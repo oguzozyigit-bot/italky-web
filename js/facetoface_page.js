@@ -26,10 +26,21 @@ const BCP = {
   el: "el-GR",
   az: "az-AZ",
   ka: "ka-GE",
+  ar: "ar-SA",
+  fa: "fa-IR",
+  hy: "hy-AM",
+  kmr: "tr-TR",
+  ckb: "tr-TR",
+  zza: "tr-TR",
+  lzz: "tr-TR",
+  ady: "tr-TR",
+  ab: "tr-TR",
 };
 
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
+const F2F_MODE_KEY = "facetoface_runtime_mode";
+const OFFLINE_PACK_KEY = "italky_offline_installed_packs_v5";
 
 function canonical(code) {
   return String(code || "")
@@ -38,34 +49,142 @@ function canonical(code) {
     .trim();
 }
 
+function getQueryMode() {
+  try {
+    const u = new URL(location.href);
+    return String(u.searchParams.get("mode") || "").trim().toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function getForcedOfflineMode() {
+  return getQueryMode() === "offline-forced";
+}
+
+function getStoredModePreference() {
+  return String(localStorage.getItem(F2F_MODE_KEY) || "auto").trim().toLowerCase();
+}
+
+function setStoredModePreference(mode) {
+  localStorage.setItem(F2F_MODE_KEY, String(mode || "auto").trim().toLowerCase());
+}
+
+function getInstalledPacksForOffline() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(OFFLINE_PACK_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function isOfflinePackActive(pack) {
+  if (!pack?.expires_at) return false;
+  return new Date(pack.expires_at).getTime() > Date.now();
+}
+
+function getInstalledOfflineCodes() {
+  const packs = getInstalledPacksForOffline().filter(isOfflinePackActive);
+  const codes = new Set();
+
+  for (const p of packs) {
+    const c = canonical(p.lang);
+    if (c) codes.add(c);
+  }
+
+  codes.add("tr");
+  codes.add("en");
+  return [...codes];
+}
+
+function isOfflineRuntime() {
+  if (getForcedOfflineMode()) return true;
+
+  const pref = getStoredModePreference();
+  if (pref === "offline") return true;
+  if (pref === "online") return false;
+
+  return navigator.onLine === false;
+}
+
+function getOfflineLangMeta(code) {
+  const map = {
+    tr:  { flag: "🇹🇷", name: "Türkçe" },
+    en:  { flag: "🇬🇧", name: "English" },
+    de:  { flag: "🇩🇪", name: "Deutsch" },
+    fr:  { flag: "🇫🇷", name: "Français" },
+    it:  { flag: "🇮🇹", name: "Italiano" },
+    es:  { flag: "🇪🇸", name: "Español" },
+    ru:  { flag: "🇷🇺", name: "Русский" },
+    el:  { flag: "🇬🇷", name: "Ελληνικά" },
+    az:  { flag: "🇦🇿", name: "Azərbaycanca" },
+    ka:  { flag: "🇬🇪", name: "ქართული" },
+    ar:  { flag: "🇸🇦", name: "العربية" },
+    fa:  { flag: "🇮🇷", name: "فارسی" },
+    hy:  { flag: "🇦🇲", name: "Հայերեն" },
+    kmr: { flag: "🟨", name: "Kürtçe (Kurmançça)" },
+    ckb: { flag: "🟧", name: "Kürtçe (Sorani)" },
+    zza: { flag: "🟫", name: "Zazaca" },
+    lzz: { flag: "🌊", name: "Lazca" },
+    ady: { flag: "🟩", name: "Çerkezce" },
+    ab:  { flag: "⬛", name: "Abhazca" }
+  };
+  return map[canonical(code)] || { flag: "🌐", name: canonical(code).toUpperCase() };
+}
+
 const SITE_LANG = "tr";
 
 const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
   ? getLangPoolForSite(SITE_LANG)
   : [];
 
-const LANGS = RAW_LANG_POOL
+const BASE_LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
 
     return {
       code,
-      flag: l.flag || "🌐",
-      name: l.name || code.toUpperCase(),
+      flag: l.flag || getOfflineLangMeta(code).flag || "🌐",
+      name: l.name || getOfflineLangMeta(code).name || code.toUpperCase(),
       bcp: BCP[code] || "en-US",
     };
   })
   .filter(Boolean);
 
+let LANGS = [...BASE_LANGS];
+
+function getRuntimeLangPool() {
+  if (!isOfflineRuntime()) return BASE_LANGS;
+
+  const allowed = new Set(getInstalledOfflineCodes());
+  let filtered = BASE_LANGS.filter((x) => allowed.has(canonical(x.code)));
+
+  const missing = [...allowed].filter((c) => !filtered.find((x) => canonical(x.code) === c));
+  for (const code of missing) {
+    const meta = getOfflineLangMeta(code);
+    filtered.push({
+      code,
+      flag: meta.flag,
+      name: meta.name,
+      bcp: BCP[code] || "tr-TR"
+    });
+  }
+
+  return filtered;
+}
+
 function langObj(code) {
   const c = canonical(code);
+  const runtimePool = getRuntimeLangPool();
 
   return (
-    LANGS.find((x) => x.code === c) || {
+    runtimePool.find((x) => x.code === c) ||
+    BASE_LANGS.find((x) => x.code === c) || {
       code: c || "en",
-      flag: "🌐",
-      name: (c || "en").toUpperCase(),
+      flag: getOfflineLangMeta(c).flag || "🌐",
+      name: getOfflineLangMeta(c).name || (c || "en").toUpperCase(),
       bcp: BCP[c] || "en-US",
     }
   );
@@ -86,6 +205,7 @@ const UI_TEXT = {
     translateError: "⚠️ Çeviri servisine ulaşılamadı",
     micBlocked: "⚠️ Mikrofon izni gerekli",
     speechUnsupported: "⚠️ Bu cihazda konuşma algılama desteklenmiyor",
+    offlineForced: "Offline mod aktif • indirilen dillerle çalışıyor",
   },
   en: {
     ready: "Tap the microphone to speak.",
@@ -96,6 +216,7 @@ const UI_TEXT = {
     translateError: "⚠️ Translation service unavailable",
     micBlocked: "⚠️ Microphone permission required",
     speechUnsupported: "⚠️ Speech recognition is not supported on this device",
+    offlineForced: "Offline mode active",
   },
   de: {
     ready: "Tippen Sie zum Sprechen auf das Mikrofon.",
@@ -106,6 +227,7 @@ const UI_TEXT = {
     translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
     micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
     speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
+    offlineForced: "Offline-Modus aktiv",
   },
   fr: {
     ready: "Touchez le micro pour parler.",
@@ -116,6 +238,7 @@ const UI_TEXT = {
     translateError: "⚠️ Service de traduction indisponible",
     micBlocked: "⚠️ Autorisation micro requise",
     speechUnsupported: "⚠️ La reconnaissance vocale n'est pas prise en charge sur cet appareil",
+    offlineForced: "Mode hors ligne actif",
   },
   it: {
     ready: "Tocca il microfono per parlare.",
@@ -126,6 +249,7 @@ const UI_TEXT = {
     translateError: "⚠️ Servizio di traduzione non disponibile",
     micBlocked: "⚠️ Autorizzazione microfono richiesta",
     speechUnsupported: "⚠️ Il riconoscimento vocale non è supportato su questo dispositivo",
+    offlineForced: "Modalità offline attiva",
   },
   es: {
     ready: "Toque el micrófono para hablar.",
@@ -136,6 +260,7 @@ const UI_TEXT = {
     translateError: "⚠️ Servicio de traducción no disponible",
     micBlocked: "⚠️ Se requiere permiso de micrófono",
     speechUnsupported: "⚠️ El reconocimiento de voz no es compatible con este dispositivo",
+    offlineForced: "Modo offline activo",
   },
 };
 
@@ -166,6 +291,8 @@ const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const settingsBtn = $("settingsBtn");
+const modeFlag = $("modeFlag");
+const modeFlagTxt = $("modeFlagTxt");
 
 const uiModal = $("uiModal");
 const uiModalTitle = $("uiModalTitle");
@@ -197,7 +324,7 @@ let recognitionSessionId = 0;
 let typewriterRunId = 0;
 
 function showUiModal(message, title = "Jeton Gerekli") {
-  if (!uiModal) return;
+  if(!uiModal) return;
   uiModalTitle.textContent = title;
   uiModalText.textContent = message;
   uiModal.classList.add("open");
@@ -208,6 +335,10 @@ function closeUiModal() {
 }
 
 uiModalGo?.addEventListener("click", () => {
+  if (getForcedOfflineMode()) {
+    closeUiModal();
+    return;
+  }
   location.href = "/pages/jetonbuy.html";
 });
 uiModalClose?.addEventListener("click", closeUiModal);
@@ -220,7 +351,7 @@ async function readAccessState() {
 }
 
 function canOpenFaceSettings() {
-  return true;
+  return !getForcedOfflineMode();
 }
 
 function getFaceVoiceMode() {
@@ -242,6 +373,8 @@ function isPaidFaceVoiceMode() {
 }
 
 async function ensureCurrentFacePremiumModeAccess() {
+  if (isOfflineRuntime()) return true;
+
   const needsPremium =
     isPaidFaceTextMode() ||
     isPaidFaceVoiceMode();
@@ -378,6 +511,14 @@ function setSystemReadyUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("ready");
+
+  if (isOfflineRuntime()) {
+    const msg = t(topLang, "offlineForced");
+    setHelper(topHelper, msg, "helper-ready");
+    setHelper(botHelper, msg, "helper-ready");
+    return;
+  }
+
   setHelper(topHelper, t(topLang, "ready"), "helper-ready");
   setHelper(botHelper, t(botLang, "ready"), "helper-ready");
 }
@@ -438,6 +579,29 @@ function refreshLangLabels() {
   if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
 }
 
+function updateModeFlagUI() {
+  if (!modeFlag || !modeFlagTxt) return;
+
+  const offline = isOfflineRuntime();
+  modeFlag.classList.toggle("offline", offline);
+  modeFlagTxt.textContent = offline ? "OFFLINE" : "ONLINE";
+}
+
+function ensureRuntimeLanguagesStillValid() {
+  const runtimePool = getRuntimeLangPool();
+  const codes = runtimePool.map((x) => canonical(x.code));
+
+  if (!codes.includes(canonical(topLang))) {
+    topLang = codes.includes("en") ? "en" : (codes[0] || "en");
+  }
+
+  if (!codes.includes(canonical(botLang))) {
+    botLang = codes.includes("tr") ? "tr" : (codes[0] || "tr");
+  }
+
+  refreshLangLabels();
+}
+
 function refreshReadyTextsIfIdle() {
   if (activeSide === null) {
     if (frameRoot?.classList.contains("is-ready")) setSystemReadyUI();
@@ -455,7 +619,9 @@ function renderPop(side) {
   const sel = side === "top" ? topLang : botLang;
   if (!list) return;
 
-  list.innerHTML = LANGS.map((l) => {
+  const runtimePool = getRuntimeLangPool();
+
+  list.innerHTML = runtimePool.map((l) => {
     const active = canonical(l.code) === canonical(sel) ? "active" : "";
     return `
       <div class="pop-item ${active}" data-code="${l.code}">
@@ -806,6 +972,14 @@ async function speak(text, langCode, tone = "neutral") {
   const value = String(text || "").trim();
   if (!value) return;
 
+  if (isOfflineRuntime()) {
+    stopAudio();
+    const myRunId = ++speakRunId;
+    if (myRunId !== speakRunId) return;
+    speakFallback(value, langCode, tone);
+    return;
+  }
+
   stopAudio();
   const myRunId = ++speakRunId;
   const voice = getVoicePreference();
@@ -908,6 +1082,14 @@ async function speak(text, langCode, tone = "neutral") {
 }
 
 async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
+  if (isOfflineRuntime()) {
+    return {
+      ok: true,
+      skipped: true,
+      reason: "offline_mode"
+    };
+  }
+
   const inLen = String(inputText || "").trim().length;
   const outLen = String(outputText || "").trim().length;
   const billableChars = Math.max(inLen, outLen);
@@ -1023,9 +1205,39 @@ function clearLatest(side) {
   wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
 }
 
+async function translateTextOffline(text, from, to) {
+  const value = String(text || "").trim();
+  if (!value) return null;
+
+  const src = canonical(from);
+  const dst = canonical(to);
+
+  try {
+    if (window.AndroidOfflineTranslate?.translate) {
+      const result = await window.AndroidOfflineTranslate.translate(
+        JSON.stringify({
+          text: value,
+          from: src,
+          to: dst
+        })
+      );
+      if (result) return String(result).trim();
+    }
+  } catch (e) {
+    console.error("offline translate error", e);
+  }
+
+  return value;
+}
+
 async function translateText(text, from, to, tone = "neutral") {
   const src = canonical(from);
   const dst = canonical(to);
+
+  if (isOfflineRuntime()) {
+    return await translateTextOffline(text, src, dst);
+  }
+
   const mode = getFaceTranslateMode();
   const style = mode === "cultural" ? "warm" : "balanced";
   const endpoints = [
@@ -1344,6 +1556,25 @@ async function toggleRecording(side) {
 }
 
 async function warmApis() {
+  if (isOfflineRuntime()) {
+    try {
+      const { data } = await supabase.auth.getUser();
+      const uid = data?.user?.id;
+      if (!uid) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tokens")
+        .eq("id", uid)
+        .maybeSingle();
+
+      if (typeof profile?.tokens === "number") {
+        setHeaderTokens(profile.tokens);
+      }
+    } catch {}
+    return;
+  }
+
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
     fetch(`${API_BASE}/api/translate_ai/health`).catch(() => {}),
@@ -1387,6 +1618,8 @@ function startBoot() {
   bootPromise = (async () => {
     setSystemPreparingUI();
     refreshLangLabels();
+    ensureRuntimeLanguagesStillValid();
+    updateModeFlagUI();
     pointOrbTo("bot");
 
     await Promise.allSettled([warmApis(), warmAudio(), readAccessState()]);
@@ -1472,17 +1705,80 @@ function bind() {
     setSystemReadyUI();
   });
 
-  homeLink?.addEventListener("click", () => {
+  homeLink?.addEventListener("click", (e) => {
+    if (getForcedOfflineMode()) {
+      e.preventDefault();
+      showUiModal("Bağlantı yokken sistem doğrudan FaceToFace offline modunda çalışır.", "Offline Mod");
+      return;
+    }
     location.href = safeHomeHref();
   });
 
   homeBtn?.addEventListener("click", () => {
+    if (getForcedOfflineMode()) {
+      showUiModal("Bağlantı yokken sistem doğrudan FaceToFace offline modunda çalışır.", "Offline Mod");
+      return;
+    }
     location.href = safeHomeHref();
   });
 
   settingsBtn?.addEventListener("click", (e) => {
+    if (!canOpenFaceSettings()) {
+      e.preventDefault();
+      showUiModal("Offline zorunlu modda ayarlar kapalıdır.", "Offline Mod");
+      return;
+    }
     e.preventDefault();
     location.href = "/pages/translation_settings.html?from=facetoface";
+  });
+
+  modeFlag?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (getForcedOfflineMode()) {
+      showUiModal("Bağlantı yokken sistem otomatik offline modda çalışır.", "Offline Mod");
+      return;
+    }
+
+    const current = isOfflineRuntime() ? "offline" : "online";
+    const next = current === "offline" ? "online" : "offline";
+
+    setStoredModePreference(next);
+    LANGS = [...BASE_LANGS];
+    ensureRuntimeLanguagesStillValid();
+    updateModeFlagUI();
+    closeAllPop();
+
+    stopAudio();
+    stopRecognizer();
+    recordingSide = null;
+    liveTranscript = "";
+    latestPreviewTranscript = "";
+
+    if (topBody) topBody.innerHTML = "";
+    if (botBody) botBody.innerHTML = "";
+
+    setSystemReadyUI();
+
+    showUiModal(
+      next === "offline"
+        ? "Offline mod açıldı. Sadece indirilen diller kullanılacak."
+        : "Online mod açıldı. Tüm uygun diller yeniden kullanılabilir.",
+      next === "offline" ? "Offline Mod" : "Online Mod"
+    );
+  });
+
+  window.addEventListener("online", () => {
+    updateModeFlagUI();
+    ensureRuntimeLanguagesStillValid();
+    refreshReadyTextsIfIdle();
+  });
+
+  window.addEventListener("offline", () => {
+    updateModeFlagUI();
+    ensureRuntimeLanguagesStillValid();
+    refreshReadyTextsIfIdle();
   });
 
   topMic?.addEventListener("click", async (e) => {
@@ -1508,11 +1804,15 @@ function bind() {
   });
 
   bindKeyboardButton(homeBtn, async () => {
-    location.href = safeHomeHref();
+    if (!getForcedOfflineMode()) {
+      location.href = safeHomeHref();
+    }
   });
 
   bindKeyboardButton(settingsBtn, async () => {
-    location.href = "/pages/translation_settings.html?from=facetoface";
+    if (canOpenFaceSettings()) {
+      location.href = "/pages/translation_settings.html?from=facetoface";
+    }
   });
 
   try {
@@ -1530,7 +1830,7 @@ if (
   !topHelper || !botHelper || !topLangBtn || !botLangBtn ||
   !topLangTxt || !botLangTxt || !popTop || !popBot ||
   !listTop || !listBot || !closeTop || !closeBot ||
-  !clearBtn || !homeLink || !homeBtn
+  !clearBtn || !homeLink || !homeBtn || !modeFlag || !modeFlagTxt
 ) {
   console.error("[facetoface] Gerekli DOM elemanları eksik.");
 } else {
