@@ -1,789 +1,1003 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-  />
-  <title>italkyAI • Kod Çöz</title>
-  <link rel="icon" href="data:," />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700;800&display=swap"
-    rel="stylesheet"
-  >
-
-  <style>
-    :root{
-      --bg:#05060a;
-      --panel:#0d111b;
-      --panel-2:#101726;
-      --card:rgba(255,255,255,.06);
-      --card-2:rgba(255,255,255,.08);
-      --line:rgba(255,255,255,.12);
-      --text:#f7faff;
-      --muted:rgba(247,250,255,.72);
-      --soft:rgba(247,250,255,.52);
-      --blue:#4fc3ff;
-      --cyan:#00e5ff;
-      --purple:#8b5cf6;
-      --pink:#ff4fd8;
-      --green:#22c55e;
-      --amber:#f59e0b;
-      --red:#ef4444;
-      --shadow:0 20px 70px rgba(0,0,0,.38);
-      --radius:26px;
-      --safe-top:env(safe-area-inset-top,0px);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
-    }
-
-    *{box-sizing:border-box}
-    html,body{
-      margin:0;
-      padding:0;
-      background:
-        radial-gradient(circle at top left, rgba(79,195,255,.16), transparent 26%),
-        radial-gradient(circle at top right, rgba(255,79,216,.12), transparent 24%),
-        linear-gradient(180deg,#05060a 0%, #070a12 45%, #05060a 100%);
-      color:var(--text);
-      font-family:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      min-height:100%;
-    }
-
-    body.shell-main{
-      overflow-x:hidden;
-    }
-
-    .page{
-      width:min(980px, calc(100vw - 24px));
-      margin:0 auto;
-      padding:calc(18px + var(--safe-top)) 0 calc(28px + var(--safe-bottom));
-    }
-
-    .hero{
-      position:relative;
-      overflow:hidden;
-      border:1px solid var(--line);
-      border-radius:32px;
-      padding:22px 18px 18px;
-      background:
-        radial-gradient(circle at 20% 10%, rgba(79,195,255,.18), transparent 24%),
-        radial-gradient(circle at 80% 0%, rgba(139,92,246,.18), transparent 22%),
-        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(16px);
-    }
-
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:999px;
-      color:var(--muted);
-      font-size:12px;
-      letter-spacing:.2px;
-      background:rgba(255,255,255,.04);
-    }
-
-    .eyebrow-dot{
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:linear-gradient(135deg,var(--cyan),var(--pink));
-      box-shadow:0 0 14px rgba(0,229,255,.8);
-    }
-
-    .hero h1{
-      margin:14px 0 8px;
-      font-family:"Space Grotesk","Outfit",sans-serif;
-      font-size:clamp(30px, 7vw, 46px);
-      line-height:1.02;
-      letter-spacing:-.03em;
-    }
-
-    .hero p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.6;
-      font-size:15px;
-    }
-
-    .statusbar{
-      margin-top:18px;
-      display:grid;
-      gap:12px;
-      grid-template-columns:repeat(4, minmax(0,1fr));
-    }
-
-    .mini{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.045);
-      border-radius:22px;
-      padding:14px;
-    }
-
-    .mini .k{
-      color:var(--soft);
-      font-size:12px;
-      margin-bottom:6px;
-    }
-
-    .mini .v{
-      font-weight:800;
-      font-size:15px;
-      letter-spacing:.01em;
-    }
-
-    .stage{
-      margin-top:18px;
-      border:1px solid var(--line);
-      border-radius:32px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.03));
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .stepbar{
-      display:flex;
-      gap:10px;
-      padding:14px;
-      border-bottom:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      flex-wrap:wrap;
-    }
-
-    .step{
-      flex:1 1 160px;
-      min-width:0;
-      padding:12px 14px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.035);
-      color:var(--soft);
-      font-size:13px;
-      font-weight:700;
-    }
-
-    .step.active{
-      color:#07111c;
-      background:linear-gradient(135deg,var(--cyan),var(--blue));
-      border-color:transparent;
-      box-shadow:0 10px 30px rgba(79,195,255,.28);
-    }
-
-    .step.done{
-      color:#dbfef2;
-      background:linear-gradient(135deg, rgba(34,197,94,.25), rgba(34,197,94,.14));
-      border-color:rgba(34,197,94,.28);
-    }
-
-    .panel{
-      display:none;
-      padding:18px;
-    }
-
-    .panel.active{
-      display:block;
-    }
-
-    .card{
-      border:1px solid var(--line);
-      border-radius:28px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.03));
-      padding:18px;
-    }
-
-    .card h2{
-      margin:0 0 8px;
-      font-family:"Space Grotesk","Outfit",sans-serif;
-      font-size:24px;
-      letter-spacing:-.02em;
-    }
-
-    .sub{
-      margin:0 0 16px;
-      color:var(--muted);
-      line-height:1.65;
-      font-size:14px;
-    }
-
-    .lang-grid,
-    .difficulty-grid{
-      display:grid;
-      grid-template-columns:repeat(2, minmax(0,1fr));
-      gap:12px;
-    }
-
-    .opt{
-      position:relative;
-      border:1px solid var(--line);
-      border-radius:24px;
-      padding:16px;
-      background:rgba(255,255,255,.04);
-      cursor:pointer;
-      transition:.22s ease;
-      user-select:none;
-      min-height:96px;
-    }
-
-    .opt:hover{
-      transform:translateY(-1px);
-      border-color:rgba(79,195,255,.32);
-      box-shadow:0 12px 26px rgba(0,0,0,.22);
-    }
-
-    .opt.selected{
-      border-color:rgba(79,195,255,.55);
-      background:
-        linear-gradient(180deg, rgba(79,195,255,.16), rgba(79,195,255,.08));
-      box-shadow:0 0 0 1px rgba(79,195,255,.18) inset, 0 16px 30px rgba(79,195,255,.15);
-    }
-
-    .opt-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:8px;
-    }
-
-    .flag{
-      font-size:22px;
-      line-height:1;
-    }
-
-    .badge{
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.04em;
-      text-transform:uppercase;
-      padding:6px 9px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      color:var(--muted);
-      border:1px solid rgba(255,255,255,.08);
-    }
-
-    .opt-title{
-      font-weight:800;
-      font-size:16px;
-      margin-bottom:4px;
-    }
-
-    .opt-desc{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.55;
-    }
-
-    .rules{
-      display:grid;
-      gap:12px;
-    }
-
-    .rule{
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:14px;
-      background:rgba(255,255,255,.035);
-    }
-
-    .rule-no{
-      min-width:34px;
-      height:34px;
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-      font-weight:900;
-      background:linear-gradient(135deg,var(--purple),var(--pink));
-      box-shadow:0 8px 18px rgba(139,92,246,.3);
-    }
-
-    .rule p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.6;
-      font-size:14px;
-    }
-
-    .actions{
-      margin-top:16px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-
-    .btn{
-      appearance:none;
-      border:none;
-      outline:none;
-      cursor:pointer;
-      border-radius:18px;
-      padding:13px 16px;
-      font-weight:800;
-      letter-spacing:.01em;
-      font-family:inherit;
-      transition:.2s ease;
-      min-height:48px;
-    }
-
-    .btn:disabled{
-      opacity:.45;
-      cursor:not-allowed;
-      transform:none!important;
-    }
-
-    .btn-primary{
-      color:#08131f;
-      background:linear-gradient(135deg,var(--cyan),var(--blue));
-      box-shadow:0 16px 28px rgba(79,195,255,.25);
-    }
-
-    .btn-primary:hover{ transform:translateY(-1px); }
-
-    .btn-secondary{
-      color:var(--text);
-      background:rgba(255,255,255,.06);
-      border:1px solid var(--line);
-    }
-
-    .btn-secondary:hover{ transform:translateY(-1px); }
-
-    .btn-danger{
-      color:#ffe7e7;
-      background:linear-gradient(135deg, rgba(239,68,68,.26), rgba(239,68,68,.16));
-      border:1px solid rgba(239,68,68,.22);
-    }
-
-    .game-head{
-      display:grid;
-      grid-template-columns:1.1fr .9fr;
-      gap:14px;
-    }
-
-    .score-board{
-      display:grid;
-      grid-template-columns:repeat(4, minmax(0,1fr));
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .score{
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:12px;
-      background:rgba(255,255,255,.04);
-    }
-
-    .score .k{
-      color:var(--soft);
-      font-size:12px;
-      margin-bottom:5px;
-    }
-
-    .score .v{
-      font-weight:900;
-      font-size:18px;
-    }
-
-    .morse-wrap{
-      margin-top:14px;
-      border:1px solid rgba(79,195,255,.22);
-      border-radius:28px;
-      padding:18px;
-      background:
-        radial-gradient(circle at top left, rgba(79,195,255,.12), transparent 38%),
-        linear-gradient(180deg, rgba(79,195,255,.08), rgba(255,255,255,.03));
-    }
-
-    .morse-label{
-      color:var(--soft);
-      font-size:12px;
-      margin-bottom:10px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      font-weight:800;
-    }
-
-    .morse-code{
-      font-family:"Space Grotesk","Outfit",sans-serif;
-      font-weight:800;
-      font-size:clamp(22px, 5.2vw, 38px);
-      line-height:1.35;
-      letter-spacing:.08em;
-      word-break:break-word;
-      min-height:64px;
-    }
-
-    .answer-wrap{
-      margin-top:14px;
-      display:grid;
-      gap:10px;
-    }
-
-    .input{
-      width:100%;
-      border:none;
-      outline:none;
-      color:var(--text);
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px 16px;
-      font-family:inherit;
-      font-size:17px;
-      font-weight:700;
-    }
-
-    .input::placeholder{ color:rgba(255,255,255,.38); }
-
-    .helper-box{
-      margin-top:14px;
-      display:grid;
-      gap:10px;
-    }
-
-    .helper{
-      display:none;
-      border-radius:18px;
-      padding:14px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.045);
-    }
-
-    .helper.show{ display:block; }
-
-    .helper .t{
-      font-size:12px;
-      color:var(--soft);
-      margin-bottom:6px;
-      text-transform:uppercase;
-      letter-spacing:.07em;
-      font-weight:800;
-    }
-
-    .helper .v{
-      font-weight:800;
-      font-size:16px;
-    }
-
-    .feedback{
-      margin-top:12px;
-      min-height:26px;
-      font-weight:800;
-      font-size:14px;
-    }
-
-    .feedback.ok{ color:#87f0b0; }
-    .feedback.bad{ color:#ff9c9c; }
-    .feedback.info{ color:#a6dcff; }
-
-    .footnote{
-      margin-top:12px;
-      color:var(--soft);
-      font-size:12px;
-      line-height:1.55;
-    }
-
-    .final-box{
-      display:none;
-      margin-top:16px;
-      border:1px solid rgba(34,197,94,.22);
-      background:linear-gradient(180deg, rgba(34,197,94,.15), rgba(255,255,255,.03));
-      border-radius:24px;
-      padding:18px;
-    }
-
-    .final-box.show{ display:block; }
-
-    .final-box h3{
-      margin:0 0 8px;
-      font-family:"Space Grotesk","Outfit",sans-serif;
-      font-size:24px;
-    }
-
-    .final-box p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.6;
-    }
-
-    .hide{ display:none!important; }
-
-    @media (max-width: 860px){
-      .game-head{
-        grid-template-columns:1fr;
-      }
-    }
-
-    @media (max-width: 720px){
-      .statusbar,
-      .score-board,
-      .lang-grid,
-      .difficulty-grid{
-        grid-template-columns:1fr;
-      }
-
-      .hero{
-        border-radius:26px;
-      }
-
-      .stage{
-        border-radius:26px;
-      }
-
-      .panel{
-        padding:14px;
-      }
-
-      .card{
-        border-radius:24px;
-        padding:16px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>italkyAI • Kod Çöz</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#050508;
+  --panel:#0a0a0f;
+  --cyan:#00f3ff;
+  --gold:#ffb800;
+  --red:#ff0055;
+  --blue:#4f46e5;
+  --green:#00e676;
+  --border: rgba(255,255,255,0.10);
+  --safeB: env(safe-area-inset-bottom, 0px);
+  --shellLift: 0px;
+  --grad: linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
+}
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+  user-select:none;
+}
+html,body{
+  margin:0;
+  width:100%;
+  height:100dvh;
+  background:var(--bg);
+  font-family:'Outfit',sans-serif;
+  color:#fff;
+  overflow:hidden;
+}
+body{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(79,70,229,.18), transparent 28%),
+    radial-gradient(circle at 0% 100%, rgba(0,243,255,.08), transparent 24%),
+    radial-gradient(circle at 100% 0%, rgba(255,0,85,.08), transparent 22%),
+    var(--bg);
+}
+
+#pageContent{
+  height:100%;
+  padding:10px 12px calc(14px + var(--safeB) + var(--shellLift)) 12px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+}
+#pageContent::-webkit-scrollbar{ display:none; }
+
+.app{
+  max-width:480px;
+  min-height:100%;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.hud{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap:8px;
+  padding:10px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.04);
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 40px rgba(0,0,0,0.35);
+  align-items:center;
+}
+
+.hudCard{
+  min-height:58px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  text-align:center;
+  padding:4px;
+}
+
+.hudBig{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+}
+
+.hudSmall{
+  font-size:10px;
+  font-weight:900;
+  opacity:.6;
+  letter-spacing:1px;
+}
+
+.main{
+  flex:1;
+  border-radius:24px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  position:relative;
+  overflow:visible;
+  backdrop-filter: blur(14px);
+  box-shadow:0 28px 60px rgba(0,0,0,.45);
+}
+
+.statusTxt{
+  text-align:center;
+  color:var(--cyan);
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  min-height:18px;
+  font-size:13px;
+}
+
+.morseBoard{
+  border-radius:22px;
+  padding:18px 14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:
+    radial-gradient(circle at top left, rgba(0,243,255,.08), transparent 30%),
+    rgba(255,255,255,.03);
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+}
+
+.morseLabel{
+  text-align:center;
+  font-size:11px;
+  font-weight:900;
+  opacity:.58;
+  letter-spacing:2px;
+  margin-bottom:10px;
+}
+
+.morseCode{
+  text-align:center;
+  font-family:"Space Grotesk",sans-serif;
+  font-size:28px;
+  font-weight:900;
+  line-height:1.45;
+  color:var(--gold);
+  letter-spacing:3px;
+  min-height:86px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  word-break:break-word;
+}
+
+.answerWrap{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.answerInput{
+  width:100%;
+  min-height:56px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  text-align:center;
+  padding:14px 12px;
+  text-transform:uppercase;
+  user-select:text;
+}
+
+.answerInput::placeholder{
+  color:rgba(255,255,255,.28);
+  text-transform:none;
+}
+
+.btnGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.btnRow{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+}
+
+.btnMain{
+  width:100%;
+  padding:15px 12px;
+  border-radius:18px;
+  border:none;
+  background:var(--cyan);
+  color:#000;
+  font-weight:1000;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.btnMain:active{ transform:scale(.98); }
+
+.btnNo{
+  background:rgba(255,255,255,0.08);
+  color:#fff;
+  border:1.5px solid rgba(255,255,255,0.18);
+}
+
+.btnGold{
+  background:var(--gold);
+  color:#111;
+}
+
+.btnRed{
+  background:rgba(255,0,85,.14);
+  color:#fff;
+  border:1.5px solid rgba(255,0,85,.25);
+}
+
+.infoBox{
+  display:grid;
+  gap:8px;
+}
+
+.infoCard{
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  padding:12px;
+  display:none;
+}
+
+.infoCard.show{ display:block; }
+
+.infoTitle{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:1px;
+  opacity:.58;
+  margin-bottom:6px;
+}
+
+.infoValue{
+  font-size:18px;
+  font-weight:900;
+  color:#fff;
+}
+
+.feedback{
+  min-height:24px;
+  text-align:center;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.4px;
+}
+.feedback.ok{ color:var(--green); }
+.feedback.bad{ color:#ff8ba7; }
+.feedback.info{ color:var(--cyan); }
+
+.progressBar{
+  height:10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.progressFill{
+  height:100%;
+  width:0%;
+  background:var(--grad);
+  transition:.25s ease;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.92);
+  backdrop-filter:blur(12px);
+  z-index:1000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.modal.show{ display:flex; }
+
+.card{
+  width:100%;
+  max-width:400px;
+  background:#111;
+  padding:22px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.10);
+  text-align:center;
+  box-shadow:0 25px 70px rgba(0,0,0,.7);
+  max-height:88vh;
+  overflow:auto;
+  scrollbar-width:none;
+}
+.card::-webkit-scrollbar{ display:none; }
+
+.langGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin:16px 0;
+}
+
+.langBtn, .levelBtn{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  color:#fff;
+  border-radius:16px;
+  padding:14px 10px;
+  cursor:pointer;
+  transition:.16s ease;
+  min-height:84px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-weight:800;
+}
+
+.langBtn .flag{ font-size:28px; }
+
+.langBtn.active, .levelBtn.active{
+  border-color: rgba(0,255,157,.30);
+  box-shadow:0 0 0 1px rgba(0,255,157,.24), 0 0 18px rgba(0,255,157,.12);
+  background: rgba(0,255,157,.08);
+}
+
+.rulesList{
+  text-align:left;
+  margin:16px 0 8px;
+  padding-left:18px;
+  line-height:1.8;
+  color:rgba(255,255,255,.86);
+  font-size:14px;
+}
+
+.resultScore{
+  font-size:42px;
+  font-weight:900;
+  color:#fff;
+  margin:18px 0 10px;
+  text-shadow:0 0 20px rgba(255,255,255,0.2);
+  font-family:'Space Grotesk',sans-serif;
+}
+
+@media (max-width:420px){
+  .hud{
+    grid-template-columns:1fr 1fr;
+  }
+  .btnRow{
+    grid-template-columns:1fr;
+  }
+  .btnGrid{
+    grid-template-columns:1fr;
+  }
+  .morseCode{
+    font-size:24px;
+  }
+}
+</style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <div class="eyebrow">
-        <span class="eyebrow-dot"></span>
-        <span>italkyAI • Eğlenerek Öğren</span>
+
+<div class="app" id="pageContent">
+  <div class="hud">
+    <div class="hudCard">
+      <div class="hudBig" id="langDisp">🇬🇧 EN</div>
+      <div class="hudSmall">DİL</div>
+    </div>
+    <div class="hudCard">
+      <div class="hudBig" id="levelDisp">KOLAY</div>
+      <div class="hudSmall">SEVİYE</div>
+    </div>
+    <div class="hudCard">
+      <div class="hudBig" id="scoreDisp">0</div>
+      <div class="hudSmall">PUAN</div>
+    </div>
+    <div class="hudCard">
+      <div class="hudBig" id="roundDisp">1/10</div>
+      <div class="hudSmall">TUR</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="statusTxt" id="statusTxt">MORS KODUNU DİNLE VE ÇÖZ</div>
+
+    <div class="progressBar">
+      <div class="progressFill" id="progressFill"></div>
+    </div>
+
+    <div class="morseBoard">
+      <div class="morseLabel">MORS KODU</div>
+      <div class="morseCode" id="morseCode">.... . .-.. .-.. ---</div>
+    </div>
+
+    <div class="answerWrap">
+      <input id="answerInput" class="answerInput" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Cevabı yaz">
+      <div class="btnGrid">
+        <button class="btnMain" id="btnCheck">KONTROL ET</button>
+        <button class="btnMain btnNo" id="btnReplayAudio">TEKRAR DİNLE</button>
       </div>
 
-      <h1>Kod Çöz</h1>
-      <p>
-        Mors alfabesini çöz, dinle, tahmin et. Seçtiğin dilde kelimeleri çözmeye çalış,
-        gerekirse Türkçe ipucu al, anlamı gör ve puan topla.
-      </p>
-
-      <div class="statusbar">
-        <div class="mini">
-          <div class="k">Oyun Türü</div>
-          <div class="v">Mors Alfabesi</div>
-        </div>
-        <div class="mini">
-          <div class="k">İpucu Dili</div>
-          <div class="v">Türkçe</div>
-        </div>
-        <div class="mini">
-          <div class="k">Akış</div>
-          <div class="v">Dil → Kural → Zorluk</div>
-        </div>
-        <div class="mini">
-          <div class="k">Mod</div>
-          <div class="v">Dinle & Çöz</div>
-        </div>
+      <div class="btnRow">
+        <button class="btnMain btnGold" id="btnHint">İPUCU AL</button>
+        <button class="btnMain btnNo" id="btnMeaning">ANLAMI GÖR</button>
+        <button class="btnMain btnRed" id="btnSkip">PAS GEÇ</button>
       </div>
-    </section>
+    </div>
 
-    <section class="stage">
-      <div class="stepbar">
-        <div class="step active" id="stepLang">1 • Dil Seçimi</div>
-        <div class="step" id="stepRules">2 • Oyun Kuralları</div>
-        <div class="step" id="stepDifficulty">3 • Zorluk Seviyesi</div>
-        <div class="step" id="stepGame">4 • Oyun</div>
+    <div class="infoBox">
+      <div class="infoCard" id="hintCard">
+        <div class="infoTitle">TÜRKÇE İPUCU</div>
+        <div class="infoValue" id="hintText">—</div>
       </div>
-
-      <!-- LANGUAGE -->
-      <div class="panel active" id="panelLanguage">
-        <div class="card">
-          <h2>Oyun dilini seç</h2>
-          <p class="sub">
-            Mors kodunu çözerken gelecek kelimelerin hangi dilde olacağını seç.
-            Türkçe havuz kullanılmıyor; Türkçe sadece ipucu ve anlam desteğinde kullanılacak.
-          </p>
-
-          <div class="lang-grid" id="languageGrid"></div>
-
-          <div class="actions">
-            <button class="btn btn-primary" id="btnGoRules" disabled>Devam Et</button>
-          </div>
-        </div>
+      <div class="infoCard" id="meaningCard">
+        <div class="infoTitle">TÜRKÇE ANLAM</div>
+        <div class="infoValue" id="meaningText">—</div>
       </div>
+    </div>
 
-      <!-- RULES -->
-      <div class="panel" id="panelRules">
-        <div class="card">
-          <h2>Oyun kuralları</h2>
-          <p class="sub">
-            Önce kuralları oku, sonra zorluk seviyeni seç. Zorluk yoksa oyun direkt başlardı;
-            bu oyunda zorluk seviyesi bulunduğu için bir sonraki adımda seviye seçimi yapılacak.
-          </p>
+    <div class="feedback info" id="feedback">Hazırsan kodu dinle ve cevapla.</div>
+  </div>
+</div>
 
-          <div class="rules">
-            <div class="rule">
-              <div class="rule-no">1</div>
-              <p>
-                Ekranda bir kelimenin <strong>Mors kodu</strong> gösterilir. İstersen aynı kodu
-                <strong>bip sesi</strong> olarak tekrar dinleyebilirsin.
-              </p>
-            </div>
+<div class="modal show" id="startModal">
+  <div class="card">
+    <h2 style="margin:0; color:var(--cyan); font-family:'Space Grotesk';">KOD ÇÖZ</h2>
+    <p style="font-size:14px; opacity:.8; line-height:1.6; margin:14px 0;">
+      Bayrağa dokun, oyun dilini seç.
+    </p>
 
-            <div class="rule">
-              <div class="rule-no">2</div>
-              <p>
-                Tahmin ettiğin kelimeyi yaz ve <strong>Kontrol Et</strong> butonuna bas.
-                Doğru cevap verdiğinde puan kazanırsın ve yeni kelimeye geçersin.
-              </p>
-            </div>
+    <div class="langGrid" id="langGrid"></div>
+    <button class="btnMain" id="startBtn">DEVAM ET</button>
+  </div>
+</div>
 
-            <div class="rule">
-              <div class="rule-no">3</div>
-              <p>
-                Zorlanırsan önce <strong>Türkçe İpucu</strong> alabilirsin. Daha da zorlanırsan
-                <strong>Türkçe Anlamı Göster</strong> seçeneğini kullanabilirsin.
-              </p>
-            </div>
+<div class="modal" id="rulesModal">
+  <div class="card">
+    <h2 style="margin:0; color:var(--gold); font-family:'Space Grotesk';">KURALLAR</h2>
+    <ul class="rulesList">
+      <li>Önce oyun dilini seçersin.</li>
+      <li>Ekrana gelen Mors kodunu çözmeye çalışırsın.</li>
+      <li>İstersen kodu tekrar bip sesiyle dinleyebilirsin.</li>
+      <li>Doğru cevap verirsen puan kazanırsın.</li>
+      <li>İpucu alırsan puanın biraz düşer.</li>
+      <li>Anlamı açarsan puanın daha da düşer.</li>
+      <li>Toplam 10 tur sonunda skorun hesaplanır.</li>
+    </ul>
+    <button class="btnMain" id="rulesOkBtn">ANLADIM, DEVAM ET</button>
+  </div>
+</div>
 
-            <div class="rule">
-              <div class="rule-no">4</div>
-              <p>
-                Yardım almadan doğru bilirsen daha çok puan kazanırsın. İpucu alınca puan azalır,
-                anlamı açınca biraz daha azalır. Ama boş geçmekten iyidir; oyun da hayat da böyledir.
-              </p>
-            </div>
+<div class="modal" id="difficultyModal">
+  <div class="card">
+    <h2 style="margin:0; color:var(--cyan); font-family:'Space Grotesk';">ZORLUK SEVİYESİ</h2>
+    <p style="font-size:14px; opacity:.8; line-height:1.6; margin:14px 0;">
+      Seviyeni seç, sonra oyun başlasın.
+    </p>
 
-            <div class="rule">
-              <div class="rule-no">5</div>
-              <p>
-                Toplam <strong>10 tur</strong> oynanır. Süre baskısı yoktur. Ama Mors’u çözerken
-                beyin “ben bunu çözerim” moduna geçebilir, önceden söylemiş olayım.
-              </p>
-            </div>
-          </div>
+    <div class="langGrid" id="difficultyGrid"></div>
+    <button class="btnMain" id="difficultyBtn">OYUNU BAŞLAT</button>
+  </div>
+</div>
 
-          <div class="actions">
-            <button class="btn btn-secondary" id="btnBackToLang">Geri</button>
-            <button class="btn btn-primary" id="btnGoDifficulty">Zorluk Seçimine Geç</button>
-          </div>
-        </div>
-      </div>
+<div class="modal" id="resultModal">
+  <div class="card">
+    <h2 style="margin:0; color:var(--gold); font-family:'Space Grotesk';">SONUÇ</h2>
+    <div class="resultScore" id="resultScore">0</div>
+    <p id="resultText" style="opacity:.78; line-height:1.6;"></p>
+    <button class="btnMain" id="btnReplay">TEKRAR OYNA</button>
+    <button class="btnMain btnNo" id="btnBack">ANA MENÜ</button>
+  </div>
+</div>
 
-      <!-- DIFFICULTY -->
-      <div class="panel" id="panelDifficulty">
-        <div class="card">
-          <h2>Zorluk seviyesini seç</h2>
-          <p class="sub">
-            Kolay seviyede daha kısa ve tanıdık kelimeler gelir. Zor seviyede kelimeler uzar,
-            Mors dizisi karışır ve göz biraz daha fazla “nokta mıydı çizgi miydi” der.
-          </p>
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
 
-          <div class="difficulty-grid" id="difficultyGrid"></div>
+try {
+  mountShell({ scroll:"none" });
+} catch(e) {
+  console.warn("[morse_game shell]", e);
+}
 
-          <div class="actions">
-            <button class="btn btn-secondary" id="btnBackToRules">Geri</button>
-            <button class="btn btn-primary" id="btnStartGame" disabled>Oyunu Başlat</button>
-          </div>
-        </div>
-      </div>
+const $ = id => document.getElementById(id);
 
-      <!-- GAME -->
-      <div class="panel" id="panelGame">
-        <div class="card">
-          <div class="game-head">
-            <div>
-              <h2>Oyuna başla</h2>
-              <p class="sub" id="gameInfoText">
-                Mors kodunu çöz, cevapla ve puan topla.
-              </p>
-            </div>
+const GAME_LANG_KEY = "italky_morse_lang";
+const GAME_LEVEL_KEY = "italky_morse_level";
 
-            <div class="score-board">
-              <div class="score">
-                <div class="k">Dil</div>
-                <div class="v" id="statLang">-</div>
-              </div>
-              <div class="score">
-                <div class="k">Seviye</div>
-                <div class="v" id="statDifficulty">-</div>
-              </div>
-              <div class="score">
-                <div class="k">Tur</div>
-                <div class="v"><span id="statRound">1</span> / 10</div>
-              </div>
-              <div class="score">
-                <div class="k">Puan</div>
-                <div class="v" id="statScore">0</div>
-              </div>
-            </div>
-          </div>
+const LANGS = {
+  en:{ name:"İngilizce", flag:"🇬🇧" },
+  de:{ name:"Almanca", flag:"🇩🇪" },
+  fr:{ name:"Fransızca", flag:"🇫🇷" },
+  es:{ name:"İspanyolca", flag:"🇪🇸" },
+  it:{ name:"İtalyanca", flag:"🇮🇹" }
+};
 
-          <div class="morse-wrap">
-            <div class="morse-label">Mors Kodu</div>
-            <div class="morse-code" id="morseCode">.... . .-.. .-.. ---</div>
+const LEVELS = {
+  easy:{ name:"Kolay", desc:"Kısa kelimeler", min:3, max:5 },
+  medium:{ name:"Orta", desc:"Karışık kelimeler", min:4, max:7 },
+  hard:{ name:"Zor", desc:"Uzun kelimeler", min:6, max:10 }
+};
 
-            <div class="actions">
-              <button class="btn btn-secondary" id="btnReplayAudio">Tekrar Dinle</button>
-              <button class="btn btn-secondary" id="btnShowHint">Türkçe İpucu Al</button>
-              <button class="btn btn-secondary" id="btnShowMeaning">Anlamı Göster</button>
-            </div>
-          </div>
+const TOTAL_ROUNDS = 10;
 
-          <div class="answer-wrap">
-            <input
-              class="input"
-              id="answerInput"
-              type="text"
-              autocomplete="off"
-              autocapitalize="characters"
-              spellcheck="false"
-              placeholder="Cevabını buraya yaz…"
-            />
+const MORSE = {
+  A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.", G: "--.", H: "....",
+  I: "..", J: ".---", K: "-.-", L: ".-..", M: "--", N: "-.", O: "---", P: ".--.",
+  Q: "--.-", R: ".-.", S: "...", T: "-", U: "..-", V: "...-", W: ".--", X: "-..-",
+  Y: "-.--", Z: "--..",
+  0: "-----", 1: ".----", 2: "..---", 3: "...--", 4: "....-", 5: ".....",
+  6: "-....", 7: "--...", 8: "---..", 9: "----."
+};
 
-            <div class="actions">
-              <button class="btn btn-primary" id="btnCheck">Kontrol Et</button>
-              <button class="btn btn-danger" id="btnSkip">Bu Turu Geç</button>
-            </div>
-          </div>
+const WORDS = {
+  en: [
+    { w:"HELLO", tr:"Merhaba", hint:"Selamlaşma kelimesi" },
+    { w:"WORLD", tr:"Dünya", hint:"Yaşadığımız gezegen" },
+    { w:"BOOK", tr:"Kitap", hint:"Okunur" },
+    { w:"WATER", tr:"Su", hint:"İçilir" },
+    { w:"APPLE", tr:"Elma", hint:"Meyve" },
+    { w:"BREAD", tr:"Ekmek", hint:"Sofrada olur" },
+    { w:"HOUSE", tr:"Ev", hint:"İçinde yaşanır" },
+    { w:"LIGHT", tr:"Işık", hint:"Karanlığı giderir" },
+    { w:"PHONE", tr:"Telefon", hint:"Arama yapılır" },
+    { w:"TRAIN", tr:"Tren", hint:"Rayda gider" },
+    { w:"FAMILY", tr:"Aile", hint:"Yakın bağ" },
+    { w:"FRIEND", tr:"Arkadaş", hint:"Dost" },
+    { w:"MUSIC", tr:"Müzik", hint:"Dinlenir" },
+    { w:"MARKET", tr:"Market", hint:"Alışveriş yapılır" },
+    { w:"ROCKET", tr:"Roket", hint:"Uzaya gider" }
+  ],
+  de: [
+    { w:"HALLO", tr:"Merhaba", hint:"Selamlaşma kelimesi" },
+    { w:"WELT", tr:"Dünya", hint:"Yaşadığımız gezegen" },
+    { w:"WASSER", tr:"Su", hint:"İçilir" },
+    { w:"BROT", tr:"Ekmek", hint:"Fırından alınır" },
+    { w:"HAUS", tr:"Ev", hint:"İçinde yaşanır" },
+    { w:"BUCH", tr:"Kitap", hint:"Okunur" },
+    { w:"SCHULE", tr:"Okul", hint:"Ders yapılan yer" },
+    { w:"FAMILIE", tr:"Aile", hint:"Yakın bağ" },
+    { w:"FREUND", tr:"Arkadaş", hint:"Dost" },
+    { w:"MUSIK", tr:"Müzik", hint:"Dinlenir" },
+    { w:"GARTEN", tr:"Bahçe", hint:"Bitkili alan" },
+    { w:"LICHT", tr:"Işık", hint:"Karanlığı dağıtır" },
+    { w:"APFEL", tr:"Elma", hint:"Meyve" },
+    { w:"MARKT", tr:"Pazar/Market", hint:"Alışveriş alanı" },
+    { w:"ZUG", tr:"Tren", hint:"Rayda gider" }
+  ],
+  fr: [
+    { w:"BONJOUR", tr:"Merhaba", hint:"Gün içinde kullanılan selamlaşma" },
+    { w:"MONDE", tr:"Dünya", hint:"Yaşadığımız gezegen" },
+    { w:"LIVRE", tr:"Kitap", hint:"Okunur" },
+    { w:"EAU", tr:"Su", hint:"İçilir" },
+    { w:"POMME", tr:"Elma", hint:"Meyve" },
+    { w:"MAISON", tr:"Ev", hint:"İçinde yaşanır" },
+    { w:"ECOLE", tr:"Okul", hint:"Ders yapılan yer" },
+    { w:"AMI", tr:"Arkadaş", hint:"Dost" },
+    { w:"MUSIQUE", tr:"Müzik", hint:"Dinlenir" },
+    { w:"JARDIN", tr:"Bahçe", hint:"Bitkili alan" },
+    { w:"LUMIERE", tr:"Işık", hint:"Karanlığı giderir" },
+    { w:"TRAIN", tr:"Tren", hint:"Rayda gider" },
+    { w:"FAMILLE", tr:"Aile", hint:"Yakın bağ" },
+    { w:"ORANGE", tr:"Portakal", hint:"Turuncu meyve" },
+    { w:"ROBOT", tr:"Robot", hint:"Akıllı makine" }
+  ],
+  es: [
+    { w:"HOLA", tr:"Merhaba", hint:"Selamlaşma kelimesi" },
+    { w:"MUNDO", tr:"Dünya", hint:"Yaşadığımız gezegen" },
+    { w:"LIBRO", tr:"Kitap", hint:"Okunur" },
+    { w:"AGUA", tr:"Su", hint:"İçilir" },
+    { w:"MANZANA", tr:"Elma", hint:"Meyve" },
+    { w:"CASA", tr:"Ev", hint:"İçinde yaşanır" },
+    { w:"ESCUELA", tr:"Okul", hint:"Ders yapılan yer" },
+    { w:"AMIGO", tr:"Arkadaş", hint:"Dost" },
+    { w:"MUSICA", tr:"Müzik", hint:"Dinlenir" },
+    { w:"JARDIN", tr:"Bahçe", hint:"Bitkili alan" },
+    { w:"LUZ", tr:"Işık", hint:"Karanlığı giderir" },
+    { w:"TREN", tr:"Tren", hint:"Rayda gider" },
+    { w:"FAMILIA", tr:"Aile", hint:"Yakın bağ" },
+    { w:"NARANJA", tr:"Portakal", hint:"Turuncu meyve" },
+    { w:"ROBOT", tr:"Robot", hint:"Akıllı makine" }
+  ],
+  it: [
+    { w:"CIAO", tr:"Merhaba / Hoşça kal", hint:"Çok bilinen İtalyanca selam" },
+    { w:"MONDO", tr:"Dünya", hint:"Yaşadığımız gezegen" },
+    { w:"LIBRO", tr:"Kitap", hint:"Okunur" },
+    { w:"ACQUA", tr:"Su", hint:"İçilir" },
+    { w:"MELA", tr:"Elma", hint:"Meyve" },
+    { w:"CASA", tr:"Ev", hint:"İçinde yaşanır" },
+    { w:"SCUOLA", tr:"Okul", hint:"Ders yapılan yer" },
+    { w:"AMICO", tr:"Arkadaş", hint:"Dost" },
+    { w:"MUSICA", tr:"Müzik", hint:"Dinlenir" },
+    { w:"GIARDINO", tr:"Bahçe", hint:"Bitkili alan" },
+    { w:"LUCE", tr:"Işık", hint:"Karanlığı giderir" },
+    { w:"TRENO", tr:"Tren", hint:"Rayda gider" },
+    { w:"FAMIGLIA", tr:"Aile", hint:"Yakın bağ" },
+    { w:"ARANCIA", tr:"Portakal", hint:"Turuncu meyve" },
+    { w:"ROBOT", tr:"Robot", hint:"Akıllı makine" }
+  ]
+};
 
-          <div class="helper-box">
-            <div class="helper" id="hintBox">
-              <div class="t">Türkçe İpucu</div>
-              <div class="v" id="hintText">-</div>
-            </div>
+const game = {
+  lang: localStorage.getItem(GAME_LANG_KEY) || "en",
+  selectedLang: localStorage.getItem(GAME_LANG_KEY) || "en",
+  level: localStorage.getItem(GAME_LEVEL_KEY) || "easy",
+  selectedLevel: localStorage.getItem(GAME_LEVEL_KEY) || "easy",
+  round: 1,
+  score: 0,
+  poolItems: [],
+  usedWords: new Set(),
+  current: null,
+  hintOpened: false,
+  meaningOpened: false
+};
 
-            <div class="helper" id="meaningBox">
-              <div class="t">Türkçe Anlam</div>
-              <div class="v" id="meaningText">-</div>
-            </div>
-          </div>
+let audioCtx = null;
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+function beep({freq=650,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended"){
+    ctx.resume().catch(() => {});
+  }
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g); g.connect(ctx.destination);
+  osc.start(now); osc.stop(now + duration + .02);
+}
+function playTapFx() {
+  beep({ freq: 620, duration: .05, type: "triangle", gain: .035 });
+}
+function playCorrectFx() {
+  beep({ freq: 520, duration: .08, type: "triangle", gain: .05 });
+  beep({ freq: 760, duration: .10, type: "triangle", gain: .05, when: .08 });
+}
+function playWrongFx() {
+  beep({ freq: 220, duration: .10, type: "sawtooth", gain: .05 });
+  beep({ freq: 170, duration: .12, type: "sawtooth", gain: .04, when: .06 });
+}
+function playHintFx() {
+  beep({ freq: 440, duration: .08, type: "triangle", gain: .04 });
+}
+function playRevealFx() {
+  beep({ freq: 700, duration: .08, type: "square", gain: .04 });
+  beep({ freq: 500, duration: .10, type: "triangle", gain: .04, when: .07 });
+}
 
-          <div class="feedback info" id="feedbackText">
-            Hazırsan Mors kodunu incele veya dinleyip cevabı yaz.
-          </div>
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
 
-          <div class="footnote">
-            Puan sistemi: doğrudan doğru bil = 10 puan, ipucu sonrası doğru bil = 7 puan,
-            anlam açıldıktan sonra doğru bil = 5 puan. Pas geçilen tur puan kazandırmaz.
-          </div>
+function normalize(str){
+  return String(str || "")
+    .toUpperCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/Ç/g,"C")
+    .replace(/Ğ/g,"G")
+    .replace(/İ/g,"I")
+    .replace(/Ö/g,"O")
+    .replace(/Ş/g,"S")
+    .replace(/Ü/g,"U")
+    .replace(/[^A-Z0-9]/g, "");
+}
 
-          <div class="final-box" id="finalBox">
-            <h3>Tur tamamlandı</h3>
-            <p id="finalText">
-              Oyun bitti.
-            </p>
+function shuffle(arr){
+  return [...arr].sort(() => Math.random() - 0.5);
+}
 
-            <div class="actions">
-              <button class="btn btn-secondary" id="btnRestart">Aynı Ayarlarla Tekrar Oyna</button>
-              <button class="btn btn-primary" id="btnBackToStart">Başa Dön</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+function wordToMorse(word){
+  return normalize(word).split("").map(ch => MORSE[ch] || "").filter(Boolean).join(" ");
+}
 
-  <script type="module" src="/js/morse_game.js"></script>
+function renderLangs() {
+  $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+    <button class="langBtn ${game.selectedLang===code ? "active" : ""}" data-lang="${code}">
+      <div class="flag">${meta.flag}</div>
+      <div>${meta.name}</div>
+    </button>
+  `).join("");
+
+  $("langGrid").querySelectorAll(".langBtn").forEach(btn => {
+    btn.onclick = () => {
+      playTapFx();
+      game.selectedLang = btn.dataset.lang;
+      renderLangs();
+    };
+  });
+}
+
+function renderLevels(){
+  $("difficultyGrid").innerHTML = Object.entries(LEVELS).map(([code, meta]) => `
+    <button class="levelBtn ${game.selectedLevel===code ? "active" : ""}" data-level="${code}">
+      <div style="font-size:18px; font-weight:900;">${meta.name}</div>
+      <div style="font-size:12px; opacity:.68;">${meta.desc}</div>
+    </button>
+  `).join("");
+
+  $("difficultyGrid").querySelectorAll(".levelBtn").forEach(btn => {
+    btn.onclick = () => {
+      playTapFx();
+      game.selectedLevel = btn.dataset.level;
+      renderLevels();
+    };
+  });
+}
+
+function getFilteredPool(lang, level){
+  const pool = WORDS[lang] || [];
+  const meta = LEVELS[level] || LEVELS.easy;
+  const filtered = pool.filter(item => {
+    const len = normalize(item.w).length;
+    return len >= meta.min && len <= meta.max;
+  });
+  return filtered.length ? filtered : pool;
+}
+
+function nextUniqueItem(){
+  if (!game.poolItems.length) return null;
+
+  if (game.usedWords.size >= game.poolItems.length) {
+    game.usedWords.clear();
+  }
+
+  let candidate = null;
+  let guard = 0;
+
+  while (guard < 100) {
+    const pick = game.poolItems[Math.floor(Math.random() * game.poolItems.length)];
+    const key = normalize(pick.w);
+    if (!game.usedWords.has(key)) {
+      game.usedWords.add(key);
+      candidate = pick;
+      break;
+    }
+    guard++;
+  }
+
+  if (!candidate) {
+    candidate = game.poolItems[Math.floor(Math.random() * game.poolItems.length)];
+  }
+
+  return candidate;
+}
+
+function updateHud(){
+  $("langDisp").textContent = `${LANGS[game.lang]?.flag || "🌐"} ${game.lang.toUpperCase()}`;
+  $("levelDisp").textContent = (LEVELS[game.level]?.name || "KOLAY").toUpperCase();
+  $("scoreDisp").textContent = String(game.score);
+  $("roundDisp").textContent = `${game.round}/${TOTAL_ROUNDS}`;
+  $("progressFill").style.width = `${((game.round - 1) / TOTAL_ROUNDS) * 100}%`;
+}
+
+function setStatus(text){
+  $("statusTxt").textContent = text;
+}
+
+function setFeedback(text, type="info"){
+  const el = $("feedback");
+  el.textContent = text;
+  el.className = `feedback ${type}`;
+}
+
+function resetInfoCards(){
+  game.hintOpened = false;
+  game.meaningOpened = false;
+  $("hintCard").classList.remove("show");
+  $("meaningCard").classList.remove("show");
+}
+
+function renderQuestion(){
+  resetInfoCards();
+  game.current = nextUniqueItem();
+
+  if (!game.current) {
+    setFeedback("Kelime havuzu bulunamadı.", "bad");
+    return;
+  }
+
+  $("morseCode").textContent = wordToMorse(game.current.w);
+  $("hintText").textContent = game.current.hint;
+  $("meaningText").textContent = game.current.tr;
+  $("answerInput").value = "";
+
+  updateHud();
+  setStatus("MORS KODUNU DİNLE VE ÇÖZ");
+  setFeedback("Hazırsan kodu dinle ve cevapla.", "info");
+}
+
+async function playMorseAudio(code){
+  const DOT = 0.08;
+  const DASH = 0.22;
+  const GAP = 0.08;
+  const LETTER_GAP = 0.18;
+
+  const parts = String(code || "").split(" ");
+  let t = 0;
+
+  for (let i = 0; i < parts.length; i++) {
+    const group = parts[i];
+    for (let j = 0; j < group.length; j++) {
+      const s = group[j];
+      if (s === ".") {
+        beep({ freq: 680, duration: DOT, type: "sine", gain: .035, when: t });
+        t += DOT;
+      } else if (s === "-") {
+        beep({ freq: 680, duration: DASH, type: "sine", gain: .04, when: t });
+        t += DASH;
+      }
+      t += GAP;
+    }
+    t += LETTER_GAP;
+  }
+}
+
+function getPoints(){
+  if (game.meaningOpened) return 5;
+  if (game.hintOpened) return 7;
+  return 10;
+}
+
+function finishGame(){
+  $("progressFill").style.width = `100%`;
+  $("resultScore").textContent = `${game.score} P`;
+  $("resultText").textContent =
+    `Seçilen dil: ${LANGS[game.lang]?.name || game.lang}. ` +
+    `Seçilen seviye: ${LEVELS[game.level]?.name || game.level}. ` +
+    `Toplam ${TOTAL_ROUNDS} tur sonunda bu puanı topladın.`;
+  $("resultModal").classList.add("show");
+}
+
+function nextRound(){
+  if (game.round >= TOTAL_ROUNDS) {
+    finishGame();
+    return;
+  }
+  game.round += 1;
+  renderQuestion();
+}
+
+function checkAnswer(){
+  const user = normalize($("answerInput").value);
+  const correct = normalize(game.current?.w || "");
+
+  if (!user) {
+    setFeedback("Önce bir cevap yaz.", "bad");
+    return;
+  }
+
+  if (user === correct) {
+    playCorrectFx();
+    const pts = getPoints();
+    game.score += pts;
+    updateHud();
+    setFeedback(`Doğru bildin. +${pts} puan kazandın.`, "ok");
+    setStatus("DOĞRU CEVAP");
+
+    setTimeout(() => {
+      nextRound();
+    }, 850);
+  } else {
+    playWrongFx();
+    setFeedback("Olmadı. Tekrar dene, ipucu al ya da anlamı aç.", "bad");
+    setStatus("TEKRAR DENE");
+  }
+}
+
+function openHint(){
+  if (!game.current) return;
+  playHintFx();
+  game.hintOpened = true;
+  $("hintCard").classList.add("show");
+  setFeedback("Türkçe ipucu açıldı. Bu turdan alacağın puan azaldı.", "info");
+}
+
+function openMeaning(){
+  if (!game.current) return;
+  playRevealFx();
+  game.hintOpened = true;
+  game.meaningOpened = true;
+  $("hintCard").classList.add("show");
+  $("meaningCard").classList.add("show");
+  setFeedback("Türkçe anlam açıldı. Artık çözmen daha kolay.", "info");
+}
+
+function skipRound(){
+  playWrongFx();
+  setFeedback(`Pas geçildi. Doğru cevap: ${game.current?.w || "-"}`, "bad");
+  setStatus("PAS GEÇİLDİ");
+
+  setTimeout(() => {
+    nextRound();
+  }, 1100);
+}
+
+function prepareStart(){
+  game.lang = game.selectedLang;
+  localStorage.setItem(GAME_LANG_KEY, game.lang);
+  $("startModal").classList.remove("show");
+  $("rulesModal").classList.add("show");
+}
+
+function openDifficulty(){
+  $("rulesModal").classList.remove("show");
+  $("difficultyModal").classList.add("show");
+}
+
+function beginGame(){
+  game.level = game.selectedLevel;
+  localStorage.setItem(GAME_LEVEL_KEY, game.level);
+
+  game.round = 1;
+  game.score = 0;
+  game.usedWords.clear();
+  game.poolItems = shuffle(getFilteredPool(game.lang, game.level));
+
+  $("difficultyModal").classList.remove("show");
+  $("resultModal").classList.remove("show");
+
+  renderQuestion();
+  updateHud();
+}
+
+$("startBtn").onclick = prepareStart;
+$("rulesOkBtn").onclick = openDifficulty;
+$("difficultyBtn").onclick = beginGame;
+
+$("btnCheck").onclick = checkAnswer;
+$("btnReplayAudio").onclick = () => playMorseAudio($("morseCode").textContent);
+$("btnHint").onclick = openHint;
+$("btnMeaning").onclick = openMeaning;
+$("btnSkip").onclick = skipRound;
+
+$("btnReplay").onclick = () => {
+  $("resultModal").classList.remove("show");
+  $("startModal").classList.add("show");
+};
+
+$("btnBack").onclick = () => {
+  location.href = "/pages/games.html";
+};
+
+$("answerInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") checkAnswer();
+});
+
+window.addEventListener("load", () => {
+  renderLangs();
+  renderLevels();
+  updateHud();
+  setStatus("MORS KODUNU DİNLE VE ÇÖZ");
+  setFeedback("Hazırsan kodu dinle ve cevapla.", "info");
+});
+</script>
 </body>
-</html>
+  </html>
