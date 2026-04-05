@@ -13,6 +13,7 @@ const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
 
 const API_BASE = "https://italky-api.onrender.com";
+const OFFLINE_FACE_URL = "/pages/offline_facetoface.html";
 const $ = (id) => document.getElementById(id);
 
 const BCP = {
@@ -166,6 +167,9 @@ const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const settingsBtn = $("settingsBtn");
+const modeFlag = $("modeFlag");
+const modeFlagTxt = $("modeFlagTxt");
+const miniToast = $("miniToast");
 
 const uiModal = $("uiModal");
 const uiModalTitle = $("uiModalTitle");
@@ -195,6 +199,27 @@ let latestPreviewTranscript = "";
 let recognitionFinishedByUser = false;
 let recognitionSessionId = 0;
 let typewriterRunId = 0;
+
+function showToast(message = "") {
+  if (!miniToast) return;
+  miniToast.textContent = String(message || "");
+  miniToast.classList.add("show");
+  clearTimeout(window.__faceToastTimer);
+  window.__faceToastTimer = setTimeout(() => {
+    miniToast.classList.remove("show");
+  }, 1800);
+}
+
+function refreshModeFlag() {
+  if (!modeFlag || !modeFlagTxt) return;
+  const online = navigator.onLine;
+  modeFlag.classList.toggle("offline", !online);
+  modeFlagTxt.textContent = online ? "ONLINE" : "OFFLINE";
+}
+
+function goOfflinePage(forced = false) {
+  location.href = forced ? `${OFFLINE_FACE_URL}?mode=offline-forced` : OFFLINE_FACE_URL;
+}
 
 function showUiModal(message, title = "Jeton Gerekli") {
   if (!uiModal) return;
