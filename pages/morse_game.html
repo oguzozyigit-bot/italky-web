@@ -127,6 +127,21 @@ body{
   font-size:13px;
 }
 
+.progressBar{
+  height:10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.progressFill{
+  height:100%;
+  width:0%;
+  background:var(--grad);
+  transition:.25s ease;
+}
+
 .morseBoard{
   border-radius:22px;
   padding:18px 14px;
@@ -269,21 +284,6 @@ body{
 .feedback.ok{ color:var(--green); }
 .feedback.bad{ color:#ff8ba7; }
 .feedback.info{ color:var(--cyan); }
-
-.progressBar{
-  height:10px;
-  border-radius:999px;
-  background:rgba(255,255,255,.06);
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,.08);
-}
-
-.progressFill{
-  height:100%;
-  width:0%;
-  background:var(--grad);
-  transition:.25s ease;
-}
 
 .modal{
   position:fixed;
@@ -635,6 +635,7 @@ const game = {
 };
 
 let audioCtx = null;
+
 function getAudioCtx(){
   try{
     if(!audioCtx){
@@ -647,6 +648,7 @@ function getAudioCtx(){
     return null;
   }
 }
+
 async function unlockAudio(){
   try{
     const ctx = getAudioCtx();
@@ -655,40 +657,55 @@ async function unlockAudio(){
     }
   }catch{}
 }
-function beep({freq=650,duration=.08,type="sine",gain=.03,when=0}){
+
+function beep({freq=780,duration=.12,type="square",gain=.16,when=0}){
   const ctx = getAudioCtx();
   if(!ctx) return;
+
   if(ctx.state === "suspended"){
     ctx.resume().catch(() => {});
   }
+
   const now = ctx.currentTime + when;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
+
   osc.type = type;
   osc.frequency.setValueAtTime(freq, now);
-  g.gain.setValueAtTime(.0001, now);
-  g.gain.exponentialRampToValueAtTime(gain, now + .01);
-  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
-  osc.connect(g); g.connect(ctx.destination);
-  osc.start(now); osc.stop(now + duration + .02);
+
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(gain * 0.96, now + Math.max(0.03, duration - 0.03));
+  g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  osc.connect(g);
+  g.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration + 0.03);
 }
+
 function playTapFx() {
-  beep({ freq: 620, duration: .05, type: "triangle", gain: .035 });
+  beep({ freq: 760, duration: .07, type: "triangle", gain: .10 });
 }
+
 function playCorrectFx() {
-  beep({ freq: 520, duration: .08, type: "triangle", gain: .05 });
-  beep({ freq: 760, duration: .10, type: "triangle", gain: .05, when: .08 });
+  beep({ freq: 620, duration: .09, type: "triangle", gain: .13 });
+  beep({ freq: 920, duration: .11, type: "triangle", gain: .14, when: .08 });
 }
+
 function playWrongFx() {
-  beep({ freq: 220, duration: .10, type: "sawtooth", gain: .05 });
-  beep({ freq: 170, duration: .12, type: "sawtooth", gain: .04, when: .06 });
+  beep({ freq: 250, duration: .11, type: "sawtooth", gain: .14 });
+  beep({ freq: 190, duration: .13, type: "sawtooth", gain: .13, when: .07 });
 }
+
 function playHintFx() {
-  beep({ freq: 440, duration: .08, type: "triangle", gain: .04 });
+  beep({ freq: 520, duration: .10, type: "triangle", gain: .12 });
 }
+
 function playRevealFx() {
-  beep({ freq: 700, duration: .08, type: "square", gain: .04 });
-  beep({ freq: 500, duration: .10, type: "triangle", gain: .04, when: .07 });
+  beep({ freq: 860, duration: .10, type: "square", gain: .13 });
+  beep({ freq: 620, duration: .12, type: "triangle", gain: .12, when: .07 });
 }
 
 ["click","touchstart","pointerdown"].forEach(evt => {
@@ -832,13 +849,17 @@ function renderQuestion(){
   updateHud();
   setStatus("MORS KODUNU DİNLE VE ÇÖZ");
   setFeedback("Hazırsan kodu dinle ve cevapla.", "info");
+
+  setTimeout(() => {
+    playMorseAudio($("morseCode").textContent);
+  }, 180);
 }
 
-async function playMorseAudio(code){
-  const DOT = 0.08;
-  const DASH = 0.22;
-  const GAP = 0.08;
-  const LETTER_GAP = 0.18;
+function playMorseAudio(code){
+  const DOT = 0.12;
+  const DASH = 0.32;
+  const GAP = 0.09;
+  const LETTER_GAP = 0.22;
 
   const parts = String(code || "").split(" ");
   let t = 0;
@@ -848,10 +869,22 @@ async function playMorseAudio(code){
     for (let j = 0; j < group.length; j++) {
       const s = group[j];
       if (s === ".") {
-        beep({ freq: 680, duration: DOT, type: "sine", gain: .035, when: t });
+        beep({
+          freq: 880,
+          duration: DOT,
+          type: "square",
+          gain: 0.17,
+          when: t
+        });
         t += DOT;
       } else if (s === "-") {
-        beep({ freq: 680, duration: DASH, type: "sine", gain: .04, when: t });
+        beep({
+          freq: 880,
+          duration: DASH,
+          type: "square",
+          gain: 0.18,
+          when: t
+        });
         t += DASH;
       }
       t += GAP;
@@ -1000,4 +1033,4 @@ window.addEventListener("load", () => {
 });
 </script>
 </body>
-  </html>
+</html>
