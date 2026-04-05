@@ -603,6 +603,8 @@ function bind() {
     botRec = null;
     setTopListening(false);
     setBotListening(false);
+    topText = "";
+    botText = "";
     setHelpers("Konuşmak için mikrofona dokununuz.", "Konuşmak için mikrofona dokununuz.");
   });
 
@@ -637,6 +639,7 @@ function init() {
 
   updateLangLabels();
   setState("ready");
+  pointOrbTo("bot");
   setHelpers("Konuşmak için mikrofona dokununuz.", "Konuşmak için mikrofona dokununuz.");
   bind();
 }
