@@ -1,33 +1,27 @@
 // FILE: /js/ancestors_language_page.js
 
-import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
 import { commitUsage } from "/js/usage_meter.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
-const micBtn = $("micBtn");
-const sendBtn = $("sendBtn");
+const topBody = $("topBody");
+const botBody = $("botBody");
+const botMic = $("botMic");
+const topHelper = $("topHelper");
+const botHelper = $("botHelper");
 const clearBtn = $("clearBtn");
-const speakBtn = $("speakBtn");
-const copyBtn = $("copyBtn");
-const retryBtn = $("retryBtn");
-const inputPreview = $("inputPreview");
-const gokturkOutput = $("gokturkOutput");
-const latinOutput = $("latinOutput");
-const leftStatus = $("leftStatus");
-const rightStatus = $("rightStatus");
-const toastEl = $("toast");
+const homeLink = $("homeLink");
 
-const tokenBackdrop = $("tokenBackdrop");
-const tokenTitle = $("tokenTitle");
-const tokenText = $("tokenText");
-const tokenCancel = $("tokenCancel");
-const tokenOk = $("tokenOk");
+const uiModal = $("uiModal");
+const uiModalText = $("uiModalText");
+const uiModalGo = $("uiModalGo");
+const uiModalClose = $("uiModalClose");
 
-let recognition = null;
-let isListening = false;
+let recognizer = null;
+let listening = false;
 let currentAudio = null;
 let sourceText = "";
 let lastLatin = "";
@@ -55,49 +49,19 @@ const phraseMap = new Map([
   ["kutlu yurt", "kutluğ yurt"]
 ]);
 
-function toast(message = "") {
-  if (!toastEl) return;
-  toastEl.textContent = String(message || "");
-  toastEl.classList.add("show");
-  clearTimeout(window.__ancToastTimer);
-  window.__ancToastTimer = setTimeout(() => {
-    toastEl.classList.remove("show");
-  }, 1800);
-}
-
-function setLeftStatus(message = "") {
-  if (leftStatus) leftStatus.textContent = message;
-}
-
-function setRightStatus(message = "") {
-  if (rightStatus) rightStatus.textContent = message;
-}
-
 function normalizeInput(value) {
-  return String(value || "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return String(value || "").replace(/\s+/g, " ").trim();
 }
 
 function normalizeKey(value) {
-  return normalizeInput(value)
-    .toLowerCase()
-    .replaceAll("’", "'")
-    .replaceAll("‘", "'");
+  return normalizeInput(value).toLowerCase().replaceAll("’", "'").replaceAll("‘", "'");
 }
 
-function translitToRunes(text) {
-  const chars = Array.from(String(text || "").toLowerCase());
-  return chars.map((ch) => {
-    if (ch === " ") return " ";
-    if (".,!?;:".includes(ch)) return " · ";
-    return runeMap[ch] || ch;
-  }).join("");
-}
+function buildOldTurkic(text) {
+  const key = normalizeKey(text);
+  if (phraseMap.has(key)) return phraseMap.get(key);
 
-function wordLevelOldTurkic(text) {
   let t = normalizeInput(text).toLowerCase();
-
   const replacements = [
     [/tanrı/g, "teŋri"],
     [/gök/g, "kök"],
@@ -116,40 +80,22 @@ function wordLevelOldTurkic(text) {
     [/millet/g, "bodun"],
     [/vatan/g, "yurt"],
     [/ordu/g, "sü"],
-    [/bilge/g, "bilge"],
     [/kağan/g, "kağan"],
     [/kutlu/g, "kutluğ"],
     [/güçlü/g, "küçlüg"],
     [/iyi/g, "edgü"]
   ];
-
-  for (const [rx, val] of replacements) {
-    t = t.replace(rx, val);
-  }
-
+  for (const [rx, val] of replacements) t = t.replace(rx, val);
   return t;
 }
 
-function buildOldTurkic(text) {
-  const key = normalizeKey(text);
-  if (phraseMap.has(key)) return phraseMap.get(key);
-  return wordLevelOldTurkic(text);
-}
-
-function looksEnglish(text) {
-  const s = String(text || "").trim().toLowerCase();
-  if (!s) return false;
-  const hits = ["hello", "hi", "may", "god", "protect", "the", "turk", "how are you", "good", "welcome"];
-  let n = 0;
-  for (const w of hits) {
-    if (s.includes(w)) n++;
-  }
-  return n >= 2;
-}
-
-function renderInputPreview(text) {
-  const clean = normalizeInput(text);
-  inputPreview.textContent = clean || "Henüz konuşma alınmadı.";
+function translitToRunes(text) {
+  const chars = Array.from(String(text || "").toLowerCase());
+  return chars.map((ch) => {
+    if (ch === " ") return " ";
+    if (".,!?;:".includes(ch)) return " · ";
+    return runeMap[ch] || ch;
+  }).join("");
 }
 
 function stopAudio() {
@@ -161,9 +107,58 @@ function stopAudio() {
   } catch {}
   currentAudio = null;
 
-  try {
-    window.speechSynthesis?.cancel?.();
-  } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+}
+
+function setTopMessage(text) {
+  topBody.innerHTML = "";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble me is-latest";
+  bubble.innerHTML = `<div class="bubble-row"><span class="txt">${text}</span></div>`;
+  topBody.appendChild(bubble);
+}
+
+function setTopOutput(runes, latin) {
+  topBody.innerHTML = "";
+
+  const runeBubble = document.createElement("div");
+  runeBubble.className = "bubble me is-latest";
+  runeBubble.innerHTML = `<div class="bubble-row"><span class="txt">${runes}</span></div>`;
+
+  const latinBubble = document.createElement("div");
+  latinBubble.className = "bubble them";
+  latinBubble.innerHTML = `
+    <div class="bubble-row">
+      <span class="txt">${latin}</span>
+      <button class="spk-icon" id="speakLatinBtn" aria-label="Seslendir">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+          <path d="M16 8a4 4 0 0 1 0 8"></path>
+          <path d="M19 5a8 8 0 0 1 0 14"></path>
+        </svg>
+      </button>
+    </div>
+  `;
+
+  topBody.appendChild(runeBubble);
+  topBody.appendChild(latinBubble);
+
+  document.getElementById("speakLatinBtn")?.addEventListener("click", speakNow);
+}
+
+function setBottomMessage(text) {
+  botBody.innerHTML = "";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble me is-latest";
+  bubble.innerHTML = `<div class="bubble-row"><span class="txt">${text}</span></div>`;
+  botBody.appendChild(bubble);
+}
+
+function setHelpers(top, bottom, bottomWait = false) {
+  topHelper.textContent = top || "";
+  botHelper.textContent = bottom || "";
+  botHelper.className = `helper-text${bottomWait ? " helper-wait" : ""}`;
+  topHelper.className = "helper-text";
 }
 
 async function refreshHeaderTokens() {
@@ -203,51 +198,40 @@ async function getTokenBalance() {
   }
 }
 
-function showTokenPopup(message = "Ataların Dili dönüşümü için jeton gerekiyor.") {
-  if (tokenTitle) tokenTitle.textContent = "Jeton Gerekli";
-  if (tokenText) tokenText.textContent = message;
-  tokenBackdrop?.classList.add("show");
+function showUiModal(message) {
+  uiModalText.textContent = message;
+  uiModal.classList.add("open");
 }
 
-function closeTokenPopup() {
-  tokenBackdrop?.classList.remove("show");
+function closeUiModal() {
+  uiModal.classList.remove("open");
 }
 
-tokenCancel?.addEventListener("click", closeTokenPopup);
-tokenOk?.addEventListener("click", () => {
+uiModalGo?.addEventListener("click", () => {
   location.href = "/pages/jetonbuy.html";
 });
-tokenBackdrop?.addEventListener("click", (e) => {
-  if (e.target === tokenBackdrop) closeTokenPopup();
+uiModalClose?.addEventListener("click", closeUiModal);
+uiModal?.addEventListener("click", (e) => {
+  if (e.target === uiModal) closeUiModal();
 });
 
 async function ensureTranslationAccess() {
   const tokens = await getTokenBalance();
   if (tokens <= 0) {
-    showTokenPopup("Ataların Dili dönüşümü için jeton gerekiyor.");
+    showUiModal("Ataların Dili dönüşümü için jeton gerekiyor.");
     return false;
   }
   return true;
 }
 
-function animateOutputs(runes, latin) {
-  gokturkOutput.textContent = runes || "𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃";
-  latinOutput.textContent = latin || "türük bitig";
-}
-
 async function transformNow() {
   const rawText = normalizeInput(sourceText);
-  if (!rawText) {
-    toast("Önce konuşun");
-    return;
-  }
+  if (!rawText) return;
 
   const canRun = await ensureTranslationAccess();
   if (!canRun) return;
 
-  setLeftStatus("Metin alındı");
-  setRightStatus("Eski Türkçe hazırlanıyor...");
-  sendBtn.disabled = true;
+  setHelpers("Eski Türkçe hazırlanıyor...", "Lütfen bekleyiniz...", true);
 
   let finalLatin = buildOldTurkic(rawText);
   let finalRunes = translitToRunes(finalLatin);
@@ -270,31 +254,25 @@ async function transformNow() {
     });
 
     const json = await res.json().catch(() => ({}));
+    const aiLatin = String(
+      json?.latin_reading ||
+      json?.old_turkic_latin ||
+      json?.translated ||
+      json?.translation ||
+      ""
+    ).trim();
 
-    if (res.ok) {
-      const aiLatin = String(
-        json?.latin_reading ||
-        json?.old_turkic_latin ||
-        json?.translated ||
-        json?.translation ||
+    if (res.ok && aiLatin && !/\b(hello|hi|may|god|protect|the|turk)\b/i.test(aiLatin)) {
+      finalLatin = aiLatin;
+      finalRunes = String(
+        json?.gokturk_text ||
+        json?.old_turkic_runes ||
         ""
-      ).trim();
-
-      const safeLatin = aiLatin && !looksEnglish(aiLatin) ? aiLatin : "";
-      if (safeLatin) {
-        finalLatin = safeLatin;
-        finalRunes = String(
-          json?.gokturk_text ||
-          json?.old_turkic_runes ||
-          ""
-        ).trim() || translitToRunes(finalLatin);
-      }
+      ).trim() || translitToRunes(finalLatin);
     }
-  } catch (e) {
-    console.warn("[ancestors_language ai fallback]", e);
-  }
+  } catch {}
 
-  animateOutputs(finalRunes, finalLatin);
+  setTopOutput(finalRunes, finalLatin);
   lastLatin = finalLatin;
 
   try {
@@ -317,19 +295,17 @@ async function transformNow() {
     }
   } catch (e) {
     if (String(e?.code || "").includes("INSUFFICIENT_TOKENS")) {
-      showTokenPopup("Ataların Dili dönüşümü için jeton gerekiyor.");
-      sendBtn.disabled = false;
+      showUiModal("Ataların Dili dönüşümü için jeton gerekiyor.");
       return;
     }
-    console.error("[ancestors_language usage]", e);
   }
 
-  setRightStatus("Eski Türkçe hazır");
-  sendBtn.disabled = false;
+  setHelpers("Eski Türkçe hazır", "Konuşmak için mikrofona dokununuz.");
+  speakNow();
 }
 
 async function speakNow() {
-  const text = normalizeInput(lastLatin || latinOutput.textContent);
+  const text = normalizeInput(lastLatin);
   if (!text) return;
 
   stopAudio();
@@ -356,12 +332,9 @@ async function speakNow() {
       const audio = new Audio(`data:audio/mp3;base64,${json.audio_base64}`);
       currentAudio = audio;
       await audio.play();
-      setRightStatus("TTS ile seslendirildi");
       return;
     }
-  } catch (e) {
-    console.warn("[ancestors_language tts fallback]", e);
-  }
+  } catch {}
 
   try {
     const u = new SpeechSynthesisUtterance(text);
@@ -370,7 +343,6 @@ async function speakNow() {
     u.pitch = 0.96;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
-    setRightStatus("TTS ile seslendirildi");
   } catch {}
 }
 
@@ -385,9 +357,9 @@ function initRecognition() {
   rec.maxAlternatives = 1;
 
   rec.onstart = () => {
-    isListening = true;
-    micBtn.textContent = "⏹️ Durdur";
-    setLeftStatus("Dinliyorum...");
+    listening = true;
+    botMic.classList.add("listening");
+    setHelpers("Hazır", "Konuşuyorsunuz...");
   };
 
   rec.onresult = (e) => {
@@ -399,81 +371,58 @@ function initRecognition() {
 
     if (finalText.trim()) {
       sourceText = normalizeInput(sourceText + " " + finalText.trim());
-      renderInputPreview(sourceText);
-      setLeftStatus("Konuşma metne döküldü");
+      setBottomMessage(sourceText);
+      transformNow();
     }
   };
 
   rec.onerror = () => {
-    isListening = false;
-    micBtn.textContent = "🎙️ Konuş";
-    setLeftStatus("Mikrofon başlatılamadı");
+    listening = false;
+    botMic.classList.remove("listening");
+    setHelpers("Hazır", "Mikrofon başlatılamadı", true);
   };
 
   rec.onend = () => {
-    isListening = false;
-    micBtn.textContent = "🎙️ Konuş";
-    setLeftStatus("Hazır");
+    listening = false;
+    botMic.classList.remove("listening");
+    setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
   };
 
   return rec;
 }
 
-micBtn?.addEventListener("click", () => {
-  if (!recognition) recognition = initRecognition();
-  if (!recognition) {
-    toast("Bu cihazda konuşma algılama desteklenmiyor");
-    return;
-  }
+botMic?.addEventListener("click", () => {
+  if (!recognizer) recognizer = initRecognition();
+  if (!recognizer) return;
 
-  if (isListening) {
-    try { recognition.stop(); } catch {}
+  if (listening) {
+    try { recognizer.stop(); } catch {}
     return;
   }
 
   try {
-    recognition.start();
-  } catch {
-    setLeftStatus("Mikrofon başlatılamadı");
-  }
+    recognizer.start();
+  } catch {}
 });
-
-sendBtn?.addEventListener("click", transformNow);
-retryBtn?.addEventListener("click", transformNow);
 
 clearBtn?.addEventListener("click", () => {
   sourceText = "";
-  renderInputPreview(sourceText);
-  animateOutputs("𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃", "türük bitig");
   lastLatin = "";
-  setLeftStatus("Hazır");
-  setRightStatus("Çıktı burada görünecek");
   stopAudio();
+  setBottomMessage("Henüz konuşma alınmadı.");
+  setTopOutput("𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃", "türük bitig");
+  setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
 });
 
-copyBtn?.addEventListener("click", async () => {
-  const text = `${gokturkOutput.textContent}\n${latinOutput.textContent}`;
-  try {
-    await navigator.clipboard.writeText(text);
-    toast("Kopyalandı");
-  } catch {
-    toast("Kopyalanamadı");
-  }
+homeLink?.addEventListener("click", () => {
+  location.href = "/pages/home.html";
 });
-
-speakBtn?.addEventListener("click", speakNow);
 
 async function init() {
-  try {
-    mountShell({ scroll: "auto" });
-  } catch (e) {
-    console.warn("[ancestors_language shell]", e);
-  }
-
-  renderInputPreview(sourceText);
+  setBottomMessage("Henüz konuşma alınmadı.");
+  setTopOutput("𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃", "türük bitig");
+  setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
   await refreshHeaderTokens();
-  setLeftStatus("Hazır");
-  setRightStatus("Çıktı burada görünecek");
 }
 
 init();
