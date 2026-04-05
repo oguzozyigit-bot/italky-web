@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Sırr-ı Kadim</title>
+  <title>italkyAI • Tamga Mührü</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -38,7 +38,7 @@
       overflow:hidden;
       background:var(--bg);
       color:#fff;
-      font-family:Outfit, sans-serif;
+      font-family:Outfit,sans-serif;
     }
 
     body{
@@ -66,7 +66,7 @@
 
     .hud{
       display:grid;
-      grid-template-columns:repeat(4,1fr);
+      grid-template-columns:repeat(3,1fr);
       gap:6px;
       padding:8px;
       border-radius:18px;
@@ -78,7 +78,7 @@
     }
 
     .hudCard{
-      min-height:52px;
+      min-height:54px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.04);
@@ -148,6 +148,38 @@
       transition:.25s ease;
     }
 
+    .missionCard{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      padding:12px;
+      text-align:center;
+      flex:0 0 auto;
+    }
+
+    .missionTop{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:1.2px;
+      color:var(--gold);
+    }
+
+    .missionMeaning{
+      margin-top:6px;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:24px;
+      font-weight:900;
+      line-height:1.25;
+      letter-spacing:.02em;
+    }
+
+    .missionSub{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
     .stoneBoard{
       flex:0 0 auto;
       border-radius:22px;
@@ -172,7 +204,7 @@
     .excavateWrap{
       position:relative;
       width:100%;
-      aspect-ratio: 16 / 7.8;
+      aspect-ratio:16 / 8.6;
       border-radius:18px;
       overflow:hidden;
       border:1px solid rgba(255,255,255,.08);
@@ -193,57 +225,75 @@
       opacity:.55;
     }
 
-    .runeLayer{
+    .slotLayer{
       position:absolute;
       inset:0;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:8px;
-      padding:14px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
       align-items:center;
-      justify-items:center;
+      padding:14px;
+      pointer-events:none;
     }
 
-    .runeNode{
-      width:100%;
-      height:100%;
-      min-height:52px;
+    .slot{
+      flex:1 1 0;
+      max-width:86px;
+      min-width:48px;
+      height:96px;
       border-radius:16px;
-      border:1px dashed rgba(255,255,255,.08);
-      background:rgba(0,0,0,.08);
+      border:1px dashed rgba(255,255,255,.12);
+      background:rgba(0,0,0,.10);
       display:flex;
       align-items:center;
       justify-content:center;
       position:relative;
       transition:.18s ease;
+      pointer-events:auto;
     }
 
-    .runeNode.tappable{
-      cursor:pointer;
+    .slot.ready{
+      border-color:rgba(0,214,143,.22);
+      background:rgba(0,214,143,.05);
     }
 
-    .runeNode.active{
-      border-color:rgba(0,214,143,.26);
+    .slot.active{
+      border-color:rgba(0,214,143,.36);
       background:rgba(0,214,143,.10);
       box-shadow:0 0 0 1px rgba(0,214,143,.16) inset;
     }
 
-    .runeNode.wrong{
+    .slot.wrong{
       border-color:rgba(255,79,109,.28);
       background:rgba(255,79,109,.08);
     }
 
-    .runeGlyph{
-      font-size:34px;
-      line-height:1;
-      color:var(--ivory);
-      text-shadow:0 0 16px rgba(255,255,255,.10);
-      opacity:.18;
-      transition:.18s ease;
+    .slotGhost{
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:1px;
+      color:rgba(255,255,255,.24);
+      text-transform:uppercase;
+      position:absolute;
+      bottom:8px;
+      left:0;
+      right:0;
+      text-align:center;
     }
 
-    .runeNode.revealed .runeGlyph{
+    .slotRune{
+      font-size:40px;
+      line-height:1;
+      color:var(--ivory);
+      text-shadow:0 0 14px rgba(255,255,255,.08);
+      opacity:.0;
+      transform:scale(.8);
+      transition:.16s ease;
+    }
+
+    .slot.filled .slotRune{
       opacity:1;
+      transform:scale(1);
     }
 
     canvas#dustCanvas{
@@ -252,37 +302,69 @@
       width:100%;
       height:100%;
       touch-action:none;
+      z-index:4;
     }
 
-    .missionCard{
+    .bankPanel{
       border-radius:18px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.03);
-      padding:12px;
-      text-align:center;
+      padding:10px;
       flex:0 0 auto;
     }
 
-    .missionTop{
-      font-size:11px;
+    .bankTitle{
+      text-align:center;
+      font-size:10px;
       font-weight:900;
-      letter-spacing:1.2px;
-      color:var(--gold);
+      letter-spacing:2px;
+      opacity:.72;
+      margin-bottom:8px;
     }
 
-    .missionWord{
-      margin-top:4px;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:28px;
-      font-weight:900;
-      letter-spacing:.04em;
+    .bankGrid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
     }
 
-    .missionSub{
-      margin-top:6px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.5;
+    .bankPiece{
+      min-height:66px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      cursor:grab;
+      transition:.16s ease;
+      touch-action:none;
+    }
+
+    .bankPiece:active{
+      transform:scale(.98);
+      cursor:grabbing;
+    }
+
+    .bankPiece.used{
+      opacity:.22;
+      pointer-events:none;
+      filter:grayscale(.6);
+    }
+
+    .pieceRune{
+      font-size:30px;
+      line-height:1;
+      color:#fff;
+    }
+
+    .pieceLat{
+      font-size:10px;
+      font-weight:900;
+      color:rgba(255,255,255,.50);
+      letter-spacing:1px;
     }
 
     .btnRow{
@@ -495,14 +577,14 @@
       margin-top:12px;
     }
 
-    .langGrid{
+    .levelGrid{
       display:grid;
       grid-template-columns:repeat(2,1fr);
       gap:10px;
       margin:16px 0;
     }
 
-    .langBtn,.levelBtn{
+    .levelBtn{
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.12);
       color:#fff;
@@ -519,18 +601,14 @@
       font-weight:800;
     }
 
-    .langBtn:active,.levelBtn:active{
+    .levelBtn:active{
       transform:scale(.98);
     }
 
-    .langBtn.active,.levelBtn.active{
+    .levelBtn.active{
       border-color:rgba(0,214,143,.30);
       box-shadow:0 0 0 1px rgba(0,214,143,.24), 0 0 18px rgba(0,214,143,.12);
       background:rgba(0,214,143,.08);
-    }
-
-    .langBtn .flag{
-      font-size:26px;
     }
 
     .rulesList{
@@ -569,17 +647,20 @@
     }
 
     @media (max-width:420px){
-      .hud{
-        grid-template-columns:1fr 1fr;
-      }
       .btnRow{
         grid-template-columns:1fr;
+      }
+      .bankGrid{
+        grid-template-columns:repeat(4,1fr);
       }
       .legendGrid{
         grid-template-columns:repeat(4,minmax(0,1fr));
       }
-      .missionWord{
-        font-size:24px;
+      .missionMeaning{
+        font-size:22px;
+      }
+      .slot{
+        height:84px;
       }
     }
 
@@ -587,8 +668,9 @@
       .hudCard{ min-height:46px; }
       .hudBig{ font-size:14px; }
       .stoneBoard{ padding:10px; }
-      .runeGlyph{ font-size:30px; }
-      .choiceGrid .runeBig{ font-size:32px; }
+      .slot{ height:82px; }
+      .slotRune{ font-size:34px; }
+      .pieceRune{ font-size:26px; }
       .btnMain{ min-height:40px; font-size:11px; }
       .legendRune{ font-size:21px; }
     }
@@ -599,10 +681,6 @@
 <main id="pageContent">
   <div class="app">
     <div class="hud">
-      <div class="hudCard">
-        <div class="hudBig" id="langDisp">🇹🇷 TR</div>
-        <div class="hudSmall">ARAYÜZ</div>
-      </div>
       <div class="hudCard">
         <div class="hudBig" id="levelDisp">KOLAY</div>
         <div class="hudSmall">SEVİYE</div>
@@ -618,25 +696,30 @@
     </div>
 
     <div class="main">
-      <div class="statusTxt" id="statusTxt">TOZU TEMİZLE, YAZITI ORTAYA ÇIKAR</div>
+      <div class="statusTxt" id="statusTxt">TOZU TEMİZLE, SONRA TAMGALARI YERLEŞTİR</div>
 
       <div class="progressBar">
         <div class="progressFill" id="progressFill"></div>
       </div>
 
       <div class="missionCard">
-        <div class="missionTop">HEDEF KELİME</div>
-        <div class="missionWord" id="missionWord">TENGRI</div>
-        <div class="missionSub" id="missionSub">Önce taşı kazı, sonra ortaya çıkan tamgaları soldan sağa doğru sırayla mühürle.</div>
+        <div class="missionTop">KAVRAM</div>
+        <div class="missionMeaning" id="missionMeaning">Üzerinde yürünür, bir yere götürür.</div>
+        <div class="missionSub" id="missionSub">Önce taşı kazı. Sonra boş yuvaları doğru tamgalarla doldur.</div>
       </div>
 
       <div class="stoneBoard">
         <div class="stoneTitle">DİJİTAL YAZIT</div>
         <div class="excavateWrap" id="excavateWrap">
           <div class="stoneCracks"></div>
-          <div class="runeLayer" id="runeLayer"></div>
+          <div class="slotLayer" id="slotLayer"></div>
           <canvas id="dustCanvas"></canvas>
         </div>
+      </div>
+
+      <div class="bankPanel">
+        <div class="bankTitle">TAMGA PARÇALARI</div>
+        <div class="bankGrid" id="bankGrid"></div>
       </div>
 
       <div class="btnRow">
@@ -671,12 +754,10 @@
 
 <div class="modal show" id="startModal">
   <div class="cardModal">
-    <h2 style="color:var(--turk-blue); margin:0;">SIRR-I KADİM</h2>
+    <h2 style="color:var(--turk-blue); margin:0;">TAMGA MÜHRÜ</h2>
     <p style="opacity:.8; line-height:1.6; font-weight:700; margin:12px 0 0;">
-      Arayüz dilini seç. Sonra kadim yazıtın üstündeki tozu kaldırıp tamgaları doğru sırayla aktive edeceksin.
+      Bu oyunda cevap hazır verilmez. Sana sadece kavram sunulur. Sen taşı kazır, tamgaları doğru sırayla yuvalara yerleştirerek yazıtı tamamlarsın.
     </p>
-
-    <div class="langGrid" id="langGrid"></div>
     <button class="mainBtn" id="startBtn">DEVAM ET</button>
   </div>
 </div>
@@ -685,12 +766,13 @@
   <div class="cardModal">
     <h2 style="color:var(--gold); margin:0;">KURALLAR</h2>
     <ul class="rulesList">
-      <li>Önce arayüz dilini seçersin.</li>
-      <li>Taş üzerindeki tozu parmağınla temizleyerek tamgaları ortaya çıkarırsın.</li>
-      <li>Görünen tamgaları soldan sağa doğru, hedef kelime sırasına uygun şekilde dokunarak aktive edersin.</li>
-      <li>Doğru sıra tuttuğunda yazıt çözülür ve puan kazanırsın.</li>
+      <li>Önce zorluk seçersin.</li>
+      <li>Her turda sana bir kelimenin kendisi değil, anlamı verilir.</li>
+      <li>Taş üstündeki tozu kaldırarak boş yazıt yuvalarını ortaya çıkarırsın.</li>
+      <li>Alttaki tamga parçalarını sürükleyip doğru yuvalara bırakırsın.</li>
+      <li>Yanlış tamga yanlış yuvaya bırakılırsa taş reddeder.</li>
+      <li>Doğru dizilim tamamlanınca yazıt çözülür ve puan kazanırsın.</li>
       <li>İpucu açarsan puanın biraz düşer.</li>
-      <li>Yanlış mühürleme denemesi sırayı bozar, ama oyundan atmaz; yeniden deneyebilirsin.</li>
     </ul>
     <button class="mainBtn" id="rulesBtn">ANLADIM, DEVAM ET</button>
   </div>
@@ -700,17 +782,17 @@
   <div class="cardModal">
     <h2 style="color:var(--turk-blue); margin:0;">ZORLUK SEVİYESİ</h2>
     <p style="opacity:.8; line-height:1.6; font-weight:700; margin:12px 0 0;">
-      Kolay modda kısa kelimeler, zorda daha uzun ve daha çok tamga gelir.
+      Kolay modda kısa kelimeler, zorda daha uzun ve daha zor dizilimler gelir.
     </p>
 
-    <div class="langGrid" id="difficultyGrid"></div>
+    <div class="levelGrid" id="difficultyGrid"></div>
     <button class="mainBtn" id="difficultyBtn">OYUNU BAŞLAT</button>
   </div>
 </div>
 
 <div class="modal" id="resultModal">
   <div class="cardModal">
-    <h2 id="resultTitle" style="margin:0;">YAZIT ÇÖZÜLDÜ</h2>
+    <h2 id="resultTitle" style="margin:0;">YAZIT TAMAMLANDI</h2>
     <div class="resultStat" id="resultStats">Skor: 0</div>
     <div class="topActions">
       <button class="secondaryBtn" id="retryBtn">TEKRAR OYNA</button>
@@ -725,23 +807,13 @@
   try{
     mountShell({ scroll:"none" });
   }catch(e){
-    console.warn("[atalarin_dili_sirri shell]", e);
+    console.warn("[tamga_muhru shell]", e);
   }
 
   const $ = (id) => document.getElementById(id);
 
-  const UI_LANG_KEY = "italky_sirri_kadim_ui_lang";
-  const LEVEL_KEY = "italky_sirri_kadim_level";
-  const BEST_KEY = "italky_sirri_kadim_best";
-
-  const LANGS = {
-    tr:{ name:"Türkçe", flag:"🇹🇷" },
-    en:{ name:"English", flag:"🇬🇧" },
-    de:{ name:"Deutsch", flag:"🇩🇪" },
-    fr:{ name:"Français", flag:"🇫🇷" },
-    it:{ name:"Italiano", flag:"🇮🇹" },
-    es:{ name:"Español", flag:"🇪🇸" }
-  };
+  const LEVEL_KEY = "italky_tamga_muhru_level";
+  const BEST_KEY = "italky_tamga_muhru_best";
 
   const LEVELS = {
     easy:{ name:"Kolay", desc:"3-4 harf", min:3, max:4 },
@@ -777,25 +849,23 @@
   };
 
   const WORD_BANK = [
-    { latin:"ATA", tr:"Ata / kök / geçmiş", info:"Ataların izine dokunma duygusunu temsil eder." },
-    { latin:"YOL", tr:"Yol / yön", info:"Göç, yön bulma ve ilerleme kavramını çağrıştırır." },
-    { latin:"KUN", tr:"Gün / güneş", info:"Eski Türkçe ses düzenine yakın kısa yapı." },
-    { latin:"SU", tr:"Su", info:"En temel yaşam kavramlarından biri." },
-    { latin:"TAS", tr:"Taş", info:"Yazıt ve anıt fikrine doğrudan bağ kurar." },
-    { latin:"TEN", tr:"Ten / beden", info:"Ses ve beden bağını hissettirir." },
-    { latin:"TENGRI", tr:"Tanrı / Gök", info:"Göktürk yazıtları çağrışımında en güçlü kelimelerden biri." },
-    { latin:"KAGAN", tr:"Kağan", info:"Kadim iktidar ve devlet kavramı." },
-    { latin:"TAMGA", tr:"Mühür / işaret", info:"Ataların Dili oyun dünyasının temel kavramı." },
-    { latin:"BITIG", tr:"Yazı / kitap / kayıt", info:"Eski Türkçe yazı kültürünün kalbine dokunur." },
-    { latin:"YURT", tr:"Yurt / vatan", info:"Kültürel aidiyet duygusu taşır." },
-    { latin:"OGUZ", tr:"Oğuz", info:"Tarihsel topluluk ve soy bağını çağrıştırır." },
-    { latin:"ALP", tr:"Yiğit / kahraman", info:"Kısa ama güçlü tarihsel ses." },
-    { latin:"URUN", tr:"Yer / konum", info:"Mekân hissi taşıyan kısa yapı." }
+    { latin:"ATA", clue:"Geçmişten gelen soy ve kök", hint:"Ataların kendisi", info:"Ata, kök ve geçmiş bağlantısını temsil eder." },
+    { latin:"YOL", clue:"Üzerinde yürünür, bir yere götürür", hint:"Yön veren güzergâh", info:"Yol; yön, hareket ve ulaşım fikrini taşır." },
+    { latin:"TAS", clue:"Yazıtın kazındığı sert yüzey", hint:"Ağır ve sert nesne", info:"Taş, yazıt kültürünün temel yüzeyidir." },
+    { latin:"SU", clue:"Yaşam için vazgeçilmez sıvı", hint:"İçilmeden yaşanmaz", info:"Su, en temel yaşam kavramlarından biridir." },
+    { latin:"KUN", clue:"Aydınlık zamanı anlatan eski ses", hint:"Güne bağlı zaman", info:"Kün/Kun, gün ve aydınlık çağrışımı taşır." },
+    { latin:"TEN", clue:"Bedenin dış yüzeyi", hint:"Deriye yakın anlam", info:"Ten, bedensel varlık hissi taşır." },
+    { latin:"ALP", clue:"Yiğit ve kahraman kişi", hint:"Cesur savaşçı", info:"Alp, eski Türk kültüründe yiğitlik unvanıdır." },
+    { latin:"YURT", clue:"Vatan, yaşanılan yer", hint:"İnsanın aidiyet duyduğu yer", info:"Yurt, mekân ve aidiyet duygusunu temsil eder." },
+    { latin:"OGUZ", clue:"Tarihsel bir Türk topluluğu", hint:"Boylar birliğini çağrıştırır", info:"Oğuz, tarihsel ve kültürel bağ taşıyan güçlü bir addır." },
+    { latin:"BITIG", clue:"Yazı, kayıt veya kitap fikri", hint:"Kaleme alınan şey", info:"Bitig, yazı ve kayıt kültürünün merkezindedir." },
+    { latin:"TAMGA", clue:"İşaret, mühür, damga", hint:"Bir şeyi tanımlayan sembol", info:"Tamga, kimlik ve işaret anlamı taşır." },
+    { latin:"KAGAN", clue:"Eski Türklerde hükümdar", hint:"Devletin en üst yöneticisi", info:"Kağan, tarihsel yönetim ve güç unvanıdır." },
+    { latin:"TENGRI", clue:"Gök, kutsal güç, tanrısal kavram", hint:"Yüce ve göksel varlık", info:"Tengri, Göktürk çağrışımında en güçlü kavramlardan biridir." },
+    { latin:"URUN", clue:"Yer, konum, bulunulan nokta", hint:"Mekânsal anlam taşır", info:"Urun, eski kullanımda yer ve konum hissi verir." }
   ].filter(item => item.latin.split("").every(ch => RUNE_MAP[ch]));
 
   const state = {
-    uiLang: localStorage.getItem(UI_LANG_KEY) || "tr",
-    selectedUiLang: localStorage.getItem(UI_LANG_KEY) || "tr",
     level: localStorage.getItem(LEVEL_KEY) || "easy",
     selectedLevel: localStorage.getItem(LEVEL_KEY) || "easy",
     round: 1,
@@ -806,8 +876,7 @@
     used: new Set(),
     hintOpened: false,
     revealReady: false,
-    solvedCount: 0,
-    revealThreshold: 0.48,
+    dragPiece: null,
     legendPlaying: false
   };
 
@@ -817,7 +886,6 @@
   let isScratching = false;
   let dustW = 0;
   let dustH = 0;
-  let scratchStats = { revealed: 0, total: 1 };
 
   function getAudioCtx(){
     try{
@@ -854,7 +922,6 @@
 
     osc.type = type;
     osc.frequency.setValueAtTime(freq, now);
-
     g.gain.setValueAtTime(.0001, now);
     g.gain.exponentialRampToValueAtTime(gain, now + .01);
     g.gain.exponentialRampToValueAtTime(.0001, now + duration);
@@ -866,23 +933,23 @@
   }
 
   function playTapFx(){
-    beep({ freq: 760, duration: .06, type: "triangle", gain: .06 });
+    beep({ freq:760, duration:.06, type:"triangle", gain:.06 });
   }
 
   function playCorrectFx(){
-    beep({ freq: 520, duration: .08, type: "triangle", gain: .07 });
-    beep({ freq: 740, duration: .09, type: "triangle", gain: .07, when: .07 });
-    beep({ freq: 960, duration: .10, type: "triangle", gain: .07, when: .14 });
+    beep({ freq:520, duration:.08, type:"triangle", gain:.07 });
+    beep({ freq:740, duration:.09, type:"triangle", gain:.07, when:.07 });
+    beep({ freq:960, duration:.10, type:"triangle", gain:.07, when:.14 });
   }
 
   function playWrongFx(){
-    beep({ freq: 210, duration: .11, type: "sawtooth", gain: .07 });
-    beep({ freq: 170, duration: .12, type: "sawtooth", gain: .06, when: .06 });
+    beep({ freq:210, duration:.11, type:"sawtooth", gain:.07 });
+    beep({ freq:170, duration:.12, type:"sawtooth", gain:.06, when:.06 });
   }
 
   function playRevealFx(){
-    beep({ freq: 430, duration: .10, type: "triangle", gain: .06 });
-    beep({ freq: 620, duration: .12, type: "triangle", gain: .06, when: .08 });
+    beep({ freq:430, duration:.10, type:"triangle", gain:.06 });
+    beep({ freq:620, duration:.12, type:"triangle", gain:.06, when:.08 });
   }
 
   ["click","touchstart","pointerdown"].forEach(evt => {
@@ -903,10 +970,7 @@
 
   function pickWord(){
     if (!state.pool.length) return null;
-
-    if (state.used.size >= state.pool.length) {
-      state.used.clear();
-    }
+    if (state.used.size >= state.pool.length) state.used.clear();
 
     let chosen = null;
     let guard = 0;
@@ -919,12 +983,10 @@
       }
       guard++;
     }
-
     return chosen || state.pool[0];
   }
 
   function updateHud(){
-    $("langDisp").textContent = `${LANGS[state.uiLang]?.flag || "🌐"} ${state.uiLang.toUpperCase()}`;
     $("levelDisp").textContent = (LEVELS[state.level]?.name || "KOLAY").toUpperCase();
     $("scoreDisp").textContent = String(state.score);
     $("roundDisp").textContent = `${state.round}/${TOTAL_ROUNDS}`;
@@ -939,23 +1001,6 @@
     const el = $("feedback");
     el.textContent = text;
     el.className = `feedback ${type}`;
-  }
-
-  function renderLangs(){
-    $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
-      <button class="langBtn ${state.selectedUiLang===code ? "active" : ""}" data-lang="${code}" type="button">
-        <div class="flag">${meta.flag}</div>
-        <div>${meta.name}</div>
-      </button>
-    `).join("");
-
-    $("langGrid").querySelectorAll(".langBtn").forEach(btn => {
-      btn.onclick = () => {
-        playTapFx();
-        state.selectedUiLang = btn.dataset.lang;
-        renderLangs();
-      };
-    });
   }
 
   function renderLevels(){
@@ -995,16 +1040,76 @@
     });
   }
 
-  function buildRuneNodes(word){
-    $("runeLayer").innerHTML = word.split("").map((ch, idx) => `
-      <button class="runeNode" type="button" data-idx="${idx}" data-char="${ch}">
-        <div class="runeGlyph">${RUNE_MAP[ch]?.rune || "?"}</div>
-      </button>
+  function buildSlots(word){
+    $("slotLayer").innerHTML = word.split("").map((ch, idx) => `
+      <div class="slot" data-idx="${idx}" data-char="${ch}">
+        <div class="slotRune"></div>
+        <div class="slotGhost">${idx + 1}</div>
+      </div>
     `).join("");
 
-    $("runeLayer").querySelectorAll(".runeNode").forEach(btn => {
-      btn.onclick = () => handleRuneTap(btn);
+    $("slotLayer").querySelectorAll(".slot").forEach(slot => {
+      slot.addEventListener("dragover", (e) => {
+        if (!state.revealReady) return;
+        e.preventDefault();
+        slot.classList.add("ready");
+      });
+
+      slot.addEventListener("dragleave", () => {
+        slot.classList.remove("ready");
+      });
+
+      slot.addEventListener("drop", (e) => {
+        if (!state.revealReady) return;
+        e.preventDefault();
+        slot.classList.remove("ready");
+        const pieceId = e.dataTransfer.getData("text/plain");
+        placePiece(pieceId, slot);
+      });
+
+      slot.addEventListener("pointerup", () => {
+        if (!state.revealReady || !state.dragPiece) return;
+        placePiece(state.dragPiece, slot);
+      });
     });
+  }
+
+  function buildBank(word){
+    const letters = word.split("");
+    const extraPool = Object.keys(RUNE_MAP).filter(ch => !letters.includes(ch));
+    const extras = shuffle(extraPool).slice(0, Math.max(2, Math.min(4, letters.length)));
+    const bankLetters = shuffle([...letters, ...extras]);
+
+    $("bankGrid").innerHTML = bankLetters.map((ch, idx) => `
+      <div class="bankPiece" draggable="true" data-piece-id="piece_${idx}" data-char="${ch}">
+        <div class="pieceRune">${RUNE_MAP[ch].rune}</div>
+        <div class="pieceLat">${RUNE_MAP[ch].sound}</div>
+      </div>
+    `).join("");
+
+    $("bankGrid").querySelectorAll(".bankPiece").forEach(piece => {
+      piece.addEventListener("dragstart", (e) => {
+        if (!state.revealReady || piece.classList.contains("used")) {
+          e.preventDefault();
+          return;
+        }
+        state.dragPiece = piece.dataset.pieceId;
+        e.dataTransfer.setData("text/plain", piece.dataset.pieceId);
+      });
+
+      piece.addEventListener("pointerdown", () => {
+        if (!state.revealReady || piece.classList.contains("used")) return;
+        state.dragPiece = piece.dataset.pieceId;
+      });
+    });
+  }
+
+  function resetRoundState(){
+    state.hintOpened = false;
+    state.revealReady = false;
+    state.dragPiece = null;
+    $("hintCard").classList.remove("show");
+    $("infoCard").classList.remove("show");
   }
 
   function renderQuestion(){
@@ -1014,21 +1119,17 @@
       return;
     }
 
-    state.hintOpened = false;
-    state.revealReady = false;
-    state.solvedCount = 0;
+    resetRoundState();
 
-    $("missionWord").textContent = state.current.latin;
-    $("hintCard").classList.remove("show");
-    $("infoCard").classList.remove("show");
-    $("hintText").textContent = state.current.tr;
-    $("infoText").textContent = state.current.info;
-
-    buildRuneNodes(state.current.latin);
+    $("missionMeaning").textContent = state.current.clue;
+    $("hintText").textContent = state.current.hint;
+    $("infoText").textContent = `${state.current.latin} → ${state.current.info}`;
+    buildSlots(state.current.latin);
+    buildBank(state.current.latin);
     resetDust();
 
     updateHud();
-    setStatus("TOZU TEMİZLE, YAZITI ORTAYA ÇIKAR");
+    setStatus("TOZU TEMİZLE, SONRA TAMGALARI YERLEŞTİR");
     setFeedback("Kazı başlasın. Parmakla taşı temizle.", "info");
   }
 
@@ -1072,34 +1173,17 @@
       dustCtx.fillRect(Math.random()*dustW, Math.random()*dustH, 24 + Math.random()*60, 3 + Math.random()*8);
     }
     dustCtx.globalAlpha = 1;
-
-    scratchStats.total = dustW * dustH;
-    scratchStats.revealed = 0;
   }
 
   function resetDust(){
     resizeDustCanvas();
     fillDust();
     state.revealReady = false;
-    $("runeLayer").querySelectorAll(".runeNode").forEach(n => {
-      n.classList.remove("revealed","active","wrong","tappable");
-      n.style.pointerEvents = "none";
+    $("slotLayer").querySelectorAll(".slot").forEach(slot => {
+      slot.classList.remove("filled","ready","active","wrong");
+      const runeEl = slot.querySelector(".slotRune");
+      runeEl.textContent = "";
     });
-  }
-
-  function revealRunesIfReady(){
-    if (state.revealReady) return;
-    const ratio = getRevealRatio();
-    if (ratio >= state.revealThreshold) {
-      state.revealReady = true;
-      $("runeLayer").querySelectorAll(".runeNode").forEach(n => {
-        n.classList.add("revealed","tappable");
-        n.style.pointerEvents = "auto";
-      });
-      playRevealFx();
-      setStatus("ŞİMDİ TAMGALARI SIRAYLA MÜHÜRLE");
-      setFeedback("Tamgalar görünür oldu. Soldan sağa doğru sırayla dokun.", "ok");
-    }
   }
 
   function eraseAt(x, y){
@@ -1115,6 +1199,27 @@
       dustCtx.fill();
     }
     dustCtx.globalCompositeOperation = "source-over";
+  }
+
+  function getRevealRatio(){
+    if (!dustCtx) return 0;
+    const img = dustCtx.getImageData(0, 0, dustW, dustH).data;
+    let transparent = 0;
+
+    for (let i = 3; i < img.length; i += 4) {
+      if (img[i] < 30) transparent++;
+    }
+    return transparent / (img.length / 4);
+  }
+
+  function maybeEnablePlacement(){
+    if (state.revealReady) return;
+    if (getRevealRatio() >= 0.48) {
+      state.revealReady = true;
+      playRevealFx();
+      setStatus("ŞİMDİ TAMGALARI YUVALARA YERLEŞTİR");
+      setFeedback("Cevap görünmez. Kavrama göre doğru tamgaları sürükleyip boş yuvalara bırak.", "ok");
+    }
   }
 
   function eventPos(evt){
@@ -1134,7 +1239,7 @@
       isScratching = true;
       const p = eventPos(evt);
       eraseAt(p.x, p.y);
-      revealRunesIfReady();
+      maybeEnablePlacement();
     };
 
     const move = (evt) => {
@@ -1142,12 +1247,12 @@
       evt.preventDefault();
       const p = eventPos(evt);
       eraseAt(p.x, p.y);
-      revealRunesIfReady();
+      maybeEnablePlacement();
     };
 
     const end = () => {
       isScratching = false;
-      revealRunesIfReady();
+      maybeEnablePlacement();
     };
 
     dustCanvas.addEventListener("mousedown", start);
@@ -1159,16 +1264,57 @@
     window.addEventListener("touchend", end, { passive:false });
   }
 
-  function getRevealRatio(){
-    if (!dustCtx) return 0;
-    const img = dustCtx.getImageData(0, 0, dustW, dustH).data;
-    let transparent = 0;
+  function placePiece(pieceId, slot){
+    if (!state.revealReady) return;
 
-    for (let i = 3; i < img.length; i += 4) {
-      if (img[i] < 30) transparent++;
+    const piece = document.querySelector(`[data-piece-id="${pieceId}"]`);
+    if (!piece || piece.classList.contains("used")) return;
+
+    const placedChar = piece.dataset.char;
+    const expectedChar = slot.dataset.char;
+
+    if (slot.classList.contains("filled")) {
+      slot.classList.remove("ready");
+      return;
     }
 
-    return transparent / (img.length / 4);
+    if (placedChar === expectedChar) {
+      slot.classList.add("filled","active");
+      slot.querySelector(".slotRune").textContent = RUNE_MAP[placedChar].rune;
+      piece.classList.add("used");
+      playTapFx();
+      setFeedback("Doğru tamga yerine oturdu.", "ok");
+      checkIfSolved();
+    } else {
+      slot.classList.add("wrong");
+      playWrongFx();
+      setFeedback("Bu tamga bu yuvaya ait değil.", "bad");
+      setTimeout(() => slot.classList.remove("wrong","ready"), 380);
+    }
+
+    state.dragPiece = null;
+  }
+
+  function checkIfSolved(){
+    const slots = [...$("slotLayer").querySelectorAll(".slot")];
+    const solved = slots.every(slot => slot.classList.contains("filled"));
+    if (!solved) return;
+
+    const pts = state.hintOpened ? 7 : 10;
+    state.score += pts;
+    if (state.score > state.best) {
+      state.best = state.score;
+      localStorage.setItem(BEST_KEY, String(state.best));
+    }
+
+    updateHud();
+    $("infoCard").classList.add("show");
+    $("infoText").textContent = `${state.current.latin} → ${state.current.info}`;
+    setStatus("YAZIT TAMAMLANDI");
+    setFeedback(`Doğru dizilim. +${pts} puan kazandın.`, "ok");
+    playCorrectFx();
+
+    setTimeout(() => nextRound(), 1200);
   }
 
   async function playLetterAudio(letter){
@@ -1196,10 +1342,10 @@
         for (let j = 0; j < group.length; j++) {
           const s = group[j];
           if (s === ".") {
-            beep({ freq: 880, duration: DOT, type: "square", gain: .09, when: t });
+            beep({ freq:880, duration:DOT, type:"square", gain:.09, when:t });
             t += DOT;
           } else if (s === "-") {
-            beep({ freq: 880, duration: DASH, type: "square", gain: .10, when: t });
+            beep({ freq:880, duration:DASH, type:"square", gain:.10, when:t });
             t += DASH;
           }
           t += GAP;
@@ -1211,54 +1357,22 @@
     });
   }
 
-  function handleRuneTap(btn){
-    if (!state.revealReady || !state.current) return;
-
-    const idx = Number(btn.dataset.idx);
-    const expected = state.solvedCount;
-
-    if (idx === expected) {
-      btn.classList.add("active");
-      state.solvedCount += 1;
-      playTapFx();
-
-      if (state.solvedCount >= state.current.latin.length) {
-        solveCurrentWord();
-      } else {
-        setStatus(`SIRAYLA İLERLE • ${state.solvedCount}/${state.current.latin.length}`);
-        setFeedback("Doğru tamga. Devam et.", "ok");
-      }
-    } else {
-      btn.classList.add("wrong");
-      playWrongFx();
-      setStatus("SIRA BOZULDU");
-      setFeedback("Yanlış tamgadan başladın. Sıra başa döndü.", "bad");
-
-      setTimeout(() => {
-        state.solvedCount = 0;
-        $("runeLayer").querySelectorAll(".runeNode").forEach(node => {
-          node.classList.remove("active","wrong");
-        });
-        setStatus("TAMGALARI BAŞTAN SIRALA");
-      }, 600);
-    }
+  function openHint(){
+    if (!state.current) return;
+    state.hintOpened = true;
+    $("hintCard").classList.add("show");
+    setFeedback("İpucu açıldı. Bu turdan alacağın puan biraz düştü.", "info");
+    playTapFx();
   }
 
-  function solveCurrentWord(){
-    const pts = state.hintOpened ? 7 : 10;
-    state.score += pts;
-    if (state.score > state.best) {
-      state.best = state.score;
-      localStorage.setItem(BEST_KEY, String(state.best));
-    }
-    updateHud();
+  function skipCurrent(){
+    if (!state.current) return;
     $("infoCard").classList.add("show");
-    $("infoText").textContent = `${state.current.tr} • ${state.current.info}`;
-    setStatus("YAZIT ÇÖZÜLDÜ");
-    setFeedback(`Doğru sıra. +${pts} puan kazandın.`, "ok");
-    playCorrectFx();
-
-    setTimeout(() => nextRound(), 1200);
+    $("infoText").textContent = `${state.current.latin} → ${state.current.info}`;
+    setStatus("YAZIT PAS GEÇİLDİ");
+    setFeedback("Bu tur atlandı.", "bad");
+    playWrongFx();
+    setTimeout(() => nextRound(), 1000);
   }
 
   function nextRound(){
@@ -1277,30 +1391,8 @@
     $("resultModal").classList.add("show");
   }
 
-  function openHint(){
-    if (!state.current) return;
-    state.hintOpened = true;
-    $("hintCard").classList.add("show");
-    $("hintText").textContent = state.current.tr;
-    setFeedback("İpucu açıldı. Bu turdan alacağın puan biraz düştü.", "info");
-    playTapFx();
-  }
-
-  function skipCurrent(){
-    if (!state.current) return;
-    $("infoCard").classList.add("show");
-    $("infoText").textContent = `${state.current.latin} → ${state.current.tr}`;
-    setStatus("YAZIT PAS GEÇİLDİ");
-    setFeedback(`Doğru çözüm: ${state.current.latin}`, "bad");
-    playWrongFx();
-
-    setTimeout(() => nextRound(), 1000);
-  }
-
   async function startRun(){
-    state.uiLang = state.selectedUiLang;
     state.level = state.selectedLevel;
-    localStorage.setItem(UI_LANG_KEY, state.uiLang);
     localStorage.setItem(LEVEL_KEY, state.level);
 
     state.round = 1;
@@ -1342,11 +1434,10 @@
   $("btnResetDust").onclick = resetDust;
 
   (function init(){
-    renderLangs();
     renderLevels();
     renderLegend();
     updateHud();
-    setStatus("TOZU TEMİZLE, YAZITI ORTAYA ÇIKAR");
+    setStatus("TOZU TEMİZLE, SONRA TAMGALARI YERLEŞTİR");
     setFeedback("Kazı başlasın. Parmakla taşı temizle.", "info");
     resizeDustCanvas();
     fillDust();
@@ -1361,4 +1452,4 @@
   })();
 </script>
 </body>
-  </html>
+</html>
