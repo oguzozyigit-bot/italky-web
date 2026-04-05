@@ -9,7 +9,7 @@
   (function(){
     try{
       if(navigator.onLine === false){
-        location.replace("/pages/offline_languages.html");
+        location.replace("/facetoface.html?mode=offline-forced");
       }
     }catch{}
   })();
@@ -353,6 +353,11 @@
 
   (async function boot(){
     try{
+      if (navigator.onLine === false) {
+        location.replace("/facetoface.html?mode=offline-forced");
+        return;
+      }
+
       const { data:{ session } } = await supabase.auth.getSession();
       if(!session){
         document.body.classList.add("login-ready");
