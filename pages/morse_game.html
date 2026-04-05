@@ -583,13 +583,13 @@
       <h2 style="margin:0 0 10px;color:var(--gold);font-family:'Space Grotesk',sans-serif;">KURALLAR</h2>
       <ul class="rulesList">
         <li>Mors kodunu dinle ve oku.</li>
-        <li>Doğrudan cevap ver.</li>
+        <li>Kontrol yerine doğrudan cevap ver.</li>
         <li>Yanlış cevapta 1 can düşer.</li>
         <li>3 canla başlarsın.</li>
         <li>İpucu veya anlam almadan doğru cevap verirsen 1 can kazanırsın.</li>
         <li>Maksimum can 5’tir.</li>
-        <li>Cevaptan sonra doğru kelime ekranda görünür, TTS ile okunur ve Türkçe anlamı gösterilir.</li>
-        <li>Sonra Devam veya Üst Menüye Dön popup’ı gelir.</li>
+        <li>Alttaki harf ve sayılara basınca o karakterin Mors sesi çalar.</li>
+        <li>Cevaptan sonra doğru kelime ve Türkçe anlam popup içinde gösterilir.</li>
       </ul>
       <button class="mainbtn" id="startBtn">ANLADIM, BAŞLA</button>
     </div>
@@ -597,12 +597,24 @@
 
   <div class="modal-wrap hidden" id="answerModal">
     <div class="modal-card">
-      <h2 id="answerTitle" style="margin:0 0 10px;color:var(--green);font-family:'Space Grotesk',sans-serif;">DOĞRU CEVAP</h2>
-      <div id="answerWord" style="font-size:34px;font-weight:1000;letter-spacing:2px;margin-top:10px;"></div>
-      <div id="answerMeaning" style="margin-top:14px;font-size:16px;line-height:1.7;color:#9df0b9;"></div>
+      <h2 id="answerModalTitle" style="margin:0 0 10px;color:var(--green);font-family:'Space Grotesk',sans-serif;">DOĞRU CEVAP</h2>
+      <div id="answerModalWord" style="font-size:34px;font-weight:1000;letter-spacing:2px;margin-top:10px;"></div>
+      <div id="answerModalMeaning" style="margin-top:14px;font-size:16px;line-height:1.7;color:#9df0b9;"></div>
+
+      <div class="resultActions">
+        <button class="mainbtn sec" id="btnTopMenuFromAnswer">ÜST MENÜYE DÖN</button>
+        <button class="mainbtn" id="btnContinueFromAnswer">DEVAM</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrap hidden" id="endModal">
+    <div class="modal-card">
+      <h2 id="endTitle" style="margin:0 0 10px;color:var(--green);font-family:'Space Grotesk',sans-serif;">OYUN BİTTİ</h2>
+      <div id="endStats" style="text-align:left; margin:18px 0; font-size:15px; line-height:1.9;"></div>
       <div class="resultActions">
         <button class="mainbtn sec" id="btnTopMenu">ÜST MENÜYE DÖN</button>
-        <button class="mainbtn" id="btnContinue">DEVAM</button>
+        <button class="mainbtn" id="btnNewGame">YENİ OYUN</button>
       </div>
     </div>
   </div>
@@ -635,7 +647,13 @@ const MORSE = {
 const GAME_LANG_KEY = "italky_morse_lang";
 const GAME_PB_PREFIX = "italky_morse_pb_";
 const SET_SIZE = 15;
-const MAX_LIVES = 5;
+
+const answerModal = $("answerModal");
+const answerModalTitle = $("answerModalTitle");
+const answerModalWord = $("answerModalWord");
+const answerModalMeaning = $("answerModalMeaning");
+const btnTopMenuFromAnswer = $("btnTopMenuFromAnswer");
+const btnContinueFromAnswer = $("btnContinueFromAnswer");
 
 let currentLang = localStorage.getItem(GAME_LANG_KEY) || "en";
 let puzzles = [];
@@ -651,8 +669,8 @@ let currentPuzzle = null;
 let hintUsed = false;
 let meaningUsed = false;
 let currentLegendTab = "letters";
-let audioCtx = null;
 
+let audioCtx = null;
 function getAudioCtx(){
   try{
     if(!audioCtx){
@@ -691,6 +709,7 @@ function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
 function playGood(){ beep({freq:620,duration:.08,type:"triangle",gain:.05}); beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08}); }
 function playBad(){ beep({freq:180,duration:.12,type:"sawtooth",gain:.05}); beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06}); }
 function playLifeUp(){ beep({freq:560,duration:.08,type:"triangle",gain:.05}); beep({freq:760,duration:.10,type:"triangle",gain:.05,when:.08}); beep({freq:980,duration:.12,type:"triangle",gain:.05,when:.16}); }
+function playFinish(){ beep({freq:700,duration:.10,type:"triangle",gain:.05}); beep({freq:920,duration:.12,type:"triangle",gain:.05,when:.10}); beep({freq:1180,duration:.15,type:"triangle",gain:.05,when:.22}); }
 
 ["click","touchstart","pointerdown"].forEach(evt => {
   window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
@@ -714,33 +733,57 @@ function toast(msg, color = "var(--blue)"){
   window.__morseToast = setTimeout(() => $("resInfo").style.opacity = "0", 1800);
 }
 
-async function speakWord(text){
+function speakWord(text) {
   const t = String(text || "").trim();
   if (!t) return;
-  await unlockAudio();
+
+  const bcp = LANGS[currentLang]?.bcp || "en-US";
 
   try {
     if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.speak(t, LANGS[currentLang]?.bcp || "en-US");
+      window.NativeTTS.speak(t, bcp);
       return;
     }
-  } catch {}
+  } catch (e) {
+    console.warn("NativeTTS speak failed:", e);
+  }
 
   try {
     if (!("speechSynthesis" in window)) return;
+
     window.speechSynthesis.cancel();
+
     const u = new SpeechSynthesisUtterance(t);
-    u.lang = LANGS[currentLang]?.bcp || "en-US";
-    u.rate = 0.9;
+    u.lang = bcp;
+    u.rate = 0.88;
     u.pitch = 1;
     u.volume = 1;
+
     const voices = window.speechSynthesis.getVoices?.() || [];
     const found = voices.find(v =>
-      String(v.lang || "").toLowerCase().startsWith((LANGS[currentLang]?.bcp || "en").split("-")[0].toLowerCase())
+      String(v.lang || "").toLowerCase().startsWith(bcp.split("-")[0].toLowerCase())
     );
     if (found) u.voice = found;
-    window.speechSynthesis.speak(u);
-  } catch {}
+
+    setTimeout(() => {
+      try {
+        window.speechSynthesis.speak(u);
+      } catch (err) {
+        console.warn("speechSynthesis speak failed:", err);
+      }
+    }, 120);
+  } catch (e) {
+    console.warn("speechSynthesis fallback failed:", e);
+  }
+}
+
+function openAnswerModal(isCorrect) {
+  answerModalTitle.textContent = isCorrect ? "DOĞRU CEVAP" : "YANLIŞ CEVAP";
+  answerModalTitle.style.color = isCorrect ? "var(--green)" : "var(--red)";
+  answerModalWord.textContent = currentPuzzle.w.trim().toUpperCase();
+  answerModalMeaning.textContent = currentPuzzle.tr || "";
+  answerModal.classList.remove("hidden");
+  speakWord(currentPuzzle.w);
 }
 
 function getPublicLangUrl(langCode){
@@ -936,7 +979,7 @@ function resetHelpers(){
 }
 
 async function loadPuzzle(){
-  if (lives <= 0) return;
+  if (lives <= 0) return showFinal(true);
   if (currentIdx >= puzzles.length) return showFinal(false);
 
   currentPuzzle = puzzles[currentIdx];
@@ -952,29 +995,8 @@ async function loadPuzzle(){
   }, 180);
 }
 
-function showAnswerPopup(isCorrect){
-  $("answerTitle").textContent = isCorrect ? "DOĞRU CEVAP" : "YANLIŞ CEVAP";
-  $("answerTitle").style.color = isCorrect ? "var(--green)" : "var(--red)";
-  $("answerWord").textContent = normalize(currentPuzzle.w);
-  $("answerMeaning").textContent = currentPuzzle.tr || "";
-  $("answerModal").classList.remove("hidden");
-
-  setTimeout(() => {
-    speakWord(currentPuzzle.w);
-  }, 120);
-}
-
-function proceedNextRound(){
-  $("answerModal").classList.add("hidden");
-
-  if (lives <= 0) {
-    showFinal(true);
-    return;
-  }
-
-  currentIdx++;
-  isBusy = false;
-  loadPuzzle();
+function handleChoiceFlow(isCorrect){
+  openAnswerModal(isCorrect);
 }
 
 async function answerCurrent(){
@@ -991,9 +1013,10 @@ async function answerCurrent(){
   isBusy = true;
   totalAnswered++;
 
-  const isCorrect = answer === correct;
+  let isCorrect = false;
 
-  if (isCorrect) {
+  if (answer === correct) {
+    isCorrect = true;
     playGood();
     streak++;
     totalCorrect++;
@@ -1004,7 +1027,7 @@ async function answerCurrent(){
 
     let extraText = "";
     if (!hintUsed && !meaningUsed) {
-      if (lives < MAX_LIVES) {
+      if (lives < 5) {
         lives++;
         playLifeUp();
         extraText = " • +1 CAN";
@@ -1015,6 +1038,7 @@ async function answerCurrent(){
 
     toast(`+${roundScore} PUAN${extraText}`, "var(--green)");
   } else {
+    isCorrect = false;
     playBad();
     streak = 0;
     lives--;
@@ -1022,7 +1046,7 @@ async function answerCurrent(){
   }
 
   updateUI();
-  showAnswerPopup(isCorrect);
+  handleChoiceFlow(isCorrect);
 }
 
 function openHint(){
@@ -1043,23 +1067,24 @@ function openMeaning(){
 }
 
 function showFinal(gameEnded){
+  answerModal.classList.add("hidden");
+
   const pbKey = GAME_PB_PREFIX + currentLang;
   const currentPB = Number(localStorage.getItem(pbKey) || 0);
   if (score > currentPB) localStorage.setItem(pbKey, String(score));
 
   const acc = totalAnswered ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
 
-  $("answerModal").classList.add("hidden");
   $("endModal").classList.remove("hidden");
   $("endTitle").textContent = gameEnded ? "OYUN BİTTİ" : "SET TAMAMLANDI";
   $("endTitle").style.color = gameEnded ? "var(--red)" : "var(--green)";
   $("endStats").innerHTML = `
 Skor: <b>${score}</b><br>
-Kalan Can: <b>${lives}</b><br>
 En İyi Seri: <b>🔥 ${maxStreak}</b><br>
 Doğruluk: <b>%${acc}</b>
   `;
   updatePB();
+  playFinish();
 }
 
 async function startGame(){
@@ -1093,7 +1118,7 @@ async function startGame(){
   $("startModal").classList.add("hidden");
   $("rulesModal").classList.add("hidden");
   $("endModal").classList.add("hidden");
-  $("answerModal").classList.add("hidden");
+  answerModal.classList.add("hidden");
 
   loadPuzzle();
 }
@@ -1109,13 +1134,12 @@ $("toRulesBtn").onclick = async () => {
 };
 
 $("startBtn").onclick = startGame;
-$("btnContinue").onclick = proceedNextRound;
 $("btnNewGame").onclick = startGame;
 
 $("btnTopMenu").onclick = () => {
   const shellMenu = document.querySelector('[data-shell-menu-btn], .shell-menu-btn, .menu-btn, #menuBtn');
   if (shellMenu) {
-    $("answerModal").classList.add("hidden");
+    $("endModal").classList.add("hidden");
     shellMenu.click();
   } else {
     location.href = "/pages/home.html";
@@ -1134,6 +1158,36 @@ $("tabLetters").onclick = () => {
 $("tabNumbers").onclick = () => {
   currentLegendTab = "numbers";
   renderLegend();
+};
+
+btnContinueFromAnswer.onclick = () => {
+  answerModal.classList.add("hidden");
+
+  if (lives <= 0) {
+    isBusy = false;
+    showFinal(true);
+    return;
+  }
+
+  currentIdx++;
+  isBusy = false;
+  loadPuzzle();
+};
+
+btnTopMenuFromAnswer.onclick = () => {
+  answerModal.classList.add("hidden");
+
+  const shellMenu =
+    document.querySelector('[data-shell-menu-btn]') ||
+    document.querySelector('.shell-menu-btn') ||
+    document.querySelector('.menu-btn') ||
+    document.querySelector('#menuBtn');
+
+  if (shellMenu) {
+    shellMenu.click();
+  } else {
+    location.href = "/pages/home.html";
+  }
 };
 
 $("answerInput").addEventListener("input", () => {
