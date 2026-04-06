@@ -597,7 +597,7 @@ function bind() {
     e.preventDefault();
     showToast("Online moda geçiliyor...");
     setTimeout(() => {
-      location.href = "facetoface.html?mode=online";
+      location.href = "/facetoface.html?mode=online";
     }, 180);
   });
 }
