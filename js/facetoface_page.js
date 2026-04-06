@@ -1502,8 +1502,11 @@ function bind() {
   });
 
   bindTap(modeFlag, async () => {
-    showToast("Offline geçiş henüz bağlanmadı");
-  });
+  showToast("Offline moda geçiliyor...");
+  setTimeout(() => {
+    location.href = "/facetoface.html?mode=offline";
+  }, 180);
+});
 
   bindMicTap(topMic, "top");
   bindMicTap(botMic, "bot");
