@@ -13,7 +13,6 @@ const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
 
 const API_BASE = "https://italky-api.onrender.com";
-const OFFLINE_FACE_URL = "/pages/offline_facetoface.html";
 const $ = (id) => document.getElementById(id);
 
 const BCP = {
@@ -33,10 +32,7 @@ const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
 
 function canonical(code) {
-  return String(code || "")
-    .toLowerCase()
-    .split("-")[0]
-    .trim();
+  return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
 const SITE_LANG = "tr";
@@ -49,7 +45,6 @@ const LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
-
     return {
       code,
       flag: l.flag || "🌐",
@@ -61,7 +56,6 @@ const LANGS = RAW_LANG_POOL
 
 function langObj(code) {
   const c = canonical(code);
-
   return (
     LANGS.find((x) => x.code === c) || {
       code: c || "en",
@@ -167,19 +161,12 @@ const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const settingsBtn = $("settingsBtn");
-const modeFlag = $("modeFlag");
-const modeFlagTxt = $("modeFlagTxt");
-const miniToast = $("miniToast");
 
 const uiModal = $("uiModal");
 const uiModalTitle = $("uiModalTitle");
 const uiModalText = $("uiModalText");
 const uiModalGo = $("uiModalGo");
 const uiModalClose = $("uiModalClose");
-
-let accessState = {
-  lockedAll: false
-};
 
 let topLang = "en";
 let botLang = "tr";
@@ -196,30 +183,8 @@ let speakRunId = 0;
 
 let liveTranscript = "";
 let latestPreviewTranscript = "";
-let recognitionFinishedByUser = false;
 let recognitionSessionId = 0;
 let typewriterRunId = 0;
-
-function showToast(message = "") {
-  if (!miniToast) return;
-  miniToast.textContent = String(message || "");
-  miniToast.classList.add("show");
-  clearTimeout(window.__faceToastTimer);
-  window.__faceToastTimer = setTimeout(() => {
-    miniToast.classList.remove("show");
-  }, 1800);
-}
-
-function refreshModeFlag() {
-  if (!modeFlag || !modeFlagTxt) return;
-  const online = navigator.onLine;
-  modeFlag.classList.toggle("offline", !online);
-  modeFlagTxt.textContent = online ? "ONLINE" : "OFFLINE";
-}
-
-function goOfflinePage(forced = false) {
-  location.href = forced ? `${OFFLINE_FACE_URL}?mode=offline-forced` : OFFLINE_FACE_URL;
-}
 
 function showUiModal(message, title = "Jeton Gerekli") {
   if (!uiModal) return;
@@ -240,14 +205,6 @@ uiModal?.addEventListener("click", (e) => {
   if (e.target === uiModal) closeUiModal();
 });
 
-async function readAccessState() {
-  accessState = { lockedAll: false };
-}
-
-function canOpenFaceSettings() {
-  return true;
-}
-
 function getFaceVoiceMode() {
   return String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
 }
@@ -267,16 +224,9 @@ function isPaidFaceVoiceMode() {
 }
 
 async function ensureCurrentFacePremiumModeAccess() {
-  const needsPremium =
-    isPaidFaceTextMode() ||
-    isPaidFaceVoiceMode();
-
+  const needsPremium = isPaidFaceTextMode() || isPaidFaceVoiceMode();
   if (!needsPremium) return true;
-
-  const ok = await ensureFaceToFacePremiumAccess();
-  if (!ok) return false;
-
-  return true;
+  return await ensureFaceToFacePremiumAccess();
 }
 
 function faceTextUsageModule() {
@@ -301,7 +251,6 @@ function faceTextUsageNote() {
 
 function faceVoiceUsageNote() {
   const v = getFaceVoiceMode();
-
   let mode = "normal";
   if (v === "clone") mode = "clone";
   else if (v === "preset") mode = "preset";
@@ -332,25 +281,10 @@ function detectToneFromText(text) {
     return upper / letters.length;
   })();
 
-  const angryWords = [
-    "saçma", "yeter", "sinir", "sinirim", "delirdim", "bıktım", "biktim",
-    "rezalet", "berbat", "nefret", "uyuz", "çıldırdım", "cildirdim"
-  ];
-
-  const sadWords = [
-    "üzgün", "uzgun", "kötüyüm", "kotuyum", "moralim bozuk",
-    "canım sıkkın", "canim sikkin", "yoruldum", "tükendim", "tukendim"
-  ];
-
-  const happyWords = [
-    "harika", "süper", "super", "müthiş", "muthis", "bayıldım",
-    "bayildim", "çok iyi", "cok iyi", "sevindim", "mutlu oldum"
-  ];
-
-  const excitedWords = [
-    "inanamıyorum", "inanamiyorum", "şahane", "sahane", "wow",
-    "efsane", "heyecanlıyım", "heyecanliyim"
-  ];
+  const angryWords = ["saçma", "yeter", "sinir", "nefret", "rezalet", "berbat"];
+  const sadWords = ["üzgün", "kötüyüm", "moralim bozuk", "yoruldum"];
+  const happyWords = ["harika", "süper", "müthiş", "çok iyi", "sevindim"];
+  const excitedWords = ["inanamıyorum", "şahane", "wow", "efsane", "heyecanlıyım"];
 
   const hasAny = (arr) => arr.some((w) => s.includes(w));
 
@@ -385,11 +319,7 @@ function resetMics() {
 function setFrameVisual(state) {
   if (!frameRoot) return;
   frameRoot.classList.remove("is-idle", "is-listening", "is-translating", "is-ready", "is-error");
-  if (state === "idle") frameRoot.classList.add("is-idle");
-  if (state === "listening") frameRoot.classList.add("is-listening");
-  if (state === "translating") frameRoot.classList.add("is-translating");
-  if (state === "ready") frameRoot.classList.add("is-ready");
-  if (state === "error") frameRoot.classList.add("is-error");
+  if (state) frameRoot.classList.add(`is-${state}`);
 }
 
 function setHelper(el, text, tone) {
@@ -553,7 +483,6 @@ function getTypingDelay(ch, index, total, text) {
 function getTypingChunkSize(index, total, text) {
   const profile = getTypingProfile(text);
   const progress = total ? index / total : 0;
-
   if (progress < 0.18) return profile.startChunk;
   if (progress < 0.78) return profile.midChunk;
   return profile.endChunk;
@@ -676,8 +605,7 @@ function rememberTtsCache(key, audioSrc) {
 }
 
 async function playCachedAudio(audioSrc, runId) {
-  if (!audioSrc) return false;
-  if (runId !== speakRunId) return false;
+  if (!audioSrc || runId !== speakRunId) return false;
 
   const nextAudio = new Audio(audioSrc);
   nextAudio.preload = "auto";
@@ -1444,36 +1372,47 @@ function bindKeyboardButton(el, handler) {
   });
 }
 
+function bindTap(el, handler) {
+  if (!el) return;
+
+  let lastPointerUp = 0;
+
+  el.addEventListener("pointerup", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    lastPointerUp = Date.now();
+    await handler(e);
+  });
+
+  el.addEventListener("click", async (e) => {
+    if (Date.now() - lastPointerUp < 400) return;
+    e.preventDefault();
+    e.stopPropagation();
+    await handler(e);
+  });
+}
+
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
-  startBoot();
 
-  topLangBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  bindTap(topLangBtn, async () => {
     closeAllPop();
     renderPop("top");
     popTop?.classList.add("show");
   });
 
-  botLangBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  bindTap(botLangBtn, async () => {
     closeAllPop();
     renderPop("bot");
     popBot?.classList.add("show");
   });
 
-  closeTop?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  bindTap(closeTop, async () => {
     closeAllPop();
   });
 
-  closeBot?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  bindTap(closeBot, async () => {
     closeAllPop();
   });
 
@@ -1485,7 +1424,7 @@ function bind() {
     if (!inside && !isBtn) closeAllPop();
   }, { capture: true });
 
-  clearBtn?.addEventListener("click", () => {
+  bindTap(clearBtn, async () => {
     stopAudio();
     stopTypewriter();
     stopRecognizer();
@@ -1510,15 +1449,11 @@ function bind() {
     location.href = "/pages/translation_settings.html?from=facetoface";
   });
 
-  topMic?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  bindTap(topMic, async () => {
     await toggleRecording("top");
   });
 
-  botMic?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  bindTap(botMic, async () => {
     await toggleRecording("bot");
   });
 
@@ -1548,6 +1483,12 @@ function bind() {
       window.speechSynthesis.getVoices();
     }
   } catch {}
+
+  try {
+    startBoot();
+  } catch (e) {
+    console.error("[facetoface startBoot error]", e);
+  }
 }
 
 if (
@@ -1555,9 +1496,13 @@ if (
   !topHelper || !botHelper || !topLangBtn || !botLangBtn ||
   !topLangTxt || !botLangTxt || !popTop || !popBot ||
   !listTop || !listBot || !closeTop || !closeBot ||
-  !clearBtn || !homeLink || !homeBtn
+  !clearBtn || !homeLink || !homeBtn || !settingsBtn
 ) {
   console.error("[facetoface] Gerekli DOM elemanları eksik.");
 } else {
-  bind();
+  try {
+    bind();
+  } catch (e) {
+    console.error("[facetoface bind error]", e);
+  }
 }
