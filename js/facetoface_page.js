@@ -1418,23 +1418,31 @@ function bind() {
   refreshModeFlag();
   unlockOnFirstTouch();
 
-  bindTap(topLangBtn, async () => {
+  topLangBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     closeAllPop();
     renderPop("top");
     popTop?.classList.add("show");
   });
 
-  bindTap(botLangBtn, async () => {
+  botLangBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     closeAllPop();
     renderPop("bot");
     popBot?.classList.add("show");
   });
 
-  bindTap(closeTop, async () => {
+  closeTop?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     closeAllPop();
   });
 
-  bindTap(closeBot, async () => {
+  closeBot?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     closeAllPop();
   });
 
@@ -1446,7 +1454,7 @@ function bind() {
     if (!inside && !isBtn) closeAllPop();
   }, { capture: true });
 
-  bindTap(clearBtn, async () => {
+  clearBtn?.addEventListener("click", () => {
     stopAudio();
     stopTypewriter();
     stopRecognizer();
@@ -1472,15 +1480,18 @@ function bind() {
   });
 
   bindTap(modeFlag, async () => {
-  showToast("Offline moda geçiliyor...");
-  location.href = "/pages/facetoface.html?mode=offline";
-});
+    showToast("Offline geçiş henüz bağlanmadı");
+  });
 
-  bindTap(topMic, async () => {
+  topMic?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     await toggleRecording("top");
   });
 
-  bindTap(botMic, async () => {
+  botMic?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     await toggleRecording("bot");
   });
 
@@ -1517,7 +1528,6 @@ function bind() {
     console.error("[facetoface startBoot error]", e);
   }
 }
-
 if (
   !frameRoot || !topBody || !botBody || !topMic || !botMic ||
   !topHelper || !botHelper || !topLangBtn || !botLangBtn ||
