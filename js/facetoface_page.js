@@ -1,5 +1,3 @@
-// FILE: /js/facetoface_page.js
-
 import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
@@ -188,6 +186,7 @@ let liveTranscript = "";
 let latestPreviewTranscript = "";
 let recognitionSessionId = 0;
 let typewriterRunId = 0;
+let recognitionFinishedByUser = false;
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -1372,6 +1371,7 @@ function startBoot() {
 
   return bootPromise;
 }
+
 async function ensureReady() {
   if (bootReady) return true;
   if (!bootStarted) startBoot();
@@ -1392,6 +1392,7 @@ function bindKeyboardButton(el, handler) {
     }
   });
 }
+
 function bindMicTap(el, side) {
   if (!el) return;
 
@@ -1413,6 +1414,7 @@ function bindMicTap(el, side) {
     await run(e);
   });
 }
+
 function bindTap(el, handler) {
   if (!el) return;
 
@@ -1504,7 +1506,7 @@ function bind() {
   });
 
   bindMicTap(topMic, "top");
-bindMicTap(botMic, "bot");
+  bindMicTap(botMic, "bot");
 
   bindKeyboardButton(topMic, async (e) => {
     e.stopPropagation();
@@ -1539,6 +1541,7 @@ bindMicTap(botMic, "bot");
     console.error("[facetoface startBoot error]", e);
   }
 }
+
 if (
   !frameRoot || !topBody || !botBody || !topMic || !botMic ||
   !topHelper || !botHelper || !topLangBtn || !botLangBtn ||
