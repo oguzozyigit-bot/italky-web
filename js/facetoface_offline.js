@@ -378,39 +378,27 @@ async function runNativeOfflineTranslate(text, fromLang, toLang) {
   if (!clean) return "";
 
   try {
-    if (window.AndroidOfflineTranslate?.translate) {
-      const result = await window.AndroidOfflineTranslate.translate(
+    if (window.AndroidOfflineTranslate?.translateJson) {
+      const raw = await window.AndroidOfflineTranslate.translateJson(
         JSON.stringify({
           text: clean,
           from: canonical(fromLang),
           to: canonical(toLang)
         })
       );
-      if (result) return String(result).trim();
-    }
-  } catch {}
 
-  try {
-    if (window.OfflineBridge?.translate) {
-      const result = await window.OfflineBridge.translate(
-        clean,
-        canonical(fromLang),
-        canonical(toLang)
-      );
-      if (result) return String(result).trim();
+      if (raw) {
+        try {
+          const parsed = JSON.parse(String(raw));
+          if (parsed?.ok && parsed?.translated) {
+            return String(parsed.translated).trim();
+          }
+        } catch {}
+      }
     }
-  } catch {}
-
-  try {
-    if (window.NativeOfflineTranslate?.translate) {
-      const result = await window.NativeOfflineTranslate.translate(
-        clean,
-        canonical(fromLang),
-        canonical(toLang)
-      );
-      if (result) return String(result).trim();
-    }
-  } catch {}
+  } catch (e) {
+    console.warn("offline native translate error", e);
+  }
 
   return "";
 }
@@ -420,17 +408,6 @@ function fallbackOfflineTranslate(text, fromLang, toLang) {
   if (!clean) return "";
 
   if (fromLang === toLang) return clean;
-
-  const lexicon = {
-    "selam": { tr: "selam", en: "hello", de: "hallo", fr: "bonjour", es: "hola", it: "ciao" },
-    "merhaba": { tr: "merhaba", en: "hello", de: "hallo", fr: "bonjour", es: "hola", it: "ciao" },
-    "nasılsın": { tr: "nasılsın", en: "how are you", de: "wie geht's", fr: "comment ça va", es: "cómo estás", it: "come stai" },
-    "teşekkür ederim": { tr: "teşekkür ederim", en: "thank you", de: "danke", fr: "merci", es: "gracias", it: "grazie" }
-  };
-
-  const key = clean.toLowerCase();
-  if (lexicon[key]?.[canonical(toLang)]) return lexicon[key][canonical(toLang)];
-
   return clean;
 }
 
@@ -506,9 +483,11 @@ function startTopRecognition() {
       return;
     }
 
+    setState("translating");
     const translated = await translateOffline(finalText, topLang, botLang);
     renderBubble(botBody, translated, true, true, botLang);
     speakText(translated, botLang);
+    setState("ready");
     setHelpers("Konuşmak için mikrofona dokununuz.", "Offline çeviri hazır");
   };
 
@@ -566,9 +545,11 @@ function startBotRecognition() {
       return;
     }
 
+    setState("translating");
     const translated = await translateOffline(finalText, botLang, topLang);
     renderBubble(topBody, translated, true, true, topLang);
     speakText(translated, topLang);
+    setState("ready");
     setHelpers("Offline çeviri hazır", "Konuşmak için mikrofona dokununuz.");
   };
 
@@ -616,7 +597,7 @@ function bind() {
     e.preventDefault();
     showToast("Online moda geçiliyor...");
     setTimeout(() => {
-      location.href = "/facetoface.html?mode=online";
+      location.href = "facetoface.html?mode=online";
     }, 180);
   });
 }
