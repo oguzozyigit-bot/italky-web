@@ -613,10 +613,12 @@ function bind() {
   });
 
   modeFlag?.addEventListener("click", (e) => {
-    e.preventDefault();
-    showToast("Şu an OFFLINE moddasınız");
-  });
-}
+  e.preventDefault();
+  showToast("Online moda geçiliyor...");
+  setTimeout(() => {
+    location.href = "/pages/facetoface.html?mode=online";
+  }, 180);
+});
 
 function init() {
   setRuntimeOffline();
