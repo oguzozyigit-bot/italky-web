@@ -1392,7 +1392,27 @@ function bindKeyboardButton(el, handler) {
     }
   });
 }
+function bindMicTap(el, side) {
+  if (!el) return;
 
+  let lastTouchTs = 0;
+
+  const run = async (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    await toggleRecording(side);
+  };
+
+  el.addEventListener("touchend", async (e) => {
+    lastTouchTs = Date.now();
+    await run(e);
+  }, { passive: false });
+
+  el.addEventListener("click", async (e) => {
+    if (Date.now() - lastTouchTs < 500) return;
+    await run(e);
+  });
+}
 function bindTap(el, handler) {
   if (!el) return;
 
@@ -1483,17 +1503,8 @@ function bind() {
     showToast("Offline geçiş henüz bağlanmadı");
   });
 
-  topMic?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await toggleRecording("top");
-  });
-
-  botMic?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await toggleRecording("bot");
-  });
+  bindMicTap(topMic, "top");
+bindMicTap(botMic, "bot");
 
   bindKeyboardButton(topMic, async (e) => {
     e.stopPropagation();
