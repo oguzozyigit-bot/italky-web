@@ -161,6 +161,9 @@ const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const settingsBtn = $("settingsBtn");
+const modeFlag = $("modeFlag");
+const modeFlagTxt = $("modeFlagTxt");
+const miniToast = $("miniToast");
 
 const uiModal = $("uiModal");
 const uiModalTitle = $("uiModalTitle");
@@ -185,6 +188,16 @@ let liveTranscript = "";
 let latestPreviewTranscript = "";
 let recognitionSessionId = 0;
 let typewriterRunId = 0;
+
+function showToast(msg = "") {
+  if (!miniToast) return;
+  miniToast.textContent = String(msg || "");
+  miniToast.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => {
+    miniToast.classList.remove("show");
+  }, 1800);
+}
 
 function showUiModal(message, title = "Jeton Gerekli") {
   if (!uiModal) return;
@@ -391,6 +404,12 @@ function bounceToReady(delay = 1200) {
 function refreshLangLabels() {
   if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
   if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
+}
+
+function refreshModeFlag() {
+  if (!modeFlag || !modeFlagTxt) return;
+  modeFlag.classList.remove("offline");
+  modeFlagTxt.textContent = "ONLINE";
 }
 
 function refreshReadyTextsIfIdle() {
@@ -1336,12 +1355,11 @@ function startBoot() {
   bootPromise = (async () => {
     setSystemPreparingUI();
     refreshLangLabels();
-    refreshModeFlag?.();
     pointOrbTo("bot");
 
     try {
       await Promise.race([
-        Promise.allSettled([warmApis(), warmAudio(), readAccessState?.()]),
+        Promise.allSettled([warmApis(), warmAudio()]),
         new Promise((resolve) => setTimeout(resolve, 1800))
       ]);
     } catch (e) {
@@ -1397,6 +1415,7 @@ function bindTap(el, handler) {
 
 function bind() {
   refreshLangLabels();
+  refreshModeFlag();
   unlockOnFirstTouch();
 
   bindTap(topLangBtn, async () => {
@@ -1452,6 +1471,11 @@ function bind() {
     location.href = "/pages/translation_settings.html?from=facetoface";
   });
 
+  bindTap(modeFlag, async () => {
+  showToast("Offline moda geçiliyor...");
+  location.href = "/pages/facetoface.html?mode=offline";
+});
+
   bindTap(topMic, async () => {
     await toggleRecording("top");
   });
@@ -1499,7 +1523,8 @@ if (
   !topHelper || !botHelper || !topLangBtn || !botLangBtn ||
   !topLangTxt || !botLangTxt || !popTop || !popBot ||
   !listTop || !listBot || !closeTop || !closeBot ||
-  !clearBtn || !homeLink || !homeBtn || !settingsBtn
+  !clearBtn || !homeLink || !homeBtn || !settingsBtn ||
+  !modeFlag || !modeFlagTxt || !miniToast
 ) {
   console.error("[facetoface] Gerekli DOM elemanları eksik.");
 } else {
