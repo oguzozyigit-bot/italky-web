@@ -1297,27 +1297,23 @@ async function toggleRecording(side) {
 }
 
 async function warmApis() {
-  await Promise.allSettled([
-    fetch(`${API_BASE}/healthz`).catch(() => {}),
-    fetch(`${API_BASE}/api/translate_ai/health`).catch(() => {}),
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        const uid = data?.user?.id;
-        if (!uid) return;
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data?.user?.id;
+    if (!uid) return;
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("tokens")
-          .eq("id", uid)
-          .maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tokens")
+      .eq("id", uid)
+      .maybeSingle();
 
-        if (typeof profile?.tokens === "number") {
-          setHeaderTokens(profile.tokens);
-        }
-      } catch {}
-    })(),
-  ]);
+    if (typeof profile?.tokens === "number") {
+      setHeaderTokens(profile.tokens);
+    }
+  } catch (e) {
+    console.warn("[facetoface warmApis]", e);
+  }
 }
 
 function unlockOnFirstTouch() {
@@ -1340,9 +1336,17 @@ function startBoot() {
   bootPromise = (async () => {
     setSystemPreparingUI();
     refreshLangLabels();
+    refreshModeFlag?.();
     pointOrbTo("bot");
 
-    await Promise.allSettled([warmApis(), warmAudio(), readAccessState()]);
+    try {
+      await Promise.race([
+        Promise.allSettled([warmApis(), warmAudio(), readAccessState?.()]),
+        new Promise((resolve) => setTimeout(resolve, 1800))
+      ]);
+    } catch (e) {
+      console.warn("[facetoface boot fallback]", e);
+    }
 
     bootReady = true;
     setSystemReadyUI();
@@ -1350,7 +1354,6 @@ function startBoot() {
 
   return bootPromise;
 }
-
 async function ensureReady() {
   if (bootReady) return true;
   if (!bootStarted) startBoot();
