@@ -1,8 +1,11 @@
-// FILE: /js/facetoface_offline.js
+// FILE: /js/offline_facetoface_page.js
 
 const $ = (id) => document.getElementById(id);
 
-const OFFLINE_PACK_KEY = "italky_offline_installed_packs_v5";
+const OFFLINE_PACK_KEYS = [
+  "italky_offline_installed_packs_v6",
+  "italky_offline_installed_packs_v5"
+];
 
 const frameRoot = $("frameRoot");
 const topLangBtn = $("topLangBtn");
@@ -28,6 +31,9 @@ let botListening = false;
 let topText = "";
 let botText = "";
 
+let topLang = "en";
+let botLang = "tr";
+
 const BCP = {
   tr: "tr-TR",
   en: "en-US",
@@ -47,29 +53,77 @@ const BCP = {
   zza: "tr-TR",
   lzz: "tr-TR",
   ady: "tr-TR",
-  ab: "tr-TR"
+  ab: "tr-TR",
+  bg: "bg-BG",
+  bn: "bn-BD",
+  ca: "ca-ES",
+  cs: "cs-CZ",
+  da: "da-DK",
+  et: "et-EE",
+  eu: "eu-ES",
+  fi: "fi-FI",
+  gl: "gl-ES",
+  hu: "hu-HU",
+  id: "id-ID",
+  lt: "lt-LT",
+  lv: "lv-LV",
+  ms: "ms-MY",
+  nl: "nl-NL",
+  pl: "pl-PL",
+  ro: "ro-RO",
+  sk: "sk-SK",
+  sl: "sl-SI",
+  sq: "sq-AL",
+  th: "th-TH",
+  ur: "ur-PK",
+  vi: "vi-VN",
+  zh: "zh-CN"
 };
 
 const LANG_META = {
-  tr:  { flag: "🇹🇷", name: "Türkçe" },
-  en:  { flag: "🇬🇧", name: "İngilizce" },
-  de:  { flag: "🇩🇪", name: "Almanca" },
-  fr:  { flag: "🇫🇷", name: "Fransızca" },
-  it:  { flag: "🇮🇹", name: "İtalyanca" },
-  es:  { flag: "🇪🇸", name: "İspanyolca" },
-  ru:  { flag: "🇷🇺", name: "Rusça" },
-  el:  { flag: "🇬🇷", name: "Yunanca" },
-  az:  { flag: "🇦🇿", name: "Azerbaycanca" },
-  ka:  { flag: "🇬🇪", name: "Gürcüce" },
-  ar:  { flag: "🇸🇦", name: "Arapça" },
-  fa:  { flag: "🇮🇷", name: "Farsça" },
-  hy:  { flag: "🇦🇲", name: "Ermenice" },
+  tr: { flag: "🇹🇷", name: "Türkçe" },
+  en: { flag: "🇬🇧", name: "İngilizce" },
+  de: { flag: "🇩🇪", name: "Almanca" },
+  fr: { flag: "🇫🇷", name: "Fransızca" },
+  it: { flag: "🇮🇹", name: "İtalyanca" },
+  es: { flag: "🇪🇸", name: "İspanyolca" },
+  ru: { flag: "🇷🇺", name: "Rusça" },
+  el: { flag: "🇬🇷", name: "Yunanca" },
+  az: { flag: "🇦🇿", name: "Azerbaycanca" },
+  ka: { flag: "🇬🇪", name: "Gürcüce" },
+  ar: { flag: "🇸🇦", name: "Arapça" },
+  fa: { flag: "🇮🇷", name: "Farsça" },
+  hy: { flag: "🇦🇲", name: "Ermenice" },
   kmr: { flag: "🟨", name: "Kürtçe (Kurmançça)" },
   ckb: { flag: "🟧", name: "Kürtçe (Sorani)" },
   zza: { flag: "🟫", name: "Zazaca" },
   lzz: { flag: "🌊", name: "Lazca" },
   ady: { flag: "🟩", name: "Çerkezce" },
-  ab:  { flag: "⬛", name: "Abhazca" }
+  ab: { flag: "⬛", name: "Abhazca" },
+  bg: { flag: "🇧🇬", name: "Bulgarca" },
+  bn: { flag: "🇧🇩", name: "Bengalce" },
+  ca: { flag: "🇪🇸", name: "Katalanca" },
+  cs: { flag: "🇨🇿", name: "Çekçe" },
+  da: { flag: "🇩🇰", name: "Danca" },
+  et: { flag: "🇪🇪", name: "Estonca" },
+  eu: { flag: "🇪🇸", name: "Baskça" },
+  fi: { flag: "🇫🇮", name: "Fince" },
+  gl: { flag: "🇪🇸", name: "Galiçyaca" },
+  hu: { flag: "🇭🇺", name: "Macarca" },
+  id: { flag: "🇮🇩", name: "Endonezce" },
+  lt: { flag: "🇱🇹", name: "Litvanca" },
+  lv: { flag: "🇱🇻", name: "Letonca" },
+  ms: { flag: "🇲🇾", name: "Malayca" },
+  nl: { flag: "🇳🇱", name: "Hollandaca" },
+  pl: { flag: "🇵🇱", name: "Lehçe" },
+  ro: { flag: "🇷🇴", name: "Romence" },
+  sk: { flag: "🇸🇰", name: "Slovakça" },
+  sl: { flag: "🇸🇮", name: "Slovence" },
+  sq: { flag: "🇦🇱", name: "Arnavutça" },
+  th: { flag: "🇹🇭", name: "Tayca" },
+  ur: { flag: "🇵🇰", name: "Urduca" },
+  vi: { flag: "🇻🇳", name: "Vietnamca" },
+  zh: { flag: "🇨🇳", name: "Çince" }
 };
 
 function canonical(code) {
@@ -88,9 +142,9 @@ function normalizeText(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
 
-function setHelpers(topText = "", botText = "") {
-  if (topHelper) topHelper.textContent = topText;
-  if (botHelper) botHelper.textContent = botText;
+function setHelpers(topTextValue = "", botTextValue = "") {
+  if (topHelper) topHelper.textContent = topTextValue;
+  if (botHelper) botHelper.textContent = botTextValue;
 }
 
 function setState(state) {
@@ -192,13 +246,43 @@ function renderBubble(container, text, latest = true, withSpeaker = false, langC
   container.appendChild(bubble);
 }
 
+function normalizePack(entry) {
+  if (!entry || typeof entry !== "object") return null;
+
+  const langPack = String(entry.lang_pack || "").trim();
+  const lang = String(entry.lang || "").trim().toLowerCase();
+  const expiresAt = entry.expires_at || null;
+
+  if (!langPack || !lang) return null;
+
+  return {
+    lang_pack: langPack,
+    free_pack: entry.free_pack === true,
+    token_spent: Number(entry.token_spent || 0),
+    starts_at: entry.starts_at || null,
+    expires_at: expiresAt,
+    lang
+  };
+}
+
 function getInstalledPacks() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(OFFLINE_PACK_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
+  const merged = [];
+
+  for (const key of OFFLINE_PACK_KEYS) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+      if (Array.isArray(parsed)) merged.push(...parsed);
+    } catch {}
   }
+
+  const map = new Map();
+  for (const raw of merged) {
+    const pack = normalizePack(raw);
+    if (!pack) continue;
+    map.set(pack.lang_pack, pack);
+  }
+
+  return [...map.values()];
 }
 
 function isPackActive(pack) {
@@ -625,18 +709,25 @@ function bind() {
   });
 }
 
+function chooseInitialLangs() {
+  const installed = getInstalledLanguages();
+
+  botLang = installed.includes("tr") ? "tr" : (installed[0] || "tr");
+  topLang = installed.includes("en")
+    ? "en"
+    : (installed.find((x) => x !== botLang) || "en");
+
+  if (topLang === botLang) {
+    topLang = installed.find((x) => x !== botLang) || "en";
+  }
+}
+
 function init() {
   if (offlinePill) {
     offlinePill.textContent = navigator.onLine ? "Offline Çeviri (Manuel)" : "Offline Çeviri";
   }
 
-  const installed = getInstalledLanguages();
-
-  if (!installed.includes("tr")) botLang = installed[0] || "tr";
-  if (!installed.includes("en")) {
-    topLang = installed.find((x) => x !== botLang) || "en";
-  }
-
+  chooseInitialLangs();
   updateLangLabels();
   setState("ready");
   pointOrbTo("bot");
