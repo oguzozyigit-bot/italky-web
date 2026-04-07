@@ -2,7 +2,6 @@
 
 import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
-import { ensureOfflineLangAccess } from "/js/offline_access_gate.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -19,7 +18,8 @@ const toastEl = $("toast");
 
 const STORAGE = {
   installed: "italky_offline_installed_packs_v6",
-  siteLang: "italky_site_lang"
+  siteLang: "italky_site_lang",
+  nativeLang: "italky_native_lang_v1"
 };
 
 const SUPPORTED_OFFLINE_LANGS = [
@@ -54,26 +54,13 @@ const SUPPORTED_OFFLINE_LANGS = [
   { code: "zh", name: "Çince", flag: "🇨🇳" }
 ];
 
-const PRIORITY_ORDER = [
-  "tr",
-  "en",
-  "de",
-  "fr",
-  "it",
-  "es",
-  "ar",
-  "ru",
-  "az"
-];
+const PRIORITY_ORDER = ["tr","en","de","fr","ru"];
 
 let currentUser = null;
 let busy = false;
 let confirmResolver = null;
 let LANGS = [];
 
-/* -------------------------------------------------------
-   HELPERS
-------------------------------------------------------- */
 function toast(message = "") {
   if (!toastEl) return;
   toastEl.textContent = String(message || "");
@@ -101,6 +88,10 @@ function getSiteLang() {
   ).trim().toLowerCase();
 }
 
+function getNativeLang() {
+  return String(localStorage.getItem(STORAGE.nativeLang) || "tr").trim().toLowerCase();
+}
+
 function priorityIndex(code) {
   const idx = PRIORITY_ORDER.indexOf(String(code || "").trim().toLowerCase());
   return idx === -1 ? 999 : idx;
@@ -108,7 +99,6 @@ function priorityIndex(code) {
 
 function buildSupportedLangList() {
   const siteLang = getSiteLang();
-
   const uniq = [];
   const seen = new Set();
 
@@ -126,7 +116,6 @@ function buildSupportedLangList() {
   uniq.sort((a, b) => {
     const pa = priorityIndex(a.code);
     const pb = priorityIndex(b.code);
-
     if (pa !== pb) return pa - pb;
     return a.name.localeCompare(b.name, siteLang);
   });
@@ -154,25 +143,15 @@ function isPackActive(pack) {
 }
 
 function packKeyForLang(code) {
-  const lang = String(code || "").trim().toLowerCase();
-  if (lang === "tr" || lang === "en") return `free-${lang}`;
-  return `${lang}-offline`;
-}
-
-function isFreeLang(code) {
-  const lang = String(code || "").trim().toLowerCase();
-  return lang === "tr" || lang === "en";
+  return `${String(code || "").trim().toLowerCase()}-offline`;
 }
 
 function upsertInstalledPack(entry) {
   const packs = getInstalledPacks();
   const idx = packs.findIndex((p) => p.lang_pack === entry.lang_pack);
 
-  if (idx >= 0) {
-    packs[idx] = { ...packs[idx], ...entry };
-  } else {
-    packs.push(entry);
-  }
+  if (idx >= 0) packs[idx] = { ...packs[idx], ...entry };
+  else packs.push(entry);
 
   saveInstalledPacks(packs);
 }
@@ -180,6 +159,24 @@ function upsertInstalledPack(entry) {
 function getInstalledPackByLang(code) {
   const key = packKeyForLang(code);
   return getInstalledPacks().find((p) => p.lang_pack === key) || null;
+}
+
+function seedPreinstalledLangs() {
+  const nativeLang = getNativeLang();
+
+  [nativeLang, "en"].forEach((lang) => {
+    if (!lang) return;
+    if (getInstalledPackByLang(lang)) return;
+
+    upsertInstalledPack({
+      lang_pack: packKeyForLang(lang),
+      free_pack: true,
+      token_spent: 0,
+      starts_at: new Date().toISOString(),
+      expires_at: "2099-12-31T23:59:59.000Z",
+      lang
+    });
+  });
 }
 
 function setBusy(flag) {
@@ -217,9 +214,6 @@ confirmBackdrop?.addEventListener("click", (e) => {
   if (e.target === confirmBackdrop) closeConfirm(false);
 });
 
-/* -------------------------------------------------------
-   HEADER TOKENS
-------------------------------------------------------- */
 async function getCurrentUser() {
   const {
     data: { session }
@@ -244,23 +238,20 @@ async function refreshHeaderTokens() {
   } catch {}
 }
 
-/* -------------------------------------------------------
-   INSTALL LOGIC
-------------------------------------------------------- */
-async function installFreePack(lang) {
-  const info = langInfo(lang);
-
-  upsertInstalledPack({
-    lang_pack: packKeyForLang(lang),
-    free_pack: true,
-    token_spent: 0,
-    starts_at: new Date().toISOString(),
-    expires_at: "2099-12-31T23:59:59.000Z",
-    lang: lang
-  });
-
-  renderInstalledList();
-  toast(`${info.name} kuruldu`);
+async function triggerAppInstall(lang) {
+  try {
+    if (window.AndroidOfflineTranslate && typeof window.AndroidOfflineTranslate.prepareOfflineLang === "function") {
+      window.AndroidOfflineTranslate.prepareOfflineLang(lang);
+      return true;
+    }
+    if (window.Android && typeof window.Android.prepareOfflineLang === "function") {
+      window.Android.prepareOfflineLang(lang);
+      return true;
+    }
+  } catch (e) {
+    console.error("[offline_languages_page] prepareOfflineLang error:", e);
+  }
+  return false;
 }
 
 async function openOfflinePack(langCode) {
@@ -275,47 +266,34 @@ async function openOfflinePack(langCode) {
     return;
   }
 
-  const title = isFreeLang(lang)
-    ? `${info.name} ücretsiz kurulsun mu?`
-    : `${info.name} offline erişimi açılsın mı?`;
-
-  const text = isFreeLang(lang)
-    ? `${info.name} ücretsiz kurulacak.`
-    : `${info.name} için 10 jeton kullanılacak.`;
-
-  const confirmed = await showConfirm(title, text);
+  const confirmed = await showConfirm(
+    `${info.name} kurulsun mu?`,
+    `${info.name} offline paketi arka planda hazırlanacak.`
+  );
   if (!confirmed) return;
 
   setBusy(true);
 
   try {
-    if (isFreeLang(lang)) {
-      await installFreePack(lang);
-      await refreshHeaderTokens();
-      return;
-    }
+    const ok = await triggerAppInstall(lang);
 
-    const access = await ensureOfflineLangAccess(lang, 10);
-
-    if (!access?.ok) {
+    if (!ok) {
       toast(`${info.name} açılamadı`);
       return;
     }
 
-    const data = access.data || {};
-
     upsertInstalledPack({
-      lang_pack: data.lang_pack || packKeyForLang(lang),
+      lang_pack: packKeyForLang(lang),
       free_pack: false,
-      token_spent: 10,
+      token_spent: 0,
       starts_at: new Date().toISOString(),
-      expires_at: data.valid_until || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-      lang: lang
+      expires_at: "2099-12-31T23:59:59.000Z",
+      lang
     });
 
     renderInstalledList();
     await refreshHeaderTokens();
-    toast(`${info.name} açıldı`);
+    toast(`${info.name} kurulumu başlatıldı`);
   } catch (e) {
     console.error("[offline_languages_page] openOfflinePack error:", e);
     toast(`${info.name} açılamadı`);
@@ -324,32 +302,19 @@ async function openOfflinePack(langCode) {
   }
 }
 
-/* -------------------------------------------------------
-   RENDER
-------------------------------------------------------- */
 function renderInstalledList() {
   const q = String(searchInput?.value || "").trim().toLowerCase();
+  const nativeLang = getNativeLang();
 
   const cards = LANGS
+    .filter((l) => l.code !== nativeLang && l.code !== "en")
     .filter((l) => !q || l.name.toLowerCase().includes(q) || l.code.includes(q))
     .map((lang) => {
       const pack = getInstalledPackByLang(lang.code);
       const active = isPackActive(pack);
-      const free = isFreeLang(lang.code);
 
-      let btnClass = "lang-btn paid";
-      let btnText = "10 Jeton ile Aç";
-      let subText = free
-        ? "Offline erişim ücretsiz"
-        : "Offline erişim";
-
-      if (free) {
-        btnClass = active ? "lang-btn installed" : "lang-btn free";
-        btnText = active ? "Kuruldu" : "Ücretsiz Kur";
-      } else if (active) {
-        btnClass = "lang-btn installed";
-        btnText = "Kuruldu";
-      }
+      const btnClass = active ? "lang-btn installed" : "lang-btn paid";
+      const btnText = active ? "Kurulu" : "Kur";
 
       return `
         <div class="lang-card">
@@ -357,7 +322,7 @@ function renderInstalledList() {
             <div class="flag">${lang.flag}</div>
             <div>
               <h3 class="lang-name">${lang.name}</h3>
-              <div class="lang-sub">${subText}</div>
+              <div class="lang-sub">Offline erişim</div>
             </div>
           </div>
 
@@ -377,10 +342,10 @@ function renderInstalledList() {
   installedList.innerHTML = cards || `
     <div class="lang-card">
       <div class="lang-head">
-        <div class="flag">🔎</div>
+        <div class="flag">✅</div>
         <div>
-          <h3 class="lang-name">Sonuç bulunamadı</h3>
-          <div class="lang-sub">Arama metnini değiştirip tekrar deneyin.</div>
+          <h3 class="lang-name">Uygun dil bulunamadı</h3>
+          <div class="lang-sub">Arama filtresini değiştirerek tekrar deneyin.</div>
         </div>
       </div>
     </div>
@@ -394,9 +359,6 @@ function renderInstalledList() {
   });
 }
 
-/* -------------------------------------------------------
-   INIT
-------------------------------------------------------- */
 async function init() {
   try {
     mountShell({ scroll: "auto" });
@@ -405,6 +367,7 @@ async function init() {
   }
 
   LANGS = buildSupportedLangList();
+  seedPreinstalledLangs();
 
   currentUser = await getCurrentUser();
   if (!currentUser?.id) {
