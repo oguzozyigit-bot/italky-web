@@ -3,6 +3,65 @@
 import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
+const NATIVE_LANG_STORAGE_KEY = "italky_native_lang_v1";
+
+const NATIVE_LANG_META = {
+  tr: { flag: "🇹🇷", name: "Türkçe" },
+  en: { flag: "🇬🇧", name: "İngilizce" },
+  de: { flag: "🇩🇪", name: "Almanca" },
+  fr: { flag: "🇫🇷", name: "Fransızca" },
+  ru: { flag: "🇷🇺", name: "Rusça" },
+  bg: { flag: "🇧🇬", name: "Bulgarca" },
+  bn: { flag: "🇧🇩", name: "Bengalce" },
+  ca: { flag: "🇪🇸", name: "Katalanca" },
+  cs: { flag: "🇨🇿", name: "Çekçe" },
+  da: { flag: "🇩🇰", name: "Danca" },
+  el: { flag: "🇬🇷", name: "Yunanca" },
+  et: { flag: "🇪🇪", name: "Estonca" },
+  eu: { flag: "🇪🇸", name: "Baskça" },
+  fi: { flag: "🇫🇮", name: "Fince" },
+  gl: { flag: "🇪🇸", name: "Galiçyaca" },
+  hu: { flag: "🇭🇺", name: "Macarca" },
+  id: { flag: "🇮🇩", name: "Endonezce" },
+  lt: { flag: "🇱🇹", name: "Litvanca" },
+  lv: { flag: "🇱🇻", name: "Letonca" },
+  ms: { flag: "🇲🇾", name: "Malayca" },
+  nl: { flag: "🇳🇱", name: "Hollandaca" },
+  pl: { flag: "🇵🇱", name: "Lehçe" },
+  ro: { flag: "🇷🇴", name: "Romence" },
+  sk: { flag: "🇸🇰", name: "Slovakça" },
+  sl: { flag: "🇸🇮", name: "Slovence" },
+  sq: { flag: "🇦🇱", name: "Arnavutça" },
+  th: { flag: "🇹🇭", name: "Tayca" },
+  ur: { flag: "🇵🇰", name: "Urduca" },
+  vi: { flag: "🇻🇳", name: "Vietnamca" },
+  zh: { flag: "🇨🇳", name: "Çince" }
+};
+
+function getNativeLangInfo() {
+  const code = String(localStorage.getItem(NATIVE_LANG_STORAGE_KEY) || "tr")
+    .trim()
+    .toLowerCase();
+
+  return NATIVE_LANG_META[code] || {
+    flag: "🌐",
+    name: code.toUpperCase() || "Dil"
+  };
+}
+
+function hydrateNativeLangPill() {
+  const info = getNativeLangInfo();
+  const flagEl = document.getElementById("headerNativeLangFlag");
+  const labelEl = document.getElementById("headerNativeLangLabel");
+
+  if (flagEl) flagEl.textContent = info.flag;
+  if (labelEl) labelEl.textContent = info.name;
+}
+
+export function refreshHeaderNativeLang() {
+  hydrateNativeLangPill();
+}
+
 const LOADING_OVERLAY_HTML = `
 <div id="shellOverlay" style="
   position:fixed; inset:0; background:#070812; z-index:99999;
@@ -48,11 +107,6 @@ const HOME_HEADER_HTML = `
         <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.6z"></path>
       </svg>
     </button>
-
-    <button class="menu-btn" id="menuBtn" aria-label="Menü" type="button">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
 
     <button class="menu-btn" id="menuBtn" aria-label="Menü" type="button">
       <span></span><span></span><span></span>
@@ -307,6 +361,38 @@ body.ui-menu-open{
   gap:10px;
 }
 
+.native-lang-pill{
+  height:44px;
+  min-width:92px;
+  max-width:160px;
+  padding:0 12px;
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 8px 18px rgba(0,0,0,.24);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#f2f5ff;
+  flex:0 1 auto;
+  overflow:hidden;
+}
+
+.native-lang-flag{
+  font-size:16px;
+  line-height:1;
+  flex:0 0 auto;
+}
+
+.native-lang-label{
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  opacity:.96;
+}
+
 .settings-btn,
 .menu-btn{
   width:44px;
@@ -496,37 +582,7 @@ body.ui-menu-open{
   object-fit:cover;
   display:block;
 }
-.native-lang-pill{
-  height:44px;
-  min-width:92px;
-  max-width:160px;
-  padding:0 12px;
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 8px 18px rgba(0,0,0,.24);
-  display:flex;
-  align-items:center;
-  gap:8px;
-  color:#f2f5ff;
-  flex:0 1 auto;
-  overflow:hidden;
-}
 
-.native-lang-flag{
-  font-size:16px;
-  line-height:1;
-  flex:0 0 auto;
-}
-
-.native-lang-label{
-  font-size:12px;
-  font-weight:900;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  opacity:.96;
-}
 .menu-user-meta{
   min-width:0;
   display:flex;
@@ -984,7 +1040,7 @@ function finishMount(options) {
   const content = document.getElementById("pageContent");
 
   if (main) {
-    main.style.overflow = (options?.scroll === "none") ? "hidden" : "auto";
+    main.style.overflow = options?.scroll === "none" ? "hidden" : "auto";
   }
 
   requestAnimationFrame(() => {
@@ -1044,6 +1100,7 @@ function bindMenu() {
     document.body.classList.add("ui-menu-open");
     hydrateShellMeta();
     hydrateAdminButton();
+    hydrateNativeLangPill();
   };
 
   const closeMenu = () => {
@@ -1061,58 +1118,7 @@ function bindMenu() {
     closeMenu();
     location.href = "/pages/translation_settings.html";
   };
-  const NATIVE_LANG_STORAGE_KEY = "italky_native_lang_v1";
 
-const NATIVE_LANG_META = {
-  tr: { flag: "🇹🇷", name: "Türkçe" },
-  en: { flag: "🇬🇧", name: "İngilizce" },
-  de: { flag: "🇩🇪", name: "Almanca" },
-  fr: { flag: "🇫🇷", name: "Fransızca" },
-  ru: { flag: "🇷🇺", name: "Rusça" },
-  bg: { flag: "🇧🇬", name: "Bulgarca" },
-  bn: { flag: "🇧🇩", name: "Bengalce" },
-  ca: { flag: "🇪🇸", name: "Katalanca" },
-  cs: { flag: "🇨🇿", name: "Çekçe" },
-  da: { flag: "🇩🇰", name: "Danca" },
-  el: { flag: "🇬🇷", name: "Yunanca" },
-  et: { flag: "🇪🇪", name: "Estonca" },
-  eu: { flag: "🇪🇸", name: "Baskça" },
-  fi: { flag: "🇫🇮", name: "Fince" },
-  gl: { flag: "🇪🇸", name: "Galiçyaca" },
-  hu: { flag: "🇭🇺", name: "Macarca" },
-  id: { flag: "🇮🇩", name: "Endonezce" },
-  lt: { flag: "🇱🇹", name: "Litvanca" },
-  lv: { flag: "🇱🇻", name: "Letonca" },
-  ms: { flag: "🇲🇾", name: "Malayca" },
-  nl: { flag: "🇳🇱", name: "Hollandaca" },
-  pl: { flag: "🇵🇱", name: "Lehçe" },
-  ro: { flag: "🇷🇴", name: "Romence" },
-  sk: { flag: "🇸🇰", name: "Slovakça" },
-  sl: { flag: "🇸🇮", name: "Slovence" },
-  sq: { flag: "🇦🇱", name: "Arnavutça" },
-  th: { flag: "🇹🇭", name: "Tayca" },
-  ur: { flag: "🇵🇰", name: "Urduca" },
-  vi: { flag: "🇻🇳", name: "Vietnamca" },
-  zh: { flag: "🇨🇳", name: "Çince" }
-};
-
-function getNativeLangInfo() {
-  const code = String(localStorage.getItem(NATIVE_LANG_STORAGE_KEY) || "tr").trim().toLowerCase();
-  return NATIVE_LANG_META[code] || { flag: "🌐", name: code.toUpperCase() || "Dil" };
-}
-
-function hydrateNativeLangPill() {
-  const info = getNativeLangInfo();
-  const flagEl = document.getElementById("headerNativeLangFlag");
-  const labelEl = document.getElementById("headerNativeLangLabel");
-
-  if (flagEl) flagEl.textContent = info.flag;
-  if (labelEl) labelEl.textContent = info.name;
-}
-
-export function refreshHeaderNativeLang() {
-  hydrateNativeLangPill();
-}
   menuBtn.addEventListener("click", openMenu);
   menuBackdrop?.addEventListener("click", closeMenu);
   headerSettingsBtn?.addEventListener("click", goSettings);
@@ -1411,6 +1417,7 @@ export function setHeaderTokens(val) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
   } catch {}
 }
+
 try {
   window.setHeaderTokens = setHeaderTokens;
 } catch {}
