@@ -60,6 +60,14 @@
       font:inherit;font-weight:900;cursor:pointer
     }
     .hint{margin-top:12px;font-size:12px;color:var(--muted)}
+    body:not(.home-ready){
+  visibility:hidden;
+  opacity:0;
+}
+body.home-ready{
+  visibility:visible;
+  opacity:1;
+}
   </style>
 </head>
 <body>
@@ -78,7 +86,26 @@
       <div class="hint">İlk aşamada seçilen dil ile İngilizce arasındaki offline paket hazırlanır.</div>
     </div>
   </div>
+  
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+  const LOGIN_PAGE = "/pages/login.html";
 
+  async function bootAuthGate() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session?.user) {
+        location.replace(LOGIN_PAGE);
+        return;
+      }
+      document.body.classList.add("home-ready");
+    } catch (e) {
+      location.replace(LOGIN_PAGE);
+    }
+  }
+
+  bootAuthGate();
+</script>
   <script type="module" src="/js/native_lang_setup.js"></script>
 </body>
 </html>
