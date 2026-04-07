@@ -32,27 +32,23 @@ function render() {
 
 async function notifyAppToPrepare(lang) {
   try {
-    if (window.AndroidOfflineTranslate && typeof window.AndroidOfflineTranslate.ensureCorePacks === "function") {
-      // Şimdilik tr-en tek zip mantığı sende kurulu.
-      // İleride dili dinamikleştireceğiz.
-      window.AndroidOfflineTranslate.ensureCorePacks();
+    localStorage.setItem(STORAGE_KEY, lang);
+
+    if (window.AndroidOfflineTranslate && typeof window.AndroidOfflineTranslate.prepareOfflineLang === "function") {
+      window.AndroidOfflineTranslate.prepareOfflineLang(lang);
       return;
     }
-    if (window.Android && typeof window.Android.ensureCorePacks === "function") {
-      window.Android.ensureCorePacks();
+
+    if (window.Android && typeof window.Android.prepareOfflineLang === "function") {
+      window.Android.prepareOfflineLang(lang);
     }
   } catch (e) {
-    console.error("ensureCorePacks error", e);
+    console.error("prepareOfflineLang error", e);
   }
 }
 
 saveBtn.addEventListener("click", async () => {
-  localStorage.setItem(STORAGE_KEY, selected);
-
-  // App tarafına haber ver
   await notifyAppToPrepare(selected);
-
-  // Bekletmeden home'a geç
   location.replace("/pages/home.html");
 });
 
