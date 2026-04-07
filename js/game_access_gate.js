@@ -3,7 +3,7 @@
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 
-const FREE_GAME_CODES = new Set(["hangman"]);
+const FREE_GAME_CODES = new Set(["hangman", "morse_game"]);
 const GAME_PRICE = 1;
 const GAME_DAYS = 7;
 
