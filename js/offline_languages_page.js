@@ -2,6 +2,7 @@
 
 import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
+import { ensureOfflineLangAccess } from "/js/offline_access_gate.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -18,6 +19,7 @@ const toastEl = $("toast");
 
 const STORAGE = {
   installed: "italky_offline_installed_packs_v6",
+  installing: "italky_offline_installing_v1",
   siteLang: "italky_site_lang",
   nativeLang: "italky_native_lang_v1"
 };
@@ -54,7 +56,7 @@ const SUPPORTED_OFFLINE_LANGS = [
   { code: "zh", name: "Çince", flag: "🇨🇳" }
 ];
 
-const PRIORITY_ORDER = ["tr","en","de","fr","ru"];
+const PRIORITY_ORDER = ["tr","de","fr","ru"];
 
 let currentUser = null;
 let busy = false;
@@ -130,6 +132,30 @@ function getInstalledPacks() {
 
 function saveInstalledPacks(list) {
   localStorage.setItem(STORAGE.installed, JSON.stringify(Array.isArray(list) ? list : []));
+}
+
+function getInstallingLangs() {
+  const data = safeJsonParse(localStorage.getItem(STORAGE.installing) || "[]", []);
+  return Array.isArray(data) ? data : [];
+}
+
+function saveInstallingLangs(list) {
+  localStorage.setItem(STORAGE.installing, JSON.stringify(Array.isArray(list) ? list : []));
+}
+
+function markInstalling(lang, value) {
+  const arr = getInstallingLangs();
+  const code = String(lang || "").trim().toLowerCase();
+  const exists = arr.includes(code);
+
+  if (value && !exists) arr.push(code);
+  if (!value && exists) arr.splice(arr.indexOf(code), 1);
+
+  saveInstallingLangs(arr);
+}
+
+function isInstalling(lang) {
+  return getInstallingLangs().includes(String(lang || "").trim().toLowerCase());
 }
 
 function nowTs() {
@@ -266,26 +292,33 @@ async function openOfflinePack(langCode) {
     return;
   }
 
+  if (isInstalling(lang)) {
+    toast("Lütfen bekleyiniz...");
+    return;
+  }
+
   const confirmed = await showConfirm(
-    `${info.name} kurulsun mu?`,
-    `${info.name} offline paketi arka planda hazırlanacak.`
+    `${info.name} indirilsin mi?`,
+    `${info.name} için 10 jeton düşecek ve paket arka planda kurulacak.`
   );
   if (!confirmed) return;
 
   setBusy(true);
 
   try {
-    const ok = await triggerAppInstall(lang);
+    const access = await ensureOfflineLangAccess(lang, 10);
 
-    if (!ok) {
+    if (!access?.ok) {
       toast(`${info.name} açılamadı`);
       return;
     }
 
+    markInstalling(lang, true);
+
     upsertInstalledPack({
       lang_pack: packKeyForLang(lang),
       free_pack: false,
-      token_spent: 0,
+      token_spent: 10,
       starts_at: new Date().toISOString(),
       expires_at: "2099-12-31T23:59:59.000Z",
       lang
@@ -293,9 +326,22 @@ async function openOfflinePack(langCode) {
 
     renderInstalledList();
     await refreshHeaderTokens();
+
+    const ok = await triggerAppInstall(lang);
+    if (!ok) {
+      markInstalling(lang, false);
+      toast(`${info.name} indirilemedi`);
+      renderInstalledList();
+      return;
+    }
+
+    markInstalling(lang, false);
+    renderInstalledList();
     toast(`${info.name} kurulumu başlatıldı`);
   } catch (e) {
     console.error("[offline_languages_page] openOfflinePack error:", e);
+    markInstalling(lang, false);
+    renderInstalledList();
     toast(`${info.name} açılamadı`);
   } finally {
     setBusy(false);
@@ -312,9 +358,18 @@ function renderInstalledList() {
     .map((lang) => {
       const pack = getInstalledPackByLang(lang.code);
       const active = isPackActive(pack);
+      const installing = isInstalling(lang.code);
 
-      const btnClass = active ? "lang-btn installed" : "lang-btn paid";
-      const btnText = active ? "Kurulu" : "Kur";
+      let btnClass = "lang-btn paid";
+      let btnText = "10 Jeton ile İndir";
+
+      if (installing) {
+        btnClass = "lang-btn installing";
+        btnText = "Lütfen bekleyiniz...";
+      } else if (active) {
+        btnClass = "lang-btn installed";
+        btnText = "Kurulu";
+      }
 
       return `
         <div class="lang-card">
@@ -330,7 +385,7 @@ function renderInstalledList() {
             class="${btnClass}"
             type="button"
             data-lang="${lang.code}"
-            ${busy ? "disabled" : ""}
+            ${(busy || installing) ? "disabled" : ""}
           >
             ${btnText}
           </button>
