@@ -3,7 +3,6 @@
 import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureOfflineLangAccess } from "/js/offline_access_gate.js";
-import { getLangPoolForSite } from "/js/lang_pool_full.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -23,13 +22,45 @@ const STORAGE = {
   siteLang: "italky_site_lang"
 };
 
+const SUPPORTED_OFFLINE_LANGS = [
+  { code: "bg", name: "Bulgarca", flag: "🇧🇬" },
+  { code: "bn", name: "Bengalce", flag: "🇧🇩" },
+  { code: "ca", name: "Katalanca", flag: "🇪🇸" },
+  { code: "cs", name: "Çekçe", flag: "🇨🇿" },
+  { code: "da", name: "Danca", flag: "🇩🇰" },
+  { code: "de", name: "Almanca", flag: "🇩🇪" },
+  { code: "el", name: "Yunanca", flag: "🇬🇷" },
+  { code: "et", name: "Estonca", flag: "🇪🇪" },
+  { code: "eu", name: "Baskça", flag: "🇪🇸" },
+  { code: "fi", name: "Fince", flag: "🇫🇮" },
+  { code: "fr", name: "Fransızca", flag: "🇫🇷" },
+  { code: "gl", name: "Galiçyaca", flag: "🇪🇸" },
+  { code: "hu", name: "Macarca", flag: "🇭🇺" },
+  { code: "id", name: "Endonezce", flag: "🇮🇩" },
+  { code: "lt", name: "Litvanca", flag: "🇱🇹" },
+  { code: "lv", name: "Letonca", flag: "🇱🇻" },
+  { code: "ms", name: "Malayca", flag: "🇲🇾" },
+  { code: "nl", name: "Hollandaca", flag: "🇳🇱" },
+  { code: "pl", name: "Lehçe", flag: "🇵🇱" },
+  { code: "ro", name: "Romence", flag: "🇷🇴" },
+  { code: "ru", name: "Rusça", flag: "🇷🇺" },
+  { code: "sk", name: "Slovakça", flag: "🇸🇰" },
+  { code: "sl", name: "Slovence", flag: "🇸🇮" },
+  { code: "sq", name: "Arnavutça", flag: "🇦🇱" },
+  { code: "th", name: "Tayca", flag: "🇹🇭" },
+  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+  { code: "ur", name: "Urduca", flag: "🇵🇰" },
+  { code: "vi", name: "Vietnamca", flag: "🇻🇳" },
+  { code: "zh", name: "Çince", flag: "🇨🇳" }
+];
+
 const PRIORITY_ORDER = [
   "tr",
   "en",
   "de",
   "fr",
-  "es",
   "it",
+  "es",
   "ar",
   "ru",
   "az"
@@ -70,83 +101,26 @@ function getSiteLang() {
   ).trim().toLowerCase();
 }
 
-function normalizeFlag(code) {
-  const map = {
-    tr: "🇹🇷",
-    en: "🇬🇧",
-    de: "🇩🇪",
-    fr: "🇫🇷",
-    it: "🇮🇹",
-    es: "🇪🇸",
-    ru: "🇷🇺",
-    ar: "🇸🇦",
-    pt: "🇵🇹",
-    nl: "🇳🇱",
-    pl: "🇵🇱",
-    uk: "🇺🇦",
-    el: "🇬🇷",
-    az: "🇦🇿",
-    ka: "🇬🇪",
-    fa: "🇮🇷",
-    hi: "🇮🇳",
-    ja: "🇯🇵",
-    ko: "🇰🇷",
-    zh: "🇨🇳",
-    sq: "🇦🇱",
-    af: "🇿🇦",
-    bg: "🇧🇬"
-  };
-  return map[String(code || "").trim().toLowerCase()] || "🌐";
-}
-
 function priorityIndex(code) {
   const idx = PRIORITY_ORDER.indexOf(String(code || "").trim().toLowerCase());
   return idx === -1 ? 999 : idx;
 }
 
-function buildLangsFromPool() {
+function buildSupportedLangList() {
   const siteLang = getSiteLang();
-  let pool = [];
-
-  try {
-    pool = getLangPoolForSite(siteLang) || [];
-  } catch (e) {
-    console.warn("[offline_languages_page] getLangPoolForSite error:", e);
-    pool = [];
-  }
-
-  const normalized = pool
-    .map((item) => {
-      const code = String(
-        item?.code ||
-        item?.lang ||
-        item?.value ||
-        item?.key ||
-        ""
-      ).trim().toLowerCase();
-
-      if (!code) return null;
-
-      const name = String(
-        item?.label ||
-        item?.name ||
-        item?.title ||
-        code.toUpperCase()
-      ).trim();
-
-      const flag = String(item?.flag || normalizeFlag(code)).trim();
-
-      return { code, name, flag };
-    })
-    .filter(Boolean);
 
   const uniq = [];
   const seen = new Set();
 
-  for (const item of normalized) {
-    if (seen.has(item.code)) continue;
-    seen.add(item.code);
-    uniq.push(item);
+  for (const item of SUPPORTED_OFFLINE_LANGS) {
+    const code = String(item.code || "").trim().toLowerCase();
+    if (!code || seen.has(code)) continue;
+    seen.add(code);
+    uniq.push({
+      code,
+      name: String(item.name || code.toUpperCase()).trim(),
+      flag: String(item.flag || "🌐").trim()
+    });
   }
 
   uniq.sort((a, b) => {
@@ -216,7 +190,7 @@ function langInfo(code) {
   return LANGS.find((l) => l.code === code) || {
     code,
     name: code?.toUpperCase() || "Dil",
-    flag: normalizeFlag(code)
+    flag: "🌐"
   };
 }
 
@@ -430,7 +404,7 @@ async function init() {
     console.warn("[offline_languages_page] shell:", e);
   }
 
-  LANGS = buildLangsFromPool();
+  LANGS = buildSupportedLangList();
 
   currentUser = await getCurrentUser();
   if (!currentUser?.id) {
