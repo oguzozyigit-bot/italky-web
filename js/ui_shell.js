@@ -100,7 +100,7 @@ const HOME_HEADER_HTML = `
       <img src="" id="headerAvatarImg" alt="Avatar">
     </button>
 
-    <button class="settings-btn" id="headerSettingsBtn" aria-label="Ayarlar" type="button" title="Ayarlar">
+    <button class="settings-btn flat-top-btn" id="headerSettingsBtn" aria-label="Ayarlar" type="button" title="Ayarlar">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 3l1.2 2.4 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4L12 3z"></path>
         <circle cx="12" cy="12" r="3.2"></circle>
@@ -108,7 +108,7 @@ const HOME_HEADER_HTML = `
       </svg>
     </button>
 
-    <button class="menu-btn" id="menuBtn" aria-label="Menü" type="button">
+    <button class="menu-btn flat-top-btn" id="menuBtn" aria-label="Menü" type="button">
       <span></span><span></span><span></span>
     </button>
   </div>
@@ -362,39 +362,28 @@ body.ui-menu-open{
 }
 
 .native-lang-pill{
-  height:44px;
-  min-width:92px;
-  max-width:160px;
-  padding:0 12px;
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 8px 18px rgba(0,0,0,.24);
+  height:38px;
+  min-width:38px;
+  max-width:38px;
+  padding:0;
+  border-radius:12px;
+  background:transparent;
+  border:none;
+  box-shadow:none;
   display:flex;
   align-items:center;
-  gap:8px;
+  justify-content:center;
+  gap:0;
   color:#f2f5ff;
-  flex:0 1 auto;
+  flex:0 0 auto;
   overflow:hidden;
 }
 
-.native-lang-pill.only-flag{
-  width:44px;
-  min-width:44px;
-  max-width:44px;
-  padding:0;
-  justify-content:center;
-  gap:0;
-}
-
 .native-lang-flag{
-  font-size:16px;
+  font-size:18px;
   line-height:1;
   flex:0 0 auto;
-}
-
-.native-lang-pill.only-flag .native-lang-flag{
-  font-size:18px;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.12));
 }
 
 .native-lang-label{
@@ -402,13 +391,12 @@ body.ui-menu-open{
 }
 
 .avatar-mini-btn{
-  width:44px;
-  height:44px;
+  width:38px;
+  height:38px;
   border:none;
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 8px 18px rgba(0,0,0,.24);
+  border-radius:50%;
+  background:transparent;
+  box-shadow:none;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -419,10 +407,12 @@ body.ui-menu-open{
 }
 
 .avatar-mini-btn img{
-  width:100%;
-  height:100%;
+  width:34px;
+  height:34px;
+  border-radius:50%;
   object-fit:cover;
   display:block;
+  border:1px solid rgba(255,255,255,.18);
 }
 
 .avatar-mini-btn.empty img{
@@ -431,24 +421,23 @@ body.ui-menu-open{
 
 .avatar-mini-btn.empty::before{
   content:"👤";
-  font-size:18px;
-  opacity:.9;
+  font-size:20px;
+  opacity:.92;
 }
 
-.settings-btn,
-.menu-btn{
-  width:44px;
-  height:44px;
+.flat-top-btn{
+  width:38px;
+  height:38px;
   border:none;
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 8px 18px rgba(0,0,0,.24);
+  border-radius:12px;
+  background:transparent;
+  box-shadow:none;
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
   flex:0 0 auto;
+  padding:0;
 }
 
 .settings-btn svg{
@@ -1244,7 +1233,7 @@ export function hydrateFromCache() {
     const u = JSON.parse(raw);
 
     const nm = u?.display_name || u?.name || u?.full_name || u?.email || "Kullanıcı";
-    const pic = u?.picture || u?.avatar || "";
+    const pic = String(u?.picture || u?.avatar || "").trim();
     const tokens = Number(u?.tokens ?? 0);
 
     const nameEl = document.getElementById("menuUserName");
@@ -1262,8 +1251,6 @@ export function hydrateFromCache() {
       topAvatarImg.src = pic;
       topAvatarImg.referrerPolicy = "no-referrer";
       topAvatarBtn?.classList.remove("empty");
-    } else {
-      topAvatarBtn?.classList.add("empty");
     }
 
     const jetonEl = document.getElementById("menuHeaderJeton");
@@ -1310,20 +1297,20 @@ async function hydrateShellMeta() {
       nameEl.textContent = data.full_name;
     }
 
+    const pic = String(data.avatar_url || "").trim();
+
     const picEl = document.getElementById("menuUserPic");
-    if (picEl && data.avatar_url) {
-      picEl.src = data.avatar_url;
+    if (picEl && pic) {
+      picEl.src = pic;
       picEl.referrerPolicy = "no-referrer";
     }
 
     const topAvatarImg = document.getElementById("headerAvatarImg");
     const topAvatarBtn = document.getElementById("headerAvatarBtn");
-    if (topAvatarImg && data.avatar_url) {
-      topAvatarImg.src = data.avatar_url;
+    if (topAvatarImg && pic) {
+      topAvatarImg.src = pic;
       topAvatarImg.referrerPolicy = "no-referrer";
       topAvatarBtn?.classList.remove("empty");
-    } else {
-      topAvatarBtn?.classList.add("empty");
     }
 
     const role = String(data.role || "").toLowerCase().trim();
@@ -1353,7 +1340,7 @@ async function hydrateShellMeta() {
       cached.last_login_at = data.last_login_at || "";
       cached.email = email || cached.email || "";
       if (data.full_name) cached.full_name = data.full_name;
-      if (data.avatar_url) cached.avatar = data.avatar_url;
+      if (pic) cached.avatar = pic;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
     } catch {}
   } catch (e) {
