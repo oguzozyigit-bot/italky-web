@@ -78,7 +78,7 @@ body.home-ready #pageContent{
   min-height:100%;
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:12px;
 }
 
 .hero{
@@ -250,26 +250,57 @@ body.home-ready #pageContent{
   animation-direction:reverse;
 }
 
-.planet-text{
+.planet-center{
   position:relative;
   z-index:3;
-  display:inline-flex;
+  display:flex;
+  flex-direction:column;
   align-items:center;
-  gap:0;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:14px;
-  font-weight:700;
-  letter-spacing:.2px;
-  color:#ffffff;
-  text-shadow:
-    0 0 10px rgba(255,255,255,.28),
-    0 0 24px rgba(255,255,255,.14);
+  justify-content:center;
+  gap:3px;
 }
 
-.planet-text .ai{
-  background:var(--ai-grad);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+.planet-nfc-icon{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  position:relative;
+  box-shadow:0 0 14px rgba(103,232,249,.22);
+}
+
+.planet-nfc-icon::before,
+.planet-nfc-icon::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:50%;
+  border:2px solid rgba(103,232,249,.95);
+  border-left-color:transparent;
+  border-bottom-color:transparent;
+  border-radius:50%;
+  transform:translate(-50%,-50%) rotate(45deg);
+}
+
+.planet-nfc-icon::before{
+  width:12px;
+  height:12px;
+}
+
+.planet-nfc-icon::after{
+  width:20px;
+  height:20px;
+  opacity:.72;
+}
+
+.planet-nfc-text{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.8px;
+  color:#fff;
+  text-shadow:0 0 12px rgba(255,255,255,.18);
 }
 
 .heroTitle{
@@ -285,16 +316,6 @@ body.home-ready #pageContent{
   max-width:320px;
 }
 
-.heroSub{
-  margin:0;
-  font-size:12px;
-  color:rgba(255,255,255,.86);
-  text-align:center;
-  line-height:1.35;
-  max-width:310px;
-  font-weight:800;
-}
-
 .heroName{
   margin:0;
   font-size:13px;
@@ -303,14 +324,6 @@ body.home-ready #pageContent{
   line-height:1.3;
   max-width:310px;
   font-weight:700;
-}
-
-.heroActions,
-#nfcUpgradeBox,
-.heroTrialWarn,
-#goSideToSide,
-.connect-code-wrap{
-  display:none !important;
 }
 
 .home-grid{
@@ -352,10 +365,10 @@ body.home-ready #pageContent{
     linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
 }
 
-.offline-grid-card{
+.text-card{
   background:
     radial-gradient(circle at 80% 15%, rgba(255,255,255,.12) 0%, transparent 30%),
-    linear-gradient(180deg, #4b1118 0%, #7f1d1d 48%, #b91c1c 100%);
+    linear-gradient(180deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
 }
 
 .card-title{
@@ -462,34 +475,53 @@ body.home-ready #pageContent{
 .face-wave::before{ top:9px;height:2px; }
 .face-wave::after{ top:16px;height:2px;opacity:.68; }
 
-.offline-art{
+.text-art{
   display:flex;
   align-items:center;
   justify-content:center;
   gap:10px;
 }
 
-.offline-sheet{
-  width:22px;
-  height:34px;
-  border-radius:8px;
-  background:rgba(255,255,255,.16);
-  border:1.4px solid rgba(255,255,255,.46);
+.text-bubble{
   position:relative;
+  width:28px;
+  height:20px;
+  border-radius:8px;
+  background:rgba(255,255,255,.92);
 }
 
-.offline-sheet::before,
-.offline-sheet::after{
+.text-bubble::after{
   content:"";
   position:absolute;
-  left:4px;
-  right:4px;
-  height:2px;
-  border-radius:2px;
-  background:rgba(255,255,255,.72);
+  left:5px;
+  bottom:-5px;
+  width:8px;
+  height:8px;
+  background:rgba(255,255,255,.92);
+  clip-path:polygon(0 0, 100% 0, 0 100%);
 }
-.offline-sheet::before{ top:10px; }
-.offline-sheet::after{ top:17px; }
+
+.text-doc{
+  position:relative;
+  width:24px;
+  height:34px;
+  border-radius:7px;
+  border:1.6px solid rgba(103,232,249,.96);
+  background:rgba(103,232,249,.08);
+}
+
+.text-doc-line{
+  position:absolute;
+  left:5px;
+  right:5px;
+  height:2px;
+  border-radius:3px;
+  background:#67e8f9;
+}
+
+.t1{ top:8px; }
+.t2{ top:14px; }
+.t3{ top:20px; }
 
 .wide-stack{
   display:flex;
@@ -527,24 +559,11 @@ body.home-ready #pageContent{
     0 0 18px rgba(103,232,249,.08);
 }
 
-.texttotext-card{
-  background:
-    radial-gradient(circle at 14% 50%, rgba(251,146,60,.22) 0%, transparent 24%),
-    radial-gradient(circle at 86% 16%, rgba(103,232,249,.14) 0%, transparent 20%),
-    linear-gradient(90deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
-}
-
 .fun-card{
   background:
     radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
     radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
     linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
-}
-
-.level-card{
-  background:
-    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
-    linear-gradient(90deg, #166534 0%, #22c55e 46%, #16a34a 100%);
 }
 
 .practice-card{
@@ -553,7 +572,12 @@ body.home-ready #pageContent{
     linear-gradient(90deg, #1d4ed8 0%, #0ea5e9 48%, #6366f1 100%);
 }
 
-.extra-ico,
+.level-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
+    linear-gradient(90deg, #166534 0%, #22c55e 46%, #16a34a 100%);
+}
+
 .fun-ico,
 .level-ico,
 .practice-ico{
@@ -567,61 +591,19 @@ body.home-ready #pageContent{
   box-shadow:inset 0 0 22px rgba(255,255,255,.05);
 }
 
-.text-bubble{
-  position:absolute;
-  left:12px;
-  top:18px;
-  width:28px;
-  height:20px;
-  border-radius:8px;
-  background:rgba(255,255,255,.92);
-}
-
-.text-bubble::after{
-  content:"";
-  position:absolute;
-  left:5px;
-  bottom:-5px;
-  width:8px;
-  height:8px;
-  background:rgba(255,255,255,.92);
-  clip-path:polygon(0 0, 100% 0, 0 100%);
-}
-
-.text-doc{
-  position:absolute;
-  right:14px;
-  top:16px;
-  width:24px;
-  height:34px;
-  border-radius:7px;
-  border:1.6px solid rgba(103,232,249,.96);
-  background:rgba(103,232,249,.08);
-}
-
-.text-doc-line{
-  position:absolute;
-  left:5px;
-  right:5px;
-  height:2px;
-  border-radius:3px;
-  background:#67e8f9;
-}
-.t1{ top:8px; }
-.t2{ top:14px; }
-.t3{ top:20px; }
-
 .fun-dice, .fun-dice::before, .fun-dice::after{
   position:absolute;
   border-radius:10px;
   background:rgba(255,255,255,.92);
 }
+
 .fun-dice{
   width:24px;
   height:24px;
   left:14px;
   top:24px;
 }
+
 .fun-dice::before{
   content:"";
   width:18px;
@@ -630,6 +612,7 @@ body.home-ready #pageContent{
   top:-10px;
   opacity:.8;
 }
+
 .fun-dice::after{
   content:"";
   width:16px;
@@ -646,6 +629,7 @@ body.home-ready #pageContent{
   border-radius:6px 6px 0 0;
   background:rgba(255,255,255,.92);
 }
+
 .level-bars span:nth-child(1){ left:14px; height:18px; }
 .level-bars span:nth-child(2){ left:30px; height:28px; }
 .level-bars span:nth-child(3){ left:46px; height:40px; }
@@ -659,6 +643,7 @@ body.home-ready #pageContent{
   border-radius:8px;
   background:rgba(255,255,255,.92);
 }
+
 .practice-chat::after{
   content:"";
   position:absolute;
@@ -669,12 +654,14 @@ body.home-ready #pageContent{
   background:rgba(255,255,255,.92);
   clip-path:polygon(0 0, 100% 0, 0 100%);
 }
+
 .practice-chat.right{
   left:auto;
   right:12px;
   top:34px;
   background:rgba(103,232,249,.92);
 }
+
 .practice-chat.right::after{
   left:auto;
   right:4px;
@@ -798,7 +785,6 @@ body.home-ready #pageContent{
   .side6{ transform:rotateX(-90deg) translateZ(68px); }
   .holo-qr{ width:98px; height:98px; }
   .planet-core{ width:98px; height:98px; }
-  .planet-text{ font-size:13px; }
   .heroTitle{ font-size:18px; }
   .card-title{ font-size:22px; }
   .wide-title{ font-size:22px; }
@@ -812,15 +798,6 @@ body.home-ready #pageContent{
 </head>
 
 <body>
-  
-<script>
-  try {
-    const nativeLang = String(localStorage.getItem("italky_native_lang_v1") || "").trim().toLowerCase();
-    if (!nativeLang) {
-      location.replace("https://appassets.androidplatform.net/assets/pages/offline_onboarding.html");
-    }
-  } catch {}
-</script>
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
@@ -861,7 +838,10 @@ body.home-ready #pageContent{
             <div class="planet-glow"></div>
             <div class="planet-rays"></div>
             <div class="planet-core">
-              <span class="planet-text">italky<span class="ai">AI</span></span>
+              <div class="planet-center">
+                <div class="planet-nfc-icon"></div>
+                <div class="planet-nfc-text">NFC</div>
+              </div>
             </div>
           </div>
         </div>
@@ -877,10 +857,9 @@ body.home-ready #pageContent{
 
         <div class="card-desc-list">
           <p class="card-desc">Yüz yüze iletişim.</p>
-          <p class="card-desc">Yapay zeka sayesinde çeviri.</p>
-          <p class="card-desc">72 dil çevirisi.</p>
+          <p class="card-desc">Yapay zeka destekli çeviri.</p>
+          <p class="card-desc">72 dil desteği.</p>
           <p class="card-desc">Tek telefon ile kullanım.</p>
-          <p class="card-desc">Özel ses seçimi.</p>
           <p class="card-desc">Bölünmüş ekran desteği.</p>
         </div>
 
@@ -891,27 +870,18 @@ body.home-ready #pageContent{
         </div>
       </a>
 
-      <a id="offlineCard" class="mod-card offline-grid-card" href="/pages/offline_languages.html">
-        <h2 class="card-title">Offline Translate</h2>
+      <a id="textCard" class="mod-card text-card" href="/pages/text_translate.html">
+        <h2 class="card-title">TextToText</h2>
 
         <div class="card-desc-list">
-          <p class="card-desc">67 Offline Dil Seçeneği.</p>
-          <p class="card-desc">İnternetsiz çeviri deneyimi.</p>
-          <p class="card-desc">Dil paketlerini indir, hemen kullan.</p>
-          <p class="card-desc">Bağlantı olmadan hızlı çeviri.</p>
+          <p class="card-desc">Metinden çeviri.</p>
+          <p class="card-desc">Fotoğraftan çeviri.</p>
+          <p class="card-desc">Hızlı ve sade kullanım.</p>
+          <p class="card-desc">Sesli okuma desteği.</p>
+          <p class="card-desc">Tek ekranda giriş ve sonuç.</p>
         </div>
 
-        <div class="card-art offline-art">
-          <div class="offline-sheet"></div>
-          <div class="offline-sheet"></div>
-          <div class="offline-sheet"></div>
-        </div>
-      </a>
-    </section>
-
-    <section class="wide-stack">
-      <a id="textCard" class="wide-card texttotext-card" href="/pages/text_translate.html">
-        <div class="extra-ico">
+        <div class="card-art text-art">
           <div class="text-bubble"></div>
           <div class="text-doc">
             <div class="text-doc-line t1"></div>
@@ -919,16 +889,10 @@ body.home-ready #pageContent{
             <div class="text-doc-line t3"></div>
           </div>
         </div>
-
-        <div class="wide-body">
-          <div class="card-topline">Metin ve Fotoğraf</div>
-          <h2 class="wide-title">TextToText</h2>
-          <p class="wide-desc">Yazıdan çeviri. Hızlı, sade ve otomatik sesli okuma destekli.</p>
-        </div>
-
-        <div class="arrow-chip"></div>
       </a>
+    </section>
 
+    <section class="wide-stack">
       <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
         <div class="fun-ico">
           <div class="fun-dice"></div>
@@ -943,6 +907,21 @@ body.home-ready #pageContent{
         <div class="arrow-chip"></div>
       </a>
 
+      <a id="practiceCard" class="wide-card practice-card" href="/pages/pratice_ai_select.html">
+        <div class="practice-ico">
+          <div class="practice-chat"></div>
+          <div class="practice-chat right"></div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Canlı Gelişim</div>
+          <h2 class="wide-title">Practice AI</h2>
+          <p class="wide-desc">Öğretmen destekli konuşma ve tekrar akışlarıyla pratik yap, akıcılığını güçlendir.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
       <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
         <div class="level-ico">
           <div class="level-bars">
@@ -952,23 +931,8 @@ body.home-ready #pageContent{
 
         <div class="wide-body">
           <div class="card-topline">Ölç & Başla</div>
-          <h2 class="wide-title">Seviye Tespit Sınavı</h2>
+          <h2 class="wide-title">Seviye Tespit</h2>
           <p class="wide-desc">Mevcut dil seviyeni ölç, sana uygun başlangıç noktasını sistem otomatik belirlesin.</p>
-        </div>
-
-        <div class="arrow-chip"></div>
-      </a>
-
-      <a id="practiceCard" class="wide-card practice-card" href="/pages/pratice_ai_select.html">
-        <div class="practice-ico">
-          <div class="practice-chat"></div>
-          <div class="practice-chat right"></div>
-        </div>
-
-        <div class="wide-body">
-          <div class="card-topline">Canlı Gelişim</div>
-          <h2 class="wide-title">Pratik Yap</h2>
-          <p class="wide-desc">Öğretmen destekli konuşma ve tekrar akışlarıyla pratik yap, akıcılığını güçlendir.</p>
         </div>
 
         <div class="arrow-chip"></div>
