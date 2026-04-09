@@ -22,10 +22,7 @@
       --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
     html,body{
       margin:0;
@@ -144,7 +141,7 @@
     }
 
     .voice-sheet.open{
-      max-height:420px;
+      max-height:540px;
       opacity:1;
       transform:translateY(0);
       padding:14px;
@@ -204,12 +201,10 @@
       display:flex;
       flex-direction:column;
       gap:8px;
-      min-height:106px;
+      min-height:98px;
     }
 
-    .voice-card:active{
-      transform:scale(.985);
-    }
+    .voice-card:active{ transform:scale(.985); }
 
     .voice-card.active{
       border-color:#818cf8;
@@ -253,6 +248,12 @@
       border-color:rgba(245,158,11,.20);
     }
 
+    .voice-badge.named{
+      color:#dbeafe;
+      background:rgba(59,130,246,.10);
+      border-color:rgba(59,130,246,.20);
+    }
+
     .voice-desc{
       font-size:11px;
       line-height:1.45;
@@ -260,34 +261,22 @@
       word-break:break-word;
     }
 
-    .voice-actions{
+    .voice-create-row{
       display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:2px;
+      margin-top:4px;
     }
 
-    .voice-mini-btn{
-      min-height:36px;
-      padding:0 12px;
+    .voice-create-btn{
+      width:100%;
+      min-height:42px;
       border:none;
-      border-radius:12px;
+      border-radius:14px;
       cursor:pointer;
       font-family:inherit;
       font-size:12px;
       font-weight:900;
-      transition:.18s ease;
-    }
-
-    .voice-mini-btn.primary{
       background:var(--grad);
       color:#05060d;
-    }
-
-    .voice-mini-btn.secondary{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
     }
 
     .persona-pills{
@@ -300,9 +289,7 @@
       padding-bottom:2px;
     }
 
-    .persona-pills::-webkit-scrollbar{
-      display:none;
-    }
+    .persona-pills::-webkit-scrollbar{ display:none; }
 
     .persona-pill{
       flex:0 0 auto;
@@ -352,9 +339,7 @@
       scrollbar-width:none;
     }
 
-    .chat-messages::-webkit-scrollbar{
-      display:none;
-    }
+    .chat-messages::-webkit-scrollbar{ display:none; }
 
     .msg{
       display:flex;
@@ -520,6 +505,10 @@
       line-height:1.3;
     }
 
+    .hidden{
+      display:none !important;
+    }
+
     @media (max-width:390px){
       .bubble{ font-size:14px; }
       .top-note-title{ font-size:12px; }
@@ -572,7 +561,7 @@
       <div class="top-row">
         <div class="top-note">
           <p class="top-note-title">Deneme ekranı</p>
-          <p class="top-note-sub">Sohbet, persona ve özel ses akışı testi</p>
+          <p class="top-note-sub">Sohbet, persona ve ses akışı testi</p>
         </div>
 
         <button class="top-pill-btn" id="toggleVoiceBtn" type="button">
@@ -585,7 +574,7 @@
         <div class="voice-sheet-head">
           <div>
             <h2 class="voice-sheet-title">Ses Değiştir</h2>
-            <p class="voice-sheet-sub">Sohbet ekranına özel ses seçimi. Buradaki seçimler çeviri ayarlarından ayrı tutulur.</p>
+            <p class="voice-sheet-sub">Burada sadece ses seçilir. Yeni ses oluşturma ayrı sayfadan yapılır.</p>
           </div>
           <button class="voice-close" id="closeVoiceSheet" type="button">×</button>
         </div>
@@ -596,7 +585,7 @@
               <div class="voice-name">Ücretsiz Ses</div>
               <div class="voice-badge free">Standart</div>
             </div>
-            <div class="voice-desc">Doğal ve ücretsiz konuşma sesi. Hızlı, temiz ve her zaman hazır.</div>
+            <div class="voice-desc">Doğal, hızlı ve her zaman hazır olan ücretsiz ses.</div>
           </div>
 
           <div class="voice-card" data-voice-type="mine">
@@ -604,26 +593,52 @@
               <div class="voice-name">Kendi Sesim</div>
               <div class="voice-badge special">Özel</div>
             </div>
-            <div class="voice-desc">Kayıtlı özel sesin varsa burada kullanılır. Sohbet sana daha yakın hissettirir.</div>
-
-            <div class="voice-actions">
-              <button class="voice-mini-btn primary" type="button">Kullan</button>
-              <button class="voice-mini-btn secondary" type="button">Dinle</button>
-            </div>
+            <div class="voice-desc">Kendi kayıtlı özel sesin varsa burada kullanılır.</div>
           </div>
 
-          <div class="voice-card" data-voice-type="custom">
+          <div class="voice-card" data-voice-type="second">
             <div class="voice-top">
-              <div class="voice-name" id="customVoiceName">Özel Ses</div>
-              <div class="voice-badge special">İsimli</div>
+              <div class="voice-name" id="secondVoiceName">İkinci Ses</div>
+              <div class="voice-badge named">İsimli</div>
             </div>
-            <div class="voice-desc" id="customVoiceDesc">Kayıt sayfasında verdiğin isim burada görünür. Ton ve bağlam buna göre şekillenir.</div>
-
-            <div class="voice-actions">
-              <button class="voice-mini-btn primary" type="button" id="useCustomVoiceBtn">Kullan</button>
-              <button class="voice-mini-btn secondary" type="button">Dinle</button>
-            </div>
+            <div class="voice-desc" id="secondVoiceDesc">Kayıt sayfasında verdiğin isim burada görünür.</div>
           </div>
+
+          <div class="voice-card" data-voice-type="umay">
+            <div class="voice-top">
+              <div class="voice-name">Umay</div>
+              <div class="voice-badge free">Hazır Ses</div>
+            </div>
+            <div class="voice-desc">Yumuşak, sıcak ve dengeli kadın ses.</div>
+          </div>
+
+          <div class="voice-card" data-voice-type="jale">
+            <div class="voice-top">
+              <div class="voice-name">Jale</div>
+              <div class="voice-badge free">Hazır Ses</div>
+            </div>
+            <div class="voice-desc">Biraz daha olgun ve sakin kadın ses.</div>
+          </div>
+
+          <div class="voice-card" data-voice-type="kaan">
+            <div class="voice-top">
+              <div class="voice-name">Kaan</div>
+              <div class="voice-badge free">Hazır Ses</div>
+            </div>
+            <div class="voice-desc">Temiz, net ve güçlü erkek ses.</div>
+          </div>
+
+          <div class="voice-card" data-voice-type="ozan">
+            <div class="voice-top">
+              <div class="voice-name">Ozan</div>
+              <div class="voice-badge free">Hazır Ses</div>
+            </div>
+            <div class="voice-desc">Samimi, rahat ve doğal erkek ses.</div>
+          </div>
+        </div>
+
+        <div class="voice-create-row">
+          <button class="voice-create-btn" id="newVoiceBtn" type="button">Yeni Ses Tanımla</button>
         </div>
       </div>
 
@@ -670,7 +685,7 @@
 
           <div class="composer-center">
             <textarea id="chatInput" class="composer-input" rows="1" placeholder="italkyAI... sana ne anlatayım?"></textarea>
-            <div class="helper">Yaz, gönder, istersen mikrofona basıp konuş. Akış sade ve hızlı olsun.</div>
+            <div class="helper">Yaz, gönder, istersen mikrofona basıp konuş.</div>
           </div>
 
           <button id="micBtn" class="mic-btn" type="button" aria-label="Mikrofon">
@@ -682,7 +697,7 @@
             </svg>
           </button>
 
-          <button id="sendBtn" class="send-btn" type="button" aria-label="Gönder">
+          <button id="sendBtn" class="send-btn hidden" type="button" aria-label="Gönder">
             <svg viewBox="0 0 24 24">
               <path d="M22 2L11 13"></path>
               <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
@@ -714,13 +729,14 @@
   const toggleVoiceBtn = $("toggleVoiceBtn");
   const voiceSheet = $("voiceSheet");
   const closeVoiceSheet = $("closeVoiceSheet");
+  const newVoiceBtn = $("newVoiceBtn");
 
-  const customVoiceName = localStorage.getItem("italkyai_custom_voice_name") || "Özel Ses";
-  const customOwnerName = localStorage.getItem("italkyai_custom_voice_owner_name") || "";
+  const secondVoiceName = localStorage.getItem("italkyai_second_voice_name") || "İkinci Ses";
+  const secondVoiceOwnerName = localStorage.getItem("italkyai_second_voice_owner_name") || "";
 
-  $("customVoiceName").textContent = customVoiceName;
-  if (customOwnerName) {
-    $("customVoiceDesc").textContent = `${customOwnerName} için tanımlanan özel ses burada kullanılır. Ton ve bağlam buna göre şekillenir.`;
+  $("secondVoiceName").textContent = secondVoiceName;
+  if (secondVoiceOwnerName) {
+    $("secondVoiceDesc").textContent = `${secondVoiceOwnerName} için tanımlanan özel ses burada görünür.`;
   }
 
   function autoResizeTextarea() {
@@ -728,7 +744,21 @@
     chatInput.style.height = `${Math.min(chatInput.scrollHeight, 140)}px`;
   }
 
-  chatInput.addEventListener("input", autoResizeTextarea);
+  function syncInputActionState() {
+    const hasText = String(chatInput.value || "").trim().length > 0;
+    if (hasText) {
+      micBtn.classList.add("hidden");
+      sendBtn.classList.remove("hidden");
+    } else {
+      micBtn.classList.remove("hidden");
+      sendBtn.classList.add("hidden");
+    }
+  }
+
+  chatInput.addEventListener("input", () => {
+    autoResizeTextarea();
+    syncInputActionState();
+  });
 
   personaPills.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -750,6 +780,10 @@
 
   closeVoiceSheet?.addEventListener("click", () => {
     voiceSheet.classList.remove("open");
+  });
+
+  newVoiceBtn?.addEventListener("click", () => {
+    location.href = "/pages/ai_voice_profile.html";
   });
 
   function addMessage(side, text, meta) {
@@ -803,6 +837,7 @@
     addMessage("right", text);
     chatInput.value = "";
     autoResizeTextarea();
+    syncInputActionState();
 
     setTimeout(() => {
       addMessage("left", fakeReply(text));
@@ -822,12 +857,8 @@
     micBtn.classList.toggle("listening");
   });
 
-  $("useCustomVoiceBtn")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    document.querySelector('[data-voice-type="custom"]')?.classList.add("active");
-  });
-
   autoResizeTextarea();
+  syncInputActionState();
 </script>
 </body>
 </html>
