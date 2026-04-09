@@ -13,10 +13,7 @@ const STORAGE = {
   voice: "italkyai_selected_voice",
   persona: "italkyai_selected_persona",
   secondVoiceName: "italkyai_second_voice_name",
-  secondVoiceOwnerName: "italkyai_second_voice_owner_name",
-  secondVoiceOwnerType: "italkyai_second_voice_owner_type",
-  secondVoiceTraits: "italkyai_second_voice_traits",
-  secondVoiceFileName: "italkyai_second_voice_file_name"
+  secondVoiceOwnerName: "italkyai_second_voice_owner_name"
 };
 
 const API = {
@@ -95,14 +92,6 @@ function hydrateSecondVoiceName() {
   UI.secondVoiceDesc.textContent = secondVoiceOwnerName
     ? `${secondVoiceOwnerName} için tanımlanan özel ses burada görünür.`
     : "Kayıt sayfasında verilen isim burada görünür.";
-}
-
-function renderWelcome() {
-  if (UI.chatMessages.children.length) return;
-
-  addMessage("left", "Tamam, sahayı kurduk. Ses seçimini üstten değiştir, alttan yaz ya da konuş. Burada gerçek akışı test ederiz.");
-  addMessage("right", "Benimle doğal konuş, kasma.");
-  addMessage("left", "Tamamdır. Ne robot gibi konuşurum ne de boş yaparım. Derdin neyse direkt gir.");
 }
 
 function addMessage(side, text, meta) {
@@ -281,7 +270,7 @@ async function sendCurrentMessage() {
 
     const reply =
       String(json?.reply || "").trim() ||
-      "Şu an cevap üretilemedi. Motor tarafını kontrol edelim.";
+      "Şu an cevap üretilemedi.";
 
     addMessage("left", reply);
     setTyping(false);
@@ -290,7 +279,7 @@ async function sendCurrentMessage() {
   } catch (e) {
     console.error("Chat hata:", e);
     setTyping(false);
-    addMessage("left", "Şu an cevap tarafında bir sorun var. Bağlantıyı ve sohbet motorunu kontrol et.");
+    addMessage("left", "Şu an cevap tarafında bir sorun var.");
   }
 }
 
@@ -342,7 +331,6 @@ async function init() {
   hydrateSecondVoiceName();
   setSelectedVoice(getSelectedVoice());
   setSelectedPersona(getSelectedPersona());
-  renderWelcome();
   bindEvents();
   autoResizeTextarea();
   syncInputActionState();
