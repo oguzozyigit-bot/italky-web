@@ -11,7 +11,6 @@ const $ = (id) => document.getElementById(id);
 
 const STORAGE = {
   voice: "italkyai_selected_voice",
-  persona: "italkyai_selected_persona",
   secondVoiceName: "italkyai_second_voice_name",
   secondVoiceOwnerName: "italkyai_second_voice_owner_name"
 };
@@ -31,15 +30,25 @@ const UI = {
   closeVoiceSheet: $("closeVoiceSheet"),
   newVoiceBtn: $("newVoiceBtn"),
   typingState: $("typingState"),
-  personaPills: [...document.querySelectorAll(".persona-pill")],
   voiceCards: [...document.querySelectorAll("[data-voice-id]")],
   secondVoiceName: $("secondVoiceName"),
-  secondVoiceDesc: $("secondVoiceDesc")
+  secondVoiceDesc: $("secondVoiceDesc"),
+  clearChatBtn: $("clearChatBtn"),
+  saveChatBtn: $("saveChatBtn"),
+  savedChatsBtn: $("savedChatsBtn"),
+  saveModal: $("saveModal"),
+  saveChatName: $("saveChatName"),
+  cancelSaveChat: $("cancelSaveChat"),
+  confirmSaveChat: $("confirmSaveChat"),
+  listenModal: $("listenModal"),
+  closeListenModal: $("closeListenModal"),
+  chatMain: document.querySelector(".chat-main")
 };
 
 let currentAudio = null;
 let currentUser = null;
 let currentProfile = null;
+let currentSessionId = crypto.randomUUID();
 
 function stopAudio() {
   try {
@@ -70,17 +79,6 @@ function setSelectedVoice(voiceId) {
   localStorage.setItem(STORAGE.voice, voiceId);
   UI.voiceCards.forEach(card => {
     card.classList.toggle("active", card.dataset.voiceId === voiceId);
-  });
-}
-
-function getSelectedPersona() {
-  return localStorage.getItem(STORAGE.persona) || "dert_ortagi";
-}
-
-function setSelectedPersona(personaId) {
-  localStorage.setItem(STORAGE.persona, personaId);
-  UI.personaPills.forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.persona === personaId);
   });
 }
 
@@ -138,12 +136,8 @@ function canSendWithoutToken(text) {
 function buildVoicePayload() {
   const voiceId = getSelectedVoice();
 
-  if (voiceId === "free_tts") {
-    return { mode: "free_tts", label: "Ücretsiz Ses" };
-  }
-  if (voiceId === "mine_clone") {
-    return { mode: "clone", label: "Kendi Sesim" };
-  }
+  if (voiceId === "free_tts") return { mode: "free_tts", label: "Ücretsiz Ses" };
+  if (voiceId === "mine_clone") return { mode: "clone", label: "Kendi Sesim" };
   if (voiceId === "second_custom") {
     return {
       mode: "special",
@@ -151,10 +145,7 @@ function buildVoicePayload() {
     };
   }
 
-  return {
-    mode: "preset",
-    label: voiceId
-  };
+  return { mode: "preset", label: voiceId };
 }
 
 async function getAuthContext() {
@@ -171,14 +162,6 @@ async function getAuthContext() {
 
   currentProfile = profile || null;
   return { user: currentUser, profile: currentProfile };
-}
-
-function getSystemPromptFlavor() {
-  const persona = getSelectedPersona();
-  if (persona === "anne_gibi") return "anne_gibi";
-  if (persona === "kanka_gibi") return "kanka_gibi";
-  if (persona === "tatli_sert") return "tatli_sert";
-  return "dert_ortagi";
 }
 
 async function speakText(text) {
@@ -234,7 +217,6 @@ async function sendCurrentMessage() {
   if (!text) return;
 
   const auth = await getAuthContext();
-
   if (!auth.user) {
     location.href = "/pages/login.html";
     return;
@@ -248,12 +230,11 @@ async function sendCurrentMessage() {
 
   try {
     const voice = buildVoicePayload();
-    const persona = getSystemPromptFlavor();
 
     const payload = {
       user_id: auth.user.id,
+      session_id: currentSessionId,
       text,
-      persona_mode: persona,
       voice_mode: voice.mode,
       voice_label: voice.label,
       free_limit: getFreeLimit(),
@@ -267,26 +248,87 @@ async function sendCurrentMessage() {
     });
 
     const json = await resp.json().catch(() => ({}));
-
-    const reply =
-      String(json?.reply || "").trim() ||
-      "Şu an cevap üretilemedi.";
+    const reply = String(json?.reply || "").trim() || "Şu an cevap üretilemedi.";
 
     addMessage("left", reply);
     setTyping(false);
-
     await speakText(reply);
   } catch (e) {
     console.error("Chat hata:", e);
     setTyping(false);
-    addMessage("left", "Şu an cevap tarafında bir sorun var.");
+    addMessage("left", "Şu an cevap üretilemedi.");
   }
+}
+
+function clearChat() {
+  UI.chatMessages.innerHTML = "";
+  currentSessionId = crypto.randomUUID();
+}
+
+async function saveChat() {
+  const title = String(UI.saveChatName.value || "").trim();
+  if (!title) return;
+
+  const auth = await getAuthContext();
+  if (!auth.user) return;
+
+  const messages = [...UI.chatMessages.querySelectorAll(".msg")].map((msg) => {
+    const side = msg.classList.contains("right") ? "user" : "assistant";
+    const text = msg.querySelector(".bubble")?.textContent || "";
+    return { role: side, message: text };
+  });
+
+  if (!messages.length) {
+    UI.saveModal.classList.remove("open");
+    return;
+  }
+
+  try {
+    await supabase.from("chat_persona_saved_chats").insert({
+      user_id: auth.user.id,
+      session_id: currentSessionId,
+      title
+    });
+
+    for (const row of messages) {
+      await supabase.from("chat_persona_saved_chat_messages").insert({
+        user_id: auth.user.id,
+        session_id: currentSessionId,
+        role: row.role,
+        message: row.message
+      });
+    }
+  } catch (e) {
+    console.error("Sohbet kaydet hata:", e);
+  }
+
+  UI.saveModal.classList.remove("open");
+  UI.saveChatName.value = "";
+}
+
+function updateViewportForKeyboard() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  document.documentElement.style.setProperty("--composerOffset", `${keyboardHeight}px`);
+
+  requestAnimationFrame(() => {
+    UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
+  });
 }
 
 function bindEvents() {
   UI.chatInput.addEventListener("input", () => {
     autoResizeTextarea();
     syncInputActionState();
+    requestAnimationFrame(() => {
+      UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
+    });
+  });
+
+  UI.chatInput.addEventListener("focus", () => {
+    setTimeout(updateViewportForKeyboard, 80);
   });
 
   UI.chatInput.addEventListener("keydown", (e) => {
@@ -299,7 +341,13 @@ function bindEvents() {
   UI.sendBtn.addEventListener("click", sendCurrentMessage);
 
   UI.micBtn.addEventListener("click", () => {
-    UI.micBtn.classList.toggle("listening");
+    UI.listenModal.classList.add("open");
+    UI.micBtn.classList.add("listening");
+  });
+
+  UI.closeListenModal.addEventListener("click", () => {
+    UI.listenModal.classList.remove("open");
+    UI.micBtn.classList.remove("listening");
   });
 
   UI.toggleVoiceBtn.addEventListener("click", () => {
@@ -320,21 +368,34 @@ function bindEvents() {
     });
   });
 
-  UI.personaPills.forEach(btn => {
-    btn.addEventListener("click", () => {
-      setSelectedPersona(btn.dataset.persona || "dert_ortagi");
-    });
+  UI.clearChatBtn.addEventListener("click", clearChat);
+
+  UI.saveChatBtn.addEventListener("click", () => {
+    UI.saveModal.classList.add("open");
   });
+
+  UI.cancelSaveChat.addEventListener("click", () => {
+    UI.saveModal.classList.remove("open");
+  });
+
+  UI.confirmSaveChat.addEventListener("click", saveChat);
+
+  UI.savedChatsBtn.addEventListener("click", () => {
+    location.href = "/pages/saved_chats.html";
+  });
+
+  window.visualViewport?.addEventListener("resize", updateViewportForKeyboard);
+  window.visualViewport?.addEventListener("scroll", updateViewportForKeyboard);
 }
 
 async function init() {
   hydrateSecondVoiceName();
   setSelectedVoice(getSelectedVoice());
-  setSelectedPersona(getSelectedPersona());
   bindEvents();
   autoResizeTextarea();
   syncInputActionState();
   await getAuthContext();
+  updateViewportForKeyboard();
 }
 
 init();
