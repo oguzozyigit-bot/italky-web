@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Deneme</title>
+  <title>italkyAI</title>
   <meta name="theme-color" content="#05060a"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,10 +23,15 @@
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
     html,body{
-      margin:0; width:100%; height:100%;
-      background:var(--bg); color:var(--text);
-      font-family:'Outfit',sans-serif; overflow:hidden;
+      margin:0;
+      width:100%;
+      height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:'Outfit',sans-serif;
+      overflow:hidden;
     }
 
     body{
@@ -68,31 +73,8 @@
     .top-row{
       display:flex;
       align-items:center;
-      justify-content:space-between;
+      justify-content:flex-end;
       gap:12px;
-    }
-
-    .top-note{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    .top-note-title{
-      margin:0;
-      font-size:13px;
-      font-weight:900;
-      color:#fff;
-      line-height:1.2;
-    }
-
-    .top-note-sub{
-      margin:0;
-      font-size:11px;
-      line-height:1.4;
-      color:var(--muted);
-      font-weight:700;
     }
 
     .top-pill-btn{
@@ -136,10 +118,21 @@
     }
 
     .voice-sheet.open{
-      max-height:640px;
+      max-height:52vh;
       opacity:1;
       transform:translateY(0);
       padding:14px;
+    }
+
+    .voice-sheet-scroll{
+      max-height:calc(52vh - 28px);
+      overflow-y:auto;
+      padding-right:4px;
+      scrollbar-width:none;
+    }
+
+    .voice-sheet-scroll::-webkit-scrollbar{
+      display:none;
     }
 
     .voice-sheet-head{
@@ -258,7 +251,7 @@
 
     .voice-create-row{
       display:flex;
-      margin-top:4px;
+      margin-top:10px;
     }
 
     .voice-create-btn{
@@ -402,21 +395,6 @@
       box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
     }
 
-    .icon-btn{
-      width:48px;
-      height:48px;
-      border:none;
-      border-radius:50%;
-      background:rgba(255,255,255,.07);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .icon-btn svg,
     .mic-btn svg,
     .send-btn svg{
       width:22px;
@@ -504,7 +482,6 @@
 
     @media (max-width:390px){
       .bubble{ font-size:14px; }
-      .top-note-title{ font-size:12px; }
     }
   </style>
 </head>
@@ -552,11 +529,6 @@
 
     <section class="top-strip">
       <div class="top-row">
-        <div class="top-note">
-          <p class="top-note-title">Deneme ekranı</p>
-          <p class="top-note-sub">Sohbet, persona ve ses akışı testi</p>
-        </div>
-
         <button class="top-pill-btn" id="toggleVoiceBtn" type="button">
           <span class="dot"></span>
           <span>Ses Değiştir</span>
@@ -564,74 +536,76 @@
       </div>
 
       <div class="voice-sheet" id="voiceSheet">
-        <div class="voice-sheet-head">
-          <div>
-            <h2 class="voice-sheet-title">Ses Değiştir</h2>
-            <p class="voice-sheet-sub">Burada sadece ses seçilir. Yeni ses tanımlama ayrı sayfadan yapılır.</p>
-          </div>
-          <button class="voice-close" id="closeVoiceSheet" type="button">×</button>
-        </div>
-
-        <div class="voice-grid" id="voiceGrid">
-          <div class="voice-card active" data-voice-id="free_tts">
-            <div class="voice-top">
-              <div class="voice-name">Ücretsiz Ses</div>
-              <div class="voice-badge free">Standart</div>
+        <div class="voice-sheet-scroll">
+          <div class="voice-sheet-head">
+            <div>
+              <h2 class="voice-sheet-title">Ses Değiştir</h2>
+              <p class="voice-sheet-sub">Burada sadece ses seçilir. Yeni ses tanımlama ayrı sayfadan yapılır.</p>
             </div>
-            <div class="voice-desc">Doğal, hızlı ve her zaman hazır olan ücretsiz konuşma sesi.</div>
+            <button class="voice-close" id="closeVoiceSheet" type="button">×</button>
           </div>
 
-          <div class="voice-card" data-voice-id="mine_clone">
-            <div class="voice-top">
-              <div class="voice-name">Kendi Sesim</div>
-              <div class="voice-badge special">Özel</div>
+          <div class="voice-grid" id="voiceGrid">
+            <div class="voice-card active" data-voice-id="free_tts">
+              <div class="voice-top">
+                <div class="voice-name">Ücretsiz Ses</div>
+                <div class="voice-badge free">Standart</div>
+              </div>
+              <div class="voice-desc">Doğal, hızlı ve her zaman hazır olan ücretsiz konuşma sesi.</div>
             </div>
-            <div class="voice-desc">Kullanıcıya ait kayıtlı özel ses burada kullanılır.</div>
-          </div>
 
-          <div class="voice-card" data-voice-id="second_custom">
-            <div class="voice-top">
-              <div class="voice-name" id="secondVoiceName">İkinci Ses</div>
-              <div class="voice-badge named">İsimli</div>
+            <div class="voice-card" data-voice-id="mine_clone">
+              <div class="voice-top">
+                <div class="voice-name">Kendi Sesim</div>
+                <div class="voice-badge special">Özel</div>
+              </div>
+              <div class="voice-desc">Kullanıcıya ait kayıtlı özel ses burada kullanılır.</div>
             </div>
-            <div class="voice-desc" id="secondVoiceDesc">Kayıt sayfasında verilen isim burada görünür.</div>
-          </div>
 
-          <div class="voice-card" data-voice-id="umay">
-            <div class="voice-top">
-              <div class="voice-name">Umay</div>
-              <div class="voice-badge free">Hazır Ses</div>
+            <div class="voice-card" data-voice-id="second_custom">
+              <div class="voice-top">
+                <div class="voice-name" id="secondVoiceName">İkinci Ses</div>
+                <div class="voice-badge named">İsimli</div>
+              </div>
+              <div class="voice-desc" id="secondVoiceDesc">Kayıt sayfasında verilen isim burada görünür.</div>
             </div>
-            <div class="voice-desc">Sıcak ve dengeli kadın ses.</div>
-          </div>
 
-          <div class="voice-card" data-voice-id="jale">
-            <div class="voice-top">
-              <div class="voice-name">Jale</div>
-              <div class="voice-badge free">Hazır Ses</div>
+            <div class="voice-card" data-voice-id="umay">
+              <div class="voice-top">
+                <div class="voice-name">Umay</div>
+                <div class="voice-badge free">Hazır Ses</div>
+              </div>
+              <div class="voice-desc">Sıcak ve dengeli kadın ses.</div>
             </div>
-            <div class="voice-desc">Daha olgun ve sakin kadın ses.</div>
-          </div>
 
-          <div class="voice-card" data-voice-id="kaan">
-            <div class="voice-top">
-              <div class="voice-name">Kaan</div>
-              <div class="voice-badge free">Hazır Ses</div>
+            <div class="voice-card" data-voice-id="jale">
+              <div class="voice-top">
+                <div class="voice-name">Jale</div>
+                <div class="voice-badge free">Hazır Ses</div>
+              </div>
+              <div class="voice-desc">Daha olgun ve sakin kadın ses.</div>
             </div>
-            <div class="voice-desc">Temiz, net ve güçlü erkek ses.</div>
-          </div>
 
-          <div class="voice-card" data-voice-id="ozan">
-            <div class="voice-top">
-              <div class="voice-name">Ozan</div>
-              <div class="voice-badge free">Hazır Ses</div>
+            <div class="voice-card" data-voice-id="kaan">
+              <div class="voice-top">
+                <div class="voice-name">Kaan</div>
+                <div class="voice-badge free">Hazır Ses</div>
+              </div>
+              <div class="voice-desc">Temiz, net ve güçlü erkek ses.</div>
             </div>
-            <div class="voice-desc">Samimi ve rahat erkek ses.</div>
-          </div>
-        </div>
 
-        <div class="voice-create-row">
-          <button class="voice-create-btn" id="newVoiceBtn" type="button">Yeni Ses Tanımla</button>
+            <div class="voice-card" data-voice-id="ozan">
+              <div class="voice-top">
+                <div class="voice-name">Ozan</div>
+                <div class="voice-badge free">Hazır Ses</div>
+              </div>
+              <div class="voice-desc">Samimi ve rahat erkek ses.</div>
+            </div>
+          </div>
+
+          <div class="voice-create-row">
+            <button class="voice-create-btn" id="newVoiceBtn" type="button">Yeni Ses Tanımla</button>
+          </div>
         </div>
       </div>
 
@@ -649,15 +623,8 @@
 
       <div class="input-wrap">
         <div class="composer">
-          <button class="icon-btn" type="button" aria-label="Ek seçenekler">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 5v14"></path>
-              <path d="M5 12h14"></path>
-            </svg>
-          </button>
-
           <div class="composer-center">
-            <textarea id="chatInput" class="composer-input" rows="1" placeholder="italkyAI... sana ne anlatayım?"></textarea>
+            <textarea id="chatInput" class="composer-input" rows="1" placeholder=""></textarea>
             <div class="helper">Jetonsuz kullanımda ilk 100 karakter serbest. Sonrası limite ve jetona göre hesaplanır.</div>
           </div>
 
