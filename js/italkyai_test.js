@@ -13,7 +13,10 @@ const STORAGE = {
   voice: "italkyai_selected_voice",
   persona: "italkyai_selected_persona",
   secondVoiceName: "italkyai_second_voice_name",
-  secondVoiceOwnerName: "italkyai_second_voice_owner_name"
+  secondVoiceOwnerName: "italkyai_second_voice_owner_name",
+  secondVoiceOwnerType: "italkyai_second_voice_owner_type",
+  secondVoiceTraits: "italkyai_second_voice_traits",
+  secondVoiceFileName: "italkyai_second_voice_file_name"
 };
 
 const API = {
@@ -58,13 +61,8 @@ function autoResizeTextarea() {
 
 function syncInputActionState() {
   const hasText = String(UI.chatInput.value || "").trim().length > 0;
-  if (hasText) {
-    UI.micBtn.classList.add("hidden");
-    UI.sendBtn.classList.remove("hidden");
-  } else {
-    UI.micBtn.classList.remove("hidden");
-    UI.sendBtn.classList.add("hidden");
-  }
+  UI.micBtn.classList.toggle("hidden", hasText);
+  UI.sendBtn.classList.toggle("hidden", !hasText);
 }
 
 function getSelectedVoice() {
@@ -152,19 +150,11 @@ function buildVoicePayload() {
   const voiceId = getSelectedVoice();
 
   if (voiceId === "free_tts") {
-    return {
-      mode: "free_tts",
-      label: "Ücretsiz Ses"
-    };
+    return { mode: "free_tts", label: "Ücretsiz Ses" };
   }
-
   if (voiceId === "mine_clone") {
-    return {
-      mode: "clone",
-      label: "Kendi Sesim"
-    };
+    return { mode: "clone", label: "Kendi Sesim" };
   }
-
   if (voiceId === "second_custom") {
     return {
       mode: "special",
@@ -196,7 +186,6 @@ async function getAuthContext() {
 
 function getSystemPromptFlavor() {
   const persona = getSelectedPersona();
-
   if (persona === "anne_gibi") return "anne_gibi";
   if (persona === "kanka_gibi") return "kanka_gibi";
   if (persona === "tatli_sert") return "tatli_sert";
