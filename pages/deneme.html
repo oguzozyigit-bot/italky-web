@@ -23,15 +23,10 @@
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-
     html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      background:var(--bg);
-      color:var(--text);
-      font-family:'Outfit',sans-serif;
-      overflow:hidden;
+      margin:0; width:100%; height:100%;
+      background:var(--bg); color:var(--text);
+      font-family:'Outfit',sans-serif; overflow:hidden;
     }
 
     body{
@@ -141,7 +136,7 @@
     }
 
     .voice-sheet.open{
-      max-height:540px;
+      max-height:640px;
       opacity:1;
       transform:translateY(0);
       padding:14px;
@@ -201,7 +196,7 @@
       display:flex;
       flex-direction:column;
       gap:8px;
-      min-height:98px;
+      min-height:92px;
     }
 
     .voice-card:active{ transform:scale(.985); }
@@ -341,17 +336,11 @@
 
     .chat-messages::-webkit-scrollbar{ display:none; }
 
-    .msg{
-      display:flex;
-      width:100%;
-    }
-
+    .msg{ display:flex; width:100%; }
     .msg.left{ justify-content:flex-start; }
     .msg.right{ justify-content:flex-end; }
 
-    .bubble-wrap{
-      max-width:84%;
-    }
+    .bubble-wrap{ max-width:84%; }
 
     .bubble{
       position:relative;
@@ -368,16 +357,12 @@
 
     .bubble.left{
       border-left:4px solid var(--orange);
-      box-shadow:
-        0 8px 24px rgba(0,0,0,.22),
-        inset 2px 0 0 rgba(242,165,26,.18);
+      box-shadow:0 8px 24px rgba(0,0,0,.22), inset 2px 0 0 rgba(242,165,26,.18);
     }
 
     .bubble.right{
       border-right:4px solid var(--green);
-      box-shadow:
-        0 8px 24px rgba(0,0,0,.22),
-        inset -2px 0 0 rgba(184,242,95,.14);
+      box-shadow:0 8px 24px rgba(0,0,0,.22), inset -2px 0 0 rgba(184,242,95,.14);
     }
 
     .msg-meta{
@@ -386,6 +371,16 @@
       font-weight:700;
       color:var(--muted);
     }
+
+    .typing{
+      display:none;
+      font-size:12px;
+      color:rgba(255,255,255,.72);
+      font-weight:800;
+      padding:0 16px 10px;
+    }
+
+    .typing.show{ display:block; }
 
     .input-wrap{
       flex:0 0 auto;
@@ -505,9 +500,7 @@
       line-height:1.3;
     }
 
-    .hidden{
-      display:none !important;
-    }
+    .hidden{ display:none !important; }
 
     @media (max-width:390px){
       .bubble{ font-size:14px; }
@@ -574,53 +567,53 @@
         <div class="voice-sheet-head">
           <div>
             <h2 class="voice-sheet-title">Ses Değiştir</h2>
-            <p class="voice-sheet-sub">Burada sadece ses seçilir. Yeni ses oluşturma ayrı sayfadan yapılır.</p>
+            <p class="voice-sheet-sub">Burada sadece ses seçilir. Yeni ses tanımlama ayrı sayfadan yapılır.</p>
           </div>
           <button class="voice-close" id="closeVoiceSheet" type="button">×</button>
         </div>
 
         <div class="voice-grid" id="voiceGrid">
-          <div class="voice-card active" data-voice-type="free">
+          <div class="voice-card active" data-voice-id="free_tts">
             <div class="voice-top">
               <div class="voice-name">Ücretsiz Ses</div>
               <div class="voice-badge free">Standart</div>
             </div>
-            <div class="voice-desc">Doğal, hızlı ve her zaman hazır olan ücretsiz ses.</div>
+            <div class="voice-desc">Doğal, hızlı ve her zaman hazır olan ücretsiz konuşma sesi.</div>
           </div>
 
-          <div class="voice-card" data-voice-type="mine">
+          <div class="voice-card" data-voice-id="mine_clone">
             <div class="voice-top">
               <div class="voice-name">Kendi Sesim</div>
               <div class="voice-badge special">Özel</div>
             </div>
-            <div class="voice-desc">Kendi kayıtlı özel sesin varsa burada kullanılır.</div>
+            <div class="voice-desc">Kullanıcıya ait kayıtlı özel ses burada kullanılır.</div>
           </div>
 
-          <div class="voice-card" data-voice-type="second">
+          <div class="voice-card" data-voice-id="second_custom">
             <div class="voice-top">
               <div class="voice-name" id="secondVoiceName">İkinci Ses</div>
               <div class="voice-badge named">İsimli</div>
             </div>
-            <div class="voice-desc" id="secondVoiceDesc">Kayıt sayfasında verdiğin isim burada görünür.</div>
+            <div class="voice-desc" id="secondVoiceDesc">Kayıt sayfasında verilen isim burada görünür.</div>
           </div>
 
-          <div class="voice-card" data-voice-type="umay">
+          <div class="voice-card" data-voice-id="umay">
             <div class="voice-top">
               <div class="voice-name">Umay</div>
               <div class="voice-badge free">Hazır Ses</div>
             </div>
-            <div class="voice-desc">Yumuşak, sıcak ve dengeli kadın ses.</div>
+            <div class="voice-desc">Sıcak ve dengeli kadın ses.</div>
           </div>
 
-          <div class="voice-card" data-voice-type="jale">
+          <div class="voice-card" data-voice-id="jale">
             <div class="voice-top">
               <div class="voice-name">Jale</div>
               <div class="voice-badge free">Hazır Ses</div>
             </div>
-            <div class="voice-desc">Biraz daha olgun ve sakin kadın ses.</div>
+            <div class="voice-desc">Daha olgun ve sakin kadın ses.</div>
           </div>
 
-          <div class="voice-card" data-voice-type="kaan">
+          <div class="voice-card" data-voice-id="kaan">
             <div class="voice-top">
               <div class="voice-name">Kaan</div>
               <div class="voice-badge free">Hazır Ses</div>
@@ -628,12 +621,12 @@
             <div class="voice-desc">Temiz, net ve güçlü erkek ses.</div>
           </div>
 
-          <div class="voice-card" data-voice-type="ozan">
+          <div class="voice-card" data-voice-id="ozan">
             <div class="voice-top">
               <div class="voice-name">Ozan</div>
               <div class="voice-badge free">Hazır Ses</div>
             </div>
-            <div class="voice-desc">Samimi, rahat ve doğal erkek ses.</div>
+            <div class="voice-desc">Samimi ve rahat erkek ses.</div>
           </div>
         </div>
 
@@ -643,36 +636,16 @@
       </div>
 
       <div class="persona-pills" id="personaPills">
-        <button class="persona-pill active">Dert Ortağı</button>
-        <button class="persona-pill">Anne Gibi</button>
-        <button class="persona-pill">Kanka Gibi</button>
-        <button class="persona-pill">Tatlı Sert</button>
+        <button class="persona-pill active" data-persona="dert_ortagi">Dert Ortağı</button>
+        <button class="persona-pill" data-persona="anne_gibi">Anne Gibi</button>
+        <button class="persona-pill" data-persona="kanka_gibi">Kanka Gibi</button>
+        <button class="persona-pill" data-persona="tatli_sert">Tatlı Sert</button>
       </div>
     </section>
 
     <section class="chat-card">
-      <div class="chat-messages" id="chatMessages">
-        <div class="msg left">
-          <div class="bubble-wrap">
-            <div class="bubble left">Tamam, sahayı kurduk. Ses seçimini üstten değiştir, alttan yaz ya da konuş. Burada akışı rahat rahat test ederiz.</div>
-            <div class="msg-meta">italkyAI • şimdi</div>
-          </div>
-        </div>
-
-        <div class="msg right">
-          <div class="bubble-wrap">
-            <div class="bubble right">Benimle doğal konuş, kasma.</div>
-            <div class="msg-meta">Sen • şimdi</div>
-          </div>
-        </div>
-
-        <div class="msg left">
-          <div class="bubble-wrap">
-            <div class="bubble left">Tamamdır. Ne robot gibi konuşurum ne de boş yaparım. Derdin neyse direkt gir.</div>
-            <div class="msg-meta">italkyAI • şimdi</div>
-          </div>
-        </div>
-      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="typing" id="typingState">italkyAI yazıyor...</div>
 
       <div class="input-wrap">
         <div class="composer">
@@ -685,7 +658,7 @@
 
           <div class="composer-center">
             <textarea id="chatInput" class="composer-input" rows="1" placeholder="italkyAI... sana ne anlatayım?"></textarea>
-            <div class="helper">Yaz, gönder, istersen mikrofona basıp konuş.</div>
+            <div class="helper">Jetonsuz kullanımda ilk 100 karakter serbest. Sonrası limite ve jetona göre hesaplanır.</div>
           </div>
 
           <button id="micBtn" class="mic-btn" type="button" aria-label="Mikrofon">
@@ -710,155 +683,6 @@
   </div>
 </main>
 
-<script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-
-  try {
-    mountShell({ scroll: "none" });
-  } catch (e) {
-    console.error("ui_shell HATASI:", e);
-  }
-
-  const $ = (id) => document.getElementById(id);
-  const chatMessages = $("chatMessages");
-  const chatInput = $("chatInput");
-  const sendBtn = $("sendBtn");
-  const micBtn = $("micBtn");
-  const personaPills = document.querySelectorAll(".persona-pill");
-  const voiceCards = document.querySelectorAll("[data-voice-type]");
-  const toggleVoiceBtn = $("toggleVoiceBtn");
-  const voiceSheet = $("voiceSheet");
-  const closeVoiceSheet = $("closeVoiceSheet");
-  const newVoiceBtn = $("newVoiceBtn");
-
-  const secondVoiceName = localStorage.getItem("italkyai_second_voice_name") || "İkinci Ses";
-  const secondVoiceOwnerName = localStorage.getItem("italkyai_second_voice_owner_name") || "";
-
-  $("secondVoiceName").textContent = secondVoiceName;
-  if (secondVoiceOwnerName) {
-    $("secondVoiceDesc").textContent = `${secondVoiceOwnerName} için tanımlanan özel ses burada görünür.`;
-  }
-
-  function autoResizeTextarea() {
-    chatInput.style.height = "auto";
-    chatInput.style.height = `${Math.min(chatInput.scrollHeight, 140)}px`;
-  }
-
-  function syncInputActionState() {
-    const hasText = String(chatInput.value || "").trim().length > 0;
-    if (hasText) {
-      micBtn.classList.add("hidden");
-      sendBtn.classList.remove("hidden");
-    } else {
-      micBtn.classList.remove("hidden");
-      sendBtn.classList.add("hidden");
-    }
-  }
-
-  chatInput.addEventListener("input", () => {
-    autoResizeTextarea();
-    syncInputActionState();
-  });
-
-  personaPills.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      personaPills.forEach((x) => x.classList.remove("active"));
-      btn.classList.add("active");
-    });
-  });
-
-  voiceCards.forEach((card) => {
-    card.addEventListener("click", () => {
-      voiceCards.forEach((x) => x.classList.remove("active"));
-      card.classList.add("active");
-    });
-  });
-
-  toggleVoiceBtn?.addEventListener("click", () => {
-    voiceSheet.classList.toggle("open");
-  });
-
-  closeVoiceSheet?.addEventListener("click", () => {
-    voiceSheet.classList.remove("open");
-  });
-
-  newVoiceBtn?.addEventListener("click", () => {
-    location.href = "/pages/ai_voice_profile.html";
-  });
-
-  function addMessage(side, text, meta) {
-    const row = document.createElement("div");
-    row.className = `msg ${side}`;
-
-    const wrap = document.createElement("div");
-    wrap.className = "bubble-wrap";
-
-    const bubble = document.createElement("div");
-    bubble.className = `bubble ${side}`;
-    bubble.textContent = text;
-
-    const metaEl = document.createElement("div");
-    metaEl.className = "msg-meta";
-    metaEl.textContent = meta || (side === "right" ? "Sen • şimdi" : "italkyAI • şimdi");
-
-    wrap.appendChild(bubble);
-    wrap.appendChild(metaEl);
-    row.appendChild(wrap);
-    chatMessages.appendChild(row);
-
-    requestAnimationFrame(() => {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    });
-  }
-
-  function fakeReply(userText) {
-    const activePersona =
-      document.querySelector(".persona-pill.active")?.textContent?.trim() || "Dert Ortağı";
-
-    if (activePersona === "Anne Gibi") {
-      return `Tamam yavrum, anladım. Şimdi bunu biraz sakin sakin aç, birlikte toparlayalım: “${userText}”`;
-    }
-
-    if (activePersona === "Kanka Gibi") {
-      return `Bak şimdi, konu net. Şunu kaçırma: “${userText}”. Buradan bir yön çıkar, gevşeme.`;
-    }
-
-    if (activePersona === "Tatlı Sert") {
-      return `Tamam ama lafı dolaştırma. Mesele buysa ona göre gireceğiz: “${userText}”.`;
-    }
-
-    return `Tamam, bunu aldım. Biraz daha aç da seni yarım yamalak anlamayayım: “${userText}”`;
-  }
-
-  function sendCurrentMessage() {
-    const text = String(chatInput.value || "").trim();
-    if (!text) return;
-
-    addMessage("right", text);
-    chatInput.value = "";
-    autoResizeTextarea();
-    syncInputActionState();
-
-    setTimeout(() => {
-      addMessage("left", fakeReply(text));
-    }, 350);
-  }
-
-  sendBtn?.addEventListener("click", sendCurrentMessage);
-
-  chatInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendCurrentMessage();
-    }
-  });
-
-  micBtn?.addEventListener("click", () => {
-    micBtn.classList.toggle("listening");
-  });
-
-  autoResizeTextarea();
-  syncInputActionState();
-</script>
+<script type="module" src="/js/italkyai_test.js"></script>
 </body>
 </html>
