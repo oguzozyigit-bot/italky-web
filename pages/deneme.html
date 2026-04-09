@@ -20,6 +20,8 @@
       --orange:#f2a51a;
       --line:rgba(255,255,255,.08);
       --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --footerPad:88px;
+      --composerOffset:0px;
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -74,7 +76,8 @@
       display:flex;
       align-items:center;
       justify-content:flex-end;
-      gap:12px;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
     .top-pill-btn{
@@ -131,9 +134,7 @@
       scrollbar-width:none;
     }
 
-    .voice-sheet-scroll::-webkit-scrollbar{
-      display:none;
-    }
+    .voice-sheet-scroll::-webkit-scrollbar{ display:none; }
 
     .voice-sheet-head{
       display:flex;
@@ -263,68 +264,29 @@
       font-family:inherit;
       font-size:12px;
       font-weight:900;
-      background:var(--grad);
-      color:#05060d;
+      background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+      color:#120b02;
     }
 
-    .persona-pills{
-      display:flex;
-      gap:8px;
-      overflow-x:auto;
-      overflow-y:hidden;
-      scrollbar-width:none;
-      flex:0 0 auto;
-      padding-bottom:2px;
-    }
-
-    .persona-pills::-webkit-scrollbar{ display:none; }
-
-    .persona-pill{
-      flex:0 0 auto;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      border-radius:999px;
-      padding:10px 13px;
-      font-size:11px;
-      font-weight:800;
-      white-space:nowrap;
-      cursor:pointer;
-      transition:.18s ease;
-    }
-
-    .persona-pill.active{
-      background:rgba(184,242,95,.14);
-      border-color:rgba(184,242,95,.35);
-      color:#ecffc4;
-      box-shadow:0 0 18px rgba(184,242,95,.10);
-    }
-
-    .chat-card{
+    .chat-main{
       flex:1;
       min-height:0;
-      display:flex;
-      flex-direction:column;
-      border:1px solid rgba(255,255,255,.07);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.015)),
-        #050608;
-      border-radius:30px;
-      box-shadow:
-        0 20px 50px rgba(0,0,0,.30),
-        inset 0 1px 0 rgba(255,255,255,.03);
+      position:relative;
       overflow:hidden;
+      border-radius:26px;
+      background:transparent;
     }
 
     .chat-messages{
-      flex:1;
-      min-height:0;
+      position:absolute;
+      inset:0;
       overflow-y:auto;
-      padding:18px 14px 18px;
+      padding:6px 4px calc(var(--footerPad) + var(--composerOffset)) 4px;
       display:flex;
       flex-direction:column;
       gap:14px;
       scrollbar-width:none;
+      scroll-behavior:smooth;
     }
 
     .chat-messages::-webkit-scrollbar{ display:none; }
@@ -345,17 +307,17 @@
       word-break:break-word;
       border:1px solid rgba(255,255,255,.07);
       background:#0d0f14;
-      box-shadow:0 8px 24px rgba(0,0,0,.22);
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
     }
 
     .bubble.left{
       border-left:4px solid var(--orange);
-      box-shadow:0 8px 24px rgba(0,0,0,.22), inset 2px 0 0 rgba(242,165,26,.18);
+      box-shadow:0 8px 24px rgba(0,0,0,.18), inset 2px 0 0 rgba(242,165,26,.18);
     }
 
     .bubble.right{
       border-right:4px solid var(--green);
-      box-shadow:0 8px 24px rgba(0,0,0,.22), inset -2px 0 0 rgba(184,242,95,.14);
+      box-shadow:0 8px 24px rgba(0,0,0,.18), inset -2px 0 0 rgba(184,242,95,.14);
     }
 
     .msg-meta{
@@ -366,20 +328,33 @@
     }
 
     .typing{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:calc(var(--footerPad) + var(--composerOffset) - 20px);
       display:none;
       font-size:12px;
       color:rgba(255,255,255,.72);
       font-weight:800;
-      padding:0 16px 10px;
+      padding:0 16px;
+      z-index:2;
     }
 
     .typing.show{ display:block; }
 
+    .composer-wrap{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:5;
+      padding:12px 0 0;
+      background:linear-gradient(180deg, transparent 0%, rgba(5,6,10,.35) 24%, rgba(5,6,10,.78) 56%, rgba(5,6,10,.96) 100%);
+      transform:translateY(calc(-1 * var(--composerOffset)));
+    }
+
     .input-wrap{
-      flex:0 0 auto;
-      padding:12px 12px 14px;
-      border-top:1px solid rgba(255,255,255,.06);
-      background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.03));
+      padding:0 0 6px;
     }
 
     .composer{
@@ -388,15 +363,16 @@
       gap:10px;
       width:100%;
       min-height:76px;
-      padding:10px;
+      padding:10px 12px;
       border-radius:26px;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.08);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
     }
 
+    .send-btn svg,
     .mic-btn svg,
-    .send-btn svg{
+    .action-btn svg{
       width:22px;
       height:22px;
       stroke:currentColor;
@@ -404,6 +380,20 @@
       fill:none;
       stroke-linecap:round;
       stroke-linejoin:round;
+    }
+
+    .action-btn{
+      width:48px;
+      height:48px;
+      border:none;
+      border-radius:50%;
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
     }
 
     .send-btn{
@@ -480,12 +470,204 @@
 
     .hidden{ display:none !important; }
 
+    .save-modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.48);
+      backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:20px;
+    }
+
+    .save-modal.open{ display:flex; }
+
+    .save-card{
+      width:min(100%, 420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .save-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .save-input{
+      width:100%;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      border-radius:16px;
+      padding:14px;
+      font-size:14px;
+      font-weight:800;
+      font-family:'Outfit',sans-serif;
+      outline:none;
+    }
+
+    .save-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .save-btn{
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .save-btn.primary{
+      background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+      color:#120b02;
+    }
+
+    .save-btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
+    .listen-modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.48);
+      backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:20px;
+    }
+
+    .listen-modal.open{ display:flex; }
+
+    .listen-card{
+      width:min(100%, 420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:14px;
+      text-align:center;
+    }
+
+    .listen-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .listen-sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
+      color:rgba(255,255,255,.72);
+      font-weight:700;
+    }
+
+    .sun-wrap{
+      width:180px;
+      height:180px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .sun-core{
+      width:92px;
+      height:92px;
+      border-radius:50%;
+      background:radial-gradient(circle, #ffdd55 0%, #ff9d00 46%, #ff5a36 74%, #e53935 100%);
+      box-shadow:
+        0 0 20px rgba(255,140,0,.30),
+        0 0 48px rgba(255,94,58,.22),
+        0 0 88px rgba(229,57,53,.18);
+      animation:sunBreath 2.2s ease-in-out infinite;
+    }
+
+    .sun-ring{
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      border:1px solid rgba(255,180,80,.14);
+      animation:sunPulse 2.4s ease-in-out infinite;
+    }
+
+    .sun-ring.r2{
+      inset:16px;
+      animation-delay:.25s;
+    }
+
+    .sun-ring.r3{
+      inset:32px;
+      animation-delay:.5s;
+    }
+
+    @keyframes sunBreath{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.08); }
+    }
+
+    @keyframes sunPulse{
+      0%,100%{ opacity:.22; transform:scale(1); }
+      50%{ opacity:.55; transform:scale(1.06); }
+    }
+
     @media (max-width:390px){
       .bubble{ font-size:14px; }
     }
   </style>
 </head>
 <body>
+
+<div class="save-modal" id="saveModal">
+  <div class="save-card">
+    <h3 class="save-title">Sohbete isim ver</h3>
+    <input id="saveChatName" class="save-input" type="text" placeholder="Örn: Babamla konuşma denemesi">
+    <div class="save-actions">
+      <button class="save-btn secondary" id="cancelSaveChat" type="button">Vazgeç</button>
+      <button class="save-btn primary" id="confirmSaveChat" type="button">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div class="listen-modal" id="listenModal">
+  <div class="listen-card">
+    <h3 class="listen-title">Dinliyorum</h3>
+    <p class="listen-sub">Konuşmayı bitirdiğinde mikrofonu tekrar kapat. Konuştukların sohbet alanına yazılır.</p>
+    <div class="sun-wrap">
+      <div class="sun-ring"></div>
+      <div class="sun-ring r2"></div>
+      <div class="sun-ring r3"></div>
+      <div class="sun-core"></div>
+    </div>
+    <button class="save-btn secondary" id="closeListenModal" type="button">Mikrofonu Kapat</button>
+  </div>
+</div>
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
@@ -533,6 +715,10 @@
           <span class="dot"></span>
           <span>Ses Değiştir</span>
         </button>
+
+        <button class="top-pill-btn" id="clearChatBtn" type="button">Sohbeti Temizle</button>
+        <button class="top-pill-btn" id="saveChatBtn" type="button">Sohbeti Kaydet</button>
+        <button class="top-pill-btn" id="savedChatsBtn" type="button">Sohbetler</button>
       </div>
 
       <div class="voice-sheet" id="voiceSheet">
@@ -608,41 +794,36 @@
           </div>
         </div>
       </div>
-
-      <div class="persona-pills" id="personaPills">
-        <button class="persona-pill active" data-persona="dert_ortagi">Dert Ortağı</button>
-        <button class="persona-pill" data-persona="anne_gibi">Anne Gibi</button>
-        <button class="persona-pill" data-persona="kanka_gibi">Kanka Gibi</button>
-        <button class="persona-pill" data-persona="tatli_sert">Tatlı Sert</button>
-      </div>
     </section>
 
-    <section class="chat-card">
+    <section class="chat-main">
       <div class="chat-messages" id="chatMessages"></div>
       <div class="typing" id="typingState">italkyAI yazıyor...</div>
 
-      <div class="input-wrap">
-        <div class="composer">
-          <div class="composer-center">
-            <textarea id="chatInput" class="composer-input" rows="1" placeholder=""></textarea>
-            <div class="helper">Jetonsuz kullanımda ilk 100 karakter serbest. Sonrası limite ve jetona göre hesaplanır.</div>
+      <div class="composer-wrap">
+        <div class="input-wrap">
+          <div class="composer">
+            <div class="composer-center">
+              <textarea id="chatInput" class="composer-input" rows="1" placeholder="Mesajını buraya yaz"></textarea>
+              <div class="helper">Jetonsuz kullanımda ilk 100 karakter serbest. Sonrası limite ve jetona göre hesaplanır.</div>
+            </div>
+
+            <button id="micBtn" class="mic-btn" type="button" aria-label="Mikrofon">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+                <path d="M19 10a7 7 0 0 1-14 0"></path>
+                <path d="M12 17v4"></path>
+                <path d="M8 21h8"></path>
+              </svg>
+            </button>
+
+            <button id="sendBtn" class="send-btn hidden" type="button" aria-label="Gönder">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 2L11 13"></path>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+              </svg>
+            </button>
           </div>
-
-          <button id="micBtn" class="mic-btn" type="button" aria-label="Mikrofon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-              <path d="M19 10a7 7 0 0 1-14 0"></path>
-              <path d="M12 17v4"></path>
-              <path d="M8 21h8"></path>
-            </svg>
-          </button>
-
-          <button id="sendBtn" class="send-btn hidden" type="button" aria-label="Gönder">
-            <svg viewBox="0 0 24 24">
-              <path d="M22 2L11 13"></path>
-              <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
-            </svg>
-          </button>
         </div>
       </div>
     </section>
