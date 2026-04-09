@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Deneme</title>
+  <meta name="theme-color" content="#05060a"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#05060a;
+      --panel:#0b0d12;
+      --panel2:#10131a;
+      --line:rgba(255,255,255,.08);
+      --text:#f5f7ff;
+      --muted:rgba(255,255,255,.62);
+      --green:#b8f25f;
+      --greenGlow:rgba(184,242,95,.20);
+      --orange:#f2a51a;
+      --orangeGlow:rgba(242,165,26,.16);
+      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:'Outfit',sans-serif;
+      overflow:hidden;
+    }
+
+    body{
+      background:
+        radial-gradient(circle at top, rgba(103,232,249,.05), transparent 22%),
+        radial-gradient(circle at bottom, rgba(244,114,182,.05), transparent 20%),
+        linear-gradient(180deg, #05060a 0%, #090b11 100%);
+    }
+
+    #pageContent{
+      min-height:100%;
+      padding:10px 12px 18px;
+      visibility:hidden;
+      opacity:0;
+    }
+
+    body.chat-ready #pageContent{
+      visibility:visible;
+      opacity:1;
+      transition:opacity .18s ease;
+    }
+
+    .chat-shell{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .chat-top{
+      flex:0 0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding-top:4px;
+    }
+
+    .chat-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .chat-brand{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .chat-brand-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:28px;
+      line-height:1;
+      letter-spacing:-.6px;
+      color:#fff;
+    }
+
+    .chat-brand-title .ai{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .chat-brand-sub{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+      font-weight:700;
+    }
+
+    .persona-pills{
+      display:flex;
+      gap:8px;
+      overflow:auto;
+      scrollbar-width:none;
+    }
+
+    .persona-pills::-webkit-scrollbar{
+      display:none;
+    }
+
+    .persona-pill{
+      flex:0 0 auto;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .persona-pill.active{
+      background:rgba(184,242,95,.14);
+      border-color:rgba(184,242,95,.35);
+      color:#ecffc4;
+      box-shadow:0 0 18px rgba(184,242,95,.10);
+    }
+
+    .voice-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .voice-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px 12px;
+      min-height:82px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:6px;
+    }
+
+    .voice-label{
+      font-size:11px;
+      color:var(--muted);
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+
+    .voice-name{
+      font-size:16px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+      word-break:break-word;
+    }
+
+    .voice-note{
+      font-size:11px;
+      color:rgba(255,255,255,.74);
+      line-height:1.3;
+      font-weight:700;
+    }
+
+    .chat-card{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      border:1px solid rgba(255,255,255,.07);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.015)),
+        #050608;
+      border-radius:30px;
+      box-shadow:
+        0 20px 50px rgba(0,0,0,.30),
+        inset 0 1px 0 rgba(255,255,255,.03);
+      overflow:hidden;
+    }
+
+    .chat-messages{
+      flex:1;
+      min-height:0;
+      overflow-y:auto;
+      padding:18px 14px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      scrollbar-width:none;
+    }
+
+    .chat-messages::-webkit-scrollbar{
+      display:none;
+    }
+
+    .msg{
+      display:flex;
+      width:100%;
+    }
+
+    .msg.left{ justify-content:flex-start; }
+    .msg.right{ justify-content:flex-end; }
+
+    .bubble-wrap{
+      max-width:84%;
+    }
+
+    .bubble{
+      position:relative;
+      padding:18px 18px;
+      border-radius:24px;
+      line-height:1.42;
+      font-size:15px;
+      font-weight:800;
+      word-break:break-word;
+      border:1px solid rgba(255,255,255,.07);
+      background:#0d0f14;
+      box-shadow:0 8px 24px rgba(0,0,0,.22);
+    }
+
+    .bubble.left{
+      border-left:4px solid var(--orange);
+      box-shadow:
+        0 8px 24px rgba(0,0,0,.22),
+        inset 2px 0 0 rgba(242,165,26,.18);
+    }
+
+    .bubble.right{
+      border-right:4px solid var(--green);
+      box-shadow:
+        0 8px 24px rgba(0,0,0,.22),
+        inset -2px 0 0 rgba(184,242,95,.14);
+    }
+
+    .msg-meta{
+      margin-top:7px;
+      font-size:11px;
+      font-weight:700;
+      color:var(--muted);
+    }
+
+    .input-wrap{
+      flex:0 0 auto;
+      padding:12px 12px 14px;
+      border-top:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.03));
+    }
+
+    .composer{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      min-height:76px;
+      padding:10px;
+      border-radius:26px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    }
+
+    .icon-btn{
+      width:48px;
+      height:48px;
+      border:none;
+      border-radius:50%;
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+
+    .icon-btn svg,
+    .mic-btn svg,
+    .send-btn svg{
+      width:22px;
+      height:22px;
+      stroke:currentColor;
+      stroke-width:2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .send-btn{
+      width:54px;
+      height:54px;
+      border:none;
+      border-radius:50%;
+      background:var(--green);
+      color:#0d1405;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
+      box-shadow:0 0 24px var(--greenGlow);
+    }
+
+    .mic-btn{
+      width:54px;
+      height:54px;
+      border:none;
+      border-radius:50%;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+
+    .mic-btn.listening{
+      box-shadow:0 0 0 6px rgba(184,242,95,.10), 0 0 24px rgba(184,242,95,.18);
+      color:#ecffc4;
+    }
+
+    .composer-center{
+      flex:1;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:5px;
+      padding:0 2px;
+    }
+
+    .composer-input{
+      width:100%;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:#fff;
+      font-size:16px;
+      font-weight:800;
+      font-family:'Outfit',sans-serif;
+    }
+
+    .composer-input::placeholder{
+      color:rgba(255,255,255,.68);
+      font-weight:800;
+    }
+
+    .cursor-glow{
+      width:3px;
+      height:24px;
+      border-radius:99px;
+      background:var(--green);
+      box-shadow:0 0 12px var(--greenGlow);
+    }
+
+    .helper{
+      font-size:11px;
+      color:var(--muted);
+      font-weight:700;
+      line-height:1.3;
+    }
+
+    @media (max-width:390px){
+      .chat-brand-title{ font-size:25px; }
+      .bubble{ font-size:14px; }
+      .voice-row{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+  const LOGIN_PAGE = "/pages/login.html";
+
+  async function bootAuthGate() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session?.user) {
+        location.replace(LOGIN_PAGE);
+        return;
+      }
+
+      const uid = session.user.id;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role,email")
+        .eq("id", uid)
+        .maybeSingle();
+
+      const role = String(profile?.role || "").toLowerCase().trim();
+      const email = String(profile?.email || session.user.email || "").toLowerCase().trim();
+      const isSuperAdmin = role === "superadmin" || email === "oguzozyigit@gmail.com";
+
+      if (!isSuperAdmin) {
+        location.replace("/pages/home.html");
+        return;
+      }
+
+      document.body.classList.add("chat-ready");
+    } catch (e) {
+      location.replace(LOGIN_PAGE);
+    }
+  }
+
+  bootAuthGate();
+</script>
+
+<main id="pageContent">
+  <div class="chat-shell">
+
+    <section class="chat-top">
+      <div class="chat-head">
+        <div class="chat-brand">
+          <h1 class="chat-brand-title">italky<span class="ai">AI</span></h1>
+          <p class="chat-brand-sub">Deneme ekranı • samimi sohbet, persona ve özel ses akışı test alanı</p>
+        </div>
+      </div>
+
+      <div class="persona-pills" id="personaPills">
+        <button class="persona-pill active">Dert Ortağı</button>
+        <button class="persona-pill">Anne Gibi</button>
+        <button class="persona-pill">Kanka Gibi</button>
+        <button class="persona-pill">Tatlı Sert</button>
+      </div>
+
+      <div class="voice-row">
+        <div class="voice-card">
+          <div class="voice-label">Birincil Ses</div>
+          <div class="voice-name">Kendi Sesim</div>
+          <div class="voice-note">Varsa birincil özel sesin burada kullanılacak.</div>
+        </div>
+
+        <div class="voice-card">
+          <div class="voice-label">İkinci Ses</div>
+          <div class="voice-name">Bir Ses Daha</div>
+          <div class="voice-note">Anne, sevgili ya da seçtiğin kişiye göre ton ayarlanacak.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chat-card">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg left">
+          <div class="bubble-wrap">
+            <div class="bubble left">Sana uygun konuşayım diye tone seç. Boşsa da idare ederiz.</div>
+            <div class="msg-meta">italkyAI • şimdi</div>
+          </div>
+        </div>
+
+        <div class="msg right">
+          <div class="bubble-wrap">
+            <div class="bubble right">Beni çok sıkmadan, doğal konuş.</div>
+            <div class="msg-meta">Sen • şimdi</div>
+          </div>
+        </div>
+
+        <div class="msg left">
+          <div class="bubble-wrap">
+            <div class="bubble left">Tamamdır. Ne robot gibi konuşurum, ne de boş boş överim. Derdin neyse direkt gir.</div>
+            <div class="msg-meta">italkyAI • şimdi</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-wrap">
+        <div class="composer">
+          <button class="icon-btn" type="button" aria-label="Ek seçenekler">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+          </button>
+
+          <div class="composer-center">
+            <input id="chatInput" class="composer-input" type="text" placeholder="italkyAI... sana ne anlatayım?" />
+            <div class="helper">Deneme alanı: yaz, gönder, persona geçişini ve akışı kontrol et.</div>
+          </div>
+
+          <div class="cursor-glow"></div>
+
+          <button id="micBtn" class="mic-btn" type="button" aria-label="Mikrofon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+              <path d="M19 10a7 7 0 0 1-14 0"></path>
+              <path d="M12 17v4"></path>
+              <path d="M8 21h8"></path>
+            </svg>
+          </button>
+
+          <button id="sendBtn" class="send-btn" type="button" aria-label="Gönder">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 2L11 13"></path>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+
+  try {
+    mountShell({ scroll: "auto" });
+  } catch (e) {
+    console.error("ui_shell HATASI:", e);
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const chatMessages = $("chatMessages");
+  const chatInput = $("chatInput");
+  const sendBtn = $("sendBtn");
+  const micBtn = $("micBtn");
+  const personaPills = document.querySelectorAll(".persona-pill");
+
+  personaPills.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      personaPills.forEach((x) => x.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  });
+
+  function addMessage(side, text, meta) {
+    const row = document.createElement("div");
+    row.className = `msg ${side}`;
+
+    const wrap = document.createElement("div");
+    wrap.className = "bubble-wrap";
+
+    const bubble = document.createElement("div");
+    bubble.className = `bubble ${side}`;
+    bubble.textContent = text;
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "msg-meta";
+    metaEl.textContent = meta || (side === "right" ? "Sen • şimdi" : "italkyAI • şimdi");
+
+    wrap.appendChild(bubble);
+    wrap.appendChild(metaEl);
+    row.appendChild(wrap);
+    chatMessages.appendChild(row);
+
+    requestAnimationFrame(() => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+  }
+
+  function fakeReply(userText) {
+    const activePersona =
+      document.querySelector(".persona-pill.active")?.textContent?.trim() || "Dert Ortağı";
+
+    if (activePersona === "Anne Gibi") {
+      return `Tamam yavrum, anladım. Şimdi bunu biraz sakin kafayla anlat, birlikte toparlayalım: “${userText}”`;
+    }
+
+    if (activePersona === "Kanka Gibi") {
+      return `Bak şimdi, konu net. Şunu kaçırma: “${userText}”. Buradan bir şey çıkar, gevşeme.`;
+    }
+
+    if (activePersona === "Tatlı Sert") {
+      return `Tamam da lafı dolandırma. Mesele buysa buna göre hareket edeceğiz: “${userText}”.`;
+    }
+
+    return `Tamam, bunu aldım. Biraz daha aç da seni yarım yamalak anlamayayım: “${userText}”`;
+  }
+
+  function sendCurrentMessage() {
+    const text = String(chatInput.value || "").trim();
+    if (!text) return;
+
+    addMessage("right", text);
+    chatInput.value = "";
+
+    setTimeout(() => {
+      addMessage("left", fakeReply(text));
+    }, 350);
+  }
+
+  sendBtn?.addEventListener("click", sendCurrentMessage);
+
+  chatInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendCurrentMessage();
+    }
+  });
+
+  micBtn?.addEventListener("click", () => {
+    micBtn.classList.toggle("listening");
+  });
+</script>
+</body>
+</html>
