@@ -123,4 +123,885 @@ body.home-ready #pageContent{
 
 .side1{ transform:rotateY(0deg) translateZ(75px); }
 .side2{ transform:rotateY(90deg) translateZ(75px); }
-.side3{ transform:rotateY(
+.side3{ transform:rotateY(180deg) translateZ(75px); }
+.side4{ transform:rotateY(270deg) translateZ(75px); }
+.side5{ transform:rotateX(90deg) translateZ(75px); }
+.side6{ transform:rotateX(-90deg) translateZ(75px); }
+
+.holo-qr{
+  position:absolute;
+  width:108px;
+  height:108px;
+  z-index:2;
+  overflow:visible;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:floatQR 4s ease-in-out infinite;
+}
+
+.ai-planet{
+  background:transparent;
+  box-shadow:none;
+}
+
+.planet-glow{
+  position:absolute;
+  inset:-16px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+    radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
+  filter:blur(12px);
+  animation:planetGlow 3.2s ease-in-out infinite;
+  z-index:1;
+}
+
+.planet-core{
+  position:relative;
+  width:108px;
+  height:108px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  z-index:2;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
+    radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
+    linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
+  box-shadow:
+    inset -10px -12px 20px rgba(0,0,0,.72),
+    inset 10px 12px 22px rgba(255,255,255,.04),
+    inset 0 0 26px rgba(255,255,255,.04),
+    0 0 18px rgba(255,255,255,.10),
+    0 0 34px rgba(103,232,249,.20),
+    0 0 64px rgba(129,140,248,.18);
+  animation:planetBreath 2.8s ease-in-out infinite;
+}
+
+.planet-core::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 0 12px rgba(255,255,255,.05);
+}
+
+.planet-core::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  top:14px;
+  width:32px;
+  height:16px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
+  filter:blur(2px);
+  transform:rotate(-18deg);
+  opacity:.9;
+}
+
+.planet-rays{
+  position:absolute;
+  inset:-18px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:1;
+}
+
+.planet-rays::before,
+.planet-rays::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg 18deg,
+      rgba(255,255,255,.28) 24deg,
+      transparent 36deg 62deg,
+      rgba(255,255,255,.16) 70deg,
+      transparent 84deg 116deg,
+      rgba(255,255,255,.22) 124deg,
+      transparent 136deg 180deg,
+      rgba(255,255,255,.18) 192deg,
+      transparent 206deg 250deg,
+      rgba(255,255,255,.24) 258deg,
+      transparent 270deg 310deg,
+      rgba(255,255,255,.15) 318deg,
+      transparent 330deg 360deg
+    );
+  mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+  -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+  filter:blur(1px);
+  opacity:.55;
+  animation:planetRaySpin 12s linear infinite;
+}
+
+.planet-rays::after{
+  opacity:.35;
+  transform:scale(1.14);
+  animation-duration:18s;
+  animation-direction:reverse;
+}
+
+.planet-center{
+  position:relative;
+  z-index:3;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+}
+
+.planet-nfc-icon{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  position:relative;
+  box-shadow:0 0 14px rgba(103,232,249,.22);
+}
+
+.planet-nfc-icon::before,
+.planet-nfc-icon::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:50%;
+  border:2px solid rgba(103,232,249,.95);
+  border-left-color:transparent;
+  border-bottom-color:transparent;
+  border-radius:50%;
+  transform:translate(-50%,-50%) rotate(45deg);
+}
+
+.planet-nfc-icon::before{
+  width:12px;
+  height:12px;
+}
+
+.planet-nfc-icon::after{
+  width:20px;
+  height:20px;
+  opacity:.72;
+}
+
+.planet-nfc-text{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.8px;
+  color:#fff;
+  text-shadow:0 0 12px rgba(255,255,255,.18);
+}
+
+.heroTitle{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:-.4px;
+  color:#fff;
+  margin:0;
+  line-height:1.15;
+  text-align:center;
+  text-shadow:0 0 12px rgba(255,255,255,.18);
+  max-width:320px;
+}
+
+.heroName{
+  margin:0;
+  font-size:13px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.3;
+  max-width:310px;
+  font-weight:700;
+}
+
+.home-grid{
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.mod-card{
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  padding:16px 15px 108px;
+  text-decoration:none;
+  color:#fff;
+  min-height:300px;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+
+.mod-card:active{
+  transform:scale(.985);
+  filter:brightness(1.08);
+}
+
+.mod-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
+}
+
+.face-card{
+  background:
+    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
+    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
+}
+
+.chat-card{
+  background:
+    radial-gradient(circle at 78% 18%, rgba(163,230,53,.18) 0%, transparent 24%),
+    radial-gradient(circle at 18% 18%, rgba(249,115,22,.26) 0%, transparent 30%),
+    linear-gradient(180deg, #5a1809 0%, #9a3412 30%, #f97316 62%, #84cc16 100%);
+}
+
+.card-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  color:#fff;
+  word-break:break-word;
+}
+
+.card-desc-list{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  max-width:100%;
+  padding-right:2px;
+}
+
+.card-desc{
+  margin:0;
+  font-size:11.1px;
+  line-height:1.38;
+  color:rgba(255,255,255,.90);
+  white-space:normal;
+  overflow:visible;
+  text-overflow:unset;
+  word-break:break-word;
+}
+
+.card-art{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  height:76px;
+  border-radius:20px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+  overflow:hidden;
+}
+
+.face-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+
+.face-headset{
+  position:relative;
+  width:28px;
+  height:38px;
+  margin-top:14px;
+}
+
+.face-headset::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-2px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 0 10px rgba(255,255,255,.16);
+}
+
+.face-headset::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:28px;
+  height:18px;
+  border-radius:14px 14px 10px 10px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
+}
+
+.face-wave{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:62px;
+  height:28px;
+  transform:translate(-50%,-50%);
+}
+
+.face-wave::before,
+.face-wave::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
+  box-shadow:0 0 14px rgba(103,232,249,.46);
+}
+
+.face-wave::before{ top:9px;height:2px; }
+.face-wave::after{ top:16px;height:2px;opacity:.68; }
+
+.chat-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+
+.chat-bubble-left,
+.chat-bubble-right{
+  position:relative;
+  border-radius:14px;
+}
+
+.chat-bubble-left{
+  width:44px;
+  height:28px;
+  background:rgba(255,255,255,.92);
+}
+
+.chat-bubble-left::after{
+  content:"";
+  position:absolute;
+  left:8px;
+  bottom:-6px;
+  width:10px;
+  height:10px;
+  background:rgba(255,255,255,.92);
+  clip-path:polygon(0 0,100% 0,0 100%);
+}
+
+.chat-bubble-right{
+  width:40px;
+  height:24px;
+  background:rgba(163,230,53,.92);
+}
+
+.chat-bubble-right::after{
+  content:"";
+  position:absolute;
+  right:7px;
+  bottom:-6px;
+  width:10px;
+  height:10px;
+  background:rgba(163,230,53,.92);
+  clip-path:polygon(100% 0,0 0,100% 100%);
+}
+
+.chat-orb{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:radial-gradient(circle, #fff 0%, #fde68a 35%, #f97316 100%);
+  box-shadow:0 0 12px rgba(249,115,22,.45);
+}
+
+.wide-stack{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.wide-card{
+  position:relative;
+  width:100%;
+  min-height:126px;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:16px 52px 16px 16px;
+  text-decoration:none;
+  color:#fff;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+
+.wide-card:active{
+  transform:scale(.985);
+  filter:brightness(1.08);
+}
+
+.wide-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
+}
+
+.fun-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
+    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
+    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
+}
+
+.practice-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
+    linear-gradient(90deg, #1d4ed8 0%, #0ea5e9 48%, #6366f1 100%);
+}
+
+.level-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
+    linear-gradient(90deg, #166534 0%, #22c55e 46%, #16a34a 100%);
+}
+
+.fun-ico,
+.level-ico,
+.practice-ico{
+  width:76px;
+  height:76px;
+  flex:0 0 auto;
+  position:relative;
+  border-radius:22px;
+  background:rgba(255,255,255,.12);
+  border:1.5px solid rgba(255,255,255,.15);
+  box-shadow:inset 0 0 22px rgba(255,255,255,.05);
+}
+
+.fun-dice, .fun-dice::before, .fun-dice::after{
+  position:absolute;
+  border-radius:10px;
+  background:rgba(255,255,255,.92);
+}
+
+.fun-dice{
+  width:24px;
+  height:24px;
+  left:14px;
+  top:24px;
+}
+
+.fun-dice::before{
+  content:"";
+  width:18px;
+  height:18px;
+  right:-22px;
+  top:-10px;
+  opacity:.8;
+}
+
+.fun-dice::after{
+  content:"";
+  width:16px;
+  height:16px;
+  right:-16px;
+  bottom:-12px;
+  opacity:.65;
+}
+
+.level-bars span{
+  position:absolute;
+  bottom:14px;
+  width:10px;
+  border-radius:6px 6px 0 0;
+  background:rgba(255,255,255,.92);
+}
+
+.level-bars span:nth-child(1){ left:14px; height:18px; }
+.level-bars span:nth-child(2){ left:30px; height:28px; }
+.level-bars span:nth-child(3){ left:46px; height:40px; }
+
+.practice-chat{
+  position:absolute;
+  left:12px;
+  top:18px;
+  width:24px;
+  height:18px;
+  border-radius:8px;
+  background:rgba(255,255,255,.92);
+}
+
+.practice-chat::after{
+  content:"";
+  position:absolute;
+  left:4px;
+  bottom:-5px;
+  width:8px;
+  height:8px;
+  background:rgba(255,255,255,.92);
+  clip-path:polygon(0 0, 100% 0, 0 100%);
+}
+
+.practice-chat.right{
+  left:auto;
+  right:12px;
+  top:34px;
+  background:rgba(103,232,249,.92);
+}
+
+.practice-chat.right::after{
+  left:auto;
+  right:4px;
+  background:rgba(103,232,249,.92);
+  clip-path:polygon(100% 0, 0 0, 100% 100%);
+}
+
+.wide-body{
+  flex:1;
+  min-width:0;
+}
+
+.card-topline{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.5px;
+  color:rgba(255,255,255,.8);
+  margin-bottom:6px;
+  text-transform:uppercase;
+}
+
+.wide-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  word-break:break-word;
+}
+
+.wide-desc{
+  margin-top:7px;
+  font-size:10.9px;
+  line-height:1.38;
+  color:rgba(255,255,255,.90);
+  max-width:86%;
+}
+
+.arrow-chip{
+  flex:0 0 auto;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.arrow-chip::before{
+  content:"";
+  position:absolute;
+  left:13px;
+  top:50%;
+  width:12px;
+  height:12px;
+  border-top:2px solid rgba(255,255,255,.9);
+  border-right:2px solid rgba(255,255,255,.9);
+  transform:translateY(-50%) rotate(45deg);
+}
+
+@keyframes rotateCrystal{
+  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+}
+
+@keyframes floatQR{
+  0%,100%{ transform:translateY(0) rotateX(0deg); }
+  50%{ transform:translateY(-8px) rotateX(5deg); }
+}
+
+@keyframes planetBreath{
+  0%,100%{
+    transform:scale(1);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 34px rgba(103,232,249,.20),
+      0 0 64px rgba(129,140,248,.18);
+  }
+  50%{
+    transform:scale(1.045);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 24px rgba(255,255,255,.05),
+      inset 0 0 28px rgba(255,255,255,.06),
+      0 0 22px rgba(255,255,255,.12),
+      0 0 42px rgba(103,232,249,.28),
+      0 0 78px rgba(129,140,248,.24);
+  }
+}
+
+@keyframes planetGlow{
+  0%,100%{
+    opacity:.55;
+    transform:scale(1);
+  }
+  50%{
+    opacity:.92;
+    transform:scale(1.16);
+  }
+}
+
+@keyframes planetRaySpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
+@media (max-width:390px){
+  .holo-container{ width:190px; height:190px; margin-bottom:2px; }
+  .crystal-cage{ width:136px; height:136px; }
+  .side1{ transform:rotateY(0deg) translateZ(68px); }
+  .side2{ transform:rotateY(90deg) translateZ(68px); }
+  .side3{ transform:rotateY(180deg) translateZ(68px); }
+  .side4{ transform:rotateY(270deg) translateZ(68px); }
+  .side5{ transform:rotateX(90deg) translateZ(68px); }
+  .side6{ transform:rotateX(-90deg) translateZ(68px); }
+  .holo-qr{ width:98px; height:98px; }
+  .planet-core{ width:98px; height:98px; }
+  .heroTitle{ font-size:18px; }
+  .card-title{ font-size:22px; }
+  .wide-title{ font-size:22px; }
+  .card-art{ height:70px; }
+  .card-desc{
+    font-size:10.5px;
+    line-height:1.34;
+  }
+  .wide-desc{
+    font-size:10.5px;
+    line-height:1.34;
+    max-width:88%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+  const LOGIN_PAGE = "/pages/login.html";
+
+  async function bootAuthGate() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session?.user) {
+        location.replace(LOGIN_PAGE);
+        return;
+      }
+      document.body.classList.add("home-ready");
+    } catch (e) {
+      location.replace(LOGIN_PAGE);
+    }
+  }
+
+  bootAuthGate();
+</script>
+
+<main id="pageContent">
+  <div class="page-shell-fit">
+
+    <section class="hero" id="heroSection">
+      <div class="heroTop">
+        <div class="holo-container">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
+          </div>
+
+          <div class="holo-qr ai-planet" aria-hidden="true">
+            <div class="planet-glow"></div>
+            <div class="planet-rays"></div>
+            <div class="planet-core">
+              <div class="planet-center">
+                <div class="planet-nfc-icon"></div>
+                <div class="planet-nfc-text">NFC</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h1 class="heroTitle">Dünya’yı Küçülttük, Cebinize Sığdırdık</h1>
+        <p class="heroName" id="heroUserName">Hoş geldin</p>
+      </div>
+    </section>
+
+    <section class="home-grid">
+      <a id="faceCard" class="mod-card face-card" href="/facetoface.html">
+        <h2 class="card-title">FaceToFace</h2>
+
+        <div class="card-desc-list">
+          <p class="card-desc">Tek telefonla karşılıklı konuş, anında çeviri al.</p>
+          <p class="card-desc">Yüz yüze iletişimde dil bariyerini saniyeler içinde kaldır.</p>
+          <p class="card-desc">72 dil desteğiyle seyahatte, satışta ve günlük yaşamda hazır çözüm sunar.</p>
+          <p class="card-desc">Hızlı, sade ve etkileyici kullanım akışıyla herkes için pratiktir.</p>
+          <p class="card-desc">Konuşmayı bölmeden iletişimi akıcı hale getirir.</p>
+        </div>
+
+        <div class="card-art face-art">
+          <div class="face-wave"></div>
+          <div class="face-headset"></div>
+          <div class="face-headset"></div>
+        </div>
+      </a>
+
+      <a id="chatCard" class="mod-card chat-card" href="/pages/italkyai_chat.html">
+        <h2 class="card-title">Sohbet AI</h2>
+
+        <div class="card-desc-list">
+          <p class="card-desc">italkyAI ile doğal ve güçlü bir yapay zekâ sohbet deneyimine gir.</p>
+          <p class="card-desc">Yazarak ya da konuşarak akıcı diyalog kur, özel seslerle deneyimi kişiselleştir.</p>
+          <p class="card-desc">Satışta, müşteri iletişiminde ve günlük kullanımda seni destekleyen akıllı yardımcı gibi çalışır.</p>
+          <p class="card-desc">Kayıtlı sohbetlerle kaldığın yerden devam et, her görüşmeyi daha verimli hale getir.</p>
+          <p class="card-desc">Hızlı cevap, doğal akış ve güçlü etkileşim tek ekranda birleşir.</p>
+        </div>
+
+        <div class="card-art chat-art">
+          <div class="chat-bubble-left"></div>
+          <div class="chat-orb"></div>
+          <div class="chat-bubble-right"></div>
+        </div>
+      </a>
+    </section>
+
+    <section class="wide-stack">
+      <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
+        <div class="fun-ico">
+          <div class="fun-dice"></div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Oyunlu Eğitim</div>
+          <h2 class="wide-title">Eğlenerek Öğren</h2>
+          <p class="wide-desc">Oyunlaştırılmış akışlarla kelime dağarcığını büyüt, dikkatini güçlendir ve dili sıkılmadan öğrenmeye devam et.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="practiceCard" class="wide-card practice-card" href="/pages/pratice_ai_select.html">
+        <div class="practice-ico">
+          <div class="practice-chat"></div>
+          <div class="practice-chat right"></div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Canlı Gelişim</div>
+          <h2 class="wide-title">Practice AI</h2>
+          <p class="wide-desc">Yapay zekâ destekli konuşma alanında pratik yap, tekrar et, hata gör ve gerçek hayata yakın akışla akıcılığını artır.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
+        <div class="level-ico">
+          <div class="level-bars">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Ölç & Başla</div>
+          <h2 class="wide-title">Seviye Tespit</h2>
+          <p class="wide-desc">Mevcut seviyeni birkaç adımda ölç, sana en uygun başlangıç noktasını anında öğren ve doğru yerden başla.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+    </section>
+
+  </div>
+</main>
+
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+try {
+  mountShell({ scroll: "auto" });
+} catch (e) {
+  console.error("ui_shell HATASI:", e);
+}
+</script>
+
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+
+  async function loadHomeUserName() {
+    const heroUserName = document.getElementById("heroUserName");
+    if (!heroUserName) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const uid = user?.id;
+      if (!uid) {
+        heroUserName.textContent = "Hoş geldin";
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("hitap, name, full_name, display_name")
+        .eq("id", uid)
+        .maybeSingle();
+
+      const rawName =
+        profile?.hitap ||
+        profile?.name ||
+        profile?.display_name ||
+        profile?.full_name ||
+        user?.user_metadata?.hitap ||
+        user?.user_metadata?.name ||
+        user?.user_metadata?.full_name ||
+        user?.email ||
+        "";
+
+      const cleanName = String(rawName || "").trim();
+      heroUserName.textContent = cleanName ? cleanName : "Hoş geldin";
+    } catch (e) {
+      heroUserName.textContent = "Hoş geldin";
+    }
+  }
+
+  loadHomeUserName();
+</script>
+
+</body>
+</html>
