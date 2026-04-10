@@ -26,6 +26,7 @@ const UI = {
   menuCloseBtn: $("menuCloseBtn"),
   homeBtn: $("homeBtn"),
   brandHome: $("brandHome"),
+  jetonYukleBtn: $("jetonYukleBtn"),
 
   newChatBtn: $("newChatBtn"),
   saveChatMenuBtn: $("saveChatMenuBtn"),
@@ -42,6 +43,11 @@ const UI = {
 
   topAvatarBtn: $("topAvatarBtn"),
   topAvatarImg: $("topAvatarImg"),
+
+  menuUserAvatar: $("menuUserAvatar"),
+  menuUserAvatarImg: $("menuUserAvatarImg"),
+  menuUserName: $("menuUserName"),
+  menuJeton: $("menuJeton"),
 
   saveModal: $("saveModal"),
   saveChatName: $("saveChatName"),
@@ -81,16 +87,19 @@ function syncInputActionState() {
   UI.sendBtn.classList.toggle("hidden", !hasText);
 }
 
+function scrollChatToBottom() {
+  requestAnimationFrame(() => {
+    UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight + 200;
+  });
+}
+
 function updateKeyboardOffset() {
   const vv = window.visualViewport;
   if (!vv) return;
 
   const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
   document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
-
-  requestAnimationFrame(() => {
-    UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
-  });
+  scrollChatToBottom();
 }
 
 function openMenu() {
@@ -147,9 +156,7 @@ function addMessage(side, text, meta) {
   row.appendChild(wrap);
   UI.chatMessages.appendChild(row);
 
-  requestAnimationFrame(() => {
-    UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
-  });
+  scrollChatToBottom();
 }
 
 function setTyping(show) {
@@ -203,7 +210,7 @@ async function getAuthContext() {
   }
 }
 
-async function hydrateAvatar() {
+async function hydrateProfileUI() {
   const ctx = await getAuthContext();
 
   const avatarUrl =
@@ -212,12 +219,26 @@ async function hydrateAvatar() {
     ctx?.user?.user_metadata?.picture ||
     "";
 
-  if (avatarUrl && UI.topAvatarImg) {
+  const displayName =
+    ctx?.profile?.full_name ||
+    ctx?.user?.user_metadata?.full_name ||
+    ctx?.user?.user_metadata?.name ||
+    ctx?.user?.email ||
+    "Kullanıcı";
+
+  const tokens = Number(ctx?.profile?.tokens || 0);
+
+  if (avatarUrl) {
     UI.topAvatarImg.src = avatarUrl;
     UI.topAvatarBtn.classList.remove("empty");
-  } else {
-    UI.topAvatarBtn.classList.add("empty");
+
+    UI.menuUserAvatarImg.src = avatarUrl;
+    UI.menuUserAvatar.innerHTML = "";
+    UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
   }
+
+  UI.menuUserName.textContent = displayName;
+  UI.menuJeton.textContent = `Jeton: ${tokens}`;
 }
 
 async function speakText(text) {
@@ -281,13 +302,6 @@ async function sendCurrentMessage(mode = "text") {
   lastInputMode = mode;
 
   const auth = await getAuthContext();
-  if (!auth.user) {
-    addMessage("left", buildLocalFallbackReply(text));
-    UI.chatInput.value = "";
-    autoResizeTextarea();
-    syncInputActionState();
-    return;
-  }
 
   addMessage("right", text);
   UI.chatInput.value = "";
@@ -296,28 +310,30 @@ async function sendCurrentMessage(mode = "text") {
   setTyping(true);
 
   try {
-    const voice = buildVoicePayload();
-
-    const payload = {
-      user_id: auth.user.id,
-      session_id: currentSessionId,
-      text,
-      voice_mode: voice.mode,
-      voice_label: voice.label,
-      free_limit: getFreeLimit(),
-      can_use_free: canSendWithoutToken(text)
-    };
-
-    const resp = await fetch(API.chat, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
     let reply = "";
-    if (resp.ok) {
-      const json = await resp.json().catch(() => ({}));
-      reply = String(json?.reply || "").trim();
+
+    if (auth.user) {
+      const voice = buildVoicePayload();
+      const payload = {
+        user_id: auth.user.id,
+        session_id: currentSessionId,
+        text,
+        voice_mode: voice.mode,
+        voice_label: voice.label,
+        free_limit: getFreeLimit(),
+        can_use_free: canSendWithoutToken(text)
+      };
+
+      const resp = await fetch(API.chat, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (resp.ok) {
+        const json = await resp.json().catch(() => ({}));
+        reply = String(json?.reply || "").trim();
+      }
     }
 
     if (!reply) reply = buildLocalFallbackReply(text);
@@ -338,46 +354,63 @@ function clearChatDom() {
   UI.chatMessages.innerHTML = "";
 }
 
-async function fetchSavedChats() {
-  const auth = await getAuthContext();
-  if (!auth.user) return [];
+const LOCAL_SAVED_KEY = "italkyai_local_saved_chats";
 
+function getLocalSavedChats() {
   try {
-    const { data, error } = await supabase
-      .from("chat_persona_saved_chats")
-      .select("id, session_id, title, created_at")
-      .eq("user_id", auth.user.id)
-      .order("created_at", { ascending: false });
-
-    if (error || !data) return [];
-    return data;
+    return JSON.parse(localStorage.getItem(LOCAL_SAVED_KEY) || "[]");
   } catch {
     return [];
   }
+}
+
+function setLocalSavedChats(list) {
+  localStorage.setItem(LOCAL_SAVED_KEY, JSON.stringify(list));
+}
+
+async function fetchSavedChats() {
+  const auth = await getAuthContext();
+  if (auth.user) {
+    try {
+      const { data, error } = await supabase
+        .from("chat_persona_saved_chats")
+        .select("id, session_id, title, created_at")
+        .eq("user_id", auth.user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) return data;
+    } catch {}
+  }
+  return getLocalSavedChats();
 }
 
 async function fetchSavedChatMessages(savedChatId) {
   const auth = await getAuthContext();
-  if (!auth.user) return [];
+  if (auth.user) {
+    try {
+      const { data, error } = await supabase
+        .from("chat_persona_saved_chat_messages")
+        .select("id, role, message, created_at")
+        .eq("saved_chat_id", savedChatId)
+        .eq("user_id", auth.user.id)
+        .order("created_at", { ascending: true });
 
-  try {
-    const { data, error } = await supabase
-      .from("chat_persona_saved_chat_messages")
-      .select("id, role, message, created_at")
-      .eq("saved_chat_id", savedChatId)
-      .eq("user_id", auth.user.id)
-      .order("created_at", { ascending: true });
-
-    if (error || !data) return [];
-    return data;
-  } catch {
-    return [];
+      if (!error && data) return data;
+    } catch {}
   }
+
+  const local = getLocalSavedChats().find(x => x.id === savedChatId);
+  if (!local) return [];
+  return (local.messages || []).map((m, i) => ({
+    id: i + 1,
+    role: m.side === "right" ? "user" : "assistant",
+    message: m.text,
+    created_at: local.created_at
+  }));
 }
 
 async function renderSavedChats() {
   UI.savedChatsList.innerHTML = "";
-
   const list = await fetchSavedChats();
 
   if (!list.length) {
@@ -427,16 +460,20 @@ async function deleteCurrentSavedChat() {
   }
 
   const auth = await getAuthContext();
-  if (!auth.user) return;
 
-  try {
-    await supabase
-      .from("chat_persona_saved_chats")
-      .delete()
-      .eq("id", currentSavedChatId)
-      .eq("user_id", auth.user.id);
-  } catch (e) {
-    console.error("Sohbet sil hata:", e);
+  if (auth.user) {
+    try {
+      await supabase
+        .from("chat_persona_saved_chats")
+        .delete()
+        .eq("id", currentSavedChatId)
+        .eq("user_id", auth.user.id);
+    } catch (e) {
+      console.error("Sohbet sil hata:", e);
+    }
+  } else {
+    const list = getLocalSavedChats().filter(x => x.id !== currentSavedChatId);
+    setLocalSavedChats(list);
   }
 
   currentSavedChatId = null;
@@ -451,11 +488,6 @@ async function saveChatNow() {
   if (!title) return;
 
   const auth = await getAuthContext();
-  if (!auth.user) {
-    UI.saveModal.classList.remove("open");
-    return;
-  }
-
   const messageRows = [...UI.chatMessages.querySelectorAll(".msg")].map((msg) => {
     const side = msg.classList.contains("right") ? "user" : "assistant";
     const text = msg.querySelector(".bubble")?.textContent || "";
@@ -467,61 +499,80 @@ async function saveChatNow() {
     return;
   }
 
-  try {
-    let savedChatId = currentSavedChatId;
+  if (auth.user) {
+    try {
+      let savedChatId = currentSavedChatId;
 
-    if (!savedChatId) {
-      const { data: inserted, error: insertErr } = await supabase
-        .from("chat_persona_saved_chats")
-        .insert({
-          user_id: auth.user.id,
-          session_id: currentSessionId,
-          title
-        })
-        .select("id")
-        .single();
+      if (!savedChatId) {
+        const { data: inserted, error: insertErr } = await supabase
+          .from("chat_persona_saved_chats")
+          .insert({
+            user_id: auth.user.id,
+            session_id: currentSessionId,
+            title
+          })
+          .select("id")
+          .single();
 
-      if (insertErr) throw insertErr;
-      savedChatId = inserted.id;
-      currentSavedChatId = savedChatId;
-    } else {
-      const { error: updateErr } = await supabase
-        .from("chat_persona_saved_chats")
-        .update({ title })
-        .eq("id", savedChatId)
-        .eq("user_id", auth.user.id);
+        if (insertErr) throw insertErr;
+        savedChatId = inserted.id;
+        currentSavedChatId = savedChatId;
+      } else {
+        const { error: updateErr } = await supabase
+          .from("chat_persona_saved_chats")
+          .update({ title })
+          .eq("id", savedChatId)
+          .eq("user_id", auth.user.id);
 
-      if (updateErr) throw updateErr;
+        if (updateErr) throw updateErr;
 
-      await supabase
+        await supabase
+          .from("chat_persona_saved_chat_messages")
+          .delete()
+          .eq("saved_chat_id", savedChatId)
+          .eq("user_id", auth.user.id);
+      }
+
+      const rows = messageRows.map((row) => ({
+        saved_chat_id: savedChatId,
+        user_id: auth.user.id,
+        session_id: currentSessionId,
+        role: row.role,
+        message: row.message,
+        char_count: row.char_count
+      }));
+
+      const { error: msgErr } = await supabase
         .from("chat_persona_saved_chat_messages")
-        .delete()
-        .eq("saved_chat_id", savedChatId)
-        .eq("user_id", auth.user.id);
+        .insert(rows);
+
+      if (msgErr) throw msgErr;
+    } catch (e) {
+      console.error("Sohbet kaydet hata:", e);
     }
+  } else {
+    const list = getLocalSavedChats().filter(x => x.id !== currentSavedChatId);
+    const id = currentSavedChatId || crypto.randomUUID();
 
-    const rows = messageRows.map((row) => ({
-      saved_chat_id: savedChatId,
-      user_id: auth.user.id,
+    list.unshift({
+      id,
       session_id: currentSessionId,
-      role: row.role,
-      message: row.message,
-      char_count: row.char_count
-    }));
+      title,
+      created_at: new Date().toISOString(),
+      messages: messageRows.map(x => ({
+        side: x.role === "user" ? "right" : "left",
+        text: x.message
+      }))
+    });
 
-    const { error: msgErr } = await supabase
-      .from("chat_persona_saved_chat_messages")
-      .insert(rows);
-
-    if (msgErr) throw msgErr;
-
-    UI.saveModal.classList.remove("open");
-    UI.saveChatName.value = "";
-    await renderSavedChats();
-  } catch (e) {
-    console.error("Sohbet kaydet hata:", e);
-    UI.saveModal.classList.remove("open");
+    setLocalSavedChats(list);
+    currentSavedChatId = id;
   }
+
+  UI.saveModal.classList.remove("open");
+  UI.saveChatName.value = "";
+  await renderSavedChats();
+  closeMenu();
 }
 
 function openListenMode() {
@@ -570,13 +621,13 @@ function bindEvents() {
   UI.chatInput.addEventListener("input", () => {
     autoResizeTextarea();
     syncInputActionState();
-    requestAnimationFrame(() => {
-      UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
-    });
+    scrollChatToBottom();
   });
 
   UI.chatInput.addEventListener("focus", () => {
-    setTimeout(updateKeyboardOffset, 80);
+    setTimeout(updateKeyboardOffset, 100);
+    setTimeout(scrollChatToBottom, 180);
+    setTimeout(scrollChatToBottom, 280);
   });
 
   UI.chatInput.addEventListener("keydown", (e) => {
@@ -600,6 +651,10 @@ function bindEvents() {
 
   UI.brandHome.addEventListener("click", () => {
     location.href = "/pages/home.html";
+  });
+
+  UI.jetonYukleBtn.addEventListener("click", () => {
+    location.href = "/pages/jetonbuy.html";
   });
 
   UI.newChatBtn.addEventListener("click", () => {
@@ -648,6 +703,7 @@ function bindEvents() {
 
   window.visualViewport?.addEventListener("resize", updateKeyboardOffset);
   window.visualViewport?.addEventListener("scroll", updateKeyboardOffset);
+  window.addEventListener("resize", updateKeyboardOffset);
 }
 
 async function init() {
@@ -656,8 +712,10 @@ async function init() {
   bindEvents();
   autoResizeTextarea();
   syncInputActionState();
-  await hydrateAvatar();
+  await hydrateProfileUI();
+  await renderSavedChats();
   updateKeyboardOffset();
+  scrollChatToBottom();
 }
 
 init();
