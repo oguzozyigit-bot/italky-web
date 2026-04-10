@@ -6,7 +6,7 @@ const STORAGE = {
   voice: "italkyai_selected_voice",
   secondVoiceName: "italkyai_second_voice_name",
   secondVoiceOwnerName: "italkyai_second_voice_owner_name",
-  savedChats: "italkyai_saved_chats"
+  openChatId: "italkyai_open_chat_id"
 };
 
 const API = {
@@ -43,6 +43,7 @@ const UI = {
   secondVoiceDesc: $("secondVoiceDesc"),
 
   topAvatarBtn: $("topAvatarBtn"),
+  topAvatarImg: $("topAvatarImg"),
 
   saveModal: $("saveModal"),
   saveChatName: $("saveChatName"),
@@ -192,12 +193,29 @@ async function getAuthContext() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id,full_name,email,tokens")
+    .select("id, full_name, email, tokens, avatar_url")
     .eq("id", currentUser.id)
     .maybeSingle();
 
   currentProfile = profile || null;
   return { user: currentUser, profile: currentProfile };
+}
+
+async function hydrateAvatar() {
+  await getAuthContext();
+
+  const avatarUrl =
+    currentProfile?.avatar_url ||
+    currentUser?.user_metadata?.avatar_url ||
+    currentUser?.user_metadata?.picture ||
+    "";
+
+  if (avatarUrl && UI.topAvatarImg) {
+    UI.topAvatarImg.src = avatarUrl;
+    UI.topAvatarBtn.classList.remove("empty");
+  } else {
+    UI.topAvatarBtn.classList.add("empty");
+  }
 }
 
 async function speakText(text) {
@@ -250,6 +268,10 @@ async function speakText(text) {
   }
 }
 
+function buildLocalFallbackReply(text) {
+  return `Tamam, bunu aldım. Biraz daha aç da seni yarım yamalak anlamayayım: ${text}`;
+}
+
 async function sendCurrentMessage(mode = "text") {
   const text = String(UI.chatInput.value || "").trim();
   if (!text) return;
@@ -287,43 +309,65 @@ async function sendCurrentMessage(mode = "text") {
       body: JSON.stringify(payload)
     });
 
-    const json = await resp.json().catch(() => ({}));
-    const reply = String(json?.reply || "").trim() || "Şu an cevap üretilemedi.";
+    let reply = "";
+    if (resp.ok) {
+      const json = await resp.json().catch(() => ({}));
+      reply = String(json?.reply || "").trim();
+    }
+
+    if (!reply) {
+      reply = buildLocalFallbackReply(text);
+    }
 
     addMessage("left", reply);
     setTyping(false);
-
     await speakText(reply);
   } catch (e) {
     console.error("Chat hata:", e);
+    const reply = buildLocalFallbackReply(text);
     setTyping(false);
-    addMessage("left", "Şu an cevap üretilemedi.");
+    addMessage("left", reply);
+    await speakText(reply);
   }
 }
 
-function clearChat() {
+function clearChatDom() {
   UI.chatMessages.innerHTML = "";
-  if (currentSavedChatId) {
-    const list = getSavedChats().filter(x => x.id !== currentSavedChatId);
-    localStorage.setItem(STORAGE.savedChats, JSON.stringify(list));
-    currentSavedChatId = null;
-    renderSavedChats();
-  }
-  currentSessionId = crypto.randomUUID();
-  closeMenu();
 }
 
-function getSavedChats() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE.savedChats) || "[]");
-  } catch {
-    return [];
-  }
+async function fetchSavedChats() {
+  const auth = await getAuthContext();
+  if (!auth.user) return [];
+
+  const { data, error } = await supabase
+    .from("chat_persona_saved_chats")
+    .select("id, session_id, title, created_at")
+    .eq("user_id", auth.user.id)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return data;
 }
 
-function renderSavedChats() {
-  const list = getSavedChats();
+async function fetchSavedChatMessages(savedChatId) {
+  const auth = await getAuthContext();
+  if (!auth.user) return [];
+
+  const { data, error } = await supabase
+    .from("chat_persona_saved_chat_messages")
+    .select("id, role, message, created_at")
+    .eq("saved_chat_id", savedChatId)
+    .eq("user_id", auth.user.id)
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+  return data;
+}
+
+async function renderSavedChats() {
   UI.savedChatsList.innerHTML = "";
+
+  const list = await fetchSavedChats();
 
   if (!list.length) {
     const empty = document.createElement("div");
@@ -338,60 +382,133 @@ function renderSavedChats() {
     btn.className = "saved-chat-btn";
     btn.innerHTML = `
       <span>${chat.title}</span>
-      <span class="saved-chat-meta">${new Date(chat.saved_at).toLocaleString("tr-TR")}</span>
+      <span class="saved-chat-meta">${new Date(chat.created_at).toLocaleString("tr-TR")}</span>
     `;
     btn.addEventListener("click", () => loadSavedChat(chat.id));
     UI.savedChatsList.appendChild(btn);
   });
 }
 
-function loadSavedChat(chatId) {
-  const chat = getSavedChats().find(x => x.id === chatId);
-  if (!chat) return;
+async function loadSavedChat(savedChatId) {
+  const messages = await fetchSavedChatMessages(savedChatId);
+  if (!messages.length) return;
 
-  UI.chatMessages.innerHTML = "";
-  currentSavedChatId = chat.id;
-  currentSessionId = chat.session_id;
+  clearChatDom();
 
-  (chat.messages || []).forEach(msg => {
-    addMessage(msg.side, msg.text, msg.meta);
+  currentSavedChatId = savedChatId;
+
+  const chats = await fetchSavedChats();
+  const found = chats.find(x => x.id === savedChatId);
+  currentSessionId = found?.session_id || crypto.randomUUID();
+
+  messages.forEach(msg => {
+    addMessage(msg.role === "user" ? "right" : "left", msg.message);
   });
 
   closeMenu();
 }
 
-function saveChatNow() {
+async function deleteCurrentSavedChat() {
+  if (!currentSavedChatId) {
+    clearChatDom();
+    currentSessionId = crypto.randomUUID();
+    closeMenu();
+    return;
+  }
+
+  const auth = await getAuthContext();
+  if (!auth.user) return;
+
+  try {
+    await supabase
+      .from("chat_persona_saved_chats")
+      .delete()
+      .eq("id", currentSavedChatId)
+      .eq("user_id", auth.user.id);
+  } catch (e) {
+    console.error("Sohbet sil hata:", e);
+  }
+
+  currentSavedChatId = null;
+  currentSessionId = crypto.randomUUID();
+  clearChatDom();
+  await renderSavedChats();
+  closeMenu();
+}
+
+async function saveChatNow() {
   const title = String(UI.saveChatName.value || "").trim();
   if (!title) return;
 
-  const messages = [...UI.chatMessages.querySelectorAll(".msg")].map((msg) => ({
-    side: msg.classList.contains("right") ? "right" : "left",
-    text: msg.querySelector(".bubble")?.textContent || "",
-    meta: msg.querySelector(".msg-meta")?.textContent || ""
-  }));
+  const auth = await getAuthContext();
+  if (!auth.user) return;
 
-  if (!messages.length) {
+  const messageRows = [...UI.chatMessages.querySelectorAll(".msg")].map((msg) => {
+    const side = msg.classList.contains("right") ? "user" : "assistant";
+    const text = msg.querySelector(".bubble")?.textContent || "";
+    return { role: side, message: text, char_count: text.length };
+  });
+
+  if (!messageRows.length) {
     UI.saveModal.classList.remove("open");
     return;
   }
 
-  const list = getSavedChats().filter(x => x.id !== currentSavedChatId);
-  const id = currentSavedChatId || crypto.randomUUID();
+  try {
+    let savedChatId = currentSavedChatId;
 
-  list.unshift({
-    id,
-    session_id: currentSessionId,
-    title,
-    saved_at: new Date().toISOString(),
-    messages
-  });
+    if (!savedChatId) {
+      const { data: inserted, error: insertErr } = await supabase
+        .from("chat_persona_saved_chats")
+        .insert({
+          user_id: auth.user.id,
+          session_id: currentSessionId,
+          title
+        })
+        .select("id")
+        .single();
 
-  localStorage.setItem(STORAGE.savedChats, JSON.stringify(list));
-  currentSavedChatId = id;
-  UI.saveModal.classList.remove("open");
-  UI.saveChatName.value = "";
-  renderSavedChats();
-  closeMenu();
+      if (insertErr) throw insertErr;
+      savedChatId = inserted.id;
+      currentSavedChatId = savedChatId;
+    } else {
+      const { error: updateErr } = await supabase
+        .from("chat_persona_saved_chats")
+        .update({ title })
+        .eq("id", savedChatId)
+        .eq("user_id", auth.user.id);
+
+      if (updateErr) throw updateErr;
+
+      await supabase
+        .from("chat_persona_saved_chat_messages")
+        .delete()
+        .eq("saved_chat_id", savedChatId)
+        .eq("user_id", auth.user.id);
+    }
+
+    const rows = messageRows.map((row) => ({
+      saved_chat_id: savedChatId,
+      user_id: auth.user.id,
+      session_id: currentSessionId,
+      role: row.role,
+      message: row.message,
+      char_count: row.char_count
+    }));
+
+    const { error: msgErr } = await supabase
+      .from("chat_persona_saved_chat_messages")
+      .insert(rows);
+
+    if (msgErr) throw msgErr;
+
+    UI.saveModal.classList.remove("open");
+    UI.saveChatName.value = "";
+    await renderSavedChats();
+    closeMenu();
+  } catch (e) {
+    console.error("Sohbet kaydet hata:", e);
+  }
 }
 
 function openListenMode() {
@@ -467,7 +584,7 @@ function bindEvents() {
   UI.menuCloseBtn.addEventListener("click", closeMenu);
 
   UI.newChatBtn.addEventListener("click", () => {
-    UI.chatMessages.innerHTML = "";
+    clearChatDom();
     currentSavedChatId = null;
     currentSessionId = crypto.randomUUID();
     closeMenu();
@@ -482,8 +599,14 @@ function bindEvents() {
 
   UI.confirmSaveChat.addEventListener("click", saveChatNow);
 
-  UI.savedChatsToggleBtn.addEventListener("click", toggleSavedChats);
-  UI.clearChatMenuBtn.addEventListener("click", clearChat);
+  UI.savedChatsToggleBtn.addEventListener("click", async () => {
+    toggleSavedChats();
+    if (UI.savedChatsList.classList.contains("open")) {
+      await renderSavedChats();
+    }
+  });
+
+  UI.clearChatMenuBtn.addEventListener("click", deleteCurrentSavedChat);
 
   UI.voiceMenuBtn.addEventListener("click", () => {
     UI.voiceSheet.classList.toggle("open");
@@ -511,128 +634,18 @@ function bindEvents() {
   window.visualViewport?.addEventListener("scroll", updateKeyboardOffset);
 }
 
-function setSelectedVoice(voiceId) {
-  localStorage.setItem(STORAGE.voice, voiceId);
-  UI.voiceCards.forEach(card => {
-    card.classList.toggle("active", card.dataset.voiceId === voiceId);
-  });
-}
-
 function initVoiceState() {
-  const selected = localStorage.getItem(STORAGE.voice) || "free_tts";
+  const selected = getSelectedVoice();
   setSelectedVoice(selected);
-}
-
-function hydrateSecondVoiceName() {
-  const secondVoiceName = localStorage.getItem(STORAGE.secondVoiceName) || "İkinci Ses";
-  const secondVoiceOwnerName = localStorage.getItem(STORAGE.secondVoiceOwnerName) || "";
-
-  UI.secondVoiceName.textContent = secondVoiceName;
-  UI.secondVoiceDesc.textContent = secondVoiceOwnerName
-    ? `${secondVoiceOwnerName} için tanımlanan özel ses burada görünür.`
-    : "Kayıt sayfasında verilen isim burada görünür.";
-}
-
-async function getAuthContext() {
-  const { data: { user } } = await supabase.auth.getUser();
-  currentUser = user || null;
-
-  if (!currentUser) return { user: null, profile: null };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id,full_name,email,tokens")
-    .eq("id", currentUser.id)
-    .maybeSingle();
-
-  currentProfile = profile || null;
-  return { user: currentUser, profile: currentProfile };
-}
-
-function buildVoicePayload() {
-  const voiceId = localStorage.getItem(STORAGE.voice) || "free_tts";
-
-  if (voiceId === "free_tts") return { mode: "free_tts", label: "Ücretsiz Ses" };
-  if (voiceId === "mine_clone") return { mode: "clone", label: "Kendi Sesim" };
-  if (voiceId === "second_custom") {
-    return {
-      mode: "special",
-      label: localStorage.getItem(STORAGE.secondVoiceName) || "İkinci Ses"
-    };
-  }
-
-  return { mode: "preset", label: voiceId };
-}
-
-async function speakText(text) {
-  if (lastInputMode !== "voice") return;
-
-  const clean = String(text || "").trim();
-  if (!clean) return;
-
-  stopAudio();
-
-  const voice = buildVoicePayload();
-
-  if (voice.mode === "free_tts") {
-    try {
-      window.speechSynthesis?.cancel?.();
-      const utterance = new SpeechSynthesisUtterance(clean);
-      utterance.lang = "tr-TR";
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      window.speechSynthesis.speak(utterance);
-      return;
-    } catch {}
-  }
-
-  try {
-    if (!currentUser) await getAuthContext();
-    if (!currentUser) return;
-
-    const resp = await fetch(API.tts, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: clean,
-        lang: "tr",
-        user_id: currentUser.id,
-        voice: voice.mode === "clone" ? "clone" : voice.label,
-        module: "italkyai"
-      })
-    });
-
-    const json = await resp.json().catch(() => ({}));
-    const audioBase64 = String(json?.audio_base64 || "").trim();
-    if (!audioBase64) return;
-
-    const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
-    currentAudio = audio;
-    audio.play().catch(() => {});
-  } catch (e) {
-    console.error("TTS hata:", e);
-  }
-}
-
-function updateKeyboardOffset() {
-  const vv = window.visualViewport;
-  if (!vv) return;
-
-  const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-  document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
-
-  requestAnimationFrame(() => {
-    UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
-  });
 }
 
 async function init() {
   hydrateSecondVoiceName();
   initVoiceState();
-  renderSavedChats();
   bindEvents();
   autoResizeTextarea();
   syncInputActionState();
+  await hydrateAvatar();
   await getAuthContext();
   updateKeyboardOffset();
 }
