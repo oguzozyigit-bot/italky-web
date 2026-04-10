@@ -5,8 +5,7 @@ const $ = (id) => document.getElementById(id);
 const STORAGE = {
   voice: "italkyai_selected_voice",
   secondVoiceName: "italkyai_second_voice_name",
-  secondVoiceOwnerName: "italkyai_second_voice_owner_name",
-  openChatId: "italkyai_open_chat_id"
+  secondVoiceOwnerName: "italkyai_second_voice_owner_name"
 };
 
 const API = {
@@ -25,6 +24,8 @@ const UI = {
   menuBtn: $("menuBtn"),
   menuBackdrop: $("menuBackdrop"),
   menuCloseBtn: $("menuCloseBtn"),
+  homeBtn: $("homeBtn"),
+  brandHome: $("brandHome"),
 
   newChatBtn: $("newChatBtn"),
   saveChatMenuBtn: $("saveChatMenuBtn"),
@@ -34,7 +35,6 @@ const UI = {
 
   voiceMenuBtn: $("voiceMenuBtn"),
   voiceSheet: $("voiceSheet"),
-  closeVoiceSheet: $("closeVoiceSheet"),
   newVoiceBtn: $("newVoiceBtn"),
   voiceCards: [...document.querySelectorAll("[data-voice-id]")],
   secondVoiceName: $("secondVoiceName"),
@@ -179,33 +179,37 @@ function buildVoicePayload() {
       label: localStorage.getItem(STORAGE.secondVoiceName) || "İkinci Ses"
     };
   }
-
   return { mode: "preset", label: voiceId };
 }
 
 async function getAuthContext() {
-  const { data: { user } } = await supabase.auth.getUser();
-  currentUser = user || null;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    currentUser = user || null;
 
-  if (!currentUser) return { user: null, profile: null };
+    if (!currentUser) return { user: null, profile: null };
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id,full_name,email,tokens,avatar_url")
-    .eq("id", currentUser.id)
-    .maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id,full_name,email,tokens,avatar_url")
+      .eq("id", currentUser.id)
+      .maybeSingle();
 
-  currentProfile = profile || null;
-  return { user: currentUser, profile: currentProfile };
+    currentProfile = profile || null;
+    return { user: currentUser, profile: currentProfile };
+  } catch (e) {
+    console.error("Auth context hata:", e);
+    return { user: null, profile: null };
+  }
 }
 
 async function hydrateAvatar() {
-  await getAuthContext();
+  const ctx = await getAuthContext();
 
   const avatarUrl =
-    currentProfile?.avatar_url ||
-    currentUser?.user_metadata?.avatar_url ||
-    currentUser?.user_metadata?.picture ||
+    ctx?.profile?.avatar_url ||
+    ctx?.user?.user_metadata?.avatar_url ||
+    ctx?.user?.user_metadata?.picture ||
     "";
 
   if (avatarUrl && UI.topAvatarImg) {
@@ -278,7 +282,10 @@ async function sendCurrentMessage(mode = "text") {
 
   const auth = await getAuthContext();
   if (!auth.user) {
-    location.href = "/pages/login.html";
+    addMessage("left", buildLocalFallbackReply(text));
+    UI.chatInput.value = "";
+    autoResizeTextarea();
+    syncInputActionState();
     return;
   }
 
@@ -313,9 +320,7 @@ async function sendCurrentMessage(mode = "text") {
       reply = String(json?.reply || "").trim();
     }
 
-    if (!reply) {
-      reply = buildLocalFallbackReply(text);
-    }
+    if (!reply) reply = buildLocalFallbackReply(text);
 
     addMessage("left", reply);
     setTyping(false);
@@ -337,29 +342,37 @@ async function fetchSavedChats() {
   const auth = await getAuthContext();
   if (!auth.user) return [];
 
-  const { data, error } = await supabase
-    .from("chat_persona_saved_chats")
-    .select("id, session_id, title, created_at")
-    .eq("user_id", auth.user.id)
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from("chat_persona_saved_chats")
+      .select("id, session_id, title, created_at")
+      .eq("user_id", auth.user.id)
+      .order("created_at", { ascending: false });
 
-  if (error || !data) return [];
-  return data;
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
 }
 
 async function fetchSavedChatMessages(savedChatId) {
   const auth = await getAuthContext();
   if (!auth.user) return [];
 
-  const { data, error } = await supabase
-    .from("chat_persona_saved_chat_messages")
-    .select("id, role, message, created_at")
-    .eq("saved_chat_id", savedChatId)
-    .eq("user_id", auth.user.id)
-    .order("created_at", { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from("chat_persona_saved_chat_messages")
+      .select("id, role, message, created_at")
+      .eq("saved_chat_id", savedChatId)
+      .eq("user_id", auth.user.id)
+      .order("created_at", { ascending: true });
 
-  if (error || !data) return [];
-  return data;
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
 }
 
 async function renderSavedChats() {
@@ -392,7 +405,6 @@ async function loadSavedChat(savedChatId) {
   if (!messages.length) return;
 
   clearChatDom();
-
   currentSavedChatId = savedChatId;
 
   const chats = await fetchSavedChats();
@@ -439,7 +451,10 @@ async function saveChatNow() {
   if (!title) return;
 
   const auth = await getAuthContext();
-  if (!auth.user) return;
+  if (!auth.user) {
+    UI.saveModal.classList.remove("open");
+    return;
+  }
 
   const messageRows = [...UI.chatMessages.querySelectorAll(".msg")].map((msg) => {
     const side = msg.classList.contains("right") ? "user" : "assistant";
@@ -503,9 +518,9 @@ async function saveChatNow() {
     UI.saveModal.classList.remove("open");
     UI.saveChatName.value = "";
     await renderSavedChats();
-    closeMenu();
   } catch (e) {
     console.error("Sohbet kaydet hata:", e);
+    UI.saveModal.classList.remove("open");
   }
 }
 
@@ -546,7 +561,6 @@ function openListenMode() {
 function closeListenMode(stopRecognition = true) {
   UI.listenModal.classList.remove("open");
   UI.micBtn.classList.remove("listening");
-
   if (stopRecognition) {
     try { recognition?.stop(); } catch {}
   }
@@ -573,13 +587,20 @@ function bindEvents() {
   });
 
   UI.sendBtn.addEventListener("click", () => sendCurrentMessage("text"));
-
   UI.micBtn.addEventListener("click", openListenMode);
   UI.closeListenModal.addEventListener("click", () => closeListenMode(true));
 
   UI.menuBtn.addEventListener("click", openMenu);
   UI.menuBackdrop.addEventListener("click", closeMenu);
   UI.menuCloseBtn.addEventListener("click", closeMenu);
+
+  UI.homeBtn.addEventListener("click", () => {
+    location.href = "/pages/home.html";
+  });
+
+  UI.brandHome.addEventListener("click", () => {
+    location.href = "/pages/home.html";
+  });
 
   UI.newChatBtn.addEventListener("click", () => {
     clearChatDom();
@@ -590,7 +611,6 @@ function bindEvents() {
 
   UI.saveChatMenuBtn.addEventListener("click", () => {
     UI.saveModal.classList.add("open");
-    closeMenu();
   });
 
   UI.cancelSaveChat.addEventListener("click", () => {
@@ -612,10 +632,6 @@ function bindEvents() {
     UI.voiceSheet.classList.toggle("open");
   });
 
-  UI.closeVoiceSheet.addEventListener("click", () => {
-    UI.voiceSheet.classList.remove("open");
-  });
-
   UI.newVoiceBtn.addEventListener("click", () => {
     location.href = "/pages/ai_voice_profile.html";
   });
@@ -634,19 +650,13 @@ function bindEvents() {
   window.visualViewport?.addEventListener("scroll", updateKeyboardOffset);
 }
 
-function initVoiceState() {
-  const selected = getSelectedVoice();
-  setSelectedVoice(selected);
-}
-
 async function init() {
   hydrateSecondVoiceName();
-  initVoiceState();
+  setSelectedVoice(getSelectedVoice());
   bindEvents();
   autoResizeTextarea();
   syncInputActionState();
   await hydrateAvatar();
-  await getAuthContext();
   updateKeyboardOffset();
 }
 
