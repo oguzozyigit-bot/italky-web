@@ -13,15 +13,19 @@
   <style>
     :root{
       --bg:#07080b;
+      --bg2:#0b0d12;
       --text:#f7f7f7;
       --muted:rgba(255,255,255,.58);
+
       --orange:#f59e0b;
       --orange2:#f97316;
       --green:#a3e635;
       --green2:#84cc16;
       --red:#ef4444;
       --yellow:#facc15;
+
       --glass:rgba(255,255,255,.045);
+      --glass2:rgba(255,255,255,.07);
       --line:rgba(255,255,255,.08);
 
       --safe-top: env(safe-area-inset-top);
@@ -29,7 +33,7 @@
 
       --header-h:84px;
       --footer-h:44px;
-      --composer-h:86px;
+      --composer-h:84px;
       --keyboard-offset:0px;
       --app-height:100dvh;
     }
@@ -186,7 +190,9 @@
       z-index:120;
     }
 
-    .menu.open{ pointer-events:auto; }
+    .menu.open{
+      pointer-events:auto;
+    }
 
     .menu-backdrop{
       position:absolute;
@@ -197,7 +203,9 @@
       transition:opacity .22s ease;
     }
 
-    .menu.open .menu-backdrop{ opacity:1; }
+    .menu.open .menu-backdrop{
+      opacity:1;
+    }
 
     .menu-panel{
       position:absolute;
@@ -216,7 +224,9 @@
       gap:12px;
     }
 
-    .menu.open .menu-panel{ transform:translateX(0); }
+    .menu.open .menu-panel{
+      transform:translateX(0);
+    }
 
     .menu-user{
       display:flex;
@@ -293,7 +303,9 @@
       scrollbar-width:none;
     }
 
-    .menu-list::-webkit-scrollbar{ display:none; }
+    .menu-list::-webkit-scrollbar{
+      display:none;
+    }
 
     .menu-item{
       width:100%;
@@ -323,7 +335,9 @@
       padding-left:8px;
     }
 
-    .saved-list.open{ display:flex; }
+    .saved-list.open{
+      display:flex;
+    }
 
     .saved-chat-btn{
       width:100%;
@@ -357,8 +371,13 @@
       scrollbar-width:none;
     }
 
-    .voice-sheet::-webkit-scrollbar{ display:none; }
-    .voice-sheet.open{ display:flex; }
+    .voice-sheet::-webkit-scrollbar{
+      display:none;
+    }
+
+    .voice-sheet.open{
+      display:flex;
+    }
 
     .voice-card{
       padding:14px;
@@ -461,8 +480,45 @@
 
     .chat-spacer{
       margin-top:auto;
-      height:1px;
       flex:1 0 auto;
+      min-height:1px;
+    }
+
+    .welcome-box{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:20px 10px 0;
+      flex:0 0 auto;
+    }
+
+    .welcome-box.hidden{
+      display:none;
+    }
+
+    .welcome-title{
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:26px;
+      line-height:1.2;
+      font-weight:800;
+      color:#fff;
+      margin:0 0 8px;
+    }
+
+    .welcome-sub{
+      font-size:16px;
+      line-height:1.4;
+      font-weight:700;
+      color:rgba(255,255,255,.72);
+      margin:0;
+    }
+
+    .welcome-name{
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 42%, var(--green) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
 
     .msg{
@@ -523,8 +579,9 @@
     }
 
     .composer{
-      display:flex;
-      align-items:flex-end;
+      display:grid;
+      grid-template-columns:1fr 46px;
+      align-items:center;
       gap:10px;
       min-height:72px;
       padding:10px 12px;
@@ -536,10 +593,10 @@
     }
 
     .composer-center{
-      flex:1;
       min-width:0;
       display:flex;
       flex-direction:column;
+      justify-content:center;
     }
 
     .composer-input{
@@ -569,10 +626,10 @@
       border:none;
       border-radius:50%;
       cursor:pointer;
-      flex:0 0 auto;
       display:flex;
       align-items:center;
       justify-content:center;
+      justify-self:center;
     }
 
     .send-btn{
@@ -719,25 +776,25 @@
 
     .ai-live{
       position:relative;
-      width:220px;
-      height:220px;
+      width:250px;
+      height:250px;
       display:flex;
       align-items:center;
       justify-content:center;
     }
 
     .ai-live-core{
-      width:102px;
-      height:102px;
+      width:108px;
+      height:108px;
       border-radius:50%;
       background:
-        radial-gradient(circle at 35% 35%, rgba(255,255,255,.55) 0%, rgba(255,255,255,.08) 16%, transparent 22%),
-        radial-gradient(circle, var(--yellow) 0%, var(--orange) 42%, var(--orange2) 72%, var(--red) 100%);
+        radial-gradient(circle at 32% 32%, rgba(255,255,255,.65) 0%, rgba(255,255,255,.12) 15%, transparent 22%),
+        radial-gradient(circle, #fff2b6 0%, var(--yellow) 18%, var(--orange) 46%, var(--orange2) 72%, var(--red) 100%);
       box-shadow:
-        0 0 18px rgba(250,204,21,.20),
-        0 0 44px rgba(249,115,22,.22),
-        0 0 88px rgba(239,68,68,.18);
-      animation:liveBreath 2.1s ease-in-out infinite;
+        0 0 24px rgba(250,204,21,.24),
+        0 0 54px rgba(249,115,22,.26),
+        0 0 110px rgba(239,68,68,.20);
+      animation:liveBreath 1.9s ease-in-out infinite;
     }
 
     .ai-live-ring{
@@ -745,17 +802,17 @@
       inset:0;
       border-radius:50%;
       border:1px solid rgba(255,180,80,.10);
-      animation:livePulse 2.4s ease-in-out infinite;
+      animation:livePulse 2.2s ease-in-out infinite;
     }
 
     .ai-live-ring.r2{
-      inset:18px;
-      animation-delay:.3s;
+      inset:22px;
+      animation-delay:.2s;
     }
 
     .ai-live-ring.r3{
-      inset:36px;
-      animation-delay:.55s;
+      inset:44px;
+      animation-delay:.45s;
     }
 
     .listen-close{
@@ -774,13 +831,13 @@
     }
 
     @keyframes liveBreath{
-      0%,100%{ transform:scale(1); }
-      50%{ transform:scale(1.11); }
+      0%,100%{ transform:scale(1); filter:brightness(1); }
+      50%{ transform:scale(1.14); filter:brightness(1.12); }
     }
 
     @keyframes livePulse{
       0%,100%{ opacity:.18; transform:scale(1); }
-      50%{ opacity:.60; transform:scale(1.10); }
+      50%{ opacity:.70; transform:scale(1.11); }
     }
   </style>
 </head>
@@ -921,7 +978,14 @@
     <section class="main">
       <div class="chat-scroll" id="chatMessages">
         <div class="chat-spacer"></div>
+        <div class="welcome-box" id="welcomeBox">
+          <div>
+            <h2 class="welcome-title">Merhaba <span class="welcome-name" id="welcomeName">Arkadaşım</span></h2>
+            <p class="welcome-sub">Sohbet konunuz ne olsun?</p>
+          </div>
+        </div>
       </div>
+
       <div class="typing" id="typingState">italkyAI yazıyor...</div>
 
       <div class="composer-wrap">
@@ -982,6 +1046,8 @@
     sendBtn: $("sendBtn"),
     micBtn: $("micBtn"),
     typingState: $("typingState"),
+    welcomeBox: $("welcomeBox"),
+    welcomeName: $("welcomeName"),
 
     menu: $("menu"),
     menuBtn: $("menuBtn"),
@@ -1054,7 +1120,7 @@
 
   function scrollChatToBottom() {
     requestAnimationFrame(() => {
-      UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight + 500;
+      UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight + 800;
     });
   }
 
@@ -1063,15 +1129,17 @@
     if (!vv) return;
 
     document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
-
     const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
 
     scrollChatToBottom();
 
-    setTimeout(() => {
-      try { UI.chatInput.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch {}
-    }, 80);
+    if (keyboardHeight > 0) {
+      setTimeout(() => {
+        try { UI.chatInput.focus({ preventScroll: true }); } catch {}
+        try { UI.chatInput.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
+      }, 120);
+    }
   }
 
   function openMenu() {
@@ -1108,7 +1176,13 @@
       : "Kayıt sayfasında verilen isim burada görünür.";
   }
 
+  function showWelcome(show) {
+    UI.welcomeBox.classList.toggle("hidden", !show);
+  }
+
   function addMessage(side, text, meta) {
+    showWelcome(false);
+
     const row = document.createElement("div");
     row.className = `msg ${side}`;
 
@@ -1191,13 +1265,14 @@
       ctx?.user?.user_metadata?.picture ||
       "";
 
-    const displayName =
+    const rawName =
       ctx?.profile?.full_name ||
       ctx?.user?.user_metadata?.full_name ||
       ctx?.user?.user_metadata?.name ||
       ctx?.user?.email ||
-      "Kullanıcı";
+      "Arkadaşım";
 
+    const firstName = String(rawName).trim().split(" ")[0] || "Arkadaşım";
     const tokens = Number(ctx?.profile?.tokens || 0);
 
     if (avatarUrl) {
@@ -1209,8 +1284,9 @@
       UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
     }
 
-    UI.menuUserName.textContent = displayName;
+    UI.menuUserName.textContent = rawName;
     UI.menuJeton.textContent = `Jeton: ${tokens}`;
+    UI.welcomeName.textContent = firstName;
   }
 
   async function speakText(text) {
@@ -1285,15 +1361,24 @@
     }
   }
 
-  function buildLocalFallbackReply(text) {
-    return `Tamam, bunu aldım. Biraz daha aç da seni yarım yamalak anlamayayım: ${text}`;
-  }
-
   async function sendCurrentMessage(mode = "text", forcedText = "") {
     const text = String(forcedText || UI.chatInput.value || "").trim();
     if (!text) return;
 
     lastInputMode = mode;
+
+    const auth = await getAuthContext();
+    const userTokens = Number(auth?.profile?.tokens || 0);
+
+    if (!canSendWithoutToken(text) && userTokens <= 0) {
+      addMessage("left", "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.");
+      if (!forcedText) {
+        UI.chatInput.value = "";
+        autoResizeTextarea();
+        syncInputActionState();
+      }
+      return;
+    }
 
     addMessage("right", text);
 
@@ -1306,7 +1391,6 @@
     setTyping(true);
 
     try {
-      const auth = await getAuthContext();
       let reply = "";
 
       if (auth.user) {
@@ -1333,24 +1417,25 @@
         }
       }
 
-      if (!reply) reply = buildLocalFallbackReply(text);
+      if (!reply) {
+        reply = `Tamam, bunu aldım. Biraz daha aç da seni yarım yamalak anlamayayım: ${text}`;
+      }
 
       addMessage("left", reply);
       setTyping(false);
       await speakText(reply);
     } catch (e) {
       console.error("Chat hata:", e);
-      const reply = buildLocalFallbackReply(text);
+      addMessage("left", `Tamam, bunu aldım. Biraz daha aç da seni yarım yamalak anlamayayım: ${text}`);
       setTyping(false);
-      addMessage("left", reply);
-      await speakText(reply);
     }
   }
 
   function clearChatDom() {
-    while (UI.chatMessages.children.length > 1) {
-      UI.chatMessages.removeChild(UI.chatMessages.lastChild);
-    }
+    const keep = UI.chatMessages.querySelector(".chat-spacer");
+    UI.chatMessages.innerHTML = "";
+    if (keep) UI.chatMessages.appendChild(keep);
+    showWelcome(true);
   }
 
   function getLocalSavedChats() {
@@ -1579,6 +1664,7 @@
 
   function startRecognitionLoop() {
     if (speakingNow) return;
+
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) return;
 
@@ -1588,6 +1674,7 @@
     recognition.lang = "tr-TR";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
+    recognition.continuous = false;
 
     recognition.onresult = async (event) => {
       const transcript = event?.results?.[0]?.[0]?.transcript || "";
@@ -1598,17 +1685,13 @@
 
     recognition.onerror = () => {
       if (micOverlayActive && !speakingNow) {
-        setTimeout(() => {
-          startRecognitionLoop();
-        }, 450);
+        setTimeout(() => startRecognitionLoop(), 500);
       }
     };
 
     recognition.onend = () => {
       if (micOverlayActive && !speakingNow) {
-        setTimeout(() => {
-          startRecognitionLoop();
-        }, 250);
+        setTimeout(() => startRecognitionLoop(), 300);
       } else {
         UI.micBtn.classList.remove("listening");
       }
@@ -1640,9 +1723,9 @@
     });
 
     UI.chatInput.addEventListener("focus", () => {
-      setTimeout(updateViewportLayout, 60);
-      setTimeout(updateViewportLayout, 160);
-      setTimeout(scrollChatToBottom, 220);
+      setTimeout(updateViewportLayout, 80);
+      setTimeout(updateViewportLayout, 180);
+      setTimeout(scrollChatToBottom, 240);
     });
 
     UI.chatInput.addEventListener("keydown", (e) => {
