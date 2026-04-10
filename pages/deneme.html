@@ -31,7 +31,7 @@
       --footer-h:44px;
       --composer-h:86px;
       --keyboard-offset:0px;
-      --app-height: 100dvh;
+      --app-height:100dvh;
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -43,7 +43,10 @@
       overflow:hidden;
       font-family:Outfit, Arial, sans-serif;
       color:var(--text);
-      background: #050608;
+      background:
+        radial-gradient(circle at top, rgba(249,115,22,.08), transparent 24%),
+        radial-gradient(circle at bottom, rgba(163,230,53,.06), transparent 18%),
+        linear-gradient(180deg,#050608 0%, #090b10 100%);
     }
 
     #pageContent{
@@ -52,10 +55,7 @@
       overflow:hidden;
     }
 
-    /* UYGULAMA ANA YAPISI: FLEXBOX */
     .app{
-      display: flex;
-      flex-direction: column;
       position:relative;
       width:100%;
       max-width:430px;
@@ -72,185 +72,833 @@
     }
 
     .header{
-      flex: 0 0 auto;
-      position: relative;
-      height: calc(var(--header-h) + var(--safe-top));
-      padding: calc(12px + var(--safe-top)) 14px 10px;
-      display: grid;
-      grid-template-columns: 44px 1fr 44px;
-      align-items: center;
-      gap: 10px;
-      z-index: 50;
-      background: linear-gradient(180deg, rgba(7,8,11,0.96), rgba(7,8,11,0.76));
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(14px);
+      position:absolute;
+      inset:0 0 auto 0;
+      height:calc(var(--header-h) + var(--safe-top));
+      padding:calc(12px + var(--safe-top)) 14px 10px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      z-index:50;
+      background:linear-gradient(180deg, rgba(7,8,11,.96), rgba(7,8,11,.76));
+      border-bottom:1px solid rgba(255,255,255,.06);
+      backdrop-filter:blur(14px);
     }
 
     .icon-btn{
-      width:44px; height:44px; border:none; border-radius:14px;
-      background:rgba(255,255,255,.04); color:#fff;
-      display:flex; align-items:center; justify-content:center; cursor:pointer;
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
     }
 
-    .icon-btn svg, .send-btn svg, .mic-btn svg{ width:20px; height:20px; stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .icon-btn svg,
+    .send-btn svg,
+    .mic-btn svg{
+      width:20px;
+      height:20px;
+      stroke:currentColor;
+      stroke-width:2.2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
 
-    .brand{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; text-align:center; cursor:pointer; user-select:none; }
-    .brand-title{ margin:0; font-family:"Space Grotesk", Outfit, sans-serif; font-size:28px; line-height:1; font-weight:800; letter-spacing:-.6px; color:#fff; }
-    .brand-title .ai{ background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 42%, var(--green) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .brand-sub{ margin:0; font-size:9px; font-weight:900; letter-spacing:3px; color:rgba(255,255,255,.32); }
+    .brand{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:2px;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+    }
 
-    /* CHAT VE INPUT ALANI YÖNETİMİ */
+    .brand-title{
+      margin:0;
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:28px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-.6px;
+      color:#fff;
+    }
+
+    .brand-title .ai{
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 42%, var(--green) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .brand-sub{
+      margin:0;
+      font-size:9px;
+      font-weight:900;
+      letter-spacing:3px;
+      color:rgba(255,255,255,.32);
+    }
+
+    .avatar-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:50%;
+      overflow:hidden;
+      cursor:pointer;
+      padding:0;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .avatar-btn img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .avatar-btn.empty::before{
+      content:"👤";
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      height:100%;
+      font-size:20px;
+    }
+
+    .menu{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:120;
+    }
+
+    .menu.open{ pointer-events:auto; }
+
+    .menu-backdrop{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,.48);
+      backdrop-filter:blur(6px);
+      opacity:0;
+      transition:opacity .22s ease;
+    }
+
+    .menu.open .menu-backdrop{ opacity:1; }
+
+    .menu-panel{
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:min(84vw, 336px);
+      transform:translateX(-104%);
+      transition:transform .24s ease;
+      padding:calc(14px + var(--safe-top)) 12px calc(14px + var(--safe-bottom));
+      background:linear-gradient(180deg, rgba(10,11,14,.98), rgba(6,7,10,.98));
+      border-right:1px solid rgba(255,255,255,.08);
+      box-shadow:20px 0 40px rgba(0,0,0,.35);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .menu.open .menu-panel{ transform:translateX(0); }
+
+    .menu-user{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:14px;
+      border-radius:20px;
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,.07);
+    }
+
+    .menu-user-avatar{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      overflow:hidden;
+      flex:0 0 auto;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+    }
+
+    .menu-user-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .menu-user-meta{
+      min-width:0;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:5px;
+    }
+
+    .menu-logo{
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:20px;
+      font-weight:900;
+      line-height:1;
+      color:#fff;
+    }
+
+    .menu-logo .ai{
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 42%, var(--green) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .menu-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+      word-break:break-word;
+    }
+
+    .menu-jeton{
+      font-size:12px;
+      font-weight:800;
+      color:#dcfce7;
+    }
+
+    .menu-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      overflow:auto;
+      scrollbar-width:none;
+    }
+
+    .menu-list::-webkit-scrollbar{ display:none; }
+
+    .menu-item{
+      width:100%;
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.07);
+      color:#fff;
+      text-align:left;
+      padding:0 14px;
+      font-size:13px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .menu-item.white{
+      background:#fff;
+      color:#111;
+    }
+
+    .saved-list{
+      display:none;
+      flex-direction:column;
+      gap:8px;
+      padding-left:8px;
+    }
+
+    .saved-list.open{ display:flex; }
+
+    .saved-chat-btn{
+      width:100%;
+      min-height:42px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      color:#fff;
+      text-align:left;
+      padding:10px 12px;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .saved-chat-meta{
+      display:block;
+      margin-top:4px;
+      font-size:10px;
+      color:rgba(255,255,255,.5);
+      font-weight:700;
+    }
+
+    .voice-sheet{
+      display:none;
+      flex-direction:column;
+      gap:10px;
+      max-height:44vh;
+      overflow:auto;
+      scrollbar-width:none;
+    }
+
+    .voice-sheet::-webkit-scrollbar{ display:none; }
+    .voice-sheet.open{ display:flex; }
+
+    .voice-card{
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.08);
+      cursor:pointer;
+    }
+
+    .voice-card.active{
+      border-color:rgba(249,115,22,.35);
+      background:rgba(249,115,22,.08);
+      box-shadow:0 0 0 1px rgba(249,115,22,.14) inset;
+    }
+
+    .voice-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+    }
+
+    .voice-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .voice-badge{
+      font-size:10px;
+      font-weight:900;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      white-space:nowrap;
+    }
+
+    .voice-badge.orange{
+      color:#fed7aa;
+      background:rgba(249,115,22,.10);
+      border-color:rgba(249,115,22,.20);
+    }
+
+    .voice-badge.green{
+      color:#dcfce7;
+      background:rgba(132,204,22,.10);
+      border-color:rgba(132,204,22,.20);
+    }
+
+    .voice-badge.named{
+      color:#dbeafe;
+      background:rgba(59,130,246,.10);
+      border-color:rgba(59,130,246,.20);
+    }
+
+    .voice-desc{
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.66);
+      font-weight:700;
+    }
+
+    .voice-create-btn{
+      width:100%;
+      min-height:42px;
+      border:none;
+      border-radius:14px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:12px;
+      font-weight:900;
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 100%);
+      color:#120b02;
+    }
+
     .main{
-      flex: 1;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      position:absolute;
+      inset:calc(var(--header-h) + var(--safe-top)) 0 calc(var(--footer-h) + var(--safe-bottom)) 0;
+      overflow:hidden;
     }
 
     .chat-scroll{
-      flex: 1;
-      overflow-y: auto;
-      padding: 14px 14px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: smooth;
+      position:absolute;
+      inset:0;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+      padding:14px 14px calc(var(--composer-h) + 26px + var(--keyboard-offset));
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      scroll-behavior:smooth;
     }
-    .chat-scroll::-webkit-scrollbar{ display:none; }
 
-    .chat-spacer{ flex: 1 0 auto; height: 1px; }
+    .msg{
+      display:flex;
+      width:100%;
+      flex:0 0 auto;
+    }
 
-    .msg{ display:flex; width:100%; flex:0 0 auto; }
     .msg.left{ justify-content:flex-start; }
     .msg.right{ justify-content:flex-end; }
+
     .bubble-wrap{ max-width:84%; }
-    .bubble{ background:#0d0f14; border:1px solid rgba(255,255,255,.07); padding:18px; border-radius:24px; font-size:15px; line-height:1.42; font-weight:800; }
+
+    .bubble{
+      background:#0d0f14;
+      border:1px solid rgba(255,255,255,.07);
+      padding:18px 18px;
+      border-radius:24px;
+      font-size:15px;
+      line-height:1.42;
+      font-weight:800;
+      word-break:break-word;
+      box-shadow:0 8px 22px rgba(0,0,0,.18);
+    }
+
     .bubble.left{ border-left:4px solid var(--orange); }
     .bubble.right{ border-right:4px solid var(--green); }
-    .msg-meta{ margin-top:7px; font-size:11px; font-weight:700; color:var(--muted); }
+
+    .msg-meta{
+      margin-top:7px;
+      font-size:11px;
+      font-weight:700;
+      color:var(--muted);
+    }
 
     .typing{
-      position: absolute; left: 14px; bottom: 90px;
-      font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 800; display: none;
+      display:none;
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:calc(var(--composer-h) + 10px + var(--keyboard-offset));
+      font-size:12px;
+      color:rgba(255,255,255,.7);
+      font-weight:800;
+      z-index:5;
     }
-    .typing.show{ display: block; }
 
-    /* COMPOSER FIXED-LIKE BUT FLOW-BASED */
+    .typing.show{ display:block; }
+
     .composer-wrap{
-      flex: 0 0 auto;
-      padding: 12px;
-      padding-bottom: calc(12px + var(--safe-bottom));
-      background: rgba(7,8,11,0.8);
-      backdrop-filter: blur(10px);
-      z-index: 10;
+      position:absolute;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      z-index:10;
+      transform:translateY(calc(-1 * var(--keyboard-offset)));
+      transition:transform .12s ease;
     }
 
     .composer{
-      display: flex; align-items: center; gap: 10px; min-height: 72px;
-      padding: 10px 12px; border-radius: 24px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      min-height:72px;
+      padding:10px 12px;
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(12px);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 12px 28px rgba(0,0,0,.20);
     }
 
-    .composer-center{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .composer-center{
+      flex:1;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+    }
+
     .composer-input{
-      width: 100%; min-height: 28px; max-height: 140px; resize: none; border: none; outline: none;
-      background: transparent; color: #fff; font-size: 16px; font-weight: 800; line-height: 1.45; font-family: inherit;
+      width:100%;
+      min-height:28px;
+      max-height:140px;
+      resize:none;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:#fff;
+      font-size:16px;
+      font-weight:800;
+      line-height:1.45;
+      font-family:inherit;
+      overflow:auto;
     }
 
-    .send-btn, .mic-btn{ width: 42px; height: 42px; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
-    .send-btn{ background: #fff; color: #000; }
-    .mic-btn{ background: transparent; color: #fff; }
-    .hidden{ display: none !important; }
+    .composer-input::placeholder{
+      color:rgba(255,255,255,.72);
+      font-weight:800;
+    }
 
-    /* MENU VE MODALLAR */
-    .menu{ position:absolute; inset:0; pointer-events:none; z-index:120; }
-    .menu.open{ pointer-events:auto; }
-    .menu-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(6px); opacity:0; transition:opacity .22s ease; }
-    .menu.open .menu-backdrop{ opacity:1; }
-    .menu-panel{ position:absolute; left:0; top:0; bottom:0; width:min(84vw, 336px); transform:translateX(-104%); transition:transform .24s ease; padding:calc(14px + var(--safe-top)) 12px; background:linear-gradient(180deg, rgba(10,11,14,.98), rgba(6,7,10,.98)); border-right:1px solid rgba(255,255,255,.08); display:flex; flex-direction:column; gap:12px; }
-    .menu.open .menu-panel{ transform:translateX(0); }
-    .menu-item{ width:100%; min-height:46px; border:none; border-radius:16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); color:#fff; text-align:left; padding:0 14px; font-size:13px; font-weight:900; }
-    .menu-item.white{ background:#fff; color:#111; }
+    .send-btn,.mic-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      border-radius:50%;
+      cursor:pointer;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-    .save-modal, .listen-modal{ position:fixed; inset:0; background:rgba(0,0,0,.52); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:9999; padding:20px; }
-    .save-modal.open, .listen-modal.open{ display:flex; }
-    .ai-live-core{ width:102px; height:102px; border-radius:50%; background: radial-gradient(circle, var(--yellow), var(--orange), var(--red)); animation:liveBreath 2.1s ease-in-out infinite; }
-    @keyframes liveBreath{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.11); } }
+    .send-btn{
+      background:#fff;
+      color:#000;
+      box-shadow:0 0 24px rgba(255,255,255,.10);
+    }
+
+    .mic-btn{
+      background:transparent;
+      color:#fff;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .footer{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      height:calc(var(--footer-h) + var(--safe-bottom));
+      padding:10px 12px calc(10px + var(--safe-bottom));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-top:1px solid rgba(255,255,255,.06);
+      background:rgba(7,8,11,.88);
+      backdrop-filter:blur(12px);
+      z-index:30;
+    }
+
+    .seal{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      flex-wrap:wrap;
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+    }
+
+    .seal-main{
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 40%, var(--green) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .seal-dot{ color:rgba(255,255,255,.25); }
+    .seal-year{ color:#bef264; }
+
+    .save-modal,.listen-modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:20px;
+    }
+
+    .save-modal.open,.listen-modal.open{ display:flex; }
+
+    .save-card{
+      width:min(100%,420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .save-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .save-input{
+      width:100%;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      border-radius:16px;
+      padding:14px;
+      font-size:14px;
+      font-weight:800;
+      font-family:inherit;
+      outline:none;
+    }
+
+    .save-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .save-btn{
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .save-btn.primary{
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 100%);
+      color:#1a0d02;
+    }
+
+    .save-btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
+    .listen-card{
+      width:min(100%, 360px);
+      height:min(64vh, 460px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      background:transparent;
+      border:none;
+      box-shadow:none;
+    }
+
+    .ai-live{
+      position:relative;
+      width:220px;
+      height:220px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .ai-live-core{
+      width:102px;
+      height:102px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255,255,255,.55) 0%, rgba(255,255,255,.08) 16%, transparent 22%),
+        radial-gradient(circle, var(--yellow) 0%, var(--orange) 42%, var(--orange2) 72%, var(--red) 100%);
+      box-shadow:
+        0 0 18px rgba(250,204,21,.20),
+        0 0 44px rgba(249,115,22,.22),
+        0 0 88px rgba(239,68,68,.18);
+      animation:liveBreath 2.1s ease-in-out infinite;
+    }
+
+    .ai-live-ring{
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      border:1px solid rgba(255,180,80,.10);
+      animation:livePulse 2.4s ease-in-out infinite;
+    }
+
+    .ai-live-ring.r2{ inset:18px; animation-delay:.3s; }
+    .ai-live-ring.r3{ inset:36px; animation-delay:.55s; }
+
+    .listen-close{
+      position:absolute;
+      bottom:0;
+      width:50px;
+      height:50px;
+      border:none;
+      border-radius:50%;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      font-size:24px;
+      line-height:1;
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    @keyframes liveBreath{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.11); }
+    }
+
+    @keyframes livePulse{
+      0%,100%{ opacity:.18; transform:scale(1); }
+      50%{ opacity:.60; transform:scale(1.10); }
+    }
   </style>
 </head>
 <body>
 
 <div class="save-modal" id="saveModal">
-  <div class="save-card" style="background:#111; padding:20px; border-radius:24px; width:100%; max-width:380px;">
-    <h3 class="save-title" style="color:#fff; margin-bottom:15px;">Sohbete isim ver</h3>
-    <input id="saveChatName" class="save-input" type="text" placeholder="Örn: Tatil planı" style="width:100%; padding:12px; border-radius:12px; margin-bottom:15px;">
-    <div class="save-actions" style="display:flex; gap:10px;">
-      <button class="save-btn secondary" id="cancelSaveChat" style="flex:1; padding:12px; border-radius:12px;">Vazgeç</button>
-      <button class="save-btn primary" id="confirmSaveChat" style="flex:1; background:var(--orange); padding:12px; border-radius:12px;">Kaydet</button>
+  <div class="save-card">
+    <h3 class="save-title">Sohbete isim ver</h3>
+    <input id="saveChatName" class="save-input" type="text" placeholder="Örn: Babamla konuşma denemesi">
+    <div class="save-actions">
+      <button class="save-btn secondary" id="cancelSaveChat" type="button">Vazgeç</button>
+      <button class="save-btn primary" id="confirmSaveChat" type="button">Kaydet</button>
     </div>
   </div>
 </div>
 
 <div class="listen-modal" id="listenModal">
   <div class="listen-card">
-    <div class="ai-live"><div class="ai-live-core"></div></div>
-    <button class="listen-close" id="closeListenModal">×</button>
+    <div class="ai-live">
+      <div class="ai-live-ring"></div>
+      <div class="ai-live-ring r2"></div>
+      <div class="ai-live-ring r3"></div>
+      <div class="ai-live-core"></div>
+    </div>
+    <button class="listen-close" id="closeListenModal" type="button">×</button>
   </div>
 </div>
 
 <div class="menu" id="menu">
   <div class="menu-backdrop" id="menuBackdrop"></div>
   <aside class="menu-panel">
-    <div class="menu-user" style="padding:15px; background:var(--glass); border-radius:20px; display:flex; align-items:center; gap:10px;">
-      <div class="menu-user-avatar" id="menuUserAvatar" style="width:44px; height:44px; background:#222; border-radius:10px; overflow:hidden;">
-        <img id="menuUserAvatarImg" style="width:100%; height:100%; object-fit:cover;">
+    <div class="menu-user">
+      <div class="menu-user-avatar" id="menuUserAvatar">
+        <img id="menuUserAvatarImg" alt="Avatar">
       </div>
       <div class="menu-user-meta">
         <div class="menu-logo">italky<span class="ai">AI</span></div>
-        <div class="menu-name" id="menuUserName" style="font-size:12px;">Kullanıcı</div>
+        <div class="menu-name" id="menuUserName">Kullanıcı</div>
+        <div class="menu-jeton" id="menuJeton">Jeton: 0</div>
       </div>
     </div>
+
     <div class="menu-list">
-      <button class="menu-item white" id="newChatBtn">Yeni Sohbet</button>
-      <button class="menu-item" id="saveChatMenuBtn">Sohbeti Kaydet</button>
-      <button class="menu-item" id="clearChatMenuBtn">Sohbeti Temizle</button>
-      <button class="menu-item" id="jetonYukleBtn">Jeton Yükle</button>
-      <button class="menu-item" id="homeBtn">Ana Sayfaya Dön</button>
+      <button class="menu-item white" id="newChatBtn" type="button">Yeni Sohbet</button>
+      <button class="menu-item" id="saveChatMenuBtn" type="button">Sohbeti Kaydet</button>
+      <button class="menu-item" id="savedChatsToggleBtn" type="button">Kayıtlı Sohbetler</button>
+      <div class="saved-list" id="savedChatsList"></div>
+      <button class="menu-item" id="clearChatMenuBtn" type="button">Sohbeti Temizle</button>
+      <button class="menu-item" id="voiceMenuBtn" type="button">Sesi Değiştir</button>
+
+      <div class="voice-sheet" id="voiceSheet">
+        <div class="voice-card active" data-voice-id="free_tts">
+          <div class="voice-top"><div class="voice-name">Ücretsiz Ses</div><div class="voice-badge green">Standart</div></div>
+          <div class="voice-desc">Doğal, hızlı ve her zaman hazır olan ücretsiz konuşma sesi.</div>
+        </div>
+
+        <div class="voice-card" data-voice-id="mine_clone">
+          <div class="voice-top"><div class="voice-name">Kendi Sesim</div><div class="voice-badge orange">Özel</div></div>
+          <div class="voice-desc">Kullanıcıya ait kayıtlı özel ses burada kullanılır.</div>
+        </div>
+
+        <div class="voice-card" data-voice-id="second_custom">
+          <div class="voice-top"><div class="voice-name" id="secondVoiceName">İkinci Ses</div><div class="voice-badge named">İsimli</div></div>
+          <div class="voice-desc" id="secondVoiceDesc">Kayıt sayfasında verilen isim burada görünür.</div>
+        </div>
+
+        <div class="voice-card" data-voice-id="umay">
+          <div class="voice-top"><div class="voice-name">Umay</div><div class="voice-badge green">Hazır Ses</div></div>
+          <div class="voice-desc">Sıcak ve dengeli kadın ses.</div>
+        </div>
+
+        <div class="voice-card" data-voice-id="jale">
+          <div class="voice-top"><div class="voice-name">Jale</div><div class="voice-badge green">Hazır Ses</div></div>
+          <div class="voice-desc">Daha olgun ve sakin kadın ses.</div>
+        </div>
+
+        <div class="voice-card" data-voice-id="kaan">
+          <div class="voice-top"><div class="voice-name">Kaan</div><div class="voice-badge green">Hazır Ses</div></div>
+          <div class="voice-desc">Temiz, net ve güçlü erkek ses.</div>
+        </div>
+
+        <div class="voice-card" data-voice-id="ozan">
+          <div class="voice-top"><div class="voice-name">Ozan</div><div class="voice-badge green">Hazır Ses</div></div>
+          <div class="voice-desc">Samimi ve rahat erkek ses.</div>
+        </div>
+
+        <button class="voice-create-btn" id="newVoiceBtn" type="button">Yeni Ses Tanımla</button>
+      </div>
+
+      <button class="menu-item" id="jetonYukleBtn" type="button">Jeton Yükle</button>
+      <button class="menu-item" id="homeBtn" type="button">Ana Sayfaya Dön</button>
     </div>
   </aside>
 </div>
 
-<div class="app">
-  <header class="header">
-    <button class="icon-btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
-    <div class="brand" id="brandHome">
-      <h1 class="brand-title">italky<span class="ai">AI</span></h1>
-      <p class="brand-sub">BE FREE</p>
-    </div>
-    <button class="avatar-btn empty" id="topAvatarBtn"><img id="topAvatarImg"></button>
-  </header>
+<main id="pageContent">
+  <div class="app">
+    <header class="header">
+      <button class="icon-btn" id="menuBtn" type="button" aria-label="Menü">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+      </button>
 
-  <section class="main">
-    <div class="chat-scroll" id="chatMessages">
-      <div class="chat-spacer"></div>
-    </div>
-    <div class="typing" id="typingState">italkyAI yazıyor...</div>
-
-    <div class="composer-wrap">
-      <div class="composer">
-        <div class="composer-center">
-          <textarea id="chatInput" class="composer-input" rows="1" placeholder="Mesajını buraya yaz"></textarea>
-        </div>
-        <button id="micBtn" class="mic-btn"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3zM19 10a7 7 0 0 1-14 0M12 17v4M8 21h8"></path></svg></button>
-        <button id="sendBtn" class="send-btn hidden"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"></path></svg></button>
+      <div class="brand" id="brandHome">
+        <h1 class="brand-title">italky<span class="ai">AI</span></h1>
+        <p class="brand-sub">BE FREE</p>
       </div>
-    </div>
-  </section>
-</div>
+
+      <button class="avatar-btn empty" id="topAvatarBtn" type="button" aria-label="Ses oluşturma">
+        <img id="topAvatarImg" alt="Avatar">
+      </button>
+    </header>
+
+    <section class="main">
+      <div class="chat-scroll" id="chatMessages">
+        <div class="chat-spacer"></div>
+      </div>
+      <div class="typing" id="typingState">italkyAI yazıyor...</div>
+
+      <div class="composer-wrap">
+        <div class="composer">
+          <div class="composer-center">
+            <textarea id="chatInput" class="composer-input" rows="1" placeholder="Mesajını buraya yaz"></textarea>
+          </div>
+
+          <button id="micBtn" class="mic-btn" type="button" aria-label="Mikrofon">
+            <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+          </button>
+
+          <button id="sendBtn" class="send-btn hidden" type="button" aria-label="Gönder">
+            <svg viewBox="0 0 24 24"><path d="M12 19V5"></path><path d="M6 11l6-6 6 6"></path></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="seal">
+        <span class="seal-main">italkyAI By Ozyigit's</span>
+        <span class="seal-dot">•</span>
+        <span class="seal-year">2026</span>
+      </div>
+    </footer>
+  </div>
+</main>
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
@@ -259,7 +907,13 @@
 
   const STORAGE = {
     voice: "italkyai_selected_voice",
+    secondVoiceName: "italkyai_second_voice_name",
+    secondVoiceOwnerName: "italkyai_second_voice_owner_name",
     localSavedChats: "italkyai_local_saved_chats"
+  };
+
+  const API = {
+    chat: "https://italky-api.onrender.com/api/italkyai/chat"
   };
 
   const UI = {
@@ -268,37 +922,52 @@
     sendBtn: $("sendBtn"),
     micBtn: $("micBtn"),
     typingState: $("typingState"),
+
     menu: $("menu"),
     menuBtn: $("menuBtn"),
+    menuBackdrop: $("menuBackdrop"),
+    homeBtn: $("homeBtn"),
+    brandHome: $("brandHome"),
+    jetonYukleBtn: $("jetonYukleBtn"),
+
+    newChatBtn: $("newChatBtn"),
+    saveChatMenuBtn: $("saveChatMenuBtn"),
+    savedChatsToggleBtn: $("savedChatsToggleBtn"),
+    savedChatsList: $("savedChatsList"),
+    clearChatMenuBtn: $("clearChatMenuBtn"),
+
+    voiceMenuBtn: $("voiceMenuBtn"),
+    voiceSheet: $("voiceSheet"),
+    newVoiceBtn: $("newVoiceBtn"),
+    voiceCards: [...document.querySelectorAll("[data-voice-id]")],
+    secondVoiceName: $("secondVoiceName"),
+    secondVoiceDesc: $("secondVoiceDesc"),
+
+    topAvatarBtn: $("topAvatarBtn"),
+    topAvatarImg: $("topAvatarImg"),
+
+    menuUserAvatar: $("menuUserAvatar"),
+    menuUserAvatarImg: $("menuUserAvatarImg"),
+    menuUserName: $("menuUserName"),
+    menuJeton: $("menuJeton"),
+
     saveModal: $("saveModal"),
+    saveChatName: $("saveChatName"),
+    cancelSaveChat: $("cancelSaveChat"),
+    confirmSaveChat: $("confirmSaveChat"),
+
     listenModal: $("listenModal"),
-    saveChatName: $("saveChatName")
+    closeListenModal: $("closeListenModal")
   };
 
   let currentUser = null;
+  let currentProfile = null;
   let currentSessionId = crypto.randomUUID();
-
-  // KLAVYE VE VIEWPORT YÖNETİMİ (SORUNU ÇÖZEN KISIM)
-  function updateViewportLayout() {
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    // Viewport yüksekliğini css değişkenine ata
-    document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
-
-    // Eğer klavye açıldıysa (boyut küçüldüyse)
-    if (vv.height < window.innerHeight * 0.8) {
-      requestAnimationFrame(() => {
-        UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
-        setTimeout(() => {
-            UI.chatInput.scrollIntoView({ block: "center", behavior: "smooth" });
-        }, 100);
-      });
-    }
-  }
-
-  window.visualViewport?.addEventListener("resize", updateViewportLayout);
-  window.visualViewport?.addEventListener("scroll", updateViewportLayout);
+  let currentSavedChatId = null;
+  let recognition = null;
+  let lastInputMode = "text";
+  let micOverlayActive = false;
+  let speakingNow = false;
 
   function autoResizeTextarea() {
     UI.chatInput.style.height = "auto";
@@ -306,58 +975,495 @@
   }
 
   function syncInputActionState() {
-    const hasText = UI.chatInput.value.trim().length > 0;
+    const hasText = String(UI.chatInput.value || "").trim().length > 0;
     UI.micBtn.classList.toggle("hidden", hasText);
     UI.sendBtn.classList.toggle("hidden", !hasText);
   }
 
-  // MESAJ SİSTEMİ
-  function addMessage(side, text) {
+  function scrollChatToBottom() {
+    requestAnimationFrame(() => {
+      UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight + 500;
+    });
+  }
+
+  function updateViewportLayout() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
+
+    const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
+
+    requestAnimationFrame(() => {
+      scrollChatToBottom();
+      setTimeout(() => {
+        try { UI.chatInput.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
+      }, 40);
+    });
+  }
+
+  function openMenu() { UI.menu.classList.add("open"); }
+  function closeMenu() {
+    UI.menu.classList.remove("open");
+    UI.voiceSheet.classList.remove("open");
+  }
+
+  function toggleSavedChats() {
+    UI.savedChatsList.classList.toggle("open");
+  }
+
+  function getSelectedVoice() {
+    return localStorage.getItem(STORAGE.voice) || "free_tts";
+  }
+
+  function setSelectedVoice(voiceId) {
+    localStorage.setItem(STORAGE.voice, voiceId);
+    UI.voiceCards.forEach(card => {
+      card.classList.toggle("active", card.dataset.voiceId === voiceId);
+    });
+  }
+
+  function hydrateSecondVoiceName() {
+    const secondVoiceName = localStorage.getItem(STORAGE.secondVoiceName) || "İkinci Ses";
+    const secondVoiceOwnerName = localStorage.getItem(STORAGE.secondVoiceOwnerName) || "";
+
+    UI.secondVoiceName.textContent = secondVoiceName;
+    UI.secondVoiceDesc.textContent = secondVoiceOwnerName
+      ? `${secondVoiceOwnerName} için tanımlanan özel ses burada görünür.`
+      : "Kayıt sayfasında verilen isim burada görünür.";
+  }
+
+  function addMessage(side, text, meta) {
     const row = document.createElement("div");
     row.className = `msg ${side}`;
-    row.innerHTML = `<div class="bubble-wrap"><div class="bubble ${side}">${text}</div></div>`;
+
+    const wrap = document.createElement("div");
+    wrap.className = "bubble-wrap";
+
+    const bubble = document.createElement("div");
+    bubble.className = `bubble ${side}`;
+    bubble.textContent = text;
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "msg-meta";
+    metaEl.textContent = meta || (side === "right" ? "Sen • şimdi" : "italkyAI • şimdi");
+
+    wrap.appendChild(bubble);
+    wrap.appendChild(metaEl);
+    row.appendChild(wrap);
     UI.chatMessages.appendChild(row);
-    UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
+    scrollChatToBottom();
   }
 
-  async function sendCurrentMessage() {
-    const text = UI.chatInput.value.trim();
+  function setTyping(show) {
+    UI.typingState.classList.toggle("show", !!show);
+  }
+
+  function countCharacters(text) {
+    return String(text || "").length;
+  }
+
+  function getFreeLimit() {
+    return 100;
+  }
+
+  async function getAuthContext() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUser = user || null;
+
+      if (!currentUser) return { user: null, profile: null };
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id,full_name,email,tokens,avatar_url")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      currentProfile = profile || null;
+      return { user: currentUser, profile: currentProfile };
+    } catch (e) {
+      console.error("Auth context hata:", e);
+      return { user: null, profile: null };
+    }
+  }
+
+  async function hydrateProfileUI() {
+    const ctx = await getAuthContext();
+
+    const avatarUrl =
+      ctx?.profile?.avatar_url ||
+      ctx?.user?.user_metadata?.avatar_url ||
+      ctx?.user?.user_metadata?.picture ||
+      "";
+
+    const fullName =
+      ctx?.profile?.full_name ||
+      ctx?.user?.user_metadata?.full_name ||
+      ctx?.user?.user_metadata?.name ||
+      ctx?.user?.email ||
+      "Kullanıcı";
+
+    const firstName = String(fullName).trim().split(" ")[0] || "Kullanıcı";
+    const tokens = Number(ctx?.profile?.tokens || 0);
+
+    if (avatarUrl) {
+      UI.topAvatarImg.src = avatarUrl;
+      UI.topAvatarBtn.classList.remove("empty");
+
+      UI.menuUserAvatar.innerHTML = "";
+      UI.menuUserAvatarImg.src = avatarUrl;
+      UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
+    }
+
+    UI.menuUserName.textContent = fullName;
+    UI.menuJeton.textContent = `Jeton: ${tokens}`;
+
+    if (UI.chatMessages.children.length === 1) {
+      const welcome = document.createElement("div");
+      welcome.className = "msg left";
+      welcome.innerHTML = `
+        <div class="bubble-wrap">
+          <div class="bubble left">Merhaba ${firstName}. Sohbet konunuz ne olsun?</div>
+          <div class="msg-meta">italkyAI • şimdi</div>
+        </div>
+      `;
+      UI.chatMessages.appendChild(welcome);
+      scrollChatToBottom();
+    }
+  }
+
+  function buildLocalFallbackReply(text) {
+    const chars = countCharacters(text);
+    const jeton = Number(currentProfile?.tokens || 0);
+
+    if (chars > 100 && jeton <= 0) {
+      return "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.";
+    }
+
+    return `Tamam, bunu aldım. Biraz daha aç da seni yarım yamalak anlamayayım: ${text}`;
+  }
+
+  async function sendCurrentMessage(mode = "text", forcedText = "") {
+    const text = String(forcedText || UI.chatInput.value || "").trim();
     if (!text) return;
 
+    lastInputMode = mode;
     addMessage("right", text);
-    UI.chatInput.value = "";
-    autoResizeTextarea();
-    syncInputActionState();
 
-    // AI simülasyonu (Gerçek API'nize bağlayın)
-    UI.typingState.classList.add("show");
-    setTimeout(() => {
-      UI.typingState.classList.remove("show");
-      addMessage("left", "Anladım, yardımcı olmaya çalışacağım.");
-    }, 1000);
+    if (!forcedText) {
+      UI.chatInput.value = "";
+      autoResizeTextarea();
+      syncInputActionState();
+    }
+
+    setTyping(true);
+
+    try {
+      const auth = await getAuthContext();
+      let reply = "";
+
+      if (auth.user) {
+        const chars = countCharacters(text);
+        const jeton = Number(currentProfile?.tokens || 0);
+
+        if (chars > 100 && jeton <= 0) {
+          reply = "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.";
+        } else {
+          const resp = await fetch(API.chat, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: auth.user.id,
+              session_id: currentSessionId,
+              text,
+              free_limit: getFreeLimit()
+            })
+          });
+
+          if (resp.ok) {
+            const json = await resp.json().catch(() => ({}));
+            reply = String(json?.reply || "").trim();
+          }
+        }
+      }
+
+      if (!reply) reply = buildLocalFallbackReply(text);
+
+      addMessage("left", reply);
+      setTyping(false);
+    } catch (e) {
+      console.error("Chat hata:", e);
+      addMessage("left", buildLocalFallbackReply(text));
+      setTyping(false);
+    }
   }
 
-  // EVENT BINDINGS
-  UI.chatInput.addEventListener("input", () => {
+  function clearChatDom() {
+    while (UI.chatMessages.children.length > 1) {
+      UI.chatMessages.removeChild(UI.chatMessages.lastChild);
+    }
+  }
+
+  function getLocalSavedChats() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE.localSavedChats) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function setLocalSavedChats(list) {
+    localStorage.setItem(STORAGE.localSavedChats, JSON.stringify(list));
+  }
+
+  async function renderSavedChats() {
+    UI.savedChatsList.innerHTML = "";
+    const list = getLocalSavedChats();
+
+    if (!list.length) {
+      const empty = document.createElement("div");
+      empty.className = "saved-chat-btn";
+      empty.textContent = "Henüz kayıtlı sohbet yok";
+      UI.savedChatsList.appendChild(empty);
+      return;
+    }
+
+    list.forEach(chat => {
+      const btn = document.createElement("button");
+      btn.className = "saved-chat-btn";
+      btn.innerHTML = `
+        <span>${chat.title}</span>
+        <span class="saved-chat-meta">${new Date(chat.created_at).toLocaleString("tr-TR")}</span>
+      `;
+      btn.addEventListener("click", () => loadSavedChat(chat.id));
+      UI.savedChatsList.appendChild(btn);
+    });
+  }
+
+  function loadSavedChat(savedChatId) {
+    const local = getLocalSavedChats().find(x => x.id === savedChatId);
+    if (!local) return;
+
+    clearChatDom();
+    currentSavedChatId = local.id;
+    currentSessionId = local.session_id || crypto.randomUUID();
+
+    (local.messages || []).forEach(msg => {
+      addMessage(msg.side, msg.text);
+    });
+
+    closeMenu();
+  }
+
+  function deleteCurrentSavedChat() {
+    if (!currentSavedChatId) {
+      clearChatDom();
+      currentSessionId = crypto.randomUUID();
+      closeMenu();
+      return;
+    }
+
+    const list = getLocalSavedChats().filter(x => x.id !== currentSavedChatId);
+    setLocalSavedChats(list);
+
+    currentSavedChatId = null;
+    currentSessionId = crypto.randomUUID();
+    clearChatDom();
+    renderSavedChats();
+    closeMenu();
+  }
+
+  function saveChatNow() {
+    const title = String(UI.saveChatName.value || "").trim();
+    if (!title) return;
+
+    const messageRows = [...UI.chatMessages.querySelectorAll(".msg")].map((msg) => {
+      const side = msg.classList.contains("right") ? "right" : "left";
+      const text = msg.querySelector(".bubble")?.textContent || "";
+      return { side, text };
+    });
+
+    if (!messageRows.length) {
+      UI.saveModal.classList.remove("open");
+      return;
+    }
+
+    const list = getLocalSavedChats().filter(x => x.id !== currentSavedChatId);
+    const id = currentSavedChatId || crypto.randomUUID();
+
+    list.unshift({
+      id,
+      session_id: currentSessionId,
+      title,
+      created_at: new Date().toISOString(),
+      messages: messageRows
+    });
+
+    setLocalSavedChats(list);
+    currentSavedChatId = id;
+    UI.saveModal.classList.remove("open");
+    UI.saveChatName.value = "";
+    renderSavedChats();
+    closeMenu();
+  }
+
+  function stopRecognitionLoop() {
+    try { recognition?.stop(); } catch {}
+    recognition = null;
+  }
+
+  function startRecognitionLoop() {
+    if (speakingNow) return;
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) return;
+
+    stopRecognitionLoop();
+
+    recognition = new Recognition();
+    recognition.lang = "tr-TR";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = async (event) => {
+      const transcript = event?.results?.[0]?.[0]?.transcript || "";
+      if (transcript.trim()) {
+        await sendCurrentMessage("voice", transcript.trim());
+      }
+    };
+
+    recognition.onerror = () => {
+      if (micOverlayActive && !speakingNow) {
+        setTimeout(() => startRecognitionLoop(), 500);
+      }
+    };
+
+    recognition.onend = () => {
+      if (micOverlayActive && !speakingNow) {
+        setTimeout(() => startRecognitionLoop(), 250);
+      } else {
+        UI.micBtn.classList.remove("listening");
+      }
+    };
+
+    try { recognition.start(); } catch {}
+  }
+
+  function openListenMode() {
+    micOverlayActive = true;
+    UI.listenModal.classList.add("open");
+    UI.micBtn.classList.add("listening");
+    startRecognitionLoop();
+  }
+
+  function closeListenMode() {
+    micOverlayActive = false;
+    UI.listenModal.classList.remove("open");
+    UI.micBtn.classList.remove("listening");
+    stopRecognitionLoop();
+    speakingNow = false;
+  }
+
+  function bindEvents() {
+    UI.chatInput.addEventListener("input", () => {
+      autoResizeTextarea();
+      syncInputActionState();
+      scrollChatToBottom();
+    });
+
+    UI.chatInput.addEventListener("focus", () => {
+      setTimeout(updateViewportLayout, 60);
+      setTimeout(updateViewportLayout, 160);
+      setTimeout(scrollChatToBottom, 240);
+    });
+
+    UI.chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendCurrentMessage("text");
+      }
+    });
+
+    UI.sendBtn.addEventListener("click", () => sendCurrentMessage("text"));
+    UI.micBtn.addEventListener("click", openListenMode);
+    UI.closeListenModal.addEventListener("click", closeListenMode);
+
+    UI.menuBtn.addEventListener("click", openMenu);
+    UI.menuBackdrop.addEventListener("click", closeMenu);
+
+    UI.homeBtn.addEventListener("click", () => {
+      location.href = "/pages/home.html";
+    });
+
+    UI.brandHome.addEventListener("click", () => {
+      location.href = "/pages/home.html";
+    });
+
+    UI.jetonYukleBtn.addEventListener("click", () => {
+      location.href = "/pages/jetonbuy.html";
+    });
+
+    UI.newChatBtn.addEventListener("click", () => {
+      clearChatDom();
+      currentSavedChatId = null;
+      currentSessionId = crypto.randomUUID();
+      closeMenu();
+    });
+
+    UI.saveChatMenuBtn.addEventListener("click", () => {
+      UI.saveModal.classList.add("open");
+    });
+
+    UI.cancelSaveChat.addEventListener("click", () => {
+      UI.saveModal.classList.remove("open");
+    });
+
+    UI.confirmSaveChat.addEventListener("click", saveChatNow);
+
+    UI.savedChatsToggleBtn.addEventListener("click", () => {
+      toggleSavedChats();
+      if (UI.savedChatsList.classList.contains("open")) {
+        renderSavedChats();
+      }
+    });
+
+    UI.clearChatMenuBtn.addEventListener("click", deleteCurrentSavedChat);
+
+    UI.voiceMenuBtn.addEventListener("click", () => {
+      UI.voiceSheet.classList.toggle("open");
+    });
+
+    UI.newVoiceBtn.addEventListener("click", () => {
+      location.href = "/pages/ai_voice_profile.html";
+    });
+
+    UI.voiceCards.forEach(card => {
+      card.addEventListener("click", () => {
+        setSelectedVoice(card.dataset.voiceId || "free_tts");
+      });
+    });
+
+    UI.topAvatarBtn.addEventListener("click", () => {
+      location.href = "/pages/ai_voice_profile.html";
+    });
+
+    window.visualViewport?.addEventListener("resize", updateViewportLayout);
+    window.visualViewport?.addEventListener("scroll", updateViewportLayout);
+    window.addEventListener("resize", updateViewportLayout);
+  }
+
+  async function init() {
+    hydrateSecondVoiceName();
+    setSelectedVoice(getSelectedVoice());
+    bindEvents();
     autoResizeTextarea();
     syncInputActionState();
-  });
+    await hydrateProfileUI();
+    renderSavedChats();
+    updateViewportLayout();
+    scrollChatToBottom();
+  }
 
-  UI.chatInput.addEventListener("focus", () => {
-    setTimeout(updateViewportLayout, 300);
-  });
-
-  UI.sendBtn.onclick = sendCurrentMessage;
-  UI.menuBtn.onclick = () => UI.menu.classList.add("open");
-  $("menuBackdrop").onclick = () => UI.menu.classList.remove("open");
-  $("newChatBtn").onclick = () => { UI.chatMessages.innerHTML = '<div class="chat-spacer"></div>'; UI.menu.classList.remove("open"); };
-  $("saveChatMenuBtn").onclick = () => UI.saveModal.classList.add("open");
-  $("cancelSaveChat").onclick = () => UI.saveModal.classList.remove("open");
-  UI.micBtn.onclick = () => UI.listenModal.classList.add("open");
-  $("closeListenModal").onclick = () => UI.listenModal.classList.remove("open");
-
-  // INITIALIZE
-  updateViewportLayout();
+  init();
 </script>
-</body>
-</html>
