@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Kayıtlı Sohbetler</title>
+  <meta name="theme-color" content="#07080b"/>
+
+  <style>
+    :root{
+      --bg:#07080b;
+      --text:#f7f7f7;
+      --muted:rgba(255,255,255,.58);
+      --orange:#f59e0b;
+      --orange2:#f97316;
+      --green:#a3e635;
+      --green2:#84cc16;
+      --red:#ef4444;
+      --line:rgba(255,255,255,.08);
+
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+      --header-h:84px;
+      --footer-h:44px;
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      font-family:Outfit, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top, rgba(249,115,22,.08), transparent 24%),
+        radial-gradient(circle at bottom, rgba(163,230,53,.06), transparent 18%),
+        linear-gradient(180deg,#050608 0%, #090b10 100%);
+    }
+
+    body.ready #pageContent{
+      opacity:1;
+      visibility:visible;
+    }
+
+    #pageContent{
+      width:100%;
+      height:100%;
+      opacity:0;
+      visibility:hidden;
+      transition:opacity .18s ease;
+      overflow:hidden;
+    }
+
+    .app{
+      position:relative;
+      width:100%;
+      max-width:430px;
+      height:100dvh;
+      margin:0 auto;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(239,68,68,.05), transparent 20%),
+        radial-gradient(circle at 85% 8%, rgba(163,230,53,.04), transparent 18%),
+        linear-gradient(180deg,#050608 0%, #090b10 100%);
+      border-left:1px solid rgba(255,255,255,.04);
+      border-right:1px solid rgba(255,255,255,.04);
+      box-shadow:0 20px 50px rgba(0,0,0,.35);
+    }
+
+    .header{
+      position:absolute;
+      inset:0 0 auto 0;
+      height:calc(var(--header-h) + var(--safe-top));
+      padding:calc(12px + var(--safe-top)) 14px 10px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      z-index:50;
+      background:linear-gradient(180deg, rgba(7,8,11,.96), rgba(7,8,11,.76));
+      border-bottom:1px solid rgba(255,255,255,.06);
+      backdrop-filter:blur(14px);
+    }
+
+    .icon-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .icon-btn svg{
+      width:22px;
+      height:22px;
+      stroke:currentColor;
+      stroke-width:2.2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:2px;
+      text-align:center;
+      user-select:none;
+    }
+
+    .brand-title{
+      margin:0;
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:28px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-.6px;
+      color:#fff;
+    }
+
+    .brand-title .ai{
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 42%, var(--green) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .brand-sub{
+      margin:0;
+      font-size:9px;
+      font-weight:900;
+      letter-spacing:3px;
+      color:rgba(255,255,255,.32);
+    }
+
+    .ghost{
+      opacity:0;
+      pointer-events:none;
+    }
+
+    .main{
+      position:absolute;
+      inset:calc(var(--header-h) + var(--safe-top)) 0 calc(var(--footer-h) + var(--safe-bottom)) 0;
+      overflow:hidden;
+      padding:12px;
+    }
+
+    .content{
+      height:100%;
+      overflow-y:auto;
+      scrollbar-width:none;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .content::-webkit-scrollbar{
+      display:none;
+    }
+
+    .top-actions{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+
+    .primary-btn{
+      min-height:50px;
+      border:none;
+      border-radius:18px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:14px;
+      font-weight:900;
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 100%);
+      color:#1a0d02;
+      box-shadow:0 10px 24px rgba(249,115,22,.18);
+    }
+
+    .section-title{
+      margin:6px 2px 0;
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .empty-box{
+      border:1px dashed rgba(255,255,255,.12);
+      background:rgba(255,255,255,.03);
+      border-radius:22px;
+      padding:20px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+      font-weight:700;
+      text-align:center;
+    }
+
+    .chat-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .chat-card{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:22px;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      box-shadow:0 10px 24px rgba(0,0,0,.14);
+    }
+
+    .chat-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .chat-title-wrap{
+      min-width:0;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:5px;
+    }
+
+    .chat-title{
+      font-size:15px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.25;
+      word-break:break-word;
+    }
+
+    .chat-meta{
+      font-size:11px;
+      color:var(--muted);
+      font-weight:700;
+      line-height:1.4;
+    }
+
+    .chat-preview{
+      font-size:12px;
+      color:rgba(255,255,255,.72);
+      line-height:1.5;
+      font-weight:700;
+      word-break:break-word;
+    }
+
+    .chat-actions{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+
+    .open-btn{
+      min-height:42px;
+      border:none;
+      border-radius:14px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+      background:linear-gradient(135deg, rgba(163,230,53,.18), rgba(132,204,22,.10));
+      color:#ecfccb;
+      border:1px solid rgba(163,230,53,.20);
+    }
+
+    .delete-btn{
+      min-width:42px;
+      height:42px;
+      border:none;
+      border-radius:14px;
+      cursor:pointer;
+      background:rgba(239,68,68,.10);
+      color:#fecaca;
+      border:1px solid rgba(239,68,68,.18);
+      font-size:18px;
+      font-weight:900;
+    }
+
+    .footer{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      height:calc(var(--footer-h) + var(--safe-bottom));
+      padding:10px 12px calc(10px + var(--safe-bottom));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-top:1px solid rgba(255,255,255,.06);
+      background:rgba(7,8,11,.88);
+      backdrop-filter:blur(12px);
+      z-index:30;
+    }
+
+    .seal{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      flex-wrap:wrap;
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+    }
+
+    .seal-main{
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 40%, var(--green) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .seal-dot{ color:rgba(255,255,255,.25); }
+    .seal-year{ color:#bef264; }
+  </style>
+</head>
+<body>
+
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+  const LOGIN_PAGE = "/pages/login.html";
+
+  async function bootAuthGate() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session?.user) {
+        location.replace(LOGIN_PAGE);
+        return;
+      }
+
+      const uid = session.user.id;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role,email")
+        .eq("id", uid)
+        .maybeSingle();
+
+      const role = String(profile?.role || "").toLowerCase().trim();
+      const email = String(profile?.email || session.user.email || "").toLowerCase().trim();
+      const isSuperAdmin = role === "superadmin" || email === "oguzozyigit@gmail.com";
+
+      if (!isSuperAdmin) {
+        location.replace("/pages/home.html");
+        return;
+      }
+
+      document.body.classList.add("ready");
+    } catch (e) {
+      location.replace(LOGIN_PAGE);
+    }
+  }
+
+  bootAuthGate();
+</script>
+
+<main id="pageContent">
+  <div class="app">
+
+    <header class="header">
+      <button class="icon-btn" id="backBtn" type="button" aria-label="Geri">
+        <svg viewBox="0 0 24 24">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="brand">
+        <h1 class="brand-title">italky<span class="ai">AI</span></h1>
+        <p class="brand-sub">BE FREE</p>
+      </div>
+
+      <div class="ghost"></div>
+    </header>
+
+    <section class="main">
+      <div class="content">
+        <div class="top-actions">
+          <button class="primary-btn" id="newChatBtn" type="button">Yeni Sohbet Başlat</button>
+        </div>
+
+        <div class="section-title">Kayıtlı Sohbetler</div>
+
+        <div class="chat-list" id="chatList"></div>
+        <div class="empty-box hidden" id="emptyBox">
+          Henüz kayıtlı sohbet yok. Önce bir sohbet başlatıp isim vererek kaydet.
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="seal">
+        <span class="seal-main">italkyAI By Ozyigit's</span>
+        <span class="seal-dot">•</span>
+        <span class="seal-year">2026</span>
+      </div>
+    </footer>
+  </div>
+</main>
+
+<script>
+  const STORAGE_KEY = "italkyai_saved_chats";
+  const OPEN_CHAT_KEY = "italkyai_open_chat_id";
+
+  const chatList = document.getElementById("chatList");
+  const emptyBox = document.getElementById("emptyBox");
+  const backBtn = document.getElementById("backBtn");
+  const newChatBtn = document.getElementById("newChatBtn");
+
+  function getSavedChats() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function setSavedChats(list) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+
+  function openChat(chatId) {
+    localStorage.setItem(OPEN_CHAT_KEY, chatId);
+    location.href = "/pages/deneme.html";
+  }
+
+  function deleteChat(chatId) {
+    const list = getSavedChats().filter(item => item.id !== chatId);
+    setSavedChats(list);
+    renderChats();
+  }
+
+  function renderChats() {
+    const list = getSavedChats();
+    chatList.innerHTML = "";
+
+    if (!list.length) {
+      emptyBox.classList.remove("hidden");
+      return;
+    }
+
+    emptyBox.classList.add("hidden");
+
+    list.forEach(chat => {
+      const card = document.createElement("div");
+      card.className = "chat-card";
+
+      const lastMsg = Array.isArray(chat.messages) && chat.messages.length
+        ? chat.messages[chat.messages.length - 1]?.text || ""
+        : "";
+
+      const top = document.createElement("div");
+      top.className = "chat-top";
+
+      const titleWrap = document.createElement("div");
+      titleWrap.className = "chat-title-wrap";
+
+      const title = document.createElement("div");
+      title.className = "chat-title";
+      title.textContent = chat.title || "İsimsiz Sohbet";
+
+      const meta = document.createElement("div");
+      meta.className = "chat-meta";
+      meta.textContent = chat.saved_at
+        ? new Date(chat.saved_at).toLocaleString("tr-TR")
+        : "-";
+
+      titleWrap.appendChild(title);
+      titleWrap.appendChild(meta);
+
+      top.appendChild(titleWrap);
+
+      const preview = document.createElement("div");
+      preview.className = "chat-preview";
+      preview.textContent = lastMsg || "Bu sohbette henüz mesaj görünmüyor.";
+
+      const actions = document.createElement("div");
+      actions.className = "chat-actions";
+
+      const openBtn = document.createElement("button");
+      openBtn.className = "open-btn";
+      openBtn.type = "button";
+      openBtn.textContent = "Bu Sohbeti Aç";
+      openBtn.addEventListener("click", () => openChat(chat.id));
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.type = "button";
+      deleteBtn.textContent = "×";
+      deleteBtn.addEventListener("click", () => deleteChat(chat.id));
+
+      actions.appendChild(openBtn);
+      actions.appendChild(deleteBtn);
+
+      card.appendChild(top);
+      card.appendChild(preview);
+      card.appendChild(actions);
+
+      chatList.appendChild(card);
+    });
+  }
+
+  backBtn.addEventListener("click", () => {
+    location.href = "/pages/deneme.html";
+  });
+
+  newChatBtn.addEventListener("click", () => {
+    localStorage.removeItem(OPEN_CHAT_KEY);
+    location.href = "/pages/deneme.html";
+  });
+
+  renderChats();
+</script>
+</body>
+</html>
