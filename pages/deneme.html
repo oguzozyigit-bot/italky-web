@@ -13,19 +13,15 @@
   <style>
     :root{
       --bg:#07080b;
-      --bg2:#0b0d12;
       --text:#f7f7f7;
       --muted:rgba(255,255,255,.58);
-
       --orange:#f59e0b;
       --orange2:#f97316;
       --green:#a3e635;
       --green2:#84cc16;
       --red:#ef4444;
       --yellow:#facc15;
-
       --glass:rgba(255,255,255,.045);
-      --glass2:rgba(255,255,255,.065);
       --line:rgba(255,255,255,.08);
 
       --safe-top: env(safe-area-inset-top);
@@ -33,8 +29,9 @@
 
       --header-h:84px;
       --footer-h:44px;
-      --composer-h:92px;
+      --composer-h:86px;
       --keyboard-offset:0px;
+      --app-height:100dvh;
     }
 
     *{
@@ -59,15 +56,13 @@
       width:100%;
       height:100%;
       overflow:hidden;
-      opacity:1;
-      visibility:visible;
     }
 
     .app{
       position:relative;
       width:100%;
       max-width:430px;
-      height:100dvh;
+      height:var(--app-height);
       margin:0 auto;
       overflow:hidden;
       background:
@@ -99,7 +94,7 @@
       height:44px;
       border:none;
       border-radius:14px;
-      background:var(--glass);
+      background:rgba(255,255,255,.04);
       color:#fff;
       display:flex;
       align-items:center;
@@ -191,9 +186,7 @@
       z-index:120;
     }
 
-    .menu.open{
-      pointer-events:auto;
-    }
+    .menu.open{ pointer-events:auto; }
 
     .menu-backdrop{
       position:absolute;
@@ -204,9 +197,7 @@
       transition:opacity .22s ease;
     }
 
-    .menu.open .menu-backdrop{
-      opacity:1;
-    }
+    .menu.open .menu-backdrop{ opacity:1; }
 
     .menu-panel{
       position:absolute;
@@ -225,9 +216,7 @@
       gap:12px;
     }
 
-    .menu.open .menu-panel{
-      transform:translateX(0);
-    }
+    .menu.open .menu-panel{ transform:translateX(0); }
 
     .menu-user{
       display:flex;
@@ -304,16 +293,14 @@
       scrollbar-width:none;
     }
 
-    .menu-list::-webkit-scrollbar{
-      display:none;
-    }
+    .menu-list::-webkit-scrollbar{ display:none; }
 
     .menu-item{
       width:100%;
       min-height:46px;
       border:none;
       border-radius:16px;
-      background:rgba(255,255,255,.045);
+      background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.07);
       color:#fff;
       text-align:left;
@@ -336,9 +323,7 @@
       padding-left:8px;
     }
 
-    .saved-list.open{
-      display:flex;
-    }
+    .saved-list.open{ display:flex; }
 
     .saved-chat-btn{
       width:100%;
@@ -372,13 +357,8 @@
       scrollbar-width:none;
     }
 
-    .voice-sheet::-webkit-scrollbar{
-      display:none;
-    }
-
-    .voice-sheet.open{
-      display:flex;
-    }
+    .voice-sheet::-webkit-scrollbar{ display:none; }
+    .voice-sheet.open{ display:flex; }
 
     .voice-card{
       padding:14px;
@@ -466,9 +446,9 @@
       inset:0;
       overflow-y:auto;
       scrollbar-width:none;
-      overscroll-behavior:contain;
       -webkit-overflow-scrolling:touch;
-      padding:14px 14px calc(var(--composer-h) + 20px + var(--keyboard-offset));
+      overscroll-behavior:contain;
+      padding:14px 14px calc(var(--composer-h) + 26px + var(--keyboard-offset));
       display:flex;
       flex-direction:column;
       gap:14px;
@@ -479,17 +459,22 @@
       display:none;
     }
 
+    .chat-spacer{
+      margin-top:auto;
+      height:1px;
+      flex:1 0 auto;
+    }
+
     .msg{
       display:flex;
       width:100%;
+      flex:0 0 auto;
     }
 
     .msg.left{ justify-content:flex-start; }
     .msg.right{ justify-content:flex-end; }
 
-    .bubble-wrap{
-      max-width:84%;
-    }
+    .bubble-wrap{ max-width:84%; }
 
     .bubble{
       background:#0d0f14;
@@ -525,9 +510,7 @@
       z-index:5;
     }
 
-    .typing.show{
-      display:block;
-    }
+    .typing.show{ display:block; }
 
     .composer-wrap{
       position:absolute;
@@ -543,7 +526,7 @@
       display:flex;
       align-items:flex-end;
       gap:10px;
-      min-height:76px;
+      min-height:72px;
       padding:10px 12px;
       border-radius:24px;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
@@ -581,8 +564,8 @@
     }
 
     .send-btn,.mic-btn{
-      width:54px;
-      height:54px;
+      width:46px;
+      height:46px;
       border:none;
       border-radius:50%;
       cursor:pointer;
@@ -936,7 +919,9 @@
     </header>
 
     <section class="main">
-      <div class="chat-scroll" id="chatMessages"></div>
+      <div class="chat-scroll" id="chatMessages">
+        <div class="chat-spacer"></div>
+      </div>
       <div class="typing" id="typingState">italkyAI yazıyor...</div>
 
       <div class="composer-wrap">
@@ -1043,6 +1028,7 @@
   let recognition = null;
   let lastInputMode = "text";
   let micOverlayActive = false;
+  let speakingNow = false;
 
   function stopAudio() {
     try {
@@ -1052,6 +1038,7 @@
       }
     } catch {}
     currentAudio = null;
+    try { window.speechSynthesis?.cancel?.(); } catch {}
   }
 
   function autoResizeTextarea() {
@@ -1067,13 +1054,15 @@
 
   function scrollChatToBottom() {
     requestAnimationFrame(() => {
-      UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight + 300;
+      UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight + 500;
     });
   }
 
-  function updateKeyboardOffset() {
+  function updateViewportLayout() {
     const vv = window.visualViewport;
     if (!vv) return;
+
+    document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
 
     const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
@@ -1081,7 +1070,7 @@
     scrollChatToBottom();
 
     setTimeout(() => {
-      UI.chatInput?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      try { UI.chatInput.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch {}
     }, 80);
   }
 
@@ -1230,17 +1219,22 @@
     const clean = String(text || "").trim();
     if (!clean) return;
 
+    stopRecognitionLoop();
+    speakingNow = true;
     stopAudio();
 
     const voice = buildVoicePayload();
 
     if (voice.mode === "free_tts") {
       try {
-        window.speechSynthesis?.cancel?.();
         const utterance = new SpeechSynthesisUtterance(clean);
         utterance.lang = "tr-TR";
         utterance.rate = 1;
         utterance.pitch = 1;
+        utterance.onend = () => {
+          speakingNow = false;
+          if (micOverlayActive) startRecognitionLoop();
+        };
         window.speechSynthesis.speak(utterance);
         return;
       } catch {}
@@ -1248,7 +1242,11 @@
 
     try {
       if (!currentUser) await getAuthContext();
-      if (!currentUser) return;
+      if (!currentUser) {
+        speakingNow = false;
+        if (micOverlayActive) startRecognitionLoop();
+        return;
+      }
 
       const resp = await fetch(API.tts, {
         method: "POST",
@@ -1264,13 +1262,26 @@
 
       const json = await resp.json().catch(() => ({}));
       const audioBase64 = String(json?.audio_base64 || "").trim();
-      if (!audioBase64) return;
+      if (!audioBase64) {
+        speakingNow = false;
+        if (micOverlayActive) startRecognitionLoop();
+        return;
+      }
 
       const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
       currentAudio = audio;
-      audio.play().catch(() => {});
+      audio.onended = () => {
+        speakingNow = false;
+        if (micOverlayActive) startRecognitionLoop();
+      };
+      audio.play().catch(() => {
+        speakingNow = false;
+        if (micOverlayActive) startRecognitionLoop();
+      });
     } catch (e) {
       console.error("TTS hata:", e);
+      speakingNow = false;
+      if (micOverlayActive) startRecognitionLoop();
     }
   }
 
@@ -1337,7 +1348,9 @@
   }
 
   function clearChatDom() {
-    UI.chatMessages.innerHTML = "";
+    while (UI.chatMessages.children.length > 1) {
+      UI.chatMessages.removeChild(UI.chatMessages.lastChild);
+    }
   }
 
   function getLocalSavedChats() {
@@ -1559,9 +1572,17 @@
     closeMenu();
   }
 
+  function stopRecognitionLoop() {
+    try { recognition?.stop(); } catch {}
+    recognition = null;
+  }
+
   function startRecognitionLoop() {
+    if (speakingNow) return;
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) return;
+
+    stopRecognitionLoop();
 
     recognition = new Recognition();
     recognition.lang = "tr-TR";
@@ -1576,17 +1597,17 @@
     };
 
     recognition.onerror = () => {
-      if (micOverlayActive) {
+      if (micOverlayActive && !speakingNow) {
         setTimeout(() => {
-          try { recognition.start(); } catch {}
+          startRecognitionLoop();
         }, 450);
       }
     };
 
     recognition.onend = () => {
-      if (micOverlayActive) {
+      if (micOverlayActive && !speakingNow) {
         setTimeout(() => {
-          try { recognition.start(); } catch {}
+          startRecognitionLoop();
         }, 250);
       } else {
         UI.micBtn.classList.remove("listening");
@@ -1603,13 +1624,12 @@
     startRecognitionLoop();
   }
 
-  function closeListenMode(stopRecognition = true) {
+  function closeListenMode() {
     micOverlayActive = false;
     UI.listenModal.classList.remove("open");
     UI.micBtn.classList.remove("listening");
-    if (stopRecognition) {
-      try { recognition?.stop(); } catch {}
-    }
+    stopRecognitionLoop();
+    speakingNow = false;
   }
 
   function bindEvents() {
@@ -1620,11 +1640,9 @@
     });
 
     UI.chatInput.addEventListener("focus", () => {
-      setTimeout(updateKeyboardOffset, 80);
-      setTimeout(scrollChatToBottom, 160);
-      setTimeout(() => {
-        UI.chatInput.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      }, 180);
+      setTimeout(updateViewportLayout, 60);
+      setTimeout(updateViewportLayout, 160);
+      setTimeout(scrollChatToBottom, 220);
     });
 
     UI.chatInput.addEventListener("keydown", (e) => {
@@ -1636,7 +1654,7 @@
 
     UI.sendBtn.addEventListener("click", () => sendCurrentMessage("text"));
     UI.micBtn.addEventListener("click", openListenMode);
-    UI.closeListenModal.addEventListener("click", () => closeListenMode(true));
+    UI.closeListenModal.addEventListener("click", closeListenMode);
 
     UI.menuBtn.addEventListener("click", openMenu);
     UI.menuBackdrop.addEventListener("click", closeMenu);
@@ -1697,9 +1715,9 @@
       location.href = "/pages/ai_voice_profile.html";
     });
 
-    window.visualViewport?.addEventListener("resize", updateKeyboardOffset);
-    window.visualViewport?.addEventListener("scroll", updateKeyboardOffset);
-    window.addEventListener("resize", updateKeyboardOffset);
+    window.visualViewport?.addEventListener("resize", updateViewportLayout);
+    window.visualViewport?.addEventListener("scroll", updateViewportLayout);
+    window.addEventListener("resize", updateViewportLayout);
   }
 
   async function init() {
@@ -1710,7 +1728,7 @@
     syncInputActionState();
     await hydrateProfileUI();
     await renderSavedChats();
-    updateKeyboardOffset();
+    updateViewportLayout();
     scrollChatToBottom();
   }
 
