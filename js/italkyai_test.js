@@ -27,9 +27,7 @@ const UI = {
   menuCloseBtn: $("menuCloseBtn"),
 
   newChatBtn: $("newChatBtn"),
-  saveChatBtn: $("saveChatBtn"),
   saveChatMenuBtn: $("saveChatMenuBtn"),
-  savedChatsBtn: $("savedChatsBtn"),
   savedChatsToggleBtn: $("savedChatsToggleBtn"),
   savedChatsList: $("savedChatsList"),
   clearChatMenuBtn: $("clearChatMenuBtn"),
@@ -193,7 +191,7 @@ async function getAuthContext() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, email, tokens, avatar_url")
+    .select("id,full_name,email,tokens,avatar_url")
     .eq("id", currentUser.id)
     .maybeSingle();
 
@@ -590,8 +588,10 @@ function bindEvents() {
     closeMenu();
   });
 
-  UI.saveChatBtn.addEventListener("click", () => UI.saveModal.classList.add("open"));
-  UI.saveChatMenuBtn.addEventListener("click", () => UI.saveModal.classList.add("open"));
+  UI.saveChatMenuBtn.addEventListener("click", () => {
+    UI.saveModal.classList.add("open");
+    closeMenu();
+  });
 
   UI.cancelSaveChat.addEventListener("click", () => {
     UI.saveModal.classList.remove("open");
