@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Ses Oluştur</title>
-  <meta name="theme-color" content="#05060a"/>
+  <meta name="theme-color" content="#090b0f"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,414 +12,530 @@
 
   <style>
     :root{
-      --bg:#05060a;
-      --text:#f5f7ff;
-      --muted:rgba(255,255,255,.62);
+      --bg:#090b0f;
+      --bg2:#0e1117;
+      --card:#11151d;
       --line:rgba(255,255,255,.08);
-      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
-      --green:#b8f25f;
-      --greenGlow:rgba(184,242,95,.18);
+      --txt:#f7f7f7;
+      --muted:rgba(255,255,255,.62);
+
+      --orange:#f97316;
+      --orange2:#fb923c;
+      --green:#84cc16;
+      --green2:#a3e635;
+      --red:#ef4444;
+
+      --safe-top:env(safe-area-inset-top);
+      --safe-bottom:env(safe-area-inset-bottom);
+      --header-h:72px;
+      --footer-h:44px;
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{
       margin:0;
       width:100%;
       height:100%;
-      background:var(--bg);
-      color:var(--text);
-      font-family:'Outfit',sans-serif;
       overflow:hidden;
-    }
-
-    body{
+      font-family:Outfit,Arial,sans-serif;
+      color:var(--txt);
       background:
-        radial-gradient(circle at top, rgba(103,232,249,.05), transparent 22%),
-        radial-gradient(circle at bottom, rgba(244,114,182,.05), transparent 20%),
-        linear-gradient(180deg, #05060a 0%, #090b11 100%);
+        radial-gradient(circle at 20% 0%, rgba(249,115,22,.12), transparent 24%),
+        radial-gradient(circle at 90% 10%, rgba(132,204,22,.10), transparent 20%),
+        radial-gradient(circle at 50% 100%, rgba(239,68,68,.08), transparent 20%),
+        linear-gradient(180deg,#07090d 0%, #0b0e14 100%);
     }
 
-    #pageContent{
-      height:100%;
-      padding:12px;
-      visibility:hidden;
-      opacity:0;
+    .app{
+      position:relative;
+      width:100%;
+      max-width:430px;
+      height:100dvh;
+      margin:0 auto;
       overflow:hidden;
+      border-left:1px solid rgba(255,255,255,.04);
+      border-right:1px solid rgba(255,255,255,.04);
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+      background:transparent;
     }
 
-    body.ready #pageContent{
-      visibility:visible;
-      opacity:1;
-      transition:opacity .18s ease;
+    .header{
+      position:absolute;
+      inset:0 0 auto 0;
+      height:calc(var(--header-h) + var(--safe-top));
+      padding:calc(6px + var(--safe-top)) 14px 6px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      z-index:20;
+      background:linear-gradient(180deg, rgba(8,10,14,.96), rgba(8,10,14,.80));
+      border-bottom:1px solid rgba(255,255,255,.06);
+      backdrop-filter:blur(12px);
     }
 
-    .page-shell{
-      height:100%;
+    .icon-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .icon-btn svg{
+      width:20px;height:20px;
+      stroke:currentColor;stroke-width:2.2;fill:none;
+      stroke-linecap:round;stroke-linejoin:round;
+    }
+
+    .brand{
       display:flex;
       flex-direction:column;
-      gap:12px;
-      overflow:hidden;
+      align-items:center;
+      justify-content:center;
+      gap:1px;
+      text-align:center;
+      cursor:pointer;
     }
 
-    .top-note{
-      flex:0 0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-
-    .top-title{
+    .brand-title{
       margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:24px;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:23px;
+      font-weight:800;
       line-height:1;
-      letter-spacing:-.6px;
       color:#fff;
     }
 
-    .top-title .ai{
-      background:var(--grad);
+    .brand-title .ai{
+      background:linear-gradient(135deg,var(--orange) 0%, var(--red) 38%, var(--green2) 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
 
-    .top-sub{
+    .brand-sub{
       margin:0;
-      font-size:12px;
-      line-height:1.45;
-      color:var(--muted);
-      font-weight:700;
-    }
-
-    .panel{
-      border:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
-      border-radius:26px;
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      box-shadow:0 18px 40px rgba(0,0,0,.24);
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .label{
-      font-size:12px;
+      font-size:8px;
       font-weight:900;
-      color:#fff;
+      letter-spacing:2.4px;
+      color:rgba(255,255,255,.30);
     }
 
-    .hint{
-      font-size:11px;
-      line-height:1.45;
-      color:var(--muted);
-      font-weight:700;
-      margin-top:-2px;
+    .top-avatar{
+      width:44px;height:44px;border-radius:50%;
+      overflow:hidden;border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.05);
     }
 
-    .input, .select, .textarea{
-      width:100%;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      border-radius:18px;
+    .top-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+
+    .main{
+      position:absolute;
+      inset:calc(var(--header-h) + var(--safe-top)) 0 calc(var(--footer-h) + var(--safe-bottom)) 0;
+      overflow-y:auto;
       padding:14px;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .main::-webkit-scrollbar{display:none}
+
+    .hero{
+      padding:12px 6px 8px;
+    }
+
+    .hero h1{
+      margin:0 0 8px;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:28px;
+      line-height:1.05;
+      letter-spacing:-.8px;
+    }
+
+    .hero p{
+      margin:0;
+      color:var(--muted);
       font-size:14px;
-      font-weight:800;
-      font-family:'Outfit',sans-serif;
-      outline:none;
+      line-height:1.45;
+      font-weight:700;
     }
 
-    .textarea{
-      min-height:110px;
-      resize:vertical;
+    .stack{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top:12px;
+      padding-bottom:18px;
     }
 
-    .input::placeholder,
-    .textarea::placeholder{
-      color:rgba(255,255,255,.45);
+    .card{
+      position:relative;
+      border-radius:26px;
+      border:1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025));
+      box-shadow:
+        0 16px 30px rgba(0,0,0,.24),
+        inset 0 1px 0 rgba(255,255,255,.04);
+      padding:16px;
+      overflow:hidden;
+    }
+
+    .card.orange{
+      background:
+        radial-gradient(circle at 12% 15%, rgba(249,115,22,.18), transparent 26%),
+        linear-gradient(180deg, rgba(249,115,22,.08), rgba(255,255,255,.02));
+    }
+
+    .card.green{
+      background:
+        radial-gradient(circle at 88% 18%, rgba(132,204,22,.16), transparent 24%),
+        linear-gradient(180deg, rgba(132,204,22,.08), rgba(255,255,255,.02));
+    }
+
+    .card.red{
+      background:
+        radial-gradient(circle at 16% 18%, rgba(239,68,68,.16), transparent 24%),
+        linear-gradient(180deg, rgba(239,68,68,.08), rgba(255,255,255,.02));
+    }
+
+    .card h2{
+      margin:0 0 8px;
+      font-size:22px;
+      line-height:1.05;
+      font-weight:900;
+      letter-spacing:-.6px;
+    }
+
+    .card p{
+      margin:0;
+      color:rgba(255,255,255,.82);
+      font-size:14px;
+      line-height:1.42;
+      font-weight:700;
     }
 
     .row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .upload-box{
-      border:1px dashed rgba(255,255,255,.18);
-      background:rgba(255,255,255,.03);
-      border-radius:22px;
-      padding:18px;
       display:flex;
-      flex-direction:column;
       gap:10px;
-      align-items:flex-start;
+      margin-top:14px;
+      flex-wrap:wrap;
     }
 
-    .upload-title{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .upload-sub{
-      font-size:11px;
-      line-height:1.45;
-      color:var(--muted);
-      font-weight:700;
-    }
-
-    .file-btn{
-      min-height:42px;
-      padding:0 14px;
+    .input{
+      width:100%;
+      min-height:50px;
       border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.08);
+      outline:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
       color:#fff;
-      font-size:12px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .file-name{
-      font-size:12px;
-      color:#dbeafe;
+      padding:14px;
+      font:inherit;
+      font-size:15px;
       font-weight:800;
-      word-break:break-word;
-    }
-
-    .warning{
-      border:1px solid rgba(245,158,11,.25);
-      background:rgba(245,158,11,.08);
-      color:#fde68a;
-      border-radius:18px;
-      padding:12px 14px;
-      font-size:12px;
-      line-height:1.5;
-      font-weight:800;
-    }
-
-    .actions{
-      margin-top:auto;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
     }
 
     .btn{
-      min-height:52px;
+      min-height:46px;
+      padding:0 16px;
       border:none;
-      border-radius:18px;
+      border-radius:16px;
       cursor:pointer;
-      font-family:'Outfit',sans-serif;
-      font-size:14px;
+      font:inherit;
+      font-size:13px;
       font-weight:900;
     }
 
-    .btn.primary{
-      background:var(--grad);
-      color:#05060d;
+    .btn.orange{
+      background:linear-gradient(135deg,var(--orange) 0%, var(--orange2) 100%);
+      color:#180d03;
     }
 
-    .btn.secondary{
+    .btn.green{
+      background:linear-gradient(135deg,var(--green) 0%, var(--green2) 100%);
+      color:#112003;
+    }
+
+    .btn.red{
+      background:linear-gradient(135deg,var(--red) 0%, #fb7185 100%);
+      color:#220708;
+    }
+
+    .btn.ghost{
       background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
       color:#fff;
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:36px;
+      padding:0 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      font-size:12px;
+      font-weight:900;
+      color:#fff;
+      background:rgba(255,255,255,.04);
     }
 
     .status{
-      font-size:12px;
-      color:#bbf7d0;
+      margin-top:12px;
+      font-size:13px;
+      line-height:1.4;
+      color:rgba(255,255,255,.78);
       font-weight:800;
-      min-height:18px;
     }
 
-    @media (max-width:390px){
-      .row{ grid-template-columns:1fr; }
+    .footer{
+      position:absolute;
+      left:0;right:0;bottom:0;
+      height:calc(var(--footer-h) + var(--safe-bottom));
+      padding:10px 12px calc(10px + var(--safe-bottom));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-top:1px solid rgba(255,255,255,.06);
+      background:rgba(7,8,11,.88);
+      backdrop-filter:blur(12px);
     }
+
+    .seal{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      flex-wrap:wrap;
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+    }
+
+    .seal-main{
+      background:linear-gradient(135deg,var(--orange) 0%, var(--red) 36%, var(--green2) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .seal-dot{color:rgba(255,255,255,.25)}
+    .seal-year{color:#bef264}
   </style>
 </head>
 <body>
 
+<div class="app">
+  <header class="header">
+    <button class="icon-btn" id="backBtn" type="button" aria-label="Geri">
+      <svg viewBox="0 0 24 24">
+        <path d="M15 18l-6-6 6-6"></path>
+      </svg>
+    </button>
+
+    <div class="brand" id="brandHome">
+      <h1 class="brand-title">italky<span class="ai">AI</span></h1>
+      <p class="brand-sub">BE FREE</p>
+    </div>
+
+    <div class="top-avatar" id="topAvatar">
+      <img id="topAvatarImg" alt="Avatar">
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <h1>Ses Oluştur</h1>
+      <p>
+        Kendi sesini ya da özel isim verdiğin ikinci sesi hazırlayıp
+        Sohbet AI içinde kullan. Daha yakın, daha kişisel, daha etkili.
+      </p>
+    </section>
+
+    <section class="stack">
+      <div class="card orange">
+        <h2>Kendi Sesim</h2>
+        <p>Kayıtlı ana özel sesin burada tutulur. Sohbet AI bu sesi kullanarak daha kişisel cevap akışı kurar.</p>
+        <div class="row">
+          <button class="btn orange" id="recordMineBtn" type="button">Kayıt Başlat</button>
+          <button class="btn ghost" id="stopMineBtn" type="button">Durdur</button>
+          <button class="btn green" id="saveMineBtn" type="button">Kaydet</button>
+        </div>
+        <div class="status" id="mineStatus">Hazır. Ana ses kaydı bekleniyor.</div>
+      </div>
+
+      <div class="card green">
+        <h2>İkinci Ses</h2>
+        <p>Annen, baban, sevdiğin biri ya da istediğin başka bir özel ses için isim ver ve ayrı kayıt oluştur.</p>
+        <div class="row">
+          <input class="input" id="secondVoiceNameInput" type="text" placeholder="Örn: Annem, Babam, Umay, Ozan">
+        </div>
+        <div class="row">
+          <button class="btn green" id="recordSecondBtn" type="button">Kayıt Başlat</button>
+          <button class="btn ghost" id="stopSecondBtn" type="button">Durdur</button>
+          <button class="btn orange" id="saveSecondBtn" type="button">İsmiyle Kaydet</button>
+        </div>
+        <div class="status" id="secondStatus">İkinci ses için isim ve kayıt bekleniyor.</div>
+      </div>
+
+      <div class="card red">
+        <h2>Kullanım Durumu</h2>
+        <p>Burada kayıtlarının hazır olup olmadığını görürsün. Sohbet AI ekranında bu sesleri seçip kullanabilirsin.</p>
+        <div class="row">
+          <span class="pill" id="pillMine">Kendi Sesim: Bekliyor</span>
+          <span class="pill" id="pillSecond">İkinci Ses: Bekliyor</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="seal">
+      <span class="seal-main">italkyAI By Ozyigit's</span>
+      <span class="seal-dot">•</span>
+      <span class="seal-year">2026</span>
+    </div>
+  </footer>
+</div>
+
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
+
   const LOGIN_PAGE = "/pages/login.html";
-
-  async function bootAuthGate() {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session?.user) {
-        location.replace(LOGIN_PAGE);
-        return;
-      }
-
-      const uid = session.user.id;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role,email")
-        .eq("id", uid)
-        .maybeSingle();
-
-      const role = String(profile?.role || "").toLowerCase().trim();
-      const email = String(profile?.email || session.user.email || "").toLowerCase().trim();
-      const isSuperAdmin = role === "superadmin" || email === "oguzozyigit@gmail.com";
-
-      if (!isSuperAdmin) {
-        location.replace("/pages/home.html");
-        return;
-      }
-
-      document.body.classList.add("ready");
-    } catch (e) {
-      location.replace(LOGIN_PAGE);
-    }
-  }
-
-  bootAuthGate();
-</script>
-
-<main id="pageContent">
-  <div class="page-shell">
-
-    <section class="top-note">
-      <h1 class="top-title">Ses <span class="ai">Oluştur</span></h1>
-      <p class="top-sub">Burada ikinci özel sesi tanımlarsın. Kaydettiğinde test ekranında otomatik görünür.</p>
-    </section>
-
-    <section class="panel">
-      <div class="field">
-        <label class="label" for="voiceName">Ses Adı</label>
-        <input class="input" id="voiceName" type="text" placeholder="Örn: Babamın Sesi, Umut, Anne Sesi">
-        <div class="hint">Bu isim ses seçim penceresinde görünecek.</div>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label class="label" for="ownerName">Kime Ait</label>
-          <input class="input" id="ownerName" type="text" placeholder="Örn: Annem, Sevgilim, Babam">
-        </div>
-
-        <div class="field">
-          <label class="label" for="ownerType">İlişki Türü</label>
-          <select class="select" id="ownerType">
-            <option value="custom">Özel</option>
-            <option value="mother">Anne</option>
-            <option value="father">Baba</option>
-            <option value="partner">Sevgili / Eş</option>
-            <option value="friend">Arkadaş</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="label" for="voiceTraits">Ses / Karakter Notları</label>
-        <textarea class="textarea" id="voiceTraits" placeholder="Örn: Bana oğlum derdi, sakin konuşurdu, Beşiktaşlıydı, biraz ağır konuşurdu..."></textarea>
-        <div class="hint">Buradaki notlar ileride kişilik/bağlam motoruna verilecek.</div>
-      </div>
-
-      <div class="upload-box">
-        <div class="upload-title">Ses Kaydı</div>
-        <div class="upload-sub">Şimdilik dosya adı saklanacak. Sonraki aşamada gerçek ses yükleme/işleme backend’e bağlanır.</div>
-        <input id="voiceFile" type="file" accept="audio/*" hidden>
-        <button class="file-btn" id="pickFileBtn" type="button">Ses Dosyası Seç</button>
-        <div class="file-name" id="fileName">Henüz dosya seçilmedi.</div>
-      </div>
-
-      <div class="warning">
-        Başkasına ait ses kullanımı için izin/onay alınmış olmalıdır. Bu alan test amaçlıdır.
-      </div>
-
-      <div class="status" id="saveStatus"></div>
-    </section>
-
-    <section class="actions">
-      <button class="btn secondary" id="backBtn" type="button">Vazgeç</button>
-      <button class="btn primary" id="saveBtn" type="button">Kaydet ve Test Ekranına Dön</button>
-    </section>
-
-  </div>
-</main>
-
-<script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-
-  try {
-    mountShell({ scroll: "auto" });
-  } catch (e) {
-    console.error("ui_shell HATASI:", e);
-  }
+  const HOME_PAGE = "/pages/home.html";
 
   const STORAGE = {
     secondVoiceName: "italkyai_second_voice_name",
     secondVoiceOwnerName: "italkyai_second_voice_owner_name",
-    secondVoiceOwnerType: "italkyai_second_voice_owner_type",
-    secondVoiceTraits: "italkyai_second_voice_traits",
-    secondVoiceFileName: "italkyai_second_voice_file_name"
+    mineReady: "italkyai_mine_voice_ready",
+    secondReady: "italkyai_second_voice_ready"
   };
 
-  const voiceName = document.getElementById("voiceName");
-  const ownerName = document.getElementById("ownerName");
-  const ownerType = document.getElementById("ownerType");
-  const voiceTraits = document.getElementById("voiceTraits");
-  const voiceFile = document.getElementById("voiceFile");
-  const pickFileBtn = document.getElementById("pickFileBtn");
-  const fileName = document.getElementById("fileName");
-  const saveStatus = document.getElementById("saveStatus");
-  const saveBtn = document.getElementById("saveBtn");
-  const backBtn = document.getElementById("backBtn");
+  const $ = (id) => document.getElementById(id);
 
-  function hydrate() {
-    voiceName.value = localStorage.getItem(STORAGE.secondVoiceName) || "";
-    ownerName.value = localStorage.getItem(STORAGE.secondVoiceOwnerName) || "";
-    ownerType.value = localStorage.getItem(STORAGE.secondVoiceOwnerType) || "custom";
-    voiceTraits.value = localStorage.getItem(STORAGE.secondVoiceTraits) || "";
-    fileName.textContent = localStorage.getItem(STORAGE.secondVoiceFileName) || "Henüz dosya seçilmedi.";
+  const UI = {
+    brandHome: $("brandHome"),
+    backBtn: $("backBtn"),
+    topAvatarImg: $("topAvatarImg"),
+
+    secondVoiceNameInput: $("secondVoiceNameInput"),
+
+    recordMineBtn: $("recordMineBtn"),
+    stopMineBtn: $("stopMineBtn"),
+    saveMineBtn: $("saveMineBtn"),
+
+    recordSecondBtn: $("recordSecondBtn"),
+    stopSecondBtn: $("stopSecondBtn"),
+    saveSecondBtn: $("saveSecondBtn"),
+
+    mineStatus: $("mineStatus"),
+    secondStatus: $("secondStatus"),
+    pillMine: $("pillMine"),
+    pillSecond: $("pillSecond")
+  };
+
+  let currentUser = null;
+
+  function updatePills() {
+    const mineReady = localStorage.getItem(STORAGE.mineReady) === "1";
+    const secondReady = localStorage.getItem(STORAGE.secondReady) === "1";
+    const secondName = localStorage.getItem(STORAGE.secondVoiceName) || "İkinci Ses";
+
+    UI.pillMine.textContent = mineReady ? "Kendi Sesim: Hazır" : "Kendi Sesim: Bekliyor";
+    UI.pillSecond.textContent = secondReady ? `${secondName}: Hazır` : `${secondName}: Bekliyor`;
   }
 
-  pickFileBtn.addEventListener("click", () => {
-    voiceFile.click();
-  });
+  async function bootAuth() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        location.replace(LOGIN_PAGE);
+        return false;
+      }
 
-  voiceFile.addEventListener("change", () => {
-    const file = voiceFile.files?.[0];
-    fileName.textContent = file ? file.name : "Henüz dosya seçilmedi.";
-  });
+      currentUser = session.user;
 
-  saveBtn.addEventListener("click", () => {
-    const vName = String(voiceName.value || "").trim();
-    const oName = String(ownerName.value || "").trim();
-    const vTraits = String(voiceTraits.value || "").trim();
-    const vType = String(ownerType.value || "custom").trim();
-    const selectedFile = voiceFile.files?.[0]?.name || fileName.textContent || "";
+      const avatar =
+        currentUser?.user_metadata?.avatar_url ||
+        currentUser?.user_metadata?.picture ||
+        "";
 
-    if (!vName) {
-      saveStatus.textContent = "Önce ses adı gir.";
-      return;
+      if (avatar) UI.topAvatarImg.src = avatar;
+
+      const savedSecondVoiceName = localStorage.getItem(STORAGE.secondVoiceName) || "";
+      if (savedSecondVoiceName) {
+        UI.secondVoiceNameInput.value = savedSecondVoiceName;
+      }
+
+      updatePills();
+      return true;
+    } catch (e) {
+      location.replace(LOGIN_PAGE);
+      return false;
     }
+  }
 
-    localStorage.setItem(STORAGE.secondVoiceName, vName);
-    localStorage.setItem(STORAGE.secondVoiceOwnerName, oName);
-    localStorage.setItem(STORAGE.secondVoiceOwnerType, vType);
-    localStorage.setItem(STORAGE.secondVoiceTraits, vTraits);
-    localStorage.setItem(STORAGE.secondVoiceFileName, selectedFile);
+  function bindEvents() {
+    UI.brandHome.addEventListener("click", () => {
+      location.href = HOME_PAGE;
+    });
 
-    saveStatus.textContent = "Kaydedildi. Test ekranına dönülüyor...";
-    setTimeout(() => {
-      location.href = "/pages/deneme.html";
-    }, 400);
-  });
+    UI.backBtn.addEventListener("click", () => {
+      history.back();
+    });
 
-  backBtn.addEventListener("click", () => {
-    location.href = "/pages/deneme.html";
-  });
+    UI.recordMineBtn.addEventListener("click", () => {
+      UI.mineStatus.textContent = "Ana ses kaydı başladı. Uygulama tarafında gerçek kayıt motoru bağlanacak.";
+    });
 
-  hydrate();
+    UI.stopMineBtn.addEventListener("click", () => {
+      UI.mineStatus.textContent = "Ana ses kaydı durduruldu.";
+    });
+
+    UI.saveMineBtn.addEventListener("click", () => {
+      localStorage.setItem(STORAGE.mineReady, "1");
+      UI.mineStatus.textContent = "Kendi Sesim kaydedildi. Sohbet AI içinde seçebilirsin.";
+      updatePills();
+    });
+
+    UI.recordSecondBtn.addEventListener("click", () => {
+      const name = String(UI.secondVoiceNameInput.value || "").trim();
+      if (!name) {
+        UI.secondStatus.textContent = "Önce ikinci ses için bir isim yaz.";
+        return;
+      }
+      UI.secondStatus.textContent = `${name} için kayıt başladı. Uygulama tarafında gerçek kayıt motoru bağlanacak.`;
+    });
+
+    UI.stopSecondBtn.addEventListener("click", () => {
+      UI.secondStatus.textContent = "İkinci ses kaydı durduruldu.";
+    });
+
+    UI.saveSecondBtn.addEventListener("click", () => {
+      const name = String(UI.secondVoiceNameInput.value || "").trim();
+      if (!name) {
+        UI.secondStatus.textContent = "İkinci sesi kaydetmek için isim yazman lazım.";
+        return;
+      }
+
+      localStorage.setItem(STORAGE.secondVoiceName, name);
+      localStorage.setItem(STORAGE.secondVoiceOwnerName, name);
+      localStorage.setItem(STORAGE.secondReady, "1");
+
+      UI.secondStatus.textContent = `${name} adıyla ikinci ses kaydedildi. Sohbet AI içinde seçebilirsin.`;
+      updatePills();
+    });
+  }
+
+  const ok = await bootAuth();
+  if (ok) bindEvents();
 </script>
 </body>
 </html>
