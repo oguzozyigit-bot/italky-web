@@ -14,22 +14,13 @@
       --txt: rgba(255,255,255,.96);
       --muted: rgba(255,255,255,.60);
       --panel-border: rgba(255,255,255,.08);
-
-      --orange-soft: rgba(249,115,22,.10);
-      --green-soft: rgba(163,230,53,.10);
-      --red-soft: rgba(239,68,68,.10);
-
       --chat-grad: linear-gradient(135deg, rgba(249,115,22,.85) 0%, rgba(251,146,60,.72) 35%, rgba(163,230,53,.70) 100%);
       --danger-grad: linear-gradient(135deg, rgba(239,68,68,.82) 0%, rgba(248,113,113,.66) 100%);
       --green-grad: linear-gradient(135deg, rgba(132,204,22,.76) 0%, rgba(163,230,53,.64) 100%);
       --orange-grad: linear-gradient(135deg, rgba(249,115,22,.82) 0%, rgba(251,146,60,.70) 100%);
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
     html,body{
       margin:0;
@@ -147,39 +138,6 @@
       box-shadow:0 14px 30px rgba(0,0,0,.18);
     }
 
-    .panel.orange{
-      background:
-        radial-gradient(circle at 14% 14%, var(--orange-soft), transparent 26%),
-        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
-    }
-
-    .panel.green{
-      background:
-        radial-gradient(circle at 84% 18%, var(--green-soft), transparent 26%),
-        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
-    }
-
-    .panel.red{
-      background:
-        radial-gradient(circle at 22% 20%, var(--red-soft), transparent 24%),
-        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
-    }
-
-    .panel-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:16px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .panel-sub{
-      margin:0;
-      font-size:11px;
-      line-height:1.45;
-      color:var(--muted);
-    }
-
     .choice-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -245,7 +203,7 @@
     .choice-desc{
       font-size:11px;
       line-height:1.45;
-      color:rgba(255,255,255,.70);
+      color:rgba(255,255,255,.72);
       word-break:break-word;
     }
 
@@ -282,19 +240,8 @@
     }
 
     .btn:active{ transform:scale(.98); }
-
-    .btn-primary{
-      background:var(--chat-grad);
-      color:#101010;
-      box-shadow:0 12px 26px rgba(249,115,22,.16);
-    }
-
-    .btn-secondary{
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      border:1px solid var(--panel-border);
-    }
-
+    .btn-primary{ background:var(--chat-grad); color:#101010; }
+    .btn-secondary{ background:rgba(255,255,255,.05); color:#fff; border:1px solid var(--panel-border); }
     .btn.orange{ background:var(--orange-grad); color:#fff; }
     .btn.green{ background:var(--green-grad); color:#fff; }
     .btn.red{ background:var(--danger-grad); color:#fff; }
@@ -338,6 +285,34 @@
       font:inherit;
       font-size:15px;
       font-weight:800;
+    }
+
+    .timer{
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      width:max-content;
+    }
+
+    .progress-wrap{
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .progress-bar{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background:var(--chat-grad);
+      transition:width .15s linear;
     }
 
     .upload-box{
@@ -408,36 +383,8 @@
       margin-top:12px;
       font-size:13px;
       line-height:1.45;
-      color:rgba(255,255,255,.78);
+      color:rgba(255,255,255,.82);
       font-weight:800;
-    }
-
-    .timer{
-      font-size:13px;
-      font-weight:900;
-      color:#fff;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      width:max-content;
-    }
-
-    .progress-wrap{
-      width:100%;
-      height:10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.08);
-    }
-
-    .progress-bar{
-      height:100%;
-      width:0%;
-      border-radius:999px;
-      background:var(--chat-grad);
-      transition:width .15s linear;
     }
 
     .summary-line{
@@ -484,13 +431,8 @@
       text-align:center;
     }
 
-    .toast.show{
-      transform:translateX(-50%) translateY(0);
-    }
-
-    .hidden{
-      display:none !important;
-    }
+    .toast.show{ transform:translateX(-50%) translateY(0); }
+    .hidden{ display:none !important; }
 
     .modal{
       position:fixed;
@@ -502,10 +444,12 @@
       justify-content:center;
       z-index:99999;
       padding:20px;
+      pointer-events:none;
     }
 
     .modal.open{
       display:flex;
+      pointer-events:auto;
     }
 
     .modal-card{
@@ -553,7 +497,6 @@
 <body>
 
 <div id="pageContent">
-
   <div class="topRow">
     <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
       <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
@@ -584,7 +527,7 @@
           <div class="choice-name">Kendi Sesim</div>
           <div class="choice-badge paid">Jetonlu</div>
         </div>
-        <div class="choice-desc" id="mineVoiceDesc">Henüz oluşturulmadı.</div>
+        <div class="choice-desc" id="mineVoiceDesc">Sesinizi kaydedin.</div>
         <button class="jump-link-btn" id="jumpMineBtn" type="button">Oluştur / Güncelle</button>
       </div>
 
@@ -593,7 +536,7 @@
           <div class="choice-name">2. Ses</div>
           <div class="choice-badge paid">Jetonlu</div>
         </div>
-        <div class="choice-desc" id="secondVoiceDesc">Henüz oluşturulmadı.</div>
+        <div class="choice-desc" id="secondVoiceDesc">Sesinizi kaydedin.</div>
         <button class="jump-link-btn" id="jumpSecondBtn" type="button">Oluştur / Güncelle</button>
       </div>
 
@@ -602,23 +545,18 @@
           <div class="choice-name">Hatıra Sesi</div>
           <div class="choice-badge paid">Jetonlu</div>
         </div>
-        <div class="choice-desc" id="memoryVoiceDesc">Henüz oluşturulmadı.</div>
+        <div class="choice-desc" id="memoryVoiceDesc">Sesinizi kaydedin.</div>
         <button class="jump-link-btn" id="jumpMemoryBtn" type="button">Oluştur / Güncelle</button>
       </div>
     </div>
   </section>
 
-  <section class="panel orange" id="mineCreateSection">
+  <section class="panel" id="mineCreateSection">
     <h2 class="panel-title">Kendi Sesim Oluştur</h2>
     <p class="panel-sub">20 saniyelik doğal bir kayıt yeterlidir.</p>
 
-    <div class="row">
-      <div class="timer" id="mineTimer">20 sn</div>
-    </div>
-
-    <div class="row">
-      <div class="progress-wrap"><div class="progress-bar" id="mineProgress"></div></div>
-    </div>
+    <div class="row"><div class="timer" id="mineTimer">20 sn</div></div>
+    <div class="row"><div class="progress-wrap"><div class="progress-bar" id="mineProgress"></div></div></div>
 
     <div class="row buttons-3">
       <button class="btn orange" id="recordMineBtn" type="button">Kaydı Başlat</button>
@@ -626,14 +564,11 @@
       <button class="btn btn-primary" id="saveMineBtn" type="button" disabled>Kaydet</button>
     </div>
 
-    <div class="audio-box">
-      <audio id="mineAudio" controls></audio>
-    </div>
-
+    <div class="audio-box"><audio id="mineAudio" controls></audio></div>
     <div class="status" id="mineStatus">Kendi Sesim için kayıt bekleniyor.</div>
   </section>
 
-  <section class="panel green" id="secondCreateSection">
+  <section class="panel" id="secondCreateSection">
     <h2 class="panel-title">2. Ses Oluştur</h2>
     <p class="panel-sub">Eş, sevgili, anne, baba gibi ikinci özel kişi için ortak ses profili.</p>
 
@@ -641,13 +576,8 @@
       <input class="input" id="secondVoiceNameInput" type="text" placeholder="Örn: Eşim, Sevgilim, Annem, Babam">
     </div>
 
-    <div class="row">
-      <div class="timer" id="secondTimer">20 sn</div>
-    </div>
-
-    <div class="row">
-      <div class="progress-wrap"><div class="progress-bar" id="secondProgress"></div></div>
-    </div>
+    <div class="row"><div class="timer" id="secondTimer">20 sn</div></div>
+    <div class="row"><div class="progress-wrap"><div class="progress-bar" id="secondProgress"></div></div></div>
 
     <div class="row buttons-3">
       <button class="btn green" id="recordSecondBtn" type="button">Kaydı Başlat</button>
@@ -655,14 +585,11 @@
       <button class="btn btn-primary" id="saveSecondBtn" type="button" disabled>Kaydet</button>
     </div>
 
-    <div class="audio-box">
-      <audio id="secondAudio" controls></audio>
-    </div>
-
+    <div class="audio-box"><audio id="secondAudio" controls></audio></div>
     <div class="status" id="secondStatus">2. Ses için isim ve kayıt bekleniyor.</div>
   </section>
 
-  <section class="panel red" id="memoryCreateSection">
+  <section class="panel" id="memoryCreateSection">
     <h2 class="panel-title">Hatıra Sesi Oluştur</h2>
     <p class="panel-sub">Elinizde kayıt varsa mp3 yükleyin. Temiz ve tek kişilik kayıtlar daha iyi sonuç verir.</p>
 
@@ -685,10 +612,7 @@
       <button class="btn btn-primary" id="saveMemoryMp3Btn" type="button">Kaydet</button>
     </div>
 
-    <div class="audio-box">
-      <audio id="memoryAudio" controls></audio>
-    </div>
-
+    <div class="audio-box"><audio id="memoryAudio" controls></audio></div>
     <div class="status" id="memoryStatus">Hatıra Sesi için mp3 bekleniyor.</div>
   </section>
 
@@ -702,10 +626,7 @@
     <button class="btn btn-secondary" id="cancelBtn" type="button">Vazgeç</button>
   </section>
 
-  <div class="note">
-    Burada oluşturulan tüm sesler Sohbet AI ve diğer ortak modüllerde görünür.
-  </div>
-
+  <div class="note">Burada oluşturulan tüm sesler Sohbet AI ve diğer ortak modüllerde görünür.</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -743,13 +664,11 @@
   </div>
 </div>
 
-<script type="module">
-  import { supabase } from "/js/supabase_client.js";
-
+<script>
+(() => {
   const VOICE_KEY = "italkyai_shared_voice_mode";
   const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
   const MAX_RECORD_SECONDS = 20;
-
   const $ = (id) => document.getElementById(id);
 
   const UI = {
@@ -819,34 +738,37 @@
     recordInfoCancelBtn: $("recordInfoCancelBtn")
   };
 
-  let currentUser = null;
-  let voiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "tts");
-  let savedVoiceMode = voiceMode;
+  const state = {
+    supabase: null,
+    currentUser: null,
+    voiceMode: normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "tts"),
+    savedVoiceMode: normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "tts"),
 
-  let pendingLeaveAction = null;
-  let pendingReplaceAction = null;
-  let pendingRecordAction = null;
+    pendingLeaveAction: null,
+    pendingReplaceAction: null,
+    pendingRecordAction: null,
 
-  let mineRecorder = null;
-  let secondRecorder = null;
+    mineRecorder: null,
+    secondRecorder: null,
 
-  let mineChunks = [];
-  let secondChunks = [];
+    mineChunks: [],
+    secondChunks: [],
 
-  let mineBlob = null;
-  let secondBlob = null;
-  let memoryMp3File = null;
+    mineBlob: null,
+    secondBlob: null,
+    memoryMp3File: null,
 
-  let mineStream = null;
-  let secondStream = null;
+    mineStream: null,
+    secondStream: null,
 
-  let mineCountdown = null;
-  let secondCountdown = null;
+    mineCountdown: null,
+    secondCountdown: null,
 
-  let profileVoiceState = {
-    mineReady: false,
-    secondReady: false,
-    memoryReady: false
+    profileVoiceState: {
+      mineReady: false,
+      secondReady: false,
+      memoryReady: false
+    }
   };
 
   function normalizeVoiceMode(v){
@@ -858,10 +780,9 @@
   }
 
   function voiceLabel(v){
-    const val = normalizeVoiceMode(v);
-    if (val === "mine") return "Kendi Sesim";
-    if (val === "second") return "2. Ses";
-    if (val === "memory") return "Hatıra Sesi";
+    if (v === "mine") return "Kendi Sesim";
+    if (v === "second") return "2. Ses";
+    if (v === "memory") return "Hatıra Sesi";
     return "TTS";
   }
 
@@ -869,181 +790,86 @@
     UI.toast.textContent = String(msg || "");
     UI.toast.classList.add("show");
     clearTimeout(window.__sohbetAiSettingsToast);
-    window.__sohbetAiSettingsToast = setTimeout(() => {
-      UI.toast.classList.remove("show");
-    }, 1700);
+    window.__sohbetAiSettingsToast = setTimeout(() => UI.toast.classList.remove("show"), 1700);
   }
 
   function paintSelections(){
     UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
-      card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === voiceMode);
+      card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === state.voiceMode);
     });
   }
 
   function refreshSummary(){
-    UI.voiceSummary.textContent = voiceLabel(voiceMode);
+    UI.voiceSummary.textContent = voiceLabel(state.voiceMode);
     UI.poolSummary.textContent = "Ortak ses havuzu aktif";
   }
 
-  function hasUnsavedChanges() {
-    return voiceMode !== savedVoiceMode;
-  }
-
-  function jumpToSection(el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function setButtonState(button, enabled) {
-    if (!button) return;
+  function setButtonState(button, enabled){
     button.disabled = !enabled;
   }
 
-  function setTimer(el, seconds) {
+  function setTimer(el, seconds){
     el.textContent = `${seconds} sn`;
   }
 
-  function setProgress(el, percent) {
+  function setProgress(el, percent){
     el.style.width = `${Math.max(0, Math.min(100, percent))}%`;
   }
 
-  function stopTracks(stream) {
+  function stopTracks(stream){
     try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
   }
 
-  function openReplaceModal(action) {
-    pendingReplaceAction = action;
+  function openReplaceModal(action){
+    state.pendingReplaceAction = action;
     UI.replaceModal.classList.add("open");
   }
 
-  function closeReplaceModal() {
-    pendingReplaceAction = null;
+  function closeReplaceModal(){
+    state.pendingReplaceAction = null;
     UI.replaceModal.classList.remove("open");
   }
 
-  function openLeaveModal(action) {
-    pendingLeaveAction = action;
+  function openLeaveModal(action){
+    state.pendingLeaveAction = action;
     UI.leaveModal.classList.add("open");
   }
 
-  function closeLeaveModal() {
-    pendingLeaveAction = null;
+  function closeLeaveModal(){
+    state.pendingLeaveAction = null;
     UI.leaveModal.classList.remove("open");
   }
 
-  function openRecordInfoModal(action) {
-    pendingRecordAction = action;
+  function openRecordInfoModal(action){
+    state.pendingRecordAction = action;
     UI.recordInfoModal.classList.add("open");
   }
 
-  function closeRecordInfoModal() {
-    pendingRecordAction = null;
+  function closeRecordInfoModal(){
+    state.pendingRecordAction = null;
     UI.recordInfoModal.classList.remove("open");
   }
 
-  async function loadProfileVoiceState() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      currentUser = user;
-
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select(`
-          voice_sample_path,
-          tts_voice_ready,
-          tts_voice_id,
-          second_voice_name,
-          second_voice_sample_path,
-          second_tts_voice_ready,
-          second_tts_voice_id,
-          memory_voice_name,
-          memory_voice_sample_path,
-          memory_tts_voice_ready,
-          memory_tts_voice_id
-        `)
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (error) return;
-
-      profileVoiceState.mineReady = !!profile?.voice_sample_path || (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
-      profileVoiceState.secondReady = !!profile?.second_voice_sample_path || (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
-      profileVoiceState.memoryReady = !!profile?.memory_voice_sample_path || (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
-
-      const secondName = String(profile?.second_voice_name || "2. Ses").trim() || "2. Ses";
-      const memoryName = String(profile?.memory_voice_name || "Hatıra Sesi").trim() || "Hatıra Sesi";
-
-      UI.mineVoiceDesc.textContent = profileVoiceState.mineReady ? "Hazır. Ortak kullanıma açık." : "Henüz oluşturulmadı.";
-      UI.secondVoiceDesc.textContent = profileVoiceState.secondReady ? `${secondName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
-      UI.memoryVoiceDesc.textContent = profileVoiceState.memoryReady ? `${memoryName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
-
-      if (profileVoiceState.mineReady) UI.mineStatus.textContent = "Kendi Sesim hazır. Sohbet AI içinde kullanılacak.";
-      if (profileVoiceState.secondReady) UI.secondStatus.textContent = `${secondName} hazır. Sohbet AI içinde kullanılacak.`;
-      if (profileVoiceState.memoryReady) UI.memoryStatus.textContent = `${memoryName} hazır. Sohbet AI içinde kullanılacak.`;
-
-      if (secondName) UI.secondVoiceNameInput.value = secondName;
-      if (memoryName) UI.memoryVoiceNameInput.value = memoryName;
-    } catch {}
+  function jumpToSection(el){
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  async function bootAuth() {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        location.replace("/pages/login.html");
-        return false;
-      }
-      currentUser = session.user;
-      await loadProfileVoiceState();
-      return true;
-    } catch {
-      location.replace("/pages/login.html");
-      return false;
-    }
+  function hasUnsavedChanges(){
+    return state.voiceMode !== state.savedVoiceMode;
   }
 
-  async function askMicPermission() {
-    try {
-      return await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      throw new Error("Mikrofon izni alınamadı.");
-    }
+  function saveSettings(){
+    localStorage.setItem(VOICE_KEY, state.voiceMode);
+    localStorage.setItem("tts_voice", state.voiceMode);
+    localStorage.setItem("live_interpreter_voice", state.voiceMode);
+    state.savedVoiceMode = state.voiceMode;
   }
 
-  function createRecorder(stream, onData, onStop) {
-    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-    recorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) onData(e.data);
-    };
-    recorder.onstop = onStop;
-    return recorder;
+  function goBackToChat(){
+    location.href = "/pages/italkyai_chat.html";
   }
 
-  async function uploadVoice(blobOrFile, voiceType, voiceName) {
-    if (!currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
-    if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
-
-    const form = new FormData();
-    form.append("user_id", currentUser.id);
-    form.append("voice_type", voiceType);
-    form.append("voice_name", voiceName || "");
-    form.append("audio_file", blobOrFile, `${voiceType}.${blobOrFile.name?.split(".").pop() || "webm"}`);
-
-    const resp = await fetch(VOICE_API, {
-      method: "POST",
-      body: form
-    });
-
-    const json = await resp.json().catch(() => ({}));
-
-    if (!resp.ok || !json?.ok) {
-      throw new Error("Backend hazır değilse bu normal. Şu an sadece önizleme oluşur.");
-    }
-
-    return json;
-  }
-
-  function startCountdown(timerEl, progressEl, onDone) {
+  function startCountdown(timerEl, progressEl, onDone){
     let remain = MAX_RECORD_SECONDS;
     setTimer(timerEl, remain);
     setProgress(progressEl, 0);
@@ -1064,42 +890,75 @@
     return interval;
   }
 
-  async function beginMineRecording() {
+  async function askMicPermission(){
     try {
-      mineChunks = [];
-      mineBlob = null;
+      return await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      throw new Error("Mikrofon izni alınamadı.");
+    }
+  }
+
+  function createRecorder(stream, onData, onStop){
+    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) onData(e.data);
+    };
+    recorder.onstop = onStop;
+    return recorder;
+  }
+
+  async function uploadVoice(blobOrFile, voiceType, voiceName){
+    if (!state.currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
+    if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
+
+    const form = new FormData();
+    form.append("user_id", state.currentUser.id);
+    form.append("voice_type", voiceType);
+    form.append("voice_name", voiceName || "");
+    form.append("audio_file", blobOrFile, `${voiceType}.${blobOrFile.name?.split(".").pop() || "webm"}`);
+
+    const resp = await fetch(VOICE_API, { method: "POST", body: form });
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok || !json?.ok) throw new Error("Backend hazır değilse bu normal. Şu an sadece önizleme oluşur.");
+    return json;
+  }
+
+  async function beginMineRecording(){
+    try {
+      state.mineChunks = [];
+      state.mineBlob = null;
       UI.mineAudio.removeAttribute("src");
       UI.mineAudio.load();
       setButtonState(UI.listenMineBtn, false);
       setButtonState(UI.saveMineBtn, false);
 
-      mineStream = await askMicPermission();
-      mineRecorder = createRecorder(
-        mineStream,
-        (data) => mineChunks.push(data),
+      state.mineStream = await askMicPermission();
+      state.mineRecorder = createRecorder(
+        state.mineStream,
+        (data) => state.mineChunks.push(data),
         () => {
-          mineBlob = new Blob(mineChunks, { type: "audio/webm" });
-          UI.mineAudio.src = URL.createObjectURL(mineBlob);
+          state.mineBlob = new Blob(state.mineChunks, { type: "audio/webm" });
+          UI.mineAudio.src = URL.createObjectURL(state.mineBlob);
           UI.mineStatus.textContent = "Kayıt tamamlandı. Dinleyebilir veya kaydedebilirsiniz.";
           setButtonState(UI.listenMineBtn, true);
           setButtonState(UI.saveMineBtn, true);
-          stopTracks(mineStream);
+          stopTracks(state.mineStream);
         }
       );
 
-      mineRecorder.start();
+      state.mineRecorder.start();
       UI.mineStatus.textContent = "Kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.";
 
-      clearInterval(mineCountdown);
-      mineCountdown = startCountdown(UI.mineTimer, UI.mineProgress, () => {
-        if (mineRecorder && mineRecorder.state !== "inactive") mineRecorder.stop();
+      clearInterval(state.mineCountdown);
+      state.mineCountdown = startCountdown(UI.mineTimer, UI.mineProgress, () => {
+        if (state.mineRecorder && state.mineRecorder.state !== "inactive") state.mineRecorder.stop();
       });
     } catch (e) {
       UI.mineStatus.textContent = e.message || "Kayıt başlatılamadı.";
     }
   }
 
-  async function beginSecondRecording() {
+  async function beginSecondRecording(){
     const secondName = String(UI.secondVoiceNameInput.value || "").trim();
     if (!secondName) {
       UI.secondStatus.textContent = "2. Ses için isim yaz.";
@@ -1107,52 +966,51 @@
     }
 
     try {
-      secondChunks = [];
-      secondBlob = null;
+      state.secondChunks = [];
+      state.secondBlob = null;
       UI.secondAudio.removeAttribute("src");
       UI.secondAudio.load();
       setButtonState(UI.listenSecondBtn, false);
       setButtonState(UI.saveSecondBtn, false);
 
-      secondStream = await askMicPermission();
-      secondRecorder = createRecorder(
-        secondStream,
-        (data) => secondChunks.push(data),
+      state.secondStream = await askMicPermission();
+      state.secondRecorder = createRecorder(
+        state.secondStream,
+        (data) => state.secondChunks.push(data),
         () => {
-          secondBlob = new Blob(secondChunks, { type: "audio/webm" });
-          UI.secondAudio.src = URL.createObjectURL(secondBlob);
+          state.secondBlob = new Blob(state.secondChunks, { type: "audio/webm" });
+          UI.secondAudio.src = URL.createObjectURL(state.secondBlob);
           UI.secondStatus.textContent = `${secondName} kaydı tamamlandı. Dinleyebilir veya kaydedebilirsiniz.`;
           setButtonState(UI.listenSecondBtn, true);
           setButtonState(UI.saveSecondBtn, true);
-          stopTracks(secondStream);
+          stopTracks(state.secondStream);
         }
       );
 
-      secondRecorder.start();
+      state.secondRecorder.start();
       UI.secondStatus.textContent = `${secondName} için kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.`;
 
-      clearInterval(secondCountdown);
-      secondCountdown = startCountdown(UI.secondTimer, UI.secondProgress, () => {
-        if (secondRecorder && secondRecorder.state !== "inactive") secondRecorder.stop();
+      clearInterval(state.secondCountdown);
+      state.secondCountdown = startCountdown(UI.secondTimer, UI.secondProgress, () => {
+        if (state.secondRecorder && state.secondRecorder.state !== "inactive") state.secondRecorder.stop();
       });
     } catch (e) {
       UI.secondStatus.textContent = e.message || "2. Ses kaydı başlatılamadı.";
     }
   }
 
-  async function saveMineVoice() {
+  async function saveMineVoice(){
     try {
       UI.mineStatus.textContent = "Kayıt kaydediliyor...";
-      await uploadVoice(mineBlob, "mine", "Kendi Sesim");
+      await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
       await loadProfileVoiceState();
-      showToast("Kendi Sesim oluşturuldu");
-      setTimeout(() => location.href = "/pages/italkyai_chat.html", 900);
+      showToast("Kendi Sesim kaydedildi");
     } catch (e) {
       UI.mineStatus.textContent = e.message || "Kayıt kaydedilemedi.";
     }
   }
 
-  async function saveSecondVoice() {
+  async function saveSecondVoice(){
     const secondName = String(UI.secondVoiceNameInput.value || "").trim();
     if (!secondName) {
       UI.secondStatus.textContent = "2. Ses için isim yaz.";
@@ -1161,53 +1019,107 @@
 
     try {
       UI.secondStatus.textContent = "Kayıt kaydediliyor...";
-      await uploadVoice(secondBlob, "second", secondName);
+      await uploadVoice(state.secondBlob, "second", secondName);
       await loadProfileVoiceState();
-      showToast(`${secondName} oluşturuldu`);
-      setTimeout(() => location.href = "/pages/italkyai_chat.html", 900);
+      showToast(`${secondName} sesi kaydedildi`);
     } catch (e) {
       UI.secondStatus.textContent = e.message || "Kayıt kaydedilemedi.";
     }
   }
 
-  async function saveMemoryVoiceFromMp3() {
+  async function saveMemoryVoiceFromMp3(){
     const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
     if (!memoryName) {
       UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
       return;
     }
-    if (!memoryMp3File) {
+    if (!state.memoryMp3File) {
       UI.memoryStatus.textContent = "Önce bir mp3 seç.";
       return;
     }
-    if (memoryMp3File.size > 10 * 1024 * 1024) {
+    if (state.memoryMp3File.size > 10 * 1024 * 1024) {
       UI.memoryStatus.textContent = "mp3 en fazla 10 MB olabilir.";
       return;
     }
 
     try {
       UI.memoryStatus.textContent = `${memoryName} mp3 yükleniyor...`;
-      await uploadVoice(memoryMp3File, "memory", memoryName);
+      await uploadVoice(state.memoryMp3File, "memory", memoryName);
       await loadProfileVoiceState();
-      showToast(`${memoryName} oluşturuldu`);
-      setTimeout(() => location.href = "/pages/italkyai_chat.html", 900);
+      showToast(`${memoryName} sesi kaydedildi`);
     } catch (e) {
       UI.memoryStatus.textContent = e.message || "Hatıra Sesi mp3 kaydedilemedi.";
     }
   }
 
-  function saveSettings(){
-    localStorage.setItem(VOICE_KEY, voiceMode);
-    localStorage.setItem("tts_voice", voiceMode);
-    localStorage.setItem("live_interpreter_voice", voiceMode);
-    savedVoiceMode = voiceMode;
+  async function loadProfileVoiceState(){
+    if (!state.supabase) return;
+    try {
+      const { data: { user } } = await state.supabase.auth.getUser();
+      if (!user) return;
+      state.currentUser = user;
+
+      const { data: profile, error } = await state.supabase
+        .from("profiles")
+        .select(`
+          voice_sample_path,
+          tts_voice_ready,
+          tts_voice_id,
+          second_voice_name,
+          second_voice_sample_path,
+          second_tts_voice_ready,
+          second_tts_voice_id,
+          memory_voice_name,
+          memory_voice_sample_path,
+          memory_tts_voice_ready,
+          memory_tts_voice_id
+        `)
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) return;
+
+      state.profileVoiceState.mineReady = !!profile?.voice_sample_path || (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+      state.profileVoiceState.secondReady = !!profile?.second_voice_sample_path || (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+      state.profileVoiceState.memoryReady = !!profile?.memory_voice_sample_path || (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+
+      const secondName = String(profile?.second_voice_name || "").trim();
+      const memoryName = String(profile?.memory_voice_name || "").trim();
+
+      UI.mineVoiceDesc.textContent = state.profileVoiceState.mineReady ? "Kendi Sesim kayıtlı." : "Sesinizi kaydedin.";
+      UI.secondVoiceDesc.textContent = state.profileVoiceState.secondReady
+        ? (secondName ? `${secondName} sesi kayıtlı.` : "2. Ses kayıtlı.")
+        : "Sesinizi kaydedin.";
+      UI.memoryVoiceDesc.textContent = state.profileVoiceState.memoryReady
+        ? (memoryName ? `${memoryName} sesi kayıtlı.` : "Hatıra Sesi kayıtlı.")
+        : "Sesinizi kaydedin.";
+
+      if (secondName) UI.secondVoiceNameInput.value = secondName;
+      if (memoryName) UI.memoryVoiceNameInput.value = memoryName;
+    } catch {}
   }
 
-  function goBackToChat(){
-    location.href = "/pages/italkyai_chat.html";
+  async function bootAuth(){
+    try {
+      const mod = await import("/js/supabase_client.js");
+      state.supabase = mod.supabase;
+
+      const { data: { session } } = await state.supabase.auth.getSession();
+      if (!session?.user) {
+        location.replace("/pages/login.html");
+        return false;
+      }
+      state.currentUser = session.user;
+      await loadProfileVoiceState();
+      return true;
+    } catch (e) {
+      console.error("Supabase yüklenemedi:", e);
+      showToast("Ayarlar açıldı. Bağlantı kontrol ediliyor.");
+      return false;
+    }
   }
 
-  function bindEvents() {
+  function bindEvents(){
     UI.backBtn.addEventListener("click", () => {
       if (hasUnsavedChanges()) openLeaveModal(goBackToChat);
       else goBackToChat();
@@ -1215,7 +1127,7 @@
 
     UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
       card.addEventListener("click", () => {
-        voiceMode = normalizeVoiceMode(card.dataset.voice || "tts");
+        state.voiceMode = normalizeVoiceMode(card.dataset.voice || "tts");
         paintSelections();
         refreshSummary();
         showToast("Ses seçimi güncellendi");
@@ -1224,7 +1136,7 @@
 
     UI.jumpMineBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      voiceMode = "mine";
+      state.voiceMode = "mine";
       paintSelections();
       refreshSummary();
       jumpToSection(UI.mineCreateSection);
@@ -1232,7 +1144,7 @@
 
     UI.jumpSecondBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      voiceMode = "second";
+      state.voiceMode = "second";
       paintSelections();
       refreshSummary();
       jumpToSection(UI.secondCreateSection);
@@ -1240,7 +1152,7 @@
 
     UI.jumpMemoryBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      voiceMode = "memory";
+      state.voiceMode = "memory";
       paintSelections();
       refreshSummary();
       jumpToSection(UI.memoryCreateSection);
@@ -1248,13 +1160,13 @@
 
     UI.recordMineBtn.addEventListener("click", () => {
       const act = () => openRecordInfoModal(beginMineRecording);
-      if (profileVoiceState.mineReady) openReplaceModal(act);
+      if (state.profileVoiceState.mineReady) openReplaceModal(act);
       else act();
     });
 
     UI.recordSecondBtn.addEventListener("click", () => {
       const act = () => openRecordInfoModal(beginSecondRecording);
-      if (profileVoiceState.secondReady) openReplaceModal(act);
+      if (state.profileVoiceState.secondReady) openReplaceModal(act);
       else act();
     });
 
@@ -1273,11 +1185,13 @@
     UI.saveMineBtn.addEventListener("click", saveMineVoice);
     UI.saveSecondBtn.addEventListener("click", saveSecondVoice);
 
-    UI.memoryPickBtn.addEventListener("click", () => UI.memoryMp3Input.click());
+    UI.memoryPickBtn.addEventListener("click", () => {
+      UI.memoryMp3Input.click();
+    });
 
     UI.memoryMp3Input.addEventListener("change", (e) => {
       const file = e.target.files?.[0] || null;
-      memoryMp3File = file;
+      state.memoryMp3File = file;
       if (file) {
         UI.memoryAudio.src = URL.createObjectURL(file);
         UI.memoryFileName.textContent = file.name;
@@ -1304,63 +1218,33 @@
 
     UI.replaceNoBtn.addEventListener("click", closeReplaceModal);
     UI.replaceYesBtn.addEventListener("click", () => {
-      const action = pendingReplaceAction;
+      const action = state.pendingReplaceAction;
       closeReplaceModal();
       if (typeof action === "function") action();
     });
 
     UI.leaveNoBtn.addEventListener("click", () => {
-      const action = pendingLeaveAction;
+      const action = state.pendingLeaveAction;
       closeLeaveModal();
       if (typeof action === "function") action();
     });
 
     UI.leaveYesBtn.addEventListener("click", () => {
       saveSettings();
-      const action = pendingLeaveAction;
+      const action = state.pendingLeaveAction;
       closeLeaveModal();
       if (typeof action === "function") action();
     });
 
     UI.recordInfoCancelBtn.addEventListener("click", closeRecordInfoModal);
     UI.recordInfoOkBtn.addEventListener("click", () => {
-      const action = pendingRecordAction;
+      const action = state.pendingRecordAction;
       closeRecordInfoModal();
       if (typeof action === "function") action();
     });
   }
 
-  function openReplaceModal(action) {
-    pendingReplaceAction = action;
-    UI.replaceModal.classList.add("open");
-  }
-
-  function closeReplaceModal() {
-    pendingReplaceAction = null;
-    UI.replaceModal.classList.remove("open");
-  }
-
-  function openLeaveModal(action) {
-    pendingLeaveAction = action;
-    UI.leaveModal.classList.add("open");
-  }
-
-  function closeLeaveModal() {
-    pendingLeaveAction = null;
-    UI.leaveModal.classList.remove("open");
-  }
-
-  function openRecordInfoModal(action) {
-    pendingRecordAction = action;
-    UI.recordInfoModal.classList.add("open");
-  }
-
-  function closeRecordInfoModal() {
-    pendingRecordAction = null;
-    UI.recordInfoModal.classList.remove("open");
-  }
-
-  async function init() {
+  async function init(){
     paintSelections();
     refreshSummary();
 
@@ -1380,6 +1264,7 @@
   }
 
   init();
+})();
 </script>
 
 </body>
