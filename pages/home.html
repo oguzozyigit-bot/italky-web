@@ -1,969 +1,1326 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Future Home</title>
-<meta name="theme-color" content="#120d16"/>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
-<style>
-:root{
-  --txt:rgba(255,255,255,.96);
-  --muted:rgba(255,255,255,.64);
-  --cardLine:rgba(255,255,255,.12);
-}
-
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-  outline:none;
-}
-
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  color:var(--txt);
-  font-family:'Outfit',sans-serif;
-  background:#120d16;
-  scrollbar-width:none;
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar,
-#pageContent::-webkit-scrollbar{
-  display:none;
-}
-
-body{
-  background:
-    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
-    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
-    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
-    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
-  overflow:hidden;
-}
-
-body:not(.home-ready) #pageContent{
-  visibility:hidden;
-  opacity:0;
-}
-
-body.home-ready #pageContent{
-  visibility:visible;
-  opacity:1;
-  transition:opacity .18s ease;
-}
-
-#pageContent{
-  width:100%;
-  height:100%;
-  min-height:100%;
-  padding:10px 14px 18px;
-  display:block;
-  overflow-y:auto;
-  overflow-x:hidden;
-  scrollbar-width:none;
-  -webkit-overflow-scrolling:touch;
-}
-
-.page-shell-fit{
-  min-height:100%;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.hero{
-  flex:0 0 auto;
-  perspective:1000px;
-}
-
-.heroTop{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-}
-
-.holo-container{
-  width:210px;
-  height:210px;
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transform-style:preserve-3d;
-  margin:2px auto 4px;
-}
-
-.crystal-cage{
-  position:absolute;
-  width:150px;
-  height:150px;
-  transform-style:preserve-3d;
-  animation:rotateCrystal 18s linear infinite;
-}
-
-.crystal-side{
-  position:absolute;
-  inset:0;
-  border:2px solid rgba(103,232,249,.42);
-  background:radial-gradient(circle, rgba(129,140,248,.12), transparent);
-  box-shadow:0 0 18px rgba(103,232,249,.22);
-}
-
-.side1{ transform:rotateY(0deg) translateZ(75px); }
-.side2{ transform:rotateY(90deg) translateZ(75px); }
-.side3{ transform:rotateY(180deg) translateZ(75px); }
-.side4{ transform:rotateY(270deg) translateZ(75px); }
-.side5{ transform:rotateX(90deg) translateZ(75px); }
-.side6{ transform:rotateX(-90deg) translateZ(75px); }
-
-.holo-qr{
-  position:absolute;
-  width:108px;
-  height:108px;
-  z-index:2;
-  overflow:visible;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  animation:floatQR 4s ease-in-out infinite;
-}
-
-.ai-planet{
-  background:transparent;
-  box-shadow:none;
-}
-
-.planet-glow{
-  position:absolute;
-  inset:-16px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-    radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
-  filter:blur(12px);
-  animation:planetGlow 3.2s ease-in-out infinite;
-  z-index:1;
-}
-
-.planet-core{
-  position:relative;
-  width:108px;
-  height:108px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  z-index:2;
-  background:
-    radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
-    radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
-    linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
-  box-shadow:
-    inset -10px -12px 20px rgba(0,0,0,.72),
-    inset 10px 12px 22px rgba(255,255,255,.04),
-    inset 0 0 26px rgba(255,255,255,.04),
-    0 0 18px rgba(255,255,255,.10),
-    0 0 34px rgba(103,232,249,.20),
-    0 0 64px rgba(129,140,248,.18);
-  animation:planetBreath 2.8s ease-in-out infinite;
-}
-
-.planet-core::before{
-  content:"";
-  position:absolute;
-  inset:6px;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:inset 0 0 12px rgba(255,255,255,.05);
-}
-
-.planet-core::after{
-  content:"";
-  position:absolute;
-  left:18px;
-  top:14px;
-  width:32px;
-  height:16px;
-  border-radius:50%;
-  background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
-  filter:blur(2px);
-  transform:rotate(-18deg);
-  opacity:.9;
-}
-
-.planet-rays{
-  position:absolute;
-  inset:-18px;
-  border-radius:50%;
-  pointer-events:none;
-  z-index:1;
-}
-
-.planet-rays::before,
-.planet-rays::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  background:
-    conic-gradient(
-      from 0deg,
-      transparent 0deg 18deg,
-      rgba(255,255,255,.28) 24deg,
-      transparent 36deg 62deg,
-      rgba(255,255,255,.16) 70deg,
-      transparent 84deg 116deg,
-      rgba(255,255,255,.22) 124deg,
-      transparent 136deg 180deg,
-      rgba(255,255,255,.18) 192deg,
-      transparent 206deg 250deg,
-      rgba(255,255,255,.24) 258deg,
-      transparent 270deg 310deg,
-      rgba(255,255,255,.15) 318deg,
-      transparent 330deg 360deg
-    );
-  mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-  -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-  filter:blur(1px);
-  opacity:.55;
-  animation:planetRaySpin 12s linear infinite;
-}
-
-.planet-rays::after{
-  opacity:.35;
-  transform:scale(1.14);
-  animation-duration:18s;
-  animation-direction:reverse;
-}
-
-.planet-center{
-  position:relative;
-  z-index:3;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-}
-
-.planet-nfc-icon{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.08);
-  position:relative;
-  box-shadow:0 0 14px rgba(103,232,249,.22);
-}
-
-.planet-nfc-icon::before,
-.planet-nfc-icon::after{
-  content:"";
-  position:absolute;
-  top:50%;
-  left:50%;
-  border:2px solid rgba(103,232,249,.95);
-  border-left-color:transparent;
-  border-bottom-color:transparent;
-  border-radius:50%;
-  transform:translate(-50%,-50%) rotate(45deg);
-}
-
-.planet-nfc-icon::before{
-  width:12px;
-  height:12px;
-}
-
-.planet-nfc-icon::after{
-  width:20px;
-  height:20px;
-  opacity:.72;
-}
-
-.planet-nfc-text{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:13px;
-  font-weight:900;
-  letter-spacing:.8px;
-  color:#fff;
-  text-shadow:0 0 12px rgba(255,255,255,.18);
-}
-
-.heroTitle{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:20px;
-  font-weight:700;
-  letter-spacing:-.4px;
-  color:#fff;
-  margin:0;
-  line-height:1.15;
-  text-align:center;
-  text-shadow:0 0 12px rgba(255,255,255,.18);
-  max-width:320px;
-}
-
-.heroName{
-  margin:0;
-  font-size:15px;
-  color:var(--muted);
-  text-align:center;
-  line-height:1.3;
-  max-width:310px;
-  font-weight:800;
-}
-
-.home-grid{
-  flex:0 0 auto;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.mod-card{
-  position:relative;
-  border-radius:28px;
-  overflow:hidden;
-  border:1px solid var(--cardLine);
-  box-shadow:
-    0 15px 30px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.05);
-  padding:16px 15px 108px;
-  text-decoration:none;
-  color:#fff;
-  min-height:300px;
-  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
-}
-
-.mod-card:active{
-  transform:scale(.985);
-  filter:brightness(1.08);
-}
-
-.face-card{
-  background:
-    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
-    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
-}
-
-.chat-card{
-  background:
-    radial-gradient(circle at 78% 18%, rgba(163,230,53,.18) 0%, transparent 24%),
-    radial-gradient(circle at 18% 18%, rgba(249,115,22,.26) 0%, transparent 30%),
-    linear-gradient(180deg, #5a1809 0%, #9a3412 30%, #f97316 62%, #84cc16 100%);
-}
-
-.card-title{
-  margin:0;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:24px;
-  line-height:1;
-  letter-spacing:-.8px;
-  color:#fff;
-  word-break:break-word;
-}
-
-.card-desc-list{
-  margin-top:10px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  max-width:100%;
-}
-
-.card-desc{
-  margin:0;
-  font-size:14px;
-  line-height:1.34;
-  color:rgba(255,255,255,.92);
-  font-weight:800;
-  word-break:break-word;
-}
-
-.card-art{
-  position:absolute;
-  left:12px;
-  right:12px;
-  bottom:12px;
-  height:76px;
-  border-radius:20px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.10);
-  overflow:hidden;
-}
-
-.face-art{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:16px;
-}
-
-.face-headset{
-  position:relative;
-  width:28px;
-  height:38px;
-  margin-top:14px;
-}
-
-.face-headset::before{
-  content:"";
-  position:absolute;
-  left:50%;
-  top:-2px;
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  transform:translateX(-50%);
-  background:rgba(255,255,255,.88);
-  box-shadow:0 0 10px rgba(255,255,255,.16);
-}
-
-.face-headset::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:0;
-  width:28px;
-  height:18px;
-  border-radius:14px 14px 10px 10px;
-  transform:translateX(-50%);
-  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
-}
-
-.face-wave{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:62px;
-  height:28px;
-  transform:translate(-50%,-50%);
-}
-
-.face-wave::before,
-.face-wave::after{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  border-radius:999px;
-  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
-  box-shadow:0 0 14px rgba(103,232,249,.46);
-}
-
-.face-wave::before{ top:9px;height:2px; }
-.face-wave::after{ top:16px;height:2px;opacity:.68; }
-
-.chat-art{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:12px;
-}
-
-.chat-bubble-left,
-.chat-bubble-right{
-  position:relative;
-  border-radius:14px;
-}
-
-.chat-bubble-left{
-  width:44px;
-  height:28px;
-  background:rgba(255,255,255,.92);
-}
-
-.chat-bubble-left::after{
-  content:"";
-  position:absolute;
-  left:8px;
-  bottom:-6px;
-  width:10px;
-  height:10px;
-  background:rgba(255,255,255,.92);
-  clip-path:polygon(0 0,100% 0,0 100%);
-}
-
-.chat-bubble-right{
-  width:40px;
-  height:24px;
-  background:rgba(163,230,53,.92);
-}
-
-.chat-bubble-right::after{
-  content:"";
-  position:absolute;
-  right:7px;
-  bottom:-6px;
-  width:10px;
-  height:10px;
-  background:rgba(163,230,53,.92);
-  clip-path:polygon(100% 0,0 0,100% 100%);
-}
-
-.chat-orb{
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  background:radial-gradient(circle, #fff 0%, #fde68a 35%, #f97316 100%);
-  box-shadow:0 0 12px rgba(249,115,22,.45);
-}
-
-.wide-stack{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.wide-card{
-  position:relative;
-  width:100%;
-  min-height:126px;
-  border-radius:28px;
-  overflow:hidden;
-  border:1px solid var(--cardLine);
-  box-shadow:
-    0 15px 30px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.05);
-  display:flex;
-  align-items:center;
-  gap:16px;
-  padding:16px 52px 16px 16px;
-  text-decoration:none;
-  color:#fff;
-  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
-}
-
-.fun-card{
-  background:
-    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
-    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
-    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
-}
-
-.practice-card{
-  background:
-    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
-    linear-gradient(90deg, #1d4ed8 0%, #0ea5e9 48%, #6366f1 100%);
-}
-
-.level-card{
-  background:
-    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
-    linear-gradient(90deg, #166534 0%, #22c55e 46%, #16a34a 100%);
-}
-
-.fun-ico,
-.level-ico,
-.practice-ico{
-  width:76px;
-  height:76px;
-  flex:0 0 auto;
-  position:relative;
-  border-radius:22px;
-  background:rgba(255,255,255,.12);
-  border:1.5px solid rgba(255,255,255,.15);
-  box-shadow:inset 0 0 22px rgba(255,255,255,.05);
-}
-
-.fun-dice, .fun-dice::before, .fun-dice::after{
-  position:absolute;
-  border-radius:10px;
-  background:rgba(255,255,255,.92);
-}
-
-.fun-dice{
-  width:24px;
-  height:24px;
-  left:14px;
-  top:24px;
-}
-
-.fun-dice::before{
-  content:"";
-  width:18px;
-  height:18px;
-  right:-22px;
-  top:-10px;
-  opacity:.8;
-}
-
-.fun-dice::after{
-  content:"";
-  width:16px;
-  height:16px;
-  right:-16px;
-  bottom:-12px;
-  opacity:.65;
-}
-
-.level-bars span{
-  position:absolute;
-  bottom:14px;
-  width:10px;
-  border-radius:6px 6px 0 0;
-  background:rgba(255,255,255,.92);
-}
-
-.level-bars span:nth-child(1){ left:14px; height:18px; }
-.level-bars span:nth-child(2){ left:30px; height:28px; }
-.level-bars span:nth-child(3){ left:46px; height:40px; }
-
-.practice-chat{
-  position:absolute;
-  left:12px;
-  top:18px;
-  width:24px;
-  height:18px;
-  border-radius:8px;
-  background:rgba(255,255,255,.92);
-}
-
-.practice-chat::after{
-  content:"";
-  position:absolute;
-  left:4px;
-  bottom:-5px;
-  width:8px;
-  height:8px;
-  background:rgba(255,255,255,.92);
-  clip-path:polygon(0 0, 100% 0, 0 100%);
-}
-
-.practice-chat.right{
-  left:auto;
-  right:12px;
-  top:34px;
-  background:rgba(103,232,249,.92);
-}
-
-.practice-chat.right::after{
-  left:auto;
-  right:4px;
-  background:rgba(103,232,249,.92);
-  clip-path:polygon(100% 0, 0 0, 100% 100%);
-}
-
-.wide-body{
-  flex:1;
-  min-width:0;
-}
-
-.card-topline{
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:.5px;
-  color:rgba(255,255,255,.8);
-  margin-bottom:6px;
-  text-transform:uppercase;
-}
-
-.wide-title{
-  margin:0;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:24px;
-  line-height:1;
-  letter-spacing:-.8px;
-  word-break:break-word;
-}
-
-.wide-desc{
-  margin-top:7px;
-  font-size:13px;
-  line-height:1.34;
-  color:rgba(255,255,255,.92);
-  max-width:86%;
-  font-weight:800;
-}
-
-.arrow-chip{
-  flex:0 0 auto;
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.18);
-}
-
-.arrow-chip::before{
-  content:"";
-  position:absolute;
-  left:13px;
-  top:50%;
-  width:12px;
-  height:12px;
-  border-top:2px solid rgba(255,255,255,.9);
-  border-right:2px solid rgba(255,255,255,.9);
-  transform:translateY(-50%) rotate(45deg);
-}
-
-@keyframes rotateCrystal{
-  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
-}
-
-@keyframes floatQR{
-  0%,100%{ transform:translateY(0) rotateX(0deg); }
-  50%{ transform:translateY(-8px) rotateX(5deg); }
-}
-
-@keyframes planetBreath{
-  0%,100%{
-    transform:scale(1);
-    box-shadow:
-      inset -10px -12px 20px rgba(0,0,0,.72),
-      inset 10px 12px 22px rgba(255,255,255,.04),
-      inset 0 0 26px rgba(255,255,255,.04),
-      0 0 18px rgba(255,255,255,.10),
-      0 0 34px rgba(103,232,249,.20),
-      0 0 64px rgba(129,140,248,.18);
-  }
-  50%{
-    transform:scale(1.045);
-    box-shadow:
-      inset -10px -12px 20px rgba(0,0,0,.72),
-      inset 10px 12px 24px rgba(255,255,255,.05),
-      inset 0 0 28px rgba(255,255,255,.06),
-      0 0 22px rgba(255,255,255,.12),
-      0 0 42px rgba(103,232,249,.28),
-      0 0 78px rgba(129,140,248,.24);
-  }
-}
-
-@keyframes planetGlow{
-  0%,100%{ opacity:.55; transform:scale(1); }
-  50%{ opacity:.92; transform:scale(1.16); }
-}
-
-@keyframes planetRaySpin{
-  from{ transform:rotate(0deg); }
-  to{ transform:rotate(360deg); }
-}
-
-@media (max-width:390px){
-  .holo-container{ width:190px; height:190px; margin-bottom:2px; }
-  .crystal-cage{ width:136px; height:136px; }
-  .side1{ transform:rotateY(0deg) translateZ(68px); }
-  .side2{ transform:rotateY(90deg) translateZ(68px); }
-  .side3{ transform:rotateY(180deg) translateZ(68px); }
-  .side4{ transform:rotateY(270deg) translateZ(68px); }
-  .side5{ transform:rotateX(90deg) translateZ(68px); }
-  .side6{ transform:rotateX(-90deg) translateZ(68px); }
-  .holo-qr{ width:98px; height:98px; }
-  .planet-core{ width:98px; height:98px; }
-  .heroTitle{ font-size:18px; }
-  .card-title{ font-size:22px; }
-  .wide-title{ font-size:22px; }
-  .card-art{ height:70px; }
-  .card-desc{ font-size:13px; }
-  .wide-desc{ font-size:12.5px; }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • SohbetAI Ses Ayarları</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --txt: rgba(255,255,255,.96);
+      --muted: rgba(255,255,255,.60);
+      --panel-border: rgba(255,255,255,.08);
+
+      --orange-soft: rgba(249,115,22,.10);
+      --green-soft: rgba(163,230,53,.10);
+      --red-soft: rgba(239,68,68,.10);
+
+      --chat-grad: linear-gradient(135deg, rgba(249,115,22,.85) 0%, rgba(251,146,60,.72) 35%, rgba(163,230,53,.70) 100%);
+      --danger-grad: linear-gradient(135deg, rgba(239,68,68,.82) 0%, rgba(248,113,113,.66) 100%);
+      --green-grad: linear-gradient(135deg, rgba(132,204,22,.76) 0%, rgba(163,230,53,.64) 100%);
+      --orange-grad: linear-gradient(135deg, rgba(249,115,22,.82) 0%, rgba(251,146,60,.70) 100%);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      min-height:100%;
+      background:#06080c;
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(249,115,22,.08), transparent 24%),
+        radial-gradient(circle at 90% 14%, rgba(163,230,53,.07), transparent 24%),
+        linear-gradient(180deg,#050608 0%, #090b10 100%);
+      z-index:-1;
+      pointer-events:none;
+    }
+
+    #pageContent{
+      max-width:560px;
+      margin:0 auto;
+      padding:14px 16px 28px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      scroll-behavior:smooth;
+    }
+
+    .topRow{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .backBtn{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--panel-border);
+      background:rgba(255,255,255,.05);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+
+    .backBtn svg{
+      width:20px;
+      height:20px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2.5;
+    }
+
+    .page-head{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:0;
+    }
+
+    .page-kicker{
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--panel-border);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.5px;
+      color:rgba(255,255,255,.82);
+    }
+
+    .title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:28px;
+      font-weight:700;
+      margin:0;
+      line-height:1;
+      letter-spacing:-1px;
+    }
+
+    .title .ai{
+      background:var(--chat-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .page-sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .panel{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      background:linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      border:1px solid var(--panel-border);
+      border-radius:22px;
+      padding:16px;
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      box-shadow:0 14px 30px rgba(0,0,0,.18);
+      position:relative;
+      z-index:1;
+    }
+
+    .panel.orange{
+      background:
+        radial-gradient(circle at 14% 14%, var(--orange-soft), transparent 26%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+    }
+
+    .panel.green{
+      background:
+        radial-gradient(circle at 84% 18%, var(--green-soft), transparent 26%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+    }
+
+    .panel.red{
+      background:
+        radial-gradient(circle at 22% 20%, var(--red-soft), transparent 24%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+    }
+
+    .panel-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:16px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .panel-sub{
+      margin:0;
+      font-size:11px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .choice-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .choice-card{
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      cursor:pointer;
+      transition:.2s ease;
+      min-height:128px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .choice-card.active{
+      border-color: rgba(249,115,22,.30);
+      background: rgba(249,115,22,.08);
+      box-shadow: 0 0 0 1px rgba(249,115,22,.12) inset;
+    }
+
+    .choice-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .choice-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+    }
+
+    .choice-badge{
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.4px;
+      padding:6px 8px;
+      border-radius:999px;
+      white-space:nowrap;
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .choice-badge.free{
+      color:#dcfce7;
+      background:rgba(34,197,94,.10);
+      border-color:rgba(34,197,94,.20);
+    }
+
+    .choice-badge.paid{
+      color:#fde68a;
+      background:rgba(245,158,11,.10);
+      border-color:rgba(245,158,11,.20);
+    }
+
+    .choice-desc{
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.70);
+      word-break:break-word;
+    }
+
+    .jump-link-btn{
+      margin-top:4px;
+      min-height:38px;
+      border:none;
+      border-radius:12px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font:inherit;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+      padding:0 12px;
+    }
+
+    .btn{
+      min-height:48px;
+      border-radius:16px;
+      font-family:inherit;
+      font-weight:800;
+      font-size:14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      transition:all .2s;
+      text-decoration:none;
+      padding:0 16px;
+      width:100%;
+    }
+
+    .btn:active{ transform:scale(.98); }
+
+    .btn-primary{
+      background:var(--chat-grad);
+      color:#101010;
+      box-shadow:0 12px 26px rgba(249,115,22,.16);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      border:1px solid var(--panel-border);
+    }
+
+    .btn.orange{ background:var(--orange-grad); color:#fff; }
+    .btn.green{ background:var(--green-grad); color:#fff; }
+    .btn.red{ background:var(--danger-grad); color:#fff; }
+
+    .btn[disabled]{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+
+    .buttons-3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:10px;
+      width:100%;
+    }
+
+    .buttons-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      width:100%;
+    }
+
+    .input{
+      width:100%;
+      min-height:50px;
+      border:none;
+      outline:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      padding:14px;
+      font:inherit;
+      font-size:15px;
+      font-weight:800;
+    }
+
+    .upload-box{
+      width:100%;
+      padding:16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px dashed rgba(255,255,255,.16);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .upload-title{
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+      margin:0;
+    }
+
+    .upload-sub{
+      font-size:11px;
+      line-height:1.5;
+      color:rgba(255,255,255,.70);
+      margin:0;
+    }
+
+    .file-btn{
+      min-height:48px;
+      border:none;
+      border-radius:16px;
+      background:var(--danger-grad);
+      color:#fff;
+      font:inherit;
+      font-size:14px;
+      font-weight:900;
+      padding:0 16px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+    }
+
+    .file-name{
+      font-size:12px;
+      line-height:1.5;
+      color:rgba(255,255,255,.82);
+      font-weight:800;
+      word-break:break-word;
+    }
+
+    .audio-box{
+      width:100%;
+      margin-top:12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      padding:10px;
+    }
+
+    audio{
+      width:100%;
+      height:40px;
+    }
+
+    .status{
+      margin-top:12px;
+      font-size:13px;
+      line-height:1.45;
+      color:rgba(255,255,255,.78);
+      font-weight:800;
+    }
+
+    .timer{
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      width:max-content;
+    }
+
+    .progress-wrap{
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .progress-bar{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background:var(--chat-grad);
+      transition:width .15s linear;
+    }
+
+    .summary-line{
+      font-size:13px;
+      color:#fff;
+      line-height:1.45;
+    }
+
+    .summary-line span{
+      color:rgba(255,255,255,.72);
+    }
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .note{
+      font-size:11px;
+      line-height:1.5;
+      color:var(--muted);
+      text-align:center;
+      padding:0 4px;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      top:18px;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding:10px 14px;
+      border-radius:999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter:blur(12px);
+      pointer-events:none;
+      max-width:min(92vw,520px);
+      text-align:center;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .hidden{ display:none !important; }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:99999;
+      padding:20px;
+    }
+
+    .modal.open{ display:flex; }
+
+    .modal-card{
+      width:min(100%, 420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .modal-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .modal-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.5;
+      color:rgba(255,255,255,.80);
+      font-weight:700;
+    }
+
+    .modal-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    @media (max-width:390px){
+      #pageContent{ padding:12px 14px 22px; }
+      .title{ font-size:25px; }
+      .choice-grid{ grid-template-columns:1fr; }
+      .buttons-3,.buttons-2{ grid-template-columns:1fr; }
+    }
+  </style>
 </head>
-
 <body>
 
+<div id="pageContent">
+  <div class="topRow">
+    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <section class="page-head">
+      <div class="page-kicker">SohbetAI Settings</div>
+      <h1 class="title">SohbetAI <span class="ai">Ses Ayarları</span></h1>
+      <p class="page-sub">Sadece sohbet seslerini yönet. Ortak ses havuzu kullanılır. Burada kültürel çeviri ayarı yoktur.</p>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2 class="panel-title">Ses Seçimi</h2>
+    <p class="panel-sub">Sohbet AI bu ortak ses havuzunu kullanır.</p>
+
+    <div class="choice-grid" id="voiceGrid">
+      <div class="choice-card" data-voice="tts">
+        <div class="choice-top">
+          <div class="choice-name">TTS</div>
+          <div class="choice-badge free">Ücretsiz</div>
+        </div>
+        <div class="choice-desc">Temel ücretsiz ses. Hızlı ve hazır.</div>
+      </div>
+
+      <div class="choice-card" data-voice="mine">
+        <div class="choice-top">
+          <div class="choice-name">Kendi Sesim</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc" id="mineVoiceDesc">Henüz oluşturulmadı.</div>
+        <button class="jump-link-btn" id="jumpMineBtn" type="button">Oluştur / Güncelle</button>
+      </div>
+
+      <div class="choice-card" data-voice="second">
+        <div class="choice-top">
+          <div class="choice-name">2. Ses</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc" id="secondVoiceDesc">Henüz oluşturulmadı.</div>
+        <button class="jump-link-btn" id="jumpSecondBtn" type="button">Oluştur / Güncelle</button>
+      </div>
+
+      <div class="choice-card" data-voice="memory">
+        <div class="choice-top">
+          <div class="choice-name">Hatıra Sesi</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc" id="memoryVoiceDesc">Henüz oluşturulmadı.</div>
+        <button class="jump-link-btn" id="jumpMemoryBtn" type="button">Oluştur / Güncelle</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel orange" id="mineCreateSection">
+    <h2 class="panel-title">Kendi Sesim Oluştur</h2>
+    <p class="panel-sub">20 saniyelik doğal bir kayıt yeterlidir.</p>
+
+    <div class="row"><div class="timer" id="mineTimer">20 sn</div></div>
+    <div class="row"><div class="progress-wrap"><div class="progress-bar" id="mineProgress"></div></div></div>
+
+    <div class="row buttons-3">
+      <button class="btn orange" id="recordMineBtn" type="button">Kaydı Başlat</button>
+      <button class="btn green" id="listenMineBtn" type="button" disabled>Dinle</button>
+      <button class="btn btn-primary" id="saveMineBtn" type="button" disabled>Kaydet</button>
+    </div>
+
+    <div class="audio-box"><audio id="mineAudio" controls></audio></div>
+    <div class="status" id="mineStatus">Kendi Sesim için kayıt bekleniyor.</div>
+  </section>
+
+  <section class="panel green" id="secondCreateSection">
+    <h2 class="panel-title">2. Ses Oluştur</h2>
+    <p class="panel-sub">Eş, sevgili, anne, baba gibi ikinci özel kişi için ortak ses profili.</p>
+
+    <div class="row">
+      <input class="input" id="secondVoiceNameInput" type="text" placeholder="Örn: Eşim, Sevgilim, Annem, Babam">
+    </div>
+
+    <div class="row"><div class="timer" id="secondTimer">20 sn</div></div>
+    <div class="row"><div class="progress-wrap"><div class="progress-bar" id="secondProgress"></div></div></div>
+
+    <div class="row buttons-3">
+      <button class="btn green" id="recordSecondBtn" type="button">Kaydı Başlat</button>
+      <button class="btn orange" id="listenSecondBtn" type="button" disabled>Dinle</button>
+      <button class="btn btn-primary" id="saveSecondBtn" type="button" disabled>Kaydet</button>
+    </div>
+
+    <div class="audio-box"><audio id="secondAudio" controls></audio></div>
+    <div class="status" id="secondStatus">2. Ses için isim ve kayıt bekleniyor.</div>
+  </section>
+
+  <section class="panel red" id="memoryCreateSection">
+    <h2 class="panel-title">Hatıra Sesi Oluştur</h2>
+    <p class="panel-sub">Elinizde kayıt varsa mp3 yükleyin. Temiz ve tek kişilik kayıtlar daha iyi sonuç verir.</p>
+
+    <div class="row">
+      <input class="input" id="memoryVoiceNameInput" type="text" placeholder="Örn: Babam, Annem, Dedem">
+    </div>
+
+    <div class="row">
+      <div class="upload-box">
+        <p class="upload-title">mp3 Yükleme</p>
+        <p class="upload-sub">Maksimum dosya boyutu: <strong>10 MB</strong>. Temiz, tek kişilik ve kısa kayıtlar daha iyi sonuç verir.</p>
+        <input class="hidden" id="memoryMp3Input" type="file" accept=".mp3,audio/mpeg">
+        <button class="file-btn" id="memoryPickBtn" type="button">mp3 Yükle</button>
+        <div class="file-name" id="memoryFileName">Henüz dosya seçilmedi.</div>
+      </div>
+    </div>
+
+    <div class="row buttons-2">
+      <button class="btn green" id="listenMemoryBtn" type="button" disabled>Dinle</button>
+      <button class="btn btn-primary" id="saveMemoryMp3Btn" type="button">Kaydet</button>
+    </div>
+
+    <div class="audio-box"><audio id="memoryAudio" controls></audio></div>
+    <div class="status" id="memoryStatus">Hatıra Sesi için mp3 bekleniyor.</div>
+  </section>
+
+  <section class="panel">
+    <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">TTS</span></div>
+    <div class="summary-line"><strong>Durum:</strong> <span id="poolSummary">Ortak ses havuzu aktif</span></div>
+  </section>
+
+  <section class="action-grid">
+    <button class="btn btn-primary" id="saveBtn" type="button">Kaydet ve Sohbet AI’a Dön</button>
+    <button class="btn btn-secondary" id="cancelBtn" type="button">Vazgeç</button>
+  </section>
+
+  <div class="note">Burada oluşturulan tüm sesler Sohbet AI ve diğer ortak modüllerde görünür.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="replaceModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Yeni kayıt oluşturulsun mu?</h3>
+    <p class="modal-text">Daha önce kayıtlı sesiniz var. Yeni kayıt oluşturursanız mevcut kayıtlı ses silinecek ve yerine yenisi kaydedilecek. Devam etmek istediğinize emin misiniz?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="replaceNoBtn" type="button">Vazgeç</button>
+      <button class="btn btn-primary" id="replaceYesBtn" type="button">Devam Et</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="leaveModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Seçimlerinizi kaydetmediniz</h3>
+    <p class="modal-text">Bu sayfadan ayrılmadan önce seçimlerinizi kaydetmek ister misiniz?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="leaveNoBtn" type="button">Hayır</button>
+      <button class="btn btn-primary" id="leaveYesBtn" type="button">Evet</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="recordInfoModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Kayıt başlayacak</h3>
+    <p class="modal-text">Lütfen 20 saniye boyunca doğal akışınızda konuşunuz.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="recordInfoCancelBtn" type="button">Vazgeç</button>
+      <button class="btn btn-primary" id="recordInfoOkBtn" type="button">Tamam</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
-  const LOGIN_PAGE = "/pages/login.html";
 
-  async function bootAuthGate() {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session?.user) {
-        location.replace(LOGIN_PAGE);
-        return;
-      }
-      document.body.classList.add("home-ready");
-    } catch (e) {
-      location.replace(LOGIN_PAGE);
+  const VOICE_KEY = "italkyai_shared_voice_mode";
+  const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
+  const MAX_RECORD_SECONDS = 20;
+
+  const $ = (id) => document.getElementById(id);
+
+  const UI = {
+    backBtn: $("backBtn"),
+    voiceGrid: $("voiceGrid"),
+    voiceSummary: $("voiceSummary"),
+    poolSummary: $("poolSummary"),
+
+    mineVoiceDesc: $("mineVoiceDesc"),
+    secondVoiceDesc: $("secondVoiceDesc"),
+    memoryVoiceDesc: $("memoryVoiceDesc"),
+
+    jumpMineBtn: $("jumpMineBtn"),
+    jumpSecondBtn: $("jumpSecondBtn"),
+    jumpMemoryBtn: $("jumpMemoryBtn"),
+
+    mineCreateSection: $("mineCreateSection"),
+    secondCreateSection: $("secondCreateSection"),
+    memoryCreateSection: $("memoryCreateSection"),
+
+    secondVoiceNameInput: $("secondVoiceNameInput"),
+    memoryVoiceNameInput: $("memoryVoiceNameInput"),
+
+    recordMineBtn: $("recordMineBtn"),
+    listenMineBtn: $("listenMineBtn"),
+    saveMineBtn: $("saveMineBtn"),
+
+    recordSecondBtn: $("recordSecondBtn"),
+    listenSecondBtn: $("listenSecondBtn"),
+    saveSecondBtn: $("saveSecondBtn"),
+
+    memoryPickBtn: $("memoryPickBtn"),
+    listenMemoryBtn: $("listenMemoryBtn"),
+    saveMemoryMp3Btn: $("saveMemoryMp3Btn"),
+    memoryMp3Input: $("memoryMp3Input"),
+    memoryFileName: $("memoryFileName"),
+
+    mineAudio: $("mineAudio"),
+    secondAudio: $("secondAudio"),
+    memoryAudio: $("memoryAudio"),
+
+    mineStatus: $("mineStatus"),
+    secondStatus: $("secondStatus"),
+    memoryStatus: $("memoryStatus"),
+
+    mineTimer: $("mineTimer"),
+    secondTimer: $("secondTimer"),
+
+    mineProgress: $("mineProgress"),
+    secondProgress: $("secondProgress"),
+
+    saveBtn: $("saveBtn"),
+    cancelBtn: $("cancelBtn"),
+
+    toast: $("toast"),
+
+    replaceModal: $("replaceModal"),
+    replaceYesBtn: $("replaceYesBtn"),
+    replaceNoBtn: $("replaceNoBtn"),
+
+    leaveModal: $("leaveModal"),
+    leaveYesBtn: $("leaveYesBtn"),
+    leaveNoBtn: $("leaveNoBtn"),
+
+    recordInfoModal: $("recordInfoModal"),
+    recordInfoOkBtn: $("recordInfoOkBtn"),
+    recordInfoCancelBtn: $("recordInfoCancelBtn")
+  };
+
+  const state = {
+    currentUser: null,
+    voiceMode: normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "tts"),
+    savedVoiceMode: normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "tts"),
+
+    pendingLeaveAction: null,
+    pendingReplaceAction: null,
+    pendingRecordAction: null,
+
+    mineRecorder: null,
+    secondRecorder: null,
+
+    mineChunks: [],
+    secondChunks: [],
+
+    mineBlob: null,
+    secondBlob: null,
+    memoryMp3File: null,
+
+    mineStream: null,
+    secondStream: null,
+
+    mineCountdown: null,
+    secondCountdown: null,
+
+    profileVoiceState: {
+      mineReady: false,
+      secondReady: false,
+      memoryReady: false
     }
+  };
+
+  function normalizeVoiceMode(v){
+    const val = String(v || "").trim().toLowerCase();
+    if (val === "mine" || val === "mine_clone" || val === "clone") return "mine";
+    if (val === "second" || val === "second_clone") return "second";
+    if (val === "memory" || val === "memory_clone") return "memory";
+    return "tts";
   }
 
-  bootAuthGate();
-</script>
+  function voiceLabel(v){
+    if (v === "mine") return "Kendi Sesim";
+    if (v === "second") return "2. Ses";
+    if (v === "memory") return "Hatıra Sesi";
+    return "TTS";
+  }
 
-<main id="pageContent">
-  <div class="page-shell-fit">
+  function showToast(msg){
+    UI.toast.textContent = String(msg || "");
+    UI.toast.classList.add("show");
+    clearTimeout(window.__sohbetAiSettingsToast);
+    window.__sohbetAiSettingsToast = setTimeout(() => UI.toast.classList.remove("show"), 1700);
+  }
 
-    <section class="hero" id="heroSection">
-      <div class="heroTop">
-        <div class="holo-container">
-          <div class="crystal-cage">
-            <div class="crystal-side side1"></div>
-            <div class="crystal-side side2"></div>
-            <div class="crystal-side side3"></div>
-            <div class="crystal-side side4"></div>
-            <div class="crystal-side side5"></div>
-            <div class="crystal-side side6"></div>
-          </div>
+  function paintSelections(){
+    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
+      card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === state.voiceMode);
+    });
+  }
 
-          <div class="holo-qr ai-planet" aria-hidden="true">
-            <div class="planet-glow"></div>
-            <div class="planet-rays"></div>
-            <div class="planet-core">
-              <div class="planet-center">
-                <div class="planet-nfc-icon"></div>
-                <div class="planet-nfc-text">NFC</div>
-              </div>
-            </div>
-          </div>
-        </div>
+  function refreshSummary(){
+    UI.voiceSummary.textContent = voiceLabel(state.voiceMode);
+    UI.poolSummary.textContent = "Ortak ses havuzu aktif";
+  }
 
-        <h1 class="heroTitle">Dünya’yı Küçülttük, Cebinize Sığdırdık</h1>
-        <p class="heroName" id="heroUserName">Hoş geldin</p>
-      </div>
-    </section>
+  function hasUnsavedChanges() {
+    return state.voiceMode !== state.savedVoiceMode;
+  }
 
-    <section class="home-grid">
-      <a id="faceCard" class="mod-card face-card" href="/facetoface.html">
-        <h2 class="card-title">FaceToFace</h2>
+  function jumpToSection(el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
-        <div class="card-desc-list">
-          <p class="card-desc">Canlı konuş.</p>
-          <p class="card-desc">Anında çeviri al.</p>
-          <p class="card-desc">Dil bariyerini kaldır.</p>
-          <p class="card-desc">Tek telefonla başla.</p>
-        </div>
+  function setButtonState(button, enabled) {
+    button.disabled = !enabled;
+  }
 
-        <div class="card-art face-art">
-          <div class="face-wave"></div>
-          <div class="face-headset"></div>
-          <div class="face-headset"></div>
-        </div>
-      </a>
+  function setTimer(el, seconds) {
+    el.textContent = `${seconds} sn`;
+  }
 
-      <a id="chatCard" class="mod-card chat-card" href="/pages/italkyai_chat.html">
-        <h2 class="card-title">Sohbet AI</h2>
+  function setProgress(el, percent) {
+    el.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+  }
 
-        <div class="card-desc-list">
-          <p class="card-desc">Doğal sohbet et.</p>
-          <p class="card-desc">Yaz veya konuş.</p>
-          <p class="card-desc">Özel ses kullan.</p>
-          <p class="card-desc">Sohbetini kaydet.</p>
-        </div>
+  function stopTracks(stream) {
+    try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
+  }
 
-        <div class="card-art chat-art">
-          <div class="chat-bubble-left"></div>
-          <div class="chat-orb"></div>
-          <div class="chat-bubble-right"></div>
-        </div>
-      </a>
-    </section>
+  function openReplaceModal(action) {
+    state.pendingReplaceAction = action;
+    UI.replaceModal.classList.add("open");
+  }
 
-    <section class="wide-stack">
-      <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
-        <div class="fun-ico">
-          <div class="fun-dice"></div>
-        </div>
+  function closeReplaceModal() {
+    state.pendingReplaceAction = null;
+    UI.replaceModal.classList.remove("open");
+  }
 
-        <div class="wide-body">
-          <div class="card-topline">Oyunlu Eğitim</div>
-          <h2 class="wide-title">Eğlenerek Öğren</h2>
-          <p class="wide-desc">Oyna, tekrar et, öğren.</p>
-        </div>
+  function openLeaveModal(action) {
+    state.pendingLeaveAction = action;
+    UI.leaveModal.classList.add("open");
+  }
 
-        <div class="arrow-chip"></div>
-      </a>
+  function closeLeaveModal() {
+    state.pendingLeaveAction = null;
+    UI.leaveModal.classList.remove("open");
+  }
 
-      <a id="practiceCard" class="wide-card practice-card" href="/pages/pratice_ai_select.html">
-        <div class="practice-ico">
-          <div class="practice-chat"></div>
-          <div class="practice-chat right"></div>
-        </div>
+  function openRecordInfoModal(action) {
+    state.pendingRecordAction = action;
+    UI.recordInfoModal.classList.add("open");
+  }
 
-        <div class="wide-body">
-          <div class="card-topline">Canlı Gelişim</div>
-          <h2 class="wide-title">Practice AI</h2>
-          <p class="wide-desc">Pratik yap, akıcılığını artır.</p>
-        </div>
+  function closeRecordInfoModal() {
+    state.pendingRecordAction = null;
+    UI.recordInfoModal.classList.remove("open");
+  }
 
-        <div class="arrow-chip"></div>
-      </a>
-
-      <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
-        <div class="level-ico">
-          <div class="level-bars">
-            <span></span><span></span><span></span>
-          </div>
-        </div>
-
-        <div class="wide-body">
-          <div class="card-topline">Ölç & Başla</div>
-          <h2 class="wide-title">Seviye Tespit</h2>
-          <p class="wide-desc">Seviyeni ölç, doğru yerden başla.</p>
-        </div>
-
-        <div class="arrow-chip"></div>
-      </a>
-    </section>
-
-  </div>
-</main>
-
-<script type="module">
-import { mountShell } from "/js/ui_shell.js";
-try {
-  mountShell({ scroll: "auto" });
-} catch (e) {
-  console.error("ui_shell HATASI:", e);
-}
-</script>
-
-<script type="module">
-  import { supabase } from "/js/supabase_client.js";
-
-  async function loadHomeUserName() {
-    const heroUserName = document.getElementById("heroUserName");
-    if (!heroUserName) return;
-
+  async function loadProfileVoiceState() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const uid = user?.id;
-      if (!uid) {
-        heroUserName.textContent = "Hoş geldin";
-        return;
-      }
+      if (!user) return;
+      state.currentUser = user;
 
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
-        .select("hitap, name, full_name, display_name")
-        .eq("id", uid)
+        .select(`
+          voice_sample_path,
+          tts_voice_ready,
+          tts_voice_id,
+          second_voice_name,
+          second_voice_sample_path,
+          second_tts_voice_ready,
+          second_tts_voice_id,
+          memory_voice_name,
+          memory_voice_sample_path,
+          memory_tts_voice_ready,
+          memory_tts_voice_id
+        `)
+        .eq("id", user.id)
         .maybeSingle();
 
-      const rawName =
-        profile?.hitap ||
-        profile?.name ||
-        profile?.display_name ||
-        profile?.full_name ||
-        user?.user_metadata?.hitap ||
-        user?.user_metadata?.name ||
-        user?.user_metadata?.full_name ||
-        user?.email ||
-        "";
+      if (error) return;
 
-      const cleanName = String(rawName || "").trim();
-      heroUserName.textContent = cleanName ? cleanName : "Hoş geldin";
-    } catch (e) {
-      heroUserName.textContent = "Hoş geldin";
+      state.profileVoiceState.mineReady = !!profile?.voice_sample_path || (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+      state.profileVoiceState.secondReady = !!profile?.second_voice_sample_path || (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+      state.profileVoiceState.memoryReady = !!profile?.memory_voice_sample_path || (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+
+      const secondName = String(profile?.second_voice_name || "2. Ses").trim() || "2. Ses";
+      const memoryName = String(profile?.memory_voice_name || "Hatıra Sesi").trim() || "Hatıra Sesi";
+
+      UI.mineVoiceDesc.textContent = state.profileVoiceState.mineReady ? "Hazır. Ortak kullanıma açık." : "Henüz oluşturulmadı.";
+      UI.secondVoiceDesc.textContent = state.profileVoiceState.secondReady ? `${secondName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
+      UI.memoryVoiceDesc.textContent = state.profileVoiceState.memoryReady ? `${memoryName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
+
+      if (state.profileVoiceState.mineReady) UI.mineStatus.textContent = "Kendi Sesim hazır. Sohbet AI içinde kullanılacak.";
+      if (state.profileVoiceState.secondReady) UI.secondStatus.textContent = `${secondName} hazır. Sohbet AI içinde kullanılacak.`;
+      if (state.profileVoiceState.memoryReady) UI.memoryStatus.textContent = `${memoryName} hazır. Sohbet AI içinde kullanılacak.`;
+
+      if (secondName) UI.secondVoiceNameInput.value = secondName;
+      if (memoryName) UI.memoryVoiceNameInput.value = memoryName;
+    } catch {}
+  }
+
+  async function bootAuth() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        location.replace("/pages/login.html");
+        return false;
+      }
+      state.currentUser = session.user;
+      await loadProfileVoiceState();
+      return true;
+    } catch {
+      location.replace("/pages/login.html");
+      return false;
     }
   }
 
-  loadHomeUserName();
+  async function askMicPermission() {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      throw new Error("Mikrofon izni alınamadı.");
+    }
+  }
+
+  function createRecorder(stream, onData, onStop) {
+    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) onData(e.data);
+    };
+    recorder.onstop = onStop;
+    return recorder;
+  }
+
+  async function uploadVoice(blobOrFile, voiceType, voiceName) {
+    if (!state.currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
+    if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
+
+    const form = new FormData();
+    form.append("user_id", state.currentUser.id);
+    form.append("voice_type", voiceType);
+    form.append("voice_name", voiceName || "");
+    form.append("audio_file", blobOrFile, `${voiceType}.${blobOrFile.name?.split(".").pop() || "webm"}`);
+
+    const resp = await fetch(VOICE_API, {
+      method: "POST",
+      body: form
+    });
+
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok || !json?.ok) throw new Error("Backend hazır değilse bu normal. Şu an sadece önizleme oluşur.");
+    return json;
+  }
+
+  function startCountdown(timerEl, progressEl, onDone) {
+    let remain = MAX_RECORD_SECONDS;
+    setTimer(timerEl, remain);
+    setProgress(progressEl, 0);
+
+    const interval = setInterval(() => {
+      remain -= 1;
+      const done = ((MAX_RECORD_SECONDS - remain) / MAX_RECORD_SECONDS) * 100;
+      setTimer(timerEl, remain);
+      setProgress(progressEl, done);
+
+      if (remain <= 0) {
+        clearInterval(interval);
+        setProgress(progressEl, 100);
+        onDone();
+      }
+    }, 1000);
+
+    return interval;
+  }
+
+  async function beginMineRecording() {
+    try {
+      state.mineChunks = [];
+      state.mineBlob = null;
+      UI.mineAudio.removeAttribute("src");
+      UI.mineAudio.load();
+      setButtonState(UI.listenMineBtn, false);
+      setButtonState(UI.saveMineBtn, false);
+
+      state.mineStream = await askMicPermission();
+      state.mineRecorder = createRecorder(
+        state.mineStream,
+        (data) => state.mineChunks.push(data),
+        () => {
+          state.mineBlob = new Blob(state.mineChunks, { type: "audio/webm" });
+          UI.mineAudio.src = URL.createObjectURL(state.mineBlob);
+          UI.mineStatus.textContent = "Kayıt tamamlandı. Dinleyebilir veya kaydedebilirsiniz.";
+          setButtonState(UI.listenMineBtn, true);
+          setButtonState(UI.saveMineBtn, true);
+          stopTracks(state.mineStream);
+        }
+      );
+
+      state.mineRecorder.start();
+      UI.mineStatus.textContent = "Kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.";
+
+      clearInterval(state.mineCountdown);
+      state.mineCountdown = startCountdown(UI.mineTimer, UI.mineProgress, () => {
+        if (state.mineRecorder && state.mineRecorder.state !== "inactive") state.mineRecorder.stop();
+      });
+    } catch (e) {
+      UI.mineStatus.textContent = e.message || "Kayıt başlatılamadı.";
+    }
+  }
+
+  async function beginSecondRecording() {
+    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+    if (!secondName) {
+      UI.secondStatus.textContent = "2. Ses için isim yaz.";
+      return;
+    }
+
+    try {
+      state.secondChunks = [];
+      state.secondBlob = null;
+      UI.secondAudio.removeAttribute("src");
+      UI.secondAudio.load();
+      setButtonState(UI.listenSecondBtn, false);
+      setButtonState(UI.saveSecondBtn, false);
+
+      state.secondStream = await askMicPermission();
+      state.secondRecorder = createRecorder(
+        state.secondStream,
+        (data) => state.secondChunks.push(data),
+        () => {
+          state.secondBlob = new Blob(state.secondChunks, { type: "audio/webm" });
+          UI.secondAudio.src = URL.createObjectURL(state.secondBlob);
+          UI.secondStatus.textContent = `${secondName} kaydı tamamlandı. Dinleyebilir veya kaydedebilirsiniz.`;
+          setButtonState(UI.listenSecondBtn, true);
+          setButtonState(UI.saveSecondBtn, true);
+          stopTracks(state.secondStream);
+        }
+      );
+
+      state.secondRecorder.start();
+      UI.secondStatus.textContent = `${secondName} için kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.`;
+
+      clearInterval(state.secondCountdown);
+      state.secondCountdown = startCountdown(UI.secondTimer, UI.secondProgress, () => {
+        if (state.secondRecorder && state.secondRecorder.state !== "inactive") state.secondRecorder.stop();
+      });
+    } catch (e) {
+      UI.secondStatus.textContent = e.message || "2. Ses kaydı başlatılamadı.";
+    }
+  }
+
+  async function saveMineVoice() {
+    try {
+      UI.mineStatus.textContent = "Kayıt kaydediliyor...";
+      await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
+      await loadProfileVoiceState();
+      showToast("Kendi Sesim oluşturuldu");
+      setTimeout(() => location.href = "/pages/italkyai_chat.html", 900);
+    } catch (e) {
+      UI.mineStatus.textContent = e.message || "Kayıt kaydedilemedi.";
+    }
+  }
+
+  async function saveSecondVoice() {
+    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+    if (!secondName) {
+      UI.secondStatus.textContent = "2. Ses için isim yaz.";
+      return;
+    }
+
+    try {
+      UI.secondStatus.textContent = "Kayıt kaydediliyor...";
+      await uploadVoice(state.secondBlob, "second", secondName);
+      await loadProfileVoiceState();
+      showToast(`${secondName} oluşturuldu`);
+      setTimeout(() => location.href = "/pages/italkyai_chat.html", 900);
+    } catch (e) {
+      UI.secondStatus.textContent = e.message || "Kayıt kaydedilemedi.";
+    }
+  }
+
+  async function saveMemoryVoiceFromMp3() {
+    const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
+    if (!memoryName) {
+      UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
+      return;
+    }
+    if (!state.memoryMp3File) {
+      UI.memoryStatus.textContent = "Önce bir mp3 seç.";
+      return;
+    }
+    if (state.memoryMp3File.size > 10 * 1024 * 1024) {
+      UI.memoryStatus.textContent = "mp3 en fazla 10 MB olabilir.";
+      return;
+    }
+
+    try {
+      UI.memoryStatus.textContent = `${memoryName} mp3 yükleniyor...`;
+      await uploadVoice(state.memoryMp3File, "memory", memoryName);
+      await loadProfileVoiceState();
+      showToast(`${memoryName} oluşturuldu`);
+      setTimeout(() => location.href = "/pages/italkyai_chat.html", 900);
+    } catch (e) {
+      UI.memoryStatus.textContent = e.message || "Hatıra Sesi mp3 kaydedilemedi.";
+    }
+  }
+
+  function saveSettings(){
+    localStorage.setItem(VOICE_KEY, state.voiceMode);
+    localStorage.setItem("tts_voice", state.voiceMode);
+    localStorage.setItem("live_interpreter_voice", state.voiceMode);
+    state.savedVoiceMode = state.voiceMode;
+  }
+
+  function goBackToChat(){
+    location.href = "/pages/italkyai_chat.html";
+  }
+
+  function bindEvents() {
+    UI.backBtn.addEventListener("click", () => {
+      if (hasUnsavedChanges()) openLeaveModal(goBackToChat);
+      else goBackToChat();
+    });
+
+    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
+      card.addEventListener("click", () => {
+        state.voiceMode = normalizeVoiceMode(card.dataset.voice || "tts");
+        paintSelections();
+        refreshSummary();
+        showToast("Ses seçimi güncellendi");
+      });
+    });
+
+    UI.jumpMineBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.voiceMode = "mine";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.mineCreateSection);
+    });
+
+    UI.jumpSecondBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.voiceMode = "second";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.secondCreateSection);
+    });
+
+    UI.jumpMemoryBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.voiceMode = "memory";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.memoryCreateSection);
+    });
+
+    UI.recordMineBtn.addEventListener("click", () => {
+      const act = () => openRecordInfoModal(beginMineRecording);
+      if (state.profileVoiceState.mineReady) openReplaceModal(act);
+      else act();
+    });
+
+    UI.recordSecondBtn.addEventListener("click", () => {
+      const act = () => openRecordInfoModal(beginSecondRecording);
+      if (state.profileVoiceState.secondReady) openReplaceModal(act);
+      else act();
+    });
+
+    UI.listenMineBtn.addEventListener("click", () => {
+      if (UI.mineAudio.src) UI.mineAudio.play();
+    });
+
+    UI.listenSecondBtn.addEventListener("click", () => {
+      if (UI.secondAudio.src) UI.secondAudio.play();
+    });
+
+    UI.listenMemoryBtn.addEventListener("click", () => {
+      if (UI.memoryAudio.src) UI.memoryAudio.play();
+    });
+
+    UI.saveMineBtn.addEventListener("click", saveMineVoice);
+    UI.saveSecondBtn.addEventListener("click", saveSecondVoice);
+
+    UI.memoryPickBtn.addEventListener("click", () => {
+      UI.memoryMp3Input.click();
+    });
+
+    UI.memoryMp3Input.addEventListener("change", (e) => {
+      const file = e.target.files?.[0] || null;
+      state.memoryMp3File = file;
+      if (file) {
+        UI.memoryAudio.src = URL.createObjectURL(file);
+        UI.memoryFileName.textContent = file.name;
+        UI.memoryStatus.textContent = `${file.name} seçildi. Kaydet diyerek devam et.`;
+        setButtonState(UI.listenMemoryBtn, true);
+      } else {
+        UI.memoryFileName.textContent = "Henüz dosya seçilmedi.";
+        setButtonState(UI.listenMemoryBtn, false);
+      }
+    });
+
+    UI.saveMemoryMp3Btn.addEventListener("click", saveMemoryVoiceFromMp3);
+
+    UI.saveBtn.addEventListener("click", () => {
+      saveSettings();
+      showToast("Ayarlar kaydedildi");
+      setTimeout(() => goBackToChat(), 350);
+    });
+
+    UI.cancelBtn.addEventListener("click", () => {
+      if (hasUnsavedChanges()) openLeaveModal(goBackToChat);
+      else goBackToChat();
+    });
+
+    UI.replaceNoBtn.addEventListener("click", closeReplaceModal);
+    UI.replaceYesBtn.addEventListener("click", () => {
+      const action = state.pendingReplaceAction;
+      closeReplaceModal();
+      if (typeof action === "function") action();
+    });
+
+    UI.leaveNoBtn.addEventListener("click", () => {
+      const action = state.pendingLeaveAction;
+      closeLeaveModal();
+      if (typeof action === "function") action();
+    });
+
+    UI.leaveYesBtn.addEventListener("click", () => {
+      saveSettings();
+      const action = state.pendingLeaveAction;
+      closeLeaveModal();
+      if (typeof action === "function") action();
+    });
+
+    UI.recordInfoCancelBtn.addEventListener("click", closeRecordInfoModal);
+    UI.recordInfoOkBtn.addEventListener("click", () => {
+      const action = state.pendingRecordAction;
+      closeRecordInfoModal();
+      if (typeof action === "function") action();
+    });
+  }
+
+  async function init() {
+    paintSelections();
+    refreshSummary();
+
+    setButtonState(UI.listenMineBtn, false);
+    setButtonState(UI.listenSecondBtn, false);
+    setButtonState(UI.listenMemoryBtn, false);
+    setButtonState(UI.saveMineBtn, false);
+    setButtonState(UI.saveSecondBtn, false);
+
+    setTimer(UI.mineTimer, MAX_RECORD_SECONDS);
+    setTimer(UI.secondTimer, MAX_RECORD_SECONDS);
+    setProgress(UI.mineProgress, 0);
+    setProgress(UI.secondProgress, 0);
+
+    bindEvents();
+    await bootAuth();
+  }
+
+  init();
 </script>
 
 </body>
