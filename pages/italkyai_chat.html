@@ -367,6 +367,7 @@
       font-weight:800;
       word-break:break-word;
       box-shadow:0 8px 22px rgba(0,0,0,.18);
+      white-space:pre-wrap;
     }
 
     .bubble.left{ border-left:4px solid var(--orange); }
@@ -468,9 +469,7 @@
       color:#fff;
     }
 
-    .hidden{
-      display:none !important;
-    }
+    .hidden{ display:none !important; }
 
     .footer{
       position:absolute;
@@ -910,6 +909,17 @@
     return 100;
   }
 
+  function collectRecentHistory(limit = 10) {
+    const rows = [...UI.chatMessages.querySelectorAll(".msg")];
+    const items = rows.map((msg) => {
+      const role = msg.classList.contains("right") ? "user" : "assistant";
+      const content = msg.querySelector(".bubble")?.textContent?.trim() || "";
+      return { role, content };
+    }).filter(x => x.content);
+
+    return items.slice(-limit);
+  }
+
   async function getAuthContext() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -973,17 +983,6 @@
     }
   }
 
-  function buildLocalFallbackReply(text) {
-    const chars = countCharacters(text);
-    const jeton = Number(currentProfile?.tokens || 0);
-
-    if (chars > 100 && jeton <= 0) {
-      return "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.";
-    }
-
-    return `Tamam, bunu aldım. ${selectedVoiceLabel()} seçili. Biraz daha aç da seni yarım yamalak anlamayayım: ${text}`;
-  }
-
   async function sendCurrentMessage(forcedText = "") {
     const text = String(forcedText || UI.chatInput.value || "").trim();
     if (!text) return;
@@ -1000,41 +999,51 @@
 
     try {
       const auth = await getAuthContext();
+      const chars = countCharacters(text);
+      const jeton = Number(currentProfile?.tokens || 0);
+
+      if (chars > 100 && jeton <= 0) {
+        addMessage("left", "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.");
+        setTyping(false);
+        return;
+      }
+
       let reply = "";
 
       if (auth.user) {
-        const chars = countCharacters(text);
-        const jeton = Number(currentProfile?.tokens || 0);
+        const history = collectRecentHistory(10);
 
-        if (chars > 100 && jeton <= 0) {
-          reply = "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.";
-        } else {
-          const resp = await fetch(API.chat, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_id: auth.user.id,
-              session_id: currentSessionId,
-              text,
-              free_limit: getFreeLimit(),
-              voice_mode: getSelectedVoice()
-            })
-          });
+        const resp = await fetch(API.chat, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: auth.user.id,
+            session_id: currentSessionId,
+            text,
+            history,
+            voice_mode: getSelectedVoice()
+          })
+        });
 
-          if (resp.ok) {
-            const json = await resp.json().catch(() => ({}));
-            reply = String(json?.reply || "").trim();
-          }
-        }
+        const json = await resp.json().catch(() => ({}));
+
+        reply = String(
+          json?.reply ||
+          json?.answer ||
+          json?.message ||
+          ""
+        ).trim();
       }
 
-      if (!reply) reply = buildLocalFallbackReply(text);
+      if (!reply) {
+        reply = "Bağlantıda bir aksaklık oldu. Lütfen tekrar yaz.";
+      }
 
       addMessage("left", reply);
       setTyping(false);
     } catch (e) {
       console.error("Chat hata:", e);
-      addMessage("left", buildLocalFallbackReply(text));
+      addMessage("left", "Bağlantıda bir aksaklık oldu. Lütfen tekrar yaz.");
       setTyping(false);
     }
   }
