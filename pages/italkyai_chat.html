@@ -405,12 +405,6 @@
       border-color:rgba(132,204,22,.20);
     }
 
-    .voice-badge.named{
-      color:#dbeafe;
-      background:rgba(59,130,246,.10);
-      border-color:rgba(59,130,246,.20);
-    }
-
     .voice-desc{
       font-size:11px;
       line-height:1.45;
@@ -806,42 +800,39 @@
       <button class="menu-item" id="voiceMenuBtn" type="button">Sesi Değiştir</button>
 
       <div class="voice-sheet" id="voiceSheet">
-        <div class="voice-card active" data-voice-id="free_tts">
-          <div class="voice-top"><div class="voice-name">Ücretsiz Ses</div><div class="voice-badge green">Standart</div></div>
-          <div class="voice-desc">Doğal, hızlı ve her zaman hazır olan ücretsiz konuşma sesi.</div>
+        <div class="voice-card active" data-voice-id="tts">
+          <div class="voice-top">
+            <div class="voice-name">TTS</div>
+            <div class="voice-badge green">Ücretsiz</div>
+          </div>
+          <div class="voice-desc">Temel ücretsiz ses. Hızlı ve her zaman hazır.</div>
         </div>
 
-        <div class="voice-card" data-voice-id="mine_clone">
-          <div class="voice-top"><div class="voice-name">Kendi Sesim</div><div class="voice-badge orange">Özel</div></div>
-          <div class="voice-desc">Kullanıcıya ait kayıtlı özel ses burada kullanılır.</div>
+        <div class="voice-card" data-voice-id="mine">
+          <div class="voice-top">
+            <div class="voice-name">Kendi Sesim</div>
+            <div class="voice-badge orange">Jetonlu</div>
+          </div>
+          <div class="voice-desc" id="chatMineVoiceDesc">Henüz oluşturulmadı.</div>
         </div>
 
-        <div class="voice-card" data-voice-id="second_custom">
-          <div class="voice-top"><div class="voice-name" id="secondVoiceName">İkinci Ses</div><div class="voice-badge named">İsimli</div></div>
-          <div class="voice-desc" id="secondVoiceDesc">Kayıt sayfasında verilen isim burada görünür.</div>
+        <div class="voice-card" data-voice-id="second">
+          <div class="voice-top">
+            <div class="voice-name">2. Ses</div>
+            <div class="voice-badge orange">Jetonlu</div>
+          </div>
+          <div class="voice-desc" id="chatSecondVoiceDesc">Henüz oluşturulmadı.</div>
         </div>
 
-        <div class="voice-card" data-voice-id="umay">
-          <div class="voice-top"><div class="voice-name">Umay</div><div class="voice-badge green">Hazır Ses</div></div>
-          <div class="voice-desc">Sıcak ve dengeli kadın ses.</div>
+        <div class="voice-card" data-voice-id="memory">
+          <div class="voice-top">
+            <div class="voice-name">Hatıra Sesi</div>
+            <div class="voice-badge orange">Jetonlu</div>
+          </div>
+          <div class="voice-desc" id="chatMemoryVoiceDesc">Henüz oluşturulmadı.</div>
         </div>
 
-        <div class="voice-card" data-voice-id="jale">
-          <div class="voice-top"><div class="voice-name">Jale</div><div class="voice-badge green">Hazır Ses</div></div>
-          <div class="voice-desc">Daha olgun ve sakin kadın ses.</div>
-        </div>
-
-        <div class="voice-card" data-voice-id="kaan">
-          <div class="voice-top"><div class="voice-name">Kaan</div><div class="voice-badge green">Hazır Ses</div></div>
-          <div class="voice-desc">Temiz, net ve güçlü erkek ses.</div>
-        </div>
-
-        <div class="voice-card" data-voice-id="ozan">
-          <div class="voice-top"><div class="voice-name">Ozan</div><div class="voice-badge green">Hazır Ses</div></div>
-          <div class="voice-desc">Samimi ve rahat erkek ses.</div>
-        </div>
-
-        <button class="voice-create-btn" id="newVoiceBtn" type="button">Yeni Ses Tanımla</button>
+        <button class="voice-create-btn" id="newVoiceBtn" type="button">Ses Merkezine Git</button>
       </div>
 
       <button class="menu-item" id="jetonYukleBtn" type="button">Jeton Yükle</button>
@@ -862,7 +853,7 @@
         <p class="brand-sub">BE FREE</p>
       </div>
 
-      <button class="avatar-btn empty" id="topAvatarBtn" type="button" aria-label="Ses oluşturma">
+      <button class="avatar-btn empty" id="topAvatarBtn" type="button" aria-label="Ses merkezi">
         <img id="topAvatarImg" alt="Avatar">
       </button>
     </header>
@@ -906,9 +897,7 @@
   const $ = (id) => document.getElementById(id);
 
   const STORAGE = {
-    voice: "italkyai_selected_voice",
-    secondVoiceName: "italkyai_second_voice_name",
-    secondVoiceOwnerName: "italkyai_second_voice_owner_name",
+    voice: "italkyai_shared_voice_mode",
     localSavedChats: "italkyai_local_saved_chats"
   };
 
@@ -940,8 +929,6 @@
     voiceSheet: $("voiceSheet"),
     newVoiceBtn: $("newVoiceBtn"),
     voiceCards: [...document.querySelectorAll("[data-voice-id]")],
-    secondVoiceName: $("secondVoiceName"),
-    secondVoiceDesc: $("secondVoiceDesc"),
 
     topAvatarBtn: $("topAvatarBtn"),
     topAvatarImg: $("topAvatarImg"),
@@ -965,7 +952,19 @@
   let currentSessionId = crypto.randomUUID();
   let currentSavedChatId = null;
   let recognition = null;
-  let pendingWebPermissionRequest = null;
+
+  function openMenu() {
+    UI.menu.classList.add("open");
+  }
+
+  function closeMenu() {
+    UI.menu.classList.remove("open");
+    UI.voiceSheet.classList.remove("open");
+  }
+
+  function toggleSavedChats() {
+    UI.savedChatsList.classList.toggle("open");
+  }
 
   function autoResizeTextarea() {
     UI.chatInput.style.height = "auto";
@@ -989,7 +988,6 @@
     if (!vv) return;
 
     document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
-
     const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
 
@@ -1001,35 +999,25 @@
     });
   }
 
-  function openMenu() { UI.menu.classList.add("open"); }
-  function closeMenu() {
-    UI.menu.classList.remove("open");
-    UI.voiceSheet.classList.remove("open");
-  }
-
-  function toggleSavedChats() {
-    UI.savedChatsList.classList.toggle("open");
-  }
-
   function getSelectedVoice() {
-    return localStorage.getItem(STORAGE.voice) || "free_tts";
+    const v = localStorage.getItem(STORAGE.voice) || "tts";
+    return ["tts", "mine", "second", "memory"].includes(v) ? v : "tts";
   }
 
   function setSelectedVoice(voiceId) {
-    localStorage.setItem(STORAGE.voice, voiceId);
+    const safeVoice = ["tts", "mine", "second", "memory"].includes(voiceId) ? voiceId : "tts";
+    localStorage.setItem(STORAGE.voice, safeVoice);
     UI.voiceCards.forEach(card => {
-      card.classList.toggle("active", card.dataset.voiceId === voiceId);
+      card.classList.toggle("active", card.dataset.voiceId === safeVoice);
     });
   }
 
-  function hydrateSecondVoiceName() {
-    const secondVoiceName = localStorage.getItem(STORAGE.secondVoiceName) || "İkinci Ses";
-    const secondVoiceOwnerName = localStorage.getItem(STORAGE.secondVoiceOwnerName) || "";
-
-    UI.secondVoiceName.textContent = secondVoiceName;
-    UI.secondVoiceDesc.textContent = secondVoiceOwnerName
-      ? `${secondVoiceOwnerName} için tanımlanan özel ses burada görünür.`
-      : "Kayıt sayfasında verilen isim burada görünür.";
+  function selectedVoiceLabel() {
+    const v = getSelectedVoice();
+    if (v === "mine") return "Kendi Sesim";
+    if (v === "second") return "2. Ses";
+    if (v === "memory") return "Hatıra Sesi";
+    return "TTS";
   }
 
   function addMessage(side, text, meta) {
@@ -1051,6 +1039,7 @@
     wrap.appendChild(metaEl);
     row.appendChild(wrap);
     UI.chatMessages.appendChild(row);
+
     scrollChatToBottom();
   }
 
@@ -1132,6 +1121,64 @@
     }
   }
 
+  async function hydrateSharedVoiceState() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(`
+          voice_sample_path,
+          tts_voice_ready,
+          tts_voice_id,
+          second_voice_name,
+          second_voice_sample_path,
+          second_tts_voice_ready,
+          second_tts_voice_id,
+          memory_voice_name,
+          memory_voice_sample_path,
+          memory_tts_voice_ready,
+          memory_tts_voice_id
+        `)
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const mineReady =
+        !!profile?.voice_sample_path ||
+        (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+
+      const secondReady =
+        !!profile?.second_voice_sample_path ||
+        (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+
+      const memoryReady =
+        !!profile?.memory_voice_sample_path ||
+        (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+
+      const secondName = String(profile?.second_voice_name || "2. Ses").trim() || "2. Ses";
+      const memoryName = String(profile?.memory_voice_name || "Hatıra Sesi").trim() || "Hatıra Sesi";
+
+      const mineDesc = document.getElementById("chatMineVoiceDesc");
+      const secondDesc = document.getElementById("chatSecondVoiceDesc");
+      const memoryDesc = document.getElementById("chatMemoryVoiceDesc");
+
+      if (mineDesc) {
+        mineDesc.textContent = mineReady ? "Hazır. Ortak kullanıma açık." : "Henüz oluşturulmadı.";
+      }
+
+      if (secondDesc) {
+        secondDesc.textContent = secondReady ? `${secondName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
+      }
+
+      if (memoryDesc) {
+        memoryDesc.textContent = memoryReady ? `${memoryName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
+      }
+    } catch (e) {
+      console.warn("hydrateSharedVoiceState error", e);
+    }
+  }
+
   function buildLocalFallbackReply(text) {
     const chars = countCharacters(text);
     const jeton = Number(currentProfile?.tokens || 0);
@@ -1140,7 +1187,7 @@
       return "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.";
     }
 
-    return `Tamam, bunu aldım. Biraz daha aç da seni yarım yamalak anlamayayım: ${text}`;
+    return `Tamam, bunu aldım. ${selectedVoiceLabel()} seçili. Biraz daha aç da seni yarım yamalak anlamayayım: ${text}`;
   }
 
   async function sendCurrentMessage(forcedText = "") {
@@ -1175,13 +1222,16 @@
               user_id: auth.user.id,
               session_id: currentSessionId,
               text,
-              free_limit: getFreeLimit()
+              free_limit: getFreeLimit(),
+              voice_mode: getSelectedVoice()
             })
           });
 
           if (resp.ok) {
             const json = await resp.json().catch(() => ({}));
             reply = String(json?.reply || "").trim();
+          } else {
+            console.error("Chat API HTTP hata:", resp.status);
           }
         }
       }
@@ -1420,17 +1470,17 @@
     });
 
     UI.newVoiceBtn.addEventListener("click", () => {
-      location.href = "/pages/ai_voice_profile.html";
+      location.href = "/pages/voice_profile.html";
     });
 
     UI.voiceCards.forEach(card => {
       card.addEventListener("click", () => {
-        setSelectedVoice(card.dataset.voiceId || "free_tts");
+        setSelectedVoice(card.dataset.voiceId || "tts");
       });
     });
 
     UI.topAvatarBtn.addEventListener("click", () => {
-      location.href = "/pages/ai_voice_profile.html";
+      location.href = "/pages/voice_profile.html";
     });
 
     window.visualViewport?.addEventListener("resize", updateViewportLayout);
@@ -1439,12 +1489,12 @@
   }
 
   async function init() {
-    hydrateSecondVoiceName();
     setSelectedVoice(getSelectedVoice());
     bindEvents();
     autoResizeTextarea();
     syncInputActionState();
     await hydrateProfileUI();
+    await hydrateSharedVoiceState();
     renderSavedChats();
     updateViewportLayout();
     scrollChatToBottom();
