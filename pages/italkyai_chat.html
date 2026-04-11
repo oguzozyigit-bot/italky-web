@@ -696,9 +696,7 @@
       <button class="menu-item white" id="newChatBtn" type="button">Yeni Sohbet</button>
       <button class="menu-item" id="saveChatMenuBtn" type="button">Sohbeti Kaydet</button>
       <button class="menu-item" id="savedChatsToggleBtn" type="button">Kayıtlı Sohbetler</button>
-
       <div class="saved-list" id="savedChatsList"></div>
-
       <button class="menu-item" id="clearChatMenuBtn" type="button">Sohbeti Temizle</button>
       <button class="menu-item orange" id="jetonYukleBtn" type="button">Jeton Yükle</button>
       <button class="menu-item red" id="homeBtn" type="button">Ana Sayfaya Dön</button>
@@ -728,9 +726,7 @@
     </header>
 
     <section class="main">
-      <div class="chat-scroll" id="chatMessages">
-        <div class="chat-spacer"></div>
-      </div>
+      <div class="chat-scroll" id="chatMessages"></div>
       <div class="typing" id="typingState">italkyAI yazıyor...</div>
 
       <div class="composer-wrap">
@@ -767,7 +763,7 @@
 
   const STORAGE = {
     voice: "italkyai_shared_voice_mode",
-    localSavedChats: "italkyai_local_saved_chats"
+    savedChats: "italkyai_local_saved_chats"
   };
 
   const API = {
@@ -810,11 +806,15 @@
     closeListenModal: $("closeListenModal")
   };
 
-  let currentUser = null;
-  let currentProfile = null;
-  let currentSessionId = crypto.randomUUID();
-  let currentSavedChatId = null;
-  let recognition = null;
+  const state = {
+    currentUser: null,
+    currentProfile: null,
+    currentSessionId: crypto.randomUUID(),
+    currentSavedChatId: null,
+    recognition: null,
+    isSending: false,
+    pendingVoiceText: ""
+  };
 
   function openMenu() {
     UI.menu.classList.add("open");
@@ -866,14 +866,6 @@
     return ["tts", "mine", "second", "memory"].includes(v) ? v : "tts";
   }
 
-  function selectedVoiceLabel() {
-    const v = getSelectedVoice();
-    if (v === "mine") return "Kendi Sesim";
-    if (v === "second") return "2. Ses";
-    if (v === "memory") return "Hatıra Sesi";
-    return "TTS";
-  }
-
   function addMessage(side, text, meta) {
     const row = document.createElement("div");
     row.className = `msg ${side}`;
@@ -901,15 +893,7 @@
     UI.typingState.classList.toggle("show", !!show);
   }
 
-  function countCharacters(text) {
-    return String(text || "").length;
-  }
-
-  function getFreeLimit() {
-    return 100;
-  }
-
-  function collectRecentHistory(limit = 10) {
+  function collectRecentHistory(limit = 20) {
     const rows = [...UI.chatMessages.querySelectorAll(".msg")];
     const items = rows.map((msg) => {
       const role = msg.classList.contains("right") ? "user" : "assistant";
@@ -923,18 +907,18 @@
   async function getAuthContext() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      currentUser = user || null;
+      state.currentUser = user || null;
 
-      if (!currentUser) return { user: null, profile: null };
+      if (!state.currentUser) return { user: null, profile: null };
 
       const { data: profile } = await supabase
         .from("profiles")
         .select("id,full_name,email,tokens,avatar_url")
-        .eq("id", currentUser.id)
+        .eq("id", state.currentUser.id)
         .maybeSingle();
 
-      currentProfile = profile || null;
-      return { user: currentUser, profile: currentProfile };
+      state.currentProfile = profile || null;
+      return { user: state.currentUser, profile: state.currentProfile };
     } catch (e) {
       console.error("Auth context hata:", e);
       return { user: null, profile: null };
@@ -969,23 +953,49 @@
     UI.menuUserName.textContent = fullName;
     UI.menuJeton.textContent = `Jeton: ${tokens}`;
 
-    if (UI.chatMessages.children.length === 1) {
-      const welcome = document.createElement("div");
-      welcome.className = "msg left";
-      welcome.innerHTML = `
-        <div class="bubble-wrap">
-          <div class="bubble left">Merhaba ${firstName}. Sohbet konunuz ne olsun?</div>
-          <div class="msg-meta">italkyAI • şimdi</div>
-        </div>
-      `;
-      UI.chatMessages.appendChild(welcome);
-      scrollChatToBottom();
+    if (!UI.chatMessages.querySelector(".msg")) {
+      addMessage("left", `Merhaba ${firstName}. Sohbet konunuz ne olsun?`);
     }
   }
 
-  async function sendCurrentMessage(forcedText = "") {
+  async function persistCurrentChatSnapshot(autoTitle = "") {
+    const messageRows = [...UI.chatMessages.querySelectorAll(".msg")].map((msg) => {
+      const side = msg.classList.contains("right") ? "right" : "left";
+      const text = msg.querySelector(".bubble")?.textContent || "";
+      return { side, text };
+    }).filter(x => x.text.trim());
+
+    if (!messageRows.length) return;
+
+    const allSaved = getLocalSavedChats();
+    const existing = allSaved.find(x => x.id === state.currentSavedChatId);
+
+    const title =
+      existing?.title ||
+      autoTitle ||
+      messageRows.find(x => x.side === "right")?.text?.slice(0, 60) ||
+      "Yeni Sohbet";
+
+    const item = {
+      id: state.currentSavedChatId || crypto.randomUUID(),
+      session_id: state.currentSessionId,
+      title,
+      created_at: existing?.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      messages: messageRows
+    };
+
+    const next = [item, ...allSaved.filter(x => x.id !== item.id)].slice(0, 10);
+    localStorage.setItem(STORAGE.savedChats, JSON.stringify(next));
+    state.currentSavedChatId = item.id;
+    renderSavedChats();
+  }
+
+  async function sendCurrentMessage(forcedText = "", inputMode = "text") {
     const text = String(forcedText || UI.chatInput.value || "").trim();
-    if (!text) return;
+    if (!text || state.isSending) return;
+
+    state.isSending = true;
 
     addMessage("right", text);
 
@@ -999,71 +1009,77 @@
 
     try {
       const auth = await getAuthContext();
-      const chars = countCharacters(text);
-      const jeton = Number(currentProfile?.tokens || 0);
 
-      if (chars > 100 && jeton <= 0) {
-        addMessage("left", "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.");
+      if (!auth.user) {
+        addMessage("left", "Oturum bilgisine ulaşılamadı. Lütfen tekrar giriş yap.");
         setTyping(false);
+        state.isSending = false;
         return;
       }
 
-      let reply = "";
+      const history = collectRecentHistory(20);
 
-      if (auth.user) {
-        const history = collectRecentHistory(10);
+      const resp = await fetch(API.chat, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: auth.user.id,
+          session_id: state.currentSessionId,
+          text,
+          history,
+          voice_mode: getSelectedVoice(),
+          input_mode: inputMode
+        })
+      });
 
-        const resp = await fetch(API.chat, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: auth.user.id,
-            session_id: currentSessionId,
-            text,
-            history,
-            voice_mode: getSelectedVoice()
-          })
-        });
+      const json = await resp.json().catch(() => ({}));
+      const reply = String(
+        json?.reply ||
+        json?.answer ||
+        json?.message ||
+        ""
+      ).trim();
 
-        const json = await resp.json().catch(() => ({}));
-
-        reply = String(
-          json?.reply ||
-          json?.answer ||
-          json?.message ||
-          ""
-        ).trim();
+      if (!resp.ok) {
+        addMessage("left", reply || "Bağlantıda bir aksaklık oldu. Lütfen tekrar yaz.");
+        setTyping(false);
+        state.isSending = false;
+        await hydrateProfileUI();
+        return;
       }
 
-      if (!reply) {
-        reply = "Bağlantıda bir aksaklık oldu. Lütfen tekrar yaz.";
+      if (json?.requires_topup) {
+        addMessage("left", reply || "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.");
+        setTyping(false);
+        state.isSending = false;
+        await hydrateProfileUI();
+        return;
       }
 
-      addMessage("left", reply);
+      addMessage("left", reply || "Şu an cevap üretirken bir sorun oluştu. Bir daha dener misin?");
       setTyping(false);
+
+      await hydrateProfileUI();
+      await persistCurrentChatSnapshot(text.slice(0, 50));
+      state.isSending = false;
     } catch (e) {
       console.error("Chat hata:", e);
       addMessage("left", "Bağlantıda bir aksaklık oldu. Lütfen tekrar yaz.");
       setTyping(false);
+      state.isSending = false;
     }
   }
 
   function clearChatDom() {
-    while (UI.chatMessages.children.length > 1) {
-      UI.chatMessages.removeChild(UI.chatMessages.lastChild);
-    }
+    UI.chatMessages.innerHTML = "";
   }
 
   function getLocalSavedChats() {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE.localSavedChats) || "[]");
+      return JSON.parse(localStorage.getItem(STORAGE.savedChats) || "[]");
     } catch {
       return [];
     }
-  }
-
-  function setLocalSavedChats(list) {
-    localStorage.setItem(STORAGE.localSavedChats, JSON.stringify(list));
   }
 
   function renderSavedChats() {
@@ -1083,7 +1099,7 @@
       btn.className = "saved-chat-btn";
       btn.innerHTML = `
         <span>${chat.title}</span>
-        <span class="saved-chat-meta">${new Date(chat.created_at).toLocaleString("tr-TR")}</span>
+        <span class="saved-chat-meta">${new Date(chat.updated_at || chat.created_at).toLocaleString("tr-TR")}</span>
       `;
       btn.addEventListener("click", () => loadSavedChat(chat.id));
       UI.savedChatsList.appendChild(btn);
@@ -1095,8 +1111,8 @@
     if (!local) return;
 
     clearChatDom();
-    currentSavedChatId = local.id;
-    currentSessionId = local.session_id || crypto.randomUUID();
+    state.currentSavedChatId = local.id;
+    state.currentSessionId = local.session_id || crypto.randomUUID();
 
     (local.messages || []).forEach(msg => {
       addMessage(msg.side, msg.text);
@@ -1106,19 +1122,21 @@
   }
 
   function deleteCurrentSavedChat() {
-    if (!currentSavedChatId) {
+    if (!state.currentSavedChatId) {
       clearChatDom();
-      currentSessionId = crypto.randomUUID();
+      state.currentSessionId = crypto.randomUUID();
+      addMessage("left", "Yeni sohbet hazır. Nereden başlayalım?");
       closeMenu();
       return;
     }
 
-    const list = getLocalSavedChats().filter(x => x.id !== currentSavedChatId);
-    setLocalSavedChats(list);
+    const list = getLocalSavedChats().filter(x => x.id !== state.currentSavedChatId);
+    localStorage.setItem(STORAGE.savedChats, JSON.stringify(list));
 
-    currentSavedChatId = null;
-    currentSessionId = crypto.randomUUID();
+    state.currentSavedChatId = null;
+    state.currentSessionId = crypto.randomUUID();
     clearChatDom();
+    addMessage("left", "Yeni sohbet hazır. Nereden başlayalım?");
     renderSavedChats();
     closeMenu();
   }
@@ -1127,41 +1145,17 @@
     const title = String(UI.saveChatName.value || "").trim();
     if (!title) return;
 
-    const messageRows = [...UI.chatMessages.querySelectorAll(".msg")].map((msg) => {
-      const side = msg.classList.contains("right") ? "right" : "left";
-      const text = msg.querySelector(".bubble")?.textContent || "";
-      return { side, text };
-    });
+    state.currentSavedChatId = state.currentSavedChatId || crypto.randomUUID();
+    persistCurrentChatSnapshot(title);
 
-    if (!messageRows.length) {
-      UI.saveModal.classList.remove("open");
-      return;
-    }
-
-    const list = getLocalSavedChats().filter(x => x.id !== currentSavedChatId);
-    const id = currentSavedChatId || crypto.randomUUID();
-
-    list.unshift({
-      id,
-      session_id: currentSessionId,
-      title,
-      created_at: new Date().toISOString(),
-      messages: messageRows
-    });
-
-    const limited = list.slice(0, 10);
-
-    setLocalSavedChats(limited);
-    currentSavedChatId = id;
     UI.saveModal.classList.remove("open");
     UI.saveChatName.value = "";
-    renderSavedChats();
     closeMenu();
   }
 
   function stopRecognitionLoop() {
-    try { recognition?.stop(); } catch {}
-    recognition = null;
+    try { state.recognition?.stop(); } catch {}
+    state.recognition = null;
   }
 
   function startRecognitionLoop() {
@@ -1170,27 +1164,27 @@
 
     stopRecognitionLoop();
 
-    recognition = new Recognition();
-    recognition.lang = "tr-TR";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    state.recognition = new Recognition();
+    state.recognition.lang = "tr-TR";
+    state.recognition.interimResults = false;
+    state.recognition.maxAlternatives = 1;
 
-    recognition.onresult = async (event) => {
+    state.recognition.onresult = async (event) => {
       const transcript = event?.results?.[0]?.[0]?.transcript || "";
       if (transcript.trim()) {
-        await sendCurrentMessage(transcript.trim());
+        await sendCurrentMessage(transcript.trim(), "voice");
       }
     };
 
-    recognition.onerror = () => {
+    state.recognition.onerror = () => {
       setTimeout(() => startRecognitionLoop(), 500);
     };
 
-    recognition.onend = () => {
+    state.recognition.onend = () => {
       setTimeout(() => startRecognitionLoop(), 250);
     };
 
-    try { recognition.start(); } catch {}
+    try { state.recognition.start(); } catch {}
   }
 
   function openListenMode() {
@@ -1219,11 +1213,11 @@
     UI.chatInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        sendCurrentMessage();
+        sendCurrentMessage("", "text");
       }
     });
 
-    UI.sendBtn.addEventListener("click", () => sendCurrentMessage());
+    UI.sendBtn.addEventListener("click", () => sendCurrentMessage("", "text"));
     UI.micBtn.addEventListener("click", openListenMode);
     UI.closeListenModal.addEventListener("click", closeListenMode);
 
@@ -1242,10 +1236,11 @@
       location.href = "/pages/jetonbuy.html";
     });
 
-    UI.newChatBtn.addEventListener("click", () => {
+    UI.newChatBtn.addEventListener("click", async () => {
       clearChatDom();
-      currentSavedChatId = null;
-      currentSessionId = crypto.randomUUID();
+      state.currentSavedChatId = null;
+      state.currentSessionId = crypto.randomUUID();
+      await hydrateProfileUI();
       closeMenu();
     });
 
@@ -1281,8 +1276,8 @@
     bindEvents();
     autoResizeTextarea();
     syncInputActionState();
-    await hydrateProfileUI();
     renderSavedChats();
+    await hydrateProfileUI();
     updateViewportLayout();
     scrollChatToBottom();
   }
