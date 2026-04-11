@@ -13,19 +13,31 @@
     :root{
       --txt: rgba(255,255,255,.96);
       --muted: rgba(255,255,255,.60);
+
+      --bg1: #050311;
+      --bg2: #0c0820;
+
+      --panel-bg: rgba(255,255,255,.03);
       --panel-border: rgba(255,255,255,.08);
-      --soft: rgba(255,255,255,.04);
 
-      --orange: rgba(249,115,22,.78);
-      --orangeSoft: rgba(251,146,60,.12);
+      --violet: #8b5cf6;
+      --violet-soft: rgba(139,92,246,.18);
 
-      --green: rgba(132,204,22,.78);
-      --greenSoft: rgba(163,230,53,.12);
+      --indigo: #6366f1;
+      --indigo-soft: rgba(99,102,241,.16);
 
-      --red: rgba(239,68,68,.78);
-      --redSoft: rgba(248,113,113,.12);
+      --cyan: #67e8f9;
+      --cyan-soft: rgba(103,232,249,.12);
 
-      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
+      --ok: #86efac;
+      --ok-bg: rgba(34,197,94,.10);
+      --ok-br: rgba(34,197,94,.20);
+
+      --warn: #fde68a;
+      --warn-bg: rgba(245,158,11,.10);
+      --warn-br: rgba(245,158,11,.20);
+
+      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#c084fc 100%);
     }
 
     *{
@@ -39,7 +51,7 @@
       padding:0;
       width:100%;
       min-height:100%;
-      background:#02000f;
+      background:var(--bg1);
       color:var(--txt);
       font-family:'Outfit',sans-serif;
     }
@@ -49,8 +61,10 @@
       position:fixed;
       inset:0;
       background:
-        radial-gradient(circle at 50% 0%, rgba(129,140,248,.12) 0%, transparent 50%),
-        radial-gradient(circle at 10% 100%, rgba(244,114,182,.08) 0%, transparent 35%);
+        radial-gradient(circle at 50% 0%, rgba(99,102,241,.14) 0%, transparent 42%),
+        radial-gradient(circle at 0% 100%, rgba(192,132,252,.10) 0%, transparent 34%),
+        radial-gradient(circle at 100% 24%, rgba(103,232,249,.08) 0%, transparent 26%),
+        linear-gradient(180deg, #050311 0%, #090616 42%, #0c0820 100%);
       z-index:-1;
       pointer-events:none;
     }
@@ -62,6 +76,7 @@
       display:flex;
       flex-direction:column;
       gap:18px;
+      scroll-behavior:smooth;
     }
 
     .topRow{
@@ -141,31 +156,32 @@
       display:flex;
       flex-direction:column;
       gap:12px;
-      background:linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
       border:1px solid var(--panel-border);
       border-radius:22px;
       padding:16px;
       backdrop-filter:blur(15px);
       -webkit-backdrop-filter:blur(15px);
-      box-shadow:0 14px 30px rgba(0,0,0,.14);
+      box-shadow:0 14px 30px rgba(0,0,0,.18);
     }
 
     .panel.orange{
       background:
-        radial-gradient(circle at 12% 15%, var(--orangeSoft), transparent 26%),
-        linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+        radial-gradient(circle at 12% 15%, var(--violet-soft), transparent 28%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
     }
 
     .panel.green{
       background:
-        radial-gradient(circle at 88% 18%, var(--greenSoft), transparent 24%),
-        linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+        radial-gradient(circle at 88% 18%, var(--indigo-soft), transparent 28%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
     }
 
     .panel.red{
       background:
-        radial-gradient(circle at 16% 18%, var(--redSoft), transparent 24%),
-        linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+        radial-gradient(circle at 18% 18%, var(--cyan-soft), transparent 26%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
     }
 
     .panel-title{
@@ -196,7 +212,7 @@
       border:1px solid rgba(255,255,255,.08);
       cursor:pointer;
       transition:.2s ease;
-      min-height:112px;
+      min-height:128px;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
@@ -208,9 +224,9 @@
     }
 
     .choice-card.active{
-      border-color:#818cf8;
-      background:rgba(129,140,248,.15);
-      box-shadow:0 0 0 1px rgba(129,140,248,.15) inset;
+      border-color: rgba(139,92,246,.42);
+      background: rgba(99,102,241,.14);
+      box-shadow: 0 0 0 1px rgba(139,92,246,.16) inset;
     }
 
     .choice-top{
@@ -238,15 +254,15 @@
     }
 
     .choice-badge.free{
-      color:#bbf7d0;
-      background:rgba(34,197,94,.10);
-      border-color:rgba(34,197,94,.20);
+      color: var(--ok);
+      background: var(--ok-bg);
+      border-color: var(--ok-br);
     }
 
     .choice-badge.paid{
-      color:#fde68a;
-      background:rgba(245,158,11,.10);
-      border-color:rgba(245,158,11,.20);
+      color: var(--warn);
+      background: var(--warn-bg);
+      border-color: var(--warn-br);
     }
 
     .choice-desc{
@@ -254,6 +270,25 @@
       line-height:1.45;
       color:rgba(255,255,255,.70);
       word-break:break-word;
+    }
+
+    .jump-link-btn{
+      margin-top:4px;
+      min-height:38px;
+      border:none;
+      border-radius:12px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font:inherit;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+      padding:0 12px;
+    }
+
+    .jump-link-btn:active{
+      transform:scale(.98);
     }
 
     .summary-line{
@@ -305,18 +340,18 @@
     }
 
     .btn.orange{
-      background:linear-gradient(135deg, rgba(249,115,22,.86) 0%, rgba(251,146,60,.74) 100%);
-      color:#180d03;
+      background: linear-gradient(135deg, rgba(139,92,246,.86) 0%, rgba(99,102,241,.74) 100%);
+      color:#f8fafc;
     }
 
     .btn.green{
-      background:linear-gradient(135deg, rgba(132,204,22,.84) 0%, rgba(163,230,53,.72) 100%);
-      color:#112003;
+      background: linear-gradient(135deg, rgba(99,102,241,.82) 0%, rgba(103,232,249,.62) 100%);
+      color:#f8fafc;
     }
 
     .btn.red{
-      background:linear-gradient(135deg, rgba(239,68,68,.84) 0%, rgba(248,113,113,.72) 100%);
-      color:#220708;
+      background: linear-gradient(135deg, rgba(192,132,252,.82) 0%, rgba(139,92,246,.68) 100%);
+      color:#f8fafc;
     }
 
     .btn.ghost{
@@ -415,30 +450,12 @@
       height:40px;
     }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      min-height:36px;
-      padding:0 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      font-size:12px;
-      font-weight:900;
-      color:#fff;
-      background:rgba(255,255,255,.04);
-    }
-
     .status{
       margin-top:12px;
       font-size:13px;
       line-height:1.4;
       color:rgba(255,255,255,.78);
       font-weight:800;
-    }
-
-    .hidden{
-      display:none !important;
     }
 
     .note{
@@ -473,6 +490,10 @@
       transform:translateX(-50%) translateY(0);
     }
 
+    .hidden{
+      display:none !important;
+    }
+
     @media (max-width:390px){
       #pageContent{ padding:12px 14px 22px; }
       .title{ font-size:25px; }
@@ -492,7 +513,7 @@
     <section class="page-head">
       <div class="page-kicker">Translation Settings</div>
       <h1 class="title">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="page-sub">Ses seçimi ve ses oluşturma aynı ekranda. Nerede oluşturulursa oluşturulsun tüm modüllerde ortak görünür.</p>
+      <p class="page-sub">Ses seçimi ve ses oluşturma aynı ekranda. Nerede oluşturulursa oluşturulsun iki yerde de görünür.</p>
     </section>
   </div>
 
@@ -515,6 +536,7 @@
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="mineVoiceDesc">Henüz oluşturulmadı.</div>
+        <button class="jump-link-btn" id="jumpMineBtn" type="button">Oluştur / Güncelle</button>
       </div>
 
       <div class="choice-card" data-voice="second">
@@ -523,6 +545,7 @@
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="secondVoiceDesc">Henüz oluşturulmadı.</div>
+        <button class="jump-link-btn" id="jumpSecondBtn" type="button">Oluştur / Güncelle</button>
       </div>
 
       <div class="choice-card" data-voice="memory">
@@ -531,6 +554,7 @@
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="memoryVoiceDesc">Henüz oluşturulmadı.</div>
+        <button class="jump-link-btn" id="jumpMemoryBtn" type="button">Oluştur / Güncelle</button>
       </div>
     </div>
   </section>
@@ -558,9 +582,9 @@
     </div>
   </section>
 
-  <section class="panel orange">
+  <section class="panel orange" id="mineCreateSection">
     <h2 class="panel-title">Kendi Sesim Oluştur</h2>
-    <p class="panel-sub">İstersen serbest konuş. İstersen metni tane tane oku. Önerilen kayıt süresi 20 saniye.</p>
+    <p class="panel-sub">İstersen serbest konuş. İstersen metni oku. Önerilen kayıt süresi 20 saniye.</p>
 
     <div class="row">
       <div class="mode-switch">
@@ -589,7 +613,7 @@ Doğal ses tonumla konuşmaya devam ediyorum.</div>
     <div class="status" id="mineStatus">Kendi Sesim için kayıt bekleniyor.</div>
   </section>
 
-  <section class="panel green">
+  <section class="panel green" id="secondCreateSection">
     <h2 class="panel-title">2. Ses Oluştur</h2>
     <p class="panel-sub">Eş, sevgili, anne, baba gibi ikinci özel kişi için ortak ses profili.</p>
 
@@ -624,7 +648,7 @@ Doğal ses tonumla konuşmaya devam ediyorum.</div>
     <div class="status" id="secondStatus">2. Ses için isim ve kayıt bekleniyor.</div>
   </section>
 
-  <section class="panel red">
+  <section class="panel red" id="memoryCreateSection">
     <h2 class="panel-title">Hatıra Sesi Oluştur</h2>
     <p class="panel-sub">Yanındaysa mikle kaydet. Elinde kayıt varsa mp3 yükle. Net ve tek kişilik kayıtlar daha iyi sonuç verir.</p>
 
@@ -715,6 +739,14 @@ Doğal ses tonumla konuşmaya devam ediyorum.</div>
     mineVoiceDesc: $("mineVoiceDesc"),
     secondVoiceDesc: $("secondVoiceDesc"),
     memoryVoiceDesc: $("memoryVoiceDesc"),
+
+    jumpMineBtn: $("jumpMineBtn"),
+    jumpSecondBtn: $("jumpSecondBtn"),
+    jumpMemoryBtn: $("jumpMemoryBtn"),
+
+    mineCreateSection: $("mineCreateSection"),
+    secondCreateSection: $("secondCreateSection"),
+    memoryCreateSection: $("memoryCreateSection"),
 
     mineFreeModeBtn: $("mineFreeModeBtn"),
     mineReadModeBtn: $("mineReadModeBtn"),
@@ -854,6 +886,14 @@ Doğal ses tonumla konuşmaya devam ediyorum.</div>
     if(UI.poolSummary) UI.poolSummary.textContent = "Ortak ses havuzu aktif";
   }
 
+  function jumpToSection(el) {
+    if (!el) return;
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
   async function loadProfileVoiceState() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -862,7 +902,6 @@ Doğal ses tonumla konuşmaya devam ediyorum.</div>
     const { data: profile, error } = await supabase
       .from("profiles")
       .select(`
-        avatar_url,
         voice_sample_path,
         tts_voice_ready,
         tts_voice_id,
@@ -1192,6 +1231,30 @@ Doğal ses tonumla konuşmaya devam ediyorum.</div>
         refreshSummary();
         showToast("Çeviri modu güncellendi");
       });
+    });
+
+    UI.jumpMineBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      voiceMode = "mine";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.mineCreateSection);
+    });
+
+    UI.jumpSecondBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      voiceMode = "second";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.secondCreateSection);
+    });
+
+    UI.jumpMemoryBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      voiceMode = "memory";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.memoryCreateSection);
     });
 
     UI.mineFreeModeBtn?.addEventListener("click", () => {
