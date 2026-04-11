@@ -21,10 +21,11 @@
       --green: rgba(163,230,53,.72);
       --green-soft: rgba(163,230,53,.10);
 
-      --red: rgba(239,68,68,.68);
-      --red-soft: rgba(239,68,68,.08);
+      --red: rgba(239,68,68,.75);
+      --red-soft: rgba(239,68,68,.10);
 
       --chat-grad: linear-gradient(135deg, rgba(249,115,22,.85) 0%, rgba(251,146,60,.72) 35%, rgba(163,230,53,.70) 100%);
+      --danger-grad: linear-gradient(135deg, rgba(239,68,68,.80) 0%, rgba(248,113,113,.64) 100%);
     }
 
     *{
@@ -309,6 +310,11 @@
       color:#fff;
     }
 
+    .btn.red{
+      background: var(--danger-grad);
+      color:#fff;
+    }
+
     .btn[disabled]{
       opacity:.45;
       cursor:not-allowed;
@@ -381,7 +387,7 @@
       min-height:48px;
       border:none;
       border-radius:16px;
-      background: linear-gradient(135deg, rgba(239,68,68,.74) 0%, rgba(248,113,113,.60) 100%);
+      background: var(--danger-grad);
       color:#fff;
       font:inherit;
       font-size:14px;
@@ -1227,10 +1233,6 @@
     action();
   }
 
-  function requestRecordStart(action) {
-    openRecordInfoModal(action);
-  }
-
   function bindEvents() {
     UI.backBtn.addEventListener("click", () => attemptLeave(goBackToChat));
 
@@ -1382,21 +1384,27 @@
     UI.recordInfoModal.classList.remove("open");
   }
 
-  paintSelections();
-  refreshSummary();
-  setButtonState(UI.listenMineBtn, false);
-  setButtonState(UI.listenSecondBtn, false);
-  setButtonState(UI.listenMemoryBtn, false);
-  setButtonState(UI.saveMineBtn, false);
-  setButtonState(UI.saveSecondBtn, false);
-  setTimer(UI.mineTimer, MAX_RECORD_SECONDS);
-  setTimer(UI.secondTimer, MAX_RECORD_SECONDS);
-  setProgress(UI.mineProgress, 0);
-  setProgress(UI.secondProgress, 0);
+  async function init() {
+    paintSelections();
+    refreshSummary();
 
-  const ok = await bootAuth();
-  if (ok) bindEvents();
+    setButtonState(UI.listenMineBtn, false);
+    setButtonState(UI.listenSecondBtn, false);
+    setButtonState(UI.listenMemoryBtn, false);
+    setButtonState(UI.saveMineBtn, false);
+    setButtonState(UI.saveSecondBtn, false);
+
+    setTimer(UI.mineTimer, MAX_RECORD_SECONDS);
+    setTimer(UI.secondTimer, MAX_RECORD_SECONDS);
+    setProgress(UI.mineProgress, 0);
+    setProgress(UI.secondProgress, 0);
+
+    const ok = await bootAuth();
+    if (ok) bindEvents();
+  }
+
+  init();
 </script>
 
 </body>
-  </html>
+</html>
