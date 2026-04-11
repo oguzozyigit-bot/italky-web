@@ -15,17 +15,14 @@
       --muted: rgba(255,255,255,.60);
       --panel-border: rgba(255,255,255,.08);
 
-      --orange: rgba(249,115,22,.72);
       --orange-soft: rgba(249,115,22,.10);
-
-      --green: rgba(163,230,53,.72);
       --green-soft: rgba(163,230,53,.10);
-
-      --red: rgba(239,68,68,.75);
       --red-soft: rgba(239,68,68,.10);
 
       --chat-grad: linear-gradient(135deg, rgba(249,115,22,.85) 0%, rgba(251,146,60,.72) 35%, rgba(163,230,53,.70) 100%);
-      --danger-grad: linear-gradient(135deg, rgba(239,68,68,.80) 0%, rgba(248,113,113,.64) 100%);
+      --danger-grad: linear-gradient(135deg, rgba(239,68,68,.82) 0%, rgba(248,113,113,.66) 100%);
+      --green-grad: linear-gradient(135deg, rgba(132,204,22,.76) 0%, rgba(163,230,53,.64) 100%);
+      --orange-grad: linear-gradient(135deg, rgba(249,115,22,.82) 0%, rgba(251,146,60,.70) 100%);
     }
 
     *{
@@ -148,8 +145,6 @@
       backdrop-filter:blur(15px);
       -webkit-backdrop-filter:blur(15px);
       box-shadow:0 14px 30px rgba(0,0,0,.18);
-      position:relative;
-      z-index:1;
     }
 
     .panel.orange{
@@ -300,20 +295,9 @@
       border:1px solid var(--panel-border);
     }
 
-    .btn.orange{
-      background: linear-gradient(135deg, rgba(249,115,22,.80) 0%, rgba(251,146,60,.70) 100%);
-      color:#fff;
-    }
-
-    .btn.green{
-      background: linear-gradient(135deg, rgba(132,204,22,.72) 0%, rgba(163,230,53,.62) 100%);
-      color:#fff;
-    }
-
-    .btn.red{
-      background: var(--danger-grad);
-      color:#fff;
-    }
+    .btn.orange{ background:var(--orange-grad); color:#fff; }
+    .btn.green{ background:var(--green-grad); color:#fff; }
+    .btn.red{ background:var(--danger-grad); color:#fff; }
 
     .btn[disabled]{
       opacity:.45;
@@ -325,8 +309,6 @@
       gap:10px;
       margin-top:12px;
       flex-wrap:wrap;
-      position:relative;
-      z-index:2;
     }
 
     .buttons-3{
@@ -387,7 +369,7 @@
       min-height:48px;
       border:none;
       border-radius:16px;
-      background: var(--danger-grad);
+      background:var(--danger-grad);
       color:#fff;
       font:inherit;
       font-size:14px;
@@ -912,6 +894,7 @@
   }
 
   function setButtonState(button, enabled) {
+    if (!button) return;
     button.disabled = !enabled;
   }
 
@@ -958,50 +941,49 @@
   }
 
   async function loadProfileVoiceState() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    currentUser = user;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      currentUser = user;
 
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select(`
-        voice_sample_path,
-        tts_voice_ready,
-        tts_voice_id,
-        second_voice_name,
-        second_voice_sample_path,
-        second_tts_voice_ready,
-        second_tts_voice_id,
-        memory_voice_name,
-        memory_voice_sample_path,
-        memory_tts_voice_ready,
-        memory_tts_voice_id
-      `)
-      .eq("id", user.id)
-      .maybeSingle();
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select(`
+          voice_sample_path,
+          tts_voice_ready,
+          tts_voice_id,
+          second_voice_name,
+          second_voice_sample_path,
+          second_tts_voice_ready,
+          second_tts_voice_id,
+          memory_voice_name,
+          memory_voice_sample_path,
+          memory_tts_voice_ready,
+          memory_tts_voice_id
+        `)
+        .eq("id", user.id)
+        .maybeSingle();
 
-    if (error) {
-      console.warn("voice state read error", error);
-      return;
-    }
+      if (error) return;
 
-    profileVoiceState.mineReady = !!profile?.voice_sample_path || (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
-    profileVoiceState.secondReady = !!profile?.second_voice_sample_path || (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
-    profileVoiceState.memoryReady = !!profile?.memory_voice_sample_path || (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+      profileVoiceState.mineReady = !!profile?.voice_sample_path || (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+      profileVoiceState.secondReady = !!profile?.second_voice_sample_path || (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+      profileVoiceState.memoryReady = !!profile?.memory_voice_sample_path || (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
 
-    const secondName = String(profile?.second_voice_name || "2. Ses").trim() || "2. Ses";
-    const memoryName = String(profile?.memory_voice_name || "Hatıra Sesi").trim() || "Hatıra Sesi";
+      const secondName = String(profile?.second_voice_name || "2. Ses").trim() || "2. Ses";
+      const memoryName = String(profile?.memory_voice_name || "Hatıra Sesi").trim() || "Hatıra Sesi";
 
-    UI.mineVoiceDesc.textContent = profileVoiceState.mineReady ? "Hazır. Ortak kullanıma açık." : "Henüz oluşturulmadı.";
-    UI.secondVoiceDesc.textContent = profileVoiceState.secondReady ? `${secondName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
-    UI.memoryVoiceDesc.textContent = profileVoiceState.memoryReady ? `${memoryName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
+      UI.mineVoiceDesc.textContent = profileVoiceState.mineReady ? "Hazır. Ortak kullanıma açık." : "Henüz oluşturulmadı.";
+      UI.secondVoiceDesc.textContent = profileVoiceState.secondReady ? `${secondName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
+      UI.memoryVoiceDesc.textContent = profileVoiceState.memoryReady ? `${memoryName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
 
-    if (profileVoiceState.mineReady) UI.mineStatus.textContent = "Kendi Sesim hazır. Sohbet AI içinde kullanılacak.";
-    if (profileVoiceState.secondReady) UI.secondStatus.textContent = `${secondName} hazır. Sohbet AI içinde kullanılacak.`;
-    if (profileVoiceState.memoryReady) UI.memoryStatus.textContent = `${memoryName} hazır. Sohbet AI içinde kullanılacak.`;
+      if (profileVoiceState.mineReady) UI.mineStatus.textContent = "Kendi Sesim hazır. Sohbet AI içinde kullanılacak.";
+      if (profileVoiceState.secondReady) UI.secondStatus.textContent = `${secondName} hazır. Sohbet AI içinde kullanılacak.`;
+      if (profileVoiceState.memoryReady) UI.memoryStatus.textContent = `${memoryName} hazır. Sohbet AI içinde kullanılacak.`;
 
-    if (secondName) UI.secondVoiceNameInput.value = secondName;
-    if (memoryName) UI.memoryVoiceNameInput.value = memoryName;
+      if (secondName) UI.secondVoiceNameInput.value = secondName;
+      if (memoryName) UI.memoryVoiceNameInput.value = memoryName;
+    } catch {}
   }
 
   async function bootAuth() {
@@ -1225,16 +1207,11 @@
     location.href = "/pages/italkyai_chat.html";
   }
 
-  function attemptLeave(action) {
-    if (hasUnsavedChanges()) {
-      openLeaveModal(action);
-      return;
-    }
-    action();
-  }
-
   function bindEvents() {
-    UI.backBtn.addEventListener("click", () => attemptLeave(goBackToChat));
+    UI.backBtn.addEventListener("click", () => {
+      if (hasUnsavedChanges()) openLeaveModal(goBackToChat);
+      else goBackToChat();
+    });
 
     UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
       card.addEventListener("click", () => {
@@ -1296,9 +1273,7 @@
     UI.saveMineBtn.addEventListener("click", saveMineVoice);
     UI.saveSecondBtn.addEventListener("click", saveSecondVoice);
 
-    UI.memoryPickBtn.addEventListener("click", () => {
-      UI.memoryMp3Input.click();
-    });
+    UI.memoryPickBtn.addEventListener("click", () => UI.memoryMp3Input.click());
 
     UI.memoryMp3Input.addEventListener("change", (e) => {
       const file = e.target.files?.[0] || null;
@@ -1319,11 +1294,12 @@
     UI.saveBtn.addEventListener("click", () => {
       saveSettings();
       showToast("Ayarlar kaydedildi");
-      setTimeout(() => goBackToChat(), 350);
+      setTimeout(goBackToChat, 350);
     });
 
     UI.cancelBtn.addEventListener("click", () => {
-      attemptLeave(goBackToChat);
+      if (hasUnsavedChanges()) openLeaveModal(goBackToChat);
+      else goBackToChat();
     });
 
     UI.replaceNoBtn.addEventListener("click", closeReplaceModal);
@@ -1399,12 +1375,12 @@
     setProgress(UI.mineProgress, 0);
     setProgress(UI.secondProgress, 0);
 
-    const ok = await bootAuth();
-    if (ok) bindEvents();
+    bindEvents();
+    await bootAuth();
   }
 
   init();
 </script>
 
 </body>
-</html>
+        </html>
