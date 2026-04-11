@@ -7,101 +7,476 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
     :root{
       --txt: rgba(255,255,255,.96);
-      --muted: rgba(255,255,255,.56);
-      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
+      --muted: rgba(255,255,255,.60);
       --panel-border: rgba(255,255,255,.08);
+      --soft: rgba(255,255,255,.04);
+
+      --orange: rgba(249,115,22,.78);
+      --orangeSoft: rgba(251,146,60,.12);
+
+      --green: rgba(132,204,22,.78);
+      --greenSoft: rgba(163,230,53,.12);
+
+      --red: rgba(239,68,68,.78);
+      --redSoft: rgba(248,113,113,.12);
+
+      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
     }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
     html,body{
-      margin:0;padding:0;width:100%;min-height:100%;
-      background:#02000f;color:var(--txt);font-family:'Outfit',sans-serif;
+      margin:0;
+      padding:0;
+      width:100%;
+      min-height:100%;
+      background:#02000f;
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
     }
+
     body::before{
-      content:"";position:fixed;inset:0;
+      content:"";
+      position:fixed;
+      inset:0;
       background:
         radial-gradient(circle at 50% 0%, rgba(129,140,248,.12) 0%, transparent 50%),
         radial-gradient(circle at 10% 100%, rgba(244,114,182,.08) 0%, transparent 35%);
-      z-index:-1;pointer-events:none;
+      z-index:-1;
+      pointer-events:none;
     }
+
     #pageContent{
-      max-width:560px;margin:0 auto;padding:14px 16px 28px;
-      display:flex;flex-direction:column;gap:18px;
+      max-width:560px;
+      margin:0 auto;
+      padding:14px 16px 28px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
     }
-    .topRow{display:flex;align-items:center;gap:12px}
+
+    .topRow{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
     .backBtn{
-      width:42px;height:42px;border-radius:14px;border:1px solid var(--panel-border);
-      background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--panel-border);
+      background:rgba(255,255,255,.05);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
     }
-    .backBtn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.5}
-    .page-head{display:flex;flex-direction:column;gap:8px;min-width:0}
+
+    .backBtn:active{ transform:scale(.96); }
+
+    .backBtn svg{
+      width:20px;
+      height:20px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2.5;
+    }
+
+    .page-head{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:0;
+    }
+
     .page-kicker{
-      display:inline-flex;width:max-content;align-items:center;gap:8px;padding:8px 12px;
-      border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--panel-border);
-      font-size:11px;font-weight:800;letter-spacing:.5px;color:rgba(255,255,255,.82);
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--panel-border);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.5px;
+      color:rgba(255,255,255,.82);
     }
+
     .title{
-      font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin:0;line-height:1;letter-spacing:-1px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:28px;
+      font-weight:700;
+      margin:0;
+      line-height:1;
+      letter-spacing:-1px;
     }
+
     .title .ai{
-      background:var(--ai-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
-    .page-sub{margin:0;font-size:12px;line-height:1.45;color:var(--muted)}
-    .settings-panel,.summary-card{
-      display:flex;flex-direction:column;gap:12px;
+
+    .page-sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .panel{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
       background:linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
-      border:1px solid var(--panel-border);border-radius:22px;padding:16px;
-      backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);box-shadow:0 14px 30px rgba(0,0,0,.14);
+      border:1px solid var(--panel-border);
+      border-radius:22px;
+      padding:16px;
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      box-shadow:0 14px 30px rgba(0,0,0,.14);
     }
+
+    .panel.orange{
+      background:
+        radial-gradient(circle at 12% 15%, var(--orangeSoft), transparent 26%),
+        linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+    }
+
+    .panel.green{
+      background:
+        radial-gradient(circle at 88% 18%, var(--greenSoft), transparent 24%),
+        linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+    }
+
+    .panel.red{
+      background:
+        radial-gradient(circle at 16% 18%, var(--redSoft), transparent 24%),
+        linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+    }
+
     .panel-title{
-      margin:0;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:900;color:#fff;
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:16px;
+      font-weight:900;
+      color:#fff;
     }
-    .panel-sub{margin:0;font-size:11px;line-height:1.45;color:var(--muted)}
-    .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .panel-sub{
+      margin:0;
+      font-size:11px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .choice-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
     .choice-card{
-      padding:14px;border-radius:18px;background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:.2s ease;min-height:112px;
-      display:flex;flex-direction:column;justify-content:space-between;gap:8px;
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      cursor:pointer;
+      transition:.2s ease;
+      min-height:112px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
     }
-    .choice-card:active{transform:scale(.985)}
+
+    .choice-card:active{
+      transform:scale(.985);
+    }
+
     .choice-card.active{
-      border-color:#818cf8;background:rgba(129,140,248,.15);box-shadow:0 0 0 1px rgba(129,140,248,.15) inset;
+      border-color:#818cf8;
+      background:rgba(129,140,248,.15);
+      box-shadow:0 0 0 1px rgba(129,140,248,.15) inset;
     }
-    .choice-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-    .choice-name{font-size:14px;font-weight:900;color:#fff;line-height:1.2}
+
+    .choice-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .choice-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+    }
+
     .choice-badge{
-      font-size:10px;font-weight:900;letter-spacing:.4px;padding:6px 8px;border-radius:999px;white-space:nowrap;border:1px solid rgba(255,255,255,.12);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.4px;
+      padding:6px 8px;
+      border-radius:999px;
+      white-space:nowrap;
+      border:1px solid rgba(255,255,255,.12);
     }
-    .choice-badge.free{color:#bbf7d0;background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.20)}
-    .choice-badge.paid{color:#fde68a;background:rgba(245,158,11,.10);border-color:rgba(245,158,11,.20)}
-    .choice-desc{font-size:11px;line-height:1.45;color:rgba(255,255,255,.70);word-break:break-word}
-    .choice-link{font-size:11px;font-weight:900;color:#c7d2fe;text-decoration:none}
-    .summary-line{font-size:13px;color:#fff;line-height:1.45}
-    .summary-line span{color:rgba(255,255,255,.72)}
-    .action-grid{display:grid;grid-template-columns:1fr;gap:12px}
+
+    .choice-badge.free{
+      color:#bbf7d0;
+      background:rgba(34,197,94,.10);
+      border-color:rgba(34,197,94,.20);
+    }
+
+    .choice-badge.paid{
+      color:#fde68a;
+      background:rgba(245,158,11,.10);
+      border-color:rgba(245,158,11,.20);
+    }
+
+    .choice-desc{
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.70);
+      word-break:break-word;
+    }
+
+    .summary-line{
+      font-size:13px;
+      color:#fff;
+      line-height:1.45;
+    }
+
+    .summary-line span{
+      color:rgba(255,255,255,.72);
+    }
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
     .btn{
-      min-height:54px;border-radius:18px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;border:none;transition:all .2s;text-decoration:none;
+      min-height:48px;
+      border-radius:16px;
+      font-family:inherit;
+      font-weight:800;
+      font-size:14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      transition:all .2s;
+      text-decoration:none;
+      padding:0 16px;
     }
-    .btn:active{transform:scale(.98)}
-    .btn-primary{background:var(--ai-grad);color:#05060d;box-shadow:0 12px 26px rgba(129,140,248,.18)}
-    .btn-secondary{background:rgba(255,255,255,.05);color:#fff;border:1px solid var(--panel-border)}
-    .note{font-size:11px;line-height:1.5;color:var(--muted);text-align:center;padding:0 4px}
+
+    .btn:active{
+      transform:scale(.98);
+    }
+
+    .btn-primary{
+      background:var(--ai-grad);
+      color:#05060d;
+      box-shadow:0 12px 26px rgba(129,140,248,.18);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      border:1px solid var(--panel-border);
+    }
+
+    .btn.orange{
+      background:linear-gradient(135deg, rgba(249,115,22,.86) 0%, rgba(251,146,60,.74) 100%);
+      color:#180d03;
+    }
+
+    .btn.green{
+      background:linear-gradient(135deg, rgba(132,204,22,.84) 0%, rgba(163,230,53,.72) 100%);
+      color:#112003;
+    }
+
+    .btn.red{
+      background:linear-gradient(135deg, rgba(239,68,68,.84) 0%, rgba(248,113,113,.72) 100%);
+      color:#220708;
+    }
+
+    .btn.ghost{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+
+    .input{
+      width:100%;
+      min-height:50px;
+      border:none;
+      outline:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      padding:14px;
+      font:inherit;
+      font-size:15px;
+      font-weight:800;
+    }
+
+    .mode-switch{
+      display:flex;
+      gap:8px;
+      width:100%;
+    }
+
+    .mode-btn{
+      flex:1;
+      min-height:42px;
+      border:none;
+      border-radius:14px;
+      cursor:pointer;
+      font:inherit;
+      font-size:12px;
+      font-weight:900;
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .mode-btn.active{
+      background:rgba(255,255,255,.14);
+      border-color:rgba(255,255,255,.18);
+    }
+
+    .read-box{
+      width:100%;
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:14px;
+      line-height:1.55;
+      color:#fff;
+      font-weight:700;
+      white-space:pre-line;
+    }
+
+    .upload-box{
+      width:100%;
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px dashed rgba(255,255,255,.14);
+    }
+
+    .upload-input{
+      width:100%;
+      color:#fff;
+      font:inherit;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .audio-box{
+      width:100%;
+      margin-top:12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      padding:10px;
+    }
+
+    audio{
+      width:100%;
+      height:40px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:36px;
+      padding:0 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      font-size:12px;
+      font-weight:900;
+      color:#fff;
+      background:rgba(255,255,255,.04);
+    }
+
+    .status{
+      margin-top:12px;
+      font-size:13px;
+      line-height:1.4;
+      color:rgba(255,255,255,.78);
+      font-weight:800;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .note{
+      font-size:11px;
+      line-height:1.5;
+      color:var(--muted);
+      text-align:center;
+      padding:0 4px;
+    }
+
     .toast{
-      position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-120px);
-      background:rgba(10,10,18,.92);border:1px solid rgba(165,180,252,.35);padding:10px 14px;border-radius:999px;
-      color:#fff;z-index:999999;font-weight:900;font-size:12px;transition:.25s;backdrop-filter:blur(12px);
-      pointer-events:none;max-width:min(92vw,520px);text-align:center;
+      position:fixed;
+      left:50%;
+      top:18px;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding:10px 14px;
+      border-radius:999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter:blur(12px);
+      pointer-events:none;
+      max-width:min(92vw,520px);
+      text-align:center;
     }
-    .toast.show{transform:translateX(-50%) translateY(0)}
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
     @media (max-width:390px){
-      #pageContent{padding:12px 14px 22px}
-      .title{font-size:25px}
-      .choice-grid{grid-template-columns:1fr}
+      #pageContent{ padding:12px 14px 22px; }
+      .title{ font-size:25px; }
+      .choice-grid{ grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -117,11 +492,11 @@
     <section class="page-head">
       <div class="page-kicker">Translation Settings</div>
       <h1 class="title">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="page-sub">Ses seçimini ve çeviri modunu buradan belirle. Seçimlerin FaceToFace ve SideToSide içinde ortak kullanılır.</p>
+      <p class="page-sub">Ses seçimi ve ses oluşturma aynı ekranda. Nerede oluşturulursa oluşturulsun tüm modüllerde ortak görünür.</p>
     </section>
   </div>
 
-  <section class="settings-panel">
+  <section class="panel">
     <h2 class="panel-title">Ses Seçimi</h2>
     <p class="panel-sub">Tüm canlı çeviri modülleri bu ortak ses havuzunu kullanır.</p>
 
@@ -131,7 +506,7 @@
           <div class="choice-name">TTS</div>
           <div class="choice-badge free">Ücretsiz</div>
         </div>
-        <div class="choice-desc">Sistem uygun ücretsiz sesi kullanır.</div>
+        <div class="choice-desc">Temel ücretsiz ses. Kayıt gerektirmez.</div>
       </div>
 
       <div class="choice-card" data-voice="mine">
@@ -140,7 +515,6 @@
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="mineVoiceDesc">Henüz oluşturulmadı.</div>
-        <a href="/pages/voice_profile.html" class="choice-link">Ses merkezi</a>
       </div>
 
       <div class="choice-card" data-voice="second">
@@ -149,7 +523,6 @@
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="secondVoiceDesc">Henüz oluşturulmadı.</div>
-        <a href="/pages/voice_profile.html" class="choice-link">Ses merkezi</a>
       </div>
 
       <div class="choice-card" data-voice="memory">
@@ -158,12 +531,11 @@
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="memoryVoiceDesc">Henüz oluşturulmadı.</div>
-        <a href="/pages/voice_profile.html" class="choice-link">Ses merkezi</a>
       </div>
     </div>
   </section>
 
-  <section class="settings-panel">
+  <section class="panel">
     <h2 class="panel-title">Çeviri Modu</h2>
     <p class="panel-sub">Popup’taki mantığın aynısı burada sabit ayar olarak çalışır.</p>
 
@@ -186,9 +558,125 @@
     </div>
   </section>
 
-  <section class="summary-card">
+  <section class="panel orange">
+    <h2 class="panel-title">Kendi Sesim Oluştur</h2>
+    <p class="panel-sub">İstersen serbest konuş. İstersen metni tane tane oku. Önerilen kayıt süresi 20 saniye.</p>
+
+    <div class="row">
+      <div class="mode-switch">
+        <button class="mode-btn active" id="mineFreeModeBtn" type="button">Serbest Konuş</button>
+        <button class="mode-btn" id="mineReadModeBtn" type="button">Metni Oku</button>
+      </div>
+    </div>
+
+    <div class="row hidden" id="mineReadBoxWrap">
+      <div class="read-box">Merhaba.
+Bu kayıt ses profilimi oluşturmak için alınıyor.
+Kelimeleri net ve sakin söylüyorum.
+Doğal ses tonumla konuşmaya devam ediyorum.</div>
+    </div>
+
+    <div class="row">
+      <button class="btn orange" id="recordMineBtn" type="button">Kaydı Başlat</button>
+      <button class="btn ghost" id="stopMineBtn" type="button">Durdur</button>
+      <button class="btn green" id="saveMineBtn" type="button">Kaydet</button>
+    </div>
+
+    <div class="audio-box">
+      <audio id="mineAudio" controls></audio>
+    </div>
+
+    <div class="status" id="mineStatus">Kendi Sesim için kayıt bekleniyor.</div>
+  </section>
+
+  <section class="panel green">
+    <h2 class="panel-title">2. Ses Oluştur</h2>
+    <p class="panel-sub">Eş, sevgili, anne, baba gibi ikinci özel kişi için ortak ses profili.</p>
+
+    <div class="row">
+      <input class="input" id="secondVoiceNameInput" type="text" placeholder="Örn: Eşim, Sevgilim, Annem, Babam">
+    </div>
+
+    <div class="row">
+      <div class="mode-switch">
+        <button class="mode-btn active" id="secondFreeModeBtn" type="button">Serbest Konuş</button>
+        <button class="mode-btn" id="secondReadModeBtn" type="button">Metni Oku</button>
+      </div>
+    </div>
+
+    <div class="row hidden" id="secondReadBoxWrap">
+      <div class="read-box">Merhaba.
+Bu kayıt ses profilimi oluşturmak için alınıyor.
+Kelimeleri net ve sakin söylüyorum.
+Doğal ses tonumla konuşmaya devam ediyorum.</div>
+    </div>
+
+    <div class="row">
+      <button class="btn green" id="recordSecondBtn" type="button">Kaydı Başlat</button>
+      <button class="btn ghost" id="stopSecondBtn" type="button">Durdur</button>
+      <button class="btn orange" id="saveSecondBtn" type="button">Kaydet</button>
+    </div>
+
+    <div class="audio-box">
+      <audio id="secondAudio" controls></audio>
+    </div>
+
+    <div class="status" id="secondStatus">2. Ses için isim ve kayıt bekleniyor.</div>
+  </section>
+
+  <section class="panel red">
+    <h2 class="panel-title">Hatıra Sesi Oluştur</h2>
+    <p class="panel-sub">Yanındaysa mikle kaydet. Elinde kayıt varsa mp3 yükle. Net ve tek kişilik kayıtlar daha iyi sonuç verir.</p>
+
+    <div class="row">
+      <input class="input" id="memoryVoiceNameInput" type="text" placeholder="Örn: Babam, Annem, Dedem">
+    </div>
+
+    <div class="row">
+      <div class="mode-switch">
+        <button class="mode-btn active" id="memoryMicModeBtn" type="button">Mikle Kaydet</button>
+        <button class="mode-btn" id="memoryMp3ModeBtn" type="button">mp3 Yükle</button>
+      </div>
+    </div>
+
+    <div class="row" id="memoryMicPanel">
+      <div class="mode-switch">
+        <button class="mode-btn active" id="memoryFreeModeBtn" type="button">Serbest Konuş</button>
+        <button class="mode-btn" id="memoryReadModeBtn" type="button">Metni Oku</button>
+      </div>
+    </div>
+
+    <div class="row hidden" id="memoryReadBoxWrap">
+      <div class="read-box">Merhaba.
+Bu kayıt ses profilimi oluşturmak için alınıyor.
+Kelimeleri net ve sakin söylüyorum.
+Doğal ses tonumla konuşmaya devam ediyorum.</div>
+    </div>
+
+    <div class="row" id="memoryMicActions">
+      <button class="btn red" id="recordMemoryBtn" type="button">Kaydı Başlat</button>
+      <button class="btn ghost" id="stopMemoryBtn" type="button">Durdur</button>
+      <button class="btn green" id="saveMemoryBtn" type="button">Kaydet</button>
+    </div>
+
+    <div class="row hidden" id="memoryUploadPanel">
+      <div class="upload-box">
+        <input class="upload-input" id="memoryMp3Input" type="file" accept=".mp3,audio/mpeg">
+      </div>
+      <button class="btn green" id="saveMemoryMp3Btn" type="button">mp3 Kaydet</button>
+    </div>
+
+    <div class="audio-box">
+      <audio id="memoryAudio" controls></audio>
+    </div>
+
+    <div class="status" id="memoryStatus">Hatıra Sesi için mik ya da mp3 bekleniyor.</div>
+  </section>
+
+  <section class="panel">
     <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">TTS</span></div>
     <div class="summary-line"><strong>Seçili Mod:</strong> <span id="translateSummary">Translate</span></div>
+    <div class="summary-line"><strong>Durum:</strong> <span id="poolSummary">Ortak ses havuzu aktif</span></div>
   </section>
 
   <section class="action-grid">
@@ -197,7 +685,7 @@
   </section>
 
   <div class="note">
-    Burada kaydettiğin seçimler FaceToFace, SideToSide ve diğer ortak modüllerde kullanılır.
+    Burada oluşturulan tüm sesler Sohbet AI ve diğer ortak modüllerde görünür.
   </div>
 
 </div>
@@ -211,19 +699,72 @@
   const TRANSLATE_KEY = "facetoface_translate_mode";
   const LEGACY_TTS_KEY = "tts_voice";
   const LEGACY_LIVE_KEY = "live_interpreter_voice";
+  const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
 
-  const voiceGrid = document.getElementById("voiceGrid");
-  const translateGrid = document.getElementById("translateGrid");
-  const voiceSummary = document.getElementById("voiceSummary");
-  const translateSummary = document.getElementById("translateSummary");
-  const saveBtn = document.getElementById("saveBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
-  const backBtn = document.getElementById("backBtn");
-  const toastEl = document.getElementById("toast");
+  const $ = (id) => document.getElementById(id);
 
-  const mineVoiceDesc = document.getElementById("mineVoiceDesc");
-  const secondVoiceDesc = document.getElementById("secondVoiceDesc");
-  const memoryVoiceDesc = document.getElementById("memoryVoiceDesc");
+  const UI = {
+    backBtn: $("backBtn"),
+
+    voiceGrid: $("voiceGrid"),
+    translateGrid: $("translateGrid"),
+    voiceSummary: $("voiceSummary"),
+    translateSummary: $("translateSummary"),
+    poolSummary: $("poolSummary"),
+
+    mineVoiceDesc: $("mineVoiceDesc"),
+    secondVoiceDesc: $("secondVoiceDesc"),
+    memoryVoiceDesc: $("memoryVoiceDesc"),
+
+    mineFreeModeBtn: $("mineFreeModeBtn"),
+    mineReadModeBtn: $("mineReadModeBtn"),
+    mineReadBoxWrap: $("mineReadBoxWrap"),
+
+    secondFreeModeBtn: $("secondFreeModeBtn"),
+    secondReadModeBtn: $("secondReadModeBtn"),
+    secondReadBoxWrap: $("secondReadBoxWrap"),
+
+    memoryMicModeBtn: $("memoryMicModeBtn"),
+    memoryMp3ModeBtn: $("memoryMp3ModeBtn"),
+    memoryMicPanel: $("memoryMicPanel"),
+    memoryMicActions: $("memoryMicActions"),
+    memoryUploadPanel: $("memoryUploadPanel"),
+    memoryFreeModeBtn: $("memoryFreeModeBtn"),
+    memoryReadModeBtn: $("memoryReadModeBtn"),
+    memoryReadBoxWrap: $("memoryReadBoxWrap"),
+    memoryMp3Input: $("memoryMp3Input"),
+
+    secondVoiceNameInput: $("secondVoiceNameInput"),
+    memoryVoiceNameInput: $("memoryVoiceNameInput"),
+
+    recordMineBtn: $("recordMineBtn"),
+    stopMineBtn: $("stopMineBtn"),
+    saveMineBtn: $("saveMineBtn"),
+
+    recordSecondBtn: $("recordSecondBtn"),
+    stopSecondBtn: $("stopSecondBtn"),
+    saveSecondBtn: $("saveSecondBtn"),
+
+    recordMemoryBtn: $("recordMemoryBtn"),
+    stopMemoryBtn: $("stopMemoryBtn"),
+    saveMemoryBtn: $("saveMemoryBtn"),
+    saveMemoryMp3Btn: $("saveMemoryMp3Btn"),
+
+    mineAudio: $("mineAudio"),
+    secondAudio: $("secondAudio"),
+    memoryAudio: $("memoryAudio"),
+
+    mineStatus: $("mineStatus"),
+    secondStatus: $("secondStatus"),
+    memoryStatus: $("memoryStatus"),
+
+    saveBtn: $("saveBtn"),
+    cancelBtn: $("cancelBtn"),
+
+    toast: $("toast")
+  };
+
+  let currentUser = null;
 
   let voiceMode = normalizeVoiceMode(
     localStorage.getItem(VOICE_KEY) ||
@@ -235,6 +776,28 @@
   let translateMode = normalizeTranslateMode(
     localStorage.getItem(TRANSLATE_KEY) || "normal"
   );
+
+  let mineMode = "free";
+  let secondMode = "free";
+  let memoryInputMode = "mic";
+  let memoryMicMode = "free";
+
+  let mineRecorder = null;
+  let secondRecorder = null;
+  let memoryRecorder = null;
+
+  let mineChunks = [];
+  let secondChunks = [];
+  let memoryChunks = [];
+
+  let mineBlob = null;
+  let secondBlob = null;
+  let memoryBlob = null;
+  let memoryMp3File = null;
+
+  let mineStream = null;
+  let secondStream = null;
+  let memoryStream = null;
 
   function normalizeVoiceMode(v){
     const val = String(v || "").trim().toLowerCase();
@@ -261,90 +824,339 @@
   }
 
   function showToast(msg){
-    if(!toastEl) return;
-    toastEl.textContent = String(msg || "");
-    toastEl.classList.add("show");
+    if(!UI.toast) return;
+    UI.toast.textContent = String(msg || "");
+    UI.toast.classList.add("show");
     clearTimeout(window.__translationSettingsToast);
     window.__translationSettingsToast = setTimeout(() => {
-      toastEl.classList.remove("show");
+      UI.toast.classList.remove("show");
     }, 1600);
   }
 
+  function setActive(btnA, btnB, isA = true) {
+    btnA?.classList.toggle("active", isA);
+    btnB?.classList.toggle("active", !isA);
+  }
+
   function paintSelections(){
-    voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
+    UI.voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
       card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === voiceMode);
     });
 
-    translateGrid?.querySelectorAll(".choice-card").forEach(card => {
+    UI.translateGrid?.querySelectorAll(".choice-card").forEach(card => {
       card.classList.toggle("active", normalizeTranslateMode(card.dataset.translate) === translateMode);
     });
   }
 
   function refreshSummary(){
-    if(voiceSummary) voiceSummary.textContent = voiceLabel(voiceMode);
-    if(translateSummary) translateSummary.textContent = translateLabel(translateMode);
+    if(UI.voiceSummary) UI.voiceSummary.textContent = voiceLabel(voiceMode);
+    if(UI.translateSummary) UI.translateSummary.textContent = translateLabel(translateMode);
+    if(UI.poolSummary) UI.poolSummary.textContent = "Ortak ses havuzu aktif";
   }
 
-  async function checkVoiceProfile(){
-    try{
-      const { data: { user } } = await supabase.auth.getUser();
+  async function loadProfileVoiceState() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    currentUser = user;
 
-      if(!user){
-        if(mineVoiceDesc) mineVoiceDesc.textContent = "Henüz oluşturulmadı.";
-        if(secondVoiceDesc) secondVoiceDesc.textContent = "Henüz oluşturulmadı.";
-        if(memoryVoiceDesc) memoryVoiceDesc.textContent = "Henüz oluşturulmadı.";
-        return;
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select(`
+        avatar_url,
+        voice_sample_path,
+        tts_voice_ready,
+        tts_voice_id,
+        second_voice_name,
+        second_voice_sample_path,
+        second_tts_voice_ready,
+        second_tts_voice_id,
+        memory_voice_name,
+        memory_voice_sample_path,
+        memory_tts_voice_ready,
+        memory_tts_voice_id
+      `)
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("voice state read error", error);
+      return;
+    }
+
+    const mineReady = !!profile?.voice_sample_path || (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+    const secondReady = !!profile?.second_voice_sample_path || (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+    const memoryReady = !!profile?.memory_voice_sample_path || (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+
+    const secondName = String(profile?.second_voice_name || "2. Ses").trim() || "2. Ses";
+    const memoryName = String(profile?.memory_voice_name || "Hatıra Sesi").trim() || "Hatıra Sesi";
+
+    if (UI.mineVoiceDesc) {
+      UI.mineVoiceDesc.textContent = mineReady ? "Hazır. Ortak kullanıma açık." : "Henüz oluşturulmadı.";
+    }
+    if (UI.secondVoiceDesc) {
+      UI.secondVoiceDesc.textContent = secondReady ? `${secondName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
+    }
+    if (UI.memoryVoiceDesc) {
+      UI.memoryVoiceDesc.textContent = memoryReady ? `${memoryName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
+    }
+
+    if (mineReady) {
+      UI.mineStatus.textContent = "Kendi Sesim hazır. Tüm modüllerde ortak kullanılacak.";
+    }
+    if (secondReady) {
+      UI.secondStatus.textContent = `${secondName} hazır. Tüm modüllerde ortak kullanılacak.`;
+    }
+    if (memoryReady) {
+      UI.memoryStatus.textContent = `${memoryName} hazır. Tüm modüllerde ortak kullanılacak.`;
+    }
+
+    if (secondName) UI.secondVoiceNameInput.value = secondName;
+    if (memoryName) UI.memoryVoiceNameInput.value = memoryName;
+  }
+
+  async function bootAuth() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        location.replace("/pages/login.html");
+        return false;
       }
+      currentUser = session.user;
+      await loadProfileVoiceState();
+      return true;
+    } catch (e) {
+      location.replace("/pages/login.html");
+      return false;
+    }
+  }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          voice_sample_path,
-          tts_voice_ready,
-          tts_voice_id,
-          second_voice_name,
-          second_voice_sample_path,
-          second_tts_voice_ready,
-          second_tts_voice_id,
-          memory_voice_name,
-          memory_voice_sample_path,
-          memory_tts_voice_ready,
-          memory_tts_voice_id
-        `)
-        .eq("id", user.id)
-        .maybeSingle();
+  async function askMicPermission() {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      throw new Error("Mikrofon izni alınamadı.");
+    }
+  }
 
-      if(error){
-        console.warn("[translation_settings voice check]", error);
-        return;
-      }
+  function stopTracks(stream) {
+    try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
+  }
 
-      const hasMine = !!data?.voice_sample_path || (!!data?.tts_voice_ready && !!data?.tts_voice_id);
-      const hasSecond = !!data?.second_voice_sample_path || (!!data?.second_tts_voice_ready && !!data?.second_tts_voice_id);
-      const hasMemory = !!data?.memory_voice_sample_path || (!!data?.memory_tts_voice_ready && !!data?.memory_tts_voice_id);
+  function createRecorder(stream, onData, onStop) {
+    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) onData(e.data);
+    };
+    recorder.onstop = onStop;
+    return recorder;
+  }
 
-      const secondName = String(data?.second_voice_name || "2. Ses").trim() || "2. Ses";
-      const memoryName = String(data?.memory_voice_name || "Hatıra Sesi").trim() || "Hatıra Sesi";
+  async function uploadVoice(blobOrFile, voiceType, voiceName) {
+    if (!currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
+    if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
 
-      if (mineVoiceDesc) {
-        mineVoiceDesc.textContent = hasMine
-          ? "Hazır. Ortak kullanıma açık."
-          : "Henüz oluşturulmadı.";
-      }
+    const form = new FormData();
+    form.append("user_id", currentUser.id);
+    form.append("voice_type", voiceType);
+    form.append("voice_name", voiceName || "");
+    form.append("audio_file", blobOrFile, `${voiceType}.${blobOrFile.name?.split(".").pop() || "webm"}`);
 
-      if (secondVoiceDesc) {
-        secondVoiceDesc.textContent = hasSecond
-          ? `${secondName} hazır. Ortak kullanıma açık.`
-          : "Henüz oluşturulmadı.";
-      }
+    const resp = await fetch(VOICE_API, {
+      method: "POST",
+      body: form
+    });
 
-      if (memoryVoiceDesc) {
-        memoryVoiceDesc.textContent = hasMemory
-          ? `${memoryName} hazır. Ortak kullanıma açık.`
-          : "Henüz oluşturulmadı.";
-      }
-    }catch(e){
-      console.warn("[translation_settings voice check]", e);
+    const json = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !json?.ok) {
+      throw new Error("Backend hazır değilse bu normal. Şu an sadece önizleme oluşur.");
+    }
+
+    return json;
+  }
+
+  async function startMineRecording() {
+    try {
+      mineChunks = [];
+      mineBlob = null;
+      UI.mineAudio.removeAttribute("src");
+      UI.mineAudio.load();
+
+      mineStream = await askMicPermission();
+      mineRecorder = createRecorder(
+        mineStream,
+        (data) => mineChunks.push(data),
+        () => {
+          mineBlob = new Blob(mineChunks, { type: "audio/webm" });
+          UI.mineAudio.src = URL.createObjectURL(mineBlob);
+          UI.mineStatus.textContent = `Kendi Sesim kaydı hazır. Mod: ${mineMode === "read" ? "Metni Oku" : "Serbest Konuş"}.`;
+          stopTracks(mineStream);
+        }
+      );
+
+      mineRecorder.start();
+      UI.mineStatus.textContent = "Kendi Sesim kaydı başladı...";
+    } catch (e) {
+      UI.mineStatus.textContent = e.message || "Kayıt başlatılamadı.";
+    }
+  }
+
+  function stopMineRecording() {
+    try {
+      if (mineRecorder && mineRecorder.state !== "inactive") mineRecorder.stop();
+    } catch {
+      UI.mineStatus.textContent = "Kayıt durdurulamadı.";
+    }
+  }
+
+  async function saveMineVoice() {
+    try {
+      UI.mineStatus.textContent = "Kendi Sesim yükleniyor...";
+      await uploadVoice(mineBlob, "mine", "Kendi Sesim");
+      UI.mineStatus.textContent = "Kendi Sesim kaydedildi. Tüm modüllerde ortak kullanılacak.";
+      await loadProfileVoiceState();
+    } catch (e) {
+      UI.mineStatus.textContent = e.message || "Kendi Sesim kaydedilemedi.";
+    }
+  }
+
+  async function startSecondRecording() {
+    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+    if (!secondName) {
+      UI.secondStatus.textContent = "2. Ses için isim yaz.";
+      return;
+    }
+
+    try {
+      secondChunks = [];
+      secondBlob = null;
+      UI.secondAudio.removeAttribute("src");
+      UI.secondAudio.load();
+
+      secondStream = await askMicPermission();
+      secondRecorder = createRecorder(
+        secondStream,
+        (data) => secondChunks.push(data),
+        () => {
+          secondBlob = new Blob(secondChunks, { type: "audio/webm" });
+          UI.secondAudio.src = URL.createObjectURL(secondBlob);
+          UI.secondStatus.textContent = `${secondName} kaydı hazır. Mod: ${secondMode === "read" ? "Metni Oku" : "Serbest Konuş"}.`;
+          stopTracks(secondStream);
+        }
+      );
+
+      secondRecorder.start();
+      UI.secondStatus.textContent = `${secondName} kaydı başladı...`;
+    } catch (e) {
+      UI.secondStatus.textContent = e.message || "2. Ses kaydı başlatılamadı.";
+    }
+  }
+
+  function stopSecondRecording() {
+    try {
+      if (secondRecorder && secondRecorder.state !== "inactive") secondRecorder.stop();
+    } catch {
+      UI.secondStatus.textContent = "2. Ses kaydı durdurulamadı.";
+    }
+  }
+
+  async function saveSecondVoice() {
+    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+    if (!secondName) {
+      UI.secondStatus.textContent = "2. Ses için isim yaz.";
+      return;
+    }
+
+    try {
+      UI.secondStatus.textContent = `${secondName} yükleniyor...`;
+      await uploadVoice(secondBlob, "second", secondName);
+      UI.secondStatus.textContent = `${secondName} kaydedildi. Tüm modüllerde ortak kullanılacak.`;
+      await loadProfileVoiceState();
+    } catch (e) {
+      UI.secondStatus.textContent = e.message || "2. Ses kaydedilemedi.";
+    }
+  }
+
+  async function startMemoryRecording() {
+    const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
+    if (!memoryName) {
+      UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
+      return;
+    }
+
+    try {
+      memoryChunks = [];
+      memoryBlob = null;
+      memoryMp3File = null;
+      UI.memoryAudio.removeAttribute("src");
+      UI.memoryAudio.load();
+
+      memoryStream = await askMicPermission();
+      memoryRecorder = createRecorder(
+        memoryStream,
+        (data) => memoryChunks.push(data),
+        () => {
+          memoryBlob = new Blob(memoryChunks, { type: "audio/webm" });
+          UI.memoryAudio.src = URL.createObjectURL(memoryBlob);
+          UI.memoryStatus.textContent = `${memoryName} kaydı hazır. Giriş: mik.`;
+          stopTracks(memoryStream);
+        }
+      );
+
+      memoryRecorder.start();
+      UI.memoryStatus.textContent = `${memoryName} kaydı başladı...`;
+    } catch (e) {
+      UI.memoryStatus.textContent = e.message || "Hatıra Sesi kaydı başlatılamadı.";
+    }
+  }
+
+  function stopMemoryRecording() {
+    try {
+      if (memoryRecorder && memoryRecorder.state !== "inactive") memoryRecorder.stop();
+    } catch {
+      UI.memoryStatus.textContent = "Hatıra Sesi kaydı durdurulamadı.";
+    }
+  }
+
+  async function saveMemoryVoiceFromMic() {
+    const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
+    if (!memoryName) {
+      UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
+      return;
+    }
+
+    try {
+      UI.memoryStatus.textContent = `${memoryName} yükleniyor...`;
+      await uploadVoice(memoryBlob, "memory", memoryName);
+      UI.memoryStatus.textContent = `${memoryName} kaydedildi. Tüm modüllerde ortak kullanılacak.`;
+      await loadProfileVoiceState();
+    } catch (e) {
+      UI.memoryStatus.textContent = e.message || "Hatıra Sesi kaydedilemedi.";
+    }
+  }
+
+  async function saveMemoryVoiceFromMp3() {
+    const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
+    if (!memoryName) {
+      UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
+      return;
+    }
+    if (!memoryMp3File) {
+      UI.memoryStatus.textContent = "Önce bir mp3 seç.";
+      return;
+    }
+    if (memoryMp3File.size > 10 * 1024 * 1024) {
+      UI.memoryStatus.textContent = "mp3 en fazla 10 MB olabilir.";
+      return;
+    }
+
+    try {
+      UI.memoryStatus.textContent = `${memoryName} mp3 yükleniyor...`;
+      await uploadVoice(memoryMp3File, "memory", memoryName);
+      UI.memoryStatus.textContent = `${memoryName} mp3 olarak kaydedildi. Tüm modüllerde ortak kullanılacak.`;
+      await loadProfileVoiceState();
+    } catch (e) {
+      UI.memoryStatus.textContent = e.message || "Hatıra Sesi mp3 kaydedilemedi.";
     }
   }
 
@@ -359,43 +1171,125 @@
     location.href = "/pages/home.html";
   }
 
-  voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
-    card.addEventListener("click", () => {
-      voiceMode = normalizeVoiceMode(card.dataset.voice || "tts");
-      paintSelections();
-      refreshSummary();
-      showToast("Ses seçimi güncellendi");
-    });
-  });
-
-  translateGrid?.querySelectorAll(".choice-card").forEach(card => {
-    card.addEventListener("click", () => {
-      translateMode = normalizeTranslateMode(card.dataset.translate || "normal");
-      paintSelections();
-      refreshSummary();
-      showToast("Çeviri modu güncellendi");
-    });
-  });
-
-  saveBtn?.addEventListener("click", () => {
-    saveSettings();
-    showToast("Ayarlar kaydedildi");
-    setTimeout(() => {
+  function bindEvents() {
+    UI.backBtn?.addEventListener("click", () => {
       goHome();
-    }, 350);
-  });
+    });
 
-  cancelBtn?.addEventListener("click", () => {
-    goHome();
-  });
+    UI.voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
+      card.addEventListener("click", () => {
+        voiceMode = normalizeVoiceMode(card.dataset.voice || "tts");
+        paintSelections();
+        refreshSummary();
+        showToast("Ses seçimi güncellendi");
+      });
+    });
 
-  backBtn?.addEventListener("click", () => {
-    goHome();
-  });
+    UI.translateGrid?.querySelectorAll(".choice-card").forEach(card => {
+      card.addEventListener("click", () => {
+        translateMode = normalizeTranslateMode(card.dataset.translate || "normal");
+        paintSelections();
+        refreshSummary();
+        showToast("Çeviri modu güncellendi");
+      });
+    });
+
+    UI.mineFreeModeBtn?.addEventListener("click", () => {
+      mineMode = "free";
+      setActive(UI.mineFreeModeBtn, UI.mineReadModeBtn, true);
+      UI.mineReadBoxWrap.classList.add("hidden");
+    });
+
+    UI.mineReadModeBtn?.addEventListener("click", () => {
+      mineMode = "read";
+      setActive(UI.mineFreeModeBtn, UI.mineReadModeBtn, false);
+      UI.mineReadBoxWrap.classList.remove("hidden");
+    });
+
+    UI.secondFreeModeBtn?.addEventListener("click", () => {
+      secondMode = "free";
+      setActive(UI.secondFreeModeBtn, UI.secondReadModeBtn, true);
+      UI.secondReadBoxWrap.classList.add("hidden");
+    });
+
+    UI.secondReadModeBtn?.addEventListener("click", () => {
+      secondMode = "read";
+      setActive(UI.secondFreeModeBtn, UI.secondReadModeBtn, false);
+      UI.secondReadBoxWrap.classList.remove("hidden");
+    });
+
+    UI.memoryMicModeBtn?.addEventListener("click", () => {
+      memoryInputMode = "mic";
+      setActive(UI.memoryMicModeBtn, UI.memoryMp3ModeBtn, true);
+      UI.memoryMicPanel.classList.remove("hidden");
+      UI.memoryMicActions.classList.remove("hidden");
+      UI.memoryUploadPanel.classList.add("hidden");
+    });
+
+    UI.memoryMp3ModeBtn?.addEventListener("click", () => {
+      memoryInputMode = "mp3";
+      setActive(UI.memoryMicModeBtn, UI.memoryMp3ModeBtn, false);
+      UI.memoryMicPanel.classList.add("hidden");
+      UI.memoryMicActions.classList.add("hidden");
+      UI.memoryReadBoxWrap.classList.add("hidden");
+      UI.memoryUploadPanel.classList.remove("hidden");
+    });
+
+    UI.memoryFreeModeBtn?.addEventListener("click", () => {
+      memoryMicMode = "free";
+      setActive(UI.memoryFreeModeBtn, UI.memoryReadModeBtn, true);
+      UI.memoryReadBoxWrap.classList.add("hidden");
+    });
+
+    UI.memoryReadModeBtn?.addEventListener("click", () => {
+      memoryMicMode = "read";
+      setActive(UI.memoryFreeModeBtn, UI.memoryReadModeBtn, false);
+      UI.memoryReadBoxWrap.classList.remove("hidden");
+    });
+
+    UI.recordMineBtn?.addEventListener("click", startMineRecording);
+    UI.stopMineBtn?.addEventListener("click", stopMineRecording);
+    UI.saveMineBtn?.addEventListener("click", saveMineVoice);
+
+    UI.recordSecondBtn?.addEventListener("click", startSecondRecording);
+    UI.stopSecondBtn?.addEventListener("click", stopSecondRecording);
+    UI.saveSecondBtn?.addEventListener("click", saveSecondVoice);
+
+    UI.recordMemoryBtn?.addEventListener("click", startMemoryRecording);
+    UI.stopMemoryBtn?.addEventListener("click", stopMemoryRecording);
+    UI.saveMemoryBtn?.addEventListener("click", saveMemoryVoiceFromMic);
+
+    UI.memoryMp3Input?.addEventListener("change", (e) => {
+      const file = e.target.files?.[0] || null;
+      memoryMp3File = file;
+      if (file) {
+        UI.memoryAudio.src = URL.createObjectURL(file);
+        UI.memoryStatus.textContent = `${file.name} seçildi. Kaydet diyerek devam et.`;
+      }
+    });
+
+    UI.saveMemoryMp3Btn?.addEventListener("click", saveMemoryVoiceFromMp3);
+
+    UI.saveBtn?.addEventListener("click", () => {
+      saveSettings();
+      showToast("Ayarlar kaydedildi");
+      setTimeout(() => {
+        goHome();
+      }, 350);
+    });
+
+    UI.cancelBtn?.addEventListener("click", () => {
+      goHome();
+    });
+  }
 
   paintSelections();
   refreshSummary();
-  checkVoiceProfile();
+
+  const ok = await bootAuth();
+  if (ok) {
+    bindEvents();
+  }
 </script>
 
 </body>
