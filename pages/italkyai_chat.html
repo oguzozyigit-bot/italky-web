@@ -147,35 +147,6 @@
       color:rgba(255,255,255,.30);
     }
 
-    .avatar-btn{
-      width:44px;
-      height:44px;
-      border:none;
-      border-radius:50%;
-      overflow:hidden;
-      cursor:pointer;
-      padding:0;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-    }
-
-    .avatar-btn img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .avatar-btn.empty::before{
-      content:"👤";
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      width:100%;
-      height:100%;
-      font-size:20px;
-    }
-
     .menu{
       position:absolute;
       inset:0;
@@ -312,11 +283,23 @@
       color:#111;
     }
 
+    .menu-item.orange{
+      color:#fed7aa;
+      background:rgba(249,115,22,.10);
+      border-color:rgba(249,115,22,.20);
+    }
+
+    .menu-item.red{
+      color:#fecaca;
+      background:rgba(239,68,68,.10);
+      border-color:rgba(239,68,68,.22);
+    }
+
     .saved-list{
       display:none;
       flex-direction:column;
       gap:8px;
-      padding-left:8px;
+      padding-left:16px;
     }
 
     .saved-list.open{ display:flex; }
@@ -326,9 +309,9 @@
       min-height:42px;
       border:none;
       border-radius:14px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.06);
-      color:#fff;
+      background:rgba(163,230,53,.06);
+      border:1px solid rgba(132,204,22,.18);
+      color:#f0fdf4;
       text-align:left;
       padding:10px 12px;
       cursor:pointer;
@@ -340,89 +323,8 @@
       display:block;
       margin-top:4px;
       font-size:10px;
-      color:rgba(255,255,255,.5);
+      color:rgba(240,253,244,.62);
       font-weight:700;
-    }
-
-    .voice-sheet{
-      display:none;
-      flex-direction:column;
-      gap:10px;
-      max-height:44vh;
-      overflow:auto;
-      scrollbar-width:none;
-    }
-
-    .voice-sheet::-webkit-scrollbar{ display:none; }
-    .voice-sheet.open{ display:flex; }
-
-    .voice-card{
-      padding:14px;
-      border-radius:18px;
-      background:rgba(255,255,255,.035);
-      border:1px solid rgba(255,255,255,.08);
-      cursor:pointer;
-    }
-
-    .voice-card.active{
-      border-color:rgba(249,115,22,.35);
-      background:rgba(249,115,22,.08);
-      box-shadow:0 0 0 1px rgba(249,115,22,.14) inset;
-    }
-
-    .voice-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:6px;
-    }
-
-    .voice-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .voice-badge{
-      font-size:10px;
-      font-weight:900;
-      padding:5px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      white-space:nowrap;
-    }
-
-    .voice-badge.orange{
-      color:#fed7aa;
-      background:rgba(249,115,22,.10);
-      border-color:rgba(249,115,22,.20);
-    }
-
-    .voice-badge.green{
-      color:#dcfce7;
-      background:rgba(132,204,22,.10);
-      border-color:rgba(132,204,22,.20);
-    }
-
-    .voice-desc{
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.66);
-      font-weight:700;
-    }
-
-    .voice-create-btn{
-      width:100%;
-      min-height:42px;
-      border:none;
-      border-radius:14px;
-      cursor:pointer;
-      font-family:inherit;
-      font-size:12px;
-      font-weight:900;
-      background:linear-gradient(135deg, var(--orange) 0%, var(--orange2) 100%);
-      color:#120b02;
     }
 
     .main{
@@ -757,7 +659,7 @@
 <div class="save-modal" id="saveModal">
   <div class="save-card">
     <h3 class="save-title">Sohbete isim ver</h3>
-    <input id="saveChatName" class="save-input" type="text" placeholder="Örn: Babamla konuşma denemesi">
+    <input id="saveChatName" class="save-input" type="text" placeholder="Örn: Akşam notları">
     <div class="save-actions">
       <button class="save-btn secondary" id="cancelSaveChat" type="button">Vazgeç</button>
       <button class="save-btn primary" id="confirmSaveChat" type="button">Kaydet</button>
@@ -795,48 +697,12 @@
       <button class="menu-item white" id="newChatBtn" type="button">Yeni Sohbet</button>
       <button class="menu-item" id="saveChatMenuBtn" type="button">Sohbeti Kaydet</button>
       <button class="menu-item" id="savedChatsToggleBtn" type="button">Kayıtlı Sohbetler</button>
+
       <div class="saved-list" id="savedChatsList"></div>
+
       <button class="menu-item" id="clearChatMenuBtn" type="button">Sohbeti Temizle</button>
-      <button class="menu-item" id="voiceMenuBtn" type="button">Sesi Değiştir</button>
-
-      <div class="voice-sheet" id="voiceSheet">
-        <div class="voice-card active" data-voice-id="tts">
-          <div class="voice-top">
-            <div class="voice-name">TTS</div>
-            <div class="voice-badge green">Ücretsiz</div>
-          </div>
-          <div class="voice-desc">Temel ücretsiz ses. Hızlı ve her zaman hazır.</div>
-        </div>
-
-        <div class="voice-card" data-voice-id="mine">
-          <div class="voice-top">
-            <div class="voice-name">Kendi Sesim</div>
-            <div class="voice-badge orange">Jetonlu</div>
-          </div>
-          <div class="voice-desc" id="chatMineVoiceDesc">Henüz oluşturulmadı.</div>
-        </div>
-
-        <div class="voice-card" data-voice-id="second">
-          <div class="voice-top">
-            <div class="voice-name">2. Ses</div>
-            <div class="voice-badge orange">Jetonlu</div>
-          </div>
-          <div class="voice-desc" id="chatSecondVoiceDesc">Henüz oluşturulmadı.</div>
-        </div>
-
-        <div class="voice-card" data-voice-id="memory">
-          <div class="voice-top">
-            <div class="voice-name">Hatıra Sesi</div>
-            <div class="voice-badge orange">Jetonlu</div>
-          </div>
-          <div class="voice-desc" id="chatMemoryVoiceDesc">Henüz oluşturulmadı.</div>
-        </div>
-
-        <button class="voice-create-btn" id="newVoiceBtn" type="button">Ses Merkezine Git</button>
-      </div>
-
-      <button class="menu-item" id="jetonYukleBtn" type="button">Jeton Yükle</button>
-      <button class="menu-item" id="homeBtn" type="button">Ana Sayfaya Dön</button>
+      <button class="menu-item orange" id="jetonYukleBtn" type="button">Jeton Yükle</button>
+      <button class="menu-item red" id="homeBtn" type="button">Ana Sayfaya Dön</button>
     </div>
   </aside>
 </div>
@@ -853,8 +719,12 @@
         <p class="brand-sub">BE FREE</p>
       </div>
 
-      <button class="avatar-btn empty" id="topAvatarBtn" type="button" aria-label="Ses merkezi">
-        <img id="topAvatarImg" alt="Avatar">
+      <button class="icon-btn" id="topSettingsBtn" type="button" aria-label="SohbetAI Ses Ayarları">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3l1.2 2.4 2.6.4-1.9 1.9.5 2.7L12 9.3 9.6 10.4l.5-2.7-1.9-1.9 2.6-.4L12 3z"></path>
+          <circle cx="12" cy="12" r="3.2"></circle>
+          <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a2 2 0 1 1 0 4H20a1 1 0 0 0-.6.6z"></path>
+        </svg>
       </button>
     </header>
 
@@ -925,13 +795,7 @@
     savedChatsList: $("savedChatsList"),
     clearChatMenuBtn: $("clearChatMenuBtn"),
 
-    voiceMenuBtn: $("voiceMenuBtn"),
-    voiceSheet: $("voiceSheet"),
-    newVoiceBtn: $("newVoiceBtn"),
-    voiceCards: [...document.querySelectorAll("[data-voice-id]")],
-
-    topAvatarBtn: $("topAvatarBtn"),
-    topAvatarImg: $("topAvatarImg"),
+    topSettingsBtn: $("topSettingsBtn"),
 
     menuUserAvatar: $("menuUserAvatar"),
     menuUserAvatarImg: $("menuUserAvatarImg"),
@@ -959,7 +823,6 @@
 
   function closeMenu() {
     UI.menu.classList.remove("open");
-    UI.voiceSheet.classList.remove("open");
   }
 
   function toggleSavedChats() {
@@ -1002,14 +865,6 @@
   function getSelectedVoice() {
     const v = localStorage.getItem(STORAGE.voice) || "tts";
     return ["tts", "mine", "second", "memory"].includes(v) ? v : "tts";
-  }
-
-  function setSelectedVoice(voiceId) {
-    const safeVoice = ["tts", "mine", "second", "memory"].includes(voiceId) ? voiceId : "tts";
-    localStorage.setItem(STORAGE.voice, safeVoice);
-    UI.voiceCards.forEach(card => {
-      card.classList.toggle("active", card.dataset.voiceId === safeVoice);
-    });
   }
 
   function selectedVoiceLabel() {
@@ -1096,9 +951,6 @@
     const tokens = Number(ctx?.profile?.tokens || 0);
 
     if (avatarUrl) {
-      UI.topAvatarImg.src = avatarUrl;
-      UI.topAvatarBtn.classList.remove("empty");
-
       UI.menuUserAvatar.innerHTML = "";
       UI.menuUserAvatarImg.src = avatarUrl;
       UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
@@ -1118,64 +970,6 @@
       `;
       UI.chatMessages.appendChild(welcome);
       scrollChatToBottom();
-    }
-  }
-
-  async function hydrateSharedVoiceState() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select(`
-          voice_sample_path,
-          tts_voice_ready,
-          tts_voice_id,
-          second_voice_name,
-          second_voice_sample_path,
-          second_tts_voice_ready,
-          second_tts_voice_id,
-          memory_voice_name,
-          memory_voice_sample_path,
-          memory_tts_voice_ready,
-          memory_tts_voice_id
-        `)
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const mineReady =
-        !!profile?.voice_sample_path ||
-        (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
-
-      const secondReady =
-        !!profile?.second_voice_sample_path ||
-        (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
-
-      const memoryReady =
-        !!profile?.memory_voice_sample_path ||
-        (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
-
-      const secondName = String(profile?.second_voice_name || "2. Ses").trim() || "2. Ses";
-      const memoryName = String(profile?.memory_voice_name || "Hatıra Sesi").trim() || "Hatıra Sesi";
-
-      const mineDesc = document.getElementById("chatMineVoiceDesc");
-      const secondDesc = document.getElementById("chatSecondVoiceDesc");
-      const memoryDesc = document.getElementById("chatMemoryVoiceDesc");
-
-      if (mineDesc) {
-        mineDesc.textContent = mineReady ? "Hazır. Ortak kullanıma açık." : "Henüz oluşturulmadı.";
-      }
-
-      if (secondDesc) {
-        secondDesc.textContent = secondReady ? `${secondName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
-      }
-
-      if (memoryDesc) {
-        memoryDesc.textContent = memoryReady ? `${memoryName} hazır. Ortak kullanıma açık.` : "Henüz oluşturulmadı.";
-      }
-    } catch (e) {
-      console.warn("hydrateSharedVoiceState error", e);
     }
   }
 
@@ -1230,8 +1024,6 @@
           if (resp.ok) {
             const json = await resp.json().catch(() => ({}));
             reply = String(json?.reply || "").trim();
-          } else {
-            console.error("Chat API HTTP hata:", resp.status);
           }
         }
       }
@@ -1348,7 +1140,9 @@
       messages: messageRows
     });
 
-    setLocalSavedChats(list);
+    const limited = list.slice(0, 10);
+
+    setLocalSavedChats(limited);
     currentSavedChatId = id;
     UI.saveModal.classList.remove("open");
     UI.saveChatName.value = "";
@@ -1465,22 +1259,8 @@
 
     UI.clearChatMenuBtn.addEventListener("click", deleteCurrentSavedChat);
 
-    UI.voiceMenuBtn.addEventListener("click", () => {
-      UI.voiceSheet.classList.toggle("open");
-    });
-
-    UI.newVoiceBtn.addEventListener("click", () => {
-      location.href = "/pages/voice_profile.html";
-    });
-
-    UI.voiceCards.forEach(card => {
-      card.addEventListener("click", () => {
-        setSelectedVoice(card.dataset.voiceId || "tts");
-      });
-    });
-
-    UI.topAvatarBtn.addEventListener("click", () => {
-      location.href = "/pages/voice_profile.html";
+    UI.topSettingsBtn.addEventListener("click", () => {
+      location.href = "/pages/sohbetai_settings.html";
     });
 
     window.visualViewport?.addEventListener("resize", updateViewportLayout);
@@ -1489,12 +1269,10 @@
   }
 
   async function init() {
-    setSelectedVoice(getSelectedVoice());
     bindEvents();
     autoResizeTextarea();
     syncInputActionState();
     await hydrateProfileUI();
-    await hydrateSharedVoiceState();
     renderSavedChats();
     updateViewportLayout();
     scrollChatToBottom();
