@@ -147,6 +147,8 @@
       backdrop-filter:blur(15px);
       -webkit-backdrop-filter:blur(15px);
       box-shadow:0 14px 30px rgba(0,0,0,.18);
+      position:relative;
+      z-index:1;
     }
 
     .panel.orange{
@@ -280,7 +282,7 @@
       transition:all .2s;
       text-decoration:none;
       padding:0 16px;
-      flex:1;
+      width:100%;
     }
 
     .btn:active{ transform:scale(.98); }
@@ -307,11 +309,6 @@
       color:#fff;
     }
 
-    .btn.red{
-      background: linear-gradient(135deg, rgba(239,68,68,.70) 0%, rgba(248,113,113,.60) 100%);
-      color:#fff;
-    }
-
     .btn[disabled]{
       opacity:.45;
       cursor:not-allowed;
@@ -322,18 +319,22 @@
       gap:10px;
       margin-top:12px;
       flex-wrap:wrap;
+      position:relative;
+      z-index:2;
     }
 
     .buttons-3{
       display:grid;
       grid-template-columns:1fr 1fr 1fr;
       gap:10px;
+      width:100%;
     }
 
     .buttons-2{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:10px;
+      width:100%;
     }
 
     .input{
@@ -357,37 +358,40 @@
       border-radius:16px;
       background:rgba(255,255,255,.05);
       border:1px dashed rgba(255,255,255,.16);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
     }
 
     .upload-title{
       font-size:13px;
       font-weight:900;
       color:#fff;
-      margin:0 0 8px;
+      margin:0;
     }
 
     .upload-sub{
       font-size:11px;
       line-height:1.5;
       color:rgba(255,255,255,.70);
-      margin:0 0 10px;
+      margin:0;
     }
 
     .file-btn{
       min-height:48px;
       border:none;
       border-radius:16px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(135deg, rgba(239,68,68,.74) 0%, rgba(248,113,113,.60) 100%);
       color:#fff;
       font:inherit;
       font-size:14px;
       font-weight:900;
       padding:0 16px;
       cursor:pointer;
-      display:inline-flex;
+      display:flex;
       align-items:center;
       justify-content:center;
+      width:100%;
     }
 
     .file-name{
@@ -683,15 +687,13 @@
         <p class="upload-title">mp3 Yükleme</p>
         <p class="upload-sub">Maksimum dosya boyutu: <strong>10 MB</strong>. Temiz, tek kişilik ve kısa kayıtlar daha iyi sonuç verir.</p>
         <input class="hidden" id="memoryMp3Input" type="file" accept=".mp3,audio/mpeg">
-        <div class="buttons-2">
-          <button class="file-btn" id="memoryPickBtn" type="button">mp3 Seç</button>
-          <button class="btn green" id="listenMemoryBtn" type="button" disabled>Dinle</button>
-        </div>
+        <button class="file-btn" id="memoryPickBtn" type="button">mp3 Yükle</button>
         <div class="file-name" id="memoryFileName">Henüz dosya seçilmedi.</div>
       </div>
     </div>
 
-    <div class="row">
+    <div class="row buttons-2">
+      <button class="btn green" id="listenMemoryBtn" type="button" disabled>Dinle</button>
       <button class="btn btn-primary" id="saveMemoryMp3Btn" type="button">Kaydet</button>
     </div>
 
@@ -764,7 +766,6 @@
 
   const UI = {
     backBtn: $("backBtn"),
-
     voiceGrid: $("voiceGrid"),
     voiceSummary: $("voiceSummary"),
     poolSummary: $("poolSummary"),
@@ -877,7 +878,6 @@
   }
 
   function showToast(msg){
-    if(!UI.toast) return;
     UI.toast.textContent = String(msg || "");
     UI.toast.classList.add("show");
     clearTimeout(window.__sohbetAiSettingsToast);
@@ -887,14 +887,14 @@
   }
 
   function paintSelections(){
-    UI.voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
+    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
       card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === voiceMode);
     });
   }
 
   function refreshSummary(){
-    if(UI.voiceSummary) UI.voiceSummary.textContent = voiceLabel(voiceMode);
-    if(UI.poolSummary) UI.poolSummary.textContent = "Ortak ses havuzu aktif";
+    UI.voiceSummary.textContent = voiceLabel(voiceMode);
+    UI.poolSummary.textContent = "Ortak ses havuzu aktif";
   }
 
   function hasUnsavedChanges() {
@@ -902,25 +902,18 @@
   }
 
   function jumpToSection(el) {
-    if (!el) return;
-    el.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function setButtonState(button, enabled) {
-    if (!button) return;
     button.disabled = !enabled;
   }
 
   function setTimer(el, seconds) {
-    if (!el) return;
     el.textContent = `${seconds} sn`;
   }
 
   function setProgress(el, percent) {
-    if (!el) return;
     el.style.width = `${Math.max(0, Math.min(100, percent))}%`;
   }
 
@@ -1015,7 +1008,7 @@
       currentUser = session.user;
       await loadProfileVoiceState();
       return true;
-    } catch (e) {
+    } catch {
       location.replace("/pages/login.html");
       return false;
     }
@@ -1238,16 +1231,6 @@
     openRecordInfoModal(action);
   }
 
-  function openRecordInfoModal(action) {
-    pendingRecordAction = action;
-    UI.recordInfoModal.classList.add("open");
-  }
-
-  function closeRecordInfoModal() {
-    pendingRecordAction = null;
-    UI.recordInfoModal.classList.remove("open");
-  }
-
   function bindEvents() {
     UI.backBtn.addEventListener("click", () => attemptLeave(goBackToChat));
 
@@ -1285,13 +1268,13 @@
     });
 
     UI.recordMineBtn.addEventListener("click", () => {
-      const act = () => requestRecordStart(beginMineRecording);
+      const act = () => openRecordInfoModal(beginMineRecording);
       if (profileVoiceState.mineReady) openReplaceModal(act);
       else act();
     });
 
     UI.recordSecondBtn.addEventListener("click", () => {
-      const act = () => requestRecordStart(beginSecondRecording);
+      const act = () => openRecordInfoModal(beginSecondRecording);
       if (profileVoiceState.secondReady) openReplaceModal(act);
       else act();
     });
@@ -1369,6 +1352,36 @@
     });
   }
 
+  function openReplaceModal(action) {
+    pendingReplaceAction = action;
+    UI.replaceModal.classList.add("open");
+  }
+
+  function closeReplaceModal() {
+    pendingReplaceAction = null;
+    UI.replaceModal.classList.remove("open");
+  }
+
+  function openLeaveModal(action) {
+    pendingLeaveAction = action;
+    UI.leaveModal.classList.add("open");
+  }
+
+  function closeLeaveModal() {
+    pendingLeaveAction = null;
+    UI.leaveModal.classList.remove("open");
+  }
+
+  function openRecordInfoModal(action) {
+    pendingRecordAction = action;
+    UI.recordInfoModal.classList.add("open");
+  }
+
+  function closeRecordInfoModal() {
+    pendingRecordAction = null;
+    UI.recordInfoModal.classList.remove("open");
+  }
+
   paintSelections();
   refreshSummary();
   setButtonState(UI.listenMineBtn, false);
@@ -1376,17 +1389,14 @@
   setButtonState(UI.listenMemoryBtn, false);
   setButtonState(UI.saveMineBtn, false);
   setButtonState(UI.saveSecondBtn, false);
-
   setTimer(UI.mineTimer, MAX_RECORD_SECONDS);
   setTimer(UI.secondTimer, MAX_RECORD_SECONDS);
   setProgress(UI.mineProgress, 0);
   setProgress(UI.secondProgress, 0);
 
   const ok = await bootAuth();
-  if (ok) {
-    bindEvents();
-  }
+  if (ok) bindEvents();
 </script>
 
 </body>
-</html>
+  </html>
