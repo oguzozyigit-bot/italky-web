@@ -998,28 +998,28 @@
   if (m === "tts") {
     localStorage.setItem(F2F_VOICE_KEY, "auto");
     localStorage.removeItem(F2F_PRESET_KEY);
-    localStorage.removeItem("facetoface_selected_voice_name");
+    localStorage.removeItem(F2F_SELECTED_NAME_KEY);
     return;
   }
 
   if (m === "mine") {
-  localStorage.setItem(F2F_VOICE_KEY, "clone");
-  localStorage.removeItem(F2F_PRESET_KEY);
-  localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
-  return;
-}
+    localStorage.setItem(F2F_VOICE_KEY, "clone");
+    localStorage.removeItem(F2F_PRESET_KEY);
+    localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
+    return;
+  }
 
   if (m === "second") {
     localStorage.setItem(F2F_VOICE_KEY, "preset");
     localStorage.setItem(F2F_PRESET_KEY, "second");
-    localStorage.setItem("facetoface_selected_voice_name", "2. Ses");
+    localStorage.setItem(F2F_SELECTED_NAME_KEY, "2. Ses");
     return;
   }
 
   if (m === "memory") {
     localStorage.setItem(F2F_VOICE_KEY, "preset");
     localStorage.setItem(F2F_PRESET_KEY, "memory");
-    localStorage.setItem("facetoface_selected_voice_name", "Hatıra Sesi");
+    localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
   }
 }
 
@@ -1075,7 +1075,29 @@
 
     return json;
   }
+  async function enrollVoice(voiceType){
+  if (!state.supabase) throw new Error("Supabase hazır değil.");
 
+  const { data: { session } } = await state.supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("Oturum bulunamadı.");
+  }
+
+  const resp = await fetch(`https://italky-api.onrender.com/voice/enroll/${voiceType}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${session.access_token}`
+    }
+  });
+
+  const json = await resp.json().catch(() => ({}));
+
+  if (!resp.ok || !json?.ok) {
+    throw new Error(json?.detail || json?.error || "Voice enroll başarısız.");
+  }
+
+  return json;
+}
   function startCountdown(timerEl, onDone) {
     let remain = MAX_RECORD_SECONDS;
     setTimer(timerEl, remain);
@@ -1168,76 +1190,86 @@
     }
   }
 
-  async function saveMineVoice() {
-    try {
-      UI.mineStatus.textContent = "Kayıt kaydediliyor...";
-      await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
+  async function saveMineVoice(){
+  try {
+    UI.mineStatus.textContent = "Kayıt yükleniyor...";
+    await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
 
-      state.voiceMode = "mine";
-      saveSettings();
-      paintSelections();
-      refreshSummary();
+    UI.mineStatus.textContent = "Kendi Sesim hazırlanıyor...";
+    await enrollVoice("mine");
 
-      await loadProfileVoiceState();
-      showToast("Kendi Sesim kaydedildi");
-    } catch (e) {
-      UI.mineStatus.textContent = e.message || "Kayıt kaydedilemedi.";
-    }
+    state.voiceMode = "mine";
+    saveSettings();
+    paintSelections();
+    refreshSummary();
+
+    await loadProfileVoiceState();
+    UI.mineStatus.textContent = "Kendi Sesim hazır.";
+    showToast("Kendi Sesim kaydedildi");
+  } catch (e) {
+    UI.mineStatus.textContent = e.message || "Kendi Sesim hazırlanamadı.";
+  }
+}
+  async function saveSecondVoice(){
+  const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+  if (!secondName) {
+    UI.secondStatus.textContent = "2. Ses için isim yaz.";
+    return;
   }
 
-  async function saveSecondVoice() {
-    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
-    if (!secondName) {
-      UI.secondStatus.textContent = "2. Ses için isim yaz.";
-      return;
-    }
+  try {
+    UI.secondStatus.textContent = "Kayıt yükleniyor...";
+    await uploadVoice(state.secondBlob, "second", secondName);
 
-    try {
-      UI.secondStatus.textContent = "Kayıt kaydediliyor...";
-      await uploadVoice(state.secondBlob, "second", secondName);
+    UI.secondStatus.textContent = `${secondName} hazırlanıyor...`;
+    await enrollVoice("second");
 
-      state.voiceMode = "second";
-      saveSettings();
-      paintSelections();
-      refreshSummary();
+    state.voiceMode = "second";
+    saveSettings();
+    paintSelections();
+    refreshSummary();
 
-      await loadProfileVoiceState();
-      showToast(`${secondName} sesi kaydedildi`);
-    } catch (e) {
-      UI.secondStatus.textContent = e.message || "Kayıt kaydedilemedi.";
-    }
+    await loadProfileVoiceState();
+    UI.secondStatus.textContent = `${secondName} hazır.`;
+    showToast(`${secondName} sesi kaydedildi`);
+  } catch (e) {
+    UI.secondStatus.textContent = e.message || "2. Ses hazırlanamadı.";
+  }
+}
+  async function saveMemoryVoiceFromMp3(){
+  const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
+  if (!memoryName) {
+    UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
+    return;
+  }
+  if (!state.memoryMp3File) {
+    UI.memoryStatus.textContent = "Önce bir mp3 seç.";
+    return;
+  }
+  if (state.memoryMp3File.size > 10 * 1024 * 1024) {
+    UI.memoryStatus.textContent = "mp3 en fazla 10 MB olabilir.";
+    return;
   }
 
-  async function saveMemoryVoiceFromMp3() {
-    const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
-    if (!memoryName) {
-      UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
-      return;
-    }
-    if (!state.memoryMp3File) {
-      UI.memoryStatus.textContent = "Önce bir mp3 seç.";
-      return;
-    }
-    if (state.memoryMp3File.size > 10 * 1024 * 1024) {
-      UI.memoryStatus.textContent = "mp3 en fazla 10 MB olabilir.";
-      return;
-    }
+  try {
+    UI.memoryStatus.textContent = `${memoryName} yükleniyor...`;
+    await uploadVoice(state.memoryMp3File, "memory", memoryName);
 
-    try {
-      UI.memoryStatus.textContent = `${memoryName} mp3 yükleniyor...`;
-      await uploadVoice(state.memoryMp3File, "memory", memoryName);
+    UI.memoryStatus.textContent = `${memoryName} hazırlanıyor...`;
+    await enrollVoice("memory");
 
-      state.voiceMode = "memory";
-      saveSettings();
-      paintSelections();
-      refreshSummary();
+    state.voiceMode = "memory";
+    saveSettings();
+    paintSelections();
+    refreshSummary();
 
-      await loadProfileVoiceState();
-      showToast(`${memoryName} sesi kaydedildi`);
-    } catch (e) {
-      UI.memoryStatus.textContent = e.message || "Hatıra Sesi mp3 kaydedilemedi.";
-    }
+    await loadProfileVoiceState();
+    UI.memoryStatus.textContent = `${memoryName} hazır.`;
+    showToast(`${memoryName} sesi kaydedildi`);
+  } catch (e) {
+    UI.memoryStatus.textContent = e.message || "Hatıra Sesi hazırlanamadı.";
   }
+}
 
   async function loadProfileVoiceState() {
     if (!state.supabase) return;
