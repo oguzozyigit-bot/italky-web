@@ -52,6 +52,7 @@ const ALT_CHARS = {
 };
 
 const F2F_VOICE_KEY = "facetoface_voice_mode";
+const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
 
 function canonical(code) {
@@ -196,6 +197,10 @@ function getFaceVoiceMode() {
   return String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
 }
 
+function getSelectedPresetVoice() {
+  return String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+}
+
 function getFaceTranslateMode() {
   const value = String(localStorage.getItem(F2F_TRANSLATE_KEY) || "normal").trim().toLowerCase();
   return value === "cultural" ? "cultural" : "normal";
@@ -225,6 +230,28 @@ function faceTextUsageNote() {
     surface: "facetoface",
     usageKind: "text",
     mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
+  });
+}
+
+function faceVoiceUsageModule() {
+  const v = getFaceVoiceMode();
+  if (v === "clone") return "voice_clone";
+  if (v === "preset") return "voice_preset_use";
+  if (v === "female" || v === "male") return "voice_ai";
+  return "voice_ai";
+}
+
+function faceVoiceUsageNote() {
+  const v = getFaceVoiceMode();
+  let mode = "normal";
+  if (v === "clone") mode = "clone";
+  else if (v === "preset") mode = "preset";
+  else if (v === "female" || v === "male") mode = "ai";
+
+  return buildUsageNote({
+    surface: "facetoface",
+    usageKind: "voice",
+    mode
   });
 }
 
@@ -785,50 +812,125 @@ async function getCurrentUserId() {
   }
 }
 
-async function warmAudio() {
+async function hasReadyVoiceProfile() {
   try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (Ctx) {
-      if (!audioCtx) audioCtx = new Ctx();
-      if (audioCtx.state === "suspended") await audioCtx.resume();
-    }
-  } catch {}
+    const userId = await getCurrentUserId();
+    if (!userId) return false;
 
-  try {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.getVoices();
-      voicesReady = true;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(`
+        tts_voice_ready,
+        tts_voice_id,
+        second_tts_voice_ready,
+        second_tts_voice_id,
+        memory_tts_voice_ready,
+        memory_tts_voice_id
+      `)
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+
+    const mode = getFaceVoiceMode();
+    const preset = getSelectedPresetVoice();
+
+    if (mode === "clone") {
+      return !!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim();
     }
-  } catch {}
+
+    if (mode === "preset" && preset === "second") {
+      return !!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim();
+    }
+
+    if (mode === "preset" && preset === "memory") {
+      return !!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim();
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
 }
 
-function createSpeakerButton(getText, langCode, tone = "neutral") {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "spk-icon";
-  btn.setAttribute("aria-label", "Tekrar dinle");
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-      <path d="M16 8a4 4 0 0 1 0 8"></path>
-      <path d="M19 5a8 8 0 0 1 0 14"></path>
-    </svg>
-  `;
+function buildTtsCacheKey(text, langCode, tone = "neutral") {
+  const mode = getFaceVoiceMode();
+  const preset = getSelectedPresetVoice();
+  return JSON.stringify({
+    t: String(text || "").trim(),
+    l: canonical(langCode),
+    m: mode,
+    p: preset,
+    n: canonTone(tone)
+  });
+}
 
-  btn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+function rememberTtsCache(key, audioSrc) {
+  if (!key || !audioSrc) return;
+  if (ttsMemoryCache.has(key)) ttsMemoryCache.delete(key);
+  ttsMemoryCache.set(key, audioSrc);
 
-    const value = typeof getText === "function" ? String(getText() || "").trim() : "";
-    if (!value) return;
+  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
+    const firstKey = ttsMemoryCache.keys().next().value;
+    ttsMemoryCache.delete(firstKey);
+  }
+}
 
-    const premiumOk = await ensureCurrentFacePremiumModeAccess();
-    if (!premiumOk) return;
+async function playCachedAudio(audioSrc, runId) {
+  if (!audioSrc || runId !== speakRunId) return false;
 
-    await speak(value, langCode, tone);
+  const nextAudio = new Audio(audioSrc);
+  nextAudio.preload = "auto";
+  nextAudio.playsInline = true;
+  nextAudio.crossOrigin = "anonymous";
+
+  await warmAudio();
+  if (runId !== speakRunId) return false;
+
+  currentAudio = nextAudio;
+
+  nextAudio.onended = () => {
+    if (currentAudio === nextAudio) currentAudio = null;
+  };
+
+  nextAudio.onerror = () => {
+    if (currentAudio === nextAudio) currentAudio = null;
+  };
+
+  await nextAudio.play();
+  return true;
+}
+
+async function speakViaApi(text, langCode, tone = "neutral") {
+  const myRunId = ++speakRunId;
+  const userId = await getCurrentUserId();
+  const mode = getFaceVoiceMode();
+  const preset = getSelectedPresetVoice();
+  const finalVoice = mode === "preset" ? preset : mode;
+
+  const r = await fetch(`${API_BASE}/api/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: userId,
+      module: "facetoface",
+      voice: finalVoice,
+      tone: canonTone(tone)
+    }),
   });
 
-  return btn;
+  if (myRunId !== speakRunId) return false;
+
+  const j = await r.json().catch(() => null);
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || "TTS API unavailable");
+  }
+
+  const audioSrc = `data:audio/mp3;base64,${j.audio_base64}`;
+  rememberTtsCache(buildTtsCacheKey(text, langCode, tone), audioSrc);
+  return await playCachedAudio(audioSrc, myRunId);
 }
 
 function chooseWebVoice(langCode) {
@@ -847,6 +949,7 @@ function speakFallback(text, langCode) {
 
   try {
     if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.stop?.();
       window.NativeTTS.speak(value, canonical(langCode));
       return true;
     }
@@ -879,42 +982,65 @@ async function speak(text, langCode, tone = "neutral") {
   stopAudio();
   await warmAudio();
 
-  const ok = speakFallback(value, langCode);
-  if (!ok) showToast("Hoparlör sesi başlatılamadı");
-}
+  const mode = getFaceVoiceMode();
+  const preset = getSelectedPresetVoice();
+  const cacheKey = buildTtsCacheKey(value, langCode, tone);
+  const cachedAudio = ttsMemoryCache.get(cacheKey);
 
-async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
-  const inLen = String(inputText || "").trim().length;
-  const outLen = String(outputText || "").trim().length;
-  const billableChars = Math.max(inLen, outLen);
-  if (billableChars <= 0) return null;
+  if (cachedAudio) {
+    try {
+      const ok = await playCachedAudio(cachedAudio, ++speakRunId);
+      if (ok) return;
+    } catch {}
+  }
 
-  let latestResult = null;
+  const wantsApiVoice =
+    mode === "clone" ||
+    mode === "female" ||
+    mode === "male" ||
+    (mode === "preset" && (preset === "second" || preset === "memory"));
 
-  if (isPaidFaceTextMode()) {
-    latestResult = await commitUsage({
-      module: faceTextUsageModule(),
-      usageKind: "text",
-      charCount: billableChars,
-      note: faceTextUsageNote(),
-      meta: {
-        surface: "facetoface",
-        from_lang: canonical(srcLang),
-        to_lang: canonical(dstLang),
-        translate_mode: getFaceTranslateMode(),
-        voice_mode: getFaceVoiceMode(),
-        input_chars: inLen,
-        output_chars: outLen,
-        billable_chars: billableChars
+  if (wantsApiVoice) {
+    try {
+      const ready = await hasReadyVoiceProfile();
+      if (ready || mode === "female" || mode === "male") {
+        const ok = await speakViaApi(value, langCode, tone);
+        if (ok) {
+          if (isPaidFaceVoiceMode()) {
+            Promise.resolve().then(async () => {
+              try {
+                const voiceUsageResult = await commitUsage({
+                  module: faceVoiceUsageModule(),
+                  usageKind: "voice",
+                  charCount: value.length,
+                  note: faceVoiceUsageNote(),
+                  meta: {
+                    surface: "facetoface",
+                    lang: canonical(langCode),
+                    tone: canonTone(tone),
+                    voice_mode: mode,
+                    preset_voice: preset,
+                    output_chars: value.length,
+                    billable_chars: value.length
+                  }
+                });
+
+                if (typeof voiceUsageResult?.tokens_after === "number") {
+                  try { setHeaderTokens(voiceUsageResult.tokens_after); } catch {}
+                }
+              } catch {}
+            });
+          }
+          return;
+        }
       }
-    });
+    } catch (e) {
+      console.warn("[facetoface speakViaApi]", e);
+    }
   }
 
-  if (typeof latestResult?.tokens_after === "number") {
-    try { setHeaderTokens(latestResult.tokens_after); } catch {}
-  }
-
-  return latestResult;
+  const fallbackOk = speakFallback(value, langCode);
+  if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
 }
 
 function addBubble(side, kind, text, opts = {}) {
