@@ -846,7 +846,58 @@ async function warmAudio() {
     }
   } catch {}
 }
+function buildTtsCacheKey(text, langCode, tone = "neutral") {
+  const mode = getFaceVoiceMode();
+  const preset = getSelectedPresetVoice();
 
+  return JSON.stringify({
+    t: String(text || "").trim(),
+    l: canonical(langCode),
+    m: mode,
+    p: preset,
+    n: canonTone(tone)
+  });
+}
+
+function rememberTtsCache(key, audioSrc) {
+  if (!key || !audioSrc) return;
+
+  if (ttsMemoryCache.has(key)) {
+    ttsMemoryCache.delete(key);
+  }
+
+  ttsMemoryCache.set(key, audioSrc);
+
+  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
+    const firstKey = ttsMemoryCache.keys().next().value;
+    ttsMemoryCache.delete(firstKey);
+  }
+}
+
+async function playCachedAudio(audioSrc, runId) {
+  if (!audioSrc || runId !== speakRunId) return false;
+
+  await warmAudio();
+  if (runId !== speakRunId) return false;
+
+  const audio = new Audio(audioSrc);
+  audio.preload = "auto";
+  audio.playsInline = true;
+  audio.crossOrigin = "anonymous";
+
+  currentAudio = audio;
+
+  audio.onended = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  await audio.play();
+  return true;
+}
 function createSpeakerButton(getText, langCode, tone = "neutral") {
   const btn = document.createElement("button");
   btn.type = "button";
