@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Arkadaşlarla</title>
+  <title>italkyAI • Arkadaşla</title>
   <meta name="theme-color" content="#07111a"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,29 +13,26 @@
   <style>
     :root{
       --bg:#07111a;
-      --bg2:#0a1624;
-      --bg3:#0d1b2d;
-      --text:#f5fbff;
-      --muted:rgba(255,255,255,.58);
+      --bg2:#0b1624;
+      --bg3:#102033;
+      --text:#f4fbff;
+      --muted:rgba(255,255,255,.60);
 
       --cyan:#22d3ee;
       --cyan2:#06b6d4;
       --blue:#3b82f6;
       --blue2:#2563eb;
-      --navy:#0b1120;
-      --navy2:#111827;
       --green:#34d399;
       --red:#ef4444;
-      --yellow:#facc15;
-
-      --glass:rgba(255,255,255,.045);
       --line:rgba(255,255,255,.08);
+      --glass:rgba(255,255,255,.045);
 
       --safe-top: env(safe-area-inset-top);
       --safe-bottom: env(safe-area-inset-bottom);
 
       --header-h:66px;
       --footer-h:44px;
+      --topbar-h:58px;
       --composer-h:86px;
       --keyboard-offset:0px;
       --app-height:100dvh;
@@ -70,8 +67,8 @@
       margin:0 auto;
       overflow:hidden;
       background:
-        radial-gradient(circle at 20% 0%, rgba(34,211,238,.08), transparent 20%),
-        radial-gradient(circle at 85% 8%, rgba(59,130,246,.06), transparent 18%),
+        radial-gradient(circle at 18% 0%, rgba(34,211,238,.08), transparent 20%),
+        radial-gradient(circle at 82% 8%, rgba(59,130,246,.07), transparent 18%),
         linear-gradient(180deg,#050b12 0%, #09111d 100%);
       border-left:1px solid rgba(255,255,255,.04);
       border-right:1px solid rgba(255,255,255,.04);
@@ -110,7 +107,7 @@
     .icon-btn svg,
     .send-btn svg,
     .mic-btn svg,
-    .mini-btn svg{
+    .top-mini-btn svg{
       width:20px;
       height:20px;
       stroke:currentColor;
@@ -141,7 +138,7 @@
       color:#fff;
     }
 
-    .brand-title .ai{
+    .brand-title .accent{
       background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
@@ -161,7 +158,6 @@
       pointer-events:none;
       z-index:120;
     }
-
     .menu.open{ pointer-events:auto; }
 
     .menu-backdrop{
@@ -172,7 +168,6 @@
       opacity:0;
       transition:opacity .22s ease;
     }
-
     .menu.open .menu-backdrop{ opacity:1; }
 
     .menu-panel{
@@ -191,7 +186,6 @@
       flex-direction:column;
       gap:12px;
     }
-
     .menu.open .menu-panel{ transform:translateX(0); }
 
     .menu-user{
@@ -241,7 +235,7 @@
       color:#fff;
     }
 
-    .menu-logo .ai{
+    .menu-logo .accent{
       background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
@@ -268,7 +262,6 @@
       overflow:auto;
       scrollbar-width:none;
     }
-
     .menu-list::-webkit-scrollbar{ display:none; }
 
     .menu-item{
@@ -309,100 +302,68 @@
       overflow:hidden;
     }
 
-    .room-strip{
+    .topbar{
       position:absolute;
       top:0;
       left:0;
       right:0;
-      z-index:9;
+      height:var(--topbar-h);
       padding:10px 14px 8px;
+      z-index:10;
       background:linear-gradient(180deg, rgba(7,17,26,.94), rgba(7,17,26,.72));
       border-bottom:1px solid rgba(255,255,255,.05);
       backdrop-filter:blur(12px);
     }
 
-    .room-card{
+    .topbar-inner{
+      height:100%;
       border-radius:18px;
-      padding:12px;
+      padding:0 12px;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 10px 28px rgba(0,0,0,.18);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .room-top{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      box-shadow:0 10px 28px rgba(0,0,0,.18);
     }
 
-    .room-title{
-      font-size:12px;
-      font-weight:900;
-      color:rgba(255,255,255,.62);
-      letter-spacing:.3px;
+    .topbar-left{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex:1;
     }
 
-    .room-badge{
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:11px;
+    .topbar-label{
+      font-size:13px;
       font-weight:900;
-      color:#dbeafe;
-      background:rgba(59,130,246,.14);
-      border:1px solid rgba(59,130,246,.22);
+      color:rgba(255,255,255,.72);
       white-space:nowrap;
     }
 
-    .room-code-line{
-      display:flex;
-      align-items:end;
-      justify-content:space-between;
-      gap:8px;
-    }
-
-    .room-code-wrap{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    .room-code-label{
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.52);
-    }
-
-    .room-code{
+    .topbar-code{
       font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:28px;
+      font-size:22px;
       line-height:1;
-      letter-spacing:2px;
       font-weight:900;
+      letter-spacing:1.4px;
       color:#fff;
-      text-shadow:0 0 24px rgba(34,211,238,.15);
+      text-shadow:0 0 24px rgba(34,211,238,.18);
     }
 
-    .room-sub{
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.54);
-    }
-
-    .room-actions{
+    .topbar-right{
       display:flex;
+      align-items:center;
       gap:8px;
-      flex-wrap:wrap;
+      flex:0 0 auto;
     }
 
-    .mini-btn{
-      min-height:36px;
+    .top-mini-btn{
+      min-height:34px;
       border:none;
-      border-radius:14px;
+      border-radius:12px;
       padding:0 12px;
       background:rgba(255,255,255,.05);
       color:#fff;
@@ -414,82 +375,26 @@
       justify-content:center;
       gap:8px;
       cursor:pointer;
+      white-space:nowrap;
     }
 
-    .mini-btn.primary{
-      background:linear-gradient(135deg, rgba(34,211,238,.18), rgba(59,130,246,.18));
+    .top-mini-btn.primary{
+      background:linear-gradient(135deg, rgba(34,211,238,.16), rgba(59,130,246,.16));
       border-color:rgba(34,211,238,.24);
       color:#ecfeff;
     }
 
     .chat-scroll{
       position:absolute;
-      inset:118px 0 0 0;
+      inset:calc(var(--topbar-h) + 6px) 0 0 0;
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
       overscroll-behavior:contain;
-      padding:2px 14px calc(var(--composer-h) + 26px + var(--keyboard-offset));
+      padding:8px 14px calc(var(--composer-h) + 26px + var(--keyboard-offset));
       display:flex;
       flex-direction:column;
       gap:10px;
       scroll-behavior:smooth;
-    }
-
-    .welcome-panel{
-      border-radius:24px;
-      padding:18px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 8px 22px rgba(0,0,0,.18);
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      margin-top:2px;
-    }
-
-    .welcome-title{
-      margin:0;
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:22px;
-      line-height:1.05;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .welcome-text{
-      margin:0;
-      font-size:14px;
-      line-height:1.5;
-      font-weight:700;
-      color:rgba(255,255,255,.74);
-    }
-
-    .welcome-actions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .hero-btn{
-      min-height:52px;
-      border:none;
-      border-radius:18px;
-      cursor:pointer;
-      font-family:inherit;
-      font-size:14px;
-      font-weight:900;
-      padding:0 14px;
-    }
-
-    .hero-btn.primary{
-      color:#05131b;
-      background:linear-gradient(135deg, #67e8f9 0%, #38bdf8 50%, #60a5fa 100%);
-    }
-
-    .hero-btn.secondary{
-      color:#e0f2fe;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
     }
 
     .msg{
@@ -497,7 +402,6 @@
       width:100%;
       flex:0 0 auto;
     }
-
     .msg.left{ justify-content:flex-start; }
     .msg.right{ justify-content:flex-end; }
     .msg.center{ justify-content:center; }
@@ -519,19 +423,6 @@
 
     .bubble.left{ border-left:4px solid var(--cyan); }
     .bubble.right{ border-right:4px solid var(--green); }
-
-    .system-bubble{
-      max-width:88%;
-      text-align:center;
-      padding:10px 14px;
-      border-radius:999px;
-      background:rgba(34,211,238,.10);
-      border:1px solid rgba(34,211,238,.18);
-      color:#cffafe;
-      font-size:12px;
-      font-weight:900;
-      box-shadow:0 8px 22px rgba(0,0,0,.14);
-    }
 
     .msg-name{
       margin-bottom:8px;
@@ -557,6 +448,19 @@
       color:var(--muted);
     }
 
+    .system-bubble{
+      max-width:88%;
+      text-align:center;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(34,211,238,.10);
+      border:1px solid rgba(34,211,238,.18);
+      color:#cffafe;
+      font-size:12px;
+      font-weight:900;
+      box-shadow:0 8px 22px rgba(0,0,0,.14);
+    }
+
     .typing{
       display:none;
       position:absolute;
@@ -568,7 +472,6 @@
       font-weight:800;
       z-index:5;
     }
-
     .typing.show{ display:block; }
 
     .composer-wrap{
@@ -695,7 +598,6 @@
       z-index:9999;
       padding:20px;
     }
-
     .modal.open{ display:flex; }
 
     .modal-card{
@@ -712,7 +614,7 @@
 
     .modal-title{
       margin:0;
-      font-family:'Space Grotesk',sans-serif;
+      font-family:"Space Grotesk", sans-serif;
       font-size:18px;
       font-weight:900;
       color:#fff;
@@ -724,6 +626,34 @@
       line-height:1.48;
       font-weight:700;
       color:rgba(255,255,255,.72);
+    }
+
+    .modal-code-box{
+      border-radius:18px;
+      padding:16px 14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+    }
+
+    .modal-code-label{
+      font-size:12px;
+      font-weight:800;
+      color:rgba(255,255,255,.60);
+    }
+
+    .modal-code{
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:34px;
+      line-height:1;
+      font-weight:900;
+      letter-spacing:2px;
+      color:#fff;
+      text-shadow:0 0 24px rgba(34,211,238,.16);
     }
 
     .modal-input{
@@ -739,6 +669,11 @@
       outline:none;
       letter-spacing:1.5px;
       text-align:center;
+    }
+
+    .modal-input::placeholder{
+      color:rgba(255,255,255,.46);
+      letter-spacing:0;
     }
 
     .modal-actions{
@@ -823,37 +758,113 @@
       display:block;
     }
 
-    .code-big{
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:30px;
-      line-height:1;
-      letter-spacing:2px;
+    .lang-sheet{
+      position:fixed;
+      inset:0;
+      z-index:9998;
+      display:none;
+      align-items:flex-end;
+      background:rgba(0,0,0,.44);
+      backdrop-filter:blur(8px);
+      padding:14px;
+    }
+    .lang-sheet.open{ display:flex; }
+
+    .lang-sheet-card{
+      width:100%;
+      max-width:430px;
+      margin:0 auto;
+      border-radius:26px 26px 18px 18px;
+      padding:16px;
+      background:linear-gradient(180deg, rgba(10,18,28,.98), rgba(7,14,24,.98));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 -14px 30px rgba(0,0,0,.28);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .sheet-handle{
+      width:54px;
+      height:5px;
+      border-radius:999px;
+      background:rgba(255,255,255,.18);
+      margin:0 auto 4px;
+    }
+
+    .sheet-title{
+      margin:0;
+      font-family:"Space Grotesk", sans-serif;
+      font-size:18px;
       font-weight:900;
-      color:#e0f2fe;
+      color:#fff;
+    }
+
+    .lang-list{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      max-height:48vh;
+      overflow:auto;
+      padding-right:2px;
+    }
+
+    .lang-btn{
+      min-height:48px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+      padding:0 12px;
+      text-align:left;
+    }
+
+    .lang-btn.active{
+      background:linear-gradient(135deg, rgba(34,211,238,.16), rgba(59,130,246,.16));
+      border-color:rgba(34,211,238,.24);
+      color:#ecfeff;
+    }
+
+    @media (max-width:390px){
+      .topbar-label{ font-size:12px; }
+      .topbar-code{ font-size:19px; }
+      .top-mini-btn{ padding:0 10px; font-size:11px; }
     }
   </style>
 </head>
 <body>
 
-<div class="modal" id="joinModal">
+<div class="modal" id="connectModal">
   <div class="modal-card">
-    <h3 class="modal-title">Sohbete Katıl</h3>
-    <p class="modal-text">Arkadaşının 6 haneli sohbet kodunu gir. İstek karşı tarafa hemen gönderilsin.</p>
-    <input id="joinCodeInput" class="modal-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000">
+    <h3 class="modal-title">Kod Gir</h3>
+    <p class="modal-text">Arkadaşına bu kodu ver ya da onun kodunu gir. Kim önce girerse, diğer tarafta onay penceresi açılır.</p>
+
+    <div class="modal-code-box">
+      <div class="modal-code-label">Senin Sohbet ID</div>
+      <div class="modal-code" id="modalOwnCode">000000</div>
+    </div>
+
+    <input id="connectCodeInput" class="modal-input" type="text" inputmode="numeric" maxlength="6" placeholder="Karşı tarafın kodu">
+
     <div class="modal-actions">
-      <button class="modal-btn secondary" id="cancelJoinBtn" type="button">Vazgeç</button>
-      <button class="modal-btn primary" id="confirmJoinBtn" type="button">İstek Gönder</button>
+      <button class="modal-btn secondary" id="closeConnectModalBtn" type="button">Kapat</button>
+      <button class="modal-btn primary" id="connectNowBtn" type="button">Bağlan</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="incomingRequestModal">
   <div class="modal-card">
-    <h3 class="modal-title">Sohbet İsteği</h3>
-    <p class="modal-text" id="incomingRequestText">Birisi seninle sohbet etmek istiyor.</p>
+    <h3 class="modal-title">Bağlantı İsteği</h3>
+    <p class="modal-text" id="incomingRequestText">Birisi seninle bağlanmak istiyor.</p>
     <div class="modal-actions">
       <button class="modal-btn red" id="rejectRequestBtn" type="button">Reddet</button>
-      <button class="modal-btn primary" id="acceptRequestBtn" type="button">Kabul Et</button>
+      <button class="modal-btn primary" id="acceptRequestBtn" type="button">Onayla</button>
     </div>
   </div>
 </div>
@@ -861,15 +872,23 @@
 <div class="modal" id="appQrModal">
   <div class="qr-full-card">
     <h3 class="qr-title">Uygulamayı İndir</h3>
-    <p class="qr-sub">Karşı tarafta uygulama yoksa bu QR ile indirsin. Odaya giriş için sadece kısa kod yeterli.</p>
+    <p class="qr-sub">Karşı tarafta uygulama yoksa bu QR ile indirsin. Sohbete bağlanmak için sadece kısa kod yeterli.</p>
     <div class="qr-box">
       <img id="appQrImage" alt="Uygulama QR">
     </div>
-    <div class="code-big" id="shareCodeBig">000000</div>
     <div class="modal-actions" style="width:100%;">
       <button class="modal-btn secondary" id="copyStoreLinkBtn" type="button">Linki Kopyala</button>
       <button class="modal-btn primary" id="closeQrModalBtn" type="button">Kapat</button>
     </div>
+  </div>
+</div>
+
+<div class="lang-sheet" id="langSheet">
+  <div class="lang-sheet-card">
+    <div class="sheet-handle"></div>
+    <h3 class="sheet-title">Dil Seç</h3>
+    <div class="lang-list" id="langList"></div>
+    <button class="modal-btn secondary" id="closeLangSheetBtn" type="button">Kapat</button>
   </div>
 </div>
 
@@ -881,18 +900,18 @@
         <img id="menuUserAvatarImg" alt="Avatar">
       </div>
       <div class="menu-user-meta">
-        <div class="menu-logo">italky<span class="ai">AI</span></div>
+        <div class="menu-logo">italky<span class="accent">AI</span></div>
         <div class="menu-name" id="menuUserName">Kullanıcı</div>
         <div class="menu-jeton" id="menuJeton">Jeton: 0</div>
       </div>
     </div>
 
     <div class="menu-list">
-      <button class="menu-item white" id="startWaitingBtn" type="button">Sohbet Başlat</button>
-      <button class="menu-item" id="openJoinBtn" type="button">Sohbete Katıl</button>
-      <button class="menu-item cyan" id="showMyCodeBtn" type="button">Benim Kodum</button>
+      <button class="menu-item white" id="newConnectionBtn" type="button">Yeni Bağlantı</button>
+      <button class="menu-item cyan" id="copyMyCodeBtn" type="button">Sohbet ID Kopyala</button>
+      <button class="menu-item" id="openConnectFromMenuBtn" type="button">Kod Gir</button>
+      <button class="menu-item" id="openLangFromMenuBtn" type="button">Dil Seç</button>
       <button class="menu-item" id="showAppQrBtn" type="button">Uygulama QR</button>
-      <button class="menu-item" id="copyCodeBtn" type="button">Kodumu Kopyala</button>
       <button class="menu-item" id="clearChatBtn" type="button">Sohbeti Temizle</button>
       <button class="menu-item" id="jetonYukleBtn" type="button">Jeton Yükle</button>
       <button class="menu-item red" id="homeBtn" type="button">Ana Sayfaya Dön</button>
@@ -908,7 +927,7 @@
       </button>
 
       <div class="brand" id="brandHome">
-        <h1 class="brand-title">Arkadaş<span class="ai">larla</span></h1>
+        <h1 class="brand-title">Arkadaş<span class="accent">la</span></h1>
         <p class="brand-sub">LIVE CONNECT</p>
       </div>
 
@@ -927,52 +946,21 @@
     </header>
 
     <section class="main">
-      <div class="room-strip">
-        <div class="room-card">
-          <div class="room-top">
-            <div class="room-title">Senin sabit sohbet kodun</div>
-            <div class="room-badge" id="roomStatusBadge">Beklemede</div>
+      <div class="topbar">
+        <div class="topbar-inner">
+          <div class="topbar-left">
+            <div class="topbar-label">Sohbet ID :</div>
+            <div class="topbar-code" id="myChatCode">000000</div>
           </div>
 
-          <div class="room-code-line">
-            <div class="room-code-wrap">
-              <div class="room-code-label">Arkadaşların bu kodla sana ulaşır</div>
-              <div class="room-code" id="myPersonalCode">000000</div>
-              <div class="room-sub" id="roomSubText">Uygulama açıksa istek anında ekrana düşer.</div>
-            </div>
-          </div>
-
-          <div class="room-actions">
-            <button class="mini-btn primary" id="miniStartBtn" type="button">
-              <svg viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
-              Sohbet Başlat
-            </button>
-            <button class="mini-btn" id="miniJoinBtn" type="button">
-              <svg viewBox="0 0 24 24"><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
-              Kodla Katıl
-            </button>
-            <button class="mini-btn" id="miniQrBtn" type="button">
-              <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4z"></path><path d="M14 4h6v6h-6z"></path><path d="M4 14h6v6H4z"></path></svg>
-              Uygulama QR
-            </button>
+          <div class="topbar-right">
+            <button class="top-mini-btn primary" id="openLangBtn" type="button">Dil Seç</button>
+            <button class="top-mini-btn" id="openConnectBtn" type="button">Kod Gir</button>
           </div>
         </div>
       </div>
 
-      <div class="chat-scroll" id="chatMessages">
-        <div class="welcome-panel" id="welcomePanel">
-          <h2 class="welcome-title">Arkadaşlarla konuşmaya başla</h2>
-          <p class="welcome-text">
-            Kodunu paylaş, gelen isteği kabul et ve herkes kendi dilinde konuşsun.
-            Sistem bunu sohbet ekranında düzenli şekilde akıtsın.
-          </p>
-          <div class="welcome-actions">
-            <button class="hero-btn primary" id="heroStartBtn" type="button">Sohbet Başlat</button>
-            <button class="hero-btn secondary" id="heroJoinBtn" type="button">Sohbete Katıl</button>
-          </div>
-        </div>
-      </div>
-
+      <div class="chat-scroll" id="chatMessages"></div>
       <div class="typing" id="typingState">Bağlantı kuruluyor...</div>
 
       <div class="composer-wrap">
@@ -1012,9 +1000,19 @@
 
   const $ = (id) => document.getElementById(id);
 
+  const APP_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+
+  const LANGS = [
+    { code: "tr", label: "Türkçe" },
+    { code: "en", label: "English" },
+    { code: "de", label: "Deutsch" },
+    { code: "fr", label: "Français" },
+    { code: "it", label: "Italiano" },
+    { code: "es", label: "Español" }
+  ];
+
   const UI = {
     chatMessages: $("chatMessages"),
-    welcomePanel: $("welcomePanel"),
     chatInput: $("chatInput"),
     sendBtn: $("sendBtn"),
     micBtn: $("micBtn"),
@@ -1027,34 +1025,20 @@
     brandHome: $("brandHome"),
     jetonYukleBtn: $("jetonYukleBtn"),
 
-    topQrBtn: $("topQrBtn"),
-
-    startWaitingBtn: $("startWaitingBtn"),
-    openJoinBtn: $("openJoinBtn"),
-    showMyCodeBtn: $("showMyCodeBtn"),
-    showAppQrBtn: $("showAppQrBtn"),
-    copyCodeBtn: $("copyCodeBtn"),
-    clearChatBtn: $("clearChatBtn"),
-
-    heroStartBtn: $("heroStartBtn"),
-    heroJoinBtn: $("heroJoinBtn"),
-    miniStartBtn: $("miniStartBtn"),
-    miniJoinBtn: $("miniJoinBtn"),
-    miniQrBtn: $("miniQrBtn"),
-
-    myPersonalCode: $("myPersonalCode"),
-    roomStatusBadge: $("roomStatusBadge"),
-    roomSubText: $("roomSubText"),
-
     menuUserAvatar: $("menuUserAvatar"),
     menuUserAvatarImg: $("menuUserAvatarImg"),
     menuUserName: $("menuUserName"),
     menuJeton: $("menuJeton"),
 
-    joinModal: $("joinModal"),
-    joinCodeInput: $("joinCodeInput"),
-    cancelJoinBtn: $("cancelJoinBtn"),
-    confirmJoinBtn: $("confirmJoinBtn"),
+    myChatCode: $("myChatCode"),
+    openLangBtn: $("openLangBtn"),
+    openConnectBtn: $("openConnectBtn"),
+
+    connectModal: $("connectModal"),
+    modalOwnCode: $("modalOwnCode"),
+    connectCodeInput: $("connectCodeInput"),
+    connectNowBtn: $("connectNowBtn"),
+    closeConnectModalBtn: $("closeConnectModalBtn"),
 
     incomingRequestModal: $("incomingRequestModal"),
     incomingRequestText: $("incomingRequestText"),
@@ -1063,23 +1047,48 @@
 
     appQrModal: $("appQrModal"),
     appQrImage: $("appQrImage"),
-    shareCodeBig: $("shareCodeBig"),
     copyStoreLinkBtn: $("copyStoreLinkBtn"),
-    closeQrModalBtn: $("closeQrModalBtn")
+    closeQrModalBtn: $("closeQrModalBtn"),
+
+    langSheet: $("langSheet"),
+    langList: $("langList"),
+    closeLangSheetBtn: $("closeLangSheetBtn"),
+
+    newConnectionBtn: $("newConnectionBtn"),
+    copyMyCodeBtn: $("copyMyCodeBtn"),
+    openConnectFromMenuBtn: $("openConnectFromMenuBtn"),
+    openLangFromMenuBtn: $("openLangFromMenuBtn"),
+    showAppQrBtn: $("showAppQrBtn"),
+    clearChatBtn: $("clearChatBtn"),
+
+    topQrBtn: $("topQrBtn")
   };
 
   const state = {
     currentUser: null,
     currentProfile: null,
-    personalCode: "000000",
-    activeConversationId: null,
+    myCode: "000000",
+    selectedLang: "tr",
+    recognition: null,
     activePeerName: "",
-    isWaiting: false,
-    incomingRequest: null,
-    recognition: null
+    isConnected: false,
+    incomingRequest: null
   };
 
-  const APP_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+  function buildQrUrl(text) {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(text)}`;
+  }
+
+  function generateFallbackCode(seed = "") {
+    let hash = 0;
+    const str = String(seed || crypto.randomUUID());
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    const num = Math.abs(hash).toString().slice(0, 6);
+    return num.padEnd(6, "7").slice(0, 6);
+  }
 
   function openMenu() {
     UI.menu.classList.add("open");
@@ -1089,18 +1098,18 @@
     UI.menu.classList.remove("open");
   }
 
-  function openJoinModal() {
-    UI.joinCodeInput.value = "";
-    UI.joinModal.classList.add("open");
-    setTimeout(() => UI.joinCodeInput.focus(), 60);
+  function openConnectModal() {
+    UI.modalOwnCode.textContent = state.myCode || "000000";
+    UI.connectCodeInput.value = "";
+    UI.connectModal.classList.add("open");
+    setTimeout(() => UI.connectCodeInput.focus(), 60);
   }
 
-  function closeJoinModal() {
-    UI.joinModal.classList.remove("open");
+  function closeConnectModal() {
+    UI.connectModal.classList.remove("open");
   }
 
   function openQrModal() {
-    UI.shareCodeBig.textContent = state.personalCode || "000000";
     UI.appQrImage.src = buildQrUrl(APP_STORE_URL);
     UI.appQrModal.classList.add("open");
   }
@@ -1109,9 +1118,17 @@
     UI.appQrModal.classList.remove("open");
   }
 
+  function openLangSheet() {
+    UI.langSheet.classList.add("open");
+  }
+
+  function closeLangSheet() {
+    UI.langSheet.classList.remove("open");
+  }
+
   function openIncomingRequestModal(name = "Birisi") {
     state.incomingRequest = { name };
-    UI.incomingRequestText.textContent = `${name} seninle sohbet etmek istiyor. Kabul ediyor musun?`;
+    UI.incomingRequestText.textContent = `${name} bağlanmak istiyor. Onaylıyor musun?`;
     UI.incomingRequestModal.classList.add("open");
   }
 
@@ -1145,9 +1162,7 @@
     const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
 
-    requestAnimationFrame(() => {
-      scrollChatToBottom();
-    });
+    requestAnimationFrame(scrollChatToBottom);
   }
 
   function setTyping(show, text = "Bağlantı kuruluyor...") {
@@ -1155,13 +1170,7 @@
     UI.typingState.classList.toggle("show", !!show);
   }
 
-  function hideWelcomePanel() {
-    UI.welcomePanel?.remove();
-  }
-
   function addSystemMessage(text) {
-    hideWelcomePanel();
-
     const row = document.createElement("div");
     row.className = "msg center";
 
@@ -1175,8 +1184,6 @@
   }
 
   function addChatMessage(side, payload = {}) {
-    hideWelcomePanel();
-
     const row = document.createElement("div");
     row.className = `msg ${side}`;
 
@@ -1215,19 +1222,70 @@
     scrollChatToBottom();
   }
 
-  function buildQrUrl(text) {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(text)}`;
+  function renderLangList() {
+    UI.langList.innerHTML = "";
+    LANGS.forEach((lang) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `lang-btn ${state.selectedLang === lang.code ? "active" : ""}`;
+      btn.textContent = lang.label;
+      btn.addEventListener("click", () => {
+        state.selectedLang = lang.code;
+        UI.openLangBtn.textContent = lang.label;
+        renderLangList();
+        addSystemMessage(`Dil seçildi: ${lang.label}`);
+        closeLangSheet();
+        closeMenu();
+      });
+      UI.langList.appendChild(btn);
+    });
   }
 
-  function generateFallbackCode(seed = "") {
-    let hash = 0;
-    const str = String(seed || crypto.randomUUID());
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
+  function normalizeCodeInput() {
+    UI.connectCodeInput.value = String(UI.connectCodeInput.value || "")
+      .replace(/\D+/g, "")
+      .slice(0, 6);
+  }
+
+  function copyText(text, label = "") {
+    navigator.clipboard?.writeText(text).then(() => {
+      addSystemMessage(label || `Kopyalandı: ${text}`);
+    }).catch(() => {
+      addSystemMessage("Kopyalama yapılamadı.");
+    });
+  }
+
+  function startRecognition() {
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      addSystemMessage("Bu cihazda sesli giriş desteklenmiyor.");
+      return;
     }
-    const num = Math.abs(hash).toString().slice(0, 6);
-    return num.padEnd(6, "7").slice(0, 6);
+
+    try { state.recognition?.stop(); } catch {}
+
+    const recognition = new Recognition();
+    recognition.lang = state.selectedLang === "tr" ? "tr-TR" : "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      const transcript = event?.results?.[0]?.[0]?.transcript || "";
+      if (transcript.trim()) {
+        UI.chatInput.value = transcript.trim();
+        autoResizeTextarea();
+        syncInputActionState();
+      }
+    };
+
+    recognition.onerror = () => {
+      addSystemMessage("Ses algılanamadı. Bir daha deneyelim.");
+    };
+
+    try {
+      recognition.start();
+      state.recognition = recognition;
+    } catch {}
   }
 
   async function getAuthContext() {
@@ -1269,25 +1327,11 @@
     }
   }
 
-  async function ensurePersonalCode(profile, user) {
+  async function ensureChatCode(profile, user) {
     const existing = String(profile?.chat_code || "").trim();
-    if (/^\d{6}$/.test(existing)) {
-      return existing;
-    }
+    if (/^\d{6}$/.test(existing)) return existing;
 
     const newCode = generateFallbackCode(user?.id || user?.email || crypto.randomUUID());
-
-    try {
-      if (user?.id) {
-        await supabase
-          .from("profiles")
-          .update({ chat_code: newCode })
-          .eq("id", user.id);
-      }
-    } catch (e) {
-      console.warn("chat_code update yapılamadı:", e);
-    }
-
     return newCode;
   }
 
@@ -1318,66 +1362,47 @@
     UI.menuUserName.textContent = fullName;
     UI.menuJeton.textContent = `Jeton: ${tokens}`;
 
-    state.personalCode = await ensurePersonalCode(ctx?.profile, ctx?.user);
-    UI.myPersonalCode.textContent = state.personalCode;
-    UI.shareCodeBig.textContent = state.personalCode;
-  }
+    state.myCode = await ensureChatCode(ctx?.profile, ctx?.user);
+    UI.myChatCode.textContent = state.myCode;
+    UI.modalOwnCode.textContent = state.myCode;
 
-  function setRoomStatus(mode = "idle", peerName = "") {
-    state.isWaiting = mode === "waiting";
-    state.activePeerName = peerName || "";
-
-    if (mode === "idle") {
-      UI.roomStatusBadge.textContent = "Beklemede";
-      UI.roomSubText.textContent = "Uygulama açıksa istek anında ekrana düşer.";
-      return;
+    const firstName = String(fullName).trim().split(" ")[0] || "Kullanıcı";
+    if (!UI.chatMessages.children.length) {
+      addSystemMessage(`Merhaba ${firstName}. Kod girerek bağlantı başlatabilirsin.`);
     }
-
-    if (mode === "waiting") {
-      UI.roomStatusBadge.textContent = "İstek Açık";
-      UI.roomSubText.textContent = "Kodunu paylaş, gelen isteği kabul et.";
-      return;
-    }
-
-    if (mode === "active") {
-      UI.roomStatusBadge.textContent = "Bağlandı";
-      UI.roomSubText.textContent = peerName ? `${peerName} ile sohbet aktif.` : "Sohbet aktif.";
-    }
-  }
-
-  function startWaitingMode() {
-    setRoomStatus("waiting");
-    addSystemMessage(`Sohbet isteği almaya hazırsın. Kodun: ${state.personalCode}`);
-    closeMenu();
   }
 
   function clearChat() {
     UI.chatMessages.innerHTML = "";
-    UI.chatMessages.appendChild(UI.welcomePanel || document.createElement("div"));
-    if (!document.getElementById("welcomePanel")) {
-      const wrap = document.createElement("div");
-      wrap.id = "welcomePanel";
-      wrap.className = "welcome-panel";
-      wrap.innerHTML = `
-        <h2 class="welcome-title">Arkadaşlarla konuşmaya başla</h2>
-        <p class="welcome-text">
-          Kodunu paylaş, gelen isteği kabul et ve herkes kendi dilinde konuşsun.
-          Sistem bunu sohbet ekranında düzenli şekilde akıtsın.
-        </p>
-        <div class="welcome-actions">
-          <button class="hero-btn primary" id="heroStartBtnClone" type="button">Sohbet Başlat</button>
-          <button class="hero-btn secondary" id="heroJoinBtnClone" type="button">Sohbete Katıl</button>
-        </div>
-      `;
-      UI.chatMessages.appendChild(wrap);
-      wrap.querySelector("#heroStartBtnClone")?.addEventListener("click", startWaitingMode);
-      wrap.querySelector("#heroJoinBtnClone")?.addEventListener("click", openJoinModal);
-    }
-    setRoomStatus("idle");
-    scrollChatToBottom();
+    state.isConnected = false;
+    state.activePeerName = "";
+    addSystemMessage("Sohbet temizlendi.");
+    closeMenu();
   }
 
-  async function sendMessage() {
+  function connectByCodeMock() {
+    const code = String(UI.connectCodeInput.value || "").trim();
+
+    if (!/^\d{6}$/.test(code)) {
+      alert("Lütfen 6 haneli kod gir.");
+      return;
+    }
+
+    if (code === state.myCode) {
+      alert("Kendi kodunu giremezsin.");
+      return;
+    }
+
+    closeConnectModal();
+    setTyping(true, "İstek gönderiliyor...");
+
+    setTimeout(() => {
+      setTyping(false);
+      addSystemMessage(`${code} kodlu kullanıcıya istek gönderildi.`);
+    }, 700);
+  }
+
+  function sendMessageMock() {
     const text = String(UI.chatInput.value || "").trim();
     if (!text) return;
 
@@ -1392,70 +1417,8 @@
     syncInputActionState();
 
     setTimeout(() => {
-      addSystemMessage("Bu ön yüz hazırlık sürümüdür. Sonraki adımda gerçek bağlantı ve bildirim akışı bağlanacak.");
+      addSystemMessage("Bu sürümde ön yüz hazır. Sonraki adımda gerçek eşleşme ve canlı bağlantı bağlanacak.");
     }, 350);
-  }
-
-  function normalizeJoinCodeInput() {
-    UI.joinCodeInput.value = String(UI.joinCodeInput.value || "")
-      .replace(/\D+/g, "")
-      .slice(0, 6);
-  }
-
-  function sendJoinRequestMock() {
-    const code = String(UI.joinCodeInput.value || "").trim();
-    if (!/^\d{6}$/.test(code)) {
-      alert("Lütfen 6 haneli kod gir.");
-      return;
-    }
-
-    closeJoinModal();
-    setTyping(true, "İstek gönderiliyor...");
-
-    setTimeout(() => {
-      setTyping(false);
-      addSystemMessage(`${code} kodlu kullanıcıya sohbet isteği gönderildi.`);
-      setRoomStatus("waiting");
-    }, 700);
-  }
-
-  function copyText(text) {
-    navigator.clipboard?.writeText(text).then(() => {
-      addSystemMessage(`Kopyalandı: ${text}`);
-    }).catch(() => {
-      addSystemMessage("Kopyalama yapılamadı.");
-    });
-  }
-
-  function startRecognition() {
-    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Recognition) {
-      addSystemMessage("Bu cihazda sesli giriş desteklenmiyor.");
-      return;
-    }
-
-    try { state.recognition?.stop(); } catch {}
-
-    const recognition = new Recognition();
-    recognition.lang = "tr-TR";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event) => {
-      const transcript = event?.results?.[0]?.[0]?.transcript || "";
-      if (transcript.trim()) {
-        UI.chatInput.value = transcript.trim();
-        autoResizeTextarea();
-        syncInputActionState();
-      }
-    };
-
-    recognition.onerror = () => {
-      addSystemMessage("Ses algılanamadı. Bir daha deneyelim.");
-    };
-
-    recognition.start();
-    state.recognition = recognition;
   }
 
   function bindEvents() {
@@ -1474,47 +1437,40 @@
     UI.chatInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        sendMessage();
+        sendMessageMock();
       }
     });
 
-    UI.sendBtn.addEventListener("click", sendMessage);
+    UI.sendBtn.addEventListener("click", sendMessageMock);
     UI.micBtn.addEventListener("click", startRecognition);
 
     UI.menuBtn.addEventListener("click", openMenu);
     UI.menuBackdrop.addEventListener("click", closeMenu);
 
-    UI.homeBtn.addEventListener("click", () => {
-      location.href = "/pages/home.html";
+    UI.homeBtn.addEventListener("click", () => location.href = "/pages/home.html");
+    UI.brandHome.addEventListener("click", () => location.href = "/pages/home.html");
+    UI.jetonYukleBtn.addEventListener("click", () => location.href = "/pages/jetonbuy.html");
+
+    UI.openConnectBtn.addEventListener("click", openConnectModal);
+    UI.openConnectFromMenuBtn.addEventListener("click", openConnectModal);
+    UI.closeConnectModalBtn.addEventListener("click", closeConnectModal);
+    UI.connectNowBtn.addEventListener("click", connectByCodeMock);
+    UI.connectCodeInput.addEventListener("input", normalizeCodeInput);
+
+    UI.openLangBtn.addEventListener("click", openLangSheet);
+    UI.openLangFromMenuBtn.addEventListener("click", openLangSheet);
+    UI.closeLangSheetBtn.addEventListener("click", closeLangSheet);
+    UI.langSheet.addEventListener("click", (e) => {
+      if (e.target === UI.langSheet) closeLangSheet();
     });
 
-    UI.brandHome.addEventListener("click", () => {
-      location.href = "/pages/home.html";
-    });
-
-    UI.jetonYukleBtn.addEventListener("click", () => {
-      location.href = "/pages/jetonbuy.html";
-    });
-
-    UI.openJoinBtn.addEventListener("click", openJoinModal);
-    UI.heroJoinBtn.addEventListener("click", openJoinModal);
-    UI.miniJoinBtn.addEventListener("click", openJoinModal);
-
-    UI.cancelJoinBtn.addEventListener("click", closeJoinModal);
-    UI.confirmJoinBtn.addEventListener("click", sendJoinRequestMock);
-    UI.joinCodeInput.addEventListener("input", normalizeJoinCodeInput);
-
-    UI.startWaitingBtn.addEventListener("click", startWaitingMode);
-    UI.heroStartBtn.addEventListener("click", startWaitingMode);
-    UI.miniStartBtn.addEventListener("click", startWaitingMode);
-
-    UI.showMyCodeBtn.addEventListener("click", () => {
-      copyText(state.personalCode);
+    UI.copyMyCodeBtn.addEventListener("click", () => {
+      copyText(state.myCode, "Sohbet ID kopyalandı.");
       closeMenu();
     });
 
-    UI.copyCodeBtn.addEventListener("click", () => {
-      copyText(state.personalCode);
+    UI.newConnectionBtn.addEventListener("click", () => {
+      openConnectModal();
       closeMenu();
     });
 
@@ -1524,29 +1480,23 @@
     });
 
     UI.topQrBtn.addEventListener("click", openQrModal);
-    UI.miniQrBtn.addEventListener("click", openQrModal);
     UI.closeQrModalBtn.addEventListener("click", closeQrModal);
+    UI.copyStoreLinkBtn.addEventListener("click", () => copyText(APP_STORE_URL, "Mağaza linki kopyalandı."));
 
-    UI.copyStoreLinkBtn.addEventListener("click", () => {
-      copyText(APP_STORE_URL);
-    });
-
-    UI.clearChatBtn.addEventListener("click", () => {
-      clearChat();
-      closeMenu();
-    });
+    UI.clearChatBtn.addEventListener("click", clearChat);
 
     UI.acceptRequestBtn.addEventListener("click", () => {
       const reqName = state.incomingRequest?.name || "Karşı taraf";
       closeIncomingRequestModal();
-      setRoomStatus("active", reqName);
+      state.isConnected = true;
+      state.activePeerName = reqName;
       addSystemMessage(`${reqName} ile bağlantı kuruldu.`);
     });
 
     UI.rejectRequestBtn.addEventListener("click", () => {
       const reqName = state.incomingRequest?.name || "Karşı taraf";
       closeIncomingRequestModal();
-      addSystemMessage(`${reqName} kullanıcısının isteği reddedildi.`);
+      addSystemMessage(`${reqName} isteği reddedildi.`);
     });
 
     window.visualViewport?.addEventListener("resize", updateViewportLayout);
@@ -1556,15 +1506,18 @@
 
   async function init() {
     bindEvents();
+    renderLangList();
+    UI.openLangBtn.textContent = LANGS.find(x => x.code === state.selectedLang)?.label || "Dil Seç";
     autoResizeTextarea();
     syncInputActionState();
     updateViewportLayout();
     await hydrateProfileUI();
-    setRoomStatus("idle");
     scrollChatToBottom();
 
-    // demo amaçlı test popup:
-    // setTimeout(() => openIncomingRequestModal("Oğuz"), 1800);
+    setTimeout(() => openConnectModal(), 350);
+
+    // Test için aç:
+    // setTimeout(() => openIncomingRequestModal("Oğuz"), 2200);
   }
 
   init();
