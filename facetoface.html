@@ -15,11 +15,12 @@
       --border:rgba(255,255,255,0.15);
       --safe-top:env(safe-area-inset-top, 0px);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
-      --composer-bg:rgba(12,14,20,.88);
+      --composer-bg:rgba(12,14,20,.92);
       --composer-line:rgba(255,255,255,.09);
-      --key-bg:rgba(255,255,255,.06);
+      --key-bg:rgba(255,255,255,.065);
       --key-line:rgba(255,255,255,.08);
-      --key-active:rgba(99,102,241,.22);
+      --key-active:rgba(99,102,241,.24);
+      --key-alt:#0d1119;
     }
 
     *{
@@ -70,12 +71,12 @@
     .half-screen.top{
       transform:rotate(180deg);
       background:linear-gradient(180deg, rgba(128,19,54,0.18), var(--bg));
-      padding:16px 14px 4px;
+      padding:14px 12px 8px;
     }
 
     .half-screen.bottom{
       background:linear-gradient(180deg, rgba(30,58,138,0.18), var(--bg));
-      padding:4px 14px 16px;
+      padding:8px 12px 14px;
     }
 
     .lang-trigger{
@@ -194,7 +195,7 @@
       flex-direction:column;
       align-items:center;
       gap:14px;
-      padding:6px 0 4px;
+      padding:10px 0 20px;
       mask-image:linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
       scrollbar-width:none;
     }
@@ -240,9 +241,9 @@
     }
 
     .spk-icon{
-      width:28px;
-      height:28px;
-      min-width:28px;
+      width:30px;
+      height:30px;
+      min-width:30px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.08);
@@ -267,22 +268,38 @@
       display:flex;
       flex-direction:column;
       align-items:center;
-      gap:8px;
+      gap:10px;
       z-index:30;
+      padding-bottom:2px;
     }
 
     .composer{
-      width:calc(100% - 8px);
+      width:calc(100% - 10px);
       display:flex;
       align-items:center;
       justify-content:center;
       gap:10px;
-      min-height:60px;
-      padding:8px 12px;
-      border-radius:22px;
+      min-height:66px;
+      padding:10px 14px;
+      border-radius:24px;
       background:var(--composer-bg);
       border:1px solid var(--composer-line);
       box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03);
+      position:relative;
+    }
+
+    .composer.listening{
+      box-shadow:
+        0 0 0 1px rgba(99,102,241,.28),
+        0 0 0 8px rgba(99,102,241,.08),
+        0 0 34px rgba(99,102,241,.20),
+        inset 0 1px 0 rgba(255,255,255,.04);
+      animation:composerPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes composerPulse{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.008); }
     }
 
     .composer-center{
@@ -294,22 +311,23 @@
 
     .composer-input{
       width:100%;
-      min-height:24px;
+      min-height:26px;
       max-height:120px;
       resize:none;
       border:none;
       outline:none;
       background:transparent;
       color:#fff;
-      font-size:16px;
+      font-size:17px;
       font-weight:800;
-      line-height:1.35;
+      line-height:1.4;
       font-family:inherit;
       overflow:auto;
       padding:0;
       margin:0;
       scrollbar-width:none;
       caret-color:transparent;
+      text-align:left;
     }
 
     .composer-input::-webkit-scrollbar{ display:none; }
@@ -320,8 +338,8 @@
     }
 
     .send-btn,.mic-btn{
-      width:40px;
-      height:40px;
+      width:42px;
+      height:42px;
       border:none;
       border-radius:50%;
       cursor:pointer;
@@ -331,6 +349,24 @@
       justify-content:center;
       background:transparent;
       color:#fff;
+      position:relative;
+      z-index:2;
+    }
+
+    .mic-btn.listening::after{
+      content:"";
+      position:absolute;
+      inset:-6px;
+      border-radius:50%;
+      border:2px solid rgba(34,197,94,.72);
+      box-shadow:0 0 0 8px rgba(34,197,94,.10), 0 0 24px rgba(34,197,94,.18);
+      animation:micPulse 1s ease-out infinite;
+    }
+
+    @keyframes micPulse{
+      0%{ transform:scale(.92); opacity:.95; }
+      70%{ transform:scale(1.14); opacity:.14; }
+      100%{ transform:scale(1.18); opacity:0; }
     }
 
     .send-btn{
@@ -341,8 +377,8 @@
 
     .send-btn svg,
     .mic-btn svg{
-      width:20px;
-      height:20px;
+      width:21px;
+      height:21px;
       stroke:currentColor;
       stroke-width:2.2;
       fill:none;
@@ -356,6 +392,7 @@
       width:100%;
       display:none;
       justify-content:center;
+      position:relative;
     }
 
     .kb-wrap.show{
@@ -363,18 +400,19 @@
     }
 
     .kb{
-      width:calc(100% - 8px);
-      background:rgba(8,10,16,.92);
+      width:calc(100% - 2px);
+      background:rgba(8,10,16,.95);
       border:1px solid rgba(255,255,255,.08);
-      border-radius:20px;
-      padding:8px;
-      box-shadow:0 16px 32px rgba(0,0,0,.26);
+      border-radius:24px;
+      padding:10px;
+      box-shadow:0 16px 32px rgba(0,0,0,.30);
+      position:relative;
     }
 
     .kb-row{
       display:flex;
-      gap:6px;
-      margin-bottom:6px;
+      gap:8px;
+      margin-bottom:8px;
     }
 
     .kb-row:last-child{ margin-bottom:0; }
@@ -382,20 +420,21 @@
     .kb-key{
       flex:1;
       min-width:0;
-      min-height:38px;
+      min-height:52px;
       border:none;
-      border-radius:12px;
+      border-radius:18px;
       background:var(--key-bg);
       border:1px solid var(--key-line);
       color:#fff;
       font-family:inherit;
-      font-size:14px;
+      font-size:19px;
       font-weight:900;
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:0 6px;
+      padding:0 8px;
+      position:relative;
     }
 
     .kb-key:active{
@@ -403,15 +442,37 @@
       transform:scale(.98);
     }
 
-    .kb-key.wide{ flex:1.5; }
-    .kb-key.xwide{ flex:2.2; }
-    .kb-key.send{
-      background:#fff;
-      color:#000;
+    .kb-key.wide{ flex:1.4; font-size:16px; }
+    .kb-key.xwide{ flex:2.2; font-size:16px; }
+    .kb-key.muted{ color:rgba(255,255,255,.92); }
+
+    .alt-pop{
+      position:absolute;
+      bottom:calc(100% + 8px);
+      left:50%;
+      transform:translateX(-50%);
+      display:flex;
+      gap:6px;
+      padding:8px;
+      border-radius:16px;
+      background:rgba(8,10,16,.98);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 14px 24px rgba(0,0,0,.28);
+      z-index:40;
     }
 
-    .kb-key.muted{
-      color:rgba(255,255,255,.82);
+    .alt-key{
+      min-width:42px;
+      height:42px;
+      border:none;
+      border-radius:12px;
+      background:var(--key-alt);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+      padding:0 10px;
     }
 
     .center-hub{
@@ -687,14 +748,14 @@
     }
 
     @media (max-width:390px){
-      .half-screen.top{ padding:14px 10px 4px; }
-      .half-screen.bottom{ padding:4px 10px 14px; }
+      .half-screen.top{ padding:12px 8px 8px; }
+      .half-screen.bottom{ padding:8px 8px 12px; }
       .bubble.me.is-latest{ font-size:26px; }
-      .composer{ width:calc(100% - 6px); min-height:58px; padding:8px 10px; border-radius:21px; }
-      .composer-input{ font-size:15px; }
-      .send-btn,.mic-btn{ width:38px; height:38px; }
-      .kb{ width:calc(100% - 6px); padding:7px; }
-      .kb-key{ min-height:36px; font-size:13px; }
+      .composer{ width:calc(100% - 4px); min-height:64px; padding:10px 12px; border-radius:22px; }
+      .composer-input{ font-size:16px; }
+      .send-btn,.mic-btn{ width:40px; height:40px; }
+      .kb{ width:100%; padding:8px; }
+      .kb-key{ min-height:48px; border-radius:16px; font-size:18px; }
       .center-hub{ height:80px; }
       .nav-btn{ font-size:9px; }
       .orb-container{ width:80px; height:80px; }
@@ -721,9 +782,9 @@
       <div class="chat-body" id="topBody"></div>
 
       <div class="composer-stack">
-        <div class="composer">
+        <div class="composer" id="topComposer">
           <div class="composer-center">
-            <textarea id="topInput" class="composer-input" rows="1" readonly placeholder="Mesajını buraya yaz"></textarea>
+            <textarea id="topInput" class="composer-input" rows="1" readonly placeholder="Write your message here"></textarea>
           </div>
 
           <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
@@ -737,8 +798,8 @@
 
           <button id="topSend" class="send-btn hidden" type="button" aria-label="Üst mesaj gönder">
             <svg viewBox="0 0 24 24">
-              <path d="M12 19V5"></path>
-              <path d="M6 11l6-6 6 6"></path>
+              <path d="M5 12h14"></path>
+              <path d="M13 6l6 6-6 6"></path>
             </svg>
           </button>
         </div>
@@ -787,7 +848,7 @@
       <div class="chat-body" id="botBody"></div>
 
       <div class="composer-stack">
-        <div class="composer">
+        <div class="composer" id="botComposer">
           <div class="composer-center">
             <textarea id="botInput" class="composer-input" rows="1" readonly placeholder="Mesajını buraya yaz"></textarea>
           </div>
@@ -803,8 +864,8 @@
 
           <button id="botSend" class="send-btn hidden" type="button" aria-label="Alt mesaj gönder">
             <svg viewBox="0 0 24 24">
-              <path d="M12 19V5"></path>
-              <path d="M6 11l6-6 6 6"></path>
+              <path d="M5 12h14"></path>
+              <path d="M13 6l6 6-6 6"></path>
             </svg>
           </button>
         </div>
@@ -837,9 +898,9 @@
     script.type = "module";
 
     if (forcedMode === "offline" || (!navigator.onLine && forcedMode !== "online")) {
-      script.src = "/js/facetoface_offline.js?v=F2F_OFFLINE_V4";
+      script.src = "/js/facetoface_offline.js?v=F2F_OFFLINE_V5";
     } else {
-      script.src = "/js/facetoface_page.js?v=F2F_ONLINE_V4";
+      script.src = "/js/facetoface_page.js?v=F2F_ONLINE_V5";
     }
 
     document.body.appendChild(script);
