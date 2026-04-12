@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Arkadaşla</title>
-  <meta name="theme-color" content="#07111a"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+  <title>italkyAI • Ana Sayfa</title>
+  <meta name="theme-color" content="#07111a" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,28 +13,29 @@
   <style>
     :root{
       --bg:#07111a;
-      --bg2:#0b1624;
-      --bg3:#102033;
+      --bg2:#0c1828;
+      --bg3:#12243a;
       --text:#f4fbff;
-      --muted:rgba(255,255,255,.60);
+      --muted:rgba(255,255,255,.62);
 
       --cyan:#22d3ee;
       --cyan2:#06b6d4;
       --blue:#3b82f6;
       --blue2:#2563eb;
+      --violet:#8b5cf6;
       --green:#34d399;
+      --gold:#facc15;
+      --orange:#fb923c;
       --red:#ef4444;
-      --line:rgba(255,255,255,.08);
+
       --glass:rgba(255,255,255,.045);
+      --line:rgba(255,255,255,.08);
 
       --safe-top: env(safe-area-inset-top);
       --safe-bottom: env(safe-area-inset-bottom);
 
       --header-h:66px;
-      --footer-h:44px;
-      --topbar-h:58px;
-      --composer-h:86px;
-      --keyboard-offset:0px;
+      --footer-h:46px;
       --app-height:100dvh;
     }
 
@@ -53,12 +54,6 @@
         linear-gradient(180deg,#050b12 0%, #09111d 100%);
     }
 
-    #pageContent{
-      width:100%;
-      height:100%;
-      overflow:hidden;
-    }
-
     .app{
       position:relative;
       width:100%;
@@ -67,8 +62,8 @@
       margin:0 auto;
       overflow:hidden;
       background:
-        radial-gradient(circle at 18% 0%, rgba(34,211,238,.08), transparent 20%),
-        radial-gradient(circle at 82% 8%, rgba(59,130,246,.07), transparent 18%),
+        radial-gradient(circle at 16% 0%, rgba(34,211,238,.08), transparent 20%),
+        radial-gradient(circle at 84% 8%, rgba(59,130,246,.07), transparent 18%),
         linear-gradient(180deg,#050b12 0%, #09111d 100%);
       border-left:1px solid rgba(255,255,255,.04);
       border-right:1px solid rgba(255,255,255,.04);
@@ -104,10 +99,7 @@
       box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
     }
 
-    .icon-btn svg,
-    .send-btn svg,
-    .mic-btn svg,
-    .top-mini-btn svg{
+    .icon-btn svg{
       width:20px;
       height:20px;
       stroke:currentColor;
@@ -124,7 +116,6 @@
       justify-content:center;
       gap:1px;
       text-align:center;
-      cursor:pointer;
       user-select:none;
     }
 
@@ -138,7 +129,7 @@
       color:#fff;
     }
 
-    .brand-title .accent{
+    .brand-title .ai{
       background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
@@ -235,7 +226,7 @@
       color:#fff;
     }
 
-    .menu-logo .accent{
+    .menu-logo .ai{
       background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
@@ -299,257 +290,204 @@
     .main{
       position:absolute;
       inset:calc(var(--header-h) + var(--safe-top)) 0 calc(var(--footer-h) + var(--safe-bottom)) 0;
-      overflow:hidden;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:14px 14px 18px;
+      scrollbar-width:none;
     }
 
-    .topbar{
-      position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      height:var(--topbar-h);
-      padding:10px 14px 8px;
-      z-index:10;
-      background:linear-gradient(180deg, rgba(7,17,26,.94), rgba(7,17,26,.72));
-      border-bottom:1px solid rgba(255,255,255,.05);
-      backdrop-filter:blur(12px);
-    }
+    .main::-webkit-scrollbar{ display:none; }
 
-    .topbar-inner{
-      height:100%;
-      border-radius:18px;
-      padding:0 12px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    .hero{
+      border-radius:28px;
+      padding:18px;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(34,211,238,.18), transparent 26%),
+        radial-gradient(circle at 85% 20%, rgba(59,130,246,.14), transparent 22%),
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 18px 36px rgba(0,0,0,.22);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .hero-title{
+      margin:0;
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:28px;
+      line-height:1.05;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .hero-title span{
+      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, #93c5fd 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero-text{
+      margin:0;
+      font-size:14px;
+      line-height:1.58;
+      color:rgba(255,255,255,.78);
+      font-weight:700;
+    }
+
+    .plan-card{
+      border-radius:22px;
+      padding:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .plan-top{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      box-shadow:0 10px 28px rgba(0,0,0,.18);
+      flex-wrap:wrap;
     }
 
-    .topbar-left{
-      min-width:0;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex:1;
-    }
-
-    .topbar-label{
-      font-size:13px;
-      font-weight:900;
-      color:rgba(255,255,255,.72);
-      white-space:nowrap;
-    }
-
-    .topbar-code{
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:22px;
-      line-height:1;
-      font-weight:900;
-      letter-spacing:1.4px;
-      color:#fff;
-      text-shadow:0 0 24px rgba(34,211,238,.18);
-    }
-
-    .topbar-right{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex:0 0 auto;
-    }
-
-    .top-mini-btn{
-      min-height:34px;
-      border:none;
-      border-radius:12px;
-      padding:0 12px;
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.08);
-      font-size:12px;
-      font-weight:900;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-
-    .top-mini-btn.primary{
-      background:linear-gradient(135deg, rgba(34,211,238,.16), rgba(59,130,246,.16));
-      border-color:rgba(34,211,238,.24);
-      color:#ecfeff;
-    }
-
-    .chat-scroll{
-      position:absolute;
-      inset:calc(var(--topbar-h) + 6px) 0 0 0;
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      overscroll-behavior:contain;
-      padding:8px 14px calc(var(--composer-h) + 26px + var(--keyboard-offset));
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      scroll-behavior:smooth;
-    }
-
-    .msg{
-      display:flex;
-      width:100%;
-      flex:0 0 auto;
-    }
-    .msg.left{ justify-content:flex-start; }
-    .msg.right{ justify-content:flex-end; }
-    .msg.center{ justify-content:center; }
-
-    .bubble-wrap{ max-width:84%; }
-
-    .bubble{
-      background:#0e1724;
-      border:1px solid rgba(255,255,255,.07);
-      padding:18px;
-      border-radius:24px;
-      font-size:15px;
-      line-height:1.42;
-      font-weight:800;
-      word-break:break-word;
-      box-shadow:0 8px 22px rgba(0,0,0,.18);
-      white-space:pre-wrap;
-    }
-
-    .bubble.left{ border-left:4px solid var(--cyan); }
-    .bubble.right{ border-right:4px solid var(--green); }
-
-    .msg-name{
-      margin-bottom:8px;
-      font-size:12px;
-      font-weight:900;
-      color:#bae6fd;
-    }
-
-    .msg-translate{
-      margin-top:10px;
-      padding-top:10px;
-      border-top:1px dashed rgba(255,255,255,.10);
-      font-size:13px;
-      line-height:1.42;
-      font-weight:800;
-      color:rgba(255,255,255,.82);
-    }
-
-    .msg-meta{
-      margin-top:7px;
-      font-size:11px;
-      font-weight:700;
-      color:var(--muted);
-    }
-
-    .system-bubble{
-      max-width:88%;
-      text-align:center;
-      padding:10px 14px;
+    .plan-badge{
+      padding:7px 12px;
       border-radius:999px;
-      background:rgba(34,211,238,.10);
-      border:1px solid rgba(34,211,238,.18);
-      color:#cffafe;
       font-size:12px;
       font-weight:900;
-      box-shadow:0 8px 22px rgba(0,0,0,.14);
+      color:#06202a;
+      background:linear-gradient(135deg, #67e8f9 0%, #38bdf8 50%, #60a5fa 100%);
     }
 
-    .typing{
-      display:none;
-      position:absolute;
-      left:14px;
-      right:14px;
-      bottom:calc(var(--composer-h) + 10px + var(--keyboard-offset));
-      font-size:12px;
-      color:rgba(255,255,255,.7);
-      font-weight:800;
-      z-index:5;
-    }
-    .typing.show{ display:block; }
-
-    .composer-wrap{
-      position:absolute;
-      left:12px;
-      right:12px;
-      bottom:12px;
-      z-index:10;
-      transform:translateY(calc(-1 * var(--keyboard-offset)));
-      transition:transform .12s ease;
+    .plan-price{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
     }
 
-    .composer{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      min-height:72px;
-      padding:10px 12px;
+    .plan-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.55;
+      color:rgba(255,255,255,.72);
+      font-weight:700;
+    }
+
+    .modules{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .module-card{
+      position:relative;
+      border:none;
       border-radius:24px;
+      padding:18px 16px;
+      text-align:left;
+      cursor:pointer;
+      color:#fff;
+      min-height:170px;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(12px);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 12px 28px rgba(0,0,0,.20);
+      box-shadow:0 14px 30px rgba(0,0,0,.20);
+      overflow:hidden;
     }
 
-    .composer-center{
-      flex:1;
-      min-width:0;
+    .module-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      opacity:.85;
+      pointer-events:none;
+    }
+
+    .module-card.face::before{
+      background:
+        radial-gradient(circle at 15% 10%, rgba(34,211,238,.20), transparent 28%),
+        radial-gradient(circle at 85% 85%, rgba(59,130,246,.16), transparent 22%);
+    }
+
+    .module-card.ai::before{
+      background:
+        radial-gradient(circle at 20% 0%, rgba(139,92,246,.20), transparent 28%),
+        radial-gradient(circle at 90% 90%, rgba(59,130,246,.12), transparent 24%);
+    }
+
+    .module-card.friend::before{
+      background:
+        radial-gradient(circle at 18% 8%, rgba(34,211,238,.22), transparent 28%),
+        radial-gradient(circle at 88% 88%, rgba(59,130,246,.18), transparent 22%);
+    }
+
+    .module-card.text::before{
+      background:
+        radial-gradient(circle at 10% 6%, rgba(59,130,246,.18), transparent 28%),
+        radial-gradient(circle at 86% 86%, rgba(34,211,238,.14), transparent 22%);
+    }
+
+    .module-card.level::before{
+      background:
+        radial-gradient(circle at 12% 8%, rgba(250,204,21,.22), transparent 28%),
+        radial-gradient(circle at 88% 88%, rgba(251,146,60,.16), transparent 22%);
+    }
+
+    .module-card.fun::before{
+      background:
+        radial-gradient(circle at 12% 8%, rgba(52,211,153,.22), transparent 28%),
+        radial-gradient(circle at 88% 88%, rgba(34,211,238,.16), transparent 22%);
+    }
+
+    .module-inner{
+      position:relative;
+      z-index:1;
       display:flex;
       flex-direction:column;
+      gap:10px;
+      height:100%;
     }
 
-    .composer-input{
-      width:100%;
-      min-height:28px;
-      max-height:140px;
-      resize:none;
-      border:none;
-      outline:none;
-      background:transparent;
-      color:#fff;
-      font-size:16px;
-      font-weight:800;
-      line-height:1.45;
-      font-family:inherit;
-      overflow:auto;
-    }
-
-    .composer-input::placeholder{
-      color:rgba(255,255,255,.72);
-      font-weight:800;
-    }
-
-    .send-btn,.mic-btn{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:50%;
-      cursor:pointer;
-      flex:0 0 auto;
+    .module-icon{
+      width:48px;
+      height:48px;
+      border-radius:16px;
       display:flex;
       align-items:center;
       justify-content:center;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
     }
 
-    .send-btn{
-      background:#fff;
-      color:#000;
-      box-shadow:0 0 24px rgba(255,255,255,.10);
+    .module-icon svg{
+      width:22px;
+      height:22px;
+      stroke:#fff;
+      stroke-width:2.1;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
     }
 
-    .mic-btn{
-      background:transparent;
+    .module-title{
+      margin:0;
+      font-size:18px;
+      line-height:1.12;
+      font-weight:900;
       color:#fff;
     }
 
-    .hidden{ display:none !important; }
+    .module-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.52;
+      font-weight:700;
+      color:rgba(255,255,255,.74);
+    }
 
     .footer{
       position:absolute;
@@ -587,310 +525,20 @@
     .seal-dot{ color:rgba(255,255,255,.25); }
     .seal-year{ color:#bae6fd; }
 
-    .modal{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.56);
-      backdrop-filter:blur(8px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-      padding:20px;
-    }
-    .modal.open{ display:flex; }
-
-    .modal-card{
-      width:min(100%,420px);
-      border-radius:24px;
-      padding:18px;
-      background:linear-gradient(145deg, rgba(12,22,34,.96), rgba(8,14,24,.96));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 24px 50px rgba(0,0,0,.30);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .modal-title{
-      margin:0;
-      font-family:"Space Grotesk", sans-serif;
-      font-size:18px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .modal-text{
-      margin:0;
-      font-size:14px;
-      line-height:1.48;
-      font-weight:700;
-      color:rgba(255,255,255,.72);
-    }
-
-    .modal-code-box{
-      border-radius:18px;
-      padding:16px 14px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-    }
-
-    .modal-code-label{
-      font-size:12px;
-      font-weight:800;
-      color:rgba(255,255,255,.60);
-    }
-
-    .modal-code{
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:34px;
-      line-height:1;
-      font-weight:900;
-      letter-spacing:2px;
-      color:#fff;
-      text-shadow:0 0 24px rgba(34,211,238,.16);
-    }
-
-    .modal-input{
-      width:100%;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      border-radius:16px;
-      padding:14px;
-      font-size:16px;
-      font-weight:900;
-      font-family:inherit;
-      outline:none;
-      letter-spacing:1.5px;
-      text-align:center;
-    }
-
-    .modal-input::placeholder{
-      color:rgba(255,255,255,.46);
-      letter-spacing:0;
-    }
-
-    .modal-actions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .modal-btn{
-      min-height:46px;
-      border:none;
-      border-radius:16px;
-      cursor:pointer;
-      font-family:inherit;
-      font-size:13px;
-      font-weight:900;
-    }
-
-    .modal-btn.primary{
-      background:linear-gradient(135deg, #67e8f9 0%, #38bdf8 50%, #60a5fa 100%);
-      color:#04131a;
-    }
-
-    .modal-btn.secondary{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-    }
-
-    .modal-btn.red{
-      background:rgba(239,68,68,.12);
-      border:1px solid rgba(239,68,68,.20);
-      color:#fee2e2;
-    }
-
-    .qr-full-card{
-      width:min(100%, 390px);
-      border-radius:28px;
-      padding:22px;
-      background:linear-gradient(180deg, rgba(6,15,25,.98), rgba(8,18,32,.98));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 24px 50px rgba(0,0,0,.34);
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-      align-items:center;
-      text-align:center;
-    }
-
-    .qr-title{
-      margin:0;
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:22px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .qr-sub{
-      margin:0;
-      font-size:14px;
-      line-height:1.45;
-      font-weight:700;
-      color:rgba(255,255,255,.74);
-    }
-
-    .qr-box{
-      width:240px;
-      height:240px;
-      border-radius:24px;
-      background:#fff;
-      padding:16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 20px 40px rgba(0,0,0,.22);
-    }
-
-    .qr-box img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
-    }
-
-    .lang-sheet{
-      position:fixed;
-      inset:0;
-      z-index:9998;
-      display:none;
-      align-items:flex-end;
-      background:rgba(0,0,0,.44);
-      backdrop-filter:blur(8px);
-      padding:14px;
-    }
-    .lang-sheet.open{ display:flex; }
-
-    .lang-sheet-card{
-      width:100%;
-      max-width:430px;
-      margin:0 auto;
-      border-radius:26px 26px 18px 18px;
-      padding:16px;
-      background:linear-gradient(180deg, rgba(10,18,28,.98), rgba(7,14,24,.98));
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 -14px 30px rgba(0,0,0,.28);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .sheet-handle{
-      width:54px;
-      height:5px;
-      border-radius:999px;
-      background:rgba(255,255,255,.18);
-      margin:0 auto 4px;
-    }
-
-    .sheet-title{
-      margin:0;
-      font-family:"Space Grotesk", sans-serif;
-      font-size:18px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .lang-list{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      max-height:48vh;
-      overflow:auto;
-      padding-right:2px;
-    }
-
-    .lang-btn{
-      min-height:48px;
-      border:none;
-      border-radius:16px;
-      cursor:pointer;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      font-family:inherit;
-      font-size:13px;
-      font-weight:900;
-      padding:0 12px;
-      text-align:left;
-    }
-
-    .lang-btn.active{
-      background:linear-gradient(135deg, rgba(34,211,238,.16), rgba(59,130,246,.16));
-      border-color:rgba(34,211,238,.24);
-      color:#ecfeff;
-    }
-
     @media (max-width:390px){
-      .topbar-label{ font-size:12px; }
-      .topbar-code{ font-size:19px; }
-      .top-mini-btn{ padding:0 10px; font-size:11px; }
+      .modules{
+        grid-template-columns:1fr;
+      }
+      .module-card{
+        min-height:158px;
+      }
+      .hero-title{
+        font-size:25px;
+      }
     }
   </style>
 </head>
 <body>
-
-<div class="modal" id="connectModal">
-  <div class="modal-card">
-    <h3 class="modal-title">Kod Gir</h3>
-    <p class="modal-text">Arkadaşına bu kodu ver ya da onun kodunu gir. Kim önce girerse, diğer tarafta onay penceresi açılır.</p>
-
-    <div class="modal-code-box">
-      <div class="modal-code-label">Senin Sohbet ID</div>
-      <div class="modal-code" id="modalOwnCode">000000</div>
-    </div>
-
-    <input id="connectCodeInput" class="modal-input" type="text" inputmode="numeric" maxlength="6" placeholder="Karşı tarafın kodu">
-
-    <div class="modal-actions">
-      <button class="modal-btn secondary" id="closeConnectModalBtn" type="button">Kapat</button>
-      <button class="modal-btn primary" id="connectNowBtn" type="button">Bağlan</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="incomingRequestModal">
-  <div class="modal-card">
-    <h3 class="modal-title">Bağlantı İsteği</h3>
-    <p class="modal-text" id="incomingRequestText">Birisi seninle bağlanmak istiyor.</p>
-    <div class="modal-actions">
-      <button class="modal-btn red" id="rejectRequestBtn" type="button">Reddet</button>
-      <button class="modal-btn primary" id="acceptRequestBtn" type="button">Onayla</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="appQrModal">
-  <div class="qr-full-card">
-    <h3 class="qr-title">Uygulamayı İndir</h3>
-    <p class="qr-sub">Karşı tarafta uygulama yoksa bu QR ile indirsin. Sohbete bağlanmak için sadece kısa kod yeterli.</p>
-    <div class="qr-box">
-      <img id="appQrImage" alt="Uygulama QR">
-    </div>
-    <div class="modal-actions" style="width:100%;">
-      <button class="modal-btn secondary" id="copyStoreLinkBtn" type="button">Linki Kopyala</button>
-      <button class="modal-btn primary" id="closeQrModalBtn" type="button">Kapat</button>
-    </div>
-  </div>
-</div>
-
-<div class="lang-sheet" id="langSheet">
-  <div class="lang-sheet-card">
-    <div class="sheet-handle"></div>
-    <h3 class="sheet-title">Dil Seç</h3>
-    <div class="lang-list" id="langList"></div>
-    <button class="modal-btn secondary" id="closeLangSheetBtn" type="button">Kapat</button>
-  </div>
-</div>
 
 <div class="menu" id="menu">
   <div class="menu-backdrop" id="menuBackdrop"></div>
@@ -900,195 +548,223 @@
         <img id="menuUserAvatarImg" alt="Avatar">
       </div>
       <div class="menu-user-meta">
-        <div class="menu-logo">italky<span class="accent">AI</span></div>
+        <div class="menu-logo">italky<span class="ai">AI</span></div>
         <div class="menu-name" id="menuUserName">Kullanıcı</div>
         <div class="menu-jeton" id="menuJeton">Jeton: 0</div>
       </div>
     </div>
 
     <div class="menu-list">
-      <button class="menu-item white" id="newConnectionBtn" type="button">Yeni Bağlantı</button>
-      <button class="menu-item cyan" id="copyMyCodeBtn" type="button">Sohbet ID Kopyala</button>
-      <button class="menu-item" id="openConnectFromMenuBtn" type="button">Kod Gir</button>
-      <button class="menu-item" id="openLangFromMenuBtn" type="button">Dil Seç</button>
-      <button class="menu-item" id="showAppQrBtn" type="button">Uygulama QR</button>
-      <button class="menu-item" id="clearChatBtn" type="button">Sohbeti Temizle</button>
+      <button class="menu-item white" id="goFaceBtn" type="button">YüzYüze Çeviri</button>
+      <button class="menu-item" id="goAiBtn" type="button">Yapay Zekayla Sohbet</button>
+      <button class="menu-item cyan" id="goFriendBtn" type="button">Arkadaşla Sohbet</button>
+      <button class="menu-item" id="goTextBtn" type="button">Yazıdan Çeviri</button>
+      <button class="menu-item" id="goLevelBtn" type="button">Seviyini Tespit Et</button>
+      <button class="menu-item" id="goFunBtn" type="button">Eğlenerek Öğren</button>
       <button class="menu-item" id="jetonYukleBtn" type="button">Jeton Yükle</button>
-      <button class="menu-item red" id="homeBtn" type="button">Ana Sayfaya Dön</button>
+      <button class="menu-item red" id="logoutBtn" type="button">Çıkış Yap</button>
     </div>
   </aside>
 </div>
 
-<main id="pageContent">
-  <div class="app">
-    <header class="header">
-      <button class="icon-btn" id="menuBtn" type="button" aria-label="Menü">
-        <svg viewBox="0 0 24 24"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
-      </button>
+<div class="app">
+  <header class="header">
+    <button class="icon-btn" id="menuBtn" type="button" aria-label="Menü">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+    </button>
 
-      <div class="brand" id="brandHome">
-        <h1 class="brand-title">Arkadaş<span class="accent">la</span></h1>
-        <p class="brand-sub">LIVE CONNECT</p>
-      </div>
+    <div class="brand">
+      <h1 class="brand-title">italky<span class="ai">AI</span></h1>
+      <p class="brand-sub">BE FREE</p>
+    </div>
 
-      <button class="icon-btn" id="topQrBtn" type="button" aria-label="Uygulama QR">
-        <svg viewBox="0 0 24 24">
-          <path d="M4 4h6v6H4z"></path>
-          <path d="M14 4h6v6h-6z"></path>
-          <path d="M4 14h6v6H4z"></path>
-          <path d="M15 15h1"></path>
-          <path d="M18 15h2"></path>
-          <path d="M15 18h5"></path>
-          <path d="M18 12h2"></path>
-          <path d="M12 12h3"></path>
-        </svg>
-      </button>
-    </header>
+    <button class="icon-btn" id="profileBtn" type="button" aria-label="Profil">
+      <svg viewBox="0 0 24 24">
+        <path d="M20 21a8 8 0 0 0-16 0"></path>
+        <circle cx="12" cy="8" r="4"></circle>
+      </svg>
+    </button>
+  </header>
 
-    <section class="main">
-      <div class="topbar">
-        <div class="topbar-inner">
-          <div class="topbar-left">
-            <div class="topbar-label">Sohbet ID :</div>
-            <div class="topbar-code" id="myChatCode">000000</div>
-          </div>
+  <main class="main">
+    <section class="hero">
+      <h2 class="hero-title">Dünyayla <span>konuşmak</span> artık daha kolay</h2>
+      <p class="hero-text">
+        italkyAI ile ister yüz yüze çeviri yap, ister yapay zekâyla sohbet et,
+        ister arkadaşınla kendi dilinde bağlantı kur. Tüm modüller aynı çatı altında,
+        sade ve hızlı bir akışla seni bekliyor.
+      </p>
 
-          <div class="topbar-right">
-            <button class="top-mini-btn primary" id="openLangBtn" type="button">Dil Seç</button>
-            <button class="top-mini-btn" id="openConnectBtn" type="button">Kod Gir</button>
-          </div>
+      <div class="plan-card">
+        <div class="plan-top">
+          <div class="plan-badge">İlk 15 Gün Ücretsiz</div>
+          <div class="plan-price">Sonra 49,90 TL / Ay</div>
         </div>
-      </div>
-
-      <div class="chat-scroll" id="chatMessages"></div>
-      <div class="typing" id="typingState">Bağlantı kuruluyor...</div>
-
-      <div class="composer-wrap">
-        <div class="composer">
-          <div class="composer-center">
-            <textarea id="chatInput" class="composer-input" rows="1" placeholder="Mesajını buraya yaz"></textarea>
-          </div>
-
-          <button id="micBtn" class="mic-btn" type="button" aria-label="Mikrofon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-              <path d="M19 10a7 7 0 0 1-14 0"></path>
-              <path d="M12 17v4"></path>
-              <path d="M8 21h8"></path>
-            </svg>
-          </button>
-
-          <button id="sendBtn" class="send-btn hidden" type="button" aria-label="Gönder">
-            <svg viewBox="0 0 24 24"><path d="M12 19V5"></path><path d="M6 11l6-6 6 6"></path></svg>
-          </button>
-        </div>
+        <p class="plan-text">
+          Abonelik iptal edilene kadar aylık olarak devam eder.
+          Jeton mantığı ayrıca sürer. Jetonlar Google Play üzerinden alınır
+          ve premium işlemlerde kullanılmaya devam eder.
+        </p>
       </div>
     </section>
 
-    <footer class="footer">
-      <div class="seal">
-        <span class="seal-main">italkyAI By Ozyigit's</span>
-        <span class="seal-dot">•</span>
-        <span class="seal-year">2026</span>
-      </div>
-    </footer>
-  </div>
-</main>
+    <section class="modules">
+      <button class="module-card face" id="faceCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M8 10c1.2-1.6 2.3-2.4 4-2.4S14.8 8.4 16 10"></path>
+              <path d="M7 16c1.5 1 3 1.5 5 1.5s3.5-.5 5-1.5"></path>
+              <path d="M4 5h16v14H4z"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">YüzYüze Çeviri</h3>
+          <p class="module-text">
+            İki kişi karşılıklı konuşurken,
+            sistem her iki tarafın dilini anlık takip etsin
+            ve iletişimi daha akıcı hale getirsin.
+          </p>
+        </div>
+      </button>
+
+      <button class="module-card ai" id="aiCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 12h6"></path>
+              <path d="M12 9v6"></path>
+              <path d="M5 8a7 7 0 0 1 14 0v5a3 3 0 0 1-3 3h-1l-3 3-3-3H8a3 3 0 0 1-3-3z"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">Yapay Zekayla Sohbet</h3>
+          <p class="module-text">
+            Sorular sor, fikir üret,
+            metin oluştur ya da yardım al.
+            italkyAI ile doğal ve güçlü bir sohbet akışına gir.
+          </p>
+        </div>
+      </button>
+
+      <button class="module-card friend" id="friendCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+              <path d="M15 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+              <path d="M3 19a6 6 0 0 1 12 0"></path>
+              <path d="M12 19a5 5 0 0 1 9 0"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">Arkadaşla Sohbet</h3>
+          <p class="module-text">
+            Sohbet ID ile arkadaşına bağlan,
+            onaylı şekilde aynı ekranda buluş
+            ve herkes kendi dilinde rahatça konuşsun.
+          </p>
+        </div>
+      </button>
+
+      <button class="module-card text" id="textCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 6h16"></path>
+              <path d="M4 12h10"></path>
+              <path d="M4 18h8"></path>
+              <path d="M18 10l2 2-2 2"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">Yazıdan Çeviri</h3>
+          <p class="module-text">
+            Yazdığın metni farklı dillere çevir,
+            kültürel anlam katmanı ile daha doğal sonuçlar al
+            ve gerekirse sesli çıktıya dönüştür.
+          </p>
+        </div>
+      </button>
+
+      <button class="module-card level" id="levelCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M5 19h14"></path>
+              <path d="M7 16V9"></path>
+              <path d="M12 16V5"></path>
+              <path d="M17 16v-4"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">Seviyini Tespit Et</h3>
+          <p class="module-text">
+            Dil seviyeni ölç,
+            eksik yönlerini gör
+            ve sana uygun çalışma yolunu daha net belirle.
+          </p>
+        </div>
+      </button>
+
+      <button class="module-card fun" id="funCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <path d="M9 9h.01"></path>
+              <path d="M15 9h.01"></path>
+              <circle cx="12" cy="12" r="9"></circle>
+            </svg>
+          </div>
+          <h3 class="module-title">Eğlenerek Öğren</h3>
+          <p class="module-text">
+            Oyunlar ve eğlenceli alıştırmalarla
+            dili daha sıcak bir akış içinde öğren
+            ve pratiği sıkıcı olmaktan çıkar.
+          </p>
+        </div>
+      </button>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="seal">
+      <span class="seal-main">italkyAI By Ozyigit's</span>
+      <span class="seal-dot">•</span>
+      <span class="seal-year">2026</span>
+    </div>
+  </footer>
+</div>
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
 
   const $ = (id) => document.getElementById(id);
 
-  const APP_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
-
-  const LANGS = [
-    { code: "tr", label: "Türkçe" },
-    { code: "en", label: "English" },
-    { code: "de", label: "Deutsch" },
-    { code: "fr", label: "Français" },
-    { code: "it", label: "Italiano" },
-    { code: "es", label: "Español" }
-  ];
-
   const UI = {
-    chatMessages: $("chatMessages"),
-    chatInput: $("chatInput"),
-    sendBtn: $("sendBtn"),
-    micBtn: $("micBtn"),
-    typingState: $("typingState"),
-
     menu: $("menu"),
     menuBtn: $("menuBtn"),
     menuBackdrop: $("menuBackdrop"),
-    homeBtn: $("homeBtn"),
-    brandHome: $("brandHome"),
-    jetonYukleBtn: $("jetonYukleBtn"),
+    profileBtn: $("profileBtn"),
 
     menuUserAvatar: $("menuUserAvatar"),
     menuUserAvatarImg: $("menuUserAvatarImg"),
     menuUserName: $("menuUserName"),
     menuJeton: $("menuJeton"),
 
-    myChatCode: $("myChatCode"),
-    openLangBtn: $("openLangBtn"),
-    openConnectBtn: $("openConnectBtn"),
+    faceCard: $("faceCard"),
+    aiCard: $("aiCard"),
+    friendCard: $("friendCard"),
+    textCard: $("textCard"),
+    levelCard: $("levelCard"),
+    funCard: $("funCard"),
 
-    connectModal: $("connectModal"),
-    modalOwnCode: $("modalOwnCode"),
-    connectCodeInput: $("connectCodeInput"),
-    connectNowBtn: $("connectNowBtn"),
-    closeConnectModalBtn: $("closeConnectModalBtn"),
+    goFaceBtn: $("goFaceBtn"),
+    goAiBtn: $("goAiBtn"),
+    goFriendBtn: $("goFriendBtn"),
+    goTextBtn: $("goTextBtn"),
+    goLevelBtn: $("goLevelBtn"),
+    goFunBtn: $("goFunBtn"),
 
-    incomingRequestModal: $("incomingRequestModal"),
-    incomingRequestText: $("incomingRequestText"),
-    acceptRequestBtn: $("acceptRequestBtn"),
-    rejectRequestBtn: $("rejectRequestBtn"),
-
-    appQrModal: $("appQrModal"),
-    appQrImage: $("appQrImage"),
-    copyStoreLinkBtn: $("copyStoreLinkBtn"),
-    closeQrModalBtn: $("closeQrModalBtn"),
-
-    langSheet: $("langSheet"),
-    langList: $("langList"),
-    closeLangSheetBtn: $("closeLangSheetBtn"),
-
-    newConnectionBtn: $("newConnectionBtn"),
-    copyMyCodeBtn: $("copyMyCodeBtn"),
-    openConnectFromMenuBtn: $("openConnectFromMenuBtn"),
-    openLangFromMenuBtn: $("openLangFromMenuBtn"),
-    showAppQrBtn: $("showAppQrBtn"),
-    clearChatBtn: $("clearChatBtn"),
-
-    topQrBtn: $("topQrBtn")
+    jetonYukleBtn: $("jetonYukleBtn"),
+    logoutBtn: $("logoutBtn")
   };
-
-  const state = {
-    currentUser: null,
-    currentProfile: null,
-    myCode: "000000",
-    selectedLang: "tr",
-    recognition: null,
-    activePeerName: "",
-    isConnected: false,
-    incomingRequest: null
-  };
-
-  function buildQrUrl(text) {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(text)}`;
-  }
-
-  function generateFallbackCode(seed = "") {
-    let hash = 0;
-    const str = String(seed || crypto.randomUUID());
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
-    }
-    const num = Math.abs(hash).toString().slice(0, 6);
-    return num.padEnd(6, "7").slice(0, 6);
-  }
 
   function openMenu() {
     UI.menu.classList.add("open");
@@ -1098,217 +774,33 @@
     UI.menu.classList.remove("open");
   }
 
-  function openConnectModal() {
-    UI.modalOwnCode.textContent = state.myCode || "000000";
-    UI.connectCodeInput.value = "";
-    UI.connectModal.classList.add("open");
-    setTimeout(() => UI.connectCodeInput.focus(), 60);
+  function go(url) {
+    location.href = url;
   }
 
-  function closeConnectModal() {
-    UI.connectModal.classList.remove("open");
-  }
-
-  function openQrModal() {
-    UI.appQrImage.src = buildQrUrl(APP_STORE_URL);
-    UI.appQrModal.classList.add("open");
-  }
-
-  function closeQrModal() {
-    UI.appQrModal.classList.remove("open");
-  }
-
-  function openLangSheet() {
-    UI.langSheet.classList.add("open");
-  }
-
-  function closeLangSheet() {
-    UI.langSheet.classList.remove("open");
-  }
-
-  function openIncomingRequestModal(name = "Birisi") {
-    state.incomingRequest = { name };
-    UI.incomingRequestText.textContent = `${name} bağlanmak istiyor. Onaylıyor musun?`;
-    UI.incomingRequestModal.classList.add("open");
-  }
-
-  function closeIncomingRequestModal() {
-    UI.incomingRequestModal.classList.remove("open");
-    state.incomingRequest = null;
-  }
-
-  function autoResizeTextarea() {
-    UI.chatInput.style.height = "auto";
-    UI.chatInput.style.height = `${Math.min(UI.chatInput.scrollHeight, 140)}px`;
-  }
-
-  function syncInputActionState() {
-    const hasText = String(UI.chatInput.value || "").trim().length > 0;
-    UI.micBtn.classList.toggle("hidden", hasText);
-    UI.sendBtn.classList.toggle("hidden", !hasText);
-  }
-
-  function scrollChatToBottom() {
-    requestAnimationFrame(() => {
-      UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight + 600;
-    });
-  }
-
-  function updateViewportLayout() {
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
-    const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
-
-    requestAnimationFrame(scrollChatToBottom);
-  }
-
-  function setTyping(show, text = "Bağlantı kuruluyor...") {
-    UI.typingState.textContent = text;
-    UI.typingState.classList.toggle("show", !!show);
-  }
-
-  function addSystemMessage(text) {
-    const row = document.createElement("div");
-    row.className = "msg center";
-
-    const bubble = document.createElement("div");
-    bubble.className = "system-bubble";
-    bubble.textContent = text;
-
-    row.appendChild(bubble);
-    UI.chatMessages.appendChild(row);
-    scrollChatToBottom();
-  }
-
-  function addChatMessage(side, payload = {}) {
-    const row = document.createElement("div");
-    row.className = `msg ${side}`;
-
-    const wrap = document.createElement("div");
-    wrap.className = "bubble-wrap";
-
-    const bubble = document.createElement("div");
-    bubble.className = `bubble ${side}`;
-
-    const name = document.createElement("div");
-    name.className = "msg-name";
-    name.textContent = payload.name || (side === "right" ? "Sen" : "Karşı Taraf");
-
-    const main = document.createElement("div");
-    main.textContent = payload.text || "";
-
-    bubble.appendChild(name);
-    bubble.appendChild(main);
-
-    if (payload.translatedText) {
-      const tr = document.createElement("div");
-      tr.className = "msg-translate";
-      tr.textContent = payload.translatedText;
-      bubble.appendChild(tr);
-    }
-
-    const meta = document.createElement("div");
-    meta.className = "msg-meta";
-    meta.textContent = payload.meta || `${side === "right" ? "Sen" : "Karşı Taraf"} • şimdi`;
-
-    wrap.appendChild(bubble);
-    wrap.appendChild(meta);
-    row.appendChild(wrap);
-    UI.chatMessages.appendChild(row);
-
-    scrollChatToBottom();
-  }
-
-  function renderLangList() {
-    UI.langList.innerHTML = "";
-    LANGS.forEach((lang) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = `lang-btn ${state.selectedLang === lang.code ? "active" : ""}`;
-      btn.textContent = lang.label;
-      btn.addEventListener("click", () => {
-        state.selectedLang = lang.code;
-        UI.openLangBtn.textContent = lang.label;
-        renderLangList();
-        addSystemMessage(`Dil seçildi: ${lang.label}`);
-        closeLangSheet();
-        closeMenu();
-      });
-      UI.langList.appendChild(btn);
-    });
-  }
-
-  function normalizeCodeInput() {
-    UI.connectCodeInput.value = String(UI.connectCodeInput.value || "")
-      .replace(/\D+/g, "")
-      .slice(0, 6);
-  }
-
-  function copyText(text, label = "") {
-    navigator.clipboard?.writeText(text).then(() => {
-      addSystemMessage(label || `Kopyalandı: ${text}`);
-    }).catch(() => {
-      addSystemMessage("Kopyalama yapılamadı.");
-    });
-  }
-
-  function startRecognition() {
-    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Recognition) {
-      addSystemMessage("Bu cihazda sesli giriş desteklenmiyor.");
-      return;
-    }
-
-    try { state.recognition?.stop(); } catch {}
-
-    const recognition = new Recognition();
-    recognition.lang = state.selectedLang === "tr" ? "tr-TR" : "en-US";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event) => {
-      const transcript = event?.results?.[0]?.[0]?.transcript || "";
-      if (transcript.trim()) {
-        UI.chatInput.value = transcript.trim();
-        autoResizeTextarea();
-        syncInputActionState();
-      }
-    };
-
-    recognition.onerror = () => {
-      addSystemMessage("Ses algılanamadı. Bir daha deneyelim.");
-    };
-
-    try {
-      recognition.start();
-      state.recognition = recognition;
-    } catch {}
-  }
-
-  async function getAuthContext() {
+  async function hydrateProfileUI() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      state.currentUser = user || null;
 
-      if (!state.currentUser) {
-        return { user: null, profile: null, walletTokens: 0 };
+      if (!user) {
+        UI.menuUserName.textContent = "Misafir";
+        UI.menuJeton.textContent = "Jeton: 0";
+        return;
       }
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id,full_name,email,tokens,avatar_url,chat_code")
-        .eq("id", state.currentUser.id)
+        .select("full_name,email,tokens,avatar_url")
+        .eq("id", user.id)
         .maybeSingle();
 
       let walletTokens = 0;
+
       try {
         const { data: wallet } = await supabase
           .from("wallets")
           .select("*")
-          .eq("user_id", state.currentUser.id)
+          .eq("user_id", user.id)
           .maybeSingle();
 
         if (wallet) {
@@ -1319,205 +811,77 @@
         walletTokens = Number(profile?.tokens || 0) || 0;
       }
 
-      state.currentProfile = profile || null;
-      return { user: state.currentUser, profile: state.currentProfile, walletTokens };
+      const avatarUrl =
+        profile?.avatar_url ||
+        user?.user_metadata?.avatar_url ||
+        user?.user_metadata?.picture ||
+        "";
+
+      const fullName =
+        profile?.full_name ||
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.email ||
+        "Kullanıcı";
+
+      if (avatarUrl) {
+        UI.menuUserAvatar.innerHTML = "";
+        UI.menuUserAvatarImg.src = avatarUrl;
+        UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
+      }
+
+      UI.menuUserName.textContent = fullName;
+      UI.menuJeton.textContent = `Jeton: ${walletTokens}`;
     } catch (e) {
-      console.error("Auth context hata:", e);
-      return { user: null, profile: null, walletTokens: 0 };
+      console.error("Profil yüklenemedi:", e);
     }
   }
 
-  async function ensureChatCode(profile, user) {
-    const existing = String(profile?.chat_code || "").trim();
-    if (/^\d{6}$/.test(existing)) return existing;
+  function bindNavigation() {
+    const routes = {
+      face: "/pages/facetoface.html",
+      ai: "/pages/sohbetai.html",
+      friend: "/pages/arkadasla.html",
+      text: "/pages/text_translate.html",
+      level: "/pages/level_test.html",
+      fun: "/pages/games.html"
+    };
 
-    const newCode = generateFallbackCode(user?.id || user?.email || crypto.randomUUID());
-    return newCode;
-  }
+    UI.faceCard.addEventListener("click", () => go(routes.face));
+    UI.aiCard.addEventListener("click", () => go(routes.ai));
+    UI.friendCard.addEventListener("click", () => go(routes.friend));
+    UI.textCard.addEventListener("click", () => go(routes.text));
+    UI.levelCard.addEventListener("click", () => go(routes.level));
+    UI.funCard.addEventListener("click", () => go(routes.fun));
 
-  async function hydrateProfileUI() {
-    const ctx = await getAuthContext();
+    UI.goFaceBtn.addEventListener("click", () => go(routes.face));
+    UI.goAiBtn.addEventListener("click", () => go(routes.ai));
+    UI.goFriendBtn.addEventListener("click", () => go(routes.friend));
+    UI.goTextBtn.addEventListener("click", () => go(routes.text));
+    UI.goLevelBtn.addEventListener("click", () => go(routes.level));
+    UI.goFunBtn.addEventListener("click", () => go(routes.fun));
 
-    const avatarUrl =
-      ctx?.profile?.avatar_url ||
-      ctx?.user?.user_metadata?.avatar_url ||
-      ctx?.user?.user_metadata?.picture ||
-      "";
-
-    const fullName =
-      ctx?.profile?.full_name ||
-      ctx?.user?.user_metadata?.full_name ||
-      ctx?.user?.user_metadata?.name ||
-      ctx?.user?.email ||
-      "Kullanıcı";
-
-    const tokens = Number(ctx?.walletTokens || 0);
-
-    if (avatarUrl) {
-      UI.menuUserAvatar.innerHTML = "";
-      UI.menuUserAvatarImg.src = avatarUrl;
-      UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
-    }
-
-    UI.menuUserName.textContent = fullName;
-    UI.menuJeton.textContent = `Jeton: ${tokens}`;
-
-    state.myCode = await ensureChatCode(ctx?.profile, ctx?.user);
-    UI.myChatCode.textContent = state.myCode;
-    UI.modalOwnCode.textContent = state.myCode;
-
-    const firstName = String(fullName).trim().split(" ")[0] || "Kullanıcı";
-    if (!UI.chatMessages.children.length) {
-      addSystemMessage(`Merhaba ${firstName}. Kod girerek bağlantı başlatabilirsin.`);
-    }
-  }
-
-  function clearChat() {
-    UI.chatMessages.innerHTML = "";
-    state.isConnected = false;
-    state.activePeerName = "";
-    addSystemMessage("Sohbet temizlendi.");
-    closeMenu();
-  }
-
-  function connectByCodeMock() {
-    const code = String(UI.connectCodeInput.value || "").trim();
-
-    if (!/^\d{6}$/.test(code)) {
-      alert("Lütfen 6 haneli kod gir.");
-      return;
-    }
-
-    if (code === state.myCode) {
-      alert("Kendi kodunu giremezsin.");
-      return;
-    }
-
-    closeConnectModal();
-    setTyping(true, "İstek gönderiliyor...");
-
-    setTimeout(() => {
-      setTyping(false);
-      addSystemMessage(`${code} kodlu kullanıcıya istek gönderildi.`);
-    }, 700);
-  }
-
-  function sendMessageMock() {
-    const text = String(UI.chatInput.value || "").trim();
-    if (!text) return;
-
-    addChatMessage("right", {
-      name: "Sen",
-      text,
-      meta: "Sen • şimdi"
-    });
-
-    UI.chatInput.value = "";
-    autoResizeTextarea();
-    syncInputActionState();
-
-    setTimeout(() => {
-      addSystemMessage("Bu sürümde ön yüz hazır. Sonraki adımda gerçek eşleşme ve canlı bağlantı bağlanacak.");
-    }, 350);
+    UI.jetonYukleBtn.addEventListener("click", () => go("/pages/jetonbuy.html"));
   }
 
   function bindEvents() {
-    UI.chatInput.addEventListener("input", () => {
-      autoResizeTextarea();
-      syncInputActionState();
-      scrollChatToBottom();
-    });
-
-    UI.chatInput.addEventListener("focus", () => {
-      setTimeout(updateViewportLayout, 60);
-      setTimeout(updateViewportLayout, 160);
-      setTimeout(scrollChatToBottom, 240);
-    });
-
-    UI.chatInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessageMock();
-      }
-    });
-
-    UI.sendBtn.addEventListener("click", sendMessageMock);
-    UI.micBtn.addEventListener("click", startRecognition);
-
     UI.menuBtn.addEventListener("click", openMenu);
     UI.menuBackdrop.addEventListener("click", closeMenu);
 
-    UI.homeBtn.addEventListener("click", () => location.href = "/pages/home.html");
-    UI.brandHome.addEventListener("click", () => location.href = "/pages/home.html");
-    UI.jetonYukleBtn.addEventListener("click", () => location.href = "/pages/jetonbuy.html");
+    UI.profileBtn.addEventListener("click", openMenu);
 
-    UI.openConnectBtn.addEventListener("click", openConnectModal);
-    UI.openConnectFromMenuBtn.addEventListener("click", openConnectModal);
-    UI.closeConnectModalBtn.addEventListener("click", closeConnectModal);
-    UI.connectNowBtn.addEventListener("click", connectByCodeMock);
-    UI.connectCodeInput.addEventListener("input", normalizeCodeInput);
-
-    UI.openLangBtn.addEventListener("click", openLangSheet);
-    UI.openLangFromMenuBtn.addEventListener("click", openLangSheet);
-    UI.closeLangSheetBtn.addEventListener("click", closeLangSheet);
-    UI.langSheet.addEventListener("click", (e) => {
-      if (e.target === UI.langSheet) closeLangSheet();
+    UI.logoutBtn.addEventListener("click", async () => {
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+      location.href = "/pages/login.html";
     });
-
-    UI.copyMyCodeBtn.addEventListener("click", () => {
-      copyText(state.myCode, "Sohbet ID kopyalandı.");
-      closeMenu();
-    });
-
-    UI.newConnectionBtn.addEventListener("click", () => {
-      openConnectModal();
-      closeMenu();
-    });
-
-    UI.showAppQrBtn.addEventListener("click", () => {
-      openQrModal();
-      closeMenu();
-    });
-
-    UI.topQrBtn.addEventListener("click", openQrModal);
-    UI.closeQrModalBtn.addEventListener("click", closeQrModal);
-    UI.copyStoreLinkBtn.addEventListener("click", () => copyText(APP_STORE_URL, "Mağaza linki kopyalandı."));
-
-    UI.clearChatBtn.addEventListener("click", clearChat);
-
-    UI.acceptRequestBtn.addEventListener("click", () => {
-      const reqName = state.incomingRequest?.name || "Karşı taraf";
-      closeIncomingRequestModal();
-      state.isConnected = true;
-      state.activePeerName = reqName;
-      addSystemMessage(`${reqName} ile bağlantı kuruldu.`);
-    });
-
-    UI.rejectRequestBtn.addEventListener("click", () => {
-      const reqName = state.incomingRequest?.name || "Karşı taraf";
-      closeIncomingRequestModal();
-      addSystemMessage(`${reqName} isteği reddedildi.`);
-    });
-
-    window.visualViewport?.addEventListener("resize", updateViewportLayout);
-    window.visualViewport?.addEventListener("scroll", updateViewportLayout);
-    window.addEventListener("resize", updateViewportLayout);
   }
 
   async function init() {
     bindEvents();
-    renderLangList();
-    UI.openLangBtn.textContent = LANGS.find(x => x.code === state.selectedLang)?.label || "Dil Seç";
-    autoResizeTextarea();
-    syncInputActionState();
-    updateViewportLayout();
+    bindNavigation();
     await hydrateProfileUI();
-    scrollChatToBottom();
-
-    setTimeout(() => openConnectModal(), 350);
-
-    // Test için aç:
-    // setTimeout(() => openIncomingRequestModal("Oğuz"), 2200);
   }
 
   init();
