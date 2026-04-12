@@ -28,10 +28,31 @@ const BCP = {
 const PLACEHOLDERS = {
   tr: "Mesajını buraya yaz",
   en: "Write your message here",
-  de: "Schreibe deine Nachricht hier",
-  fr: "Écris ton message ici",
+  de: "Schreibe hier deine Nachricht",
+  fr: "Écris ici ton message",
   it: "Scrivi qui il tuo messaggio",
-  es: "Escribe tu mensaje aquí",
+  es: "Escribe aquí tu mensaje",
+};
+
+const ALT_CHARS = {
+  a: ["â", "á", "à"],
+  A: ["Â", "Á", "À"],
+  c: ["ç"],
+  C: ["Ç"],
+  g: ["ğ"],
+  G: ["Ğ"],
+  i: ["ı", "î"],
+  I: ["İ", "Î"],
+  o: ["ö", "ô", "ó"],
+  O: ["Ö", "Ô", "Ó"],
+  s: ["ş"],
+  S: ["Ş"],
+  u: ["ü", "û", "ú"],
+  U: ["Ü", "Û", "Ú"],
+  e: ["é", "è", "ê"],
+  E: ["É", "È", "Ê"],
+  n: ["ñ"],
+  N: ["Ñ"]
 };
 
 const F2F_VOICE_KEY = "facetoface_voice_mode";
@@ -93,6 +114,8 @@ const topSend = $("topSend");
 const botSend = $("botSend");
 const topInput = $("topInput");
 const botInput = $("botInput");
+const topComposer = $("topComposer");
+const botComposer = $("botComposer");
 
 const topKeyboardWrap = $("topKeyboardWrap");
 const botKeyboardWrap = $("botKeyboardWrap");
@@ -126,6 +149,9 @@ let botLang = "tr";
 let activeSide = null;
 let activeKeyboardSide = null;
 let keyboardShift = { top: false, bot: false };
+let altMenuEl = null;
+let altPressTimer = null;
+let altPressed = false;
 
 let recognizer = null;
 let recordingSide = null;
@@ -271,15 +297,27 @@ function pointOrbTo(side) {
 
 function setMicState(side, state) {
   const mic = side === "top" ? topMic : botMic;
-  if (!mic) return;
+  const composer = side === "top" ? topComposer : botComposer;
+  if (!mic || !composer) return;
+
   mic.classList.remove("listening", "recorded");
-  if (state === "listening") mic.classList.add("listening");
-  if (state === "recorded") mic.classList.add("recorded");
+  composer.classList.remove("listening");
+
+  if (state === "listening") {
+    mic.classList.add("listening");
+    composer.classList.add("listening");
+  }
+
+  if (state === "recorded") {
+    mic.classList.add("recorded");
+  }
 }
 
 function resetMics() {
   topMic?.classList.remove("listening", "recorded");
   botMic?.classList.remove("listening", "recorded");
+  topComposer?.classList.remove("listening");
+  botComposer?.classList.remove("listening");
 }
 
 function setFrameVisual(state) {
@@ -412,16 +450,26 @@ function syncAllComposerButtons() {
   syncComposerButtons("bot");
 }
 
+function hideAltMenu() {
+  altMenuEl?.remove();
+  altMenuEl = null;
+  clearTimeout(altPressTimer);
+  altPressTimer = null;
+  altPressed = false;
+}
+
 function showKeyboard(side) {
   activeKeyboardSide = side;
   topKeyboardWrap?.classList.toggle("show", side === "top");
   botKeyboardWrap?.classList.toggle("show", side === "bot");
+  hideAltMenu();
   renderKeyboard(side);
   keepLatestVisible(side);
 }
 
 function hideKeyboards() {
   activeKeyboardSide = null;
+  hideAltMenu();
   topKeyboardWrap?.classList.remove("show");
   botKeyboardWrap?.classList.remove("show");
 }
@@ -453,44 +501,121 @@ function clearInputValue(side) {
   syncComposerButtons(side);
 }
 
-function keyboardExtraChars(lang) {
-  const c = canonical(lang);
-  if (c === "tr") return ["ç", "ğ", "ı", "ö", "ş", "ü"];
-  if (c === "de") return ["ä", "ö", "ü", "ß"];
-  if (c === "fr") return ["à", "â", "ç", "é", "è", "ê"];
-  if (c === "it") return ["à", "è", "é", "ì", "ò", "ù"];
-  if (c === "es") return ["á", "é", "í", "ñ", "ó", "ú"];
-  return [];
-}
-
 function keyboardLayout(lang, isShift) {
-  const upper = !!isShift;
-  const norm = (v) => upper ? String(v).toUpperCase() : String(v).toLowerCase();
+  const c = canonical(lang);
+
+  if (c === "tr") {
+    return isShift
+      ? [
+          ["Q","W","E","R","T","Y","U","I","O","P"],
+          ["A","S","D","F","G","H","J","K","L"],
+          ["Z","X","C","V","B","N","M"]
+        ]
+      : [
+          ["q","w","e","r","t","y","u","ı","o","p"],
+          ["a","s","d","f","g","h","j","k","l"],
+          ["z","x","c","v","b","n","m"]
+        ];
+  }
 
   const base = [
     ["q","w","e","r","t","y","u","i","o","p"],
     ["a","s","d","f","g","h","j","k","l"],
-    ["z","x","c","v","b","n","m"],
-  ].map((row) => row.map(norm));
+    ["z","x","c","v","b","n","m"]
+  ];
 
-  const extras = keyboardExtraChars(lang).map(norm);
-  return { base, extras };
+  return isShift ? base.map((r) => r.map((x) => x.toUpperCase())) : base;
 }
 
-function createKey(label, action, className = "") {
+function createAltMenu(targetBtn, chars, onPick) {
+  hideAltMenu();
+  if (!targetBtn || !chars?.length) return;
+
+  const host = document.createElement("div");
+  host.className = "alt-pop";
+
+  chars.forEach((ch) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "alt-key";
+    b.textContent = ch;
+    b.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onPick(ch);
+      hideAltMenu();
+    });
+    host.appendChild(b);
+  });
+
+  targetBtn.appendChild(host);
+  altMenuEl = host;
+}
+
+function bindKeyPress(btn, { onTap, onLongPress }) {
+  let timer = null;
+  let longFired = false;
+
+  const clearAll = () => {
+    if (timer) clearTimeout(timer);
+    timer = null;
+  };
+
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    longFired = false;
+
+    if (onLongPress) {
+      timer = setTimeout(() => {
+        longFired = true;
+        altPressed = true;
+        onLongPress();
+      }, 320);
+    }
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearAll();
+    if (!longFired) onTap();
+    setTimeout(() => { altPressed = false; }, 30);
+  });
+
+  btn.addEventListener("pointerleave", () => {
+    clearAll();
+  });
+
+  btn.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+  });
+}
+
+function createKey(label, action, className = "", side = "bot") {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = `kb-key ${className}`.trim();
   btn.textContent = label;
-  btn.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+
+  const alts = ALT_CHARS[label] || ALT_CHARS[String(label).toLowerCase()] || [];
+
+  bindKeyPress(btn, {
+    onTap: () => {
+      hideAltMenu();
+      action(label);
+    },
+    onLongPress: alts.length ? () => {
+      createAltMenu(btn, alts, (picked) => {
+        action(picked);
+      });
+    } : null
   });
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    action();
-  });
+
   return btn;
 }
 
@@ -499,57 +624,51 @@ function renderKeyboard(side) {
   const wrap = side === "top" ? topKeyboard : botKeyboard;
   if (!wrap) return;
 
-  const { base, extras } = keyboardLayout(lang, keyboardShift[side]);
+  const rows = keyboardLayout(lang, keyboardShift[side]);
   wrap.innerHTML = "";
 
-  base.forEach((rowChars, idx) => {
+  rows.forEach((chars, idx) => {
     const row = document.createElement("div");
     row.className = "kb-row";
 
     if (idx === 2) {
-      row.appendChild(createKey(keyboardShift[side] ? "KÜÇÜK" : "BÜYÜK", () => {
+      row.appendChild(createKey(keyboardShift[side] ? "küçük" : "BÜYÜK", () => {
         keyboardShift[side] = !keyboardShift[side];
+        hideAltMenu();
         renderKeyboard(side);
-      }, "wide muted"));
+      }, "wide muted", side));
     }
 
-    rowChars.forEach((ch) => {
-      row.appendChild(createKey(ch, () => {
-        appendInputValue(side, ch);
-        if (keyboardShift[side]) {
+    chars.forEach((ch) => {
+      row.appendChild(createKey(ch, (value) => {
+        appendInputValue(side, value);
+        if (keyboardShift[side] && value.length === 1 && /[A-ZÇĞİÖŞÜ]/.test(value)) {
           keyboardShift[side] = false;
           renderKeyboard(side);
         }
-      }));
+      }, "", side));
     });
 
     if (idx === 2) {
-      row.appendChild(createKey("SİL", () => backspaceInputValue(side), "wide muted"));
+      row.appendChild(createKey("SİL", () => {
+        hideAltMenu();
+        backspaceInputValue(side);
+      }, "wide muted", side));
     }
 
     wrap.appendChild(row);
   });
 
-  if (extras.length) {
-    const exRow = document.createElement("div");
-    exRow.className = "kb-row";
-    extras.forEach((ch) => {
-      exRow.appendChild(createKey(ch, () => {
-        appendInputValue(side, ch);
-        if (keyboardShift[side]) {
-          keyboardShift[side] = false;
-          renderKeyboard(side);
-        }
-      }));
-    });
-    wrap.appendChild(exRow);
-  }
-
   const bottomRow = document.createElement("div");
   bottomRow.className = "kb-row";
-  bottomRow.appendChild(createKey("TEMİZLE", () => clearInputValue(side), "wide muted"));
-  bottomRow.appendChild(createKey("BOŞLUK", () => appendInputValue(side, " "), "xwide muted"));
-  bottomRow.appendChild(createKey("GÖNDER", () => sendTyped(side), "wide send"));
+  bottomRow.appendChild(createKey("TEMİZLE", () => {
+    hideAltMenu();
+    clearInputValue(side);
+  }, "wide muted", side));
+  bottomRow.appendChild(createKey("BOŞLUK", () => {
+    hideAltMenu();
+    appendInputValue(side, " ");
+  }, "xwide muted", side));
   wrap.appendChild(bottomRow);
 }
 
@@ -888,7 +1007,6 @@ async function speak(text, langCode, tone = "neutral") {
       await playCachedAudio(cachedAudioSrc, myRunId);
       return;
     } catch (e) {
-      console.warn("[facetoface cached audio replay failed]", e);
       ttsMemoryCache.delete(cacheKey);
     }
   }
@@ -914,8 +1032,7 @@ async function speak(text, langCode, tone = "neutral") {
           played = true;
         }
       }
-    } catch (e) {
-      console.warn("[facetoface clone speak fallback]", e);
+    } catch {
       if (myRunId !== speakRunId) return;
       speakFallback(value, langCode, tone);
       played = true;
@@ -929,8 +1046,7 @@ async function speak(text, langCode, tone = "neutral") {
         speakFallback(value, langCode, tone);
         played = true;
       }
-    } catch (e) {
-      console.warn("[facetoface preset speak fallback]", e);
+    } catch {
       if (myRunId !== speakRunId) return;
       speakFallback(value, langCode, tone);
       played = true;
@@ -1534,26 +1650,6 @@ function bindMicTap(el, side) {
   });
 }
 
-function bindTap(el, handler) {
-  if (!el) return;
-
-  let lastPointerUp = 0;
-
-  el.addEventListener("pointerup", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    lastPointerUp = Date.now();
-    await handler(e);
-  });
-
-  el.addEventListener("click", async (e) => {
-    if (Date.now() - lastPointerUp < 400) return;
-    e.preventDefault();
-    e.stopPropagation();
-    await handler(e);
-  });
-}
-
 function bindReadonlyInput(side) {
   const input = side === "top" ? topInput : botInput;
   const send = side === "top" ? topSend : botSend;
@@ -1566,7 +1662,6 @@ function bindReadonlyInput(side) {
   };
 
   input.setAttribute("readonly", "readonly");
-
   input.addEventListener("pointerdown", open);
   input.addEventListener("click", open);
   input.addEventListener("focus", (e) => {
@@ -1629,9 +1724,10 @@ function bind() {
     const isLangBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
     const isInput = e.target?.closest?.("#topInput,#botInput");
     const isKb = e.target?.closest?.("#topKeyboardWrap,#botKeyboardWrap");
+    const isAlt = e.target?.closest?.(".alt-pop");
 
     if (!insidePop && !isLangBtn) closeAllPop();
-    if (!isInput && !isKb) hideKeyboards();
+    if (!isInput && !isKb && !isAlt) hideKeyboards();
   }, { capture: true });
 
   clearBtn?.addEventListener("click", () => {
@@ -1714,6 +1810,8 @@ const requiredDomOk =
   !!botSend &&
   !!topInput &&
   !!botInput &&
+  !!topComposer &&
+  !!botComposer &&
   !!topKeyboardWrap &&
   !!botKeyboardWrap &&
   !!topKeyboard &&
@@ -1741,4 +1839,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-}
+              }
