@@ -92,14 +92,6 @@ const HOME_HEADER_HTML = `
   </div>
 
   <div class="header-actions">
-    <div class="native-lang-pill only-flag" id="headerNativeLangPill" title="Seçili dil">
-      <span class="native-lang-flag" id="headerNativeLangFlag">🌐</span>
-    </div>
-
-    <button class="avatar-mini-btn empty" id="headerAvatarBtn" aria-label="Profil" type="button" title="Profil">
-      <img src="" id="headerAvatarImg" alt="Avatar">
-    </button>
-
     <button class="settings-btn flat-top-btn" id="headerSettingsBtn" aria-label="Ayarlar" type="button" title="Ayarlar">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 3l1.2 2.4 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4L12 3z"></path>
@@ -283,22 +275,6 @@ body.ui-menu-open{overflow:hidden;}
 }
 .brand-slogan{font-size:9px;font-weight:800;letter-spacing:3.8px;color:rgba(255,255,255,.38);margin-left:1px;}
 .header-actions{display:flex;align-items:center;gap:10px;}
-.native-lang-pill{
-  height:38px;min-width:38px;max-width:38px;padding:0;border-radius:12px;
-  background:transparent;border:none;box-shadow:none;display:flex;align-items:center;justify-content:center;
-  color:#f2f5ff;flex:0 0 auto;overflow:hidden;
-}
-.native-lang-flag{font-size:18px;line-height:1;filter:drop-shadow(0 0 6px rgba(255,255,255,.12));}
-.native-lang-label{display:none !important;}
-.avatar-mini-btn{
-  width:38px;height:38px;border:none;border-radius:50%;background:transparent;box-shadow:none;
-  display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;flex:0 0 auto;
-}
-.avatar-mini-btn img{
-  width:34px;height:34px;border-radius:50%;object-fit:cover;display:block;border:1px solid rgba(255,255,255,.18);
-}
-.avatar-mini-btn.empty img{display:none;}
-.avatar-mini-btn.empty::before{content:"👤";font-size:20px;opacity:.92;}
 .flat-top-btn{
   width:38px;height:38px;border:none;border-radius:12px;background:transparent;box-shadow:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;
@@ -501,7 +477,6 @@ function finishMount(options) {
     syncFooterHeight();
     hydrateShellMeta();
     hydrateAdminButton();
-    hydrateNativeLangPill();
 
     try {
       if (!__shellAutoTranslateInstalled) {
@@ -529,7 +504,6 @@ function finishMount(options) {
 function bindMenu() {
   const menuBtn = document.getElementById("menuBtn");
   const headerSettingsBtn = document.getElementById("headerSettingsBtn");
-  const headerAvatarBtn = document.getElementById("headerAvatarBtn");
   const sideMenu = document.getElementById("sideMenu");
   const menuBackdrop = document.getElementById("menuBackdrop");
   const logoutBtn = document.getElementById("logoutBtn");
@@ -554,7 +528,6 @@ function bindMenu() {
     document.body.classList.add("ui-menu-open");
     hydrateShellMeta();
     hydrateAdminButton();
-    hydrateNativeLangPill();
   };
 
   const closeMenu = () => {
@@ -576,7 +549,6 @@ function bindMenu() {
   menuBtn.addEventListener("click", openMenu);
   menuBackdrop?.addEventListener("click", closeMenu);
   headerSettingsBtn?.addEventListener("click", goSettings);
-  headerAvatarBtn?.addEventListener("click", goProfile);
 
   menuProfileTop?.addEventListener("click", goProfile);
   menuAvatarClick?.addEventListener("click", (e) => {
@@ -671,14 +643,6 @@ export function hydrateFromCache() {
       picEl.referrerPolicy = "no-referrer";
     }
 
-    const topAvatarImg = document.getElementById("headerAvatarImg");
-    const topAvatarBtn = document.getElementById("headerAvatarBtn");
-    if (topAvatarImg && pic) {
-      topAvatarImg.src = pic;
-      topAvatarImg.referrerPolicy = "no-referrer";
-      topAvatarBtn?.classList.remove("empty");
-    }
-
     const jetonEl = document.getElementById("menuHeaderJeton");
     if (jetonEl) jetonEl.textContent = String(tokens);
   } catch {}
@@ -730,14 +694,6 @@ async function hydrateShellMeta() {
     if (picEl && pic) {
       picEl.src = pic;
       picEl.referrerPolicy = "no-referrer";
-    }
-
-    const topAvatarImg = document.getElementById("headerAvatarImg");
-    const topAvatarBtn = document.getElementById("headerAvatarBtn");
-    if (topAvatarImg && pic) {
-      topAvatarImg.src = pic;
-      topAvatarImg.referrerPolicy = "no-referrer";
-      topAvatarBtn?.classList.remove("empty");
     }
 
     const role = String(data.role || "").toLowerCase().trim();
