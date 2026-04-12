@@ -746,15 +746,22 @@
   </div>
 </div>
 
-<script>
+<script type="module">
 (() => {
   const VOICE_KEY = "italkyai_shared_voice_mode";
   const TRANSLATE_KEY = "facetoface_translate_mode";
   const LEGACY_TTS_KEY = "tts_voice";
   const LEGACY_LIVE_KEY = "live_interpreter_voice";
+
+  /* FaceToFace'in gerçekten okuduğu anahtarlar */
+  const F2F_VOICE_KEY = "facetoface_voice_mode";
+  const F2F_PRESET_KEY = "facetoface_voice_preset";
+
   const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
   const MAX_RECORD_SECONDS = 20;
   const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const RETURN_TO = String(params.get("from") || "").trim().toLowerCase();
 
   const UI = {
     backBtn: $("backBtn"),
@@ -821,9 +828,21 @@
   const state = {
     supabase: null,
     currentUser: null,
-    voiceMode: normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || localStorage.getItem(LEGACY_TTS_KEY) || localStorage.getItem(LEGACY_LIVE_KEY) || "tts"),
+    voiceMode: normalizeVoiceMode(
+      localStorage.getItem(VOICE_KEY) ||
+      localStorage.getItem(F2F_VOICE_KEY) ||
+      localStorage.getItem(LEGACY_TTS_KEY) ||
+      localStorage.getItem(LEGACY_LIVE_KEY) ||
+      "tts"
+    ),
     translateMode: normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal"),
-    savedVoiceMode: normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || localStorage.getItem(LEGACY_TTS_KEY) || localStorage.getItem(LEGACY_LIVE_KEY) || "tts"),
+    savedVoiceMode: normalizeVoiceMode(
+      localStorage.getItem(VOICE_KEY) ||
+      localStorage.getItem(F2F_VOICE_KEY) ||
+      localStorage.getItem(LEGACY_TTS_KEY) ||
+      localStorage.getItem(LEGACY_LIVE_KEY) ||
+      "tts"
+    ),
     savedTranslateMode: normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal"),
 
     pendingLeaveAction: null,
@@ -854,9 +873,12 @@
 
   function normalizeVoiceMode(v){
     const val = String(v || "").trim().toLowerCase();
+
     if (val === "mine" || val === "mine_clone" || val === "clone") return "mine";
     if (val === "second" || val === "second_clone") return "second";
     if (val === "memory" || val === "memory_clone") return "memory";
+
+    if (val === "tts" || val === "auto") return "tts";
     return "tts";
   }
 
@@ -940,6 +962,59 @@
     UI.leaveModal.classList.remove("open");
   }
 
+  function resolveReturnUrl() {
+    if (RETURN_TO === "facetoface") return "/pages/facetoface.html";
+    if (RETURN_TO === "sidetoside") return "/pages/sidetoside.html";
+    if (RETURN_TO === "alltoall") return "/pages/alltoall.html";
+    return "/pages/home.html";
+  }
+
+  function goHome(){
+    location.href = resolveReturnUrl();
+  }
+
+  function applyVoiceKeys(mode) {
+    const m = normalizeVoiceMode(mode);
+
+    /* Ortak havuz anahtarları */
+    localStorage.setItem(VOICE_KEY, m);
+    localStorage.setItem(LEGACY_TTS_KEY, m);
+    localStorage.setItem(LEGACY_LIVE_KEY, m);
+
+    /* FaceToFace'in beklediği anahtarlar */
+    if (m === "tts") {
+      localStorage.setItem(F2F_VOICE_KEY, "auto");
+      localStorage.removeItem(F2F_PRESET_KEY);
+      return;
+    }
+
+    if (m === "mine") {
+      localStorage.setItem(F2F_VOICE_KEY, "clone");
+      localStorage.removeItem(F2F_PRESET_KEY);
+      return;
+    }
+
+    if (m === "second") {
+      localStorage.setItem(F2F_VOICE_KEY, "preset");
+      localStorage.setItem(F2F_PRESET_KEY, "second");
+      return;
+    }
+
+    if (m === "memory") {
+      localStorage.setItem(F2F_VOICE_KEY, "preset");
+      localStorage.setItem(F2F_PRESET_KEY, "memory");
+      return;
+    }
+  }
+
+  function saveSettings(){
+    localStorage.setItem(TRANSLATE_KEY, state.translateMode);
+    applyVoiceKeys(state.voiceMode);
+
+    state.savedVoiceMode = state.voiceMode;
+    state.savedTranslateMode = state.translateMode;
+  }
+
   async function askMicPermission(){
     try {
       return await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -949,7 +1024,11 @@
   }
 
   function createRecorder(stream, onData, onStop){
-    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : "audio/webm";
+
+    const recorder = new MediaRecorder(stream, { mimeType });
     recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) onData(e.data);
     };
@@ -961,15 +1040,21 @@
     if (!state.currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
     if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
 
+    const fileExt = blobOrFile.name?.split(".").pop() || (voiceType === "memory" ? "mp3" : "webm");
+
     const form = new FormData();
     form.append("user_id", state.currentUser.id);
     form.append("voice_type", voiceType);
     form.append("voice_name", voiceName || "");
-    form.append("audio_file", blobOrFile, `${voiceType}.${blobOrFile.name?.split(".").pop() || "webm"}`);
+    form.append("audio_file", blobOrFile, `${voiceType}.${fileExt}`);
 
     const resp = await fetch(VOICE_API, { method: "POST", body: form });
     const json = await resp.json().catch(() => ({}));
-    if (!resp.ok || !json?.ok) throw new Error("Backend hazır değilse bu normal. Şu an sadece önizleme oluşur.");
+
+    if (!resp.ok || !json?.ok) {
+      throw new Error(json?.detail || json?.error || "Ses kaydı backend’e gönderilemedi.");
+    }
+
     return json;
   }
 
@@ -1069,6 +1154,12 @@
     try {
       UI.mineStatus.textContent = "Kayıt kaydediliyor...";
       await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
+
+      state.voiceMode = "mine";
+      saveSettings();
+      paintSelections();
+      refreshSummary();
+
       await loadProfileVoiceState();
       showToast("Kendi Sesim kaydedildi");
     } catch (e) {
@@ -1086,6 +1177,12 @@
     try {
       UI.secondStatus.textContent = "Kayıt kaydediliyor...";
       await uploadVoice(state.secondBlob, "second", secondName);
+
+      state.voiceMode = "second";
+      saveSettings();
+      paintSelections();
+      refreshSummary();
+
       await loadProfileVoiceState();
       showToast(`${secondName} sesi kaydedildi`);
     } catch (e) {
@@ -1111,6 +1208,12 @@
     try {
       UI.memoryStatus.textContent = `${memoryName} mp3 yükleniyor...`;
       await uploadVoice(state.memoryMp3File, "memory", memoryName);
+
+      state.voiceMode = "memory";
+      saveSettings();
+      paintSelections();
+      refreshSummary();
+
       await loadProfileVoiceState();
       showToast(`${memoryName} sesi kaydedildi`);
     } catch (e) {
@@ -1120,6 +1223,7 @@
 
   async function loadProfileVoiceState(){
     if (!state.supabase) return;
+
     try {
       const { data: { user } } = await state.supabase.auth.getUser();
       if (!user) return;
@@ -1145,9 +1249,17 @@
 
       if (error) return;
 
-      state.profileVoiceState.mineReady = !!profile?.voice_sample_path || (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
-      state.profileVoiceState.secondReady = !!profile?.second_voice_sample_path || (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
-      state.profileVoiceState.memoryReady = !!profile?.memory_voice_sample_path || (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+      state.profileVoiceState.mineReady =
+        !!profile?.voice_sample_path ||
+        (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+
+      state.profileVoiceState.secondReady =
+        !!profile?.second_voice_sample_path ||
+        (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+
+      state.profileVoiceState.memoryReady =
+        !!profile?.memory_voice_sample_path ||
+        (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
 
       const secondName = String(profile?.second_voice_name || "").trim();
       const memoryName = String(profile?.memory_voice_name || "").trim();
@@ -1175,6 +1287,7 @@
         location.replace("/pages/login.html");
         return false;
       }
+
       state.currentUser = session.user;
       await loadProfileVoiceState();
       return true;
@@ -1267,6 +1380,7 @@
     UI.memoryMp3Input.addEventListener("change", (e) => {
       const file = e.target.files?.[0] || null;
       state.memoryMp3File = file;
+
       if (file) {
         UI.memoryAudio.src = URL.createObjectURL(file);
         UI.memoryFileName.textContent = file.name;
@@ -1283,7 +1397,7 @@
     UI.saveBtn.addEventListener("click", () => {
       saveSettings();
       showToast("Ayarlar kaydedildi");
-      setTimeout(goHome, 350);
+      setTimeout(goHome, 300);
     });
 
     UI.cancelBtn.addEventListener("click", () => {
