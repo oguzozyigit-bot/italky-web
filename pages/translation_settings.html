@@ -989,41 +989,39 @@
   }
 
   function applyVoiceKeys(mode) {
-    const m = normalizeVoiceMode(mode);
+  const m = normalizeVoiceMode(mode);
 
-    /* ortak kayıtlar */
-    localStorage.setItem(VOICE_KEY, m);
-    localStorage.setItem(LEGACY_TTS_KEY, m);
-    localStorage.setItem(LEGACY_LIVE_KEY, m);
+  localStorage.setItem(VOICE_KEY, m);
+  localStorage.setItem(LEGACY_TTS_KEY, m);
+  localStorage.setItem(LEGACY_LIVE_KEY, m);
 
-    /* facetoface için açık anahtarlar */
-    if (m === "tts") {
-      localStorage.setItem(F2F_VOICE_KEY, "auto");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
-      return;
-    }
-
-    if (m === "mine") {
-      localStorage.setItem(F2F_VOICE_KEY, "clone");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
-      return;
-    }
-
-    if (m === "second") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "second");
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "2. Ses");
-      return;
-    }
-
-    if (m === "memory") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "memory");
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
-    }
+  if (m === "tts") {
+    localStorage.setItem(F2F_VOICE_KEY, "auto");
+    localStorage.removeItem(F2F_PRESET_KEY);
+    localStorage.removeItem("facetoface_selected_voice_name");
+    return;
   }
+
+  if (m === "mine") {
+    localStorage.setItem(F2F_VOICE_KEY, "clone");
+    localStorage.removeItem(F2F_PRESET_KEY);
+    localStorage.setItem("facetoface_selected_voice_name", "Kendi Sesim");
+    return;
+  }
+
+  if (m === "second") {
+    localStorage.setItem(F2F_VOICE_KEY, "preset");
+    localStorage.setItem(F2F_PRESET_KEY, "second");
+    localStorage.setItem("facetoface_selected_voice_name", "2. Ses");
+    return;
+  }
+
+  if (m === "memory") {
+    localStorage.setItem(F2F_VOICE_KEY, "preset");
+    localStorage.setItem(F2F_PRESET_KEY, "memory");
+    localStorage.setItem("facetoface_selected_voice_name", "Hatıra Sesi");
+  }
+}
 
   function saveSettings() {
     localStorage.setItem(TRANSLATE_KEY, state.translateMode);
