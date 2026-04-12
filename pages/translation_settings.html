@@ -753,9 +753,10 @@
   const LEGACY_TTS_KEY = "tts_voice";
   const LEGACY_LIVE_KEY = "live_interpreter_voice";
 
-  /* FaceToFace'in gerçekten okuduğu anahtarlar */
+  /* FaceToFace tarafının okuduğu anahtarlar */
   const F2F_VOICE_KEY = "facetoface_voice_mode";
   const F2F_PRESET_KEY = "facetoface_voice_preset";
+  const F2F_SELECTED_NAME_KEY = "facetoface_selected_voice_name";
 
   const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
   const MAX_RECORD_SECONDS = 20;
@@ -828,6 +829,7 @@
   const state = {
     supabase: null,
     currentUser: null,
+
     voiceMode: normalizeVoiceMode(
       localStorage.getItem(VOICE_KEY) ||
       localStorage.getItem(F2F_VOICE_KEY) ||
@@ -835,7 +837,11 @@
       localStorage.getItem(LEGACY_LIVE_KEY) ||
       "tts"
     ),
-    translateMode: normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal"),
+
+    translateMode: normalizeTranslateMode(
+      localStorage.getItem(TRANSLATE_KEY) || "normal"
+    ),
+
     savedVoiceMode: normalizeVoiceMode(
       localStorage.getItem(VOICE_KEY) ||
       localStorage.getItem(F2F_VOICE_KEY) ||
@@ -843,7 +849,10 @@
       localStorage.getItem(LEGACY_LIVE_KEY) ||
       "tts"
     ),
-    savedTranslateMode: normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal"),
+
+    savedTranslateMode: normalizeTranslateMode(
+      localStorage.getItem(TRANSLATE_KEY) || "normal"
+    ),
 
     pendingLeaveAction: null,
     pendingReplaceAction: null,
@@ -871,40 +880,46 @@
     }
   };
 
-  function normalizeVoiceMode(v){
+  function normalizeVoiceMode(v) {
     const val = String(v || "").trim().toLowerCase();
 
     if (val === "mine" || val === "mine_clone" || val === "clone") return "mine";
     if (val === "second" || val === "second_clone") return "second";
     if (val === "memory" || val === "memory_clone") return "memory";
+    if (val === "preset") {
+      const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+      if (preset === "second") return "second";
+      if (preset === "memory") return "memory";
+    }
 
-    if (val === "tts" || val === "auto") return "tts";
     return "tts";
   }
 
-  function normalizeTranslateMode(v){
+  function normalizeTranslateMode(v) {
     return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
   }
 
-  function voiceLabel(v){
+  function voiceLabel(v) {
     if (v === "mine") return "Kendi Sesim";
     if (v === "second") return "2. Ses";
     if (v === "memory") return "Hatıra Sesi";
     return "TTS";
   }
 
-  function translateLabel(v){
+  function translateLabel(v) {
     return v === "cultural" ? "Kültürel Translate" : "Translate";
   }
 
-  function showToast(msg){
+  function showToast(msg) {
     UI.toast.textContent = String(msg || "");
     UI.toast.classList.add("show");
     clearTimeout(window.__translationSettingsToast);
-    window.__translationSettingsToast = setTimeout(() => UI.toast.classList.remove("show"), 1700);
+    window.__translationSettingsToast = setTimeout(() => {
+      UI.toast.classList.remove("show");
+    }, 1700);
   }
 
-  function paintSelections(){
+  function paintSelections() {
     UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
       card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === state.voiceMode);
     });
@@ -914,7 +929,7 @@
     });
   }
 
-  function refreshSummary(){
+  function refreshSummary() {
     UI.voiceSummary.textContent = voiceLabel(state.voiceMode);
     UI.translateSummary.textContent = translateLabel(state.translateMode);
     UI.poolSummary.textContent = "Ortak ses havuzu aktif";
@@ -930,84 +945,87 @@
     el.textContent = `${seconds} sn`;
   }
 
-  function stopTracks(stream){
+  function stopTracks(stream) {
     try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
   }
 
-  function jumpToSection(el){
+  function jumpToSection(el) {
     el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function hasUnsavedChanges(){
+  function hasUnsavedChanges() {
     return state.voiceMode !== state.savedVoiceMode || state.translateMode !== state.savedTranslateMode;
   }
 
-  function openReplaceModal(action){
+  function openReplaceModal(action) {
     state.pendingReplaceAction = action;
     UI.replaceModal.classList.add("open");
   }
 
-  function closeReplaceModal(){
+  function closeReplaceModal() {
     state.pendingReplaceAction = null;
     UI.replaceModal.classList.remove("open");
   }
 
-  function openLeaveModal(action){
+  function openLeaveModal(action) {
     state.pendingLeaveAction = action;
     UI.leaveModal.classList.add("open");
   }
 
-  function closeLeaveModal(){
+  function closeLeaveModal() {
     state.pendingLeaveAction = null;
     UI.leaveModal.classList.remove("open");
   }
 
   function resolveReturnUrl() {
-    if (RETURN_TO === "facetoface") return "/pages/facetoface.html";
-    if (RETURN_TO === "sidetoside") return "/pages/sidetoside.html";
-    if (RETURN_TO === "alltoall") return "/pages/alltoall.html";
-    return "/pages/home.html";
+    if (RETURN_TO === "facetoface") return "/pages/facetoface.html?from=settings";
+    if (RETURN_TO === "sidetoside") return "/pages/sidetoside.html?from=settings";
+    if (RETURN_TO === "alltoall") return "/pages/alltoall.html?from=settings";
+    return "/pages/facetoface.html?from=settings";
   }
 
-  function goHome(){
+  function goHome() {
     location.href = resolveReturnUrl();
   }
 
   function applyVoiceKeys(mode) {
     const m = normalizeVoiceMode(mode);
 
-    /* Ortak havuz anahtarları */
+    /* ortak kayıtlar */
     localStorage.setItem(VOICE_KEY, m);
     localStorage.setItem(LEGACY_TTS_KEY, m);
     localStorage.setItem(LEGACY_LIVE_KEY, m);
 
-    /* FaceToFace'in beklediği anahtarlar */
+    /* facetoface için açık anahtarlar */
     if (m === "tts") {
       localStorage.setItem(F2F_VOICE_KEY, "auto");
       localStorage.removeItem(F2F_PRESET_KEY);
+      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
       return;
     }
 
     if (m === "mine") {
       localStorage.setItem(F2F_VOICE_KEY, "clone");
       localStorage.removeItem(F2F_PRESET_KEY);
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
       return;
     }
 
     if (m === "second") {
       localStorage.setItem(F2F_VOICE_KEY, "preset");
       localStorage.setItem(F2F_PRESET_KEY, "second");
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "2. Ses");
       return;
     }
 
     if (m === "memory") {
       localStorage.setItem(F2F_VOICE_KEY, "preset");
       localStorage.setItem(F2F_PRESET_KEY, "memory");
-      return;
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
     }
   }
 
-  function saveSettings(){
+  function saveSettings() {
     localStorage.setItem(TRANSLATE_KEY, state.translateMode);
     applyVoiceKeys(state.voiceMode);
 
@@ -1015,7 +1033,7 @@
     state.savedTranslateMode = state.translateMode;
   }
 
-  async function askMicPermission(){
+  async function askMicPermission() {
     try {
       return await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
@@ -1023,7 +1041,7 @@
     }
   }
 
-  function createRecorder(stream, onData, onStop){
+  function createRecorder(stream, onData, onStop) {
     const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
       ? "audio/webm;codecs=opus"
       : "audio/webm";
@@ -1036,11 +1054,13 @@
     return recorder;
   }
 
-  async function uploadVoice(blobOrFile, voiceType, voiceName){
+  async function uploadVoice(blobOrFile, voiceType, voiceName) {
     if (!state.currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
     if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
 
-    const fileExt = blobOrFile.name?.split(".").pop() || (voiceType === "memory" ? "mp3" : "webm");
+    const fileExt =
+      blobOrFile.name?.split(".").pop() ||
+      (voiceType === "memory" ? "mp3" : "webm");
 
     const form = new FormData();
     form.append("user_id", state.currentUser.id);
@@ -1058,7 +1078,7 @@
     return json;
   }
 
-  function startCountdown(timerEl, onDone){
+  function startCountdown(timerEl, onDone) {
     let remain = MAX_RECORD_SECONDS;
     setTimer(timerEl, remain);
 
@@ -1074,7 +1094,7 @@
     return interval;
   }
 
-  async function beginMineRecording(){
+  async function beginMineRecording() {
     try {
       state.mineChunks = [];
       state.mineBlob = null;
@@ -1109,7 +1129,7 @@
     }
   }
 
-  async function beginSecondRecording(){
+  async function beginSecondRecording() {
     const secondName = String(UI.secondVoiceNameInput.value || "").trim();
     if (!secondName) {
       UI.secondStatus.textContent = "2. Ses için isim yaz.";
@@ -1150,7 +1170,7 @@
     }
   }
 
-  async function saveMineVoice(){
+  async function saveMineVoice() {
     try {
       UI.mineStatus.textContent = "Kayıt kaydediliyor...";
       await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
@@ -1167,7 +1187,7 @@
     }
   }
 
-  async function saveSecondVoice(){
+  async function saveSecondVoice() {
     const secondName = String(UI.secondVoiceNameInput.value || "").trim();
     if (!secondName) {
       UI.secondStatus.textContent = "2. Ses için isim yaz.";
@@ -1190,7 +1210,7 @@
     }
   }
 
-  async function saveMemoryVoiceFromMp3(){
+  async function saveMemoryVoiceFromMp3() {
     const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
     if (!memoryName) {
       UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
@@ -1221,7 +1241,7 @@
     }
   }
 
-  async function loadProfileVoiceState(){
+  async function loadProfileVoiceState() {
     if (!state.supabase) return;
 
     try {
@@ -1277,7 +1297,7 @@
     } catch {}
   }
 
-  async function bootAuth(){
+  async function bootAuth() {
     try {
       const mod = await import("/js/supabase_client.js");
       state.supabase = mod.supabase;
@@ -1298,7 +1318,7 @@
     }
   }
 
-  function bindEvents(){
+  function bindEvents() {
     UI.backBtn.addEventListener("click", () => {
       if (hasUnsavedChanges()) openLeaveModal(goHome);
       else goHome();
@@ -1394,10 +1414,15 @@
 
     UI.saveMemoryMp3Btn.addEventListener("click", saveMemoryVoiceFromMp3);
 
-    UI.saveBtn.addEventListener("click", () => {
+    UI.saveBtn.addEventListener("click", async () => {
       saveSettings();
       showToast("Ayarlar kaydedildi");
-      setTimeout(goHome, 300);
+
+      await loadProfileVoiceState();
+
+      setTimeout(() => {
+        location.href = resolveReturnUrl();
+      }, 300);
     });
 
     UI.cancelBtn.addEventListener("click", () => {
@@ -1426,7 +1451,7 @@
     });
   }
 
-  async function init(){
+  async function init() {
     paintSelections();
     refreshSummary();
 
