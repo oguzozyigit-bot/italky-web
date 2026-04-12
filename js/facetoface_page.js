@@ -9,7 +9,6 @@ import {
 
 const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
-
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
@@ -26,6 +25,15 @@ const BCP = {
   ka: "ka-GE",
 };
 
+const PLACEHOLDERS = {
+  tr: "Mesajını buraya yaz",
+  en: "Write your message here",
+  de: "Schreibe deine Nachricht hier",
+  fr: "Écris ton message ici",
+  it: "Scrivi qui il tuo messaggio",
+  es: "Escribe tu mensaje aquí",
+};
+
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
 
@@ -39,10 +47,12 @@ const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
   ? getLangPoolForSite(SITE_LANG)
   : [];
 
+const LATIN_ALLOW = new Set(["tr", "en", "de", "fr", "it", "es"]);
+
 const LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
-    if (!code) return null;
+    if (!code || !LATIN_ALLOW.has(code)) return null;
     return {
       code,
       flag: l.flag || "🌐",
@@ -69,73 +79,8 @@ function labelChip(code) {
   return `${o.flag} ${o.name}`;
 }
 
-const UI_TEXT = {
-  tr: {
-    ready: "Hazır",
-    preparing: "Sistem hazırlanıyor...",
-    repeat: "Konuşmanız bitince mikrofona tekrar basınız.",
-    wait: "Lütfen bekleyiniz...",
-    translating: "Çevriliyor...",
-    translateError: "⚠️ Çeviri servisine ulaşılamadı",
-    micBlocked: "⚠️ Mikrofon izni gerekli",
-    speechUnsupported: "⚠️ Bu cihazda konuşma algılama desteklenmiyor",
-  },
-  en: {
-    ready: "Ready",
-    preparing: "System is preparing...",
-    repeat: "Press the microphone again when you finish speaking.",
-    wait: "Please wait...",
-    translating: "Translating...",
-    translateError: "⚠️ Translation service unavailable",
-    micBlocked: "⚠️ Microphone permission required",
-    speechUnsupported: "⚠️ Speech recognition is not supported on this device",
-  },
-  de: {
-    ready: "Bereit",
-    preparing: "System wird vorbereitet...",
-    repeat: "Drücken Sie das Mikrofon erneut, wenn Sie fertig gesprochen haben.",
-    wait: "Bitte warten...",
-    translating: "Wird übersetzt...",
-    translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
-    micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
-    speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
-  },
-  fr: {
-    ready: "Prêt",
-    preparing: "Le système se prépare...",
-    repeat: "Appuyez de nouveau sur le micro quand vous avez fini de parler.",
-    wait: "Veuillez patienter...",
-    translating: "Traduction en cours...",
-    translateError: "⚠️ Service de traduction indisponible",
-    micBlocked: "⚠️ Autorisation micro requise",
-    speechUnsupported: "⚠️ La reconnaissance vocale n'est pas prise en charge sur cet appareil",
-  },
-  it: {
-    ready: "Pronto",
-    preparing: "Sistema in preparazione...",
-    repeat: "Premi di nuovo il microfono quando hai finito di parlare.",
-    wait: "Attendere prego...",
-    translating: "Traduzione in corso...",
-    translateError: "⚠️ Servizio di traduzione non disponibile",
-    micBlocked: "⚠️ Autorizzazione microfono richiesta",
-    speechUnsupported: "⚠️ Il riconoscimento vocale non è supportato su questo dispositivo",
-  },
-  es: {
-    ready: "Listo",
-    preparing: "El sistema se está preparando...",
-    repeat: "Pulse el micrófono otra vez cuando termine de hablar.",
-    wait: "Por favor espere...",
-    translating: "Traduciendo...",
-    translateError: "⚠️ Servicio de traducción no disponible",
-    micBlocked: "⚠️ Se requiere permiso de micrófono",
-    speechUnsupported: "⚠️ El reconocimiento de voz no es compatible con este dispositivo",
-  },
-};
-
-function t(langCode, key) {
-  const c = canonical(langCode);
-  const pack = UI_TEXT[c] || UI_TEXT.en;
-  return pack[key] || UI_TEXT.en[key] || "";
+function getPlaceholder(code) {
+  return PLACEHOLDERS[canonical(code)] || PLACEHOLDERS.en;
 }
 
 const frameRoot = $("frameRoot");
@@ -148,6 +93,11 @@ const topSend = $("topSend");
 const botSend = $("botSend");
 const topInput = $("topInput");
 const botInput = $("botInput");
+
+const topKeyboardWrap = $("topKeyboardWrap");
+const botKeyboardWrap = $("botKeyboardWrap");
+const topKeyboard = $("topKeyboard");
+const botKeyboard = $("botKeyboard");
 
 const topLangBtn = $("topLangBtn");
 const botLangBtn = $("botLangBtn");
@@ -174,6 +124,9 @@ const uiModalClose = $("uiModalClose");
 let topLang = "en";
 let botLang = "tr";
 let activeSide = null;
+let activeKeyboardSide = null;
+let keyboardShift = { top: false, bot: false };
+
 let recognizer = null;
 let recordingSide = null;
 let currentAudio = null;
@@ -188,7 +141,6 @@ let liveTranscript = "";
 let latestPreviewTranscript = "";
 let recognitionSessionId = 0;
 let typewriterRunId = 0;
-let recognitionFinishedByUser = false;
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -376,6 +328,8 @@ function bounceToReady(delay = 1200) {
 function refreshLangLabels() {
   if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
   if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
+  if (topInput) topInput.placeholder = getPlaceholder(topLang);
+  if (botInput) botInput.placeholder = getPlaceholder(botLang);
 }
 
 function closeAllPop() {
@@ -403,11 +357,12 @@ function renderPop(side) {
 
   list.querySelectorAll(".pop-item").forEach((el) => {
     el.addEventListener("click", () => {
-      const code = el.dataset.code || "en";
-      if (side === "top") topLang = canonical(code);
-      else botLang = canonical(code);
+      const code = canonical(el.dataset.code || "en");
+      if (side === "top") topLang = code;
+      else botLang = code;
 
       refreshLangLabels();
+      renderKeyboard(side);
       closeAllPop();
     });
   });
@@ -448,10 +403,6 @@ function syncComposerButtons(side) {
   if (!input || !mic || !send) return;
 
   const hasText = String(input.value || "").trim().length > 0;
-
-  // Kritik kural:
-  // Klavye açıldı diye send çıkmayacak.
-  // Sadece metin varsa send görünür olacak.
   mic.classList.toggle("hidden", hasText);
   send.classList.toggle("hidden", !hasText);
 }
@@ -461,17 +412,145 @@ function syncAllComposerButtons() {
   syncComposerButtons("bot");
 }
 
-function focusComposer(side) {
+function showKeyboard(side) {
+  activeKeyboardSide = side;
+  topKeyboardWrap?.classList.toggle("show", side === "top");
+  botKeyboardWrap?.classList.toggle("show", side === "bot");
+  renderKeyboard(side);
+  keepLatestVisible(side);
+}
+
+function hideKeyboards() {
+  activeKeyboardSide = null;
+  topKeyboardWrap?.classList.remove("show");
+  botKeyboardWrap?.classList.remove("show");
+}
+
+function appendInputValue(side, value) {
   const input = side === "top" ? topInput : botInput;
   if (!input) return;
 
-  requestAnimationFrame(() => {
-    try {
-      input.focus({ preventScroll: false });
-    } catch {
-      input.focus();
-    }
+  input.value = `${input.value || ""}${value}`;
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function backspaceInputValue(side) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+
+  input.value = String(input.value || "").slice(0, -1);
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function clearInputValue(side) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+
+  input.value = "";
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function keyboardExtraChars(lang) {
+  const c = canonical(lang);
+  if (c === "tr") return ["ç", "ğ", "ı", "ö", "ş", "ü"];
+  if (c === "de") return ["ä", "ö", "ü", "ß"];
+  if (c === "fr") return ["à", "â", "ç", "é", "è", "ê"];
+  if (c === "it") return ["à", "è", "é", "ì", "ò", "ù"];
+  if (c === "es") return ["á", "é", "í", "ñ", "ó", "ú"];
+  return [];
+}
+
+function keyboardLayout(lang, isShift) {
+  const upper = !!isShift;
+  const norm = (v) => upper ? String(v).toUpperCase() : String(v).toLowerCase();
+
+  const base = [
+    ["q","w","e","r","t","y","u","i","o","p"],
+    ["a","s","d","f","g","h","j","k","l"],
+    ["z","x","c","v","b","n","m"],
+  ].map((row) => row.map(norm));
+
+  const extras = keyboardExtraChars(lang).map(norm);
+  return { base, extras };
+}
+
+function createKey(label, action, className = "") {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `kb-key ${className}`.trim();
+  btn.textContent = label;
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
   });
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    action();
+  });
+  return btn;
+}
+
+function renderKeyboard(side) {
+  const lang = side === "top" ? topLang : botLang;
+  const wrap = side === "top" ? topKeyboard : botKeyboard;
+  if (!wrap) return;
+
+  const { base, extras } = keyboardLayout(lang, keyboardShift[side]);
+  wrap.innerHTML = "";
+
+  base.forEach((rowChars, idx) => {
+    const row = document.createElement("div");
+    row.className = "kb-row";
+
+    if (idx === 2) {
+      row.appendChild(createKey(keyboardShift[side] ? "KÜÇÜK" : "BÜYÜK", () => {
+        keyboardShift[side] = !keyboardShift[side];
+        renderKeyboard(side);
+      }, "wide muted"));
+    }
+
+    rowChars.forEach((ch) => {
+      row.appendChild(createKey(ch, () => {
+        appendInputValue(side, ch);
+        if (keyboardShift[side]) {
+          keyboardShift[side] = false;
+          renderKeyboard(side);
+        }
+      }));
+    });
+
+    if (idx === 2) {
+      row.appendChild(createKey("SİL", () => backspaceInputValue(side), "wide muted"));
+    }
+
+    wrap.appendChild(row);
+  });
+
+  if (extras.length) {
+    const exRow = document.createElement("div");
+    exRow.className = "kb-row";
+    extras.forEach((ch) => {
+      exRow.appendChild(createKey(ch, () => {
+        appendInputValue(side, ch);
+        if (keyboardShift[side]) {
+          keyboardShift[side] = false;
+          renderKeyboard(side);
+        }
+      }));
+    });
+    wrap.appendChild(exRow);
+  }
+
+  const bottomRow = document.createElement("div");
+  bottomRow.className = "kb-row";
+  bottomRow.appendChild(createKey("TEMİZLE", () => clearInputValue(side), "wide muted"));
+  bottomRow.appendChild(createKey("BOŞLUK", () => appendInputValue(side, " "), "xwide muted"));
+  bottomRow.appendChild(createKey("GÖNDER", () => sendTyped(side), "wide send"));
+  wrap.appendChild(bottomRow);
 }
 
 function keepLatestVisible(side) {
@@ -882,10 +961,7 @@ async function speak(text, langCode, tone = "neutral") {
           try { setHeaderTokens(voiceUsageResult.tokens_after); } catch {}
         }
       } catch (e) {
-        if (e?.code === "INSUFFICIENT_TOKENS") {
-          console.warn("[facetoface voice usage] insufficient tokens after playback");
-          return;
-        }
+        if (e?.code === "INSUFFICIENT_TOKENS") return;
         console.error("[facetoface voice usage]", e);
       }
     });
@@ -1113,7 +1189,7 @@ async function finalizeRecognition(side, text) {
 
   setTranslatingUI(side);
 
-  const latestRow = addBubble(other, "me", t(dst, "translating"), {
+  const latestRow = addBubble(other, "me", "Çevriliyor...", {
     latest: true,
     speakLang: dst,
     speakTone: sourceTone,
@@ -1125,7 +1201,7 @@ async function finalizeRecognition(side, text) {
   if (!tr) {
     setErrorUI();
     if (latestTxt) {
-      latestTxt.textContent = t(dst, "translateError");
+      latestTxt.textContent = "⚠️ Çeviri hatası";
       keepLatestVisible(other);
     }
     bounceToReady(1200);
@@ -1147,19 +1223,7 @@ async function finalizeRecognition(side, text) {
     const speakPromise = speak(tr, dst, sourceTone);
     await typewriteText(latestTxt, tr, other);
     keepLatestVisible(other);
-    try {
-      await speakPromise;
-    } catch {}
-  } else {
-    addBubble(other, "me", tr, {
-      latest: true,
-      speakLang: dst,
-      speakTone: sourceTone,
-    });
-
-    try {
-      await speak(tr, dst, sourceTone);
-    } catch {}
+    try { await speakPromise; } catch {}
   }
 
   setSystemReadyUI();
@@ -1179,7 +1243,7 @@ async function finalizeTypedMessage(side, rawText) {
 
   setTranslatingUI(side);
 
-  const latestRow = addBubble(other, "me", t(dst, "translating"), {
+  const latestRow = addBubble(other, "me", "Çevriliyor...", {
     latest: true,
     speakLang: dst,
     speakTone: tone,
@@ -1191,7 +1255,7 @@ async function finalizeTypedMessage(side, rawText) {
   if (!tr) {
     setErrorUI();
     if (latestTxt) {
-      latestTxt.textContent = t(dst, "translateError");
+      latestTxt.textContent = "⚠️ Çeviri hatası";
       keepLatestVisible(other);
     }
     bounceToReady(1200);
@@ -1213,9 +1277,7 @@ async function finalizeTypedMessage(side, rawText) {
     const speakPromise = speak(tr, dst, tone);
     await typewriteText(latestTxt, tr, other);
     keepLatestVisible(other);
-    try {
-      await speakPromise;
-    } catch {}
+    try { await speakPromise; } catch {}
   }
 
   setSystemReadyUI();
@@ -1241,12 +1303,14 @@ async function sendTyped(side) {
 }
 
 function startRecording(side) {
+  hideKeyboards();
+
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang);
 
   if (!rec) {
     setErrorUI();
-    showToast(t(lang, "speechUnsupported"));
+    showToast("Bu cihazda konuşma algılama desteklenmiyor");
     bounceToReady(1800);
     return;
   }
@@ -1257,7 +1321,6 @@ function startRecording(side) {
   recordingSide = side;
   liveTranscript = "";
   latestPreviewTranscript = "";
-  recognitionFinishedByUser = false;
 
   rec.onstart = () => {
     setListeningUI(side);
@@ -1289,16 +1352,15 @@ function startRecording(side) {
     if (mySessionId !== recognitionSessionId) return;
 
     if (String(e?.error || "").includes("not-allowed")) {
-      showToast(t(lang, "micBlocked"));
+      showToast("Mikrofon izni gerekli");
     } else {
-      showToast(t(lang, "preparing"));
+      showToast("Mikrofon hatası");
     }
 
     recognizer = null;
     recordingSide = null;
     liveTranscript = "";
     latestPreviewTranscript = "";
-    recognitionFinishedByUser = false;
 
     setErrorUI();
     bounceToReady(1600);
@@ -1319,13 +1381,10 @@ function startRecording(side) {
     const previewNode = (sideAtEnd === "top" ? topBody : botBody)?.querySelector(".bubble.preview");
     previewNode?.remove();
 
-    const shouldFinalize = !!finalText;
-
     liveTranscript = "";
     latestPreviewTranscript = "";
-    recognitionFinishedByUser = false;
 
-    if (shouldFinalize) {
+    if (finalText) {
       Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
       return;
     }
@@ -1340,7 +1399,6 @@ function startRecording(side) {
     recordingSide = null;
     liveTranscript = "";
     latestPreviewTranscript = "";
-    recognitionFinishedByUser = false;
     setErrorUI();
     bounceToReady(1200);
   }
@@ -1353,24 +1411,14 @@ async function toggleRecording(side) {
   if (!premiumOk) return;
 
   if (recordingSide === side) {
-    recognitionFinishedByUser = true;
     setTranslatingUI(side);
-
-    setTimeout(() => {
-      stopRecognizer();
-    }, 120);
-
+    setTimeout(() => stopRecognizer(), 120);
     return;
   }
 
   if (recordingSide && recordingSide !== side) {
-    recognitionFinishedByUser = true;
     setTranslatingUI(recordingSide);
-
-    setTimeout(() => {
-      stopRecognizer();
-    }, 80);
-
+    setTimeout(() => stopRecognizer(), 80);
     return;
   }
 
@@ -1431,6 +1479,8 @@ function startBoot() {
     bootReady = true;
     setSystemReadyUI();
     syncAllComposerButtons();
+    renderKeyboard("top");
+    renderKeyboard("bot");
   })();
 
   return bootPromise;
@@ -1468,6 +1518,11 @@ function bindMicTap(el, side) {
     await toggleRecording(side);
   };
 
+  el.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
   el.addEventListener("touchend", async (e) => {
     lastTouchTs = Date.now();
     await run(e);
@@ -1499,27 +1554,30 @@ function bindTap(el, handler) {
   });
 }
 
-function bindInputEvents(side) {
+function bindReadonlyInput(side) {
   const input = side === "top" ? topInput : botInput;
   const send = side === "top" ? topSend : botSend;
   if (!input || !send) return;
 
-  input.addEventListener("input", () => {
-    autoResizeTextarea(input);
-    syncComposerButtons(side);
+  const open = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showKeyboard(side);
+  };
+
+  input.setAttribute("readonly", "readonly");
+
+  input.addEventListener("pointerdown", open);
+  input.addEventListener("click", open);
+  input.addEventListener("focus", (e) => {
+    e.preventDefault();
+    input.blur();
+    showKeyboard(side);
   });
 
-  input.addEventListener("focus", () => {
-    // Sadece focus oldu diye ok/send çıkmayacak.
-    // Bu yüzden burada state değiştirmiyoruz.
-    setTimeout(() => keepLatestVisible(side), 80);
-  });
-
-  input.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      await sendTyped(side);
-    }
+  send.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
   });
 
   send.addEventListener("click", async (e) => {
@@ -1565,11 +1623,15 @@ function bind() {
   });
 
   document.addEventListener("click", (e) => {
-    const inside =
+    const insidePop =
       (popTop && popTop.contains(e.target)) ||
       (popBot && popBot.contains(e.target));
-    const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
-    if (!inside && !isBtn) closeAllPop();
+    const isLangBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+    const isInput = e.target?.closest?.("#topInput,#botInput");
+    const isKb = e.target?.closest?.("#topKeyboardWrap,#botKeyboardWrap");
+
+    if (!insidePop && !isLangBtn) closeAllPop();
+    if (!isInput && !isKb) hideKeyboards();
   }, { capture: true });
 
   clearBtn?.addEventListener("click", () => {
@@ -1592,6 +1654,7 @@ function bind() {
       autoResizeTextarea(botInput);
     }
 
+    hideKeyboards();
     syncAllComposerButtons();
     setSystemReadyUI();
   });
@@ -1622,8 +1685,8 @@ function bind() {
     location.href = safeHomeHref();
   });
 
-  bindInputEvents("top");
-  bindInputEvents("bot");
+  bindReadonlyInput("top");
+  bindReadonlyInput("bot");
 
   try {
     if (window.speechSynthesis) {
@@ -1651,6 +1714,10 @@ const requiredDomOk =
   !!botSend &&
   !!topInput &&
   !!botInput &&
+  !!topKeyboardWrap &&
+  !!botKeyboardWrap &&
+  !!topKeyboard &&
+  !!botKeyboard &&
   !!topLangBtn &&
   !!botLangBtn &&
   !!topLangTxt &&
@@ -1674,4 +1741,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-      }
+}
