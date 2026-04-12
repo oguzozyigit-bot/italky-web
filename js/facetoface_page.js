@@ -1026,17 +1026,12 @@ async function speak(text, langCode, tone = "neutral") {
 
   if (wantsApiVoice) {
     try {
-      const ready =
-        mode === "female" ||
-        mode === "male" ||
-        await hasReadyVoiceProfile();
-
-      if (ready) {
-        const ok = await speakViaApi(value, langCode, tone);
-        if (ok) return;
-      }
+      // Hazır mı diye bloklama yapma.
+      // Önce API'yi dene, başarısız olursa fallback'e geç.
+      const ok = await speakViaApi(value, langCode, tone);
+      if (ok) return;
     } catch (e) {
-      console.warn("[facetoface speakViaApi]", e);
+      console.warn("[facetoface speakViaApi fallback]", e);
     }
   }
 
