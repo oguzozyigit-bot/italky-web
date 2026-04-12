@@ -943,24 +943,36 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   const preset = getSelectedPresetVoice();
   const finalVoice = mode === "preset" ? preset : mode;
 
+  if (!userId) {
+    throw new Error("USER_ID_MISSING");
+  }
+
+  const payload = {
+    text: String(text || "").trim(),
+    lang: canonical(langCode),
+    user_id: userId,
+    module: "facetoface",
+    voice: finalVoice,
+    voice_mode: mode,
+    preset_voice: preset || "",
+    tone: canonTone(tone),
+  };
+
+  console.log("[facetoface tts payload]", payload);
+
   const r = await fetch(`${API_BASE}/api/tts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: String(text || "").trim(),
-      lang: canonical(langCode),
-      user_id: userId,
-      module: "facetoface",
-      voice: finalVoice,
-      tone: canonTone(tone),
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (myRunId !== speakRunId) return false;
 
   const j = await r.json().catch(() => null);
+  console.log("[facetoface tts response]", r.status, j);
+
   if (!r.ok || !j?.ok || !j?.audio_base64) {
-    throw new Error(j?.error || j?.detail || "TTS API unavailable");
+    throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
   }
 
   const audioSrc = `data:audio/mp3;base64,${j.audio_base64}`;
@@ -1026,19 +1038,22 @@ async function speak(text, langCode, tone = "neutral") {
 
   if (wantsApiVoice) {
     try {
-      // Hazır mı diye bloklama yapma.
-      // Önce API'yi dene, başarısız olursa fallback'e geç.
       const ok = await speakViaApi(value, langCode, tone);
       if (ok) return;
     } catch (e) {
-      console.warn("[facetoface speakViaApi fallback]", e);
+      console.warn("[facetoface custom voice failed]", e);
+
+      if (mode === "clone") {
+        showToast("Kendi Sesim hazır değil ya da backend clone sesi üretemedi");
+      } else if (mode === "preset") {
+        showToast("Kayıtlı özel ses hazır değil, normal sese dönüldü");
+      }
     }
   }
 
   const fallbackOk = speakFallback(value, langCode);
   if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
 }
-
 async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
   const inLen = String(inputText || "").trim().length;
   const outLen = String(outputText || "").trim().length;
