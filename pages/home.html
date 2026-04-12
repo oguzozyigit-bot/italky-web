@@ -1,1050 +1,890 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Future Home</title>
-<meta name="theme-color" content="#120d16"/>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
-<style>
-:root{
-  --txt:rgba(255,255,255,.96);
-  --muted:rgba(255,255,255,.64);
-  --cardLine:rgba(255,255,255,.12);
-}
-
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-  outline:none;
-}
-
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  color:var(--txt);
-  font-family:'Outfit',sans-serif;
-  background:#120d16;
-  scrollbar-width:none;
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar,
-#pageContent::-webkit-scrollbar{
-  display:none;
-}
-
-body{
-  background:
-    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
-    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
-    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
-    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
-  overflow:hidden;
-}
-
-body:not(.home-ready) #pageContent{
-  visibility:hidden;
-  opacity:0;
-}
-
-body.home-ready #pageContent{
-  visibility:visible;
-  opacity:1;
-  transition:opacity .18s ease;
-}
-
-#pageContent{
-  width:100%;
-  height:100%;
-  min-height:100%;
-  padding:10px 14px 18px;
-  display:block;
-  overflow-y:auto;
-  overflow-x:hidden;
-  scrollbar-width:none;
-  -webkit-overflow-scrolling:touch;
-}
-
-.page-shell-fit{
-  min-height:100%;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.hero{
-  flex:0 0 auto;
-  perspective:1000px;
-}
-
-.heroTop{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-}
-
-.holo-container{
-  width:210px;
-  height:210px;
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transform-style:preserve-3d;
-  margin:2px auto 4px;
-}
-
-.crystal-cage{
-  position:absolute;
-  width:150px;
-  height:150px;
-  transform-style:preserve-3d;
-  animation:rotateCrystal 18s linear infinite;
-}
-
-.crystal-side{
-  position:absolute;
-  inset:0;
-  border:2px solid rgba(103,232,249,.42);
-  background:radial-gradient(circle, rgba(129,140,248,.12), transparent);
-  box-shadow:0 0 18px rgba(103,232,249,.22);
-}
-
-.side1{ transform:rotateY(0deg) translateZ(75px); }
-.side2{ transform:rotateY(90deg) translateZ(75px); }
-.side3{ transform:rotateY(180deg) translateZ(75px); }
-.side4{ transform:rotateY(270deg) translateZ(75px); }
-.side5{ transform:rotateX(90deg) translateZ(75px); }
-.side6{ transform:rotateX(-90deg) translateZ(75px); }
-
-.holo-qr{
-  position:absolute;
-  width:108px;
-  height:108px;
-  z-index:2;
-  overflow:visible;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  animation:floatQR 4s ease-in-out infinite;
-}
-
-.ai-planet{
-  background:transparent;
-  box-shadow:none;
-}
-
-.planet-glow{
-  position:absolute;
-  inset:-16px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-    radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
-  filter:blur(12px);
-  animation:planetGlow 3.2s ease-in-out infinite;
-  z-index:1;
-}
-
-.planet-core{
-  position:relative;
-  width:108px;
-  height:108px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  z-index:2;
-  background:
-    radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
-    radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
-    linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
-  box-shadow:
-    inset -10px -12px 20px rgba(0,0,0,.72),
-    inset 10px 12px 22px rgba(255,255,255,.04),
-    inset 0 0 26px rgba(255,255,255,.04),
-    0 0 18px rgba(255,255,255,.10),
-    0 0 34px rgba(103,232,249,.20),
-    0 0 64px rgba(129,140,248,.18);
-  animation:planetBreath 2.8s ease-in-out infinite;
-}
-
-.planet-core::before{
-  content:"";
-  position:absolute;
-  inset:6px;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:inset 0 0 12px rgba(255,255,255,.05);
-}
-
-.planet-core::after{
-  content:"";
-  position:absolute;
-  left:18px;
-  top:14px;
-  width:32px;
-  height:16px;
-  border-radius:50%;
-  background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
-  filter:blur(2px);
-  transform:rotate(-18deg);
-  opacity:.9;
-}
-
-.planet-rays{
-  position:absolute;
-  inset:-18px;
-  border-radius:50%;
-  pointer-events:none;
-  z-index:1;
-}
-
-.planet-rays::before,
-.planet-rays::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  background:
-    conic-gradient(
-      from 0deg,
-      transparent 0deg 18deg,
-      rgba(255,255,255,.28) 24deg,
-      transparent 36deg 62deg,
-      rgba(255,255,255,.16) 70deg,
-      transparent 84deg 116deg,
-      rgba(255,255,255,.22) 124deg,
-      transparent 136deg 180deg,
-      rgba(255,255,255,.18) 192deg,
-      transparent 206deg 250deg,
-      rgba(255,255,255,.24) 258deg,
-      transparent 270deg 310deg,
-      rgba(255,255,255,.15) 318deg,
-      transparent 330deg 360deg
-    );
-  mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-  -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-  filter:blur(1px);
-  opacity:.55;
-  animation:planetRaySpin 12s linear infinite;
-}
-
-.planet-rays::after{
-  opacity:.35;
-  transform:scale(1.14);
-  animation-duration:18s;
-  animation-direction:reverse;
-}
-
-.planet-center{
-  position:relative;
-  z-index:3;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-}
-
-.planet-nfc-icon{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.08);
-  position:relative;
-  box-shadow:0 0 14px rgba(103,232,249,.22);
-}
-
-.planet-nfc-icon::before,
-.planet-nfc-icon::after{
-  content:"";
-  position:absolute;
-  top:50%;
-  left:50%;
-  border:2px solid rgba(103,232,249,.95);
-  border-left-color:transparent;
-  border-bottom-color:transparent;
-  border-radius:50%;
-  transform:translate(-50%,-50%) rotate(45deg);
-}
-
-.planet-nfc-icon::before{
-  width:12px;
-  height:12px;
-}
-
-.planet-nfc-icon::after{
-  width:20px;
-  height:20px;
-  opacity:.72;
-}
-
-.planet-nfc-text{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:13px;
-  font-weight:900;
-  letter-spacing:.8px;
-  color:#fff;
-  text-shadow:0 0 12px rgba(255,255,255,.18);
-}
-
-.heroTitle{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:20px;
-  font-weight:700;
-  letter-spacing:-.4px;
-  color:#fff;
-  margin:0;
-  line-height:1.15;
-  text-align:center;
-  text-shadow:0 0 12px rgba(255,255,255,.18);
-  max-width:320px;
-}
-
-.heroName{
-  margin:0;
-  font-size:15px;
-  color:var(--muted);
-  text-align:center;
-  line-height:1.3;
-  max-width:310px;
-  font-weight:800;
-}
-
-.home-grid{
-  flex:0 0 auto;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.mod-card{
-  position:relative;
-  border-radius:28px;
-  overflow:hidden;
-  border:1px solid var(--cardLine);
-  box-shadow:
-    0 15px 30px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.05);
-  padding:16px 15px 108px;
-  text-decoration:none;
-  color:#fff;
-  min-height:300px;
-  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
-}
-
-.mod-card:active{
-  transform:scale(.985);
-  filter:brightness(1.08);
-}
-
-.face-card{
-  background:
-    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
-    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
-}
-
-.chat-card{
-  background:
-    radial-gradient(circle at 18% 14%, rgba(251,146,60,.18) 0%, transparent 24%),
-    radial-gradient(circle at 82% 16%, rgba(239,68,68,.24) 0%, transparent 24%),
-    radial-gradient(circle at 50% 100%, rgba(255,255,255,.05) 0%, transparent 24%),
-    linear-gradient(180deg, #451217 0%, #7f1d1d 34%, #b91c1c 66%, #ef4444 100%);
-}
-
-.card-title{
-  margin:0;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:24px;
-  line-height:1;
-  letter-spacing:-.8px;
-  color:#fff;
-  word-break:break-word;
-}
-
-.card-desc-list{
-  margin-top:10px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  max-width:100%;
-}
-
-.card-desc{
-  margin:0;
-  font-size:14px;
-  line-height:1.34;
-  color:rgba(255,255,255,.92);
-  font-weight:800;
-  word-break:break-word;
-}
-
-.card-art{
-  position:absolute;
-  left:12px;
-  right:12px;
-  bottom:12px;
-  height:76px;
-  border-radius:20px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.10);
-  overflow:hidden;
-}
-
-.face-art{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:16px;
-}
-
-.face-headset{
-  position:relative;
-  width:28px;
-  height:38px;
-  margin-top:14px;
-}
-
-.face-headset::before{
-  content:"";
-  position:absolute;
-  left:50%;
-  top:-2px;
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  transform:translateX(-50%);
-  background:rgba(255,255,255,.88);
-  box-shadow:0 0 10px rgba(255,255,255,.16);
-}
-
-.face-headset::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:0;
-  width:28px;
-  height:18px;
-  border-radius:14px 14px 10px 10px;
-  transform:translateX(-50%);
-  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
-}
-
-.face-wave{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:62px;
-  height:28px;
-  transform:translate(-50%,-50%);
-}
-
-.face-wave::before,
-.face-wave::after{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  border-radius:999px;
-  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
-  box-shadow:0 0 14px rgba(103,232,249,.46);
-}
-
-.face-wave::before{ top:9px;height:2px; }
-.face-wave::after{ top:16px;height:2px;opacity:.68; }
-
-.chat-art{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:12px;
-}
-
-.chat-bubble-left,
-.chat-bubble-right{
-  position:relative;
-  border-radius:14px;
-}
-
-.chat-bubble-left{
-  width:44px;
-  height:28px;
-  background:rgba(255,245,245,.94);
-}
-
-.chat-bubble-left::after{
-  content:"";
-  position:absolute;
-  left:8px;
-  bottom:-6px;
-  width:10px;
-  height:10px;
-  background:rgba(255,245,245,.94);
-  clip-path:polygon(0 0,100% 0,0 100%);
-}
-
-.chat-bubble-right{
-  width:40px;
-  height:24px;
-  background:rgba(254,202,202,.92);
-}
-
-.chat-bubble-right::after{
-  content:"";
-  position:absolute;
-  right:7px;
-  bottom:-6px;
-  width:10px;
-  height:10px;
-  background:rgba(254,202,202,.92);
-  clip-path:polygon(100% 0,0 0,100% 100%);
-}
-
-.chat-orb{
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  background:radial-gradient(circle, #fff 0%, #fecaca 35%, #ef4444 100%);
-  box-shadow:0 0 14px rgba(239,68,68,.42);
-}
-
-.wide-stack{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.wide-card{
-  position:relative;
-  width:100%;
-  min-height:126px;
-  border-radius:28px;
-  overflow:hidden;
-  border:1px solid var(--cardLine);
-  box-shadow:
-    0 15px 30px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.05);
-  display:flex;
-  align-items:center;
-  gap:16px;
-  padding:16px 52px 16px 16px;
-  text-decoration:none;
-  color:#fff;
-  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
-}
-
-.fun-card{
-  background:
-    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
-    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
-    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
-}
-
-.practice-card{
-  background:
-    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
-    linear-gradient(90deg, #1d4ed8 0%, #0ea5e9 48%, #6366f1 100%);
-}
-
-.level-card{
-  background:
-    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
-    linear-gradient(90deg, #166534 0%, #22c55e 46%, #16a34a 100%);
-}
-
-.textwide-card{
-  background:
-    radial-gradient(circle at 82% 14%, rgba(255,255,255,.08) 0%, transparent 24%),
-    linear-gradient(90deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
-}
-
-.fun-ico,
-.level-ico,
-.practice-ico,
-.textwide-ico{
-  width:76px;
-  height:76px;
-  flex:0 0 auto;
-  position:relative;
-  border-radius:22px;
-  background:rgba(255,255,255,.12);
-  border:1.5px solid rgba(255,255,255,.15);
-  box-shadow:inset 0 0 22px rgba(255,255,255,.05);
-}
-
-.fun-dice, .fun-dice::before, .fun-dice::after{
-  position:absolute;
-  border-radius:10px;
-  background:rgba(255,255,255,.92);
-}
-
-.fun-dice{
-  width:24px;
-  height:24px;
-  left:14px;
-  top:24px;
-}
-
-.fun-dice::before{
-  content:"";
-  width:18px;
-  height:18px;
-  right:-22px;
-  top:-10px;
-  opacity:.8;
-}
-
-.fun-dice::after{
-  content:"";
-  width:16px;
-  height:16px;
-  right:-16px;
-  bottom:-12px;
-  opacity:.65;
-}
-
-.level-bars span{
-  position:absolute;
-  bottom:14px;
-  width:10px;
-  border-radius:6px 6px 0 0;
-  background:rgba(255,255,255,.92);
-}
-
-.level-bars span:nth-child(1){ left:14px; height:18px; }
-.level-bars span:nth-child(2){ left:30px; height:28px; }
-.level-bars span:nth-child(3){ left:46px; height:40px; }
-
-.practice-chat{
-  position:absolute;
-  left:12px;
-  top:18px;
-  width:24px;
-  height:18px;
-  border-radius:8px;
-  background:rgba(255,255,255,.92);
-}
-
-.practice-chat::after{
-  content:"";
-  position:absolute;
-  left:4px;
-  bottom:-5px;
-  width:8px;
-  height:8px;
-  background:rgba(255,255,255,.92);
-  clip-path:polygon(0 0, 100% 0, 0 100%);
-}
-
-.practice-chat.right{
-  left:auto;
-  right:12px;
-  top:34px;
-  background:rgba(103,232,249,.92);
-}
-
-.practice-chat.right::after{
-  left:auto;
-  right:4px;
-  background:rgba(103,232,249,.92);
-  clip-path:polygon(100% 0, 0 0, 100% 100%);
-}
-
-.textwide-bubble{
-  position:absolute;
-  left:12px;
-  top:18px;
-  width:24px;
-  height:18px;
-  border-radius:8px;
-  background:rgba(255,255,255,.92);
-}
-
-.textwide-bubble::after{
-  content:"";
-  position:absolute;
-  left:4px;
-  bottom:-5px;
-  width:8px;
-  height:8px;
-  background:rgba(255,255,255,.92);
-  clip-path:polygon(0 0, 100% 0, 0 100%);
-}
-
-.textwide-doc{
-  position:absolute;
-  right:12px;
-  top:16px;
-  width:24px;
-  height:34px;
-  border-radius:7px;
-  border:1.6px solid rgba(103,232,249,.96);
-  background:rgba(103,232,249,.08);
-}
-
-.textwide-doc::before,
-.textwide-doc::after{
-  content:"";
-  position:absolute;
-  left:5px;
-  right:5px;
-  height:2px;
-  border-radius:3px;
-  background:#67e8f9;
-}
-
-.textwide-doc::before{ top:8px; }
-.textwide-doc::after{ top:14px; }
-
-.textwide-line{
-  position:absolute;
-  left:5px;
-  right:5px;
-  top:20px;
-  height:2px;
-  border-radius:3px;
-  background:#67e8f9;
-}
-
-.wide-body{
-  flex:1;
-  min-width:0;
-}
-
-.card-topline{
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:.5px;
-  color:rgba(255,255,255,.8);
-  margin-bottom:6px;
-  text-transform:uppercase;
-}
-
-.wide-title{
-  margin:0;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:24px;
-  line-height:1;
-  letter-spacing:-.8px;
-  word-break:break-word;
-}
-
-.wide-desc{
-  margin-top:7px;
-  font-size:13px;
-  line-height:1.34;
-  color:rgba(255,255,255,.92);
-  max-width:86%;
-  font-weight:800;
-}
-
-.arrow-chip{
-  flex:0 0 auto;
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.18);
-}
-
-.arrow-chip::before{
-  content:"";
-  position:absolute;
-  left:13px;
-  top:50%;
-  width:12px;
-  height:12px;
-  border-top:2px solid rgba(255,255,255,.9);
-  border-right:2px solid rgba(255,255,255,.9);
-  transform:translateY(-50%) rotate(45deg);
-}
-
-@keyframes rotateCrystal{
-  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
-}
-
-@keyframes floatQR{
-  0%,100%{ transform:translateY(0) rotateX(0deg); }
-  50%{ transform:translateY(-8px) rotateX(5deg); }
-}
-
-@keyframes planetBreath{
-  0%,100%{
-    transform:scale(1);
-    box-shadow:
-      inset -10px -12px 20px rgba(0,0,0,.72),
-      inset 10px 12px 22px rgba(255,255,255,.04),
-      inset 0 0 26px rgba(255,255,255,.04),
-      0 0 18px rgba(255,255,255,.10),
-      0 0 34px rgba(103,232,249,.20),
-      0 0 64px rgba(129,140,248,.18);
-  }
-  50%{
-    transform:scale(1.045);
-    box-shadow:
-      inset -10px -12px 20px rgba(0,0,0,.72),
-      inset 10px 12px 24px rgba(255,255,255,.05),
-      inset 0 0 28px rgba(255,255,255,.06),
-      0 0 22px rgba(255,255,255,.12),
-      0 0 42px rgba(103,232,249,.28),
-      0 0 78px rgba(129,140,248,.24);
-  }
-}
-
-@keyframes planetGlow{
-  0%,100%{ opacity:.55; transform:scale(1); }
-  50%{ opacity:.92; transform:scale(1.16); }
-}
-
-@keyframes planetRaySpin{
-  from{ transform:rotate(0deg); }
-  to{ transform:rotate(360deg); }
-}
-
-@media (max-width:390px){
-  .holo-container{ width:190px; height:190px; margin-bottom:2px; }
-  .crystal-cage{ width:136px; height:136px; }
-  .side1{ transform:rotateY(0deg) translateZ(68px); }
-  .side2{ transform:rotateY(90deg) translateZ(68px); }
-  .side3{ transform:rotateY(180deg) translateZ(68px); }
-  .side4{ transform:rotateY(270deg) translateZ(68px); }
-  .side5{ transform:rotateX(90deg) translateZ(68px); }
-  .side6{ transform:rotateX(-90deg) translateZ(68px); }
-  .holo-qr{ width:98px; height:98px; }
-  .planet-core{ width:98px; height:98px; }
-  .heroTitle{ font-size:18px; }
-  .card-title{ font-size:22px; }
-  .wide-title{ font-size:22px; }
-  .card-art{ height:70px; }
-  .card-desc{ font-size:13px; }
-  .wide-desc{ font-size:12.5px; }
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+  <title>italkyAI • Ana Sayfa</title>
+  <meta name="theme-color" content="#07111a" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#07111a;
+      --bg2:#0c1828;
+      --bg3:#12243a;
+      --text:#f4fbff;
+      --muted:rgba(255,255,255,.62);
+
+      --cyan:#22d3ee;
+      --cyan2:#06b6d4;
+      --blue:#3b82f6;
+      --blue2:#2563eb;
+      --violet:#8b5cf6;
+      --green:#34d399;
+      --gold:#facc15;
+      --orange:#fb923c;
+      --red:#ef4444;
+
+      --glass:rgba(255,255,255,.045);
+      --line:rgba(255,255,255,.08);
+
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+
+      --header-h:66px;
+      --footer-h:46px;
+      --app-height:100dvh;
+    }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      font-family:Outfit, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top, rgba(34,211,238,.10), transparent 24%),
+        radial-gradient(circle at bottom, rgba(59,130,246,.08), transparent 18%),
+        linear-gradient(180deg,#050b12 0%, #09111d 100%);
+    }
+
+    .app{
+      position:relative;
+      width:100%;
+      max-width:430px;
+      height:var(--app-height);
+      margin:0 auto;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 16% 0%, rgba(34,211,238,.08), transparent 20%),
+        radial-gradient(circle at 84% 8%, rgba(59,130,246,.07), transparent 18%),
+        linear-gradient(180deg,#050b12 0%, #09111d 100%);
+      border-left:1px solid rgba(255,255,255,.04);
+      border-right:1px solid rgba(255,255,255,.04);
+      box-shadow:0 20px 50px rgba(0,0,0,.35);
+    }
+
+    .header{
+      position:absolute;
+      inset:0 0 auto 0;
+      height:calc(var(--header-h) + var(--safe-top));
+      padding:calc(2px + var(--safe-top)) 14px 4px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      z-index:50;
+      background:linear-gradient(180deg, rgba(7,17,26,.96), rgba(7,17,26,.76));
+      border-bottom:1px solid rgba(255,255,255,.06);
+      backdrop-filter:blur(14px);
+    }
+
+    .icon-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .icon-btn svg{
+      width:20px;
+      height:20px;
+      stroke:currentColor;
+      stroke-width:2.2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:1px;
+      text-align:center;
+      user-select:none;
+    }
+
+    .brand-title{
+      margin:0;
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:23px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-.5px;
+      color:#fff;
+    }
+
+    .brand-title .ai{
+      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .brand-sub{
+      margin:0;
+      font-size:8px;
+      font-weight:900;
+      letter-spacing:2.4px;
+      color:rgba(255,255,255,.30);
+    }
+
+    .menu{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:120;
+    }
+    .menu.open{ pointer-events:auto; }
+
+    .menu-backdrop{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,.48);
+      backdrop-filter:blur(6px);
+      opacity:0;
+      transition:opacity .22s ease;
+    }
+    .menu.open .menu-backdrop{ opacity:1; }
+
+    .menu-panel{
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:min(84vw, 336px);
+      transform:translateX(-104%);
+      transition:transform .24s ease;
+      padding:calc(14px + var(--safe-top)) 12px calc(14px + var(--safe-bottom));
+      background:linear-gradient(180deg, rgba(10,16,26,.98), rgba(6,10,18,.98));
+      border-right:1px solid rgba(255,255,255,.08);
+      box-shadow:20px 0 40px rgba(0,0,0,.35);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .menu.open .menu-panel{ transform:translateX(0); }
+
+    .menu-user{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:14px;
+      border-radius:20px;
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,.07);
+    }
+
+    .menu-user-avatar{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      overflow:hidden;
+      flex:0 0 auto;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+    }
+
+    .menu-user-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .menu-user-meta{
+      min-width:0;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:5px;
+    }
+
+    .menu-logo{
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:20px;
+      font-weight:900;
+      line-height:1;
+      color:#fff;
+    }
+
+    .menu-logo .ai{
+      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .menu-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+      word-break:break-word;
+    }
+
+    .menu-jeton{
+      font-size:12px;
+      font-weight:800;
+      color:#cffafe;
+    }
+
+    .menu-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      overflow:auto;
+      scrollbar-width:none;
+    }
+    .menu-list::-webkit-scrollbar{ display:none; }
+
+    .menu-item{
+      width:100%;
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.07);
+      color:#fff;
+      text-align:left;
+      padding:0 14px;
+      font-size:13px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .menu-item.white{
+      background:#fff;
+      color:#111;
+    }
+
+    .menu-item.cyan{
+      color:#cffafe;
+      background:rgba(34,211,238,.10);
+      border-color:rgba(34,211,238,.22);
+    }
+
+    .menu-item.red{
+      color:#fecaca;
+      background:rgba(239,68,68,.10);
+      border-color:rgba(239,68,68,.22);
+    }
+
+    .main{
+      position:absolute;
+      inset:calc(var(--header-h) + var(--safe-top)) 0 calc(var(--footer-h) + var(--safe-bottom)) 0;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:14px 14px 18px;
+      scrollbar-width:none;
+    }
+
+    .main::-webkit-scrollbar{ display:none; }
+
+    .hero{
+      border-radius:28px;
+      padding:18px;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(34,211,238,.18), transparent 26%),
+        radial-gradient(circle at 85% 20%, rgba(59,130,246,.14), transparent 22%),
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 18px 36px rgba(0,0,0,.22);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .hero-title{
+      margin:0;
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:28px;
+      line-height:1.05;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .hero-title span{
+      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, #93c5fd 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero-text{
+      margin:0;
+      font-size:14px;
+      line-height:1.58;
+      color:rgba(255,255,255,.78);
+      font-weight:700;
+    }
+
+    .plan-card{
+      border-radius:22px;
+      padding:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .plan-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .plan-badge{
+      padding:7px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      color:#06202a;
+      background:linear-gradient(135deg, #67e8f9 0%, #38bdf8 50%, #60a5fa 100%);
+    }
+
+    .plan-price{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .plan-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.55;
+      color:rgba(255,255,255,.72);
+      font-weight:700;
+    }
+
+    .modules{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .module-card{
+      position:relative;
+      border:none;
+      border-radius:24px;
+      padding:18px 16px;
+      text-align:left;
+      cursor:pointer;
+      color:#fff;
+      min-height:170px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 14px 30px rgba(0,0,0,.20);
+      overflow:hidden;
+    }
+
+    .module-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      opacity:.85;
+      pointer-events:none;
+    }
+
+    .module-card.face::before{
+      background:
+        radial-gradient(circle at 15% 10%, rgba(34,211,238,.20), transparent 28%),
+        radial-gradient(circle at 85% 85%, rgba(59,130,246,.16), transparent 22%);
+    }
+
+    .module-card.ai::before{
+      background:
+        radial-gradient(circle at 20% 0%, rgba(139,92,246,.20), transparent 28%),
+        radial-gradient(circle at 90% 90%, rgba(59,130,246,.12), transparent 24%);
+    }
+
+    .module-card.friend::before{
+      background:
+        radial-gradient(circle at 18% 8%, rgba(34,211,238,.22), transparent 28%),
+        radial-gradient(circle at 88% 88%, rgba(59,130,246,.18), transparent 22%);
+    }
+
+    .module-card.text::before{
+      background:
+        radial-gradient(circle at 10% 6%, rgba(59,130,246,.18), transparent 28%),
+        radial-gradient(circle at 86% 86%, rgba(34,211,238,.14), transparent 22%);
+    }
+
+    .module-card.level::before{
+      background:
+        radial-gradient(circle at 12% 8%, rgba(250,204,21,.22), transparent 28%),
+        radial-gradient(circle at 88% 88%, rgba(251,146,60,.16), transparent 22%);
+    }
+
+    .module-card.fun::before{
+      background:
+        radial-gradient(circle at 12% 8%, rgba(52,211,153,.22), transparent 28%),
+        radial-gradient(circle at 88% 88%, rgba(34,211,238,.16), transparent 22%);
+    }
+
+    .module-inner{
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      height:100%;
+    }
+
+    .module-icon{
+      width:48px;
+      height:48px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+
+    .module-icon svg{
+      width:22px;
+      height:22px;
+      stroke:#fff;
+      stroke-width:2.1;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .module-title{
+      margin:0;
+      font-size:18px;
+      line-height:1.12;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .module-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.52;
+      font-weight:700;
+      color:rgba(255,255,255,.74);
+    }
+
+    .footer{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      height:calc(var(--footer-h) + var(--safe-bottom));
+      padding:10px 12px calc(10px + var(--safe-bottom));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-top:1px solid rgba(255,255,255,.06);
+      background:rgba(7,17,26,.88);
+      backdrop-filter:blur(12px);
+      z-index:30;
+    }
+
+    .seal{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      flex-wrap:wrap;
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+    }
+
+    .seal-main{
+      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .seal-dot{ color:rgba(255,255,255,.25); }
+    .seal-year{ color:#bae6fd; }
+
+    @media (max-width:390px){
+      .modules{
+        grid-template-columns:1fr;
+      }
+      .module-card{
+        min-height:158px;
+      }
+      .hero-title{
+        font-size:25px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<script type="module">
-  import { supabase } from "/js/supabase_client.js";
-  const LOGIN_PAGE = "/pages/login.html";
+<div class="menu" id="menu">
+  <div class="menu-backdrop" id="menuBackdrop"></div>
+  <aside class="menu-panel">
+    <div class="menu-user">
+      <div class="menu-user-avatar" id="menuUserAvatar">
+        <img id="menuUserAvatarImg" alt="Avatar">
+      </div>
+      <div class="menu-user-meta">
+        <div class="menu-logo">italky<span class="ai">AI</span></div>
+        <div class="menu-name" id="menuUserName">Kullanıcı</div>
+        <div class="menu-jeton" id="menuJeton">Jeton: 0</div>
+      </div>
+    </div>
 
-  async function bootAuthGate() {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session?.user) {
-        location.replace(LOGIN_PAGE);
-        return;
-      }
-      document.body.classList.add("home-ready");
-    } catch (e) {
-      location.replace(LOGIN_PAGE);
-    }
-  }
+    <div class="menu-list">
+      <button class="menu-item white" id="goFaceBtn" type="button">YüzYüze Çeviri</button>
+      <button class="menu-item" id="goAiBtn" type="button">Yapay Zekayla Sohbet</button>
+      <button class="menu-item cyan" id="goFriendBtn" type="button">Arkadaşla Sohbet</button>
+      <button class="menu-item" id="goTextBtn" type="button">Yazıdan Çeviri</button>
+      <button class="menu-item" id="goLevelBtn" type="button">Seviyini Tespit Et</button>
+      <button class="menu-item" id="goFunBtn" type="button">Eğlenerek Öğren</button>
+      <button class="menu-item" id="jetonYukleBtn" type="button">Jeton Yükle</button>
+      <button class="menu-item red" id="logoutBtn" type="button">Çıkış Yap</button>
+    </div>
+  </aside>
+</div>
 
-  bootAuthGate();
-</script>
+<div class="app">
+  <header class="header">
+    <button class="icon-btn" id="menuBtn" type="button" aria-label="Menü">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+    </button>
 
-<main id="pageContent">
-  <div class="page-shell-fit">
+    <div class="brand">
+      <h1 class="brand-title">italky<span class="ai">AI</span></h1>
+      <p class="brand-sub">BE FREE</p>
+    </div>
 
-    <section class="hero" id="heroSection">
-      <div class="heroTop">
-        <div class="holo-container">
-          <div class="crystal-cage">
-            <div class="crystal-side side1"></div>
-            <div class="crystal-side side2"></div>
-            <div class="crystal-side side3"></div>
-            <div class="crystal-side side4"></div>
-            <div class="crystal-side side5"></div>
-            <div class="crystal-side side6"></div>
-          </div>
+    <button class="icon-btn" id="profileBtn" type="button" aria-label="Profil">
+      <svg viewBox="0 0 24 24">
+        <path d="M20 21a8 8 0 0 0-16 0"></path>
+        <circle cx="12" cy="8" r="4"></circle>
+      </svg>
+    </button>
+  </header>
 
-          <div class="holo-qr ai-planet" aria-hidden="true">
-            <div class="planet-glow"></div>
-            <div class="planet-rays"></div>
-            <div class="planet-core">
-              <div class="planet-center">
-                <div class="planet-nfc-icon"></div>
-                <div class="planet-nfc-text">NFC</div>
-              </div>
-            </div>
-          </div>
+  <main class="main">
+    <section class="hero">
+      <h2 class="hero-title">Dünyayla <span>konuşmak</span> artık daha kolay</h2>
+      <p class="hero-text">
+        italkyAI ile ister yüz yüze çeviri yap, ister yapay zekâyla sohbet et,
+        ister arkadaşınla kendi dilinde bağlantı kur. Tüm modüller aynı çatı altında,
+        sade ve hızlı bir akışla seni bekliyor.
+      </p>
+
+      <div class="plan-card">
+        <div class="plan-top">
+          <div class="plan-badge">İlk 15 Gün Ücretsiz</div>
+          <div class="plan-price">Sonra 49,90 TL / Ay</div>
         </div>
-
-        <h1 class="heroTitle">Dünya’yı Küçülttük, Cebinize Sığdırdık</h1>
-        <p class="heroName" id="heroUserName">Hoş geldin</p>
+        <p class="plan-text">
+          Abonelik iptal edilene kadar aylık olarak devam eder.
+          Jeton mantığı ayrıca sürer. Jetonlar Google Play üzerinden alınır
+          ve premium işlemlerde kullanılmaya devam eder.
+        </p>
       </div>
     </section>
 
-    <section class="home-grid">
-      <a id="faceCard" class="mod-card face-card" href="/facetoface.html">
-        <h2 class="card-title">FaceToFace</h2>
-
-        <div class="card-desc-list">
-          <p class="card-desc">Canlı konuş.</p>
-          <p class="card-desc">Anında çeviri al.</p>
-          <p class="card-desc">Dil bariyerini kaldır.</p>
-          <p class="card-desc">Tek telefonla başla.</p>
-        </div>
-
-        <div class="card-art face-art">
-          <div class="face-wave"></div>
-          <div class="face-headset"></div>
-          <div class="face-headset"></div>
-        </div>
-      </a>
-
-      <a id="chatCard" class="mod-card chat-card" href="/pages/italkyai_chat.html">
-        <h2 class="card-title">Sohbet AI</h2>
-
-        <div class="card-desc-list">
-          <p class="card-desc">Doğal sohbet et.</p>
-          <p class="card-desc">Yaz veya konuş.</p>
-          <p class="card-desc">Özel ses kullan.</p>
-          <p class="card-desc">Sohbetini kaydet.</p>
-        </div>
-
-        <div class="card-art chat-art">
-          <div class="chat-bubble-left"></div>
-          <div class="chat-orb"></div>
-          <div class="chat-bubble-right"></div>
-        </div>
-      </a>
-    </section>
-
-    <section class="wide-stack">
-      <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
-        <div class="fun-ico">
-          <div class="fun-dice"></div>
-        </div>
-
-        <div class="wide-body">
-          <div class="card-topline">Oyunlu Eğitim</div>
-          <h2 class="wide-title">Eğlenerek Öğren</h2>
-          <p class="wide-desc">Oyna, tekrar et, öğren.</p>
-        </div>
-
-        <div class="arrow-chip"></div>
-      </a>
-
-      <a id="practiceCard" class="wide-card practice-card" href="/pages/pratice_ai_select.html">
-        <div class="practice-ico">
-          <div class="practice-chat"></div>
-          <div class="practice-chat right"></div>
-        </div>
-
-        <div class="wide-body">
-          <div class="card-topline">Canlı Gelişim</div>
-          <h2 class="wide-title">Practice AI</h2>
-          <p class="wide-desc">Pratik yap, akıcılığını artır.</p>
-        </div>
-
-        <div class="arrow-chip"></div>
-      </a>
-
-      <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
-        <div class="level-ico">
-          <div class="level-bars">
-            <span></span><span></span><span></span>
+    <section class="modules">
+      <button class="module-card face" id="faceCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M8 10c1.2-1.6 2.3-2.4 4-2.4S14.8 8.4 16 10"></path>
+              <path d="M7 16c1.5 1 3 1.5 5 1.5s3.5-.5 5-1.5"></path>
+              <path d="M4 5h16v14H4z"></path>
+            </svg>
           </div>
+          <h3 class="module-title">YüzYüze Çeviri</h3>
+          <p class="module-text">
+            İki kişi karşılıklı konuşurken,
+            sistem her iki tarafın dilini anlık takip etsin
+            ve iletişimi daha akıcı hale getirsin.
+          </p>
         </div>
+      </button>
 
-        <div class="wide-body">
-          <div class="card-topline">Ölç & Başla</div>
-          <h2 class="wide-title">Seviye Tespit</h2>
-          <p class="wide-desc">Seviyeni ölç, doğru yerden başla.</p>
+      <button class="module-card ai" id="aiCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 12h6"></path>
+              <path d="M12 9v6"></path>
+              <path d="M5 8a7 7 0 0 1 14 0v5a3 3 0 0 1-3 3h-1l-3 3-3-3H8a3 3 0 0 1-3-3z"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">Yapay Zekayla Sohbet</h3>
+          <p class="module-text">
+            Sorular sor, fikir üret,
+            metin oluştur ya da yardım al.
+            italkyAI ile doğal ve güçlü bir sohbet akışına gir.
+          </p>
         </div>
+      </button>
 
-        <div class="arrow-chip"></div>
-      </a>
-
-      <a id="textWideCard" class="wide-card textwide-card" href="/pages/text_translate.html">
-        <div class="textwide-ico">
-          <div class="textwide-bubble"></div>
-          <div class="textwide-doc"></div>
-          <div class="textwide-line"></div>
+      <button class="module-card friend" id="friendCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+              <path d="M15 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+              <path d="M3 19a6 6 0 0 1 12 0"></path>
+              <path d="M12 19a5 5 0 0 1 9 0"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">Arkadaşla Sohbet</h3>
+          <p class="module-text">
+            Sohbet ID ile arkadaşına bağlan,
+            onaylı şekilde aynı ekranda buluş
+            ve herkes kendi dilinde rahatça konuşsun.
+          </p>
         </div>
+      </button>
 
-        <div class="wide-body">
-          <div class="card-topline">Metin Çeviri</div>
-          <h2 class="wide-title">TextToText</h2>
-          <p class="wide-desc">Yaz, çevir, kopyala, dinle.</p>
+      <button class="module-card text" id="textCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 6h16"></path>
+              <path d="M4 12h10"></path>
+              <path d="M4 18h8"></path>
+              <path d="M18 10l2 2-2 2"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">Yazıdan Çeviri</h3>
+          <p class="module-text">
+            Yazdığın metni farklı dillere çevir,
+            kültürel anlam katmanı ile daha doğal sonuçlar al
+            ve gerekirse sesli çıktıya dönüştür.
+          </p>
         </div>
+      </button>
 
-        <div class="arrow-chip"></div>
-      </a>
+      <button class="module-card level" id="levelCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M5 19h14"></path>
+              <path d="M7 16V9"></path>
+              <path d="M12 16V5"></path>
+              <path d="M17 16v-4"></path>
+            </svg>
+          </div>
+          <h3 class="module-title">Seviyini Tespit Et</h3>
+          <p class="module-text">
+            Dil seviyeni ölç,
+            eksik yönlerini gör
+            ve sana uygun çalışma yolunu daha net belirle.
+          </p>
+        </div>
+      </button>
+
+      <button class="module-card fun" id="funCard" type="button">
+        <div class="module-inner">
+          <div class="module-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <path d="M9 9h.01"></path>
+              <path d="M15 9h.01"></path>
+              <circle cx="12" cy="12" r="9"></circle>
+            </svg>
+          </div>
+          <h3 class="module-title">Eğlenerek Öğren</h3>
+          <p class="module-text">
+            Oyunlar ve eğlenceli alıştırmalarla
+            dili daha sıcak bir akış içinde öğren
+            ve pratiği sıkıcı olmaktan çıkar.
+          </p>
+        </div>
+      </button>
     </section>
+  </main>
 
-  </div>
-</main>
-
-<script type="module">
-import { mountShell } from "/js/ui_shell.js";
-try {
-  mountShell({ scroll: "auto" });
-} catch (e) {
-  console.error("ui_shell HATASI:", e);
-}
-</script>
+  <footer class="footer">
+    <div class="seal">
+      <span class="seal-main">italkyAI By Ozyigit's</span>
+      <span class="seal-dot">•</span>
+      <span class="seal-year">2026</span>
+    </div>
+  </footer>
+</div>
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
 
-  async function loadHomeUserName() {
-    const heroUserName = document.getElementById("heroUserName");
-    if (!heroUserName) return;
+  const $ = (id) => document.getElementById(id);
 
+  const UI = {
+    menu: $("menu"),
+    menuBtn: $("menuBtn"),
+    menuBackdrop: $("menuBackdrop"),
+    profileBtn: $("profileBtn"),
+
+    menuUserAvatar: $("menuUserAvatar"),
+    menuUserAvatarImg: $("menuUserAvatarImg"),
+    menuUserName: $("menuUserName"),
+    menuJeton: $("menuJeton"),
+
+    faceCard: $("faceCard"),
+    aiCard: $("aiCard"),
+    friendCard: $("friendCard"),
+    textCard: $("textCard"),
+    levelCard: $("levelCard"),
+    funCard: $("funCard"),
+
+    goFaceBtn: $("goFaceBtn"),
+    goAiBtn: $("goAiBtn"),
+    goFriendBtn: $("goFriendBtn"),
+    goTextBtn: $("goTextBtn"),
+    goLevelBtn: $("goLevelBtn"),
+    goFunBtn: $("goFunBtn"),
+
+    jetonYukleBtn: $("jetonYukleBtn"),
+    logoutBtn: $("logoutBtn")
+  };
+
+  function openMenu() {
+    UI.menu.classList.add("open");
+  }
+
+  function closeMenu() {
+    UI.menu.classList.remove("open");
+  }
+
+  function go(url) {
+    location.href = url;
+  }
+
+  async function hydrateProfileUI() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const uid = user?.id;
-      if (!uid) {
-        heroUserName.textContent = "Hoş geldin";
+
+      if (!user) {
+        UI.menuUserName.textContent = "Misafir";
+        UI.menuJeton.textContent = "Jeton: 0";
         return;
       }
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("hitap, name, full_name, display_name")
-        .eq("id", uid)
+        .select("full_name,email,tokens,avatar_url")
+        .eq("id", user.id)
         .maybeSingle();
 
-      const rawName =
-        profile?.hitap ||
-        profile?.name ||
-        profile?.display_name ||
-        profile?.full_name ||
-        user?.user_metadata?.hitap ||
-        user?.user_metadata?.name ||
-        user?.user_metadata?.full_name ||
-        user?.email ||
+      let walletTokens = 0;
+
+      try {
+        const { data: wallet } = await supabase
+          .from("wallets")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (wallet) {
+          walletTokens =
+            Number(wallet.tokens ?? wallet.balance ?? wallet.amount ?? wallet.jeton ?? wallet.credit ?? 0) || 0;
+        }
+      } catch {
+        walletTokens = Number(profile?.tokens || 0) || 0;
+      }
+
+      const avatarUrl =
+        profile?.avatar_url ||
+        user?.user_metadata?.avatar_url ||
+        user?.user_metadata?.picture ||
         "";
 
-      const cleanName = String(rawName || "").trim();
-      heroUserName.textContent = cleanName ? cleanName : "Hoş geldin";
+      const fullName =
+        profile?.full_name ||
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.email ||
+        "Kullanıcı";
+
+      if (avatarUrl) {
+        UI.menuUserAvatar.innerHTML = "";
+        UI.menuUserAvatarImg.src = avatarUrl;
+        UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
+      }
+
+      UI.menuUserName.textContent = fullName;
+      UI.menuJeton.textContent = `Jeton: ${walletTokens}`;
     } catch (e) {
-      heroUserName.textContent = "Hoş geldin";
+      console.error("Profil yüklenemedi:", e);
     }
   }
 
-  loadHomeUserName();
-</script>
+  function bindNavigation() {
+    const routes = {
+      face: "/pages/facetoface.html",
+      ai: "/pages/sohbetai.html",
+      friend: "/pages/arkadasla.html",
+      text: "/pages/text_translate.html",
+      level: "/pages/level_test.html",
+      fun: "/pages/games.html"
+    };
 
+    UI.faceCard.addEventListener("click", () => go(routes.face));
+    UI.aiCard.addEventListener("click", () => go(routes.ai));
+    UI.friendCard.addEventListener("click", () => go(routes.friend));
+    UI.textCard.addEventListener("click", () => go(routes.text));
+    UI.levelCard.addEventListener("click", () => go(routes.level));
+    UI.funCard.addEventListener("click", () => go(routes.fun));
+
+    UI.goFaceBtn.addEventListener("click", () => go(routes.face));
+    UI.goAiBtn.addEventListener("click", () => go(routes.ai));
+    UI.goFriendBtn.addEventListener("click", () => go(routes.friend));
+    UI.goTextBtn.addEventListener("click", () => go(routes.text));
+    UI.goLevelBtn.addEventListener("click", () => go(routes.level));
+    UI.goFunBtn.addEventListener("click", () => go(routes.fun));
+
+    UI.jetonYukleBtn.addEventListener("click", () => go("/pages/jetonbuy.html"));
+  }
+
+  function bindEvents() {
+    UI.menuBtn.addEventListener("click", openMenu);
+    UI.menuBackdrop.addEventListener("click", closeMenu);
+
+    UI.profileBtn.addEventListener("click", openMenu);
+
+    UI.logoutBtn.addEventListener("click", async () => {
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+      location.href = "/pages/login.html";
+    });
+  }
+
+  async function init() {
+    bindEvents();
+    bindNavigation();
+    await hydrateProfileUI();
+  }
+
+  init();
+</script>
 </body>
 </html>
