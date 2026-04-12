@@ -1,10 +1,3 @@
-// FILE: italky-web/js/translate_page.js
-// ✅ ÇEVİRİ FIX: backend hangi alanı isterse çalışsın diye 2 format birden gönderir
-// ✅ Dil seçici sheet + arama + çok dil
-// ✅ Scroll gizli
-// ✅ Slogan sabit: By Ozyigit's
-// ✅ Ping: GET /api/translate/_ping (senin backend’de var)
-
 import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id)=>document.getElementById(id);
 
