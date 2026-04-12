@@ -220,33 +220,11 @@ function faceTextUsageModule() {
   return getFaceTranslateMode() === "cultural" ? "facetoface_ai" : "usage_face_to_face";
 }
 
-function faceVoiceUsageModule() {
-  const v = getFaceVoiceMode();
-  if (v === "clone") return "voice_clone";
-  if (v === "preset") return "voice_preset_use";
-  if (v === "female" || v === "male") return "voice_ai";
-  return "voice_ai";
-}
-
 function faceTextUsageNote() {
   return buildUsageNote({
     surface: "facetoface",
     usageKind: "text",
     mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
-  });
-}
-
-function faceVoiceUsageNote() {
-  const v = getFaceVoiceMode();
-  let mode = "normal";
-  if (v === "clone") mode = "clone";
-  else if (v === "preset") mode = "preset";
-  else if (v === "female" || v === "male") mode = "ai";
-
-  return buildUsageNote({
-    surface: "facetoface",
-    usageKind: "voice",
-    mode
   });
 }
 
@@ -315,10 +293,23 @@ function setFrameVisual(state) {
   if (state) frameRoot.classList.add(`is-${state}`);
 }
 
+function setInputPlaceholder(side, value = "") {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+  input.placeholder = value;
+}
+
+function restoreInputPlaceholder(side) {
+  const lang = side === "top" ? topLang : botLang;
+  setInputPlaceholder(side, getPlaceholder(lang));
+}
+
 function setSystemReadyUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("ready");
+  restoreInputPlaceholder("top");
+  restoreInputPlaceholder("bot");
 }
 
 function setSystemPreparingUI() {
@@ -333,6 +324,7 @@ function setListeningUI(side) {
   resetMics();
   setMicState(side, "listening");
   setFrameVisual("listening");
+  setInputPlaceholder(side, "");
 }
 
 function setTranslatingUI(side) {
@@ -346,6 +338,8 @@ function setErrorUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("error");
+  restoreInputPlaceholder("top");
+  restoreInputPlaceholder("bot");
 }
 
 function bounceToReady(delay = 1200) {
@@ -355,8 +349,9 @@ function bounceToReady(delay = 1200) {
 function refreshLangLabels() {
   if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
   if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
-  if (topInput) topInput.placeholder = getPlaceholder(topLang);
-  if (botInput) botInput.placeholder = getPlaceholder(botLang);
+
+  if (topInput && recordingSide !== "top") topInput.placeholder = getPlaceholder(topLang);
+  if (botInput && recordingSide !== "bot") botInput.placeholder = getPlaceholder(botLang);
 }
 
 function closeAllPop() {
@@ -397,9 +392,16 @@ function renderPop(side) {
 
 function stopAudio() {
   speakRunId += 1;
-  try { currentAudio?.pause?.(); } catch {}
-  try { if (currentAudio) currentAudio.currentTime = 0; } catch {}
+
+  try {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+  } catch {}
+
   currentAudio = null;
+
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
@@ -415,7 +417,7 @@ function wait(ms) {
 function autoResizeTextarea(el) {
   if (!el) return;
   el.style.height = "auto";
-  el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  el.style.height = `${Math.min(el.scrollHeight, 84)}px`;
 }
 
 function syncComposerButtons(side) {
@@ -475,19 +477,9 @@ function backspaceInputValue(side) {
   syncComposerButtons(side);
 }
 
-function clearInputValue(side) {
-  const input = side === "top" ? topInput : botInput;
-  if (!input) return;
-
-  input.value = "";
-  autoResizeTextarea(input);
-  syncComposerButtons(side);
-}
-
 function keyboardRows(lang, shift) {
   const c = canonical(lang);
   const upper = !!shift;
-
   const numRow = ["1","2","3","4","5","6","7","8","9","0"];
 
   if (c === "tr") {
@@ -793,34 +785,6 @@ async function getCurrentUserId() {
   }
 }
 
-function getSelectedPresetVoice() {
-  return String(localStorage.getItem("facetoface_voice_preset") || "huma").trim().toLowerCase();
-}
-
-function getVoicePreference() {
-  const faceMode = getFaceVoiceMode();
-  if (["auto", "female", "male", "clone", "preset"].includes(faceMode)) return faceMode;
-  return "auto";
-}
-
-async function hasReadyVoiceProfile() {
-  try {
-    const userId = await getCurrentUserId();
-    if (!userId) return false;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("tts_voice_ready,tts_voice_id")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error) return false;
-    return !!data?.tts_voice_ready && !!String(data?.tts_voice_id || "").trim();
-  } catch {
-    return false;
-  }
-}
-
 async function warmAudio() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -838,84 +802,33 @@ async function warmAudio() {
   } catch {}
 }
 
-function buildTtsCacheKey(text, langCode, tone = "neutral") {
-  const voice = getVoicePreference();
-  const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
+function createSpeakerButton(getText, langCode, tone = "neutral") {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "spk-icon";
+  btn.setAttribute("aria-label", "Tekrar dinle");
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    </svg>
+  `;
 
-  return JSON.stringify({
-    t: String(text || "").trim(),
-    l: canonical(langCode),
-    v: String(finalVoice || "auto").trim().toLowerCase(),
-    n: canonTone(tone)
-  });
-}
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-function rememberTtsCache(key, audioSrc) {
-  if (!key || !audioSrc) return;
-  if (ttsMemoryCache.has(key)) ttsMemoryCache.delete(key);
-  ttsMemoryCache.set(key, audioSrc);
+    const value = typeof getText === "function" ? String(getText() || "").trim() : "";
+    if (!value) return;
 
-  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
-    const firstKey = ttsMemoryCache.keys().next().value;
-    ttsMemoryCache.delete(firstKey);
-  }
-}
+    const premiumOk = await ensureCurrentFacePremiumModeAccess();
+    if (!premiumOk) return;
 
-async function playCachedAudio(audioSrc, runId) {
-  if (!audioSrc || runId !== speakRunId) return false;
-
-  const nextAudio = new Audio(audioSrc);
-  nextAudio.preload = "auto";
-  nextAudio.playsInline = true;
-  nextAudio.crossOrigin = "anonymous";
-
-  await warmAudio();
-  if (runId !== speakRunId) return false;
-
-  currentAudio = nextAudio;
-
-  nextAudio.onended = () => {
-    if (currentAudio === nextAudio) currentAudio = null;
-  };
-
-  nextAudio.onerror = () => {
-    if (currentAudio === nextAudio) currentAudio = null;
-  };
-
-  await nextAudio.play();
-  return true;
-}
-
-async function speakViaApi(text, langCode, tone = "neutral") {
-  const myRunId = speakRunId;
-  const userId = await getCurrentUserId();
-  const voice = getVoicePreference();
-  const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
-
-  const r = await fetch(`${API_BASE}/api/tts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: String(text || "").trim(),
-      lang: canonical(langCode),
-      user_id: userId,
-      module: "facetoface",
-      voice: finalVoice,
-      tone: canonTone(tone),
-    }),
+    await speak(value, langCode, tone);
   });
 
-  if (myRunId !== speakRunId) return false;
-
-  const j = await r.json().catch(() => null);
-  if (!r.ok || !j?.ok || !j?.audio_base64) {
-    throw new Error(j?.error || j?.detail || "TTS API unavailable");
-  }
-
-  const audioSrc = `data:audio/mp3;base64,${j.audio_base64}`;
-  const cacheKey = buildTtsCacheKey(text, langCode, tone);
-  rememberTtsCache(cacheKey, audioSrc);
-  return await playCachedAudio(audioSrc, myRunId);
+  return btn;
 }
 
 function chooseWebVoice(langCode) {
@@ -930,22 +843,33 @@ function chooseWebVoice(langCode) {
 
 function speakFallback(text, langCode) {
   const value = String(text || "").trim();
-  if (!value || !window.speechSynthesis) return;
+  if (!value) return false;
+
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(value, canonical(langCode));
+      return true;
+    }
+  } catch {}
+
+  if (!window.speechSynthesis) return false;
 
   try {
     window.speechSynthesis.cancel();
   } catch {}
 
-  const u = new SpeechSynthesisUtterance(value);
-  u.lang = langObj(langCode).bcp;
-  u.rate = 0.95;
-  u.pitch = 1;
-  const voice = chooseWebVoice(langCode);
-  if (voice) u.voice = voice;
-
   try {
+    const u = new SpeechSynthesisUtterance(value);
+    u.lang = langObj(langCode).bcp;
+    u.rate = 0.95;
+    u.pitch = 1;
+    const voice = chooseWebVoice(langCode);
+    if (voice) u.voice = voice;
     window.speechSynthesis.speak(u);
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function speak(text, langCode, tone = "neutral") {
@@ -953,33 +877,10 @@ async function speak(text, langCode, tone = "neutral") {
   if (!value) return;
 
   stopAudio();
-  const voice = getVoicePreference();
-  const cacheKey = buildTtsCacheKey(value, langCode, tone);
-  const cachedAudioSrc = ttsMemoryCache.get(cacheKey);
+  await warmAudio();
 
-  if (voice === "auto") {
-    speakFallback(value, langCode);
-    return;
-  }
-
-  if (cachedAudioSrc) {
-    try {
-      await playCachedAudio(cachedAudioSrc, speakRunId);
-      return;
-    } catch {}
-  }
-
-  try {
-    if (voice === "clone") {
-      const ready = await hasReadyVoiceProfile();
-      if (!ready) speakFallback(value, langCode);
-      else await speakViaApi(value, langCode, tone);
-    } else {
-      await speakViaApi(value, langCode, tone);
-    }
-  } catch {
-    speakFallback(value, langCode);
-  }
+  const ok = speakFallback(value, langCode);
+  if (!ok) showToast("Hoparlör sesi başlatılamadı");
 }
 
 async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
@@ -1014,34 +915,6 @@ async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
   }
 
   return latestResult;
-}
-
-function createSpeakerButton(getText, langCode, tone = "neutral") {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "spk-icon";
-  btn.setAttribute("aria-label", "Tekrar dinle");
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-      <path d="M16 8a4 4 0 0 1 0 8"></path>
-      <path d="M19 5a8 8 0 0 1 0 14"></path>
-    </svg>
-  `;
-
-  btn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const value = typeof getText === "function" ? String(getText() || "").trim() : "";
-    if (!value) return;
-
-    const premiumOk = await ensureCurrentFacePremiumModeAccess();
-    if (!premiumOk) return;
-
-    await speak(value, langCode, tone);
-  });
-
-  return btn;
 }
 
 function addBubble(side, kind, text, opts = {}) {
@@ -1207,9 +1080,8 @@ async function finalizeRecognition(side, text) {
 
   if (latestTxt) {
     latestTxt.textContent = "";
-    const speakPromise = speak(tr, dst, sourceTone);
     await typewriteText(latestTxt, tr, other);
-    try { await speakPromise; } catch {}
+    await speak(tr, dst, sourceTone);
   }
 
   setSystemReadyUI();
@@ -1255,9 +1127,8 @@ async function finalizeTypedMessage(side, rawText) {
 
   if (latestTxt) {
     latestTxt.textContent = "";
-    const speakPromise = speak(tr, dst, tone);
     await typewriteText(latestTxt, tr, other);
-    try { await speakPromise; } catch {}
+    await speak(tr, dst, tone);
   }
 
   setSystemReadyUI();
@@ -1277,6 +1148,7 @@ async function sendTyped(side) {
 
   input.value = "";
   autoResizeTextarea(input);
+  restoreInputPlaceholder(side);
   syncComposerButtons(side);
 
   await finalizeTypedMessage(side, text);
@@ -1284,6 +1156,7 @@ async function sendTyped(side) {
 
 function startRecording(side) {
   hideKeyboards();
+  setInputPlaceholder(side, "");
 
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang);
@@ -1601,6 +1474,9 @@ function bind() {
       autoResizeTextarea(botInput);
     }
 
+    restoreInputPlaceholder("top");
+    restoreInputPlaceholder("bot");
+
     hideKeyboards();
     syncAllComposerButtons();
     setSystemReadyUI();
@@ -1690,4 +1566,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-      }
+}
