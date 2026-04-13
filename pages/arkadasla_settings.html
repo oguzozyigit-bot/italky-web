@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Arkadaşla Ayarları</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --txt: rgba(255,255,255,.96);
+      --muted: rgba(255,255,255,.60);
+
+      --bg1:#06111b;
+      --bg2:#0b1725;
+
+      --panel-border: rgba(255,255,255,.08);
+
+      --cyan:#22d3ee;
+      --cyan-soft:rgba(34,211,238,.16);
+
+      --blue:#3b82f6;
+      --blue-soft:rgba(59,130,246,.14);
+
+      --navy:#0f172a;
+      --navy-soft:rgba(15,23,42,.30);
+
+      --ok:#86efac;
+      --ok-bg:rgba(34,197,94,.10);
+      --ok-br:rgba(34,197,94,.20);
+
+      --warn:#fde68a;
+      --warn-bg:rgba(245,158,11,.10);
+      --warn-br:rgba(245,158,11,.20);
+
+      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#38bdf8 46%,#60a5fa 100%);
+      --danger-grad: linear-gradient(135deg, rgba(239,68,68,.82) 0%, rgba(248,113,113,.66) 100%);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg1);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(34,211,238,.14) 0%, transparent 42%),
+        radial-gradient(circle at 0% 100%, rgba(59,130,246,.12) 0%, transparent 34%),
+        radial-gradient(circle at 100% 24%, rgba(103,232,249,.08) 0%, transparent 26%),
+        linear-gradient(180deg, #06111b 0%, #08131f 42%, #0b1725 100%);
+      z-index:-1;
+      pointer-events:none;
+    }
+
+    #pageContent{
+      max-width:560px;
+      margin:0 auto;
+      padding:14px 16px 28px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      scroll-behavior:smooth;
+    }
+
+    .topRow{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .backBtn{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--panel-border);
+      background:rgba(255,255,255,.05);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+
+    .backBtn svg{
+      width:20px;
+      height:20px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2.5;
+    }
+
+    .page-head{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:0;
+    }
+
+    .page-kicker{
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--panel-border);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.5px;
+      color:rgba(255,255,255,.82);
+    }
+
+    .title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:28px;
+      font-weight:700;
+      margin:0;
+      line-height:1;
+      letter-spacing:-1px;
+    }
+
+    .title .ai{
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .page-sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .panel{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      border:1px solid var(--panel-border);
+      border-radius:22px;
+      padding:16px;
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      box-shadow:0 14px 30px rgba(0,0,0,.18);
+    }
+
+    .panel.orange{
+      background:
+        radial-gradient(circle at 12% 15%, var(--cyan-soft), transparent 28%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+    }
+
+    .panel.green{
+      background:
+        radial-gradient(circle at 88% 18%, var(--blue-soft), transparent 28%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+    }
+
+    .panel.red{
+      background:
+        radial-gradient(circle at 18% 18%, rgba(34,211,238,.10), transparent 26%),
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+    }
+
+    .panel-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:16px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .panel-sub{
+      margin:0;
+      font-size:11px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .choice-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .choice-card{
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      cursor:pointer;
+      transition:.2s ease;
+      min-height:128px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .choice-card.active{
+      border-color: rgba(34,211,238,.42);
+      background: rgba(59,130,246,.14);
+      box-shadow: 0 0 0 1px rgba(34,211,238,.16) inset;
+    }
+
+    .choice-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .choice-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+    }
+
+    .choice-badge{
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.4px;
+      padding:6px 8px;
+      border-radius:999px;
+      white-space:nowrap;
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .choice-badge.free{
+      color: var(--ok);
+      background: var(--ok-bg);
+      border-color: var(--ok-br);
+    }
+
+    .choice-badge.paid{
+      color: var(--warn);
+      background: var(--warn-bg);
+      border-color: var(--warn-br);
+    }
+
+    .choice-desc{
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.70);
+      word-break:break-word;
+    }
+
+    .jump-link-btn{
+      margin-top:4px;
+      min-height:38px;
+      border:none;
+      border-radius:12px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font:inherit;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+      padding:0 12px;
+    }
+
+    .btn{
+      min-height:48px;
+      border-radius:16px;
+      font-family:inherit;
+      font-weight:800;
+      font-size:14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      transition:all .2s;
+      text-decoration:none;
+      padding:0 16px;
+      width:100%;
+    }
+
+    .btn:active{ transform:scale(.98); }
+
+    .btn-primary{
+      background:var(--ai-grad);
+      color:#05060d;
+      box-shadow:0 12px 26px rgba(59,130,246,.18);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      border:1px solid var(--panel-border);
+    }
+
+    .btn.orange{
+      background: linear-gradient(135deg, rgba(34,211,238,.86) 0%, rgba(59,130,246,.74) 100%);
+      color:#f8fafc;
+    }
+
+    .btn.green{
+      background: linear-gradient(135deg, rgba(59,130,246,.82) 0%, rgba(103,232,249,.62) 100%);
+      color:#f8fafc;
+    }
+
+    .btn.red{
+      background: var(--danger-grad);
+      color:#fff;
+    }
+
+    .btn[disabled]{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+
+    .buttons-3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:10px;
+      width:100%;
+    }
+
+    .buttons-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      width:100%;
+    }
+
+    .input{
+      width:100%;
+      min-height:50px;
+      border:none;
+      outline:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      padding:14px;
+      font:inherit;
+      font-size:15px;
+      font-weight:800;
+    }
+
+    .timer{
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      width:max-content;
+    }
+
+    .upload-box{
+      width:100%;
+      padding:16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px dashed rgba(255,255,255,.16);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .upload-title{
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+      margin:0;
+    }
+
+    .upload-sub{
+      font-size:11px;
+      line-height:1.5;
+      color:rgba(255,255,255,.70);
+      margin:0;
+    }
+
+    .file-btn{
+      min-height:48px;
+      border:none;
+      border-radius:16px;
+      background:var(--danger-grad);
+      color:#fff;
+      font:inherit;
+      font-size:14px;
+      font-weight:900;
+      padding:0 16px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+    }
+
+    .file-name{
+      font-size:12px;
+      line-height:1.5;
+      color:rgba(255,255,255,.82);
+      font-weight:800;
+      word-break:break-word;
+    }
+
+    .audio-box{
+      width:100%;
+      margin-top:12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      padding:10px;
+    }
+
+    audio{
+      width:100%;
+      height:40px;
+    }
+
+    .status{
+      margin-top:12px;
+      font-size:13px;
+      line-height:1.45;
+      color:rgba(255,255,255,.82);
+      font-weight:800;
+    }
+
+    .summary-line{
+      font-size:13px;
+      color:#fff;
+      line-height:1.45;
+    }
+
+    .summary-line span{
+      color:rgba(255,255,255,.72);
+    }
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .note{
+      font-size:11px;
+      line-height:1.5;
+      color:var(--muted);
+      text-align:center;
+      padding:0 4px;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      top:18px;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.92);
+      border:1px solid rgba(34,211,238,.35);
+      padding:10px 14px;
+      border-radius:999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter:blur(12px);
+      pointer-events:none;
+      max-width:min(92vw,520px);
+      text-align:center;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:99999;
+      padding:20px;
+      pointer-events:none;
+    }
+
+    .modal.open{
+      display:flex;
+      pointer-events:auto;
+    }
+
+    .modal-card{
+      width:min(100%, 420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .modal-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .modal-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.5;
+      color:rgba(255,255,255,.80);
+      font-weight:700;
+    }
+
+    .modal-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    @media (max-width:390px){
+      #pageContent{ padding:12px 14px 22px; }
+      .title{ font-size:25px; }
+      .choice-grid{ grid-template-columns:1fr; }
+      .buttons-3,.buttons-2{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="pageContent">
+  <div class="topRow">
+    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <section class="page-head">
+      <div class="page-kicker">Arkadaşla Settings</div>
+      <h1 class="title">Arkadaşla <span class="ai">Ayarları</span></h1>
+      <p class="page-sub">Ses seçimi ve çeviri modu Arkadaşla için aynı sistemden yönetilir. Kaydet deyince Arkadaşla sayfasına geri dönülür.</p>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2 class="panel-title">Ses Seçimi</h2>
+    <p class="panel-sub">Arkadaşla modülü ortak ses havuzunu kullanır.</p>
+
+    <div class="choice-grid" id="voiceGrid">
+      <div class="choice-card" data-voice="tts">
+        <div class="choice-top">
+          <div class="choice-name">TTS</div>
+          <div class="choice-badge free">Ücretsiz</div>
+        </div>
+        <div class="choice-desc">Temel ücretsiz ses. Kayıt gerektirmez.</div>
+      </div>
+
+      <div class="choice-card" data-voice="mine">
+        <div class="choice-top">
+          <div class="choice-name">Kendi Sesim</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc" id="mineVoiceDesc">Sesinizi kaydedin.</div>
+        <button class="jump-link-btn" id="jumpMineBtn" type="button">Oluştur / Güncelle</button>
+      </div>
+
+      <div class="choice-card" data-voice="second">
+        <div class="choice-top">
+          <div class="choice-name">2. Ses</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc" id="secondVoiceDesc">Sesinizi kaydedin.</div>
+        <button class="jump-link-btn" id="jumpSecondBtn" type="button">Oluştur / Güncelle</button>
+      </div>
+
+      <div class="choice-card" data-voice="memory">
+        <div class="choice-top">
+          <div class="choice-name">Hatıra Sesi</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc" id="memoryVoiceDesc">Sesinizi kaydedin.</div>
+        <button class="jump-link-btn" id="jumpMemoryBtn" type="button">Oluştur / Güncelle</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">Çeviri Modu</h2>
+    <p class="panel-sub">Popup’taki mantığın aynısı burada sabit ayar olarak çalışır.</p>
+
+    <div class="choice-grid" id="translateGrid">
+      <div class="choice-card" data-translate="normal">
+        <div class="choice-top">
+          <div class="choice-name">Translate</div>
+          <div class="choice-badge free">Ücretsiz</div>
+        </div>
+        <div class="choice-desc">Hızlı ve düz çeviri. Gündelik konuşmalarda hızlı sonuç verir.</div>
+      </div>
+
+      <div class="choice-card" data-translate="cultural">
+        <div class="choice-top">
+          <div class="choice-name">Kültürel Translate</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc">Bağlamı, tonu ve amacı daha doğal yorumlar.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel orange" id="mineCreateSection">
+    <h2 class="panel-title">Kendi Sesim Oluştur</h2>
+    <p class="panel-sub">20 saniyelik doğal bir kayıt yeterlidir.</p>
+
+    <div class="row"><div class="timer" id="mineTimer">20 sn</div></div>
+
+    <div class="row buttons-3">
+      <button class="btn orange" id="recordMineBtn" type="button">Kaydı Başlat</button>
+      <button class="btn green" id="listenMineBtn" type="button" disabled>Dinle</button>
+      <button class="btn btn-primary" id="saveMineBtn" type="button" disabled>Kaydet</button>
+    </div>
+
+    <div class="audio-box"><audio id="mineAudio" controls></audio></div>
+    <div class="status" id="mineStatus">Kendi Sesim için kayıt bekleniyor.</div>
+  </section>
+
+  <section class="panel green" id="secondCreateSection">
+    <h2 class="panel-title">2. Ses Oluştur</h2>
+    <p class="panel-sub">İkinci özel kişi için ortak ses profili.</p>
+
+    <div class="row">
+      <input class="input" id="secondVoiceNameInput" type="text" placeholder="Örn: Eşim, Annem, Babam">
+    </div>
+
+    <div class="row"><div class="timer" id="secondTimer">20 sn</div></div>
+
+    <div class="row buttons-3">
+      <button class="btn green" id="recordSecondBtn" type="button">Kaydı Başlat</button>
+      <button class="btn orange" id="listenSecondBtn" type="button" disabled>Dinle</button>
+      <button class="btn btn-primary" id="saveSecondBtn" type="button" disabled>Kaydet</button>
+    </div>
+
+    <div class="audio-box"><audio id="secondAudio" controls></audio></div>
+    <div class="status" id="secondStatus">2. Ses için isim ve kayıt bekleniyor.</div>
+  </section>
+
+  <section class="panel red" id="memoryCreateSection">
+    <h2 class="panel-title">Hatıra Sesi Oluştur</h2>
+    <p class="panel-sub">Elinizde kayıt varsa mp3 yükleyin. Temiz ve tek kişilik kayıtlar daha iyi sonuç verir.</p>
+
+    <div class="row">
+      <input class="input" id="memoryVoiceNameInput" type="text" placeholder="Örn: Babam, Annem, Dedem">
+    </div>
+
+    <div class="row">
+      <div class="upload-box">
+        <p class="upload-title">mp3 Yükleme</p>
+        <p class="upload-sub">Maksimum dosya boyutu: <strong>10 MB</strong>. Temiz ve kısa kayıtlar daha iyi sonuç verir.</p>
+        <input class="hidden" id="memoryMp3Input" type="file" accept=".mp3,audio/mpeg">
+        <button class="file-btn" id="memoryPickBtn" type="button">mp3 Yükle</button>
+        <div class="file-name" id="memoryFileName">Henüz dosya seçilmedi.</div>
+      </div>
+    </div>
+
+    <div class="row buttons-2">
+      <button class="btn green" id="listenMemoryBtn" type="button" disabled>Dinle</button>
+      <button class="btn btn-primary" id="saveMemoryMp3Btn" type="button">Kaydet</button>
+    </div>
+
+    <div class="audio-box"><audio id="memoryAudio" controls></audio></div>
+    <div class="status" id="memoryStatus">Hatıra Sesi için mp3 bekleniyor.</div>
+  </section>
+
+  <section class="panel">
+    <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">TTS</span></div>
+    <div class="summary-line"><strong>Seçili Mod:</strong> <span id="translateSummary">Translate</span></div>
+    <div class="summary-line"><strong>Durum:</strong> <span id="poolSummary">Ortak ses havuzu aktif</span></div>
+  </section>
+
+  <section class="action-grid">
+    <button class="btn btn-primary" id="saveBtn" type="button">Kaydet ve Arkadaşla’ya Dön</button>
+    <button class="btn btn-secondary" id="cancelBtn" type="button">Vazgeç</button>
+  </section>
+
+  <div class="note">
+    Burada oluşturulan sesler Arkadaşla ve ortak ses kullanan modüllerde görünür.
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="replaceModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Yeni kayıt oluşturulsun mu?</h3>
+    <p class="modal-text">Daha önce kayıtlı sesiniz var. Yeni kayıt oluşturursanız mevcut kayıt silinir ve yerine yenisi kaydedilir.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="replaceNoBtn" type="button">Vazgeç</button>
+      <button class="btn btn-primary" id="replaceYesBtn" type="button">Devam Et</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="leaveModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Seçimlerinizi kaydetmediniz</h3>
+    <p class="modal-text">Bu sayfadan ayrılmadan önce seçimlerinizi kaydetmek ister misiniz?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="leaveNoBtn" type="button">Hayır</button>
+      <button class="btn btn-primary" id="leaveYesBtn" type="button">Evet</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+(() => {
+  const VOICE_KEY = "italkyai_shared_voice_mode";
+  const TRANSLATE_KEY = "facetoface_translate_mode";
+  const LEGACY_TTS_KEY = "tts_voice";
+  const LEGACY_LIVE_KEY = "live_interpreter_voice";
+
+  const F2F_VOICE_KEY = "facetoface_voice_mode";
+  const F2F_PRESET_KEY = "facetoface_voice_preset";
+  const F2F_SELECTED_NAME_KEY = "facetoface_selected_voice_name";
+
+  const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
+  const MAX_RECORD_SECONDS = 20;
+  const RETURN_URL = "/pages/arkadasla.html";
+
+  const $ = (id) => document.getElementById(id);
+
+  const UI = {
+    backBtn: $("backBtn"),
+    voiceGrid: $("voiceGrid"),
+    translateGrid: $("translateGrid"),
+    voiceSummary: $("voiceSummary"),
+    translateSummary: $("translateSummary"),
+    poolSummary: $("poolSummary"),
+
+    mineVoiceDesc: $("mineVoiceDesc"),
+    secondVoiceDesc: $("secondVoiceDesc"),
+    memoryVoiceDesc: $("memoryVoiceDesc"),
+
+    jumpMineBtn: $("jumpMineBtn"),
+    jumpSecondBtn: $("jumpSecondBtn"),
+    jumpMemoryBtn: $("jumpMemoryBtn"),
+
+    mineCreateSection: $("mineCreateSection"),
+    secondCreateSection: $("secondCreateSection"),
+    memoryCreateSection: $("memoryCreateSection"),
+
+    secondVoiceNameInput: $("secondVoiceNameInput"),
+    memoryVoiceNameInput: $("memoryVoiceNameInput"),
+
+    recordMineBtn: $("recordMineBtn"),
+    listenMineBtn: $("listenMineBtn"),
+    saveMineBtn: $("saveMineBtn"),
+
+    recordSecondBtn: $("recordSecondBtn"),
+    listenSecondBtn: $("listenSecondBtn"),
+    saveSecondBtn: $("saveSecondBtn"),
+
+    memoryPickBtn: $("memoryPickBtn"),
+    listenMemoryBtn: $("listenMemoryBtn"),
+    saveMemoryMp3Btn: $("saveMemoryMp3Btn"),
+    memoryMp3Input: $("memoryMp3Input"),
+    memoryFileName: $("memoryFileName"),
+
+    mineAudio: $("mineAudio"),
+    secondAudio: $("secondAudio"),
+    memoryAudio: $("memoryAudio"),
+
+    mineStatus: $("mineStatus"),
+    secondStatus: $("secondStatus"),
+    memoryStatus: $("memoryStatus"),
+
+    mineTimer: $("mineTimer"),
+    secondTimer: $("secondTimer"),
+
+    saveBtn: $("saveBtn"),
+    cancelBtn: $("cancelBtn"),
+
+    toast: $("toast"),
+
+    replaceModal: $("replaceModal"),
+    replaceYesBtn: $("replaceYesBtn"),
+    replaceNoBtn: $("replaceNoBtn"),
+
+    leaveModal: $("leaveModal"),
+    leaveYesBtn: $("leaveYesBtn"),
+    leaveNoBtn: $("leaveNoBtn")
+  };
+
+  const state = {
+    supabase: null,
+    currentUser: null,
+
+    voiceMode: normalizeVoiceMode(
+      localStorage.getItem(VOICE_KEY) ||
+      localStorage.getItem(F2F_VOICE_KEY) ||
+      localStorage.getItem(LEGACY_TTS_KEY) ||
+      localStorage.getItem(LEGACY_LIVE_KEY) ||
+      "tts"
+    ),
+
+    translateMode: normalizeTranslateMode(
+      localStorage.getItem(TRANSLATE_KEY) || "normal"
+    ),
+
+    savedVoiceMode: normalizeVoiceMode(
+      localStorage.getItem(VOICE_KEY) ||
+      localStorage.getItem(F2F_VOICE_KEY) ||
+      localStorage.getItem(LEGACY_TTS_KEY) ||
+      localStorage.getItem(LEGACY_LIVE_KEY) ||
+      "tts"
+    ),
+
+    savedTranslateMode: normalizeTranslateMode(
+      localStorage.getItem(TRANSLATE_KEY) || "normal"
+    ),
+
+    pendingLeaveAction: null,
+    pendingReplaceAction: null,
+
+    mineRecorder: null,
+    secondRecorder: null,
+
+    mineChunks: [],
+    secondChunks: [],
+
+    mineBlob: null,
+    secondBlob: null,
+    memoryMp3File: null,
+
+    mineStream: null,
+    secondStream: null,
+
+    mineCountdown: null,
+    secondCountdown: null,
+
+    profileVoiceState: {
+      mineReady: false,
+      secondReady: false,
+      memoryReady: false
+    }
+  };
+
+  function normalizeVoiceMode(v) {
+    const val = String(v || "").trim().toLowerCase();
+
+    if (val === "mine" || val === "mine_clone" || val === "clone") return "mine";
+    if (val === "second" || val === "second_clone") return "second";
+    if (val === "memory" || val === "memory_clone") return "memory";
+    if (val === "preset") {
+      const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+      if (preset === "second") return "second";
+      if (preset === "memory") return "memory";
+    }
+
+    return "tts";
+  }
+
+  function normalizeTranslateMode(v) {
+    return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
+  }
+
+  function voiceLabel(v) {
+    if (v === "mine") return "Kendi Sesim";
+    if (v === "second") return "2. Ses";
+    if (v === "memory") return "Hatıra Sesi";
+    return "TTS";
+  }
+
+  function translateLabel(v) {
+    return v === "cultural" ? "Kültürel Translate" : "Translate";
+  }
+
+  function showToast(msg) {
+    UI.toast.textContent = String(msg || "");
+    UI.toast.classList.add("show");
+    clearTimeout(window.__arkadaslaSettingsToast);
+    window.__arkadaslaSettingsToast = setTimeout(() => {
+      UI.toast.classList.remove("show");
+    }, 1700);
+  }
+
+  function paintSelections() {
+    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
+      card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === state.voiceMode);
+    });
+
+    UI.translateGrid.querySelectorAll(".choice-card").forEach(card => {
+      card.classList.toggle("active", normalizeTranslateMode(card.dataset.translate) === state.translateMode);
+    });
+  }
+
+  function refreshSummary() {
+    UI.voiceSummary.textContent = voiceLabel(state.voiceMode);
+    UI.translateSummary.textContent = translateLabel(state.translateMode);
+    UI.poolSummary.textContent = "Ortak ses havuzu aktif";
+  }
+
+  function setButtonState(button, enabled) {
+    if (!button) return;
+    button.disabled = !enabled;
+  }
+
+  function setTimer(el, seconds) {
+    if (!el) return;
+    el.textContent = `${seconds} sn`;
+  }
+
+  function stopTracks(stream) {
+    try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
+  }
+
+  function jumpToSection(el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function hasUnsavedChanges() {
+    return state.voiceMode !== state.savedVoiceMode || state.translateMode !== state.savedTranslateMode;
+  }
+
+  function openReplaceModal(action) {
+    state.pendingReplaceAction = action;
+    UI.replaceModal.classList.add("open");
+  }
+
+  function closeReplaceModal() {
+    state.pendingReplaceAction = null;
+    UI.replaceModal.classList.remove("open");
+  }
+
+  function openLeaveModal(action) {
+    state.pendingLeaveAction = action;
+    UI.leaveModal.classList.add("open");
+  }
+
+  function closeLeaveModal() {
+    state.pendingLeaveAction = null;
+    UI.leaveModal.classList.remove("open");
+  }
+
+  function goBackArkadasla() {
+    location.href = RETURN_URL;
+  }
+
+  function applyVoiceKeys(mode) {
+    const m = normalizeVoiceMode(mode);
+
+    localStorage.setItem(VOICE_KEY, m);
+    localStorage.setItem(LEGACY_TTS_KEY, m);
+    localStorage.setItem(LEGACY_LIVE_KEY, m);
+
+    if (m === "tts") {
+      localStorage.setItem(F2F_VOICE_KEY, "auto");
+      localStorage.removeItem(F2F_PRESET_KEY);
+      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
+      return;
+    }
+
+    if (m === "mine") {
+      localStorage.setItem(F2F_VOICE_KEY, "clone");
+      localStorage.removeItem(F2F_PRESET_KEY);
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
+      return;
+    }
+
+    if (m === "second") {
+      localStorage.setItem(F2F_VOICE_KEY, "preset");
+      localStorage.setItem(F2F_PRESET_KEY, "second");
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "2. Ses");
+      return;
+    }
+
+    if (m === "memory") {
+      localStorage.setItem(F2F_VOICE_KEY, "preset");
+      localStorage.setItem(F2F_PRESET_KEY, "memory");
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
+    }
+  }
+
+  function saveSettings() {
+    localStorage.setItem(TRANSLATE_KEY, state.translateMode);
+    applyVoiceKeys(state.voiceMode);
+
+    state.savedVoiceMode = state.voiceMode;
+    state.savedTranslateMode = state.translateMode;
+  }
+
+  async function askMicPermission() {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      throw new Error("Mikrofon izni alınamadı.");
+    }
+  }
+
+  function createRecorder(stream, onData, onStop) {
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : "audio/webm";
+
+    const recorder = new MediaRecorder(stream, { mimeType });
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) onData(e.data);
+    };
+    recorder.onstop = onStop;
+    return recorder;
+  }
+
+  async function uploadVoice(blobOrFile, voiceType, voiceName) {
+    if (!state.currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
+    if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
+
+    const fileExt =
+      blobOrFile.name?.split(".").pop() ||
+      (voiceType === "memory" ? "mp3" : "webm");
+
+    const form = new FormData();
+    form.append("user_id", state.currentUser.id);
+    form.append("voice_type", voiceType);
+    form.append("voice_name", voiceName || "");
+    form.append("audio_file", blobOrFile, `${voiceType}.${fileExt}`);
+
+    const resp = await fetch(VOICE_API, { method: "POST", body: form });
+    const json = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !json?.ok) {
+      throw new Error(json?.detail || json?.error || "Ses kaydı backend’e gönderilemedi.");
+    }
+
+    return json;
+  }
+
+  async function enrollVoice(voiceType) {
+    if (!state.supabase) throw new Error("Supabase hazır değil.");
+
+    const { data: { session } } = await state.supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error("Oturum bulunamadı.");
+    }
+
+    const resp = await fetch(`https://italky-api.onrender.com/voice/enroll/${voiceType}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${session.access_token}`
+      }
+    });
+
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok || !json?.ok) {
+      throw new Error(json?.detail || json?.error || "Voice enroll başarısız.");
+    }
+
+    return json;
+  }
+
+  function startCountdown(timerEl, onDone) {
+    let remain = MAX_RECORD_SECONDS;
+    setTimer(timerEl, remain);
+
+    const interval = setInterval(() => {
+      remain -= 1;
+      setTimer(timerEl, remain);
+      if (remain <= 0) {
+        clearInterval(interval);
+        onDone();
+      }
+    }, 1000);
+
+    return interval;
+  }
+
+  async function beginMineRecording() {
+    try {
+      state.mineChunks = [];
+      state.mineBlob = null;
+      UI.mineAudio.removeAttribute("src");
+      UI.mineAudio.load();
+      setButtonState(UI.listenMineBtn, false);
+      setButtonState(UI.saveMineBtn, false);
+
+      state.mineStream = await askMicPermission();
+      state.mineRecorder = createRecorder(
+        state.mineStream,
+        (data) => state.mineChunks.push(data),
+        () => {
+          state.mineBlob = new Blob(state.mineChunks, { type: "audio/webm" });
+          UI.mineAudio.src = URL.createObjectURL(state.mineBlob);
+          UI.mineStatus.textContent = "Kayıt tamamlandı. Dinleyebilir veya kaydedebilirsiniz.";
+          setButtonState(UI.listenMineBtn, true);
+          setButtonState(UI.saveMineBtn, true);
+          stopTracks(state.mineStream);
+        }
+      );
+
+      state.mineRecorder.start();
+      UI.mineStatus.textContent = "Kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.";
+
+      clearInterval(state.mineCountdown);
+      state.mineCountdown = startCountdown(UI.mineTimer, () => {
+        if (state.mineRecorder && state.mineRecorder.state !== "inactive") state.mineRecorder.stop();
+      });
+    } catch (e) {
+      UI.mineStatus.textContent = e.message || "Kayıt başlatılamadı.";
+    }
+  }
+
+  async function beginSecondRecording() {
+    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+    if (!secondName) {
+      UI.secondStatus.textContent = "2. Ses için isim yaz.";
+      return;
+    }
+
+    try {
+      state.secondChunks = [];
+      state.secondBlob = null;
+      UI.secondAudio.removeAttribute("src");
+      UI.secondAudio.load();
+      setButtonState(UI.listenSecondBtn, false);
+      setButtonState(UI.saveSecondBtn, false);
+
+      state.secondStream = await askMicPermission();
+      state.secondRecorder = createRecorder(
+        state.secondStream,
+        (data) => state.secondChunks.push(data),
+        () => {
+          state.secondBlob = new Blob(state.secondChunks, { type: "audio/webm" });
+          UI.secondAudio.src = URL.createObjectURL(state.secondBlob);
+          UI.secondStatus.textContent = `${secondName} kaydı tamamlandı. Dinleyebilir veya kaydedebilirsiniz.`;
+          setButtonState(UI.listenSecondBtn, true);
+          setButtonState(UI.saveSecondBtn, true);
+          stopTracks(state.secondStream);
+        }
+      );
+
+      state.secondRecorder.start();
+      UI.secondStatus.textContent = `${secondName} için kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.`;
+
+      clearInterval(state.secondCountdown);
+      state.secondCountdown = startCountdown(UI.secondTimer, () => {
+        if (state.secondRecorder && state.secondRecorder.state !== "inactive") state.secondRecorder.stop();
+      });
+    } catch (e) {
+      UI.secondStatus.textContent = e.message || "2. Ses kaydı başlatılamadı.";
+    }
+  }
+
+  async function saveMineVoice() {
+    try {
+      UI.mineStatus.textContent = "Kayıt yükleniyor...";
+      await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
+
+      UI.mineStatus.textContent = "Kendi Sesim hazırlanıyor...";
+      await enrollVoice("mine");
+
+      state.voiceMode = "mine";
+      saveSettings();
+      paintSelections();
+      refreshSummary();
+
+      await loadProfileVoiceState();
+      UI.mineStatus.textContent = "Kendi Sesim hazır.";
+      showToast("Kendi Sesim kaydedildi");
+    } catch (e) {
+      UI.mineStatus.textContent = e.message || "Kendi Sesim hazırlanamadı.";
+    }
+  }
+
+  async function saveSecondVoice() {
+    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+    if (!secondName) {
+      UI.secondStatus.textContent = "2. Ses için isim yaz.";
+      return;
+    }
+
+    try {
+      UI.secondStatus.textContent = "Kayıt yükleniyor...";
+      await uploadVoice(state.secondBlob, "second", secondName);
+
+      UI.secondStatus.textContent = `${secondName} hazırlanıyor...`;
+      await enrollVoice("second");
+
+      state.voiceMode = "second";
+      saveSettings();
+      paintSelections();
+      refreshSummary();
+
+      await loadProfileVoiceState();
+      UI.secondStatus.textContent = `${secondName} hazır.`;
+      showToast(`${secondName} sesi kaydedildi`);
+    } catch (e) {
+      UI.secondStatus.textContent = e.message || "2. Ses hazırlanamadı.";
+    }
+  }
+
+  async function saveMemoryVoiceFromMp3() {
+    const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
+    if (!memoryName) {
+      UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
+      return;
+    }
+    if (!state.memoryMp3File) {
+      UI.memoryStatus.textContent = "Önce bir mp3 seç.";
+      return;
+    }
+    if (state.memoryMp3File.size > 10 * 1024 * 1024) {
+      UI.memoryStatus.textContent = "mp3 en fazla 10 MB olabilir.";
+      return;
+    }
+
+    try {
+      UI.memoryStatus.textContent = `${memoryName} yükleniyor...`;
+      await uploadVoice(state.memoryMp3File, "memory", memoryName);
+
+      UI.memoryStatus.textContent = `${memoryName} hazırlanıyor...`;
+      await enrollVoice("memory");
+
+      state.voiceMode = "memory";
+      saveSettings();
+      paintSelections();
+      refreshSummary();
+
+      await loadProfileVoiceState();
+      UI.memoryStatus.textContent = `${memoryName} hazır.`;
+      showToast(`${memoryName} sesi kaydedildi`);
+    } catch (e) {
+      UI.memoryStatus.textContent = e.message || "Hatıra Sesi hazırlanamadı.";
+    }
+  }
+
+  async function loadProfileVoiceState() {
+    if (!state.supabase) return;
+
+    try {
+      const { data: { user } } = await state.supabase.auth.getUser();
+      if (!user) return;
+      state.currentUser = user;
+
+      const { data: profile, error } = await state.supabase
+        .from("profiles")
+        .select(`
+          voice_sample_path,
+          tts_voice_ready,
+          tts_voice_id,
+          second_voice_name,
+          second_voice_sample_path,
+          second_tts_voice_ready,
+          second_tts_voice_id,
+          memory_voice_name,
+          memory_voice_sample_path,
+          memory_tts_voice_ready,
+          memory_tts_voice_id
+        `)
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) return;
+
+      state.profileVoiceState.mineReady =
+        !!profile?.voice_sample_path ||
+        (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+
+      state.profileVoiceState.secondReady =
+        !!profile?.second_voice_sample_path ||
+        (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+
+      state.profileVoiceState.memoryReady =
+        !!profile?.memory_voice_sample_path ||
+        (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+
+      const secondName = String(profile?.second_voice_name || "").trim();
+      const memoryName = String(profile?.memory_voice_name || "").trim();
+
+      UI.mineVoiceDesc.textContent = state.profileVoiceState.mineReady ? "Kendi Sesim kayıtlı." : "Sesinizi kaydedin.";
+      UI.secondVoiceDesc.textContent = state.profileVoiceState.secondReady
+        ? (secondName ? `${secondName} sesi kayıtlı.` : "2. Ses kayıtlı.")
+        : "Sesinizi kaydedin.";
+      UI.memoryVoiceDesc.textContent = state.profileVoiceState.memoryReady
+        ? (memoryName ? `${memoryName} sesi kayıtlı.` : "Hatıra Sesi kayıtlı.")
+        : "Sesinizi kaydedin.";
+
+      if (secondName) UI.secondVoiceNameInput.value = secondName;
+      if (memoryName) UI.memoryVoiceNameInput.value = memoryName;
+    } catch {}
+  }
+
+  async function bootAuth() {
+    try {
+      const mod = await import("/js/supabase_client.js");
+      state.supabase = mod.supabase;
+
+      const { data: { session } } = await state.supabase.auth.getSession();
+      if (!session?.user) {
+        location.replace("/pages/login.html");
+        return false;
+      }
+
+      state.currentUser = session.user;
+      await loadProfileVoiceState();
+      return true;
+    } catch (e) {
+      console.error("Supabase yüklenemedi:", e);
+      showToast("Ayarlar açıldı. Bağlantı kontrol ediliyor.");
+      return false;
+    }
+  }
+
+  function bindEvents() {
+    UI.backBtn.addEventListener("click", () => {
+      if (hasUnsavedChanges()) openLeaveModal(goBackArkadasla);
+      else goBackArkadasla();
+    });
+
+    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
+      card.addEventListener("click", () => {
+        state.voiceMode = normalizeVoiceMode(card.dataset.voice || "tts");
+        paintSelections();
+        refreshSummary();
+        showToast("Ses seçimi güncellendi");
+      });
+    });
+
+    UI.translateGrid.querySelectorAll(".choice-card").forEach(card => {
+      card.addEventListener("click", () => {
+        state.translateMode = normalizeTranslateMode(card.dataset.translate || "normal");
+        paintSelections();
+        refreshSummary();
+        showToast("Çeviri modu güncellendi");
+      });
+    });
+
+    UI.jumpMineBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.voiceMode = "mine";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.mineCreateSection);
+    });
+
+    UI.jumpSecondBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.voiceMode = "second";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.secondCreateSection);
+    });
+
+    UI.jumpMemoryBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.voiceMode = "memory";
+      paintSelections();
+      refreshSummary();
+      jumpToSection(UI.memoryCreateSection);
+    });
+
+    UI.recordMineBtn.addEventListener("click", () => {
+      const act = () => beginMineRecording();
+      if (state.profileVoiceState.mineReady) openReplaceModal(act);
+      else act();
+    });
+
+    UI.recordSecondBtn.addEventListener("click", () => {
+      const act = () => beginSecondRecording();
+      if (state.profileVoiceState.secondReady) openReplaceModal(act);
+      else act();
+    });
+
+    UI.listenMineBtn.addEventListener("click", () => {
+      if (UI.mineAudio.src) UI.mineAudio.play();
+    });
+
+    UI.listenSecondBtn.addEventListener("click", () => {
+      if (UI.secondAudio.src) UI.secondAudio.play();
+    });
+
+    UI.listenMemoryBtn.addEventListener("click", () => {
+      if (UI.memoryAudio.src) UI.memoryAudio.play();
+    });
+
+    UI.saveMineBtn.addEventListener("click", saveMineVoice);
+    UI.saveSecondBtn.addEventListener("click", saveSecondVoice);
+
+    UI.memoryPickBtn.addEventListener("click", () => {
+      UI.memoryMp3Input.click();
+    });
+
+    UI.memoryMp3Input.addEventListener("change", (e) => {
+      const file = e.target.files?.[0] || null;
+      state.memoryMp3File = file;
+
+      if (file) {
+        UI.memoryAudio.src = URL.createObjectURL(file);
+        UI.memoryFileName.textContent = file.name;
+        UI.memoryStatus.textContent = `${file.name} seçildi. Kaydet diyerek devam et.`;
+        setButtonState(UI.listenMemoryBtn, true);
+      } else {
+        UI.memoryFileName.textContent = "Henüz dosya seçilmedi.";
+        setButtonState(UI.listenMemoryBtn, false);
+      }
+    });
+
+    UI.saveMemoryMp3Btn.addEventListener("click", saveMemoryVoiceFromMp3);
+
+    UI.saveBtn.addEventListener("click", async () => {
+      saveSettings();
+      showToast("Ayarlar kaydedildi");
+
+      await loadProfileVoiceState();
+
+      setTimeout(() => {
+        location.href = RETURN_URL;
+      }, 300);
+    });
+
+    UI.cancelBtn.addEventListener("click", () => {
+      if (hasUnsavedChanges()) openLeaveModal(goBackArkadasla);
+      else goBackArkadasla();
+    });
+
+    UI.replaceNoBtn.addEventListener("click", closeReplaceModal);
+    UI.replaceYesBtn.addEventListener("click", () => {
+      const action = state.pendingReplaceAction;
+      closeReplaceModal();
+      if (typeof action === "function") action();
+    });
+
+    UI.leaveNoBtn.addEventListener("click", () => {
+      const action = state.pendingLeaveAction;
+      closeLeaveModal();
+      if (typeof action === "function") action();
+    });
+
+    UI.leaveYesBtn.addEventListener("click", () => {
+      saveSettings();
+      const action = state.pendingLeaveAction;
+      closeLeaveModal();
+      if (typeof action === "function") action();
+    });
+  }
+
+  async function init() {
+    paintSelections();
+    refreshSummary();
+
+    setButtonState(UI.listenMineBtn, false);
+    setButtonState(UI.listenSecondBtn, false);
+    setButtonState(UI.listenMemoryBtn, false);
+    setTimer(UI.mineTimer, MAX_RECORD_SECONDS);
+    setTimer(UI.secondTimer, MAX_RECORD_SECONDS);
+
+    bindEvents();
+    await bootAuth();
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
