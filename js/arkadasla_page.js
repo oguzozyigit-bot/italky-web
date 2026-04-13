@@ -172,17 +172,17 @@ const state = {
 
 function shortName(name) {
   const v = String(name || "").trim();
-  return v ? v.split(" ")[0] : "Karşı Taraf";
+  return v ? v.split(" ")[0] : "Karşı";
 }
 
 function getLangItems() {
   try {
     if (Array.isArray(LANG_POOL) && LANG_POOL.length) {
-      return LANG_POOL.map(item => ({
+      return LANG_POOL.map((item) => ({
         code: item.code || item.key || item.id,
         tr_name: item.tr_name || item.tr || item.turkish || item.label_tr || item.native || item.name || item.code,
         flag: item.flag || flagFromCode(item.code || item.key || item.id)
-      })).filter(x => x.code);
+      })).filter((x) => x.code);
     }
   } catch {}
   return [
@@ -295,14 +295,6 @@ function closeAllConnectionModals() {
   closeModal(UI.blockConfirmModal);
 }
 
-function closeAllExitModals() {
-  closeModal(UI.leaveChatModal);
-  closeModal(UI.savePromptModal);
-  closeModal(UI.saveNameModal);
-  closeModal(UI.addContactModal);
-  closeModal(UI.deleteContactModal);
-}
-
 function cleanupConnectionUi() {
   closeAllConnectionModals();
   setTyping(false, "");
@@ -407,7 +399,6 @@ function syncPeerBar() {
   if (UI.peerLang) UI.peerLang.textContent = state.activePeerLang || "Dil seçilmedi";
 
   if (!UI.peerStatusText) return;
-
   if (!state.activePeerName) {
     UI.peerStatusText.textContent = "Dile dokunup seçimini yap";
     return;
@@ -435,6 +426,20 @@ function copyText(text, okMessage = "Kopyalandı.") {
 
 function buildQrUrl(text) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(text)}`;
+}
+
+async function showLocalNotification(title, body) {
+  try {
+    if (!("Notification" in window)) return;
+
+    if (Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+
+    if (Notification.permission === "granted") {
+      new Notification(title, { body, silent: false });
+    }
+  } catch {}
 }
 
 function syncSettingsUI() {
@@ -721,8 +726,10 @@ async function pollIncomingRequests() {
     if (state.incomingRequest?.request_id === latest.request_id) return;
 
     state.incomingRequest = latest;
-    UI.incomingRequestText.textContent = `${shortName(latest.requester_name)} kullanıcısından sohbet isteği aldınız.`;
+    const reqName = shortName(latest.requester_name || latest.requester_code || "Karşı");
+    UI.incomingRequestText.textContent = `${reqName} seninle sohbet etmek istiyor.`;
     openModal(UI.incomingRequestModal);
+    await showLocalNotification("Yeni sohbet isteği", `${reqName} seninle sohbet etmek istiyor.`);
     beep();
   } catch {}
 }
@@ -753,7 +760,7 @@ async function checkCurrentConversation() {
 
     state.activeConversationId = conv.id;
     state.activePeerUserId = conv.other_user_id;
-    state.activePeerName = shortName(conv.other_name || "Karşı Taraf");
+    state.activePeerName = shortName(conv.other_name || "Karşı");
     state.activePeerCode = conv.other_code || "";
     state.activePeerLang = conv.other_lang || "tr";
     state.activePeerFlag = conv.other_flag || flagFromCode(conv.other_lang || "tr");
@@ -781,13 +788,12 @@ async function pollMessages() {
       if (state.loadedMessageIds.has(item.id)) continue;
 
       const side = item.sender_user_id === state.currentUser.id ? "right" : "left";
+      const targetLang = side === "right" ? state.activePeerLang : state.selectedLang;
+      const sourceLang = item.source_lang || (side === "right" ? state.selectedLang : state.activePeerLang);
 
-      let translated = "";
-      if (side === "right") {
-        translated = item.translated_text || await translateText(item.text, state.selectedLang, state.activePeerLang);
-      } else {
-        translated = item.translated_text || await translateText(item.text, item.source_lang || state.activePeerLang, state.selectedLang);
-      }
+      const translated =
+        item.translated_text ||
+        await translateText(item.text, sourceLang, targetLang);
 
       addChatMessage(side, {
         text: item.text,
@@ -846,7 +852,7 @@ async function acceptIncomingRequest() {
     });
 
     state.activeConversationId = res.conversation_id;
-    state.activePeerName = shortName(state.incomingRequest.requester_name || "Karşı Taraf");
+    state.activePeerName = shortName(state.incomingRequest.requester_name || "Karşı");
     state.activePeerCode = state.incomingRequest.requester_code || "";
     state.activePeerLang = state.incomingRequest.requester_lang || "tr";
     state.activePeerFlag = state.incomingRequest.requester_flag || flagFromCode(state.activePeerLang);
@@ -879,7 +885,7 @@ async function rejectIncomingRequest() {
         action: "reject"
       })
     });
-    addSystemMessage(`${shortName(state.incomingRequest.requester_name || "Karşı Taraf")} isteği reddedildi.`);
+    addSystemMessage(`${shortName(state.incomingRequest.requester_name || "Karşı")} isteği reddedildi.`);
     closeModal(UI.incomingRequestModal);
   } catch (e) {
     addSystemMessage(e.message || "İstek reddedilemedi.");
@@ -936,6 +942,23 @@ function renderBlockedUsers() {
   });
 }
 
+async function sendLeaveNotice() {
+  if (!state.activeConversationId) return;
+  try {
+    await api("/message", {
+      method: "POST",
+      body: JSON.stringify({
+        conversation_id: state.activeConversationId,
+        text: `${shortName(state.myName)} sohbetten ayrıldı.`,
+        source_lang: state.selectedLang,
+        source_flag: state.selectedFlag,
+        source_voice: "auto",
+        translated_text: `${shortName(state.myName)} left the chat.`
+      })
+    });
+  } catch {}
+}
+
 async function sendMessage() {
   const text = String(UI.chatInput?.value || "").trim();
   if (!text) return;
@@ -969,8 +992,6 @@ async function sendMessage() {
       translatedText: translatedText || "",
       meta: "Şimdi"
     });
-
-    scrollChatToBottom();
   } catch (e) {
     addSystemMessage(e.message || "Mesaj gönderilemedi.");
   }
@@ -1022,6 +1043,7 @@ async function loadContacts() {
           addSystemMessage("Bu kişi şu anda meşgul.");
           return;
         }
+        await showLocalNotification("Sohbet isteği", `${item.contact_name} kullanıcısına istek gönderiliyor.`);
         await sendRequest(item.contact_code);
       });
 
@@ -1037,8 +1059,7 @@ async function loadContacts() {
 }
 
 async function saveCurrentContact() {
-  const name = String(UI.contactNameInput?.value || "").trim();
-  if (!name || !state.activePeerCode) {
+  if (!state.activePeerCode) {
     await goHomeNow();
     return;
   }
@@ -1048,7 +1069,7 @@ async function saveCurrentContact() {
       method: "POST",
       body: JSON.stringify({
         contact_code: state.activePeerCode,
-        contact_name: name,
+        contact_name: state.activePeerName || "Karşı",
         contact_lang: state.activePeerLang,
         contact_flag: state.activePeerFlag,
         contact_voice: state.activePeerVoice
@@ -1099,13 +1120,13 @@ async function loadSavedChats() {
       btn.type = "button";
       btn.innerHTML = `
         <span>${item.title}</span>
-        <span class="saved-meta">${item.peer_flag || "🌐"} ${item.peer_name || "Karşı Taraf"} • ${new Date(item.updated_at).toLocaleString("tr-TR")}</span>
+        <span class="saved-meta">${item.peer_flag || "🌐"} ${item.peer_name || "Karşı"} • ${new Date(item.updated_at).toLocaleString("tr-TR")}</span>
       `;
       btn.addEventListener("click", async () => {
         try {
           const detail = await api(`/saved/${item.id}`);
           clearChatDom();
-          state.activePeerName = shortName(detail.saved_chat.peer_name || "Karşı Taraf");
+          state.activePeerName = shortName(detail.saved_chat.peer_name || "Karşı");
           state.activePeerLang = detail.saved_chat.peer_lang || "tr";
           state.activePeerFlag = detail.saved_chat.peer_flag || flagFromCode(state.activePeerLang);
           state.activePeerVoice = detail.saved_chat.peer_voice || "auto";
@@ -1155,22 +1176,18 @@ function getOutgoingMessagesForSave() {
       translated_text: translated || null,
       meta: meta || null
     };
-  }).filter(x => x.text);
+  }).filter((x) => x.text);
 }
 
-async function saveChatByName() {
-  const title = String(UI.saveChatNameInput?.value || "").trim();
-  if (!title) {
-    addSystemMessage("Lütfen sohbet adı yaz.");
-    return;
-  }
+async function saveChatAuto() {
+  const autoTitle = state.activePeerName || "Kayıtlı Sohbet";
 
   try {
     await api("/saved", {
       method: "POST",
       body: JSON.stringify({
         conversation_id: state.activeConversationId,
-        title,
+        title: autoTitle,
         peer_user_id: state.activePeerUserId,
         peer_name: state.activePeerName,
         peer_lang: state.activePeerLang,
@@ -1180,14 +1197,13 @@ async function saveChatByName() {
       })
     });
 
-    closeModal(UI.saveNameModal);
-    addSystemMessage(`Sohbet kaydedildi: ${title}`);
+    addSystemMessage(`Sohbet kaydedildi: ${autoTitle}`);
     await loadSavedChats();
-    await maybeAskAddContactThenHome();
   } catch (e) {
     addSystemMessage(e.message || "Sohbet kaydedilemedi.");
-    await maybeAskAddContactThenHome();
   }
+
+  await maybeAskAddContactThenHome();
 }
 
 async function endConversationBackend() {
@@ -1221,7 +1237,7 @@ async function isPeerInContacts() {
   if (!state.activePeerCode) return true;
   try {
     const res = await api("/contacts");
-    return (res.items || []).some(x => (x.contact_code || "").toUpperCase() === state.activePeerCode.toUpperCase());
+    return (res.items || []).some((x) => (x.contact_code || "").toUpperCase() === state.activePeerCode.toUpperCase());
   } catch {
     return true;
   }
@@ -1230,8 +1246,7 @@ async function isPeerInContacts() {
 async function maybeAskAddContactThenHome() {
   const exists = await isPeerInContacts();
   if (state.activePeerName && state.activePeerCode && !exists) {
-    UI.addContactText.textContent = `${state.activePeerName} adlı kişiyi rehbere eklemek ister misiniz?`;
-    UI.contactNameInput.value = state.activePeerName;
+    UI.addContactText.textContent = `${state.activePeerName} rehbere eklensin mi?`;
     openModal(UI.addContactModal);
     return;
   }
@@ -1352,10 +1367,7 @@ function bindEvents() {
     location.href = "/pages/arkadasla_settings.html";
   });
 
-  UI.closeSettingsSheetBtn?.addEventListener("click", () => {
-    closeSheet(UI.settingsSheet);
-  });
-
+  UI.closeSettingsSheetBtn?.addEventListener("click", () => closeSheet(UI.settingsSheet));
   UI.goSettingsPageBtn?.addEventListener("click", () => {
     closeSheet(UI.settingsSheet);
     location.href = "/pages/arkadasla_settings.html";
@@ -1387,8 +1399,7 @@ function bindEvents() {
   });
 
   UI.manualAddContactBtn?.addEventListener("click", () => {
-    UI.contactNameInput.value = "";
-    UI.addContactText.textContent = "Elle eklemek istediğiniz kişi için önce kodla bağlantı kurun.";
+    UI.addContactText.textContent = "Bağlantı kurduğun kişi doğrudan rehbere eklenecek.";
     openModal(UI.addContactModal);
   });
 
@@ -1413,14 +1424,12 @@ function bindEvents() {
   UI.rejectRequestBtn?.addEventListener("click", rejectIncomingRequest);
   UI.blockRequestBtn?.addEventListener("click", blockIncomingRequest);
 
-  UI.blockNoBtn?.addEventListener("click", () => {
-    closeModal(UI.blockConfirmModal);
-  });
+  UI.blockNoBtn?.addEventListener("click", () => closeModal(UI.blockConfirmModal));
 
   UI.blockYesBtn?.addEventListener("click", () => {
     if (!state.pendingBlockRequest) return;
     state.blockedUsers.push({
-      name: shortName(state.pendingBlockRequest.requester_name || "Karşı Taraf"),
+      name: shortName(state.pendingBlockRequest.requester_name || "Karşı"),
       code: state.pendingBlockRequest.requester_code || ""
     });
     saveBlockedUsers();
@@ -1432,8 +1441,9 @@ function bindEvents() {
   });
 
   UI.leaveChatNoBtn?.addEventListener("click", () => closeModal(UI.leaveChatModal));
-  UI.leaveChatYesBtn?.addEventListener("click", () => {
+  UI.leaveChatYesBtn?.addEventListener("click", async () => {
     closeModal(UI.leaveChatModal);
+    await sendLeaveNotice();
     openModal(UI.savePromptModal);
   });
 
@@ -1442,9 +1452,9 @@ function bindEvents() {
     await maybeAskAddContactThenHome();
   });
 
-  UI.openSaveNameBtn?.addEventListener("click", () => {
+  UI.openSaveNameBtn?.addEventListener("click", async () => {
     closeModal(UI.savePromptModal);
-    openModal(UI.saveNameModal);
+    await saveChatAuto();
   });
 
   UI.cancelSaveNameBtn?.addEventListener("click", async () => {
@@ -1452,7 +1462,10 @@ function bindEvents() {
     await maybeAskAddContactThenHome();
   });
 
-  UI.confirmSaveNameBtn?.addEventListener("click", saveChatByName);
+  UI.confirmSaveNameBtn?.addEventListener("click", async () => {
+    closeModal(UI.saveNameModal);
+    await saveChatAuto();
+  });
 
   UI.cancelContactBtn?.addEventListener("click", async () => {
     closeModal(UI.addContactModal);
