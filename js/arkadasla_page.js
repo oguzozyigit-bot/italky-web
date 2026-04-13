@@ -3,6 +3,7 @@ import { LANG_POOL } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com/api/arkadasla";
 const TRANSLATE_API = "https://italky-api.onrender.com/api/translate";
+const TTS_API = "https://italky-api.onrender.com/api/tts";
 const APP_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
 
 const STORAGE = {
@@ -14,13 +15,9 @@ const STORAGE = {
 
 const VOICES = [
   { id: "auto", label: "Otomatik Ses" },
-  { id: "Hüma", label: "Hüma" },
-  { id: "Ozan", label: "Ozan" },
-  { id: "Umay", label: "Umay" },
-  { id: "Jale", label: "Jale" },
-  { id: "Mina", label: "Mina" },
-  { id: "Beren", label: "Beren" },
-  { id: "Kaan", label: "Kaan" }
+  { id: "mine", label: "Kendi Sesim" },
+  { id: "second", label: "2. Ses" },
+  { id: "memory", label: "Hatıra Sesi" }
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -112,8 +109,6 @@ const UI = {
   goSettingsPageBtn: $("goSettingsPageBtn"),
 
   newConnectionBtn: $("newConnectionBtn"),
-  copyMyCodeBtn: $("copyMyCodeBtn"),
-  openConnectFromMenuBtn: $("openConnectFromMenuBtn"),
   toggleContactsBtn: $("toggleContactsBtn"),
   contactsList: $("contactsList"),
   manualAddContactBtn: $("manualAddContactBtn"),
@@ -121,7 +116,6 @@ const UI = {
   blockedList: $("blockedList"),
   toggleSavedChatsBtn: $("toggleSavedChatsBtn"),
   savedChatsList: $("savedChatsList"),
-  showAppQrBtn: $("showAppQrBtn"),
   endChatBtn: $("endChatBtn"),
   openSettingsFromMenuBtn: $("openSettingsFromMenuBtn"),
 
@@ -160,6 +154,7 @@ const state = {
   recognition: null,
   leaveReason: "manual",
   blockedUsers: [],
+  currentAudio: null,
 
   contactsOpen: false,
   savedChatsOpen: false,
@@ -365,12 +360,12 @@ function clearChatDom() {
 
 function syncPeerBar() {
   if (UI.peerName) UI.peerName.textContent = state.activePeerName || "Henüz bağlantı yok";
-  if (UI.peerFlag) UI.peerFlag.textContent = state.activePeerFlag || "🌐";
-  if (UI.peerLang) UI.peerLang.textContent = state.activePeerName ? state.selectedLangLabel : "Dil seçilmedi";
+  if (UI.peerFlag) UI.peerFlag.textContent = state.selectedFlag || "🌐";
+  if (UI.peerLang) UI.peerLang.textContent = state.selectedLangLabel || "Dil seçilmedi";
 
   if (!UI.peerStatusText) return;
   if (!state.activePeerName) {
-    UI.peerStatusText.textContent = "";
+    UI.peerStatusText.textContent = "Dile dokunup seçimini yap";
     return;
   }
 
@@ -415,6 +410,7 @@ function hydrateSettingsFromStorage() {
   state.culturalMode = localStorage.getItem(STORAGE.cultural) === "1";
   state.autoRead = localStorage.getItem(STORAGE.autoRead) !== "0";
   syncSettingsUI();
+  syncPeerBar();
 }
 
 function renderLangList() {
@@ -468,36 +464,93 @@ function renderVoiceList() {
 
 function stopSpeaking() {
   try { window.speechSynthesis?.cancel(); } catch {}
+  try {
+    if (state.currentAudio) {
+      state.currentAudio.pause();
+      state.currentAudio.currentTime = 0;
+    }
+  } catch {}
+  state.currentAudio = null;
 }
 
-function findSpeechVoiceForSelection() {
-  const synth = window.speechSynthesis;
-  if (!synth) return null;
-  const voices = synth.getVoices() || [];
-  if (!voices.length) return null;
-
-  if (state.selectedVoiceName && state.selectedVoiceName !== "auto") {
-    const byName = voices.find(v => v.name.toLowerCase().includes(state.selectedVoiceName.toLowerCase()));
-    if (byName) return byName;
-  }
-
-  return voices.find(v => (v.lang || "").toLowerCase().startsWith((state.selectedLang || "tr").toLowerCase())) || voices[0] || null;
-}
-
-function speakText(text) {
+function speakWithBrowser(text) {
   if (!state.autoRead || !text || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
-
   stopSpeaking();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = speechLangFor(state.selectedLang);
+  try { window.speechSynthesis.speak(utter); } catch {}
+}
 
-  const voice = findSpeechVoiceForSelection();
-  if (voice) {
-    utter.voice = voice;
-    utter.lang = voice.lang || utter.lang;
+async function speakWithSelectedVoice(text) {
+  if (!state.autoRead || !text) return;
+
+  if (state.selectedVoiceName === "auto") {
+    speakWithBrowser(text);
+    return;
   }
 
-  try { window.speechSynthesis.speak(utter); } catch {}
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) {
+      speakWithBrowser(text);
+      return;
+    }
+
+    let apiVoiceMode = "auto";
+    let apiVoice = "auto";
+    let apiPresetVoice = "";
+
+    if (state.selectedVoiceName === "mine") {
+      apiVoiceMode = "clone";
+      apiVoice = "clone";
+    } else if (state.selectedVoiceName === "second") {
+      apiVoiceMode = "preset";
+      apiVoice = "second";
+      apiPresetVoice = "second";
+    } else if (state.selectedVoiceName === "memory") {
+      apiVoiceMode = "preset";
+      apiVoice = "memory";
+      apiPresetVoice = "memory";
+    }
+
+    const resp = await fetch(TTS_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        lang: state.selectedLang,
+        user_id: user.id,
+        module: "arkadasla",
+        voice: apiVoice,
+        voice_mode: apiVoiceMode,
+        preset_voice: apiPresetVoice,
+        selected_voice: state.selectedVoiceName,
+        tone: "neutral"
+      })
+    });
+
+    const json = await resp.json().catch(() => ({}));
+    const audioBase64 =
+      json?.audio_base64 ||
+      json?.audio ||
+      json?.data?.audio_base64 ||
+      json?.result?.audio_base64 ||
+      "";
+
+    if (!resp.ok || !audioBase64) {
+      speakWithBrowser(text);
+      return;
+    }
+
+    stopSpeaking();
+    const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+    audio.preload = "auto";
+    audio.playsInline = true;
+    state.currentAudio = audio;
+    await audio.play();
+  } catch {
+    speakWithBrowser(text);
+  }
 }
 
 function startRecognition() {
@@ -611,6 +664,7 @@ async function updatePresence(appState = "foreground") {
         app_state: appState,
         selected_lang: state.selectedLang,
         selected_flag: state.selectedFlag,
+        selected_voice: state.selectedVoiceName,
         is_busy: !!state.activeConversationId,
         current_conversation_id: state.activeConversationId || null
       })
@@ -688,7 +742,9 @@ async function pollMessages() {
         meta: `${side === "right" ? "Şimdi" : "Az önce"}`
       }, item.id);
 
-      if (side === "left") speakText(translated || item.text);
+      if (side === "left") {
+        await speakWithSelectedVoice(translated || item.text);
+      }
     }
   } catch {}
 }
@@ -700,7 +756,8 @@ async function sendRequest(targetCode) {
       body: JSON.stringify({
         target_code: targetCode,
         requester_lang: state.selectedLang,
-        requester_flag: state.selectedFlag
+        requester_flag: state.selectedFlag,
+        requester_voice: state.selectedVoiceName
       })
     });
 
@@ -741,7 +798,7 @@ async function acceptIncomingRequest() {
     syncPeerBar();
     closeModal(UI.incomingRequestModal);
     addSystemMessage(`${state.activePeerName} ile bağlantı kuruldu.`);
-    speakText(`${state.activePeerName} ile bağlantı kuruldu`);
+    await speakWithSelectedVoice(`${state.activePeerName} ile bağlantı kuruldu`);
     await updatePresence();
   } catch (e) {
     addSystemMessage(e.message || "İstek onaylanamadı.");
@@ -837,6 +894,7 @@ async function sendMessage() {
         text,
         source_lang: state.selectedLang,
         source_flag: state.selectedFlag,
+        source_voice: state.selectedVoiceName,
         translated_text: translatedText || null
       })
     });
@@ -1179,7 +1237,6 @@ function bindEvents() {
     await handleLeaveFlow("manual");
   });
 
-  UI.openConnectFromMenuBtn?.addEventListener("click", () => openModal(UI.connectModal));
   UI.newConnectionBtn?.addEventListener("click", () => openModal(UI.connectModal));
   UI.closeConnectModalBtn?.addEventListener("click", () => closeModal(UI.connectModal));
   UI.connectCodeInput?.addEventListener("input", normalizeCodeInput);
@@ -1205,15 +1262,6 @@ function bindEvents() {
 
   UI.closeRequestSentBtn?.addEventListener("click", () => closeModal(UI.requestSentModal));
 
-  UI.copyMyCodeBtn?.addEventListener("click", () => {
-    copyText(state.myCode, "Sohbet ID kopyalandı.");
-  });
-
-  UI.showAppQrBtn?.addEventListener("click", () => {
-    if (UI.appQrImage) UI.appQrImage.src = buildQrUrl(APP_STORE_URL);
-    openModal(UI.appQrModal);
-  });
-
   UI.topQrBtn?.addEventListener("click", () => {
     if (UI.appQrImage) UI.appQrImage.src = buildQrUrl(APP_STORE_URL);
     openModal(UI.appQrModal);
@@ -1223,17 +1271,17 @@ function bindEvents() {
   UI.copyStoreLinkBtn?.addEventListener("click", () => copyText(APP_STORE_URL, "Mağaza linki kopyalandı."));
 
   UI.topSettingsBtn?.addEventListener("click", () => {
-  location.href = "/pages/arkadasla_settings.html";
-});
+    location.href = "/pages/arkadasla_settings.html";
+  });
 
-UI.openSettingsFromMenuBtn?.addEventListener("click", () => {
-  closeMenu();
-  location.href = "/pages/arkadasla_settings.html";
-});
+  UI.openSettingsFromMenuBtn?.addEventListener("click", () => {
+    closeMenu();
+    location.href = "/pages/arkadasla_settings.html";
+  });
 
-UI.closeSettingsSheetBtn?.addEventListener("click", () => {
-  closeSheet(UI.settingsSheet);
-});
+  UI.closeSettingsSheetBtn?.addEventListener("click", () => {
+    closeSheet(UI.settingsSheet);
+  });
 
   UI.autoReadToggle?.addEventListener("click", () => {
     state.autoRead = !state.autoRead;
@@ -1251,6 +1299,7 @@ UI.closeSettingsSheetBtn?.addEventListener("click", () => {
 
   UI.peerFlag?.addEventListener("click", () => openSheet(UI.langSheet));
   UI.peerLang?.addEventListener("click", () => openSheet(UI.langSheet));
+  UI.peerName?.addEventListener("click", () => openSheet(UI.langSheet));
   UI.closeLangSheetBtn?.addEventListener("click", () => closeSheet(UI.langSheet));
 
   UI.toggleContactsBtn?.addEventListener("click", async () => {
