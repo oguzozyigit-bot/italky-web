@@ -7,6 +7,7 @@ const TRANSLATE_ENDPOINTS = [
   "https://italky-api.onrender.com/api/translate-ai",
   "https://italky-api.onrender.com/api/translate"
 ];
+const TTS_API = "https://italky-api.onrender.com/api/tts";
 
 const STORAGE = {
   language: "italky_translation_from_lang",
@@ -113,9 +114,16 @@ const state = {
 
   incomingRequest: null,
   outgoingRequest: null,
+
   loadedMessageIds: new Set(),
+  localEchoKeys: new Set(),
+  sendLock: false,
+
   recognition: null,
+  recognitionBuffer: "",
+  recognitionFinalizeTimer: null,
   currentAudio: null,
+  synthUnlocked: false,
 
   timers: {
     incoming: null,
@@ -141,21 +149,28 @@ function normalizeVoiceName(v) {
   return "auto";
 }
 
+function voiceLabel(v) {
+  const m = normalizeVoiceName(v);
+  if (m === "mine") return "Kendi Sesim";
+  if (m === "second") return "2. Ses";
+  if (m === "memory") return "Hatıra Sesi";
+  return "Otomatik Ses";
+}
+
 function injectMicAnimationStyle() {
   if (document.getElementById("arkadaslaMicAnimStyle")) return;
-
   const style = document.createElement("style");
   style.id = "arkadaslaMicAnimStyle";
   style.textContent = `
     .mic-btn.listening{
       position:relative;
-      box-shadow:0 0 0 1px rgba(34,211,238,.35),0 0 24px rgba(34,211,238,.18);
       border-radius:50%;
+      box-shadow:0 0 0 1px rgba(34,211,238,.35),0 0 26px rgba(34,211,238,.18);
     }
     .mic-btn.listening::after{
       content:"";
       position:absolute;
-      inset:-6px;
+      inset:-7px;
       border-radius:50%;
       border:2px solid rgba(34,211,238,.72);
       box-shadow:0 0 0 8px rgba(34,211,238,.10),0 0 24px rgba(34,211,238,.16);
@@ -180,7 +195,6 @@ function getLangItems() {
       })).filter((x) => x.code);
     }
   } catch {}
-
   return [
     { code: "tr", tr_name: "Türkçe", flag: "🇹🇷" },
     { code: "en", tr_name: "İngilizce", flag: "🇬🇧" },
@@ -228,9 +242,7 @@ async function api(path, options = {}) {
     ...(options.headers || {})
   };
 
-  if (state.authToken) {
-    headers.Authorization = `Bearer ${state.authToken}`;
-  }
+  if (state.authToken) headers.Authorization = `Bearer ${state.authToken}`;
 
   const resp = await fetch(`${API_BASE}${path}`, {
     ...options,
@@ -282,7 +294,6 @@ async function translateText(text, fromLang, toLang) {
       if (value) return value;
     } catch {}
   }
-
   return "";
 }
 
@@ -338,14 +349,16 @@ function addSystemMessage(text) {
   if (!UI.chatMessages) return;
   const row = document.createElement("div");
   row.className = "msg center";
-
   const bubble = document.createElement("div");
   bubble.className = "system-bubble";
   bubble.textContent = text;
-
   row.appendChild(bubble);
   UI.chatMessages.appendChild(row);
   scrollChatToBottom();
+}
+
+function makeLocalEchoKey(conversationId, text) {
+  return `${conversationId}__${String(text || "").trim().toLowerCase()}`;
 }
 
 function addChatMessage(side, payload = {}, id = null) {
@@ -364,22 +377,21 @@ function addChatMessage(side, payload = {}, id = null) {
   bubble.className = `bubble ${side}`;
 
   const main = document.createElement("div");
+  const original = String(payload.text || "").trim();
+  const translated = String(payload.translatedText || "").trim();
 
   if (side === "right") {
-    main.textContent = payload.text || "";
+    main.textContent = original;
     bubble.appendChild(main);
   } else {
-    const translated = String(payload.translatedText || "").trim();
-    const original = String(payload.text || "").trim();
-
     main.textContent = translated || original;
     bubble.appendChild(main);
 
     if (translated && original && translated !== original) {
-      const sourceEl = document.createElement("div");
-      sourceEl.className = "msg-translate";
-      sourceEl.textContent = original;
-      bubble.appendChild(sourceEl);
+      const src = document.createElement("div");
+      src.className = "msg-translate";
+      src.textContent = original;
+      bubble.appendChild(src);
     }
   }
 
@@ -398,6 +410,7 @@ function clearChatDom() {
   if (!UI.chatMessages) return;
   UI.chatMessages.innerHTML = "";
   state.loadedMessageIds.clear();
+  state.localEchoKeys.clear();
 }
 
 function syncPeerBar() {
@@ -412,9 +425,16 @@ function syncPeerBar() {
     return;
   }
 
-  if (state.activePeerBusy) UI.peerStatusText.textContent = "Meşgul";
-  else if (state.activePeerOnline) UI.peerStatusText.textContent = "Çevrimiçi";
-  else UI.peerStatusText.textContent = "Çevrimdışı";
+  const modeText = state.culturalMode ? "Kültürel çeviri açık" : "Normal çeviri";
+  const voiceText = voiceLabel(state.selectedVoiceName);
+
+  if (state.activePeerBusy) {
+    UI.peerStatusText.textContent = `${modeText} • ${voiceText}`;
+  } else if (state.activePeerOnline) {
+    UI.peerStatusText.textContent = `Çevrimiçi • ${modeText} • ${voiceText}`;
+  } else {
+    UI.peerStatusText.textContent = `Çevrimdışı • ${modeText}`;
+  }
 }
 
 function normalizeCodeInput() {
@@ -467,6 +487,7 @@ function renderLangList() {
       localStorage.setItem(STORAGE.language, lang.code);
       renderLangList();
       closeSheet(UI.langSheet);
+      syncPeerBar();
       await updatePresence();
     });
     UI.langList.appendChild(btn);
@@ -491,10 +512,22 @@ function renderVoiceList() {
       state.selectedVoiceName = voice.id;
       localStorage.setItem(STORAGE.voiceName, voice.id);
       renderVoiceList();
+      syncPeerBar();
       await updatePresence();
     });
     UI.voiceList.appendChild(btn);
   });
+}
+
+function unlockSpeech() {
+  if (state.synthUnlocked) return;
+  state.synthUnlocked = true;
+  try {
+    const utter = new SpeechSynthesisUtterance(" ");
+    utter.volume = 0;
+    window.speechSynthesis.speak(utter);
+    window.speechSynthesis.cancel();
+  } catch {}
 }
 
 function stopSpeaking() {
@@ -508,12 +541,27 @@ function stopSpeaking() {
   state.currentAudio = null;
 }
 
+function chooseVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  const target = speechLangFor(langCode).toLowerCase();
+  const base = String(langCode || "").toLowerCase();
+
+  let found = voices.find(v => String(v.lang || "").toLowerCase() === target);
+  if (!found) found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(base));
+  return found || null;
+}
+
 function speakWithBrowser(text, langCode = "tr") {
   if (!state.autoRead || !text || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
-
+  unlockSpeech();
   stopSpeaking();
+
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = speechLangFor(langCode);
+  utter.rate = 0.92;
+  utter.pitch = 1.0;
+  const voice = chooseVoice(langCode);
+  if (voice) utter.voice = voice;
 
   try {
     window.speechSynthesis.speak(utter);
@@ -524,31 +572,13 @@ async function speakWithSelectedVoice(text, langCode, voiceName, ownerUserId) {
   if (!state.autoRead || !text) return;
 
   const resolvedVoice = normalizeVoiceName(voiceName);
-  if (resolvedVoice === "auto") {
+
+  if (resolvedVoice === "auto" || !ownerUserId) {
     speakWithBrowser(text, langCode);
     return;
   }
 
   try {
-    const TTS_API = "https://italky-api.onrender.com/api/tts";
-
-    let apiVoiceMode = "auto";
-    let apiVoice = "auto";
-    let apiPresetVoice = "";
-
-    if (resolvedVoice === "mine") {
-      apiVoiceMode = "clone";
-      apiVoice = "clone";
-    } else if (resolvedVoice === "second") {
-      apiVoiceMode = "preset";
-      apiVoice = "second";
-      apiPresetVoice = "second";
-    } else if (resolvedVoice === "memory") {
-      apiVoiceMode = "preset";
-      apiVoice = "memory";
-      apiPresetVoice = "memory";
-    }
-
     const resp = await fetch(TTS_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -557,21 +587,22 @@ async function speakWithSelectedVoice(text, langCode, voiceName, ownerUserId) {
         lang: langCode,
         user_id: ownerUserId,
         module: "arkadasla",
-        voice: apiVoice,
-        voice_mode: apiVoiceMode,
-        preset_voice: apiPresetVoice,
         selected_voice: resolvedVoice,
+        voice: resolvedVoice === "mine" ? "clone" : resolvedVoice,
+        voice_mode: resolvedVoice === "mine" ? "clone" : (resolvedVoice === "auto" ? "auto" : "preset"),
+        preset_voice: resolvedVoice === "second" || resolvedVoice === "memory" ? resolvedVoice : "",
         tone: "neutral"
       })
     });
 
     const json = await resp.json().catch(() => ({}));
-    const audioBase64 =
+    const audioBase64 = String(
       json?.audio_base64 ||
       json?.audio ||
       json?.data?.audio_base64 ||
       json?.result?.audio_base64 ||
-      "";
+      ""
+    ).trim();
 
     if (!resp.ok || !audioBase64) {
       speakWithBrowser(text, langCode);
@@ -593,6 +624,26 @@ function setMicListening(isListening) {
   UI.micBtn?.classList.toggle("listening", !!isListening);
 }
 
+function finalizeRecognizedSpeech() {
+  const finalText = String(state.recognitionBuffer || "").trim();
+  state.recognitionBuffer = "";
+  clearTimeout(state.recognitionFinalizeTimer);
+
+  if (!finalText) {
+    setMicListening(false);
+    return;
+  }
+
+  if (UI.chatInput) {
+    UI.chatInput.value = finalText;
+    autoResizeTextarea();
+    syncInputActionState();
+  }
+
+  setMicListening(false);
+  sendMessage();
+}
+
 function startRecognition() {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition) {
@@ -602,11 +653,13 @@ function startRecognition() {
 
   try { state.recognition?.stop(); } catch {}
 
+  state.recognitionBuffer = "";
+
   const recognition = new Recognition();
   recognition.lang = speechLangFor(state.selectedLang);
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
-  recognition.continuous = false;
+  recognition.continuous = true;
 
   recognition.onstart = () => {
     setMicListening(true);
@@ -614,24 +667,30 @@ function startRecognition() {
 
   recognition.onresult = (event) => {
     let transcript = "";
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      transcript = event.results[i]?.[0]?.transcript || transcript;
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += ` ${event.results[i][0].transcript || ""}`;
     }
+    state.recognitionBuffer = transcript.trim();
 
     if (UI.chatInput) {
-      UI.chatInput.value = String(transcript || "").trim();
+      UI.chatInput.value = state.recognitionBuffer;
       autoResizeTextarea();
       syncInputActionState();
     }
+
+    clearTimeout(state.recognitionFinalizeTimer);
+    state.recognitionFinalizeTimer = setTimeout(() => {
+      try { recognition.stop(); } catch {}
+    }, 1800);
   };
 
   recognition.onerror = () => {
+    clearTimeout(state.recognitionFinalizeTimer);
     setMicListening(false);
-    addSystemMessage("Ses algılanamadı. Bir daha deneyelim.");
   };
 
   recognition.onend = () => {
-    setMicListening(false);
+    finalizeRecognizedSpeech();
   };
 
   try {
@@ -699,6 +758,29 @@ async function updatePresence(appState = "foreground") {
   } catch {}
 }
 
+function ringIncoming() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+
+    [784, 988].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now + i * 0.18);
+      gain.gain.setValueAtTime(0.0001, now + i * 0.18);
+      gain.gain.exponentialRampToValueAtTime(0.05, now + i * 0.18 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.18 + 0.16);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + i * 0.18);
+      osc.stop(now + i * 0.18 + 0.17);
+    });
+  } catch {}
+}
+
 async function pollIncomingRequests() {
   try {
     const res = await api("/incoming");
@@ -711,6 +793,7 @@ async function pollIncomingRequests() {
     state.incomingRequest = latest;
     UI.incomingRequestText.textContent = `${safeName(latest.requester_name, latest.requester_code || "Karşı Taraf")} seninle sohbet etmek istiyor.`;
     openModal(UI.incomingRequestModal);
+    ringIncoming();
   } catch {}
 }
 
@@ -720,6 +803,10 @@ async function checkCurrentConversation() {
     const conv = res.conversation;
 
     if (!conv) {
+      if (state.activeConversationId) {
+        addSystemMessage(`${shortName(state.activePeerName || "Karşı Taraf")} ayrıldı.`);
+      }
+
       state.activeConversationId = null;
       state.activePeerUserId = null;
       state.activePeerName = "";
@@ -766,7 +853,14 @@ async function pollMessages() {
 
       const side = item.sender_user_id === state.currentUser.id ? "right" : "left";
       const sourceLang = item.source_lang || (side === "right" ? state.selectedLang : state.activePeerLang);
-      const targetLang = side === "right" ? state.activePeerLang : state.selectedLang;
+      const targetLang = side === "left" ? state.selectedLang : state.activePeerLang;
+
+      const echoKey = makeLocalEchoKey(state.activeConversationId, item.text);
+      if (side === "right" && state.localEchoKeys.has(echoKey)) {
+        state.loadedMessageIds.add(item.id);
+        state.localEchoKeys.delete(echoKey);
+        continue;
+      }
 
       const translated =
         side === "left"
@@ -870,17 +964,48 @@ async function rejectIncomingRequest() {
   }
 }
 
+async function sendLeaveNotice() {
+  if (!state.activeConversationId) return;
+  try {
+    const leaveText = `${shortName(state.myName, "Kullanıcı")} ayrıldı.`;
+    const translated = await translateText(leaveText, state.selectedLang, state.activePeerLang);
+
+    await api("/message", {
+      method: "POST",
+      body: JSON.stringify({
+        conversation_id: state.activeConversationId,
+        text: leaveText,
+        source_lang: state.selectedLang,
+        source_flag: state.selectedFlag,
+        source_voice: "auto",
+        translated_text: translated || null
+      })
+    });
+  } catch {}
+}
+
 async function sendMessage() {
   const text = String(UI.chatInput?.value || "").trim();
-  if (!text) return;
+  if (!text || state.sendLock) return;
 
   if (!state.activeConversationId) {
     addSystemMessage("Önce bağlantı kurman gerekiyor.");
     return;
   }
 
+  state.sendLock = true;
+
   try {
     const translatedText = await translateText(text, state.selectedLang, state.activePeerLang);
+    const echoKey = makeLocalEchoKey(state.activeConversationId, text);
+
+    state.localEchoKeys.add(echoKey);
+
+    addChatMessage("right", {
+      text,
+      translatedText: "",
+      meta: "Şimdi"
+    });
 
     await api("/message", {
       method: "POST",
@@ -897,10 +1022,10 @@ async function sendMessage() {
     UI.chatInput.value = "";
     autoResizeTextarea();
     syncInputActionState();
-
-    await pollMessages();
   } catch (e) {
     addSystemMessage(e.message || "Mesaj gönderilemedi.");
+  } finally {
+    state.sendLock = false;
   }
 }
 
@@ -916,7 +1041,6 @@ async function endConversationBackend() {
 async function resetAfterEndChat() {
   stopSpeaking();
   try { state.recognition?.stop(); } catch {}
-
   await endConversationBackend();
 
   state.activeConversationId = null;
@@ -937,13 +1061,12 @@ async function resetAfterEndChat() {
 
 function startTimers() {
   stopTimers();
-
-  state.timers.incoming = setInterval(pollIncomingRequests, 4000);
-  state.timers.conversation = setInterval(checkCurrentConversation, 2500);
-  state.timers.messages = setInterval(pollMessages, 1800);
+  state.timers.incoming = setInterval(pollIncomingRequests, 2500);
+  state.timers.conversation = setInterval(checkCurrentConversation, 1500);
+  state.timers.messages = setInterval(pollMessages, 900);
   state.timers.presence = setInterval(() => {
     updatePresence(document.hidden ? "background" : "foreground");
-  }, 15000);
+  }, 10000);
 }
 
 function stopTimers() {
@@ -982,12 +1105,12 @@ function bindEvents() {
 
   UI.homeBtn?.addEventListener("click", async () => {
     closeMenu();
-    UI.leaveChatText.textContent = "Sohbetten çıkmak istiyor musunuz?";
+    UI.leaveChatText.textContent = "Sohbetten ayrılmak istiyor musunuz?";
     openModal(UI.leaveChatModal);
   });
 
   UI.brandHome?.addEventListener("click", async () => {
-    UI.leaveChatText.textContent = "Sohbetten çıkmak istiyor musunuz?";
+    UI.leaveChatText.textContent = "Sohbetten ayrılmak istiyor musunuz?";
     openModal(UI.leaveChatModal);
   });
 
@@ -1042,6 +1165,7 @@ function bindEvents() {
     state.culturalMode = !state.culturalMode;
     localStorage.setItem(STORAGE.cultural, state.culturalMode ? "1" : "0");
     syncSettingsUI();
+    syncPeerBar();
   });
 
   UI.peerFlag?.addEventListener("click", () => openSheet(UI.langSheet));
@@ -1056,6 +1180,7 @@ function bindEvents() {
 
   UI.leaveChatYesBtn?.addEventListener("click", async () => {
     closeModal(UI.leaveChatModal);
+    await sendLeaveNotice();
     await resetAfterEndChat();
     location.href = "/pages/home.html";
   });
@@ -1067,6 +1192,9 @@ function bindEvents() {
   document.addEventListener("visibilitychange", async () => {
     await updatePresence(document.hidden ? "background" : "foreground");
   });
+
+  document.addEventListener("pointerdown", unlockSpeech, { once: true });
+  document.addEventListener("touchstart", unlockSpeech, { once: true, passive: true });
 }
 
 async function init() {
