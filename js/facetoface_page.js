@@ -53,6 +53,11 @@ const ALT_CHARS = {
 
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
+const F2F_AUTO_READ_KEY = "facetoface_auto_read";
+
+function isFaceAutoReadEnabled() {
+  return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
+}
 
 function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
@@ -63,17 +68,16 @@ const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
   ? getLangPoolForSite(SITE_LANG)
   : [];
 
-const LATIN_ALLOW = new Set(["tr", "en", "de", "fr", "it", "es"]);
-
 const LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
-    if (!code || !LATIN_ALLOW.has(code)) return null;
+    if (!code) return null;
+
     return {
       code,
       flag: l.flag || "🌐",
-      name: l.name || code.toUpperCase(),
-      bcp: BCP[code] || "en-US",
+      name: l.name || l.tr_name || code.toUpperCase(),
+      bcp: BCP[code] || `${code}-${String(code).toUpperCase()}`
     };
   })
   .filter(Boolean);
@@ -131,6 +135,7 @@ const closeBot = $("close-bot");
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
+const settingsBtn = $("settingsBtn");
 const miniToast = $("miniToast");
 
 const uiModal = $("uiModal");
@@ -936,7 +941,11 @@ function chooseWebVoice(langCode) {
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
   return pool[0] || voices[0] || null;
 }
-async function speakViaApi(text, langCode, tone = "neutral") {
+async function speak(text, langCode, tone = "neutral") {
+  if (!isFaceAutoReadEnabled()) return;
+
+  const value = String(text || "").trim();
+  if (!value) return;
   const myRunId = ++speakRunId;
   const userId = await getCurrentUserId();
   const mode = getFaceVoiceMode();
@@ -1583,6 +1592,10 @@ function bindReadonlyInput(side) {
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
+
+  settingsBtn?.addEventListener("click", () => {
+    location.href = "/pages/facetoface_settings.html";
+  });
 
   topLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
