@@ -222,33 +222,69 @@
       padding:0 12px;
     }
 
-    .btn{
-      min-height:48px;
-      border-radius:16px;
-      font-family:inherit;
-      font-weight:800;
-      font-size:14px;
-      cursor:pointer;
+    .setting-row{
       display:flex;
       align-items:center;
-      justify-content:center;
-      border:none;
-      transition:all .2s;
-      text-decoration:none;
-      padding:0 16px;
-      width:100%;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
     }
 
-    .btn:active{ transform:scale(.98); }
-    .btn-primary{ background:var(--chat-grad); color:#101010; }
-    .btn-secondary{ background:rgba(255,255,255,.05); color:#fff; border:1px solid var(--panel-border); }
-    .btn.orange{ background:var(--orange-grad); color:#fff; }
-    .btn.green{ background:var(--green-grad); color:#fff; }
-    .btn.red{ background:var(--danger-grad); color:#fff; }
+    .setting-meta{
+      min-width:0;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
 
-    .btn[disabled]{
-      opacity:.45;
-      cursor:not-allowed;
+    .setting-title{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .setting-sub{
+      font-size:12px;
+      line-height:1.4;
+      color:rgba(255,255,255,.64);
+      font-weight:700;
+    }
+
+    .toggle{
+      position:relative;
+      width:56px;
+      height:32px;
+      border:none;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      cursor:pointer;
+      transition:.18s ease;
+      flex:0 0 auto;
+    }
+
+    .toggle::after{
+      content:"";
+      position:absolute;
+      top:4px;
+      left:4px;
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      background:#fff;
+      transition:.18s ease;
+      box-shadow:0 4px 12px rgba(0,0,0,.2);
+    }
+
+    .toggle.active{
+      background:linear-gradient(135deg, rgba(249,115,22,.55), rgba(163,230,53,.72));
+    }
+
+    .toggle.active::after{
+      left:28px;
     }
 
     .row{
@@ -397,6 +433,35 @@
       color:rgba(255,255,255,.72);
     }
 
+    .btn{
+      min-height:48px;
+      border-radius:16px;
+      font-family:inherit;
+      font-weight:800;
+      font-size:14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      transition:all .2s;
+      text-decoration:none;
+      padding:0 16px;
+      width:100%;
+    }
+
+    .btn:active{ transform:scale(.98); }
+    .btn-primary{ background:var(--chat-grad); color:#101010; }
+    .btn-secondary{ background:rgba(255,255,255,.05); color:#fff; border:1px solid var(--panel-border); }
+    .btn.orange{ background:var(--orange-grad); color:#fff; }
+    .btn.green{ background:var(--green-grad); color:#fff; }
+    .btn.red{ background:var(--danger-grad); color:#fff; }
+
+    .btn[disabled]{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
     .action-grid{
       display:grid;
       grid-template-columns:1fr;
@@ -510,44 +575,57 @@
   </div>
 
   <section class="panel">
+    <h2 class="panel-title">Okuma</h2>
+    <p class="panel-sub">Sohbet AI cevaplarını otomatik sesli okuyabilir.</p>
+
+    <div class="setting-row">
+      <div class="setting-meta">
+        <div class="setting-title">Mesajı otomatik oku</div>
+        <div class="setting-sub">Gelen cevaplar otomatik sesli okunsun.</div>
+      </div>
+      <button class="toggle active" id="autoReadToggle" type="button"></button>
+    </div>
+  </section>
+
+  <section class="panel">
     <h2 class="panel-title">Ses Seçimi</h2>
-    <p class="panel-sub">Sohbet AI bu ortak ses havuzunu kullanır.</p>
+    <p class="panel-sub">Premium seslerde önce kayıt, sonra jeton kontrolü yapılır.</p>
 
     <div class="choice-grid" id="voiceGrid">
-      <div class="choice-card" data-voice="tts">
+      <button class="choice-card" data-voice="tts" type="button">
         <div class="choice-top">
           <div class="choice-name">TTS</div>
           <div class="choice-badge free">Ücretsiz</div>
         </div>
         <div class="choice-desc">Temel ücretsiz ses. Hızlı ve hazır.</div>
-      </div>
+      </button>
 
-      <div class="choice-card" data-voice="mine">
+      <button class="choice-card" data-voice="mine" type="button">
         <div class="choice-top">
           <div class="choice-name">Kendi Sesim</div>
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="mineVoiceDesc">Sesinizi kaydedin.</div>
         <button class="jump-link-btn" id="jumpMineBtn" type="button">Oluştur / Güncelle</button>
-      </div>
+      </button>
 
-      <div class="choice-card" data-voice="second">
+      <button class="choice-card" data-voice="second" type="button">
         <div class="choice-top">
           <div class="choice-name">2. Ses</div>
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="secondVoiceDesc">Sesinizi kaydedin.</div>
         <button class="jump-link-btn" id="jumpSecondBtn" type="button">Oluştur / Güncelle</button>
-      </div>
+      </button>
 
-      <div class="choice-card" data-voice="memory">
+      <button class="choice-card" data-voice="memory" type="button">
         <div class="choice-top">
           <div class="choice-name">Hatıra Sesi</div>
           <div class="choice-badge paid">Jetonlu</div>
         </div>
         <div class="choice-desc" id="memoryVoiceDesc">Sesinizi kaydedin.</div>
         <button class="jump-link-btn" id="jumpMemoryBtn" type="button">Oluştur / Güncelle</button>
-      </div>
+      </button>
     </div>
   </section>
 
@@ -617,6 +695,7 @@
   </section>
 
   <section class="panel">
+    <div class="summary-line"><strong>Mesajı Otomatik Oku:</strong> <span id="autoReadSummary">Açık</span></div>
     <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">TTS</span></div>
     <div class="summary-line"><strong>Durum:</strong> <span id="poolSummary">Ortak ses havuzu aktif</span></div>
   </section>
@@ -664,15 +743,47 @@
   </div>
 </div>
 
-<script>
+<div class="modal" id="tokenModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Jeton Gerekli</h3>
+    <p class="modal-text">Bu özelliği kullanabilmek için lütfen jeton yükleyiniz.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="tokenCancelBtn" type="button">Vazgeç</button>
+      <button class="btn btn-primary" id="tokenGoBtn" type="button">Jeton Yükle</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="voiceMissingModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Ses Kaydı Yok</h3>
+    <p class="modal-text">Henüz ses kaydı oluşturmadınız. Ses kaydı oluşturmak istiyor musunuz?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="voiceMissingNoBtn" type="button">Hayır</button>
+      <button class="btn btn-primary" id="voiceMissingYesBtn" type="button">Evet</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
 (() => {
-  const VOICE_KEY = "italkyai_shared_voice_mode";
+  const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
+  const SHARED_VOICE_MODE_KEY = "italkyai_shared_voice_mode";
+  const CHAT_AUTO_READ_KEY = "italkyai_chat_auto_read";
+  const LEGACY_TTS_KEY = "tts_voice";
+  const LEGACY_LIVE_KEY = "live_interpreter_voice";
   const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
   const MAX_RECORD_SECONDS = 20;
+  const ADVANCED_URL = "/pages/translation_settings.html?from=sohbetai";
+  const RETURN_URL = "/pages/italkyai_chat.html";
+
   const $ = (id) => document.getElementById(id);
 
   const UI = {
     backBtn: $("backBtn"),
+    autoReadToggle: $("autoReadToggle"),
+    autoReadSummary: $("autoReadSummary"),
+
     voiceGrid: $("voiceGrid"),
     voiceSummary: $("voiceSummary"),
     poolSummary: $("poolSummary"),
@@ -735,14 +846,34 @@
 
     recordInfoModal: $("recordInfoModal"),
     recordInfoOkBtn: $("recordInfoOkBtn"),
-    recordInfoCancelBtn: $("recordInfoCancelBtn")
+    recordInfoCancelBtn: $("recordInfoCancelBtn"),
+
+    tokenModal: $("tokenModal"),
+    tokenCancelBtn: $("tokenCancelBtn"),
+    tokenGoBtn: $("tokenGoBtn"),
+
+    voiceMissingModal: $("voiceMissingModal"),
+    voiceMissingNoBtn: $("voiceMissingNoBtn"),
+    voiceMissingYesBtn: $("voiceMissingYesBtn")
   };
 
   const state = {
     supabase: null,
     currentUser: null,
-    voiceMode: normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "tts"),
-    savedVoiceMode: normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "tts"),
+    voiceMode: normalizeVoiceMode(
+      localStorage.getItem(SHARED_VOICE_NAME_KEY) ||
+      localStorage.getItem(SHARED_VOICE_MODE_KEY) ||
+      localStorage.getItem(LEGACY_TTS_KEY) ||
+      "tts"
+    ),
+    savedVoiceMode: normalizeVoiceMode(
+      localStorage.getItem(SHARED_VOICE_NAME_KEY) ||
+      localStorage.getItem(SHARED_VOICE_MODE_KEY) ||
+      localStorage.getItem(LEGACY_TTS_KEY) ||
+      "tts"
+    ),
+    autoRead: localStorage.getItem(CHAT_AUTO_READ_KEY) !== "0",
+    savedAutoRead: localStorage.getItem(CHAT_AUTO_READ_KEY) !== "0",
 
     pendingLeaveAction: null,
     pendingReplaceAction: null,
@@ -763,6 +894,8 @@
 
     mineCountdown: null,
     secondCountdown: null,
+
+    walletTokens: 0,
 
     profileVoiceState: {
       mineReady: false,
@@ -802,6 +935,8 @@
   function refreshSummary(){
     UI.voiceSummary.textContent = voiceLabel(state.voiceMode);
     UI.poolSummary.textContent = "Ortak ses havuzu aktif";
+    UI.autoReadSummary.textContent = state.autoRead ? "Açık" : "Kapalı";
+    UI.autoReadToggle.classList.toggle("active", !!state.autoRead);
   }
 
   function setButtonState(button, enabled){
@@ -850,23 +985,47 @@
     UI.recordInfoModal.classList.remove("open");
   }
 
+  function openTokenModal(){
+    UI.tokenModal.classList.add("open");
+  }
+
+  function closeTokenModal(){
+    UI.tokenModal.classList.remove("open");
+  }
+
+  function openVoiceMissingModal(){
+    UI.voiceMissingModal.classList.add("open");
+  }
+
+  function closeVoiceMissingModal(){
+    UI.voiceMissingModal.classList.remove("open");
+  }
+
   function jumpToSection(el){
     el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function hasUnsavedChanges(){
-    return state.voiceMode !== state.savedVoiceMode;
+    return state.voiceMode !== state.savedVoiceMode || state.autoRead !== state.savedAutoRead;
+  }
+
+  function hasJeton(){
+    return Number(state.walletTokens || 0) > 0;
   }
 
   function saveSettings(){
-    localStorage.setItem(VOICE_KEY, state.voiceMode);
-    localStorage.setItem("tts_voice", state.voiceMode);
-    localStorage.setItem("live_interpreter_voice", state.voiceMode);
+    localStorage.setItem(SHARED_VOICE_NAME_KEY, state.voiceMode);
+    localStorage.setItem(SHARED_VOICE_MODE_KEY, state.voiceMode);
+    localStorage.setItem(LEGACY_TTS_KEY, state.voiceMode);
+    localStorage.setItem(LEGACY_LIVE_KEY, state.voiceMode);
+    localStorage.setItem(CHAT_AUTO_READ_KEY, state.autoRead ? "1" : "0");
+
     state.savedVoiceMode = state.voiceMode;
+    state.savedAutoRead = state.autoRead;
   }
 
   function goBackToChat(){
-    location.href = "/pages/italkyai_chat.html";
+    location.href = RETURN_URL;
   }
 
   function startCountdown(timerEl, progressEl, onDone){
@@ -899,7 +1058,11 @@
   }
 
   function createRecorder(stream, onData, onStop){
-    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : "audio/webm";
+
+    const recorder = new MediaRecorder(stream, { mimeType });
     recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) onData(e.data);
     };
@@ -911,15 +1074,19 @@
     if (!state.currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
     if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
 
+    const ext =
+      blobOrFile.name?.split(".").pop() ||
+      (voiceType === "memory" ? "mp3" : "webm");
+
     const form = new FormData();
     form.append("user_id", state.currentUser.id);
     form.append("voice_type", voiceType);
     form.append("voice_name", voiceName || "");
-    form.append("audio_file", blobOrFile, `${voiceType}.${blobOrFile.name?.split(".").pop() || "webm"}`);
+    form.append("audio_file", blobOrFile, `${voiceType}.${ext}`);
 
     const resp = await fetch(VOICE_API, { method: "POST", body: form });
     const json = await resp.json().catch(() => ({}));
-    if (!resp.ok || !json?.ok) throw new Error("Backend hazır değilse bu normal. Şu an sadece önizleme oluşur.");
+    if (!resp.ok || !json?.ok) throw new Error(json?.detail || json?.error || "Kayıt yüklenemedi.");
     return json;
   }
 
@@ -1052,6 +1219,21 @@
     }
   }
 
+  async function loadWallet(){
+    try {
+      const { data: wallet } = await state.supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", state.currentUser.id)
+        .maybeSingle();
+
+      state.walletTokens =
+        Number(wallet?.tokens ?? wallet?.balance ?? wallet?.amount ?? wallet?.jeton ?? wallet?.credit ?? 0) || 0;
+    } catch {
+      state.walletTokens = 0;
+    }
+  }
+
   async function loadProfileVoiceState(){
     if (!state.supabase) return;
     try {
@@ -1110,6 +1292,7 @@
         return false;
       }
       state.currentUser = session.user;
+      await loadWallet();
       await loadProfileVoiceState();
       return true;
     } catch (e) {
@@ -1119,18 +1302,54 @@
     }
   }
 
+  function canUseVoice(voiceKey){
+    if (voiceKey === "tts") return true;
+    if (voiceKey === "mine") return state.profileVoiceState.mineReady;
+    if (voiceKey === "second") return state.profileVoiceState.secondReady;
+    if (voiceKey === "memory") return state.profileVoiceState.memoryReady;
+    return false;
+  }
+
+  function trySelectVoice(voiceKey){
+    if (voiceKey === "tts") {
+      state.voiceMode = "tts";
+      paintSelections();
+      refreshSummary();
+      showToast("TTS seçildi");
+      return;
+    }
+
+    if (!canUseVoice(voiceKey)) {
+      openVoiceMissingModal();
+      return;
+    }
+
+    if (!hasJeton()) {
+      openTokenModal();
+      return;
+    }
+
+    state.voiceMode = voiceKey;
+    paintSelections();
+    refreshSummary();
+    showToast(`${voiceLabel(voiceKey)} seçildi`);
+  }
+
   function bindEvents(){
     UI.backBtn.addEventListener("click", () => {
       if (hasUnsavedChanges()) openLeaveModal(goBackToChat);
       else goBackToChat();
     });
 
+    UI.autoReadToggle.addEventListener("click", () => {
+      state.autoRead = !state.autoRead;
+      refreshSummary();
+      showToast(state.autoRead ? "Mesajı otomatik oku açıldı" : "Mesajı otomatik oku kapatıldı");
+    });
+
     UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
       card.addEventListener("click", () => {
-        state.voiceMode = normalizeVoiceMode(card.dataset.voice || "tts");
-        paintSelections();
-        refreshSummary();
-        showToast("Ses seçimi güncellendi");
+        trySelectVoice(normalizeVoiceMode(card.dataset.voice || "tts"));
       });
     });
 
@@ -1242,6 +1461,16 @@
       closeRecordInfoModal();
       if (typeof action === "function") action();
     });
+
+    UI.tokenCancelBtn.addEventListener("click", closeTokenModal);
+    UI.tokenGoBtn.addEventListener("click", () => {
+      location.href = "/pages/jetonbuy.html";
+    });
+
+    UI.voiceMissingNoBtn.addEventListener("click", closeVoiceMissingModal);
+    UI.voiceMissingYesBtn.addEventListener("click", () => {
+      location.href = ADVANCED_URL;
+    });
   }
 
   async function init(){
@@ -1261,6 +1490,8 @@
 
     bindEvents();
     await bootAuth();
+    paintSelections();
+    refreshSummary();
   }
 
   init();
@@ -1268,4 +1499,4 @@
 </script>
 
 </body>
-</html>
+  </html>
