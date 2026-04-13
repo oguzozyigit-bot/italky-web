@@ -142,6 +142,7 @@ const state = {
   activePeerCode: "",
   activePeerLang: "tr",
   activePeerFlag: "🌐",
+  activePeerVoice: "auto",
   activePeerOnline: false,
   activePeerBusy: false,
 
@@ -168,6 +169,11 @@ const state = {
     presence: null
   }
 };
+
+function shortName(name) {
+  const v = String(name || "").trim();
+  return v ? v.split(" ")[0] : "Karşı Taraf";
+}
 
 function getLangItems() {
   try {
@@ -241,21 +247,35 @@ async function api(path, options = {}) {
 }
 
 async function translateText(text, fromLang, toLang) {
-  if (!text) return "";
+  const clean = String(text || "").trim();
+  if (!clean) return "";
+
   try {
     const resp = await fetch(TRANSLATE_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text,
-        from: fromLang,
-        to: toLang,
-        mode: state.culturalMode ? "cultural" : "normal"
+        text: clean,
+        from_lang: fromLang,
+        to_lang: toLang,
+        source: fromLang,
+        target: toLang,
+        mode: state.culturalMode ? "cultural" : "normal",
+        use_ai: state.culturalMode,
+        cultural: state.culturalMode
       })
     });
+
     const json = await resp.json().catch(() => ({}));
     if (!resp.ok) return "";
-    return String(json?.translated_text || json?.translation || json?.result || "").trim();
+    return String(
+      json?.translated_text ||
+      json?.translated ||
+      json?.translation ||
+      json?.result ||
+      json?.text ||
+      ""
+    ).trim();
   } catch {
     return "";
   }
@@ -267,6 +287,29 @@ function openModal(el) { el?.classList.add("open"); }
 function closeModal(el) { el?.classList.remove("open"); }
 function openSheet(el) { el?.classList.add("open"); }
 function closeSheet(el) { el?.classList.remove("open"); }
+
+function closeAllConnectionModals() {
+  closeModal(UI.connectModal);
+  closeModal(UI.requestSentModal);
+  closeModal(UI.incomingRequestModal);
+  closeModal(UI.blockConfirmModal);
+}
+
+function closeAllExitModals() {
+  closeModal(UI.leaveChatModal);
+  closeModal(UI.savePromptModal);
+  closeModal(UI.saveNameModal);
+  closeModal(UI.addContactModal);
+  closeModal(UI.deleteContactModal);
+}
+
+function cleanupConnectionUi() {
+  closeAllConnectionModals();
+  setTyping(false, "");
+  if (UI.connectCodeInput) UI.connectCodeInput.value = "";
+  state.outgoingRequest = null;
+  state.incomingRequest = null;
+}
 
 function autoResizeTextarea() {
   if (!UI.chatInput) return;
@@ -360,10 +403,11 @@ function clearChatDom() {
 
 function syncPeerBar() {
   if (UI.peerName) UI.peerName.textContent = state.activePeerName || "Henüz bağlantı yok";
-  if (UI.peerFlag) UI.peerFlag.textContent = state.selectedFlag || "🌐";
-  if (UI.peerLang) UI.peerLang.textContent = state.selectedLangLabel || "Dil seçilmedi";
+  if (UI.peerFlag) UI.peerFlag.textContent = state.activePeerFlag || state.selectedFlag || "🌐";
+  if (UI.peerLang) UI.peerLang.textContent = state.activePeerLang || "Dil seçilmedi";
 
   if (!UI.peerStatusText) return;
+
   if (!state.activePeerName) {
     UI.peerStatusText.textContent = "Dile dokunup seçimini yap";
     return;
@@ -452,10 +496,11 @@ function renderVoiceList() {
     btn.type = "button";
     btn.className = `voice-btn ${state.selectedVoiceName === voice.id ? "active" : ""}`;
     btn.textContent = voice.label;
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       state.selectedVoiceName = voice.id;
       localStorage.setItem(STORAGE.voiceName, voice.id);
       renderVoiceList();
+      await updatePresence();
       addSystemMessage(`Ses seçildi: ${voice.label}`);
     });
     UI.voiceList.appendChild(btn);
@@ -473,41 +518,35 @@ function stopSpeaking() {
   state.currentAudio = null;
 }
 
-function speakWithBrowser(text) {
+function speakWithBrowser(text, langCode = "tr") {
   if (!state.autoRead || !text || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
   stopSpeaking();
   const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = speechLangFor(state.selectedLang);
+  utter.lang = speechLangFor(langCode);
   try { window.speechSynthesis.speak(utter); } catch {}
 }
 
-async function speakWithSelectedVoice(text) {
+async function speakWithVoice(text, langCode, voiceName, ownerUserId) {
   if (!state.autoRead || !text) return;
 
-  if (state.selectedVoiceName === "auto") {
-    speakWithBrowser(text);
+  if (!voiceName || voiceName === "auto" || !ownerUserId) {
+    speakWithBrowser(text, langCode);
     return;
   }
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.id) {
-      speakWithBrowser(text);
-      return;
-    }
-
     let apiVoiceMode = "auto";
     let apiVoice = "auto";
     let apiPresetVoice = "";
 
-    if (state.selectedVoiceName === "mine") {
+    if (voiceName === "mine") {
       apiVoiceMode = "clone";
       apiVoice = "clone";
-    } else if (state.selectedVoiceName === "second") {
+    } else if (voiceName === "second") {
       apiVoiceMode = "preset";
       apiVoice = "second";
       apiPresetVoice = "second";
-    } else if (state.selectedVoiceName === "memory") {
+    } else if (voiceName === "memory") {
       apiVoiceMode = "preset";
       apiVoice = "memory";
       apiPresetVoice = "memory";
@@ -518,13 +557,13 @@ async function speakWithSelectedVoice(text) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text,
-        lang: state.selectedLang,
-        user_id: user.id,
+        lang: langCode,
+        user_id: ownerUserId,
         module: "arkadasla",
         voice: apiVoice,
         voice_mode: apiVoiceMode,
         preset_voice: apiPresetVoice,
-        selected_voice: state.selectedVoiceName,
+        selected_voice: voiceName,
         tone: "neutral"
       })
     });
@@ -538,7 +577,7 @@ async function speakWithSelectedVoice(text) {
       "";
 
     if (!resp.ok || !audioBase64) {
-      speakWithBrowser(text);
+      speakWithBrowser(text, langCode);
       return;
     }
 
@@ -549,7 +588,7 @@ async function speakWithSelectedVoice(text) {
     state.currentAudio = audio;
     await audio.play();
   } catch {
-    speakWithBrowser(text);
+    speakWithBrowser(text, langCode);
   }
 }
 
@@ -636,7 +675,7 @@ async function loadProfileUI() {
     .maybeSingle();
 
   if (profile?.full_name) state.myName = profile.full_name;
-  if (UI.menuUserName) UI.menuUserName.textContent = state.myName;
+  if (UI.menuUserName) UI.menuUserName.textContent = shortName(state.myName);
 
   const avatarUrl =
     profile?.avatar_url ||
@@ -682,7 +721,7 @@ async function pollIncomingRequests() {
     if (state.incomingRequest?.request_id === latest.request_id) return;
 
     state.incomingRequest = latest;
-    UI.incomingRequestText.textContent = `${latest.requester_name} kullanıcısından sohbet isteği aldınız.`;
+    UI.incomingRequestText.textContent = `${shortName(latest.requester_name)} kullanıcısından sohbet isteği aldınız.`;
     openModal(UI.incomingRequestModal);
     beep();
   } catch {}
@@ -703,20 +742,30 @@ async function checkCurrentConversation() {
       state.activePeerCode = "";
       state.activePeerLang = "tr";
       state.activePeerFlag = "🌐";
+      state.activePeerVoice = "auto";
       state.activePeerOnline = false;
       state.activePeerBusy = false;
       syncPeerBar();
       return;
     }
 
+    const wasDisconnected = !state.activeConversationId;
+
     state.activeConversationId = conv.id;
     state.activePeerUserId = conv.other_user_id;
-    state.activePeerName = conv.other_name || "Karşı Taraf";
+    state.activePeerName = shortName(conv.other_name || "Karşı Taraf");
     state.activePeerCode = conv.other_code || "";
     state.activePeerLang = conv.other_lang || "tr";
     state.activePeerFlag = conv.other_flag || flagFromCode(conv.other_lang || "tr");
+    state.activePeerVoice = conv.other_voice || "auto";
     state.activePeerOnline = true;
     state.activePeerBusy = true;
+
+    if (wasDisconnected || UI.requestSentModal?.classList.contains("open") || UI.connectModal?.classList.contains("open")) {
+      cleanupConnectionUi();
+      addSystemMessage(`${state.activePeerName} ile bağlantı kuruldu.`);
+    }
+
     syncPeerBar();
   } catch {}
 }
@@ -732,9 +781,13 @@ async function pollMessages() {
       if (state.loadedMessageIds.has(item.id)) continue;
 
       const side = item.sender_user_id === state.currentUser.id ? "right" : "left";
-      const translated = side === "right"
-        ? (await translateText(item.text, state.selectedLang, state.activePeerLang))
-        : (item.translated_text || await translateText(item.text, state.activePeerLang, state.selectedLang));
+
+      let translated = "";
+      if (side === "right") {
+        translated = item.translated_text || await translateText(item.text, state.selectedLang, state.activePeerLang);
+      } else {
+        translated = item.translated_text || await translateText(item.text, item.source_lang || state.activePeerLang, state.selectedLang);
+      }
 
       addChatMessage(side, {
         text: item.text,
@@ -743,7 +796,12 @@ async function pollMessages() {
       }, item.id);
 
       if (side === "left") {
-        await speakWithSelectedVoice(translated || item.text);
+        await speakWithVoice(
+          translated || item.text,
+          state.selectedLang,
+          item.source_voice || state.activePeerVoice || "auto",
+          item.sender_user_id
+        );
       }
     }
   } catch {}
@@ -763,11 +821,11 @@ async function sendRequest(targetCode) {
 
     state.outgoingRequest = {
       targetCode,
-      targetName: res.target_name || targetCode,
+      targetName: shortName(res.target_name || targetCode),
       requestId: res.request_id || null
     };
 
-    UI.requestSentText.textContent = `${state.outgoingRequest.targetName} kullanıcısına sohbet isteği gönderdin. Cevap bekleniyor. Bekleyiniz.`;
+    UI.requestSentText.textContent = `${state.outgoingRequest.targetName} kullanıcısına sohbet isteği gönderdin. Cevap bekleniyor.`;
     closeModal(UI.connectModal);
     openModal(UI.requestSentModal);
   } catch (e) {
@@ -788,18 +846,21 @@ async function acceptIncomingRequest() {
     });
 
     state.activeConversationId = res.conversation_id;
-    state.activePeerName = state.incomingRequest.requester_name || "Karşı Taraf";
+    state.activePeerName = shortName(state.incomingRequest.requester_name || "Karşı Taraf");
     state.activePeerCode = state.incomingRequest.requester_code || "";
     state.activePeerLang = state.incomingRequest.requester_lang || "tr";
     state.activePeerFlag = state.incomingRequest.requester_flag || flagFromCode(state.activePeerLang);
+    state.activePeerVoice = state.incomingRequest.requester_voice || "auto";
     state.activePeerOnline = true;
     state.activePeerBusy = true;
 
+    cleanupConnectionUi();
     syncPeerBar();
-    closeModal(UI.incomingRequestModal);
+
     addSystemMessage(`${state.activePeerName} ile bağlantı kuruldu.`);
-    await speakWithSelectedVoice(`${state.activePeerName} ile bağlantı kuruldu`);
+    await speakWithVoice(`${state.activePeerName} ile bağlantı kuruldu`, state.selectedLang, state.selectedVoiceName, state.currentUser?.id);
     await updatePresence();
+    await pollMessages();
   } catch (e) {
     addSystemMessage(e.message || "İstek onaylanamadı.");
   } finally {
@@ -818,7 +879,7 @@ async function rejectIncomingRequest() {
         action: "reject"
       })
     });
-    addSystemMessage(`${state.incomingRequest.requester_name || "Karşı Taraf"} isteği reddedildi.`);
+    addSystemMessage(`${shortName(state.incomingRequest.requester_name || "Karşı Taraf")} isteği reddedildi.`);
     closeModal(UI.incomingRequestModal);
   } catch (e) {
     addSystemMessage(e.message || "İstek reddedilemedi.");
@@ -830,7 +891,7 @@ async function rejectIncomingRequest() {
 async function blockIncomingRequest() {
   if (!state.incomingRequest) return;
   state.pendingBlockRequest = state.incomingRequest;
-  UI.blockConfirmText.textContent = `${state.incomingRequest.requester_name} kullanıcısını engellerseniz size bir daha sohbet isteği gönderemez. Emin misiniz?`;
+  UI.blockConfirmText.textContent = `${shortName(state.incomingRequest.requester_name)} kullanıcısını engellerseniz size bir daha sohbet isteği gönderemez. Emin misiniz?`;
   openModal(UI.blockConfirmModal);
 }
 
@@ -902,7 +963,14 @@ async function sendMessage() {
     UI.chatInput.value = "";
     autoResizeTextarea();
     syncInputActionState();
-    await pollMessages();
+
+    addChatMessage("right", {
+      text,
+      translatedText: translatedText || "",
+      meta: "Şimdi"
+    });
+
+    scrollChatToBottom();
   } catch (e) {
     addSystemMessage(e.message || "Mesaj gönderilemedi.");
   }
@@ -982,7 +1050,8 @@ async function saveCurrentContact() {
         contact_code: state.activePeerCode,
         contact_name: name,
         contact_lang: state.activePeerLang,
-        contact_flag: state.activePeerFlag
+        contact_flag: state.activePeerFlag,
+        contact_voice: state.activePeerVoice
       })
     });
     closeModal(UI.addContactModal);
@@ -1036,9 +1105,10 @@ async function loadSavedChats() {
         try {
           const detail = await api(`/saved/${item.id}`);
           clearChatDom();
-          state.activePeerName = detail.saved_chat.peer_name || "Karşı Taraf";
+          state.activePeerName = shortName(detail.saved_chat.peer_name || "Karşı Taraf");
           state.activePeerLang = detail.saved_chat.peer_lang || "tr";
           state.activePeerFlag = detail.saved_chat.peer_flag || flagFromCode(state.activePeerLang);
+          state.activePeerVoice = detail.saved_chat.peer_voice || "auto";
           state.activePeerOnline = false;
           state.activePeerBusy = false;
           syncPeerBar();
@@ -1080,6 +1150,7 @@ function getOutgoingMessagesForSave() {
     return {
       side,
       sender_name: null,
+      sender_voice: side === "right" ? state.selectedVoiceName : state.activePeerVoice,
       text,
       translated_text: translated || null,
       meta: meta || null
@@ -1104,6 +1175,7 @@ async function saveChatByName() {
         peer_name: state.activePeerName,
         peer_lang: state.activePeerLang,
         peer_flag: state.activePeerFlag,
+        peer_voice: state.activePeerVoice,
         messages: getOutgoingMessagesForSave()
       })
     });
@@ -1135,6 +1207,7 @@ async function resetAfterEndChat() {
   state.activePeerCode = "";
   state.activePeerLang = "tr";
   state.activePeerFlag = "🌐";
+  state.activePeerVoice = "auto";
   state.activePeerOnline = false;
   state.activePeerBusy = false;
 
@@ -1194,14 +1267,14 @@ function startTimers() {
   stopTimers();
 
   state.timers.incoming = setInterval(pollIncomingRequests, 5000);
-  state.timers.conversation = setInterval(checkCurrentConversation, 5000);
-  state.timers.messages = setInterval(pollMessages, 2500);
+  state.timers.conversation = setInterval(checkCurrentConversation, 3000);
+  state.timers.messages = setInterval(pollMessages, 2000);
   state.timers.contacts = setInterval(() => {
     if (state.contactsOpen) loadContacts();
   }, 7000);
   state.timers.presence = setInterval(() => {
     updatePresence(document.hidden ? "background" : "foreground");
-  }, 20000);
+  }, 15000);
 }
 
 function stopTimers() {
@@ -1283,6 +1356,11 @@ function bindEvents() {
     closeSheet(UI.settingsSheet);
   });
 
+  UI.goSettingsPageBtn?.addEventListener("click", () => {
+    closeSheet(UI.settingsSheet);
+    location.href = "/pages/arkadasla_settings.html";
+  });
+
   UI.autoReadToggle?.addEventListener("click", () => {
     state.autoRead = !state.autoRead;
     localStorage.setItem(STORAGE.autoRead, state.autoRead ? "1" : "0");
@@ -1342,7 +1420,7 @@ function bindEvents() {
   UI.blockYesBtn?.addEventListener("click", () => {
     if (!state.pendingBlockRequest) return;
     state.blockedUsers.push({
-      name: state.pendingBlockRequest.requester_name || "Karşı Taraf",
+      name: shortName(state.pendingBlockRequest.requester_name || "Karşı Taraf"),
       code: state.pendingBlockRequest.requester_code || ""
     });
     saveBlockedUsers();
@@ -1397,13 +1475,6 @@ function bindEvents() {
   document.addEventListener("visibilitychange", async () => {
     await updatePresence(document.hidden ? "background" : "foreground");
   });
-
-  window.addEventListener("beforeunload", (e) => {
-    if (state.activeConversationId) {
-      e.preventDefault();
-      e.returnValue = "";
-    }
-  });
 }
 
 async function init() {
@@ -1424,7 +1495,7 @@ async function init() {
 
     await loadProfileUI();
     syncPeerBar();
-    addSystemMessage(`Merhaba ${(state.myName || "Kullanıcı").split(" ")[0]}. Kod girerek bağlantı başlatabilirsin.`);
+    addSystemMessage(`Merhaba ${shortName(state.myName || "Kullanıcı")}. Kod girerek bağlantı başlatabilirsin.`);
 
     bindEvents();
     await updatePresence("foreground");
