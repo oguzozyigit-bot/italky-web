@@ -2,889 +2,178 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
-  <title>italkyAI • Ana Sayfa</title>
-  <meta name="theme-color" content="#07111a" />
-
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <title>italkyAI • Dil Seçimi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#07111a;
-      --bg2:#0c1828;
-      --bg3:#12243a;
-      --text:#f4fbff;
-      --muted:rgba(255,255,255,.62);
-
-      --cyan:#22d3ee;
-      --cyan2:#06b6d4;
-      --blue:#3b82f6;
-      --blue2:#2563eb;
-      --violet:#8b5cf6;
-      --green:#34d399;
-      --gold:#facc15;
-      --orange:#fb923c;
-      --red:#ef4444;
-
-      --glass:rgba(255,255,255,.045);
-      --line:rgba(255,255,255,.08);
-
-      --safe-top: env(safe-area-inset-top);
-      --safe-bottom: env(safe-area-inset-bottom);
-
-      --header-h:66px;
-      --footer-h:46px;
-      --app-height:100dvh;
+      --bg:#07050b;
+      --card:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.12);
+      --text:#fff;
+      --muted:rgba(255,255,255,.64);
+      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
     }
-
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      overflow:hidden;
-      font-family:Outfit, Arial, sans-serif;
-      color:var(--text);
+      margin:0;width:100%;height:100%;
       background:
-        radial-gradient(circle at top, rgba(34,211,238,.10), transparent 24%),
-        radial-gradient(circle at bottom, rgba(59,130,246,.08), transparent 18%),
-        linear-gradient(180deg,#050b12 0%, #09111d 100%);
+        radial-gradient(circle at top, rgba(99,102,241,.20), transparent 28%),
+        radial-gradient(circle at 20% 18%, rgba(244,114,182,.12), transparent 24%),
+        var(--bg);
+      color:var(--text);font-family:Outfit,sans-serif;
     }
-
-    .app{
-      position:relative;
-      width:100%;
-      max-width:430px;
-      height:var(--app-height);
-      margin:0 auto;
-      overflow:hidden;
-      background:
-        radial-gradient(circle at 16% 0%, rgba(34,211,238,.08), transparent 20%),
-        radial-gradient(circle at 84% 8%, rgba(59,130,246,.07), transparent 18%),
-        linear-gradient(180deg,#050b12 0%, #09111d 100%);
-      border-left:1px solid rgba(255,255,255,.04);
-      border-right:1px solid rgba(255,255,255,.04);
-      box-shadow:0 20px 50px rgba(0,0,0,.35);
-    }
-
-    .header{
-      position:absolute;
-      inset:0 0 auto 0;
-      height:calc(var(--header-h) + var(--safe-top));
-      padding:calc(2px + var(--safe-top)) 14px 4px;
-      display:grid;
-      grid-template-columns:44px 1fr 44px;
-      align-items:center;
-      gap:10px;
-      z-index:50;
-      background:linear-gradient(180deg, rgba(7,17,26,.96), rgba(7,17,26,.76));
-      border-bottom:1px solid rgba(255,255,255,.06);
-      backdrop-filter:blur(14px);
-    }
-
-    .icon-btn{
-      width:44px;
-      height:44px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
-    }
-
-    .icon-btn svg{
-      width:20px;
-      height:20px;
-      stroke:currentColor;
-      stroke-width:2.2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .brand{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:1px;
-      text-align:center;
-      user-select:none;
-    }
-
-    .brand-title{
-      margin:0;
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:23px;
-      line-height:1;
-      font-weight:800;
-      letter-spacing:-.5px;
-      color:#fff;
-    }
-
-    .brand-title .ai{
-      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .brand-sub{
-      margin:0;
-      font-size:8px;
-      font-weight:900;
-      letter-spacing:2.4px;
-      color:rgba(255,255,255,.30);
-    }
-
-    .menu{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      z-index:120;
-    }
-    .menu.open{ pointer-events:auto; }
-
-    .menu-backdrop{
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.48);
-      backdrop-filter:blur(6px);
-      opacity:0;
-      transition:opacity .22s ease;
-    }
-    .menu.open .menu-backdrop{ opacity:1; }
-
-    .menu-panel{
-      position:absolute;
-      left:0;
-      top:0;
-      bottom:0;
-      width:min(84vw, 336px);
-      transform:translateX(-104%);
-      transition:transform .24s ease;
-      padding:calc(14px + var(--safe-top)) 12px calc(14px + var(--safe-bottom));
-      background:linear-gradient(180deg, rgba(10,16,26,.98), rgba(6,10,18,.98));
-      border-right:1px solid rgba(255,255,255,.08);
-      box-shadow:20px 0 40px rgba(0,0,0,.35);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .menu.open .menu-panel{ transform:translateX(0); }
-
-    .menu-user{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      padding:14px;
-      border-radius:20px;
-      background:var(--glass);
-      border:1px solid rgba(255,255,255,.07);
-    }
-
-    .menu-user-avatar{
-      width:58px;
-      height:58px;
-      border-radius:18px;
-      overflow:hidden;
-      flex:0 0 auto;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-    }
-
-    .menu-user-avatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .menu-user-meta{
-      min-width:0;
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:5px;
-    }
-
-    .menu-logo{
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:20px;
-      font-weight:900;
-      line-height:1;
-      color:#fff;
-    }
-
-    .menu-logo .ai{
-      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .menu-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      line-height:1.2;
-      word-break:break-word;
-    }
-
-    .menu-jeton{
-      font-size:12px;
-      font-weight:800;
-      color:#cffafe;
-    }
-
-    .menu-list{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      overflow:auto;
-      scrollbar-width:none;
-    }
-    .menu-list::-webkit-scrollbar{ display:none; }
-
-    .menu-item{
-      width:100%;
-      min-height:46px;
-      border:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.07);
-      color:#fff;
-      text-align:left;
-      padding:0 14px;
-      font-size:13px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .menu-item.white{
-      background:#fff;
-      color:#111;
-    }
-
-    .menu-item.cyan{
-      color:#cffafe;
-      background:rgba(34,211,238,.10);
-      border-color:rgba(34,211,238,.22);
-    }
-
-    .menu-item.red{
-      color:#fecaca;
-      background:rgba(239,68,68,.10);
-      border-color:rgba(239,68,68,.22);
-    }
-
-    .main{
-      position:absolute;
-      inset:calc(var(--header-h) + var(--safe-top)) 0 calc(var(--footer-h) + var(--safe-bottom)) 0;
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      padding:14px 14px 18px;
-      scrollbar-width:none;
-    }
-
-    .main::-webkit-scrollbar{ display:none; }
-
-    .hero{
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{
+      width:min(100%,420px);
+      background:var(--card);
+      border:1px solid var(--border);
       border-radius:28px;
-      padding:18px;
-      background:
-        radial-gradient(circle at 15% 0%, rgba(34,211,238,.18), transparent 26%),
-        radial-gradient(circle at 85% 20%, rgba(59,130,246,.14), transparent 22%),
-        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 18px 36px rgba(0,0,0,.22);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+      padding:22px;
+      backdrop-filter:blur(14px);
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
     }
-
-    .hero-title{
-      margin:0;
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:28px;
-      line-height:1.05;
-      font-weight:900;
-      color:#fff;
+    .logo{font-family:"Space Grotesk",sans-serif;font-size:34px;font-weight:800;margin-bottom:8px}
+    .logo .ai{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    h1{font-size:22px;line-height:1.2;margin:0 0 8px}
+    p{margin:0 0 18px;color:var(--muted);line-height:1.5}
+    .lang-list{display:grid;gap:10px}
+    .lang-btn{
+      width:100%;min-height:54px;border-radius:18px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      color:#fff;font:inherit;font-weight:800;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 16px;cursor:pointer
     }
-
-    .hero-title span{
-      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, #93c5fd 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
+    .lang-btn.active{
+      border-color:rgba(129,140,248,.6);
+      box-shadow:0 0 0 2px rgba(129,140,248,.14) inset;
     }
-
-    .hero-text{
-      margin:0;
-      font-size:14px;
-      line-height:1.58;
-      color:rgba(255,255,255,.78);
-      font-weight:700;
+    .flag{font-size:22px;margin-right:10px}
+    .left{display:flex;align-items:center}
+    .actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:18px}
+    .save{
+      min-height:54px;border:none;border-radius:18px;
+      background:var(--grad);color:#07050b;
+      font:inherit;font-weight:900;cursor:pointer
     }
-
-    .plan-card{
-      border-radius:22px;
-      padding:14px;
+    .save[disabled]{opacity:.65;cursor:default}
+    .hint{margin-top:12px;font-size:12px;color:var(--muted)}
+    .status-card{
+      margin-top:16px;
+      border:1px solid var(--border);
+      border-radius:20px;
       background:rgba(255,255,255,.04);
+      padding:14px;
+      display:none;
+    }
+    .status-card.show{display:block}
+    .status-title{
+      font-size:13px;
+      font-weight:900;
+      margin-bottom:8px;
+      letter-spacing:.2px;
+    }
+    .status-line{
+      font-size:13px;
+      line-height:1.6;
+      color:rgba(255,255,255,.88);
+      margin-bottom:10px;
+    }
+    .progress{
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
       border:1px solid rgba(255,255,255,.08);
+    }
+    .progress-fill{
+      height:100%;
+      width:0%;
+      background:var(--grad);
+      transition:width .25s ease;
+      box-shadow:0 0 16px rgba(103,232,249,.22);
+    }
+    .status-pills{
+      margin-top:10px;
       display:flex;
-      flex-direction:column;
+      flex-wrap:wrap;
       gap:8px;
     }
-
-    .plan-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .plan-badge{
-      padding:7px 12px;
+    .pill{
+      min-height:32px;
+      padding:6px 10px;
       border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-      color:#06202a;
-      background:linear-gradient(135deg, #67e8f9 0%, #38bdf8 50%, #60a5fa 100%);
-    }
-
-    .plan-price{
-      font-size:14px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      font-size:11px;
       font-weight:900;
       color:#fff;
     }
-
-    .plan-text{
-      margin:0;
-      font-size:13px;
-      line-height:1.55;
-      color:rgba(255,255,255,.72);
-      font-weight:700;
+    .pill.ok{border-color:rgba(34,197,94,.28);color:#bbf7d0}
+    .pill.warn{border-color:rgba(245,158,11,.28);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.28);color:#fecaca}
+    body:not(.home-ready){
+      visibility:hidden;
+      opacity:0;
     }
-
-    .modules{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-
-    .module-card{
-      position:relative;
-      border:none;
-      border-radius:24px;
-      padding:18px 16px;
-      text-align:left;
-      cursor:pointer;
-      color:#fff;
-      min-height:170px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 14px 30px rgba(0,0,0,.20);
-      overflow:hidden;
-    }
-
-    .module-card::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      opacity:.85;
-      pointer-events:none;
-    }
-
-    .module-card.face::before{
-      background:
-        radial-gradient(circle at 15% 10%, rgba(34,211,238,.20), transparent 28%),
-        radial-gradient(circle at 85% 85%, rgba(59,130,246,.16), transparent 22%);
-    }
-
-    .module-card.ai::before{
-      background:
-        radial-gradient(circle at 20% 0%, rgba(139,92,246,.20), transparent 28%),
-        radial-gradient(circle at 90% 90%, rgba(59,130,246,.12), transparent 24%);
-    }
-
-    .module-card.friend::before{
-      background:
-        radial-gradient(circle at 18% 8%, rgba(34,211,238,.22), transparent 28%),
-        radial-gradient(circle at 88% 88%, rgba(59,130,246,.18), transparent 22%);
-    }
-
-    .module-card.text::before{
-      background:
-        radial-gradient(circle at 10% 6%, rgba(59,130,246,.18), transparent 28%),
-        radial-gradient(circle at 86% 86%, rgba(34,211,238,.14), transparent 22%);
-    }
-
-    .module-card.level::before{
-      background:
-        radial-gradient(circle at 12% 8%, rgba(250,204,21,.22), transparent 28%),
-        radial-gradient(circle at 88% 88%, rgba(251,146,60,.16), transparent 22%);
-    }
-
-    .module-card.fun::before{
-      background:
-        radial-gradient(circle at 12% 8%, rgba(52,211,153,.22), transparent 28%),
-        radial-gradient(circle at 88% 88%, rgba(34,211,238,.16), transparent 22%);
-    }
-
-    .module-inner{
-      position:relative;
-      z-index:1;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      height:100%;
-    }
-
-    .module-icon{
-      width:48px;
-      height:48px;
-      border-radius:16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
-    }
-
-    .module-icon svg{
-      width:22px;
-      height:22px;
-      stroke:#fff;
-      stroke-width:2.1;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .module-title{
-      margin:0;
-      font-size:18px;
-      line-height:1.12;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .module-text{
-      margin:0;
-      font-size:13px;
-      line-height:1.52;
-      font-weight:700;
-      color:rgba(255,255,255,.74);
-    }
-
-    .footer{
-      position:absolute;
-      left:0;
-      right:0;
-      bottom:0;
-      height:calc(var(--footer-h) + var(--safe-bottom));
-      padding:10px 12px calc(10px + var(--safe-bottom));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-top:1px solid rgba(255,255,255,.06);
-      background:rgba(7,17,26,.88);
-      backdrop-filter:blur(12px);
-      z-index:30;
-    }
-
-    .seal{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:7px;
-      flex-wrap:wrap;
-      font-size:12px;
-      font-weight:900;
-      text-align:center;
-    }
-
-    .seal-main{
-      background:linear-gradient(135deg, var(--cyan) 0%, var(--blue) 44%, #93c5fd 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .seal-dot{ color:rgba(255,255,255,.25); }
-    .seal-year{ color:#bae6fd; }
-
-    @media (max-width:390px){
-      .modules{
-        grid-template-columns:1fr;
-      }
-      .module-card{
-        min-height:158px;
-      }
-      .hero-title{
-        font-size:25px;
-      }
+    body.home-ready{
+      visibility:visible;
+      opacity:1;
     }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="card">
+      <div class="logo">italky<span class="ai">AI</span></div>
+      <h1>Kendi dilinizi seçin</h1>
+      <p>Seçiminize göre ana diliniz ve İngilizce offline için hazırlanır. Hazırlık durumu aşağıda gösterilir.</p>
 
-<div class="menu" id="menu">
-  <div class="menu-backdrop" id="menuBackdrop"></div>
-  <aside class="menu-panel">
-    <div class="menu-user">
-      <div class="menu-user-avatar" id="menuUserAvatar">
-        <img id="menuUserAvatarImg" alt="Avatar">
+      <div class="lang-list" id="langList"></div>
+
+      <div class="actions">
+        <button class="save" id="saveBtn">Devam Et</button>
       </div>
-      <div class="menu-user-meta">
-        <div class="menu-logo">italky<span class="ai">AI</span></div>
-        <div class="menu-name" id="menuUserName">Kullanıcı</div>
-        <div class="menu-jeton" id="menuJeton">Jeton: 0</div>
+
+      <div class="status-card" id="installStatusCard">
+        <div class="status-title" id="installStatusTitle">Offline hazırlık başlatılıyor</div>
+        <div class="status-line" id="installStatusLine">Dil paketleri hazırlanıyor...</div>
+        <div class="progress">
+          <div class="progress-fill" id="installProgressFill"></div>
+        </div>
+        <div class="status-pills" id="installStatusPills"></div>
       </div>
+
+      <div class="hint">İlk aşamada seçilen ana dil ve İngilizce offline paket olarak hazırlanır. Diğer dilleri Offline Languages modülünden indirebilirsiniz.</div>
     </div>
-
-    <div class="menu-list">
-      <button class="menu-item white" id="goFaceBtn" type="button">YüzYüze Çeviri</button>
-      <button class="menu-item" id="goAiBtn" type="button">Yapay Zekayla Sohbet</button>
-      <button class="menu-item cyan" id="goFriendBtn" type="button">Arkadaşla Sohbet</button>
-      <button class="menu-item" id="goTextBtn" type="button">Yazıdan Çeviri</button>
-      <button class="menu-item" id="goLevelBtn" type="button">Seviyini Tespit Et</button>
-      <button class="menu-item" id="goFunBtn" type="button">Eğlenerek Öğren</button>
-      <button class="menu-item" id="jetonYukleBtn" type="button">Jeton Yükle</button>
-      <button class="menu-item red" id="logoutBtn" type="button">Çıkış Yap</button>
-    </div>
-  </aside>
-</div>
-
-<div class="app">
-  <header class="header">
-    <button class="icon-btn" id="menuBtn" type="button" aria-label="Menü">
-      <svg viewBox="0 0 24 24"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
-    </button>
-
-    <div class="brand">
-      <h1 class="brand-title">italky<span class="ai">AI</span></h1>
-      <p class="brand-sub">BE FREE</p>
-    </div>
-
-    <button class="icon-btn" id="profileBtn" type="button" aria-label="Profil">
-      <svg viewBox="0 0 24 24">
-        <path d="M20 21a8 8 0 0 0-16 0"></path>
-        <circle cx="12" cy="8" r="4"></circle>
-      </svg>
-    </button>
-  </header>
-
-  <main class="main">
-    <section class="hero">
-      <h2 class="hero-title">Dünyayla <span>konuşmak</span> artık daha kolay</h2>
-      <p class="hero-text">
-        italkyAI ile ister yüz yüze çeviri yap, ister yapay zekâyla sohbet et,
-        ister arkadaşınla kendi dilinde bağlantı kur. Tüm modüller aynı çatı altında,
-        sade ve hızlı bir akışla seni bekliyor.
-      </p>
-
-      <div class="plan-card">
-        <div class="plan-top">
-          <div class="plan-badge">İlk 15 Gün Ücretsiz</div>
-          <div class="plan-price">Sonra 49,90 TL / Ay</div>
-        </div>
-        <p class="plan-text">
-          Abonelik iptal edilene kadar aylık olarak devam eder.
-          Jeton mantığı ayrıca sürer. Jetonlar Google Play üzerinden alınır
-          ve premium işlemlerde kullanılmaya devam eder.
-        </p>
-      </div>
-    </section>
-
-    <section class="modules">
-      <button class="module-card face" id="faceCard" type="button">
-        <div class="module-inner">
-          <div class="module-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 10c1.2-1.6 2.3-2.4 4-2.4S14.8 8.4 16 10"></path>
-              <path d="M7 16c1.5 1 3 1.5 5 1.5s3.5-.5 5-1.5"></path>
-              <path d="M4 5h16v14H4z"></path>
-            </svg>
-          </div>
-          <h3 class="module-title">YüzYüze Çeviri</h3>
-          <p class="module-text">
-            İki kişi karşılıklı konuşurken,
-            sistem her iki tarafın dilini anlık takip etsin
-            ve iletişimi daha akıcı hale getirsin.
-          </p>
-        </div>
-      </button>
-
-      <button class="module-card ai" id="aiCard" type="button">
-        <div class="module-inner">
-          <div class="module-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M9 12h6"></path>
-              <path d="M12 9v6"></path>
-              <path d="M5 8a7 7 0 0 1 14 0v5a3 3 0 0 1-3 3h-1l-3 3-3-3H8a3 3 0 0 1-3-3z"></path>
-            </svg>
-          </div>
-          <h3 class="module-title">Yapay Zekayla Sohbet</h3>
-          <p class="module-text">
-            Sorular sor, fikir üret,
-            metin oluştur ya da yardım al.
-            italkyAI ile doğal ve güçlü bir sohbet akışına gir.
-          </p>
-        </div>
-      </button>
-
-      <button class="module-card friend" id="friendCard" type="button">
-        <div class="module-inner">
-          <div class="module-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
-              <path d="M15 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
-              <path d="M3 19a6 6 0 0 1 12 0"></path>
-              <path d="M12 19a5 5 0 0 1 9 0"></path>
-            </svg>
-          </div>
-          <h3 class="module-title">Arkadaşla Sohbet</h3>
-          <p class="module-text">
-            Sohbet ID ile arkadaşına bağlan,
-            onaylı şekilde aynı ekranda buluş
-            ve herkes kendi dilinde rahatça konuşsun.
-          </p>
-        </div>
-      </button>
-
-      <button class="module-card text" id="textCard" type="button">
-        <div class="module-inner">
-          <div class="module-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M4 6h16"></path>
-              <path d="M4 12h10"></path>
-              <path d="M4 18h8"></path>
-              <path d="M18 10l2 2-2 2"></path>
-            </svg>
-          </div>
-          <h3 class="module-title">Yazıdan Çeviri</h3>
-          <p class="module-text">
-            Yazdığın metni farklı dillere çevir,
-            kültürel anlam katmanı ile daha doğal sonuçlar al
-            ve gerekirse sesli çıktıya dönüştür.
-          </p>
-        </div>
-      </button>
-
-      <button class="module-card level" id="levelCard" type="button">
-        <div class="module-inner">
-          <div class="module-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M5 19h14"></path>
-              <path d="M7 16V9"></path>
-              <path d="M12 16V5"></path>
-              <path d="M17 16v-4"></path>
-            </svg>
-          </div>
-          <h3 class="module-title">Seviyini Tespit Et</h3>
-          <p class="module-text">
-            Dil seviyeni ölç,
-            eksik yönlerini gör
-            ve sana uygun çalışma yolunu daha net belirle.
-          </p>
-        </div>
-      </button>
-
-      <button class="module-card fun" id="funCard" type="button">
-        <div class="module-inner">
-          <div class="module-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-              <path d="M9 9h.01"></path>
-              <path d="M15 9h.01"></path>
-              <circle cx="12" cy="12" r="9"></circle>
-            </svg>
-          </div>
-          <h3 class="module-title">Eğlenerek Öğren</h3>
-          <p class="module-text">
-            Oyunlar ve eğlenceli alıştırmalarla
-            dili daha sıcak bir akış içinde öğren
-            ve pratiği sıkıcı olmaktan çıkar.
-          </p>
-        </div>
-      </button>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="seal">
-      <span class="seal-main">italkyAI By Ozyigit's</span>
-      <span class="seal-dot">•</span>
-      <span class="seal-year">2026</span>
-    </div>
-  </footer>
-</div>
+  </div>
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
+  const LOGIN_PAGE = "/pages/login.html";
 
-  const $ = (id) => document.getElementById(id);
-
-  const UI = {
-    menu: $("menu"),
-    menuBtn: $("menuBtn"),
-    menuBackdrop: $("menuBackdrop"),
-    profileBtn: $("profileBtn"),
-
-    menuUserAvatar: $("menuUserAvatar"),
-    menuUserAvatarImg: $("menuUserAvatarImg"),
-    menuUserName: $("menuUserName"),
-    menuJeton: $("menuJeton"),
-
-    faceCard: $("faceCard"),
-    aiCard: $("aiCard"),
-    friendCard: $("friendCard"),
-    textCard: $("textCard"),
-    levelCard: $("levelCard"),
-    funCard: $("funCard"),
-
-    goFaceBtn: $("goFaceBtn"),
-    goAiBtn: $("goAiBtn"),
-    goFriendBtn: $("goFriendBtn"),
-    goTextBtn: $("goTextBtn"),
-    goLevelBtn: $("goLevelBtn"),
-    goFunBtn: $("goFunBtn"),
-
-    jetonYukleBtn: $("jetonYukleBtn"),
-    logoutBtn: $("logoutBtn")
-  };
-
-  function openMenu() {
-    UI.menu.classList.add("open");
-  }
-
-  function closeMenu() {
-    UI.menu.classList.remove("open");
-  }
-
-  function go(url) {
-    location.href = url;
-  }
-
-  async function hydrateProfileUI() {
+  async function bootAuthGate() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        UI.menuUserName.textContent = "Misafir";
-        UI.menuJeton.textContent = "Jeton: 0";
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session?.user) {
+        location.replace(LOGIN_PAGE);
         return;
       }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name,email,tokens,avatar_url")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      let walletTokens = 0;
-
-      try {
-        const { data: wallet } = await supabase
-          .from("wallets")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (wallet) {
-          walletTokens =
-            Number(wallet.tokens ?? wallet.balance ?? wallet.amount ?? wallet.jeton ?? wallet.credit ?? 0) || 0;
-        }
-      } catch {
-        walletTokens = Number(profile?.tokens || 0) || 0;
-      }
-
-      const avatarUrl =
-        profile?.avatar_url ||
-        user?.user_metadata?.avatar_url ||
-        user?.user_metadata?.picture ||
-        "";
-
-      const fullName =
-        profile?.full_name ||
-        user?.user_metadata?.full_name ||
-        user?.user_metadata?.name ||
-        user?.email ||
-        "Kullanıcı";
-
-      if (avatarUrl) {
-        UI.menuUserAvatar.innerHTML = "";
-        UI.menuUserAvatarImg.src = avatarUrl;
-        UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
-      }
-
-      UI.menuUserName.textContent = fullName;
-      UI.menuJeton.textContent = `Jeton: ${walletTokens}`;
+      document.body.classList.add("home-ready");
     } catch (e) {
-      console.error("Profil yüklenemedi:", e);
+      location.replace(LOGIN_PAGE);
     }
   }
 
-  function bindNavigation() {
-    const routes = {
-      face: "/pages/facetoface.html",
-      ai: "/pages/sohbetai.html",
-      friend: "/pages/arkadasla.html",
-      text: "/pages/text_translate.html",
-      level: "/pages/level_test.html",
-      fun: "/pages/games.html"
-    };
-
-    UI.faceCard.addEventListener("click", () => go(routes.face));
-    UI.aiCard.addEventListener("click", () => go(routes.ai));
-    UI.friendCard.addEventListener("click", () => go(routes.friend));
-    UI.textCard.addEventListener("click", () => go(routes.text));
-    UI.levelCard.addEventListener("click", () => go(routes.level));
-    UI.funCard.addEventListener("click", () => go(routes.fun));
-
-    UI.goFaceBtn.addEventListener("click", () => go(routes.face));
-    UI.goAiBtn.addEventListener("click", () => go(routes.ai));
-    UI.goFriendBtn.addEventListener("click", () => go(routes.friend));
-    UI.goTextBtn.addEventListener("click", () => go(routes.text));
-    UI.goLevelBtn.addEventListener("click", () => go(routes.level));
-    UI.goFunBtn.addEventListener("click", () => go(routes.fun));
-
-    UI.jetonYukleBtn.addEventListener("click", () => go("/pages/jetonbuy.html"));
-  }
-
-  function bindEvents() {
-    UI.menuBtn.addEventListener("click", openMenu);
-    UI.menuBackdrop.addEventListener("click", closeMenu);
-
-    UI.profileBtn.addEventListener("click", openMenu);
-
-    UI.logoutBtn.addEventListener("click", async () => {
-      try {
-        await supabase.auth.signOut();
-      } catch {}
-      location.href = "/pages/login.html";
-    });
-  }
-
-  async function init() {
-    bindEvents();
-    bindNavigation();
-    await hydrateProfileUI();
-  }
-
-  init();
+  bootAuthGate();
 </script>
+  <script type="module" src="/js/native_lang_setup.js"></script>
 </body>
 </html>
