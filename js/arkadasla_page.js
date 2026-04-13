@@ -2,7 +2,11 @@ import { supabase } from "/js/supabase_client.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com/api/arkadasla";
-const TRANSLATE_API = "https://italky-api.onrender.com/api/translate";
+const TRANSLATE_ENDPOINTS = [
+  "https://italky-api.onrender.com/api/translate_ai",
+  "https://italky-api.onrender.com/api/translate-ai",
+  "https://italky-api.onrender.com/api/translate"
+];
 const TTS_API = "https://italky-api.onrender.com/api/tts";
 const APP_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
 
@@ -175,6 +179,13 @@ function shortName(name) {
   return v ? v.split(" ")[0] : "Karşı";
 }
 
+function normalizeVoiceName(v) {
+  const val = String(v || "auto").trim().toLowerCase();
+  if (["auto", "mine", "second", "memory"].includes(val)) return val;
+  if (val === "clone") return "mine";
+  return "auto";
+}
+
 function getLangItems() {
   try {
     if (Array.isArray(LANG_POOL) && LANG_POOL.length) {
@@ -219,6 +230,10 @@ function speechLangFor(code) {
   return map[code] || `${code}-${String(code).toUpperCase()}`;
 }
 
+function nowMeta() {
+  return "Şimdi";
+}
+
 async function getAuthToken() {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token || "";
@@ -250,35 +265,42 @@ async function translateText(text, fromLang, toLang) {
   const clean = String(text || "").trim();
   if (!clean) return "";
 
-  try {
-    const resp = await fetch(TRANSLATE_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: clean,
-        from_lang: fromLang,
-        to_lang: toLang,
-        source: fromLang,
-        target: toLang,
-        mode: state.culturalMode ? "cultural" : "normal",
-        use_ai: state.culturalMode,
-        cultural: state.culturalMode
-      })
-    });
+  for (const endpoint of TRANSLATE_ENDPOINTS) {
+    try {
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: clean,
+          from_lang: fromLang,
+          to_lang: toLang,
+          from: fromLang,
+          to: toLang,
+          source: fromLang,
+          target: toLang,
+          mode: state.culturalMode ? "cultural" : "normal",
+          use_ai: state.culturalMode,
+          cultural: state.culturalMode
+        })
+      });
 
-    const json = await resp.json().catch(() => ({}));
-    if (!resp.ok) return "";
-    return String(
-      json?.translated_text ||
-      json?.translated ||
-      json?.translation ||
-      json?.result ||
-      json?.text ||
-      ""
-    ).trim();
-  } catch {
-    return "";
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok) continue;
+
+      const value = String(
+        json?.translated_text ||
+        json?.translated ||
+        json?.translation ||
+        json?.result ||
+        json?.text ||
+        ""
+      ).trim();
+
+      if (value) return value;
+    } catch {}
   }
+
+  return "";
 }
 
 function openMenu() { UI.menu?.classList.add("open"); }
@@ -431,11 +453,9 @@ function buildQrUrl(text) {
 async function showLocalNotification(title, body) {
   try {
     if (!("Notification" in window)) return;
-
     if (Notification.permission === "default") {
       await Notification.requestPermission();
     }
-
     if (Notification.permission === "granted") {
       new Notification(title, { body, silent: false });
     }
@@ -450,12 +470,12 @@ function syncSettingsUI() {
 function hydrateSettingsFromStorage() {
   const langs = getLangItems();
   const storedLang = localStorage.getItem(STORAGE.language) || "tr";
-  const found = langs.find(x => x.code === storedLang) || langs[0];
+  const found = langs.find((x) => x.code === storedLang) || langs[0];
 
   state.selectedLang = found.code;
   state.selectedLangLabel = found.tr_name;
   state.selectedFlag = found.flag;
-  state.selectedVoiceName = localStorage.getItem(STORAGE.voiceName) || "auto";
+  state.selectedVoiceName = normalizeVoiceName(localStorage.getItem(STORAGE.voiceName) || "auto");
   state.culturalMode = localStorage.getItem(STORAGE.cultural) === "1";
   state.autoRead = localStorage.getItem(STORAGE.autoRead) !== "0";
   syncSettingsUI();
@@ -534,7 +554,8 @@ function speakWithBrowser(text, langCode = "tr") {
 async function speakWithVoice(text, langCode, voiceName, ownerUserId) {
   if (!state.autoRead || !text) return;
 
-  if (!voiceName || voiceName === "auto" || !ownerUserId) {
+  const resolvedVoice = normalizeVoiceName(voiceName);
+  if (resolvedVoice === "auto" || !ownerUserId) {
     speakWithBrowser(text, langCode);
     return;
   }
@@ -544,14 +565,14 @@ async function speakWithVoice(text, langCode, voiceName, ownerUserId) {
     let apiVoice = "auto";
     let apiPresetVoice = "";
 
-    if (voiceName === "mine") {
+    if (resolvedVoice === "mine") {
       apiVoiceMode = "clone";
       apiVoice = "clone";
-    } else if (voiceName === "second") {
+    } else if (resolvedVoice === "second") {
       apiVoiceMode = "preset";
       apiVoice = "second";
       apiPresetVoice = "second";
-    } else if (voiceName === "memory") {
+    } else if (resolvedVoice === "memory") {
       apiVoiceMode = "preset";
       apiVoice = "memory";
       apiPresetVoice = "memory";
@@ -568,7 +589,7 @@ async function speakWithVoice(text, langCode, voiceName, ownerUserId) {
         voice: apiVoice,
         voice_mode: apiVoiceMode,
         preset_voice: apiPresetVoice,
-        selected_voice: voiceName,
+        selected_voice: resolvedVoice,
         tone: "neutral"
       })
     });
@@ -764,7 +785,7 @@ async function checkCurrentConversation() {
     state.activePeerCode = conv.other_code || "";
     state.activePeerLang = conv.other_lang || "tr";
     state.activePeerFlag = conv.other_flag || flagFromCode(conv.other_lang || "tr");
-    state.activePeerVoice = conv.other_voice || "auto";
+    state.activePeerVoice = normalizeVoiceName(conv.other_voice || "auto");
     state.activePeerOnline = true;
     state.activePeerBusy = true;
 
@@ -798,7 +819,7 @@ async function pollMessages() {
       addChatMessage(side, {
         text: item.text,
         translatedText: translated || "",
-        meta: `${side === "right" ? "Şimdi" : "Az önce"}`
+        meta: side === "right" ? "Şimdi" : "Az önce"
       }, item.id);
 
       if (side === "left") {
@@ -843,20 +864,21 @@ async function acceptIncomingRequest() {
   if (!state.incomingRequest?.request_id) return;
 
   try {
+    const incoming = state.incomingRequest;
     const res = await api("/respond", {
       method: "POST",
       body: JSON.stringify({
-        request_id: state.incomingRequest.request_id,
+        request_id: incoming.request_id,
         action: "accept"
       })
     });
 
     state.activeConversationId = res.conversation_id;
-    state.activePeerName = shortName(state.incomingRequest.requester_name || "Karşı");
-    state.activePeerCode = state.incomingRequest.requester_code || "";
-    state.activePeerLang = state.incomingRequest.requester_lang || "tr";
-    state.activePeerFlag = state.incomingRequest.requester_flag || flagFromCode(state.activePeerLang);
-    state.activePeerVoice = state.incomingRequest.requester_voice || "auto";
+    state.activePeerName = shortName(incoming.requester_name || incoming.requester_code || "Karşı");
+    state.activePeerCode = incoming.requester_code || "";
+    state.activePeerLang = incoming.requester_lang || "tr";
+    state.activePeerFlag = incoming.requester_flag || flagFromCode(state.activePeerLang);
+    state.activePeerVoice = normalizeVoiceName(incoming.requester_voice || "auto");
     state.activePeerOnline = true;
     state.activePeerBusy = true;
 
@@ -945,15 +967,18 @@ function renderBlockedUsers() {
 async function sendLeaveNotice() {
   if (!state.activeConversationId) return;
   try {
+    const leaveText = `${shortName(state.myName)} sohbetten ayrıldı.`;
+    const translated = await translateText(leaveText, state.selectedLang, state.activePeerLang);
+
     await api("/message", {
       method: "POST",
       body: JSON.stringify({
         conversation_id: state.activeConversationId,
-        text: `${shortName(state.myName)} sohbetten ayrıldı.`,
+        text: leaveText,
         source_lang: state.selectedLang,
         source_flag: state.selectedFlag,
         source_voice: "auto",
-        translated_text: `${shortName(state.myName)} left the chat.`
+        translated_text: translated || null
       })
     });
   } catch {}
@@ -990,7 +1015,7 @@ async function sendMessage() {
     addChatMessage("right", {
       text,
       translatedText: translatedText || "",
-      meta: "Şimdi"
+      meta: nowMeta()
     });
   } catch (e) {
     addSystemMessage(e.message || "Mesaj gönderilemedi.");
@@ -1129,7 +1154,7 @@ async function loadSavedChats() {
           state.activePeerName = shortName(detail.saved_chat.peer_name || "Karşı");
           state.activePeerLang = detail.saved_chat.peer_lang || "tr";
           state.activePeerFlag = detail.saved_chat.peer_flag || flagFromCode(state.activePeerLang);
-          state.activePeerVoice = detail.saved_chat.peer_voice || "auto";
+          state.activePeerVoice = normalizeVoiceName(detail.saved_chat.peer_voice || "auto");
           state.activePeerOnline = false;
           state.activePeerBusy = false;
           syncPeerBar();
