@@ -206,8 +206,8 @@ function isPaidFaceTextMode() {
 }
 
 function isPaidFaceVoiceMode() {
-  const v = getFaceVoiceMode();
-  return v === "clone" || v === "female" || v === "male" || v === "preset";
+  const v = getResolvedFaceVoice();
+  return v === "mine" || v === "second" || v === "memory";
 }
 
 async function ensureCurrentFacePremiumModeAccess() {
