@@ -416,6 +416,21 @@
       border:1px solid rgba(255,255,255,.08);
       backdrop-filter:blur(12px);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 12px 28px rgba(0,0,0,.20);
+      position:relative;
+    }
+
+    .composer.listening{
+      box-shadow:
+        0 0 0 1px rgba(249,115,22,.30),
+        0 0 0 8px rgba(249,115,22,.08),
+        0 0 30px rgba(249,115,22,.18),
+        inset 0 1px 0 rgba(255,255,255,.04);
+      animation:composerPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes composerPulse{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.006); }
     }
 
     .composer-center{
@@ -456,6 +471,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      position:relative;
     }
 
     .send-btn{
@@ -467,6 +483,22 @@
     .mic-btn{
       background:transparent;
       color:#fff;
+    }
+
+    .mic-btn.listening::after{
+      content:"";
+      position:absolute;
+      inset:-6px;
+      border-radius:50%;
+      border:2px solid rgba(34,197,94,.72);
+      box-shadow:0 0 0 8px rgba(34,197,94,.10), 0 0 24px rgba(34,197,94,.18);
+      animation:micPulse 1s ease-out infinite;
+    }
+
+    @keyframes micPulse{
+      0%{ transform:scale(.92); opacity:.95; }
+      70%{ transform:scale(1.14); opacity:.14; }
+      100%{ transform:scale(1.18); opacity:0; }
     }
 
     .hidden{ display:none !important; }
@@ -507,7 +539,7 @@
     .seal-dot{ color:rgba(255,255,255,.25); }
     .seal-year{ color:#bef264; }
 
-    .save-modal,.listen-modal{
+    .save-modal{
       position:fixed;
       inset:0;
       background:rgba(0,0,0,.52);
@@ -519,7 +551,7 @@
       padding:20px;
     }
 
-    .save-modal.open,.listen-modal.open{ display:flex; }
+    .save-modal.open{ display:flex; }
 
     .save-card{
       width:min(100%,420px);
@@ -580,77 +612,6 @@
       border:1px solid rgba(255,255,255,.10);
       color:#fff;
     }
-
-    .listen-card{
-      width:min(100%, 360px);
-      height:min(64vh, 460px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      background:transparent;
-      border:none;
-      box-shadow:none;
-    }
-
-    .ai-live{
-      position:relative;
-      width:220px;
-      height:220px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .ai-live-core{
-      width:102px;
-      height:102px;
-      border-radius:50%;
-      background:
-        radial-gradient(circle at 35% 35%, rgba(255,255,255,.55) 0%, rgba(255,255,255,.08) 16%, transparent 22%),
-        radial-gradient(circle, var(--yellow) 0%, var(--orange) 42%, var(--orange2) 72%, var(--red) 100%);
-      box-shadow:
-        0 0 18px rgba(250,204,21,.20),
-        0 0 44px rgba(249,115,22,.22),
-        0 0 88px rgba(239,68,68,.18);
-      animation:liveBreath 2.1s ease-in-out infinite;
-    }
-
-    .ai-live-ring{
-      position:absolute;
-      inset:0;
-      border-radius:50%;
-      border:1px solid rgba(255,180,80,.10);
-      animation:livePulse 2.4s ease-in-out infinite;
-    }
-
-    .ai-live-ring.r2{ inset:18px; animation-delay:.3s; }
-    .ai-live-ring.r3{ inset:36px; animation-delay:.55s; }
-
-    .listen-close{
-      position:absolute;
-      bottom:0;
-      width:50px;
-      height:50px;
-      border:none;
-      border-radius:50%;
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      font-size:24px;
-      line-height:1;
-      cursor:pointer;
-      border:1px solid rgba(255,255,255,.08);
-    }
-
-    @keyframes liveBreath{
-      0%,100%{ transform:scale(1); }
-      50%{ transform:scale(1.11); }
-    }
-
-    @keyframes livePulse{
-      0%,100%{ opacity:.18; transform:scale(1); }
-      50%{ opacity:.60; transform:scale(1.10); }
-    }
   </style>
 </head>
 <body>
@@ -663,18 +624,6 @@
       <button class="save-btn secondary" id="cancelSaveChat" type="button">Vazgeç</button>
       <button class="save-btn primary" id="confirmSaveChat" type="button">Kaydet</button>
     </div>
-  </div>
-</div>
-
-<div class="listen-modal" id="listenModal">
-  <div class="listen-card">
-    <div class="ai-live">
-      <div class="ai-live-ring"></div>
-      <div class="ai-live-ring r2"></div>
-      <div class="ai-live-ring r3"></div>
-      <div class="ai-live-core"></div>
-    </div>
-    <button class="listen-close" id="closeListenModal" type="button">×</button>
   </div>
 </div>
 
@@ -730,7 +679,7 @@
       <div class="typing" id="typingState">italkyAI yazıyor...</div>
 
       <div class="composer-wrap">
-        <div class="composer">
+        <div class="composer" id="chatComposer">
           <div class="composer-center">
             <textarea id="chatInput" class="composer-input" rows="1" placeholder="Mesajını buraya yaz"></textarea>
           </div>
@@ -762,7 +711,7 @@
   const $ = (id) => document.getElementById(id);
 
   const STORAGE = {
-    voice: "italkyai_shared_voice_mode",
+    voice: "italkyai_shared_voice_name",
     savedChats: "italkyai_local_saved_chats"
   };
 
@@ -776,6 +725,7 @@
     sendBtn: $("sendBtn"),
     micBtn: $("micBtn"),
     typingState: $("typingState"),
+    chatComposer: $("chatComposer"),
 
     menu: $("menu"),
     menuBtn: $("menuBtn"),
@@ -800,10 +750,7 @@
     saveModal: $("saveModal"),
     saveChatName: $("saveChatName"),
     cancelSaveChat: $("cancelSaveChat"),
-    confirmSaveChat: $("confirmSaveChat"),
-
-    listenModal: $("listenModal"),
-    closeListenModal: $("closeListenModal")
+    confirmSaveChat: $("confirmSaveChat")
   };
 
   const state = {
@@ -813,7 +760,8 @@
     currentSavedChatId: null,
     recognition: null,
     isSending: false,
-    pendingVoiceText: ""
+    isListening: false,
+    lastTranscript: ""
   };
 
   function openMenu() {
@@ -835,8 +783,15 @@
 
   function syncInputActionState() {
     const hasText = String(UI.chatInput.value || "").trim().length > 0;
-    UI.micBtn.classList.toggle("hidden", hasText);
+    UI.micBtn.classList.toggle("hidden", hasText && !state.isListening);
     UI.sendBtn.classList.toggle("hidden", !hasText);
+  }
+
+  function setListeningUi(isListening) {
+    state.isListening = !!isListening;
+    UI.chatComposer?.classList.toggle("listening", !!isListening);
+    UI.micBtn?.classList.toggle("listening", !!isListening);
+    syncInputActionState();
   }
 
   function scrollChatToBottom() {
@@ -932,7 +887,7 @@
           walletTokens =
             Number(wallet.tokens ?? wallet.balance ?? wallet.amount ?? wallet.jeton ?? wallet.credit ?? 0) || 0;
         }
-      } catch (e) {
+      } catch {
         walletTokens = Number(profile?.tokens || 0) || 0;
       }
 
@@ -1015,10 +970,13 @@
     if (!text || state.isSending) return;
 
     state.isSending = true;
-
     addMessage("right", text);
 
     if (!forcedText) {
+      UI.chatInput.value = "";
+      autoResizeTextarea();
+      syncInputActionState();
+    } else {
       UI.chatInput.value = "";
       autoResizeTextarea();
       syncInputActionState();
@@ -1172,48 +1130,72 @@
     closeMenu();
   }
 
-  function stopRecognitionLoop() {
+  function stopRecognition() {
     try { state.recognition?.stop(); } catch {}
     state.recognition = null;
+    setListeningUi(false);
   }
 
-  function startRecognitionLoop() {
+  function startRecognitionOnce() {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Recognition) return;
+    if (!Recognition) {
+      addMessage("left", "Bu cihazda sesli giriş desteklenmiyor.");
+      return;
+    }
 
-    stopRecognitionLoop();
+    if (state.isListening) {
+      stopRecognition();
+      return;
+    }
 
-    state.recognition = new Recognition();
-    state.recognition.lang = "tr-TR";
-    state.recognition.interimResults = false;
-    state.recognition.maxAlternatives = 1;
+    stopRecognition();
 
-    state.recognition.onresult = async (event) => {
-      const transcript = event?.results?.[0]?.[0]?.transcript || "";
-      if (transcript.trim()) {
-        await sendCurrentMessage(transcript.trim(), "voice");
+    const recognition = new Recognition();
+    recognition.lang = "tr-TR";
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    recognition.maxAlternatives = 1;
+
+    state.recognition = recognition;
+    state.lastTranscript = "";
+    setListeningUi(true);
+
+    recognition.onresult = (event) => {
+      const parts = [];
+      for (let i = 0; i < event.results.length; i++) {
+        const part = event.results[i]?.[0]?.transcript || "";
+        if (part.trim()) parts.push(part.trim());
+      }
+
+      const transcript = parts.join(" ").trim();
+      state.lastTranscript = transcript;
+
+      if (transcript) {
+        UI.chatInput.value = transcript;
+        autoResizeTextarea();
+        syncInputActionState();
+        scrollChatToBottom();
       }
     };
 
-    state.recognition.onerror = () => {
-      setTimeout(() => startRecognitionLoop(), 500);
+    recognition.onerror = () => {
+      stopRecognition();
     };
 
-    state.recognition.onend = () => {
-      setTimeout(() => startRecognitionLoop(), 250);
+    recognition.onend = async () => {
+      const finalText = String(UI.chatInput.value || state.lastTranscript || "").trim();
+      stopRecognition();
+
+      if (finalText) {
+        await sendCurrentMessage(finalText, "voice");
+      }
     };
 
-    try { state.recognition.start(); } catch {}
-  }
-
-  function openListenMode() {
-    UI.listenModal.classList.add("open");
-    startRecognitionLoop();
-  }
-
-  function closeListenMode() {
-    UI.listenModal.classList.remove("open");
-    stopRecognitionLoop();
+    try {
+      recognition.start();
+    } catch {
+      stopRecognition();
+    }
   }
 
   function bindEvents() {
@@ -1237,8 +1219,7 @@
     });
 
     UI.sendBtn.addEventListener("click", () => sendCurrentMessage("", "text"));
-    UI.micBtn.addEventListener("click", openListenMode);
-    UI.closeListenModal.addEventListener("click", closeListenMode);
+    UI.micBtn.addEventListener("click", startRecognitionOnce);
 
     UI.menuBtn.addEventListener("click", openMenu);
     UI.menuBackdrop.addEventListener("click", closeMenu);
