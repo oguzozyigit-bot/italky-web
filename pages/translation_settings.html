@@ -590,16 +590,13 @@
   const RETURN_PARAM = new URLSearchParams(location.search).get("from") || "";
 
   const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
+  const ENROLL_API = "https://italky-api.onrender.com/api/voice/enroll";
   const MAX_RECORD_SECONDS = 20;
   const $ = (id) => document.getElementById(id);
 
   const UI = {
     backBtn: $("backBtn"),
     backOnlyBtn: $("backOnlyBtn"),
-
-    mineCreateSection: $("mineCreateSection"),
-    secondCreateSection: $("secondCreateSection"),
-    memoryCreateSection: $("memoryCreateSection"),
 
     secondVoiceNameInput: $("secondVoiceNameInput"),
     memoryVoiceNameInput: $("memoryVoiceNameInput"),
@@ -685,11 +682,6 @@
     }, 1700);
   }
 
-  function openReplaceModal(action) {
-    state.pendingReplaceAction = action;
-    UI.replaceModal.classList.add("open");
-  }
-
   function closeReplaceModal() {
     state.pendingReplaceAction = null;
     UI.replaceModal.classList.remove("open");
@@ -762,7 +754,7 @@
     return json;
   }
 
-  async function enrollVoice(voiceType){
+  async function enrollVoice(voiceType) {
     if (!state.supabase) throw new Error("Supabase hazır değil.");
 
     const { data: { session } } = await state.supabase.auth.getSession();
@@ -770,7 +762,7 @@
       throw new Error("Oturum bulunamadı.");
     }
 
-    const resp = await fetch(`https://italky-api.onrender.com/voice/enroll/${voiceType}`, {
+    const resp = await fetch(`${ENROLL_API}/${voiceType}`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${session.access_token}`
@@ -878,7 +870,7 @@
     }
   }
 
-  async function saveMineVoice(){
+  async function saveMineVoice() {
     try {
       UI.mineStatus.textContent = "Kayıt yükleniyor...";
       await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
@@ -893,7 +885,7 @@
     }
   }
 
-  async function saveSecondVoice(){
+  async function saveSecondVoice() {
     const secondName = String(UI.secondVoiceNameInput.value || "").trim();
     if (!secondName) {
       UI.secondStatus.textContent = "2. Ses için isim yaz.";
@@ -914,7 +906,7 @@
     }
   }
 
-  async function saveMemoryVoiceFromMp3(){
+  async function saveMemoryVoiceFromMp3() {
     const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
     if (!memoryName) {
       UI.memoryStatus.textContent = "Hatıra Sesi için isim yaz.";
@@ -967,8 +959,8 @@
     UI.backBtn.addEventListener("click", openLeaveModal);
     UI.backOnlyBtn.addEventListener("click", openLeaveModal);
 
-    UI.recordMineBtn.addEventListener("click", () => beginMineRecording());
-    UI.recordSecondBtn.addEventListener("click", () => beginSecondRecording());
+    UI.recordMineBtn.addEventListener("click", beginMineRecording);
+    UI.recordSecondBtn.addEventListener("click", beginSecondRecording);
 
     UI.listenMineBtn.addEventListener("click", () => {
       if (UI.mineAudio.src) UI.mineAudio.play();
@@ -1007,10 +999,8 @@
     UI.saveMemoryMp3Btn.addEventListener("click", saveMemoryVoiceFromMp3);
 
     UI.saveBtn.addEventListener("click", () => {
-      showToast("Kayıt tamamlandı");
-      setTimeout(() => {
-        goBack();
-      }, 300);
+      showToast("İşlem tamamlandı");
+      setTimeout(goBack, 300);
     });
 
     UI.replaceNoBtn.addEventListener("click", closeReplaceModal);
