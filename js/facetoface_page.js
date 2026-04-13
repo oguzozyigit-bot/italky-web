@@ -54,6 +54,8 @@ const ALT_CHARS = {
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
+const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
+const F2F_PRESET_KEY = "facetoface_voice_preset";
 
 function isFaceAutoReadEnabled() {
   return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
@@ -197,21 +199,19 @@ uiModal?.addEventListener("click", (e) => {
   if (e.target === uiModal) closeUiModal();
 });
 
-const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
-const F2F_PRESET_KEY = "facetoface_voice_preset";
-
 function getResolvedFaceVoice() {
-  const shared = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "").trim().toLowerCase();
-  if (["auto", "mine", "second", "memory"].includes(shared)) {
-    return shared;
-  }
-
   const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
   const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
 
   if (mode === "clone") return "mine";
   if (mode === "preset" && preset === "second") return "second";
   if (mode === "preset" && preset === "memory") return "memory";
+  if (mode === "auto") return "auto";
+
+  const shared = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "").trim().toLowerCase();
+  if (["auto", "mine", "second", "memory"].includes(shared)) {
+    return shared;
+  }
 
   return "auto";
 }
@@ -225,6 +225,15 @@ function getSelectedPresetVoice() {
   return resolved === "second" || resolved === "memory" ? resolved : "";
 }
 
+function getFaceTranslateMode() {
+  const value = String(localStorage.getItem(F2F_TRANSLATE_KEY) || "normal").trim().toLowerCase();
+  return value === "cultural" ? "cultural" : "normal";
+}
+
+function isPaidFaceTextMode() {
+  return getFaceTranslateMode() === "cultural";
+}
+
 async function hasReadyVoiceProfile() {
   try {
     const userId = await getCurrentUserId();
@@ -236,11 +245,9 @@ async function hasReadyVoiceProfile() {
         voice_sample_path,
         tts_voice_ready,
         tts_voice_id,
-
         second_voice_sample_path,
         second_tts_voice_ready,
         second_tts_voice_id,
-
         memory_voice_sample_path,
         memory_tts_voice_ready,
         memory_tts_voice_id
@@ -971,14 +978,32 @@ async function speakViaApi(text, langCode, tone = "neutral") {
     throw new Error("USER_ID_MISSING");
   }
 
+  let apiVoiceMode = "auto";
+  let apiVoice = "auto";
+  let apiPresetVoice = "";
+
+  if (selectedVoice === "mine") {
+    apiVoiceMode = "clone";
+    apiVoice = "clone";
+  } else if (selectedVoice === "second") {
+    apiVoiceMode = "preset";
+    apiVoice = "second";
+    apiPresetVoice = "second";
+  } else if (selectedVoice === "memory") {
+    apiVoiceMode = "preset";
+    apiVoice = "memory";
+    apiPresetVoice = "memory";
+  }
+
   const payload = {
     text: value,
     lang: canonical(langCode),
     user_id: userId,
     module: "facetoface",
-    voice: selectedVoice,
-    voice_mode: selectedVoice,
-    preset_voice: selectedVoice === "auto" ? "" : selectedVoice,
+    voice: apiVoice,
+    voice_mode: apiVoiceMode,
+    preset_voice: apiPresetVoice,
+    selected_voice: selectedVoice,
     tone: canonTone(tone),
   };
 
@@ -1001,6 +1026,7 @@ async function speakViaApi(text, langCode, tone = "neutral") {
 
   return await playCachedAudio(audioSrc, myRunId);
 }
+
 function speakFallback(text, langCode) {
   const value = String(text || "").trim();
   if (!value) return false;
@@ -1058,13 +1084,9 @@ async function speak(text, langCode, tone = "neutral") {
     const ready = await hasReadyVoiceProfile();
 
     if (!ready) {
-      if (selectedVoice === "mine") {
-        showToast("Kendi Sesim hazır değil");
-      } else if (selectedVoice === "second") {
-        showToast("2. Ses hazır değil");
-      } else if (selectedVoice === "memory") {
-        showToast("Hatıra Sesi hazır değil");
-      }
+      if (selectedVoice === "mine") showToast("Kendi Sesim hazır değil");
+      else if (selectedVoice === "second") showToast("2. Ses hazır değil");
+      else if (selectedVoice === "memory") showToast("Hatıra Sesi hazır değil");
       return;
     }
 
