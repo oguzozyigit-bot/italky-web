@@ -257,7 +257,7 @@ function isPaidFaceTextMode() {
 
 function isPaidFaceVoiceMode() {
   const v = getFaceVoiceMode();
-  return v === "clone" || v === "female" || v === "male" || v === "preset";
+  return v === "clone" || v === "preset";
 }
 
 async function ensureCurrentFacePremiumModeAccess() {
@@ -851,6 +851,7 @@ async function warmAudio() {
     }
   } catch {}
 }
+
 function buildTtsCacheKey(text, langCode, tone = "neutral") {
   const mode = getFaceVoiceMode();
   const preset = getSelectedPresetVoice();
@@ -903,6 +904,7 @@ async function playCachedAudio(audioSrc, runId) {
   await audio.play();
   return true;
 }
+
 function createSpeakerButton(getText, langCode, tone = "neutral") {
   const btn = document.createElement("button");
   btn.type = "button";
@@ -941,11 +943,13 @@ function chooseWebVoice(langCode) {
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
   return pool[0] || voices[0] || null;
 }
-async function speak(text, langCode, tone = "neutral") {
-  if (!isFaceAutoReadEnabled()) return;
+
+async function speakViaApi(text, langCode, tone = "neutral") {
+  if (!isFaceAutoReadEnabled()) return false;
 
   const value = String(text || "").trim();
-  if (!value) return;
+  if (!value) return false;
+
   const myRunId = ++speakRunId;
   const userId = await getCurrentUserId();
   const mode = getFaceVoiceMode();
@@ -957,7 +961,7 @@ async function speak(text, langCode, tone = "neutral") {
   }
 
   const payload = {
-    text: String(text || "").trim(),
+    text: value,
     lang: canonical(langCode),
     user_id: userId,
     module: "facetoface",
@@ -966,8 +970,6 @@ async function speak(text, langCode, tone = "neutral") {
     preset_voice: preset || "",
     tone: canonTone(tone),
   };
-
-  console.log("[facetoface tts payload]", payload);
 
   const r = await fetch(`${API_BASE}/api/tts`, {
     method: "POST",
@@ -978,17 +980,17 @@ async function speak(text, langCode, tone = "neutral") {
   if (myRunId !== speakRunId) return false;
 
   const j = await r.json().catch(() => null);
-  console.log("[facetoface tts response]", r.status, j);
 
   if (!r.ok || !j?.ok || !j?.audio_base64) {
     throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
   }
 
   const audioSrc = `data:audio/mp3;base64,${j.audio_base64}`;
-  rememberTtsCache(buildTtsCacheKey(text, langCode, tone), audioSrc);
+  rememberTtsCache(buildTtsCacheKey(value, langCode, tone), audioSrc);
 
   return await playCachedAudio(audioSrc, myRunId);
 }
+
 function speakFallback(text, langCode) {
   const value = String(text || "").trim();
   if (!value) return false;
@@ -1021,6 +1023,8 @@ function speakFallback(text, langCode) {
 }
 
 async function speak(text, langCode, tone = "neutral") {
+  if (!isFaceAutoReadEnabled()) return;
+
   const value = String(text || "").trim();
   if (!value) return;
 
@@ -1041,8 +1045,6 @@ async function speak(text, langCode, tone = "neutral") {
 
   const wantsApiVoice =
     mode === "clone" ||
-    mode === "female" ||
-    mode === "male" ||
     (mode === "preset" && (preset === "second" || preset === "memory"));
 
   if (wantsApiVoice) {
@@ -1063,6 +1065,7 @@ async function speak(text, langCode, tone = "neutral") {
   const fallbackOk = speakFallback(value, langCode);
   if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
 }
+
 async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
   const inLen = String(inputText || "").trim().length;
   const outLen = String(outputText || "").trim().length;
