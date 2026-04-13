@@ -2,6 +2,7 @@ import { supabase } from "/js/supabase_client.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com/api/arkadasla";
+const TRANSLATE_API = "https://italky-api.onrender.com/api/translate";
 const APP_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
 
 const STORAGE = {
@@ -37,22 +38,17 @@ const UI = {
   menuBackdrop: $("menuBackdrop"),
   homeBtn: $("homeBtn"),
   brandHome: $("brandHome"),
-  jetonYukleBtn: $("jetonYukleBtn"),
 
   menuUserAvatar: $("menuUserAvatar"),
   menuUserAvatarImg: $("menuUserAvatarImg"),
   menuUserName: $("menuUserName"),
-  menuJeton: $("menuJeton"),
+  menuMyCode: $("menuMyCode"),
 
-  myChatCode: $("myChatCode"),
   modalOwnCode: $("modalOwnCode"),
   peerFlag: $("peerFlag"),
   peerName: $("peerName"),
+  peerLang: $("peerLang"),
   peerStatusText: $("peerStatusText"),
-
-  openLangBtn: $("openLangBtn"),
-  openSettingsBtn: $("openSettingsBtn"),
-  openConnectBtn: $("openConnectBtn"),
 
   connectModal: $("connectModal"),
   connectCodeInput: $("connectCodeInput"),
@@ -64,6 +60,11 @@ const UI = {
   acceptRequestBtn: $("acceptRequestBtn"),
   rejectRequestBtn: $("rejectRequestBtn"),
 
+  leaveChatModal: $("leaveChatModal"),
+  leaveChatText: $("leaveChatText"),
+  leaveChatNoBtn: $("leaveChatNoBtn"),
+  leaveChatYesBtn: $("leaveChatYesBtn"),
+
   savePromptModal: $("savePromptModal"),
   skipSaveBtn: $("skipSaveBtn"),
   openSaveNameBtn: $("openSaveNameBtn"),
@@ -74,6 +75,7 @@ const UI = {
   confirmSaveNameBtn: $("confirmSaveNameBtn"),
 
   addContactModal: $("addContactModal"),
+  addContactText: $("addContactText"),
   contactNameInput: $("contactNameInput"),
   cancelContactBtn: $("cancelContactBtn"),
   confirmContactBtn: $("confirmContactBtn"),
@@ -97,21 +99,21 @@ const UI = {
   autoReadToggle: $("autoReadToggle"),
   culturalToggle: $("culturalToggle"),
   closeSettingsSheetBtn: $("closeSettingsSheetBtn"),
+  goSettingsPageBtn: $("goSettingsPageBtn"),
 
   newConnectionBtn: $("newConnectionBtn"),
   copyMyCodeBtn: $("copyMyCodeBtn"),
   openConnectFromMenuBtn: $("openConnectFromMenuBtn"),
-  openLangFromMenuBtn: $("openLangFromMenuBtn"),
-  openSettingsFromMenuBtn: $("openSettingsFromMenuBtn"),
   toggleContactsBtn: $("toggleContactsBtn"),
-  contactStatusFilter: $("contactStatusFilter"),
   contactsList: $("contactsList"),
   toggleSavedChatsBtn: $("toggleSavedChatsBtn"),
   savedChatsList: $("savedChatsList"),
   showAppQrBtn: $("showAppQrBtn"),
   endChatBtn: $("endChatBtn"),
+  openSettingsFromMenuBtn: $("openSettingsFromMenuBtn"),
 
-  topQrBtn: $("topQrBtn")
+  topQrBtn: $("topQrBtn"),
+  topSettingsBtn: $("topSettingsBtn")
 };
 
 const state = {
@@ -119,6 +121,7 @@ const state = {
   currentUser: null,
   myCode: "",
   myName: "",
+
   selectedLang: "tr",
   selectedLangLabel: "Türkçe",
   selectedFlag: "🇹🇷",
@@ -137,12 +140,13 @@ const state = {
 
   incomingRequest: null,
   pendingDeleteContactId: null,
+  loadedMessageIds: new Set(),
+
+  recognition: null,
+  leavingReason: "manual",
 
   contactsOpen: false,
   savedChatsOpen: false,
-
-  loadedMessageIds: new Set(),
-  recognition: null,
 
   timers: {
     incoming: null,
@@ -197,14 +201,6 @@ function speechLangFor(code) {
   return map[code] || `${code}-${String(code).toUpperCase()}`;
 }
 
-function ensureElement(el, name) {
-  if (!el) {
-    console.warn(`Eksik element: ${name}`);
-    return false;
-  }
-  return true;
-}
-
 async function getAuthToken() {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token || "";
@@ -218,9 +214,7 @@ async function api(path, options = {}) {
     ...(options.headers || {})
   };
 
-  if (state.authToken) {
-    headers.Authorization = `Bearer ${state.authToken}`;
-  }
+  if (state.authToken) headers.Authorization = `Bearer ${state.authToken}`;
 
   const resp = await fetch(`${API_BASE}${path}`, {
     ...options,
@@ -234,29 +228,35 @@ async function api(path, options = {}) {
   return json;
 }
 
-function openMenu() {
-  UI.menu?.classList.add("open");
+async function translateText(text, fromLang, toLang) {
+  if (!text) return "";
+
+  try {
+    const resp = await fetch(TRANSLATE_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        from: fromLang,
+        to: toLang,
+        mode: state.culturalMode ? "cultural" : "normal"
+      })
+    });
+
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok) return "";
+    return String(json?.translated_text || json?.translation || json?.result || "").trim();
+  } catch {
+    return "";
+  }
 }
 
-function closeMenu() {
-  UI.menu?.classList.remove("open");
-}
-
-function openModal(el) {
-  el?.classList.add("open");
-}
-
-function closeModal(el) {
-  el?.classList.remove("open");
-}
-
-function openSheet(el) {
-  el?.classList.add("open");
-}
-
-function closeSheet(el) {
-  el?.classList.remove("open");
-}
+function openMenu() { UI.menu?.classList.add("open"); }
+function closeMenu() { UI.menu?.classList.remove("open"); }
+function openModal(el) { el?.classList.add("open"); }
+function closeModal(el) { el?.classList.remove("open"); }
+function openSheet(el) { el?.classList.add("open"); }
+function closeSheet(el) { el?.classList.remove("open"); }
 
 function autoResizeTextarea() {
   if (!UI.chatInput) return;
@@ -341,12 +341,13 @@ function addChatMessage(side, payload = {}, id = null) {
 
   const meta = document.createElement("div");
   meta.className = "msg-meta";
-  meta.textContent = payload.meta || `${side === "right" ? "Sen" : "Karşı Taraf"} • şimdi`;
+  meta.textContent = payload.meta || "";
 
   wrap.appendChild(bubble);
   wrap.appendChild(meta);
   row.appendChild(wrap);
   UI.chatMessages.appendChild(row);
+
   scrollChatToBottom();
 }
 
@@ -359,20 +360,20 @@ function clearChatDom() {
 function syncPeerBar() {
   if (UI.peerName) UI.peerName.textContent = state.activePeerName || "Henüz bağlantı yok";
   if (UI.peerFlag) UI.peerFlag.textContent = state.activePeerFlag || "🌐";
+  if (UI.peerLang) UI.peerLang.textContent = state.activePeerName ? state.selectedLangLabel : "Dil seçilmedi";
 
   if (!UI.peerStatusText) return;
-
   if (!state.activePeerName) {
     UI.peerStatusText.textContent = "";
     return;
   }
 
   if (state.activePeerBusy) {
-    UI.peerStatusText.textContent = "• Meşgul";
+    UI.peerStatusText.textContent = "Meşgul";
   } else if (state.activePeerOnline) {
-    UI.peerStatusText.textContent = "• Çevrimiçi";
+    UI.peerStatusText.textContent = "Çevrimiçi";
   } else {
-    UI.peerStatusText.textContent = "• Çevrimdışı";
+    UI.peerStatusText.textContent = "Çevrimdışı";
   }
 }
 
@@ -408,12 +409,9 @@ function hydrateSettingsFromStorage() {
   state.selectedLang = found.code;
   state.selectedLangLabel = found.tr_name;
   state.selectedFlag = found.flag;
-
   state.selectedVoiceName = localStorage.getItem(STORAGE.voiceName) || "auto";
   state.culturalMode = localStorage.getItem(STORAGE.cultural) === "1";
   state.autoRead = localStorage.getItem(STORAGE.autoRead) !== "0";
-
-  if (UI.openLangBtn) UI.openLangBtn.textContent = found.tr_name;
   syncSettingsUI();
 }
 
@@ -425,17 +423,22 @@ function renderLangList() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = `lang-btn ${state.selectedLang === lang.code ? "active" : ""}`;
-    btn.textContent = `${lang.flag} ${lang.tr_name}`;
+    btn.innerHTML = `
+      <div class="lang-left">
+        <span class="lang-flag">${lang.flag}</span>
+        <span class="lang-name">${lang.tr_name}</span>
+      </div>
+      <span class="lang-check">✓</span>
+    `;
     btn.addEventListener("click", async () => {
       state.selectedLang = lang.code;
       state.selectedLangLabel = lang.tr_name;
       state.selectedFlag = lang.flag;
       localStorage.setItem(STORAGE.language, lang.code);
-      if (UI.openLangBtn) UI.openLangBtn.textContent = lang.tr_name;
       renderLangList();
       closeSheet(UI.langSheet);
-      closeMenu();
       addSystemMessage(`Dil seçildi: ${lang.tr_name}`);
+      syncPeerBar();
       await updatePresence();
     });
     UI.langList.appendChild(btn);
@@ -461,10 +464,8 @@ function renderVoiceList() {
   });
 }
 
-function initSpeechVoices() {
-  try {
-    window.speechSynthesis?.getVoices();
-  } catch {}
+function stopSpeaking() {
+  try { window.speechSynthesis?.cancel(); } catch {}
 }
 
 function findSpeechVoiceForSelection() {
@@ -481,13 +482,8 @@ function findSpeechVoiceForSelection() {
   return voices.find(v => (v.lang || "").toLowerCase().startsWith((state.selectedLang || "tr").toLowerCase())) || voices[0] || null;
 }
 
-function stopSpeaking() {
-  try { window.speechSynthesis?.cancel(); } catch {}
-}
-
 function speakText(text) {
-  if (!state.autoRead) return;
-  if (!text || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+  if (!state.autoRead || !text || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
 
   stopSpeaking();
 
@@ -500,9 +496,7 @@ function speakText(text) {
     utter.lang = voice.lang || utter.lang;
   }
 
-  try {
-    window.speechSynthesis.speak(utter);
-  } catch {}
+  try { window.speechSynthesis.speak(utter); } catch {}
 }
 
 function startRecognition() {
@@ -543,19 +537,36 @@ function beep() {
     const ctx = new AudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-
     osc.type = "sine";
     osc.frequency.setValueAtTime(1046, ctx.currentTime);
-
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
-
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
     osc.stop(ctx.currentTime + 0.2);
   } catch {}
+}
+
+function longPress(element, onLongPress) {
+  let timer = null;
+
+  const start = () => {
+    timer = setTimeout(() => onLongPress(), 650);
+  };
+
+  const cancel = () => {
+    if (timer) clearTimeout(timer);
+    timer = null;
+  };
+
+  element.addEventListener("touchstart", start, { passive: true });
+  element.addEventListener("mousedown", start);
+  element.addEventListener("touchend", cancel);
+  element.addEventListener("touchmove", cancel);
+  element.addEventListener("mouseleave", cancel);
+  element.addEventListener("mouseup", cancel);
 }
 
 async function loadProfileUI() {
@@ -593,23 +604,10 @@ async function loadProfileUI() {
     UI.menuUserAvatar.appendChild(UI.menuUserAvatarImg);
   }
 
-  try {
-    const { data: wallet } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    const tokens = Number(wallet?.tokens ?? wallet?.balance ?? wallet?.amount ?? wallet?.jeton ?? wallet?.credit ?? 0) || 0;
-    if (UI.menuJeton) UI.menuJeton.textContent = `Jeton: ${tokens}`;
-  } catch {
-    if (UI.menuJeton) UI.menuJeton.textContent = "Jeton: 0";
-  }
-
   const me = await api("/me");
   state.myCode = me.chat_code || "";
-  if (UI.myChatCode) UI.myChatCode.textContent = state.myCode;
   if (UI.modalOwnCode) UI.modalOwnCode.textContent = state.myCode;
+  if (UI.menuMyCode) UI.menuMyCode.textContent = `Sohbet ID: ${state.myCode}`;
 }
 
 async function updatePresence(appState = "foreground") {
@@ -624,9 +622,7 @@ async function updatePresence(appState = "foreground") {
         current_conversation_id: state.activeConversationId || null
       })
     });
-  } catch (e) {
-    console.error("presence", e);
-  }
+  } catch {}
 }
 
 async function pollIncomingRequests() {
@@ -639,14 +635,10 @@ async function pollIncomingRequests() {
     if (state.incomingRequest?.request_id === latest.request_id) return;
 
     state.incomingRequest = latest;
-    if (UI.incomingRequestText) {
-      UI.incomingRequestText.textContent = `${latest.requester_name} bağlanmak istiyor. Onaylıyor musun?`;
-    }
+    UI.incomingRequestText.textContent = `${latest.requester_name} bağlanmak istiyor. Onaylıyor musun?`;
     openModal(UI.incomingRequestModal);
     beep();
-  } catch (e) {
-    console.error("incoming", e);
-  }
+  } catch {}
 }
 
 async function checkCurrentConversation() {
@@ -676,9 +668,7 @@ async function checkCurrentConversation() {
     state.activePeerOnline = true;
     state.activePeerBusy = true;
     syncPeerBar();
-  } catch (e) {
-    console.error("conversation", e);
-  }
+  } catch {}
 }
 
 async function pollMessages() {
@@ -703,9 +693,7 @@ async function pollMessages() {
 
       if (side === "left") speakText(item.translated_text || item.text);
     }
-  } catch (e) {
-    console.error("messages", e);
-  }
+  } catch {}
 }
 
 async function sendRequest(targetCode) {
@@ -791,6 +779,8 @@ async function sendMessage() {
   }
 
   try {
+    const translatedText = await translateText(text, state.selectedLang, state.activePeerLang);
+
     await api("/message", {
       method: "POST",
       body: JSON.stringify({
@@ -798,7 +788,7 @@ async function sendMessage() {
         text,
         source_lang: state.selectedLang,
         source_flag: state.selectedFlag,
-        translated_text: state.culturalMode ? `${state.selectedLangLabel} için kültürel çeviri açık.` : null
+        translated_text: translatedText || null
       })
     });
 
@@ -817,17 +807,9 @@ async function loadContacts() {
   try {
     const res = await api("/contacts");
     const items = res.items || [];
-    const filter = UI.contactStatusFilter?.value || "all";
     UI.contactsList.innerHTML = "";
 
-    const filtered = items.filter(item => {
-      if (filter === "online") return item.is_online && !item.is_busy;
-      if (filter === "busy") return item.is_busy;
-      if (filter === "offline") return !item.is_online;
-      return true;
-    });
-
-    if (!filtered.length) {
+    if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "saved-btn";
       empty.textContent = "Henüz rehber boş";
@@ -835,7 +817,7 @@ async function loadContacts() {
       return;
     }
 
-    filtered.forEach((item) => {
+    items.forEach((item) => {
       const card = document.createElement("div");
       card.className = "contact-card";
 
@@ -849,16 +831,13 @@ async function loadContacts() {
           <span class="contact-flag">${item.contact_flag || "🌐"}</span>
           <span class="contact-name">${item.contact_name}</span>
         </div>
-        <div class="contact-sub">${item.contact_code} • ${item.is_busy ? "Meşgul" : item.is_online ? "Çevrimiçi" : "Çevrimdışı"}</div>
+        <div class="contact-sub">${item.is_busy ? "Meşgul" : item.is_online ? "Çevrimiçi" : "Çevrimdışı"} • ${item.contact_code}</div>
       `;
 
-      const actions = document.createElement("div");
-      actions.className = "contact-actions";
+      card.appendChild(presence);
+      card.appendChild(meta);
 
-      const callBtn = document.createElement("button");
-      callBtn.className = "contact-action";
-      callBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>`;
-      callBtn.addEventListener("click", async () => {
+      card.addEventListener("click", async () => {
         if (!item.is_online) {
           addSystemMessage("Bu kişi şu anda çevrimdışı.");
           return;
@@ -870,35 +849,21 @@ async function loadContacts() {
         await sendRequest(item.contact_code);
       });
 
-      const delBtn = document.createElement("button");
-      delBtn.className = "contact-action red";
-      delBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path></svg>`;
-      delBtn.addEventListener("click", () => {
+      longPress(card, () => {
         state.pendingDeleteContactId = item.id;
-        if (UI.deleteContactText) {
-          UI.deleteContactText.textContent = `${item.contact_name} adlı kişiyi rehberden silmek istiyor musun?`;
-        }
+        UI.deleteContactText.textContent = `${item.contact_name} adlı kişiyi rehberden silmek istiyor musun?`;
         openModal(UI.deleteContactModal);
       });
 
-      actions.appendChild(callBtn);
-      actions.appendChild(delBtn);
-
-      card.appendChild(presence);
-      card.appendChild(meta);
-      card.appendChild(actions);
-
       UI.contactsList.appendChild(card);
     });
-  } catch (e) {
-    console.error("contacts", e);
-  }
+  } catch {}
 }
 
 async function saveCurrentContact() {
   const name = String(UI.contactNameInput?.value || "").trim();
   if (!name || !state.activePeerCode) {
-    addSystemMessage("Rehbere eklenecek kişi bilgisi eksik.");
+    await goHomeNow();
     return;
   }
 
@@ -915,8 +880,10 @@ async function saveCurrentContact() {
     closeModal(UI.addContactModal);
     addSystemMessage("Kişi rehbere eklendi.");
     await loadContacts();
+    await goHomeNow();
   } catch (e) {
     addSystemMessage(e.message || "Rehbere eklenemedi.");
+    await goHomeNow();
   }
 }
 
@@ -989,9 +956,7 @@ async function loadSavedChats() {
       });
       UI.savedChatsList.appendChild(btn);
     });
-  } catch (e) {
-    console.error("saved", e);
-  }
+  } catch {}
 }
 
 function getOutgoingMessagesForSave() {
@@ -1041,20 +1006,23 @@ async function saveChatByName() {
     closeModal(UI.saveNameModal);
     addSystemMessage(`Sohbet kaydedildi: ${title}`);
     await loadSavedChats();
-    await resetAfterEndChat();
+    await maybeAskAddContactThenHome();
   } catch (e) {
     addSystemMessage(e.message || "Sohbet kaydedilemedi.");
+    await maybeAskAddContactThenHome();
   }
+}
+
+async function endConversationBackend() {
+  if (!state.activeConversationId) return;
+  try {
+    await api(`/end?conversation_id=${encodeURIComponent(state.activeConversationId)}`, { method: "POST" });
+  } catch {}
 }
 
 async function resetAfterEndChat() {
   stopSpeaking();
-
-  if (state.activeConversationId) {
-    try {
-      await api(`/end?conversation_id=${encodeURIComponent(state.activeConversationId)}`, { method: "POST" });
-    } catch {}
-  }
+  await endConversationBackend();
 
   state.activeConversationId = null;
   state.activePeerUserId = null;
@@ -1071,7 +1039,49 @@ async function resetAfterEndChat() {
   await updatePresence();
 }
 
-async function bindPrimaryEvents() {
+async function isPeerInContacts() {
+  if (!state.activePeerCode) return true;
+  try {
+    const res = await api("/contacts");
+    return (res.items || []).some(x => (x.contact_code || "").toUpperCase() === state.activePeerCode.toUpperCase());
+  } catch {
+    return true;
+  }
+}
+
+async function maybeAskAddContactThenHome() {
+  const exists = await isPeerInContacts();
+  if (state.activePeerName && state.activePeerCode && !exists) {
+    UI.addContactText.textContent = `${state.activePeerName} adlı kişiyi rehbere eklemek ister misiniz?`;
+    UI.contactNameInput.value = state.activePeerName;
+    openModal(UI.addContactModal);
+    return;
+  }
+  await goHomeNow();
+}
+
+async function goHomeNow() {
+  await resetAfterEndChat();
+  location.href = "/pages/home.html";
+}
+
+async function handleLeaveFlow(reason = "manual") {
+  state.leavingReason = reason;
+  if (!state.activeConversationId && !UI.chatMessages?.children.length) {
+    location.href = "/pages/home.html";
+    return;
+  }
+
+  const who = state.activePeerName || "Bu kişi";
+  UI.leaveChatText.textContent =
+    reason === "peer_left"
+      ? `${who} sohbetten ayrıldı. Sohbeti kaydetmek ister misiniz?`
+      : `${who} ile sohbeti bitirmek istiyor musunuz?`;
+
+  openModal(UI.leaveChatModal);
+}
+
+function bindEvents() {
   UI.chatInput?.addEventListener("input", () => {
     autoResizeTextarea();
     syncInputActionState();
@@ -1091,12 +1101,17 @@ async function bindPrimaryEvents() {
   UI.menuBtn?.addEventListener("click", openMenu);
   UI.menuBackdrop?.addEventListener("click", closeMenu);
 
-  UI.homeBtn?.addEventListener("click", () => location.href = "/pages/home.html");
-  UI.brandHome?.addEventListener("click", () => location.href = "/pages/home.html");
-  UI.jetonYukleBtn?.addEventListener("click", () => location.href = "/pages/jetonbuy.html");
+  UI.homeBtn?.addEventListener("click", async () => {
+    closeMenu();
+    await handleLeaveFlow("manual");
+  });
 
-  UI.openConnectBtn?.addEventListener("click", () => openModal(UI.connectModal));
+  UI.brandHome?.addEventListener("click", async () => {
+    await handleLeaveFlow("manual");
+  });
+
   UI.openConnectFromMenuBtn?.addEventListener("click", () => openModal(UI.connectModal));
+  UI.newConnectionBtn?.addEventListener("click", () => openModal(UI.connectModal));
   UI.closeConnectModalBtn?.addEventListener("click", () => closeModal(UI.connectModal));
   UI.connectCodeInput?.addEventListener("input", normalizeCodeInput);
 
@@ -1113,15 +1128,29 @@ async function bindPrimaryEvents() {
     await sendRequest(code);
   });
 
-  UI.openLangBtn?.addEventListener("click", () => openSheet(UI.langSheet));
-  UI.openLangFromMenuBtn?.addEventListener("click", () => openSheet(UI.langSheet));
-  UI.closeLangSheetBtn?.addEventListener("click", () => closeSheet(UI.langSheet));
-  UI.langSheet?.addEventListener("click", (e) => { if (e.target === UI.langSheet) closeSheet(UI.langSheet); });
+  UI.copyMyCodeBtn?.addEventListener("click", () => {
+    copyText(state.myCode, "Sohbet ID kopyalandı.");
+  });
 
-  UI.openSettingsBtn?.addEventListener("click", () => openSheet(UI.settingsSheet));
+  UI.showAppQrBtn?.addEventListener("click", () => {
+    if (UI.appQrImage) UI.appQrImage.src = buildQrUrl(APP_STORE_URL);
+    openModal(UI.appQrModal);
+  });
+
+  UI.topQrBtn?.addEventListener("click", () => {
+    if (UI.appQrImage) UI.appQrImage.src = buildQrUrl(APP_STORE_URL);
+    openModal(UI.appQrModal);
+  });
+
+  UI.closeQrModalBtn?.addEventListener("click", () => closeModal(UI.appQrModal));
+  UI.copyStoreLinkBtn?.addEventListener("click", () => copyText(APP_STORE_URL, "Mağaza linki kopyalandı."));
+
+  UI.topSettingsBtn?.addEventListener("click", () => openSheet(UI.settingsSheet));
   UI.openSettingsFromMenuBtn?.addEventListener("click", () => openSheet(UI.settingsSheet));
   UI.closeSettingsSheetBtn?.addEventListener("click", () => closeSheet(UI.settingsSheet));
-  UI.settingsSheet?.addEventListener("click", (e) => { if (e.target === UI.settingsSheet) closeSheet(UI.settingsSheet); });
+  UI.goSettingsPageBtn?.addEventListener("click", () => {
+    location.href = "/pages/arkadasla_settings.html";
+  });
 
   UI.autoReadToggle?.addEventListener("click", () => {
     state.autoRead = !state.autoRead;
@@ -1137,29 +1166,9 @@ async function bindPrimaryEvents() {
     addSystemMessage(state.culturalMode ? "Kültürel çeviri açıldı." : "Kültürel çeviri kapatıldı.");
   });
 
-  UI.copyMyCodeBtn?.addEventListener("click", () => {
-    copyText(state.myCode, "Sohbet ID kopyalandı.");
-    closeMenu();
-  });
-
-  UI.newConnectionBtn?.addEventListener("click", () => {
-    closeMenu();
-    openModal(UI.connectModal);
-  });
-
-  UI.showAppQrBtn?.addEventListener("click", () => {
-    if (UI.appQrImage) UI.appQrImage.src = buildQrUrl(APP_STORE_URL);
-    closeMenu();
-    openModal(UI.appQrModal);
-  });
-
-  UI.topQrBtn?.addEventListener("click", () => {
-    if (UI.appQrImage) UI.appQrImage.src = buildQrUrl(APP_STORE_URL);
-    openModal(UI.appQrModal);
-  });
-
-  UI.closeQrModalBtn?.addEventListener("click", () => closeModal(UI.appQrModal));
-  UI.copyStoreLinkBtn?.addEventListener("click", () => copyText(APP_STORE_URL, "Mağaza linki kopyalandı."));
+  UI.peerFlag?.addEventListener("click", () => openSheet(UI.langSheet));
+  UI.peerLang?.addEventListener("click", () => openSheet(UI.langSheet));
+  UI.closeLangSheetBtn?.addEventListener("click", () => closeSheet(UI.langSheet));
 
   UI.toggleContactsBtn?.addEventListener("click", async () => {
     state.contactsOpen = !state.contactsOpen;
@@ -1167,19 +1176,29 @@ async function bindPrimaryEvents() {
     if (state.contactsOpen) await loadContacts();
   });
 
-  UI.contactStatusFilter?.addEventListener("change", loadContacts);
-
   UI.toggleSavedChatsBtn?.addEventListener("click", async () => {
     state.savedChatsOpen = !state.savedChatsOpen;
     UI.savedChatsList?.classList.toggle("open", state.savedChatsOpen);
     if (state.savedChatsOpen) await loadSavedChats();
   });
 
-  UI.endChatBtn?.addEventListener("click", () => openModal(UI.savePromptModal));
+  UI.endChatBtn?.addEventListener("click", async () => {
+    closeMenu();
+    await handleLeaveFlow("manual");
+  });
+
+  UI.acceptRequestBtn?.addEventListener("click", acceptIncomingRequest);
+  UI.rejectRequestBtn?.addEventListener("click", rejectIncomingRequest);
+
+  UI.leaveChatNoBtn?.addEventListener("click", () => closeModal(UI.leaveChatModal));
+  UI.leaveChatYesBtn?.addEventListener("click", async () => {
+    closeModal(UI.leaveChatModal);
+    openModal(UI.savePromptModal);
+  });
 
   UI.skipSaveBtn?.addEventListener("click", async () => {
     closeModal(UI.savePromptModal);
-    await resetAfterEndChat();
+    await maybeAskAddContactThenHome();
   });
 
   UI.openSaveNameBtn?.addEventListener("click", () => {
@@ -1189,22 +1208,24 @@ async function bindPrimaryEvents() {
 
   UI.cancelSaveNameBtn?.addEventListener("click", async () => {
     closeModal(UI.saveNameModal);
-    await resetAfterEndChat();
+    await maybeAskAddContactThenHome();
   });
 
   UI.confirmSaveNameBtn?.addEventListener("click", saveChatByName);
 
-  UI.cancelContactBtn?.addEventListener("click", () => closeModal(UI.addContactModal));
+  UI.cancelContactBtn?.addEventListener("click", async () => {
+    closeModal(UI.addContactModal);
+    await goHomeNow();
+  });
+
   UI.confirmContactBtn?.addEventListener("click", saveCurrentContact);
 
   UI.cancelDeleteContactBtn?.addEventListener("click", () => {
     state.pendingDeleteContactId = null;
     closeModal(UI.deleteContactModal);
   });
-  UI.confirmDeleteContactBtn?.addEventListener("click", deleteContactNow);
 
-  UI.acceptRequestBtn?.addEventListener("click", acceptIncomingRequest);
-  UI.rejectRequestBtn?.addEventListener("click", rejectIncomingRequest);
+  UI.confirmDeleteContactBtn?.addEventListener("click", deleteContactNow);
 
   window.visualViewport?.addEventListener("resize", updateViewportLayout);
   window.visualViewport?.addEventListener("scroll", updateViewportLayout);
@@ -1212,6 +1233,13 @@ async function bindPrimaryEvents() {
 
   document.addEventListener("visibilitychange", async () => {
     await updatePresence(document.hidden ? "background" : "foreground");
+  });
+
+  window.addEventListener("beforeunload", (e) => {
+    if (state.activeConversationId) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
   });
 }
 
@@ -1235,15 +1263,12 @@ function stopTimers() {
 
 async function init() {
   try {
-    if (!ensureElement(UI.chatInput, "chatInput")) return;
-
     state.authToken = await getAuthToken();
     if (!state.authToken) {
       location.href = "/pages/login.html";
       return;
     }
 
-    initSpeechVoices();
     hydrateSettingsFromStorage();
     renderLangList();
     renderVoiceList();
@@ -1255,15 +1280,13 @@ async function init() {
     syncPeerBar();
     addSystemMessage(`Merhaba ${(state.myName || "Kullanıcı").split(" ")[0]}. Kod girerek bağlantı başlatabilirsin.`);
 
-    await bindPrimaryEvents();
+    bindEvents();
     await updatePresence("foreground");
     await checkCurrentConversation();
     await pollIncomingRequests();
 
     startTimers();
     scrollChatToBottom();
-
-    setTimeout(() => openModal(UI.connectModal), 350);
   } catch (e) {
     console.error("ARKADASLA INIT HATASI:", e);
     addSystemMessage("Sayfa başlatılırken bir hata oluştu.");
