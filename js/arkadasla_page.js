@@ -1222,12 +1222,18 @@ function bindEvents() {
   UI.closeQrModalBtn?.addEventListener("click", () => closeModal(UI.appQrModal));
   UI.copyStoreLinkBtn?.addEventListener("click", () => copyText(APP_STORE_URL, "Mağaza linki kopyalandı."));
 
-  UI.topSettingsBtn?.addEventListener("click", () => openSheet(UI.settingsSheet));
-  UI.openSettingsFromMenuBtn?.addEventListener("click", () => openSheet(UI.settingsSheet));
-  UI.closeSettingsSheetBtn?.addEventListener("click", () => closeSheet(UI.settingsSheet));
-  UI.goSettingsPageBtn?.addEventListener("click", () => {
-    location.href = "/pages/arkadasla_settings.html";
-  });
+  UI.topSettingsBtn?.addEventListener("click", () => {
+  location.href = "/pages/arkadasla_settings.html";
+});
+
+UI.openSettingsFromMenuBtn?.addEventListener("click", () => {
+  closeMenu();
+  location.href = "/pages/arkadasla_settings.html";
+});
+
+UI.closeSettingsSheetBtn?.addEventListener("click", () => {
+  closeSheet(UI.settingsSheet);
+});
 
   UI.autoReadToggle?.addEventListener("click", () => {
     state.autoRead = !state.autoRead;
