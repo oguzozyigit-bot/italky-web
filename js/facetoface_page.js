@@ -1017,6 +1017,11 @@ async function speakViaApi(text, langCode, tone = "neutral") {
 
   const j = await r.json().catch(() => null);
 
+  console.log("[facetoface /api/tts full response]", {
+  status: r.status,
+  json: j
+});
+
   if (!r.ok || !j?.ok || !j?.audio_base64) {
     throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
   }
