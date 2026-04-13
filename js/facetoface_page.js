@@ -197,12 +197,32 @@ uiModal?.addEventListener("click", (e) => {
   if (e.target === uiModal) closeUiModal();
 });
 
+const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
+const F2F_PRESET_KEY = "facetoface_voice_preset";
+
+function getResolvedFaceVoice() {
+  const shared = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "").trim().toLowerCase();
+  if (["auto", "mine", "second", "memory"].includes(shared)) {
+    return shared;
+  }
+
+  const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
+  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+
+  if (mode === "clone") return "mine";
+  if (mode === "preset" && preset === "second") return "second";
+  if (mode === "preset" && preset === "memory") return "memory";
+
+  return "auto";
+}
+
 function getFaceVoiceMode() {
-  return String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
+  return getResolvedFaceVoice();
 }
 
 function getSelectedPresetVoice() {
-  return String(localStorage.getItem("facetoface_voice_preset") || "").trim().toLowerCase();
+  const resolved = getResolvedFaceVoice();
+  return resolved === "second" || resolved === "memory" ? resolved : "";
 }
 
 async function hasReadyVoiceProfile() {
@@ -213,10 +233,15 @@ async function hasReadyVoiceProfile() {
     const { data, error } = await supabase
       .from("profiles")
       .select(`
+        voice_sample_path,
         tts_voice_ready,
         tts_voice_id,
+
+        second_voice_sample_path,
         second_tts_voice_ready,
         second_tts_voice_id,
+
+        memory_voice_sample_path,
         memory_tts_voice_ready,
         memory_tts_voice_id
       `)
@@ -225,19 +250,18 @@ async function hasReadyVoiceProfile() {
 
     if (error || !data) return false;
 
-    const mode = getFaceVoiceMode();
-    const preset = getSelectedPresetVoice();
+    const mode = getResolvedFaceVoice();
 
-    if (mode === "clone") {
-      return !!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim();
+    if (mode === "mine") {
+      return !!data.voice_sample_path || (!!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim());
     }
 
-    if (mode === "preset" && preset === "second") {
-      return !!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim();
+    if (mode === "second") {
+      return !!data.second_voice_sample_path || (!!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim());
     }
 
-    if (mode === "preset" && preset === "memory") {
-      return !!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim();
+    if (mode === "memory") {
+      return !!data.memory_voice_sample_path || (!!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim());
     }
 
     return false;
@@ -246,18 +270,9 @@ async function hasReadyVoiceProfile() {
   }
 }
 
-function getFaceTranslateMode() {
-  const value = String(localStorage.getItem(F2F_TRANSLATE_KEY) || "normal").trim().toLowerCase();
-  return value === "cultural" ? "cultural" : "normal";
-}
-
-function isPaidFaceTextMode() {
-  return getFaceTranslateMode() === "cultural";
-}
-
 function isPaidFaceVoiceMode() {
-  const v = getFaceVoiceMode();
-  return v === "clone" || v === "preset";
+  const v = getResolvedFaceVoice();
+  return v === "mine" || v === "second" || v === "memory";
 }
 
 async function ensureCurrentFacePremiumModeAccess() {
@@ -853,14 +868,12 @@ async function warmAudio() {
 }
 
 function buildTtsCacheKey(text, langCode, tone = "neutral") {
-  const mode = getFaceVoiceMode();
-  const preset = getSelectedPresetVoice();
+  const voice = getResolvedFaceVoice();
 
   return JSON.stringify({
     t: String(text || "").trim(),
     l: canonical(langCode),
-    m: mode,
-    p: preset,
+    v: voice,
     n: canonTone(tone)
   });
 }
@@ -952,9 +965,7 @@ async function speakViaApi(text, langCode, tone = "neutral") {
 
   const myRunId = ++speakRunId;
   const userId = await getCurrentUserId();
-  const mode = getFaceVoiceMode();
-  const preset = getSelectedPresetVoice();
-  const finalVoice = mode === "preset" ? preset : mode;
+  const selectedVoice = getResolvedFaceVoice();
 
   if (!userId) {
     throw new Error("USER_ID_MISSING");
@@ -965,9 +976,9 @@ async function speakViaApi(text, langCode, tone = "neutral") {
     lang: canonical(langCode),
     user_id: userId,
     module: "facetoface",
-    voice: finalVoice,
-    voice_mode: mode,
-    preset_voice: preset || "",
+    voice: selectedVoice,
+    voice_mode: selectedVoice,
+    preset_voice: selectedVoice === "auto" ? "" : selectedVoice,
     tone: canonTone(tone),
   };
 
@@ -990,7 +1001,6 @@ async function speakViaApi(text, langCode, tone = "neutral") {
 
   return await playCachedAudio(audioSrc, myRunId);
 }
-
 function speakFallback(text, langCode) {
   const value = String(text || "").trim();
   if (!value) return false;
@@ -1031,8 +1041,7 @@ async function speak(text, langCode, tone = "neutral") {
   stopAudio();
   await warmAudio();
 
-  const mode = getFaceVoiceMode();
-  const preset = getSelectedPresetVoice();
+  const selectedVoice = getResolvedFaceVoice();
   const cacheKey = buildTtsCacheKey(value, langCode, tone);
   const cachedAudio = ttsMemoryCache.get(cacheKey);
 
@@ -1043,21 +1052,34 @@ async function speak(text, langCode, tone = "neutral") {
     } catch {}
   }
 
-  const wantsApiVoice =
-    mode === "clone" ||
-    (mode === "preset" && (preset === "second" || preset === "memory"));
+  const wantsApiVoice = ["mine", "second", "memory"].includes(selectedVoice);
 
   if (wantsApiVoice) {
+    const ready = await hasReadyVoiceProfile();
+
+    if (!ready) {
+      if (selectedVoice === "mine") {
+        showToast("Kendi Sesim hazır değil");
+      } else if (selectedVoice === "second") {
+        showToast("2. Ses hazır değil");
+      } else if (selectedVoice === "memory") {
+        showToast("Hatıra Sesi hazır değil");
+      }
+      return;
+    }
+
     try {
       const ok = await speakViaApi(value, langCode, tone);
       if (ok) return;
     } catch (e) {
       console.warn("[facetoface custom voice failed]", e);
 
-      if (mode === "clone") {
-        showToast("Kendi Sesim hazır değil ya da backend clone sesi üretemedi");
-      } else if (mode === "preset") {
-        showToast("Kayıtlı özel ses hazır değil, normal sese dönüldü");
+      if (selectedVoice === "mine") {
+        showToast("Kendi Sesim üretilemedi, normal sese dönüldü");
+      } else if (selectedVoice === "second") {
+        showToast("2. Ses üretilemedi, normal sese dönüldü");
+      } else if (selectedVoice === "memory") {
+        showToast("Hatıra Sesi üretilemedi, normal sese dönüldü");
       }
     }
   }
