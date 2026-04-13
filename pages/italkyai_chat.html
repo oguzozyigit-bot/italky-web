@@ -712,11 +712,13 @@
 
   const STORAGE = {
     voice: "italkyai_shared_voice_name",
-    savedChats: "italkyai_local_saved_chats"
+    savedChats: "italkyai_local_saved_chats",
+    autoRead: "italkyai_chat_auto_read"
   };
 
   const API = {
-    chat: "https://italky-api.onrender.com/api/italkyai/chat"
+    chat: "https://italky-api.onrender.com/api/italkyai/chat",
+    tts: "https://italky-api.onrender.com/api/tts"
   };
 
   const UI = {
@@ -761,7 +763,8 @@
     recognition: null,
     isSending: false,
     isListening: false,
-    lastTranscript: ""
+    lastTranscript: "",
+    currentAudio: null
   };
 
   function openMenu() {
@@ -819,6 +822,162 @@
   function getSelectedVoice() {
     const v = localStorage.getItem(STORAGE.voice) || "tts";
     return ["tts", "mine", "second", "memory"].includes(v) ? v : "tts";
+  }
+
+  function isAutoReadEnabled() {
+    return String(localStorage.getItem(STORAGE.autoRead) || "1") !== "0";
+  }
+
+  function cleanupTranscript(text = "") {
+    return String(text || "")
+      .replace(/\s+/g, " ")
+      .replace(/\b(\S+)( \1\b)+/gi, "$1")
+      .trim();
+  }
+
+  function buildStableTranscript(results) {
+    const pieces = [];
+
+    for (let i = 0; i < results.length; i++) {
+      const chunk = String(results[i]?.[0]?.transcript || "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (!chunk) continue;
+
+      const prev = pieces[pieces.length - 1] || "";
+      if (prev === chunk) continue;
+      if (prev && chunk.startsWith(prev)) {
+        pieces[pieces.length - 1] = chunk;
+        continue;
+      }
+      if (prev && prev.startsWith(chunk)) continue;
+
+      pieces.push(chunk);
+    }
+
+    return cleanupTranscript(pieces.join(" "));
+  }
+
+  function stopReplyAudio() {
+    try {
+      if (state.currentAudio) {
+        state.currentAudio.pause();
+        state.currentAudio.currentTime = 0;
+      }
+    } catch {}
+    state.currentAudio = null;
+
+    try { window.speechSynthesis?.cancel?.(); } catch {}
+    try { window.NativeTTS?.stop?.(); } catch {}
+  }
+
+  async function getCurrentUserId() {
+    try {
+      const { data } = await supabase.auth.getUser();
+      return data?.user?.id || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function speakWithBrowser(text) {
+    const value = String(text || "").trim();
+    if (!value) return;
+
+    try {
+      if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+        window.NativeTTS.speak(value, "tr");
+        return;
+      }
+    } catch {}
+
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(value);
+        utter.lang = "tr-TR";
+        utter.rate = 0.96;
+        utter.pitch = 1;
+        window.speechSynthesis.speak(utter);
+      }
+    } catch {}
+  }
+
+  async function speakReplyText(text) {
+    const value = String(text || "").trim();
+    if (!value || !isAutoReadEnabled()) return;
+
+    stopReplyAudio();
+
+    const selectedVoice = getSelectedVoice();
+
+    if (selectedVoice === "tts") {
+      speakWithBrowser(value);
+      return;
+    }
+
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        speakWithBrowser(value);
+        return;
+      }
+
+      let apiVoiceMode = "auto";
+      let apiVoice = "auto";
+      let apiPresetVoice = "";
+
+      if (selectedVoice === "mine") {
+        apiVoiceMode = "clone";
+        apiVoice = "clone";
+      } else if (selectedVoice === "second") {
+        apiVoiceMode = "preset";
+        apiVoice = "second";
+        apiPresetVoice = "second";
+      } else if (selectedVoice === "memory") {
+        apiVoiceMode = "preset";
+        apiVoice = "memory";
+        apiPresetVoice = "memory";
+      }
+
+      const resp = await fetch(API.tts, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: value,
+          lang: "tr",
+          user_id: userId,
+          module: "chat_ai",
+          voice: apiVoice,
+          voice_mode: apiVoiceMode,
+          preset_voice: apiPresetVoice,
+          selected_voice: selectedVoice,
+          tone: "neutral"
+        })
+      });
+
+      const json = await resp.json().catch(() => ({}));
+      const audioBase64 =
+        json?.audio_base64 ||
+        json?.audio ||
+        json?.data?.audio_base64 ||
+        json?.result?.audio_base64 ||
+        "";
+
+      if (!resp.ok || !audioBase64) {
+        speakWithBrowser(value);
+        return;
+      }
+
+      const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+      audio.preload = "auto";
+      audio.playsInline = true;
+      state.currentAudio = audio;
+      await audio.play();
+    } catch {
+      speakWithBrowser(value);
+    }
   }
 
   function addMessage(side, text, meta) {
@@ -972,16 +1131,9 @@
     state.isSending = true;
     addMessage("right", text);
 
-    if (!forcedText) {
-      UI.chatInput.value = "";
-      autoResizeTextarea();
-      syncInputActionState();
-    } else {
-      UI.chatInput.value = "";
-      autoResizeTextarea();
-      syncInputActionState();
-    }
-
+    UI.chatInput.value = "";
+    autoResizeTextarea();
+    syncInputActionState();
     setTyping(true);
 
     try {
@@ -1010,12 +1162,12 @@
       });
 
       const json = await resp.json().catch(() => ({}));
-      const reply = String(
+      const reply = cleanupTranscript(
         json?.reply ||
         json?.answer ||
         json?.message ||
         ""
-      ).trim();
+      );
 
       if (!resp.ok) {
         addMessage("left", reply || "Bağlantıda bir aksaklık oldu. Lütfen tekrar yaz.");
@@ -1033,9 +1185,11 @@
         return;
       }
 
-      addMessage("left", reply || "Şu an cevap üretirken bir sorun oluştu. Bir daha dener misin?");
-      setTyping(false);
+      const finalReply = reply || "Şu an cevap üretirken bir sorun oluştu. Bir daha dener misin?";
+      addMessage("left", finalReply);
+      await speakReplyText(finalReply);
 
+      setTyping(false);
       await hydrateProfileUI();
       await persistCurrentChatSnapshot(text.slice(0, 50));
       state.isSending = false;
@@ -1099,6 +1253,8 @@
   }
 
   function deleteCurrentSavedChat() {
+    stopReplyAudio();
+
     if (!state.currentSavedChatId) {
       clearChatDom();
       state.currentSessionId = crypto.randomUUID();
@@ -1161,13 +1317,7 @@
     setListeningUi(true);
 
     recognition.onresult = (event) => {
-      const parts = [];
-      for (let i = 0; i < event.results.length; i++) {
-        const part = event.results[i]?.[0]?.transcript || "";
-        if (part.trim()) parts.push(part.trim());
-      }
-
-      const transcript = parts.join(" ").trim();
+      const transcript = buildStableTranscript(event.results);
       state.lastTranscript = transcript;
 
       if (transcript) {
@@ -1183,7 +1333,7 @@
     };
 
     recognition.onend = async () => {
-      const finalText = String(UI.chatInput.value || state.lastTranscript || "").trim();
+      const finalText = cleanupTranscript(UI.chatInput.value || state.lastTranscript || "");
       stopRecognition();
 
       if (finalText) {
@@ -1237,6 +1387,7 @@
     });
 
     UI.newChatBtn.addEventListener("click", async () => {
+      stopReplyAudio();
       clearChatDom();
       state.currentSavedChatId = null;
       state.currentSessionId = crypto.randomUUID();
