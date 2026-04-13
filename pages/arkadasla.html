@@ -20,6 +20,7 @@
       --green:#22c55e;
       --orange:#f59e0b;
       --red:#ef4444;
+      --gray:#64748b;
       --line:rgba(255,255,255,.08);
       --glass:rgba(255,255,255,.045);
 
@@ -71,7 +72,7 @@
       height:calc(var(--header-h) + var(--safe-top));
       padding:calc(2px + var(--safe-top)) 14px 4px;
       display:grid;
-      grid-template-columns:44px 1fr 88px;
+      grid-template-columns:44px 1fr 92px;
       align-items:center;
       gap:10px;
       z-index:50;
@@ -80,7 +81,7 @@
       backdrop-filter:blur(14px);
     }
 
-    .icon-btn,.send-btn,.mic-btn,.menu-item,.contact-action,.modal-btn,.lang-btn,.voice-btn,.toggle{
+    .icon-btn,.send-btn,.mic-btn,.menu-item,.contact-card,.saved-btn,.modal-btn,.lang-btn,.voice-btn,.toggle{
       border:none;
       cursor:pointer;
       font-family:inherit;
@@ -98,14 +99,7 @@
       box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
     }
 
-    .header-actions{
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      gap:8px;
-    }
-
-    .icon-btn svg,.send-btn svg,.mic-btn svg,.contact-action svg{
+    .icon-btn svg,.send-btn svg,.mic-btn svg,.modal-close svg{
       width:20px;
       height:20px;
       stroke:currentColor;
@@ -113,6 +107,13 @@
       fill:none;
       stroke-linecap:round;
       stroke-linejoin:round;
+    }
+
+    .header-actions{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
     }
 
     .brand{
@@ -188,6 +189,7 @@
       display:flex;
       flex-direction:column;
       gap:12px;
+      overflow:hidden;
     }
 
     .menu.open .menu-panel{ transform:translateX(0); }
@@ -293,18 +295,17 @@
       border-color:rgba(239,68,68,.22);
     }
 
-    .saved-list,.contact-list{
+    .saved-list,.contact-list,.blocked-list{
       display:none;
       flex-direction:column;
       gap:8px;
       padding-left:10px;
     }
 
-    .saved-list.open,.contact-list.open{ display:flex; }
+    .saved-list.open,.contact-list.open,.blocked-list.open{ display:flex; }
 
     .saved-btn,.contact-card{
       width:100%;
-      border:none;
       border-radius:14px;
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.08);
@@ -317,7 +318,6 @@
       padding:10px 12px;
       font-size:12px;
       font-weight:800;
-      cursor:pointer;
     }
 
     .saved-meta{
@@ -334,6 +334,8 @@
       align-items:center;
       gap:10px;
       user-select:none;
+      -webkit-user-select:none;
+      touch-action:manipulation;
     }
 
     .contact-presence{
@@ -346,7 +348,7 @@
 
     .presence-online{ background:var(--green); box-shadow:0 0 10px rgba(34,197,94,.45), 0 0 0 3px rgba(255,255,255,.04); }
     .presence-busy{ background:var(--orange); box-shadow:0 0 10px rgba(245,158,11,.45), 0 0 0 3px rgba(255,255,255,.04); }
-    .presence-offline{ background:#64748b; }
+    .presence-offline{ background:var(--gray); }
 
     .contact-meta{
       min-width:0;
@@ -446,6 +448,8 @@
       font-weight:800;
       color:#cffafe;
       white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .peer-status{
@@ -494,13 +498,6 @@
 
     .bubble.left{ border-left:4px solid var(--cyan); }
     .bubble.right{ border-right:4px solid var(--green); }
-
-    .msg-name{
-      margin-bottom:8px;
-      font-size:12px;
-      font-weight:900;
-      color:#bae6fd;
-    }
 
     .msg-translate{
       margin-top:10px;
@@ -713,10 +710,10 @@
 
     .modal-code{
       font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:30px;
+      font-size:24px;
       line-height:1;
       font-weight:900;
-      letter-spacing:1.2px;
+      letter-spacing:1px;
       color:#fff;
       text-shadow:0 0 18px rgba(34,211,238,.16);
     }
@@ -769,55 +766,6 @@
       background:rgba(239,68,68,.12);
       border:1px solid rgba(239,68,68,.20);
       color:#fee2e2;
-    }
-
-    .qr-full-card{
-      width:min(100%, 390px);
-      border-radius:28px;
-      padding:22px;
-      background:linear-gradient(180deg, rgba(6,15,25,.98), rgba(8,18,32,.98));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 24px 50px rgba(0,0,0,.34);
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-      align-items:center;
-      text-align:center;
-    }
-
-    .qr-title{
-      margin:0;
-      font-family:"Space Grotesk", Outfit, sans-serif;
-      font-size:22px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .qr-sub{
-      margin:0;
-      font-size:14px;
-      line-height:1.45;
-      font-weight:700;
-      color:rgba(255,255,255,.74);
-    }
-
-    .qr-box{
-      width:240px;
-      height:240px;
-      border-radius:24px;
-      background:#fff;
-      padding:16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 20px 40px rgba(0,0,0,.22);
-    }
-
-    .qr-box img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
     }
 
     .sheet{
@@ -1003,13 +951,36 @@
   </div>
 </div>
 
+<div class="modal" id="requestSentModal">
+  <div class="modal-card">
+    <h3 class="modal-title">İstek Gönderildi</h3>
+    <p class="modal-text" id="requestSentText">Sohbet isteği gönderildi. Cevap bekleniyor.</p>
+    <div class="modal-actions">
+      <button class="modal-btn red" id="cancelOutgoingRequestBtn" type="button">İsteği İptal Et</button>
+      <button class="modal-btn secondary" id="closeRequestSentBtn" type="button">Bekle</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="incomingRequestModal">
   <div class="modal-card">
-    <h3 class="modal-title">Bağlantı İsteği</h3>
-    <p class="modal-text" id="incomingRequestText">Birisi seninle bağlanmak istiyor.</p>
+    <h3 class="modal-title">Sohbet İsteği</h3>
+    <p class="modal-text" id="incomingRequestText">Bir kullanıcı size sohbet isteği gönderdi.</p>
+    <div class="modal-actions" style="grid-template-columns:1fr 1fr 1fr;">
+      <button class="modal-btn secondary" id="rejectRequestBtn" type="button">Reddet</button>
+      <button class="modal-btn primary" id="acceptRequestBtn" type="button">Kabul Et</button>
+      <button class="modal-btn red" id="blockRequestBtn" type="button">Engelle</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="blockConfirmModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Kullanıcıyı Engelle</h3>
+    <p class="modal-text" id="blockConfirmText">Bu kullanıcıyı engellerseniz size bir daha sohbet isteği gönderemez. Emin misiniz?</p>
     <div class="modal-actions">
-      <button class="modal-btn red" id="rejectRequestBtn" type="button">Reddet</button>
-      <button class="modal-btn primary" id="acceptRequestBtn" type="button">Onayla</button>
+      <button class="modal-btn secondary" id="blockNoBtn" type="button">Hayır</button>
+      <button class="modal-btn red" id="blockYesBtn" type="button">Evet</button>
     </div>
   </div>
 </div>
@@ -1072,13 +1043,13 @@
 </div>
 
 <div class="modal" id="appQrModal">
-  <div class="qr-full-card">
-    <h3 class="qr-title">Uygulamayı İndir</h3>
-    <p class="qr-sub">Karşı tarafta uygulama yoksa bu QR ile indirsin. Sohbete bağlanmak için sadece kısa kod yeterli.</p>
-    <div class="qr-box">
-      <img id="appQrImage" alt="Uygulama QR">
+  <div class="modal-card">
+    <h3 class="modal-title">Uygulamayı İndir</h3>
+    <p class="modal-text">Karşı tarafta uygulama yoksa bu QR ile indirsin. Sohbete bağlanmak için sadece kısa kod yeterli.</p>
+    <div style="width:240px;height:240px;border-radius:24px;background:#fff;padding:16px;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+      <img id="appQrImage" alt="Uygulama QR" style="width:100%;height:100%;object-fit:contain;display:block;">
     </div>
-    <div class="modal-actions" style="width:100%;">
+    <div class="modal-actions">
       <button class="modal-btn secondary" id="copyStoreLinkBtn" type="button">Linki Kopyala</button>
       <button class="modal-btn primary" id="closeQrModalBtn" type="button">Kapat</button>
     </div>
@@ -1143,14 +1114,18 @@
 
     <div class="menu-list">
       <button class="menu-item white" id="newConnectionBtn" type="button">Yeni Bağlantı</button>
-      <button class="menu-item cyan" id="copyMyCodeBtn" type="button">Sohbet ID Kopyala</button>
-      <button class="menu-item" id="openConnectFromMenuBtn" type="button">Kod Gir</button>
       <button class="menu-item" id="toggleContactsBtn" type="button">Rehber</button>
       <div class="contact-list" id="contactsList"></div>
+
+      <button class="menu-item" id="manualAddContactBtn" type="button">Rehbere Elle Ekle</button>
+
+      <button class="menu-item" id="toggleBlockedBtn" type="button">Engellenenler</button>
+      <div class="blocked-list" id="blockedList"></div>
+
       <button class="menu-item" id="toggleSavedChatsBtn" type="button">Kayıtlı Sohbetler</button>
       <div class="saved-list" id="savedChatsList"></div>
+
       <button class="menu-item" id="openSettingsFromMenuBtn" type="button">Ayarlar</button>
-      <button class="menu-item" id="showAppQrBtn" type="button">Uygulama QR</button>
       <button class="menu-item red" id="endChatBtn" type="button">Sohbeti Bitir</button>
       <button class="menu-item red" id="homeBtn" type="button">Ana Sayfa</button>
     </div>
@@ -1165,8 +1140,8 @@
       </button>
 
       <div class="brand" id="brandHome">
-        <h1 class="brand-title">Arkadaş<span class="accent">la</span></h1>
-        <p class="brand-sub">LIVE CONNECT</p>
+        <h1 class="brand-title">italky<span class="accent">AI</span></h1>
+        <p class="brand-sub">BE FREE</p>
       </div>
 
       <div class="header-actions">
