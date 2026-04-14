@@ -51,13 +51,3 @@ export function translateOffline(from, to, text) {
     })
   );
 }
-
-export function bindOfflineTranslateEvents({ onDownloadResult, onTranslateResult } = {}) {
-  window.addEventListener("offlineModelDownloadResult", (e) => {
-    onDownloadResult?.(e.detail || {});
-  });
-
-  window.addEventListener("offlineTranslateResult", (e) => {
-    onTranslateResult?.(e.detail || {});
-  });
-}
