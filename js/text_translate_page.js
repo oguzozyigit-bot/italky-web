@@ -90,7 +90,6 @@ let mediaRecording = false;
 
 let translateCtl = null;
 let activeTranslateToken = 0;
-let translateClickTimer = null;
 
 let activeMode = (localStorage.getItem("qtt_translate_mode") || "standard").toLowerCase() === "ai"
   ? "ai"
@@ -335,6 +334,37 @@ async function manualDownloadOfflineCurrentModel() {
     console.error(e);
     toast("Offline model indirilemedi.");
   }
+}
+
+function ensureOfflineDownloadButton() {
+  if (document.getElementById("btnOfflineModel")) return;
+
+  const btn = document.createElement("button");
+  btn.id = "btnOfflineModel";
+  btn.type = "button";
+  btn.textContent = "📦 Offline Model İndir";
+
+  btn.style.marginTop = "10px";
+  btn.style.width = "100%";
+  btn.style.padding = "14px 16px";
+  btn.style.borderRadius = "16px";
+  btn.style.border = "1px solid rgba(255,255,255,.14)";
+  btn.style.background = "rgba(255,255,255,.06)";
+  btn.style.color = "#fff";
+  btn.style.fontWeight = "700";
+  btn.style.cursor = "pointer";
+
+  btn.addEventListener("click", async () => {
+    await manualDownloadOfflineCurrentModel();
+  });
+
+  const host =
+    btnTranslate?.parentElement ||
+    document.querySelector(".actions") ||
+    document.querySelector(".translator-actions") ||
+    document.body;
+
+  host.appendChild(btn);
 }
 
 /* -------------------------
@@ -984,36 +1014,6 @@ async function translateText() {
 }
 
 /* -------------------------
-   TRANSLATE BUTTON
--------------------------- */
-function bindTranslateButton() {
-  if (!btnTranslate) return;
-
-  btnTranslate.addEventListener("click", () => {
-    if (translateClickTimer) {
-      clearTimeout(translateClickTimer);
-      translateClickTimer = null;
-    }
-
-    translateClickTimer = setTimeout(async () => {
-      translateClickTimer = null;
-      await translateText();
-    }, 260);
-  });
-
-  btnTranslate.addEventListener("dblclick", async (e) => {
-    e.preventDefault();
-
-    if (translateClickTimer) {
-      clearTimeout(translateClickTimer);
-      translateClickTimer = null;
-    }
-
-    await manualDownloadOfflineCurrentModel();
-  });
-}
-
-/* -------------------------
    BIND
 -------------------------- */
 function bind() {
@@ -1045,7 +1045,9 @@ function bind() {
     }
   });
 
-  bindTranslateButton();
+  btnTranslate?.addEventListener("click", async () => {
+    await translateText();
+  });
 
   srcTxt?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -1093,6 +1095,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setMicState(false);
 
   ensureMockOfflineLicenseOnce();
+  ensureOfflineDownloadButton();
 
   const status = readOfflineStatusSafe();
   console.log("offline status:", status);
