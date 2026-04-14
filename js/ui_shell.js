@@ -133,7 +133,7 @@ const HOME_HEADER_HTML = `
 
           <div class="menu-username" id="menuUserName">Kullanıcı</div>
           <div class="menu-last-login" id="menuLastLogin">S.G.T: -</div>
-          <div class="menu-plan-line" id="menuPlanLine">Free • 15 gün ücretsiz deneme</div>
+          <div class="menu-plan-line" id="menuPlanLine">Üyelik • Aktif</div>
 
           <div class="menu-token-row">
             <div class="menu-token-pill">
@@ -673,8 +673,8 @@ async function hydratePlanUi() {
   const line = document.getElementById("menuPlanLine");
   if (!line) return;
 
-  let planLabel = "Free";
-  let planSub = "15 gün ücretsiz deneme";
+  let mainLabel = "Üyelik";
+  let subLabel = "Aktif";
 
   try {
     const { supabase } = await import("/js/supabase_client.js");
@@ -688,21 +688,15 @@ async function hydratePlanUi() {
       });
 
       const access = await resp.json().catch(() => ({}));
+      const accessOpen = !!access?.access_open;
 
-      const membershipStatus = String(access?.membership_status || "").toLowerCase().trim();
-      const trialDaysLeft = Number(access?.trial_days_left || 0);
-      const isPro = !!access?.access_open && membershipStatus === "active";
-
-      planLabel = isPro ? "Pro" : "Free";
-      planSub = isPro
-        ? "Pro erişim aktif"
-        : (trialDaysLeft > 0 ? "15 gün ücretsiz deneme" : "Üyelik gerekli");
+      subLabel = accessOpen ? "Aktif" : "Kapalı";
     }
   } catch (e) {
     console.warn("[ui_shell hydratePlanUi]", e);
   }
 
-  line.textContent = `${planLabel} • ${planSub}`;
+  line.textContent = `${mainLabel} • ${subLabel}`;
 }
 
 async function hydrateShellMeta() {
