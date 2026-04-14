@@ -16,10 +16,10 @@ const confirmOk = $("confirmOk");
 const toastEl = $("toast");
 
 const STORAGE = {
-  installed: "italky_offline_installed_pairs_v3",
-  downloading: "italky_offline_downloading_pairs_v3",
-  nativeLang: "italky_native_lang_v3",
-  offlineLicenseDays: "italky_offline_license_days_v3"
+  installed: "italky_offline_installed_pairs_v4",
+  downloading: "italky_offline_downloading_pairs_v4",
+  nativeLang: "italky_native_lang_v4",
+  offlineLicenseDays: "italky_offline_license_days_v4"
 };
 
 const ALL_OFFLINE_LANGS = [
@@ -247,7 +247,7 @@ function renderLicenseInfo() {
   const nativeInfo = getLangInfo(getNativeLang());
 
   licenseInfo.textContent =
-    `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Offline lisans: ${days} gün • İndirilen her dil ${nativeInfo.code.toUpperCase()} ↔ hedef dil olarak çift yönlü kurulur.`;
+    `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Offline lisans: ${days} gün`;
 }
 
 function renderMyLanguageSelect() {
@@ -266,7 +266,7 @@ function renderMyLanguageSelect() {
     setNativeLang(newCode);
     renderLicenseInfo();
     renderInstalledList();
-    toast(`${getLangInfo(newCode).name} ana dil olarak seçildi`);
+    toast(`${getLangInfo(newCode).name} seçildi`);
   };
 }
 
@@ -285,7 +285,7 @@ function renderInstalledList() {
       const isDownloading = !!progress;
 
       let btnClass = "lang-btn free";
-      let btnText = "Ücretsiz İndir";
+      let btnText = "İndir";
 
       if (installed) {
         btnClass = "lang-btn installed";
@@ -293,9 +293,6 @@ function renderInstalledList() {
       } else if (isDownloading) {
         btnClass = "lang-btn installing";
         btnText = progress.label || "İndiriliyor...";
-      } else {
-        btnClass = "lang-btn soft";
-        btnText = `İndir (${nativeLang.toUpperCase()} ↔ ${lang.code.toUpperCase()})`;
       }
 
       const progressHtml = isDownloading ? `
@@ -303,7 +300,7 @@ function renderInstalledList() {
           <div class="progress-bar">
             <div class="progress-fill" style="width:${Math.max(4, Math.min(100, Number(progress.percent || 0)))}%"></div>
           </div>
-          <div class="progress-text">${progress.message || "İndirme başladı. Lütfen uygulamayı kapatmayın. Uygulama içinde başka sayfalarda gezebilirsiniz."}</div>
+          <div class="progress-text">${progress.message || "Lütfen bekleyiniz. Kurulum devam ediyor."}</div>
         </div>
       ` : "";
 
@@ -313,7 +310,7 @@ function renderInstalledList() {
             <div class="flag">${lang.flag}</div>
             <div>
               <h3 class="lang-name">${lang.name}</h3>
-              <div class="lang-sub">${nativeLang.toUpperCase()} ↔ ${lang.code.toUpperCase()} offline erişim</div>
+              <div class="lang-sub">Offline kullanım için hazırla</div>
             </div>
           </div>
 
@@ -371,12 +368,10 @@ async function startLanguageInstallFlow(langCode) {
 
   const confirmed = await showConfirm(
     `${info.name} indirilsin mi?`,
-    `${nativeInfo.name} ↔ ${info.name} çift yönlü indirilecek.
+    `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
 
 İndirme başladıktan sonra lütfen uygulamayı kapatmayın.
-Uygulama içinde başka sayfalarda gezebilirsiniz.
-
-Bu dil şu an indirilemezse size yumuşak bir uyarı gösterilecek.`
+Uygulama içinde başka sayfalarda gezebilirsiniz.`
   );
 
   if (!confirmed) return;
@@ -401,11 +396,11 @@ async function installBiDirectionalPair(langCode) {
   try {
     setLangProgress(code, {
       percent: 4,
-      label: "Hazırlanıyor...",
-      message: "İndirme başladı. Lütfen uygulamayı kapatmayın. Uygulama içinde başka sayfalarda gezebilirsiniz."
+      label: "Başlatılıyor...",
+      message: `Lütfen bekleyiniz. Şu anda ${info.name} kurulumu hazırlanıyor.`
     });
     renderInstalledList();
-    toast(`${info.name} indirmesi başladı`);
+    toast(`${info.name} indirilmeye başladı`);
 
     if (!canUseNativeOfflineInstaller()) {
       await fakeBiDirectionalInstall(code, nativeLang);
@@ -432,34 +427,38 @@ async function installBiDirectionalPair(langCode) {
 }
 
 async function fakeBiDirectionalInstall(langCode, nativeLang) {
+  const info = getLangInfo(langCode);
+  const nativeInfo = getLangInfo(nativeLang);
+
   const steps = [
-    { percent: 10, label: "Hazırlanıyor...", message: "İndirme başladı. Lütfen uygulamayı kapatmayın. Uygulama içinde başka sayfalarda gezebilirsiniz." },
-    { percent: 35, label: `${nativeLang.toUpperCase()} → ${langCode.toUpperCase()} indiriliyor...`, message: "İlk yön indiriliyor..." },
-    { percent: 72, label: `${langCode.toUpperCase()} → ${nativeLang.toUpperCase()} indiriliyor...`, message: "İkinci yön indiriliyor..." },
-    { percent: 100, label: "Kurulum tamamlandı", message: "Dil paketi indirildi ve kullanıma hazır." }
+    { percent: 10, label: "Başlatılıyor...", message: `Lütfen bekleyiniz. Şu anda ${info.name} kurulumu hazırlanıyor.` },
+    { percent: 35, label: "İndiriliyor...", message: `${nativeInfo.name} için gerekli dosyalar indiriliyor...` },
+    { percent: 72, label: "Kuruluyor...", message: `${info.name} için kurulum devam ediyor. Uygulamayı kapatmayın.` },
+    { percent: 100, label: "Tamamlandı", message: `${info.name} artık kullanıma hazır.` }
   ];
 
   for (const step of steps) {
     setLangProgress(langCode, step);
     renderInstalledList();
-    await new Promise((r) => setTimeout(r, step.percent === 100 ? 400 : 1200));
+    await new Promise((r) => setTimeout(r, step.percent === 100 ? 500 : 1600));
   }
 
   markInstalledBiDirectional(langCode);
   clearLangProgress(langCode);
   renderInstalledList();
-  toast(`${getLangInfo(langCode).name} artık offline hazır`);
+  toast(`${getLangInfo(langCode).name} artık hazır`);
 }
 
 window.addEventListener("offlinePairDownloadStarted", (e) => {
   const d = e.detail || {};
   const code = String(d.target || "").toLowerCase();
+  const info = getLangInfo(code);
   if (!code) return;
 
   setLangProgress(code, {
     percent: 5,
-    label: "Hazırlanıyor...",
-    message: "İndirme başladı. Lütfen uygulamayı kapatmayın. Uygulama içinde başka sayfalarda gezebilirsiniz."
+    label: "Başlatılıyor...",
+    message: `Lütfen bekleyiniz. Şu anda ${info.name} için indirme başladı.`
   });
   renderInstalledList();
 });
@@ -467,12 +466,13 @@ window.addEventListener("offlinePairDownloadStarted", (e) => {
 window.addEventListener("offlinePairDownloadProgress", (e) => {
   const d = e.detail || {};
   const code = String(d.target || "").toLowerCase();
+  const info = getLangInfo(code);
   if (!code) return;
 
   setLangProgress(code, {
     percent: Number(d.percent || 0),
     label: d.label || "İndiriliyor...",
-    message: d.message || "Uygulama içinde başka sayfalarda gezebilirsiniz."
+    message: d.message || `Lütfen bekleyiniz. Şu anda ${info.name} kurulumu devam ediyor.`
   });
   renderInstalledList();
 });
@@ -485,7 +485,7 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
   markInstalledBiDirectional(code);
   clearLangProgress(code);
   renderInstalledList();
-  toast(`${getLangInfo(code).name} artık offline hazır`);
+  toast(`${getLangInfo(code).name} artık hazır`);
 });
 
 window.addEventListener("offlinePairDownloadFailed", (e) => {
