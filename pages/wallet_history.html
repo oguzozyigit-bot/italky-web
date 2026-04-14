@@ -433,13 +433,13 @@
         <div class="sum-card">
           <div class="sum-label">Toplam Yüklenen</div>
           <div class="sum-value" id="totalLoaded">0</div>
-          <div class="sum-sub">Satın alma, bonus, hediye ve kredi dahil</div>
+          <div class="sum-sub">Play, NFC, kod, bonus ve hediye dahil</div>
         </div>
 
         <div class="sum-card">
           <div class="sum-label">Toplam Harcanan</div>
           <div class="sum-value" id="totalSpent">0</div>
-          <div class="sum-sub">Kullanım bazlı düşen toplam jeton</div>
+          <div class="sum-sub">Çeviri, sohbet ve ses kullanımından düşen jeton</div>
         </div>
       </div>
     </section>
@@ -512,7 +512,10 @@
       "manual_add",
       "nfc_token_load",
       "manual_code_token_load",
-      "google_play_token_load"
+      "google_play_token_load",
+      "billing_google_confirm",
+      "billing_google",
+      "subscription_bonus"
     ]);
 
     const SPENT_TYPES = new Set([
@@ -531,27 +534,19 @@
       "voice_preset_preview",
       "practic_ai",
       "level_test_exam",
-      "game_pass_use"
+      "game_pass_use",
+      "translate_ai_gemini",
+      "translate_ai_openai",
+      "arkadasla_translate_gemini",
+      "arkadasla_translate_openai",
+      "chat_text_gemini",
+      "chat_text_openai",
+      "chat_voice_gemini",
+      "chat_voice_openai",
+      "tts_mine",
+      "tts_second",
+      "tts_memory"
     ]);
-
-    const GAME_NAME_MAP = {
-      hangman: "Hangman",
-      echo_rush: "Echo Rush",
-      spy_master: "Spy Master",
-      sentence_builder: "Sentence Builder",
-      neural_box: "Neural Box",
-      memory_pulse: "Memory Pulse",
-      meteor_strike: "Meteor Strike",
-      glitch_hunt: "Glitch Hunt",
-      gap_master: "Gap Master",
-      quantum_duo: "Quantum Duo",
-      code_cracker: "Code Cracker"
-    };
-
-    function getGameName(code){
-      const key = String(code || "").trim().toLowerCase();
-      return GAME_NAME_MAP[key] || key || "Oyun";
-    }
 
     function formatInt(val){
       return Number(val || 0).toLocaleString("tr-TR");
@@ -588,7 +583,27 @@
       try{ return JSON.parse(meta); } catch { return {}; }
     }
 
+    function getRowTxType(row){
+      return String(row?.tx_type || row?.type || "").trim().toLowerCase();
+    }
+
+    function getRowSource(row){
+      return String(row?.source || row?.reason || "").trim().toLowerCase();
+    }
+
+    function getRowUsageKind(row){
+      return String(row?.usage_kind || "").trim().toLowerCase();
+    }
+
     function getSignedAmount(row){
+      const txType = getRowTxType(row);
+
+      if (row?.jetons !== undefined && row?.jetons !== null) {
+        const jetons = Number(row.jetons || 0);
+        if (txType === "debit") return -Math.abs(jetons);
+        if (txType === "credit") return Math.abs(jetons);
+      }
+
       const delta = Number(row?.delta);
       if (Number.isFinite(delta) && delta !== 0) return delta;
 
@@ -601,152 +616,126 @@
       return amount;
     }
 
-    function typeLabel(type, reason){
-      const t = String(type || "").trim().toLowerCase();
-      const r = String(reason || "").trim().toLowerCase();
+    function isLoadedRow(row){
+      const txType = getRowTxType(row);
+      const source = getRowSource(row);
+      const amt = getSignedAmount(row);
+
+      return amt > 0 || txType === "credit" || LOADED_TYPES.has(source);
+    }
+
+    function isSpentRow(row){
+      const txType = getRowTxType(row);
+      const source = getRowSource(row);
+      const amt = getSignedAmount(row);
+
+      return amt < 0 || txType === "debit" || SPENT_TYPES.has(source);
+    }
+
+    function typeLabel(row){
+      const txType = getRowTxType(row);
+      const source = getRowSource(row);
+      const usageKind = getRowUsageKind(row);
 
       const map = {
-        credit: "Yüklenen",
-        debit: "Harcanan",
-
         purchase: "Satın Alma",
         package_bonus: "Paket Bonusu",
         upgrade_credit: "Yükseltme Kredisi",
         gift: "Hediye",
         manual_add: "Manuel Ekleme",
         manual_deduct: "Manuel Düşüm",
-
         nfc_token_load: "NFC Kart Yükleme",
         manual_code_token_load: "Kod ile Yükleme",
         google_play_token_load: "Google Play Yükleme",
+        billing_google_confirm: "Play Satın Alma",
+        billing_google: "Play Satın Alma",
+        subscription_bonus: "Üyelik Bonusu",
 
-        usage_text: "Metin Kullanımı",
-        usage_face_to_face: "FaceToFace",
-        usage_side_to_side: "SideToSide",
-        usage_meeting: "Toplantı Kullanımı",
-        usage_clone_voice: "Klon Ses",
-        usage_teacher: "Practice AI",
+        translate_ai_gemini: "Kültürel Translate",
+        translate_ai_openai: "Kültürel Translate",
+        arkadasla_translate_gemini: "Arkadaşla Çeviri",
+        arkadasla_translate_openai: "Arkadaşla Çeviri",
 
-        text_ai: "Kültürel Translate",
-        voice_ai: "Ses Kullanımı",
-        voice_clone: "Kendi Sesim",
-        voice_clone_preview: "Kendi Sesim Önizleme",
-        voice_preset_use: "Özel Ses Kullanımı",
-        voice_preset_preview: "Özel Ses Önizleme",
-        practic_ai: "Practice AI",
+        chat_text_gemini: "Yazılı Sohbet",
+        chat_text_openai: "Yazılı Sohbet",
+        chat_voice_gemini: "Sesli Sohbet",
+        chat_voice_openai: "Sesli Sohbet",
 
-        level_test_exam: "Seviye Tespit Sınavı",
-        game_pass_use: "Oyun Erişimi"
+        tts_mine: "Kendi Sesim",
+        tts_second: "2. Ses",
+        tts_memory: "Hatıra Sesi"
       };
 
-      if (map[r]) return map[r];
-      if (map[t]) return map[t];
-      if (reason) return reason;
-      return type || "İşlem";
+      if (map[source]) return map[source];
+
+      if (source === "usage") {
+        if (usageKind === "text") return "Text Kullanımı";
+        if (usageKind === "voice") return "Ses Kullanımı";
+      }
+
+      if (txType === "credit") return "Yüklenen";
+      if (txType === "debit") return "Harcanan";
+
+      return row?.description || row?.reason || row?.type || "İşlem";
     }
 
-    function typeIcon(type, amount, reason){
-      const t = String(type || "").trim().toLowerCase();
-      const r = String(reason || "").trim().toLowerCase();
+    function typeIcon(row){
+      const source = getRowSource(row);
 
-      if (
-        amount > 0 ||
-        r.includes("nfc_token_load") ||
-        r.includes("manual_code_token_load") ||
-        r.includes("google_play_token_load") ||
-        r.includes("purchase") ||
-        r.includes("gift") ||
-        r.includes("package_bonus") ||
-        r.includes("upgrade_credit")
-      ) {
-        if (r.includes("gift")) return "🎁";
-        if (r.includes("google_play")) return "🛒";
-        if (r.includes("manual_code")) return "🔢";
-        if (r.includes("nfc_token_load")) return "📶";
+      if (isLoadedRow(row)) {
+        if (source.includes("gift")) return "🎁";
+        if (source.includes("google_play") || source.includes("billing_google") || source.includes("purchase")) return "🛒";
+        if (source.includes("manual_code")) return "🔢";
+        if (source.includes("nfc")) return "📶";
+        if (source.includes("package_bonus")) return "🎉";
+        if (source.includes("upgrade_credit")) return "🔄";
         return "➕";
       }
 
-      if (
-        amount < 0 ||
-        r.includes("level_test_exam") ||
-        r.includes("game_pass_use") ||
-        r.includes("text_ai") ||
-        r.includes("voice_ai") ||
-        r.includes("voice_clone") ||
-        r.includes("practice")
-      ) {
-        if (r.includes("level_test_exam")) return "📝";
-        if (r.includes("game_pass_use")) return "🎮";
-        if (r.includes("text_ai")) return "🌍";
-        if (r.includes("voice_clone")) return "🗣️";
-        if (r.includes("voice_ai")) return "🔊";
-        if (r.includes("practice")) return "🎓";
+      if (isSpentRow(row)) {
+        if (source.includes("translate")) return "🌍";
+        if (source.includes("chat_voice")) return "🎙️";
+        if (source.includes("chat_text")) return "💬";
+        if (source.includes("tts_")) return "🗣️";
+        if (source.includes("voice")) return "🔊";
         return "➖";
       }
 
       return "•";
     }
 
-    function typeGroup(type, amount, reason){
-      const t = String(type || "").trim().toLowerCase();
-      const r = String(reason || "").trim().toLowerCase();
-
-      if (
-        amount > 0 ||
-        t === "credit" ||
-        r.includes("nfc_token_load") ||
-        r.includes("manual_code_token_load") ||
-        r.includes("google_play_token_load") ||
-        r.includes("purchase") ||
-        r.includes("gift") ||
-        r.includes("package_bonus") ||
-        r.includes("upgrade_credit")
-      ) return "plus";
-
-      if (
-        amount < 0 ||
-        t === "debit" ||
-        r.includes("level_test_exam") ||
-        r.includes("game_pass_use") ||
-        r.includes("text_ai") ||
-        r.includes("voice_ai") ||
-        r.includes("voice_clone") ||
-        r.includes("practice")
-      ) return "minus";
-
+    function typeGroup(row){
+      if (isLoadedRow(row)) return "plus";
+      if (isSpentRow(row)) return "minus";
       return "neutral";
     }
 
-    function formatEntryTitle(row, meta){
-      const reason = String(row?.reason || "").trim().toLowerCase();
-
-      if (reason === "game_pass_use") {
-        return `${getGameName(meta?.game_code)} erişimi`;
-      }
-
-      if (reason === "nfc_token_load") return "NFC kart yüklemesi";
-      if (reason === "manual_code_token_load") return "Kod ile yükleme";
-      if (reason === "google_play_token_load") return "Google Play yüklemesi";
-      if (reason === "level_test_exam") return "Seviye tespit sınavı";
-
-      return row?.reason || "Jeton işlemi";
+    function formatEntryTitle(row){
+      return row?.description || typeLabel(row) || "Jeton işlemi";
     }
 
     function filterRows(rows){
       const q = String(searchInput.value || "").trim().toLowerCase();
 
       return rows.filter((row) => {
-        const type = String(row.type || "").trim().toLowerCase();
-        const reason = String(row.reason || "").trim().toLowerCase();
+        const txType = getRowTxType(row);
+        const source = getRowSource(row);
+        const usageKind = getRowUsageKind(row);
         const meta = parseMeta(row.meta);
-        const signedAmount = getSignedAmount(row);
 
         const searchBlob = [
-          type,
-          reason,
+          txType,
+          source,
+          usageKind,
+          row.description || "",
+          row.reason || "",
           row.note || "",
-          meta?.game_code || "",
-          getGameName(meta?.game_code || "")
+          meta?.module || "",
+          meta?.provider || "",
+          meta?.voice_mode || "",
+          meta?.from_lang || "",
+          meta?.to_lang || "",
+          meta?.lang || ""
         ].join(" ").toLowerCase();
 
         const matchesSearch = !q || searchBlob.includes(q);
@@ -754,15 +743,15 @@
         let matchesFilter = true;
 
         if (activeFilter === "loaded") {
-          matchesFilter = signedAmount > 0 || LOADED_TYPES.has(type) || LOADED_TYPES.has(reason);
+          matchesFilter = isLoadedRow(row);
         } else if (activeFilter === "spent") {
-          matchesFilter = signedAmount < 0 || SPENT_TYPES.has(type) || SPENT_TYPES.has(reason);
+          matchesFilter = isSpentRow(row);
         } else if (activeFilter === "gift") {
-          matchesFilter = type === "gift" || reason === "gift";
+          matchesFilter = source === "gift";
         } else if (activeFilter === "package_bonus") {
-          matchesFilter = type === "package_bonus" || reason === "package_bonus";
+          matchesFilter = source === "package_bonus";
         } else if (activeFilter === "upgrade_credit") {
-          matchesFilter = type === "upgrade_credit" || reason === "upgrade_credit";
+          matchesFilter = source === "upgrade_credit";
         }
 
         return matchesSearch && matchesFilter;
@@ -798,37 +787,33 @@
 
     function buildSubText(row, meta){
       const bits = [];
-      const type = String(row.type || "").trim().toLowerCase();
-      const reason = String(row.reason || "").trim().toLowerCase();
+      const txType = getRowTxType(row);
+      const source = getRowSource(row);
+      const usageKind = getRowUsageKind(row);
 
-      if (reason === "game_pass_use") {
-        const gameName = getGameName(meta?.game_code);
-        const days = Number(meta?.days || 7);
-        bits.push(`${gameName} için ${days} gün erişim açıldı`);
-        if (meta?.balance_after !== undefined && meta?.balance_after !== null) {
-          bits.push(`İşlem sonrası bakiye: ${meta.balance_after}`);
-        }
-        return bits.join(" • ");
-      }
+      if (txType) bits.push(`İşlem: ${txType}`);
+      if (source) bits.push(`Kaynak: ${source}`);
+      if (usageKind) bits.push(`Tür: ${usageKind}`);
 
       if (meta?.module) bits.push(`Modül: ${meta.module}`);
-      if (meta?.surface) bits.push(`Alan: ${meta.surface}`);
-      if (meta?.usage_kind) bits.push(`Tür: ${meta.usage_kind}`);
-      if (meta?.source) bits.push(`Kaynak: ${meta.source}`);
-      if (meta?.input_chars) bits.push(`Giriş: ${meta.input_chars} kr`);
-      if (meta?.output_chars) bits.push(`Çıkış: ${meta.output_chars} kr`);
-      if (meta?.billable_chars) bits.push(`Ücretlenen: ${meta.billable_chars} kr`);
-      if (meta?.charge_type === "startup") bits.push("İlk kullanım düşümü");
-      if (meta?.charge_type === "3000_step") bits.push("3000 karakter eşiği");
+      if (meta?.provider) bits.push(`Sağlayıcı: ${meta.provider}`);
+      if (meta?.voice_mode) bits.push(`Ses: ${meta.voice_mode}`);
+      if (meta?.from_lang && meta?.to_lang) bits.push(`Dil: ${meta.from_lang}→${meta.to_lang}`);
+      if (meta?.lang) bits.push(`Dil: ${meta.lang}`);
+      if (meta?.tone) bits.push(`Ton: ${meta.tone}`);
+      if (meta?.chars_used) bits.push(`Karakter: ${meta.chars_used}`);
+      if (meta?.input_mode) bits.push(`Giriş: ${meta.input_mode}`);
+      if (meta?.session_id) bits.push(`Oturum bağlı`);
+      if (meta?.module === "arkadasla") bits.push("Arkadaşla modülünde kullanıldı");
 
-      if (type === "upgrade_credit" || reason === "upgrade_credit") bits.push("Paket yükseltmesinden kalan değer jetona çevrildi");
-      if (type === "package_bonus" || reason === "package_bonus") bits.push("Paketle birlikte gelen bonus jeton");
-      if (type === "purchase" || reason === "purchase") bits.push("Jeton satın alma işlemi");
-      if (type === "gift" || reason === "gift") bits.push("Hediye jeton hareketi");
-      if (reason === "nfc_token_load") bits.push("NFC kart ile yükleme yapıldı");
-      if (reason === "manual_code_token_load") bits.push("6 haneli kod ile yükleme yapıldı");
-      if (reason === "google_play_token_load") bits.push("Google Play üzerinden jeton yüklendi");
-      if (reason === "level_test_exam") bits.push("Seviye tespit sınavı için jeton kullanıldı");
+      if (source === "nfc_token_load") bits.push("NFC kart ile jeton yüklendi");
+      if (source === "manual_code_token_load") bits.push("Kod ile jeton yüklendi");
+      if (source === "google_play_token_load" || source === "billing_google_confirm" || source === "billing_google") {
+        bits.push("Google Play üzerinden jeton yüklendi");
+      }
+      if (source === "package_bonus") bits.push("Paketle gelen bonus jeton");
+      if (source === "upgrade_credit") bits.push("Paket yükseltmesinden çevrilen kredi");
+      if (source === "gift") bits.push("Hediye jeton hareketi");
 
       return bits.join(" • ") || "Jeton hareket kaydı";
     }
@@ -850,13 +835,13 @@
 
       listWrap.innerHTML = filtered.map((row) => {
         const amt = getSignedAmount(row);
-        const group = typeGroup(row.type, amt, row.reason);
-        const icon = typeIcon(row.type, amt, row.reason);
+        const group = typeGroup(row);
+        const icon = typeIcon(row);
         const meta = parseMeta(row.meta);
 
         const balanceAfterRaw =
-          meta?.balance_after ??
           row?.balance_after ??
+          meta?.balance_after ??
           row?.tokens_after ??
           row?.after_balance ??
           null;
@@ -873,10 +858,10 @@
 
             <div class="mid">
               <div class="mid-top">
-                <div class="type-pill">${escapeHtml(typeLabel(row.type, row.reason))}</div>
+                <div class="type-pill">${escapeHtml(typeLabel(row))}</div>
               </div>
 
-              <div class="title">${escapeHtml(formatEntryTitle(row, meta))}</div>
+              <div class="title">${escapeHtml(formatEntryTitle(row))}</div>
               <div class="sub">${escapeHtml(buildSubText(row, meta))}</div>
               <div class="date">${escapeHtml(formatDate(row.created_at))}</div>
             </div>
