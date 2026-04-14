@@ -16,10 +16,10 @@ const confirmOk = $("confirmOk");
 const toastEl = $("toast");
 
 const STORAGE = {
-  installed: "italky_offline_installed_pairs_v2",
-  downloading: "italky_offline_downloading_pairs_v2",
-  nativeLang: "italky_native_lang_v2",
-  offlineLicenseDays: "italky_offline_license_days_v2"
+  installed: "italky_offline_installed_pairs_v3",
+  downloading: "italky_offline_downloading_pairs_v3",
+  nativeLang: "italky_native_lang_v3",
+  offlineLicenseDays: "italky_offline_license_days_v3"
 };
 
 const ALL_OFFLINE_LANGS = [
@@ -55,6 +55,7 @@ const ALL_OFFLINE_LANGS = [
   { code: "sl", name: "Slovence", flag: "🇸🇮" },
   { code: "sq", name: "Arnavutça", flag: "🇦🇱" },
   { code: "sv", name: "İsveççe", flag: "🇸🇪" },
+  { code: "tg", name: "Tacikçe", flag: "🇹🇯" },
   { code: "th", name: "Tayca", flag: "🇹🇭" },
   { code: "tr", name: "Türkçe", flag: "🇹🇷" },
   { code: "uk", name: "Ukraynaca", flag: "🇺🇦" },
@@ -260,16 +261,18 @@ function renderMyLanguageSelect() {
     </option>
   `).join("");
 
-  myLangSelect.addEventListener("change", () => {
+  myLangSelect.onchange = () => {
     const newCode = String(myLangSelect.value || "tr").trim().toLowerCase();
     setNativeLang(newCode);
     renderLicenseInfo();
     renderInstalledList();
     toast(`${getLangInfo(newCode).name} ana dil olarak seçildi`);
-  });
+  };
 }
 
 function renderInstalledList() {
+  if (!installedList) return;
+
   const q = String(searchInput?.value || "").trim().toLowerCase();
   const nativeLang = getNativeLang();
 
@@ -342,10 +345,10 @@ function renderInstalledList() {
   `;
 
   installedList.querySelectorAll("[data-lang]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+    btn.onclick = async () => {
       const lang = btn.getAttribute("data-lang");
       await startLanguageInstallFlow(lang);
-    });
+    };
   });
 }
 
@@ -373,7 +376,7 @@ async function startLanguageInstallFlow(langCode) {
 İndirme başladıktan sonra lütfen uygulamayı kapatmayın.
 Uygulama içinde başka sayfalarda gezebilirsiniz.
 
-Bir sorun olursa size yumuşak bir uyarı gösterilecek.`
+Bu dil şu an indirilemezse size yumuşak bir uyarı gösterilecek.`
   );
 
   if (!confirmed) return;
@@ -485,4 +488,35 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
   toast(`${getLangInfo(code).name} artık offline hazır`);
 });
 
-window.addEventListener("offlinePairDownload
+window.addEventListener("offlinePairDownloadFailed", (e) => {
+  const d = e.detail || {};
+  const code = String(d.target || "").toLowerCase();
+  const info = getLangInfo(code);
+  const message = d.error || `${info.name} şu an indirilemedi. Daha sonra tekrar deneyebilirsiniz.`;
+
+  if (code) clearLangProgress(code);
+  renderInstalledList();
+  toast(message);
+});
+
+async function init() {
+  try {
+    mountShell({ scroll: "auto" });
+  } catch (e) {
+    console.warn("[offline_languages_page] shell:", e);
+  }
+
+  LANGS = buildSupportedLangList();
+  renderMyLanguageSelect();
+  renderLicenseInfo();
+  renderInstalledList();
+
+  searchInput?.addEventListener("input", renderInstalledList);
+
+  console.log("OFFLINE_LANGUAGES_READY", {
+    langs: LANGS.length,
+    native: getNativeLang()
+  });
+}
+
+init();
