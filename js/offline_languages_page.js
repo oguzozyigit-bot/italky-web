@@ -4,6 +4,8 @@ const $ = (id) => document.getElementById(id);
 
 const installedList = $("installedList");
 const searchInput = $("searchInput");
+const myLangSelect = $("myLangSelect");
+const licenseInfo = $("licenseInfo");
 
 const confirmBackdrop = $("confirmBackdrop");
 const confirmTitle = $("confirmTitle");
@@ -14,11 +16,10 @@ const confirmOk = $("confirmOk");
 const toastEl = $("toast");
 
 const STORAGE = {
-  installed: "italky_offline_installed_pairs_v1",
-  downloading: "italky_offline_downloading_pairs_v1",
-  siteLang: "italky_site_lang",
-  nativeLang: "italky_native_lang_v1",
-  offlineLicenseDays: "italky_offline_license_days_v1"
+  installed: "italky_offline_installed_pairs_v2",
+  downloading: "italky_offline_downloading_pairs_v2",
+  nativeLang: "italky_native_lang_v2",
+  offlineLicenseDays: "italky_offline_license_days_v2"
 };
 
 const ALL_OFFLINE_LANGS = [
@@ -62,12 +63,11 @@ const ALL_OFFLINE_LANGS = [
   { code: "zh", name: "Çince", flag: "🇨🇳" }
 ];
 
-const PRIORITY_ORDER = ["en", "de", "fr", "ru", "ar", "es", "it"];
+const PRIORITY_ORDER = ["tr", "en", "de", "fr", "ru", "ar", "es", "it"];
 
 let LANGS = [];
 let busy = false;
 let confirmResolver = null;
-let pendingLangCode = null;
 
 function toast(message = "") {
   if (!toastEl) return;
@@ -88,17 +88,18 @@ function safeJsonParse(raw, fallback) {
   }
 }
 
-function getSiteLang() {
-  return String(localStorage.getItem(STORAGE.siteLang) || "tr").trim().toLowerCase();
-}
-
-function getNativeLang() {
-  return String(localStorage.getItem(STORAGE.nativeLang) || "tr").trim().toLowerCase();
-}
-
 function getOfflineLicenseDays() {
   const v = Number(localStorage.getItem(STORAGE.offlineLicenseDays) || "37");
   return Number.isFinite(v) && v > 0 ? v : 37;
+}
+
+function getNativeLang() {
+  const raw = String(localStorage.getItem(STORAGE.nativeLang) || "tr").trim().toLowerCase();
+  return raw || "tr";
+}
+
+function setNativeLang(code) {
+  localStorage.setItem(STORAGE.nativeLang, String(code || "tr").trim().toLowerCase());
 }
 
 function priorityIndex(code) {
@@ -107,7 +108,6 @@ function priorityIndex(code) {
 }
 
 function buildSupportedLangList() {
-  const siteLang = getSiteLang();
   const uniq = [];
   const seen = new Set();
 
@@ -126,7 +126,7 @@ function buildSupportedLangList() {
     const pa = priorityIndex(a.code);
     const pb = priorityIndex(b.code);
     if (pa !== pb) return pa - pb;
-    return a.name.localeCompare(b.name, siteLang);
+    return a.name.localeCompare(b.name, "tr");
   });
 
   return uniq;
@@ -170,9 +170,7 @@ function isLangInstalledBiDirectional(langCode) {
 
 function getLangProgress(langCode) {
   const downloading = getDownloadingMap();
-  const item = downloading[String(langCode || "").toLowerCase()];
-  if (!item) return null;
-  return item;
+  return downloading[String(langCode || "").toLowerCase()] || null;
 }
 
 function setLangProgress(langCode, patch) {
@@ -215,14 +213,6 @@ function markInstalledBiDirectional(langCode) {
   saveInstalledPairs(installed);
 }
 
-function humanDownloadText(langName) {
-  return `${langName} için çift yönlü indirme başlayacak.
-Bu dil hem gidiş hem dönüş yönünde kurulacak.
-
-Lütfen uygulamayı kapatmayın.
-Uygulama içinde başka sayfalarda gezebilirsiniz.`;
-}
-
 function showConfirm(title, text) {
   return new Promise((resolve) => {
     confirmResolver = resolve;
@@ -250,6 +240,35 @@ function setBusy(flag) {
   busy = !!flag;
 }
 
+function renderLicenseInfo() {
+  if (!licenseInfo) return;
+  const days = getOfflineLicenseDays();
+  const nativeInfo = getLangInfo(getNativeLang());
+
+  licenseInfo.textContent =
+    `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Offline lisans: ${days} gün • İndirilen her dil ${nativeInfo.code.toUpperCase()} ↔ hedef dil olarak çift yönlü kurulur.`;
+}
+
+function renderMyLanguageSelect() {
+  if (!myLangSelect) return;
+
+  const current = getNativeLang();
+
+  myLangSelect.innerHTML = LANGS.map((lang) => `
+    <option value="${lang.code}" ${lang.code === current ? "selected" : ""}>
+      ${lang.flag} ${lang.name}
+    </option>
+  `).join("");
+
+  myLangSelect.addEventListener("change", () => {
+    const newCode = String(myLangSelect.value || "tr").trim().toLowerCase();
+    setNativeLang(newCode);
+    renderLicenseInfo();
+    renderInstalledList();
+    toast(`${getLangInfo(newCode).name} ana dil olarak seçildi`);
+  });
+}
+
 function renderInstalledList() {
   const q = String(searchInput?.value || "").trim().toLowerCase();
   const nativeLang = getNativeLang();
@@ -271,16 +290,17 @@ function renderInstalledList() {
       } else if (isDownloading) {
         btnClass = "lang-btn installing";
         btnText = progress.label || "İndiriliyor...";
+      } else {
+        btnClass = "lang-btn soft";
+        btnText = `İndir (${nativeLang.toUpperCase()} ↔ ${lang.code.toUpperCase()})`;
       }
 
       const progressHtml = isDownloading ? `
-        <div style="margin-top:10px;">
-          <div style="height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.08);">
-            <div style="height:100%;width:${Math.max(4, Math.min(100, Number(progress.percent || 0)))}%;background:linear-gradient(90deg,#4de8ff,#7b7dff,#ff54c9);transition:width .25s ease;"></div>
+        <div class="progress-wrap">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${Math.max(4, Math.min(100, Number(progress.percent || 0)))}%"></div>
           </div>
-          <div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.72);font-weight:900;line-height:1.45;">
-            ${progress.message || "İndirme başladı. Lütfen uygulamayı kapatmayın. Uygulama içinde başka sayfalarda gezebilirsiniz."}
-          </div>
+          <div class="progress-text">${progress.message || "İndirme başladı. Lütfen uygulamayı kapatmayın. Uygulama içinde başka sayfalarda gezebilirsiniz."}</div>
         </div>
       ` : "";
 
@@ -334,28 +354,29 @@ async function startLanguageInstallFlow(langCode) {
   if (!code || busy) return;
 
   const info = getLangInfo(code);
+  const nativeInfo = getLangInfo(getNativeLang());
 
   if (isLangInstalledBiDirectional(code)) {
-    toast(`${info.name} zaten kurulu`);
+    toast(`${info.name} zaten hazır`);
     return;
   }
 
   if (getLangProgress(code)) {
-    toast("İndirme zaten devam ediyor.");
+    toast("Bu dil için indirme zaten devam ediyor.");
     return;
   }
-
-  pendingLangCode = code;
 
   const confirmed = await showConfirm(
     `${info.name} indirilsin mi?`,
-    humanDownloadText(info.name)
+    `${nativeInfo.name} ↔ ${info.name} çift yönlü indirilecek.
+
+İndirme başladıktan sonra lütfen uygulamayı kapatmayın.
+Uygulama içinde başka sayfalarda gezebilirsiniz.
+
+Bir sorun olursa size yumuşak bir uyarı gösterilecek.`
   );
 
-  if (!confirmed) {
-    pendingLangCode = null;
-    return;
-  }
+  if (!confirmed) return;
 
   await installBiDirectionalPair(code);
 }
@@ -401,7 +422,7 @@ async function installBiDirectionalPair(langCode) {
     console.error("[offline_languages_page] installBiDirectionalPair:", e);
     clearLangProgress(code);
     renderInstalledList();
-    toast(`${info.name} indirilemedi`);
+    toast(`${info.name} şu an indirilemedi`);
   } finally {
     setBusy(false);
   }
@@ -464,29 +485,4 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
   toast(`${getLangInfo(code).name} artık offline hazır`);
 });
 
-window.addEventListener("offlinePairDownloadFailed", (e) => {
-  const d = e.detail || {};
-  const code = String(d.target || "").toLowerCase();
-  const message = d.error || "İndirme başarısız";
-
-  if (code) {
-    clearLangProgress(code);
-  }
-  renderInstalledList();
-  toast(message);
-});
-
-async function init() {
-  try {
-    mountShell({ scroll: "auto" });
-  } catch (e) {
-    console.warn("[offline_languages_page] shell:", e);
-  }
-
-  LANGS = buildSupportedLangList();
-  renderInstalledList();
-
-  searchInput?.addEventListener("input", renderInstalledList);
-}
-
-init();
+window.addEventListener("offlinePairDownload
