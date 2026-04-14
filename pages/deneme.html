@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Offline Translate</title>
+  <title>italkyAI • Offline Diller</title>
   <meta name="theme-color" content="#050814"/>
 
   <style>
@@ -20,8 +20,10 @@
       --safe-top:env(safe-area-inset-top,0px);
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shadow:0 18px 38px rgba(0,0,0,.26);
-      --orange-grad:linear-gradient(135deg, rgba(255,140,40,.24), rgba(255,84,201,.14));
-      --orange-line:rgba(255,140,40,.38);
+      --free-grad:linear-gradient(135deg, rgba(21,214,130,.24), rgba(77,232,255,.16));
+      --free-line:rgba(21,214,130,.34);
+      --installed-grad:linear-gradient(135deg,#10b981,#22c55e);
+      --installing-grad:linear-gradient(135deg,#64748b,#475569);
     }
 
     *{
@@ -85,6 +87,21 @@
       line-height:1.55;
       color:var(--muted);
       font-weight:800;
+    }
+
+    .hero-note{
+      margin-top:12px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:38px;
+      padding:0 14px;
+      border-radius:999px;
+      background:rgba(21,214,130,.10);
+      border:1px solid rgba(21,214,130,.20);
+      color:#d8fff0;
+      font-size:13px;
+      font-weight:900;
     }
 
     .tools{
@@ -169,33 +186,24 @@
       cursor:pointer;
     }
 
-    .lang-btn.installed{
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.12);
-    }
-
     .lang-btn.free{
-      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.14));
-      border:1px solid rgba(31,195,136,.30);
+      background:var(--free-grad);
+      border:1px solid var(--free-line);
+      color:#fff;
     }
 
-    .lang-btn.paid{
-  background:linear-gradient(135deg,#f59e0b,#f97316);
-  color:#fff;
-}
+    .lang-btn.installed{
+      background:var(--installed-grad);
+      color:#fff;
+    }
 
-.lang-btn.installed{
-  background:linear-gradient(135deg,#10b981,#22c55e);
-  color:#fff;
-}
-
-.lang-btn.installing{
-  background:linear-gradient(135deg,#64748b,#475569);
-  color:#fff;
-}
+    .lang-btn.installing{
+      background:var(--installing-grad);
+      color:#fff;
+    }
 
     .lang-btn[disabled]{
-      opacity:.72;
+      opacity:.78;
       cursor:default;
     }
 
@@ -295,8 +303,8 @@
     }
 
     .modal-btn.ok{
-      background:var(--orange-grad);
-      border:1px solid var(--orange-line);
+      background:var(--free-grad);
+      border:1px solid var(--free-line);
       color:#fff;
     }
 
@@ -312,13 +320,14 @@
   <main id="pageContent">
     <div class="page">
       <section class="panel">
-        <h1 class="hero-title">Offline Translate</h1>
-        <p class="hero-sub">İnternet olmadan iletişime devam</p>
+        <h1 class="hero-title">Offline Diller</h1>
+        <p class="hero-sub">İnternet yokken de çeviriye devam et. Gerekli dilleri önceden indir, cihazında hazır tut.</p>
+        <div class="hero-note">🟢 Uygun diller ücretsiz indirilebilir</div>
       </section>
 
       <section class="panel">
         <div class="tools">
-          <input id="searchInput" class="search" type="text" placeholder="Dil Ara"/>
+          <input id="searchInput" class="search" type="text" placeholder="Dil ara"/>
         </div>
 
         <div class="section-title">Diller</div>
@@ -333,11 +342,11 @@
 
   <div id="confirmBackdrop" class="modal-backdrop">
     <div class="modal">
-      <h3 id="confirmTitle" class="modal-title">Dil erişimini onaylayın</h3>
-      <div id="confirmText" class="modal-text"></div>
+      <h3 id="confirmTitle" class="modal-title">İndirmeyi onaylayın</h3>
+      <div id="confirmText" class="modal-text">Seçtiğiniz dil cihazınıza indirilecek ve internet olmadan kullanılabilecek.</div>
       <div class="modal-actions">
         <button id="confirmCancel" class="modal-btn cancel" type="button">Vazgeç</button>
-        <button id="confirmOk" class="modal-btn ok" type="button">Devam Et</button>
+        <button id="confirmOk" class="modal-btn ok" type="button">İndir</button>
       </div>
     </div>
   </div>
