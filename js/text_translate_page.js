@@ -8,6 +8,12 @@ import {
   resolveUsageMode,
   buildUsageNote
 } from "/js/usage_meter.js";
+import {
+  getOfflineStatus,
+  setMockOfflineLicense,
+  downloadOfflineModel,
+  translateOffline
+} from "/js/offline_translate_bridge.js";
 
 /* -------------------------
    SHELL
@@ -89,6 +95,11 @@ let activeMode = (localStorage.getItem("qtt_translate_mode") || "standard").toLo
   ? "ai"
   : "standard";
 
+let speakCtl = null;
+let speakToken = 0;
+let lastClickAt = 0;
+let audio = null;
+
 /* -------------------------
    HELPERS
 -------------------------- */
@@ -153,7 +164,7 @@ function setTranslateBusy(isBusy, text = "") {
   if (!btnTranslate) return;
   btnTranslate.disabled = !!isBusy;
   btnTranslate.textContent = text || (isAiMode() ? "✨ AI ÇEVİR" : "✨ ÇEVİR");
-  dstTxt.style.opacity = isBusy ? "0.45" : "1";
+  if (dstTxt) dstTxt.style.opacity = isBusy ? "0.45" : "1";
 }
 
 function stopTranslateRequest() {
@@ -161,6 +172,168 @@ function stopTranslateRequest() {
     if (translateCtl) translateCtl.abort();
   } catch {}
   translateCtl = null;
+}
+
+function setOutputText(text) {
+  if (!dstTxt) return;
+  if ("value" in dstTxt) dstTxt.value = String(text || "");
+  dstTxt.textContent = String(text || "");
+}
+
+function getOutputText() {
+  if (!dstTxt) return "";
+  return String(("value" in dstTxt ? dstTxt.value : dstTxt.textContent) || "").trim();
+}
+
+function setSourceText(text) {
+  if (!srcTxt) return;
+  if ("value" in srcTxt) srcTxt.value = String(text || "");
+  srcTxt.textContent = String(text || "");
+}
+
+function getSourceText() {
+  if (!srcTxt) return "";
+  return String(("value" in srcTxt ? srcTxt.value : srcTxt.textContent) || "").trim();
+}
+
+/* -------------------------
+   OFFLINE
+-------------------------- */
+function hasOfflineBridge() {
+  return !!window.OfflineTranslate;
+}
+
+function ensureMockOfflineLicenseOnce() {
+  if (!hasOfflineBridge()) return;
+
+  const key = "italky_offline_mock_license_set_v1";
+  if (localStorage.getItem(key) === "1") return;
+
+  try {
+    setMockOfflineLicense(30);
+    localStorage.setItem(key, "1");
+  } catch (e) {
+    console.warn("Mock offline lisans yazılamadı:", e);
+  }
+}
+
+function readOfflineStatusSafe() {
+  try {
+    return getOfflineStatus();
+  } catch (e) {
+    return { ok: false, error: "offline_status_failed" };
+  }
+}
+
+function waitForCustomEventOnce(eventName, timeoutMs = 45000) {
+  return new Promise((resolve, reject) => {
+    let done = false;
+
+    const finish = (fn, value) => {
+      if (done) return;
+      done = true;
+      window.removeEventListener(eventName, onEvent);
+      clearTimeout(timer);
+      fn(value);
+    };
+
+    const onEvent = (e) => {
+      finish(resolve, e?.detail || {});
+    };
+
+    const timer = setTimeout(() => {
+      finish(reject, new Error(`${eventName}_timeout`));
+    }, timeoutMs);
+
+    window.addEventListener(eventName, onEvent, { once: true });
+  });
+}
+
+async function requestOfflineModelDownload(from, to, wifiOnly = false) {
+  if (!hasOfflineBridge()) {
+    throw new Error("offline_bridge_missing");
+  }
+
+  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 60000);
+  downloadOfflineModel(from, to, wifiOnly);
+  const detail = await waiter;
+
+  if (!detail?.ok) {
+    throw new Error(detail?.error || "offline_model_download_failed");
+  }
+
+  return detail;
+}
+
+async function requestOfflineTranslate(from, to, text) {
+  if (!hasOfflineBridge()) {
+    throw new Error("offline_bridge_missing");
+  }
+
+  const waiter = waitForCustomEventOnce("offlineTranslateResult", 45000);
+  translateOffline(from, to, text);
+  const detail = await waiter;
+
+  if (!detail?.ok) {
+    throw new Error(detail?.error || "offline_translate_failed");
+  }
+
+  return String(detail?.translatedText || "").trim();
+}
+
+async function tryOfflineTranslateFlow(text) {
+  if (isAiMode()) return null;
+  if (!hasOfflineBridge()) return null;
+
+  const status = readOfflineStatusSafe();
+  if (!status?.licenseValid) return null;
+
+  const from = canonical(fromLang);
+  const to = canonical(toLang);
+
+  try {
+    setTranslateBusy(true, "📦 OFFLINE HAZIRLANIYOR...");
+    await requestOfflineModelDownload(from, to, false);
+
+    setTranslateBusy(true, "📦 OFFLINE ÇEVRİLİYOR...");
+    const out = await requestOfflineTranslate(from, to, text);
+
+    if (!out) throw new Error("offline_empty_translation");
+    return out;
+  } catch (e) {
+    console.warn("Offline çeviri başarısız, online fallback denenecek:", e);
+    return null;
+  }
+}
+
+async function manualDownloadOfflineCurrentModel() {
+  if (isAiMode()) {
+    toast("AI modunda offline model yerine online AI kullanılır.");
+    return;
+  }
+
+  if (!hasOfflineBridge()) {
+    toast("Offline köprüsü bulunamadı.");
+    return;
+  }
+
+  const status = readOfflineStatusSafe();
+  if (!status?.licenseValid) {
+    toast("Offline lisans yok veya süresi dolmuş.");
+    return;
+  }
+
+  const from = canonical(fromLang);
+  const to = canonical(toLang);
+
+  try {
+    toast("Offline model indiriliyor...");
+    await requestOfflineModelDownload(from, to, false);
+    toast(`Offline model hazır: ${from.toUpperCase()} → ${to.toUpperCase()}`);
+  } catch (e) {
+    console.error(e);
+    toast("Offline model indirilemedi.");
+  }
 }
 
 /* -------------------------
@@ -214,7 +387,8 @@ async function chargeTranslationUsage(inputText, outputText) {
         from_lang: canonical(fromLang),
         to_lang: canonical(toLang),
         input_chars: inLen,
-        output_chars: outLen
+        output_chars: outLen,
+        translation_mode: activeMode
       }
     });
 
@@ -340,10 +514,10 @@ function renderTopLanguageButtons() {
   const fromObj = getLangByCode(fromLang);
   const toObj = getLangByCode(toLang);
 
-  fromFlag.textContent = fromObj.flag;
-  toFlag.textContent = toObj.flag;
-  fromName.textContent = fromObj.trName;
-  toName.textContent = toObj.trName;
+  if (fromFlag) fromFlag.textContent = fromObj.flag;
+  if (toFlag) toFlag.textContent = toObj.flag;
+  if (fromName) fromName.textContent = fromObj.trName;
+  if (toName) toName.textContent = toObj.trName;
 
   localStorage.setItem("qtt_from_lang", canonical(fromLang));
   localStorage.setItem("qtt_to_lang", canonical(toLang));
@@ -405,27 +579,30 @@ function renderLangList(query = "") {
 
 function openLangModal(mode) {
   modalMode = mode === "to" ? "to" : "from";
-  modalModeTitle.textContent = modalMode === "from" ? "Kaynak Dil" : "Hedef Dil";
-  langModal.classList.add("show");
-  langModal.setAttribute("aria-hidden", "false");
-  langSearch.value = "";
+  if (modalModeTitle) {
+    modalModeTitle.textContent = modalMode === "from" ? "Kaynak Dil" : "Hedef Dil";
+  }
+  if (langModal) {
+    langModal.classList.add("show");
+    langModal.setAttribute("aria-hidden", "false");
+  }
+  if (langSearch) {
+    langSearch.value = "";
+    setTimeout(() => langSearch.focus(), 40);
+  }
   renderLangList("");
-  setTimeout(() => langSearch.focus(), 40);
 }
 
 function closeLangModal() {
-  langModal.classList.remove("show");
-  langModal.setAttribute("aria-hidden", "true");
+  if (langModal) {
+    langModal.classList.remove("show");
+    langModal.setAttribute("aria-hidden", "true");
+  }
 }
 
 /* -------------------------
    SPEAK
 -------------------------- */
-let audio = null;
-let speakCtl = null;
-let speakToken = 0;
-let lastClickAt = 0;
-
 function stopSpeak() {
   try {
     if (speakCtl) speakCtl.abort();
@@ -512,10 +689,8 @@ async function speakText(text, langCode) {
     if (j?.audio_base64) {
       audio = new Audio("data:audio/mpeg;base64," + j.audio_base64);
       audio.playsInline = true;
-
       audio.onended = () => { if (myToken === speakToken) audio = null; };
       audio.onerror = () => { if (myToken === speakToken) audio = null; };
-
       if (myToken !== speakToken) return;
       await audio.play();
       return;
@@ -579,7 +754,7 @@ async function startBrowserSpeechRecognition() {
       const t = e.results?.[0]?.[0]?.transcript || "";
       const txt = String(t || "").trim();
       if (txt) {
-        srcTxt.value = txt;
+        setSourceText(txt);
         await translateText();
       }
     };
@@ -621,7 +796,7 @@ async function startMediaRecorderFlow() {
         fd.append("file", blob, "speech.webm");
         fd.append("lang", canonical(fromLang));
 
-        srcTxt.value = "Dinleniyor...";
+        setSourceText("Dinleniyor...");
 
         try {
           const r = await fetch(STT_ENDPOINT, {
@@ -633,15 +808,15 @@ async function startMediaRecorderFlow() {
           const text = String(j?.text || "").trim();
 
           if (text) {
-            srcTxt.value = text;
+            setSourceText(text);
             await translateText();
           } else {
-            srcTxt.value = "";
+            setSourceText("");
             toast("Ses çözümlenemedi.");
           }
         } catch (e) {
           console.error("stt error", e);
-          srcTxt.value = "";
+          setSourceText("");
           toast("Ses çözümlenemedi.");
         } finally {
           stopMediaStream();
@@ -734,10 +909,10 @@ async function fetchTranslation(body, endpoints) {
 }
 
 async function translateText() {
-  const text = String(srcTxt?.value || "").trim();
+  const text = getSourceText();
 
   if (!text) {
-    if (dstTxt) dstTxt.textContent = "...";
+    setOutputText("...");
     toast("Önce çevrilecek bir metin yaz.");
     return;
   }
@@ -746,35 +921,43 @@ async function translateText() {
 
   const myToken = ++activeTranslateToken;
   setTranslateBusy(true, isAiMode() ? "✨ AI ÇEVRİLİYOR..." : "✨ ÇEVRİLİYOR...");
-
-  if (dstTxt) {
-    dstTxt.textContent = "Çevriliyor...";
-  }
+  setOutputText("Çevriliyor...");
 
   try {
-    const body = {
-      text,
-      source: canonical(fromLang),
-      target: canonical(toLang),
-      from_lang: canonical(fromLang),
-      to_lang: canonical(toLang),
-      mode: activeMode,
-      use_ai: isAiMode(),
-      cultural: isAiMode(),
-      special_voice: false
-    };
+    let out = null;
 
-    const endpoints = isAiMode()
-      ? TRANSLATE_AI_ENDPOINTS
-      : TRANSLATE_STANDARD_ENDPOINTS;
+    if (!isAiMode()) {
+      out = await tryOfflineTranslateFlow(text);
+    }
 
-    const result = await fetchTranslation(body, endpoints);
+    if (!out) {
+      const body = {
+        text,
+        source: canonical(fromLang),
+        target: canonical(toLang),
+        from_lang: canonical(fromLang),
+        to_lang: canonical(toLang),
+        mode: activeMode,
+        use_ai: isAiMode(),
+        cultural: isAiMode(),
+        special_voice: false
+      };
+
+      const endpoints = isAiMode()
+        ? TRANSLATE_AI_ENDPOINTS
+        : TRANSLATE_STANDARD_ENDPOINTS;
+
+      const result = await fetchTranslation(body, endpoints);
+
+      if (myToken !== activeTranslateToken) return;
+
+      out = String(result?.out || "").trim();
+    }
 
     if (myToken !== activeTranslateToken) return;
 
-    const out = String(result?.out || "").trim();
     if (!out) {
-      if (dstTxt) dstTxt.textContent = "⚠️ Çeviri şu an yapılamadı.";
+      setOutputText("⚠️ Çeviri şu an yapılamadı.");
       return;
     }
 
@@ -782,7 +965,7 @@ async function translateText() {
 
     if (myToken !== activeTranslateToken) return;
 
-    if (dstTxt) dstTxt.textContent = out;
+    setOutputText(out);
 
     setTimeout(() => {
       speakText(out, canonical(toLang));
@@ -790,7 +973,7 @@ async function translateText() {
   } catch (e) {
     console.warn("translateText error:", e);
     if (e?.name !== "AbortError" && String(e?.message || "") !== "insufficient_tokens") {
-      if (dstTxt) dstTxt.textContent = "⚠️ Çeviri şu an yapılamadı.";
+      setOutputText("⚠️ Çeviri şu an yapılamadı.");
     }
   } finally {
     if (myToken === activeTranslateToken) {
@@ -843,7 +1026,7 @@ function bind() {
   btnMic?.addEventListener("click", handleMic);
 
   btnSpeak?.addEventListener("click", () => {
-    const t = String(dstTxt?.textContent || "").trim();
+    const t = getOutputText();
     if (t && t !== "...") {
       speakText(t, canonical(toLang));
     }
@@ -860,6 +1043,11 @@ function bind() {
     syncModeUi();
     toast("AI / kültürel çeviri aktif");
   });
+
+  btnTranslate?.addEventListener("dblclick", async (e) => {
+    e.preventDefault();
+    await manualDownloadOfflineCurrentModel();
+  });
 }
 
 /* -------------------------
@@ -875,8 +1063,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind();
   syncModeUi();
 
-  if (dstTxt) dstTxt.textContent = "...";
+  setOutputText("...");
   setMicState(false);
+
+  ensureMockOfflineLicenseOnce();
+
+  const status = readOfflineStatusSafe();
+  console.log("offline status:", status);
+
+  window.italkyOffline = {
+    status: () => readOfflineStatusSafe(),
+    downloadCurrentModel: () => manualDownloadOfflineCurrentModel(),
+    translateCurrent: () => translateText()
+  };
 });
 
 window.addEventListener("beforeunload", () => {
