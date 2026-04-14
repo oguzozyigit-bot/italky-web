@@ -6,10 +6,12 @@ const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
 
 const PUBLIC_PAGES = new Set([
   "/pages/login.html",
+  "/pages/auth_callback.html",
   "/pages/membership.html",
-  "/pages/trial.html",
-  "/pages/register.html",
-  "/pages/forgot-password.html"
+  "/pages/about.html",
+  "/pages/faq.html",
+  "/pages/privacy.html",
+  "/pages/contact.html"
 ]);
 
 function normalizePath(pathname) {
@@ -22,10 +24,7 @@ function isPublicPage(pathname = location.pathname) {
 
 async function getSessionOrNull() {
   const { data, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error("[global_access] session error:", error);
-    return null;
-  }
+  if (error) return null;
   return data?.session || null;
 }
 
@@ -37,11 +36,9 @@ async function fetchAccessState(session) {
   });
 
   const json = await resp.json().catch(() => ({}));
-
   if (!resp.ok) {
     throw new Error(json?.detail || "Erişim bilgisi alınamadı");
   }
-
   return json;
 }
 
@@ -55,10 +52,7 @@ function goMembership() {
 }
 
 export async function initGlobalAccess(options = {}) {
-  const {
-    requireAccessOpen = true,
-    allowPublicPageBypass = true
-  } = options;
+  const { allowPublicPageBypass = true } = options;
 
   const currentPath = normalizePath(location.pathname);
 
@@ -74,14 +68,10 @@ export async function initGlobalAccess(options = {}) {
 
   const access = await fetchAccessState(session);
 
-  if (requireAccessOpen && !access?.access_open) {
+  if (!access?.access_open) {
     goMembership();
     return { ok: false, redirected: "membership", access };
   }
 
-  return {
-    ok: true,
-    session,
-    access
-  };
+  return { ok: true, session, access };
 }
