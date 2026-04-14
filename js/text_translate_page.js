@@ -1,13 +1,19 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
-import { mountShell } from "/js/ui_shell.js";
+import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import {
   getOfflineStatus,
   setMockOfflineLicense
 } from "/js/offline_translate_bridge.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
+import {
+  commitUsage,
+  resolveUsageModule,
+  resolveUsageMode,
+  buildUsageNote
+} from "/js/usage_meter.js";
 
-alert("LANG_POOL + UI_SHELL + OFFLINE_BRIDGE + SUPABASE + AUTH OK");
+alert("ALL IMPORTS OK");
 
 try {
   mountShell({ scroll: "none" });
@@ -35,14 +41,21 @@ function toast(msg) {
 }
 
 try {
-  console.log("supabase object:", !!supabase);
+  console.log("LANG_POOL:", Array.isArray(LANG_POOL) ? LANG_POOL.length : "not-array");
+  console.log("supabase:", !!supabase);
   console.log("ensureAuthAndCacheUser:", typeof ensureAuthAndCacheUser);
+  console.log("commitUsage:", typeof commitUsage);
+  console.log("resolveUsageModule:", typeof resolveUsageModule);
+  console.log("resolveUsageMode:", typeof resolveUsageMode);
+  console.log("buildUsageNote:", typeof buildUsageNote);
+  console.log("setHeaderTokens:", typeof setHeaderTokens);
+
   if (window.OfflineTranslate) {
     setMockOfflineLicense(30);
-    console.log("offline status test:", getOfflineStatus());
+    console.log("offline status:", getOfflineStatus());
   }
 } catch (e) {
-  alert("AUTH TEST HATA: " + (e?.message || e));
+  alert("USAGE TEST HATA: " + (e?.message || e));
 }
 
 if (btnTranslate) {
@@ -52,7 +65,7 @@ if (btnTranslate) {
       toast("Önce çevrilecek bir metin yaz.");
       return;
     }
-    if (dstTxt) dstTxt.textContent = "AUTH TEST: " + text;
+    if (dstTxt) dstTxt.textContent = "ALL IMPORTS TEST: " + text;
   });
 }
 
