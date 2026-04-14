@@ -251,11 +251,15 @@
     }
   }
 
-  async function resolveTarget(){
-    const next = getNextTarget();
-    if (next) return next;
-    return HOME;
+  async function resolveTarget(access){
+  if (!access?.ok || !access?.access_open) {
+    return MEMBERSHIP;
   }
+
+  const next = getNextTarget();
+  if (next) return next;
+  return HOME;
+}
 
   async function getAccessState() {
     const { data:{ session } } = await supabase.auth.getSession();
@@ -292,8 +296,8 @@
         return;
       }
 
-      const target = await resolveTarget();
-      location.replace(target);
+      const target = await resolveTarget(access);
+location.replace(target);
     }catch(e){
       console.error("routeAfterLogin error:", e);
       location.replace(MEMBERSHIP);
