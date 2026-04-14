@@ -684,19 +684,29 @@
     }
 
     async function recheckAndRoute(){
-      try{
-        const access = await getAccessState();
-        syncAccessUi(access);
-        if(access?.access_open){
-          toast("Abonelik doğrulandı!");
-          setTimeout(() => location.replace(HOME), 800);
-        } else {
-          toast("Henüz aktif bir abonelik bulunamadı");
-        }
-      }catch(e){
-        toast("Güncelleme başarısız");
-      }
+  try{
+    sendUserIdToNative();
+
+    if(window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function"){
+      window.AndroidBilling.restorePurchases();
+      await new Promise(r => setTimeout(r, 1800));
     }
+
+    const access = await getAccessState();
+    syncAccessUi(access);
+
+    if(access?.access_open){
+      toast("Abonelik doğrulandı!");
+      setTimeout(() => location.replace(HOME), 800);
+      return;
+    }
+
+    toast("Play aboneliğiniz varsa birkaç saniye sonra tekrar kontrol edin");
+  }catch(e){
+    console.error("recheckAndRoute error:", e);
+    toast("Güncelleme başarısız");
+  }
+}
 
     window.onNativeSubscriptionSuccess = async function(){
       toast("Ödeme başarılı! Yetkiler tanımlanıyor...");
