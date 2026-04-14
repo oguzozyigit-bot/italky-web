@@ -92,6 +92,13 @@ const HOME_HEADER_HTML = `
   </div>
 
   <div class="header-actions">
+    <button class="plus-btn flat-top-btn" id="headerPlusBtn" aria-label="Jeton Yükle" type="button" title="Jeton Yükle">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14"></path>
+        <path d="M5 12h14"></path>
+      </svg>
+    </button>
+
     <button class="settings-btn flat-top-btn" id="headerSettingsBtn" aria-label="Ayarlar" type="button" title="Ayarlar">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 3l1.2 2.4 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4L12 3z"></path>
@@ -126,6 +133,7 @@ const HOME_HEADER_HTML = `
 
           <div class="menu-username" id="menuUserName">Kullanıcı</div>
           <div class="menu-last-login" id="menuLastLogin">S.G.T: -</div>
+          <div class="menu-plan-line" id="menuPlanLine">Free • 15 gün ücretsiz deneme</div>
 
           <div class="menu-token-row">
             <div class="menu-token-pill">
@@ -274,12 +282,15 @@ body.ui-menu-open{overflow:hidden;}
   filter:drop-shadow(0 0 10px rgba(124,92,255,.25));
 }
 .brand-slogan{font-size:9px;font-weight:800;letter-spacing:3.8px;color:rgba(255,255,255,.38);margin-left:1px;}
-.header-actions{display:flex;align-items:center;gap:10px;}
+.header-actions{display:flex;align-items:center;gap:6px;}
 .flat-top-btn{
   width:38px;height:38px;border:none;border-radius:12px;background:transparent;box-shadow:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;
 }
-.settings-btn svg{width:18px;height:18px;stroke:#f2f5ff;stroke-width:2;fill:none;opacity:.96;}
+.plus-btn svg,
+.settings-btn svg{
+  width:18px;height:18px;stroke:#f2f5ff;stroke-width:2;fill:none;opacity:.96;
+}
 .menu-btn{flex-direction:column;gap:4px;}
 .menu-btn span{display:block;width:18px;height:2px;border-radius:999px;background:#f2f5ff;}
 .shellMain{flex:1;min-height:0;overflow-y:auto;padding-bottom:calc(var(--footerH) + 10px);position:relative;}
@@ -326,6 +337,7 @@ body.ui-menu-open{overflow:hidden;}
 .menu-brand-ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .menu-username{font-size:14px;font-weight:800;color:#ffffff;line-height:1.2;word-break:break-word;}
 .menu-last-login{font-size:11px;font-weight:800;color:rgba(255,255,255,.56);line-height:1.3;}
+.menu-plan-line{font-size:12px;font-weight:800;color:rgba(255,255,255,.72);line-height:1.35;margin-top:-2px;}
 .menu-token-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .menu-token-pill{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;width:max-content;max-width:100%;
@@ -476,6 +488,7 @@ function finishMount(options) {
     hydrateFromCache();
     syncFooterHeight();
     hydrateShellMeta();
+    hydratePlanUi();
     hydrateAdminButton();
 
     try {
@@ -504,6 +517,7 @@ function finishMount(options) {
 function bindMenu() {
   const menuBtn = document.getElementById("menuBtn");
   const headerSettingsBtn = document.getElementById("headerSettingsBtn");
+  const headerPlusBtn = document.getElementById("headerPlusBtn");
   const sideMenu = document.getElementById("sideMenu");
   const menuBackdrop = document.getElementById("menuBackdrop");
   const logoutBtn = document.getElementById("logoutBtn");
@@ -527,6 +541,7 @@ function bindMenu() {
     sideMenu.setAttribute("aria-hidden", "false");
     document.body.classList.add("ui-menu-open");
     hydrateShellMeta();
+    hydratePlanUi();
     hydrateAdminButton();
   };
 
@@ -546,9 +561,15 @@ function bindMenu() {
     location.href = "/pages/translation_settings.html";
   };
 
+  const goPlus = () => {
+    closeMenu();
+    location.href = "/pages/jetonbuy.html";
+  };
+
   menuBtn.addEventListener("click", openMenu);
   menuBackdrop?.addEventListener("click", closeMenu);
   headerSettingsBtn?.addEventListener("click", goSettings);
+  headerPlusBtn?.addEventListener("click", goPlus);
 
   menuProfileTop?.addEventListener("click", goProfile);
   menuAvatarClick?.addEventListener("click", (e) => {
@@ -648,6 +669,42 @@ export function hydrateFromCache() {
   } catch {}
 }
 
+async function hydratePlanUi() {
+  const line = document.getElementById("menuPlanLine");
+  if (!line) return;
+
+  let planLabel = "Free";
+  let planSub = "15 gün ücretsiz deneme";
+
+  try {
+    const { supabase } = await import("/js/supabase_client.js");
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session?.access_token) {
+      const resp = await fetch("https://italky-api.onrender.com/api/session/access-state", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      const access = await resp.json().catch(() => ({}));
+
+      const membershipStatus = String(access?.membership_status || "").toLowerCase().trim();
+      const trialDaysLeft = Number(access?.trial_days_left || 0);
+      const isPro = !!access?.access_open && membershipStatus === "active";
+
+      planLabel = isPro ? "Pro" : "Free";
+      planSub = isPro
+        ? "Pro erişim aktif"
+        : (trialDaysLeft > 0 ? "15 gün ücretsiz deneme" : "Üyelik gerekli");
+    }
+  } catch (e) {
+    console.warn("[ui_shell hydratePlanUi]", e);
+  }
+
+  line.textContent = `${planLabel} • ${planSub}`;
+}
+
 async function hydrateShellMeta() {
   const lastLoginEl = document.getElementById("menuLastLogin");
   const adminLink = document.getElementById("adminPanelLink");
@@ -689,7 +746,6 @@ async function hydrateShellMeta() {
     }
 
     const pic = String(data.avatar_url || "").trim();
-
     const picEl = document.getElementById("menuUserPic");
     if (picEl && pic) {
       picEl.src = pic;
