@@ -1,4 +1,6 @@
-alert("text_translate_page.js BASLADI");
+import { LANG_POOL } from "/js/lang_pool_full.js";
+
+alert("LANG_POOL OK");
 
 const btnTranslate = document.getElementById("btnTranslate");
 const btnOfflineModel = document.getElementById("btnOfflineModel");
@@ -7,7 +9,6 @@ const dstTxt = document.getElementById("dstTxt");
 const toastEl = document.getElementById("toast");
 
 function toast(msg) {
-  console.log("[toast]", msg);
   if (!toastEl) {
     alert(msg);
     return;
@@ -20,6 +21,8 @@ function toast(msg) {
   }, 2000);
 }
 
+console.log("LANG_POOL length:", Array.isArray(LANG_POOL) ? LANG_POOL.length : "not-array");
+
 if (btnTranslate) {
   btnTranslate.addEventListener("click", () => {
     const text = String(srcTxt?.value || "").trim();
@@ -27,7 +30,7 @@ if (btnTranslate) {
       toast("Önce çevrilecek bir metin yaz.");
       return;
     }
-    if (dstTxt) dstTxt.textContent = "TEST ÇALIŞTI: " + text;
+    if (dstTxt) dstTxt.textContent = "LANG_POOL TEST: " + text;
   });
 }
 
@@ -36,5 +39,3 @@ if (btnOfflineModel) {
     toast("Offline butonu tıklandı");
   });
 }
-
-console.log("text_translate_page.js test modu aktif");
