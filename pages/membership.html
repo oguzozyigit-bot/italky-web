@@ -91,9 +91,9 @@
       min-height:34px;
       padding:0 12px;
       border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.09);
-      color:#fff;
+      background:rgba(132,204,22,.15);
+      border:1px solid rgba(132,204,22,.30);
+      color:#bef264;
       font-size:11px;
       font-weight:900;
       letter-spacing:.4px;
@@ -358,11 +358,11 @@
 <body>
   <main id="pageContent">
     <section class="hero">
-      <div class="badge">15 Gün Ücretsiz Deneme</div>
-      <h2 class="hero-title">Kapıyı açan <span class="accent">tek üyelik</span></h2>
+      <div class="badge">🚀 15 GÜN ÜCRETSİZ DENEME</div>
+      <h2 class="hero-title">Sınırsızlığa giden <span class="accent">tek anahtar</span></h2>
       <p class="hero-text">
-        İlk 15 gün ücretsiz başlar. Süre bitince uygulamaya devam etmek için aylık üyelik aktif olmalıdır.
-        İstediğiniz zaman iptal edebilirsiniz.
+        italky Pro ile tüm özellikleri 15 gün boyunca kuruş ödemeden keşfedin. 
+        Süre bitiminde aboneliğiniz otomatik olarak devam eder, dilediğiniz an iptal edebilirsiniz.
       </p>
     </section>
 
@@ -370,42 +370,42 @@
       <div class="price-top">
         <div>
           <h3 class="plan-name">italky Pro</h3>
-          <p class="plan-sub">Tüm erişim kapısını açan ana üyelik planı</p>
+          <p class="plan-sub">Yapay zeka ile dil engelini aşın</p>
         </div>
-        <div class="plan-chip">Ürün Kimliği: italky_pro</div>
+        <div class="plan-chip">Pro Erişim</div>
       </div>
 
       <div class="price-line">
-        <div class="trial">15 Gün <small>ücretsiz</small></div>
-        <div class="price">Sonra aylık 69,90 TL</div>
+        <div class="trial">15 Gün <small>Bedava</small></div>
+        <div class="price">Sonra 69,90 TL/ay</div>
       </div>
 
       <ul class="feature-list">
-        <li><span class="dot"></span><span>15 gün sonunda üyelik yoksa uygulamaya giriş kapanır.</span></li>
-        <li><span class="dot"></span><span>İptal etseniz bile mevcut dönem sonuna kadar kullanım devam eder.</span></li>
-        <li><span class="dot"></span><span>Jetonlar üyelik aktifken premium özelliklerde kullanılabilir.</span></li>
-        <li><span class="dot"></span><span>Normal çeviri ve ücretsiz TTS tarafında sayaç çalışmaz.</span></li>
+        <li><span class="dot"></span><span>15 gün boyunca tam erişim, 0 TL ödeme.</span></li>
+        <li><span class="dot"></span><span>Sınırsız çeviri ve AI sesli iletişim.</span></li>
+        <li><span class="dot"></span><span>Özel jetonlar ile premium özellik kullanımı.</span></li>
+        <li><span class="dot"></span><span>Google Play üzerinden güvenli ve kolay iptal.</span></li>
       </ul>
 
       <div class="cta">
-        <button class="buy-btn" id="buyBtn" type="button">15 Gün Ücretsiz Başlat</button>
-        <button class="secondary-btn" id="continueBtn" type="button">Durumu Yenile</button>
+        <button class="buy-btn" id="buyBtn" type="button">Denemeyi Şimdi Başlat</button>
+        <button class="secondary-btn" id="continueBtn" type="button">Durumu Güncelle</button>
       </div>
     </section>
 
     <section class="meta-card">
-      <div class="meta-line"><span>Durum:</span> <strong id="statusLabel">Kontrol ediliyor...</strong></div>
-      <div class="meta-line"><span>Trial kalan gün:</span> <strong id="trialDaysLabel">-</strong></div>
-      <div class="meta-line"><span>Üyelik bitiş:</span> <strong id="membershipEndsLabel">-</strong></div>
-      <div class="meta-line"><span>Jeton:</span> <strong id="tokensLabel">0</strong></div>
+      <div class="meta-line"><span>Üyelik Durumu:</span> <strong id="statusLabel">Kontrol ediliyor...</strong></div>
+      <div class="meta-line"><span>Kalan Deneme:</span> <strong id="trialDaysLabel">-</strong></div>
+      <div class="meta-line"><span>Bitiş Tarihi:</span> <strong id="membershipEndsLabel">-</strong></div>
+      <div class="meta-line"><span>Mevcut Jeton:</span> <strong id="tokensLabel">0</strong></div>
     </section>
 
     <div class="status-box" id="statusBox">
-      Üyelik bilgisi kontrol ediliyor...
+      Yükleniyor...
     </div>
 
     <div class="tiny">
-      Satın alma Google Play üzerinden yapılır. Deneme süresi sonunda abonelik şartları geçerli olur.
+      Ödeme ve abonelik yönetimi tamamen Google Play güvencesindedir. Ücretlendirme deneme süresi sonunda başlar.
     </div>
   </main>
 
@@ -455,7 +455,7 @@
     function fmtDate(value){
       if (!value) return "-";
       try{
-        return new Date(value).toLocaleString("tr-TR");
+        return new Date(value).toLocaleDateString("tr-TR", { day:'numeric', month:'long', year:'numeric' });
       }catch{
         return String(value);
       }
@@ -465,32 +465,20 @@
       const { data:{ session } } = await supabase.auth.getSession();
       if(!session){
         location.replace(LOGIN);
-        throw new Error("Oturum yok");
+        throw new Error("Oturum bulunamadı");
       }
       currentSession = session;
       currentUserId = session.user?.id || "";
-      if(!currentUserId){
-        location.replace(LOGIN);
-        throw new Error("Kullanıcı yok");
-      }
       return session;
     }
 
     async function getAccessState(){
       const session = await getSessionOrLogin();
-
       const resp = await fetch(API_ACCESS, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+        headers: { Authorization: `Bearer ${session.access_token}` }
       });
-
       const json = await resp.json().catch(() => ({}));
-
-      if(!resp.ok){
-        throw new Error(json?.detail || "Erişim bilgisi alınamadı");
-      }
-
+      if(!resp.ok) throw new Error(json?.detail || "Erişim bilgisi alınamadı");
       return json;
     }
 
@@ -499,21 +487,18 @@
       const membershipStatus = String(data?.membership_status || "inactive");
       const tokenCount = Number(data?.tokens ?? 0);
 
-      UI.statusLabel.textContent = accessOpen ? "Erişim Açık" : "Üyelik Gerekli";
-      UI.trialDaysLabel.textContent = String(data?.trial_days_left ?? 0);
+      UI.statusLabel.textContent = accessOpen ? "Aktif" : "Pasif";
+      UI.trialDaysLabel.textContent = (data?.trial_days_left ?? 0) + " Gün";
       UI.membershipEndsLabel.textContent = fmtDate(data?.membership_ends_at);
       UI.tokensLabel.textContent = String(tokenCount);
       try { setHeaderTokens(tokenCount); } catch {}
 
       if(accessOpen){
-        setStatus("ok", "Erişim açık. İstersen doğrudan uygulamaya devam edebilirsin.");
-        UI.buyBtn.textContent = "Uygulamaya Devam Et";
-      } else if (membershipStatus === "trial") {
-        setStatus("warn", "Deneme süresi bittiğinde uygulamaya devam etmek için üyelik gerekir.");
-        UI.buyBtn.textContent = "15 Gün Ücretsiz Başlat";
+        setStatus("ok", "Premium erişiminiz açık. Uygulamayı sınırsız kullanabilirsiniz.");
+        UI.buyBtn.textContent = "Uygulamaya Git";
       } else {
-        setStatus("err", "Üyelik aktif değil. Devam etmek için italky Pro başlatın.");
-        UI.buyBtn.textContent = "Üyeliği Başlat";
+        setStatus("warn", "Deneme süreniz dolmuş veya üyelik pasif. Lütfen devam etmek için abonelik başlatın.");
+        UI.buyBtn.textContent = "15 Gün Ücretsiz Başlat";
       }
     }
 
@@ -532,7 +517,6 @@
     async function handleBuyClick(){
       try{
         const access = await getAccessState();
-
         if(access?.access_open){
           location.replace(HOME);
           return;
@@ -541,20 +525,17 @@
         sendUserIdToNative();
 
         if(!isNativeBillingReady()){
-          toast("Ödeme sistemi hazır değil");
+          toast("Google Play Store bağlantısı kurulamadı");
           return;
         }
 
         UI.buyBtn.disabled = true;
-        toast("Google Play açılıyor...");
+        toast("Google Play ödeme ekranı açılıyor...");
         window.AndroidBilling.buy(PRODUCT_ID);
       }catch(e){
-        console.error("handleBuyClick error:", e);
-        toast(e?.message || "Satın alma başlatılamadı");
+        toast(e?.message || "İşlem başlatılamadı");
       }finally{
-        setTimeout(() => {
-          UI.buyBtn.disabled = false;
-        }, 1200);
+        setTimeout(() => { UI.buyBtn.disabled = false; }, 1500);
       }
     }
 
@@ -562,34 +543,30 @@
       try{
         const access = await getAccessState();
         syncAccessUi(access);
-
         if(access?.access_open){
-          toast("Üyelik aktif. Hoş geldin!");
-          setTimeout(() => location.replace(HOME), 350);
+          toast("Abonelik doğrulandı!");
+          setTimeout(() => location.replace(HOME), 800);
+        } else {
+          toast("Henüz aktif bir abonelik bulunamadı");
         }
       }catch(e){
-        console.error("recheckAndRoute error:", e);
-        toast(e?.message || "Durum güncellenemedi");
+        toast("Güncelleme başarısız");
       }
     }
 
+    // Native Callback
     window.onNativeSubscriptionSuccess = async function(){
-      toast("Üyelik doğrulanıyor...");
-      setTimeout(() => {
-        recheckAndRoute();
-      }, 1200);
+      toast("Ödeme başarılı! Yetkiler tanımlanıyor...");
+      setTimeout(recheckAndRoute, 1500);
     };
 
-    window.addEventListener("italky-subscription-success", async () => {
-      toast("Üyelik doğrulanıyor...");
-      setTimeout(() => {
-        recheckAndRoute();
-      }, 1200);
+    window.addEventListener("italky-subscription-success", () => {
+      toast("Abonelik başarılı!");
+      setTimeout(recheckAndRoute, 1500);
     });
 
     window.addEventListener("italky-billing-error", (e) => {
-      const msg = e?.detail?.message || "Satın alma doğrulanamadı";
-      toast(msg);
+      toast(e?.detail?.message || "İşlem iptal edildi");
     });
 
     UI.buyBtn?.addEventListener("click", handleBuyClick);
@@ -597,17 +574,12 @@
 
     (async function boot(){
       try{
-        await mountShell({
-          title: "Üyelik",
-          showBack: true
-        });
-
+        await mountShell({ title: "italky Pro", showBack: true });
         const access = await getAccessState();
         sendUserIdToNative();
         syncAccessUi(access);
       }catch(e){
-        console.error("membership boot error:", e);
-        setStatus("err", e?.message || "Üyelik bilgisi alınamadı");
+        setStatus("err", "Bilgileriniz yüklenemedi. Lütfen tekrar deneyin.");
       }
     })();
   </script>
