@@ -757,6 +757,26 @@
         }
       }
     }, true);
+   // Membership ekranından geri ile korumalı sayfalara dönmeyi engelle
+(function lockBackOnMembership(){
+  try{
+    const here = location.pathname + location.search + location.hash;
+
+    history.replaceState({ membershipLock: true }, "", here);
+    history.pushState({ membershipLock: true }, "", here);
+
+    window.addEventListener("popstate", () => {
+      try{
+        history.pushState({ membershipLock: true }, "", here);
+        toast("Erişim için üyelik gerekli");
+      }catch(e){
+        console.error("membership popstate lock error:", e);
+      }
+    });
+  }catch(e){
+    console.error("membership history lock init error:", e);
+  }
+})(); 
   </script>
 </body>
 </html>
