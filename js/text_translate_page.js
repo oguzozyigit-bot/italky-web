@@ -90,6 +90,7 @@ let mediaRecording = false;
 
 let translateCtl = null;
 let activeTranslateToken = 0;
+let translateClickTimer = null;
 
 let activeMode = (localStorage.getItem("qtt_translate_mode") || "standard").toLowerCase() === "ai"
   ? "ai"
@@ -983,6 +984,36 @@ async function translateText() {
 }
 
 /* -------------------------
+   TRANSLATE BUTTON
+-------------------------- */
+function bindTranslateButton() {
+  if (!btnTranslate) return;
+
+  btnTranslate.addEventListener("click", () => {
+    if (translateClickTimer) {
+      clearTimeout(translateClickTimer);
+      translateClickTimer = null;
+    }
+
+    translateClickTimer = setTimeout(async () => {
+      translateClickTimer = null;
+      await translateText();
+    }, 260);
+  });
+
+  btnTranslate.addEventListener("dblclick", async (e) => {
+    e.preventDefault();
+
+    if (translateClickTimer) {
+      clearTimeout(translateClickTimer);
+      translateClickTimer = null;
+    }
+
+    await manualDownloadOfflineCurrentModel();
+  });
+}
+
+/* -------------------------
    BIND
 -------------------------- */
 function bind() {
@@ -1014,7 +1045,7 @@ function bind() {
     }
   });
 
-  btnTranslate?.addEventListener("click", translateText);
+  bindTranslateButton();
 
   srcTxt?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -1042,11 +1073,6 @@ function bind() {
     activeMode = "ai";
     syncModeUi();
     toast("AI / kültürel çeviri aktif");
-  });
-
-  btnTranslate?.addEventListener("dblclick", async (e) => {
-    e.preventDefault();
-    await manualDownloadOfflineCurrentModel();
   });
 }
 
