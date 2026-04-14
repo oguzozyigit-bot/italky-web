@@ -204,47 +204,15 @@ async function manualDownloadOfflineCurrentModel() {
   const to = canonical(toLang);
 
   try {
-    toast("Offline model indiriliyor...");
-    await requestOfflineModelDownload(from, to, false);
+    toast(`Model indiriliyor: ${from.toUpperCase()} → ${to.toUpperCase()}`);
+    const result = await requestOfflineModelDownload(from, to, false);
+    console.log("download result:", result);
     toast(`Offline model hazır: ${from.toUpperCase()} → ${to.toUpperCase()}`);
   } catch (e) {
     console.error("model download error:", e);
-    toast(`Offline model indirilemedi: ${e?.message || "bilinmeyen hata"}`);
-  }
-}
-
-async function translateText() {
-  const text = getSourceText();
-
-  if (!text) {
-    setOutputText("...");
-    toast("Önce çevrilecek bir metin yaz.");
-    return;
-  }
-
-  const from = canonical(fromLang);
-  const to = canonical(toLang);
-
-  try {
-    const status = readOfflineStatusSafe();
-    if (!status?.licenseValid) {
-      toast("Offline lisans yok veya süresi dolmuş.");
-      return;
-    }
-
-    setOutputText("Çevriliyor...");
-    const out = await requestOfflineTranslate(from, to, text);
-
-    if (!out) {
-      setOutputText("⚠️ Çeviri alınamadı.");
-      return;
-    }
-
-    setOutputText(out);
-  } catch (e) {
-    console.error("offline translate error:", e);
-    setOutputText("⚠️ Çeviri şu an yapılamadı.");
-    toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
+    const msg = e?.message || "bilinmeyen hata";
+    toast(`Model indirme hatası: ${msg}`);
+    alert(`Model indirme hatası:\n${msg}`);
   }
 }
 
