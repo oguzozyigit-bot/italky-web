@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Offline Translate</title>
+  <title>italkyAI • Offline Diller</title>
   <meta name="theme-color" content="#050814"/>
 
   <style>
@@ -13,15 +13,16 @@
       --line:rgba(255,255,255,.10);
       --txt:#fff;
       --muted:rgba(255,255,255,.68);
-      --grad:linear-gradient(135deg,#4de8ff 0%, #7b7dff 46%, #ff54c9 100%);
-      --ok:#15d682;
-      --warn:#ffb84d;
-      --err:#ff5d7a;
       --safe-top:env(safe-area-inset-top,0px);
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shadow:0 18px 38px rgba(0,0,0,.26);
-      --orange-grad:linear-gradient(135deg, rgba(255,140,40,.24), rgba(255,84,201,.14));
-      --orange-line:rgba(255,140,40,.38);
+
+      --free-grad:linear-gradient(135deg, rgba(21,214,130,.24), rgba(77,232,255,.16));
+      --free-line:rgba(21,214,130,.34);
+      --installed-grad:linear-gradient(135deg,#10b981,#22c55e);
+      --installing-grad:linear-gradient(135deg,#64748b,#475569);
+      --soft-grad:linear-gradient(135deg, rgba(123,125,255,.20), rgba(255,84,201,.12));
+      --soft-line:rgba(123,125,255,.30);
     }
 
     *{
@@ -54,7 +55,7 @@
 
     .page{
       width:100%;
-      max-width:700px;
+      max-width:760px;
       margin:0 auto;
       padding:14px 14px 34px;
     }
@@ -87,27 +88,115 @@
       font-weight:800;
     }
 
-    .tools{
-      display:flex;
+    .tool-grid{
+      display:grid;
+      grid-template-columns:1fr;
       gap:12px;
-      align-items:center;
       margin-bottom:16px;
     }
 
+    .control-label{
+      display:block;
+      margin:0 0 8px;
+      font-size:13px;
+      color:rgba(255,255,255,.72);
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
     .search{
-      flex:1;
+      width:100%;
       height:60px;
       border-radius:18px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.03);
       color:#fff;
       padding:0 18px;
-      font-size:17px;
+      font-size:16px;
       font-weight:800;
     }
 
     .search::placeholder{
       color:rgba(255,255,255,.42);
+    }
+
+    .fake-select{
+      width:100%;
+      min-height:60px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:#fff;
+      padding:0 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+    }
+
+    .fake-select:active{
+      transform:scale(.992);
+    }
+
+    .fake-select-left{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+
+    .fake-select-flag{
+      font-size:24px;
+      width:28px;
+      text-align:center;
+      flex:0 0 28px;
+    }
+
+    .fake-select-text{
+      min-width:0;
+    }
+
+    .fake-select-title{
+      font-size:16px;
+      font-weight:900;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .fake-select-sub{
+      margin-top:3px;
+      font-size:12px;
+      color:rgba(255,255,255,.58);
+      font-weight:800;
+    }
+
+    .fake-select-caret{
+      color:rgba(255,255,255,.62);
+      font-size:18px;
+      flex:0 0 auto;
+    }
+
+    .hint{
+      margin-top:8px;
+      font-size:12px;
+      color:rgba(255,255,255,.56);
+      font-weight:800;
+      line-height:1.45;
+    }
+
+    .status-strip{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:13px;
+      font-weight:900;
+      color:rgba(255,255,255,.88);
+      line-height:1.5;
     }
 
     .section-title{
@@ -160,43 +249,69 @@
 
     .lang-btn{
       width:100%;
-      height:62px;
-      border-radius:18px;
+      height:64px;
+      border-radius:20px;
       border:none;
       color:#fff;
-      font-size:16px;
+      font-size:17px;
       font-weight:1000;
       cursor:pointer;
-    }
-
-    .lang-btn.installed{
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.12);
+      letter-spacing:.2px;
     }
 
     .lang-btn.free{
-      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.14));
-      border:1px solid rgba(31,195,136,.30);
+      background:var(--free-grad);
+      border:1px solid var(--free-line);
+      color:#fff;
     }
 
-    .lang-btn.paid{
-  background:linear-gradient(135deg,#f59e0b,#f97316);
-  color:#fff;
-}
+    .lang-btn.installed{
+      background:var(--installed-grad);
+      color:#fff;
+    }
 
-.lang-btn.installed{
-  background:linear-gradient(135deg,#10b981,#22c55e);
-  color:#fff;
-}
+    .lang-btn.installing{
+      background:var(--installing-grad);
+      color:#fff;
+    }
 
-.lang-btn.installing{
-  background:linear-gradient(135deg,#64748b,#475569);
-  color:#fff;
-}
+    .lang-btn.soft{
+      background:var(--soft-grad);
+      border:1px solid var(--soft-line);
+      color:#fff;
+    }
 
     .lang-btn[disabled]{
-      opacity:.72;
+      opacity:.82;
       cursor:default;
+    }
+
+    .progress-wrap{
+      margin-top:14px;
+    }
+
+    .progress-bar{
+      height:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .progress-fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#4de8ff,#7b7dff,#ff54c9);
+      transition:width .35s ease;
+    }
+
+    .progress-text{
+      margin-top:10px;
+      font-size:13px;
+      color:rgba(255,255,255,.78);
+      font-weight:900;
+      line-height:1.5;
+      white-space:pre-line;
     }
 
     .toast{
@@ -235,8 +350,8 @@
       position:fixed;
       inset:0;
       background:rgba(0,0,0,.58);
-      backdrop-filter:blur(6px);
-      -webkit-backdrop-filter:blur(6px);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
       display:none;
       align-items:center;
       justify-content:center;
@@ -249,25 +364,25 @@
     }
 
     .modal{
-      width:min(92vw, 520px);
-      border-radius:28px;
-      border:1px solid rgba(255,255,255,.10);
+      width:min(92vw, 540px);
+      border-radius:30px;
+      border:1px solid rgba(255,255,255,.12);
       background:linear-gradient(180deg, rgba(20,24,44,.98), rgba(10,12,24,.98));
       box-shadow:0 24px 60px rgba(0,0,0,.45);
-      padding:22px;
+      padding:24px;
     }
 
     .modal-title{
-      font-size:22px;
+      font-size:24px;
       font-weight:1000;
-      margin:0 0 10px;
+      margin:0 0 12px;
       line-height:1.15;
     }
 
     .modal-text{
-      font-size:15px;
-      line-height:1.6;
-      color:rgba(255,255,255,.84);
+      font-size:16px;
+      line-height:1.7;
+      color:rgba(255,255,255,.88);
       font-weight:800;
       white-space:pre-line;
     }
@@ -275,15 +390,15 @@
     .modal-actions{
       display:flex;
       gap:12px;
-      margin-top:18px;
+      margin-top:20px;
     }
 
     .modal-btn{
       flex:1;
-      height:56px;
-      border-radius:18px;
+      height:64px;
+      border-radius:22px;
       border:none;
-      font-size:16px;
+      font-size:18px;
       font-weight:1000;
       cursor:pointer;
     }
@@ -295,15 +410,83 @@
     }
 
     .modal-btn.ok{
-      background:var(--orange-grad);
-      border:1px solid var(--orange-line);
+      background:var(--free-grad);
+      border:1px solid var(--free-line);
       color:#fff;
+    }
+
+    .picker-list{
+      margin-top:16px;
+      max-height:58vh;
+      overflow:auto;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+    }
+
+    .picker-option{
+      width:100%;
+      border:none;
+      background:transparent;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:16px 18px;
+      font-size:17px;
+      font-weight:900;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      cursor:pointer;
+      text-align:left;
+    }
+
+    .picker-option:last-child{
+      border-bottom:none;
+    }
+
+    .picker-option-left{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .picker-option-flag{
+      font-size:28px;
+      width:32px;
+      flex:0 0 32px;
+      text-align:center;
+    }
+
+    .picker-option-name{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .picker-option-check{
+      font-size:20px;
+      color:#8cf0ff;
+      opacity:0;
+    }
+
+    .picker-option.active .picker-option-check{
+      opacity:1;
+    }
+
+    @media (min-width:640px){
+      .tool-grid{
+        grid-template-columns:1fr 1fr;
+      }
+      .tool-grid .span-2{
+        grid-column:1 / -1;
+      }
     }
 
     @media (max-width:420px){
       .hero-title{ font-size:24px; }
       .hero-sub{ font-size:15px; }
-      .tools{ flex-direction:column; }
       .modal-actions{ flex-direction:column; }
     }
   </style>
@@ -312,13 +495,36 @@
   <main id="pageContent">
     <div class="page">
       <section class="panel">
-        <h1 class="hero-title">Offline Translate</h1>
-        <p class="hero-sub">İnternet olmadan iletişime devam</p>
+        <h1 class="hero-title">Offline Diller</h1>
+        <p class="hero-sub">İnternet yokken de çeviriye devam et. Kendi dilini seç, gerekli dilleri indir ve kullan.</p>
       </section>
 
       <section class="panel">
-        <div class="tools">
-          <input id="searchInput" class="search" type="text" placeholder="Dil Ara"/>
+        <div class="tool-grid">
+          <div>
+            <label class="control-label">Benim Dilim</label>
+            <button id="myLangPickerBtn" class="fake-select" type="button">
+              <div class="fake-select-left">
+                <div id="myLangFlag" class="fake-select-flag">🇹🇷</div>
+                <div class="fake-select-text">
+                  <div id="myLangTitle" class="fake-select-title">Türkçe</div>
+                  <div class="fake-select-sub">Ana konuşma diliniz</div>
+                </div>
+              </div>
+              <div class="fake-select-caret">▾</div>
+            </button>
+            <div class="hint">Seçtiğin diller ana dilinle birlikte indirilecektir.</div>
+          </div>
+
+          <div>
+            <label class="control-label" for="searchInput">Dil Ara</label>
+            <input id="searchInput" class="search" type="text" placeholder="Dil ara"/>
+            <div class="hint">Örnek: Almanca, Fransızca, Rusça</div>
+          </div>
+
+          <div class="span-2 status-strip" id="licenseInfo">
+            Offline lisans kontrol ediliyor...
+          </div>
         </div>
 
         <div class="section-title">Diller</div>
@@ -333,11 +539,22 @@
 
   <div id="confirmBackdrop" class="modal-backdrop">
     <div class="modal">
-      <h3 id="confirmTitle" class="modal-title">Dil erişimini onaylayın</h3>
+      <h3 id="confirmTitle" class="modal-title">Dil indirilsin mi?</h3>
       <div id="confirmText" class="modal-text"></div>
       <div class="modal-actions">
         <button id="confirmCancel" class="modal-btn cancel" type="button">Vazgeç</button>
-        <button id="confirmOk" class="modal-btn ok" type="button">Devam Et</button>
+        <button id="confirmOk" class="modal-btn ok" type="button">İndir</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="langPickerBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <h3 class="modal-title">Benim Dilim</h3>
+      <div class="modal-text">Kullandığınız ana dili seçin.</div>
+      <div id="langPickerList" class="picker-list"></div>
+      <div class="modal-actions">
+        <button id="langPickerClose" class="modal-btn cancel" type="button">Kapat</button>
       </div>
     </div>
   </div>
