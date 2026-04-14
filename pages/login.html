@@ -226,6 +226,7 @@
 
   const toastEl = document.getElementById("toast");
   const HOME = "/pages/home.html";
+  const MEMBERSHIP = "/pages/membership.html";
   const CALLBACK = "/pages/auth_callback.html";
   const googleBtn = document.getElementById("googleBtn");
 
@@ -256,14 +257,46 @@
     return HOME;
   }
 
+  async function getAccessState() {
+    const { data:{ session } } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("Oturum bulunamadı");
+    }
+
+    const resp = await fetch("https://italky-api.onrender.com/api/session/access-state", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${session.access_token}`
+      }
+    });
+
+    const json = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      throw new Error(json?.detail || "Erişim kontrolü yapılamadı");
+    }
+
+    return json;
+  }
+
   async function routeAfterLogin(){
     try{
       await ensureAuthAndCacheUser();
+
+      const access = await getAccessState();
+
+      if (!access?.ok || !access?.access_open) {
+        toast("Üyelik gerekli");
+        setTimeout(() => location.replace(MEMBERSHIP), 250);
+        return;
+      }
+
       const target = await resolveTarget();
       location.replace(target);
     }catch(e){
       console.error("routeAfterLogin error:", e);
-      location.replace(HOME);
+      location.replace(MEMBERSHIP);
     }
   }
 
@@ -279,7 +312,10 @@
     try{
       const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
       const idToken = String(data?.id_token || data?.idToken || "").trim();
-      if(!idToken){ toast("Token yok, giriş tamamlanamadı."); return; }
+      if(!idToken){
+        toast("Token yok, giriş tamamlanamadı.");
+        return;
+      }
 
       googleBtn.disabled = true;
       toast("Oturum açılıyor...");
@@ -305,6 +341,7 @@
       toast("Hoş geldin!");
       setTimeout(() => routeAfterLogin(), 300);
     }catch(e){
+      console.error("onNativeLoginSuccess error:", e);
       googleBtn.disabled = false;
       toast("Giriş hatası");
     }
@@ -324,6 +361,7 @@
       toast("Google yönlendiriliyor…");
       await loginWithGoogle(next);
     }catch(e){
+      console.error("googleBtn click error:", e);
       googleBtn.disabled = false;
       toast(e?.message || "Giriş başlatılamadı");
     }
@@ -334,7 +372,7 @@
     "Dünyada ilk ve tek…",
     "Kültürel çeviri ile…",
     "Kelimeyi değil, anlamı çeviriyoruz…",
-    "Ofline çeviri ile kasintisiz yaşa…",
+    "Offline çeviri ile kasıntısız yaşa…",
     "Dünya artık senin dilinde…",
     "Başlamak için sadece giriş yap…"
   ];
@@ -353,19 +391,16 @@
 
   (async function boot(){
     try{
-      if (navigator.onLine === false) {
-        location.replace("/facetoface.html?mode=offline-forced");
-        return;
-      }
-
       const { data:{ session } } = await supabase.auth.getSession();
+
       if(!session){
         document.body.classList.add("login-ready");
         return;
       }
 
       await routeAfterLogin();
-    }catch(_e){
+    }catch(e){
+      console.error("boot error:", e);
       document.body.classList.add("login-ready");
     }
   })();
