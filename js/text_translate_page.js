@@ -5,8 +5,9 @@ import {
   setMockOfflineLicense
 } from "/js/offline_translate_bridge.js";
 import { supabase } from "/js/supabase_client.js";
+import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-alert("LANG_POOL + UI_SHELL + OFFLINE_BRIDGE + SUPABASE OK");
+alert("LANG_POOL + UI_SHELL + OFFLINE_BRIDGE + SUPABASE + AUTH OK");
 
 try {
   mountShell({ scroll: "none" });
@@ -35,12 +36,13 @@ function toast(msg) {
 
 try {
   console.log("supabase object:", !!supabase);
+  console.log("ensureAuthAndCacheUser:", typeof ensureAuthAndCacheUser);
   if (window.OfflineTranslate) {
     setMockOfflineLicense(30);
     console.log("offline status test:", getOfflineStatus());
   }
 } catch (e) {
-  alert("SUPABASE/BRIDGE HATA: " + (e?.message || e));
+  alert("AUTH TEST HATA: " + (e?.message || e));
 }
 
 if (btnTranslate) {
@@ -50,7 +52,7 @@ if (btnTranslate) {
       toast("Önce çevrilecek bir metin yaz.");
       return;
     }
-    if (dstTxt) dstTxt.textContent = "SUPABASE TEST: " + text;
+    if (dstTxt) dstTxt.textContent = "AUTH TEST: " + text;
   });
 }
 
