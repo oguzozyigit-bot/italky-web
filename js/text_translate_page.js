@@ -9,18 +9,14 @@ import {
   translateOffline
 } from "/js/offline_translate_bridge.js";
 
-/* -------------------------
-   SHELL
--------------------------- */
 try {
   mountShell({ scroll: "none" });
 } catch (e) {
   console.error("ui_shell HATASI:", e);
 }
 
-/* -------------------------
-   DOM
--------------------------- */
+console.log("TEXT_TRANSLATE_FINAL_LOADED");
+
 const $ = (id) => document.getElementById(id);
 
 const fromBtn = $("fromBtn");
@@ -46,14 +42,8 @@ const langList = $("langList");
 const modalModeTitle = $("modalModeTitle");
 const toastEl = $("toast");
 
-/* -------------------------
-   CONFIG
--------------------------- */
 const API_BASE = "https://italky-api.onrender.com";
 
-/* -------------------------
-   STATE
--------------------------- */
 let modalMode = "from";
 let fromLang = localStorage.getItem("qtt_from_lang") || "tr";
 let toLang = localStorage.getItem("qtt_to_lang") || "en";
@@ -65,9 +55,6 @@ let speakToken = 0;
 let lastClickAt = 0;
 let activeTranslateToken = 0;
 
-/* -------------------------
-   HELPERS
--------------------------- */
 function canonical(code) {
   return String(code || "").trim().toLowerCase();
 }
@@ -92,7 +79,7 @@ function toast(msg) {
   clearTimeout(window.__textTranslateToast);
   window.__textTranslateToast = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 2400);
+  }, 2600);
 }
 
 function setOutputText(text) {
@@ -112,7 +99,7 @@ function hasOfflineBridge() {
 function ensureMockOfflineLicenseOnce() {
   if (!hasOfflineBridge()) return;
 
-  const key = "italky_offline_mock_license_set_v1";
+  const key = "italky_offline_mock_license_set_v2";
   if (localStorage.getItem(key) === "1") return;
 
   try {
@@ -133,7 +120,7 @@ function readOfflineStatusSafe() {
   }
 }
 
-function waitForCustomEventOnce(eventName, timeoutMs = 90000) {
+function waitForCustomEventOnce(eventName, timeoutMs = 120000) {
   return new Promise((resolve, reject) => {
     let done = false;
 
@@ -160,7 +147,7 @@ function waitForCustomEventOnce(eventName, timeoutMs = 90000) {
 async function requestOfflineModelDownload(from, to, wifiOnly = false) {
   if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
 
-  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 90000);
+  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 120000);
   downloadOfflineModel(from, to, wifiOnly);
   const detail = await waiter;
 
@@ -174,7 +161,7 @@ async function requestOfflineModelDownload(from, to, wifiOnly = false) {
 async function requestOfflineTranslate(from, to, text) {
   if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
 
-  const waiter = waitForCustomEventOnce("offlineTranslateResult", 90000);
+  const waiter = waitForCustomEventOnce("offlineTranslateResult", 120000);
   translateOffline(from, to, text);
   const detail = await waiter;
 
@@ -215,28 +202,6 @@ async function manualDownloadOfflineCurrentModel() {
   }
 }
 
-async function tryOfflineTranslateFlow(text) {
-  if (!hasOfflineBridge()) {
-    throw new Error("offline_bridge_missing");
-  }
-
-  const status = readOfflineStatusSafe();
-  if (!status?.licenseValid) {
-    throw new Error("offline_license_required");
-  }
-
-  const from = canonical(fromLang);
-  const to = canonical(toLang);
-
-  const out = await requestOfflineTranslate(from, to, text);
-
-  if (!out) {
-    throw new Error("offline_empty_translation");
-  }
-
-  return out;
-}
-
 async function translateText() {
   const text = getSourceText();
 
@@ -246,13 +211,31 @@ async function translateText() {
     return;
   }
 
+  if (!hasOfflineBridge()) {
+    toast("Offline köprüsü bulunamadı.");
+    return;
+  }
+
+  const status = readOfflineStatusSafe();
+  if (!status?.licenseValid) {
+    toast("Offline lisans yok veya süresi dolmuş.");
+    return;
+  }
+
   const myToken = ++activeTranslateToken;
+  const from = canonical(fromLang);
+  const to = canonical(toLang);
+
   setOutputText("Çevriliyor...");
 
   try {
-    const out = await tryOfflineTranslateFlow(text);
+    const out = await requestOfflineTranslate(from, to, text);
 
     if (myToken !== activeTranslateToken) return;
+
+    if (!out) {
+      throw new Error("offline_empty_translation");
+    }
 
     setOutputText(out);
 
@@ -268,9 +251,6 @@ async function translateText() {
   }
 }
 
-/* -------------------------
-   TTS
--------------------------- */
 function stopSpeak() {
   try {
     if (speakCtl) speakCtl.abort();
@@ -360,9 +340,6 @@ async function speakText(text, langCode) {
   }
 }
 
-/* -------------------------
-   AUTH
--------------------------- */
 async function requireLogin() {
   const { data: { session } = {} } = await supabase.auth.getSession();
   if (!session?.user) {
@@ -375,9 +352,6 @@ async function requireLogin() {
   return true;
 }
 
-/* -------------------------
-   LANG DATA
--------------------------- */
 const TURKISH_LANG_NAMES = {
   af:"Afrikanca", sq:"Arnavutça", am:"Amharca", ar:"Arapça", hy:"Ermenice", az:"Azerbaycanca",
   eu:"Baskça", be:"Belarusça", bn:"Bengalce", bs:"Boşnakça", bg:"Bulgarca", ca:"Katalanca",
@@ -480,9 +454,6 @@ function renderTopLanguageButtons() {
   localStorage.setItem("qtt_to_lang", canonical(toLang));
 }
 
-/* -------------------------
-   LANG MODAL
--------------------------- */
 function renderLangList(query = "") {
   const q = String(query || "").trim().toLowerCase();
   const currentCode = modalMode === "from" ? canonical(fromLang) : canonical(toLang);
@@ -557,9 +528,6 @@ function closeLangModal() {
   }
 }
 
-/* -------------------------
-   BIND
--------------------------- */
 function bind() {
   fromBtn?.addEventListener("click", () => openLangModal("from"));
   toBtn?.addEventListener("click", () => openLangModal("to"));
@@ -606,9 +574,6 @@ function bind() {
   });
 }
 
-/* -------------------------
-   BOOT
--------------------------- */
 document.addEventListener("DOMContentLoaded", async () => {
   if (!(await requireLogin())) return;
 
@@ -622,4 +587,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   ensureMockOfflineLicenseOnce();
 
   console.log("offline status:", readOfflineStatusSafe());
+  console.log("TEXT_TRANSLATE_FINAL_LOADED");
+});
+
+window.addEventListener("beforeunload", () => {
+  stopSpeak();
 });
