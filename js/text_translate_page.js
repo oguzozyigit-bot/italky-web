@@ -1,6 +1,13 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
+import { mountShell } from "/js/ui_shell.js";
 
-alert("LANG_POOL OK");
+alert("LANG_POOL + UI_SHELL OK");
+
+try {
+  mountShell({ scroll: "none" });
+} catch (e) {
+  alert("UI_SHELL HATA: " + (e?.message || e));
+}
 
 const btnTranslate = document.getElementById("btnTranslate");
 const btnOfflineModel = document.getElementById("btnOfflineModel");
@@ -30,7 +37,7 @@ if (btnTranslate) {
       toast("Önce çevrilecek bir metin yaz.");
       return;
     }
-    if (dstTxt) dstTxt.textContent = "LANG_POOL TEST: " + text;
+    if (dstTxt) dstTxt.textContent = "UI_SHELL TEST: " + text;
   });
 }
 
