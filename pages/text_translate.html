@@ -1,1106 +1,642 @@
-import { supabase } from "/js/supabase_client.js";
-import { ensureAuthAndCacheUser } from "/js/auth.js";
-import { LANG_POOL } from "/js/lang_pool_full.js";
-import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
-import {
-  commitUsage,
-  resolveUsageModule,
-  resolveUsageMode,
-  buildUsageNote
-} from "/js/usage_meter.js";
-import {
-  getOfflineStatus,
-  setMockOfflineLicense,
-  downloadOfflineModel,
-  translateOffline
-} from "/js/offline_translate_bridge.js";
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Quantum Translate</title>
 
-/* -------------------------
-   SHELL
--------------------------- */
-try {
-  mountShell({ scroll: "none" });
-} catch (e) {
-  console.error("ui_shell HATASI:", e);
-}
-
-/* -------------------------
-   DOM
--------------------------- */
-const $ = (id) => document.getElementById(id);
-
-const fromBtn = $("fromBtn");
-const toBtn = $("toBtn");
-const btnSwap = $("btnSwap");
-
-const fromFlag = $("fromFlag");
-const toFlag = $("toFlag");
-const fromName = $("fromName");
-const toName = $("toName");
-
-const srcTxt = $("srcTxt");
-const dstTxt = $("dstTxt");
-
-const btnMic = $("btnMic");
-const btnSpeak = $("btnSpeak");
-const btnTranslate = $("btnTranslate");
-const btnOfflineModel = $("btnOfflineModel");
-
-const langModal = $("langModal");
-const modalClose = $("modalClose");
-const langSearch = $("langSearch");
-const langList = $("langList");
-const modalModeTitle = $("modalModeTitle");
-const toastEl = $("toast");
-
-const btnModeStandard = $("btnModeStandard") || $("btnStandardMode") || $("btnStandard");
-const btnModeAi = $("btnModeAi") || $("btnAiMode") || $("btnAi") || $("btnCultural");
-const modeBadge = $("modeBadge") || $("translateModeBadge") || $("modeText");
-
-/* -------------------------
-   CONFIG
--------------------------- */
-const API_BASE = "https://italky-api.onrender.com";
-
-const TRANSLATE_STANDARD_ENDPOINTS = [
-  `${API_BASE}/api/translate`
-];
-
-const TRANSLATE_AI_ENDPOINTS = [
-  `${API_BASE}/api/translate_ai`,
-  `${API_BASE}/api/translate-ai`,
-  `${API_BASE}/api/translate`
-];
-
-const TTS_ENDPOINT = `${API_BASE}/api/tts`;
-const STT_ENDPOINT = `${API_BASE}/api/stt`;
-
-/* -------------------------
-   STATE
--------------------------- */
-let modalMode = "from";
-let fromLang = localStorage.getItem("qtt_from_lang") || "tr";
-let toLang = localStorage.getItem("qtt_to_lang") || "en";
-let ALL_LANGS = [];
-
-let mediaRecorder = null;
-let mediaChunks = [];
-let mediaStream = null;
-let mediaRecording = false;
-
-let translateCtl = null;
-let activeTranslateToken = 0;
-
-let activeMode = (localStorage.getItem("qtt_translate_mode") || "standard").toLowerCase() === "ai"
-  ? "ai"
-  : "standard";
-
-let speakCtl = null;
-let speakToken = 0;
-let lastClickAt = 0;
-let audio = null;
-
-/* -------------------------
-   HELPERS
--------------------------- */
-function canonical(code) {
-  return String(code || "").trim().toLowerCase();
-}
-
-function escapeHtml(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function toast(msg) {
-  console.log("[TEXT_TRANSLATE_TOAST]", msg);
-  if (!toastEl) {
-    alert(String(msg || ""));
-    return;
+<meta name="theme-color" content="#0a0a12">
+<style>
+  html,body{
+    background:#000 !important;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    font-family:'Outfit', sans-serif;
   }
-  toastEl.textContent = String(msg || "");
-  toastEl.classList.add("show");
-  clearTimeout(window.__textTranslateToast);
-  window.__textTranslateToast = setTimeout(() => {
-    toastEl.classList.remove("show");
-  }, 2200);
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@500;700&display=swap');
+</style>
+
+<style>
+:root{
+  --bg:#070711;
+  --bg-2:#0b0b18;
+  --card:rgba(255,255,255,0.04);
+  --card-2:rgba(255,255,255,0.06);
+  --text:#ffffff;
+  --muted:rgba(255,255,255,0.65);
+  --soft:rgba(255,255,255,0.08);
+  --glass-border:rgba(255,255,255,0.12);
+
+  --ai-grad:linear-gradient(135deg,#a5b4fc 0%,#818cf8 35%,#f9a8d4 100%);
+  --out-grad:linear-gradient(180deg,rgba(65,15,40,.92) 0%, rgba(10,8,18,.98) 100%);
+
+  --pastel-btn:linear-gradient(135deg,#c4b5fd 0%, #a5b4fc 45%, #fbcfe8 100%);
+  --pastel-shadow:0 12px 28px rgba(165,180,252,.26);
+
+  --retro-pink:#ff7abf;
+  --retro-cyan:#7dd3fc;
+  --retro-violet:#a78bfa;
+  --retro-line:rgba(255,255,255,0.14);
 }
 
-function setMicState(listening) {
-  if (!btnMic) return;
-  btnMic.classList.toggle("listening", !!listening);
-  btnMic.textContent = listening ? "⏺️" : "🎙️";
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
 }
 
-function isAiMode() {
-  return activeMode === "ai";
+html,body{
+  width:100%;
+  height:100%;
+  color:var(--text);
 }
 
-function syncModeUi() {
-  localStorage.setItem("qtt_translate_mode", isAiMode() ? "ai" : "standard");
+body{
+  background:
+    radial-gradient(circle at 15% 10%, rgba(125,211,252,.10) 0%, transparent 20%),
+    radial-gradient(circle at 85% 16%, rgba(255,122,191,.11) 0%, transparent 22%),
+    radial-gradient(circle at 50% 0%, rgba(167,139,250,.16) 0%, transparent 34%),
+    linear-gradient(180deg,#090912 0%, #000 100%);
+}
 
-  if (btnModeStandard) {
-    btnModeStandard.classList.toggle("active", !isAiMode());
-    btnModeStandard.setAttribute("aria-pressed", String(!isAiMode()));
+button, input, textarea{
+  font-family:inherit;
+}
+
+#pageContent{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background:transparent;
+}
+
+.main-wrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+  min-height:0;
+}
+
+.lang-hub{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--glass-border);
+  border-radius:18px;
+  padding:8px;
+  backdrop-filter:blur(20px);
+  margin-bottom:8px;
+  box-shadow:0 14px 28px rgba(0,0,0,.18);
+}
+
+.lang-pill{
+  flex:1;
+  min-width:0;
+  border:none;
+  background:rgba(255,255,255,0.04);
+  color:#fff;
+  border-radius:14px;
+  min-height:48px;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  cursor:pointer;
+  border:1px solid rgba(255,255,255,0.06);
+  transition:.2s ease;
+}
+.lang-pill:active{
+  transform:scale(.985);
+}
+.lang-pill-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.lang-flag{
+  font-size:18px;
+  width:24px;
+  text-align:center;
+  flex:0 0 24px;
+}
+.lang-name{
+  font-family:'Space Grotesk', sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.lang-caret{
+  color:rgba(255,255,255,.62);
+  font-size:14px;
+  flex:0 0 auto;
+}
+
+.swap-trigger{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--glass-border);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:18px;
+  flex:0 0 auto;
+  transition:.2s ease;
+}
+.swap-trigger:active{
+  transform:rotate(180deg) scale(.95);
+}
+
+.quantum-gate{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+
+.gate-panel{
+  flex:1;
+  position:relative;
+  border-radius:28px;
+  border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.025);
+  display:flex;
+  flex-direction:column;
+  padding:18px;
+  min-height:0;
+  box-shadow:0 18px 36px rgba(0,0,0,.18);
+  backdrop-filter:blur(18px);
+}
+
+.panel-in{
+  border-bottom-left-radius:0;
+  border-bottom-right-radius:0;
+  border-bottom:none;
+}
+
+.panel-out{
+  border-top-left-radius:0;
+  border-top-right-radius:0;
+  border-top:none;
+  background:var(--out-grad);
+  border-color:rgba(251,207,232,.16);
+}
+
+.panel-action{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:40px;
+  height:40px;
+  border-radius:13px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--glass-border);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:30;
+  font-size:18px;
+  transition:all .2s;
+}
+.panel-action:active{
+  transform:scale(.92);
+  background:rgba(255,255,255,0.10);
+}
+
+textarea{
+  flex:1;
+  background:transparent;
+  border:none;
+  color:#fff;
+  font-size:17px;
+  font-weight:400;
+  line-height:1.55;
+  resize:none;
+  width:100%;
+  padding-right:46px;
+  caret-color:#c4b5fd;
+}
+textarea::placeholder{
+  color:rgba(255,255,255,.34);
+}
+
+.output-area{
+  flex:1;
+  color:#fce7f3;
+  font-size:17px;
+  font-weight:600;
+  line-height:1.55;
+  overflow-y:auto;
+  white-space:pre-wrap;
+  padding-right:46px;
+}
+
+.command-bar{
+  min-height:64px;
+  background:rgba(18,18,30,.48);
+  border-left:1px solid var(--glass-border);
+  border-right:1px solid var(--glass-border);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:10px;
+  position:relative;
+  z-index:20;
+}
+
+.btn-translate{
+  width:100%;
+  min-height:46px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.24);
+  background:var(--pastel-btn);
+  color:#241630;
+  font-weight:900;
+  font-size:14px;
+  letter-spacing:.3px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  box-shadow:var(--pastel-shadow), inset 0 1px 0 rgba(255,255,255,.50);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.btn-translate:active{
+  transform:translateY(2px) scale(.985);
+}
+.btn-translate:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+.btn-offline{
+  width:100%;
+  min-height:44px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-weight:800;
+  font-size:13px;
+  letter-spacing:.2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.btn-offline:active{
+  transform:translateY(2px) scale(.985);
+}
+.btn-offline:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  background:rgba(0,0,0,.68);
+  padding:14px;
+}
+.modal.show{
+  display:flex;
+}
+
+.modal-card{
+  width:min(100%,700px);
+  max-height:min(88vh,900px);
+  overflow:hidden;
+  border-radius:28px;
+  border:1px solid var(--retro-line);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(125,211,252,.10) 0%, transparent 30%),
+    radial-gradient(circle at 85% 10%, rgba(255,122,191,.12) 0%, transparent 30%),
+    linear-gradient(180deg,#151323 0%, #090913 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.03),
+    0 30px 70px rgba(0,0,0,.55),
+    0 0 30px rgba(167,139,250,.10);
+  backdrop-filter:blur(20px);
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
+
+.modal-gridline{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:24px 24px;
+  mask-image:linear-gradient(180deg, rgba(255,255,255,.55), transparent 70%);
+}
+
+.modal-head{
+  position:sticky;
+  top:0;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 16px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(9,9,19,.86);
+  backdrop-filter:blur(14px);
+}
+
+.modal-title-wrap{
+  min-width:0;
+}
+.modal-kicker{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.8px;
+  color:var(--retro-cyan);
+  margin-bottom:6px;
+}
+.modal-title{
+  margin:0;
+  font-family:'Space Grotesk', sans-serif;
+  font-size:22px;
+  letter-spacing:-.6px;
+}
+.modal-title .accent{
+  background:linear-gradient(135deg,#7dd3fc,#a78bfa,#ff7abf);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.modal-sub{
+  margin:6px 0 0;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--muted);
+}
+
+.modal-close{
+  flex:0 0 auto;
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.modal-search{
+  padding:12px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.search-shell{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:48px;
+  border-radius:16px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.09);
+  padding:0 14px;
+}
+.search-shell span{
+  color:rgba(255,255,255,.56);
+  font-size:16px;
+}
+.search-shell input{
+  flex:1;
+  min-width:0;
+  background:transparent;
+  border:none;
+  color:#fff;
+  font-size:14px;
+}
+.search-shell input::placeholder{
+  color:rgba(255,255,255,.34);
+}
+
+.lang-list{
+  overflow:auto;
+  padding:12px 12px 16px;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+.lang-option{
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  border-radius:18px;
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+.lang-option:active{
+  transform:scale(.986);
+}
+.lang-option.active{
+  border-color:rgba(167,139,250,.40);
+  background:linear-gradient(135deg, rgba(125,211,252,.10), rgba(255,122,191,.08));
+  box-shadow:0 0 0 1px rgba(167,139,250,.12);
+}
+.lang-option-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.lang-option-flag{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.06);
+  font-size:18px;
+  flex:0 0 30px;
+}
+.lang-option-text{
+  min-width:0;
+}
+.lang-option-name{
+  font-size:14px;
+  font-weight:800;
+  color:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.lang-option-code{
+  font-size:11px;
+  font-weight:700;
+  color:rgba(255,255,255,.50);
+  margin-top:3px;
+  text-transform:uppercase;
+}
+.lang-option-check{
+  color:#c4b5fd;
+  font-size:18px;
+  font-weight:900;
+  opacity:0;
+}
+.lang-option.active .lang-option-check{
+  opacity:1;
+}
+
+.empty-state{
+  padding:22px 14px;
+  text-align:center;
+  color:rgba(255,255,255,.52);
+  font-size:13px;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  top:18px;
+  transform:translateX(-50%) translateY(-120px);
+  background:rgba(10,10,18,.94);
+  border:1px solid rgba(196,181,253,.34);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  z-index:10000;
+  transition:.25s;
+  pointer-events:none;
+  backdrop-filter:blur(14px);
+  max-width:min(92vw,520px);
+  text-align:center;
+}
+.toast.show{
+  transform:translateX(-50%) translateY(0);
+}
+
+@media (min-width:720px){
+  .main-wrap{
+    padding:14px;
   }
-
-  if (btnModeAi) {
-    btnModeAi.classList.toggle("active", isAiMode());
-    btnModeAi.setAttribute("aria-pressed", String(isAiMode()));
+  .lang-list{
+    grid-template-columns:1fr 1fr;
   }
-
-  if (modeBadge) {
-    modeBadge.textContent = isAiMode() ? "AI / Kültürel" : "Standart";
-    modeBadge.classList.toggle("ai-mode", isAiMode());
-    modeBadge.classList.toggle("standard-mode", !isAiMode());
-  }
-
-  if (btnTranslate) {
-    btnTranslate.textContent = isAiMode() ? "✨ AI ÇEVİR" : "✨ ÇEVİR";
+  .modal{
+    align-items:center;
   }
 }
 
-function setTranslateBusy(isBusy, text = "") {
-  if (!btnTranslate) return;
-  btnTranslate.disabled = !!isBusy;
-  btnTranslate.textContent = text || (isAiMode() ? "✨ AI ÇEVİR" : "✨ ÇEVİR");
-  if (dstTxt) dstTxt.style.opacity = isBusy ? "0.45" : "1";
+@media (max-width:390px){
+  .lang-name{ font-size:11px; }
+  textarea, .output-area{ font-size:16px; }
 }
+</style>
+</head>
 
-function stopTranslateRequest() {
-  try {
-    if (translateCtl) translateCtl.abort();
-  } catch {}
-  translateCtl = null;
-}
+<body>
+<main id="pageContent">
+  <div class="main-wrap">
 
-function setOutputText(text) {
-  if (!dstTxt) return;
-  if ("value" in dstTxt) dstTxt.value = String(text || "");
-  dstTxt.textContent = String(text || "");
-}
-
-function getOutputText() {
-  if (!dstTxt) return "";
-  return String(("value" in dstTxt ? dstTxt.value : dstTxt.textContent) || "").trim();
-}
-
-function setSourceText(text) {
-  if (!srcTxt) return;
-  if ("value" in srcTxt) srcTxt.value = String(text || "");
-  srcTxt.textContent = String(text || "");
-}
-
-function getSourceText() {
-  if (!srcTxt) return "";
-  return String(("value" in srcTxt ? srcTxt.value : srcTxt.textContent) || "").trim();
-}
-
-/* -------------------------
-   OFFLINE
--------------------------- */
-function hasOfflineBridge() {
-  return !!window.OfflineTranslate;
-}
-
-function ensureMockOfflineLicenseOnce() {
-  if (!hasOfflineBridge()) {
-    console.warn("Offline bridge yok, mock lisans yazılamadı.");
-    return;
-  }
-
-  const key = "italky_offline_mock_license_set_v1";
-  if (localStorage.getItem(key) === "1") return;
-
-  try {
-    setMockOfflineLicense(30);
-    localStorage.setItem(key, "1");
-    console.log("Mock offline lisans yazıldı.");
-  } catch (e) {
-    console.warn("Mock offline lisans yazılamadı:", e);
-  }
-}
-
-function readOfflineStatusSafe() {
-  try {
-    return getOfflineStatus();
-  } catch (e) {
-    console.error("Offline status okunamadı:", e);
-    return { ok: false, error: "offline_status_failed" };
-  }
-}
-
-function waitForCustomEventOnce(eventName, timeoutMs = 45000) {
-  return new Promise((resolve, reject) => {
-    let done = false;
-
-    const finish = (fn, value) => {
-      if (done) return;
-      done = true;
-      window.removeEventListener(eventName, onEvent);
-      clearTimeout(timer);
-      fn(value);
-    };
-
-    const onEvent = (e) => {
-      finish(resolve, e?.detail || {});
-    };
-
-    const timer = setTimeout(() => {
-      finish(reject, new Error(`${eventName}_timeout`));
-    }, timeoutMs);
-
-    window.addEventListener(eventName, onEvent, { once: true });
-  });
-}
-
-async function requestOfflineModelDownload(from, to, wifiOnly = false) {
-  if (!hasOfflineBridge()) {
-    throw new Error("offline_bridge_missing");
-  }
-
-  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 60000);
-  downloadOfflineModel(from, to, wifiOnly);
-  const detail = await waiter;
-
-  if (!detail?.ok) {
-    throw new Error(detail?.error || "offline_model_download_failed");
-  }
-
-  return detail;
-}
-
-async function requestOfflineTranslate(from, to, text) {
-  if (!hasOfflineBridge()) {
-    throw new Error("offline_bridge_missing");
-  }
-
-  const waiter = waitForCustomEventOnce("offlineTranslateResult", 45000);
-  translateOffline(from, to, text);
-  const detail = await waiter;
-
-  if (!detail?.ok) {
-    throw new Error(detail?.error || "offline_translate_failed");
-  }
-
-  return String(detail?.translatedText || "").trim();
-}
-
-async function tryOfflineTranslateFlow(text) {
-  if (isAiMode()) return null;
-  if (!hasOfflineBridge()) return null;
-
-  const status = readOfflineStatusSafe();
-  if (!status?.licenseValid) return null;
-
-  const from = canonical(fromLang);
-  const to = canonical(toLang);
-
-  try {
-    setTranslateBusy(true, "📦 OFFLINE HAZIRLANIYOR...");
-    await requestOfflineModelDownload(from, to, false);
-
-    setTranslateBusy(true, "📦 OFFLINE ÇEVRİLİYOR...");
-    const out = await requestOfflineTranslate(from, to, text);
-
-    if (!out) throw new Error("offline_empty_translation");
-    return out;
-  } catch (e) {
-    console.warn("Offline çeviri başarısız, online fallback denenecek:", e);
-    return null;
-  }
-}
-
-async function manualDownloadOfflineCurrentModel() {
-  console.log("manualDownloadOfflineCurrentModel başladı");
-
-  if (isAiMode()) {
-    toast("AI modunda offline model yerine online AI kullanılır.");
-    return;
-  }
-
-  if (!hasOfflineBridge()) {
-    toast("Offline köprüsü bulunamadı.");
-    return;
-  }
-
-  const status = readOfflineStatusSafe();
-  console.log("offline status", status);
-
-  if (!status?.licenseValid) {
-    toast("Offline lisans yok veya süresi dolmuş.");
-    return;
-  }
-
-  const from = canonical(fromLang);
-  const to = canonical(toLang);
-
-  try {
-    toast("Offline model indiriliyor...");
-    await requestOfflineModelDownload(from, to, false);
-    toast(`Offline model hazır: ${from.toUpperCase()} → ${to.toUpperCase()}`);
-  } catch (e) {
-    console.error("Offline model indirme hatası:", e);
-    toast(`Offline model indirilemedi: ${e?.message || "bilinmeyen hata"}`);
-  }
-}
-
-/* -------------------------
-   AUTH
--------------------------- */
-async function requireLogin() {
-  const { data: { session } = {} } = await supabase.auth.getSession();
-  if (!session?.user) {
-    location.replace("/pages/login.html");
-    return false;
-  }
-  try {
-    await ensureAuthAndCacheUser();
-  } catch {}
-  return true;
-}
-
-/* -------------------------
-   TOKENS / USAGE
--------------------------- */
-async function chargeTranslationUsage(inputText, outputText) {
-  const inLen = String(inputText || "").trim().length;
-  const outLen = String(outputText || "").trim().length;
-  const billableChars = Math.max(inLen, outLen);
-
-  if (billableChars <= 0) {
-    return { ok: true, tokens_after: null, tokens_charged: 0 };
-  }
-
-  const moduleKey = resolveUsageModule({
-    surface: "text",
-    ai: isAiMode()
-  });
-
-  const mode = resolveUsageMode({
-    ai: isAiMode()
-  });
-
-  const note = buildUsageNote({
-    surface: "text",
-    ai: isAiMode()
-  });
-
-  try {
-    const result = await commitUsage({
-      module: moduleKey,
-      mode,
-      charCount: billableChars,
-      note,
-      meta: {
-        from_lang: canonical(fromLang),
-        to_lang: canonical(toLang),
-        input_chars: inLen,
-        output_chars: outLen,
-        translation_mode: activeMode
-      }
-    });
-
-    if (typeof result?.tokens_after === "number") {
-      setHeaderTokens(result.tokens_after);
-    }
-
-    return result;
-  } catch (e) {
-    if (e?.code === "INSUFFICIENT_TOKENS") {
-      toast("Jeton yetersiz. Jeton Market açılıyor.");
-      setTimeout(() => {
-        location.href = "/pages/jetonbuy.html";
-      }, 350);
-      throw e;
-    }
-    throw e;
-  }
-}
-
-/* -------------------------
-   LANG DATA
--------------------------- */
-const TURKISH_LANG_NAMES = {
-  af:"Afrikanca", sq:"Arnavutça", am:"Amharca", ar:"Arapça", hy:"Ermenice", az:"Azerbaycanca",
-  eu:"Baskça", be:"Belarusça", bn:"Bengalce", bs:"Boşnakça", bg:"Bulgarca", ca:"Katalanca",
-  ceb:"Cebuano", zh:"Çince", "zh-cn":"Basitleştirilmiş Çince", "zh-tw":"Geleneksel Çince",
-  co:"Korsikaca", hr:"Hırvatça", cs:"Çekçe", da:"Danca", nl:"Hollandaca", en:"İngilizce",
-  eo:"Esperanto", et:"Estonca", fi:"Fince", fr:"Fransızca", fy:"Frizce", gl:"Galiçyaca",
-  ka:"Gürcüce", de:"Almanca", el:"Yunanca", gu:"Guceratça", ht:"Haiti Kreyolu", ha:"Hausa",
-  haw:"Hawaii Dili", he:"İbranice", iw:"İbranice", hi:"Hintçe", hmn:"Hmongca", hu:"Macarca",
-  is:"İzlandaca", ig:"İgbo", id:"Endonezce", ga:"İrlandaca", it:"İtalyanca", ja:"Japonca",
-  jv:"Cava Dili", kn:"Kannada", kk:"Kazakça", km:"Kmerce", rw:"Kinyarwanda", ko:"Korece",
-  ku:"Kürtçe", ky:"Kırgızca", lo:"Laoca", la:"Latince", lv:"Letonca", lt:"Litvanca",
-  lb:"Lüksemburgca", mk:"Makedonca", mg:"Malgaşça", ms:"Malayca", ml:"Malayalamca", mt:"Maltaca",
-  mi:"Maorice", mr:"Marathi", mn:"Moğolca", my:"Burmaca", ne:"Nepalce", no:"Norveççe",
-  ny:"Nyanja", or:"Oriyaca", ps:"Peştuca", fa:"Farsça", pl:"Lehçe", pt:"Portekizce",
-  pa:"Pencapça", ro:"Romence", ru:"Rusça", sm:"Samoaca", gd:"İskoç Galcesi", sr:"Sırpça",
-  st:"Sotho", sn:"Shona", sd:"Sindhi", si:"Sinhalaca", sk:"Slovakça", sl:"Slovence",
-  so:"Somalice", es:"İspanyolca", su:"Sundaca", sw:"Svahili", sv:"İsveççe", tl:"Tagalog",
-  tg:"Tacikçe", ta:"Tamilce", tt:"Tatarca", te:"Teluguca", th:"Tayca", tr:"Türkçe",
-  tk:"Türkmence", uk:"Ukraynaca", ur:"Urduca", ug:"Uygurca", uz:"Özbekçe", vi:"Vietnamca",
-  cy:"Galce", xh:"Xhosa", yi:"Yidiş", yo:"Yorubaca", zu:"Zuluca"
-};
-
-const FLAG_MAP = {
-  tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", ru:"🇷🇺", ar:"🇸🇦", zh:"🇨🇳",
-  ja:"🇯🇵", ko:"🇰🇷", pt:"🇵🇹", nl:"🇳🇱", el:"🇬🇷", uk:"🇺🇦", pl:"🇵🇱", ro:"🇷🇴", bg:"🇧🇬",
-  cs:"🇨🇿", sk:"🇸🇰", sl:"🇸🇮", hr:"🇭🇷", sr:"🇷🇸", bs:"🇧🇦", hu:"🇭🇺", fi:"🇫🇮", sv:"🇸🇪",
-  no:"🇳🇴", da:"🇩🇰", is:"🇮🇸", et:"🇪🇪", lv:"🇱🇻", lt:"🇱🇹", az:"🇦🇿", ka:"🇬🇪", fa:"🇮🇷",
-  hi:"🇮🇳", ur:"🇵🇰", bn:"🇧🇩", pa:"🇮🇳", ta:"🇮🇳", te:"🇮🇳", ml:"🇮🇳", mr:"🇮🇳", gu:"🇮🇳",
-  kn:"🇮🇳", th:"🇹🇭", vi:"🇻🇳", id:"🇮🇩", ms:"🇲🇾", sw:"🇰🇪", he:"🇮🇱", iw:"🇮🇱", hy:"🇦🇲",
-  be:"🇧🇾", kk:"🇰🇿", ky:"🇰🇬", uz:"🇺🇿", tk:"🇹🇲", mn:"🇲🇳"
-};
-
-function getFlag(code, item) {
-  return item?.flag || FLAG_MAP[canonical(code)] || "🌐";
-}
-
-function getTurkishName(item) {
-  const code = canonical(item?.code);
-  return (
-    TURKISH_LANG_NAMES[code] ||
-    item?.tr ||
-    item?.name_tr ||
-    item?.nativeName ||
-    item?.name ||
-    code.toUpperCase()
-  );
-}
-
-function sanitizeLangPool() {
-  const raw = Array.isArray(LANG_POOL) ? LANG_POOL : [];
-  const seen = new Set();
-
-  return raw
-    .map((item) => {
-      const code = canonical(item?.code);
-      if (!code || seen.has(code) || code === "auto" || code === "detect") return null;
-      seen.add(code);
-
-      const trName = getTurkishName(item);
-
-      return {
-        code,
-        flag: getFlag(code, item),
-        trName,
-        searchText: [
-          code,
-          trName,
-          item?.name || "",
-          item?.nativeName || "",
-          item?.name_tr || "",
-          item?.tr || ""
-        ].join(" ").toLowerCase()
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.trName.localeCompare(b.trName, "tr"));
-}
-
-function getLangByCode(code) {
-  return ALL_LANGS.find((x) => x.code === canonical(code)) || {
-    code: canonical(code),
-    flag: "🌐",
-    trName: String(code || "").toUpperCase()
-  };
-}
-
-function ensureValidLanguages() {
-  if (!ALL_LANGS.find((x) => x.code === canonical(fromLang))) fromLang = "tr";
-  if (!ALL_LANGS.find((x) => x.code === canonical(toLang))) toLang = "en";
-
-  if (canonical(fromLang) === canonical(toLang)) {
-    const fallback = canonical(fromLang) === "en" ? "tr" : "en";
-    if (ALL_LANGS.find((x) => x.code === fallback)) {
-      toLang = fallback;
-    }
-  }
-}
-
-function renderTopLanguageButtons() {
-  const fromObj = getLangByCode(fromLang);
-  const toObj = getLangByCode(toLang);
-
-  if (fromFlag) fromFlag.textContent = fromObj.flag;
-  if (toFlag) toFlag.textContent = toObj.flag;
-  if (fromName) fromName.textContent = fromObj.trName;
-  if (toName) toName.textContent = toObj.trName;
-
-  localStorage.setItem("qtt_from_lang", canonical(fromLang));
-  localStorage.setItem("qtt_to_lang", canonical(toLang));
-}
-
-/* -------------------------
-   LANG MODAL
--------------------------- */
-function renderLangList(query = "") {
-  const q = String(query || "").trim().toLowerCase();
-  const currentCode = modalMode === "from" ? canonical(fromLang) : canonical(toLang);
-
-  const filtered = !q
-    ? ALL_LANGS
-    : ALL_LANGS.filter((item) => item.searchText.includes(q));
-
-  if (!filtered.length) {
-    langList.innerHTML = `<div class="empty-state">Aradığın dil bulunamadı.</div>`;
-    return;
-  }
-
-  langList.innerHTML = filtered.map((item) => `
-    <button class="lang-option ${item.code === currentCode ? "active" : ""}" type="button" data-code="${item.code}">
-      <div class="lang-option-left">
-        <div class="lang-option-flag">${item.flag}</div>
-        <div class="lang-option-text">
-          <div class="lang-option-name">${escapeHtml(item.trName)}</div>
-          <div class="lang-option-code">${escapeHtml(item.code)}</div>
+    <section class="lang-hub">
+      <button class="lang-pill" id="fromBtn" type="button" aria-label="Kaynak dili seç">
+        <div class="lang-pill-left">
+          <span class="lang-flag" id="fromFlag">🇹🇷</span>
+          <span class="lang-name" id="fromName">Türkçe</span>
         </div>
+        <span class="lang-caret">▾</span>
+      </button>
+
+      <button class="swap-trigger" id="btnSwap" type="button" aria-label="Dilleri değiştir">⇄</button>
+
+      <button class="lang-pill" id="toBtn" type="button" aria-label="Hedef dili seç">
+        <div class="lang-pill-left">
+          <span class="lang-flag" id="toFlag">🇬🇧</span>
+          <span class="lang-name" id="toName">İngilizce</span>
+        </div>
+        <span class="lang-caret">▾</span>
+      </button>
+    </section>
+
+    <section class="quantum-gate">
+      <div class="gate-panel panel-in">
+        <textarea id="srcTxt" placeholder="Metin girin..."></textarea>
       </div>
-      <div class="lang-option-check">✓</div>
-    </button>
-  `).join("");
 
-  langList.querySelectorAll(".lang-option").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const code = canonical(btn.dataset.code);
-      if (!code) return;
-
-      if (modalMode === "from") {
-        fromLang = code;
-        if (canonical(fromLang) === canonical(toLang)) {
-          const other = ALL_LANGS.find((x) => x.code !== canonical(fromLang));
-          if (other) toLang = other.code;
-        }
-      } else {
-        toLang = code;
-        if (canonical(toLang) === canonical(fromLang)) {
-          const other = ALL_LANGS.find((x) => x.code !== canonical(toLang));
-          if (other) fromLang = other.code;
-        }
-      }
-
-      renderTopLanguageButtons();
-      closeLangModal();
-    });
-  });
-}
-
-function openLangModal(mode) {
-  modalMode = mode === "to" ? "to" : "from";
-  if (modalModeTitle) {
-    modalModeTitle.textContent = modalMode === "from" ? "Kaynak Dil" : "Hedef Dil";
-  }
-  if (langModal) {
-    langModal.classList.add("show");
-    langModal.setAttribute("aria-hidden", "false");
-  }
-  if (langSearch) {
-    langSearch.value = "";
-    setTimeout(() => langSearch.focus(), 40);
-  }
-  renderLangList("");
-}
-
-function closeLangModal() {
-  if (langModal) {
-    langModal.classList.remove("show");
-    langModal.setAttribute("aria-hidden", "true");
-  }
-}
-
-/* -------------------------
-   SPEAK
--------------------------- */
-function stopSpeak() {
-  try {
-    if (speakCtl) speakCtl.abort();
-  } catch {}
-  speakCtl = null;
-
-  try {
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-  } catch {}
-  audio = null;
-
-  try { window.NativeTTS?.stop?.(); } catch {}
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-}
-
-function speakNativeFallback(text, langCode) {
-  const t = String(text || "").trim();
-  if (!t) return false;
-
-  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-    try { window.NativeTTS.stop?.(); } catch {}
-    setTimeout(() => {
-      try { window.NativeTTS.speak(t, String(langCode || "en")); } catch {}
-    }, 100);
-    return true;
-  }
-
-  if (!window.speechSynthesis) return false;
-
-  try { window.speechSynthesis.cancel(); } catch {}
-  const u = new SpeechSynthesisUtterance(t);
-  u.lang = String(langCode || "en");
-  u.rate = 1;
-  u.pitch = 1;
-  u.volume = 1;
-
-  setTimeout(() => {
-    try { window.speechSynthesis.speak(u); } catch {}
-  }, 60);
-
-  return true;
-}
-
-async function speakText(text, langCode) {
-  const now = Date.now();
-  if (now - lastClickAt < 180) return;
-  lastClickAt = now;
-
-  const t = String(text || "").trim();
-  if (!t || t === "...") return;
-
-  stopSpeak();
-
-  const myToken = ++speakToken;
-
-  if (btnSpeak) {
-    btnSpeak.style.pointerEvents = "none";
-    setTimeout(() => {
-      btnSpeak.style.pointerEvents = "auto";
-    }, 250);
-  }
-
-  try {
-    speakCtl = new AbortController();
-
-    const r = await fetch(TTS_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: t,
-        lang: canonical(langCode || "en")
-      }),
-      signal: speakCtl.signal
-    });
-
-    if (myToken !== speakToken) return;
-
-    const j = await r.json().catch(() => null);
-    if (myToken !== speakToken) return;
-
-    if (j?.audio_base64) {
-      audio = new Audio("data:audio/mpeg;base64," + j.audio_base64);
-      audio.playsInline = true;
-      audio.onended = () => { if (myToken === speakToken) audio = null; };
-      audio.onerror = () => { if (myToken === speakToken) audio = null; };
-      if (myToken !== speakToken) return;
-      await audio.play();
-      return;
-    }
-
-    speakNativeFallback(t, canonical(langCode));
-  } catch (e) {
-    if (e?.name !== "AbortError") {
-      speakNativeFallback(t, canonical(langCode));
-    }
-  }
-}
-
-/* -------------------------
-   MIC
--------------------------- */
-function stopMediaStream() {
-  try {
-    mediaStream?.getTracks?.().forEach((track) => track.stop());
-  } catch {}
-  mediaStream = null;
-}
-
-function browserSpeechSupported() {
-  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-}
-
-function mediaRecorderSupported() {
-  return !!(navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined");
-}
-
-async function startBrowserSpeechRecognition() {
-  return new Promise((resolve) => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      resolve(false);
-      return;
-    }
-
-    let recognition;
-    try {
-      recognition = new SR();
-      recognition.lang = canonical(fromLang);
-      recognition.interimResults = false;
-      recognition.continuous = false;
-      recognition.maxAlternatives = 1;
-    } catch {
-      resolve(false);
-      return;
-    }
-
-    let finished = false;
-    const done = (ok) => {
-      if (finished) return;
-      finished = true;
-      setMicState(false);
-      resolve(ok);
-    };
-
-    recognition.onresult = async (e) => {
-      const t = e.results?.[0]?.[0]?.transcript || "";
-      const txt = String(t || "").trim();
-      if (txt) {
-        setSourceText(txt);
-        await translateText();
-      }
-    };
-
-    recognition.onerror = () => done(false);
-    recognition.onend = () => done(true);
-
-    try {
-      setMicState(true);
-      recognition.start();
-    } catch {
-      done(false);
-    }
-  });
-}
-
-async function startMediaRecorderFlow() {
-  if (!mediaRecorderSupported()) {
-    toast("Bu cihazda mikrofon özelliği desteklenmiyor.");
-    return;
-  }
-
-  if (!mediaRecording) {
-    try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(mediaStream);
-      mediaChunks = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data?.size) mediaChunks.push(e.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        setMicState(false);
-        mediaRecording = false;
-
-        const blob = new Blob(mediaChunks, { type: "audio/webm" });
-        const fd = new FormData();
-        fd.append("file", blob, "speech.webm");
-        fd.append("lang", canonical(fromLang));
-
-        setSourceText("Dinleniyor...");
-
-        try {
-          const r = await fetch(STT_ENDPOINT, {
-            method: "POST",
-            body: fd
-          });
-
-          const j = await r.json().catch(() => ({}));
-          const text = String(j?.text || "").trim();
-
-          if (text) {
-            setSourceText(text);
-            await translateText();
-          } else {
-            setSourceText("");
-            toast("Ses çözümlenemedi.");
-          }
-        } catch (e) {
-          console.error("stt error", e);
-          setSourceText("");
-          toast("Ses çözümlenemedi.");
-        } finally {
-          stopMediaStream();
-        }
-      };
-
-      mediaRecorder.start();
-      mediaRecording = true;
-      setMicState(true);
-    } catch (e) {
-      console.error("mic permission error", e);
-      stopMediaStream();
-      setMicState(false);
-      toast("Mikrofon izni gerekli.");
-    }
-    return;
-  }
-
-  try {
-    mediaRecorder.stop();
-  } catch {
-    mediaRecording = false;
-    setMicState(false);
-    stopMediaStream();
-  }
-}
-
-async function handleMic() {
-  if (mediaRecording) {
-    await startMediaRecorderFlow();
-    return;
-  }
-
-  if (browserSpeechSupported()) {
-    const ok = await startBrowserSpeechRecognition();
-    if (ok) return;
-  }
-
-  await startMediaRecorderFlow();
-}
-
-/* -------------------------
-   TRANSLATE
--------------------------- */
-async function fetchTranslation(body, endpoints) {
-  let lastError = null;
-
-  for (const endpoint of endpoints) {
-    try {
-      const ctl = new AbortController();
-      translateCtl = ctl;
-
-      const r = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: ctl.signal
-      });
-
-      const raw = await r.text().catch(() => "");
-      if (!r.ok) {
-        lastError = new Error(`translate_fail_${r.status}`);
-        continue;
-      }
-
-      let data = {};
-      try {
-        data = JSON.parse(raw);
-      } catch {
-        data = {};
-      }
-
-      const out = String(
-        data?.translated ||
-        data?.translation ||
-        data?.text ||
-        data?.output ||
-        ""
-      ).trim();
-
-      if (out) return { ok: true, data, out };
-      lastError = new Error("empty_translation");
-    } catch (e) {
-      if (e?.name === "AbortError") throw e;
-      lastError = e;
-    }
-  }
-
-  throw lastError || new Error("translate_failed");
-}
-
-async function translateText() {
-  const text = getSourceText();
-
-  if (!text) {
-    setOutputText("...");
-    toast("Önce çevrilecek bir metin yaz.");
-    return;
-  }
-
-  stopTranslateRequest();
-
-  const myToken = ++activeTranslateToken;
-  setTranslateBusy(true, isAiMode() ? "✨ AI ÇEVRİLİYOR..." : "✨ ÇEVRİLİYOR...");
-  setOutputText("Çevriliyor...");
-
-  try {
-    let out = null;
-
-    if (!isAiMode()) {
-      out = await tryOfflineTranslateFlow(text);
-    }
-
-    if (!out) {
-      const body = {
-        text,
-        source: canonical(fromLang),
-        target: canonical(toLang),
-        from_lang: canonical(fromLang),
-        to_lang: canonical(toLang),
-        mode: activeMode,
-        use_ai: isAiMode(),
-        cultural: isAiMode(),
-        special_voice: false
-      };
-
-      const endpoints = isAiMode()
-        ? TRANSLATE_AI_ENDPOINTS
-        : TRANSLATE_STANDARD_ENDPOINTS;
-
-      const result = await fetchTranslation(body, endpoints);
-
-      if (myToken !== activeTranslateToken) return;
-
-      out = String(result?.out || "").trim();
-    }
-
-    if (myToken !== activeTranslateToken) return;
-
-    if (!out) {
-      setOutputText("⚠️ Çeviri şu an yapılamadı.");
-      return;
-    }
-
-    await chargeTranslationUsage(text, out);
-
-    if (myToken !== activeTranslateToken) return;
-
-    setOutputText(out);
-
-    setTimeout(() => {
-      speakText(out, canonical(toLang));
-    }, 160);
-  } catch (e) {
-    console.warn("translateText error:", e);
-    if (e?.name !== "AbortError" && String(e?.message || "") !== "insufficient_tokens") {
-      setOutputText("⚠️ Çeviri şu an yapılamadı.");
-    }
-  } finally {
-    if (myToken === activeTranslateToken) {
-      setTranslateBusy(false);
-    }
-  }
-}
-
-/* -------------------------
-   BIND
--------------------------- */
-function bind() {
-  fromBtn?.addEventListener("click", () => openLangModal("from"));
-  toBtn?.addEventListener("click", () => openLangModal("to"));
-
-  btnSwap?.addEventListener("click", () => {
-    const a = fromLang;
-    const b = toLang;
-    fromLang = b;
-    toLang = a;
-    renderTopLanguageButtons();
-    toast("Diller değiştirildi");
-  });
-
-  modalClose?.addEventListener("click", closeLangModal);
-
-  langModal?.addEventListener("click", (e) => {
-    if (e.target === langModal) closeLangModal();
-  });
-
-  langSearch?.addEventListener("input", (e) => {
-    renderLangList(e.target.value || "");
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && langModal?.classList.contains("show")) {
-      closeLangModal();
-    }
-  });
-
-  btnTranslate?.addEventListener("click", async () => {
-    await translateText();
-  });
-
-  btnOfflineModel?.addEventListener("click", async () => {
-    console.log("btnOfflineModel click alındı");
-    toast("Offline butonu çalıştı");
-    await manualDownloadOfflineCurrentModel();
-  });
-
-  btnMic?.addEventListener("click", handleMic);
-
-  btnSpeak?.addEventListener("click", () => {
-    const t = getOutputText();
-    if (t && t !== "...") {
-      speakText(t, canonical(toLang));
-    }
-  });
-
-  btnModeStandard?.addEventListener("click", () => {
-    activeMode = "standard";
-    syncModeUi();
-    toast("Standart çeviri aktif");
-  });
-
-  btnModeAi?.addEventListener("click", () => {
-    activeMode = "ai";
-    syncModeUi();
-    toast("AI / kültürel çeviri aktif");
-  });
-
-  srcTxt?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      translateText();
-    }
-  });
-}
-
-/* -------------------------
-   BOOT
--------------------------- */
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("text_translate_page.js yüklendi");
-
-  if (!(await requireLogin())) return;
-
-  ALL_LANGS = sanitizeLangPool();
-  ensureValidLanguages();
-  renderTopLanguageButtons();
-  renderLangList("");
-  bind();
-  syncModeUi();
-
-  setOutputText("...");
-  setMicState(false);
-
-  ensureMockOfflineLicenseOnce();
-
-  const status = readOfflineStatusSafe();
-  console.log("offline status:", status);
-  console.log("window.OfflineTranslate:", !!window.OfflineTranslate);
-  console.log("btnOfflineModel:", !!btnOfflineModel);
-
-  window.italkyOffline = {
-    status: () => readOfflineStatusSafe(),
-    downloadCurrentModel: () => manualDownloadOfflineCurrentModel(),
-    translateCurrent: () => translateText()
-  };
-});
-
-window.addEventListener("beforeunload", () => {
-  stopSpeak();
-  stopTranslateRequest();
-  stopMediaStream();
-  try { mediaRecorder?.stop?.(); } catch {}
-});
+      <div class="command-bar">
+        <button class="btn-translate" id="btnTranslate" type="button">
+          ✨ ÇEVİR
+        </button>
+
+        <button class="btn-offline" id="btnOfflineModel" type="button">
+          📦 Offline Model İndir
+        </button>
+      </div>
+
+      <div class="gate-panel panel-out">
+        <button class="panel-action" id="btnSpeak" type="button" title="Dinle">🔊</button>
+        <div class="output-area" id="dstTxt">...</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="modal" id="langModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-gridline"></div>
+
+    <div class="modal-head">
+      <div class="modal-title-wrap">
+        <div class="modal-kicker">RETRO MODERN • 90s POPUP</div>
+        <h2 class="modal-title"><span class="accent" id="modalModeTitle">Dil</span> Seç</h2>
+        <p class="modal-sub">Bayraklı tam dil listesi burada. Arayıp dokun, seç ve devam et.</p>
+      </div>
+      <button class="modal-close" id="modalClose" type="button" aria-label="Kapat">✕</button>
+    </div>
+
+    <div class="modal-search">
+      <div class="search-shell">
+        <span>⌕</span>
+        <input id="langSearch" type="text" placeholder="Dil ara..." autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="lang-list" id="langList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/js/text_translate_page.js"></script>
+</body>
+</html>
