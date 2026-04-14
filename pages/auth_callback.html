@@ -108,16 +108,15 @@
     }
 
     async function resolvePostLoginTarget(next = ""){
-      if (next) return next;
+  const access = await getAccessState();
 
-      const access = await getAccessState();
+  if (!access?.ok || !access?.access_open) {
+    return MEMBERSHIP;
+  }
 
-      if (access?.ok && access?.access_open) {
-        return HOME;
-      }
-
-      return MEMBERSHIP;
-    }
+  if (next) return next;
+  return HOME;
+}
 
     try{
       const url = new URL(location.href);
