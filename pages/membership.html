@@ -684,29 +684,30 @@
     }
 
     async function recheckAndRoute(){
-  try{
-    sendUserIdToNative();
+      try{
+        sendUserIdToNative();
 
-    if(window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function"){
-      window.AndroidBilling.restorePurchases();
-      await new Promise(r => setTimeout(r, 1800));
+        if(window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function"){
+          toast("Mevcut abonelik kontrol ediliyor...");
+          window.AndroidBilling.restorePurchases();
+          await new Promise(r => setTimeout(r, 1800));
+        }
+
+        const access = await getAccessState();
+        syncAccessUi(access);
+
+        if(access?.access_open){
+          toast("Abonelik doğrulandı!");
+          setTimeout(() => location.replace(HOME), 800);
+          return;
+        }
+
+        toast("Play aboneliğiniz varsa birkaç saniye sonra tekrar deneyin");
+      }catch(e){
+        console.error("recheckAndRoute error:", e);
+        toast("Güncelleme başarısız");
+      }
     }
-
-    const access = await getAccessState();
-    syncAccessUi(access);
-
-    if(access?.access_open){
-      toast("Abonelik doğrulandı!");
-      setTimeout(() => location.replace(HOME), 800);
-      return;
-    }
-
-    toast("Play aboneliğiniz varsa birkaç saniye sonra tekrar kontrol edin");
-  }catch(e){
-    console.error("recheckAndRoute error:", e);
-    toast("Güncelleme başarısız");
-  }
-}
 
     window.onNativeSubscriptionSuccess = async function(){
       toast("Ödeme başarılı! Yetkiler tanımlanıyor...");
@@ -730,7 +731,18 @@
         const access = await getAccessState();
         sendUserIdToNative();
         syncAccessUi(access);
+
+        if(!access?.access_open && window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function"){
+          setTimeout(() => {
+            try{
+              window.AndroidBilling.restorePurchases();
+            }catch(e){
+              console.error("auto restore error:", e);
+            }
+          }, 600);
+        }
       }catch(e){
+        console.error("membership boot error:", e);
         setStatus("err", "Bilgileriniz yüklenemedi. Lütfen tekrar deneyin.");
       }
     })();
