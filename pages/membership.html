@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
+  <title>italkyAI • Üyelik</title>
+  <meta name="theme-color" content="#07080b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#07080b;
+      --text:#f8fafc;
+      --muted:rgba(255,255,255,.68);
+      --line:rgba(255,255,255,.08);
+      --glass:rgba(255,255,255,.05);
+
+      --cyan:#22d3ee;
+      --blue:#3b82f6;
+      --violet:#8b5cf6;
+      --green:#84cc16;
+      --orange:#f59e0b;
+      --pink:#ec4899;
+
+      --grad:linear-gradient(135deg,#22d3ee 0%,#3b82f6 35%,#8b5cf6 68%,#ec4899 100%);
+      --grad2:linear-gradient(135deg,#84cc16 0%,#22d3ee 45%,#3b82f6 100%);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:
+        radial-gradient(circle at top, rgba(34,211,238,.12), transparent 28%),
+        radial-gradient(circle at bottom, rgba(139,92,246,.12), transparent 24%),
+        linear-gradient(180deg,#05060a 0%, #090b12 100%);
+      color:var(--text);
+      font-family:Outfit,system-ui,sans-serif;
+    }
+
+    body{
+      overflow-x:hidden;
+    }
+
+    #pageContent{
+      width:100%;
+      max-width:560px;
+      margin:0 auto;
+      padding:18px 14px 120px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      padding:22px 18px 20px;
+      border-radius:26px;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(34,211,238,.16), transparent 26%),
+        radial-gradient(circle at 95% 0%, rgba(236,72,153,.12), transparent 28%),
+        linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.09);
+      box-shadow:0 22px 50px rgba(0,0,0,.28);
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:auto -60px -60px auto;
+      width:180px;
+      height:180px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(139,92,246,.20), transparent 70%);
+      pointer-events:none;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:34px;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.09);
+      color:#fff;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.4px;
+      margin-bottom:12px;
+    }
+
+    .hero-title{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:30px;
+      line-height:1.02;
+      letter-spacing:-1.2px;
+      font-weight:800;
+    }
+
+    .hero-title .accent{
+      background:var(--grad2);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero-text{
+      margin:12px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.58;
+      font-weight:700;
+    }
+
+    .price-card{
+      position:relative;
+      overflow:hidden;
+      border-radius:24px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.028));
+      border:1px solid rgba(255,255,255,.09);
+      padding:18px;
+      box-shadow:0 16px 34px rgba(0,0,0,.22);
+    }
+
+    .price-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+
+    .plan-name{
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+      margin:0 0 5px;
+      font-family:"Space Grotesk",sans-serif;
+    }
+
+    .plan-sub{
+      margin:0;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      line-height:1.5;
+    }
+
+    .plan-chip{
+      min-height:32px;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(34,211,238,.12);
+      border:1px solid rgba(34,211,238,.20);
+      color:#cffafe;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .price-line{
+      display:flex;
+      align-items:flex-end;
+      gap:10px;
+      margin-top:6px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+
+    .trial{
+      font-size:28px;
+      font-weight:900;
+      line-height:1;
+      color:#fff;
+    }
+
+    .trial small{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .price{
+      font-size:16px;
+      color:#bef264;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .feature-list{
+      display:grid;
+      gap:10px;
+      margin:0;
+      padding:0;
+      list-style:none;
+    }
+
+    .feature-list li{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      color:#fff;
+      font-size:13px;
+      line-height:1.5;
+      font-weight:800;
+    }
+
+    .dot{
+      margin-top:4px;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--cyan),var(--blue));
+      flex:0 0 auto;
+      box-shadow:0 0 16px rgba(34,211,238,.35);
+    }
+
+    .cta{
+      display:grid;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .buy-btn, .secondary-btn{
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      padding:0 18px;
+      font:inherit;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      width:100%;
+    }
+
+    .buy-btn{
+      background:var(--grad);
+      color:#081018;
+      box-shadow:0 18px 36px rgba(59,130,246,.22);
+    }
+
+    .secondary-btn{
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.09);
+      color:#fff;
+    }
+
+    .buy-btn[disabled], .secondary-btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .meta-card{
+      border-radius:22px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      padding:16px;
+      display:grid;
+      gap:10px;
+    }
+
+    .meta-line{
+      font-size:13px;
+      color:#fff;
+      line-height:1.5;
+      font-weight:800;
+    }
+
+    .meta-line span{
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .status-box{
+      border-radius:18px;
+      padding:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:13px;
+      line-height:1.55;
+      font-weight:800;
+      color:#fff;
+    }
+
+    .status-box.ok{
+      background:rgba(132,204,22,.08);
+      border-color:rgba(132,204,22,.16);
+      color:#ecfccb;
+    }
+
+    .status-box.warn{
+      background:rgba(245,158,11,.08);
+      border-color:rgba(245,158,11,.16);
+      color:#ffedd5;
+    }
+
+    .status-box.err{
+      background:rgba(239,68,68,.08);
+      border-color:rgba(239,68,68,.16);
+      color:#fee2e2;
+    }
+
+    .tiny{
+      text-align:center;
+      color:rgba(255,255,255,.54);
+      font-size:11px;
+      line-height:1.6;
+      font-weight:700;
+      padding:2px 8px 0;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      top:20px;
+      transform:translateX(-50%) translateY(-120px);
+      min-height:44px;
+      padding:10px 16px;
+      border-radius:16px;
+      background:rgba(12,16,28,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      max-width:min(92vw,420px);
+      z-index:99999;
+      box-shadow:0 18px 36px rgba(0,0,0,.35);
+      transition:.22s ease;
+      backdrop-filter:blur(14px);
+      pointer-events:none;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <main id="pageContent">
+    <section class="hero">
+      <div class="badge">15 Gün Ücretsiz Deneme</div>
+      <h2 class="hero-title">Kapıyı açan <span class="accent">tek üyelik</span></h2>
+      <p class="hero-text">
+        İlk 15 gün ücretsiz başlar. Süre bitince uygulamaya devam etmek için aylık üyelik aktif olmalıdır.
+        İstediğiniz zaman iptal edebilirsiniz.
+      </p>
+    </section>
+
+    <section class="price-card">
+      <div class="price-top">
+        <div>
+          <h3 class="plan-name">italky Pro</h3>
+          <p class="plan-sub">Tüm erişim kapısını açan ana üyelik planı</p>
+        </div>
+        <div class="plan-chip">Ürün Kimliği: italky_pro</div>
+      </div>
+
+      <div class="price-line">
+        <div class="trial">15 Gün <small>ücretsiz</small></div>
+        <div class="price">Sonra aylık 69,90 TL</div>
+      </div>
+
+      <ul class="feature-list">
+        <li><span class="dot"></span><span>15 gün sonunda üyelik yoksa uygulamaya giriş kapanır.</span></li>
+        <li><span class="dot"></span><span>İptal etseniz bile mevcut dönem sonuna kadar kullanım devam eder.</span></li>
+        <li><span class="dot"></span><span>Jetonlar üyelik aktifken premium özelliklerde kullanılabilir.</span></li>
+        <li><span class="dot"></span><span>Normal çeviri ve ücretsiz TTS tarafında sayaç çalışmaz.</span></li>
+      </ul>
+
+      <div class="cta">
+        <button class="buy-btn" id="buyBtn" type="button">15 Gün Ücretsiz Başlat</button>
+        <button class="secondary-btn" id="continueBtn" type="button">Durumu Yenile</button>
+      </div>
+    </section>
+
+    <section class="meta-card">
+      <div class="meta-line"><span>Durum:</span> <strong id="statusLabel">Kontrol ediliyor...</strong></div>
+      <div class="meta-line"><span>Trial kalan gün:</span> <strong id="trialDaysLabel">-</strong></div>
+      <div class="meta-line"><span>Üyelik bitiş:</span> <strong id="membershipEndsLabel">-</strong></div>
+      <div class="meta-line"><span>Jeton:</span> <strong id="tokensLabel">0</strong></div>
+    </section>
+
+    <div class="status-box" id="statusBox">
+      Üyelik bilgisi kontrol ediliyor...
+    </div>
+
+    <div class="tiny">
+      Satın alma Google Play üzerinden yapılır. Deneme süresi sonunda abonelik şartları geçerli olur.
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    const UI = {
+      buyBtn: $("buyBtn"),
+      continueBtn: $("continueBtn"),
+      toast: $("toast"),
+      statusBox: $("statusBox"),
+      statusLabel: $("statusLabel"),
+      trialDaysLabel: $("trialDaysLabel"),
+      membershipEndsLabel: $("membershipEndsLabel"),
+      tokensLabel: $("tokensLabel")
+    };
+
+    const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
+    const HOME = "/pages/home.html";
+    const LOGIN = "/pages/login.html";
+    const PRODUCT_ID = "italky_pro";
+
+    let currentUserId = "";
+    let currentSession = null;
+
+    function toast(msg){
+      if(!UI.toast) return;
+      UI.toast.textContent = String(msg || "");
+      UI.toast.classList.add("show");
+      clearTimeout(window.__membershipToast);
+      window.__membershipToast = setTimeout(() => {
+        UI.toast.classList.remove("show");
+      }, 2200);
+    }
+
+    function setStatus(kind, text){
+      UI.statusBox.className = "status-box";
+      if (kind) UI.statusBox.classList.add(kind);
+      UI.statusBox.textContent = text;
+    }
+
+    function fmtDate(value){
+      if (!value) return "-";
+      try{
+        return new Date(value).toLocaleString("tr-TR");
+      }catch{
+        return String(value);
+      }
+    }
+
+    async function getSessionOrLogin(){
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session){
+        location.replace(LOGIN);
+        throw new Error("Oturum yok");
+      }
+      currentSession = session;
+      currentUserId = session.user?.id || "";
+      if(!currentUserId){
+        location.replace(LOGIN);
+        throw new Error("Kullanıcı yok");
+      }
+      return session;
+    }
+
+    async function getAccessState(){
+      const session = await getSessionOrLogin();
+
+      const resp = await fetch(API_ACCESS, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      const json = await resp.json().catch(() => ({}));
+
+      if(!resp.ok){
+        throw new Error(json?.detail || "Erişim bilgisi alınamadı");
+      }
+
+      return json;
+    }
+
+    function syncAccessUi(data){
+      const accessOpen = !!data?.access_open;
+      const membershipStatus = String(data?.membership_status || "inactive");
+      const tokenCount = Number(data?.tokens ?? 0);
+
+      UI.statusLabel.textContent = accessOpen ? "Erişim Açık" : "Üyelik Gerekli";
+      UI.trialDaysLabel.textContent = String(data?.trial_days_left ?? 0);
+      UI.membershipEndsLabel.textContent = fmtDate(data?.membership_ends_at);
+      UI.tokensLabel.textContent = String(tokenCount);
+      try { setHeaderTokens(tokenCount); } catch {}
+
+      if(accessOpen){
+        setStatus("ok", "Erişim açık. İstersen doğrudan uygulamaya devam edebilirsin.");
+        UI.buyBtn.textContent = "Uygulamaya Devam Et";
+      } else if (membershipStatus === "trial") {
+        setStatus("warn", "Deneme süresi bittiğinde uygulamaya devam etmek için üyelik gerekir.");
+        UI.buyBtn.textContent = "15 Gün Ücretsiz Başlat";
+      } else {
+        setStatus("err", "Üyelik aktif değil. Devam etmek için italky Pro başlatın.");
+        UI.buyBtn.textContent = "Üyeliği Başlat";
+      }
+    }
+
+    function isNativeBillingReady(){
+      return !!(window.AndroidBilling && typeof window.AndroidBilling.buy === "function");
+    }
+
+    function sendUserIdToNative(){
+      try{
+        if(window.AndroidBilling && typeof window.AndroidBilling.setUserId === "function" && currentUserId){
+          window.AndroidBilling.setUserId(currentUserId);
+        }
+      }catch{}
+    }
+
+    async function handleBuyClick(){
+      try{
+        const access = await getAccessState();
+
+        if(access?.access_open){
+          location.replace(HOME);
+          return;
+        }
+
+        sendUserIdToNative();
+
+        if(!isNativeBillingReady()){
+          toast("Ödeme sistemi hazır değil");
+          return;
+        }
+
+        UI.buyBtn.disabled = true;
+        toast("Google Play açılıyor...");
+        window.AndroidBilling.buy(PRODUCT_ID);
+      }catch(e){
+        console.error("handleBuyClick error:", e);
+        toast(e?.message || "Satın alma başlatılamadı");
+      }finally{
+        setTimeout(() => {
+          UI.buyBtn.disabled = false;
+        }, 1200);
+      }
+    }
+
+    async function recheckAndRoute(){
+      try{
+        const access = await getAccessState();
+        syncAccessUi(access);
+
+        if(access?.access_open){
+          toast("Üyelik aktif. Hoş geldin!");
+          setTimeout(() => location.replace(HOME), 350);
+        }
+      }catch(e){
+        console.error("recheckAndRoute error:", e);
+        toast(e?.message || "Durum güncellenemedi");
+      }
+    }
+
+    window.onNativeSubscriptionSuccess = async function(){
+      toast("Üyelik doğrulanıyor...");
+      setTimeout(() => {
+        recheckAndRoute();
+      }, 1200);
+    };
+
+    window.addEventListener("italky-subscription-success", async () => {
+      toast("Üyelik doğrulanıyor...");
+      setTimeout(() => {
+        recheckAndRoute();
+      }, 1200);
+    });
+
+    window.addEventListener("italky-billing-error", (e) => {
+      const msg = e?.detail?.message || "Satın alma doğrulanamadı";
+      toast(msg);
+    });
+
+    UI.buyBtn?.addEventListener("click", handleBuyClick);
+    UI.continueBtn?.addEventListener("click", recheckAndRoute);
+
+    (async function boot(){
+      try{
+        await mountShell({
+          title: "Üyelik",
+          showBack: true
+        });
+
+        const access = await getAccessState();
+        sendUserIdToNative();
+        syncAccessUi(access);
+      }catch(e){
+        console.error("membership boot error:", e);
+        setStatus("err", e?.message || "Üyelik bilgisi alınamadı");
+      }
+    })();
+  </script>
+</body>
+</html>
