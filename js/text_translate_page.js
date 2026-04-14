@@ -44,6 +44,7 @@ const dstTxt = $("dstTxt");
 const btnMic = $("btnMic");
 const btnSpeak = $("btnSpeak");
 const btnTranslate = $("btnTranslate");
+const btnOfflineModel = $("btnOfflineModel");
 
 const langModal = $("langModal");
 const modalClose = $("modalClose");
@@ -52,7 +53,6 @@ const langList = $("langList");
 const modalModeTitle = $("modalModeTitle");
 const toastEl = $("toast");
 
-/* AI / MODE (HTML’de varsa kullanır, yoksa bozulmaz) */
 const btnModeStandard = $("btnModeStandard") || $("btnStandardMode") || $("btnStandard");
 const btnModeAi = $("btnModeAi") || $("btnAiMode") || $("btnAi") || $("btnCultural");
 const modeBadge = $("modeBadge") || $("translateModeBadge") || $("modeText");
@@ -117,13 +117,17 @@ function escapeHtml(str) {
 }
 
 function toast(msg) {
-  if (!toastEl) return;
+  console.log("[TEXT_TRANSLATE_TOAST]", msg);
+  if (!toastEl) {
+    alert(String(msg || ""));
+    return;
+  }
   toastEl.textContent = String(msg || "");
   toastEl.classList.add("show");
   clearTimeout(window.__textTranslateToast);
   window.__textTranslateToast = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 1800);
+  }, 2200);
 }
 
 function setMicState(listening) {
@@ -204,7 +208,10 @@ function hasOfflineBridge() {
 }
 
 function ensureMockOfflineLicenseOnce() {
-  if (!hasOfflineBridge()) return;
+  if (!hasOfflineBridge()) {
+    console.warn("Offline bridge yok, mock lisans yazılamadı.");
+    return;
+  }
 
   const key = "italky_offline_mock_license_set_v1";
   if (localStorage.getItem(key) === "1") return;
@@ -212,6 +219,7 @@ function ensureMockOfflineLicenseOnce() {
   try {
     setMockOfflineLicense(30);
     localStorage.setItem(key, "1");
+    console.log("Mock offline lisans yazıldı.");
   } catch (e) {
     console.warn("Mock offline lisans yazılamadı:", e);
   }
@@ -221,6 +229,7 @@ function readOfflineStatusSafe() {
   try {
     return getOfflineStatus();
   } catch (e) {
+    console.error("Offline status okunamadı:", e);
     return { ok: false, error: "offline_status_failed" };
   }
 }
@@ -307,6 +316,8 @@ async function tryOfflineTranslateFlow(text) {
 }
 
 async function manualDownloadOfflineCurrentModel() {
+  console.log("manualDownloadOfflineCurrentModel başladı");
+
   if (isAiMode()) {
     toast("AI modunda offline model yerine online AI kullanılır.");
     return;
@@ -318,6 +329,8 @@ async function manualDownloadOfflineCurrentModel() {
   }
 
   const status = readOfflineStatusSafe();
+  console.log("offline status", status);
+
   if (!status?.licenseValid) {
     toast("Offline lisans yok veya süresi dolmuş.");
     return;
@@ -331,40 +344,9 @@ async function manualDownloadOfflineCurrentModel() {
     await requestOfflineModelDownload(from, to, false);
     toast(`Offline model hazır: ${from.toUpperCase()} → ${to.toUpperCase()}`);
   } catch (e) {
-    console.error(e);
-    toast("Offline model indirilemedi.");
+    console.error("Offline model indirme hatası:", e);
+    toast(`Offline model indirilemedi: ${e?.message || "bilinmeyen hata"}`);
   }
-}
-
-function ensureOfflineDownloadButton() {
-  if (document.getElementById("btnOfflineModel")) return;
-
-  const btn = document.createElement("button");
-  btn.id = "btnOfflineModel";
-  btn.type = "button";
-  btn.textContent = "📦 Offline Model İndir";
-
-  btn.style.marginTop = "10px";
-  btn.style.width = "100%";
-  btn.style.padding = "14px 16px";
-  btn.style.borderRadius = "16px";
-  btn.style.border = "1px solid rgba(255,255,255,.14)";
-  btn.style.background = "rgba(255,255,255,.06)";
-  btn.style.color = "#fff";
-  btn.style.fontWeight = "700";
-  btn.style.cursor = "pointer";
-
-  btn.addEventListener("click", async () => {
-    await manualDownloadOfflineCurrentModel();
-  });
-
-  const host =
-    btnTranslate?.parentElement ||
-    document.querySelector(".actions") ||
-    document.querySelector(".translator-actions") ||
-    document.body;
-
-  host.appendChild(btn);
 }
 
 /* -------------------------
@@ -566,7 +548,7 @@ function renderLangList(query = "") {
     : ALL_LANGS.filter((item) => item.searchText.includes(q));
 
   if (!filtered.length) {
-    langList.innerHTML = `<div class="empty-state">Aradığın dil bulunamadı. Biraz daha kısa yaz, dil seni görmemiş olabilir.</div>`;
+    langList.innerHTML = `<div class="empty-state">Aradığın dil bulunamadı.</div>`;
     return;
   }
 
@@ -1049,11 +1031,10 @@ function bind() {
     await translateText();
   });
 
-  srcTxt?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      translateText();
-    }
+  btnOfflineModel?.addEventListener("click", async () => {
+    console.log("btnOfflineModel click alındı");
+    toast("Offline butonu çalıştı");
+    await manualDownloadOfflineCurrentModel();
   });
 
   btnMic?.addEventListener("click", handleMic);
@@ -1076,12 +1057,21 @@ function bind() {
     syncModeUi();
     toast("AI / kültürel çeviri aktif");
   });
+
+  srcTxt?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      translateText();
+    }
+  });
 }
 
 /* -------------------------
    BOOT
 -------------------------- */
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("text_translate_page.js yüklendi");
+
   if (!(await requireLogin())) return;
 
   ALL_LANGS = sanitizeLangPool();
@@ -1095,10 +1085,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   setMicState(false);
 
   ensureMockOfflineLicenseOnce();
-  ensureOfflineDownloadButton();
 
   const status = readOfflineStatusSafe();
   console.log("offline status:", status);
+  console.log("window.OfflineTranslate:", !!window.OfflineTranslate);
+  console.log("btnOfflineModel:", !!btnOfflineModel);
 
   window.italkyOffline = {
     status: () => readOfflineStatusSafe(),
