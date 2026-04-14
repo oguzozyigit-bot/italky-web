@@ -35,7 +35,6 @@ const toName = $("toName");
 const srcTxt = $("srcTxt");
 const dstTxt = $("dstTxt");
 
-const btnMic = $("btnMic");
 const btnSpeak = $("btnSpeak");
 const btnTranslate = $("btnTranslate");
 const btnOfflineModel = $("btnOfflineModel");
@@ -60,11 +59,11 @@ let fromLang = localStorage.getItem("qtt_from_lang") || "tr";
 let toLang = localStorage.getItem("qtt_to_lang") || "en";
 let ALL_LANGS = [];
 
-let activeMode = "standard";
 let audio = null;
 let speakCtl = null;
 let speakToken = 0;
 let lastClickAt = 0;
+let activeTranslateToken = 0;
 
 /* -------------------------
    HELPERS
@@ -93,7 +92,7 @@ function toast(msg) {
   clearTimeout(window.__textTranslateToast);
   window.__textTranslateToast = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 2200);
+  }, 2400);
 }
 
 function setOutputText(text) {
@@ -134,7 +133,7 @@ function readOfflineStatusSafe() {
   }
 }
 
-function waitForCustomEventOnce(eventName, timeoutMs = 45000) {
+function waitForCustomEventOnce(eventName, timeoutMs = 90000) {
   return new Promise((resolve, reject) => {
     let done = false;
 
@@ -161,7 +160,7 @@ function waitForCustomEventOnce(eventName, timeoutMs = 45000) {
 async function requestOfflineModelDownload(from, to, wifiOnly = false) {
   if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
 
-  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 60000);
+  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 90000);
   downloadOfflineModel(from, to, wifiOnly);
   const detail = await waiter;
 
@@ -175,7 +174,7 @@ async function requestOfflineModelDownload(from, to, wifiOnly = false) {
 async function requestOfflineTranslate(from, to, text) {
   if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
 
-  const waiter = waitForCustomEventOnce("offlineTranslateResult", 45000);
+  const waiter = waitForCustomEventOnce("offlineTranslateResult", 90000);
   translateOffline(from, to, text);
   const detail = await waiter;
 
@@ -213,6 +212,59 @@ async function manualDownloadOfflineCurrentModel() {
     const msg = e?.message || "bilinmeyen hata";
     toast(`Model indirme hatası: ${msg}`);
     alert(`Model indirme hatası:\n${msg}`);
+  }
+}
+
+async function tryOfflineTranslateFlow(text) {
+  if (!hasOfflineBridge()) {
+    throw new Error("offline_bridge_missing");
+  }
+
+  const status = readOfflineStatusSafe();
+  if (!status?.licenseValid) {
+    throw new Error("offline_license_required");
+  }
+
+  const from = canonical(fromLang);
+  const to = canonical(toLang);
+
+  const out = await requestOfflineTranslate(from, to, text);
+
+  if (!out) {
+    throw new Error("offline_empty_translation");
+  }
+
+  return out;
+}
+
+async function translateText() {
+  const text = getSourceText();
+
+  if (!text) {
+    setOutputText("...");
+    toast("Önce çevrilecek bir metin yaz.");
+    return;
+  }
+
+  const myToken = ++activeTranslateToken;
+  setOutputText("Çevriliyor...");
+
+  try {
+    const out = await tryOfflineTranslateFlow(text);
+
+    if (myToken !== activeTranslateToken) return;
+
+    setOutputText(out);
+
+    setTimeout(() => {
+      speakText(out, canonical(toLang));
+    }, 160);
+  } catch (e) {
+    console.error("offline translate error:", e);
+    const msg = e?.message || "bilinmeyen hata";
+    setOutputText("⚠️ Çeviri şu an yapılamadı.");
+    toast(`Çeviri hatası: ${msg}`);
+    alert(`Çeviri hatası:\n${msg}`);
   }
 }
 
