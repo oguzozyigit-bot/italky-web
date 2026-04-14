@@ -1,7 +1,11 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { mountShell } from "/js/ui_shell.js";
+import {
+  getOfflineStatus,
+  setMockOfflineLicense
+} from "/js/offline_translate_bridge.js";
 
-alert("LANG_POOL + UI_SHELL OK");
+alert("LANG_POOL + UI_SHELL + OFFLINE_BRIDGE OK");
 
 try {
   mountShell({ scroll: "none" });
@@ -28,7 +32,17 @@ function toast(msg) {
   }, 2000);
 }
 
-console.log("LANG_POOL length:", Array.isArray(LANG_POOL) ? LANG_POOL.length : "not-array");
+try {
+  if (window.OfflineTranslate) {
+    setMockOfflineLicense(30);
+    const status = getOfflineStatus();
+    console.log("offline status test:", status);
+  } else {
+    console.log("window.OfflineTranslate yok");
+  }
+} catch (e) {
+  alert("OFFLINE BRIDGE HATA: " + (e?.message || e));
+}
 
 if (btnTranslate) {
   btnTranslate.addEventListener("click", () => {
@@ -37,7 +51,7 @@ if (btnTranslate) {
       toast("Önce çevrilecek bir metin yaz.");
       return;
     }
-    if (dstTxt) dstTxt.textContent = "UI_SHELL TEST: " + text;
+    if (dstTxt) dstTxt.textContent = "OFFLINE BRIDGE TEST: " + text;
   });
 }
 
