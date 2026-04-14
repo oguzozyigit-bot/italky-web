@@ -1,42 +1,27 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • FaceToFace Ayarları</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Offline Translate</title>
+  <meta name="theme-color" content="#050814"/>
 
   <style>
     :root{
-      --txt: rgba(255,255,255,.96);
-      --muted: rgba(255,255,255,.62);
-
-      --bg1:#08102a;
-      --bg2:#13204a;
-
-      --panel-border: rgba(255,255,255,.08);
-
-      --cyan:#67e8f9;
-      --cyan-soft:rgba(103,232,249,.16);
-
-      --indigo:#6366f1;
-      --indigo-soft:rgba(99,102,241,.14);
-
-      --blue:#3b82f6;
-      --blue-soft:rgba(59,130,246,.14);
-
-      --ok:#86efac;
-      --ok-bg:rgba(34,197,94,.10);
-      --ok-br:rgba(34,197,94,.20);
-
-      --warn:#fde68a;
-      --warn-bg:rgba(245,158,11,.10);
-      --warn-br:rgba(245,158,11,.20);
-
-      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#60a5fa 100%);
+      --bg1:#050814;
+      --bg2:#090d1c;
+      --line:rgba(255,255,255,.10);
+      --txt:#fff;
+      --muted:rgba(255,255,255,.68);
+      --grad:linear-gradient(135deg,#4de8ff 0%, #7b7dff 46%, #ff54c9 100%);
+      --ok:#15d682;
+      --warn:#ffb84d;
+      --err:#ff5d7a;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --shadow:0 18px 38px rgba(0,0,0,.26);
+      --orange-grad:linear-gradient(135deg, rgba(255,140,40,.24), rgba(255,84,201,.14));
+      --orange-line:rgba(255,140,40,.38);
     }
 
     *{
@@ -47,822 +32,316 @@
 
     html,body{
       margin:0;
-      padding:0;
       width:100%;
       min-height:100%;
-      background:var(--bg1);
       color:var(--txt);
-      font-family:'Outfit',sans-serif;
+      font-family:Inter, Outfit, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 16% 10%, rgba(123,125,255,.18), transparent 28%),
+        radial-gradient(circle at 84% 16%, rgba(255,84,201,.15), transparent 24%),
+        radial-gradient(circle at 50% 0%, rgba(77,232,255,.10), transparent 30%),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
     }
 
-    body::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(99,102,241,.16) 0%, transparent 42%),
-        radial-gradient(circle at 0% 100%, rgba(103,232,249,.10) 0%, transparent 34%),
-        radial-gradient(circle at 100% 24%, rgba(59,130,246,.10) 0%, transparent 26%),
-        linear-gradient(180deg, #08102a 0%, #0b1433 42%, #13204a 100%);
-      z-index:-1;
-      pointer-events:none;
+    body{
+      padding-top:var(--safe-top);
+      padding-bottom:var(--safe-bottom);
     }
 
     #pageContent{
-      max-width:560px;
+      min-height:100dvh;
+    }
+
+    .page{
+      width:100%;
+      max-width:700px;
       margin:0 auto;
-      padding:14px 16px 28px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      scroll-behavior:smooth;
-    }
-
-    .topRow{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .backBtn{
-      width:42px;
-      height:42px;
-      border-radius:14px;
-      border:1px solid var(--panel-border);
-      background:rgba(255,255,255,.05);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .backBtn svg{
-      width:20px;
-      height:20px;
-      stroke:#fff;
-      fill:none;
-      stroke-width:2.5;
-    }
-
-    .page-head{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      min-width:0;
-    }
-
-    .page-kicker{
-      display:inline-flex;
-      width:max-content;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--panel-border);
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.5px;
-      color:rgba(255,255,255,.82);
-    }
-
-    .title{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
-      font-weight:700;
-      margin:0;
-      line-height:1;
-      letter-spacing:-1px;
-    }
-
-    .title .ai{
-      background:var(--ai-grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .page-sub{
-      margin:0;
-      font-size:12px;
-      line-height:1.45;
-      color:var(--muted);
+      padding:14px 14px 34px;
     }
 
     .panel{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      background:
-        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
-      border:1px solid var(--panel-border);
-      border-radius:22px;
-      padding:16px;
-      backdrop-filter:blur(15px);
-      -webkit-backdrop-filter:blur(15px);
-      box-shadow:0 14px 30px rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.03);
+      padding:18px;
+      margin-bottom:16px;
+      overflow:hidden;
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
     }
 
-    .panel.soft{
-      background:
-        radial-gradient(circle at 12% 15%, var(--cyan-soft), transparent 28%),
-        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+    .hero-title{
+      margin:0 0 8px;
+      font-size:28px;
+      font-weight:1000;
+      line-height:1.08;
+      letter-spacing:-.6px;
     }
 
-    .panel-title{
+    .hero-sub{
       margin:0;
-      font-family:'Space Grotesk',sans-serif;
       font-size:16px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .panel-sub{
-      margin:0;
-      font-size:11px;
-      line-height:1.45;
+      line-height:1.55;
       color:var(--muted);
-    }
-
-    .setting-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      padding:14px;
-      border-radius:18px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-    }
-
-    .setting-meta{
-      min-width:0;
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    .setting-title{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .setting-sub{
-      font-size:12px;
-      line-height:1.4;
-      color:rgba(255,255,255,.64);
-      font-weight:700;
-    }
-
-    .toggle{
-      position:relative;
-      width:56px;
-      height:32px;
-      border:none;
-      border-radius:999px;
-      background:rgba(255,255,255,.12);
-      cursor:pointer;
-      transition:.18s ease;
-      flex:0 0 auto;
-    }
-
-    .toggle::after{
-      content:"";
-      position:absolute;
-      top:4px;
-      left:4px;
-      width:24px;
-      height:24px;
-      border-radius:50%;
-      background:#fff;
-      transition:.18s ease;
-      box-shadow:0 4px 12px rgba(0,0,0,.2);
-    }
-
-    .toggle.active{
-      background:linear-gradient(135deg, rgba(103,232,249,.55), rgba(99,102,241,.72));
-    }
-
-    .toggle.active::after{
-      left:28px;
-    }
-
-    .choice-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .choice-card{
-      padding:14px;
-      border-radius:18px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
-      cursor:pointer;
-      transition:.2s ease;
-      min-height:128px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      gap:8px;
-    }
-
-    .choice-card.active{
-      border-color: rgba(103,232,249,.42);
-      background: rgba(99,102,241,.14);
-      box-shadow: 0 0 0 1px rgba(103,232,249,.16) inset;
-    }
-
-    .choice-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-    }
-
-    .choice-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      line-height:1.2;
-    }
-
-    .choice-badge{
-      font-size:10px;
-      font-weight:900;
-      letter-spacing:.4px;
-      padding:6px 8px;
-      border-radius:999px;
-      white-space:nowrap;
-      border:1px solid rgba(255,255,255,.12);
-    }
-
-    .choice-badge.free{
-      color: var(--ok);
-      background: var(--ok-bg);
-      border-color: var(--ok-br);
-    }
-
-    .choice-badge.paid{
-      color: var(--warn);
-      background: var(--warn-bg);
-      border-color: var(--warn-br);
-    }
-
-    .choice-desc{
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.70);
-      word-break:break-word;
-    }
-
-    .summary-line{
-      font-size:13px;
-      color:#fff;
-      line-height:1.45;
-    }
-
-    .summary-line span{
-      color:rgba(255,255,255,.72);
-    }
-
-    .btn{
-      min-height:48px;
-      border-radius:16px;
-      font-family:inherit;
       font-weight:800;
-      font-size:14px;
-      cursor:pointer;
+    }
+
+    .tools{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:16px;
+    }
+
+    .search{
+      flex:1;
+      height:60px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:#fff;
+      padding:0 18px;
+      font-size:17px;
+      font-weight:800;
+    }
+
+    .search::placeholder{
+      color:rgba(255,255,255,.42);
+    }
+
+    .section-title{
+      margin:6px 0 14px;
+      font-size:18px;
+      font-weight:1000;
+    }
+
+    .lang-card{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      border-radius:24px;
+      padding:18px;
+      margin-bottom:14px;
+    }
+
+    .lang-head{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:16px;
+    }
+
+    .flag{
+      width:56px;
+      height:56px;
+      border-radius:18px;
       display:flex;
       align-items:center;
       justify-content:center;
-      border:none;
-      transition:all .2s;
-      text-decoration:none;
-      padding:0 16px;
+      font-size:32px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      flex:0 0 auto;
+    }
+
+    .lang-name{
+      font-size:19px;
+      font-weight:1000;
+      line-height:1.1;
+      margin:0;
+    }
+
+    .lang-sub{
+      margin-top:4px;
+      font-size:14px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .lang-btn{
       width:100%;
-    }
-
-    .btn:active{ transform:scale(.98); }
-
-    .btn-primary{
-      background:var(--ai-grad);
-      color:#05060d;
-      box-shadow:0 12px 26px rgba(99,102,241,.18);
-    }
-
-    .btn-secondary{
-      background:rgba(255,255,255,.05);
+      height:62px;
+      border-radius:18px;
+      border:none;
       color:#fff;
-      border:1px solid var(--panel-border);
+      font-size:16px;
+      font-weight:1000;
+      cursor:pointer;
     }
 
-    .action-grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
+    .lang-btn.installed{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .lang-btn.free{
+      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.14));
+      border:1px solid rgba(31,195,136,.30);
+    }
+
+    .lang-btn.paid{
+  background:linear-gradient(135deg,#f59e0b,#f97316);
+  color:#fff;
+}
+
+.lang-btn.installed{
+  background:linear-gradient(135deg,#10b981,#22c55e);
+  color:#fff;
+}
+
+.lang-btn.installing{
+  background:linear-gradient(135deg,#64748b,#475569);
+  color:#fff;
+}
+
+    .lang-btn[disabled]{
+      opacity:.72;
+      cursor:default;
     }
 
     .toast{
       position:fixed;
       left:50%;
-      top:18px;
-      transform:translateX(-50%) translateY(-120px);
-      background:rgba(10,10,18,.92);
-      border:1px solid rgba(103,232,249,.35);
-      padding:10px 14px;
-      border-radius:999px;
+      bottom:calc(22px + var(--safe-bottom));
+      transform:translateX(-50%) translateY(120px);
+      background:rgba(10,12,24,.96);
+      border:1px solid rgba(255,255,255,.10);
       color:#fff;
-      z-index:999999;
+      padding:14px 18px;
+      border-radius:999px;
+      font-size:13px;
       font-weight:900;
-      font-size:12px;
-      transition:.25s;
-      backdrop-filter:blur(12px);
-      pointer-events:none;
-      max-width:min(92vw,520px);
+      z-index:9999;
+      transition:.25s ease;
+      box-shadow:0 18px 36px rgba(0,0,0,.30);
       text-align:center;
+      max-width:min(92vw, 560px);
     }
 
     .toast.show{
       transform:translateX(-50%) translateY(0);
     }
 
-    .modal{
+    .footer{
+      text-align:center;
+      padding-top:10px;
+      color:rgba(255,255,255,.44);
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.4px;
+    }
+
+    .modal-backdrop{
       position:fixed;
       inset:0;
-      background:rgba(0,0,0,.52);
-      backdrop-filter:blur(8px);
+      background:rgba(0,0,0,.58);
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
       display:none;
       align-items:center;
       justify-content:center;
-      z-index:99999;
-      padding:20px;
-      pointer-events:none;
-    }
-
-    .modal.open{
-      display:flex;
-      pointer-events:auto;
-    }
-
-    .modal-card{
-      width:min(100%, 420px);
-      border-radius:24px;
+      z-index:9998;
       padding:18px;
-      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 24px 50px rgba(0,0,0,.30);
+    }
+
+    .modal-backdrop.show{
       display:flex;
-      flex-direction:column;
-      gap:12px;
+    }
+
+    .modal{
+      width:min(92vw, 520px);
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(20,24,44,.98), rgba(10,12,24,.98));
+      box-shadow:0 24px 60px rgba(0,0,0,.45);
+      padding:22px;
     }
 
     .modal-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
-      font-weight:900;
-      color:#fff;
+      font-size:22px;
+      font-weight:1000;
+      margin:0 0 10px;
+      line-height:1.15;
     }
 
     .modal-text{
-      margin:0;
-      font-size:13px;
-      line-height:1.5;
-      color:rgba(255,255,255,.80);
-      font-weight:700;
+      font-size:15px;
+      line-height:1.6;
+      color:rgba(255,255,255,.84);
+      font-weight:800;
+      white-space:pre-line;
     }
 
     .modal-actions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
+      display:flex;
+      gap:12px;
+      margin-top:18px;
     }
 
-    @media (max-width:390px){
-      #pageContent{ padding:12px 14px 22px; }
-      .title{ font-size:25px; }
-      .choice-grid{ grid-template-columns:1fr; }
+    .modal-btn{
+      flex:1;
+      height:56px;
+      border-radius:18px;
+      border:none;
+      font-size:16px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .modal-btn.cancel{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+    }
+
+    .modal-btn.ok{
+      background:var(--orange-grad);
+      border:1px solid var(--orange-line);
+      color:#fff;
+    }
+
+    @media (max-width:420px){
+      .hero-title{ font-size:24px; }
+      .hero-sub{ font-size:15px; }
+      .tools{ flex-direction:column; }
+      .modal-actions{ flex-direction:column; }
     }
   </style>
 </head>
 <body>
+  <main id="pageContent">
+    <div class="page">
+      <section class="panel">
+        <h1 class="hero-title">Offline Translate</h1>
+        <p class="hero-sub">İnternet olmadan iletişime devam</p>
+      </section>
 
-<div id="pageContent">
-  <div class="topRow">
-    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
-      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
+      <section class="panel">
+        <div class="tools">
+          <input id="searchInput" class="search" type="text" placeholder="Dil Ara"/>
+        </div>
 
-    <section class="page-head">
-      <div class="page-kicker">FaceToFace Settings</div>
-      <h1 class="title">Ses ve Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="page-sub">FaceToFace modülü için temel ayarlar burada yönetilir.</p>
-    </section>
-  </div>
+        <div class="section-title">Diller</div>
+        <div id="installedList"></div>
+      </section>
 
-  <section class="panel soft">
-    <h2 class="panel-title">Okuma ve Çeviri</h2>
-    <p class="panel-sub">Bu ayarlar FaceToFace içinde doğrudan kullanılır.</p>
+      <div class="footer">italkyAI • By Ozyigit's • 2026</div>
+    </div>
+  </main>
 
-    <div class="setting-row">
-      <div class="setting-meta">
-        <div class="setting-title">Mesajı otomatik oku</div>
-        <div class="setting-sub">Gelen çeviri otomatik sesli okunsun.</div>
+  <div id="toast" class="toast"></div>
+
+  <div id="confirmBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="confirmTitle" class="modal-title">Dil erişimini onaylayın</h3>
+      <div id="confirmText" class="modal-text"></div>
+      <div class="modal-actions">
+        <button id="confirmCancel" class="modal-btn cancel" type="button">Vazgeç</button>
+        <button id="confirmOk" class="modal-btn ok" type="button">Devam Et</button>
       </div>
-      <button class="toggle active" id="autoReadToggle" type="button"></button>
-    </div>
-
-    <div class="setting-row">
-      <div class="setting-meta">
-        <div class="setting-title">Kültürel çeviri</div>
-        <div class="setting-sub">Daha doğal ve bağlama uygun çeviri kullanılsın.</div>
-      </div>
-      <button class="toggle" id="culturalToggle" type="button"></button>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2 class="panel-title">Ses Seç</h2>
-    <p class="panel-sub">Ses kayıtlıysa ve jeton varsa seçilir. Kayıt yoksa seni ses oluşturma sayfasına yönlendirir.</p>
-
-    <div class="choice-grid" id="voiceGrid">
-      <button class="choice-card active" data-voice="auto" type="button">
-        <div class="choice-top">
-          <div class="choice-name">Otomatik Ses</div>
-          <div class="choice-badge free">Hazır</div>
-        </div>
-        <div class="choice-desc">Varsayılan sistem sesi kullanılır.</div>
-      </button>
-
-      <button class="choice-card" data-voice="mine" type="button">
-        <div class="choice-top">
-          <div class="choice-name">Kendi Sesim</div>
-          <div class="choice-badge paid">Jetonlu</div>
-        </div>
-        <div class="choice-desc" id="mineVoiceDesc">Kayıt durumu kontrol ediliyor.</div>
-      </button>
-
-      <button class="choice-card" data-voice="second" type="button">
-        <div class="choice-top">
-          <div class="choice-name">2. Ses</div>
-          <div class="choice-badge paid">Jetonlu</div>
-        </div>
-        <div class="choice-desc" id="secondVoiceDesc">Kayıt durumu kontrol ediliyor.</div>
-      </button>
-
-      <button class="choice-card" data-voice="memory" type="button">
-        <div class="choice-top">
-          <div class="choice-name">Hatıra Sesi</div>
-          <div class="choice-badge paid">Jetonlu</div>
-        </div>
-        <div class="choice-desc" id="memoryVoiceDesc">Kayıt durumu kontrol ediliyor.</div>
-      </button>
-    </div>
-  </section>
-
-  <section class="panel">
-    <div class="summary-line"><strong>Mesajı Otomatik Oku:</strong> <span id="autoReadSummary">Açık</span></div>
-    <div class="summary-line"><strong>Kültürel Çeviri:</strong> <span id="translateSummary">Kapalı</span></div>
-    <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">Otomatik Ses</span></div>
-  </section>
-
-  <section class="action-grid">
-    <button class="btn btn-secondary" id="goAdvancedBtn" type="button">Gelişmiş Ses Ayarları</button>
-    <button class="btn btn-primary" id="saveBtn" type="button">Kaydet</button>
-  </section>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<div class="modal" id="tokenModal">
-  <div class="modal-card">
-    <h3 class="modal-title">Jeton Gerekli</h3>
-    <p class="modal-text">Bu özelliği kullanabilmek için lütfen jeton yükleyiniz.</p>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" id="tokenCancelBtn" type="button">Vazgeç</button>
-      <button class="btn btn-primary" id="tokenGoBtn" type="button">Jeton Yükle</button>
     </div>
   </div>
-</div>
 
-<div class="modal" id="voiceMissingModal">
-  <div class="modal-card">
-    <h3 class="modal-title">Ses Kaydı Yok</h3>
-    <p class="modal-text">Henüz ses kaydı oluşturmadınız. Ses kaydı oluşturmak istiyor musunuz?</p>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" id="voiceMissingNoBtn" type="button">Hayır</button>
-      <button class="btn btn-primary" id="voiceMissingYesBtn" type="button">Evet</button>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-(() => {
-  const AUTO_READ_KEY = "facetoface_auto_read";
-  const TRANSLATE_KEY = "facetoface_translate_mode";
-  const F2F_VOICE_KEY = "facetoface_voice_mode";
-  const F2F_PRESET_KEY = "facetoface_voice_preset";
-  const F2F_SELECTED_NAME_KEY = "facetoface_selected_voice_name";
-  const ADVANCED_URL = "/pages/translation_settings.html?from=facetoface";
-  const RETURN_URL = "/facetoface.html";
-
-  const $ = (id) => document.getElementById(id);
-
-  const UI = {
-    backBtn: $("backBtn"),
-    autoReadToggle: $("autoReadToggle"),
-    culturalToggle: $("culturalToggle"),
-
-    voiceGrid: $("voiceGrid"),
-    mineVoiceDesc: $("mineVoiceDesc"),
-    secondVoiceDesc: $("secondVoiceDesc"),
-    memoryVoiceDesc: $("memoryVoiceDesc"),
-
-    autoReadSummary: $("autoReadSummary"),
-    translateSummary: $("translateSummary"),
-    voiceSummary: $("voiceSummary"),
-
-    goAdvancedBtn: $("goAdvancedBtn"),
-    saveBtn: $("saveBtn"),
-
-    toast: $("toast"),
-
-    tokenModal: $("tokenModal"),
-    tokenCancelBtn: $("tokenCancelBtn"),
-    tokenGoBtn: $("tokenGoBtn"),
-
-    voiceMissingModal: $("voiceMissingModal"),
-    voiceMissingNoBtn: $("voiceMissingNoBtn"),
-    voiceMissingYesBtn: $("voiceMissingYesBtn")
-  };
-
-  const state = {
-    supabase: null,
-    currentUser: null,
-    selectedVoice: readCurrentVoice(),
-    autoRead: localStorage.getItem(AUTO_READ_KEY) !== "0",
-    cultural: localStorage.getItem(TRANSLATE_KEY) === "cultural",
-    pendingVoice: null,
-    walletTokens: 0,
-    profileVoiceState: {
-      mineReady: false,
-      secondReady: false,
-      memoryReady: false
-    }
-  };
-
-  function readCurrentVoice() {
-    const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
-    const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
-
-    if (mode === "clone") return "mine";
-    if (mode === "preset" && preset === "second") return "second";
-    if (mode === "preset" && preset === "memory") return "memory";
-    return "auto";
-  }
-
-  function showToast(msg) {
-    UI.toast.textContent = msg;
-    UI.toast.classList.add("show");
-    clearTimeout(window.__facetofaceSettingsToast);
-    window.__facetofaceSettingsToast = setTimeout(() => {
-      UI.toast.classList.remove("show");
-    }, 1600);
-  }
-
-  function openModal(el) { el.classList.add("open"); }
-  function closeModal(el) { el.classList.remove("open"); }
-
-  function syncToggles() {
-    UI.autoReadToggle.classList.toggle("active", !!state.autoRead);
-    UI.culturalToggle.classList.toggle("active", !!state.cultural);
-    UI.autoReadSummary.textContent = state.autoRead ? "Açık" : "Kapalı";
-    UI.translateSummary.textContent = state.cultural ? "Açık" : "Kapalı";
-  }
-
-  function voiceLabel(v) {
-    if (v === "mine") return "Kendi Sesim";
-    if (v === "second") return "2. Ses";
-    if (v === "memory") return "Hatıra Sesi";
-    return "Otomatik Ses";
-  }
-
-  function syncVoiceCards() {
-    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
-      card.classList.toggle("active", card.dataset.voice === state.selectedVoice);
-    });
-    UI.voiceSummary.textContent = voiceLabel(state.selectedVoice);
-  }
-
-  function hasJeton() {
-    return Number(state.walletTokens || 0) > 0;
-  }
-
-  async function bootAuth() {
-    const mod = await import("/js/supabase_client.js");
-    state.supabase = mod.supabase;
-
-    const { data: { session } } = await state.supabase.auth.getSession();
-    if (!session?.user) {
-      location.replace("/pages/login.html");
-      return false;
-    }
-
-    state.currentUser = session.user;
-    return true;
-  }
-
-  async function loadWallet() {
-    try {
-      const { data: wallet } = await state.supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", state.currentUser.id)
-        .maybeSingle();
-
-      state.walletTokens =
-        Number(wallet?.tokens ?? wallet?.balance ?? wallet?.amount ?? wallet?.jeton ?? wallet?.credit ?? 0) || 0;
-    } catch {
-      state.walletTokens = 0;
-    }
-  }
-
-  async function loadProfileVoiceState() {
-    try {
-      const { data: profile } = await state.supabase
-        .from("profiles")
-        .select(`
-          voice_sample_path,
-          tts_voice_ready,
-          tts_voice_id,
-          second_voice_name,
-          second_voice_sample_path,
-          second_tts_voice_ready,
-          second_tts_voice_id,
-          memory_voice_name,
-          memory_voice_sample_path,
-          memory_tts_voice_ready,
-          memory_tts_voice_id
-        `)
-        .eq("id", state.currentUser.id)
-        .maybeSingle();
-
-      state.profileVoiceState.mineReady =
-        !!profile?.voice_sample_path ||
-        (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
-
-      state.profileVoiceState.secondReady =
-        !!profile?.second_voice_sample_path ||
-        (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
-
-      state.profileVoiceState.memoryReady =
-        !!profile?.memory_voice_sample_path ||
-        (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
-
-      UI.mineVoiceDesc.textContent = state.profileVoiceState.mineReady
-        ? "Ses kayıtlı. Jeton varsa seçebilirsin."
-        : "Henüz kayıtlı değil.";
-
-      UI.secondVoiceDesc.textContent = state.profileVoiceState.secondReady
-        ? "Ses kayıtlı. Jeton varsa seçebilirsin."
-        : "Henüz kayıtlı değil.";
-
-      UI.memoryVoiceDesc.textContent = state.profileVoiceState.memoryReady
-        ? "Ses kayıtlı. Jeton varsa seçebilirsin."
-        : "Henüz kayıtlı değil.";
-    } catch {
-      UI.mineVoiceDesc.textContent = "Kayıt durumu okunamadı.";
-      UI.secondVoiceDesc.textContent = "Kayıt durumu okunamadı.";
-      UI.memoryVoiceDesc.textContent = "Kayıt durumu okunamadı.";
-    }
-  }
-
-  function askToken() {
-    openModal(UI.tokenModal);
-  }
-
-  function askVoiceMissing(targetVoice) {
-    state.pendingVoice = targetVoice;
-    openModal(UI.voiceMissingModal);
-  }
-
-  function canUseVoice(voiceKey) {
-    if (voiceKey === "auto") return true;
-    if (voiceKey === "mine") return state.profileVoiceState.mineReady;
-    if (voiceKey === "second") return state.profileVoiceState.secondReady;
-    if (voiceKey === "memory") return state.profileVoiceState.memoryReady;
-    return false;
-  }
-
-  function trySelectVoice(voiceKey) {
-    if (voiceKey === "auto") {
-      state.selectedVoice = "auto";
-      syncVoiceCards();
-      showToast("Otomatik Ses seçildi");
-      return;
-    }
-
-    if (!canUseVoice(voiceKey)) {
-      askVoiceMissing(voiceKey);
-      return;
-    }
-
-    if (!hasJeton()) {
-      askToken();
-      return;
-    }
-
-    state.selectedVoice = voiceKey;
-    syncVoiceCards();
-    showToast(`${voiceLabel(voiceKey)} seçildi`);
-  }
-
-  function saveSettings() {
-    localStorage.setItem(AUTO_READ_KEY, state.autoRead ? "1" : "0");
-    localStorage.setItem(TRANSLATE_KEY, state.cultural ? "cultural" : "normal");
-
-    if (state.selectedVoice === "auto") {
-      localStorage.setItem(F2F_VOICE_KEY, "auto");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
-    } else if (state.selectedVoice === "mine") {
-      localStorage.setItem(F2F_VOICE_KEY, "clone");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
-    } else if (state.selectedVoice === "second") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "second");
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "2. Ses");
-    } else if (state.selectedVoice === "memory") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "memory");
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
-    }
-
-    location.href = RETURN_URL;
-  }
-
-  function bindEvents() {
-    UI.backBtn.addEventListener("click", () => location.href = RETURN_URL);
-
-    UI.autoReadToggle.addEventListener("click", () => {
-      state.autoRead = !state.autoRead;
-      syncToggles();
-      showToast(state.autoRead ? "Mesajı otomatik oku açıldı" : "Mesajı otomatik oku kapatıldı");
-    });
-
-    UI.culturalToggle.addEventListener("click", () => {
-      if (!state.cultural && !hasJeton()) {
-        askToken();
-        return;
-      }
-      state.cultural = !state.cultural;
-      syncToggles();
-      showToast(state.cultural ? "Kültürel çeviri açıldı" : "Kültürel çeviri kapatıldı");
-    });
-
-    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
-      card.addEventListener("click", () => {
-        trySelectVoice(card.dataset.voice);
-      });
-    });
-
-    UI.goAdvancedBtn.addEventListener("click", () => location.href = ADVANCED_URL);
-    UI.saveBtn.addEventListener("click", saveSettings);
-
-    UI.tokenCancelBtn.addEventListener("click", () => closeModal(UI.tokenModal));
-    UI.tokenGoBtn.addEventListener("click", () => {
-      location.href = "/pages/jetonbuy.html";
-    });
-
-    UI.voiceMissingNoBtn.addEventListener("click", () => closeModal(UI.voiceMissingModal));
-    UI.voiceMissingYesBtn.addEventListener("click", () => {
-      location.href = ADVANCED_URL;
-    });
-  }
-
-  async function init() {
-    const ok = await bootAuth();
-    if (!ok) return;
-
-    await loadWallet();
-    await loadProfileVoiceState();
-
-    if (!["auto","mine","second","memory"].includes(state.selectedVoice)) {
-      state.selectedVoice = "auto";
-    }
-
-    syncToggles();
-    syncVoiceCards();
-    bindEvents();
-  }
-
-  init();
-})();
-</script>
-
+  <script type="module" src="/js/offline_languages_page.js"></script>
 </body>
 </html>
