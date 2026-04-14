@@ -13,17 +13,16 @@
       --line:rgba(255,255,255,.10);
       --txt:#fff;
       --muted:rgba(255,255,255,.68);
-      --grad:linear-gradient(135deg,#4de8ff 0%, #7b7dff 46%, #ff54c9 100%);
-      --ok:#15d682;
-      --warn:#ffb84d;
-      --err:#ff5d7a;
       --safe-top:env(safe-area-inset-top,0px);
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shadow:0 18px 38px rgba(0,0,0,.26);
+
       --free-grad:linear-gradient(135deg, rgba(21,214,130,.24), rgba(77,232,255,.16));
       --free-line:rgba(21,214,130,.34);
       --installed-grad:linear-gradient(135deg,#10b981,#22c55e);
       --installing-grad:linear-gradient(135deg,#64748b,#475569);
+      --soft-grad:linear-gradient(135deg, rgba(123,125,255,.20), rgba(255,84,201,.12));
+      --soft-line:rgba(123,125,255,.30);
     }
 
     *{
@@ -56,7 +55,7 @@
 
     .page{
       width:100%;
-      max-width:700px;
+      max-width:760px;
       margin:0 auto;
       padding:14px 14px 34px;
     }
@@ -104,27 +103,57 @@
       font-weight:900;
     }
 
-    .tools{
-      display:flex;
+    .tool-grid{
+      display:grid;
+      grid-template-columns:1fr;
       gap:12px;
-      align-items:center;
       margin-bottom:16px;
     }
 
-    .search{
-      flex:1;
+    .control-label{
+      display:block;
+      margin:0 0 8px;
+      font-size:13px;
+      color:rgba(255,255,255,.72);
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
+    .search,
+    .select{
+      width:100%;
       height:60px;
       border-radius:18px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.03);
       color:#fff;
       padding:0 18px;
-      font-size:17px;
+      font-size:16px;
       font-weight:800;
     }
 
     .search::placeholder{
       color:rgba(255,255,255,.42);
+    }
+
+    .hint{
+      margin-top:8px;
+      font-size:12px;
+      color:rgba(255,255,255,.56);
+      font-weight:800;
+      line-height:1.45;
+    }
+
+    .status-strip{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:13px;
+      font-weight:900;
+      color:rgba(255,255,255,.88);
+      line-height:1.5;
     }
 
     .section-title{
@@ -202,9 +231,43 @@
       color:#fff;
     }
 
+    .lang-btn.soft{
+      background:var(--soft-grad);
+      border:1px solid var(--soft-line);
+      color:#fff;
+    }
+
     .lang-btn[disabled]{
-      opacity:.78;
+      opacity:.82;
       cursor:default;
+    }
+
+    .progress-wrap{
+      margin-top:12px;
+    }
+
+    .progress-bar{
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .progress-fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#4de8ff,#7b7dff,#ff54c9);
+      transition:width .25s ease;
+    }
+
+    .progress-text{
+      margin-top:8px;
+      font-size:12px;
+      color:rgba(255,255,255,.72);
+      font-weight:900;
+      line-height:1.45;
+      white-space:pre-line;
     }
 
     .toast{
@@ -308,10 +371,18 @@
       color:#fff;
     }
 
+    @media (min-width:640px){
+      .tool-grid{
+        grid-template-columns:1fr 1fr;
+      }
+      .tool-grid .span-2{
+        grid-column:1 / -1;
+      }
+    }
+
     @media (max-width:420px){
       .hero-title{ font-size:24px; }
       .hero-sub{ font-size:15px; }
-      .tools{ flex-direction:column; }
       .modal-actions{ flex-direction:column; }
     }
   </style>
@@ -321,13 +392,27 @@
     <div class="page">
       <section class="panel">
         <h1 class="hero-title">Offline Diller</h1>
-        <p class="hero-sub">İnternet yokken de çeviriye devam et. Gerekli dilleri önceden indir, cihazında hazır tut.</p>
-        <div class="hero-note">🟢 Uygun diller ücretsiz indirilebilir</div>
+        <p class="hero-sub">İnternet yokken de çeviriye devam et. Benim dilim ile seçtiğin dil çift yönlü indirilsin, kalite düşmesin.</p>
+        <div class="hero-note">🟢 İndirilebilir dillere yakın, güvenli liste</div>
       </section>
 
       <section class="panel">
-        <div class="tools">
-          <input id="searchInput" class="search" type="text" placeholder="Dil ara"/>
+        <div class="tool-grid">
+          <div>
+            <label class="control-label" for="myLangSelect">Benim Dilim</label>
+            <select id="myLangSelect" class="select"></select>
+            <div class="hint">İndirilen her dil, seçtiğin ana dil ile çift yönlü kurulur.</div>
+          </div>
+
+          <div>
+            <label class="control-label" for="searchInput">Dil Ara</label>
+            <input id="searchInput" class="search" type="text" placeholder="Dil ara"/>
+            <div class="hint">Örnek: Almanca, Fransızca, Rusça</div>
+          </div>
+
+          <div class="span-2 status-strip" id="licenseInfo">
+            Offline lisans kontrol ediliyor...
+          </div>
         </div>
 
         <div class="section-title">Diller</div>
@@ -343,7 +428,7 @@
   <div id="confirmBackdrop" class="modal-backdrop">
     <div class="modal">
       <h3 id="confirmTitle" class="modal-title">İndirmeyi onaylayın</h3>
-      <div id="confirmText" class="modal-text">Seçtiğiniz dil cihazınıza indirilecek ve internet olmadan kullanılabilecek.</div>
+      <div id="confirmText" class="modal-text"></div>
       <div class="modal-actions">
         <button id="confirmCancel" class="modal-btn cancel" type="button">Vazgeç</button>
         <button id="confirmOk" class="modal-btn ok" type="button">İndir</button>
@@ -353,4 +438,4 @@
 
   <script type="module" src="/js/offline_languages_page.js"></script>
 </body>
-</html>
+</html>⁰
