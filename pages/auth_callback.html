@@ -43,9 +43,10 @@
     import { supabase } from "/js/supabase_client.js";
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-    const HOME   = "/pages/home.html";
-    const LOGIN  = "/pages/login.html";
-    const ACCESS = "/pages/access.html";
+    const HOME = "/pages/home.html";
+    const LOGIN = "/pages/login.html";
+    const MEMBERSHIP = "/pages/membership.html";
+    const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
     const errBox = document.getElementById("errBox");
 
     function showErr(msg){
@@ -63,62 +64,59 @@
       }
     }
 
-    if (sessionStorage.getItem("italky_cb_lock_v3") === "1") {
-      const next = getNextTarget();
+    function goLogin(next = ""){
       location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}` : LOGIN);
     }
-    sessionStorage.setItem("italky_cb_lock_v3", "1");
 
-    async function waitForSession(maxMs=9000){
+    if (sessionStorage.getItem("italky_cb_lock_v4") === "1") {
+      const next = getNextTarget();
+      goLogin(next);
+    }
+    sessionStorage.setItem("italky_cb_lock_v4", "1");
+
+    async function waitForSession(maxMs = 9000){
       const start = Date.now();
-      while(Date.now() - start < maxMs){
+      while (Date.now() - start < maxMs){
         const { data:{ session } } = await supabase.auth.getSession();
-        if(session) return session;
-        await new Promise(r=>setTimeout(r, 250));
+        if (session) return session;
+        await new Promise(r => setTimeout(r, 250));
       }
       return null;
     }
 
-    async function resolvePostLoginTarget(next = ""){
-      if(next) return next;
+    async function getAccessState(){
+      const { data:{ session } } = await supabase.auth.getSession();
 
-      const { data:{ user }, error:userErr } = await supabase.auth.getUser();
-      if(userErr || !user?.id) return LOGIN;
-
-      const { data:profile, error:profileErr } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          selected_package_code,
-          package_active,
-          package_started_at,
-          package_ends_at,
-          trial_started_at,
-          trial_ends_at
-        `)
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if(profileErr || !profile){
-        return ACCESS;
+      if (!session?.access_token) {
+        throw new Error("Oturum bulunamadı");
       }
 
-      const now = Date.now();
+      const resp = await fetch(ACCESS_API, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`
+        }
+      });
 
-      const hasActivePackage =
-        !!profile.selected_package_code &&
-        profile.package_active === true &&
-        (!profile.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
+      const json = await resp.json().catch(() => ({}));
 
-      const hasActiveTrial =
-        !!profile.trial_ends_at &&
-        new Date(profile.trial_ends_at).getTime() > now;
+      if (!resp.ok) {
+        throw new Error(json?.detail || "Erişim kontrolü yapılamadı");
+      }
 
-      if(hasActivePackage || hasActiveTrial){
+      return json;
+    }
+
+    async function resolvePostLoginTarget(next = ""){
+      if (next) return next;
+
+      const access = await getAccessState();
+
+      if (access?.ok && access?.access_open) {
         return HOME;
       }
 
-      return ACCESS;
+      return MEMBERSHIP;
     }
 
     try{
@@ -126,24 +124,20 @@
       const code = url.searchParams.get("code");
       const next = getNextTarget();
 
-      if(code){
+      if (code){
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if(error){
+        if (error){
           console.error("exchangeCodeForSession error:", error);
           showErr("OAuth exchange hatası: " + (error.message || "unknown"));
-          setTimeout(()=>{
-            location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}` : LOGIN);
-          }, 900);
+          setTimeout(() => goLogin(next), 900);
           throw error;
         }
       }
 
       const s = await waitForSession();
-      if(!s){
+      if (!s){
         showErr("Oturum bulunamadı. Tekrar giriş sayfasına yönlendiriliyor…");
-        setTimeout(()=>{
-          location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}` : LOGIN);
-        }, 900);
+        setTimeout(() => goLogin(next), 900);
         throw new Error("session_not_found");
       }
 
@@ -157,11 +151,13 @@
     }catch(e){
       console.error("auth_callback fatal:", e);
       const next = getNextTarget();
-      setTimeout(()=>{
+      setTimeout(() => {
         location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}&e=auth` : `${LOGIN}?e=auth`);
       }, 700);
     } finally {
-      setTimeout(()=>{ try{ sessionStorage.removeItem("italky_cb_lock_v3"); }catch{} }, 10000);
+      setTimeout(() => {
+        try{ sessionStorage.removeItem("italky_cb_lock_v4"); }catch{}
+      }, 10000);
     }
   </script>
 </body>
