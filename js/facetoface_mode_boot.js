@@ -1,5 +1,5 @@
-const MODE_KEY = "facetoface_mode_v1";
-const TOAST_KEY = "facetoface_mode_toast_v1";
+const MODE_KEY = "facetoface_mode_v2";
+const TOAST_KEY = "facetoface_mode_toast_v2";
 
 const modeToggle = document.getElementById("modeToggle");
 const modeToggleLabel = document.getElementById("modeToggleLabel");
@@ -46,7 +46,6 @@ function resolveMode() {
 
 function updateToggleUi(mode) {
   if (!modeToggle || !modeToggleLabel) return;
-
   modeToggle.classList.remove("online", "offline");
   modeToggle.classList.add(mode === "offline" ? "offline" : "online");
   modeToggleLabel.textContent = mode === "offline" ? "OFFLINE" : "ONLINE";
@@ -79,8 +78,8 @@ function loadModeScript(mode) {
   script.type = "module";
   script.src =
     mode === "offline"
-      ? "/js/facetoface_offline.js?v=F2F_OFFLINE_V9"
-      : "/js/facetoface_page.js?v=F2F_ONLINE_V9";
+      ? "/js/facetoface_offline.js?v=F2F_OFFLINE_V10"
+      : "/js/facetoface_page.js?v=F2F_ONLINE_V10";
   document.body.appendChild(script);
 }
 
@@ -90,7 +89,7 @@ async function toggleMode() {
   if (current === "online") {
     writeMode("offline");
     setPendingToast("Offline moda geçildi");
-    location.replace(buildUrlForMode("offline"));
+    location.href = buildUrlForMode("offline");
     return;
   }
 
@@ -101,7 +100,7 @@ async function toggleMode() {
 
   writeMode("online");
   setPendingToast("Online moda geçildi");
-  location.replace(buildUrlForMode("online"));
+  location.href = buildUrlForMode("online");
 }
 
 function bindModeToggle() {
@@ -120,7 +119,7 @@ function bindNetworkAutoFallback() {
 
     writeMode("offline");
     setPendingToast("Bağlantı kesildi. Offline moda geçildi.");
-    location.replace(buildUrlForMode("offline"));
+    location.href = buildUrlForMode("offline");
   });
 }
 
