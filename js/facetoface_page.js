@@ -68,6 +68,10 @@ function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
+function getNativeLang() {
+  return canonical(localStorage.getItem(NATIVE_LANG_KEY) || "tr") || "tr";
+}
+
 const SITE_LANG = "tr";
 const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
   ? getLangPoolForSite(SITE_LANG)
@@ -107,9 +111,35 @@ function getPlaceholder(code) {
   return PLACEHOLDERS[canonical(code)] || PLACEHOLDERS.en;
 }
 
-function getNativeLang() {
-  const stored = canonical(localStorage.getItem(NATIVE_LANG_KEY) || "tr");
-  return stored || "tr";
+function getInstalledOfflinePairs() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(OFFLINE_INSTALLED_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function getInstalledTargetLangsForNative(nativeLang) {
+  const native = canonical(nativeLang);
+  const installed = getInstalledOfflinePairs();
+  const result = [];
+
+  Object.values(installed).forEach((item) => {
+    const from = canonical(item?.from);
+    const to = canonical(item?.to);
+    if (from === native && to && !result.includes(to)) result.push(to);
+    if (to === native && from && !result.includes(from)) result.push(from);
+  });
+
+  return result.filter((code) => code !== native);
+}
+
+function hasInstalledOfflinePair(source, target) {
+  const s = canonical(source);
+  const t = canonical(target);
+  const installed = getInstalledOfflinePairs();
+  return !!installed[`${s}_${t}`] && !!installed[`${t}_${s}`];
 }
 
 const frameRoot = $("frameRoot");
@@ -168,7 +198,7 @@ const offlineRequiredText = $("offlineRequiredText");
 const offlineRequiredCloseBtn = $("offlineRequiredCloseBtn");
 
 let topLang = getNativeLang();
-let botLang = "en";
+let botLang = getInstalledTargetLangsForNative(topLang)[0] || "en";
 window.topLang = topLang;
 window.botLang = botLang;
 
@@ -237,20 +267,13 @@ function getResolvedFaceVoice() {
   if (mode === "auto") return "auto";
 
   const shared = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "").trim().toLowerCase();
-  if (["auto", "mine", "second", "memory"].includes(shared)) {
-    return shared;
-  }
+  if (["auto", "mine", "second", "memory"].includes(shared)) return shared;
 
   return "auto";
 }
 
 function getFaceVoiceMode() {
   return getResolvedFaceVoice();
-}
-
-function getSelectedPresetVoice() {
-  const resolved = getResolvedFaceVoice();
-  return resolved === "second" || resolved === "memory" ? resolved : "";
 }
 
 function getFaceTranslateMode() {
@@ -286,19 +309,9 @@ async function hasReadyVoiceProfile() {
     if (error || !data) return false;
 
     const mode = getResolvedFaceVoice();
-
-    if (mode === "mine") {
-      return !!data.voice_sample_path || (!!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim());
-    }
-
-    if (mode === "second") {
-      return !!data.second_voice_sample_path || (!!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim());
-    }
-
-    if (mode === "memory") {
-      return !!data.memory_voice_sample_path || (!!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim());
-    }
-
+    if (mode === "mine") return !!data.voice_sample_path || (!!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim());
+    if (mode === "second") return !!data.second_voice_sample_path || (!!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim());
+    if (mode === "memory") return !!data.memory_voice_sample_path || (!!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim());
     return false;
   } catch {
     return false;
@@ -466,40 +479,6 @@ function closeAllPop() {
   popBot?.classList.remove("show");
 }
 
-function getInstalledOfflinePairs() {
-  try {
-    return JSON.parse(localStorage.getItem(OFFLINE_INSTALLED_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function getInstalledTargetLangsForNative(nativeLang) {
-  const n = canonical(nativeLang);
-  return getInstalledOfflinePairs()
-    .map((p) => {
-      const s = canonical(p?.source);
-      const t = canonical(p?.target);
-      if (s === n) return t;
-      if (t === n) return s;
-      return "";
-    })
-    .filter(Boolean)
-    .filter((v, i, arr) => arr.indexOf(v) === i);
-}
-
-function hasInstalledOfflinePair(source, target) {
-  const s = canonical(source);
-  const t = canonical(target);
-  const pairs = getInstalledOfflinePairs();
-
-  return pairs.some((p) => {
-    const ps = canonical(p?.source);
-    const pt = canonical(p?.target);
-    return (ps === s && pt === t) || (ps === t && pt === s);
-  });
-}
-
 function openOfflineRequiredPopup(message = "Önce dil yüklemeniz gereklidir.") {
   if (offlineRequiredTitle) offlineRequiredTitle.textContent = "Dil yüklemeniz gerekli";
   if (offlineRequiredText) offlineRequiredText.textContent = message;
@@ -527,10 +506,10 @@ function syncModeUi() {
 
 function enforceOfflineLanguageRule() {
   const nativeLang = getNativeLang();
+  const allowedTargets = getInstalledTargetLangsForNative(nativeLang);
+
   topLang = nativeLang;
   window.topLang = topLang;
-
-  const allowedTargets = getInstalledTargetLangsForNative(nativeLang);
 
   if (!allowedTargets.includes(botLang)) {
     botLang = allowedTargets[0] || "en";
@@ -586,9 +565,7 @@ function renderPop(side) {
   if (!list) return;
 
   if (currentRuntimeMode === "offline" && side === "top") {
-    const nativeLang = getNativeLang();
-    const current = langObj(nativeLang);
-
+    const current = langObj(getNativeLang());
     list.innerHTML = `
       <div class="pop-item active" data-code="${current.code}">
         <div class="pop-left">
@@ -602,10 +579,8 @@ function renderPop(side) {
   }
 
   let pool = LANGS;
-
   if (currentRuntimeMode === "offline" && side === "bot") {
-    const nativeLang = getNativeLang();
-    const allowed = new Set(getInstalledTargetLangsForNative(nativeLang));
+    const allowed = new Set(getInstalledTargetLangsForNative(getNativeLang()));
     pool = LANGS.filter((l) => allowed.has(canonical(l.code)));
   }
 
@@ -636,13 +611,13 @@ function renderPop(side) {
         window.botLang = botLang;
       }
 
-      refreshLangLabels();
-      renderKeyboard(side);
-
       if (currentRuntimeMode === "offline") {
         enforceOfflineLanguageRule();
+      } else {
+        refreshLangLabels();
       }
 
+      renderKeyboard(side);
       closeAllPop();
     });
   });
@@ -731,9 +706,7 @@ function playKeyClick(kind = "key") {
   const ctx = ensureKeyboardAudio();
   if (!ctx || !keyboardMasterGain) return;
 
-  if (ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
 
   const now = ctx.currentTime;
   const osc = ctx.createOscillator();
@@ -791,7 +764,6 @@ function hideKeyboards() {
 function appendInputValue(side, value) {
   const input = side === "top" ? topInput : botInput;
   if (!input) return;
-
   input.value = `${input.value || ""}${value}`;
   autoResizeTextarea(input);
   syncComposerButtons(side);
@@ -800,7 +772,6 @@ function appendInputValue(side, value) {
 function backspaceInputValue(side) {
   const input = side === "top" ? topInput : botInput;
   if (!input) return;
-
   input.value = String(input.value || "").slice(0, -1);
   autoResizeTextarea(input);
   syncComposerButtons(side);
@@ -1482,9 +1453,7 @@ async function translateText(text, from, to, tone = "neutral") {
       });
 
       const offlineValue = String(offlineRaw?.translatedText || "").trim();
-      if (offlineRaw?.ok && offlineValue) {
-        return offlineValue;
-      }
+      if (offlineRaw?.ok && offlineValue) return offlineValue;
 
       if (offlineRaw?.error === "offline_license_required") {
         showToast("Offline çeviri için lisans doğrulanamadı");
@@ -1867,7 +1836,6 @@ function startBoot() {
 
     currentRuntimeMode = "online";
     syncModeUi();
-
     window.topLang = topLang;
     window.botLang = botLang;
 
@@ -1960,36 +1928,18 @@ function bindReadonlyInput(side) {
 }
 
 function bindModeControls() {
-  const bindToggle = (el) => {
-    if (!el) return;
+  window.f2fToggleMode = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation();
 
-    let lastTouchTs = 0;
-
-    const run = (e) => {
-      e?.preventDefault?.();
-      e?.stopPropagation?.();
-
-      if (currentRuntimeMode === "online") {
-        tryEnableOfflineMode();
-      } else {
-        closeOfflineRequiredPopup();
-        setModeOnline();
-      }
-    };
-
-    el.addEventListener("touchend", (e) => {
-      lastTouchTs = Date.now();
-      run(e);
-    }, { passive: false });
-
-    el.addEventListener("click", (e) => {
-      if (Date.now() - lastTouchTs < 500) return;
-      run(e);
-    });
+    if (currentRuntimeMode === "online") {
+      tryEnableOfflineMode();
+    } else {
+      closeOfflineRequiredPopup();
+      setModeOnline();
+      showToast("Online mod aktif");
+    }
   };
-
-  bindToggle(topModeToggle);
-  bindToggle(botModeToggle);
 
   offlineRequiredCloseBtn?.addEventListener("click", (e) => {
     e.preventDefault();
