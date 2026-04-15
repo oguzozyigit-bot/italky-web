@@ -524,55 +524,74 @@
     .btn-home{ left:14px; }
     .btn-clear{ right:14px; }
 
-    .offline-badge{
+    .mode-toggle{
       position:absolute;
-      top:8px;
-      left:50%;
-      transform:translateX(-50%);
-      min-height:30px;
-      padding:0 12px;
+      left:88px;
+      top:50%;
+      transform:translateY(-50%);
+      width:98px;
+      height:38px;
       border-radius:999px;
-      background:rgba(34,197,94,.16);
-      border:1px solid rgba(34,197,94,.28);
-      color:#eafff3;
-      font-size:11px;
-      font-weight:1000;
-      letter-spacing:.3px;
-      display:none;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      padding:4px;
+      display:flex;
       align-items:center;
-      justify-content:center;
-      gap:8px;
+      cursor:pointer;
       z-index:760;
+      overflow:hidden;
       backdrop-filter:blur(10px);
     }
 
-    .offline-badge.show{
-      display:inline-flex;
+    .mode-toggle-track{
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      opacity:.18;
+      transition:.2s ease;
     }
 
-    .settings-lock-badge{
+    .mode-toggle-thumb{
+      position:relative;
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 6px 16px rgba(0,0,0,.24);
+      transition:transform .22s ease, background .22s ease;
+      z-index:2;
+    }
+
+    .mode-toggle-label{
       position:absolute;
-      right:66px;
-      top:50%;
-      transform:translateY(-50%);
-      min-height:28px;
-      padding:0 10px;
-      border-radius:999px;
-      background:rgba(239,68,68,.12);
-      border:1px solid rgba(239,68,68,.22);
-      color:#ffe7ea;
-      font-size:10px;
-      font-weight:1000;
-      letter-spacing:.2px;
-      display:none;
+      inset:0;
+      display:flex;
       align-items:center;
       justify-content:center;
-      z-index:760;
-      white-space:nowrap;
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.45px;
+      color:#fff;
+      z-index:1;
+      pointer-events:none;
     }
 
-    .settings-lock-badge.show{
-      display:inline-flex;
+    .mode-toggle.online .mode-toggle-track{
+      background:rgba(34,197,94,.95);
+    }
+
+    .mode-toggle.online .mode-toggle-thumb{
+      transform:translateX(0);
+      background:#ecfff3;
+    }
+
+    .mode-toggle.offline .mode-toggle-track{
+      background:rgba(239,68,68,.95);
+    }
+
+    .mode-toggle.offline .mode-toggle-thumb{
+      transform:translateX(58px);
+      background:#fff0f2;
     }
 
     .orb-container{
@@ -650,7 +669,7 @@
       align-items:center;
       gap:3px;
       height:20px;
-      position: absolute;
+      position:absolute;
       opacity:0;
       transition:.25s;
       z-index:20;
@@ -810,6 +829,29 @@
     .mini-toast.show{
       transform:translateX(-50%) translateY(0);
     }
+
+    @media (max-width:390px){
+      .mode-toggle{
+        left:78px;
+        width:90px;
+      }
+
+      .mode-toggle.offline .mode-toggle-thumb{
+        transform:translateX(50px);
+      }
+
+      .holo-container{ width:190px; height:190px; margin-bottom:2px; }
+      .crystal-cage{ width:136px; height:136px; }
+      .side1{ transform:rotateY(0deg) translateZ(68px); }
+      .side2{ transform:rotateY(90deg) translateZ(68px); }
+      .side3{ transform:rotateY(180deg) translateZ(68px); }
+      .side4{ transform:rotateY(270deg) translateZ(68px); }
+      .side5{ transform:rotateX(90deg) translateZ(68px); }
+      .side6{ transform:rotateX(-90deg) translateZ(68px); }
+      .holo-qr{ width:98px; height:98px; }
+      .planet-core{ width:98px; height:98px; }
+      .heroTitle{ font-size:18px; }
+    }
   </style>
 </head>
 <body id="frameRoot" class="to-bot">
@@ -861,7 +903,11 @@
     <div class="center-hub">
       <a class="nav-btn btn-home" id="homeLink" href="/pages/home.html">ANA SAYFA</a>
 
-      <div id="offlineBadge" class="offline-badge">🟢 OFFLINE MOD</div>
+      <button id="modeToggle" class="mode-toggle online" type="button" aria-label="Online offline geçiş">
+        <span class="mode-toggle-track"></span>
+        <span class="mode-toggle-thumb"></span>
+        <span class="mode-toggle-label" id="modeToggleLabel">ONLINE</span>
+      </button>
 
       <div class="orb-container" id="homeBtn" title="Ana sayfa">
         <div class="energy-orbit">
@@ -877,8 +923,6 @@
           <span class="logo-text">italky<span class="logo-ai">AI</span></span>
         </div>
       </div>
-
-      <div id="settingsLockBadge" class="settings-lock-badge">AYARLAR KAPALI</div>
 
       <div style="position:absolute; right:14px; display:flex; align-items:center; gap:8px; z-index:650;">
         <button
@@ -958,20 +1002,6 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module">
-    const params = new URLSearchParams(location.search);
-    const forcedMode = String(params.get("mode") || "").trim().toLowerCase();
-
-    const script = document.createElement("script");
-    script.type = "module";
-
-    if (forcedMode === "offline" || (!navigator.onLine && forcedMode !== "online")) {
-      script.src = "/js/facetoface_offline.js?v=F2F_OFFLINE_V8";
-    } else {
-      script.src = "/js/facetoface_page.js?v=F2F_ONLINE_V8";
-    }
-
-    document.body.appendChild(script);
-  </script>
+  <script type="module" src="/js/facetoface_mode_boot.js?v=F2F_MODE_BOOT_V1"></script>
 </body>
 </html>
