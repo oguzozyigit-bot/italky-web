@@ -85,8 +85,8 @@ function loadModeScript(mode) {
   script.type = "module";
   script.src =
     mode === "offline"
-      ? "/js/facetoface_offline.js?v=F2F_OFFLINE_V13"
-      : "/js/facetoface_page.js?v=F2F_ONLINE_V13";
+      ? "/js/facetoface_offline.js?v=F2F_OFFLINE_V14"
+      : "/js/facetoface_page.js?v=F2F_ONLINE_V14";
   document.body.appendChild(script);
 }
 
