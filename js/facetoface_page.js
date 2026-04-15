@@ -1930,7 +1930,7 @@ function bindReadonlyInput(side) {
 function bindModeControls() {
   window.f2fToggleMode = (e) => {
     e?.preventDefault?.();
-    e?.stopPropagation();
+    e?.stopPropagation?.();
 
     if (currentRuntimeMode === "online") {
       tryEnableOfflineMode();
