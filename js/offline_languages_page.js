@@ -30,7 +30,6 @@ const STORAGE = {
 };
 
 const ALL_OFFLINE_LANGS = [
-const ALL_OFFLINE_LANGS = [
   { code: "af", name: "Afrikanca", flag: "🇿🇦" },
   { code: "ar", name: "Arapça", flag: "🇸🇦" },
   { code: "be", name: "Belarusça", flag: "🇧🇾" },
