@@ -23,10 +23,10 @@ const langPickerClose = $("langPickerClose");
 const toastEl = $("toast");
 
 const STORAGE = {
-  installed: "italky_offline_installed_pairs_v6",
-  downloading: "italky_offline_downloading_pairs_v6",
-  nativeLang: "italky_native_lang_v6",
-  offlineLicenseDays: "italky_offline_license_days_v6"
+  installed: "italky_offline_installed_pairs_v7",
+  downloading: "italky_offline_downloading_pairs_v7",
+  nativeLang: "italky_native_lang_v7",
+  offlineLicenseDays: "italky_offline_license_days_v7"
 };
 
 const ALL_OFFLINE_LANGS = [
@@ -425,8 +425,8 @@ Uygulama içinde başka sayfalarda gezebilirsiniz.`
 
 function canUseNativeOfflineInstaller() {
   return !!(
-    (window.AndroidOfflineTranslate && typeof window.AndroidOfflineTranslate.downloadBiDirectionalPair === "function") ||
-    (window.Android && typeof window.Android.downloadBiDirectionalPair === "function")
+    window.OfflineTranslate &&
+    typeof window.OfflineTranslate.downloadBiDirectionalPair === "function"
   );
 }
 
@@ -449,7 +449,7 @@ async function installBiDirectionalPair(langCode) {
     if (!canUseNativeOfflineInstaller()) {
       clearLangProgress(code);
       renderInstalledList();
-      toast("Gerçek kurulum için app tarafı bağlanacak.");
+      toast("Gerçek kurulum için uygulama tarafı hazır değil.");
       return;
     }
 
@@ -458,11 +458,7 @@ async function installBiDirectionalPair(langCode) {
       target: code
     });
 
-    if (window.AndroidOfflineTranslate?.downloadBiDirectionalPair) {
-      window.AndroidOfflineTranslate.downloadBiDirectionalPair(payload);
-    } else if (window.Android?.downloadBiDirectionalPair) {
-      window.Android.downloadBiDirectionalPair(payload);
-    }
+    window.OfflineTranslate.downloadBiDirectionalPair(payload);
   } catch (e) {
     console.error("[offline_languages_page] installBiDirectionalPair:", e);
     clearLangProgress(code);
