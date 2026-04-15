@@ -544,6 +544,9 @@ async function init() {
     console.warn("[offline_languages_page] shell:", e);
   }
 
+  clearStaleDownloadingState();
+  normalizeInstalledVsProgress();
+
   LANGS = buildSupportedLangList();
 
   ensureMockOfflineLicenseOnce();
@@ -560,4 +563,46 @@ async function init() {
   });
 }
 
+function clearStaleDownloadingState() {
+  const map = getDownloadingMap();
+  const now = Date.now();
+  let changed = false;
+
+  Object.keys(map).forEach((code) => {
+    const item = map[code];
+    const updatedAt = Number(item?.updatedAt || 0);
+
+    if (!updatedAt || now - updatedAt > 3 * 60 * 1000) {
+      delete map[code];
+      changed = true;
+      return;
+    }
+
+    if (isLangInstalledBiDirectional(code)) {
+      delete map[code];
+      changed = true;
+    }
+  });
+
+  if (changed) saveDownloadingMap(map);
+}
+
+function normalizeInstalledVsProgress() {
+  const installed = getInstalledPairs();
+  const downloading = getDownloadingMap();
+  let changed = false;
+
+  Object.keys(downloading).forEach((code) => {
+    const nativeLang = getNativeLang();
+    const okA = installed[pairKey(nativeLang, code)];
+    const okB = installed[pairKey(code, nativeLang)];
+
+    if (okA && okB) {
+      delete downloading[code];
+      changed = true;
+    }
+  });
+
+  if (changed) saveDownloadingMap(downloading);
+}
 init();
