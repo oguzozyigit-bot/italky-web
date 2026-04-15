@@ -1,36 +1,44 @@
-// FILE: /js/facetoface_offline.js
+import { getLangPoolForSite } from "/js/lang_pool_full.js";
 
 const $ = (id) => document.getElementById(id);
 
-const OFFLINE_PACK_KEY = "italky_offline_installed_packs_v5";
-const F2F_RUNTIME_KEY = "facetoface_runtime_mode";
+const topBody = $("topBody");
+const botBody = $("botBody");
 
-const frameRoot = $("frameRoot");
+const topMic = $("topMic");
+const botMic = $("botMic");
+const topSend = $("topSend");
+const botSend = $("botSend");
+const topInput = $("topInput");
+const botInput = $("botInput");
+const topComposer = $("topComposer");
+const botComposer = $("botComposer");
+
+const topKeyboardWrap = $("topKeyboardWrap");
+const botKeyboardWrap = $("botKeyboardWrap");
+const topKeyboard = $("topKeyboard");
+const botKeyboard = $("botKeyboard");
+
 const topLangBtn = $("topLangBtn");
 const botLangBtn = $("botLangBtn");
 const topLangTxt = $("topLangTxt");
 const botLangTxt = $("botLangTxt");
-const topBody = $("topBody");
-const botBody = $("botBody");
-const topMic = $("topMic");
-const botMic = $("botMic");
-const topHelper = $("topHelper");
-const botHelper = $("botHelper");
+const popTop = $("pop-top");
+const popBot = $("pop-bot");
+const listTop = $("list-top");
+const listBot = $("list-bot");
+const closeTop = $("close-top");
+const closeBot = $("close-bot");
+
+const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
-const clearBtn = $("clearBtn");
 const settingsBtn = $("settingsBtn");
-const modeFlag = $("modeFlag");
-const modeFlagTxt = $("modeFlagTxt");
 const miniToast = $("miniToast");
 
-let currentAudio = null;
-let topRec = null;
-let botRec = null;
-let topListening = false;
-let botListening = false;
-let topLang = "en";
-let botLang = "tr";
+const offlineBadge = $("offlineBadge");
+const settingsLockBadge = $("settingsLockBadge");
+const frameRoot = $("frameRoot");
 
 const BCP = {
   tr: "tr-TR",
@@ -40,89 +48,122 @@ const BCP = {
   it: "it-IT",
   es: "es-ES",
   ru: "ru-RU",
-  el: "el-GR",
-  az: "az-AZ",
-  ka: "ka-GE",
   ar: "ar-SA",
-  fa: "fa-IR",
-  hy: "hy-AM",
-  kmr: "tr-TR",
-  ckb: "tr-TR",
-  zza: "tr-TR",
-  lzz: "tr-TR",
-  ady: "tr-TR",
-  ab: "tr-TR"
+  zh: "zh-CN",
+  tg: "tg-TJ"
 };
 
-const LANG_META = {
-  tr:  { flag: "🇹🇷", name: "Türkçe" },
-  en:  { flag: "🇬🇧", name: "İngilizce" },
-  de:  { flag: "🇩🇪", name: "Almanca" },
-  fr:  { flag: "🇫🇷", name: "Fransızca" },
-  it:  { flag: "🇮🇹", name: "İtalyanca" },
-  es:  { flag: "🇪🇸", name: "İspanyolca" },
-  ru:  { flag: "🇷🇺", name: "Rusça" },
-  el:  { flag: "🇬🇷", name: "Yunanca" },
-  az:  { flag: "🇦🇿", name: "Azerbaycanca" },
-  ka:  { flag: "🇬🇪", name: "Gürcüce" },
-  ar:  { flag: "🇸🇦", name: "Arapça" },
-  fa:  { flag: "🇮🇷", name: "Farsça" },
-  hy:  { flag: "🇦🇲", name: "Ermenice" },
-  kmr: { flag: "🟨", name: "Kürtçe (Kurmançça)" },
-  ckb: { flag: "🟧", name: "Kürtçe (Sorani)" },
-  zza: { flag: "🟫", name: "Zazaca" },
-  lzz: { flag: "🌊", name: "Lazca" },
-  ady: { flag: "🟩", name: "Çerkezce" },
-  ab:  { flag: "⬛", name: "Abhazca" }
+const PLACEHOLDERS = {
+  tr: "Mesajını buraya yaz",
+  en: "Write your message here",
+  de: "Schreibe hier deine Nachricht",
+  fr: "Écris ici ton message",
+  it: "Scrivi qui il tuo messaggio",
+  es: "Escribe aquí tu mensaje",
+  ru: "Введите сообщение",
+  ar: "اكتب رسالتك هنا",
+  zh: "在这里输入消息",
+  tg: "Паёми худро ин ҷо нависед"
 };
+
+const ALT_CHARS = {
+  a: ["â", "á", "à"],
+  A: ["Â", "Á", "À"],
+  c: ["ç"],
+  C: ["Ç"],
+  g: ["ğ"],
+  G: ["Ğ"],
+  i: ["ı", "î"],
+  I: ["İ", "Î"],
+  o: ["ö", "ô", "ó"],
+  O: ["Ö", "Ô", "Ó"],
+  s: ["ş"],
+  S: ["Ş"],
+  u: ["ü", "û", "ú"],
+  U: ["Ü", "Û", "Ú"],
+  e: ["é", "è", "ê"],
+  E: ["É", "È", "Ê"],
+  n: ["ñ"],
+  N: ["Ñ"]
+};
+
+const SITE_LANG = "tr";
+const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
+  ? getLangPoolForSite(SITE_LANG)
+  : [];
+
+const LANGS = RAW_LANG_POOL
+  .map((l) => {
+    const code = canonical(l.code);
+    if (!code) return null;
+
+    return {
+      code,
+      flag: l.flag || "🌐",
+      name: l.name || l.tr_name || code.toUpperCase(),
+      bcp: BCP[code] || `${code}-${String(code).toUpperCase()}`
+    };
+  })
+  .filter(Boolean);
+
+let topLang = "en";
+let botLang = "tr";
+let activeKeyboardSide = null;
+let shiftState = { top: false, bot: false };
+let altMenuEl = null;
+let holdTimer = null;
+let currentAudio = null;
+let speakRunId = 0;
+let typewriterRunId = 0;
 
 function canonical(code) {
-  return String(code || "").trim().toLowerCase().split("-")[0];
+  return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
-function langMeta(code) {
+function langObj(code) {
   const c = canonical(code);
-  return LANG_META[c] || {
-    flag: "🌐",
-    name: c.toUpperCase()
-  };
+  return (
+    LANGS.find((x) => x.code === c) || {
+      code: c || "en",
+      flag: "🌐",
+      name: (c || "en").toUpperCase(),
+      bcp: BCP[c] || "en-US",
+    }
+  );
 }
 
-function normalizeText(text) {
-  return String(text || "").replace(/\s+/g, " ").trim();
+function labelChip(code) {
+  const o = langObj(code);
+  return `${o.flag} ${o.name}`;
 }
 
-function showToast(message = "") {
+function getPlaceholder(code) {
+  return PLACEHOLDERS[canonical(code)] || PLACEHOLDERS.en;
+}
+
+function showToast(msg = "") {
   if (!miniToast) return;
-  miniToast.textContent = String(message || "");
+  miniToast.textContent = String(msg || "");
   miniToast.classList.add("show");
-  clearTimeout(window.__offlineToastTimer);
-  window.__offlineToastTimer = setTimeout(() => {
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => {
     miniToast.classList.remove("show");
-  }, 1800);
+  }, 1900);
 }
 
-function setRuntimeOffline() {
-  try {
-    localStorage.setItem(F2F_RUNTIME_KEY, "offline");
-  } catch {}
+function showOfflineUi() {
+  offlineBadge?.classList.add("show");
+  settingsLockBadge?.classList.add("show");
 }
 
-function updateModeFlag() {
-  if (!modeFlag || !modeFlagTxt) return;
-  modeFlag.classList.add("offline");
-  modeFlagTxt.textContent = "OFFLINE";
+function setErrorUI() {
+  frameRoot?.classList.remove("is-idle", "is-listening", "is-translating", "is-ready");
+  frameRoot?.classList.add("is-error");
 }
 
-function setHelpers(topText = "", botText = "") {
-  if (topHelper) topHelper.textContent = topText;
-  if (botHelper) botHelper.textContent = botText;
-}
-
-function setState(state) {
-  if (!frameRoot) return;
-  frameRoot.classList.remove("is-listening", "is-translating", "is-ready", "is-error");
-  if (state) frameRoot.classList.add(`is-${state}`);
+function setReadyUI() {
+  frameRoot?.classList.remove("is-idle", "is-listening", "is-translating", "is-error");
+  frameRoot?.classList.add("is-ready");
 }
 
 function pointOrbTo(side) {
@@ -131,493 +172,752 @@ function pointOrbTo(side) {
   frameRoot.classList.add(side === "top" ? "to-top" : "to-bot");
 }
 
+function setInputPlaceholder(side, value = "") {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+  input.placeholder = value;
+}
+
+function restoreInputPlaceholder(side) {
+  const lang = side === "top" ? topLang : botLang;
+  setInputPlaceholder(side, getPlaceholder(lang));
+}
+
+function refreshLangLabels() {
+  if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
+  if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
+  restoreInputPlaceholder("top");
+  restoreInputPlaceholder("bot");
+}
+
+function closeAllPop() {
+  popTop?.classList.remove("show");
+  popBot?.classList.remove("show");
+}
+
+function renderPop(side) {
+  const list = side === "top" ? listTop : listBot;
+  const sel = side === "top" ? topLang : botLang;
+  if (!list) return;
+
+  list.innerHTML = LANGS.map((l) => {
+    const active = canonical(l.code) === canonical(sel) ? "active" : "";
+    return `
+      <div class="pop-item ${active}" data-code="${l.code}">
+        <div class="pop-left">
+          <div class="pop-flag">${l.flag}</div>
+          <div class="pop-name">${l.name}</div>
+        </div>
+        <div class="pop-code">${l.code.toUpperCase()}</div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".pop-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      const code = canonical(el.dataset.code || "en");
+      if (side === "top") topLang = code;
+      else botLang = code;
+
+      refreshLangLabels();
+      renderKeyboard(side);
+      closeAllPop();
+    });
+  });
+}
+
+function autoResizeTextarea(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = `${Math.min(el.scrollHeight, 84)}px`;
+}
+
+function syncComposerButtons(side) {
+  const input = side === "top" ? topInput : botInput;
+  const mic = side === "top" ? topMic : botMic;
+  const send = side === "top" ? topSend : botSend;
+  if (!input || !mic || !send) return;
+
+  const hasText = String(input.value || "").trim().length > 0;
+  mic.classList.add("hidden");
+  send.classList.toggle("hidden", !hasText);
+}
+
+function syncAllComposerButtons() {
+  syncComposerButtons("top");
+  syncComposerButtons("bot");
+}
+
+function hideAltMenu() {
+  altMenuEl?.remove();
+  altMenuEl = null;
+  clearTimeout(holdTimer);
+  holdTimer = null;
+}
+
+function showKeyboard(side) {
+  activeKeyboardSide = side;
+  topKeyboardWrap?.classList.toggle("show", side === "top");
+  botKeyboardWrap?.classList.toggle("show", side === "bot");
+  hideAltMenu();
+  renderKeyboard(side);
+  keepLatestVisible(side);
+}
+
+function hideKeyboards() {
+  activeKeyboardSide = null;
+  hideAltMenu();
+  topKeyboardWrap?.classList.remove("show");
+  botKeyboardWrap?.classList.remove("show");
+}
+
+function appendInputValue(side, value) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+
+  input.value = `${input.value || ""}${value}`;
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function backspaceInputValue(side) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+
+  input.value = String(input.value || "").slice(0, -1);
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function keyboardRows(lang, shift) {
+  const c = canonical(lang);
+  const upper = !!shift;
+  const numRow = ["1","2","3","4","5","6","7","8","9","0"];
+
+  if (c === "tr") {
+    return {
+      nums: numRow,
+      r1: upper ? ["Q","W","E","R","T","Y","U","I","O","P"] : ["q","w","e","r","t","y","u","ı","o","p"],
+      r2: upper ? ["A","S","D","F","G","H","J","K","L"] : ["a","s","d","f","g","h","j","k","l"],
+      r3: upper ? ["Z","X","C","V","B","N","M"] : ["z","x","c","v","b","n","m"],
+    };
+  }
+
+  const mapRow = (row) => upper ? row.map((x) => x.toUpperCase()) : row;
+  return {
+    nums: numRow,
+    r1: mapRow(["q","w","e","r","t","y","u","i","o","p"]),
+    r2: mapRow(["a","s","d","f","g","h","j","k","l"]),
+    r3: mapRow(["z","x","c","v","b","n","m"]),
+  };
+}
+
+function svgShift() {
+  return `
+    <svg viewBox="0 0 24 24">
+      <path d="M12 4l6 7h-4v8H10v-8H6l6-7z"></path>
+    </svg>
+  `;
+}
+
+function svgBackspace() {
+  return `
+    <svg viewBox="0 0 24 24">
+      <path d="M21 6H9l-6 6 6 6h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"></path>
+      <path d="M10 9l5 6"></path>
+      <path d="M15 9l-5 6"></path>
+    </svg>
+  `;
+}
+
+function createKey({ label = "", html = "", onTap, onLongPress = null, className = "" }) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `kb-key ${className}`.trim();
+  if (html) btn.innerHTML = html;
+  else btn.textContent = label;
+
+  let longTriggered = false;
+
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    longTriggered = false;
+
+    if (onLongPress) {
+      holdTimer = setTimeout(() => {
+        longTriggered = true;
+        onLongPress(btn);
+      }, 320);
+    }
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    if (!longTriggered && onTap) onTap();
+  });
+
+  btn.addEventListener("pointerleave", () => {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+  });
+
+  btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  return btn;
+}
+
+function createAltMenu(hostBtn, chars, onPick) {
+  hideAltMenu();
+  if (!hostBtn || !chars?.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "alt-pop";
+
+  chars.forEach((ch) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "alt-key";
+    b.textContent = ch;
+    b.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onPick(ch);
+      hideAltMenu();
+    });
+    wrap.appendChild(b);
+  });
+
+  hostBtn.appendChild(wrap);
+  altMenuEl = wrap;
+}
+
+function renderCharKeys(rowEl, chars, side) {
+  chars.forEach((ch) => {
+    const alts = ALT_CHARS[ch] || ALT_CHARS[String(ch).toLowerCase()] || [];
+    rowEl.appendChild(createKey({
+      label: ch,
+      onTap: () => {
+        hideAltMenu();
+        appendInputValue(side, ch);
+        if (shiftState[side] && /[A-ZÇĞİÖŞÜ]/.test(ch)) {
+          shiftState[side] = false;
+          renderKeyboard(side);
+        }
+      },
+      onLongPress: alts.length ? (btn) => {
+        createAltMenu(btn, alts, (picked) => appendInputValue(side, picked));
+      } : null
+    }));
+  });
+}
+
+function renderKeyboard(side) {
+  const wrap = side === "top" ? topKeyboard : botKeyboard;
+  const lang = side === "top" ? topLang : botLang;
+  if (!wrap) return;
+
+  const rows = keyboardRows(lang, shiftState[side]);
+  wrap.innerHTML = "";
+
+  const rowNums = document.createElement("div");
+  rowNums.className = "kb-row";
+  renderCharKeys(rowNums, rows.nums, side);
+  wrap.appendChild(rowNums);
+
+  const row1 = document.createElement("div");
+  row1.className = "kb-row";
+  renderCharKeys(row1, rows.r1, side);
+  wrap.appendChild(row1);
+
+  const row2 = document.createElement("div");
+  row2.className = "kb-row";
+  row2.appendChild(document.createElement("div")).style.flex = "0.35";
+  renderCharKeys(row2, rows.r2, side);
+  row2.appendChild(document.createElement("div")).style.flex = "0.35";
+  wrap.appendChild(row2);
+
+  const row3 = document.createElement("div");
+  row3.className = "kb-row";
+
+  row3.appendChild(createKey({
+    html: svgShift(),
+    className: "icon wide",
+    onTap: () => {
+      hideAltMenu();
+      shiftState[side] = !shiftState[side];
+      renderKeyboard(side);
+    }
+  }));
+
+  renderCharKeys(row3, rows.r3, side);
+
+  row3.appendChild(createKey({
+    html: svgBackspace(),
+    className: "icon wide",
+    onTap: () => {
+      hideAltMenu();
+      backspaceInputValue(side);
+    }
+  }));
+
+  wrap.appendChild(row3);
+
+  const row4 = document.createElement("div");
+  row4.className = "kb-row";
+
+  row4.appendChild(createKey({ label: ",", onTap: () => appendInputValue(side, ",") }));
+  row4.appendChild(createKey({ label: ".", onTap: () => appendInputValue(side, ".") }));
+  row4.appendChild(createKey({ label: " ", className: "xwide", onTap: () => appendInputValue(side, " ") }));
+  row4.appendChild(createKey({ label: "?", onTap: () => appendInputValue(side, "?") }));
+  row4.appendChild(createKey({ label: "!", onTap: () => appendInputValue(side, "!") }));
+
+  wrap.appendChild(row4);
+}
+
+function keepLatestVisible(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+
+  const apply = () => {
+    try {
+      wrap.scrollTop = wrap.scrollHeight;
+    } catch {}
+  };
+
+  apply();
+  requestAnimationFrame(apply);
+  setTimeout(apply, 40);
+  setTimeout(apply, 120);
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function stopTypewriter() {
+  typewriterRunId += 1;
+}
+
+async function typewriteText(el, finalText, side) {
+  if (!el) return;
+
+  stopTypewriter();
+  const runId = typewriterRunId;
+  const full = String(finalText || "").trim();
+
+  el.textContent = "";
+  if (!full) return;
+
+  let i = 0;
+  while (i < full.length) {
+    if (runId !== typewriterRunId) return;
+    const next = Math.min(full.length, i + 2);
+    el.textContent = full.slice(0, next);
+    i = next;
+    keepLatestVisible(side);
+    await wait(10);
+  }
+}
+
 function stopAudio() {
+  speakRunId += 1;
+
   try {
-    currentAudio?.pause?.();
-    if (currentAudio) currentAudio.currentTime = 0;
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
   } catch {}
+
   currentAudio = null;
 
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
 
-function renderBubble(container, text, latest = true, withSpeaker = false, langCode = "tr") {
-  if (!container) return;
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  const langBase = canonical(langCode);
+  let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
+  return pool[0] || voices[0] || null;
+}
 
-  if (latest) container.innerHTML = "";
+function speakFallback(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return false;
 
-  const bubble = document.createElement("div");
-  bubble.className = `bubble me${latest ? " is-latest" : ""}`;
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(value, canonical(langCode));
+      return true;
+    }
+  } catch {}
+
+  if (!window.speechSynthesis) return false;
+
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(value);
+    u.lang = langObj(langCode).bcp;
+    u.rate = 0.95;
+    u.pitch = 1;
+    const voice = chooseWebVoice(langCode);
+    if (voice) u.voice = voice;
+    window.speechSynthesis.speak(u);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function speak(text, langCode) {
+  stopAudio();
+  speakFallback(text, langCode);
+}
+
+function createSpeakerButton(getText, langCode) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "spk-icon";
+  btn.setAttribute("aria-label", "Tekrar dinle");
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    </svg>
+  `;
+
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const value = typeof getText === "function" ? String(getText() || "").trim() : "";
+    if (!value) return;
+    await speak(value, langCode);
+  });
+
+  return btn;
+}
+
+function addBubble(side, kind, text, opts = {}) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return null;
 
   const row = document.createElement("div");
-  row.className = "bubble-row";
+  row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
+
+  const inner = document.createElement("div");
+  inner.className = "bubble-row";
 
   const txt = document.createElement("span");
   txt.className = "txt";
-  txt.textContent = text;
-  row.appendChild(txt);
+  txt.textContent = String(text || "").trim();
 
-  if (withSpeaker) {
-    const spk = document.createElement("button");
-    spk.className = "spk-icon";
-    spk.type = "button";
-    spk.setAttribute("aria-label", "Seslendir");
-    spk.innerHTML = `
-      <svg viewBox="0 0 24 24">
-        <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-        <path d="M16 8a4 4 0 0 1 0 8"></path>
-        <path d="M19 5a8 8 0 0 1 0 14"></path>
-      </svg>
-    `;
-    spk.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      speakText(text, langCode);
-    });
-    row.appendChild(spk);
+  if (opts.withSpeaker || kind === "me") {
+    inner.appendChild(createSpeakerButton(() => txt.textContent || "", opts.speakLang || "en"));
   }
 
-  bubble.appendChild(row);
-  container.appendChild(bubble);
-
-  try {
-    container.scrollTop = container.scrollHeight;
-  } catch {}
+  inner.appendChild(txt);
+  row.appendChild(inner);
+  wrap.appendChild(row);
+  keepLatestVisible(side);
+  return row;
 }
 
-function getInstalledPacks() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(OFFLINE_PACK_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+function clearLatest(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
 }
 
-function isPackActive(pack) {
-  if (!pack?.expires_at) return false;
-  return new Date(pack.expires_at).getTime() > Date.now();
-}
-
-function getInstalledLanguages() {
-  const packs = getInstalledPacks().filter(isPackActive);
-  const codes = new Set(["tr", "en"]);
-
-  for (const p of packs) {
-    const code = canonical(p.lang);
-    if (code) codes.add(code);
+async function offlineTranslateText(text, from, to) {
+  if (!window.OfflineTranslate || typeof window.OfflineTranslate.translate !== "function") {
+    throw new Error("Offline köprüsü bulunamadı.");
   }
 
-  return [...codes];
-}
+  return new Promise((resolve, reject) => {
+    let done = false;
 
-function updateLangLabels() {
-  const top = langMeta(topLang);
-  const bot = langMeta(botLang);
+    const finish = (fn, value) => {
+      if (done) return;
+      done = true;
+      window.removeEventListener("offlineTranslateResult", onResult);
+      clearTimeout(timer);
+      fn(value);
+    };
 
-  if (topLangTxt) topLangTxt.textContent = `${top.flag} ${top.name}`;
-  if (botLangTxt) botLangTxt.textContent = `${bot.flag} ${bot.name}`;
-}
-
-function createLangSheet(title, codes, selectedCode, onPick) {
-  const backdrop = document.createElement("div");
-  backdrop.style.cssText = `
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.58);
-    backdrop-filter:blur(8px);
-    z-index:999999;
-    display:flex;
-    align-items:flex-end;
-    justify-content:center;
-    padding:14px;
-  `;
-
-  const card = document.createElement("div");
-  card.style.cssText = `
-    width:min(100%,420px);
-    max-height:72vh;
-    overflow:hidden;
-    border-radius:24px;
-    border:1px solid rgba(255,255,255,.10);
-    background:linear-gradient(180deg, rgba(18,22,36,.98), rgba(10,12,24,.98));
-    box-shadow:0 24px 60px rgba(0,0,0,.45);
-    display:flex;
-    flex-direction:column;
-  `;
-
-  const head = document.createElement("div");
-  head.style.cssText = `
-    padding:14px 14px 10px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    border-bottom:1px solid rgba(255,255,255,.08);
-    font-weight:1000;
-    font-size:14px;
-  `;
-  head.innerHTML = `<div>${title}</div>`;
-
-  const close = document.createElement("button");
-  close.type = "button";
-  close.textContent = "Kapat";
-  close.style.cssText = `
-    min-height:38px;
-    padding:0 12px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,.10);
-    background:rgba(255,255,255,.06);
-    color:#fff;
-    font-weight:1000;
-    cursor:pointer;
-  `;
-  head.appendChild(close);
-
-  const list = document.createElement("div");
-  list.style.cssText = `
-    overflow:auto;
-    padding:10px;
-    display:grid;
-    gap:8px;
-  `;
-
-  codes.forEach((code) => {
-    const meta = langMeta(code);
-    const item = document.createElement("button");
-    item.type = "button";
-    item.style.cssText = `
-      min-height:52px;
-      border-radius:16px;
-      border:1px solid ${canonical(code) === canonical(selectedCode) ? "rgba(99,102,241,.30)" : "rgba(255,255,255,.08)"};
-      background:${canonical(code) === canonical(selectedCode) ? "rgba(99,102,241,.14)" : "rgba(255,255,255,.04)"};
-      color:#fff;
-      font-weight:1000;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:0 14px;
-      cursor:pointer;
-    `;
-    item.innerHTML = `
-      <span>${meta.flag} ${meta.name}</span>
-      <span style="opacity:.7">${code.toUpperCase()}</span>
-    `;
-    item.addEventListener("click", () => {
-      onPick(code);
-      backdrop.remove();
-    });
-    list.appendChild(item);
-  });
-
-  close.addEventListener("click", () => backdrop.remove());
-  backdrop.addEventListener("click", (e) => {
-    if (e.target === backdrop) backdrop.remove();
-  });
-
-  card.appendChild(head);
-  card.appendChild(list);
-  backdrop.appendChild(card);
-  document.body.appendChild(backdrop);
-}
-
-function openTopLangPicker() {
-  const codes = getInstalledLanguages().filter((c) => c !== botLang);
-  createLangSheet("HEDEF DİL", codes, topLang, (code) => {
-    topLang = code;
-    updateLangLabels();
-  });
-}
-
-function openBotLangPicker() {
-  const codes = getInstalledLanguages().filter((c) => c !== topLang);
-  createLangSheet("İNDİRİLEN DİLLER", codes, botLang, (code) => {
-    botLang = code;
-    updateLangLabels();
-  });
-}
-
-function createRecognizer(langCode) {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
-
-  const rec = new SR();
-  rec.lang = BCP[canonical(langCode)] || "tr-TR";
-  rec.interimResults = true;
-  rec.continuous = false;
-  rec.maxAlternatives = 1;
-  return rec;
-}
-
-async function speakText(text, langCode) {
-  const clean = normalizeText(text);
-  if (!clean) return;
-
-  stopAudio();
-
-  try {
-    if (window.NativeTTS?.speak) {
-      window.NativeTTS.speak(clean, canonical(langCode));
-      return;
-    }
-  } catch {}
-
-  try {
-    const utter = new SpeechSynthesisUtterance(clean);
-    utter.lang = BCP[canonical(langCode)] || "tr-TR";
-    utter.rate = 0.95;
-    utter.pitch = 1;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utter);
-  } catch {}
-}
-
-async function runNativeOfflineTranslate(text, fromLang, toLang) {
-  const clean = normalizeText(text);
-  if (!clean) return "";
-
-  try {
-    if (window.AndroidOfflineTranslate?.translateJson) {
-      const raw = await window.AndroidOfflineTranslate.translateJson(
-        JSON.stringify({
-          text: clean,
-          from: canonical(fromLang),
-          to: canonical(toLang)
-        })
-      );
-
-      if (raw) {
-        try {
-          const parsed = JSON.parse(String(raw));
-          if (parsed?.ok && parsed?.translated) {
-            return String(parsed.translated).trim();
-          }
-        } catch {}
+    const onResult = (e) => {
+      const detail = e?.detail || {};
+      if (!detail.ok) {
+        finish(reject, new Error(detail.error || "offline_translate_failed"));
+        return;
       }
+      finish(resolve, String(detail.translatedText || "").trim());
+    };
+
+    const timer = setTimeout(() => {
+      finish(reject, new Error("offlineTranslateResult_timeout"));
+    }, 120000);
+
+    window.addEventListener("offlineTranslateResult", onResult, { once: true });
+
+    window.OfflineTranslate.translate(JSON.stringify({
+      from: canonical(from),
+      to: canonical(to),
+      text: String(text || "").trim()
+    }));
+  });
+}
+
+async function finalizeTypedMessage(side, rawText) {
+  const text = String(rawText || "").replace(/\s+/g, " ").trim();
+  if (!text) return;
+
+  const src = side === "top" ? topLang : botLang;
+  const dst = side === "top" ? botLang : topLang;
+  const other = side === "top" ? "bot" : "top";
+
+  addBubble(side, "them", text);
+  clearLatest(other);
+
+  frameRoot?.classList.remove("is-ready", "is-error");
+  frameRoot?.classList.add("is-translating");
+  pointOrbTo(side);
+
+  const latestRow = addBubble(other, "me", "Çevriliyor...", {
+    latest: true,
+    speakLang: dst
+  });
+
+  const latestTxt = latestRow?.querySelector(".txt");
+
+  try {
+    const tr = await offlineTranslateText(text, src, dst);
+    if (!tr) throw new Error("offline_empty_translation");
+
+    if (latestTxt) {
+      latestTxt.textContent = "";
+      await typewriteText(latestTxt, tr, other);
+      await speak(tr, dst);
     }
+
+    setReadyUI();
   } catch (e) {
-    console.warn("offline native translate error", e);
+    setErrorUI();
+    if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
+    showToast("Offline çeviri yapılamadı");
+    setTimeout(() => setReadyUI(), 1200);
   }
-
-  return "";
 }
 
-function fallbackOfflineTranslate(text, fromLang, toLang) {
-  const clean = normalizeText(text);
-  if (!clean) return "";
+async function sendTyped(side) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
 
-  if (fromLang === toLang) return clean;
-  return clean;
+  const text = String(input.value || "").trim();
+  if (!text) return;
+
+  input.value = "";
+  autoResizeTextarea(input);
+  restoreInputPlaceholder(side);
+  syncComposerButtons(side);
+
+  await finalizeTypedMessage(side, text);
 }
 
-async function translateOffline(text, fromLang, toLang) {
-  const nativeResult = await runNativeOfflineTranslate(text, fromLang, toLang);
-  if (nativeResult) return nativeResult;
-  return fallbackOfflineTranslate(text, fromLang, toLang);
+function bindReadonlyInput(side) {
+  const input = side === "top" ? topInput : botInput;
+  const send = side === "top" ? topSend : botSend;
+  const mic = side === "top" ? topMic : botMic;
+
+  if (!input || !send || !mic) return;
+
+  input.setAttribute("readonly", "readonly");
+
+  const open = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showKeyboard(side);
+  };
+
+  input.addEventListener("pointerdown", open);
+  input.addEventListener("click", open);
+  input.addEventListener("focus", (e) => {
+    e.preventDefault();
+    input.blur();
+    showKeyboard(side);
+  });
+
+  mic.classList.add("hidden");
+
+  send.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  send.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await sendTyped(side);
+  });
+
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
 }
 
-function toggleMicVisual(el, on) {
+function bindKeyboardButton(el, handler) {
   if (!el) return;
-  el.classList.toggle("listening", !!on);
-}
-
-function setTopListening(on) {
-  topListening = on;
-  toggleMicVisual(topMic, on);
-  pointOrbTo("top");
-  setState(on ? "listening" : "ready");
-}
-
-function setBotListening(on) {
-  botListening = on;
-  toggleMicVisual(botMic, on);
-  pointOrbTo("bot");
-  setState(on ? "listening" : "ready");
-}
-
-function startTopRecognition() {
-  if (topListening) {
-    try { topRec?.stop?.(); } catch {}
-    return;
-  }
-
-  const rec = createRecognizer(topLang);
-  if (!rec) {
-    showToast("Bu cihazda ses tanıma desteklenmiyor");
-    return;
-  }
-
-  topRec = rec;
-  let live = "";
-
-  rec.onstart = () => {
-    setTopListening(true);
-    setHelpers("Konuşmayı bitirince bekleyin...", botHelper?.textContent || "");
-  };
-
-  rec.onresult = (e) => {
-    let finalText = "";
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const txt = e.results[i][0]?.transcript || "";
-      if (e.results[i].isFinal) finalText += txt + " ";
+  el.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      await handler(e);
     }
-
-    if (finalText.trim()) {
-      live = normalizeText(finalText);
-      renderBubble(topBody, live, true, true, topLang);
-    }
-  };
-
-  rec.onerror = () => {
-    setTopListening(false);
-    setHelpers("Mikrofon başlatılamadı", botHelper?.textContent || "");
-  };
-
-  rec.onend = async () => {
-    setTopListening(false);
-
-    const finalText = normalizeText(live);
-    if (!finalText) {
-      setHelpers("Konuşmak için mikrofona dokununuz.", botHelper?.textContent || "");
-      return;
-    }
-
-    setState("translating");
-    const translated = await translateOffline(finalText, topLang, botLang);
-    renderBubble(botBody, translated, true, true, botLang);
-    speakText(translated, botLang);
-    setState("ready");
-    setHelpers("Konuşmak için mikrofona dokununuz.", "Offline çeviri hazır");
-  };
-
-  try {
-    rec.start();
-  } catch {
-    setTopListening(false);
-  }
-}
-
-function startBotRecognition() {
-  if (botListening) {
-    try { botRec?.stop?.(); } catch {}
-    return;
-  }
-
-  const rec = createRecognizer(botLang);
-  if (!rec) {
-    showToast("Bu cihazda ses tanıma desteklenmiyor");
-    return;
-  }
-
-  botRec = rec;
-  let live = "";
-
-  rec.onstart = () => {
-    setBotListening(true);
-    setHelpers(topHelper?.textContent || "", "Konuşmayı bitirince bekleyin...");
-  };
-
-  rec.onresult = (e) => {
-    let finalText = "";
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const txt = e.results[i][0]?.transcript || "";
-      if (e.results[i].isFinal) finalText += txt + " ";
-    }
-
-    if (finalText.trim()) {
-      live = normalizeText(finalText);
-      renderBubble(botBody, live, true, true, botLang);
-    }
-  };
-
-  rec.onerror = () => {
-    setBotListening(false);
-    setHelpers(topHelper?.textContent || "", "Mikrofon başlatılamadı");
-  };
-
-  rec.onend = async () => {
-    setBotListening(false);
-
-    const finalText = normalizeText(live);
-    if (!finalText) {
-      setHelpers(topHelper?.textContent || "", "Konuşmak için mikrofona dokununuz.");
-      return;
-    }
-
-    setState("translating");
-    const translated = await translateOffline(finalText, botLang, topLang);
-    renderBubble(topBody, translated, true, true, topLang);
-    speakText(translated, topLang);
-    setState("ready");
-    setHelpers("Offline çeviri hazır", "Konuşmak için mikrofona dokununuz.");
-  };
-
-  try {
-    rec.start();
-  } catch {
-    setBotListening(false);
-  }
+  });
 }
 
 function bind() {
-  topLangBtn?.addEventListener("click", openTopLangPicker);
-  botLangBtn?.addEventListener("click", openBotLangPicker);
+  showOfflineUi();
+  setReadyUI();
+  refreshLangLabels();
+  pointOrbTo("bot");
 
-  topMic?.addEventListener("click", startTopRecognition);
-  botMic?.addEventListener("click", startBotRecognition);
+  settingsBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showToast("Offline modda ayarlar kapalı");
+  });
+
+  topLangBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    renderPop("top");
+    popTop?.classList.add("show");
+  });
+
+  botLangBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    renderPop("bot");
+    popBot?.classList.add("show");
+  });
+
+  closeTop?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+  });
+
+  closeBot?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+  });
+
+  document.addEventListener("click", (e) => {
+    const insidePop =
+      (popTop && popTop.contains(e.target)) ||
+      (popBot && popBot.contains(e.target));
+    const isLangBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+    const isInput = e.target?.closest?.("#topInput,#botInput");
+    const isKb = e.target?.closest?.("#topKeyboardWrap,#botKeyboardWrap");
+    const isAlt = e.target?.closest?.(".alt-pop");
+
+    if (!insidePop && !isLangBtn) closeAllPop();
+    if (!isInput && !isKb && !isAlt) hideKeyboards();
+  }, { capture: true });
 
   clearBtn?.addEventListener("click", () => {
     stopAudio();
-    topBody.innerHTML = "";
-    botBody.innerHTML = "";
-    topRec = null;
-    botRec = null;
-    setTopListening(false);
-    setBotListening(false);
-    setHelpers("Konuşmak için mikrofona dokununuz.", "Konuşmak için mikrofona dokununuz.");
+    stopTypewriter();
+
+    if (topBody) topBody.innerHTML = "";
+    if (botBody) botBody.innerHTML = "";
+
+    if (topInput) {
+      topInput.value = "";
+      autoResizeTextarea(topInput);
+    }
+    if (botInput) {
+      botInput.value = "";
+      autoResizeTextarea(botInput);
+    }
+
+    restoreInputPlaceholder("top");
+    restoreInputPlaceholder("bot");
+
+    hideKeyboards();
+    syncAllComposerButtons();
+    setReadyUI();
   });
 
   homeLink?.addEventListener("click", (e) => {
     e.preventDefault();
-    showToast("Offline modda sadece FaceToFace kullanılabilir");
+    location.href = "/pages/home.html";
   });
 
-  homeBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    showToast("Offline modda sadece FaceToFace kullanılabilir");
+  homeBtn?.addEventListener("click", () => {
+    location.href = "/pages/home.html";
   });
 
-  settingsBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    showToast("Offline modda ayarlar sınırlı çalışır");
+  bindReadonlyInput("top");
+  bindReadonlyInput("bot");
+
+  bindKeyboardButton(homeBtn, async () => {
+    location.href = "/pages/home.html";
   });
 
-  modeFlag?.addEventListener("click", (e) => {
-    e.preventDefault();
-    showToast("Online moda geçiliyor...");
-    setTimeout(() => {
-      location.href = "/facetoface.html?mode=online";
-    }, 180);
-  });
+  renderKeyboard("top");
+  renderKeyboard("bot");
+
+  showToast("Bağlantı kesildi. Offline çeviri ile devam ediliyor.");
 }
 
-function init() {
-  setRuntimeOffline();
-  updateModeFlag();
+const requiredDomOk =
+  !!frameRoot &&
+  !!topBody &&
+  !!botBody &&
+  !!topSend &&
+  !!botSend &&
+  !!topInput &&
+  !!botInput &&
+  !!topComposer &&
+  !!botComposer &&
+  !!topKeyboardWrap &&
+  !!botKeyboardWrap &&
+  !!topKeyboard &&
+  !!botKeyboard &&
+  !!topLangBtn &&
+  !!botLangBtn &&
+  !!topLangTxt &&
+  !!botLangTxt &&
+  !!popTop &&
+  !!popBot &&
+  !!listTop &&
+  !!listBot &&
+  !!closeTop &&
+  !!closeBot &&
+  !!clearBtn &&
+  !!homeLink &&
+  !!homeBtn &&
+  !!miniToast &&
+  !!offlineBadge &&
+  !!settingsLockBadge;
 
-  const installed = getInstalledLanguages();
-
-  if (!installed.includes("tr")) botLang = installed[0] || "tr";
-  if (!installed.includes("en")) {
-    topLang = installed.find((x) => x !== botLang) || "en";
+if (!requiredDomOk) {
+  console.error("[facetoface_offline] Gerekli DOM elemanları eksik.");
+} else {
+  try {
+    bind();
+  } catch (e) {
+    console.error("[facetoface_offline bind error]", e);
   }
-
-  updateLangLabels();
-  setState("ready");
-  pointOrbTo("bot");
-  setHelpers("Konuşmak için mikrofona dokununuz.", "Konuşmak için mikrofona dokununuz.");
-  bind();
 }
-
-init();
