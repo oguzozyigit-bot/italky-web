@@ -13,7 +13,7 @@ function showToast(msg = "") {
 function loadMainScript() {
   const script = document.createElement("script");
   script.type = "module";
-  script.src = "/js/facetoface_page.js?v=F2F_PAGE_V1";
+  script.src = "/js/facetoface_page.js?v=F2F_PAGE_V2";
   document.body.appendChild(script);
 }
 
