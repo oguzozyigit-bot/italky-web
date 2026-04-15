@@ -163,6 +163,8 @@ const offlineRequiredCloseBtn = $("offlineRequiredCloseBtn");
 
 let topLang = "en";
 let botLang = "tr";
+window.topLang = topLang;
+window.botLang = botLang;
 let activeSide = null;
 let activeKeyboardSide = null;
 let shiftState = { top: false, bot: false };
