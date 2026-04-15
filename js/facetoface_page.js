@@ -58,6 +58,7 @@ const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
 const F2F_PRESET_KEY = "facetoface_voice_preset";
 const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
 const F2F_MODE_KEY = "facetoface_runtime_mode";
+const NATIVE_LANG_KEY = "italky_native_lang_v7";
 
 function isFaceAutoReadEnabled() {
   return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
@@ -104,6 +105,11 @@ function labelChip(code) {
 
 function getPlaceholder(code) {
   return PLACEHOLDERS[canonical(code)] || PLACEHOLDERS.en;
+}
+
+function getNativeLang() {
+  const stored = canonical(localStorage.getItem(NATIVE_LANG_KEY) || "tr");
+  return stored || "tr";
 }
 
 const frameRoot = $("frameRoot");
@@ -161,10 +167,11 @@ const offlineRequiredTitle = $("offlineRequiredTitle");
 const offlineRequiredText = $("offlineRequiredText");
 const offlineRequiredCloseBtn = $("offlineRequiredCloseBtn");
 
-let topLang = "en";
-let botLang = "tr";
+let topLang = getNativeLang();
+let botLang = "en";
 window.topLang = topLang;
 window.botLang = botLang;
+
 let activeSide = null;
 let activeKeyboardSide = null;
 let shiftState = { top: false, bot: false };
@@ -467,6 +474,20 @@ function getInstalledOfflinePairs() {
   }
 }
 
+function getInstalledTargetLangsForNative(nativeLang) {
+  const n = canonical(nativeLang);
+  return getInstalledOfflinePairs()
+    .map((p) => {
+      const s = canonical(p?.source);
+      const t = canonical(p?.target);
+      if (s === n) return t;
+      if (t === n) return s;
+      return "";
+    })
+    .filter(Boolean)
+    .filter((v, i, arr) => arr.indexOf(v) === i);
+}
+
 function hasInstalledOfflinePair(source, target) {
   const s = canonical(source);
   const t = canonical(target);
@@ -479,9 +500,9 @@ function hasInstalledOfflinePair(source, target) {
   });
 }
 
-function openOfflineRequiredPopup() {
+function openOfflineRequiredPopup(message = "Önce dil yüklemeniz gereklidir.") {
   if (offlineRequiredTitle) offlineRequiredTitle.textContent = "Dil yüklemeniz gerekli";
-  if (offlineRequiredText) offlineRequiredText.textContent = "Önce dil yüklemeniz gereklidir.";
+  if (offlineRequiredText) offlineRequiredText.textContent = message;
   offlineRequiredBackdrop?.classList.add("show");
 }
 
@@ -504,21 +525,53 @@ function syncModeUi() {
   localStorage.setItem(F2F_MODE_KEY, currentRuntimeMode);
 }
 
+function enforceOfflineLanguageRule() {
+  const nativeLang = getNativeLang();
+  topLang = nativeLang;
+  window.topLang = topLang;
+
+  const allowedTargets = getInstalledTargetLangsForNative(nativeLang);
+
+  if (!allowedTargets.includes(botLang)) {
+    botLang = allowedTargets[0] || "en";
+    window.botLang = botLang;
+  }
+
+  refreshLangLabels();
+}
+
 function setModeOnline() {
   currentRuntimeMode = "online";
   syncModeUi();
+  refreshLangLabels();
 }
 
 function setModeOffline() {
   currentRuntimeMode = "offline";
+  enforceOfflineLanguageRule();
   syncModeUi();
 }
 
 function tryEnableOfflineMode() {
-  const installed = hasInstalledOfflinePair(topLang, botLang);
+  const nativeLang = getNativeLang();
+  const allowedTargets = getInstalledTargetLangsForNative(nativeLang);
 
-  if (!installed) {
-    openOfflineRequiredPopup();
+  if (!allowedTargets.length) {
+    openOfflineRequiredPopup("Önce ana diliniz için en az bir karşı dil yüklemeniz gereklidir.");
+    setModeOnline();
+    return false;
+  }
+
+  topLang = nativeLang;
+  window.topLang = topLang;
+
+  if (!allowedTargets.includes(botLang)) {
+    botLang = allowedTargets[0];
+    window.botLang = botLang;
+  }
+
+  if (!hasInstalledOfflinePair(topLang, botLang)) {
+    openOfflineRequiredPopup("Seçili dil çifti offline kullanım için hazır değil.");
     setModeOnline();
     return false;
   }
@@ -530,10 +583,35 @@ function tryEnableOfflineMode() {
 
 function renderPop(side) {
   const list = side === "top" ? listTop : listBot;
-  const sel = side === "top" ? topLang : botLang;
   if (!list) return;
 
-  list.innerHTML = LANGS.map((l) => {
+  if (currentRuntimeMode === "offline" && side === "top") {
+    const nativeLang = getNativeLang();
+    const current = langObj(nativeLang);
+
+    list.innerHTML = `
+      <div class="pop-item active" data-code="${current.code}">
+        <div class="pop-left">
+          <div class="pop-flag">${current.flag}</div>
+          <div class="pop-name">${current.name}</div>
+        </div>
+        <div class="pop-code">ANA</div>
+      </div>
+    `;
+    return;
+  }
+
+  let pool = LANGS;
+
+  if (currentRuntimeMode === "offline" && side === "bot") {
+    const nativeLang = getNativeLang();
+    const allowed = new Set(getInstalledTargetLangsForNative(nativeLang));
+    pool = LANGS.filter((l) => allowed.has(canonical(l.code)));
+  }
+
+  const sel = side === "top" ? topLang : botLang;
+
+  list.innerHTML = pool.map((l) => {
     const active = canonical(l.code) === canonical(sel) ? "active" : "";
     return `
       <div class="pop-item ${active}" data-code="${l.code}">
@@ -549,14 +627,20 @@ function renderPop(side) {
   list.querySelectorAll(".pop-item").forEach((el) => {
     el.addEventListener("click", () => {
       const code = canonical(el.dataset.code || "en");
-      if (side === "top") topLang = code;
-      else botLang = code;
+
+      if (side === "top") {
+        topLang = code;
+        window.topLang = topLang;
+      } else {
+        botLang = code;
+        window.botLang = botLang;
+      }
 
       refreshLangLabels();
       renderKeyboard(side);
 
-      if (currentRuntimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang)) {
-        setModeOnline();
+      if (currentRuntimeMode === "offline") {
+        enforceOfflineLanguageRule();
       }
 
       closeAllPop();
@@ -1761,8 +1845,18 @@ function startBoot() {
 
   bootPromise = (async () => {
     setSystemPreparingUI();
-    refreshLangLabels();
     pointOrbTo("bot");
+
+    topLang = getNativeLang();
+    window.topLang = topLang;
+
+    const allowedTargets = getInstalledTargetLangsForNative(topLang);
+    if (!allowedTargets.includes(botLang)) {
+      botLang = allowedTargets[0] || "en";
+      window.botLang = botLang;
+    }
+
+    refreshLangLabels();
 
     try {
       await Promise.race([
@@ -1773,6 +1867,9 @@ function startBoot() {
 
     currentRuntimeMode = "online";
     syncModeUi();
+
+    window.topLang = topLang;
+    window.botLang = botLang;
 
     bootReady = true;
     setSystemReadyUI();
@@ -1815,11 +1912,6 @@ function bindMicTap(el, side) {
     e?.stopPropagation?.();
     await toggleRecording(side);
   };
-
-  el.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  });
 
   el.addEventListener("touchend", async (e) => {
     lastTouchTs = Date.now();
@@ -1885,11 +1977,6 @@ function bindModeControls() {
       }
     };
 
-    el.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-
     el.addEventListener("touchend", (e) => {
       lastTouchTs = Date.now();
       run(e);
@@ -1937,12 +2024,7 @@ function bindSettingsButtons() {
   });
 }
 
-function bind() {
-  refreshLangLabels();
-  unlockOnFirstTouch();
-  bindModeControls();
-  bindSettingsButtons();
-
+function bindLanguageButtons() {
   topLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1970,7 +2052,9 @@ function bind() {
     e.stopPropagation();
     closeAllPop();
   });
+}
 
+function bindGlobalClicks() {
   document.addEventListener("click", (e) => {
     const insidePop =
       (popTop && popTop.contains(e.target)) ||
@@ -1983,7 +2067,9 @@ function bind() {
     if (!insidePop && !isLangBtn) closeAllPop();
     if (!isInput && !isKb && !isAlt) hideKeyboards();
   }, { capture: true });
+}
 
+function bindUtilityButtons() {
   clearBtn?.addEventListener("click", () => {
     stopAudio();
     stopTypewriter();
@@ -2021,6 +2107,12 @@ function bind() {
     location.href = safeHomeHref();
   });
 
+  bindKeyboardButton(homeBtn, async () => {
+    location.href = safeHomeHref();
+  });
+}
+
+function bindMicButtons() {
   bindMicTap(topMic, "top");
   bindMicTap(botMic, "bot");
 
@@ -2033,14 +2125,14 @@ function bind() {
     e.stopPropagation();
     await toggleRecording("bot");
   });
+}
 
-  bindKeyboardButton(homeBtn, async () => {
-    location.href = safeHomeHref();
-  });
-
+function bindInputs() {
   bindReadonlyInput("top");
   bindReadonlyInput("bot");
+}
 
+function bindSpeechVoices() {
   try {
     if (window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = () => {
@@ -2049,6 +2141,19 @@ function bind() {
       window.speechSynthesis.getVoices();
     }
   } catch {}
+}
+
+function bind() {
+  refreshLangLabels();
+  unlockOnFirstTouch();
+  bindModeControls();
+  bindSettingsButtons();
+  bindLanguageButtons();
+  bindGlobalClicks();
+  bindUtilityButtons();
+  bindMicButtons();
+  bindInputs();
+  bindSpeechVoices();
 
   try {
     startBoot();
