@@ -76,7 +76,6 @@ const LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
-
     return {
       code,
       flag: l.flag || "🌐",
@@ -108,6 +107,8 @@ function getPlaceholder(code) {
 }
 
 const frameRoot = $("frameRoot");
+const centerHub = $("centerHub");
+
 const topBody = $("topBody");
 const botBody = $("botBody");
 
@@ -136,10 +137,17 @@ const listBot = $("list-bot");
 const closeTop = $("close-top");
 const closeBot = $("close-bot");
 
+const topModeToggle = $("topModeToggle");
+const botModeToggle = $("botModeToggle");
+const topModeToggleLabel = $("topModeToggleLabel");
+const botModeToggleLabel = $("botModeToggleLabel");
+
+const topSettingsMini = $("topSettingsMini");
+const botSettingsMini = $("botSettingsMini");
+
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
-const settingsBtn = $("settingsBtn");
 const miniToast = $("miniToast");
 
 const uiModal = $("uiModal");
@@ -148,9 +156,6 @@ const uiModalText = $("uiModalText");
 const uiModalGo = $("uiModalGo");
 const uiModalClose = $("uiModalClose");
 
-const onlineModeBtn = $("onlineModeBtn");
-const offlineModeBtn = $("offlineModeBtn");
-const modeLabel = $("modeLabel");
 const offlineRequiredBackdrop = $("offlineRequiredBackdrop");
 const offlineRequiredTitle = $("offlineRequiredTitle");
 const offlineRequiredText = $("offlineRequiredText");
@@ -179,9 +184,9 @@ let typewriterRunId = 0;
 
 let altMenuEl = null;
 let holdTimer = null;
+
 let keyboardAudioCtx = null;
 let keyboardMasterGain = null;
-let keyboardSoundUnlocked = false;
 let currentRuntimeMode = "online";
 
 function showToast(msg = "") {
@@ -343,9 +348,16 @@ function detectToneFromText(text) {
 }
 
 function pointOrbTo(side) {
-  if (!frameRoot) return;
-  frameRoot.classList.remove("to-top", "to-bot");
-  frameRoot.classList.add(side === "top" ? "to-top" : "to-bot");
+  frameRoot?.classList.remove("to-top", "to-bot");
+  centerHub?.classList.remove("to-top", "to-bot");
+
+  if (side === "top") {
+    frameRoot?.classList.add("to-top");
+    centerHub?.classList.add("to-top");
+  } else {
+    frameRoot?.classList.add("to-bot");
+    centerHub?.classList.add("to-bot");
+  }
 }
 
 function setMicState(side, state) {
@@ -457,6 +469,7 @@ function hasInstalledOfflinePair(source, target) {
   const s = canonical(source);
   const t = canonical(target);
   const pairs = getInstalledOfflinePairs();
+
   return pairs.some((p) => {
     const ps = canonical(p?.source);
     const pt = canonical(p?.target);
@@ -465,14 +478,9 @@ function hasInstalledOfflinePair(source, target) {
 }
 
 function openOfflineRequiredPopup() {
-  if (!offlineRequiredBackdrop) {
-    showToast("Önce dil yüklemeniz gereklidir");
-    return;
-  }
-
   if (offlineRequiredTitle) offlineRequiredTitle.textContent = "Dil yüklemeniz gerekli";
   if (offlineRequiredText) offlineRequiredText.textContent = "Önce dil yüklemeniz gereklidir.";
-  offlineRequiredBackdrop.classList.add("show");
+  offlineRequiredBackdrop?.classList.add("show");
 }
 
 function closeOfflineRequiredPopup() {
@@ -480,9 +488,17 @@ function closeOfflineRequiredPopup() {
 }
 
 function syncModeUi() {
-  onlineModeBtn?.classList.toggle("active", currentRuntimeMode === "online");
-  offlineModeBtn?.classList.toggle("active", currentRuntimeMode === "offline");
-  if (modeLabel) modeLabel.textContent = currentRuntimeMode === "offline" ? "Offline" : "Online";
+  const online = currentRuntimeMode === "online";
+
+  [topModeToggle, botModeToggle].forEach((el) => {
+    if (!el) return;
+    el.classList.toggle("online", online);
+    el.classList.toggle("offline", !online);
+  });
+
+  if (topModeToggleLabel) topModeToggleLabel.textContent = online ? "ONLINE" : "OFFLINE";
+  if (botModeToggleLabel) botModeToggleLabel.textContent = online ? "ONLINE" : "OFFLINE";
+
   localStorage.setItem(F2F_MODE_KEY, currentRuntimeMode);
 }
 
@@ -503,6 +519,7 @@ function tryEnableOfflineMode() {
     setModeOnline();
     return false;
   }
+
   setModeOffline();
   showToast("Offline mod hazır");
   return true;
@@ -534,9 +551,11 @@ function renderPop(side) {
 
       refreshLangLabels();
       renderKeyboard(side);
+
       if (currentRuntimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang)) {
         setModeOnline();
       }
+
       closeAllPop();
     });
   });
@@ -599,12 +618,14 @@ function ensureKeyboardAudio() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return null;
+
     if (!keyboardAudioCtx) {
       keyboardAudioCtx = new Ctx();
       keyboardMasterGain = keyboardAudioCtx.createGain();
-      keyboardMasterGain.gain.value = 0.05;
+      keyboardMasterGain.gain.value = 0.045;
       keyboardMasterGain.connect(keyboardAudioCtx.destination);
     }
+
     return keyboardAudioCtx;
   } catch {
     return null;
@@ -614,12 +635,8 @@ function ensureKeyboardAudio() {
 async function unlockKeyboardAudio() {
   const ctx = ensureKeyboardAudio();
   if (!ctx) return;
-
   try {
-    if (ctx.state === "suspended") {
-      await ctx.resume();
-    }
-    keyboardSoundUnlocked = true;
+    if (ctx.state === "suspended") await ctx.resume();
   } catch {}
 }
 
@@ -637,14 +654,25 @@ function playKeyClick(kind = "key") {
   const filter = ctx.createBiquadFilter();
 
   filter.type = "highpass";
-  filter.frequency.value = kind === "space" ? 950 : kind === "backspace" ? 1450 : kind === "shift" ? 1300 : 1200;
+  filter.frequency.value =
+    kind === "space" ? 900 :
+    kind === "backspace" ? 1450 :
+    kind === "shift" ? 1250 : 1180;
 
   osc.type = kind === "space" ? "triangle" : "square";
-  osc.frequency.setValueAtTime(kind === "space" ? 460 : kind === "backspace" ? 690 : kind === "shift" ? 620 : 560, now);
-  osc.frequency.exponentialRampToValueAtTime(kind === "space" ? 300 : 220, now + 0.028);
+  osc.frequency.setValueAtTime(
+    kind === "space" ? 460 :
+    kind === "backspace" ? 700 :
+    kind === "shift" ? 620 : 560,
+    now
+  );
+  osc.frequency.exponentialRampToValueAtTime(
+    kind === "space" ? 310 : 220,
+    now + 0.028
+  );
 
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(kind === "space" ? 0.028 : 0.024, now + 0.003);
+  gain.gain.exponentialRampToValueAtTime(kind === "space" ? 0.026 : 0.022, now + 0.003);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
 
   osc.connect(filter);
@@ -745,7 +773,6 @@ function createKey({ label = "", html = "", onTap, onLongPress = null, className
     e.preventDefault();
     e.stopPropagation();
     longTriggered = false;
-
     unlockKeyboardAudio();
     btn.classList.add("pressing");
 
@@ -764,6 +791,7 @@ function createKey({ label = "", html = "", onTap, onLongPress = null, className
     clearTimeout(holdTimer);
     holdTimer = null;
     btn.classList.remove("pressing");
+
     if (!longTriggered && onTap) {
       playKeyClick(sound);
       onTap();
@@ -824,9 +852,9 @@ function renderCharKeys(rowEl, chars, side) {
           renderKeyboard(side);
         }
       },
-      onLongPress: alts.length ? (btn) => {
-        createAltMenu(btn, alts, (picked) => appendInputValue(side, picked));
-      } : null
+      onLongPress: alts.length
+        ? (btn) => createAltMenu(btn, alts, (picked) => appendInputValue(side, picked))
+        : null
     }));
   });
 }
@@ -1136,9 +1164,7 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   const userId = await getCurrentUserId();
   const selectedVoice = getResolvedFaceVoice();
 
-  if (!userId) {
-    throw new Error("USER_ID_MISSING");
-  }
+  if (!userId) throw new Error("USER_ID_MISSING");
 
   let apiVoiceMode = "auto";
   let apiVoice = "auto";
@@ -1178,11 +1204,6 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   if (myRunId !== speakRunId) return false;
 
   const j = await r.json().catch(() => null);
-
-  console.log("[facetoface /api/tts full response]", {
-    status: r.status,
-    json: j
-  });
 
   if (!r.ok || !j?.ok || !j?.audio_base64) {
     throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
@@ -1263,13 +1284,9 @@ async function speak(text, langCode, tone = "neutral") {
     } catch (e) {
       console.warn("[facetoface custom voice failed]", e);
 
-      if (selectedVoice === "mine") {
-        showToast("Kendi Sesim üretilemedi, normal sese dönüldü");
-      } else if (selectedVoice === "second") {
-        showToast("2. Ses üretilemedi, normal sese dönüldü");
-      } else if (selectedVoice === "memory") {
-        showToast("Hatıra Sesi üretilemedi, normal sese dönüldü");
-      }
+      if (selectedVoice === "mine") showToast("Kendi Sesim üretilemedi, normal sese dönüldü");
+      else if (selectedVoice === "second") showToast("2. Ses üretilemedi, normal sese dönüldü");
+      else if (selectedVoice === "memory") showToast("Hatıra Sesi üretilemedi, normal sese dönüldü");
     }
   }
 
@@ -1342,30 +1359,48 @@ function clearLatest(side) {
   wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
 }
 
+function offlineTranslateRequest(payload) {
+  return new Promise((resolve) => {
+    if (!window.OfflineTranslate?.translate) {
+      resolve(null);
+      return;
+    }
+
+    const handler = (e) => {
+      resolve(e.detail || null);
+    };
+
+    window.addEventListener("offlineTranslateResult", handler, { once: true });
+
+    try {
+      window.OfflineTranslate.translate(JSON.stringify(payload));
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
 async function translateText(text, from, to, tone = "neutral") {
   const src = canonical(from);
   const dst = canonical(to);
   const mode = getFaceTranslateMode();
   const style = mode === "cultural" ? "warm" : "balanced";
 
-  if (currentRuntimeMode === "offline" && window.OfflineTranslate?.translate) {
+  if (currentRuntimeMode === "offline") {
     try {
-      const offlineRaw = await new Promise((resolve) => {
-        const handler = (e) => {
-          window.removeEventListener("offlineTranslateResult", handler);
-          resolve(e.detail || null);
-        };
-        window.addEventListener("offlineTranslateResult", handler, { once: true });
-        window.OfflineTranslate.translate(JSON.stringify({
-          from: src,
-          to: dst,
-          text: String(text || "").trim()
-        }));
+      const offlineRaw = await offlineTranslateRequest({
+        from: src,
+        to: dst,
+        text: String(text || "").trim()
       });
 
       const offlineValue = String(offlineRaw?.translatedText || "").trim();
       if (offlineRaw?.ok && offlineValue) {
         return offlineValue;
+      }
+
+      if (offlineRaw?.error === "offline_license_required") {
+        showToast("Offline çeviri için lisans doğrulanamadı");
       }
     } catch {}
   }
@@ -1830,17 +1865,27 @@ function bindReadonlyInput(side) {
 }
 
 function bindModeControls() {
-  onlineModeBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const switchToOnline = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     closeOfflineRequiredPopup();
     setModeOnline();
+  };
+
+  const switchToOffline = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    tryEnableOfflineMode();
+  };
+
+  topModeToggle?.addEventListener("click", () => {
+    if (currentRuntimeMode === "online") switchToOffline();
+    else switchToOnline();
   });
 
-  offlineModeBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    tryEnableOfflineMode();
+  botModeToggle?.addEventListener("click", () => {
+    if (currentRuntimeMode === "online") switchToOffline();
+    else switchToOnline();
   });
 
   offlineRequiredCloseBtn?.addEventListener("click", (e) => {
@@ -1858,14 +1903,29 @@ function bindModeControls() {
   });
 }
 
+function bindSettingsButtons() {
+  const go = () => {
+    location.href = "/pages/facetoface_settings.html";
+  };
+
+  topSettingsMini?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    go();
+  });
+
+  botSettingsMini?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    go();
+  });
+}
+
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
   bindModeControls();
-
-  settingsBtn?.addEventListener("click", () => {
-    location.href = "/pages/facetoface_settings.html";
-  });
+  bindSettingsButtons();
 
   topLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -2010,7 +2070,17 @@ const requiredDomOk =
   !!clearBtn &&
   !!homeLink &&
   !!homeBtn &&
-  !!miniToast;
+  !!miniToast &&
+  !!topModeToggle &&
+  !!botModeToggle &&
+  !!topModeToggleLabel &&
+  !!botModeToggleLabel &&
+  !!topSettingsMini &&
+  !!botSettingsMini &&
+  !!offlineRequiredBackdrop &&
+  !!offlineRequiredTitle &&
+  !!offlineRequiredText &&
+  !!offlineRequiredCloseBtn;
 
 if (!requiredDomOk) {
   console.error("[facetoface] Gerekli DOM elemanları eksik.");
