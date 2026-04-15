@@ -56,6 +56,8 @@ const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
 const F2F_PRESET_KEY = "facetoface_voice_preset";
+const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
+const F2F_MODE_KEY = "facetoface_runtime_mode";
 
 function isFaceAutoReadEnabled() {
   return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
@@ -146,6 +148,14 @@ const uiModalText = $("uiModalText");
 const uiModalGo = $("uiModalGo");
 const uiModalClose = $("uiModalClose");
 
+const onlineModeBtn = $("onlineModeBtn");
+const offlineModeBtn = $("offlineModeBtn");
+const modeLabel = $("modeLabel");
+const offlineRequiredBackdrop = $("offlineRequiredBackdrop");
+const offlineRequiredTitle = $("offlineRequiredTitle");
+const offlineRequiredText = $("offlineRequiredText");
+const offlineRequiredCloseBtn = $("offlineRequiredCloseBtn");
+
 let topLang = "en";
 let botLang = "tr";
 let activeSide = null;
@@ -169,6 +179,10 @@ let typewriterRunId = 0;
 
 let altMenuEl = null;
 let holdTimer = null;
+let keyboardAudioCtx = null;
+let keyboardMasterGain = null;
+let keyboardSoundUnlocked = false;
+let currentRuntimeMode = "online";
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -431,6 +445,69 @@ function closeAllPop() {
   popBot?.classList.remove("show");
 }
 
+function getInstalledOfflinePairs() {
+  try {
+    return JSON.parse(localStorage.getItem(OFFLINE_INSTALLED_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function hasInstalledOfflinePair(source, target) {
+  const s = canonical(source);
+  const t = canonical(target);
+  const pairs = getInstalledOfflinePairs();
+  return pairs.some((p) => {
+    const ps = canonical(p?.source);
+    const pt = canonical(p?.target);
+    return (ps === s && pt === t) || (ps === t && pt === s);
+  });
+}
+
+function openOfflineRequiredPopup() {
+  if (!offlineRequiredBackdrop) {
+    showToast("Önce dil yüklemeniz gereklidir");
+    return;
+  }
+
+  if (offlineRequiredTitle) offlineRequiredTitle.textContent = "Dil yüklemeniz gerekli";
+  if (offlineRequiredText) offlineRequiredText.textContent = "Önce dil yüklemeniz gereklidir.";
+  offlineRequiredBackdrop.classList.add("show");
+}
+
+function closeOfflineRequiredPopup() {
+  offlineRequiredBackdrop?.classList.remove("show");
+}
+
+function syncModeUi() {
+  onlineModeBtn?.classList.toggle("active", currentRuntimeMode === "online");
+  offlineModeBtn?.classList.toggle("active", currentRuntimeMode === "offline");
+  if (modeLabel) modeLabel.textContent = currentRuntimeMode === "offline" ? "Offline" : "Online";
+  localStorage.setItem(F2F_MODE_KEY, currentRuntimeMode);
+}
+
+function setModeOnline() {
+  currentRuntimeMode = "online";
+  syncModeUi();
+}
+
+function setModeOffline() {
+  currentRuntimeMode = "offline";
+  syncModeUi();
+}
+
+function tryEnableOfflineMode() {
+  const installed = hasInstalledOfflinePair(topLang, botLang);
+  if (!installed) {
+    openOfflineRequiredPopup();
+    setModeOnline();
+    return false;
+  }
+  setModeOffline();
+  showToast("Offline mod hazır");
+  return true;
+}
+
 function renderPop(side) {
   const list = side === "top" ? listTop : listBot;
   const sel = side === "top" ? topLang : botLang;
@@ -457,6 +534,9 @@ function renderPop(side) {
 
       refreshLangLabels();
       renderKeyboard(side);
+      if (currentRuntimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang)) {
+        setModeOnline();
+      }
       closeAllPop();
     });
   });
@@ -513,6 +593,68 @@ function hideAltMenu() {
   altMenuEl = null;
   clearTimeout(holdTimer);
   holdTimer = null;
+}
+
+function ensureKeyboardAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    if (!keyboardAudioCtx) {
+      keyboardAudioCtx = new Ctx();
+      keyboardMasterGain = keyboardAudioCtx.createGain();
+      keyboardMasterGain.gain.value = 0.05;
+      keyboardMasterGain.connect(keyboardAudioCtx.destination);
+    }
+    return keyboardAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+async function unlockKeyboardAudio() {
+  const ctx = ensureKeyboardAudio();
+  if (!ctx) return;
+
+  try {
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
+    keyboardSoundUnlocked = true;
+  } catch {}
+}
+
+function playKeyClick(kind = "key") {
+  const ctx = ensureKeyboardAudio();
+  if (!ctx || !keyboardMasterGain) return;
+
+  if (ctx.state === "suspended") {
+    ctx.resume().catch(() => {});
+  }
+
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+
+  filter.type = "highpass";
+  filter.frequency.value = kind === "space" ? 950 : kind === "backspace" ? 1450 : kind === "shift" ? 1300 : 1200;
+
+  osc.type = kind === "space" ? "triangle" : "square";
+  osc.frequency.setValueAtTime(kind === "space" ? 460 : kind === "backspace" ? 690 : kind === "shift" ? 620 : 560, now);
+  osc.frequency.exponentialRampToValueAtTime(kind === "space" ? 300 : 220, now + 0.028);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(kind === "space" ? 0.028 : 0.024, now + 0.003);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(keyboardMasterGain);
+
+  try {
+    osc.start(now);
+    osc.stop(now + 0.035);
+  } catch {}
 }
 
 function showKeyboard(side) {
@@ -590,7 +732,7 @@ function svgBackspace() {
   `;
 }
 
-function createKey({ label = "", html = "", onTap, onLongPress = null, className = "" }) {
+function createKey({ label = "", html = "", onTap, onLongPress = null, className = "", sound = "key" }) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = `kb-key ${className}`.trim();
@@ -604,9 +746,13 @@ function createKey({ label = "", html = "", onTap, onLongPress = null, className
     e.stopPropagation();
     longTriggered = false;
 
+    unlockKeyboardAudio();
+    btn.classList.add("pressing");
+
     if (onLongPress) {
       holdTimer = setTimeout(() => {
         longTriggered = true;
+        playKeyClick(sound);
         onLongPress(btn);
       }, 320);
     }
@@ -617,12 +763,17 @@ function createKey({ label = "", html = "", onTap, onLongPress = null, className
     e.stopPropagation();
     clearTimeout(holdTimer);
     holdTimer = null;
-    if (!longTriggered && onTap) onTap();
+    btn.classList.remove("pressing");
+    if (!longTriggered && onTap) {
+      playKeyClick(sound);
+      onTap();
+    }
   });
 
   btn.addEventListener("pointerleave", () => {
     clearTimeout(holdTimer);
     holdTimer = null;
+    btn.classList.remove("pressing");
   });
 
   btn.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -648,6 +799,7 @@ function createAltMenu(hostBtn, chars, onPick) {
     b.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
+      playKeyClick("key");
       onPick(ch);
       hideAltMenu();
     });
@@ -663,6 +815,7 @@ function renderCharKeys(rowEl, chars, side) {
     const alts = ALT_CHARS[ch] || ALT_CHARS[String(ch).toLowerCase()] || [];
     rowEl.appendChild(createKey({
       label: ch,
+      sound: "key",
       onTap: () => {
         hideAltMenu();
         appendInputValue(side, ch);
@@ -709,6 +862,7 @@ function renderKeyboard(side) {
   row3.appendChild(createKey({
     html: svgShift(),
     className: "icon wide",
+    sound: "shift",
     onTap: () => {
       hideAltMenu();
       shiftState[side] = !shiftState[side];
@@ -721,6 +875,7 @@ function renderKeyboard(side) {
   row3.appendChild(createKey({
     html: svgBackspace(),
     className: "icon wide",
+    sound: "backspace",
     onTap: () => {
       hideAltMenu();
       backspaceInputValue(side);
@@ -734,6 +889,7 @@ function renderKeyboard(side) {
 
   row4.appendChild(createKey({
     label: ",",
+    sound: "key",
     onTap: () => {
       hideAltMenu();
       appendInputValue(side, ",");
@@ -742,6 +898,7 @@ function renderKeyboard(side) {
 
   row4.appendChild(createKey({
     label: ".",
+    sound: "key",
     onTap: () => {
       hideAltMenu();
       appendInputValue(side, ".");
@@ -751,6 +908,7 @@ function renderKeyboard(side) {
   row4.appendChild(createKey({
     label: " ",
     className: "xwide",
+    sound: "space",
     onTap: () => {
       hideAltMenu();
       appendInputValue(side, " ");
@@ -759,6 +917,7 @@ function renderKeyboard(side) {
 
   row4.appendChild(createKey({
     label: "?",
+    sound: "key",
     onTap: () => {
       hideAltMenu();
       appendInputValue(side, "?");
@@ -767,6 +926,7 @@ function renderKeyboard(side) {
 
   row4.appendChild(createKey({
     label: "!",
+    sound: "key",
     onTap: () => {
       hideAltMenu();
       appendInputValue(side, "!");
@@ -872,6 +1032,8 @@ async function warmAudio() {
       voicesReady = true;
     }
   } catch {}
+
+  await unlockKeyboardAudio();
 }
 
 function buildTtsCacheKey(text, langCode, tone = "neutral") {
@@ -1018,9 +1180,9 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   const j = await r.json().catch(() => null);
 
   console.log("[facetoface /api/tts full response]", {
-  status: r.status,
-  json: j
-});
+    status: r.status,
+    json: j
+  });
 
   if (!r.ok || !j?.ok || !j?.audio_base64) {
     throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
@@ -1185,6 +1347,29 @@ async function translateText(text, from, to, tone = "neutral") {
   const dst = canonical(to);
   const mode = getFaceTranslateMode();
   const style = mode === "cultural" ? "warm" : "balanced";
+
+  if (currentRuntimeMode === "offline" && window.OfflineTranslate?.translate) {
+    try {
+      const offlineRaw = await new Promise((resolve) => {
+        const handler = (e) => {
+          window.removeEventListener("offlineTranslateResult", handler);
+          resolve(e.detail || null);
+        };
+        window.addEventListener("offlineTranslateResult", handler, { once: true });
+        window.OfflineTranslate.translate(JSON.stringify({
+          from: src,
+          to: dst,
+          text: String(text || "").trim()
+        }));
+      });
+
+      const offlineValue = String(offlineRaw?.translatedText || "").trim();
+      if (offlineRaw?.ok && offlineValue) {
+        return offlineValue;
+      }
+    } catch {}
+  }
+
   const endpoints = [
     `${API_BASE}/api/translate_ai`,
     `${API_BASE}/api/translate-ai`,
@@ -1548,6 +1733,9 @@ function startBoot() {
       ]);
     } catch {}
 
+    currentRuntimeMode = "online";
+    syncModeUi();
+
     bootReady = true;
     setSystemReadyUI();
     syncAllComposerButtons();
@@ -1641,9 +1829,39 @@ function bindReadonlyInput(side) {
   syncComposerButtons(side);
 }
 
+function bindModeControls() {
+  onlineModeBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeOfflineRequiredPopup();
+    setModeOnline();
+  });
+
+  offlineModeBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    tryEnableOfflineMode();
+  });
+
+  offlineRequiredCloseBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeOfflineRequiredPopup();
+    setModeOnline();
+  });
+
+  offlineRequiredBackdrop?.addEventListener("click", (e) => {
+    if (e.target === offlineRequiredBackdrop) {
+      closeOfflineRequiredPopup();
+      setModeOnline();
+    }
+  });
+}
+
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
+  bindModeControls();
 
   settingsBtn?.addEventListener("click", () => {
     location.href = "/pages/facetoface_settings.html";
