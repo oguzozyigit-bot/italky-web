@@ -524,13 +524,21 @@
     .btn-home{ left:14px; }
     .btn-clear{ right:14px; }
 
-    .mode-toggle{
+    .mode-stack{
       position:absolute;
-      left:88px;
+      left:14px;
       top:50%;
       transform:translateY(-50%);
-      width:98px;
-      height:38px;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:8px;
+      z-index:760;
+    }
+
+    .mode-toggle{
+      width:102px;
+      height:36px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.06);
@@ -538,9 +546,9 @@
       display:flex;
       align-items:center;
       cursor:pointer;
-      z-index:760;
       overflow:hidden;
       backdrop-filter:blur(10px);
+      position:relative;
     }
 
     .mode-toggle-track{
@@ -553,8 +561,8 @@
 
     .mode-toggle-thumb{
       position:relative;
-      width:30px;
-      height:30px;
+      width:28px;
+      height:28px;
       border-radius:50%;
       background:#fff;
       box-shadow:0 6px 16px rgba(0,0,0,.24);
@@ -590,7 +598,7 @@
     }
 
     .mode-toggle.offline .mode-toggle-thumb{
-      transform:translateX(58px);
+      transform:translateX(66px);
       background:#fff0f2;
     }
 
@@ -831,13 +839,16 @@
     }
 
     @media (max-width:390px){
+      .mode-stack{
+        left:10px;
+      }
+
       .mode-toggle{
-        left:78px;
-        width:90px;
+        width:92px;
       }
 
       .mode-toggle.offline .mode-toggle-thumb{
-        transform:translateX(50px);
+        transform:translateX(56px);
       }
 
       .holo-container{ width:190px; height:190px; margin-bottom:2px; }
@@ -901,13 +912,15 @@
     </div>
 
     <div class="center-hub">
-      <a class="nav-btn btn-home" id="homeLink" href="/pages/home.html">ANA SAYFA</a>
+      <div class="mode-stack">
+        <a class="nav-btn btn-home" id="homeLink" href="/pages/home.html" style="position:static;">ANA SAYFA</a>
 
-      <button id="modeToggle" class="mode-toggle online" type="button" aria-label="Online offline geçiş">
-        <span class="mode-toggle-track"></span>
-        <span class="mode-toggle-thumb"></span>
-        <span class="mode-toggle-label" id="modeToggleLabel">ONLINE</span>
-      </button>
+        <button id="modeToggle" class="mode-toggle online" type="button" aria-label="Online offline geçiş">
+          <span class="mode-toggle-track"></span>
+          <span class="mode-toggle-thumb"></span>
+          <span class="mode-toggle-label" id="modeToggleLabel">ONLINE</span>
+        </button>
+      </div>
 
       <div class="orb-container" id="homeBtn" title="Ana sayfa">
         <div class="energy-orbit">
@@ -1002,6 +1015,6 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/facetoface_mode_boot.js?v=F2F_MODE_BOOT_V1"></script>
+  <script type="module" src="/js/facetoface_mode_boot.js?v=F2F_MODE_BOOT_V2"></script>
 </body>
 </html>
