@@ -1,8 +1,10 @@
-const MODE_KEY = "facetoface_mode_v2";
-const TOAST_KEY = "facetoface_mode_toast_v2";
+const MODE_KEY = "facetoface_mode_v3";
+const TOAST_KEY = "facetoface_mode_toast_v3";
 
-const modeToggle = document.getElementById("modeToggle");
-const modeToggleLabel = document.getElementById("modeToggleLabel");
+const topModeToggle = document.getElementById("topModeToggle");
+const botModeToggle = document.getElementById("botModeToggle");
+const topModeToggleLabel = document.getElementById("topModeToggleLabel");
+const botModeToggleLabel = document.getElementById("botModeToggleLabel");
 const miniToast = document.getElementById("miniToast");
 
 function showToast(msg = "") {
@@ -44,11 +46,16 @@ function resolveMode() {
   return "online";
 }
 
+function updateOneToggle(toggle, labelEl, mode) {
+  if (!toggle || !labelEl) return;
+  toggle.classList.remove("online", "offline");
+  toggle.classList.add(mode === "offline" ? "offline" : "online");
+  labelEl.textContent = mode === "offline" ? "OFFLINE" : "ONLINE";
+}
+
 function updateToggleUi(mode) {
-  if (!modeToggle || !modeToggleLabel) return;
-  modeToggle.classList.remove("online", "offline");
-  modeToggle.classList.add(mode === "offline" ? "offline" : "online");
-  modeToggleLabel.textContent = mode === "offline" ? "OFFLINE" : "ONLINE";
+  updateOneToggle(topModeToggle, topModeToggleLabel, mode);
+  updateOneToggle(botModeToggle, botModeToggleLabel, mode);
 }
 
 function writeMode(mode) {
@@ -78,12 +85,17 @@ function loadModeScript(mode) {
   script.type = "module";
   script.src =
     mode === "offline"
-      ? "/js/facetoface_offline.js?v=F2F_OFFLINE_V10"
-      : "/js/facetoface_page.js?v=F2F_ONLINE_V10";
+      ? "/js/facetoface_offline.js?v=F2F_OFFLINE_V11"
+      : "/js/facetoface_page.js?v=F2F_ONLINE_V11";
   document.body.appendChild(script);
 }
 
+let switching = false;
+
 async function toggleMode() {
+  if (switching) return;
+  switching = true;
+
   const current = resolveMode();
 
   if (current === "online") {
@@ -95,6 +107,7 @@ async function toggleMode() {
 
   if (!navigator.onLine) {
     showToast("İnternet yok. Online moda geçilemiyor.");
+    switching = false;
     return;
   }
 
@@ -103,9 +116,9 @@ async function toggleMode() {
   location.href = buildUrlForMode("online");
 }
 
-function bindModeToggle() {
-  if (!modeToggle) return;
-  modeToggle.addEventListener("click", async (e) => {
+function bindModeToggle(toggle) {
+  if (!toggle) return;
+  toggle.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
     await toggleMode();
@@ -126,7 +139,8 @@ function bindNetworkAutoFallback() {
 (function boot() {
   const mode = resolveMode();
   writeMode(mode);
-  bindModeToggle();
+  bindModeToggle(topModeToggle);
+  bindModeToggle(botModeToggle);
   bindNetworkAutoFallback();
   consumePendingToast();
   loadModeScript(mode);
