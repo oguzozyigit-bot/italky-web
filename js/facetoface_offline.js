@@ -93,7 +93,7 @@ function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
-const LANGS = RAW_LANG_POOL
+const RAW_LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
@@ -107,8 +107,85 @@ const LANGS = RAW_LANG_POOL
   })
   .filter(Boolean);
 
-let topLang = "en";
-let botLang = "tr";
+const OFFLINE_STORAGE_CANDIDATES = [
+  "italky_offline_installed_pairs_v7",
+  "italky_offline_installed_pairs_v6",
+  "italky_offline_installed_pairs_v5",
+  "italky_offline_installed_pairs_v4",
+  "italky_offline_installed_pairs_v3",
+  "italky_offline_installed_pairs_v2",
+  "italky_offline_installed_pairs_v1"
+];
+
+const NATIVE_LANG_STORAGE_CANDIDATES = [
+  "italky_native_lang_v7",
+  "italky_native_lang_v6",
+  "italky_native_lang_v5",
+  "italky_native_lang_v4",
+  "italky_native_lang_v3",
+  "italky_native_lang_v2",
+  "italky_native_lang_v1"
+];
+
+function safeJsonParse(raw, fallback) {
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getSavedNativeLang() {
+  for (const key of NATIVE_LANG_STORAGE_CANDIDATES) {
+    const val = String(localStorage.getItem(key) || "").trim().toLowerCase();
+    if (val) return val;
+  }
+  return "tr";
+}
+
+function getInstalledPairsMap() {
+  for (const key of OFFLINE_STORAGE_CANDIDATES) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    const parsed = safeJsonParse(raw, {});
+    if (parsed && typeof parsed === "object" && Object.keys(parsed).length) {
+      return parsed;
+    }
+  }
+  return {};
+}
+
+function getInstalledOfflineLanguageCodes() {
+  const map = getInstalledPairsMap();
+  const codes = new Set();
+
+  Object.values(map).forEach((item) => {
+    if (!item || typeof item !== "object") return;
+    const from = canonical(item.from || "");
+    const to = canonical(item.to || "");
+    if (from) codes.add(from);
+    if (to) codes.add(to);
+  });
+
+  const nativeLang = getSavedNativeLang();
+  if (nativeLang) codes.add(nativeLang);
+
+  return [...codes];
+}
+
+const INSTALLED_CODES = getInstalledOfflineLanguageCodes();
+
+const LANGS = RAW_LANGS.filter((lang) => INSTALLED_CODES.includes(lang.code));
+
+let topLang = INSTALLED_CODES.includes("en") ? "en" : (getSavedNativeLang() || "tr");
+let botLang = getSavedNativeLang() || "tr";
+
+if (topLang === botLang) {
+  const other = LANGS.find((x) => x.code !== botLang);
+  if (other) topLang = other.code;
+}
+
 let activeKeyboardSide = null;
 let shiftState = { top: false, bot: false };
 let altMenuEl = null;
@@ -116,6 +193,7 @@ let holdTimer = null;
 let currentAudio = null;
 let speakRunId = 0;
 let typewriterRunId = 0;
+let nativeSpeechSide = null;
 
 function langObj(code) {
   const c = canonical(code);
@@ -156,6 +234,23 @@ function setErrorUI() {
 function setReadyUI() {
   frameRoot?.classList.remove("is-idle", "is-listening", "is-translating", "is-error");
   frameRoot?.classList.add("is-ready");
+  topComposer?.classList.remove("listening");
+  botComposer?.classList.remove("listening");
+  topMic?.classList.remove("listening");
+  botMic?.classList.remove("listening");
+}
+
+function setListeningUI(side) {
+  frameRoot?.classList.remove("is-idle", "is-translating", "is-error", "is-ready");
+  frameRoot?.classList.add("is-listening");
+  pointOrbTo(side);
+  if (side === "top") {
+    topComposer?.classList.add("listening");
+    topMic?.classList.add("listening");
+  } else {
+    botComposer?.classList.add("listening");
+    botMic?.classList.add("listening");
+  }
 }
 
 function pointOrbTo(side) {
@@ -231,7 +326,7 @@ function syncComposerButtons(side) {
   if (!input || !mic || !send) return;
 
   const hasText = String(input.value || "").trim().length > 0;
-  mic.classList.add("hidden");
+  mic.classList.remove("hidden");
   send.classList.toggle("hidden", !hasText);
 }
 
@@ -724,7 +819,63 @@ async function sendTyped(side) {
   await finalizeTypedMessage(side, text);
 }
 
-function bindReadonlyInput(side) {
+function handleNativeSpeechResult(side, text) {
+  const cleaned = String(text || "").trim();
+  if (!cleaned) {
+    setReadyUI();
+    return;
+  }
+
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+
+  input.value = cleaned;
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+  sendTyped(side);
+}
+
+function startOfflineNativeMic(side) {
+  if (!window.Native || typeof window.Native.startSpeechRecognition !== "function") {
+    showToast("Bu cihazda mikrofon kullanılamıyor");
+    return;
+  }
+
+  const lang = side === "top" ? topLang : botLang;
+  nativeSpeechSide = side;
+  setListeningUI(side);
+
+  try {
+    window.Native.startSpeechRecognition(langObj(lang).bcp, side);
+  } catch {
+    nativeSpeechSide = null;
+    setErrorUI();
+    showToast("Mikrofon başlatılamadı");
+    setTimeout(() => setReadyUI(), 1200);
+  }
+}
+
+window.onNativeSpeechResult = (payload) => {
+  try {
+    const side = String(payload?.side || nativeSpeechSide || "top");
+    const text = String(payload?.text || "").trim();
+    nativeSpeechSide = null;
+    handleNativeSpeechResult(side, text);
+  } catch {
+    nativeSpeechSide = null;
+    setErrorUI();
+    setTimeout(() => setReadyUI(), 1200);
+  }
+};
+
+window.onNativeSpeechError = () => {
+  nativeSpeechSide = null;
+  setErrorUI();
+  showToast("Mikrofon işlemi tamamlanamadı");
+  setTimeout(() => setReadyUI(), 1200);
+};
+
+function bindInput(side) {
   const input = side === "top" ? topInput : botInput;
   const send = side === "top" ? topSend : botSend;
   const mic = side === "top" ? topMic : botMic;
@@ -745,8 +896,6 @@ function bindReadonlyInput(side) {
     showKeyboard(side);
   });
 
-  mic.classList.add("hidden");
-
   send.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -756,6 +905,13 @@ function bindReadonlyInput(side) {
     e.preventDefault();
     e.stopPropagation();
     await sendTyped(side);
+  });
+
+  mic.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hideKeyboards();
+    startOfflineNativeMic(side);
   });
 
   input.addEventListener("input", () => {
@@ -781,6 +937,9 @@ function bind() {
   setReadyUI();
   refreshLangLabels();
   pointOrbTo("bot");
+
+  settingsBtn?.classList.add("hidden");
+  homeLink?.classList.add("hidden");
 
   settingsBtn?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -853,17 +1012,12 @@ function bind() {
     setReadyUI();
   });
 
-  homeLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    location.href = "/pages/home.html";
-  });
-
   homeBtn?.addEventListener("click", () => {
     location.href = "/pages/home.html";
   });
 
-  bindReadonlyInput("top");
-  bindReadonlyInput("bot");
+  bindInput("top");
+  bindInput("bot");
 
   bindKeyboardButton(homeBtn, async () => {
     location.href = "/pages/home.html";
@@ -900,7 +1054,6 @@ const requiredDomOk =
   !!closeTop &&
   !!closeBot &&
   !!clearBtn &&
-  !!homeLink &&
   !!homeBtn &&
   !!miniToast;
 
