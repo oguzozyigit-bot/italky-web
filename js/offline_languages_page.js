@@ -87,7 +87,25 @@ function toast(message = "") {
     toastEl.classList.remove("show");
   }, 2200);
 }
+function ensureMockOfflineLicenseOnce() {
+  try {
+    if (
+      !window.OfflineTranslate ||
+      typeof window.OfflineTranslate.setMockOfflineLicense !== "function"
+    ) {
+      return;
+    }
 
+    const key = "italky_offline_mock_license_offline_page_v1";
+    if (localStorage.getItem(key) === "1") return;
+
+    window.OfflineTranslate.setMockOfflineLicense(37);
+    localStorage.setItem(key, "1");
+    console.log("Offline page mock lisans yazıldı");
+  } catch (e) {
+    console.error("Mock lisans yazılamadı:", e);
+  }
+}
 function safeJsonParse(raw, fallback) {
   try {
     const parsed = JSON.parse(raw);
@@ -527,6 +545,9 @@ async function init() {
   }
 
   LANGS = buildSupportedLangList();
+
+  ensureMockOfflineLicenseOnce();
+
   renderMyLanguageButton();
   renderLicenseInfo();
   renderInstalledList();
