@@ -41,6 +41,17 @@ const botSettingsMini = $("botSettingsMini");
 const miniToast = $("miniToast");
 const frameRoot = $("frameRoot");
 
+const uiModal = $("uiModal");
+const uiModalTitle = $("uiModalTitle");
+const uiModalText = $("uiModalText");
+const uiModalGo = $("uiModalGo");
+const uiModalClose = $("uiModalClose");
+
+const STORAGE = {
+  installedPairs: "italky_offline_installed_pairs_v7",
+  nativeLang: "italky_native_lang_v7"
+};
+
 const BCP = {
   tr: "tr-TR",
   en: "en-US",
@@ -50,8 +61,7 @@ const BCP = {
   es: "es-ES",
   ru: "ru-RU",
   ar: "ar-SA",
-  zh: "zh-CN",
-  tg: "tg-TJ"
+  zh: "zh-CN"
 };
 
 const PLACEHOLDERS = {
@@ -63,8 +73,7 @@ const PLACEHOLDERS = {
   es: "Escribe aquí tu mensaje",
   ru: "Введите сообщение",
   ar: "اكتب رسالتك هنا",
-  zh: "在这里输入消息",
-  tg: "Паёми худро ин ҷо нависед"
+  zh: "在这里输入消息"
 };
 
 const HOME_LABELS = {
@@ -76,8 +85,7 @@ const HOME_LABELS = {
   es: "INICIO",
   ru: "ГЛАВНАЯ",
   ar: "الرئيسية",
-  zh: "首页",
-  tg: "АСОСӢ"
+  zh: "首页"
 };
 
 const CLEAR_LABELS = {
@@ -89,8 +97,7 @@ const CLEAR_LABELS = {
   es: "LIMPIAR",
   ru: "ОЧИСТИТЬ",
   ar: "مسح",
-  zh: "清除",
-  tg: "ПОК КУН"
+  zh: "清除"
 };
 
 const ALT_CHARS = {
@@ -114,14 +121,60 @@ const ALT_CHARS = {
   N: ["Ñ"]
 };
 
+function canonical(code) {
+  return String(code || "").toLowerCase().split("-")[0].trim();
+}
+
+function safeJsonParse(raw, fallback) {
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getInstalledPairs() {
+  return safeJsonParse(localStorage.getItem(STORAGE.installedPairs) || "{}", {});
+}
+
+function getNativeLang() {
+  return canonical(localStorage.getItem(STORAGE.nativeLang) || "tr");
+}
+
+function getInstalledOfflineLanguageCodes() {
+  const pairs = getInstalledPairs();
+  const codes = new Set();
+
+  Object.values(pairs).forEach((item) => {
+    if (!item || typeof item !== "object") return;
+    const from = canonical(item.from);
+    const to = canonical(item.to);
+    if (from) codes.add(from);
+    if (to) codes.add(to);
+  });
+
+  return [...codes];
+}
+
+function hasAnyInstalledOfflinePair() {
+  const pairs = getInstalledPairs();
+  return Object.keys(pairs).length > 0;
+}
+
+function pairKey(a, b) {
+  return `${canonical(a)}__${canonical(b)}`;
+}
+
+function hasInstalledBiDirectional(a, b) {
+  const pairs = getInstalledPairs();
+  return !!pairs[pairKey(a, b)] && !!pairs[pairKey(b, a)];
+}
+
 const SITE_LANG = "tr";
 const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
   ? getLangPoolForSite(SITE_LANG)
   : [];
-
-function canonical(code) {
-  return String(code || "").toLowerCase().split("-")[0].trim();
-}
 
 const RAW_LANGS = RAW_LANG_POOL
   .map((l) => {
@@ -137,84 +190,11 @@ const RAW_LANGS = RAW_LANG_POOL
   })
   .filter(Boolean);
 
-const OFFLINE_STORAGE_CANDIDATES = [
-  "italky_offline_installed_pairs_v7",
-  "italky_offline_installed_pairs_v6",
-  "italky_offline_installed_pairs_v5",
-  "italky_offline_installed_pairs_v4",
-  "italky_offline_installed_pairs_v3",
-  "italky_offline_installed_pairs_v2",
-  "italky_offline_installed_pairs_v1"
-];
-
-const NATIVE_LANG_STORAGE_CANDIDATES = [
-  "italky_native_lang_v7",
-  "italky_native_lang_v6",
-  "italky_native_lang_v5",
-  "italky_native_lang_v4",
-  "italky_native_lang_v3",
-  "italky_native_lang_v2",
-  "italky_native_lang_v1"
-];
-
-function safeJsonParse(raw, fallback) {
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function getSavedNativeLang() {
-  for (const key of NATIVE_LANG_STORAGE_CANDIDATES) {
-    const val = String(localStorage.getItem(key) || "").trim().toLowerCase();
-    if (val) return val;
-  }
-  return "tr";
-}
-
-function getInstalledPairsMap() {
-  for (const key of OFFLINE_STORAGE_CANDIDATES) {
-    const raw = localStorage.getItem(key);
-    if (!raw) continue;
-    const parsed = safeJsonParse(raw, {});
-    if (parsed && typeof parsed === "object" && Object.keys(parsed).length) {
-      return parsed;
-    }
-  }
-  return {};
-}
-
-function getInstalledOfflineLanguageCodes() {
-  const map = getInstalledPairsMap();
-  const codes = new Set();
-
-  Object.values(map).forEach((item) => {
-    if (!item || typeof item !== "object") return;
-    const from = canonical(item.from || "");
-    const to = canonical(item.to || "");
-    if (from) codes.add(from);
-    if (to) codes.add(to);
-  });
-
-  const nativeLang = getSavedNativeLang();
-  if (nativeLang) codes.add(nativeLang);
-
-  return [...codes];
-}
-
 const INSTALLED_CODES = getInstalledOfflineLanguageCodes();
-
 const LANGS = RAW_LANGS.filter((lang) => INSTALLED_CODES.includes(lang.code));
 
-let topLang = INSTALLED_CODES.includes("en") ? "en" : (getSavedNativeLang() || "tr");
-let botLang = getSavedNativeLang() || "tr";
-
-if (topLang === botLang) {
-  const other = LANGS.find((x) => x.code !== botLang);
-  if (other) topLang = other.code;
-}
+let topLang = LANGS.find((x) => x.code !== getNativeLang())?.code || getNativeLang();
+let botLang = getNativeLang();
 
 let activeKeyboardSide = null;
 let activeUiSide = "bot";
@@ -268,6 +248,29 @@ function showToast(msg = "") {
   window.__toastTimer = setTimeout(() => {
     miniToast.classList.remove("show");
   }, 1900);
+}
+
+function showSetupRequiredModal() {
+  if (!uiModal || !uiModalTitle || !uiModalText || !uiModalGo || !uiModalClose) {
+    location.href = "/pages/offline_languages.html";
+    return;
+  }
+
+  uiModalTitle.textContent = "Dil Kurulumu Gerekli";
+  uiModalText.textContent = "Henüz dil kurulumu yapmadınız. Lütfen dil kurulumunuzu tamamlayın.";
+  uiModal.classList.add("open");
+
+  uiModalGo.textContent = "Offline Diller";
+  uiModalClose.textContent = "Kapat";
+
+  uiModalGo.onclick = () => {
+    location.href = "/pages/offline_languages.html";
+  };
+
+  uiModalClose.onclick = () => {
+    uiModal.classList.remove("open");
+    location.href = "/pages/offline_languages.html";
+  };
 }
 
 function setErrorUI() {
@@ -334,7 +337,11 @@ function renderPop(side) {
   const sel = side === "top" ? topLang : botLang;
   if (!list) return;
 
-  list.innerHTML = LANGS.map((l) => {
+  const targetBase = side === "top" ? botLang : topLang;
+
+  const available = LANGS.filter((l) => hasInstalledBiDirectional(targetBase, l.code));
+
+  list.innerHTML = available.map((l) => {
     const active = canonical(l.code) === canonical(sel) ? "active" : "";
     return `
       <div class="pop-item ${active}" data-code="${l.code}">
@@ -407,7 +414,7 @@ function hideKeyboards() {
 }
 
 function keyPressFeedback() {
-  try { navigator.vibrate?.(8); } catch {}
+  try { navigator.vibrate?.(8) } catch {}
 
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -702,8 +709,8 @@ function stopAudio() {
 
   currentAudio = null;
 
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  try { window.NativeTTS?.stop?.(); } catch {}
+  try { window.speechSynthesis?.cancel?.() } catch {}
+  try { window.NativeTTS?.stop?.() } catch {}
 }
 
 function chooseWebVoice(langCode) {
@@ -1014,6 +1021,11 @@ function bindKeyboardButton(el, handler) {
 }
 
 function bind() {
+  if (!hasAnyInstalledOfflinePair()) {
+    showSetupRequiredModal();
+    return;
+  }
+
   setReadyUI();
   refreshLangLabels();
   pointOrbTo("bot");
@@ -1148,7 +1160,12 @@ const requiredDomOk =
   !!miniToast &&
   !!centerHub &&
   !!homeText &&
-  !!clearText;
+  !!clearText &&
+  !!uiModal &&
+  !!uiModalTitle &&
+  !!uiModalText &&
+  !!uiModalGo &&
+  !!uiModalClose;
 
 if (!requiredDomOk) {
   console.error("[facetoface_offline] Gerekli DOM elemanları eksik.");
