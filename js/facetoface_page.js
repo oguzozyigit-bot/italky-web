@@ -514,6 +514,7 @@ function setModeOffline() {
 
 function tryEnableOfflineMode() {
   const installed = hasInstalledOfflinePair(topLang, botLang);
+
   if (!installed) {
     openOfflineRequiredPopup();
     setModeOnline();
@@ -1865,28 +1866,41 @@ function bindReadonlyInput(side) {
 }
 
 function bindModeControls() {
-  const switchToOnline = (e) => {
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    closeOfflineRequiredPopup();
-    setModeOnline();
+  const bindToggle = (el) => {
+    if (!el) return;
+
+    let lastTouchTs = 0;
+
+    const run = (e) => {
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+
+      if (currentRuntimeMode === "online") {
+        tryEnableOfflineMode();
+      } else {
+        closeOfflineRequiredPopup();
+        setModeOnline();
+      }
+    };
+
+    el.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    el.addEventListener("touchend", (e) => {
+      lastTouchTs = Date.now();
+      run(e);
+    }, { passive: false });
+
+    el.addEventListener("click", (e) => {
+      if (Date.now() - lastTouchTs < 500) return;
+      run(e);
+    });
   };
 
-  const switchToOffline = (e) => {
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    tryEnableOfflineMode();
-  };
-
-  topModeToggle?.addEventListener("click", () => {
-    if (currentRuntimeMode === "online") switchToOffline();
-    else switchToOnline();
-  });
-
-  botModeToggle?.addEventListener("click", () => {
-    if (currentRuntimeMode === "online") switchToOffline();
-    else switchToOnline();
-  });
+  bindToggle(topModeToggle);
+  bindToggle(botModeToggle);
 
   offlineRequiredCloseBtn?.addEventListener("click", (e) => {
     e.preventDefault();
