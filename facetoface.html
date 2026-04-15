@@ -80,6 +80,17 @@
       padding:6px 8px calc(6px + var(--safe-bottom));
     }
 
+    .lang-row{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:0 6px;
+      flex:0 0 auto;
+      z-index:60;
+    }
+
     .lang-trigger{
       background:transparent;
       border:none;
@@ -92,12 +103,80 @@
       cursor:pointer;
       display:inline-flex;
       align-items:center;
+      justify-content:center;
       gap:10px;
-      z-index:50;
       min-height:40px;
-      max-width:92%;
+      flex:1;
+      max-width:320px;
       text-decoration:none;
+    }
+
+    .mode-toggle-inline{
+      width:110px;
+      min-width:110px;
+      height:40px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      padding:4px;
+      display:flex;
+      align-items:center;
+      cursor:pointer;
+      overflow:hidden;
+      backdrop-filter:blur(10px);
+      position:relative;
       flex:0 0 auto;
+    }
+
+    .mode-toggle-inline-track{
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      opacity:.18;
+      transition:.2s ease;
+    }
+
+    .mode-toggle-inline-thumb{
+      position:relative;
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 6px 16px rgba(0,0,0,.24);
+      transition:transform .22s ease, background .22s ease;
+      z-index:2;
+    }
+
+    .mode-toggle-inline-label{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.45px;
+      color:#fff;
+      z-index:1;
+      pointer-events:none;
+    }
+
+    .mode-toggle-inline.online .mode-toggle-inline-track{
+      background:rgba(34,197,94,.95);
+    }
+
+    .mode-toggle-inline.online .mode-toggle-inline-thumb{
+      transform:translateX(0);
+      background:#ecfff3;
+    }
+
+    .mode-toggle-inline.offline .mode-toggle-inline-track{
+      background:rgba(239,68,68,.95);
+    }
+
+    .mode-toggle-inline.offline .mode-toggle-inline-thumb{
+      transform:translateX(68px);
+      background:#fff0f2;
     }
 
     .popover{
@@ -521,86 +600,7 @@
       box-shadow:none;
     }
 
-    .btn-home{ left:14px; }
     .btn-clear{ right:14px; }
-
-    .mode-stack{
-      position:absolute;
-      left:14px;
-      top:50%;
-      transform:translateY(-50%);
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      gap:8px;
-      z-index:760;
-    }
-
-    .mode-toggle{
-      width:102px;
-      height:36px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      padding:4px;
-      display:flex;
-      align-items:center;
-      cursor:pointer;
-      overflow:hidden;
-      backdrop-filter:blur(10px);
-      position:relative;
-    }
-
-    .mode-toggle-track{
-      position:absolute;
-      inset:0;
-      border-radius:999px;
-      opacity:.18;
-      transition:.2s ease;
-    }
-
-    .mode-toggle-thumb{
-      position:relative;
-      width:28px;
-      height:28px;
-      border-radius:50%;
-      background:#fff;
-      box-shadow:0 6px 16px rgba(0,0,0,.24);
-      transition:transform .22s ease, background .22s ease;
-      z-index:2;
-    }
-
-    .mode-toggle-label{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:10px;
-      font-weight:1000;
-      letter-spacing:.45px;
-      color:#fff;
-      z-index:1;
-      pointer-events:none;
-    }
-
-    .mode-toggle.online .mode-toggle-track{
-      background:rgba(34,197,94,.95);
-    }
-
-    .mode-toggle.online .mode-toggle-thumb{
-      transform:translateX(0);
-      background:#ecfff3;
-    }
-
-    .mode-toggle.offline .mode-toggle-track{
-      background:rgba(239,68,68,.95);
-    }
-
-    .mode-toggle.offline .mode-toggle-thumb{
-      transform:translateX(66px);
-      background:#fff0f2;
-    }
 
     .orb-container{
       width:82px;
@@ -839,16 +839,17 @@
     }
 
     @media (max-width:390px){
-      .mode-stack{
-        left:10px;
+      .lang-row{
+        gap:8px;
       }
 
-      .mode-toggle{
-        width:92px;
+      .mode-toggle-inline{
+        width:96px;
+        min-width:96px;
       }
 
-      .mode-toggle.offline .mode-toggle-thumb{
-        transform:translateX(56px);
+      .mode-toggle-inline.offline .mode-toggle-inline-thumb{
+        transform:translateX(54px);
       }
 
       .holo-container{ width:190px; height:190px; margin-bottom:2px; }
@@ -868,9 +869,17 @@
 <body id="frameRoot" class="to-bot">
   <div class="container">
     <div class="half-screen top" id="topSection">
-      <button class="lang-trigger" id="topLangBtn" type="button">
-        <span id="topLangTxt">🇬🇧 English</span> ⌵
-      </button>
+      <div class="lang-row">
+        <button id="topModeToggle" class="mode-toggle-inline online" type="button" aria-label="Online offline geçiş">
+          <span class="mode-toggle-inline-track"></span>
+          <span class="mode-toggle-inline-thumb"></span>
+          <span class="mode-toggle-inline-label" id="topModeToggleLabel">ONLINE</span>
+        </button>
+
+        <button class="lang-trigger" id="topLangBtn" type="button">
+          <span id="topLangTxt">🇬🇧 English</span> ⌵
+        </button>
+      </div>
 
       <div class="popover" id="pop-top" role="dialog" aria-label="Üst dil seçimi">
         <div class="pop-head">
@@ -912,15 +921,7 @@
     </div>
 
     <div class="center-hub">
-      <div class="mode-stack">
-        <a class="nav-btn btn-home" id="homeLink" href="/pages/home.html" style="position:static;">ANA SAYFA</a>
-
-        <button id="modeToggle" class="mode-toggle online" type="button" aria-label="Online offline geçiş">
-          <span class="mode-toggle-track"></span>
-          <span class="mode-toggle-thumb"></span>
-          <span class="mode-toggle-label" id="modeToggleLabel">ONLINE</span>
-        </button>
-      </div>
+      <a class="nav-btn" id="homeLink" href="/pages/home.html" style="left:14px;">ANA SAYFA</a>
 
       <div class="orb-container" id="homeBtn" title="Ana sayfa">
         <div class="energy-orbit">
@@ -958,9 +959,17 @@
     </div>
 
     <div class="half-screen bottom" id="botSection">
-      <button class="lang-trigger" id="botLangBtn" type="button">
-        <span id="botLangTxt">🇹🇷 Türkçe</span> ⌵
-      </button>
+      <div class="lang-row">
+        <button id="botModeToggle" class="mode-toggle-inline online" type="button" aria-label="Online offline geçiş">
+          <span class="mode-toggle-inline-track"></span>
+          <span class="mode-toggle-inline-thumb"></span>
+          <span class="mode-toggle-inline-label" id="botModeToggleLabel">ONLINE</span>
+        </button>
+
+        <button class="lang-trigger" id="botLangBtn" type="button">
+          <span id="botLangTxt">🇹🇷 Türkçe</span> ⌵
+        </button>
+      </div>
 
       <div class="popover" id="pop-bot" role="dialog" aria-label="Alt dil seçimi">
         <div class="pop-head">
@@ -1015,6 +1024,6 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/facetoface_mode_boot.js?v=F2F_MODE_BOOT_V2"></script>
+  <script type="module" src="/js/facetoface_mode_boot.js?v=F2F_MODE_BOOT_V3"></script>
 </body>
 </html>
