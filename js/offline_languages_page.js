@@ -75,7 +75,7 @@ const PRIORITY_ORDER = ["tr", "en", "de", "fr", "ru", "ar", "es", "it"];
 let LANGS = [];
 let busy = false;
 let confirmResolver = null;
-let pendingDownloadLang = null;
+let confirmMeta = null;
 let globalDownloadLock = false;
 
 function toast(message = "") {
@@ -245,6 +245,14 @@ function markInstalledBiDirectional(langCode) {
   saveInstalledPairs(installed);
 }
 
+function clearAllInstalledPairs() {
+  saveInstalledPairs({});
+}
+
+function clearAllDownloadingPairs() {
+  saveDownloadingMap({});
+}
+
 function clearStaleDownloadingState() {
   const map = getDownloadingMap();
   const now = Date.now();
@@ -288,9 +296,10 @@ function normalizeInstalledVsProgress() {
   if (changed) saveDownloadingMap(downloading);
 }
 
-function showConfirm(title, text) {
+function showConfirm(title, text, meta = null) {
   return new Promise((resolve) => {
     confirmResolver = resolve;
+    confirmMeta = meta;
     if (confirmTitle) confirmTitle.textContent = title;
     if (confirmText) confirmText.textContent = text;
     confirmBackdrop?.classList.add("show");
@@ -299,10 +308,10 @@ function showConfirm(title, text) {
 
 function closeConfirm(result) {
   confirmBackdrop?.classList.remove("show");
-  if (typeof confirmResolver === "function") {
-    confirmResolver(result);
-    confirmResolver = null;
-  }
+  const resolver = confirmResolver;
+  confirmResolver = null;
+  confirmMeta = null;
+  if (typeof resolver === "function") resolver(result);
 }
 
 confirmCancel?.addEventListener("click", () => closeConfirm(false));
@@ -332,6 +341,46 @@ function renderMyLanguageButton() {
   if (myLangTitle) myLangTitle.textContent = info.name;
 }
 
+async function tryChangeNativeLanguage(newCode) {
+  const current = getNativeLang();
+  const next = canonical(newCode);
+
+  if (!next || next === current) {
+    closeLangPicker();
+    return;
+  }
+
+  if (globalDownloadLock || Object.keys(getDownloadingMap()).length > 0 || busy) {
+    toast("Dil indirme sürerken kendi diliniz değiştirilemez.");
+    return;
+  }
+
+  const confirmed = await showConfirm(
+    "Kendi diliniz değişecek",
+    `Kendi diliniz ${getLangInfo(next).name} olarak değiştirilecek.
+
+Bu işlem mevcut offline dil yüklemelerinizi sıfırlar.
+Eski hazır diller silinecek ve yeni kendi dilinize göre dilleri tekrar indirmeniz gerekecek.
+
+Devam etmek istiyor musunuz?`,
+    { type: "native_lang_change", nextCode: next }
+  );
+
+  if (!confirmed) return;
+
+  setNativeLang(next);
+  clearAllInstalledPairs();
+  clearAllDownloadingPairs();
+  globalDownloadLock = false;
+  busy = false;
+
+  renderMyLanguageButton();
+  renderLicenseInfo();
+  renderInstalledList();
+  closeLangPicker();
+  toast(`${getLangInfo(next).name} seçildi. Offline kurulum sıfırlandı.`);
+}
+
 function renderLangPickerOptions() {
   if (!langPickerList) return;
 
@@ -348,14 +397,9 @@ function renderLangPickerOptions() {
   `).join("");
 
   langPickerList.querySelectorAll("[data-lang]").forEach((btn) => {
-    btn.onclick = () => {
+    btn.onclick = async () => {
       const newCode = canonical(btn.getAttribute("data-lang") || "tr");
-      setNativeLang(newCode);
-      renderMyLanguageButton();
-      renderLicenseInfo();
-      renderInstalledList();
-      closeLangPicker();
-      toast(`${getLangInfo(newCode).name} seçildi`);
+      await tryChangeNativeLanguage(newCode);
     };
   });
 }
@@ -377,6 +421,9 @@ function renderInstalledList() {
 
   const q = String(searchInput?.value || "").trim().toLowerCase();
   const nativeLang = getNativeLang();
+  const downloadingMap = getDownloadingMap();
+  const hasActiveDownload = Object.keys(downloadingMap).length > 0;
+  globalDownloadLock = hasActiveDownload;
 
   const filtered = LANGS
     .filter((l) => l.code !== nativeLang)
@@ -415,7 +462,9 @@ function renderInstalledList() {
       btnText = progress.label || "İndiriliyor...";
       disabled = true;
     } else if (globalDownloadLock) {
-      disabled = true;
+      btnClass = "lang-btn free";
+      btnText = "İndir";
+      disabled = false;
     }
 
     const progressHtml = isDownloading ? `
@@ -441,7 +490,7 @@ function renderInstalledList() {
           class="${btnClass}"
           type="button"
           data-lang="${lang.code}"
-          ${busy || disabled ? "disabled" : ""}
+          ${busy && !isDownloading ? "disabled" : ""}
         >
           ${btnText}
         </button>
@@ -466,22 +515,23 @@ async function startLanguageInstallFlow(langCode) {
   const info = getLangInfo(code);
   const nativeInfo = getLangInfo(getNativeLang());
 
-  if (globalDownloadLock) {
-    toast("Şu anda başka bir dil indiriliyor. Lütfen mevcut indirme tamamlansın.");
-    return;
-  }
-
   if (isLangInstalledBiDirectional(code)) {
     toast(`${info.name} zaten hazır`);
+    renderInstalledList();
     return;
   }
 
   if (getLangProgress(code)) {
     toast("Bu dil için indirme zaten devam ediyor.");
+    renderInstalledList();
     return;
   }
 
-  pendingDownloadLang = code;
+  if (globalDownloadLock) {
+    toast("Önce mevcut indirme tamamlanmalı.");
+    renderInstalledList();
+    return;
+  }
 
   const confirmed = await showConfirm(
     `${info.name} indirilsin mi?`,
@@ -495,7 +545,7 @@ Ortalama bir dil paketi telefonunuzda ek alan kullanır.`
   );
 
   if (!confirmed) {
-    pendingDownloadLang = null;
+    renderInstalledList();
     return;
   }
 
@@ -525,12 +575,11 @@ async function installBiDirectionalPair(langCode) {
     });
     renderInstalledList();
 
-    await new Promise((r) => setTimeout(r, 4000));
-
     if (!canUseNativeOfflineInstaller()) {
       clearLangProgress(code);
-      renderInstalledList();
       globalDownloadLock = false;
+      setBusy(false);
+      renderInstalledList();
       toast("Gerçek kurulum için uygulama tarafı hazır değil.");
       return;
     }
@@ -545,8 +594,9 @@ async function installBiDirectionalPair(langCode) {
   } catch (e) {
     console.error("[offline_languages_page] installBiDirectionalPair:", e);
     clearLangProgress(code);
-    renderInstalledList();
     globalDownloadLock = false;
+    setBusy(false);
+    renderInstalledList();
     toast(`${info.name} şu an indirilemedi`);
   } finally {
     setBusy(false);
@@ -588,8 +638,9 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
 
   markInstalledBiDirectional(code);
   clearLangProgress(code);
-  renderInstalledList();
   globalDownloadLock = false;
+  setBusy(false);
+  renderInstalledList();
   toast(`${getLangInfo(code).name} artık hazır`);
 });
 
@@ -600,8 +651,9 @@ window.addEventListener("offlinePairDownloadFailed", (e) => {
   const message = d.error || `${info.name} şu an indirilemedi. Daha sonra tekrar deneyebilirsiniz.`;
 
   if (code) clearLangProgress(code);
-  renderInstalledList();
   globalDownloadLock = false;
+  setBusy(false);
+  renderInstalledList();
   toast(message);
 });
 
