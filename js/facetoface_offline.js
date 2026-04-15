@@ -35,9 +35,6 @@ const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const settingsBtn = $("settingsBtn");
 const miniToast = $("miniToast");
-
-const offlineBadge = $("offlineBadge");
-const settingsLockBadge = $("settingsLockBadge");
 const frameRoot = $("frameRoot");
 
 const BCP = {
@@ -92,6 +89,10 @@ const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
   ? getLangPoolForSite(SITE_LANG)
   : [];
 
+function canonical(code) {
+  return String(code || "").toLowerCase().split("-")[0].trim();
+}
+
 const LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
@@ -115,10 +116,6 @@ let holdTimer = null;
 let currentAudio = null;
 let speakRunId = 0;
 let typewriterRunId = 0;
-
-function canonical(code) {
-  return String(code || "").toLowerCase().split("-")[0].trim();
-}
 
 function langObj(code) {
   const c = canonical(code);
@@ -149,11 +146,6 @@ function showToast(msg = "") {
   window.__toastTimer = setTimeout(() => {
     miniToast.classList.remove("show");
   }, 1900);
-}
-
-function showOfflineUi() {
-  offlineBadge?.classList.add("show");
-  settingsLockBadge?.classList.add("show");
 }
 
 function setErrorUI() {
@@ -739,7 +731,7 @@ function bindReadonlyInput(side) {
 
   if (!input || !send || !mic) return;
 
-  input.setAttribute("readonly", "readonly");
+  input.removeAttribute("readonly");
 
   const open = (e) => {
     e.preventDefault();
@@ -749,9 +741,7 @@ function bindReadonlyInput(side) {
 
   input.addEventListener("pointerdown", open);
   input.addEventListener("click", open);
-  input.addEventListener("focus", (e) => {
-    e.preventDefault();
-    input.blur();
+  input.addEventListener("focus", () => {
     showKeyboard(side);
   });
 
@@ -766,6 +756,11 @@ function bindReadonlyInput(side) {
     e.preventDefault();
     e.stopPropagation();
     await sendTyped(side);
+  });
+
+  input.addEventListener("input", () => {
+    autoResizeTextarea(input);
+    syncComposerButtons(side);
   });
 
   autoResizeTextarea(input);
@@ -783,7 +778,6 @@ function bindKeyboardButton(el, handler) {
 }
 
 function bind() {
-  showOfflineUi();
   setReadyUI();
   refreshLangLabels();
   pointOrbTo("bot");
@@ -908,9 +902,7 @@ const requiredDomOk =
   !!clearBtn &&
   !!homeLink &&
   !!homeBtn &&
-  !!miniToast &&
-  !!offlineBadge &&
-  !!settingsLockBadge;
+  !!miniToast;
 
 if (!requiredDomOk) {
   console.error("[facetoface_offline] Gerekli DOM elemanları eksik.");
