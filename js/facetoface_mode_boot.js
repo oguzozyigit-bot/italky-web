@@ -1,5 +1,5 @@
-const MODE_KEY = "facetoface_mode_v3";
-const TOAST_KEY = "facetoface_mode_toast_v3";
+const MODE_KEY = "facetoface_mode_v4";
+const TOAST_KEY = "facetoface_mode_toast_v4";
 
 const topModeToggle = document.getElementById("topModeToggle");
 const botModeToggle = document.getElementById("botModeToggle");
@@ -85,8 +85,8 @@ function loadModeScript(mode) {
   script.type = "module";
   script.src =
     mode === "offline"
-      ? "/js/facetoface_offline.js?v=F2F_OFFLINE_V11"
-      : "/js/facetoface_page.js?v=F2F_ONLINE_V11";
+      ? "/js/facetoface_offline.js?v=F2F_OFFLINE_V13"
+      : "/js/facetoface_page.js?v=F2F_ONLINE_V13";
   document.body.appendChild(script);
 }
 
