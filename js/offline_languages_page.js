@@ -1,564 +1,546 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Offline Diller</title>
-  <meta name="theme-color" content="#050814"/>
+import { mountShell } from "/js/ui_shell.js";
 
-  <style>
-    :root{
-      --bg1:#050814;
-      --bg2:#090d1c;
-      --line:rgba(255,255,255,.10);
-      --txt:#fff;
-      --muted:rgba(255,255,255,.68);
-      --safe-top:env(safe-area-inset-top,0px);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
-      --shadow:0 18px 38px rgba(0,0,0,.26);
+const $ = (id) => document.getElementById(id);
 
-      --free-grad:linear-gradient(135deg, rgba(21,214,130,.24), rgba(77,232,255,.16));
-      --free-line:rgba(21,214,130,.34);
-      --installed-grad:linear-gradient(135deg,#10b981,#22c55e);
-      --installing-grad:linear-gradient(135deg,#64748b,#475569);
-      --soft-grad:linear-gradient(135deg, rgba(123,125,255,.20), rgba(255,84,201,.12));
-      --soft-line:rgba(123,125,255,.30);
-    }
+const installedList = $("installedList");
+const searchInput = $("searchInput");
+const licenseInfo = $("licenseInfo");
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
+const myLangPickerBtn = $("myLangPickerBtn");
+const myLangFlag = $("myLangFlag");
+const myLangTitle = $("myLangTitle");
 
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      color:var(--txt);
-      font-family:Inter, Outfit, Arial, sans-serif;
-      background:
-        radial-gradient(circle at 16% 10%, rgba(123,125,255,.18), transparent 28%),
-        radial-gradient(circle at 84% 16%, rgba(255,84,201,.15), transparent 24%),
-        radial-gradient(circle at 50% 0%, rgba(77,232,255,.10), transparent 30%),
-        linear-gradient(180deg,var(--bg1),var(--bg2));
-    }
+const confirmBackdrop = $("confirmBackdrop");
+const confirmTitle = $("confirmTitle");
+const confirmText = $("confirmText");
+const confirmCancel = $("confirmCancel");
+const confirmOk = $("confirmOk");
 
-    body{
-      padding-top:var(--safe-top);
-      padding-bottom:var(--safe-bottom);
-    }
+const langPickerBackdrop = $("langPickerBackdrop");
+const langPickerList = $("langPickerList");
+const langPickerClose = $("langPickerClose");
 
-    #pageContent{
-      min-height:100dvh;
-    }
+const toastEl = $("toast");
 
-    .page{
-      width:100%;
-      max-width:760px;
-      margin:0 auto;
-      padding:14px 14px 34px;
-    }
+const STORAGE = {
+  installed: "italky_offline_installed_pairs_v6",
+  downloading: "italky_offline_downloading_pairs_v6",
+  nativeLang: "italky_native_lang_v6",
+  offlineLicenseDays: "italky_offline_license_days_v6"
+};
 
-    .panel{
-      border:1px solid var(--line);
-      border-radius:28px;
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.03);
-      padding:18px;
-      margin-bottom:16px;
-      overflow:hidden;
-      backdrop-filter:blur(14px);
-      -webkit-backdrop-filter:blur(14px);
-    }
+const ALL_OFFLINE_LANGS = [
+  { code: "ar", name: "Arapça", flag: "🇸🇦" },
+  { code: "bg", name: "Bulgarca", flag: "🇧🇬" },
+  { code: "bn", name: "Bengalce", flag: "🇧🇩" },
+  { code: "ca", name: "Katalanca", flag: "🇪🇸" },
+  { code: "cs", name: "Çekçe", flag: "🇨🇿" },
+  { code: "da", name: "Danca", flag: "🇩🇰" },
+  { code: "de", name: "Almanca", flag: "🇩🇪" },
+  { code: "el", name: "Yunanca", flag: "🇬🇷" },
+  { code: "en", name: "İngilizce", flag: "🇬🇧" },
+  { code: "es", name: "İspanyolca", flag: "🇪🇸" },
+  { code: "et", name: "Estonca", flag: "🇪🇪" },
+  { code: "fi", name: "Fince", flag: "🇫🇮" },
+  { code: "fr", name: "Fransızca", flag: "🇫🇷" },
+  { code: "hi", name: "Hintçe", flag: "🇮🇳" },
+  { code: "hu", name: "Macarca", flag: "🇭🇺" },
+  { code: "id", name: "Endonezce", flag: "🇮🇩" },
+  { code: "it", name: "İtalyanca", flag: "🇮🇹" },
+  { code: "ja", name: "Japonca", flag: "🇯🇵" },
+  { code: "ko", name: "Korece", flag: "🇰🇷" },
+  { code: "lt", name: "Litvanca", flag: "🇱🇹" },
+  { code: "lv", name: "Letonca", flag: "🇱🇻" },
+  { code: "ms", name: "Malayca", flag: "🇲🇾" },
+  { code: "nl", name: "Hollandaca", flag: "🇳🇱" },
+  { code: "no", name: "Norveççe", flag: "🇳🇴" },
+  { code: "pl", name: "Lehçe", flag: "🇵🇱" },
+  { code: "pt", name: "Portekizce", flag: "🇵🇹" },
+  { code: "ro", name: "Romence", flag: "🇷🇴" },
+  { code: "ru", name: "Rusça", flag: "🇷🇺" },
+  { code: "sk", name: "Slovakça", flag: "🇸🇰" },
+  { code: "sl", name: "Slovence", flag: "🇸🇮" },
+  { code: "sq", name: "Arnavutça", flag: "🇦🇱" },
+  { code: "sv", name: "İsveççe", flag: "🇸🇪" },
+  { code: "tg", name: "Tacikçe", flag: "🇹🇯" },
+  { code: "th", name: "Tayca", flag: "🇹🇭" },
+  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+  { code: "uk", name: "Ukraynaca", flag: "🇺🇦" },
+  { code: "ur", name: "Urduca", flag: "🇵🇰" },
+  { code: "vi", name: "Vietnamca", flag: "🇻🇳" },
+  { code: "zh", name: "Çince", flag: "🇨🇳" }
+];
 
-    .hero-title{
-      margin:0 0 8px;
-      font-size:28px;
-      font-weight:1000;
-      line-height:1.08;
-      letter-spacing:-.6px;
-    }
+const PRIORITY_ORDER = ["tr", "en", "de", "fr", "ru", "ar", "es", "it"];
 
-    .hero-sub{
-      margin:0;
-      font-size:16px;
-      line-height:1.55;
-      color:var(--muted);
-      font-weight:800;
-    }
+let LANGS = [];
+let busy = false;
+let confirmResolver = null;
+let pendingDownloadLang = null;
 
-    .tool-grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-      margin-bottom:16px;
-    }
+function toast(message = "") {
+  if (!toastEl) return;
+  toastEl.textContent = String(message || "");
+  toastEl.classList.add("show");
+  clearTimeout(window.__offlineToastTimer);
+  window.__offlineToastTimer = setTimeout(() => {
+    toastEl.classList.remove("show");
+  }, 2200);
+}
 
-    .control-label{
-      display:block;
-      margin:0 0 8px;
-      font-size:13px;
-      color:rgba(255,255,255,.72);
-      font-weight:900;
-      letter-spacing:.2px;
-    }
+function safeJsonParse(raw, fallback) {
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 
-    .search{
-      width:100%;
-      height:60px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
-      color:#fff;
-      padding:0 18px;
-      font-size:16px;
-      font-weight:800;
-    }
+function getOfflineLicenseDays() {
+  const v = Number(localStorage.getItem(STORAGE.offlineLicenseDays) || "37");
+  return Number.isFinite(v) && v > 0 ? v : 37;
+}
 
-    .search::placeholder{
-      color:rgba(255,255,255,.42);
-    }
+function getNativeLang() {
+  const raw = String(localStorage.getItem(STORAGE.nativeLang) || "tr").trim().toLowerCase();
+  return raw || "tr";
+}
 
-    .fake-select{
-      width:100%;
-      min-height:60px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
-      color:#fff;
-      padding:0 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      cursor:pointer;
-    }
+function setNativeLang(code) {
+  localStorage.setItem(STORAGE.nativeLang, String(code || "tr").trim().toLowerCase());
+}
 
-    .fake-select:active{
-      transform:scale(.992);
-    }
+function priorityIndex(code) {
+  const idx = PRIORITY_ORDER.indexOf(String(code || "").trim().toLowerCase());
+  return idx === -1 ? 999 : idx;
+}
 
-    .fake-select-left{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      min-width:0;
-    }
+function buildSupportedLangList() {
+  const uniq = [];
+  const seen = new Set();
 
-    .fake-select-flag{
-      font-size:24px;
-      width:28px;
-      text-align:center;
-      flex:0 0 28px;
-    }
+  for (const item of ALL_OFFLINE_LANGS) {
+    const code = String(item.code || "").trim().toLowerCase();
+    if (!code || seen.has(code)) continue;
+    seen.add(code);
+    uniq.push({
+      code,
+      name: String(item.name || code.toUpperCase()).trim(),
+      flag: String(item.flag || "🌐").trim()
+    });
+  }
 
-    .fake-select-text{
-      min-width:0;
-    }
+  uniq.sort((a, b) => {
+    const pa = priorityIndex(a.code);
+    const pb = priorityIndex(b.code);
+    if (pa !== pb) return pa - pb;
+    return a.name.localeCompare(b.name, "tr");
+  });
 
-    .fake-select-title{
-      font-size:16px;
-      font-weight:900;
-      color:#fff;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+  return uniq;
+}
 
-    .fake-select-sub{
-      margin-top:3px;
-      font-size:12px;
-      color:rgba(255,255,255,.58);
-      font-weight:800;
-    }
+function pairKey(from, to) {
+  return `${String(from).toLowerCase()}_${String(to).toLowerCase()}`;
+}
 
-    .fake-select-caret{
-      color:rgba(255,255,255,.62);
-      font-size:18px;
-      flex:0 0 auto;
-    }
+function getInstalledPairs() {
+  const data = safeJsonParse(localStorage.getItem(STORAGE.installed) || "{}", {});
+  return data && typeof data === "object" ? data : {};
+}
 
-    .hint{
-      margin-top:8px;
-      font-size:12px;
-      color:rgba(255,255,255,.56);
-      font-weight:800;
-      line-height:1.45;
-    }
+function saveInstalledPairs(map) {
+  localStorage.setItem(STORAGE.installed, JSON.stringify(map || {}));
+}
 
-    .status-strip{
-      margin-top:12px;
-      padding:12px 14px;
-      border-radius:16px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      font-size:13px;
-      font-weight:900;
-      color:rgba(255,255,255,.88);
-      line-height:1.5;
-    }
+function getDownloadingMap() {
+  const data = safeJsonParse(localStorage.getItem(STORAGE.downloading) || "{}", {});
+  return data && typeof data === "object" ? data : {};
+}
 
-    .section-title{
-      margin:6px 0 14px;
-      font-size:18px;
-      font-weight:1000;
-    }
+function saveDownloadingMap(map) {
+  localStorage.setItem(STORAGE.downloading, JSON.stringify(map || {}));
+}
 
-    .lang-card{
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
-      border-radius:24px;
-      padding:18px;
-      margin-bottom:14px;
-    }
+function getLangInfo(code) {
+  return LANGS.find((l) => l.code === code) || {
+    code,
+    name: String(code || "").toUpperCase(),
+    flag: "🌐"
+  };
+}
 
-    .lang-head{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      margin-bottom:16px;
-    }
+function isLangInstalledBiDirectional(langCode) {
+  const nativeLang = getNativeLang();
+  const installed = getInstalledPairs();
+  return !!installed[pairKey(nativeLang, langCode)] && !!installed[pairKey(langCode, nativeLang)];
+}
 
-    .flag{
-      width:56px;
-      height:56px;
-      border-radius:18px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:32px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      flex:0 0 auto;
-    }
+function getLangProgress(langCode) {
+  const downloading = getDownloadingMap();
+  return downloading[String(langCode || "").toLowerCase()] || null;
+}
 
-    .lang-name{
-      font-size:19px;
-      font-weight:1000;
-      line-height:1.1;
-      margin:0;
-    }
+function setLangProgress(langCode, patch) {
+  const code = String(langCode || "").toLowerCase();
+  const downloading = getDownloadingMap();
+  downloading[code] = {
+    ...(downloading[code] || {}),
+    ...patch,
+    updatedAt: Date.now()
+  };
+  saveDownloadingMap(downloading);
+}
 
-    .lang-sub{
-      margin-top:4px;
-      font-size:14px;
-      color:var(--muted);
-      font-weight:800;
-    }
+function clearLangProgress(langCode) {
+  const code = String(langCode || "").toLowerCase();
+  const downloading = getDownloadingMap();
+  delete downloading[code];
+  saveDownloadingMap(downloading);
+}
 
-    .lang-btn{
-      width:100%;
-      height:64px;
-      border-radius:20px;
-      border:none;
-      color:#fff;
-      font-size:17px;
-      font-weight:1000;
-      cursor:pointer;
-      letter-spacing:.2px;
-    }
+function markInstalledBiDirectional(langCode) {
+  const nativeLang = getNativeLang();
+  const installed = getInstalledPairs();
+  const expiresAt = new Date(Date.now() + getOfflineLicenseDays() * 24 * 60 * 60 * 1000).toISOString();
 
-    .lang-btn.free{
-      background:var(--free-grad);
-      border:1px solid var(--free-line);
-      color:#fff;
-    }
+  installed[pairKey(nativeLang, langCode)] = {
+    from: nativeLang,
+    to: langCode,
+    installedAt: new Date().toISOString(),
+    expiresAt
+  };
 
-    .lang-btn.installed{
-      background:var(--installed-grad);
-      color:#fff;
-    }
+  installed[pairKey(langCode, nativeLang)] = {
+    from: langCode,
+    to: nativeLang,
+    installedAt: new Date().toISOString(),
+    expiresAt
+  };
 
-    .lang-btn.installing{
-      background:var(--installing-grad);
-      color:#fff;
-    }
+  saveInstalledPairs(installed);
+}
 
-    .lang-btn.soft{
-      background:var(--soft-grad);
-      border:1px solid var(--soft-line);
-      color:#fff;
-    }
+function showConfirm(title, text) {
+  return new Promise((resolve) => {
+    confirmResolver = resolve;
+    if (confirmTitle) confirmTitle.textContent = title;
+    if (confirmText) confirmText.textContent = text;
+    confirmBackdrop?.classList.add("show");
+  });
+}
 
-    .lang-btn[disabled]{
-      opacity:.82;
-      cursor:default;
-    }
+function closeConfirm(result) {
+  confirmBackdrop?.classList.remove("show");
+  if (typeof confirmResolver === "function") {
+    confirmResolver(result);
+    confirmResolver = null;
+  }
+}
 
-    .progress-wrap{
-      margin-top:14px;
-    }
+confirmCancel?.addEventListener("click", () => closeConfirm(false));
+confirmOk?.addEventListener("click", () => closeConfirm(true));
+confirmBackdrop?.addEventListener("click", (e) => {
+  if (e.target === confirmBackdrop) closeConfirm(false);
+});
 
-    .progress-bar{
-      height:12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.08);
-    }
+function openLangPicker() {
+  renderLangPickerOptions();
+  langPickerBackdrop?.classList.add("show");
+}
 
-    .progress-fill{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,#4de8ff,#7b7dff,#ff54c9);
-      transition:width .35s ease;
-    }
+function closeLangPicker() {
+  langPickerBackdrop?.classList.remove("show");
+}
 
-    .progress-text{
-      margin-top:10px;
-      font-size:13px;
-      color:rgba(255,255,255,.78);
-      font-weight:900;
-      line-height:1.5;
-      white-space:pre-line;
-    }
+langPickerClose?.addEventListener("click", closeLangPicker);
+langPickerBackdrop?.addEventListener("click", (e) => {
+  if (e.target === langPickerBackdrop) closeLangPicker();
+});
+myLangPickerBtn?.addEventListener("click", openLangPicker);
 
-    .toast{
-      position:fixed;
-      left:50%;
-      bottom:calc(22px + var(--safe-bottom));
-      transform:translateX(-50%) translateY(120px);
-      background:rgba(10,12,24,.96);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      padding:14px 18px;
-      border-radius:999px;
-      font-size:13px;
-      font-weight:900;
-      z-index:9999;
-      transition:.25s ease;
-      box-shadow:0 18px 36px rgba(0,0,0,.30);
-      text-align:center;
-      max-width:min(92vw, 560px);
-    }
+function renderMyLanguageButton() {
+  const info = getLangInfo(getNativeLang());
+  if (myLangFlag) myLangFlag.textContent = info.flag;
+  if (myLangTitle) myLangTitle.textContent = info.name;
+}
 
-    .toast.show{
-      transform:translateX(-50%) translateY(0);
-    }
+function renderLangPickerOptions() {
+  if (!langPickerList) return;
 
-    .footer{
-      text-align:center;
-      padding-top:10px;
-      color:rgba(255,255,255,.44);
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.4px;
-    }
+  const current = getNativeLang();
 
-    .modal-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.58);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:9998;
-      padding:18px;
-    }
+  langPickerList.innerHTML = LANGS.map((lang) => `
+    <button class="picker-option ${lang.code === current ? "active" : ""}" type="button" data-lang="${lang.code}">
+      <div class="picker-option-left">
+        <div class="picker-option-flag">${lang.flag}</div>
+        <div class="picker-option-name">${lang.name}</div>
+      </div>
+      <div class="picker-option-check">✓</div>
+    </button>
+  `).join("");
 
-    .modal-backdrop.show{
-      display:flex;
-    }
+  langPickerList.querySelectorAll("[data-lang]").forEach((btn) => {
+    btn.onclick = () => {
+      const newCode = String(btn.getAttribute("data-lang") || "tr").trim().toLowerCase();
+      setNativeLang(newCode);
+      renderMyLanguageButton();
+      renderLicenseInfo();
+      renderInstalledList();
+      closeLangPicker();
+      toast(`${getLangInfo(newCode).name} seçildi`);
+    };
+  });
+}
 
-    .modal{
-      width:min(92vw, 540px);
-      border-radius:30px;
-      border:1px solid rgba(255,255,255,.12);
-      background:linear-gradient(180deg, rgba(20,24,44,.98), rgba(10,12,24,.98));
-      box-shadow:0 24px 60px rgba(0,0,0,.45);
-      padding:24px;
-    }
+function setBusy(flag) {
+  busy = !!flag;
+}
 
-    .modal-title{
-      font-size:24px;
-      font-weight:1000;
-      margin:0 0 12px;
-      line-height:1.15;
-    }
+function renderLicenseInfo() {
+  if (!licenseInfo) return;
+  const days = getOfflineLicenseDays();
+  const nativeInfo = getLangInfo(getNativeLang());
 
-    .modal-text{
-      font-size:16px;
-      line-height:1.7;
-      color:rgba(255,255,255,.88);
-      font-weight:800;
-      white-space:pre-line;
-    }
+  licenseInfo.textContent = `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Offline lisans: ${days} gün`;
+}
 
-    .modal-actions{
-      display:flex;
-      gap:12px;
-      margin-top:20px;
-    }
+function renderInstalledList() {
+  if (!installedList) return;
 
-    .modal-btn{
-      flex:1;
-      height:64px;
-      border-radius:22px;
-      border:none;
-      font-size:18px;
-      font-weight:1000;
-      cursor:pointer;
-    }
+  const q = String(searchInput?.value || "").trim().toLowerCase();
+  const nativeLang = getNativeLang();
 
-    .modal-btn.cancel{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-      color:#fff;
-    }
+  const filtered = LANGS
+    .filter((l) => l.code !== nativeLang)
+    .filter((l) => !q || l.name.toLowerCase().includes(q) || l.code.includes(q));
 
-    .modal-btn.ok{
-      background:var(--free-grad);
-      border:1px solid var(--free-line);
-      color:#fff;
-    }
-
-    .picker-list{
-      margin-top:16px;
-      max-height:58vh;
-      overflow:auto;
-      border-radius:20px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.03);
-    }
-
-    .picker-option{
-      width:100%;
-      border:none;
-      background:transparent;
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      padding:16px 18px;
-      font-size:17px;
-      font-weight:900;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      cursor:pointer;
-      text-align:left;
-    }
-
-    .picker-option:last-child{
-      border-bottom:none;
-    }
-
-    .picker-option-left{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      min-width:0;
-    }
-
-    .picker-option-flag{
-      font-size:28px;
-      width:32px;
-      flex:0 0 32px;
-      text-align:center;
-    }
-
-    .picker-option-name{
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .picker-option-check{
-      font-size:20px;
-      color:#8cf0ff;
-      opacity:0;
-    }
-
-    .picker-option.active .picker-option-check{
-      opacity:1;
-    }
-
-    @media (min-width:640px){
-      .tool-grid{
-        grid-template-columns:1fr 1fr;
-      }
-      .tool-grid .span-2{
-        grid-column:1 / -1;
-      }
-    }
-
-    @media (max-width:420px){
-      .hero-title{ font-size:24px; }
-      .hero-sub{ font-size:15px; }
-      .modal-actions{ flex-direction:column; }
-    }
-  </style>
-</head>
-<body>
-  <main id="pageContent">
-    <div class="page">
-      <section class="panel">
-        <h1 class="hero-title">Offline Diller</h1>
-        <p class="hero-sub">İnternet yokken de çeviriye devam et. Kendi dilini seç, gerekli dilleri indir ve kullan.</p>
-      </section>
-
-      <section class="panel">
-        <div class="tool-grid">
+  if (!filtered.length) {
+    installedList.innerHTML = `
+      <div class="lang-card">
+        <div class="lang-head">
+          <div class="flag">✅</div>
           <div>
-            <label class="control-label">Benim Dilim</label>
-            <button id="myLangPickerBtn" class="fake-select" type="button">
-              <div class="fake-select-left">
-                <div id="myLangFlag" class="fake-select-flag">🇹🇷</div>
-                <div class="fake-select-text">
-                  <div id="myLangTitle" class="fake-select-title">Türkçe</div>
-                  <div class="fake-select-sub">Ana konuşma diliniz</div>
-                </div>
-              </div>
-              <div class="fake-select-caret">▾</div>
-            </button>
-            <div class="hint">Seçtiğin diller ana dilinle birlikte indirilecektir.</div>
+            <h3 class="lang-name">Uygun dil bulunamadı</h3>
+            <div class="lang-sub">Arama filtresini değiştirerek tekrar deneyin.</div>
           </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
+  installedList.innerHTML = filtered.map((lang) => {
+    const installed = isLangInstalledBiDirectional(lang.code);
+    const progress = getLangProgress(lang.code);
+    const isDownloading = !!progress;
+
+    let btnClass = "lang-btn free";
+    let btnText = "İndir";
+
+    if (installed) {
+      btnClass = "lang-btn installed";
+      btnText = "Kurulu";
+    } else if (isDownloading) {
+      btnClass = "lang-btn installing";
+      btnText = progress.label || "İndiriliyor...";
+    }
+
+    const progressHtml = isDownloading ? `
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:${Math.max(4, Math.min(100, Number(progress.percent || 0)))}%"></div>
+        </div>
+        <div class="progress-text">${progress.message || "Lütfen bekleyiniz. Kurulum devam ediyor."}</div>
+      </div>
+    ` : "";
+
+    return `
+      <div class="lang-card">
+        <div class="lang-head">
+          <div class="flag">${lang.flag}</div>
           <div>
-            <label class="control-label" for="searchInput">Dil Ara</label>
-            <input id="searchInput" class="search" type="text" placeholder="Dil ara"/>
-            <div class="hint">Örnek: Almanca, Fransızca, Rusça</div>
-          </div>
-
-          <div class="span-2 status-strip" id="licenseInfo">
-            Offline lisans kontrol ediliyor...
+            <h3 class="lang-name">${lang.name}</h3>
+            <div class="lang-sub">Offline kullanım için hazırla</div>
           </div>
         </div>
 
-        <div class="section-title">Diller</div>
-        <div id="installedList"></div>
-      </section>
+        <button
+          class="${btnClass}"
+          type="button"
+          data-lang="${lang.code}"
+          ${busy || isDownloading ? "disabled" : ""}
+        >
+          ${btnText}
+        </button>
 
-      <div class="footer">italkyAI • By Ozyigit's • 2026</div>
-    </div>
-  </main>
-
-  <div id="toast" class="toast"></div>
-
-  <div id="confirmBackdrop" class="modal-backdrop">
-    <div class="modal">
-      <h3 id="confirmTitle" class="modal-title">Dil indirilsin mi?</h3>
-      <div id="confirmText" class="modal-text"></div>
-      <div class="modal-actions">
-        <button id="confirmCancel" class="modal-btn cancel" type="button">Vazgeç</button>
-        <button id="confirmOk" class="modal-btn ok" type="button">İndir</button>
+        ${progressHtml}
       </div>
-    </div>
-  </div>
+    `;
+  }).join("");
 
-  <div id="langPickerBackdrop" class="modal-backdrop">
-    <div class="modal">
-      <h3 class="modal-title">Benim Dilim</h3>
-      <div class="modal-text">Kullandığınız ana dili seçin.</div>
-      <div id="langPickerList" class="picker-list"></div>
-      <div class="modal-actions">
-        <button id="langPickerClose" class="modal-btn cancel" type="button">Kapat</button>
-      </div>
-    </div>
-  </div>
+  installedList.querySelectorAll("[data-lang]").forEach((btn) => {
+    btn.onclick = async () => {
+      const lang = btn.getAttribute("data-lang");
+      await startLanguageInstallFlow(lang);
+    };
+  });
+}
 
-  <script type="module" src="/js/offline_languages_page.js"></script>
-</body>
-</html>
+async function startLanguageInstallFlow(langCode) {
+  const code = String(langCode || "").trim().toLowerCase();
+  if (!code || busy) return;
+
+  const info = getLangInfo(code);
+  const nativeInfo = getLangInfo(getNativeLang());
+
+  if (isLangInstalledBiDirectional(code)) {
+    toast(`${info.name} zaten hazır`);
+    return;
+  }
+
+  if (getLangProgress(code)) {
+    toast("Bu dil için indirme zaten devam ediyor.");
+    return;
+  }
+
+  pendingDownloadLang = code;
+
+  const confirmed = await showConfirm(
+    `${info.name} indirilsin mi?`,
+    `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
+
+İndirme başladıktan sonra lütfen uygulamayı kapatmayın.
+Uygulama içinde başka sayfalarda gezebilirsiniz.`
+  );
+
+  if (!confirmed) {
+    pendingDownloadLang = null;
+    return;
+  }
+
+  await installBiDirectionalPair(code);
+}
+
+function canUseNativeOfflineInstaller() {
+  return !!(
+    (window.AndroidOfflineTranslate && typeof window.AndroidOfflineTranslate.downloadBiDirectionalPair === "function") ||
+    (window.Android && typeof window.Android.downloadBiDirectionalPair === "function")
+  );
+}
+
+async function installBiDirectionalPair(langCode) {
+  const code = String(langCode || "").trim().toLowerCase();
+  const info = getLangInfo(code);
+  const nativeLang = getNativeLang();
+
+  setBusy(true);
+
+  try {
+    setLangProgress(code, {
+      percent: 4,
+      label: "Başlatılıyor...",
+      message: `Lütfen bekleyiniz. Şu anda ${info.name} indiriliyor.`
+    });
+    renderInstalledList();
+    toast(`${info.name} indirilmeye başladı`);
+
+    if (!canUseNativeOfflineInstaller()) {
+      clearLangProgress(code);
+      renderInstalledList();
+      toast("Gerçek kurulum için app tarafı bağlanacak.");
+      return;
+    }
+
+    const payload = JSON.stringify({
+      source: nativeLang,
+      target: code
+    });
+
+    if (window.AndroidOfflineTranslate?.downloadBiDirectionalPair) {
+      window.AndroidOfflineTranslate.downloadBiDirectionalPair(payload);
+    } else if (window.Android?.downloadBiDirectionalPair) {
+      window.Android.downloadBiDirectionalPair(payload);
+    }
+  } catch (e) {
+    console.error("[offline_languages_page] installBiDirectionalPair:", e);
+    clearLangProgress(code);
+    renderInstalledList();
+    toast(`${info.name} şu an indirilemedi`);
+  } finally {
+    setBusy(false);
+  }
+}
+
+window.addEventListener("offlinePairDownloadStarted", (e) => {
+  const d = e.detail || {};
+  const code = String(d.target || "").toLowerCase();
+  const info = getLangInfo(code);
+  if (!code) return;
+
+  setLangProgress(code, {
+    percent: 5,
+    label: "Başlatılıyor...",
+    message: `Lütfen bekleyiniz. Şu anda ${info.name} için indirme başladı.`
+  });
+  renderInstalledList();
+});
+
+window.addEventListener("offlinePairDownloadProgress", (e) => {
+  const d = e.detail || {};
+  const code = String(d.target || "").toLowerCase();
+  const info = getLangInfo(code);
+  if (!code) return;
+
+  setLangProgress(code, {
+    percent: Number(d.percent || 0),
+    label: d.label || "İndiriliyor...",
+    message: d.message || `Lütfen bekleyiniz. Şu anda ${info.name} kurulumu devam ediyor.`
+  });
+  renderInstalledList();
+});
+
+window.addEventListener("offlinePairDownloadCompleted", (e) => {
+  const d = e.detail || {};
+  const code = String(d.target || "").toLowerCase();
+  if (!code) return;
+
+  markInstalledBiDirectional(code);
+  clearLangProgress(code);
+  renderInstalledList();
+  toast(`${getLangInfo(code).name} artık hazır`);
+});
+
+window.addEventListener("offlinePairDownloadFailed", (e) => {
+  const d = e.detail || {};
+  const code = String(d.target || "").toLowerCase();
+  const info = getLangInfo(code);
+  const message = d.error || `${info.name} şu an indirilemedi. Daha sonra tekrar deneyebilirsiniz.`;
+
+  if (code) clearLangProgress(code);
+  renderInstalledList();
+  toast(message);
+});
+
+async function init() {
+  try {
+    mountShell({ scroll: "auto" });
+  } catch (e) {
+    console.warn("[offline_languages_page] shell:", e);
+  }
+
+  LANGS = buildSupportedLangList();
+  renderMyLanguageButton();
+  renderLicenseInfo();
+  renderInstalledList();
+
+  searchInput?.addEventListener("input", renderInstalledList);
+
+  console.log("OFFLINE_LANGUAGES_READY", {
+    langs: LANGS.length,
+    native: getNativeLang()
+  });
+}
+
+init();
