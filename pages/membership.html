@@ -214,39 +214,17 @@
       line-height:1.5;
     }
 
-    .meta-box{
-      margin-top:22px;
-      border:1px solid rgba(255,255,255,0.08);
-      background:rgba(255,255,255,0.03);
-      border-radius:22px;
-      padding:16px;
-      text-align:left;
-      display:grid;
-      gap:10px;
-    }
-
-    .meta-line{
-      font-size:14px;
-      font-weight:800;
-      color:#fff;
-      line-height:1.45;
-    }
-
-    .meta-line span{
-      color:rgba(255,255,255,0.56);
-      font-weight:700;
-    }
-
     .status-box{
       margin-top:18px;
-      padding:14px 16px;
+      padding:16px 18px;
       border-radius:18px;
-      font-size:14px;
-      line-height:1.55;
+      font-size:15px;
+      line-height:1.6;
       font-weight:800;
       border:1px solid rgba(255,255,255,0.08);
       background:rgba(255,255,255,0.03);
       color:#fff;
+      text-align:center;
     }
 
     .status-box.ok{
@@ -267,8 +245,7 @@
       color:#fee2e2;
     }
 
-    .buy-btn,
-    .secondary-btn{
+    .buy-btn{
       width:100%;
       min-height:72px;
       border-radius:22px;
@@ -278,27 +255,16 @@
       margin-top:18px;
       cursor:pointer;
       transition:transform .16s ease, opacity .16s ease;
-    }
-
-    .buy-btn:active,
-    .secondary-btn:active{
-      transform:scale(.992);
-    }
-
-    .buy-btn{
       background:#fff;
       color:#000;
       box-shadow:0 20px 40px rgba(0,0,0,0.5);
     }
 
-    .secondary-btn{
-      background:rgba(255,255,255,0.05);
-      color:#fff;
-      border:1px solid rgba(255,255,255,0.10);
+    .buy-btn:active{
+      transform:scale(.992);
     }
 
-    .buy-btn[disabled],
-    .secondary-btn[disabled]{
+    .buy-btn[disabled]{
       opacity:.6;
       cursor:default;
     }
@@ -394,17 +360,18 @@
         İlk 2 ay avantajlı fiyat.<br>
         Sonrasında 2 USD / ay olarak devam eder.<br>
         Ülke vergi uygulamalarına göre ek vergi yansıyabilir.<br>
-        İnternet ihtiyacı olmadan 58 dile çeviri.<br> 
-        (ilk kurulumda internet gereklidir.)<br>
+        İnternet ihtiyacı olmadan 58 dile çeviri.<br>
+        (İlk kurulumda internet gereklidir.)<br>
         Bağlı Kalma, Özgür Kal...
       </div>
 
       <div class="status-box" id="statusBox">
-        Hesap kontrol ediliyor...
+        Sayın kullanıcımız,<br>
+        Dünyayı küçültmenize bir adım kaldı.
       </div>
 
       <button class="buy-btn" id="buyBtn" type="button">Üyeliği Başlat</button>
-      
+
       <div class="google-play-info">
         <span>🛡️ Tahsilat Google Play tarafından yapılır. Desteklenen ülkelerde GSM operatörü üzerinden de ödeme yapılabilir.</span>
       </div>
@@ -424,13 +391,8 @@
 
     const UI = {
       buyBtn: $("buyBtn"),
-      refreshBtn: $("refreshBtn"),
       toast: $("toast"),
-      statusBox: $("statusBox"),
-      statusLabel: $("statusLabel"),
-      trialDaysLabel: $("trialDaysLabel"),
-      membershipEndsLabel: $("membershipEndsLabel"),
-      tokensLabel: $("tokensLabel")
+      statusBox: $("statusBox")
     };
 
     const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
@@ -451,22 +413,43 @@
       }, 2200);
     }
 
-    function setStatus(kind, text) {
-      UI.statusBox.className = "status-box";
-      if (kind) UI.statusBox.classList.add(kind);
-      UI.statusBox.textContent = text;
+    function escapeHtml(value = "") {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
     }
 
-    function fmtDate(value) {
-      if (!value) return "-";
-      try {
-        return new Date(value).toLocaleDateString("tr-TR", {
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        });
-      } catch {
-        return String(value);
+    function getDisplayNameFromSession(session) {
+      const user = session?.user;
+      if (!user) return "kullanıcımız";
+
+      const meta = user.user_metadata || {};
+      const fullName =
+        meta.full_name ||
+        meta.name ||
+        user.email ||
+        "kullanıcımız";
+
+      return String(fullName).trim() || "kullanıcımız";
+    }
+
+    function renderWelcomeBox(name) {
+      const safeName = escapeHtml(name || "kullanıcımız");
+      UI.statusBox.className = "status-box";
+      UI.statusBox.innerHTML = `Sayın ${safeName}<br>Dünyayı küçültmenize bir adım kaldı.`;
+    }
+
+    function setStatus(kind, text, allowHtml = false) {
+      UI.statusBox.className = "status-box";
+      if (kind) UI.statusBox.classList.add(kind);
+
+      if (allowHtml) {
+        UI.statusBox.innerHTML = text;
+      } else {
+        UI.statusBox.textContent = text;
       }
     }
 
@@ -480,6 +463,8 @@
 
       currentSession = session;
       currentUserId = session.user?.id || "";
+      renderWelcomeBox(getDisplayNameFromSession(session));
+
       return session;
     }
 
@@ -501,26 +486,23 @@
       const accessOpen = !!data?.access_open;
       const tokenCount = Number(data?.tokens ?? 0);
 
-      UI.statusLabel.textContent = accessOpen ? "Aktif" : "Pasif";
-      UI.trialDaysLabel.textContent = accessOpen ? "Üyelik Açık" : "Beklemede";
-
-      const endsAt =
-        data?.membership_ends_at ||
-        data?.package_ends_at ||
-        data?.gift_ends_at ||
-        data?.trial_ends_at ||
-        null;
-
-      UI.membershipEndsLabel.textContent = fmtDate(endsAt);
-      UI.tokensLabel.textContent = String(tokenCount);
-
       try { setHeaderTokens(tokenCount); } catch {}
 
+      const displayName = getDisplayNameFromSession(currentSession);
+
       if (accessOpen) {
-        setStatus("ok", "Erişiminiz açık. Uygulamaya devam edebilirsiniz.");
+        setStatus(
+          "ok",
+          `Sayın ${escapeHtml(displayName)}<br>Dünyayı küçültmenize bir adım değil, artık tam erişiminiz var.`,
+          true
+        );
         UI.buyBtn.textContent = "Uygulamaya Git";
       } else {
-        setStatus("warn", "Erişiminiz kapalı. Üyeliği başlatarak kullanıma devam edebilirsiniz.");
+        setStatus(
+          "warn",
+          `Sayın ${escapeHtml(displayName)}<br>Dünyayı küçültmenize bir adım kaldı.`,
+          true
+        );
         UI.buyBtn.textContent = "Üyeliği Başlat";
       }
     }
@@ -607,7 +589,6 @@
     });
 
     UI.buyBtn?.addEventListener("click", handleBuyClick);
-    UI.refreshBtn?.addEventListener("click", recheckAndRoute);
 
     (async function boot() {
       try {
@@ -630,7 +611,6 @@
       } catch (e) {
         console.error("membership boot error:", e);
         if (String(e?.message || "").includes("Önce giriş yapın")) return;
-
       }
     })();
   </script>
