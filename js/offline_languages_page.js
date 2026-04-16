@@ -161,6 +161,7 @@ function getNativeInstalledPairs() {
     if (!window.OfflineTranslate || typeof window.OfflineTranslate.getInstalledOfflinePairs !== "function") {
       return {};
     }
+
     const raw = window.OfflineTranslate.getInstalledOfflinePairs() || "{}";
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === "object" ? parsed : {};
@@ -209,10 +210,12 @@ function syncStorageToNative() {
 function mergeInstalledPairsWithNative() {
   const localPairs = getInstalledPairs();
   const nativePairs = getNativeInstalledPairs();
+
   const merged = {
     ...localPairs,
     ...nativePairs
   };
+
   saveInstalledPairs(merged);
   return merged;
 }
