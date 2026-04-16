@@ -120,7 +120,7 @@ function ensureMockOfflineLicenseOnce() {
     const key = "italky_offline_mock_license_offline_page_v2";
     if (localStorage.getItem(key) === "1") return;
 
-    window.OfflineTranslate.setMockOfflineLicense(37);
+    window.OfflineTranslate.setMockOfflineLicense(45);
     localStorage.setItem(key, "1");
   } catch (e) {
     console.error("Mock lisans yazılamadı:", e);
@@ -141,8 +141,8 @@ function canonical(code) {
 }
 
 function getOfflineLicenseDays() {
-  const v = Number(localStorage.getItem(STORAGE.offlineLicenseDays) || "37");
-  return Number.isFinite(v) && v > 0 ? v : 37;
+  const v = Number(localStorage.getItem(STORAGE.offlineLicenseDays) || "45");
+  return Number.isFinite(v) && v > 0 ? v : 45;
 }
 
 function canUseNativeMirror() {
@@ -154,6 +154,20 @@ function canUseNativeMirror() {
     typeof window.OfflineTranslate.setInstalledOfflinePairs === "function" &&
     typeof window.OfflineTranslate.clearInstalledOfflinePairs === "function"
   );
+}
+
+function getNativeInstalledPairs() {
+  try {
+    if (!window.OfflineTranslate || typeof window.OfflineTranslate.getInstalledOfflinePairs !== "function") {
+      return {};
+    }
+    const raw = window.OfflineTranslate.getInstalledOfflinePairs() || "{}";
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (e) {
+    console.error("Native installed pairs okunamadı:", e);
+    return {};
+  }
 }
 
 function syncStorageFromNative() {
@@ -190,6 +204,17 @@ function syncStorageToNative() {
   } catch (e) {
     console.warn("Native installed pair yazılamadı:", e);
   }
+}
+
+function mergeInstalledPairsWithNative() {
+  const localPairs = getInstalledPairs();
+  const nativePairs = getNativeInstalledPairs();
+  const merged = {
+    ...localPairs,
+    ...nativePairs
+  };
+  saveInstalledPairs(merged);
+  return merged;
 }
 
 function getNativeLang() {
@@ -437,6 +462,15 @@ Devam etmek istiyor musunuz?`
   setNativeLang(next);
   clearAllInstalledPairs();
   clearAllDownloadingPairs();
+
+  try {
+    if (window.OfflineTranslate && typeof window.OfflineTranslate.clearInstalledOfflinePairs === "function") {
+      window.OfflineTranslate.clearInstalledOfflinePairs();
+    }
+  } catch (e) {
+    console.warn("Native installed pair temizlenemedi:", e);
+  }
+
   globalDownloadLock = false;
   busy = false;
 
@@ -697,6 +731,15 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
   if (!code) return;
 
   markInstalledBiDirectional(code);
+
+  try {
+    if (window.OfflineTranslate && typeof window.OfflineTranslate.setInstalledOfflinePairs === "function") {
+      window.OfflineTranslate.setInstalledOfflinePairs(JSON.stringify(getInstalledPairs()));
+    }
+  } catch (err) {
+    console.error("Native installed pair sync failed:", err);
+  }
+
   clearLangProgress(code);
   globalDownloadLock = false;
   setBusy(false);
@@ -724,13 +767,32 @@ async function init() {
     console.warn("[offline_languages_page] shell:", e);
   }
 
+  try {
+    const applyShellVars = () => {
+      const root = getComputedStyle(document.documentElement);
+      const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+      const headerH = parseFloat(root.getPropertyValue("--headerH")) || 0;
+      document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
+      document.documentElement.style.setProperty("--safe-top", headerH ? `${Math.max(0, headerH - 6)}px` : "0px");
+    };
+
+    applyShellVars();
+    setTimeout(applyShellVars, 120);
+    setTimeout(applyShellVars, 500);
+    window.addEventListener("resize", applyShellVars);
+  } catch (e) {
+    console.warn("[offline_languages_page] shell vars:", e);
+  }
+
   syncStorageFromNative();
   clearStaleDownloadingState();
-  normalizeInstalledVsProgress();
 
   LANGS = buildSupportedLangList();
 
   ensureMockOfflineLicenseOnce();
+
+  mergeInstalledPairsWithNative();
+  normalizeInstalledVsProgress();
 
   renderMyLanguageButton();
   renderLicenseInfo();
