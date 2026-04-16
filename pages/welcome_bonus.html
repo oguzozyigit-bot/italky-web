@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
+  <title>italkyAI • Hoş Geldin</title>
+  <meta name="theme-color" content="#050608" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --grad:linear-gradient(135deg,#22d3ee 0%,#8b5cf6 55%,#ec4899 100%);
+      --bg:#050608;
+      --line:rgba(255,255,255,.10);
+    }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body{
+      margin:0; width:100%; min-height:100%;
+      background:#050608; color:#fff; font-family:"Outfit",sans-serif;
+      overflow:hidden;
+    }
+
+    body{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(34,211,238,0.16) 0%, transparent 40%),
+        radial-gradient(circle at 100% 20%, rgba(139,92,246,0.10) 0%, transparent 30%),
+        #050608;
+    }
+
+    canvas{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+    }
+
+    .card{
+      position:relative;
+      z-index:2;
+      width:min(92vw,560px);
+      border-radius:34px;
+      padding:34px 26px;
+      text-align:center;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--line);
+      backdrop-filter:blur(16px);
+      box-shadow:0 24px 60px rgba(0,0,0,.35);
+    }
+
+    .badge{
+      display:inline-block;
+      padding:8px 16px;
+      border-radius:12px;
+      background:var(--grad);
+      color:#000;
+      font-size:14px;
+      font-weight:900;
+      margin-bottom:16px;
+      letter-spacing:1px;
+      text-transform:uppercase;
+    }
+
+    h1{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:36px;
+      line-height:1.05;
+      letter-spacing:-1.8px;
+    }
+
+    p{
+      margin:16px 0 0;
+      font-size:18px;
+      line-height:1.65;
+      color:rgba(255,255,255,.78);
+      font-weight:700;
+    }
+
+    .gift{
+      margin-top:24px;
+      font-size:56px;
+      font-weight:900;
+      color:#bef264;
+      font-family:"Space Grotesk",sans-serif;
+    }
+
+    .sub{
+      margin-top:8px;
+      font-size:16px;
+      font-weight:800;
+      color:#fff;
+    }
+
+    .actions{
+      margin-top:28px;
+      display:grid;
+      gap:14px;
+    }
+
+    .btn{
+      min-height:66px;
+      border:none;
+      border-radius:22px;
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .btn.primary{
+      background:#fff;
+      color:#000;
+    }
+
+    .btn.secondary{
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.10);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fx"></canvas>
+
+  <div class="card">
+    <div class="badge">HOŞ GELDİNİZ</div>
+    <h1>Dünyayı küçülten uygulamaya<br>hoş geldin</h1>
+    <p id="welcomeText">5 jeton hediyeniz hesabınıza yükleniyor...</p>
+    <div class="gift" id="giftCount">+5</div>
+    <div class="sub">Jeton hesabınıza tanımlandı</div>
+
+    <div class="actions">
+      <button class="btn primary" id="goHomeBtn" type="button">Uygulamaya kolay erişim için buraya tıklayın</button>
+      <button class="btn secondary" id="skipBtn" type="button">Atla</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+    import { setHeaderTokens } from "/js/ui_shell.js";
+
+    const goHomeBtn = document.getElementById("goHomeBtn");
+    const skipBtn = document.getElementById("skipBtn");
+    const welcomeText = document.getElementById("welcomeText");
+
+    async function claimBonus() {
+      try {
+        const { data, error } = await supabase.rpc("claim_first_membership_bonus");
+        if (error) throw error;
+
+        if (data?.ok && typeof data?.tokens_after === "number") {
+          try { setHeaderTokens(data.tokens_after); } catch {}
+        }
+
+        if (data?.granted) {
+          welcomeText.textContent = "5 jeton hediyeniz hesabınıza yüklendi. Dünyayı küçültmeye hazırsınız.";
+        } else if (data?.already_claimed) {
+          welcomeText.textContent = "Hesabınız zaten hazır. Dünyayı küçültmeye devam edin.";
+        } else {
+          welcomeText.textContent = "Hesabınız hazırlandı.";
+        }
+      } catch (e) {
+        console.error("claim bonus error:", e);
+        welcomeText.textContent = "Hesabınız hazırlandı. Uygulamaya geçebilirsiniz.";
+      }
+    }
+
+    function goHome() {
+      sessionStorage.setItem("italky_skip_welcome_once", "1");
+      location.replace("/pages/home.html");
+    }
+
+    goHomeBtn.addEventListener("click", goHome);
+    skipBtn.addEventListener("click", goHome);
+
+    claimBonus();
+
+    const canvas = document.getElementById("fx");
+    const ctx = canvas.getContext("2d");
+    let w = canvas.width = window.innerWidth;
+    let h = canvas.height = window.innerHeight;
+
+    const pieces = Array.from({ length: 180 }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h - h,
+      r: 4 + Math.random() * 6,
+      vx: -2 + Math.random() * 4,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * Math.PI,
+      vr: -0.2 + Math.random() * 0.4,
+      color: ["#22d3ee","#8b5cf6","#ec4899","#bef264","#ffffff"][Math.floor(Math.random()*5)]
+    }));
+
+    function draw() {
+      ctx.clearRect(0,0,w,h);
+      for (const p of pieces) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
+        ctx.restore();
+
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+
+        if (p.y > h + 20) {
+          p.y = -20;
+          p.x = Math.random() * w;
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener("resize", () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    });
+
+    draw();
+  </script>
+</body>
+</html>
