@@ -142,89 +142,101 @@
   </div>
 
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-    import { setHeaderTokens } from "/js/ui_shell.js";
+  import { supabase } from "/js/supabase_client.js";
+  import { setHeaderTokens } from "/js/ui_shell.js";
 
-    const goHomeBtn = document.getElementById("goHomeBtn");
-    const skipBtn = document.getElementById("skipBtn");
-    const welcomeText = document.getElementById("welcomeText");
+  const goHomeBtn = document.getElementById("goHomeBtn");
+  const skipBtn = document.getElementById("skipBtn");
+  const welcomeText = document.getElementById("welcomeText");
 
-    async function claimBonus() {
-      try {
-        const { data, error } = await supabase.rpc("claim_first_membership_bonus");
-        if (error) throw error;
+  async function claimBonus() {
+    try {
+      const { data, error } = await supabase.rpc("claim_first_membership_bonus");
+      if (error) throw error;
 
-        if (data?.ok && typeof data?.tokens_after === "number") {
-          try { setHeaderTokens(data.tokens_after); } catch {}
-        }
+      if (data?.ok && typeof data?.tokens_after === "number") {
+        try { setHeaderTokens(data.tokens_after); } catch {}
+      }
 
-        if (data?.granted) {
-          welcomeText.textContent = "Dünyayı cebinde taşımaya hazırsın.";
-        } else if (data?.already_claimed) {
-          welcomeText.textContent = "Dünyayı cebinde taşımaya devam et.";
-        } else {
-          welcomeText.textContent = "Hesabınız hazırlandı.";
-        }
-      } catch (e) {
-        console.error("claim bonus error:", e);
-        welcomeText.textContent = "Hesabınız hazırlandı. Uygulamaya geçebilirsiniz.";
+      if (data?.granted) {
+        welcomeText.textContent = "Dünyayı cebinde taşımaya hazırsın.";
+      } else if (data?.already_claimed) {
+        welcomeText.textContent = "Dünyayı cebinde taşımaya devam et.";
+      } else {
+        welcomeText.textContent = "Hesabınız hazırlandı.";
+      }
+    } catch (e) {
+      console.error("claim bonus error:", e);
+      welcomeText.textContent = "Hesabınız hazırlandı. Uygulamaya geçebilirsiniz.";
+    }
+  }
+
+  function goHome() {
+    sessionStorage.setItem("italky_skip_welcome_once", "1");
+    location.replace("/pages/home.html");
+  }
+
+  async function installShortcutAndGoHome() {
+    try {
+      if (window.AndroidApp && typeof window.AndroidApp.pinAppShortcut === "function") {
+        window.AndroidApp.pinAppShortcut();
+      }
+    } catch (e) {
+      console.error("pin shortcut error:", e);
+    }
+
+    setTimeout(goHome, 500);
+  }
+
+  goHomeBtn.addEventListener("click", installShortcutAndGoHome);
+  skipBtn.addEventListener("click", goHome);
+
+  claimBonus();
+
+  const canvas = document.getElementById("fx");
+  const ctx = canvas.getContext("2d");
+  let w = canvas.width = window.innerWidth;
+  let h = canvas.height = window.innerHeight;
+
+  const pieces = Array.from({ length: 180 }, () => ({
+    x: Math.random() * w,
+    y: Math.random() * h - h,
+    r: 4 + Math.random() * 6,
+    vx: -2 + Math.random() * 4,
+    vy: 2 + Math.random() * 4,
+    rot: Math.random() * Math.PI,
+    vr: -0.2 + Math.random() * 0.4,
+    color: ["#22d3ee","#8b5cf6","#ec4899","#bef264","#ffffff"][Math.floor(Math.random()*5)]
+  }));
+
+  function draw() {
+    ctx.clearRect(0,0,w,h);
+    for (const p of pieces) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
+      ctx.restore();
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+
+      if (p.y > h + 20) {
+        p.y = -20;
+        p.x = Math.random() * w;
       }
     }
+    requestAnimationFrame(draw);
+  }
 
-    function goHome() {
-      sessionStorage.setItem("italky_skip_welcome_once", "1");
-      location.replace("/pages/home.html");
-    }
+  window.addEventListener("resize", () => {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  });
 
-    goHomeBtn.addEventListener("click", goHome);
-    skipBtn.addEventListener("click", goHome);
-
-    claimBonus();
-
-    const canvas = document.getElementById("fx");
-    const ctx = canvas.getContext("2d");
-    let w = canvas.width = window.innerWidth;
-    let h = canvas.height = window.innerHeight;
-
-    const pieces = Array.from({ length: 180 }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h - h,
-      r: 4 + Math.random() * 6,
-      vx: -2 + Math.random() * 4,
-      vy: 2 + Math.random() * 4,
-      rot: Math.random() * Math.PI,
-      vr: -0.2 + Math.random() * 0.4,
-      color: ["#22d3ee","#8b5cf6","#ec4899","#bef264","#ffffff"][Math.floor(Math.random()*5)]
-    }));
-
-    function draw() {
-      ctx.clearRect(0,0,w,h);
-      for (const p of pieces) {
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
-        ctx.restore();
-
-        p.x += p.vx;
-        p.y += p.vy;
-        p.rot += p.vr;
-
-        if (p.y > h + 20) {
-          p.y = -20;
-          p.x = Math.random() * w;
-        }
-      }
-      requestAnimationFrame(draw);
-    }
-
-    window.addEventListener("resize", () => {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-    });
-
-    draw();
-  </script>
+  draw();
+</script>
 </body>
 </html>
