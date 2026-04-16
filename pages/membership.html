@@ -12,109 +12,347 @@
 
   <style>
     :root {
-      --cyan: #22d3ee;
-      --grad: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
-      --green: #bef264;
+      --cyan:#22d3ee;
+      --violet:#8b5cf6;
+      --pink:#ec4899;
+      --green:#bef264;
+      --grad:linear-gradient(135deg,#22d3ee 0%,#8b5cf6 55%,#ec4899 100%);
+      --bg:#050608;
+      --card:rgba(255,255,255,0.04);
+      --line:rgba(255,255,255,0.10);
+      --muted:rgba(255,255,255,0.68);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
 
     html,body{
-      margin:0; width:100%; min-height:100%;
+      margin:0;
+      width:100%;
+      min-height:100%;
       background:#050608;
-      color:#fff; font-family:'Outfit',sans-serif; overflow-x:hidden;
+      color:#fff;
+      font-family:"Outfit",sans-serif;
+      overflow-x:hidden;
     }
 
-    body {
-      background: 
+    body{
+      background:
         radial-gradient(circle at 50% 0%, rgba(34,211,238,0.15) 0%, transparent 45%),
+        radial-gradient(circle at 100% 20%, rgba(139,92,246,0.10) 0%, transparent 30%),
         #050608;
     }
 
-    /* --- DÖNEN DÜNYA VE LOGO --- */
-    .stage {
-      height: 380px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      perspective: 1200px;
+    #pageContent{
+      width:100%;
+      max-width:560px;
+      margin:0 auto;
+      padding:0 22px calc(60px + var(--safe-bottom));
     }
 
-    .planet-rotate {
-      position: relative;
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #1e293b, #0f172a, #020617);
-      box-shadow: 
+    .stage{
+      height:360px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      perspective:1200px;
+    }
+
+    .planet-rotate{
+      position:relative;
+      width:150px;
+      height:150px;
+      border-radius:50%;
+      background:radial-gradient(circle at 30% 30%, #1e293b, #0f172a, #020617);
+      box-shadow:
         inset -15px -15px 40px rgba(0,0,0,0.9),
         inset 10px 10px 25px rgba(255,255,255,0.05),
         0 0 60px rgba(34,211,238,0.25);
-      display: flex; align-items: center; justify-content: center;
-      border: 1px solid rgba(255,255,255,0.1);
-      animation: globeSpin 15s linear infinite;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(255,255,255,0.1);
+      animation:globeSpin 15s linear infinite;
     }
 
-    .logo-fix {
-      animation: counterSpin 15s linear infinite;
-      font-family: "Space Grotesk"; font-size: 22px; font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-    .logo-fix span { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-    @keyframes globeSpin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-    @keyframes counterSpin { from { transform: rotateY(0deg); } to { transform: rotateY(-360deg); } }
-
-    /* --- İÇERİK --- */
-    #pageContent { width:100%; max-width:540px; margin:0 auto; padding:0 24px 60px; }
-
-    .header { text-align: center; margin-bottom: 45px; }
-    .header h1 { font-family: 'Space Grotesk'; font-size: 40px; margin:0; letter-spacing: -2px; line-height: 1; }
-    .header p { color: var(--cyan); font-weight: 800; margin: 12px 0 0; letter-spacing: 3px; text-transform: uppercase; font-size: 14px; }
-
-    .info-list { display: grid; gap: 32px; margin-bottom: 50px; }
-    .info-box { position: relative; padding-left: 28px; border-left: 2px solid rgba(255,255,255,0.1); }
-    .info-box::before {
-      content: ""; position: absolute; left: -6px; top: 0; width: 10px; height: 10px;
-      background: var(--cyan); border-radius: 50%; box-shadow: 0 0 15px var(--cyan);
+    .logo-fix{
+      animation:counterSpin 15s linear infinite;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-0.5px;
+      color:#fff;
     }
 
-    /* DAHA BÜYÜK YAZILAR */
-    .info-box h3 { font-size: 20px; margin: 0 0 10px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .info-box p { font-size: 16px; margin: 0; color: rgba(255,255,255,0.7); line-height: 1.6; font-weight: 500; }
-
-    /* PREMIUM PANEL */
-    .sub-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 35px; padding: 35px; text-align: center;
-      backdrop-filter: blur(15px);
+    .logo-fix span{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
 
-    .free-badge {
-      display: inline-block; padding: 8px 16px; border-radius: 12px;
-      background: var(--grad); color: #000; font-size: 14px; font-weight: 900;
-      margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+    @keyframes globeSpin{
+      from{ transform:rotateY(0deg); }
+      to{ transform:rotateY(360deg); }
     }
 
-    .price-main { font-family: 'Space Grotesk'; font-size: 68px; font-weight: 900; color: var(--green); line-height: 1; }
-    .price-desc { font-size: 18px; font-weight: 700; color: #fff; margin-top: 10px; }
-    .price-info { font-size: 14px; opacity: 0.5; margin-top: 15px; font-weight: 600; line-height: 1.4; }
-
-    .buy-btn {
-      width: 100%; min-height: 72px; border-radius: 22px; border: none;
-      background: #fff; color: #000; font-size: 20px; font-weight: 900;
-      margin-top: 30px; cursor: pointer;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    @keyframes counterSpin{
+      from{ transform:rotateY(0deg); }
+      to{ transform:rotateY(-360deg); }
     }
 
-    .google-play-info {
-      margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;
-      font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.4);
+    .header{
+      text-align:center;
+      margin-bottom:38px;
     }
 
-    .footer { margin-top: 60px; text-align: center; font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 3px; }
+    .header h1{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:40px;
+      margin:0;
+      letter-spacing:-2px;
+      line-height:1;
+    }
+
+    .header p{
+      color:var(--cyan);
+      font-weight:800;
+      margin:12px 0 0;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      font-size:13px;
+    }
+
+    .info-list{
+      display:grid;
+      gap:28px;
+      margin-bottom:42px;
+    }
+
+    .info-box{
+      position:relative;
+      padding-left:28px;
+      border-left:2px solid rgba(255,255,255,0.1);
+    }
+
+    .info-box::before{
+      content:"";
+      position:absolute;
+      left:-6px;
+      top:0;
+      width:10px;
+      height:10px;
+      background:var(--cyan);
+      border-radius:50%;
+      box-shadow:0 0 15px var(--cyan);
+    }
+
+    .info-box h3{
+      font-size:20px;
+      margin:0 0 10px;
+      font-weight:800;
+      color:#fff;
+      letter-spacing:-0.5px;
+    }
+
+    .info-box p{
+      font-size:16px;
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+      font-weight:500;
+    }
+
+    .sub-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:35px;
+      padding:32px 26px;
+      text-align:center;
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      box-shadow:0 24px 50px rgba(0,0,0,0.35);
+    }
+
+    .free-badge{
+      display:inline-block;
+      padding:8px 16px;
+      border-radius:12px;
+      background:var(--grad);
+      color:#000;
+      font-size:14px;
+      font-weight:900;
+      margin-bottom:20px;
+      text-transform:uppercase;
+      letter-spacing:1px;
+    }
+
+    .price-main{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:64px;
+      font-weight:900;
+      color:var(--green);
+      line-height:1;
+      letter-spacing:-2px;
+    }
+
+    .price-desc{
+      font-size:18px;
+      font-weight:700;
+      color:#fff;
+      margin-top:10px;
+    }
+
+    .price-info{
+      font-size:14px;
+      opacity:.72;
+      margin-top:15px;
+      font-weight:700;
+      line-height:1.5;
+    }
+
+    .meta-box{
+      margin-top:22px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.03);
+      border-radius:22px;
+      padding:16px;
+      text-align:left;
+      display:grid;
+      gap:10px;
+    }
+
+    .meta-line{
+      font-size:14px;
+      font-weight:800;
+      color:#fff;
+      line-height:1.45;
+    }
+
+    .meta-line span{
+      color:rgba(255,255,255,0.56);
+      font-weight:700;
+    }
+
+    .status-box{
+      margin-top:18px;
+      padding:14px 16px;
+      border-radius:18px;
+      font-size:14px;
+      line-height:1.55;
+      font-weight:800;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.03);
+      color:#fff;
+    }
+
+    .status-box.ok{
+      background:rgba(132,204,22,0.10);
+      border-color:rgba(132,204,22,0.18);
+      color:#ecfccb;
+    }
+
+    .status-box.warn{
+      background:rgba(245,158,11,0.10);
+      border-color:rgba(245,158,11,0.18);
+      color:#ffedd5;
+    }
+
+    .status-box.err{
+      background:rgba(239,68,68,0.10);
+      border-color:rgba(239,68,68,0.18);
+      color:#fee2e2;
+    }
+
+    .buy-btn,
+    .secondary-btn{
+      width:100%;
+      min-height:72px;
+      border-radius:22px;
+      border:none;
+      font-size:20px;
+      font-weight:900;
+      margin-top:18px;
+      cursor:pointer;
+      transition:transform .16s ease, opacity .16s ease;
+    }
+
+    .buy-btn:active,
+    .secondary-btn:active{
+      transform:scale(.992);
+    }
+
+    .buy-btn{
+      background:#fff;
+      color:#000;
+      box-shadow:0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .secondary-btn{
+      background:rgba(255,255,255,0.05);
+      color:#fff;
+      border:1px solid rgba(255,255,255,0.10);
+    }
+
+    .buy-btn[disabled],
+    .secondary-btn[disabled]{
+      opacity:.6;
+      cursor:default;
+    }
+
+    .google-play-info{
+      margin-top:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-size:13px;
+      font-weight:700;
+      color:rgba(255,255,255,0.45);
+      text-align:center;
+      line-height:1.5;
+    }
+
+    .footer{
+      margin-top:54px;
+      text-align:center;
+      font-size:12px;
+      font-weight:800;
+      color:rgba(255,255,255,0.22);
+      letter-spacing:3px;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      top:20px;
+      transform:translateX(-50%) translateY(-120px);
+      min-height:44px;
+      padding:10px 16px;
+      border-radius:16px;
+      background:rgba(12,16,28,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      max-width:min(92vw,420px);
+      z-index:99999;
+      box-shadow:0 18px 36px rgba(0,0,0,.35);
+      transition:.22s ease;
+      backdrop-filter:blur(14px);
+      pointer-events:none;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -133,49 +371,273 @@
 
     <div class="info-list">
       <div class="info-box">
-        <h3>AI Semantic Engine</h3>
-        <p>Cümlenin ruhunu ve bağlamını saniyesinde çözen 2026 model ileri seviye yapay zeka teknolojisi.</p>
+        <h3>AI Anlam Motoru</h3>
+        <p>Cümlenin bağlamını, tonunu ve niyetini hızla çözen güçlü yapay zeka desteğiyle daha doğal çeviri deneyimi.</p>
       </div>
 
       <div class="info-box">
-        <h3>Sınırsız Global Erişim</h3>
-        <p>177 ülkede, 58 dilde internete ihtiyaç duymadan offline kullanım ile her an her yerde özgürce iletişim.</p>
+        <h3>177 Ülkede Global Erişim</h3>
+        <p>58 offline dil desteğiyle internet olmasa bile iletişime devam edin. Seyahatte, işte ve günlük kullanımda hep hazır.</p>
       </div>
 
       <div class="info-box">
-        <h3>Kuantum Ses Teknolojisi</h3>
-        <p>Çeviriler artık sizin ses tonunuzla hayat buluyor. Duygunuzu ve kimliğinizi kaybetmeden kendiniz olarak konuşun.</p>
+        <h3>Sesli ve Akıllı İletişim</h3>
+        <p>Canlı çeviri, metin dönüşümü ve premium ses akışları aynı üyelik altında tek hesapta toplanır.</p>
       </div>
     </div>
 
     <div class="sub-card">
       <div class="free-badge">İLK 3 GÜN ÜCRETSİZ</div>
       <div class="price-main">1 USD</div>
-      <div class="price-desc">AYLIK ABONELİK</div>
+      <div class="price-desc">İLK 2 AY AVANTAJLI ERİŞİM</div>
       <div class="price-info">
-        İlk 2 ay avantajlı fiyat. <br>
-        Daha sonra standart 2 USD / Ay olarak güncellenir.
+        İlk 2 ay avantajlı fiyat.<br>
+        Sonrasında 2.5 USD / ay olarak devam eder.<br>
+        Ülke vergi uygulamalarına göre ek vergi yansıyabilir.
       </div>
-      
-      <button class="buy-btn" id="buyBtn">Denemeyi Başlat</button>
+
+      <div class="meta-box">
+        <div class="meta-line"><span>Üyelik Durumu:</span> <strong id="statusLabel">Kontrol ediliyor...</strong></div>
+        <div class="meta-line"><span>Kalan Hediye Süresi:</span> <strong id="trialDaysLabel">-</strong></div>
+        <div class="meta-line"><span>Erişim Bitiş Tarihi:</span> <strong id="membershipEndsLabel">-</strong></div>
+        <div class="meta-line"><span>Mevcut Jeton:</span> <strong id="tokensLabel">0</strong></div>
+      </div>
+
+      <div class="status-box" id="statusBox">
+        Hesap kontrol ediliyor...
+      </div>
+
+      <button class="buy-btn" id="buyBtn" type="button">Denemeyi Başlat</button>
+      <button class="secondary-btn" id="refreshBtn" type="button">Durumu Güncelle</button>
 
       <div class="google-play-info">
-        <span>🛡️ Google Play Güvencesiyle</span>
+        <span>🛡️ Tahsilat Google Play tarafından yapılır. Desteklenen ülkelerde GSM operatörü üzerinden de ödeme yapılabilir.</span>
       </div>
     </div>
 
     <div class="footer">italkyAI BY Ozyigit's 2026</div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
-    const UI = { buyBtn: document.getElementById("buyBtn") };
-    
-    UI.buyBtn.onclick = () => {
-      if(window.AndroidBilling) {
-        window.AndroidBilling.buy("italky_pro");
-      }
+    import { setHeaderTokens } from "/js/ui_shell.js";
+    import { lockMembershipPageBack } from "/js/global_access.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    const UI = {
+      buyBtn: $("buyBtn"),
+      refreshBtn: $("refreshBtn"),
+      toast: $("toast"),
+      statusBox: $("statusBox"),
+      statusLabel: $("statusLabel"),
+      trialDaysLabel: $("trialDaysLabel"),
+      membershipEndsLabel: $("membershipEndsLabel"),
+      tokensLabel: $("tokensLabel")
     };
+
+    const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
+    const HOME = "/pages/home.html";
+    const LOGIN = "/pages/login.html";
+    const PRODUCT_ID = "italky_pro";
+
+    let currentUserId = "";
+    let currentSession = null;
+
+    function toast(msg = "") {
+      if (!UI.toast) return;
+      UI.toast.textContent = String(msg || "");
+      UI.toast.classList.add("show");
+      clearTimeout(window.__membershipToast);
+      window.__membershipToast = setTimeout(() => {
+        UI.toast.classList.remove("show");
+      }, 2200);
+    }
+
+    function setStatus(kind, text) {
+      UI.statusBox.className = "status-box";
+      if (kind) UI.statusBox.classList.add(kind);
+      UI.statusBox.textContent = text;
+    }
+
+    function fmtDate(value) {
+      if (!value) return "-";
+      try {
+        return new Date(value).toLocaleDateString("tr-TR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        });
+      } catch {
+        return String(value);
+      }
+    }
+
+    async function getSessionOrLogin() {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        location.replace(LOGIN);
+        throw new Error("Önce giriş yapın");
+      }
+
+      currentSession = session;
+      currentUserId = session.user?.id || "";
+      return session;
+    }
+
+    async function getAccessState() {
+      const session = await getSessionOrLogin();
+
+      const resp = await fetch(API_ACCESS, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(json?.detail || "Erişim bilgisi alınamadı");
+      return json;
+    }
+
+    function syncAccessUi(data) {
+      const accessOpen = !!data?.access_open;
+      const tokenCount = Number(data?.tokens ?? 0);
+
+      UI.statusLabel.textContent = accessOpen ? "Aktif" : "Pasif";
+      UI.trialDaysLabel.textContent = `${data?.trial_days_left ?? data?.gift_days_left ?? 0} Gün`;
+
+      const endsAt =
+        data?.membership_ends_at ||
+        data?.package_ends_at ||
+        data?.gift_ends_at ||
+        data?.trial_ends_at ||
+        null;
+
+      UI.membershipEndsLabel.textContent = fmtDate(endsAt);
+      UI.tokensLabel.textContent = String(tokenCount);
+
+      try { setHeaderTokens(tokenCount); } catch {}
+
+      if (accessOpen) {
+        setStatus("ok", "Erişiminiz açık. Uygulamaya devam edebilirsiniz.");
+        UI.buyBtn.textContent = "Uygulamaya Git";
+      } else {
+        setStatus("warn", "Erişiminiz kapalı. Denemeyi başlatabilir veya üyeliğinizi yenileyebilirsiniz.");
+        UI.buyBtn.textContent = "Denemeyi Başlat";
+      }
+    }
+
+    function isNativeBillingReady() {
+      return !!(window.AndroidBilling && typeof window.AndroidBilling.buy === "function");
+    }
+
+    function sendUserIdToNative() {
+      try {
+        if (window.AndroidBilling && typeof window.AndroidBilling.setUserId === "function" && currentUserId) {
+          window.AndroidBilling.setUserId(currentUserId);
+        }
+      } catch {}
+    }
+
+    async function handleBuyClick() {
+      try {
+        const access = await getAccessState();
+
+        if (access?.access_open) {
+          location.replace(HOME);
+          return;
+        }
+
+        sendUserIdToNative();
+
+        if (!isNativeBillingReady()) {
+          toast("Google Play bağlantısı kurulamadı");
+          return;
+        }
+
+        UI.buyBtn.disabled = true;
+        toast("Google Play ödeme ekranı açılıyor...");
+        window.AndroidBilling.buy(PRODUCT_ID);
+      } catch (e) {
+        toast(e?.message || "İşlem başlatılamadı");
+      } finally {
+        setTimeout(() => {
+          UI.buyBtn.disabled = false;
+        }, 1500);
+      }
+    }
+
+    async function recheckAndRoute() {
+      try {
+        await getSessionOrLogin();
+        sendUserIdToNative();
+
+        if (window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function") {
+          toast("Mevcut üyelik kontrol ediliyor...");
+          window.AndroidBilling.restorePurchases();
+          await new Promise((r) => setTimeout(r, 1800));
+        }
+
+        const access = await getAccessState();
+        syncAccessUi(access);
+
+        if (access?.access_open) {
+          toast("Üyelik doğrulandı!");
+          setTimeout(() => location.replace(HOME), 800);
+          return;
+        }
+
+        toast("Üyelik henüz aktif görünmüyor");
+      } catch (e) {
+        console.error("recheckAndRoute error:", e);
+        toast(e?.message || "Güncelleme başarısız");
+      }
+    }
+
+    window.onNativeSubscriptionSuccess = async function () {
+      toast("Ödeme başarılı! Erişim tanımlanıyor...");
+      setTimeout(recheckAndRoute, 1500);
+    };
+
+    window.addEventListener("italky-subscription-success", () => {
+      toast("Üyelik başarılı!");
+      setTimeout(recheckAndRoute, 1500);
+    });
+
+    window.addEventListener("italky-billing-error", (e) => {
+      toast(e?.detail?.message || "İşlem iptal edildi");
+    });
+
+    UI.buyBtn?.addEventListener("click", handleBuyClick);
+    UI.refreshBtn?.addEventListener("click", recheckAndRoute);
+
+    (async function boot() {
+      try {
+        lockMembershipPageBack();
+        await getSessionOrLogin();
+        sendUserIdToNative();
+
+        const access = await getAccessState();
+        syncAccessUi(access);
+
+        if (!access?.access_open && window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function") {
+          setTimeout(() => {
+            try {
+              window.AndroidBilling.restorePurchases();
+            } catch (e) {
+              console.error("auto restore error:", e);
+            }
+          }, 600);
+        }
+      } catch (e) {
+        console.error("membership boot error:", e);
+        if (String(e?.message || "").includes("Önce giriş yapın")) return;
+        setStatus("err", "Bilgileriniz yüklenemedi. Lütfen tekrar deneyin.");
+      }
+    })();
   </script>
 </body>
 </html>
