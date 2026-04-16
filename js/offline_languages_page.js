@@ -634,11 +634,11 @@ async function startLanguageInstallFlow(langCode) {
     `${info.name} indirilsin mi?`,
     `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
 
-İndirme hızınıza göre yükleme süresi değişkenlik gösterebilir. Ortalama 1 ile 5 dakika arasındadır.
+İnternet bağlantınızdaki indirme hızınıza göre, yükleme süresi değişkenlik gösterebilir. Ortalama 30 saniye ile 3 dakika arasındadır.
 
 Uygulamayı kapatmadan diğer modüllerde gezinebilirsiniz. Bu durum indirmeyi engellemez.
 
-Ortalama bir dil paketi telefonunuzda ek alan kullanır.`
+Her bir çevrimdışı dil paketi: Telefonunuzda, Paket başına yaklaşık 140-190 MB yer kaplar.
   );
 
   if (!confirmed) {
