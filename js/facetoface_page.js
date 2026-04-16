@@ -580,6 +580,7 @@ function renderPop(side) {
   if (!list) return;
 
   let pool = LANGS;
+
   if (currentRuntimeMode === "offline") {
     const allowed = new Set(getOfflinePickerPool());
     pool = LANGS.filter((l) => allowed.has(canonical(l.code)));
