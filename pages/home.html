@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-  
+
 <style>
   body{
     visibility:hidden;
@@ -19,6 +19,7 @@
     visibility:visible;
   }
 </style>
+
 <style>
 :root{
   --txt:rgba(255,255,255,.96);
@@ -934,23 +935,6 @@ body.home-ready #pageContent{
 
 <body>
 
-<script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-
-  async function bootPageGate() {
-    try {
-      const result = await initGlobalAccess({ allowPublicPageBypass: false });
-      if (result?.ok) {
-        document.body.classList.add("home-ready");
-      }
-    } catch (e) {
-      console.error("home access gate error:", e);
-    }
-  }
-
-  bootPageGate();
-</script>
-
 <main id="pageContent">
   <div class="page-shell-fit">
 
@@ -1112,6 +1096,7 @@ body.home-ready #pageContent{
 
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
+
       if (!user) {
         heroUserName.textContent = "Hoş geldin";
         return;
