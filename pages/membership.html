@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-  <title>italkyAI • Global Access</title>
+  <title>italkyAI • Official Access</title>
   <meta name="theme-color" content="#050608" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
       --cyan: #22d3ee;
-      --violet: #8b5cf6;
       --grad: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
+      --green: #bef264;
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -27,177 +27,144 @@
 
     body {
       background: 
-        radial-gradient(circle at 50% 0%, rgba(34,211,238,0.12) 0%, transparent 40%),
+        radial-gradient(circle at 50% 0%, rgba(34,211,238,0.15) 0%, transparent 45%),
         #050608;
     }
 
-    /* --- KENDİ ETRAFINDA DÖNEN DÜNYA VE LOGO --- */
-    .world-stage {
-      height: 360px;
+    /* --- DÖNEN DÜNYA VE LOGO --- */
+    .stage {
+      height: 380px;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      perspective: 1000px;
+      perspective: 1200px;
     }
 
-    /* Işık Halkası */
-    .orbit-ring {
-      position: absolute;
-      width: 240px;
-      height: 240px;
-      border: 1px solid rgba(34,211,238,0.1);
-      border-radius: 50%;
-      animation: pulseOrbit 6s ease-in-out infinite;
-    }
-
-    .planet-master {
+    .planet-rotate {
       position: relative;
-      width: 140px;
-      height: 140px;
+      width: 150px;
+      height: 150px;
       border-radius: 50%;
-      background: linear-gradient(145deg, #111827 0%, #020617 100%);
+      background: radial-gradient(circle at 30% 30%, #1e293b, #0f172a, #020617);
       box-shadow: 
-        inset -15px -15px 30px rgba(0,0,0,0.9),
+        inset -15px -15px 40px rgba(0,0,0,0.9),
         inset 10px 10px 25px rgba(255,255,255,0.05),
-        0 0 50px rgba(34,211,238,0.2);
+        0 0 60px rgba(34,211,238,0.25);
       display: flex; align-items: center; justify-content: center;
-      z-index: 10;
       border: 1px solid rgba(255,255,255,0.1);
-      /* Kendi etrafında pürüzsüz dönüş */
-      animation: selfRotate 12s linear infinite;
+      animation: globeSpin 15s linear infinite;
     }
 
-    .logo-container {
-      /* Logonun dünya ile beraber dönmemesi için ters yöne çeviriyoruz veya sabit tutuyoruz */
-      animation: counterRotate 12s linear infinite;
-      font-family: "Space Grotesk"; font-size: 21px; font-weight: 800;
-      text-shadow: 0 0 20px rgba(255,255,255,0.4);
+    .logo-fix {
+      animation: counterSpin 15s linear infinite;
+      font-family: "Space Grotesk"; font-size: 22px; font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .logo-fix span { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    @keyframes globeSpin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+    @keyframes counterSpin { from { transform: rotateY(0deg); } to { transform: rotateY(-360deg); } }
+
+    /* --- İÇERİK --- */
+    #pageContent { width:100%; max-width:540px; margin:0 auto; padding:0 24px 60px; }
+
+    .header { text-align: center; margin-bottom: 45px; }
+    .header h1 { font-family: 'Space Grotesk'; font-size: 40px; margin:0; letter-spacing: -2px; line-height: 1; }
+    .header p { color: var(--cyan); font-weight: 800; margin: 12px 0 0; letter-spacing: 3px; text-transform: uppercase; font-size: 14px; }
+
+    .info-list { display: grid; gap: 32px; margin-bottom: 50px; }
+    .info-box { position: relative; padding-left: 28px; border-left: 2px solid rgba(255,255,255,0.1); }
+    .info-box::before {
+      content: ""; position: absolute; left: -6px; top: 0; width: 10px; height: 10px;
+      background: var(--cyan); border-radius: 50%; box-shadow: 0 0 15px var(--cyan);
     }
 
-    .logo-container span {
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    @keyframes selfRotate {
-      from { transform: rotateY(0deg); }
-      to { transform: rotateY(360deg); }
-    }
-
-    @keyframes counterRotate {
-      from { transform: rotateY(0deg); }
-      to { transform: rotateY(-360deg); }
-    }
-
-    @keyframes pulseOrbit {
-      0%, 100% { transform: scale(1) rotateX(70deg); opacity: 0.2; }
-      50% { transform: scale(1.1) rotateX(70deg); opacity: 0.5; }
-    }
-
-    /* --- İÇERİK YAPISI --- */
-    #pageContent { width:100%; max-width:540px; margin:0 auto; padding:0 20px 60px; }
-
-    .hero-header { text-align: center; margin-bottom: 40px; }
-    .hero-header h1 { font-family: 'Space Grotesk'; font-size: 36px; margin:0; letter-spacing: -2px; }
-    .hero-header p { color: var(--cyan); font-weight: 800; margin: 10px 0 0; letter-spacing: 2px; text-transform: uppercase; font-size: 13px; }
-
-    /* İKONSUZ MODERN KARTLAR */
-    .info-stack {
-      display: grid;
-      gap: 24px;
-      margin-bottom: 40px;
-    }
-
-    .info-item {
-      position: relative;
-      padding-left: 24px;
-      border-left: 2px solid rgba(255,255,255,0.1);
-    }
-
-    .info-item::before {
-      content: "";
-      position: absolute;
-      left: -5px;
-      top: 0;
-      width: 8px;
-      height: 8px;
-      background: var(--cyan);
-      border-radius: 50%;
-      box-shadow: 0 0 12px var(--cyan);
-    }
-
-    .info-item h3 { font-size: 18px; margin: 0 0 8px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .info-item p { font-size: 14px; margin: 0; color: rgba(255,255,255,0.5); line-height: 1.6; font-weight: 500; }
+    /* DAHA BÜYÜK YAZILAR */
+    .info-box h3 { font-size: 20px; margin: 0 0 10px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .info-box p { font-size: 16px; margin: 0; color: rgba(255,255,255,0.7); line-height: 1.6; font-weight: 500; }
 
     /* PREMIUM PANEL */
-    .premium-panel {
-      background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+    .sub-card {
+      background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 32px; padding: 32px; text-align: center;
-      backdrop-filter: blur(10px);
+      border-radius: 35px; padding: 35px; text-align: center;
+      backdrop-filter: blur(15px);
     }
 
-    .price-hero { font-family: 'Space Grotesk'; font-size: 64px; font-weight: 900; color: #bef264; line-height: 1; }
-    .price-sub { font-size: 14px; font-weight: 800; color: #fff; margin-top: 12px; opacity: 0.9; }
+    .free-badge {
+      display: inline-block; padding: 8px 16px; border-radius: 12px;
+      background: var(--grad); color: #000; font-size: 14px; font-weight: 900;
+      margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+    }
 
-    .main-btn {
-      width: 100%; min-height: 68px; border-radius: 20px; border: none;
-      background: #fff; color: #000; font-size: 18px; font-weight: 900;
+    .price-main { font-family: 'Space Grotesk'; font-size: 68px; font-weight: 900; color: var(--green); line-height: 1; }
+    .price-desc { font-size: 18px; font-weight: 700; color: #fff; margin-top: 10px; }
+    .price-info { font-size: 14px; opacity: 0.5; margin-top: 15px; font-weight: 600; line-height: 1.4; }
+
+    .buy-btn {
+      width: 100%; min-height: 72px; border-radius: 22px; border: none;
+      background: #fff; color: #000; font-size: 20px; font-weight: 900;
       margin-top: 30px; cursor: pointer;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     }
 
-    .footer-text { margin-top: 50px; text-align: center; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 3px; }
+    .google-play-info {
+      margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.4);
+    }
+
+    .footer { margin-top: 60px; text-align: center; font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 3px; }
   </style>
 </head>
 <body>
 
   <div id="pageContent">
-    <div class="world-stage">
-      <div class="orbit-ring"></div>
-      <div class="planet-master">
-        <div class="logo-container">italky<span>AI</span></div>
+    <div class="stage">
+      <div class="planet-rotate">
+        <div class="logo-fix">italky<span>AI</span></div>
       </div>
     </div>
 
-    <div class="hero-header">
+    <div class="header">
       <h1>Dünyayı küçülttük.</h1>
       <p>Cebinize sığdırdık.</p>
     </div>
 
-    <div class="info-stack">
-      <div class="info-item">
+    <div class="info-list">
+      <div class="info-box">
         <h3>AI Semantic Engine</h3>
-        <p>Kelimelerin ötesine geçin. Cümlenin ruhunu, anlamını ve bağlamını saniyesinde çözen 2026 model ileri seviye AI motoru.</p>
+        <p>Cümlenin ruhunu ve bağlamını saniyesinde çözen 2026 model ileri seviye yapay zeka teknolojisi.</p>
       </div>
 
-      <div class="info-item">
+      <div class="info-box">
         <h3>Sınırsız Global Erişim</h3>
-        <p>177 ülkede, 58 dilde internete ihtiyaç duymadan özgürce konuşun. Bağlantı kopsa da iletişiminiz asla durmasın.</p>
+        <p>177 ülkede, 58 dilde internete ihtiyaç duymadan offline kullanım ile her an her yerde özgürce iletişim.</p>
       </div>
 
-      <div class="info-item">
+      <div class="info-box">
         <h3>Kuantum Ses Teknolojisi</h3>
-        <p>Çeviriler artık sizin ses tonunuzla hayat buluyor. Duygunuzu ve kimliğinizi kaybetmeden her dilde kendiniz olarak konuşun.</p>
-      </div>
-
-      <div class="info-item">
-        <h3>Eğitimi Deneyime Dönüştürün</h3>
-        <p>Yapay zeka ile interaktif sohbetler ve özel kelime oyunları sayesinde dil öğrenmeyi statik bir süreçten çıkarıp yaşayan bir tecrübeye dönüştürdük.</p>
+        <p>Çeviriler artık sizin ses tonunuzla hayat buluyor. Duygunuzu ve kimliğinizi kaybetmeden kendiniz olarak konuşun.</p>
       </div>
     </div>
 
-    <div class="premium-panel">
-      <div class="price-hero">1 USD</div>
-      <div class="price-sub">İLK İKİ AY AVANTAJI</div>
-      <p style="font-size: 13px; opacity: 0.5; margin-top: 15px;">Daha sonra standart 2 USD / Ay ile devam eder.</p>
+    <div class="sub-card">
+      <div class="free-badge">İLK 3 GÜN ÜCRETSİZ</div>
+      <div class="price-main">1 USD</div>
+      <div class="price-desc">AYLIK ABONELİK</div>
+      <div class="price-info">
+        İlk 2 ay avantajlı fiyat. <br>
+        Daha sonra standart 2 USD / Ay olarak güncellenir.
+      </div>
       
-      <button class="main-btn" id="buyBtn">Üyeliği Başlat</button>
+      <button class="buy-btn" id="buyBtn">Denemeyi Başlat</button>
+
+      <div class="google-play-info">
+        <span>🛡️ Google Play Güvencesiyle</span>
+      </div>
     </div>
 
-    <div class="footer-text">italkyAI BY Ozyigit's 2026</div>
+    <div class="footer">italkyAI BY Ozyigit's 2026</div>
   </div>
 
   <script type="module">
