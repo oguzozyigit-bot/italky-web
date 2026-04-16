@@ -3,28 +3,6 @@ import { supabase } from "/js/supabase_client.js";
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
-const BCP = {
-  tr: "tr-TR",
-  en: "en-US",
-  de: "de-DE",
-  fr: "fr-FR",
-  it: "it-IT",
-  es: "es-ES",
-};
-
-const GOKTURK_LABEL = "𐱅𐰇𐰼𐰚 • Göktürkçe";
-const GOKTURK_CODE = "gokturk";
-const TR_CODE = "tr";
-
-const TARGET_LANGS = [
-  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-  { code: "en", name: "İngilizce", flag: "🇬🇧" },
-  { code: "de", name: "Almanca", flag: "🇩🇪" },
-  { code: "fr", name: "Fransızca", flag: "🇫🇷" },
-  { code: "it", name: "İtalyanca", flag: "🇮🇹" },
-  { code: "es", name: "İspanyolca", flag: "🇪🇸" }
-];
-
 const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
 const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
@@ -33,20 +11,12 @@ const frameRoot = $("frameRoot");
 const topBody = $("topBody");
 const botBody = $("botBody");
 
-const sourceLangTxt = $("sourceLangTxt");
-const targetLangTxt = $("targetLangTxt");
-const targetLangBtn = $("targetLangBtn");
-const targetLangPopover = $("targetLangPopover");
-const targetLangList = $("targetLangList");
-const targetLangClose = $("targetLangClose");
-
-const settingsBtn = $("settingsBtn");
-
 const botInput = $("botInput");
 const botMic = $("botMic");
 const botSend = $("botSend");
 const botComposer = $("botComposer");
 
+const settingsBtn = $("settingsBtn");
 const clearBtn = $("clearBtn");
 const homeBtn = $("homeBtn");
 const homeLink = $("homeLink");
@@ -55,59 +25,13 @@ const genericBackdrop = $("genericBackdrop");
 const genericTitle = $("genericTitle");
 const genericText = $("genericText");
 const genericCloseBtn = $("genericCloseBtn");
-
 const miniToast = $("miniToast");
 
-let direction = "gokturk_to_target";
-let targetLang = "tr";
 let recognizer = null;
 let recording = false;
 let currentAudio = null;
 let speakRunId = 0;
 let typewriterRunId = 0;
-
-function canonical(code) {
-  return String(code || "").toLowerCase().split("-")[0].trim();
-}
-
-function getSelectedVoice() {
-  const mode = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "tts").trim().toLowerCase();
-  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
-
-  if (mode === "clone") return "mine";
-  if (mode === "preset" && preset === "second") return "second";
-  if (mode === "preset" && preset === "memory") return "memory";
-  if (["mine", "second", "memory", "tts", "auto"].includes(mode)) return mode;
-  return "tts";
-}
-
-function isAutoReadEnabled() {
-  return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
-}
-
-function langLabel(code) {
-  if (canonical(code) === GOKTURK_CODE) return GOKTURK_LABEL;
-  const found = TARGET_LANGS.find((x) => x.code === canonical(code));
-  return found ? `${found.flag} ${found.name}` : code.toUpperCase();
-}
-
-function sourceCode() {
-  return direction === "gokturk_to_target" ? GOKTURK_CODE : targetLang;
-}
-
-function targetCode() {
-  return direction === "gokturk_to_target" ? targetLang : GOKTURK_CODE;
-}
-
-function refreshDirectionUi() {
-  sourceLangTxt.textContent = langLabel(sourceCode());
-  targetLangTxt.textContent = langLabel(targetCode());
-
-  botInput.placeholder =
-    direction === "gokturk_to_target"
-      ? "Göktürkçe metni yaz veya konuş"
-      : "Türkçe metni yaz veya konuş";
-}
 
 function showToast(msg = "") {
   miniToast.textContent = String(msg || "");
@@ -126,6 +50,21 @@ function openModal(title, text) {
 
 function closeModal() {
   genericBackdrop.classList.remove("show");
+}
+
+function getSelectedVoice() {
+  const mode = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "tts").trim().toLowerCase();
+  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+
+  if (mode === "clone") return "mine";
+  if (mode === "preset" && preset === "second") return "second";
+  if (mode === "preset" && preset === "memory") return "memory";
+  if (["mine", "second", "memory", "tts", "auto"].includes(mode)) return mode;
+  return "tts";
+}
+
+function isAutoReadEnabled() {
+  return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
 }
 
 function stopAudio() {
@@ -163,49 +102,14 @@ function syncComposerButtons() {
   botSend.classList.toggle("hidden", !hasText);
 }
 
-function keepBottomVisible() {
+function keepVisible() {
   requestAnimationFrame(() => {
-    botBody.scrollTop = botBody.scrollHeight + 300;
     topBody.scrollTop = topBody.scrollHeight + 300;
+    botBody.scrollTop = botBody.scrollHeight + 300;
   });
 }
 
-function addBubble(where, kind, text, opts = {}) {
-  const wrap = where === "top" ? topBody : botBody;
-  const row = document.createElement("div");
-  row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
-
-  const inner = document.createElement("div");
-  inner.className = "bubble-row";
-
-  if (opts.speaker && kind === "me") {
-    inner.appendChild(createSpeakerButton(() => txt.textContent || "", opts.speakLang || "tr"));
-  }
-
-  const txt = document.createElement("span");
-  txt.className = "txt";
-  txt.textContent = String(text || "").trim();
-
-  if (opts.speaker && kind === "me") {
-    inner.innerHTML = "";
-    inner.appendChild(createSpeakerButton(() => txt.textContent || "", opts.speakLang || "tr"));
-    inner.appendChild(txt);
-  } else {
-    inner.appendChild(txt);
-  }
-
-  row.appendChild(inner);
-  wrap.appendChild(row);
-  keepBottomVisible();
-  return row;
-}
-
-function clearLatest(where) {
-  const wrap = where === "top" ? topBody : botBody;
-  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
-}
-
-function createSpeakerButton(getText, langCode) {
+function createSpeakerButton(getText) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "spk-icon";
@@ -223,40 +127,38 @@ function createSpeakerButton(getText, langCode) {
     e.stopPropagation();
     const value = typeof getText === "function" ? String(getText() || "").trim() : "";
     if (!value) return;
-    await speak(value, langCode);
+    await speak(value);
   });
 
   return btn;
 }
 
-async function typewriteText(el, finalText) {
-  stopTypewriter();
-  const runId = typewriterRunId;
-  const full = String(finalText || "").trim();
-  el.textContent = "";
-  if (!full) return;
+function addBubble(where, kind, text, opts = {}) {
+  const wrap = where === "top" ? topBody : botBody;
+  const row = document.createElement("div");
+  row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
 
-  let i = 0;
-  while (i < full.length) {
-    if (runId !== typewriterRunId) return;
-    const next = Math.min(full.length, i + (i < 14 ? 1 : 2));
-    el.textContent = full.slice(0, next);
-    i = next;
-    keepBottomVisible();
-    const ch = full.charAt(i - 1);
-    if (ch === " ") await wait(0);
-    else if (/[.!?]/.test(ch)) await wait(75);
-    else if (/[,]/.test(ch)) await wait(45);
-    else await wait(8);
+  const inner = document.createElement("div");
+  inner.className = "bubble-row";
+
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text || "").trim();
+
+  if (opts.speaker && kind === "me") {
+    inner.appendChild(createSpeakerButton(() => txt.textContent || ""));
   }
+
+  inner.appendChild(txt);
+  row.appendChild(inner);
+  wrap.appendChild(row);
+  keepVisible();
+  return row;
 }
 
-function chooseWebVoice(langCode) {
-  const voices = window.speechSynthesis?.getVoices?.() || [];
-  const base = canonical(langCode);
-  let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(base));
-  if (!pool.length && base === "gokturk") pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith("tr"));
-  return pool[0] || voices[0] || null;
+function clearLatest(where) {
+  const wrap = where === "top" ? topBody : botBody;
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
 }
 
 async function getCurrentUserId() {
@@ -268,7 +170,12 @@ async function getCurrentUserId() {
   }
 }
 
-async function speakViaApi(text, langCode) {
+function chooseWebVoice() {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  return voices.find(v => String(v.lang || "").toLowerCase().startsWith("tr")) || voices[0] || null;
+}
+
+async function speakViaApi(text) {
   const selectedVoice = getSelectedVoice();
   if (!["mine", "second", "memory"].includes(selectedVoice)) return false;
 
@@ -299,7 +206,7 @@ async function speakViaApi(text, langCode) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       text: String(text || "").trim(),
-      lang: canonical(langCode) === GOKTURK_CODE ? "tr" : canonical(langCode),
+      lang: "tr",
       user_id: userId,
       module: "atalarin_dili",
       voice: apiVoice,
@@ -322,19 +229,19 @@ async function speakViaApi(text, langCode) {
   return true;
 }
 
-async function speak(text, langCode) {
+async function speak(text) {
   if (!isAutoReadEnabled()) return;
   const value = String(text || "").trim();
   if (!value) return;
 
   stopAudio();
 
-  const ok = await speakViaApi(value, langCode).catch(() => false);
+  const ok = await speakViaApi(value).catch(() => false);
   if (ok) return;
 
   try {
     if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.speak(value, canonical(langCode) === GOKTURK_CODE ? "tr" : canonical(langCode));
+      window.NativeTTS.speak(value, "tr");
       return;
     }
   } catch {}
@@ -343,8 +250,8 @@ async function speak(text, langCode) {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(value);
-      utter.lang = canonical(langCode) === GOKTURK_CODE ? "tr-TR" : (BCP[canonical(langCode)] || "tr-TR");
-      const voice = chooseWebVoice(langCode);
+      utter.lang = "tr-TR";
+      const voice = chooseWebVoice();
       if (voice) utter.voice = voice;
       utter.rate = 0.95;
       utter.pitch = 1;
@@ -359,37 +266,61 @@ function normalizeText(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
 
-async function translateAtalar(text, fromLang, toLang) {
+async function translateToGokturk(text) {
+  const value = normalizeText(text);
+  if (!value) return null;
+
   const resp = await fetch(`${API_BASE}/api/translate_ai`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      text: String(text || "").trim(),
-      from_lang: canonical(fromLang) === GOKTURK_CODE ? "tr" : canonical(fromLang),
-      to_lang: canonical(toLang) === GOKTURK_CODE ? "tr" : canonical(toLang),
-      source: canonical(fromLang) === GOKTURK_CODE ? "tr" : canonical(fromLang),
-      target: canonical(toLang) === GOKTURK_CODE ? "tr" : canonical(toLang),
+      text: value,
+      from_lang: "tr",
+      to_lang: "tr",
+      source: "tr",
+      target: "tr",
       mode: "normal",
       use_ai: true,
       cultural: false,
       style: "balanced",
       atalar_mode: true,
-      atalar_source: canonical(fromLang),
-      atalar_target: canonical(toLang)
+      atalar_source: "tr",
+      atalar_target: "gokturk"
     })
   });
 
   const json = await resp.json().catch(() => ({}));
   if (!resp.ok) return null;
 
-  let value = String(json?.translated || json?.translation || json?.text || "").trim();
-  if (!value) return null;
+  const out =
+    String(json?.gokturk_text || "").trim() ||
+    String(json?.translated || "").trim() ||
+    String(json?.translation || "").trim() ||
+    "";
 
-  if (canonical(toLang) === GOKTURK_CODE) {
-    if (json?.gokturk_text) value = String(json.gokturk_text).trim();
+  return out || null;
+}
+
+async function typewriteText(el, finalText) {
+  stopTypewriter();
+  const runId = typewriterRunId;
+  const full = String(finalText || "").trim();
+  el.textContent = "";
+  if (!full) return;
+
+  let i = 0;
+  while (i < full.length) {
+    if (runId !== typewriterRunId) return;
+    const next = Math.min(full.length, i + (i < 14 ? 1 : 2));
+    el.textContent = full.slice(0, next);
+    i = next;
+    keepVisible();
+    const ch = full.charAt(i - 1);
+    if (ch === " ") await wait(0);
+    else if (/[.!?]/.test(ch)) await wait(75);
+    else if (/[,]/.test(ch)) await wait(45);
+    else await wait(8);
   }
-
-  return value;
 }
 
 async function processMessage(rawText) {
@@ -400,9 +331,6 @@ async function processMessage(rawText) {
   autoResizeTextarea();
   syncComposerButtons();
 
-  const src = sourceCode();
-  const dst = targetCode();
-
   addBubble("bot", "them", text);
   clearLatest("top");
 
@@ -411,12 +339,11 @@ async function processMessage(rawText) {
 
   const latestRow = addBubble("top", "me", "Çevriliyor...", {
     latest: true,
-    speaker: true,
-    speakLang: dst
+    speaker: true
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const translated = await translateAtalar(text, src, dst);
+  const translated = await translateToGokturk(text);
 
   if (!translated) {
     frameRoot.classList.remove("is-translating");
@@ -432,7 +359,7 @@ async function processMessage(rawText) {
   if (latestTxt) {
     latestTxt.textContent = "";
     await typewriteText(latestTxt, translated);
-    await speak(translated, dst);
+    await speak(translated);
   }
 
   frameRoot.classList.remove("is-translating", "is-error");
@@ -445,6 +372,7 @@ function stopRecognizer() {
   recording = false;
   botComposer.classList.remove("listening");
   botMic.classList.remove("listening");
+  syncComposerButtons();
 }
 
 function startRecognition() {
@@ -460,7 +388,7 @@ function startRecognition() {
   }
 
   recognizer = new SR();
-  recognizer.lang = canonical(sourceCode()) === GOKTURK_CODE ? "tr-TR" : (BCP[canonical(sourceCode())] || "tr-TR");
+  recognizer.lang = "tr-TR";
   recognizer.interimResults = true;
   recognizer.continuous = true;
   recognizer.maxAlternatives = 1;
@@ -517,66 +445,7 @@ function startRecognition() {
   }
 }
 
-function renderTargetLangs() {
-  targetLangList.innerHTML = TARGET_LANGS.map((l) => {
-    const active = canonical(l.code) === canonical(targetLang) ? "active" : "";
-    return `
-      <div class="pop-item ${active}" data-code="${l.code}">
-        <div class="pop-left">
-          <div class="pop-flag">${l.flag}</div>
-          <div class="pop-name">${l.name}</div>
-        </div>
-        <div class="pop-code">${l.code.toUpperCase()}</div>
-      </div>
-    `;
-  }).join("");
-
-  targetLangList.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      targetLang = canonical(el.dataset.code || "tr");
-      refreshDirectionUi();
-      closeTargetLangPopover();
-      showToast(`${langLabel(targetLang)} seçildi`);
-    });
-  });
-}
-
-function openTargetLangPopover() {
-  renderTargetLangs();
-  targetLangPopover.classList.add("show");
-}
-
-function closeTargetLangPopover() {
-  targetLangPopover.classList.remove("show");
-}
-
 function bindEvents() {
-  targetLangBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openTargetLangPopover();
-  });
-
-  targetLangClose.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeTargetLangPopover();
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!targetLangPopover.contains(e.target) && !e.target.closest("#targetLangBtn")) {
-      closeTargetLangPopover();
-    }
-  }, { capture: true });
-
-  $("swapDirectionBtn").addEventListener("click", async () => {
-    direction = direction === "gokturk_to_target" ? "target_to_gokturk" : "gokturk_to_target";
-    refreshDirectionUi();
-    stopAudio();
-    stopTypewriter();
-    showToast("Çeviri yönü değiştirildi");
-  });
-
   settingsBtn.addEventListener("click", () => {
     location.href = "/pages/facetoface_settings.html";
   });
@@ -625,7 +494,6 @@ function bindEvents() {
 }
 
 function init() {
-  refreshDirectionUi();
   autoResizeTextarea();
   syncComposerButtons();
   frameRoot.classList.add("is-ready");
