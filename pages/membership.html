@@ -3,190 +3,233 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-  <title>italkyAI • Premium</title>
-  <meta name="theme-color" content="#050608" />
+  <title>italkyAI • Quantum Access</title>
+  <meta name="theme-color" content="#0a0a0c" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#050608;
-      --cyan:#22d3ee;
-      --violet:#8b5cf6;
-      --grad:linear-gradient(135deg,#22d3ee 0%,#8b5cf6 100%);
+    :root {
+      --cyan: #22d3ee;
+      --violet: #8b5cf6;
+      --pink: #ec4899;
+      --grad: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 50%, #ec4899 100%);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
     html,body{
       margin:0; width:100%; min-height:100%;
-      background:#050608;
+      background:#0a0a0c;
       color:#fff; font-family:'Outfit',sans-serif; overflow-x:hidden;
     }
 
-    body{
+    /* --- DERİN UZAY ARKA PLAN --- */
+    body {
       background: 
-        radial-gradient(circle at 50% -20%, rgba(34,211,238,0.15) 0%, transparent 40%),
-        radial-gradient(circle at 0% 100%, rgba(139,92,246,0.08) 0%, transparent 30%);
+        radial-gradient(circle at 50% 10%, rgba(34,211,238,0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(236,72,153,0.1) 0%, transparent 40%),
+        #0a0a0c;
     }
 
-    /* --- PREMIUM GÖRSEL MERKEZ --- */
-    .hero-box {
-      height: 320px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .crystal-outer {
-      width: 180px;
-      height: 180px;
-      position: relative;
+    /* --- KUANTUM KRİSTAL VE LOGO ANİMASYONU --- */
+    .visual-core {
+      height: 340px;
       display: flex;
       align-items: center;
       justify-content: center;
+      perspective: 1200px;
+      position: relative;
+    }
+
+    .crystal-shell {
+      position: absolute;
+      width: 170px;
+      height: 170px;
       transform-style: preserve-3d;
-      animation: slowRotate 20s linear infinite;
+      animation: hyperRotate 25s linear infinite;
     }
 
-    .glass-side {
+    .side {
       position: absolute;
       inset: 0;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.02);
-      backdrop-filter: blur(10px);
+      border: 1px solid rgba(34,211,238,0.4);
+      background: radial-gradient(circle, rgba(139,92,246,0.12), transparent);
+      box-shadow: 0 0 25px rgba(34,211,238,0.2);
+      backdrop-filter: blur(2px);
     }
-    .s1{ transform: rotateY(0deg) translateZ(90px); }
-    .s2{ transform: rotateY(90deg) translateZ(90px); }
-    .s3{ transform: rotateX(90deg) translateZ(90px); }
+    .s1{ transform: rotateY(0deg) translateZ(85px); }
+    .s2{ transform: rotateY(90deg) translateZ(85px); }
+    .s3{ transform: rotateY(180deg) translateZ(85px); }
+    .s4{ transform: rotateY(270deg) translateZ(85px); }
+    .s5{ transform: rotateX(90deg) translateZ(85px); }
+    .s6{ transform: rotateX(-90deg) translateZ(85px); }
 
-    /* DÜNYA VE LOGO: KOYU VE NET */
-    .dark-planet {
+    /* PARLAYAN KOYU ÇEKİRDEK */
+    .quantum-planet {
       position: absolute;
-      width: 130px;
-      height: 130px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #1e293b, #0f172a, #020617);
+      background: linear-gradient(145deg, #111318 0%, #020305 100%);
       box-shadow: 
-        inset -10px -10px 30px rgba(0,0,0,0.8),
-        0 0 40px rgba(34,211,238,0.2);
+        inset -10px -10px 25px rgba(0,0,0,0.9),
+        inset 8px 8px 20px rgba(255,255,255,0.05),
+        0 0 40px rgba(34,211,238,0.3);
       display: flex; align-items: center; justify-content: center;
       border: 1px solid rgba(255,255,255,0.1);
-      z-index: 5;
+      z-index: 10;
+      animation: breath 4s ease-in-out infinite;
     }
 
     .italky-logo {
-      font-family: "Space Grotesk"; font-size: 20px; font-weight: 700; color: #fff;
+      font-family: "Space Grotesk"; font-size: 19px; font-weight: 800; color: #fff;
+      text-shadow: 0 0 15px rgba(255,255,255,0.4);
     }
-    .italky-logo span { color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+    .italky-logo span { 
+      background: var(--grad); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+      font-weight: 900;
+    }
 
-    @keyframes slowRotate { from{transform:rotateX(0) rotateY(0);} to{transform:rotateX(360deg) rotateY(360deg);} }
+    @keyframes hyperRotate {
+      from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      to { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+    }
 
-    /* --- İÇERİK --- */
-    #pageContent { width:100%; max-width:500px; margin:0 auto; padding:20px; }
+    @keyframes breath {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(34,211,238,0.3); }
+      50% { transform: scale(1.08); box-shadow: 0 0 60px rgba(139,92,246,0.4); }
+    }
 
-    .slogan-group { text-align: center; margin-bottom: 30px; }
-    .slogan-group h1 { font-family: 'Space Grotesk'; font-size: 32px; margin:0; letter-spacing: -1.5px; }
-    .slogan-group p { color: var(--cyan); font-weight: 600; margin: 5px 0 0; opacity: 0.8; }
+    /* --- İÇERİK MİMARİSİ --- */
+    #pageContent { width:100%; max-width:520px; margin:0 auto; padding:0 18px 50px; }
 
-    .feature-card {
+    .slogan-box { text-align: center; margin: -20px 0 30px; }
+    .slogan-box h1 { font-family: 'Space Grotesk'; font-size: 34px; margin:0; letter-spacing: -1.8px; line-height: 0.9; }
+    .slogan-box p { color: var(--cyan); font-weight: 800; margin: 8px 0 0; letter-spacing: 1px; text-transform: uppercase; font-size: 14px; }
+
+    .glass-card {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 24px;
+      border-radius: 30px;
       padding: 24px;
       margin-bottom: 20px;
+      backdrop-filter: blur(10px);
     }
 
-    .feat-row { display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-start; }
-    .feat-row:last-child { margin-bottom: 0; }
-    .feat-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
-    
-    .feat-text h3 { font-size: 16px; margin: 0 0 4px; font-weight: 700; color: #fff; }
-    .feat-text p { font-size: 13px; margin: 0; color: rgba(255,255,255,0.6); line-height: 1.5; }
+    /* ÖZELLİKLER */
+    .feat { display: flex; gap: 18px; margin-bottom: 24px; }
+    .feat:last-child { margin-bottom: 0; }
+    .feat-icon { 
+      width: 48px; height: 48px; border-radius: 15px; 
+      background: rgba(255,255,255,0.05); 
+      display: flex; align-items: center; justify-content: center; 
+      font-size: 22px; flex-shrink: 0; 
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .special-icon { background: var(--grad); color: #000; border:none; box-shadow: 0 0 20px rgba(34,211,238,0.4); }
 
-    /* FİYAT ALANI */
-    .offer-box {
-      background: linear-gradient(145deg, rgba(34,211,238,0.1), transparent);
-      border: 1px solid rgba(34,211,238,0.3);
-      border-radius: 24px; padding: 25px; text-align: center;
+    .feat-info h3 { font-size: 17px; margin: 0 0 5px; font-weight: 800; color: #fff; }
+    .feat-info p { font-size: 13.5px; margin: 0; color: rgba(255,255,255,0.6); line-height: 1.5; font-weight: 600; }
+
+    /* FİYAT - 1 USD VURGUSU */
+    .price-panel {
+      background: linear-gradient(145deg, rgba(34,211,238,0.15), rgba(139,92,246,0.05));
+      border: 1px solid rgba(34,211,238,0.4);
+      border-radius: 32px; padding: 28px; text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     }
 
-    .offer-price { font-family: 'Space Grotesk'; font-size: 48px; font-weight: 800; color: #bef264; margin-bottom: 5px; }
-    .offer-price small { font-size: 16px; color: #fff; opacity: 0.7; }
+    .big-price { font-family: 'Space Grotesk'; font-size: 56px; font-weight: 900; color: #bef264; line-height: 1; text-shadow: 0 0 25px rgba(190,242,100,0.4); }
+    .price-tag { font-size: 15px; font-weight: 800; color: #fff; margin-top: 8px; letter-spacing: 0.5px; }
 
     .buy-btn {
-      width: 100%; min-height: 60px; border-radius: 18px; border: none;
-      background: #fff; color: #000; font-size: 16px; font-weight: 800;
-      margin-top: 20px; cursor: pointer; transition: transform 0.2s;
+      width: 100%; min-height: 66px; border-radius: 22px; border: none;
+      background: #fff; color: #000; font-size: 18px; font-weight: 900;
+      margin-top: 25px; cursor: pointer;
+      box-shadow: 0 15px 30px rgba(255,255,255,0.15);
+      position: relative; overflow: hidden;
     }
-    .buy-btn:active { transform: scale(0.97); }
+    .buy-btn::after {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.6), transparent);
+      transform: rotate(45deg); animation: shine 3s infinite;
+    }
+    @keyframes shine { 0% { left: -150%; } 100% { left: 150%; } }
 
-    .footer { text-align: center; padding: 40px 0; font-size: 12px; opacity: 0.4; font-weight: 700; letter-spacing: 1px; }
+    .footer-seal { padding: 40px 0; text-align: center; font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.3); letter-spacing: 2px; }
   </style>
 </head>
 <body>
 
   <div id="pageContent">
-    <div class="hero-box">
-      <div class="crystal-outer">
-        <div class="glass-side s1"></div>
-        <div class="glass-side s2"></div>
-        <div class="glass-side s3"></div>
+    <div class="visual-core">
+      <div class="crystal-shell">
+        <div class="side s1"></div>
+        <div class="side s2"></div>
+        <div class="side s3"></div>
+        <div class="side s4"></div>
+        <div class="side s5"></div>
+        <div class="side s6"></div>
       </div>
-      <div class="dark-planet">
+      <div class="quantum-planet">
         <div class="italky-logo">italky<span>AI</span></div>
       </div>
     </div>
 
-    <div class="slogan-group">
+    <div class="slogan-box">
       <h1>Dünyayı küçülttük.</h1>
       <p>Cebinize sığdırdık.</p>
     </div>
 
-    <div class="feature-card">
-      <div class="feat-row">
-        <div class="feat-icon">✨</div>
-        <div class="feat-text">
+    <div class="glass-card">
+      <div class="feat">
+        <div class="feat-icon special-icon">✨</div>
+        <div class="feat-info">
           <h3>Hadi Beni Şaşırt!</h3>
-          <p>Yapay zekanın sınırlarını interaktif oyunlar ve akıllı sohbetler ile keşfet. Öğrenmeyi bir serüvene dönüştür.</p>
+          <p>Yapay zekayı arkadaşın yap. Akıllı sohbetler ve interaktif kelime oyunlarıyla dil öğrenmeyi bir keşif yolculuğuna dönüştür.</p>
         </div>
       </div>
-      <div class="feat-row">
+      
+      <div class="feat">
         <div class="feat-icon">🧠</div>
-        <div class="feat-text">
-          <h3>Semantik AI Engine</h3>
-          <p>Kelimeleri değil, cümlenin tam ruhunu ve bağlamını anlayan 2026 model ileri seviye teknoloji.</p>
+        <div class="feat-info">
+          <h3>Semantic Engine</h3>
+          <p>Kelimelerin ötesine geçiyoruz. Cümlenin ruhunu, anlamını ve bağlamını saniyesinde çözen 2026 model AI motoru.</p>
         </div>
       </div>
-      <div class="feat-row">
+
+      <div class="feat">
         <div class="feat-icon">🌍</div>
-        <div class="feat-text">
-          <h3>Offline Global Erişim</h3>
-          <p>177 ülkede, 58 dilde internete ihtiyaç duymadan özgürce iletişim kurun.</p>
+        <div class="feat-info">
+          <h3>Offline Global Güç</h3>
+          <p>177 ülkede, 58 dilde internete ihtiyaç duymadan özgürce konuş. Bağlantın kopsa da iletişimin asla kopmasın.</p>
         </div>
       </div>
-      <div class="feat-row">
+
+      <div class="feat">
         <div class="feat-icon">🎙</div>
-        <div class="feat-text">
+        <div class="feat-info">
           <h3>AI Voice</h3>
-          <p>Çeviriler artık senin sesin! Kendi tonun ve duygunla her dilde doğal bir şekilde konuş.</p>
+          <p>Çeviriler artık senin ses tonunla hayat buluyor. Duygunu ve kimliğini kaybetmeden her dilde "sen" olarak konuş.</p>
         </div>
       </div>
     </div>
 
-    <div class="offer-box">
-      <div class="offer-price">1 USD <small>/ ay</small></div>
-      <div style="font-weight: 800; font-size: 14px;">İLK İKİ AY AVANTAJI</div>
-      <p style="font-size: 12px; opacity: 0.6; margin-top: 10px;">Sonrasında standart 2 USD / Ay ile devam eder.</p>
+    <div class="price-panel">
+      <div class="big-price">1 USD</div>
+      <div class="price-tag">İLK İKİ AY AVANTAJI</div>
+      <p style="font-size: 13px; opacity: 0.6; margin-top: 12px; font-weight: 600;">Sonrasında standart 2 USD / Ay ile devam eder.</p>
       
       <button class="buy-btn" id="buyBtn">Üyeliği Başlat</button>
     </div>
 
-    <div class="footer">italkyAI BY Ozyigit's 2026</div>
+    <div class="footer-seal">italkyAI BY Ozyigit's 2026</div>
   </div>
 
   <script type="module">
@@ -194,7 +237,9 @@
     const UI = { buyBtn: document.getElementById("buyBtn") };
     
     UI.buyBtn.onclick = () => {
-      if(window.AndroidBilling) window.AndroidBilling.buy("italky_pro");
+      if(window.AndroidBilling) {
+        window.AndroidBilling.buy("italky_pro");
+      }
     };
   </script>
 </body>
