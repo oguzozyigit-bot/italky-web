@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Ataların Dili</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root{
+      --ai-gradient: linear-gradient(135deg,#67e8f9,#3b82f6,#60a5fa);
+      --gold-gradient: linear-gradient(135deg,#dbeafe,#93c5fd,#fde68a);
+      --bg:#04101b;
+      --border:rgba(255,255,255,0.14);
+      --panel-top:linear-gradient(180deg, rgba(14,116,144,.22), rgba(4,16,27,.98));
+      --panel-bot:linear-gradient(180deg, rgba(30,64,175,.16), rgba(4,16,27,.98));
+      --composer-bg:rgba(8,14,24,.96);
+      --composer-line:rgba(255,255,255,.08);
+      --safe-bottom:env(safe-area-inset-bottom, 0px);
+      --safe-top:env(safe-area-inset-top, 0px);
+      --text:#f8fafc;
+      --muted:rgba(255,255,255,.64);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Outfit,sans-serif;
+      overflow:hidden;
+    }
+
+    body{
+      min-height:100dvh;
+      background:
+        radial-gradient(circle at top, rgba(103,232,249,.08), transparent 24%),
+        radial-gradient(circle at bottom, rgba(250,204,21,.05), transparent 20%),
+        #04101b;
+    }
+
+    .container{
+      display:flex;
+      flex-direction:column;
+      width:100%;
+      height:100dvh;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .topbar{
+      flex:0 0 auto;
+      padding:calc(8px + var(--safe-top)) 10px 8px;
+      background:linear-gradient(180deg, rgba(4,16,27,.98), rgba(4,16,27,.82));
+      border-bottom:1px solid rgba(255,255,255,.06);
+      backdrop-filter:blur(14px);
+      z-index:700;
+    }
+
+    .topbar-inner{
+      width:min(94vw,460px);
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:1fr auto 1fr 38px;
+      align-items:center;
+      gap:8px;
+    }
+
+    .lang-pill{
+      min-height:40px;
+      border:none;
+      border-radius:999px;
+      padding:8px 14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      cursor:default;
+    }
+
+    .lang-pill.target{
+      cursor:pointer;
+    }
+
+    .dir-switch{
+      width:46px;
+      height:40px;
+      border:none;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .dir-switch svg{
+      width:22px;
+      height:22px;
+      stroke:currentColor;
+      stroke-width:2.2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .settings-btn{
+      width:38px;
+      height:38px;
+      border:none;
+      border-radius:50%;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .settings-btn svg{
+      width:18px;
+      height:18px;
+      stroke:currentColor;
+      stroke-width:2.1;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .popover{
+      position:absolute;
+      top:calc(58px + var(--safe-top));
+      left:50%;
+      transform:translateX(-50%);
+      width:min(92vw,360px);
+      max-height:360px;
+      background:#08111d;
+      border:1px solid var(--border);
+      border-radius:24px;
+      display:none;
+      flex-direction:column;
+      z-index:9000;
+      overflow:hidden;
+      box-shadow:0 22px 60px rgba(0,0,0,.92);
+    }
+
+    .popover.show{ display:flex; }
+
+    .pop-head{
+      padding:14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-weight:900;
+      letter-spacing:.3px;
+    }
+
+    .pop-close{
+      cursor:pointer;
+      padding:8px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+    }
+
+    .pop-list{
+      flex:1;
+      overflow-y:auto;
+      padding:10px;
+      scrollbar-width:none;
+    }
+
+    .pop-list::-webkit-scrollbar{ display:none; }
+
+    .pop-item{
+      padding:12px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+      border:1px solid transparent;
+    }
+
+    .pop-item:hover{ background:rgba(255,255,255,.06); }
+
+    .pop-item.active{
+      background:rgba(59,130,246,.14);
+      border-color:rgba(59,130,246,.25);
+    }
+
+    .pop-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .pop-flag{ font-size:18px; }
+
+    .pop-name{
+      font-weight:900;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:220px;
+    }
+
+    .pop-code{
+      font-weight:900;
+      font-size:12px;
+      opacity:.7;
+    }
+
+    .half-screen{
+      flex:1;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:space-between;
+      overflow:hidden;
+      min-height:0;
+    }
+
+    .half-screen.top{
+      background:var(--panel-top);
+      padding:10px 8px 8px;
+    }
+
+    .half-screen.bottom{
+      background:var(--panel-bot);
+      padding:6px 8px calc(6px + var(--safe-bottom));
+    }
+
+    .panel-head{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 8px;
+      min-height:32px;
+      flex:0 0 auto;
+    }
+
+    .panel-label{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.4px;
+      color:rgba(255,255,255,.72);
+      text-transform:uppercase;
+      text-align:center;
+    }
+
+    .chat-body{
+      flex:1 1 auto;
+      min-height:0;
+      width:100%;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:14px;
+      padding:12px 0 20px;
+      mask-image:linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+      scrollbar-width:none;
+    }
+
+    .chat-body::-webkit-scrollbar{ display:none; }
+
+    .bubble{
+      text-align:center;
+      max-width:86%;
+      line-height:1.28;
+      word-break:break-word;
+    }
+
+    .bubble.them{
+      opacity:.72;
+      font-size:18px;
+      font-weight:650;
+    }
+
+    .bubble.me{
+      font-size:18px;
+      font-weight:650;
+      opacity:.84;
+    }
+
+    .bubble.me.is-latest{
+      font-size:30px;
+      font-weight:900;
+      opacity:1;
+      line-height:1.08;
+    }
+
+    .bubble-row{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .bubble-row .txt{
+      display:inline-block;
+    }
+
+    .spk-icon{
+      width:30px;
+      height:30px;
+      min-width:30px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      padding:0;
+    }
+
+    .spk-icon svg{
+      width:14px;
+      height:14px;
+      fill:none;
+      stroke:#fff;
+      stroke-width:2.1;
+      opacity:.95;
+    }
+
+    .center-hub{
+      height:82px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      background:rgba(0,0,0,.58);
+      backdrop-filter:blur(16px);
+      z-index:600;
+      flex:0 0 auto;
+      border-top:1px solid rgba(255,255,255,.05);
+      border-bottom:1px solid rgba(255,255,255,.05);
+    }
+
+    .nav-btn{
+      position:absolute;
+      padding:10px 18px;
+      border-radius:100px;
+      background:transparent;
+      border:1px solid var(--border);
+      color:#fff;
+      font-size:10px;
+      font-weight:900;
+      cursor:pointer;
+      z-index:650;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+    }
+
+    .btn-clear{ right:14px; }
+
+    .orb-container{
+      width:82px;
+      height:82px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+    }
+
+    .energy-orbit{
+      position:absolute;
+      width:82px;
+      height:82px;
+      border-radius:50%;
+      animation:rotateOrbit 5s linear infinite;
+    }
+
+    .ball-1, .ball-2{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      filter:blur(1.5px);
+      transition:background .25s ease, box-shadow .25s ease;
+    }
+
+    .ball-1{
+      top:-5px;
+      left:50%;
+      transform:translateX(-50%);
+      background:#3b82f6;
+      box-shadow:0 0 15px #3b82f6;
+    }
+
+    .ball-2{
+      bottom:-5px;
+      left:50%;
+      transform:translateX(-50%);
+      background:#facc15;
+      box-shadow:0 0 15px #facc15;
+    }
+
+    .ai-core{
+      width:66px;
+      height:66px;
+      border-radius:50%;
+      background:#000;
+      border:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:"Space Grotesk",sans-serif;
+      font-weight:700;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .logo-text{
+      color:#fff;
+      letter-spacing:.4px;
+      font-size:13px;
+    }
+
+    .logo-ai{
+      background:var(--gold-gradient);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .eq-wrap{
+      display:flex;
+      align-items:center;
+      gap:3px;
+      height:20px;
+      position:absolute;
+      opacity:0;
+      transition:.25s;
+      z-index:20;
+    }
+
+    #frameRoot.is-listening .eq-wrap,
+    #frameRoot.is-translating .eq-wrap{
+      opacity:1;
+    }
+
+    #frameRoot.is-listening .logo-text,
+    #frameRoot.is-translating .logo-text{
+      opacity:0;
+    }
+
+    .eq-bar{
+      width:3px;
+      background:var(--gold-gradient);
+      border-radius:10px;
+      animation:eqAnim .7s infinite ease-in-out;
+    }
+
+    #frameRoot.is-idle .ball-1,
+    #frameRoot.is-idle .ball-2,
+    #frameRoot.is-error .ball-1,
+    #frameRoot.is-error .ball-2{
+      background:#ef4444;
+      box-shadow:0 0 18px rgba(239,68,68,.9);
+    }
+
+    #frameRoot.is-listening .ball-1,
+    #frameRoot.is-translating .ball-1{
+      background:#3b82f6;
+      box-shadow:0 0 18px rgba(59,130,246,.95);
+    }
+
+    #frameRoot.is-listening .ball-2,
+    #frameRoot.is-translating .ball-2{
+      background:#facc15;
+      box-shadow:0 0 18px rgba(250,204,21,.95);
+    }
+
+    #frameRoot.is-ready .ball-1,
+    #frameRoot.is-ready .ball-2{
+      background:#22c55e;
+      box-shadow:0 0 18px rgba(34,197,94,.9);
+    }
+
+    .composer-stack{
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      z-index:30;
+      padding-bottom:0;
+      flex:0 0 auto;
+    }
+
+    .composer{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      min-height:62px;
+      padding:9px 12px;
+      border-radius:22px;
+      background:var(--composer-bg);
+      border:1px solid var(--composer-line);
+      box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03);
+      position:relative;
+    }
+
+    .composer.listening{
+      box-shadow:
+        0 0 0 1px rgba(59,130,246,.30),
+        0 0 0 8px rgba(59,130,246,.08),
+        0 0 30px rgba(59,130,246,.20),
+        inset 0 1px 0 rgba(255,255,255,.04);
+      animation:composerPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes composerPulse{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.006); }
+    }
+
+    .composer-center{
+      flex:1;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .composer-input{
+      width:100%;
+      min-height:24px;
+      max-height:120px;
+      resize:none;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:#fff;
+      font-size:17px;
+      font-weight:800;
+      line-height:1.4;
+      font-family:inherit;
+      overflow:auto;
+      padding:0;
+      margin:0;
+      scrollbar-width:none;
+      text-align:left;
+    }
+
+    .composer-input::-webkit-scrollbar{ display:none; }
+
+    .composer-input::placeholder{
+      color:rgba(255,255,255,.72);
+      font-weight:800;
+    }
+
+    .send-btn,.mic-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      border-radius:50%;
+      cursor:pointer;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:transparent;
+      color:#fff;
+      position:relative;
+      z-index:2;
+    }
+
+    .mic-btn.listening::after{
+      content:"";
+      position:absolute;
+      inset:-6px;
+      border-radius:50%;
+      border:2px solid rgba(34,197,94,.72);
+      box-shadow:0 0 0 8px rgba(34,197,94,.10), 0 0 24px rgba(34,197,94,.18);
+      animation:micPulse 1s ease-out infinite;
+    }
+
+    @keyframes micPulse{
+      0%{ transform:scale(.92); opacity:.95; }
+      70%{ transform:scale(1.14); opacity:.14; }
+      100%{ transform:scale(1.18); opacity:0; }
+    }
+
+    .send-btn{
+      background:#fff;
+      color:#000;
+      box-shadow:0 0 24px rgba(255,255,255,.10);
+    }
+
+    .send-btn svg,
+    .mic-btn svg{
+      width:22px;
+      height:22px;
+      stroke:currentColor;
+      stroke-width:2.2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .hidden{ display:none !important; }
+
+    .mini-toast{
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%) translateY(120px);
+      min-height:44px;
+      padding:10px 16px;
+      border-radius:16px;
+      background:rgba(12,16,28,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      max-width:min(92vw,420px);
+      z-index:99999;
+      box-shadow:0 18px 36px rgba(0,0,0,.35);
+      transition:.22s ease;
+      backdrop-filter:blur(14px);
+      pointer-events:none;
+    }
+
+    .mini-toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    @keyframes rotateOrbit{
+      from{ transform:rotate(0deg); }
+      to{ transform:rotate(360deg); }
+    }
+
+    @keyframes eqAnim{
+      0%,100%{ height:5px; opacity:.6; }
+      50%{ height:25px; opacity:1; }
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999999;
+      padding:20px;
+    }
+
+    .modal.open,
+    .modal.show{
+      display:flex;
+    }
+
+    .modal-card{
+      width:min(100%, 420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+    }
+
+    .modal-title{
+      margin:0 0 8px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .modal-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.6;
+      color:rgba(255,255,255,.76);
+    }
+
+    .modal-actions{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .modal-btn{
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .modal-btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
+    @media (max-width:390px){
+      .topbar-inner{
+        width:min(95vw, 420px);
+        grid-template-columns:1fr auto 1fr 38px;
+      }
+
+      .lang-pill{
+        font-size:11px;
+        padding:8px 10px;
+      }
+    }
+  </style>
+</head>
+<body id="frameRoot" class="to-bot">
+  <div class="container">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="lang-pill" id="sourceLangPill">
+          <span id="sourceLangTxt">𐱅𐰇𐰼𐰚 • Göktürkçe</span>
+        </div>
+
+        <button class="dir-switch" id="swapDirectionBtn" type="button" aria-label="Çeviri yönünü değiştir">
+          <svg viewBox="0 0 24 24">
+            <path d="M7 7h10"></path>
+            <path d="M13 3l4 4-4 4"></path>
+            <path d="M17 17H7"></path>
+            <path d="M11 21l-4-4 4-4"></path>
+          </svg>
+        </button>
+
+        <button class="lang-pill target" id="targetLangBtn" type="button">
+          <span id="targetLangTxt">🇹🇷 Türkçe</span>
+        </button>
+
+        <button id="settingsBtn" class="settings-btn" type="button" aria-label="Ayarlar">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3.2"></circle>
+            <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a2 2 0 1 1 0 4H20a1 1 0 0 0-.6.6z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="popover" id="targetLangPopover" role="dialog" aria-label="Hedef dil seçimi">
+      <div class="pop-head">
+        <div>HEDEF DİL</div>
+        <div class="pop-close" id="targetLangClose">✕</div>
+      </div>
+      <div class="pop-list" id="targetLangList"></div>
+    </div>
+
+    <div class="half-screen top">
+      <div class="panel-head">
+        <div class="panel-label" id="topPanelLabel">ÇEVRİLEN METİN</div>
+      </div>
+
+      <div class="chat-body" id="topBody"></div>
+    </div>
+
+    <div class="center-hub" id="centerHub">
+      <a class="nav-btn" id="homeLink" href="/pages/home.html" style="left:14px;">ANA SAYFA</a>
+
+      <div class="orb-container" id="homeBtn" title="Ana sayfa">
+        <div class="energy-orbit">
+          <div class="ball-1"></div>
+          <div class="ball-2"></div>
+        </div>
+        <div class="ai-core">
+          <div class="eq-wrap" aria-hidden="true">
+            <div class="eq-bar" style="animation-delay:0s"></div>
+            <div class="eq-bar" style="animation-delay:.2s"></div>
+            <div class="eq-bar" style="animation-delay:.4s"></div>
+          </div>
+          <span class="logo-text">italky<span class="logo-ai">AI</span></span>
+        </div>
+      </div>
+
+      <div class="nav-btn btn-clear" id="clearBtn">TEMİZLE</div>
+    </div>
+
+    <div class="half-screen bottom">
+      <div class="panel-head">
+        <div class="panel-label" id="bottomPanelLabel">YAZ / KONUŞ</div>
+      </div>
+
+      <div class="chat-body" id="botBody"></div>
+
+      <div class="composer-stack">
+        <div class="composer" id="botComposer">
+          <div class="composer-center">
+            <textarea id="botInput" class="composer-input" rows="1" placeholder="Buraya yaz veya konuş"></textarea>
+          </div>
+
+          <button id="botMic" class="mic-btn" type="button" aria-label="Mikrofon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+              <path d="M19 10a7 7 0 0 1-14 0"></path>
+              <path d="M12 17v4"></path>
+              <path d="M8 21h8"></path>
+            </svg>
+          </button>
+
+          <button id="botSend" class="send-btn hidden" type="button" aria-label="Gönder">
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14"></path>
+              <path d="M13 6l6 6-6 6"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="genericBackdrop" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="genericTitle">Bilgi</h3>
+      <p class="modal-text" id="genericText">İşlem yapılamadı.</p>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" id="genericCloseBtn">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mini-toast" id="miniToast"></div>
+
+  <script type="module" src="/js/atalarin_dili_page.js?v=ATALAR_V1"></script>
+  <script type="module">
+    import { initGlobalAccess } from "/js/global_access.js";
+    await initGlobalAccess({ allowPublicPageBypass: false });
+  </script>
+</body>
+</html>
