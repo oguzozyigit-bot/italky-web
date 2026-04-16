@@ -7,27 +7,54 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
   <style>
     html,body{
-      margin:0;width:100%;height:100dvh;
-      display:flex;align-items:center;justify-content:center;
-      background:#02000f;color:#fff;font-family:Outfit,sans-serif
+      margin:0;
+      width:100%;
+      height:100dvh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#02000f;
+      color:#fff;
+      font-family:Outfit,sans-serif;
+      overflow:hidden;
     }
     .box{
-      width:min(520px,92vw);padding:18px;border-radius:22px;
+      width:min(520px,92vw);
+      padding:18px;
+      border-radius:22px;
       border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);text-align:center
+      background:rgba(255,255,255,.04);
+      text-align:center;
     }
-    .t{font-weight:1000;font-size:16px;margin:0 0 8px}
-    .s{font-weight:800;font-size:12px;color:rgba(255,255,255,.65);margin:0}
+    .t{
+      font-weight:1000;
+      font-size:16px;
+      margin:0 0 8px;
+    }
+    .s{
+      font-weight:800;
+      font-size:12px;
+      color:rgba(255,255,255,.65);
+      margin:0;
+    }
     .spin{
-      width:40px;height:40px;margin:14px auto 2px;
-      border-radius:999px;border:3px solid rgba(255,255,255,.18);
-      border-top-color: rgba(99,102,241,.95);
+      width:40px;
+      height:40px;
+      margin:14px auto 2px;
+      border-radius:999px;
+      border:3px solid rgba(255,255,255,.18);
+      border-top-color:rgba(99,102,241,.95);
       animation:r 1s linear infinite;
     }
-    @keyframes r{to{transform:rotate(360deg)}}
+    @keyframes r{
+      to{ transform:rotate(360deg); }
+    }
     .e{
-      margin-top:10px;font-size:11px;color:rgba(255,255,255,.55);
-      word-break:break-word;display:none
+      margin-top:10px;
+      font-size:11px;
+      color:rgba(255,255,255,.55);
+      word-break:break-word;
+      display:none;
     }
   </style>
 </head>
@@ -68,11 +95,12 @@
       location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}` : LOGIN);
     }
 
-    if (sessionStorage.getItem("italky_cb_lock_v4") === "1") {
+    if (sessionStorage.getItem("italky_cb_lock_v5") === "1") {
       const next = getNextTarget();
       goLogin(next);
+      throw new Error("callback_lock");
     }
-    sessionStorage.setItem("italky_cb_lock_v4", "1");
+    sessionStorage.setItem("italky_cb_lock_v5", "1");
 
     async function waitForSession(maxMs = 9000){
       const start = Date.now();
@@ -108,15 +136,15 @@
     }
 
     async function resolvePostLoginTarget(next = ""){
-  const access = await getAccessState();
+      const access = await getAccessState();
 
-  if (!access?.ok || !access?.access_open) {
-    return MEMBERSHIP;
-  }
+      if (!access?.access_open) {
+        return MEMBERSHIP;
+      }
 
-  if (next) return next;
-  return HOME;
-}
+      if (next) return next;
+      return HOME;
+    }
 
     try{
       const url = new URL(location.href);
@@ -143,19 +171,20 @@
       await ensureAuthAndCacheUser();
 
       const target = await resolvePostLoginTarget(next);
-
-      history.replaceState({}, "", target);
       location.replace(target);
 
     }catch(e){
       console.error("auth_callback fatal:", e);
-      const next = getNextTarget();
-      setTimeout(() => {
-        location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}&e=auth` : `${LOGIN}?e=auth`);
-      }, 700);
+
+      if (String(e?.message || "") !== "callback_lock") {
+        const next = getNextTarget();
+        setTimeout(() => {
+          location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}&e=auth` : `${LOGIN}?e=auth`);
+        }, 700);
+      }
     } finally {
       setTimeout(() => {
-        try{ sessionStorage.removeItem("italky_cb_lock_v4"); }catch{}
+        try{ sessionStorage.removeItem("italky_cb_lock_v5"); }catch{}
       }, 10000);
     }
   </script>
