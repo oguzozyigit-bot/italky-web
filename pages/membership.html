@@ -216,33 +216,63 @@
 
     .status-box{
       margin-top:18px;
-      padding:16px 18px;
-      border-radius:18px;
+      padding:18px 18px;
+      border-radius:22px;
       font-size:15px;
       line-height:1.6;
       font-weight:800;
-      border:1px solid rgba(255,255,255,0.08);
-      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.12);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(34,211,238,0.14) 0%, transparent 35%),
+        radial-gradient(circle at 80% 80%, rgba(139,92,246,0.12) 0%, transparent 38%),
+        linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
       color:#fff;
       text-align:center;
+      box-shadow:
+        0 14px 34px rgba(0,0,0,.26),
+        inset 0 1px 0 rgba(255,255,255,.06),
+        0 0 24px rgba(34,211,238,.08);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
     }
 
     .status-box.ok{
-      background:rgba(132,204,22,0.10);
-      border-color:rgba(132,204,22,0.18);
-      color:#ecfccb;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(190,242,100,0.16) 0%, transparent 34%),
+        radial-gradient(circle at 82% 80%, rgba(34,211,238,0.12) 0%, transparent 36%),
+        linear-gradient(135deg, rgba(132,204,22,0.14), rgba(255,255,255,0.04));
+      border-color:rgba(190,242,100,0.24);
+      color:#f3ffd6;
+      box-shadow:
+        0 14px 34px rgba(0,0,0,.26),
+        inset 0 1px 0 rgba(255,255,255,.06),
+        0 0 26px rgba(190,242,100,.10);
     }
 
     .status-box.warn{
-      background:rgba(245,158,11,0.10);
-      border-color:rgba(245,158,11,0.18);
-      color:#ffedd5;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(34,211,238,0.14) 0%, transparent 34%),
+        radial-gradient(circle at 82% 80%, rgba(236,72,153,0.12) 0%, transparent 36%),
+        linear-gradient(135deg, rgba(34,211,238,0.12), rgba(139,92,246,0.08), rgba(255,255,255,0.03));
+      border-color:rgba(34,211,238,0.22);
+      color:#e8fcff;
+      box-shadow:
+        0 14px 34px rgba(0,0,0,.26),
+        inset 0 1px 0 rgba(255,255,255,.06),
+        0 0 28px rgba(34,211,238,.12);
     }
 
     .status-box.err{
-      background:rgba(239,68,68,0.10);
-      border-color:rgba(239,68,68,0.18);
-      color:#fee2e2;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(239,68,68,0.18) 0%, transparent 34%),
+        radial-gradient(circle at 82% 80%, rgba(139,92,246,0.10) 0%, transparent 36%),
+        linear-gradient(135deg, rgba(239,68,68,0.14), rgba(255,255,255,0.03));
+      border-color:rgba(239,68,68,0.22);
+      color:#ffe6e6;
+      box-shadow:
+        0 14px 34px rgba(0,0,0,.26),
+        inset 0 1px 0 rgba(255,255,255,.06),
+        0 0 24px rgba(239,68,68,.10);
     }
 
     .buy-btn{
@@ -367,7 +397,7 @@
 
       <div class="status-box" id="statusBox">
         Sayın kullanıcımız,<br>
-        Dünyayı anlamanıza bir adım kaldı.
+        Dünyayı küçültmenize bir adım kaldı.
       </div>
 
       <button class="buy-btn" id="buyBtn" type="button">Üyeliği Başlat</button>
@@ -395,9 +425,9 @@
       statusBox: $("statusBox")
     };
 
-    const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
     const HOME = "/pages/home.html";
     const LOGIN = "/pages/login.html";
+    const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
     const PRODUCT_ID = "italky_pro";
 
     let currentUserId = "";
@@ -438,7 +468,7 @@
 
     function renderWelcomeBox(name) {
       const safeName = escapeHtml(name || "kullanıcımız");
-      UI.statusBox.className = "status-box";
+      UI.statusBox.className = "status-box warn";
       UI.statusBox.innerHTML = `Sayın ${safeName}<br>Dünyayı küçültmenize bir adım kaldı.`;
     }
 
@@ -471,7 +501,7 @@
     async function getAccessState() {
       const session = await getSessionOrLogin();
 
-      const resp = await fetch(API_ACCESS, {
+      const resp = await fetch(ACCESS_API, {
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }
@@ -563,7 +593,7 @@
 
         if (access?.access_open) {
           toast("Üyelik doğrulandı!");
-          setTimeout(() => location.replace(HOME), 800);
+          setTimeout(() => location.replace("/pages/welcome_bonus.html"), 800);
           return;
         }
 
