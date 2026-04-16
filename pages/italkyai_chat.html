@@ -394,6 +394,20 @@
 
     .typing.show{ display:block; }
 
+    .audio-wait{
+      display:none;
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:calc(var(--composer-h) + 34px + var(--keyboard-offset));
+      font-size:12px;
+      color:rgba(255,255,255,.62);
+      font-weight:800;
+      z-index:5;
+    }
+
+    .audio-wait.show{ display:block; }
+
     .composer-wrap{
       position:absolute;
       left:12px;
@@ -677,6 +691,7 @@
     <section class="main">
       <div class="chat-scroll" id="chatMessages"></div>
       <div class="typing" id="typingState">italkyAI yazıyor...</div>
+      <div class="audio-wait" id="audioWaitState">Ses hazırlanıyor...</div>
 
       <div class="composer-wrap">
         <div class="composer" id="chatComposer">
@@ -727,6 +742,7 @@
     sendBtn: $("sendBtn"),
     micBtn: $("micBtn"),
     typingState: $("typingState"),
+    audioWaitState: $("audioWaitState"),
     chatComposer: $("chatComposer"),
 
     menu: $("menu"),
@@ -859,6 +875,75 @@
     return cleanupTranscript(pieces.join(" "));
   }
 
+  function setTyping(show) {
+    UI.typingState.classList.toggle("show", !!show);
+  }
+
+  function setAudioWait(show, text = "Ses hazırlanıyor...") {
+    if (!UI.audioWaitState) return;
+    UI.audioWaitState.textContent = text;
+    UI.audioWaitState.classList.toggle("show", !!show);
+  }
+
+  function stopTypewriter() {
+    if (!window.__chatTypewriterId) window.__chatTypewriterId = 0;
+    window.__chatTypewriterId += 1;
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function getTypingDelay(ch) {
+    if (ch === " ") return 0;
+    if (/[.!?]/.test(ch)) return 32;
+    if (/[,;:]/.test(ch)) return 18;
+    if (/\n/.test(ch)) return 14;
+    return 8;
+  }
+
+  async function typeReplyIntoBubble(bubbleEl, text) {
+    if (!bubbleEl) return;
+
+    stopTypewriter();
+    const runId = window.__chatTypewriterId;
+    const full = String(text || "").trim();
+
+    bubbleEl.textContent = "";
+    if (!full) return;
+
+    for (let i = 0; i < full.length; i++) {
+      if (runId !== window.__chatTypewriterId) return;
+      bubbleEl.textContent += full[i];
+      scrollChatToBottom();
+      await wait(getTypingDelay(full[i]));
+    }
+  }
+
+  function createAssistantMessageShell(metaText = "italkyAI • şimdi") {
+    const row = document.createElement("div");
+    row.className = "msg left";
+
+    const wrap = document.createElement("div");
+    wrap.className = "bubble-wrap";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble left";
+    bubble.textContent = "";
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "msg-meta";
+    metaEl.textContent = metaText;
+
+    wrap.appendChild(bubble);
+    wrap.appendChild(metaEl);
+    row.appendChild(wrap);
+    UI.chatMessages.appendChild(row);
+    scrollChatToBottom();
+
+    return { row, bubble, metaEl };
+  }
+
   function stopReplyAudio() {
     try {
       if (state.currentAudio) {
@@ -870,6 +955,7 @@
 
     try { window.speechSynthesis?.cancel?.(); } catch {}
     try { window.NativeTTS?.stop?.(); } catch {}
+    setAudioWait(false);
   }
 
   async function getCurrentUserId() {
@@ -906,20 +992,27 @@
 
   async function speakReplyText(text) {
     const value = String(text || "").trim();
-    if (!value || !isAutoReadEnabled()) return;
+    if (!value || !isAutoReadEnabled()) {
+      setAudioWait(false);
+      return;
+    }
 
     stopReplyAudio();
 
     const selectedVoice = getSelectedVoice();
 
     if (selectedVoice === "tts") {
+      setAudioWait(false);
       speakWithBrowser(value);
       return;
     }
 
+    setAudioWait(true, "Özel ses hazırlanıyor...");
+
     try {
       const userId = await getCurrentUserId();
       if (!userId) {
+        setAudioWait(false);
         speakWithBrowser(value);
         return;
       }
@@ -966,6 +1059,7 @@
         "";
 
       if (!resp.ok || !audioBase64) {
+        setAudioWait(false);
         speakWithBrowser(value);
         return;
       }
@@ -974,8 +1068,21 @@
       audio.preload = "auto";
       audio.playsInline = true;
       state.currentAudio = audio;
+
+      audio.onended = () => {
+        if (state.currentAudio === audio) state.currentAudio = null;
+        setAudioWait(false);
+      };
+
+      audio.onerror = () => {
+        if (state.currentAudio === audio) state.currentAudio = null;
+        setAudioWait(false);
+      };
+
+      setAudioWait(false);
       await audio.play();
     } catch {
+      setAudioWait(false);
       speakWithBrowser(value);
     }
   }
@@ -1001,10 +1108,6 @@
     UI.chatMessages.appendChild(row);
 
     scrollChatToBottom();
-  }
-
-  function setTyping(show) {
-    UI.typingState.classList.toggle("show", !!show);
   }
 
   function collectRecentHistory(limit = 20) {
@@ -1087,7 +1190,7 @@
     UI.menuJeton.textContent = `Jeton: ${tokens}`;
 
     if (!UI.chatMessages.querySelector(".msg")) {
-      addMessage("left", `Merhaba ${firstName}. Sohbet konunuz ne olsun?`);
+      addMessage("left", `Merhaba ${firstName}. Ben buradayım, rahat rahat yazabilirsin.`);
     }
   }
 
@@ -1129,12 +1232,16 @@
     if (!text || state.isSending) return;
 
     state.isSending = true;
+    stopReplyAudio();
+    stopTypewriter();
+
     addMessage("right", text);
 
     UI.chatInput.value = "";
     autoResizeTextarea();
     syncInputActionState();
     setTyping(true);
+    setAudioWait(false);
 
     try {
       const auth = await getAuthContext();
@@ -1142,6 +1249,7 @@
       if (!auth.user) {
         addMessage("left", "Oturum bilgisine ulaşılamadı. Lütfen tekrar giriş yap.");
         setTyping(false);
+        setAudioWait(false);
         state.isSending = false;
         return;
       }
@@ -1172,6 +1280,7 @@
       if (!resp.ok) {
         addMessage("left", reply || "Bağlantıda bir aksaklık oldu. Lütfen tekrar yaz.");
         setTyping(false);
+        setAudioWait(false);
         state.isSending = false;
         await hydrateProfileUI();
         return;
@@ -1180,16 +1289,19 @@
       if (json?.requires_topup) {
         addMessage("left", reply || "Lütfen sohbete devam etmek için jeton yüklemesi yapınız.");
         setTyping(false);
+        setAudioWait(false);
         state.isSending = false;
         await hydrateProfileUI();
         return;
       }
 
-      const finalReply = reply || "Şu an cevap üretirken bir sorun oluştu. Bir daha dener misin?";
-      addMessage("left", finalReply);
-      await speakReplyText(finalReply);
+      const finalReply = reply || "Şu an cevap üretirken bir sorun oluştu. Bir daha dener misin.";
+      const shell = createAssistantMessageShell("italkyAI • şimdi");
 
       setTyping(false);
+      await typeReplyIntoBubble(shell.bubble, finalReply);
+      await speakReplyText(finalReply);
+
       await hydrateProfileUI();
       await persistCurrentChatSnapshot(text.slice(0, 50));
       state.isSending = false;
@@ -1197,11 +1309,13 @@
       console.error("Chat hata:", e);
       addMessage("left", "Bağlantıda bir aksaklık oldu. Lütfen tekrar yaz.");
       setTyping(false);
+      setAudioWait(false);
       state.isSending = false;
     }
   }
 
   function clearChatDom() {
+    stopTypewriter();
     UI.chatMessages.innerHTML = "";
   }
 
@@ -1241,6 +1355,8 @@
     const local = getLocalSavedChats().find(x => x.id === savedChatId);
     if (!local) return;
 
+    stopReplyAudio();
+    stopTypewriter();
     clearChatDom();
     state.currentSavedChatId = local.id;
     state.currentSessionId = local.session_id || crypto.randomUUID();
@@ -1254,11 +1370,12 @@
 
   function deleteCurrentSavedChat() {
     stopReplyAudio();
+    stopTypewriter();
 
     if (!state.currentSavedChatId) {
       clearChatDom();
       state.currentSessionId = crypto.randomUUID();
-      addMessage("left", "Yeni sohbet hazır. Nereden başlayalım?");
+      addMessage("left", "Yeni sohbet hazır. İçini dökebilirsin.");
       closeMenu();
       return;
     }
@@ -1269,7 +1386,7 @@
     state.currentSavedChatId = null;
     state.currentSessionId = crypto.randomUUID();
     clearChatDom();
-    addMessage("left", "Yeni sohbet hazır. Nereden başlayalım?");
+    addMessage("left", "Yeni sohbet hazır. İçini dökebilirsin.");
     renderSavedChats();
     closeMenu();
   }
@@ -1388,6 +1505,7 @@
 
     UI.newChatBtn.addEventListener("click", async () => {
       stopReplyAudio();
+      stopTypewriter();
       clearChatDom();
       state.currentSavedChatId = null;
       state.currentSessionId = crypto.randomUUID();
@@ -1435,7 +1553,8 @@
 
   init();
 </script>
-  <script type="module">
+
+<script type="module">
   import { initGlobalAccess } from "/js/global_access.js";
   await initGlobalAccess({ allowPublicPageBypass: false });
 </script>
