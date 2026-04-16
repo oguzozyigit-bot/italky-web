@@ -515,7 +515,8 @@
       "google_play_token_load",
       "billing_google_confirm",
       "billing_google",
-      "subscription_bonus"
+      "subscription_bonus",
+      "welcome_bonus"
     ]);
 
     const SPENT_TYPES = new Set([
@@ -525,6 +526,7 @@
       "usage_meeting",
       "usage_clone_voice",
       "usage_teacher",
+      "usage_voice",
       "manual_deduct",
       "text_ai",
       "voice_ai",
@@ -588,11 +590,17 @@
     }
 
     function getRowSource(row){
-      return String(row?.source || row?.reason || "").trim().toLowerCase();
+      const meta = parseMeta(row?.meta);
+      return String(
+        row?.source ||
+        meta?.source ||
+        row?.reason ||
+        ""
+      ).trim().toLowerCase();
     }
 
     function getRowUsageKind(row){
-      return String(row?.usage_kind || "").trim().toLowerCase();
+      return String(row?.usage_kind || parseMeta(row?.meta)?.usage_kind || "").trim().toLowerCase();
     }
 
     function getSignedAmount(row){
@@ -608,12 +616,9 @@
       if (Number.isFinite(delta) && delta !== 0) return delta;
 
       const amount = Number(row?.amount || 0);
-      const type = String(row?.type || "").trim().toLowerCase();
+      if (Number.isFinite(amount) && amount !== 0) return amount;
 
-      if (type === "debit" && amount > 0) return -amount;
-      if (type === "credit" && amount < 0) return Math.abs(amount);
-
-      return amount;
+      return 0;
     }
 
     function isLoadedRow(row){
@@ -621,7 +626,7 @@
       const source = getRowSource(row);
       const amt = getSignedAmount(row);
 
-      return amt > 0 || txType === "credit" || LOADED_TYPES.has(source);
+      return amt > 0 || txType === "credit" || txType === "gift" || LOADED_TYPES.has(source);
     }
 
     function isSpentRow(row){
@@ -642,6 +647,7 @@
         package_bonus: "Paket Bonusu",
         upgrade_credit: "Yükseltme Kredisi",
         gift: "Hediye",
+        welcome_bonus: "Hoş Geldin Bonusu",
         manual_add: "Manuel Ekleme",
         manual_deduct: "Manuel Düşüm",
         nfc_token_load: "NFC Kart Yükleme",
@@ -650,23 +656,23 @@
         billing_google_confirm: "Play Satın Alma",
         billing_google: "Play Satın Alma",
         subscription_bonus: "Üyelik Bonusu",
-
         translate_ai_gemini: "Kültürel Translate",
         translate_ai_openai: "Kültürel Translate",
         arkadasla_translate_gemini: "Arkadaşla Çeviri",
         arkadasla_translate_openai: "Arkadaşla Çeviri",
-
         chat_text_gemini: "Yazılı Sohbet",
         chat_text_openai: "Yazılı Sohbet",
         chat_voice_gemini: "Sesli Sohbet",
         chat_voice_openai: "Sesli Sohbet",
-
         tts_mine: "Kendi Sesim",
         tts_second: "2. Ses",
-        tts_memory: "Hatıra Sesi"
+        tts_memory: "Hatıra Sesi",
+        usage_text: "Metin Kullanımı",
+        usage_voice: "Ses Kullanımı"
       };
 
       if (map[source]) return map[source];
+      if (map[txType]) return map[txType];
 
       if (source === "usage") {
         if (usageKind === "text") return "Text Kullanımı";
@@ -675,6 +681,7 @@
 
       if (txType === "credit") return "Yüklenen";
       if (txType === "debit") return "Harcanan";
+      if (txType === "gift") return "Hediye";
 
       return row?.description || row?.reason || row?.type || "İşlem";
     }
@@ -683,6 +690,7 @@
       const source = getRowSource(row);
 
       if (isLoadedRow(row)) {
+        if (source.includes("welcome_bonus")) return "🎊";
         if (source.includes("gift")) return "🎁";
         if (source.includes("google_play") || source.includes("billing_google") || source.includes("purchase")) return "🛒";
         if (source.includes("manual_code")) return "🔢";
@@ -711,7 +719,7 @@
     }
 
     function formatEntryTitle(row){
-      return row?.description || typeLabel(row) || "Jeton işlemi";
+      return row?.description || row?.reason || typeLabel(row) || "Jeton işlemi";
     }
 
     function filterRows(rows){
@@ -747,7 +755,7 @@
         } else if (activeFilter === "spent") {
           matchesFilter = isSpentRow(row);
         } else if (activeFilter === "gift") {
-          matchesFilter = source === "gift";
+          matchesFilter = source === "gift" || source === "welcome_bonus" || txType === "gift";
         } else if (activeFilter === "package_bonus") {
           matchesFilter = source === "package_bonus";
         } else if (activeFilter === "upgrade_credit") {
@@ -802,18 +810,20 @@
       if (meta?.lang) bits.push(`Dil: ${meta.lang}`);
       if (meta?.tone) bits.push(`Ton: ${meta.tone}`);
       if (meta?.chars_used) bits.push(`Karakter: ${meta.chars_used}`);
+      if (meta?.used_chars) bits.push(`Karakter: ${meta.used_chars}`);
       if (meta?.input_mode) bits.push(`Giriş: ${meta.input_mode}`);
       if (meta?.session_id) bits.push(`Oturum bağlı`);
       if (meta?.module === "arkadasla") bits.push("Arkadaşla modülünde kullanıldı");
 
       if (source === "nfc_token_load") bits.push("NFC kart ile jeton yüklendi");
       if (source === "manual_code_token_load") bits.push("Kod ile jeton yüklendi");
-      if (source === "google_play_token_load" || source === "billing_google_confirm" || source === "billing_google") {
+      if (source === "google_play_token_load" || source === "billing_google_confirm" || source === "billing_google" || source === "purchase") {
         bits.push("Google Play üzerinden jeton yüklendi");
       }
       if (source === "package_bonus") bits.push("Paketle gelen bonus jeton");
       if (source === "upgrade_credit") bits.push("Paket yükseltmesinden çevrilen kredi");
       if (source === "gift") bits.push("Hediye jeton hareketi");
+      if (source === "welcome_bonus") bits.push("İlk üyelikte verilen 5 jeton hoş geldin bonusu");
 
       return bits.join(" • ") || "Jeton hareket kaydı";
     }
