@@ -135,6 +135,20 @@ function getInstalledTargetLangsForNative(nativeLang) {
   return result.filter((code) => code !== native);
 }
 
+function getAllInstalledOfflineLangs() {
+  const installed = getInstalledOfflinePairs();
+  const result = new Set();
+
+  Object.values(installed).forEach((item) => {
+    const from = canonical(item?.from);
+    const to = canonical(item?.to);
+    if (from) result.add(from);
+    if (to) result.add(to);
+  });
+
+  return Array.from(result).filter(Boolean);
+}
+
 function hasInstalledOfflinePair(source, target) {
   const s = canonical(source);
   const t = canonical(target);
@@ -197,8 +211,8 @@ const offlineRequiredTitle = $("offlineRequiredTitle");
 const offlineRequiredText = $("offlineRequiredText");
 const offlineRequiredCloseBtn = $("offlineRequiredCloseBtn");
 
-let topLang = getNativeLang();
-let botLang = getInstalledTargetLangsForNative(topLang)[0] || "en";
+let topLang = "en";
+let botLang = getNativeLang();
 window.topLang = topLang;
 window.botLang = botLang;
 
@@ -227,6 +241,7 @@ let holdTimer = null;
 let keyboardAudioCtx = null;
 let keyboardMasterGain = null;
 let currentRuntimeMode = "online";
+let offlinePickerPool = [];
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -504,18 +519,25 @@ function syncModeUi() {
   localStorage.setItem(F2F_MODE_KEY, currentRuntimeMode);
 }
 
-function enforceOfflineLanguageRule() {
-  const nativeLang = getNativeLang();
-  const allowedTargets = getInstalledTargetLangsForNative(nativeLang);
+function getOfflinePickerPool() {
+  const native = getNativeLang();
+  const all = getAllInstalledOfflineLangs();
+  const set = new Set(all);
+  if (native) set.add(native);
+  return Array.from(set).filter(Boolean);
+}
 
-  topLang = nativeLang;
+function applyOfflineStartLayout() {
+  const native = getNativeLang();
+  const pool = getOfflinePickerPool();
+  offlinePickerPool = pool;
+
+  botLang = native || "tr";
+  const firstOther = pool.find((x) => canonical(x) !== canonical(botLang));
+  topLang = firstOther || botLang || "en";
+
   window.topLang = topLang;
-
-  if (!allowedTargets.includes(botLang)) {
-    botLang = allowedTargets[0] || "en";
-    window.botLang = botLang;
-  }
-
+  window.botLang = botLang;
   refreshLangLabels();
 }
 
@@ -527,27 +549,20 @@ function setModeOnline() {
 
 function setModeOffline() {
   currentRuntimeMode = "offline";
-  enforceOfflineLanguageRule();
+  applyOfflineStartLayout();
   syncModeUi();
 }
 
 function tryEnableOfflineMode() {
-  const nativeLang = getNativeLang();
-  const allowedTargets = getInstalledTargetLangsForNative(nativeLang);
+  const pool = getOfflinePickerPool();
 
-  if (!allowedTargets.length) {
-    openOfflineRequiredPopup("Önce ana diliniz için en az bir karşı dil yüklemeniz gereklidir.");
+  if (!pool.length || pool.length < 2) {
+    openOfflineRequiredPopup("Önce offline dillerden en az bir karşı dil yüklemeniz gereklidir.");
     setModeOnline();
     return false;
   }
 
-  topLang = nativeLang;
-  window.topLang = topLang;
-
-  if (!allowedTargets.includes(botLang)) {
-    botLang = allowedTargets[0];
-    window.botLang = botLang;
-  }
+  applyOfflineStartLayout();
 
   if (!hasInstalledOfflinePair(topLang, botLang)) {
     openOfflineRequiredPopup("Seçili dil çifti offline kullanım için hazır değil.");
@@ -564,23 +579,9 @@ function renderPop(side) {
   const list = side === "top" ? listTop : listBot;
   if (!list) return;
 
-  if (currentRuntimeMode === "offline" && side === "top") {
-    const current = langObj(getNativeLang());
-    list.innerHTML = `
-      <div class="pop-item active" data-code="${current.code}">
-        <div class="pop-left">
-          <div class="pop-flag">${current.flag}</div>
-          <div class="pop-name">${current.name}</div>
-        </div>
-        <div class="pop-code">ANA</div>
-      </div>
-    `;
-    return;
-  }
-
   let pool = LANGS;
-  if (currentRuntimeMode === "offline" && side === "bot") {
-    const allowed = new Set(getInstalledTargetLangsForNative(getNativeLang()));
+  if (currentRuntimeMode === "offline") {
+    const allowed = new Set(getOfflinePickerPool());
     pool = LANGS.filter((l) => allowed.has(canonical(l.code)));
   }
 
@@ -611,12 +612,11 @@ function renderPop(side) {
         window.botLang = botLang;
       }
 
-      if (currentRuntimeMode === "offline") {
-        enforceOfflineLanguageRule();
-      } else {
-        refreshLangLabels();
+      if (currentRuntimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang)) {
+        showToast("Bu iki dil arasında offline çeviri hazır değil");
       }
 
+      refreshLangLabels();
       renderKeyboard(side);
       closeAllPop();
     });
@@ -1816,13 +1816,16 @@ function startBoot() {
     setSystemPreparingUI();
     pointOrbTo("bot");
 
-    topLang = getNativeLang();
-    window.topLang = topLang;
+    botLang = getNativeLang();
+    topLang = "en";
 
-    const allowedTargets = getInstalledTargetLangsForNative(topLang);
-    if (!allowedTargets.includes(botLang)) {
-      botLang = allowedTargets[0] || "en";
-      window.botLang = botLang;
+    window.topLang = topLang;
+    window.botLang = botLang;
+
+    const firstOther = getInstalledTargetLangsForNative(botLang)[0];
+    if (firstOther) {
+      topLang = firstOther;
+      window.topLang = topLang;
     }
 
     refreshLangLabels();
@@ -1836,8 +1839,6 @@ function startBoot() {
 
     currentRuntimeMode = "online";
     syncModeUi();
-    window.topLang = topLang;
-    window.botLang = botLang;
 
     bootReady = true;
     setSystemReadyUI();
