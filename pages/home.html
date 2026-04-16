@@ -1101,42 +1101,58 @@ body.home-ready #pageContent{
 </main>
 
 <script type="module">
-import { mountShell } from "/js/ui_shell.js";
-try {
-  mountShell({ scroll: "auto" });
-} catch (e) {
-  console.error("ui_shell HATASI:", e);
-}
-</script>
-
-<script type="module">
-  import { supabase } from "/js/supabase_client.js";
-
-  <script type="module">
+  import { mountShell } from "/js/ui_shell.js";
   import { initGlobalAccess } from "/js/global_access.js";
   import { supabase } from "/js/supabase_client.js";
 
-  async function bootHomeGate() {
+  async function fillUserName() {
     try {
-      const result = await initGlobalAccess({ allowPublicPageBypass: false });
-      if (!result?.ok) return;
+      const heroUserName = document.getElementById("heroUserName");
+      if (!heroUserName) return;
 
-      document.body.classList.add("home-ready");
-
-      // İstersen ileride welcome bonus kontrolünü de burada açarız
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
-        if (skipWelcome) {
-          sessionStorage.removeItem("italky_skip_welcome_once");
-        }
+      const user = session?.user;
+      if (!user) {
+        heroUserName.textContent = "Hoş geldin";
+        return;
       }
+
+      const meta = user.user_metadata || {};
+      const rawName =
+        meta.hitap ||
+        meta.name ||
+        meta.full_name ||
+        user.email ||
+        "Hoş geldin";
+
+      const firstName = String(rawName).trim().split(" ")[0] || "Hoş geldin";
+      heroUserName.textContent = `${firstName}, hazır mısın?`;
     } catch (e) {
-      console.error("home gate error:", e);
+      console.error("hero user name error:", e);
     }
   }
 
-  bootHomeGate();
+  async function bootHome() {
+    try {
+      mountShell({ scroll: "auto" });
+
+      const result = await initGlobalAccess({ allowPublicPageBypass: false });
+      if (!result?.ok) return;
+
+      await fillUserName();
+
+      document.body.classList.add("home-ready");
+
+      const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
+      if (skipWelcome) {
+        sessionStorage.removeItem("italky_skip_welcome_once");
+      }
+    } catch (e) {
+      console.error("home boot error:", e);
+    }
+  }
+
+  bootHome();
 </script>
 
 </body>
