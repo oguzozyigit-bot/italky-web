@@ -9,7 +9,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  
+<style>
+  body{
+    visibility:hidden;
+  }
 
+  body.home-ready{
+    visibility:visible;
+  }
+</style>
 <style>
 :root{
   --txt:rgba(255,255,255,.96);
@@ -1103,43 +1112,31 @@ try {
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
 
-  async function loadHomeUserName() {
-    const heroUserName = document.getElementById("heroUserName");
-    if (!heroUserName) return;
+  <script type="module">
+  import { initGlobalAccess } from "/js/global_access.js";
+  import { supabase } from "/js/supabase_client.js";
 
+  async function bootHomeGate() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const uid = user?.id;
-      if (!uid) {
-        heroUserName.textContent = "Hoş geldin";
-        return;
+      const result = await initGlobalAccess({ allowPublicPageBypass: false });
+      if (!result?.ok) return;
+
+      document.body.classList.add("home-ready");
+
+      // İstersen ileride welcome bonus kontrolünü de burada açarız
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
+        if (skipWelcome) {
+          sessionStorage.removeItem("italky_skip_welcome_once");
+        }
       }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("hitap, name, full_name, display_name")
-        .eq("id", uid)
-        .maybeSingle();
-
-      const rawName =
-        profile?.hitap ||
-        profile?.name ||
-        profile?.display_name ||
-        profile?.full_name ||
-        user?.user_metadata?.hitap ||
-        user?.user_metadata?.name ||
-        user?.user_metadata?.full_name ||
-        user?.email ||
-        "";
-
-      const cleanName = String(rawName || "").trim();
-      heroUserName.textContent = cleanName ? cleanName : "Hoş geldin";
     } catch (e) {
-      heroUserName.textContent = "Hoş geldin";
+      console.error("home gate error:", e);
     }
   }
 
-  loadHomeUserName();
+  bootHomeGate();
 </script>
 
 </body>
