@@ -495,45 +495,45 @@
 
   <main id="pageContent">
     <section class="hero">
-      <div class="badge">🚀 15 GÜN ÜCRETSİZ DENEME</div>
-      <h2 class="hero-title">Sınırsızlığa giden <span class="accent">tek anahtar</span></h2>
+      <div class="badge">🎁 15 GÜN HEDİYE ERİŞİM</div>
+      <h2 class="hero-title">Tüm özelliklere giden <span class="accent">tek kapı</span></h2>
       <p class="hero-text">
-        italky Pro ile tüm özellikleri 15 gün boyunca ücretsiz keşfedin.
-        Süre bitiminde aboneliğiniz otomatik olarak devam eder, dilediğiniz an iptal edebilirsiniz.
+        Üyeliğinizi başlatın, 15 gün boyunca hediye erişim ile tüm sistemi kullanın.
+        Süre sonunda erişiminizin devam etmesi için üyeliğiniz aktif olmalıdır.
       </p>
     </section>
 
     <section class="price-card">
       <div class="price-top">
         <div>
-          <h3 class="plan-name">italky Pro</h3>
-          <p class="plan-sub">Yapay zeka ile dil engelini aşın</p>
+          <h3 class="plan-name">italky Üyelik</h3>
+          <p class="plan-sub">Dil engelini kaldıran tam erişim</p>
         </div>
-        <div class="plan-chip">Pro Erişim</div>
+        <div class="plan-chip">Tam Erişim</div>
       </div>
 
       <div class="price-line">
-        <div class="trial">15 Gün <small>Bedava</small></div>
+        <div class="trial">15 Gün <small>Hediye</small></div>
         <div class="price">Sonra 69,90 TL/ay</div>
       </div>
 
       <ul class="feature-list">
-        <li><span class="dot"></span><span>15 gün boyunca tam erişim, 0 TL ödeme.</span></li>
-        <li><span class="dot"></span><span>Sınırsız çeviri ve AI sesli iletişim.</span></li>
-        <li><span class="dot"></span><span>Özel jetonlar ile premium özellik kullanımı.</span></li>
-        <li><span class="dot"></span><span>Google Play üzerinden güvenli ve kolay iptal.</span></li>
+        <li><span class="dot"></span><span>15 gün boyunca tüm modüller açık.</span></li>
+        <li><span class="dot"></span><span>Canlı çeviri, AI ses ve premium akışlar hazır.</span></li>
+        <li><span class="dot"></span><span>Jetonlu özellikleri aynı hesapla kullanın.</span></li>
+        <li><span class="dot"></span><span>Google Play üzerinden güvenli ödeme ve iptal.</span></li>
       </ul>
 
       <div class="cta">
-        <button class="buy-btn" id="buyBtn" type="button">Denemeyi Şimdi Başlat</button>
+        <button class="buy-btn" id="buyBtn" type="button">Üyeliği Başlat</button>
         <button class="secondary-btn" id="continueBtn" type="button">Durumu Güncelle</button>
       </div>
     </section>
 
     <section class="meta-card">
       <div class="meta-line"><span>Üyelik Durumu:</span> <strong id="statusLabel">Kontrol ediliyor...</strong></div>
-      <div class="meta-line"><span>Kalan Deneme:</span> <strong id="trialDaysLabel">-</strong></div>
-      <div class="meta-line"><span>Bitiş Tarihi:</span> <strong id="membershipEndsLabel">-</strong></div>
+      <div class="meta-line"><span>Kalan Hediye Süresi:</span> <strong id="trialDaysLabel">-</strong></div>
+      <div class="meta-line"><span>Erişim Bitiş Tarihi:</span> <strong id="membershipEndsLabel">-</strong></div>
       <div class="meta-line"><span>Mevcut Jeton:</span> <strong id="tokensLabel">0</strong></div>
     </section>
 
@@ -542,7 +542,7 @@
     </div>
 
     <div class="tiny">
-      Ödeme ve abonelik yönetimi tamamen Google Play güvencesindedir. Ücretlendirme deneme süresi sonunda başlar.
+      Ödeme ve abonelik yönetimi tamamen Google Play güvencesindedir. Erişim hediye süresiyle başlar.
     </div>
   </main>
 
@@ -558,6 +558,7 @@
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
     import { setHeaderTokens } from "/js/ui_shell.js";
+    import { lockMembershipPageBack } from "/js/global_access.js";
 
     const $ = (id) => document.getElementById(id);
 
@@ -599,7 +600,7 @@
     function fmtDate(value){
       if (!value) return "-";
       try{
-        return new Date(value).toLocaleDateString("tr-TR", { day:'numeric', month:'long', year:'numeric' });
+        return new Date(value).toLocaleDateString("tr-TR", { day:"numeric", month:"long", year:"numeric" });
       }catch{
         return String(value);
       }
@@ -631,18 +632,26 @@
       const tokenCount = Number(data?.tokens ?? 0);
 
       UI.statusLabel.textContent = accessOpen ? "Aktif" : "Pasif";
-      UI.trialDaysLabel.textContent = (data?.trial_days_left ?? 0) + " Gün";
-      UI.membershipEndsLabel.textContent = fmtDate(data?.membership_ends_at);
+      UI.trialDaysLabel.textContent = (data?.trial_days_left ?? data?.gift_days_left ?? 0) + " Gün";
+
+      const endsAt =
+        data?.membership_ends_at ||
+        data?.package_ends_at ||
+        data?.gift_ends_at ||
+        data?.trial_ends_at ||
+        null;
+
+      UI.membershipEndsLabel.textContent = fmtDate(endsAt);
       UI.tokensLabel.textContent = String(tokenCount);
 
       try { setHeaderTokens(tokenCount); } catch {}
 
       if(accessOpen){
-        setStatus("ok", "Premium erişiminiz açık. Uygulamayı sınırsız kullanabilirsiniz.");
+        setStatus("ok", "Erişiminiz açık. Uygulamayı kullanmaya devam edebilirsiniz.");
         UI.buyBtn.textContent = "Uygulamaya Git";
       } else {
-        setStatus("warn", "Deneme süreniz dolmuş veya üyelik pasif. Lütfen devam etmek için abonelik başlatın.");
-        UI.buyBtn.textContent = "15 Gün Ücretsiz Başlat";
+        setStatus("warn", "Erişiminiz kapalı. Devam etmek için üyeliğinizi başlatın veya yenileyin.");
+        UI.buyBtn.textContent = "Üyeliği Başlat";
       }
     }
 
@@ -661,6 +670,7 @@
     async function handleBuyClick(){
       try{
         const access = await getAccessState();
+
         if(access?.access_open){
           location.replace(HOME);
           return;
@@ -688,7 +698,7 @@
         sendUserIdToNative();
 
         if(window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function"){
-          toast("Mevcut abonelik kontrol ediliyor...");
+          toast("Mevcut üyelik kontrol ediliyor...");
           window.AndroidBilling.restorePurchases();
           await new Promise(r => setTimeout(r, 1800));
         }
@@ -697,12 +707,12 @@
         syncAccessUi(access);
 
         if(access?.access_open){
-          toast("Abonelik doğrulandı!");
+          toast("Üyelik doğrulandı!");
           setTimeout(() => location.replace(HOME), 800);
           return;
         }
 
-        toast("Play aboneliğiniz varsa birkaç saniye sonra tekrar deneyin");
+        toast("Üyelik henüz aktif görünmüyor");
       }catch(e){
         console.error("recheckAndRoute error:", e);
         toast("Güncelleme başarısız");
@@ -710,12 +720,12 @@
     }
 
     window.onNativeSubscriptionSuccess = async function(){
-      toast("Ödeme başarılı! Yetkiler tanımlanıyor...");
+      toast("Ödeme başarılı! Erişim tanımlanıyor...");
       setTimeout(recheckAndRoute, 1500);
     };
 
     window.addEventListener("italky-subscription-success", () => {
-      toast("Abonelik başarılı!");
+      toast("Üyelik başarılı!");
       setTimeout(recheckAndRoute, 1500);
     });
 
@@ -728,6 +738,8 @@
 
     (async function boot(){
       try{
+        lockMembershipPageBack();
+
         const access = await getAccessState();
         sendUserIdToNative();
         syncAccessUi(access);
@@ -757,26 +769,6 @@
         }
       }
     }, true);
-   // Membership ekranından geri ile korumalı sayfalara dönmeyi engelle
-(function lockBackOnMembership(){
-  try{
-    const here = location.pathname + location.search + location.hash;
-
-    history.replaceState({ membershipLock: true }, "", here);
-    history.pushState({ membershipLock: true }, "", here);
-
-    window.addEventListener("popstate", () => {
-      try{
-        history.pushState({ membershipLock: true }, "", here);
-        toast("Erişim için üyelik gerekli");
-      }catch(e){
-        console.error("membership popstate lock error:", e);
-      }
-    });
-  }catch(e){
-    console.error("membership history lock init error:", e);
-  }
-})(); 
   </script>
 </body>
 </html>
