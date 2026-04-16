@@ -926,23 +926,20 @@ body.home-ready #pageContent{
 <body>
 
 <script type="module">
-  import { supabase } from "/js/supabase_client.js";
-  const LOGIN_PAGE = "/pages/login.html";
+  import { initGlobalAccess } from "/js/global_access.js";
 
-  async function bootAuthGate() {
+  async function bootPageGate() {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session?.user) {
-        location.replace(LOGIN_PAGE);
-        return;
+      const result = await initGlobalAccess({ allowPublicPageBypass: false });
+      if (result?.ok) {
+        document.body.classList.add("home-ready");
       }
-      document.body.classList.add("home-ready");
     } catch (e) {
-      location.replace(LOGIN_PAGE);
+      console.error("home access gate error:", e);
     }
   }
 
-  bootAuthGate();
+  bootPageGate();
 </script>
 
 <main id="pageContent">
@@ -1146,4 +1143,4 @@ try {
 </script>
 
 </body>
-  </html>
+</html>
