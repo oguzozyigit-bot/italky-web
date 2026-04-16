@@ -634,11 +634,13 @@ async function startLanguageInstallFlow(langCode) {
     `${info.name} indirilsin mi?`,
     `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
 
-İnternet bağlantınızdaki indirme hızınıza göre, yükleme süresi değişkenlik gösterebilir. Ortalama 30 saniye ile 3 dakika arasındadır.
+İnternet bağlantınızdaki indirme hızına göre yükleme süresi değişebilir.
+Ortalama 30 saniye ile 3 dakika arasındadır.
 
-Uygulamayı kapatmadan diğer modüllerde gezinebilirsiniz. Bu durum indirmeyi engellemez.
+Uygulamayı kapatmadan diğer modüllerde gezinebilirsiniz.
+Bu durum indirmeyi engellemez.
 
-Her bir çevrimdışı dil paketi: Telefonunuzda, Paket başına yaklaşık 140-190 MB yer kaplar.
+Her bir çevrimdışı dil paketi telefonda yaklaşık 140-190 MB yer kaplar.`
   );
 
   if (!confirmed) {
@@ -709,7 +711,7 @@ window.addEventListener("offlinePairDownloadStarted", (e) => {
   setLangProgress(code, {
     percent: 10,
     label: "Başlatılıyor...",
-    message: `Lütfen bekleyiniz. Şu anda ${info.name} için indirme başladı.`
+    message: d.message || `Lütfen bekleyiniz. Şu anda ${info.name} için indirme başladı.`
   });
   renderInstalledList();
 });
