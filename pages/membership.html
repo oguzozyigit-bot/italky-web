@@ -3,334 +3,199 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-  <title>italkyAI • Retro-Future Premium</title>
-  <meta name="theme-color" content="#120d16" />
+  <title>italkyAI • Premium</title>
+  <meta name="theme-color" content="#050608" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#120d16;
-      --text:#f8fafc;
-      --muted:rgba(255,255,255,.64);
+      --bg:#050608;
       --cyan:#22d3ee;
-      --blue:#3b82f6;
       --violet:#8b5cf6;
-      --green:#bef264;
-      --pink:#ec4899;
-      --grad:linear-gradient(135deg,#22d3ee 0%,#3b82f6 35%,#8b5cf6 68%,#ec4899 100%);
-      --shadow:0 22px 50px rgba(0,0,0,.45);
+      --grad:linear-gradient(135deg,#22d3ee 0%,#8b5cf6 100%);
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
     html,body{
       margin:0; width:100%; min-height:100%;
-      background:#120d16;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(34,211,238,.15) 0%, transparent 35%),
-        radial-gradient(circle at 20% 18%, rgba(236,72,153,.10) 0%, transparent 25%),
-        linear-gradient(180deg, #1d1016 0%, #120d16 100%);
-      color:var(--text); font-family:Outfit,sans-serif; overflow-x:hidden;
+      background:#050608;
+      color:#fff; font-family:'Outfit',sans-serif; overflow-x:hidden;
     }
 
-    body{ display:flex; flex-direction:column; min-height:100vh; }
+    body{
+      background: 
+        radial-gradient(circle at 50% -20%, rgba(34,211,238,0.15) 0%, transparent 40%),
+        radial-gradient(circle at 0% 100%, rgba(139,92,246,0.08) 0%, transparent 30%);
+    }
 
-    /* --- RETRO-FUTURE KRİSTAL VE KOYU DÜNYA --- */
-    .hero-visual {
-      height: 280px;
+    /* --- PREMIUM GÖRSEL MERKEZ --- */
+    .hero-box {
+      height: 320px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      perspective: 1000px;
       position: relative;
     }
 
-    .holo-container {
-      width: 220px;
-      height: 220px;
+    .crystal-outer {
+      width: 180px;
+      height: 180px;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
       transform-style: preserve-3d;
+      animation: slowRotate 20s linear infinite;
     }
 
-    .crystal-cage {
-      position: absolute;
-      width: 155px;
-      height: 155px;
-      transform-style: preserve-3d;
-      animation: rotateCrystal 22s linear infinite;
-    }
-
-    .crystal-side {
+    .glass-side {
       position: absolute;
       inset: 0;
-      border: 1.5px solid rgba(139,92,246,.4);
-      background: radial-gradient(circle, rgba(34,211,238,.15), transparent);
-      box-shadow: 0 0 25px rgba(139,92,246,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(10px);
     }
+    .s1{ transform: rotateY(0deg) translateZ(90px); }
+    .s2{ transform: rotateY(90deg) translateZ(90px); }
+    .s3{ transform: rotateX(90deg) translateZ(90px); }
 
-    .side1{ transform:rotateY(0deg) translateZ(77px); }
-    .side2{ transform:rotateY(90deg) translateZ(77px); }
-    .side3{ transform:rotateY(180deg) translateZ(77px); }
-    .side4{ transform:rotateY(270deg) translateZ(77px); }
-    .side5{ transform:rotateX(90deg) translateZ(77px); }
-    .side6{ transform:rotateX(-90deg) translateZ(77px); }
-
-    .planet-core {
+    /* DÜNYA VE LOGO: KOYU VE NET */
+    .dark-planet {
       position: absolute;
-      width: 120px;
-      height: 120px;
+      width: 130px;
+      height: 130px;
       border-radius: 50%;
-      background: linear-gradient(145deg, #0f172a 0%, #020617 100%);
+      background: radial-gradient(circle at 30% 30%, #1e293b, #0f172a, #020617);
       box-shadow: 
-        inset -12px -12px 25px rgba(0,0,0,.9),
-        inset 10px 10px 20px rgba(255,255,255,.05),
-        0 0 40px rgba(34,211,238,0.3);
-      z-index: 10;
-      animation: planetBreath 3.5s ease-in-out infinite;
+        inset -10px -10px 30px rgba(0,0,0,0.8),
+        0 0 40px rgba(34,211,238,0.2);
       display: flex; align-items: center; justify-content: center;
       border: 1px solid rgba(255,255,255,0.1);
+      z-index: 5;
     }
 
-    .planet-logo {
-      font-family: "Space Grotesk"; 
-      font-size: 18px; 
-      font-weight: 800; 
-      letter-spacing: -0.6px; 
-      color: #fff;
-      text-shadow: 0 0 12px rgba(255,255,255,0.5);
+    .italky-logo {
+      font-family: "Space Grotesk"; font-size: 20px; font-weight: 700; color: #fff;
     }
-    .planet-logo .ai { 
-      background: var(--grad); 
-      -webkit-background-clip: text; 
-      -webkit-text-fill-color: transparent; 
-      font-weight: 900;
-    }
+    .italky-logo span { color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
 
-    @keyframes rotateCrystal {
-      from { transform: rotateX(0deg) rotateY(0deg); }
-      to { transform: rotateX(360deg) rotateY(720deg); }
-    }
+    @keyframes slowRotate { from{transform:rotateX(0) rotateY(0);} to{transform:rotateX(360deg) rotateY(360deg);} }
 
-    @keyframes planetBreath {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.06); }
-    }
+    /* --- İÇERİK --- */
+    #pageContent { width:100%; max-width:500px; margin:0 auto; padding:20px; }
 
-    .slogan-wrap { text-align: center; margin-bottom: 25px; }
-    .slogan-main { font-family: "Space Grotesk"; font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1.5px; color: #fff; }
-    .slogan-sub { font-size: 16px; color: var(--cyan); font-weight: 700; margin-top: 6px; letter-spacing: 1px; }
+    .slogan-group { text-align: center; margin-bottom: 30px; }
+    .slogan-group h1 { font-family: 'Space Grotesk'; font-size: 32px; margin:0; letter-spacing: -1.5px; }
+    .slogan-group p { color: var(--cyan); font-weight: 600; margin: 5px 0 0; opacity: 0.8; }
 
-    #pageContent { width:100%; max-width:560px; margin:0 auto; padding:0 14px 40px; display:flex; flex-direction:column; gap:20px; flex:1; }
-
-    .hero-card {
-      padding: 24px 20px; border-radius: 28px;
+    .feature-card {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: var(--shadow);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 20px;
     }
 
-    .badge { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 8px; background: var(--pink); color: #fff; font-size: 10px; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
-
-    /* --- 1990'S RETRO-PREMIUM IKONLAR --- */
-    .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .feat-item { background: rgba(0,0,0,0.2); padding: 18px; border-radius: 4px; border-left: 3px solid var(--cyan); position: relative; }
-    .feat-item.highlight { grid-column: span 2; border-left-color: var(--pink); background: linear-gradient(90deg, rgba(236,72,153,0.1), transparent); }
+    .feat-row { display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-start; }
+    .feat-row:last-child { margin-bottom: 0; }
+    .feat-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
     
-    .retro-ico { 
-      font-size: 24px; 
-      margin-bottom: 12px; 
-      display: block; 
-      filter: drop-shadow(0 0 8px var(--cyan));
-      font-family: "Space Grotesk";
-      color: var(--cyan);
-    }
-    .highlight .retro-ico { color: var(--pink); filter: drop-shadow(0 0 8px var(--pink)); }
-
-    .feat-title { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 6px; font-family: "Space Grotesk"; }
-    .feat-desc { font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.5; }
+    .feat-text h3 { font-size: 16px; margin: 0 0 4px; font-weight: 700; color: #fff; }
+    .feat-text p { font-size: 13px; margin: 0; color: rgba(255,255,255,0.6); line-height: 1.5; }
 
     /* FİYAT ALANI */
-    .price-card {
-      border-radius: 4px; background: #000;
-      border: 1px solid var(--cyan); padding: 25px;
-      box-shadow: 0 0 20px rgba(34,211,238,0.15);
+    .offer-box {
+      background: linear-gradient(145deg, rgba(34,211,238,0.1), transparent);
+      border: 1px solid rgba(34,211,238,0.3);
+      border-radius: 24px; padding: 25px; text-align: center;
     }
 
-    .price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .promo-price { font-family: "Space Grotesk"; font-size: 48px; font-weight: 900; color: var(--green); line-height: 1; text-shadow: 3px 3px 0px rgba(0,0,0,1), 0 0 15px var(--green); }
-    .promo-label { font-size: 13px; color: #fff; font-weight: 900; margin-top: 8px; border-top: 1px solid var(--green); display: inline-block; padding-top: 4px; }
-
-    .feature-list { list-style: none; padding: 0; margin: 0 0 25px 0; display: grid; gap: 14px; }
-    .feature-list li { display: flex; gap: 12px; font-size: 13px; font-weight: 700; color: #fff; align-items: center; }
-    .feature-list li::before { content: ">>"; color: var(--cyan); font-family: monospace; font-weight: 900; }
+    .offer-price { font-family: 'Space Grotesk'; font-size: 48px; font-weight: 800; color: #bef264; margin-bottom: 5px; }
+    .offer-price small { font-size: 16px; color: #fff; opacity: 0.7; }
 
     .buy-btn {
-      width: 100%; min-height: 64px; border-radius: 4px; border: 2px solid #000;
-      background: var(--grad); color: #000; font-size: 18px; font-weight: 900;
-      cursor: pointer; box-shadow: 4px 4px 0px var(--cyan);
-      text-transform: uppercase; letter-spacing: 1px;
+      width: 100%; min-height: 60px; border-radius: 18px; border: none;
+      background: #fff; color: #000; font-size: 16px; font-weight: 800;
+      margin-top: 20px; cursor: pointer; transition: transform 0.2s;
     }
-    .buy-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--cyan); }
+    .buy-btn:active { transform: scale(0.97); }
 
-    .status-msg { margin-top: 20px; font-size: 11px; font-weight: 900; color: var(--cyan); text-align: center; font-family: monospace; text-transform: uppercase; }
-
-    .footer-seal { 
-      margin-top: 40px; 
-      text-align: center; 
-      font-size: 12px; 
-      font-weight: 900; 
-      color: var(--muted); 
-      letter-spacing: 2px;
-      font-family: "Space Grotesk";
-      border-top: 1px solid rgba(255,255,255,0.05);
-      padding-top: 20px;
-    }
-    .footer-seal span { color: var(--pink); }
+    .footer { text-align: center; padding: 40px 0; font-size: 12px; opacity: 0.4; font-weight: 700; letter-spacing: 1px; }
   </style>
 </head>
 <body>
 
-  <main id="pageContent">
-    <section class="hero-visual">
-      <div class="holo-container">
-        <div class="crystal-cage">
-          <div class="crystal-side side1"></div>
-          <div class="crystal-side side2"></div>
-          <div class="crystal-side side3"></div>
-          <div class="crystal-side side4"></div>
-          <div class="crystal-side side5"></div>
-          <div class="crystal-side side6"></div>
-        </div>
-        <div class="planet-core">
-          <div class="planet-logo">italky<span class="ai">AI</span></div>
-        </div>
+  <div id="pageContent">
+    <div class="hero-box">
+      <div class="crystal-outer">
+        <div class="glass-side s1"></div>
+        <div class="glass-side s2"></div>
+        <div class="glass-side s3"></div>
       </div>
-    </section>
-
-    <div class="slogan-wrap">
-      <h1 class="slogan-main">Dünyayı küçülttük.</h1>
-      <p class="slogan-sub">Cebinize sığdırdık.</p>
+      <div class="dark-planet">
+        <div class="italky-logo">italky<span>AI</span></div>
+      </div>
     </div>
 
-    <section class="hero-card">
-      <div class="badge">SYSTEM READY: 3 DAYS GIFT</div>
+    <div class="slogan-group">
+      <h1>Dünyayı küçülttük.</h1>
+      <p>Cebinize sığdırdık.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-row">
+        <div class="feat-icon">✨</div>
+        <div class="feat-text">
+          <h3>Hadi Beni Şaşırt!</h3>
+          <p>Yapay zekanın sınırlarını interaktif oyunlar ve akıllı sohbetler ile keşfet. Öğrenmeyi bir serüvene dönüştür.</p>
+        </div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-icon">🧠</div>
+        <div class="feat-text">
+          <h3>Semantik AI Engine</h3>
+          <p>Kelimeleri değil, cümlenin tam ruhunu ve bağlamını anlayan 2026 model ileri seviye teknoloji.</p>
+        </div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-icon">🌍</div>
+        <div class="feat-text">
+          <h3>Offline Global Erişim</h3>
+          <p>177 ülkede, 58 dilde internete ihtiyaç duymadan özgürce iletişim kurun.</p>
+        </div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-icon">🎙</div>
+        <div class="feat-text">
+          <h3>AI Voice</h3>
+          <p>Çeviriler artık senin sesin! Kendi tonun ve duygunla her dilde doğal bir şekilde konuş.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="offer-box">
+      <div class="offer-price">1 USD <small>/ ay</small></div>
+      <div style="font-weight: 800; font-size: 14px;">İLK İKİ AY AVANTAJI</div>
+      <p style="font-size: 12px; opacity: 0.6; margin-top: 10px;">Sonrasında standart 2 USD / Ay ile devam eder.</p>
       
-      <div class="feat-grid">
-        <div class="feat-item highlight">
-          <div class="retro-ico">(!?)</div>
-          <div class="feat-title">Hadi Beni Şaşırt!</div>
-          <div class="feat-desc">AI modunu aktif et! Kelime oyunları, interaktif sohbetler ve sürpriz içeriklerle dil öğrenmeyi fütüristik bir serüvene dönüştür.</div>
-        </div>
-
-        <div class="feat-item">
-          <div class="retro-ico">[AI]</div>
-          <div class="feat-title">Semantic Engine</div>
-          <div class="feat-desc">Kelimelerin ötesine geç. Cümlenin ruhunu, anlamını ve bağlamını anlayan 2026 model AI teknolojisi.</div>
-        </div>
-
-        <div class="feat-item">
-          <div class="retro-ico">((( )))</div>
-          <div class="feat-title">AI Voice</div>
-          <div class="feat-desc">Çeviriler artık senin sesin! Kendi tonun ve duygunla her dilde doğal bir şekilde konuş.</div>
-        </div>
-
-        <div class="feat-item">
-          <div class="retro-ico">OFF_LINE</div>
-          <div class="feat-title">58 Dil / 177 Ülke</div>
-          <div class="feat-desc">İnternet bağlantısına veda et. 58 dilde offline destekle dünyanın her yerinde özgürce iletişim kur.</div>
-        </div>
-
-        <div class="feat-item">
-          <div class="retro-ico">SAFE_PAY</div>
-          <div class="feat-title">Güvenli Ödeme</div>
-          <div class="feat-desc">Google Play güvencesi ve GSM operatörü faturalandırması ile hızlı, şeffaf ve güvenli abonelik.</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="price-card">
-      <div class="price-row">
-        <div class="promo-box">
-          <div class="promo-price">1 USD</div>
-          <div class="promo-label">İLK 2 AY AVANTAJI</div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 900;">STANDART</div>
-          <div style="font-size: 16px; color: #fff; font-weight: 900;">2 USD / AY</div>
-        </div>
-      </div>
-
-      <ul class="feature-list">
-        <li>Tüm offline paketlere sınırsız erişim.</li>
-        <li>Yapay zeka ile interaktif oyun modları.</li>
-        <li>Sınırsız Semantic AI ve Voice çeviri.</li>
-      </ul>
-
       <button class="buy-btn" id="buyBtn">Üyeliği Başlat</button>
-      
-      <div id="statusBox" class="status-msg">ACCESS_STATUS: WAITING...</div>
-    </section>
+    </div>
 
-    <footer class="footer-seal">
-      italky<span>AI</span> BY Ozyigit's 2026
-    </footer>
-  </main>
+    <div class="footer">italkyAI BY Ozyigit's 2026</div>
+  </div>
 
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
-    import { lockMembershipPageBack } from "/js/global_access.js";
-
-    const UI = {
-      buyBtn: document.getElementById("buyBtn"),
-      statusBox: document.getElementById("statusBox")
+    const UI = { buyBtn: document.getElementById("buyBtn") };
+    
+    UI.buyBtn.onclick = () => {
+      if(window.AndroidBilling) window.AndroidBilling.buy("italky_pro");
     };
-
-    const PRODUCT_ID = "italky_pro";
-    const API_URL = "https://italky-api.onrender.com/api/session/access-state";
-    let currentUserId = "";
-
-    async function checkAccess() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { location.replace("/pages/login.html"); return; }
-      currentUserId = session.user.id;
-
-      try {
-        const res = await fetch(API_URL, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        });
-        const data = await res.json();
-        const active = !!data.access_open;
-        
-        UI.statusBox.textContent = active ? "SYSTEM_STATUS: ACTIVE" : "SYSTEM_STATUS: WAITING";
-        UI.buyBtn.textContent = active ? "SİSTEME GİRİŞ YAP" : "ÜYELİĞİ BAŞLAT";
-        return active;
-      } catch (e) { return false; }
-    }
-
-    UI.buyBtn.onclick = async () => {
-      const active = await checkAccess();
-      if (active) { location.replace("/pages/home.html"); return; }
-
-      if (window.AndroidBilling) {
-        if (currentUserId) window.AndroidBilling.setUserId(currentUserId);
-        window.AndroidBilling.buy(PRODUCT_ID);
-      }
-    };
-
-    window.onNativeSubscriptionSuccess = () => {
-      setTimeout(() => checkAccess(), 1500);
-    };
-
-    (async () => {
-      lockMembershipPageBack();
-      await checkAccess();
-    })();
   </script>
 </body>
 </html>
