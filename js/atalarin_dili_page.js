@@ -266,17 +266,16 @@ function addBubble(where, kind, text, opts = {}) {
   inner.appendChild(txt);
   stack.appendChild(inner);
 
-  if (opts.subText) {
-    const sub = document.createElement("div");
-    sub.className = "sub-txt";
-    sub.textContent = String(opts.subText || "").trim();
-    stack.appendChild(sub);
-  }
+  const sub = document.createElement("div");
+  sub.className = "sub-txt";
+  sub.textContent = String(opts.subText || "").trim();
+  stack.appendChild(sub);
 
   row.appendChild(stack);
   wrap.appendChild(row);
   keepVisible();
-  return row;
+
+  return { row, txt, sub };
 }
 
 function clearLatest(where) {
@@ -427,29 +426,26 @@ async function processMessage(rawText) {
   autoResizeTextarea();
   syncComposerButtons();
 
-  addBubble("bot", "them", text);
+  addBubble("bot", "them", text, { subText: "" });
   clearLatest("top");
 
   frameRoot.classList.remove("is-ready", "is-error");
   frameRoot.classList.add("is-translating");
 
-  const latestRow = addBubble("top", "me", "Çevriliyor...", {
+  const bubble = addBubble("top", "me", "Çevriliyor...", {
     latest: true,
     speaker: true,
     speakText: text,
-    subText: ""
+    subText: text
   });
-
-  const latestTxt = latestRow?.querySelector(".txt");
-  const latestSub = latestRow?.querySelector(".sub-txt");
 
   const translated = turkishToGokturk(text);
 
   if (!translated) {
     frameRoot.classList.remove("is-translating");
     frameRoot.classList.add("is-error");
-    if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
-    if (latestSub) latestSub.textContent = "";
+    bubble.txt.textContent = "⚠️ Çeviri hatası";
+    bubble.sub.textContent = "";
     setTimeout(() => {
       frameRoot.classList.remove("is-error");
       frameRoot.classList.add("is-ready");
@@ -457,14 +453,8 @@ async function processMessage(rawText) {
     return;
   }
 
-  if (latestTxt) {
-    latestTxt.textContent = "";
-    await typewriteText(latestTxt, translated);
-  }
-
-  if (latestSub) {
-    latestSub.textContent = text;
-  }
+  await typewriteText(bubble.txt, translated);
+  bubble.sub.textContent = text;
 
   await speak(text);
 
@@ -475,6 +465,25 @@ async function processMessage(rawText) {
 /* =========================================================
    STT
 ========================================================= */
+
+function normalizeRecognitionPieces(results) {
+  let finalText = "";
+  let interimText = "";
+
+  for (let i = 0; i < results.length; i++) {
+    const piece = normalizeText(results[i]?.[0]?.transcript || "");
+    if (!piece) continue;
+
+    if (results[i].isFinal) {
+      finalText = normalizeText(`${finalText} ${piece}`);
+    } else {
+      interimText = normalizeText(piece);
+    }
+  }
+
+  const merged = normalizeText(`${finalText} ${interimText}`);
+  return merged;
+}
 
 function stopRecognizer() {
   try { recognizer?.stop(); } catch {}
@@ -503,10 +512,11 @@ function startRecognition() {
   recognizer.continuous = true;
   recognizer.maxAlternatives = 1;
 
-  let live = "";
+  let finalCaptured = "";
 
   recognizer.onstart = () => {
     recording = true;
+    finalCaptured = "";
     botComposer.classList.add("listening");
     botMic.classList.add("listening");
     syncComposerButtons();
@@ -515,13 +525,9 @@ function startRecognition() {
   };
 
   recognizer.onresult = (e) => {
-    const parts = [];
-    for (let i = 0; i < e.results.length; i++) {
-      const t = String(e.results[i]?.[0]?.transcript || "").trim();
-      if (t) parts.push(t);
-    }
-    live = normalizeText(parts.join(" "));
-    botInput.value = live;
+    const merged = normalizeRecognitionPieces(e.results);
+    finalCaptured = merged;
+    botInput.value = merged;
     autoResizeTextarea();
     syncComposerButtons();
   };
@@ -538,7 +544,7 @@ function startRecognition() {
   };
 
   recognizer.onend = async () => {
-    const finalText = normalizeText(botInput.value || live);
+    const finalText = normalizeText(finalCaptured || botInput.value);
     stopRecognizer();
     if (finalText) {
       await processMessage(finalText);
