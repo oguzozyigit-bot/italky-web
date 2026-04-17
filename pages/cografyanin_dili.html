@@ -18,10 +18,6 @@
   --safe-bottom:env(safe-area-inset-bottom, 0px);
   --text:#fff7ed;
   --muted:rgba(255,255,255,.64);
-  --earth-1:#92400e;
-  --earth-2:#b45309;
-  --earth-3:#78350f;
-
   --kb-bg:rgba(15,9,7,.98);
   --key-bg:#2b170f;
   --key-line:rgba(255,255,255,.08);
@@ -408,7 +404,7 @@ body{
   font-weight:800;
 }
 
-.send-btn,.mic-btn{
+.send-btn,.mic-btn,.kbd-btn{
   width:42px;
   height:42px;
   border:none;
@@ -422,6 +418,11 @@ body{
   color:#fff;
   position:relative;
   z-index:2;
+}
+
+.kbd-btn{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
 }
 
 .mic-btn.listening::after{
@@ -447,7 +448,8 @@ body{
 }
 
 .send-btn svg,
-.mic-btn svg{
+.mic-btn svg,
+.kbd-btn svg{
   width:22px;
   height:22px;
   stroke:currentColor;
@@ -601,8 +603,6 @@ body{
   border-radius:10px;
   animation:eqAnim .7s infinite ease-in-out;
 }
-
-.status-pill{ display:none; }
 
 #frameRoot.is-idle .ball-1,
 #frameRoot.is-idle .ball-2,
@@ -806,17 +806,6 @@ body{
   0%,100%{ height:5px; opacity:.6; }
   50%{ height:25px; opacity:1; }
 }
-
-@media (max-width:390px){
-  .lang-row-inner{
-    width:min(94vw, 410px);
-    grid-template-columns:1fr 38px;
-  }
-
-  .lang-trigger{
-    width:min(72vw, 276px);
-  }
-}
 </style>
 </head>
 
@@ -850,6 +839,14 @@ body{
 
       <div class="composer-stack">
         <div class="composer" id="topComposer">
+          <button id="topKbdBtn" class="kbd-btn" type="button" aria-label="Klavye aç">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+              <path d="M7 10h.01"></path><path d="M10 10h.01"></path><path d="M13 10h.01"></path><path d="M16 10h.01"></path>
+              <path d="M7 14h10"></path>
+            </svg>
+          </button>
+
           <div class="composer-center">
             <textarea id="topInput" class="composer-input" rows="1" placeholder="Çevrilecek metin" readonly></textarea>
           </div>
@@ -926,6 +923,14 @@ body{
 
       <div class="composer-stack">
         <div class="composer" id="botComposer">
+          <button id="botKbdBtn" class="kbd-btn" type="button" aria-label="Klavye aç">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+              <path d="M7 10h.01"></path><path d="M10 10h.01"></path><path d="M13 10h.01"></path><path d="M16 10h.01"></path>
+              <path d="M7 14h10"></path>
+            </svg>
+          </button>
+
           <div class="composer-center">
             <textarea id="botInput" class="composer-input" rows="1" placeholder="Mesajını buraya yaz" readonly></textarea>
           </div>
@@ -966,10 +971,10 @@ body{
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/cografyanin_dili_page.js?v=COGRAFYA_V2"></script>
+  <script type="module" src="/js/cografyanin_dili_page.js?v=COGRAFYA_V4"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     await initGlobalAccess({ allowPublicPageBypass: false });
   </script>
 </body>
-</html>
+        </html>
