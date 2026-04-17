@@ -77,6 +77,7 @@ const state = {
   botLastSpeech: ""
 };
 
+const KB_NUM_ROW = ["1","2","3","4","5","6","7","8","9","0"];
 const KB_ROWS = [
   ["q","w","e","r","t","y","u","ı","o","p","ğ","ü"],
   ["a","s","d","f","g","h","j","k","l","ş","i"],
@@ -97,13 +98,6 @@ function toast(msg = "") {
   }, 1800);
 }
 
-function openModal(title, text) {
-  if (!UI.genericBackdrop) return;
-  UI.genericTitle.textContent = title;
-  UI.genericText.textContent = text;
-  UI.genericBackdrop.classList.add("show");
-}
-
 function closeModal() {
   UI.genericBackdrop?.classList.remove("show");
 }
@@ -115,7 +109,7 @@ function currentTuran() {
 function updateLangButtons() {
   const item = currentTuran();
   if (UI.topLangTxt) UI.topLangTxt.textContent = `${item.flag} ${item.name}`;
-  if (UI.botLangTxt) UI.botLangTxt.textContent = `🇹🇷 Türkçe`;
+  if (UI.botLangTxt) UI.botLangTxt.textContent = "🇹🇷 Türkçe";
 }
 
 function pointOrbTo(side) {
@@ -152,6 +146,26 @@ function keepVisible() {
   });
 }
 
+function createSpeakerButton(getText, getLang) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "spk-icon";
+  btn.setAttribute("aria-label", "Tekrar dinle");
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    </svg>
+  `;
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await speakText(getText(), getLang());
+  });
+  return btn;
+}
+
 function addBubble(where, kind, text, opts = {}) {
   const wrap = where === "top" ? UI.topBody : UI.botBody;
   if (!wrap) return;
@@ -173,7 +187,6 @@ function addBubble(where, kind, text, opts = {}) {
   txt.className = "txt";
   txt.textContent = String(text || "");
   inner.appendChild(txt);
-
   row.appendChild(inner);
 
   if (opts.subText) {
@@ -240,7 +253,6 @@ function insertText(side, text) {
 
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? input.value.length;
-
   input.value = input.value.slice(0, start) + text + input.value.slice(end);
 
   const nextPos = start + text.length;
@@ -283,7 +295,6 @@ function backspaceText(side) {
 function toggleShift(side) {
   if (side === "top") state.shiftTop = !state.shiftTop;
   else state.shiftBot = !state.shiftBot;
-
   buildKeyboard(side === "top" ? UI.topKeyboard : UI.botKeyboard, side);
 }
 
@@ -295,6 +306,13 @@ function buildKeyboard(root, side) {
   if (!root) return;
   root.innerHTML = "";
   const shifted = currentShift(side);
+
+  const rowNums = document.createElement("div");
+  rowNums.className = "kb-row";
+  KB_NUM_ROW.forEach((ch) => {
+    rowNums.appendChild(createKey(ch, "", () => insertText(side, ch)));
+  });
+  root.appendChild(rowNums);
 
   KB_ROWS.forEach((chars, rowIndex) => {
     const row = document.createElement("div");
@@ -344,10 +362,9 @@ function buildKeyboard(root, side) {
   row4.appendChild(createKey(".", "", () => insertText(side, ".")));
   row4.appendChild(createKey("?", "", () => insertText(side, "?")));
   row4.appendChild(createKey("boşluk", "xwide", () => insertText(side, " ")));
-  row4.appendChild(createKey("tamam", "wide", () => {
+  row4.appendChild(createKey("tamam", "wide", async () => {
     toggleKeyboard(side, false);
-    if (side === "top") runTranslate("top");
-    else runTranslate("bot");
+    await sendTyped(side);
   }));
 
   root.appendChild(row4);
@@ -356,22 +373,20 @@ function buildKeyboard(root, side) {
 function toggleKeyboard(side, force = null) {
   const wrap = side === "top" ? UI.topKeyboardWrap : UI.botKeyboardWrap;
   const other = side === "top" ? UI.botKeyboardWrap : UI.topKeyboardWrap;
-
   if (!wrap) return;
 
   other?.classList.remove("show");
 
   const willShow = force === null ? !wrap.classList.contains("show") : !!force;
   wrap.classList.toggle("show", willShow);
-
   pointOrbTo(side);
 
   const input = side === "top" ? UI.topInput : UI.botInput;
   if (willShow && input) {
     setTimeout(() => {
-      input.focus();
-      const len = input.value.length;
-      input.setSelectionRange(len, len);
+      try {
+        input.focus();
+      } catch {}
     }, 30);
   }
 }
@@ -507,26 +522,6 @@ async function speakText(text, langCode) {
   } catch {}
 }
 
-function createSpeakerButton(getText, getLang) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "spk-icon";
-  btn.setAttribute("aria-label", "Tekrar dinle");
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-      <path d="M16 8a4 4 0 0 1 0 8"></path>
-      <path d="M19 5a8 8 0 0 1 0 14"></path>
-    </svg>
-  `;
-  btn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await speakText(getText(), getLang());
-  });
-  return btn;
-}
-
 async function getAccessToken() {
   const { data } = await supabase.auth.getSession();
   return data?.session?.access_token || "";
@@ -563,12 +558,10 @@ async function translateAI(text, from, to) {
   return out;
 }
 
-async function runTranslate(fromSide) {
-  const inputEl = fromSide === "top" ? UI.topInput : UI.botInput;
+async function runTranslateText(fromSide, text) {
   const targetSide = fromSide === "top" ? "bot" : "top";
-  const text = normalizeText(inputEl?.value);
-
-  if (!text) return;
+  const cleanText = normalizeText(text);
+  if (!cleanText) return;
 
   document.body.classList.remove("is-ready", "is-error");
   document.body.classList.add("is-translating");
@@ -581,10 +574,10 @@ async function runTranslate(fromSide) {
     let speakLang = "tr";
 
     if (fromSide === "top") {
-      translated = await translateAI(text, currentTuran().code, "tr");
+      translated = await translateAI(cleanText, currentTuran().code, "tr");
       speakLang = "tr";
     } else {
-      translated = await translateAI(text, "tr", currentTuran().code);
+      translated = await translateAI(cleanText, "tr", currentTuran().code);
       speakLang = currentTuran().code;
     }
 
@@ -593,7 +586,7 @@ async function runTranslate(fromSide) {
       speaker: true,
       speakText: translated,
       speakLang,
-      subText: text
+      subText: cleanText
     });
 
     await speakText(translated, speakLang);
@@ -603,7 +596,7 @@ async function runTranslate(fromSide) {
   } catch (e) {
     addBubble(targetSide, "me", "⚠️ Çeviri şu an yapılamadı.", {
       latest: true,
-      subText: text
+      subText: cleanText
     });
 
     document.body.classList.remove("is-translating");
@@ -615,6 +608,20 @@ async function runTranslate(fromSide) {
       document.body.classList.add("is-ready");
     }, 1200);
   }
+}
+
+async function sendTyped(side) {
+  const input = side === "top" ? UI.topInput : UI.botInput;
+  if (!input) return;
+
+  const text = normalizeText(input.value);
+  if (!text) return;
+
+  input.value = "";
+  autoResize(input);
+  syncComposerButtons();
+
+  await runTranslateText(side, text);
 }
 
 function extractStableRecognitionText(results) {
@@ -698,13 +705,15 @@ function startRecognition(side) {
     toast("Mikrofon hatası");
   };
 
-  recog.onend = () => {
+  recog.onend = async () => {
     const finalText = normalizeText(side === "top" ? state.topLastSpeech : state.botLastSpeech);
     stopRecognition(side);
 
     if (finalText) {
-      if (side === "top") runTranslate("top");
-      else runTranslate("bot");
+      inputEl.value = "";
+      autoResize(inputEl);
+      syncComposerButtons();
+      await runTranslateText(side, finalText);
     }
   };
 
@@ -728,9 +737,8 @@ function prepareInputs() {
     input.setAttribute("autocorrect", "off");
     input.setAttribute("autocapitalize", "off");
     input.setAttribute("spellcheck", "false");
-
     input.addEventListener("focus", () => {
-      input.blur();
+      try { input.blur(); } catch {}
     });
   });
 }
@@ -767,21 +775,21 @@ function bindEvents() {
   UI.topInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      runTranslate("top");
+      sendTyped("top");
     }
   });
 
   UI.botInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      runTranslate("bot");
+      sendTyped("bot");
     }
   });
 
   UI.topMic?.addEventListener("click", () => startRecognition("top"));
   UI.botMic?.addEventListener("click", () => startRecognition("bot"));
-  UI.topSend?.addEventListener("click", () => runTranslate("top"));
-  UI.botSend?.addEventListener("click", () => runTranslate("bot"));
+  UI.topSend?.addEventListener("click", () => sendTyped("top"));
+  UI.botSend?.addEventListener("click", () => sendTyped("bot"));
 
   UI.topKbdBtn?.addEventListener("click", () => toggleKeyboard("top"));
   UI.botKbdBtn?.addEventListener("click", () => toggleKeyboard("bot"));
