@@ -14,6 +14,7 @@ const frameRoot = $("frameRoot");
 
 const fromBtn = $("fromBtn");
 const toBtn = $("toBtn");
+const swapBtn = $("swapBtn");
 const fromFlag = $("fromFlag");
 const toFlag = $("toFlag");
 const fromText = $("fromText");
@@ -27,6 +28,7 @@ const resultSub = $("resultSub");
 const resultArea = $("resultArea");
 
 const inputBox = $("inputBox");
+const inputPreviewBubble = $("inputPreviewBubble");
 const micBtn = $("micBtn");
 const translateBtn = $("translateBtn");
 
@@ -95,10 +97,29 @@ function setOutput(main, sub = "") {
   resultArea.scrollTop = resultArea.scrollHeight + 300;
 }
 
+function syncInputPreview() {
+  inputPreviewBubble.textContent = normalizeText(inputBox.value);
+}
+
 function syncInputButtons() {
   const hasText = normalizeText(inputBox.value).length > 0;
-  micBtn.classList.toggle("hidden", hasText && !listening);
-  translateBtn.classList.toggle("hidden", !hasText);
+
+  if (listening) {
+    micBtn.classList.remove("hidden");
+    micBtn.classList.add("listening");
+    translateBtn.classList.add("hidden");
+    return;
+  }
+
+  micBtn.classList.remove("listening");
+
+  if (hasText) {
+    micBtn.classList.add("hidden");
+    translateBtn.classList.remove("hidden");
+  } else {
+    micBtn.classList.remove("hidden");
+    translateBtn.classList.add("hidden");
+  }
 }
 
 function stopSpeak() {
@@ -197,7 +218,7 @@ async function speakText(text, langCode) {
 }
 
 function hasOfflineBridge() {
-  return !!window.OfflineTranslate;
+  return typeof translateOffline === "function" && typeof downloadOfflineModel === "function";
 }
 
 function ensureMockOfflineLicenseOnce() {
@@ -476,27 +497,51 @@ async function manualDownloadOfflineCurrentModel() {
 }
 
 async function translateOnline(text, from, to) {
-  const r = await fetch(`${API_BASE}/translate_ai`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text,
-      from_lang: from,
-      to_lang: to,
-      mode: "normal"
-    })
+  try {
+    const r = await fetch(`${API_BASE}/translate_ai`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        from_lang: from,
+        to_lang: to,
+        mode: "normal"
+      })
+    });
+
+    const j = await r.json().catch(() => null);
+    const out =
+      String(j?.translated || "").trim() ||
+      String(j?.translation || "").trim() ||
+      "";
+
+    if (r.ok && out) return out;
+  } catch {}
+
+  const googleFreeUrl = "https://translate.googleapis.com/translate_a/single";
+  const params = new URLSearchParams({
+    client: "gtx",
+    sl: from,
+    tl: to,
+    dt: "t",
+    q: text
   });
 
-  const j = await r.json().catch(() => null);
-  if (!r.ok) throw new Error(j?.error || "online_translate_failed");
+  const g = await fetch(`${googleFreeUrl}?${params.toString()}`);
+  const data = await g.json().catch(() => null);
 
-  const out =
-    String(j?.translated || "").trim() ||
-    String(j?.translation || "").trim() ||
-    "";
+  let translated = "";
+  if (Array.isArray(data) && Array.isArray(data[0])) {
+    for (const item of data[0]) {
+      if (Array.isArray(item) && item[0]) {
+        translated += String(item[0]);
+      }
+    }
+  }
 
-  if (!out) throw new Error("online_empty_translation");
-  return out;
+  translated = normalizeText(translated);
+  if (!translated) throw new Error("online_translate_failed");
+  return translated;
 }
 
 async function translateText() {
@@ -608,6 +653,7 @@ function startRecognition() {
     inputBox.value = stableText;
     inputBox.style.height = "auto";
     inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+    syncInputPreview();
     syncInputButtons();
   };
 
@@ -643,6 +689,14 @@ async function requireLogin() {
 function bindEvents() {
   fromBtn.addEventListener("click", () => openLangPopover("from"));
   toBtn.addEventListener("click", () => openLangPopover("to"));
+
+  swapBtn.addEventListener("click", () => {
+    const oldFrom = fromLang;
+    fromLang = toLang;
+    toLang = oldFrom;
+    renderTopLanguageButtons();
+    toast("Diller değiştirildi");
+  });
 
   popoverClose.addEventListener("click", closeLangPopover);
   langPopover.addEventListener("click", (e) => {
@@ -692,6 +746,7 @@ function bindEvents() {
   inputBox.addEventListener("input", () => {
     inputBox.style.height = "auto";
     inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+    syncInputPreview();
     syncInputButtons();
   });
 
@@ -710,6 +765,7 @@ function bindEvents() {
     inputBox.value = "";
     inputBox.style.height = "auto";
     setOutput("...", "");
+    syncInputPreview();
     stopSpeak();
     stopRecognition();
     frameRoot.classList.remove("is-translating", "is-error");
@@ -730,6 +786,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   ensureMockOfflineLicenseOnce();
 
   inputBox.style.height = "auto";
+  inputBox.removeAttribute("readonly");
+  inputBox.disabled = false;
+  syncInputPreview();
   syncInputButtons();
   frameRoot.classList.add("is-ready");
 });
