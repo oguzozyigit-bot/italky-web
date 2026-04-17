@@ -44,8 +44,6 @@ const langList = $("langList");
 
 const toastEl = $("toast");
 
-const API_BASE = "https://italky-api.onrender.com";
-
 let fromLang = localStorage.getItem("text_single_from_lang") || "tr";
 let toLang = localStorage.getItem("text_single_to_lang") || "en";
 let ALL_LANGS = [];
@@ -185,7 +183,7 @@ async function speakText(text, langCode) {
   try {
     speakCtl = new AbortController();
 
-    const r = await fetch(`${API_BASE}/api/tts`, {
+    const r = await fetch("https://italky-api.onrender.com/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -224,7 +222,7 @@ function hasOfflineBridge() {
 function ensureMockOfflineLicenseOnce() {
   if (!hasOfflineBridge()) return;
 
-  const key = "italky_offline_mock_license_set_text_single_v1";
+  const key = "italky_offline_mock_license_set_text_single_v3";
   if (localStorage.getItem(key) === "1") return;
 
   try {
@@ -293,6 +291,36 @@ async function ensureOfflineModelReady(from, to) {
   const status = readOfflineStatusSafe();
   if (!status?.licenseValid) throw new Error("offline_license_invalid");
   await requestOfflineModelDownload(from, to, false);
+}
+
+async function translateGoogleFree(text, from, to) {
+  const params = new URLSearchParams({
+    client: "gtx",
+    sl: from,
+    tl: to,
+    dt: "t",
+    q: text
+  });
+
+  const r = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
+  if (!r.ok) {
+    throw new Error("google_free_failed");
+  }
+
+  const data = await r.json().catch(() => null);
+  let translated = "";
+
+  if (Array.isArray(data) && Array.isArray(data[0])) {
+    for (const item of data[0]) {
+      if (Array.isArray(item) && item[0]) {
+        translated += String(item[0]);
+      }
+    }
+  }
+
+  translated = normalizeText(translated);
+  if (!translated) throw new Error("google_free_empty");
+  return translated;
 }
 
 const TURKISH_LANG_NAMES = {
@@ -496,54 +524,6 @@ async function manualDownloadOfflineCurrentModel() {
   }
 }
 
-async function translateOnline(text, from, to) {
-  try {
-    const r = await fetch(`${API_BASE}/translate_ai`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        from_lang: from,
-        to_lang: to,
-        mode: "normal"
-      })
-    });
-
-    const j = await r.json().catch(() => null);
-    const out =
-      String(j?.translated || "").trim() ||
-      String(j?.translation || "").trim() ||
-      "";
-
-    if (r.ok && out) return out;
-  } catch {}
-
-  const googleFreeUrl = "https://translate.googleapis.com/translate_a/single";
-  const params = new URLSearchParams({
-    client: "gtx",
-    sl: from,
-    tl: to,
-    dt: "t",
-    q: text
-  });
-
-  const g = await fetch(`${googleFreeUrl}?${params.toString()}`);
-  const data = await g.json().catch(() => null);
-
-  let translated = "";
-  if (Array.isArray(data) && Array.isArray(data[0])) {
-    for (const item of data[0]) {
-      if (Array.isArray(item) && item[0]) {
-        translated += String(item[0]);
-      }
-    }
-  }
-
-  translated = normalizeText(translated);
-  if (!translated) throw new Error("online_translate_failed");
-  return translated;
-}
-
 async function translateText() {
   const text = normalizeText(inputBox.value);
   if (!text) {
@@ -567,7 +547,7 @@ async function translateText() {
       if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
       out = await requestOfflineTranslate(from, to, text);
     } else {
-      out = await translateOnline(text, from, to);
+      out = await translateGoogleFree(text, from, to);
     }
 
     if (myToken !== lastTranslateToken) return;
