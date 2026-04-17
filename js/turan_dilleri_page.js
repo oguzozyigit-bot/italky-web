@@ -34,6 +34,7 @@ const UI = {
   topBody: $("topBody"),
   topKeyboardWrap: $("topKeyboardWrap"),
   topKeyboard: $("topKeyboard"),
+  topKbdBtn: $("topKbdBtn"),
   popTop: $("pop-top"),
   closeTop: $("close-top"),
   listTop: $("list-top"),
@@ -48,6 +49,7 @@ const UI = {
   botBody: $("botBody"),
   botKeyboardWrap: $("botKeyboardWrap"),
   botKeyboard: $("botKeyboard"),
+  botKbdBtn: $("botKbdBtn"),
 
   homeBtn: $("homeBtn"),
   homeLink: $("homeLink"),
@@ -70,7 +72,9 @@ const state = {
   currentAudio: null,
   speakRunId: 0,
   shiftTop: false,
-  shiftBot: false
+  shiftBot: false,
+  topLastSpeech: "",
+  botLastSpeech: ""
 };
 
 const KB_ROWS = [
@@ -84,6 +88,7 @@ function normalizeText(text) {
 }
 
 function toast(msg = "") {
+  if (!UI.miniToast) return;
   UI.miniToast.textContent = String(msg || "");
   UI.miniToast.classList.add("show");
   clearTimeout(window.__turanToast);
@@ -93,13 +98,14 @@ function toast(msg = "") {
 }
 
 function openModal(title, text) {
+  if (!UI.genericBackdrop) return;
   UI.genericTitle.textContent = title;
   UI.genericText.textContent = text;
   UI.genericBackdrop.classList.add("show");
 }
 
 function closeModal() {
-  UI.genericBackdrop.classList.remove("show");
+  UI.genericBackdrop?.classList.remove("show");
 }
 
 function currentTuran() {
@@ -108,45 +114,47 @@ function currentTuran() {
 
 function updateLangButtons() {
   const item = currentTuran();
-  UI.topLangTxt.textContent = `${item.flag} ${item.name}`;
-  UI.botLangTxt.textContent = `🇹🇷 Türkçe`;
+  if (UI.topLangTxt) UI.topLangTxt.textContent = `${item.flag} ${item.name}`;
+  if (UI.botLangTxt) UI.botLangTxt.textContent = `🇹🇷 Türkçe`;
 }
 
 function pointOrbTo(side) {
   document.body.classList.remove("to-top", "to-bot");
   document.body.classList.add(side === "top" ? "to-top" : "to-bot");
-  UI.centerHub.classList.toggle("to-top", side === "top");
+  UI.centerHub?.classList.toggle("to-top", side === "top");
   state.activeSide = side;
 }
 
 function autoResize(textarea) {
+  if (!textarea) return;
   textarea.style.height = "auto";
   textarea.style.height = `${Math.min(textarea.scrollHeight, 84)}px`;
 }
 
 function syncComposerButtons() {
-  const topHas = normalizeText(UI.topInput.value).length > 0;
-  UI.topMic.classList.toggle("hidden", topHas && !state.topListening);
-  UI.topSend.classList.toggle("hidden", !topHas);
-  UI.topMic.classList.toggle("listening", state.topListening);
-  UI.topComposer.classList.toggle("listening", state.topListening);
+  const topHas = normalizeText(UI.topInput?.value).length > 0;
+  UI.topMic?.classList.toggle("hidden", topHas && !state.topListening);
+  UI.topSend?.classList.toggle("hidden", !topHas);
+  UI.topMic?.classList.toggle("listening", state.topListening);
+  UI.topComposer?.classList.toggle("listening", state.topListening);
 
-  const botHas = normalizeText(UI.botInput.value).length > 0;
-  UI.botMic.classList.toggle("hidden", botHas && !state.botListening);
-  UI.botSend.classList.toggle("hidden", !botHas);
-  UI.botMic.classList.toggle("listening", state.botListening);
-  UI.botComposer.classList.toggle("listening", state.botListening);
+  const botHas = normalizeText(UI.botInput?.value).length > 0;
+  UI.botMic?.classList.toggle("hidden", botHas && !state.botListening);
+  UI.botSend?.classList.toggle("hidden", !botHas);
+  UI.botMic?.classList.toggle("listening", state.botListening);
+  UI.botComposer?.classList.toggle("listening", state.botListening);
 }
 
 function keepVisible() {
   requestAnimationFrame(() => {
-    UI.topBody.scrollTop = UI.topBody.scrollHeight + 300;
-    UI.botBody.scrollTop = UI.botBody.scrollHeight + 300;
+    if (UI.topBody) UI.topBody.scrollTop = UI.topBody.scrollHeight + 300;
+    if (UI.botBody) UI.botBody.scrollTop = UI.botBody.scrollHeight + 300;
   });
 }
 
 function addBubble(where, kind, text, opts = {}) {
   const wrap = where === "top" ? UI.topBody : UI.botBody;
+  if (!wrap) return;
 
   const row = document.createElement("div");
   row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
@@ -180,11 +188,13 @@ function addBubble(where, kind, text, opts = {}) {
 }
 
 function clearBubbles() {
-  UI.topBody.innerHTML = "";
-  UI.botBody.innerHTML = "";
+  if (UI.topBody) UI.topBody.innerHTML = "";
+  if (UI.botBody) UI.botBody.innerHTML = "";
 }
 
 function renderTopLangList() {
+  if (!UI.listTop) return;
+
   UI.listTop.innerHTML = TURAN_POOL.map((item) => `
     <div class="pop-item ${item.code === state.topLang ? "active" : ""}" data-code="${item.code}">
       <div class="pop-left">
@@ -200,7 +210,7 @@ function renderTopLangList() {
       state.topLang = el.dataset.code;
       updateLangButtons();
       renderTopLangList();
-      UI.popTop.classList.remove("show");
+      UI.popTop?.classList.remove("show");
       toast("Turan dili değişti");
     });
   });
@@ -226,6 +236,8 @@ function createIconKey(svg, cls = "", onClick = null) {
 
 function insertText(side, text) {
   const input = side === "top" ? UI.topInput : UI.botInput;
+  if (!input) return;
+
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? input.value.length;
 
@@ -244,6 +256,8 @@ function insertText(side, text) {
 
 function backspaceText(side) {
   const input = side === "top" ? UI.topInput : UI.botInput;
+  if (!input) return;
+
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? input.value.length;
 
@@ -278,6 +292,7 @@ function currentShift(side) {
 }
 
 function buildKeyboard(root, side) {
+  if (!root) return;
   root.innerHTML = "";
   const shifted = currentShift(side);
 
@@ -287,9 +302,7 @@ function buildKeyboard(root, side) {
 
     if (rowIndex === 2) {
       const shiftKey = createIconKey(
-        `<svg viewBox="0 0 24 24">
-          <path d="M12 4l7 8h-4v8H9v-8H5l7-8z"></path>
-        </svg>`,
+        `<svg viewBox="0 0 24 24"><path d="M12 4l7 8h-4v8H9v-8H5l7-8z"></path></svg>`,
         "wide",
         () => toggleShift(side)
       );
@@ -344,14 +357,17 @@ function toggleKeyboard(side, force = null) {
   const wrap = side === "top" ? UI.topKeyboardWrap : UI.botKeyboardWrap;
   const other = side === "top" ? UI.botKeyboardWrap : UI.topKeyboardWrap;
 
-  other.classList.remove("show");
+  if (!wrap) return;
+
+  other?.classList.remove("show");
 
   const willShow = force === null ? !wrap.classList.contains("show") : !!force;
   wrap.classList.toggle("show", willShow);
+
   pointOrbTo(side);
 
   const input = side === "top" ? UI.topInput : UI.botInput;
-  if (willShow) {
+  if (willShow && input) {
     setTimeout(() => {
       input.focus();
       const len = input.value.length;
@@ -550,7 +566,7 @@ async function translateAI(text, from, to) {
 async function runTranslate(fromSide) {
   const inputEl = fromSide === "top" ? UI.topInput : UI.botInput;
   const targetSide = fromSide === "top" ? "bot" : "top";
-  const text = normalizeText(inputEl.value);
+  const text = normalizeText(inputEl?.value);
 
   if (!text) return;
 
@@ -631,12 +647,12 @@ function stopRecognition(side) {
 function setListening(side, on) {
   if (side === "top") {
     state.topListening = !!on;
-    UI.topComposer.classList.toggle("listening", !!on);
-    UI.topMic.classList.toggle("listening", !!on);
+    UI.topComposer?.classList.toggle("listening", !!on);
+    UI.topMic?.classList.toggle("listening", !!on);
   } else {
     state.botListening = !!on;
-    UI.botComposer.classList.toggle("listening", !!on);
-    UI.botMic.classList.toggle("listening", !!on);
+    UI.botComposer?.classList.toggle("listening", !!on);
+    UI.botMic?.classList.toggle("listening", !!on);
   }
   syncComposerButtons();
 }
@@ -664,11 +680,15 @@ function startRecognition(side) {
   recog.onstart = () => {
     pointOrbTo(side);
     setListening(side, true);
+    if (side === "top") state.topLastSpeech = "";
+    else state.botLastSpeech = "";
   };
 
   recog.onresult = (e) => {
     const stableText = extractStableRecognitionText(e.results);
     inputEl.value = stableText;
+    if (side === "top") state.topLastSpeech = stableText;
+    else state.botLastSpeech = stableText;
     autoResize(inputEl);
     syncComposerButtons();
   };
@@ -679,7 +699,13 @@ function startRecognition(side) {
   };
 
   recog.onend = () => {
+    const finalText = normalizeText(side === "top" ? state.topLastSpeech : state.botLastSpeech);
     stopRecognition(side);
+
+    if (finalText) {
+      if (side === "top") runTranslate("top");
+      else runTranslate("bot");
+    }
   };
 
   if (side === "top") state.topRecognizer = recog;
@@ -692,88 +718,102 @@ function startRecognition(side) {
   }
 }
 
+function prepareInputs() {
+  [UI.topInput, UI.botInput].forEach((input) => {
+    if (!input) return;
+    input.readOnly = false;
+    input.disabled = false;
+    input.setAttribute("inputmode", "none");
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("autocorrect", "off");
+    input.setAttribute("autocapitalize", "off");
+    input.setAttribute("spellcheck", "false");
+
+    input.addEventListener("focus", () => {
+      input.blur();
+    });
+  });
+}
+
 function bindEvents() {
-  UI.topLangBtn.addEventListener("click", () => {
+  UI.topLangBtn?.addEventListener("click", () => {
     renderTopLangList();
-    UI.popTop.classList.add("show");
+    UI.popTop?.classList.add("show");
   });
 
-  UI.closeTop.addEventListener("click", () => UI.popTop.classList.remove("show"));
-  UI.popTop.addEventListener("click", (e) => {
+  UI.closeTop?.addEventListener("click", () => UI.popTop?.classList.remove("show"));
+  UI.popTop?.addEventListener("click", (e) => {
     if (e.target === UI.popTop) UI.popTop.classList.remove("show");
   });
 
-  UI.topSettingsMini.addEventListener("click", () => {
+  UI.topSettingsMini?.addEventListener("click", () => {
     location.href = "/pages/premium_voice_settings.html?from=turan_dilleri";
   });
 
-  UI.botSettingsMini.addEventListener("click", () => {
+  UI.botSettingsMini?.addEventListener("click", () => {
     location.href = "/pages/premium_voice_settings.html?from=turan_dilleri";
   });
 
-  UI.topInput.addEventListener("input", () => {
+  UI.topInput?.addEventListener("input", () => {
     autoResize(UI.topInput);
     syncComposerButtons();
   });
 
-  UI.botInput.addEventListener("input", () => {
+  UI.botInput?.addEventListener("input", () => {
     autoResize(UI.botInput);
     syncComposerButtons();
   });
 
-  UI.topInput.addEventListener("focus", () => pointOrbTo("top"));
-  UI.botInput.addEventListener("focus", () => pointOrbTo("bot"));
-
-  UI.topInput.addEventListener("keydown", (e) => {
+  UI.topInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       runTranslate("top");
     }
   });
 
-  UI.botInput.addEventListener("keydown", (e) => {
+  UI.botInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       runTranslate("bot");
     }
   });
 
-  UI.topMic.addEventListener("click", () => startRecognition("top"));
-  UI.botMic.addEventListener("click", () => startRecognition("bot"));
-  UI.topSend.addEventListener("click", () => runTranslate("top"));
-  UI.botSend.addEventListener("click", () => runTranslate("bot"));
+  UI.topMic?.addEventListener("click", () => startRecognition("top"));
+  UI.botMic?.addEventListener("click", () => startRecognition("bot"));
+  UI.topSend?.addEventListener("click", () => runTranslate("top"));
+  UI.botSend?.addEventListener("click", () => runTranslate("bot"));
 
-  UI.topKbdBtn.addEventListener("click", () => toggleKeyboard("top"));
-  UI.botKbdBtn.addEventListener("click", () => toggleKeyboard("bot"));
+  UI.topKbdBtn?.addEventListener("click", () => toggleKeyboard("top"));
+  UI.botKbdBtn?.addEventListener("click", () => toggleKeyboard("bot"));
 
-  UI.homeLink.addEventListener("click", (e) => {
+  UI.homeLink?.addEventListener("click", (e) => {
     e.preventDefault();
     location.href = "/pages/home.html";
   });
 
-  UI.homeBtn.addEventListener("click", () => {
+  UI.homeBtn?.addEventListener("click", () => {
     location.href = "/pages/home.html";
   });
 
-  UI.clearBtn.addEventListener("click", () => {
-    UI.topInput.value = "";
-    UI.botInput.value = "";
+  UI.clearBtn?.addEventListener("click", () => {
+    if (UI.topInput) UI.topInput.value = "";
+    if (UI.botInput) UI.botInput.value = "";
     autoResize(UI.topInput);
     autoResize(UI.botInput);
     stopAudio();
     stopRecognition("top");
     stopRecognition("bot");
     clearBubbles();
-    UI.topKeyboardWrap.classList.remove("show");
-    UI.botKeyboardWrap.classList.remove("show");
+    UI.topKeyboardWrap?.classList.remove("show");
+    UI.botKeyboardWrap?.classList.remove("show");
     syncComposerButtons();
     document.body.classList.remove("is-translating", "is-error");
     document.body.classList.add("is-ready");
     pointOrbTo("bot");
   });
 
-  UI.genericCloseBtn.addEventListener("click", closeModal);
-  UI.genericBackdrop.addEventListener("click", (e) => {
+  UI.genericCloseBtn?.addEventListener("click", closeModal);
+  UI.genericBackdrop?.addEventListener("click", (e) => {
     if (e.target === UI.genericBackdrop) closeModal();
   });
 }
@@ -790,6 +830,7 @@ async function requireLogin() {
 document.addEventListener("DOMContentLoaded", async () => {
   if (!(await requireLogin())) return;
 
+  prepareInputs();
   updateLangButtons();
   renderTopLangList();
   buildKeyboard(UI.topKeyboard, "top");
