@@ -14,7 +14,7 @@ const TURAN_POOL = [
   { code:"ky", name:"Kırgızca", flag:"🇰🇬" },
   { code:"uz", name:"Özbekçe", flag:"🇺🇿" },
   { code:"tk", name:"Türkmence", flag:"🇹🇲" },
-  { code:"ug", name:"Uygurca", flag:"🇺🇾" },
+  { code:"ug", name:"Uygurca", flag:"🌐" },
   { code:"tt", name:"Tatarca", flag:"🌐" },
   { code:"ba", name:"Başkurtça", flag:"🌐" },
   { code:"gag", name:"Gagavuzca", flag:"🌐" },
@@ -79,8 +79,8 @@ const UI = {
 const state = {
   popoverTarget: null,
   top: {
-    from: "tr",
-    to: "en",
+    from: "en",
+    to: "tr",
     listening: false,
     recognizer: null
   },
@@ -107,24 +107,27 @@ function toast(msg) {
   }, 1800);
 }
 
-function poolForSide(side) {
-  return side === "bot" ? TURAN_POOL : FOREIGN_POOL;
+function poolForTarget(side, field) {
+  if (side === "top") {
+    return field === "from" ? FOREIGN_POOL : FOREIGN_POOL;
+  }
+  return field === "from" ? TURAN_POOL : TURAN_POOL;
 }
 
-function findLang(side, code) {
-  return poolForSide(side).find((x) => x.code === code) || poolForSide(side)[0];
+function findLang(list, code) {
+  return list.find((x) => x.code === code) || list[0];
 }
 
 function updateLangPills() {
-  const tf = findLang("top", state.top.from);
-  const tt = findLang("top", state.top.to);
+  const tf = findLang(FOREIGN_POOL, state.top.from);
+  const tt = findLang(FOREIGN_POOL, state.top.to);
   UI.topFromFlag.textContent = tf.flag;
   UI.topFromText.textContent = tf.name;
   UI.topToFlag.textContent = tt.flag;
   UI.topToText.textContent = tt.name;
 
-  const bf = findLang("bot", state.bot.from);
-  const bt = findLang("bot", state.bot.to);
+  const bf = findLang(TURAN_POOL, state.bot.from);
+  const bt = findLang(TURAN_POOL, state.bot.to);
   UI.botFromFlag.textContent = bf.flag;
   UI.botFromText.textContent = bf.name;
   UI.botToFlag.textContent = bt.flag;
@@ -135,12 +138,11 @@ function syncSendButtons() {
   const topHasText = normalizeText(UI.topInput.value).length > 0;
   UI.topMicBtn.classList.toggle("hidden", topHasText && !state.top.listening);
   UI.topSendBtn.classList.toggle("hidden", !topHasText);
+  UI.topMicBtn.classList.toggle("listening", state.top.listening);
 
   const botHasText = normalizeText(UI.botInput.value).length > 0;
   UI.botMicBtn.classList.toggle("hidden", botHasText && !state.bot.listening);
   UI.botSendBtn.classList.toggle("hidden", !botHasText);
-
-  UI.topMicBtn.classList.toggle("listening", state.top.listening);
   UI.botMicBtn.classList.toggle("listening", state.bot.listening);
 }
 
@@ -171,19 +173,20 @@ function renderPopoverList(query = "") {
   if (!state.popoverTarget) return;
 
   const { side, field } = state.popoverTarget;
-  const q = normalizeText(query).toLowerCase();
+  const list = poolForTarget(side, field);
   const currentCode = state[side][field];
-  const list = poolForSide(side).filter((item) => {
-    if (!q) return true;
-    return `${item.name} ${item.code}`.toLowerCase().includes(q);
-  });
+  const q = normalizeText(query).toLowerCase();
 
-  if (!list.length) {
+  const filtered = !q
+    ? list
+    : list.filter((item) => `${item.name} ${item.code}`.toLowerCase().includes(q));
+
+  if (!filtered.length) {
     UI.langList.innerHTML = `<div style="padding:22px 14px;text-align:center;color:rgba(255,255,255,.52);font-size:13px;">Dil bulunamadı.</div>`;
     return;
   }
 
-  UI.langList.innerHTML = list.map((item) => `
+  UI.langList.innerHTML = filtered.map((item) => `
     <button class="lang-option ${item.code === currentCode ? "active" : ""}" type="button" data-code="${item.code}">
       <div class="lang-option-left">
         <div class="lang-option-flag">${item.flag}</div>
@@ -202,7 +205,7 @@ function renderPopoverList(query = "") {
       state[side][field] = code;
 
       if (state[side].from === state[side].to) {
-        const alt = poolForSide(side).find((x) => x.code !== code);
+        const alt = list.find((x) => x.code !== code);
         if (alt) {
           if (field === "from") state[side].to = alt.code;
           else state[side].from = alt.code;
@@ -390,8 +393,8 @@ async function runTranslate(fromSide) {
 
   if (!text) return;
 
-  frameRoot.classList.remove("is-ready", "is-error");
-  frameRoot.classList.add("is-translating");
+  document.getElementById("frameRoot").classList.remove("is-ready", "is-error");
+  document.getElementById("frameRoot").classList.add("is-translating");
 
   setResult(targetSide, "Çevriliyor...", text);
 
@@ -399,16 +402,16 @@ async function runTranslate(fromSide) {
     const translated = await translateAI(text, source.from, source.to);
     setResult(targetSide, translated, text);
     await speakText(translated, source.to);
-    frameRoot.classList.remove("is-translating", "is-error");
-    frameRoot.classList.add("is-ready");
+    document.getElementById("frameRoot").classList.remove("is-translating", "is-error");
+    document.getElementById("frameRoot").classList.add("is-ready");
   } catch (e) {
     setResult(targetSide, "⚠️ Çeviri şu an yapılamadı.", text);
-    frameRoot.classList.remove("is-translating");
-    frameRoot.classList.add("is-error");
+    document.getElementById("frameRoot").classList.remove("is-translating");
+    document.getElementById("frameRoot").classList.add("is-error");
     toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
     setTimeout(() => {
-      frameRoot.classList.remove("is-error");
-      frameRoot.classList.add("is-ready");
+      document.getElementById("frameRoot").classList.remove("is-error");
+      document.getElementById("frameRoot").classList.add("is-ready");
     }, 1200);
   }
 }
@@ -568,8 +571,8 @@ function bindEvents() {
     setResult("top", "...", "");
     setResult("bot", "...", "");
     syncSendButtons();
-    frameRoot.classList.remove("is-translating", "is-error");
-    frameRoot.classList.add("is-ready");
+    document.getElementById("frameRoot").classList.remove("is-translating", "is-error");
+    document.getElementById("frameRoot").classList.add("is-ready");
   });
 }
 
@@ -590,5 +593,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   syncSendButtons();
   setResult("top", "...", "");
   setResult("bot", "...", "");
-  frameRoot.classList.add("is-ready");
+  document.getElementById("frameRoot").classList.add("is-ready");
 });
