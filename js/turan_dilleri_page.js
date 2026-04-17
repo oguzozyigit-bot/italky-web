@@ -8,7 +8,6 @@ const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
 const TURAN_POOL = [
-  { code:"tr", name:"Türkçe", flag:"🇹🇷" },
   { code:"az", name:"Azerbaycan Türkçesi", flag:"🇦🇿" },
   { code:"kk", name:"Kazakça", flag:"🇰🇿" },
   { code:"ky", name:"Kırgızca", flag:"🇰🇬" },
@@ -22,41 +21,21 @@ const TURAN_POOL = [
   { code:"nog", name:"Nogayca", flag:"🌐" }
 ];
 
-const FOREIGN_POOL = [
-  { code:"tr", name:"Türkçe", flag:"🇹🇷" },
-  { code:"en", name:"İngilizce", flag:"🇬🇧" },
-  { code:"de", name:"Almanca", flag:"🇩🇪" },
-  { code:"fr", name:"Fransızca", flag:"🇫🇷" },
-  { code:"it", name:"İtalyanca", flag:"🇮🇹" },
-  { code:"es", name:"İspanyolca", flag:"🇪🇸" },
-  { code:"ar", name:"Arapça", flag:"🇸🇦" },
-  { code:"ru", name:"Rusça", flag:"🇷🇺" },
-  { code:"fa", name:"Farsça", flag:"🇮🇷" }
-];
-
 const UI = {
   settingsBtn: $("settingsBtn"),
 
-  topFromBtn: $("topFromBtn"),
-  topToBtn: $("topToBtn"),
-  topSwapBtn: $("topSwapBtn"),
-  topFromFlag: $("topFromFlag"),
-  topFromText: $("topFromText"),
-  topToFlag: $("topToFlag"),
-  topToText: $("topToText"),
+  topTuranBtn: $("topTuranBtn"),
+  topTuranFlag: $("topTuranFlag"),
+  topTuranText: $("topTuranText"),
   topInput: $("topInput"),
   topMicBtn: $("topMicBtn"),
   topSendBtn: $("topSendBtn"),
   topResultBubble: $("topResultBubble"),
   topResultSub: $("topResultSub"),
 
-  botFromBtn: $("botFromBtn"),
-  botToBtn: $("botToBtn"),
-  botSwapBtn: $("botSwapBtn"),
-  botFromFlag: $("botFromFlag"),
-  botFromText: $("botFromText"),
-  botToFlag: $("botToFlag"),
-  botToText: $("botToText"),
+  botTuranBtn: $("botTuranBtn"),
+  botTuranFlag: $("botTuranFlag"),
+  botTuranText: $("botTuranText"),
   botInput: $("botInput"),
   botMicBtn: $("botMicBtn"),
   botSendBtn: $("botSendBtn"),
@@ -79,14 +58,12 @@ const UI = {
 const state = {
   popoverTarget: null,
   top: {
-    from: "en",
-    to: "tr",
+    turan: "az",
     listening: false,
     recognizer: null
   },
   bot: {
-    from: "tr",
-    to: "az",
+    turan: "az",
     listening: false,
     recognizer: null
   },
@@ -107,31 +84,18 @@ function toast(msg) {
   }, 1800);
 }
 
-function poolForTarget(side, field) {
-  if (side === "top") {
-    return field === "from" ? FOREIGN_POOL : FOREIGN_POOL;
-  }
-  return field === "from" ? TURAN_POOL : TURAN_POOL;
-}
-
-function findLang(list, code) {
-  return list.find((x) => x.code === code) || list[0];
+function findTuran(code) {
+  return TURAN_POOL.find((x) => x.code === code) || TURAN_POOL[0];
 }
 
 function updateLangPills() {
-  const tf = findLang(FOREIGN_POOL, state.top.from);
-  const tt = findLang(FOREIGN_POOL, state.top.to);
-  UI.topFromFlag.textContent = tf.flag;
-  UI.topFromText.textContent = tf.name;
-  UI.topToFlag.textContent = tt.flag;
-  UI.topToText.textContent = tt.name;
+  const top = findTuran(state.top.turan);
+  UI.topTuranFlag.textContent = top.flag;
+  UI.topTuranText.textContent = top.name;
 
-  const bf = findLang(TURAN_POOL, state.bot.from);
-  const bt = findLang(TURAN_POOL, state.bot.to);
-  UI.botFromFlag.textContent = bf.flag;
-  UI.botFromText.textContent = bf.name;
-  UI.botToFlag.textContent = bt.flag;
-  UI.botToText.textContent = bt.name;
+  const bot = findTuran(state.bot.turan);
+  UI.botTuranFlag.textContent = bot.flag;
+  UI.botTuranText.textContent = bot.name;
 }
 
 function syncSendButtons() {
@@ -157,7 +121,7 @@ function setResult(targetSide, main, sub = "") {
 
 function openPopover(target) {
   state.popoverTarget = target;
-  UI.popoverTitle.textContent = "Dil Seç";
+  UI.popoverTitle.textContent = "Turan Dili Seç";
   UI.langSearch.value = "";
   renderPopoverList("");
   UI.langPopover.classList.add("show");
@@ -172,14 +136,13 @@ function closePopover() {
 function renderPopoverList(query = "") {
   if (!state.popoverTarget) return;
 
-  const { side, field } = state.popoverTarget;
-  const list = poolForTarget(side, field);
-  const currentCode = state[side][field];
+  const { side } = state.popoverTarget;
+  const currentCode = state[side].turan;
   const q = normalizeText(query).toLowerCase();
 
   const filtered = !q
-    ? list
-    : list.filter((item) => `${item.name} ${item.code}`.toLowerCase().includes(q));
+    ? TURAN_POOL
+    : TURAN_POOL.filter((item) => `${item.name} ${item.code}`.toLowerCase().includes(q));
 
   if (!filtered.length) {
     UI.langList.innerHTML = `<div style="padding:22px 14px;text-align:center;color:rgba(255,255,255,.52);font-size:13px;">Dil bulunamadı.</div>`;
@@ -202,16 +165,7 @@ function renderPopoverList(query = "") {
   UI.langList.querySelectorAll(".lang-option").forEach((btn) => {
     btn.addEventListener("click", () => {
       const code = btn.dataset.code;
-      state[side][field] = code;
-
-      if (state[side].from === state[side].to) {
-        const alt = list.find((x) => x.code !== code);
-        if (alt) {
-          if (field === "from") state[side].to = alt.code;
-          else state[side].from = alt.code;
-        }
-      }
-
+      state[side].turan = code;
       updateLangPills();
       closePopover();
     });
@@ -386,7 +340,6 @@ async function speakText(text, langCode) {
 }
 
 async function runTranslate(fromSide) {
-  const source = state[fromSide];
   const inputEl = fromSide === "top" ? UI.topInput : UI.botInput;
   const targetSide = fromSide === "top" ? "bot" : "top";
   const text = normalizeText(inputEl.value);
@@ -399,9 +352,20 @@ async function runTranslate(fromSide) {
   setResult(targetSide, "Çevriliyor...", text);
 
   try {
-    const translated = await translateAI(text, source.from, source.to);
+    let translated = "";
+    let speakLang = "tr";
+
+    if (fromSide === "bot") {
+      translated = await translateAI(text, "tr", state.bot.turan);
+      speakLang = state.bot.turan;
+    } else {
+      translated = await translateAI(text, state.top.turan, "tr");
+      speakLang = "tr";
+    }
+
     setResult(targetSide, translated, text);
-    await speakText(translated, source.to);
+    await speakText(translated, speakLang);
+
     document.getElementById("frameRoot").classList.remove("is-translating", "is-error");
     document.getElementById("frameRoot").classList.add("is-ready");
   } catch (e) {
@@ -495,23 +459,8 @@ function bindEvents() {
     location.href = "/pages/premium_voice_settings.html?from=turan_dilleri";
   });
 
-  UI.topFromBtn.addEventListener("click", () => openPopover({ side:"top", field:"from" }));
-  UI.topToBtn.addEventListener("click", () => openPopover({ side:"top", field:"to" }));
-  UI.topSwapBtn.addEventListener("click", () => {
-    const old = state.top.from;
-    state.top.from = state.top.to;
-    state.top.to = old;
-    updateLangPills();
-  });
-
-  UI.botFromBtn.addEventListener("click", () => openPopover({ side:"bot", field:"from" }));
-  UI.botToBtn.addEventListener("click", () => openPopover({ side:"bot", field:"to" }));
-  UI.botSwapBtn.addEventListener("click", () => {
-    const old = state.bot.from;
-    state.bot.from = state.bot.to;
-    state.bot.to = old;
-    updateLangPills();
-  });
+  UI.topTuranBtn.addEventListener("click", () => openPopover({ side:"top" }));
+  UI.botTuranBtn.addEventListener("click", () => openPopover({ side:"bot" }));
 
   UI.popoverClose.addEventListener("click", closePopover);
   UI.langPopover.addEventListener("click", (e) => {
@@ -526,6 +475,7 @@ function bindEvents() {
     UI.topInput.style.height = `${Math.min(UI.topInput.scrollHeight, 140)}px`;
     syncSendButtons();
   });
+
   UI.botInput.addEventListener("input", () => {
     UI.botInput.style.height = "auto";
     UI.botInput.style.height = `${Math.min(UI.botInput.scrollHeight, 140)}px`;
