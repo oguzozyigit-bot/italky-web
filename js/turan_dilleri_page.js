@@ -22,8 +22,6 @@ const TURAN_POOL = [
 ];
 
 const UI = {
-  topSection: $("topSection"),
-  botSection: $("botSection"),
   centerHub: $("centerHub"),
 
   topLangBtn: $("topLangBtn"),
@@ -75,10 +73,10 @@ const state = {
   shiftBot: false
 };
 
-const TR_KEYBOARD_ROWS = [
-  ["q", "w", "e", "r", "t", "y", "u", "ı", "o", "p", "ğ", "ü"],
-  ["a", "s", "d", "f", "g", "h", "j", "k", "l", "ş", "i"],
-  ["z", "x", "c", "v", "b", "n", "m", "ö", "ç"]
+const KB_ROWS = [
+  ["q","w","e","r","t","y","u","ı","o","p","ğ","ü"],
+  ["a","s","d","f","g","h","j","k","l","ş","i"],
+  ["z","x","c","v","b","n","m","ö","ç"]
 ];
 
 function normalizeText(text) {
@@ -157,12 +155,10 @@ function addBubble(where, kind, text, opts = {}) {
   inner.className = "bubble-row";
 
   if (opts.speaker) {
-    inner.appendChild(
-      createSpeakerButton(
-        () => opts.speakText || text,
-        () => opts.speakLang || "tr"
-      )
-    );
+    inner.appendChild(createSpeakerButton(
+      () => opts.speakText || text,
+      () => opts.speakLang || "tr"
+    ));
   }
 
   const txt = document.createElement("span");
@@ -285,7 +281,7 @@ function buildKeyboard(root, side) {
   root.innerHTML = "";
   const shifted = currentShift(side);
 
-  TR_KEYBOARD_ROWS.forEach((chars, rowIndex) => {
+  KB_ROWS.forEach((chars, rowIndex) => {
     const row = document.createElement("div");
     row.className = "kb-row";
 
@@ -331,21 +327,15 @@ function buildKeyboard(root, side) {
   const row4 = document.createElement("div");
   row4.className = "kb-row";
 
-  const comma = createKey(",", "", () => insertText(side, ","));
-  const dot = createKey(".", "", () => insertText(side, "."));
-  const question = createKey("?", "", () => insertText(side, "?"));
-  const space = createKey("boşluk", "xwide", () => insertText(side, " "));
-  const enter = createKey("tamam", "wide", () => {
+  row4.appendChild(createKey(",", "", () => insertText(side, ",")));
+  row4.appendChild(createKey(".", "", () => insertText(side, ".")));
+  row4.appendChild(createKey("?", "", () => insertText(side, "?")));
+  row4.appendChild(createKey("boşluk", "xwide", () => insertText(side, " ")));
+  row4.appendChild(createKey("tamam", "wide", () => {
     toggleKeyboard(side, false);
     if (side === "top") runTranslate("top");
     else runTranslate("bot");
-  });
-
-  row4.appendChild(comma);
-  row4.appendChild(dot);
-  row4.appendChild(question);
-  row4.appendChild(space);
-  row4.appendChild(enter);
+  }));
 
   root.appendChild(row4);
 }
@@ -410,12 +400,10 @@ async function getCurrentUserId() {
 
 function chooseWebVoice(langCode) {
   const voices = window.speechSynthesis?.getVoices?.() || [];
-  return (
-    voices.find(v => String(v.lang || "").toLowerCase().startsWith(String(langCode || "").toLowerCase())) ||
-    voices.find(v => String(v.lang || "").toLowerCase().startsWith("tr")) ||
-    voices[0] ||
-    null
-  );
+  return voices.find(v => String(v.lang || "").toLowerCase().startsWith(String(langCode || "").toLowerCase())) ||
+         voices.find(v => String(v.lang || "").toLowerCase().startsWith("tr")) ||
+         voices[0] ||
+         null;
 }
 
 async function speakViaApi(text, langCode) {
@@ -534,7 +522,7 @@ async function translateAI(text, from, to) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
     },
     body: JSON.stringify({
       text,
@@ -623,7 +611,6 @@ function extractStableRecognitionText(results) {
     if (results[i].isFinal) latestFinal = piece;
     else latestInterim = piece;
   }
-
   return normalizeText(latestFinal || latestInterim);
 }
 
