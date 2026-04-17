@@ -1,7 +1,6 @@
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
-import { mountShell } from "/js/ui_shell.js";
 import {
   getOfflineStatus,
   setMockOfflineLicense,
@@ -9,54 +8,61 @@ import {
   translateOffline
 } from "/js/offline_translate_bridge.js";
 
-try {
-  mountShell({ scroll: "none" });
-} catch (e) {
-  console.error("ui_shell HATASI:", e);
-}
-
-console.log("TEXT_TRANSLATE_FINAL_LOADED");
-
 const $ = (id) => document.getElementById(id);
+
+const frameRoot = $("frameRoot");
 
 const fromBtn = $("fromBtn");
 const toBtn = $("toBtn");
-const btnSwap = $("btnSwap");
-
 const fromFlag = $("fromFlag");
 const toFlag = $("toFlag");
-const fromName = $("fromName");
-const toName = $("toName");
+const fromText = $("fromText");
+const toText = $("toText");
 
-const srcTxt = $("srcTxt");
-const dstTxt = $("dstTxt");
+const offlineToggle = $("offlineToggle");
+const soundToggle = $("soundToggle");
 
-const btnSpeak = $("btnSpeak");
-const btnTranslate = $("btnTranslate");
-const btnOfflineModel = $("btnOfflineModel");
+const resultBubble = $("resultBubble");
+const resultSub = $("resultSub");
+const resultArea = $("resultArea");
 
-const langModal = $("langModal");
-const modalClose = $("modalClose");
+const inputBox = $("inputBox");
+const translateBtn = $("translateBtn");
+const speakBtn = $("speakBtn");
+
+const homeBtn = $("homeBtn");
+const homeLink = $("homeLink");
+const clearBtn = $("clearBtn");
+
+const langPopover = $("langPopover");
+const popoverTitle = $("popoverTitle");
+const popoverClose = $("popoverClose");
 const langSearch = $("langSearch");
 const langList = $("langList");
-const modalModeTitle = $("modalModeTitle");
+
 const toastEl = $("toast");
 
 const API_BASE = "https://italky-api.onrender.com";
 
-let modalMode = "from";
-let fromLang = localStorage.getItem("qtt_from_lang") || "tr";
-let toLang = localStorage.getItem("qtt_to_lang") || "en";
+let fromLang = localStorage.getItem("text_single_from_lang") || "tr";
+let toLang = localStorage.getItem("text_single_to_lang") || "en";
 let ALL_LANGS = [];
+let popoverMode = "from";
 
 let audio = null;
 let speakCtl = null;
 let speakToken = 0;
-let lastClickAt = 0;
-let activeTranslateToken = 0;
+let lastTranslateToken = 0;
+
+let offlineEnabled = localStorage.getItem("text_single_offline_enabled") === "1";
+let soundEnabled = localStorage.getItem("text_single_sound_enabled") !== "0";
 
 function canonical(code) {
   return String(code || "").trim().toLowerCase();
+}
+
+function normalizeText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
 }
 
 function escapeHtml(str) {
@@ -69,186 +75,18 @@ function escapeHtml(str) {
 }
 
 function toast(msg) {
-  console.log("[toast]", msg);
-  if (!toastEl) {
-    alert(String(msg || ""));
-    return;
-  }
+  if (!toastEl) return;
   toastEl.textContent = String(msg || "");
   toastEl.classList.add("show");
-  clearTimeout(window.__textTranslateToast);
-  window.__textTranslateToast = setTimeout(() => {
+  clearTimeout(window.__textSingleToast);
+  window.__textSingleToast = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 2600);
+  }, 2200);
 }
 
-function setOutputText(text) {
-  if (!dstTxt) return;
-  dstTxt.textContent = String(text || "");
-}
-
-function getSourceText() {
-  if (!srcTxt) return "";
-  return String(srcTxt.value || "").trim();
-}
-
-function hasOfflineBridge() {
-  return !!window.OfflineTranslate;
-}
-
-function ensureMockOfflineLicenseOnce() {
-  if (!hasOfflineBridge()) return;
-
-  const key = "italky_offline_mock_license_set_v2";
-  if (localStorage.getItem(key) === "1") return;
-
-  try {
-    setMockOfflineLicense(30);
-    localStorage.setItem(key, "1");
-    console.log("Mock lisans yazıldı");
-  } catch (e) {
-    console.warn("Mock lisans yazılamadı:", e);
-  }
-}
-
-function readOfflineStatusSafe() {
-  try {
-    return getOfflineStatus();
-  } catch (e) {
-    console.error("offline status error:", e);
-    return { ok: false, error: "offline_status_failed" };
-  }
-}
-
-function waitForCustomEventOnce(eventName, timeoutMs = 120000) {
-  return new Promise((resolve, reject) => {
-    let done = false;
-
-    const finish = (fn, value) => {
-      if (done) return;
-      done = true;
-      window.removeEventListener(eventName, onEvent);
-      clearTimeout(timer);
-      fn(value);
-    };
-
-    const onEvent = (e) => {
-      finish(resolve, e?.detail || {});
-    };
-
-    const timer = setTimeout(() => {
-      finish(reject, new Error(`${eventName}_timeout`));
-    }, timeoutMs);
-
-    window.addEventListener(eventName, onEvent, { once: true });
-  });
-}
-
-async function requestOfflineModelDownload(from, to, wifiOnly = false) {
-  if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
-
-  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 120000);
-  downloadOfflineModel(from, to, wifiOnly);
-  const detail = await waiter;
-
-  if (!detail?.ok) {
-    throw new Error(detail?.error || "offline_model_download_failed");
-  }
-
-  return detail;
-}
-
-async function requestOfflineTranslate(from, to, text) {
-  if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
-
-  const waiter = waitForCustomEventOnce("offlineTranslateResult", 120000);
-  translateOffline(from, to, text);
-  const detail = await waiter;
-
-  if (!detail?.ok) {
-    throw new Error(detail?.error || "offline_translate_failed");
-  }
-
-  return String(detail?.translatedText || "").trim();
-}
-
-async function manualDownloadOfflineCurrentModel() {
-  if (!hasOfflineBridge()) {
-    toast("Offline köprüsü bulunamadı.");
-    return;
-  }
-
-  const status = readOfflineStatusSafe();
-  console.log("offline status:", status);
-
-  if (!status?.licenseValid) {
-    toast("Offline lisans yok veya süresi dolmuş.");
-    return;
-  }
-
-  const from = canonical(fromLang);
-  const to = canonical(toLang);
-
-  try {
-    toast(`Model indiriliyor: ${from.toUpperCase()} → ${to.toUpperCase()}`);
-    const result = await requestOfflineModelDownload(from, to, false);
-    console.log("download result:", result);
-    toast(`Offline model hazır: ${from.toUpperCase()} → ${to.toUpperCase()}`);
-  } catch (e) {
-    console.error("model download error:", e);
-    const msg = e?.message || "bilinmeyen hata";
-    toast(`Model indirme hatası: ${msg}`);
-    alert(`Model indirme hatası:\n${msg}`);
-  }
-}
-
-async function translateText() {
-  const text = getSourceText();
-
-  if (!text) {
-    setOutputText("...");
-    toast("Önce çevrilecek bir metin yaz.");
-    return;
-  }
-
-  if (!hasOfflineBridge()) {
-    toast("Offline köprüsü bulunamadı.");
-    return;
-  }
-
-  const status = readOfflineStatusSafe();
-  if (!status?.licenseValid) {
-    toast("Offline lisans yok veya süresi dolmuş.");
-    return;
-  }
-
-  const myToken = ++activeTranslateToken;
-  const from = canonical(fromLang);
-  const to = canonical(toLang);
-
-  setOutputText("Çevriliyor...");
-
-  try {
-    const out = await requestOfflineTranslate(from, to, text);
-
-    if (myToken !== activeTranslateToken) return;
-
-    if (!out) {
-      throw new Error("offline_empty_translation");
-    }
-
-    setOutputText(out);
-
-    setTimeout(() => {
-      speakText(out, canonical(toLang));
-    }, 160);
-  } catch (e) {
-    console.error("offline translate error:", e);
-    const msg = e?.message || "bilinmeyen hata";
-    setOutputText("⚠️ Çeviri şu an yapılamadı.");
-    toast(`Çeviri hatası: ${msg}`);
-    alert(`Çeviri hatası:\n${msg}`);
-  }
+function setOutput(text, sub = "") {
+  resultBubble.textContent = String(text || "");
+  resultSub.textContent = String(sub || "");
 }
 
 function stopSpeak() {
@@ -269,6 +107,14 @@ function stopSpeak() {
   try { window.speechSynthesis?.cancel?.(); } catch {}
 }
 
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  return voices.find(v => String(v.lang || "").toLowerCase().startsWith(canonical(langCode))) ||
+         voices.find(v => String(v.lang || "").toLowerCase().startsWith("en")) ||
+         voices[0] ||
+         null;
+}
+
 function speakNativeFallback(text, langCode) {
   const t = String(text || "").trim();
   if (!t) return false;
@@ -277,7 +123,7 @@ function speakNativeFallback(text, langCode) {
     try { window.NativeTTS.stop?.(); } catch {}
     setTimeout(() => {
       try { window.NativeTTS.speak(t, String(langCode || "en")); } catch {}
-    }, 100);
+    }, 80);
     return true;
   }
 
@@ -286,6 +132,8 @@ function speakNativeFallback(text, langCode) {
   try { window.speechSynthesis.cancel(); } catch {}
   const u = new SpeechSynthesisUtterance(t);
   u.lang = String(langCode || "en");
+  const voice = chooseWebVoice(langCode);
+  if (voice) u.voice = voice;
   setTimeout(() => {
     try { window.speechSynthesis.speak(u); } catch {}
   }, 60);
@@ -294,15 +142,11 @@ function speakNativeFallback(text, langCode) {
 }
 
 async function speakText(text, langCode) {
-  const now = Date.now();
-  if (now - lastClickAt < 180) return;
-  lastClickAt = now;
-
-  const t = String(text || "").trim();
+  if (!soundEnabled) return;
+  const t = normalizeText(text);
   if (!t || t === "...") return;
 
   stopSpeak();
-
   const myToken = ++speakToken;
 
   try {
@@ -340,16 +184,82 @@ async function speakText(text, langCode) {
   }
 }
 
-async function requireLogin() {
-  const { data: { session } = {} } = await supabase.auth.getSession();
-  if (!session?.user) {
-    location.replace("/pages/login.html");
-    return false;
-  }
+function hasOfflineBridge() {
+  return !!window.OfflineTranslate;
+}
+
+function ensureMockOfflineLicenseOnce() {
+  if (!hasOfflineBridge()) return;
+
+  const key = "italky_offline_mock_license_set_text_single_v1";
+  if (localStorage.getItem(key) === "1") return;
+
   try {
-    await ensureAuthAndCacheUser();
+    setMockOfflineLicense(30);
+    localStorage.setItem(key, "1");
   } catch {}
-  return true;
+}
+
+function readOfflineStatusSafe() {
+  try {
+    return getOfflineStatus();
+  } catch {
+    return { ok: false, error: "offline_status_failed" };
+  }
+}
+
+function waitForCustomEventOnce(eventName, timeoutMs = 120000) {
+  return new Promise((resolve, reject) => {
+    let done = false;
+
+    const finish = (fn, value) => {
+      if (done) return;
+      done = true;
+      window.removeEventListener(eventName, onEvent);
+      clearTimeout(timer);
+      fn(value);
+    };
+
+    const onEvent = (e) => {
+      finish(resolve, e?.detail || {});
+    };
+
+    const timer = setTimeout(() => {
+      finish(reject, new Error(`${eventName}_timeout`));
+    }, timeoutMs);
+
+    window.addEventListener(eventName, onEvent, { once: true });
+  });
+}
+
+async function requestOfflineModelDownload(from, to, wifiOnly = false) {
+  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 120000);
+  downloadOfflineModel(from, to, wifiOnly);
+  const detail = await waiter;
+
+  if (!detail?.ok) {
+    throw new Error(detail?.error || "offline_model_download_failed");
+  }
+
+  return detail;
+}
+
+async function requestOfflineTranslate(from, to, text) {
+  const waiter = waitForCustomEventOnce("offlineTranslateResult", 120000);
+  translateOffline(from, to, text);
+  const detail = await waiter;
+
+  if (!detail?.ok) {
+    throw new Error(detail?.error || "offline_translate_failed");
+  }
+
+  return String(detail?.translatedText || "").trim();
+}
+
+async function ensureOfflineModelReady(from, to) {
+  const status = readOfflineStatusSafe();
+  if (!status?.licenseValid) throw new Error("offline_license_invalid");
+  await requestOfflineModelDownload(from, to, false);
 }
 
 const TURKISH_LANG_NAMES = {
@@ -445,25 +355,36 @@ function renderTopLanguageButtons() {
   const fromObj = getLangByCode(fromLang);
   const toObj = getLangByCode(toLang);
 
-  if (fromFlag) fromFlag.textContent = fromObj.flag;
-  if (toFlag) toFlag.textContent = toObj.flag;
-  if (fromName) fromName.textContent = fromObj.trName;
-  if (toName) toName.textContent = toObj.trName;
+  fromFlag.textContent = fromObj.flag;
+  toFlag.textContent = toObj.flag;
+  fromText.textContent = fromObj.trName;
+  toText.textContent = toObj.trName;
 
-  localStorage.setItem("qtt_from_lang", canonical(fromLang));
-  localStorage.setItem("qtt_to_lang", canonical(toLang));
+  localStorage.setItem("text_single_from_lang", canonical(fromLang));
+  localStorage.setItem("text_single_to_lang", canonical(toLang));
+}
+
+function renderToggles() {
+  offlineToggle.classList.toggle("active", !!offlineEnabled);
+  offlineToggle.classList.toggle("inactive", !offlineEnabled);
+
+  soundToggle.classList.toggle("active", !!soundEnabled);
+  soundToggle.classList.toggle("inactive", !soundEnabled);
+
+  localStorage.setItem("text_single_offline_enabled", offlineEnabled ? "1" : "0");
+  localStorage.setItem("text_single_sound_enabled", soundEnabled ? "1" : "0");
 }
 
 function renderLangList(query = "") {
   const q = String(query || "").trim().toLowerCase();
-  const currentCode = modalMode === "from" ? canonical(fromLang) : canonical(toLang);
+  const currentCode = popoverMode === "from" ? canonical(fromLang) : canonical(toLang);
 
   const filtered = !q
     ? ALL_LANGS
     : ALL_LANGS.filter((item) => item.searchText.includes(q));
 
   if (!filtered.length) {
-    langList.innerHTML = `<div class="empty-state">Aradığın dil bulunamadı.</div>`;
+    langList.innerHTML = `<div style="padding:22px 14px;text-align:center;color:rgba(255,255,255,.52);font-size:13px;">Aradığın dil bulunamadı.</div>`;
     return;
   }
 
@@ -485,7 +406,7 @@ function renderLangList(query = "") {
       const code = canonical(btn.dataset.code);
       if (!code) return;
 
-      if (modalMode === "from") {
+      if (popoverMode === "from") {
         fromLang = code;
         if (canonical(fromLang) === canonical(toLang)) {
           const other = ALL_LANGS.find((x) => x.code !== canonical(fromLang));
@@ -500,77 +421,220 @@ function renderLangList(query = "") {
       }
 
       renderTopLanguageButtons();
-      closeLangModal();
+      closeLangPopover();
     });
   });
 }
 
-function openLangModal(mode) {
-  modalMode = mode === "to" ? "to" : "from";
-  if (modalModeTitle) {
-    modalModeTitle.textContent = modalMode === "from" ? "Kaynak Dil" : "Hedef Dil";
-  }
-  if (langModal) {
-    langModal.classList.add("show");
-    langModal.setAttribute("aria-hidden", "false");
-  }
-  if (langSearch) {
-    langSearch.value = "";
-    setTimeout(() => langSearch.focus(), 40);
-  }
+function openLangPopover(mode) {
+  popoverMode = mode === "to" ? "to" : "from";
+  popoverTitle.textContent = popoverMode === "from" ? "Kaynak Dil Seç" : "Hedef Dil Seç";
+  langPopover.classList.add("show");
+  langSearch.value = "";
   renderLangList("");
+  setTimeout(() => langSearch.focus(), 40);
 }
 
-function closeLangModal() {
-  if (langModal) {
-    langModal.classList.remove("show");
-    langModal.setAttribute("aria-hidden", "true");
+function closeLangPopover() {
+  langPopover.classList.remove("show");
+}
+
+async function manualDownloadOfflineCurrentModel() {
+  if (!hasOfflineBridge()) {
+    toast("Offline köprüsü bulunamadı.");
+    return;
+  }
+
+  const status = readOfflineStatusSafe();
+  if (!status?.licenseValid) {
+    toast("Offline lisans yok veya süresi dolmuş.");
+    return;
+  }
+
+  const from = canonical(fromLang);
+  const to = canonical(toLang);
+
+  try {
+    toast(`Model indiriliyor: ${from.toUpperCase()} → ${to.toUpperCase()}`);
+    await ensureOfflineModelReady(from, to);
+    toast(`Offline model hazır: ${from.toUpperCase()} → ${to.toUpperCase()}`);
+  } catch (e) {
+    toast(`Model indirme hatası: ${e?.message || "bilinmeyen hata"}`);
   }
 }
 
-function bind() {
-  fromBtn?.addEventListener("click", () => openLangModal("from"));
-  toBtn?.addEventListener("click", () => openLangModal("to"));
-
-  btnSwap?.addEventListener("click", () => {
-    const a = fromLang;
-    const b = toLang;
-    fromLang = b;
-    toLang = a;
-    renderTopLanguageButtons();
-    toast("Diller değiştirildi");
+async function translateOnline(text, from, to) {
+  const r = await fetch(`${API_BASE}/translate_ai`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text,
+      from_lang: from,
+      to_lang: to,
+      mode: "normal"
+    })
   });
 
-  modalClose?.addEventListener("click", closeLangModal);
+  const j = await r.json().catch(() => null);
+  if (!r.ok) throw new Error(j?.error || "online_translate_failed");
 
-  langModal?.addEventListener("click", (e) => {
-    if (e.target === langModal) closeLangModal();
+  const out =
+    String(j?.translated || "").trim() ||
+    String(j?.translation || "").trim() ||
+    "";
+
+  if (!out) throw new Error("online_empty_translation");
+  return out;
+}
+
+async function translateText() {
+  const text = normalizeText(inputBox.value);
+  if (!text) {
+    setOutput("...", "");
+    toast("Önce çevrilecek bir metin yaz.");
+    return;
+  }
+
+  const myToken = ++lastTranslateToken;
+  const from = canonical(fromLang);
+  const to = canonical(toLang);
+
+  frameRoot.classList.remove("is-ready", "is-error");
+  frameRoot.classList.add("is-translating");
+  setOutput("Çevriliyor...", text);
+
+  try {
+    let out = "";
+
+    if (offlineEnabled) {
+      if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
+      out = await requestOfflineTranslate(from, to, text);
+    } else {
+      out = await translateOnline(text, from, to);
+    }
+
+    if (myToken !== lastTranslateToken) return;
+
+    setOutput(out, text);
+
+    frameRoot.classList.remove("is-translating", "is-error");
+    frameRoot.classList.add("is-ready");
+
+    if (soundEnabled) {
+      setTimeout(() => {
+        speakText(out, to);
+      }, 140);
+    }
+  } catch (e) {
+    if (myToken !== lastTranslateToken) return;
+
+    setOutput("⚠️ Çeviri şu an yapılamadı.", text);
+    frameRoot.classList.remove("is-translating");
+    frameRoot.classList.add("is-error");
+    toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
+
+    setTimeout(() => {
+      frameRoot.classList.remove("is-error");
+      frameRoot.classList.add("is-ready");
+    }, 1200);
+  }
+}
+
+function setOutput(main, sub = "") {
+  resultBubble.textContent = String(main || "");
+  resultSub.textContent = String(sub || "");
+  resultBubble.className = `bubble ${String(main || "").trim() && String(main || "").trim() !== "..." ? "latest" : "normal"}`;
+  resultArea.scrollTop = resultArea.scrollHeight + 300;
+}
+
+async function requireLogin() {
+  const { data: { session } = {} } = await supabase.auth.getSession();
+  if (!session?.user) {
+    location.replace("/pages/login.html");
+    return false;
+  }
+  try {
+    await ensureAuthAndCacheUser();
+  } catch {}
+  return true;
+}
+
+function bindEvents() {
+  fromBtn.addEventListener("click", () => openLangPopover("from"));
+  toBtn.addEventListener("click", () => openLangPopover("to"));
+
+  popoverClose.addEventListener("click", closeLangPopover);
+  langPopover.addEventListener("click", (e) => {
+    if (e.target === langPopover) closeLangPopover();
   });
 
-  langSearch?.addEventListener("input", (e) => {
+  langSearch.addEventListener("input", (e) => {
     renderLangList(e.target.value || "");
   });
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && langModal?.classList.contains("show")) {
-      closeLangModal();
+    if (e.key === "Escape" && langPopover.classList.contains("show")) {
+      closeLangPopover();
     }
   });
 
-  btnTranslate?.addEventListener("click", async () => {
-    await translateText();
-  });
+  offlineToggle.addEventListener("click", async () => {
+    offlineEnabled = !offlineEnabled;
+    renderToggles();
 
-  btnOfflineModel?.addEventListener("click", async () => {
-    toast("Offline butonu çalıştı");
-    await manualDownloadOfflineCurrentModel();
-  });
-
-  btnSpeak?.addEventListener("click", () => {
-    const t = String(dstTxt?.textContent || "").trim();
-    if (t && t !== "...") {
-      speakText(t, canonical(toLang));
+    if (offlineEnabled) {
+      toast("Offline modu açıldı");
+      try {
+        await manualDownloadOfflineCurrentModel();
+      } catch {}
+    } else {
+      toast("Offline modu kapatıldı");
     }
+  });
+
+  soundToggle.addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    renderToggles();
+    if (!soundEnabled) stopSpeak();
+    toast(soundEnabled ? "Ses açıldı" : "Ses kapatıldı");
+  });
+
+  translateBtn.addEventListener("click", translateText);
+
+  inputBox.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      translateText();
+    }
+  });
+
+  inputBox.addEventListener("input", () => {
+    inputBox.style.height = "auto";
+    inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+  });
+
+  speakBtn.addEventListener("click", () => {
+    const t = normalizeText(resultBubble.textContent);
+    if (!t || t === "..." || t.startsWith("⚠️")) return;
+    speakText(t, canonical(toLang));
+  });
+
+  clearBtn.addEventListener("click", () => {
+    inputBox.value = "";
+    inputBox.style.height = "auto";
+    setOutput("...", "");
+    stopSpeak();
+    frameRoot.classList.remove("is-translating", "is-error");
+    frameRoot.classList.add("is-ready");
+  });
+
+  homeLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = "/pages/home.html";
+  });
+
+  homeBtn.addEventListener("click", () => {
+    location.href = "/pages/home.html";
   });
 }
 
@@ -580,14 +644,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   ALL_LANGS = sanitizeLangPool();
   ensureValidLanguages();
   renderTopLanguageButtons();
-  renderLangList("");
-  bind();
+  renderToggles();
+  bindEvents();
 
-  setOutputText("...");
+  setOutput("...", "");
   ensureMockOfflineLicenseOnce();
 
-  console.log("offline status:", readOfflineStatusSafe());
-  console.log("TEXT_TRANSLATE_FINAL_LOADED");
+  frameRoot.classList.add("is-ready");
 });
 
 window.addEventListener("beforeunload", () => {
