@@ -3,6 +3,11 @@ import { supabase } from "/js/supabase_client.js";
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
+function apiUrl(path) {
+  const clean = String(path || "").replace(/^\/+/, "");
+  return `${API_BASE}/api/${clean}`;
+}
+
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
@@ -264,7 +269,6 @@ function playKeyClick(kind = "key") {
   }
 
   const now = ctx.currentTime;
-
   const oscA = ctx.createOscillator();
   const oscB = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -581,7 +585,7 @@ async function speakViaApi(text, langCode) {
     apiPresetVoice = "memory";
   }
 
-  const resp = await fetch(`${API_BASE}/api/tts`, {
+  const resp = await fetch(apiUrl("tts"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -647,7 +651,8 @@ async function getAccessToken() {
 
 async function translateAI(text, from, to) {
   const token = await getAccessToken();
-  const r = await fetch(`${API_BASE}/translate_ai`, {
+
+  const r = await fetch(apiUrl("translate_ai"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
