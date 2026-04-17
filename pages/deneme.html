@@ -18,163 +18,139 @@
 <style>
 :root{
   --bg: #0a070b;
-  --card-bg: rgba(255, 255, 255, 0.04);
+  --card-bg: rgba(255, 255, 255, 0.03);
   --card-border: rgba(255, 255, 255, 0.08);
   --txt: rgba(255, 255, 255, 0.98);
-  --muted: rgba(255, 255, 255, 0.55);
-  --accent: #67e8f9; /* Marka Cam Göbeği */
+  --muted: rgba(255, 255, 255, 0.50);
+  --accent: #67e8f9;
 }
 
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-  outline:none;
-}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
 html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  color:var(--txt);
-  font-family:'Outfit',sans-serif;
-  background:var(--bg);
-  scrollbar-width:none;
+  margin:0; width:100%; height:100%;
+  color:var(--txt); font-family:'Outfit',sans-serif;
+  background:var(--bg); scrollbar-width:none;
 }
 
 #pageContent::-webkit-scrollbar{ display:none; }
 
 body{
   background: 
-    radial-gradient(circle at 50% -10%, rgba(103, 232, 249, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 35%),
+    radial-gradient(circle at 50% -10%, rgba(103, 232, 249, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 30%),
     var(--bg);
   overflow:hidden;
 }
 
 #pageContent{
-  width:100%;
-  height:100%;
-  padding:12px 16px 24px;
-  display:block;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
+  width:100%; height:100%; padding:14px 16px 30px;
+  display:block; overflow-y:auto; -webkit-overflow-scrolling:touch;
 }
 
-.page-shell-fit{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  max-width: 500px;
-  margin: 0 auto;
-}
+.page-shell-fit{ display:flex; flex-direction:column; gap:16px; max-width: 500px; margin: 0 auto; }
 
-/* Hero & Hologram */
+/* Hero Section */
 .hero{ perspective:1000px; padding: 10px 0; }
 .heroTop{ display:flex; flex-direction:column; align-items:center; gap:8px; }
 
 .holo-container{
-  width:200px; height:200px;
-  position:relative;
+  width:180px; height:180px; position:relative;
   display:flex; align-items:center; justify-content:center;
   transform-style:preserve-3d;
 }
 
 .crystal-cage{
-  position:absolute; width:140px; height:140px;
-  transform-style:preserve-3d;
-  animation:rotateCrystal 20s linear infinite;
+  position:absolute; width:130px; height:130px;
+  transform-style:preserve-3d; animation:rotateCrystal 20s linear infinite;
 }
 
 .crystal-side{
-  position:absolute; inset:0;
-  border:1.5px solid rgba(103,232,249,0.3);
-  background:radial-gradient(circle, rgba(103,232,249,0.08), transparent);
+  position:absolute; inset:0; border:1px solid rgba(103,232,249,0.3);
+  background:radial-gradient(circle, rgba(103,232,249,0.05), transparent);
 }
 
-.side1{ transform:rotateY(0deg) translateZ(70px); }
-.side2{ transform:rotateY(90deg) translateZ(70px); }
-.side3{ transform:rotateY(180deg) translateZ(70px); }
-.side4{ transform:rotateY(270deg) translateZ(70px); }
-.side5{ transform:rotateX(90deg) translateZ(70px); }
-.side6{ transform:rotateX(-90deg) translateZ(70px); }
+.side1{ transform:rotateY(0deg) translateZ(65px); }
+.side2{ transform:rotateY(90deg) translateZ(65px); }
+.side3{ transform:rotateY(180deg) translateZ(65px); }
+.side4{ transform:rotateY(270deg) translateZ(65px); }
+.side5{ transform:rotateX(90deg) translateZ(65px); }
+.side6{ transform:rotateX(-90deg) translateZ(65px); }
 
 .planet-core{
-  position:relative; width:100px; height:100px;
-  border-radius:50%;
+  position:relative; width:90px; height:90px; border-radius:50%;
   background: radial-gradient(circle at 30% 30%, #222, #000);
-  box-shadow: 0 0 40px rgba(103,232,249,0.25), inset 2px 2px 10px rgba(255,255,255,0.1);
-  display:flex; align-items:center; justify-content:center;
-  z-index:10;
+  box-shadow: 0 0 40px rgba(103,232,249,0.3);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10;
 }
 
-.planet-nfc-text{ font-family:'Space Grotesk',sans-serif; font-weight:800; color:var(--accent); font-size:14px; }
+.nfc-ico-svg{ width:24px; height:24px; fill:var(--accent); margin-bottom:2px; }
+.planet-nfc-text{ font-family:'Space Grotesk',sans-serif; font-weight:800; color:#fff; font-size:12px; letter-spacing:1px; }
 
 .heroTitle{
-  font-family:'Space Grotesk',sans-serif; font-size:22px; text-align:center;
-  background: linear-gradient(to bottom, #fff, #aaa);
+  font-family:'Space Grotesk',sans-serif; font-size:20px; text-align:center;
+  background: linear-gradient(to bottom, #fff, #999);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin: 10px 0 0;
 }
 
-.heroName{ color:var(--muted); font-size:14px; font-weight:500; margin-top:-5px;}
-
-/* Card Systems */
+/* Grid & Cards */
 .home-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
 .mod-card, .wide-card{
-  position:relative; border-radius:24px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  text-decoration:none; color:#fff;
-  transition: all 0.2s ease;
+  position:relative; border-radius:26px;
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+  text-decoration:none; color:#fff; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow:hidden;
 }
 
-.mod-card:active, .wide-card:active{ transform: scale(0.97); background: rgba(255,255,255,0.08); }
+.mod-card:active, .wide-card:active{ transform: scale(0.96); background: rgba(255,255,255,0.07); }
 
-.mod-card{ padding:20px 16px 80px; min-height:240px; }
+.mod-card{ padding:24px 16px 90px; min-height:250px; }
 
-/* Renk Sızıntıları (Glows) */
-.face-card::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 0%, rgba(103,232,249,0.12), transparent 60%); pointer-events:none; }
-.offline-card::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 0%, rgba(239,68,68,0.1), transparent 60%); pointer-events:none; }
-.ai-chat-card::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 50%, rgba(168, 85, 247, 0.12), transparent 50%); pointer-events:none; }
-.atalar-card::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 50%, rgba(14, 165, 233, 0.12), transparent 50%); pointer-events:none; }
-.mezopotamya-card::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 50%, rgba(245, 158, 11, 0.1), transparent 50%); pointer-events:none; }
+/* Dynamic Card Glows */
+.c-blue::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.15), transparent 60%); pointer-events:none; }
+.c-red::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 0%, rgba(239, 68, 68, 0.12), transparent 60%); pointer-events:none; }
+.c-purple::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 50%, rgba(168, 85, 247, 0.12), transparent 50%); pointer-events:none; }
+.c-orange::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 50%, rgba(245, 158, 11, 0.12), transparent 50%); pointer-events:none; }
+.c-green::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 50%, rgba(34, 197, 94, 0.12), transparent 50%); pointer-events:none; }
+.c-gold::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 0% 50%, rgba(234, 179, 8, 0.1), transparent 50%); pointer-events:none; }
 
-.card-title{ font-family:'Space Grotesk',sans-serif; font-size:20px; margin:0 0 10px; }
-.card-desc{ font-size:12.5px; color:var(--muted); margin:3px 0; line-height:1.4; font-weight:400; }
+.card-title{ font-family:'Space Grotesk',sans-serif; font-size:20px; margin:0 0 10px; font-weight:700; }
+.card-desc{ font-size:12px; color:var(--muted); margin:4px 0; line-height:1.4; font-weight:400; }
 
 .card-art{
-  position:absolute; bottom:12px; left:12px; right:12px; height:60px;
-  background: rgba(255,255,255,0.03); border-radius:16px;
+  position:absolute; bottom:14px; left:14px; right:14px; height:64px;
+  background: rgba(255,255,255,0.04); border-radius:18px;
+  display:flex; align-items:center; justify-content:center; font-size:24px;
 }
 
 /* Wide Cards */
 .wide-stack{ display:flex; flex-direction:column; gap:12px; }
-.wide-card{ display:flex; align-items:center; gap:16px; padding:16px; }
+.wide-card{ display:flex; align-items:center; gap:16px; padding:18px; }
 
-.ai-chat-ico, .region-ico, .textwide-ico, .fun-ico, .level-ico{
-  width:56px; height:56px; border-radius:16px;
-  background: rgba(255,255,255,0.05);
+.ico-box{
+  width:54px; height:54px; border-radius:18px;
+  background: rgba(255,255,255,0.04);
   display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; border: 1px solid rgba(255,255,255,0.1);
+  flex-shrink:0; border: 1px solid rgba(255,255,255,0.08);
+  font-size:22px;
 }
 
 .wide-body{ flex:1; }
-.card-topline{ font-size:9px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
-.wide-title{ font-family:'Space Grotesk',sans-serif; font-size:18px; margin:0; }
+.card-topline{ font-size:9px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:4px; opacity:0.8; }
+.wide-title{ font-family:'Space Grotesk',sans-serif; font-size:18px; margin:0; font-weight:700; }
 .wide-desc{ font-size:12px; color:var(--muted); margin:4px 0 0; font-weight:400; }
 
 .arrow-chip{
-  width:32px; height:32px; border-radius:50%;
-  background: rgba(255,255,255,0.05);
+  width:30px; height:30px; border-radius:50%;
+  background: rgba(255,255,255,0.06);
   display:flex; align-items:center; justify-content:center;
 }
 .arrow-chip::after{
-  content:""; width:6px; height:6px;
-  border-top: 2px solid #fff; border-right: 2px solid #fff;
-  transform: rotate(45deg); margin-left:-2px;
+  content:""; width:5px; height:5px; border-top: 2px solid #fff; border-right: 2px solid #fff;
+  transform: rotate(45deg); margin-left:-2px; opacity:0.5;
 }
 
 @keyframes rotateCrystal{
@@ -182,8 +158,7 @@ body{
   to{ transform:rotateX(360deg) rotateY(720deg); }
 }
 
-/* Custom Icons */
-.orb-icon{ width:12px; height:12px; background:var(--accent); border-radius:50%; box-shadow: 0 0 15px var(--accent); }
+.glow-text { text-shadow: 0 0 10px currentColor; }
 </style>
 </head>
 
@@ -204,72 +179,124 @@ body{
             <div class="crystal-side side6"></div>
           </div>
           <div class="planet-core">
-            <div class="planet-nfc-text">NFC</div>
+            <svg class="nfc-ico-svg" viewBox="0 0 24 24"><path d="M20,2H4C2.9,2,2,2.9,2,4v16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M20,20H4V4h16V20z M18,6h-5c-1.1,0-2,0.9-2,2v2.2c-0.6-0.3-1.3-0.4-2-0.4c-2.2,0-4,1.8-4,4s1.8,4,4,4c0.7,0,1.4-0.2,2-0.4V20h5c1.1,0,2-0.9,2-2V8C20,6.9,19.1,6,18,6z M11,14c0,1.1-0.9,2-2,2s-2-0.9-2-2s0.9-2,2-2S11,12.9,11,14z M18,18h-2v-4.5c0-0.8-0.7-1.5-1.5-1.5S13,12.7,13,13.5V18h-2v-8h5c0.6,0,1,0.4,1,1V18z"/></svg>
+            <div class="planet-nfc-text">NFC ACCESS</div>
           </div>
         </div>
-        <h1 class="heroTitle">Dünyayı Cebinize Sığdırdık</h1>
-        <p class="heroName" id="heroUserName">Hoş geldin</p>
+        <h1 class="heroTitle">italkyAI • Global Vision</h1>
+        <p class="heroName" id="heroUserName">Yükleniyor...</p>
       </div>
     </section>
 
     <section class="home-grid">
-      <a class="mod-card face-card" href="/facetoface.html">
+      <a class="mod-card c-blue" href="/facetoface.html">
         <h2 class="card-title">YüzYüze</h2>
-        <p class="card-desc">Canlı konuşmaları anlık çevirir.</p>
-        <p class="card-desc">Dil bariyerini ortadan kaldırır.</p>
-        <div class="card-art"></div>
+        <p class="card-desc">Anlık karşılıklı çeviri.</p>
+        <p class="card-desc">Gecikmesiz diyalog.</p>
+        <div class="card-art">🎙️</div>
       </a>
 
-      <a class="mod-card offline-card" href="/pages/offline_languages.html">
+      <a class="mod-card c-red" href="/pages/offline_languages.html">
         <h2 class="card-title">Offline</h2>
-        <p class="card-desc">İnternet olmasa da çeviriye devam.</p>
-        <p class="card-desc">Dilleri indir, her yerde kullan.</p>
-        <div class="card-art"></div>
+        <p class="card-desc">Bağlantısız çeviri gücü.</p>
+        <p class="card-desc">Her an, her yerde.</p>
+        <div class="card-art">📡</div>
       </a>
     </section>
 
     <section class="wide-stack">
-      <a class="wide-card ai-chat-card" href="/pages/italkyai_chat.html">
-        <div class="ai-chat-ico"><div class="orb-icon"></div></div>
+      
+      <a class="wide-card c-purple" href="/pages/italkyai_chat.html">
+        <div class="ico-box glow-text" style="color:#a855f7">✦</div>
         <div class="wide-body">
-          <div class="card-topline">Zekâ</div>
+          <div class="card-topline">Yapay Zeka</div>
           <h2 class="wide-title">AI Sohbeti</h2>
-          <p class="wide-desc">Sor, yaz, konuş ve anında cevap al.</p>
+          <p class="wide-desc">Gelişmiş LLM ile akıllı asistanın.</p>
         </div>
         <div class="arrow-chip"></div>
       </a>
 
-      <a class="wide-card atalar-card" href="/pages/atalarin_dili.html">
-        <div class="region-ico" style="color:#0ea5e9">古</div>
+      <a class="wide-card c-blue" href="/pages/atalarin_dili.html">
+        <div class="ico-box glow-text" style="color:#0ea5e9">𐰔</div>
         <div class="wide-body">
-          <div class="card-topline">Miras</div>
+          <div class="card-topline">Kültür</div>
           <h2 class="wide-title">Ataların Dili</h2>
-          <p class="wide-desc">Göktürkçe ve kadim Türkçe köprüleri.</p>
+          <p class="wide-desc">Göktürkçe ve Orhun Yazıtları rehberi.</p>
         </div>
         <div class="arrow-chip"></div>
       </a>
 
-      <a class="wide-card mezopotamya-card" href="/pages/mezopotamyanin_dili.html">
-        <div class="region-ico" style="color:#f59e0b">☼</div>
+      <a class="wide-card c-orange" href="/pages/mezopotamyanin_dili.html">
+        <div class="ico-box glow-text" style="color:#f59e0b">☀️</div>
         <div class="wide-body">
-          <div class="card-topline">Coğrafya</div>
+          <div class="card-topline">Kadim</div>
           <h2 class="wide-title">Mezopotamya</h2>
-          <p class="wide-desc">Kürtçe, Zazaca ve Arapça yerel çeviri.</p>
+          <p class="wide-desc">Kürtçe, Zazaca ve yerel lehçeler.</p>
         </div>
         <div class="arrow-chip"></div>
       </a>
 
-      <a class="wide-card" style="--glow: #22c55e" href="/pages/game_menu.html">
-        <div class="fun-ico">🎲</div>
+      <a class="wide-card c-green" href="/pages/balkanlarin_dili.html">
+        <div class="ico-box glow-text" style="color:#22c55e">🌳</div>
         <div class="wide-body">
-          <div class="card-topline">Eğitim</div>
-          <h2 class="wide-title">Eğlenerek Öğren</h2>
-          <p class="wide-desc">Dil öğrenimini oyunla birleştir.</p>
+          <div class="card-topline">Komşu</div>
+          <h2 class="wide-title">Balkanlar</h2>
+          <p class="wide-desc">Boşnakça, Arnavutça ve fazlası.</p>
         </div>
         <div class="arrow-chip"></div>
       </a>
-    </section>
 
+      <a class="wide-card c-red" href="/pages/turklerin_dili.html">
+        <div class="ico-box glow-text" style="color:#ef4444">🏹</div>
+        <div class="wide-body">
+          <div class="card-topline">Turan</div>
+          <h2 class="wide-title">Türklerin Dili</h2>
+          <p class="wide-desc">Azerice, Kazakça, Özbekçe sentezi.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a class="wide-card c-gold" href="/pages/kafkaslarin_dili.html">
+        <div class="ico-box glow-text" style="color:#eab308">🏔️</div>
+        <div class="wide-body">
+          <div class="card-topline">Dağlar</div>
+          <h2 class="wide-title">Kafkaslar</h2>
+          <p class="wide-desc">Çerkesçe, Gürcüce ve dağ dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a class="wide-card" href="/pages/text_translate.html">
+        <div class="ico-box">✎</div>
+        <div class="wide-body">
+          <div class="card-topline">Araçlar</div>
+          <h2 class="wide-title">Metin Çeviri</h2>
+          <p class="wide-desc">Yaz kopyala ve saniyeler içinde çevir.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a class="wide-card" style="border-color: rgba(34,197,94,0.3)" href="/pages/game_menu.html">
+        <div class="ico-box">🎮</div>
+        <div class="wide-body">
+          <div class="card-topline">Eğlence</div>
+          <h2 class="wide-title">Eğlenerek Öğren</h2>
+          <p class="wide-desc">Oyunlarla dil pratiği yap.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a class="wide-card" href="/pages/level_test_hub.html">
+        <div class="ico-box">📊</div>
+        <div class="wide-body">
+          <div class="card-topline">Gelişim</div>
+          <h2 class="wide-title">Seviye Tespit</h2>
+          <p class="wide-desc">Dil seviyeni analiz et ve başla.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+    </section>
   </div>
 </main>
 
@@ -283,11 +310,15 @@ body{
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       const heroUserName = document.getElementById("heroUserName");
-      if (user && heroUserName) {
-        const name = user.user_metadata?.full_name || user.email.split('@')[0];
-        heroUserName.textContent = `${name}, keşfetmeye hazır mısın?`;
+      if (heroUserName) {
+        if (user) {
+          const name = user.user_metadata?.full_name || user.email.split('@')[0];
+          heroUserName.textContent = `Hoş geldin, ${name.split(' ')[0]}!`;
+        } else {
+          heroUserName.textContent = "Hoş geldin, keşfetmeye başla!";
+        }
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("user name error", e); }
   }
 
   async function boot() {
