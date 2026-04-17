@@ -30,7 +30,6 @@ let recognizer = null;
 let recording = false;
 let currentAudio = null;
 let speakRunId = 0;
-let typewriterRunId = 0;
 
 /* =========================================================
    GÖKTÜRK MOTORU - LOCAL
@@ -194,14 +193,6 @@ function stopAudio() {
   try { window.NativeTTS?.stop?.(); } catch {}
 }
 
-function stopTypewriter() {
-  typewriterRunId += 1;
-}
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function autoResizeTextarea() {
   botInput.style.height = "auto";
   botInput.style.height = `${Math.min(botInput.scrollHeight, 120)}px`;
@@ -244,10 +235,83 @@ function createSpeakerButton(getText) {
   return btn;
 }
 
+function buildCharGrid(gokturkText, latinText) {
+  const grid = document.createElement("div");
+  grid.className = "char-grid";
+
+  const latinChars = [...String(latinText || "")];
+  const gokturkChars = [...String(gokturkText || "")];
+
+  let latinIndex = 0;
+
+  for (let i = 0; i < gokturkChars.length; i++) {
+    const rune = gokturkChars[i];
+
+    if (rune === " ") {
+      const spacer = document.createElement("div");
+      spacer.className = "char-space";
+      grid.appendChild(spacer);
+
+      while (latinChars[latinIndex] === " ") {
+        latinIndex += 1;
+      }
+      continue;
+    }
+
+    while (latinChars[latinIndex] === " ") {
+      latinIndex += 1;
+    }
+
+    const latinChar = latinChars[latinIndex] || "";
+    latinIndex += 1;
+
+    const col = document.createElement("div");
+    col.className = "char-col";
+
+    const top = document.createElement("div");
+    top.className = "char-rune";
+    top.textContent = rune;
+
+    const bottom = document.createElement("div");
+    bottom.className = "char-latin";
+    bottom.textContent = latinChar;
+
+    col.appendChild(top);
+    col.appendChild(bottom);
+    grid.appendChild(col);
+  }
+
+  return grid;
+}
+
 function addBubble(where, kind, text, opts = {}) {
   const wrap = where === "top" ? topBody : botBody;
   const row = document.createElement("div");
   row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
+
+  if (opts.charMap && kind === "me") {
+    const stack = document.createElement("div");
+    stack.className = "bubble-stack";
+
+    const inner = document.createElement("div");
+    inner.className = "bubble-row";
+
+    if (opts.speaker) {
+      inner.appendChild(createSpeakerButton(() => opts.speakText || ""));
+    }
+
+    const txt = document.createElement("div");
+    txt.className = "txt";
+    txt.appendChild(buildCharGrid(text, opts.subText || ""));
+    inner.appendChild(txt);
+    stack.appendChild(inner);
+
+    row.appendChild(stack);
+    wrap.appendChild(row);
+    keepVisible();
+
+    return { row, txt };
+  }
 
   const stack = document.createElement("div");
   stack.className = "bubble-stack";
@@ -265,17 +329,11 @@ function addBubble(where, kind, text, opts = {}) {
 
   inner.appendChild(txt);
   stack.appendChild(inner);
-
-  const sub = document.createElement("div");
-  sub.className = "sub-txt";
-  sub.textContent = String(opts.subText || "").trim();
-  stack.appendChild(sub);
-
   row.appendChild(stack);
   wrap.appendChild(row);
   keepVisible();
 
-  return { row, txt, sub };
+  return { row, txt };
 }
 
 function clearLatest(where) {
@@ -389,32 +447,6 @@ async function speak(text) {
 }
 
 /* =========================================================
-   TYPEWRITER
-========================================================= */
-
-async function typewriteText(el, finalText) {
-  stopTypewriter();
-  const runId = typewriterRunId;
-  const full = String(finalText || "").trim();
-  el.textContent = "";
-  if (!full) return;
-
-  let i = 0;
-  while (i < full.length) {
-    if (runId !== typewriterRunId) return;
-    const next = Math.min(full.length, i + (i < 14 ? 1 : 2));
-    el.textContent = full.slice(0, next);
-    i = next;
-    keepVisible();
-    const ch = full.charAt(i - 1);
-    if (ch === " ") await wait(0);
-    else if (/[.!?]/.test(ch)) await wait(75);
-    else if (/[,]/.test(ch)) await wait(45);
-    else await wait(8);
-  }
-}
-
-/* =========================================================
    AKIŞ
 ========================================================= */
 
@@ -426,26 +458,18 @@ async function processMessage(rawText) {
   autoResizeTextarea();
   syncComposerButtons();
 
-  addBubble("bot", "them", text, { subText: "" });
+  addBubble("bot", "them", text);
   clearLatest("top");
 
   frameRoot.classList.remove("is-ready", "is-error");
   frameRoot.classList.add("is-translating");
-
-  const bubble = addBubble("top", "me", "Çevriliyor...", {
-    latest: true,
-    speaker: true,
-    speakText: text,
-    subText: text
-  });
 
   const translated = turkishToGokturk(text);
 
   if (!translated) {
     frameRoot.classList.remove("is-translating");
     frameRoot.classList.add("is-error");
-    bubble.txt.textContent = "⚠️ Çeviri hatası";
-    bubble.sub.textContent = "";
+    addBubble("top", "me", "⚠️ Çeviri hatası", { latest: true });
     setTimeout(() => {
       frameRoot.classList.remove("is-error");
       frameRoot.classList.add("is-ready");
@@ -453,8 +477,13 @@ async function processMessage(rawText) {
     return;
   }
 
-  await typewriteText(bubble.txt, translated);
-  bubble.sub.textContent = text;
+  addBubble("top", "me", translated, {
+    latest: true,
+    speaker: true,
+    speakText: text,
+    subText: text,
+    charMap: true
+  });
 
   await speak(text);
 
@@ -481,8 +510,7 @@ function normalizeRecognitionPieces(results) {
     }
   }
 
-  const merged = normalizeText(`${finalText} ${interimText}`);
-  return merged;
+  return normalizeText(`${finalText} ${interimText}`);
 }
 
 function stopRecognizer() {
@@ -572,7 +600,6 @@ function bindEvents() {
 
   clearBtn.addEventListener("click", () => {
     stopAudio();
-    stopTypewriter();
     stopRecognizer();
     topBody.innerHTML = "";
     botBody.innerHTML = "";
