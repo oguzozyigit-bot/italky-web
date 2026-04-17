@@ -1,950 +1,984 @@
-<!doctype html>
-<html lang="tr">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Kafkasların Dili</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
-
-<style>
-:root{
-  --ai-gradient: linear-gradient(135deg,#facc15,#eab308,#a16207);
-  --bg:#080808;
-  --border:rgba(255,255,255,0.14);
-  --composer-bg:rgba(14,14,14,.95);
-  --composer-line:rgba(255,255,255,.09);
-  --safe-bottom:env(safe-area-inset-bottom, 0px);
-  --text:#fffbea;
-  --muted:rgba(255,255,255,.64);
-  --kb-bg:rgba(10,10,10,.98);
-  --key-bg:#1f1a0a;
-  --key-line:rgba(255,255,255,.08);
-  --key-active:rgba(250,204,21,.22);
-  --key-text:#fffbea;
-}
-
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-  outline:none;
-  -webkit-user-select:none;
-  user-select:none;
-}
-
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  background:var(--bg);
-  color:#fff;
-  font-family:Outfit,sans-serif;
-  overflow:hidden;
-}
-
-body{
-  min-height:100dvh;
-  background:
-    radial-gradient(circle at top, rgba(250,204,21,.08), transparent 22%),
-    radial-gradient(circle at bottom, rgba(161,98,7,.08), transparent 22%),
-    #080808;
-}
-
-.container{
-  display:flex;
-  flex-direction:column;
-  width:100%;
-  height:100dvh;
-  position:relative;
-  overflow:hidden;
-}
-
-.half-screen{
-  flex:1;
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:space-between;
-  overflow:hidden;
-  min-height:0;
-}
-
-.half-screen.top{
-  transform:rotate(180deg);
-  background:linear-gradient(180deg, rgba(161,98,7,.20), var(--bg));
-  padding:10px 8px 8px;
-}
-
-.half-screen.bottom{
-  background:linear-gradient(180deg, rgba(250,204,21,.08), var(--bg));
-  padding:6px 8px calc(6px + var(--safe-bottom));
-}
-
-.lang-row{
-  width:100%;
-  display:flex;
-  justify-content:center;
-  padding:0 6px;
-  flex:0 0 auto;
-  position:relative;
-  z-index:3000;
-  pointer-events:none;
-}
-
-.lang-row-inner{
-  width:min(92vw, 420px);
-  display:grid;
-  grid-template-columns:1fr 38px;
-  align-items:center;
-  gap:8px;
-  margin:0 auto;
-  position:relative;
-  z-index:3001;
-  pointer-events:auto;
-}
-
-.lang-tools-btn{
-  width:38px;
-  min-width:38px;
-  height:38px;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  flex:0 0 auto;
-  justify-self:center;
-  align-self:center;
-  pointer-events:auto;
-  z-index:3002;
-}
-
-.lang-tools-btn svg{
-  width:18px;
-  height:18px;
-  stroke:currentColor;
-  stroke-width:2.1;
-  fill:none;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
-
-.lang-trigger{
-  background:transparent;
-  border:none;
-  padding:8px 14px;
-  border-radius:999px;
-  color:#fff;
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:.2px;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  min-height:38px;
-  width:min(76vw, 316px);
-  text-decoration:none;
-  white-space:nowrap;
-  pointer-events:auto;
-  z-index:3002;
-}
-
-.popover{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  width:min(92vw,360px);
-  height:360px;
-  background:#111111;
-  border:1px solid var(--border);
-  border-radius:24px;
-  display:none;
-  flex-direction:column;
-  z-index:5000;
-  overflow:hidden;
-  box-shadow:0 22px 60px rgba(0,0,0,.92);
-}
-
-.popover.show{ display:flex; }
-
-.half-screen.top .popover{
-  top:56px;
-  left:calc(50% + 20px);
-}
-
-.pop-head{
-  padding:14px;
-  border-bottom:1px solid rgba(255,255,255,.10);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-weight:900;
-  letter-spacing:.3px;
-}
-
-.pop-close{
-  cursor:pointer;
-  padding:8px 12px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.06);
-}
-
-.pop-list{
-  flex:1;
-  overflow-y:auto;
-  padding:10px;
-  scrollbar-width:none;
-}
-
-.pop-list::-webkit-scrollbar{ display:none; }
-
-.pop-item{
-  padding:12px;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  cursor:pointer;
-  border:1px solid transparent;
-}
-
-.pop-item:hover{ background:rgba(255,255,255,.06); }
-
-.pop-item.active{
-  background:rgba(250,204,21,.14);
-  border-color:rgba(250,204,21,.25);
-}
-
-.pop-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  min-width:0;
-}
-
-.pop-flag{ font-size:18px; }
-
-.pop-name{
-  font-weight:900;
-  font-size:13px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:220px;
-}
-
-.pop-code{
-  font-weight:900;
-  font-size:12px;
-  opacity:.7;
-}
-
-.chat-body{
-  flex:1 1 auto;
-  min-height:0;
-  width:100%;
-  overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:14px;
-  padding:12px 0 20px;
-  mask-image:linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-  scrollbar-width:none;
-}
-
-.chat-body::-webkit-scrollbar{ display:none; }
-
-.bubble{
-  text-align:center;
-  max-width:84%;
-  line-height:1.25;
-  word-break:break-word;
-}
-
-.bubble.them{
-  opacity:.58;
-  font-size:18px;
-  font-weight:500;
-}
-
-.bubble.me{
-  font-size:18px;
-  font-weight:650;
-  opacity:.82;
-}
-
-.bubble.me.is-latest{
-  font-size:30px;
-  font-weight:900;
-  opacity:1;
-  line-height:1.08;
-}
-
-.bubble-row{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.bubble-row .txt{
-  display:inline-block;
-}
-
-.spk-icon{
-  width:30px;
-  height:30px;
-  min-width:30px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.08);
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  padding:0;
-}
-
-.spk-icon svg{
-  width:14px;
-  height:14px;
-  fill:none;
-  stroke:#fff;
-  stroke-width:2.1;
-  opacity:.95;
-}
-
-.composer-stack{
-  width:100%;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:6px;
-  z-index:30;
-  padding-bottom:0;
-  flex:0 0 auto;
-}
-
-.composer{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  min-height:62px;
-  padding:9px 12px;
-  border-radius:22px;
-  background:var(--composer-bg);
-  border:1px solid var(--composer-line);
-  box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03);
-  position:relative;
-}
+import { supabase } from "/js/supabase_client.js";
+
+const API_BASE = "https://italky-api.onrender.com";
+const $ = (id) => document.getElementById(id);
+
+function apiUrl(path) {
+  const clean = String(path || "").replace(/^\/+/, "");
+  return `${API_BASE}/api/${clean}`;
+}
+
+const F2F_VOICE_KEY = "facetoface_voice_mode";
+const F2F_PRESET_KEY = "facetoface_voice_preset";
+const F2F_AUTO_READ_KEY = "facetoface_auto_read";
+
+const KAFKAS_POOL = [
+  { code: "ab", name: "Abhazca", flag: "🏔️" },
+  { code: "ady", name: "Adigece", flag: "🛡️" },
+  { code: "kbd", name: "Kabardeyce", flag: "⚔️" },
+  { code: "ce", name: "Çeçence", flag: "🦅" },
+  { code: "ka", name: "Gürcüce", flag: "🍇" },
+  { code: "os", name: "Osetçe", flag: "⛰️" },
+  { code: "lez", name: "Lezgice", flag: "🌄" },
+  { code: "av", name: "Avarca", flag: "🗻" }
+];
+
+const UI = {
+  centerHub: $("centerHub"),
+
+  topLangBtn: $("topLangBtn"),
+  topLangTxt: $("topLangTxt"),
+  topSettingsMini: $("topSettingsMini"),
+  topInput: $("topInput"),
+  topMic: $("topMic"),
+  topSend: $("topSend"),
+  topComposer: $("topComposer"),
+  topBody: $("topBody"),
+  topKeyboardWrap: $("topKeyboardWrap"),
+  topKeyboard: $("topKeyboard"),
+  popTop: $("pop-top"),
+  closeTop: $("close-top"),
+  listTop: $("list-top"),
+
+  botLangBtn: $("botLangBtn"),
+  botLangTxt: $("botLangTxt"),
+  botSettingsMini: $("botSettingsMini"),
+  botInput: $("botInput"),
+  botMic: $("botMic"),
+  botSend: $("botSend"),
+  botComposer: $("botComposer"),
+  botBody: $("botBody"),
+  botKeyboardWrap: $("botKeyboardWrap"),
+  botKeyboard: $("botKeyboard"),
+
+  homeBtn: $("homeBtn"),
+  homeLink: $("homeLink"),
+  clearBtn: $("clearBtn"),
+
+  genericBackdrop: $("genericBackdrop"),
+  genericTitle: $("genericTitle"),
+  genericText: $("genericText"),
+  genericCloseBtn: $("genericCloseBtn"),
+  miniToast: $("miniToast")
+};
+
+const state = {
+  topLang: "ab",
+  activeSide: "bot",
+  topListening: false,
+  botListening: false,
+  topRecognizer: null,
+  botRecognizer: null,
+  currentAudio: null,
+  speakRunId: 0,
+  shiftTop: false,
+  shiftBot: false,
+  topLastSpeech: "",
+  botLastSpeech: "",
+  keyboardAudioCtx: null,
+  keyboardMasterGain: null
+};
+
+const KB_NUM_ROW = ["1","2","3","4","5","6","7","8","9","0"];
+const KB_ROWS = [
+  ["q","w","e","r","t","y","u","ı","o","p","ğ","ü"],
+  ["a","s","d","f","g","h","j","k","l","ş","i"],
+  ["z","x","c","v","b","n","m","ö","ç"]
+];
+
+function normalizeText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+function toast(msg = "") {
+  if (!UI.miniToast) return;
+  UI.miniToast.textContent = String(msg || "");
+  UI.miniToast.classList.add("show");
+  clearTimeout(window.__kafkasToast);
+  window.__kafkasToast = setTimeout(() => {
+    UI.miniToast.classList.remove("show");
+  }, 1800);
+}
 
-.composer.listening{
-  box-shadow:
-    0 0 0 1px rgba(250,204,21,.30),
-    0 0 0 8px rgba(250,204,21,.08),
-    0 0 30px rgba(250,204,21,.20),
-    inset 0 1px 0 rgba(255,255,255,.04);
-  animation:composerPulse 1.2s ease-in-out infinite;
+function closeModal() {
+  UI.genericBackdrop?.classList.remove("show");
 }
 
-@keyframes composerPulse{
-  0%,100%{ transform:scale(1); }
-  50%{ transform:scale(1.006); }
+function currentKafkas() {
+  return KAFKAS_POOL.find((x) => x.code === state.topLang) || KAFKAS_POOL[0];
 }
 
-.composer-center{
-  flex:1;
-  min-width:0;
-  display:flex;
-  flex-direction:column;
+function updateLangButtons() {
+  const item = currentKafkas();
+  if (UI.topLangTxt) UI.topLangTxt.textContent = `${item.flag} ${item.name}`;
+  if (UI.botLangTxt) UI.botLangTxt.textContent = "🇹🇷 Türkçe";
 }
 
-.composer-input{
-  width:100%;
-  min-height:24px;
-  max-height:84px;
-  resize:none;
-  border:none;
-  outline:none;
-  background:transparent;
-  color:#fff;
-  font-size:17px;
-  font-weight:800;
-  line-height:1.4;
-  font-family:inherit;
-  overflow:auto;
-  padding:0;
-  margin:0;
-  scrollbar-width:none;
-  text-align:left;
+function pointOrbTo(side) {
+  document.body.classList.remove("to-top", "to-bot");
+  document.body.classList.add(side === "top" ? "to-top" : "to-bot");
+  UI.centerHub?.classList.toggle("to-top", side === "top");
+  state.activeSide = side;
 }
 
-.composer-input::-webkit-scrollbar{ display:none; }
-
-.composer-input::placeholder{
-  color:rgba(255,255,255,.72);
-  font-weight:800;
-}
-
-.send-btn,.mic-btn{
-  width:42px;
-  height:42px;
-  border:none;
-  border-radius:50%;
-  cursor:pointer;
-  flex:0 0 auto;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:transparent;
-  color:#fff;
-  position:relative;
-  z-index:2;
-}
-
-.mic-btn.listening::after{
-  content:"";
-  position:absolute;
-  inset:-6px;
-  border-radius:50%;
-  border:2px solid rgba(34,197,94,.72);
-  box-shadow:0 0 0 8px rgba(34,197,94,.10), 0 0 24px rgba(34,197,94,.18);
-  animation:micPulse 1s ease-out infinite;
-}
-
-@keyframes micPulse{
-  0%{ transform:scale(.92); opacity:.95; }
-  70%{ transform:scale(1.14); opacity:.14; }
-  100%{ transform:scale(1.18); opacity:0; }
-}
-
-.send-btn{
-  background:#fff;
-  color:#000;
-  box-shadow:0 0 24px rgba(255,255,255,.10);
-}
-
-.send-btn svg,
-.mic-btn svg{
-  width:22px;
-  height:22px;
-  stroke:currentColor;
-  stroke-width:2.2;
-  fill:none;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
-
-.hidden{ display:none !important; }
-
-.center-hub{
-  height:82px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  background:rgba(0,0,0,.58);
-  backdrop-filter:blur(16px);
-  z-index:600;
-  flex:0 0 auto;
-  border-top:1px solid rgba(255,255,255,.05);
-  border-bottom:1px solid rgba(255,255,255,.05);
-}
-
-.nav-btn{
-  position:absolute;
-  padding:10px 18px;
-  border-radius:100px;
-  background:transparent;
-  border:1px solid var(--border);
-  color:#fff;
-  font-size:10px;
-  font-weight:900;
-  cursor:pointer;
-  z-index:650;
-  text-decoration:none;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  box-shadow:none;
-}
-
-.nav-btn .label-rotate{
-  display:inline-block;
-  transition:transform .22s ease;
-}
-
-.center-hub.to-top #homeLink .label-rotate,
-.center-hub.to-top #clearBtn .label-rotate{
-  transform:rotate(180deg);
-}
-
-.btn-clear{ right:14px; }
-
-.orb-container{
-  width:82px;
-  height:82px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:transform .8s cubic-bezier(.34,1.56,.64,1);
-  position:relative;
-}
-
-.energy-orbit{
-  position:absolute;
-  width:82px;
-  height:82px;
-  border-radius:50%;
-  animation:rotateOrbit 5s linear infinite;
-}
-
-.ball-1, .ball-2{
-  position:absolute;
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  filter:blur(1.5px);
-  transition:background .25s ease, box-shadow .25s ease, transform .25s ease;
-}
-
-.ball-1{
-  top:-5px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#facc15;
-  box-shadow:0 0 15px #facc15;
-}
-
-.ball-2{
-  bottom:-5px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#a16207;
-  box-shadow:0 0 15px #a16207;
-}
-
-.ai-core{
-  width:66px;
-  height:66px;
-  border-radius:50%;
-  background:#000;
-  border:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:"Space Grotesk",sans-serif;
-  font-weight:700;
-  position:relative;
-  overflow:hidden;
-}
-
-.logo-text{
-  color:#fff;
-  letter-spacing:.4px;
-  font-size:13px;
-}
-
-.logo-ai{
-  background:var(--ai-gradient);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+function autoResize(textarea) {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  textarea.style.height = `${Math.min(textarea.scrollHeight, 84)}px`;
 }
 
-.eq-wrap{
-  display:flex;
-  align-items:center;
-  gap:3px;
-  height:20px;
-  position:absolute;
-  opacity:0;
-  transition:.25s;
-  z-index:20;
-}
-
-#frameRoot.is-listening .eq-wrap,
-#frameRoot.is-translating .eq-wrap{
-  opacity:1;
-}
-
-#frameRoot.is-listening .logo-text,
-#frameRoot.is-translating .logo-text{
-  opacity:0;
-}
-
-.eq-bar{
-  width:3px;
-  background:var(--ai-gradient);
-  border-radius:10px;
-  animation:eqAnim .7s infinite ease-in-out;
-}
-
-#frameRoot.is-idle .ball-1,
-#frameRoot.is-idle .ball-2,
-#frameRoot.is-error .ball-1,
-#frameRoot.is-error .ball-2{
-  background:#ef4444;
-  box-shadow:0 0 18px rgba(239,68,68,.9);
-}
-
-#frameRoot.is-listening .ball-1,
-#frameRoot.is-translating .ball-1{
-  background:#facc15;
-  box-shadow:0 0 18px rgba(250,204,21,.95);
-}
-
-#frameRoot.is-listening .ball-2,
-#frameRoot.is-translating .ball-2{
-  background:#a16207;
-  box-shadow:0 0 18px rgba(161,98,7,.95);
-}
-
-#frameRoot.is-ready .ball-1,
-#frameRoot.is-ready .ball-2{
-  background:#22c55e;
-  box-shadow:0 0 18px rgba(34,197,94,.9);
-}
-
-#frameRoot.to-top .orb-container{ transform:rotate(180deg); }
-#frameRoot.to-bot .orb-container{ transform:rotate(0deg); }
-
-.kb-wrap{
-  width:100%;
-  display:none;
-  justify-content:center;
-  position:relative;
-  flex:0 0 auto;
-}
+function syncComposerButtons() {
+  const topHas = normalizeText(UI.topInput?.value).length > 0;
+  UI.topMic?.classList.toggle("hidden", topHas && !state.topListening);
+  UI.topSend?.classList.toggle("hidden", !topHas);
+  UI.topMic?.classList.toggle("listening", state.topListening);
+  UI.topComposer?.classList.toggle("listening", state.topListening);
 
-.kb-wrap.show{
-  display:flex;
+  const botHas = normalizeText(UI.botInput?.value).length > 0;
+  UI.botMic?.classList.toggle("hidden", botHas && !state.botListening);
+  UI.botSend?.classList.toggle("hidden", !botHas);
+  UI.botMic?.classList.toggle("listening", state.botListening);
+  UI.botComposer?.classList.toggle("listening", state.botListening);
 }
 
-.kb{
-  width:100%;
-  background:rgba(12,12,12,.98);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:22px;
-  padding:8px;
-  box-shadow:0 16px 32px rgba(0,0,0,.30);
-  position:relative;
+function keepVisible() {
+  requestAnimationFrame(() => {
+    if (UI.topBody) UI.topBody.scrollTop = UI.topBody.scrollHeight + 300;
+    if (UI.botBody) UI.botBody.scrollTop = UI.botBody.scrollHeight + 300;
+  });
 }
 
-.kb-row{
-  display:flex;
-  gap:5px;
-  margin-bottom:5px;
+function createSpeakerButton(getText, getLang) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "spk-icon";
+  btn.setAttribute("aria-label", "Tekrar dinle");
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    </svg>
+  `;
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await speakText(getText(), getLang());
+  });
+  return btn;
 }
 
-.kb-row:last-child{ margin-bottom:0; }
-
-.kb-key{
-  flex:1;
-  min-width:0;
-  min-height:46px;
-  border:none;
-  border-radius:12px;
-  background:#2b250d;
-  border:1px solid rgba(255,255,255,.10);
-  color:#ffffff;
-  font-family:inherit;
-  font-size:20px;
-  font-weight:1000;
-  letter-spacing:.2px;
-  text-shadow:0 1px 0 rgba(0,0,0,.35);
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0 6px;
-  position:relative;
-  transition:transform .08s ease, background .12s ease, box-shadow .12s ease;
-}
-
-.kb-key:active,
-.kb-key.pressing{
-  background:rgba(250,204,21,.28);
-  transform:scale(.98);
-  box-shadow:
-    0 0 0 1px rgba(250,204,21,.34),
-    0 8px 18px rgba(250,204,21,.18),
-    inset 0 1px 0 rgba(255,255,255,.06);
-}
-
-.kb-key.wide{ flex:1.35; }
-.kb-key.xwide{ flex:2.4; }
-
-.kb-key.icon svg{
-  width:20px;
-  height:20px;
-  stroke:#fff;
-  stroke-width:2.2;
-  fill:none;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
-
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.52);
-  backdrop-filter:blur(6px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:999999;
-  padding:20px;
-}
-
-.modal.open,
-.modal.show{
-  display:flex;
-}
+function addBubble(where, kind, text, opts = {}) {
+  const wrap = where === "top" ? UI.topBody : UI.botBody;
+  if (!wrap) return;
 
-.modal-card{
-  width:min(100%, 420px);
-  border-radius:24px;
-  padding:18px;
-  background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow:0 24px 50px rgba(0,0,0,.30);
-}
-
-.modal-title{
-  margin:0 0 8px;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:20px;
-  font-weight:900;
-  color:#fff;
-}
+  const row = document.createElement("div");
+  row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
 
-.modal-text{
-  margin:0;
-  font-size:13px;
-  line-height:1.6;
-  color:rgba(255,255,255,.76);
-}
+  const inner = document.createElement("div");
+  inner.className = "bubble-row";
 
-.modal-actions{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:10px;
-  margin-top:16px;
-}
+  if (opts.speaker) {
+    inner.appendChild(createSpeakerButton(
+      () => opts.speakText || text,
+      () => opts.speakLang || "tr"
+    ));
+  }
 
-.modal-btn{
-  min-height:46px;
-  border:none;
-  border-radius:16px;
-  cursor:pointer;
-  font-family:inherit;
-  font-size:13px;
-  font-weight:900;
-}
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text || "");
+  inner.appendChild(txt);
+  row.appendChild(inner);
 
-.modal-btn.secondary{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  color:#fff;
-}
+  if (opts.subText) {
+    const sub = document.createElement("div");
+    sub.className = "bubble-sub";
+    sub.textContent = String(opts.subText || "");
+    row.appendChild(sub);
+  }
 
-.mini-toast{
-  position:fixed;
-  left:50%;
-  bottom:24px;
-  transform:translateX(-50%) translateY(120px);
-  min-height:44px;
-  padding:10px 16px;
-  border-radius:16px;
-  background:rgba(12,16,28,.96);
-  border:1px solid rgba(255,255,255,.10);
-  color:#fff;
-  font-size:12px;
-  font-weight:1000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  max-width:min(92vw,420px);
-  z-index:99999;
-  box-shadow:0 18px 36px rgba(0,0,0,.35);
-  transition:.22s ease;
-  backdrop-filter:blur(14px);
-  pointer-events:none;
+  wrap.appendChild(row);
+  keepVisible();
 }
 
-.mini-toast.show{
-  transform:translateX(-50%) translateY(0);
+function clearBubbles() {
+  if (UI.topBody) UI.topBody.innerHTML = "";
+  if (UI.botBody) UI.botBody.innerHTML = "";
 }
 
-@keyframes rotateOrbit{
-  from{ transform:rotate(0deg); }
-  to{ transform:rotate(360deg); }
-}
+function renderTopLangList() {
+  if (!UI.listTop) return;
 
-@keyframes eqAnim{
-  0%,100%{ height:5px; opacity:.6; }
-  50%{ height:25px; opacity:1; }
-}
-</style>
-</head>
-
-<body id="frameRoot" class="to-bot">
-  <div class="container">
-    <div class="half-screen top" id="topSection">
-      <div class="lang-row">
-        <div class="lang-row-inner">
-          <button class="lang-trigger" id="topLangBtn" type="button">
-            <span id="topLangTxt">🏔️ Abhazca</span> ⌵
-          </button>
-
-          <button id="topSettingsMini" class="lang-tools-btn" type="button" aria-label="Ayarlar">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3.2"></circle>
-              <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a2 2 0 1 1 0 4H20a1 1 0 0 0-.6.6z"></path>
-            </svg>
-          </button>
-        </div>
+  UI.listTop.innerHTML = KAFKAS_POOL.map((item) => `
+    <div class="pop-item ${item.code === state.topLang ? "active" : ""}" data-code="${item.code}">
+      <div class="pop-left">
+        <div class="pop-flag">${item.flag}</div>
+        <div class="pop-name">${item.name}</div>
       </div>
-
-      <div class="popover" id="pop-top" role="dialog" aria-label="Kafkas dili seçimi">
-        <div class="pop-head">
-          <div>KAFKAS DİLLERİ</div>
-          <div class="pop-close" id="close-top">✕</div>
-        </div>
-        <div class="pop-list" id="list-top"></div>
-      </div>
-
-      <div class="chat-body" id="topBody"></div>
-
-      <div class="composer-stack">
-        <div class="composer" id="topComposer">
-          <div class="composer-center">
-            <textarea id="topInput" class="composer-input" rows="1" placeholder="Seçili Kafkas dilinde yaz" readonly></textarea>
-          </div>
-
-          <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-              <path d="M19 10a7 7 0 0 1-14 0"></path>
-              <path d="M12 17v4"></path>
-              <path d="M8 21h8"></path>
-            </svg>
-          </button>
-
-          <button id="topSend" class="send-btn hidden" type="button" aria-label="Üst mesaj gönder">
-            <svg viewBox="0 0 24 24">
-              <path d="M5 12h14"></path>
-              <path d="M13 6l6 6-6 6"></path>
-            </svg>
-          </button>
-        </div>
-
-        <div class="kb-wrap" id="topKeyboardWrap">
-          <div class="kb" id="topKeyboard"></div>
-        </div>
-      </div>
+      <div class="pop-code">${item.code}</div>
     </div>
+  `).join("");
 
-    <div class="center-hub" id="centerHub">
-      <a class="nav-btn" id="homeLink" href="/pages/home.html" style="left:14px;"><span class="label-rotate">ANA SAYFA</span></a>
+  UI.listTop.querySelectorAll(".pop-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      state.topLang = el.dataset.code;
+      updateLangButtons();
+      renderTopLangList();
+      UI.popTop?.classList.remove("show");
+      toast("Kafkas dili değişti");
+    });
+  });
+}
 
-      <div class="orb-container" id="homeBtn" title="Ana sayfa">
-        <div class="energy-orbit">
-          <div class="ball-1"></div>
-          <div class="ball-2"></div>
-        </div>
-        <div class="ai-core">
-          <div class="eq-wrap" aria-hidden="true">
-            <div class="eq-bar" style="animation-delay:0s"></div>
-            <div class="eq-bar" style="animation-delay:.2s"></div>
-            <div class="eq-bar" style="animation-delay:.4s"></div>
-          </div>
-          <span class="logo-text">italky<span class="logo-ai">AI</span></span>
-        </div>
-      </div>
+function ensureKeyboardAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
 
-      <div class="nav-btn btn-clear" id="clearBtn"><span class="label-rotate">TEMİZLE</span></div>
-    </div>
+    if (!state.keyboardAudioCtx) {
+      state.keyboardAudioCtx = new Ctx();
+      state.keyboardMasterGain = state.keyboardAudioCtx.createGain();
+      state.keyboardMasterGain.gain.value = 0.08;
+      state.keyboardMasterGain.connect(state.keyboardAudioCtx.destination);
+    }
 
-    <div class="half-screen bottom" id="botSection">
-      <div class="lang-row">
-        <div class="lang-row-inner">
-          <button class="lang-trigger" id="botLangBtn" type="button" disabled>
-            <span id="botLangTxt">🇹🇷 Türkçe</span>
-          </button>
+    return state.keyboardAudioCtx;
+  } catch {
+    return null;
+  }
+}
 
-          <button id="botSettingsMini" class="lang-tools-btn" type="button" aria-label="Ayarlar">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3.2"></circle>
-              <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a2 2 0 1 1 0 4H20a1 1 0 0 0-.6.6z"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
+async function unlockKeyboardAudio() {
+  const ctx = ensureKeyboardAudio();
+  if (!ctx) return;
+  try {
+    if (ctx.state === "suspended") await ctx.resume();
+  } catch {}
+}
 
-      <div class="chat-body" id="botBody"></div>
+function playKeyClick(kind = "key") {
+  const ctx = ensureKeyboardAudio();
+  if (!ctx || !state.keyboardMasterGain) return;
 
-      <div class="composer-stack">
-        <div class="composer" id="botComposer">
-          <div class="composer-center">
-            <textarea id="botInput" class="composer-input" rows="1" placeholder="Türkçe yaz" readonly></textarea>
-          </div>
+  if (ctx.state === "suspended") {
+    ctx.resume().catch(() => {});
+  }
 
-          <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-              <path d="M19 10a7 7 0 0 1-14 0"></path>
-              <path d="M12 17v4"></path>
-              <path d="M8 21h8"></path>
-            </svg>
-          </button>
+  const now = ctx.currentTime;
+  const oscA = ctx.createOscillator();
+  const oscB = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
 
-          <button id="botSend" class="send-btn hidden" type="button" aria-label="Alt mesaj gönder">
-            <svg viewBox="0 0 24 24">
-              <path d="M5 12h14"></path>
-              <path d="M13 6l6 6-6 6"></path>
-            </svg>
-          </button>
-        </div>
+  filter.type = "bandpass";
+  filter.frequency.value =
+    kind === "space" ? 1300 :
+    kind === "backspace" ? 1900 :
+    kind === "enter" ? 1700 :
+    kind === "shift" ? 1500 : 1600;
 
-        <div class="kb-wrap" id="botKeyboardWrap">
-          <div class="kb" id="botKeyboard"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+  oscA.type = "square";
+  oscB.type = "triangle";
 
-  <div class="modal" id="genericBackdrop">
-    <div class="modal-card">
-      <h3 class="modal-title" id="genericTitle">Bilgi</h3>
-      <p class="modal-text" id="genericText">İşlem yapılamadı.</p>
-      <div class="modal-actions">
-        <button class="modal-btn secondary" id="genericCloseBtn">Kapat</button>
-      </div>
-    </div>
-  </div>
+  const base =
+    kind === "space" ? 120 :
+    kind === "backspace" ? 210 :
+    kind === "enter" ? 185 :
+    kind === "shift" ? 165 : 175;
 
-  <div class="mini-toast" id="miniToast"></div>
+  oscA.frequency.setValueAtTime(base, now);
+  oscB.frequency.setValueAtTime(base * 2.6, now);
 
-  <script type="module" src="/js/kafkaslarin_dili_page.js?v=KAFKAS_V1"></script>
-  <script type="module">
-    import { initGlobalAccess } from "/js/global_access.js";
-    await initGlobalAccess({ allowPublicPageBypass: false });
-  </script>
-</body>
-</html>
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.11, now + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+
+  oscA.connect(filter);
+  oscB.connect(filter);
+  filter.connect(gain);
+  gain.connect(state.keyboardMasterGain);
+
+  try {
+    oscA.start(now);
+    oscB.start(now);
+    oscA.stop(now + 0.05);
+    oscB.stop(now + 0.05);
+  } catch {}
+}
+
+function createKey(label, cls = "", onClick = null, sound = "key") {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `kb-key ${cls}`.trim();
+  btn.textContent = label;
+
+  btn.addEventListener("pointerdown", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    btn.classList.add("pressing");
+    await unlockKeyboardAudio();
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    btn.classList.remove("pressing");
+    playKeyClick(sound);
+    onClick?.();
+  });
+
+  btn.addEventListener("pointerleave", () => {
+    btn.classList.remove("pressing");
+  });
+
+  return btn;
+}
+
+function createIconKey(svg, cls = "", onClick = null, sound = "key") {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `kb-key icon ${cls}`.trim();
+  btn.innerHTML = svg;
+
+  btn.addEventListener("pointerdown", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    btn.classList.add("pressing");
+    await unlockKeyboardAudio();
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    btn.classList.remove("pressing");
+    playKeyClick(sound);
+    onClick?.();
+  });
+
+  btn.addEventListener("pointerleave", () => {
+    btn.classList.remove("pressing");
+  });
+
+  return btn;
+}
+
+function insertText(side, text) {
+  const input = side === "top" ? UI.topInput : UI.botInput;
+  if (!input) return;
+
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = input.value.slice(0, start) + text + input.value.slice(end);
+
+  const nextPos = start + text.length;
+  requestAnimationFrame(() => {
+    input.focus();
+    input.setSelectionRange(nextPos, nextPos);
+  });
+
+  autoResize(input);
+  syncComposerButtons();
+  pointOrbTo(side);
+}
+
+function backspaceText(side) {
+  const input = side === "top" ? UI.topInput : UI.botInput;
+  if (!input) return;
+
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+
+  if (start !== end) {
+    input.value = input.value.slice(0, start) + input.value.slice(end);
+    requestAnimationFrame(() => {
+      input.focus();
+      input.setSelectionRange(start, start);
+    });
+  } else if (start > 0) {
+    input.value = input.value.slice(0, start - 1) + input.value.slice(end);
+    requestAnimationFrame(() => {
+      input.focus();
+      input.setSelectionRange(start - 1, start - 1);
+    });
+  }
+
+  autoResize(input);
+  syncComposerButtons();
+  pointOrbTo(side);
+}
+
+function toggleShift(side) {
+  if (side === "top") state.shiftTop = !state.shiftTop;
+  else state.shiftBot = !state.shiftBot;
+  buildKeyboard(side === "top" ? UI.topKeyboard : UI.botKeyboard, side);
+}
+
+function currentShift(side) {
+  return side === "top" ? state.shiftTop : state.shiftBot;
+}
+
+function buildKeyboard(root, side) {
+  if (!root) return;
+  root.innerHTML = "";
+  const shifted = currentShift(side);
+
+  const rowNums = document.createElement("div");
+  rowNums.className = "kb-row";
+  KB_NUM_ROW.forEach((ch) => {
+    rowNums.appendChild(createKey(ch, "", () => insertText(side, ch), "key"));
+  });
+  root.appendChild(rowNums);
+
+  KB_ROWS.forEach((chars, rowIndex) => {
+    const row = document.createElement("div");
+    row.className = "kb-row";
+
+    if (rowIndex === 2) {
+      const shiftKey = createIconKey(
+        `<svg viewBox="0 0 24 24"><path d="M12 4l7 8h-4v8H9v-8H5l7-8z"></path></svg>`,
+        "wide",
+        () => toggleShift(side),
+        "shift"
+      );
+      if (shifted) shiftKey.classList.add("pressing");
+      row.appendChild(shiftKey);
+    }
+
+    chars.forEach((ch) => {
+      const out = shifted ? ch.toUpperCase() : ch;
+      row.appendChild(createKey(out, "", () => {
+        insertText(side, out);
+        if (currentShift(side)) {
+          if (side === "top") state.shiftTop = false;
+          else state.shiftBot = false;
+          buildKeyboard(root, side);
+        }
+      }, "key"));
+    });
+
+    if (rowIndex === 2) {
+      row.appendChild(createIconKey(
+        `<svg viewBox="0 0 24 24">
+          <path d="M21 4H8l-5 8 5 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+          <path d="M10 9l5 6"></path>
+          <path d="M15 9l-5 6"></path>
+        </svg>`,
+        "wide",
+        () => backspaceText(side),
+        "backspace"
+      ));
+    }
+
+    root.appendChild(row);
+  });
+
+  const row4 = document.createElement("div");
+  row4.className = "kb-row";
+
+  row4.appendChild(createKey(",", "", () => insertText(side, ","), "key"));
+  row4.appendChild(createKey(".", "", () => insertText(side, "."), "key"));
+  row4.appendChild(createKey("?", "", () => insertText(side, "?"), "key"));
+  row4.appendChild(createKey("boşluk", "xwide", () => insertText(side, " "), "space"));
+  row4.appendChild(createKey("tamam", "wide", async () => {
+    toggleKeyboard(side, false);
+    await sendTyped(side);
+  }, "enter"));
+
+  root.appendChild(row4);
+}
+
+function toggleKeyboard(side, force = null) {
+  const wrap = side === "top" ? UI.topKeyboardWrap : UI.botKeyboardWrap;
+  const other = side === "top" ? UI.botKeyboardWrap : UI.topKeyboardWrap;
+  if (!wrap) return;
+
+  other?.classList.remove("show");
+
+  const willShow = force === null ? !wrap.classList.contains("show") : !!force;
+  wrap.classList.toggle("show", willShow);
+  pointOrbTo(side);
+
+  const input = side === "top" ? UI.topInput : UI.botInput;
+  if (willShow && input) {
+    setTimeout(async () => {
+      await unlockKeyboardAudio();
+      try {
+        input.focus();
+      } catch {}
+    }, 30);
+  }
+}
+
+function getSelectedVoice() {
+  const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
+  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+
+  if (mode === "clone") return "mine";
+  if (mode === "preset" && preset === "second") return "second";
+  if (mode === "preset" && preset === "memory") return "memory";
+  return "auto";
+}
+
+function isAutoReadEnabled() {
+  return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
+}
+
+function stopAudio() {
+  state.speakRunId += 1;
+
+  try {
+    if (state.currentAudio) {
+      state.currentAudio.pause();
+      state.currentAudio.currentTime = 0;
+    }
+  } catch {}
+
+  state.currentAudio = null;
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try { window.NativeTTS?.stop?.(); } catch {}
+}
+
+async function getCurrentUserId() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || null;
+  } catch {
+    return null;
+  }
+}
+
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  return voices.find(v => String(v.lang || "").toLowerCase().startsWith(String(langCode || "").toLowerCase())) ||
+         voices.find(v => String(v.lang || "").toLowerCase().startsWith("tr")) ||
+         voices[0] ||
+         null;
+}
+
+async function speakViaApi(text, langCode) {
+  const selectedVoice = getSelectedVoice();
+  if (!["mine", "second", "memory"].includes(selectedVoice)) return false;
+
+  const userId = await getCurrentUserId();
+  if (!userId) return false;
+
+  const myRunId = ++state.speakRunId;
+
+  let apiVoiceMode = "auto";
+  let apiVoice = "auto";
+  let apiPresetVoice = "";
+
+  if (selectedVoice === "mine") {
+    apiVoiceMode = "clone";
+    apiVoice = "clone";
+  } else if (selectedVoice === "second") {
+    apiVoiceMode = "preset";
+    apiVoice = "second";
+    apiPresetVoice = "second";
+  } else if (selectedVoice === "memory") {
+    apiVoiceMode = "preset";
+    apiVoice = "memory";
+    apiPresetVoice = "memory";
+  }
+
+  const resp = await fetch(apiUrl("tts"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: String(langCode || "tr").trim().toLowerCase(),
+      user_id: userId,
+      module: "kafkaslarin_dili",
+      voice: apiVoice,
+      voice_mode: apiVoiceMode,
+      preset_voice: apiPresetVoice,
+      selected_voice: selectedVoice,
+      tone: "neutral"
+    })
+  });
+
+  const json = await resp.json().catch(() => null);
+  if (!resp.ok || !json?.audio_base64) return false;
+  if (myRunId !== state.speakRunId) return false;
+
+  const audio = new Audio(`data:audio/mp3;base64,${json.audio_base64}`);
+  audio.preload = "auto";
+  audio.playsInline = true;
+  state.currentAudio = audio;
+  await audio.play();
+  return true;
+}
+
+async function speakText(text, langCode) {
+  if (!isAutoReadEnabled()) return;
+  const value = normalizeText(text);
+  if (!value || value === "...") return;
+
+  stopAudio();
+
+  const ok = await speakViaApi(value, langCode).catch(() => false);
+  if (ok) return;
+
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(value, String(langCode || "tr"));
+      return;
+    }
+  } catch {}
+
+  try {
+    if (window.speechSynthesis) {
+      const utter = new SpeechSynthesisUtterance(value);
+      utter.lang = String(langCode || "tr");
+      const voice = chooseWebVoice(langCode);
+      if (voice) utter.voice = voice;
+      utter.rate = 0.95;
+      utter.pitch = 1;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    }
+  } catch {}
+}
+
+async function getAccessToken() {
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.access_token || "";
+}
+
+async function translateAI(text, from, to) {
+  const token = await getAccessToken();
+
+  const r = await fetch(apiUrl("translate_ai"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({
+      text,
+      from_lang: from,
+      to_lang: to,
+      mode: "cultural",
+      tone: "neutral",
+      style: "balanced"
+    })
+  });
+
+  const j = await r.json().catch(() => null);
+  const out =
+    String(j?.translated || "").trim() ||
+    String(j?.translation || "").trim() ||
+    "";
+
+  if (!r.ok || !out) {
+    throw new Error(j?.error || "translate_failed");
+  }
+
+  return out;
+}
+
+async function runTranslateText(fromSide, text) {
+  const targetSide = fromSide === "top" ? "bot" : "top";
+  const cleanText = normalizeText(text);
+  if (!cleanText) return;
+
+  document.body.classList.remove("is-ready", "is-error");
+  document.body.classList.add("is-translating");
+  pointOrbTo(fromSide);
+
+  addBubble(targetSide, "me", "Çevriliyor...", { latest: true });
+
+  try {
+    let translated = "";
+    let speakLang = "tr";
+
+    if (fromSide === "top") {
+      translated = await translateAI(cleanText, currentKafkas().code, "tr");
+      speakLang = "tr";
+    } else {
+      translated = await translateAI(cleanText, "tr", currentKafkas().code);
+      speakLang = currentKafkas().code;
+    }
+
+    addBubble(targetSide, "me", translated, {
+      latest: true,
+      speaker: true,
+      speakText: translated,
+      speakLang,
+      subText: cleanText
+    });
+
+    await speakText(translated, speakLang);
+
+    document.body.classList.remove("is-translating", "is-error");
+    document.body.classList.add("is-ready");
+  } catch (e) {
+    addBubble(targetSide, "me", "⚠️ Çeviri şu an yapılamadı.", {
+      latest: true,
+      subText: cleanText
+    });
+
+    document.body.classList.remove("is-translating");
+    document.body.classList.add("is-error");
+    toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
+
+    setTimeout(() => {
+      document.body.classList.remove("is-error");
+      document.body.classList.add("is-ready");
+    }, 1200);
+  }
+}
+
+async function sendTyped(side) {
+  const input = side === "top" ? UI.topInput : UI.botInput;
+  if (!input) return;
+
+  const text = normalizeText(input.value);
+  if (!text) return;
+
+  input.value = "";
+  autoResize(input);
+  syncComposerButtons();
+
+  await runTranslateText(side, text);
+}
+
+function extractStableRecognitionText(results) {
+  let latestFinal = "";
+  let latestInterim = "";
+
+  for (let i = 0; i < results.length; i++) {
+    const piece = normalizeText(results[i]?.[0]?.transcript || "");
+    if (!piece) continue;
+    if (results[i].isFinal) latestFinal = piece;
+    else latestInterim = piece;
+  }
+  return normalizeText(latestFinal || latestInterim);
+}
+
+function stopRecognition(side) {
+  if (side === "top") {
+    try { state.topRecognizer?.stop(); } catch {}
+    state.topRecognizer = null;
+    state.topListening = false;
+    setListening("top", false);
+  } else {
+    try { state.botRecognizer?.stop(); } catch {}
+    state.botRecognizer = null;
+    state.botListening = false;
+    setListening("bot", false);
+  }
+}
+
+function setListening(side, on) {
+  if (side === "top") {
+    state.topListening = !!on;
+    UI.topComposer?.classList.toggle("listening", !!on);
+    UI.topMic?.classList.toggle("listening", !!on);
+  } else {
+    state.botListening = !!on;
+    UI.botComposer?.classList.toggle("listening", !!on);
+    UI.botMic?.classList.toggle("listening", !!on);
+  }
+  syncComposerButtons();
+}
+
+function startRecognition(side) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    toast("Bu cihazda sesli giriş desteklenmiyor");
+    return;
+  }
+
+  if ((side === "top" && state.topListening) || (side === "bot" && state.botListening)) {
+    stopRecognition(side);
+    return;
+  }
+
+  const recog = new SR();
+  recog.lang = "tr-TR";
+  recog.interimResults = true;
+  recog.continuous = false;
+  recog.maxAlternatives = 1;
+
+  const inputEl = side === "top" ? UI.topInput : UI.botInput;
+
+  recog.onstart = () => {
+    pointOrbTo(side);
+    setListening(side, true);
+    if (side === "top") state.topLastSpeech = "";
+    else state.botLastSpeech = "";
+  };
+
+  recog.onresult = (e) => {
+    const stableText = extractStableRecognitionText(e.results);
+    inputEl.value = stableText;
+    if (side === "top") state.topLastSpeech = stableText;
+    else state.botLastSpeech = stableText;
+    autoResize(inputEl);
+    syncComposerButtons();
+  };
+
+  recog.onerror = () => {
+    stopRecognition(side);
+    toast("Mikrofon hatası");
+  };
+
+  recog.onend = async () => {
+    const finalText = normalizeText(side === "top" ? state.topLastSpeech : state.botLastSpeech);
+    stopRecognition(side);
+
+    if (finalText) {
+      inputEl.value = "";
+      autoResize(inputEl);
+      syncComposerButtons();
+      await runTranslateText(side, finalText);
+    }
+  };
+
+  if (side === "top") state.topRecognizer = recog;
+  else state.botRecognizer = recog;
+
+  try {
+    recog.start();
+  } catch {
+    stopRecognition(side);
+  }
+}
+
+function prepareInputs() {
+  [UI.topInput, UI.botInput].forEach((input) => {
+    if (!input) return;
+    input.readOnly = false;
+    input.disabled = false;
+    input.setAttribute("inputmode", "none");
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("autocorrect", "off");
+    input.setAttribute("autocapitalize", "off");
+    input.setAttribute("spellcheck", "false");
+
+    input.addEventListener("pointerdown", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const side = input === UI.topInput ? "top" : "bot";
+      await unlockKeyboardAudio();
+      toggleKeyboard(side, true);
+    });
+
+    input.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const side = input === UI.topInput ? "top" : "bot";
+      await unlockKeyboardAudio();
+      toggleKeyboard(side, true);
+    });
+
+    input.addEventListener("focus", () => {
+      try { input.blur(); } catch {}
+    });
+  });
+}
+
+function bindEvents() {
+  UI.topLangBtn?.addEventListener("click", () => {
+    renderTopLangList();
+    UI.popTop?.classList.add("show");
+  });
+
+  UI.closeTop?.addEventListener("click", () => UI.popTop?.classList.remove("show"));
+  UI.popTop?.addEventListener("click", (e) => {
+    if (e.target === UI.popTop) UI.popTop.classList.remove("show");
+  });
+
+  UI.topSettingsMini?.addEventListener("click", () => {
+    location.href = "/pages/premium_voice_settings.html?from=kafkaslarin_dili";
+  });
+
+  UI.botSettingsMini?.addEventListener("click", () => {
+    location.href = "/pages/premium_voice_settings.html?from=kafkaslarin_dili";
+  });
+
+  UI.topInput?.addEventListener("input", () => {
+    autoResize(UI.topInput);
+    syncComposerButtons();
+  });
+
+  UI.botInput?.addEventListener("input", () => {
+    autoResize(UI.botInput);
+    syncComposerButtons();
+  });
+
+  UI.topInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendTyped("top");
+    }
+  });
+
+  UI.botInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendTyped("bot");
+    }
+  });
+
+  UI.topMic?.addEventListener("click", () => startRecognition("top"));
+  UI.botMic?.addEventListener("click", () => startRecognition("bot"));
+  UI.topSend?.addEventListener("click", () => sendTyped("top"));
+  UI.botSend?.addEventListener("click", () => sendTyped("bot"));
+
+  UI.homeLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = "/pages/home.html";
+  });
+
+  UI.homeBtn?.addEventListener("click", () => {
+    location.href = "/pages/home.html";
+  });
+
+  UI.clearBtn?.addEventListener("click", () => {
+    if (UI.topInput) UI.topInput.value = "";
+    if (UI.botInput) UI.botInput.value = "";
+    autoResize(UI.topInput);
+    autoResize(UI.botInput);
+    stopAudio();
+    stopRecognition("top");
+    stopRecognition("bot");
+    clearBubbles();
+    UI.topKeyboardWrap?.classList.remove("show");
+    UI.botKeyboardWrap?.classList.remove("show");
+    syncComposerButtons();
+    document.body.classList.remove("is-translating", "is-error");
+    document.body.classList.add("is-ready");
+    pointOrbTo("bot");
+  });
+
+  UI.genericCloseBtn?.addEventListener("click", closeModal);
+  UI.genericBackdrop?.addEventListener("click", (e) => {
+    if (e.target === UI.genericBackdrop) closeModal();
+  });
+}
+
+async function requireLogin() {
+  const { data: { session } = {} } = await supabase.auth.getSession();
+  if (!session?.user) {
+    location.replace("/pages/login.html");
+    return false;
+  }
+  return true;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  if (!(await requireLogin())) return;
+
+  prepareInputs();
+  updateLangButtons();
+  renderTopLangList();
+  buildKeyboard(UI.topKeyboard, "top");
+  buildKeyboard(UI.botKeyboard, "bot");
+  bindEvents();
+  syncComposerButtons();
+  document.body.classList.add("is-ready");
+  pointOrbTo("bot");
+});
