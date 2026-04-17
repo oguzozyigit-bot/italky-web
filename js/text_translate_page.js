@@ -27,8 +27,8 @@ const resultSub = $("resultSub");
 const resultArea = $("resultArea");
 
 const inputBox = $("inputBox");
+const micBtn = $("micBtn");
 const translateBtn = $("translateBtn");
-const speakBtn = $("speakBtn");
 
 const homeBtn = $("homeBtn");
 const homeLink = $("homeLink");
@@ -53,6 +53,10 @@ let audio = null;
 let speakCtl = null;
 let speakToken = 0;
 let lastTranslateToken = 0;
+
+let recognizer = null;
+let listening = false;
+let capturedSpeech = "";
 
 let offlineEnabled = localStorage.getItem("text_single_offline_enabled") === "1";
 let soundEnabled = localStorage.getItem("text_single_sound_enabled") !== "0";
@@ -84,9 +88,17 @@ function toast(msg) {
   }, 2200);
 }
 
-function setOutput(text, sub = "") {
-  resultBubble.textContent = String(text || "");
+function setOutput(main, sub = "") {
+  resultBubble.textContent = String(main || "");
   resultSub.textContent = String(sub || "");
+  resultBubble.className = `bubble ${String(main || "").trim() && String(main || "").trim() !== "..." ? "latest" : "normal"}`;
+  resultArea.scrollTop = resultArea.scrollHeight + 300;
+}
+
+function syncInputButtons() {
+  const hasText = normalizeText(inputBox.value).length > 0;
+  micBtn.classList.toggle("hidden", hasText && !listening);
+  translateBtn.classList.toggle("hidden", !hasText);
 }
 
 function stopSpeak() {
@@ -540,11 +552,80 @@ async function translateText() {
   }
 }
 
-function setOutput(main, sub = "") {
-  resultBubble.textContent = String(main || "");
-  resultSub.textContent = String(sub || "");
-  resultBubble.className = `bubble ${String(main || "").trim() && String(main || "").trim() !== "..." ? "latest" : "normal"}`;
-  resultArea.scrollTop = resultArea.scrollHeight + 300;
+function extractStableRecognitionText(results) {
+  let latestFinal = "";
+  let latestInterim = "";
+
+  for (let i = 0; i < results.length; i++) {
+    const piece = normalizeText(results[i]?.[0]?.transcript || "");
+    if (!piece) continue;
+
+    if (results[i].isFinal) {
+      latestFinal = piece;
+    } else {
+      latestInterim = piece;
+    }
+  }
+
+  return normalizeText(latestFinal || latestInterim);
+}
+
+function stopRecognition() {
+  try { recognizer?.stop(); } catch {}
+  recognizer = null;
+  listening = false;
+  capturedSpeech = "";
+  syncInputButtons();
+}
+
+function startRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    toast("Bu cihazda sesli giriş desteklenmiyor");
+    return;
+  }
+
+  if (listening) {
+    stopRecognition();
+    return;
+  }
+
+  recognizer = new SR();
+  recognizer.lang = "tr-TR";
+  recognizer.interimResults = true;
+  recognizer.continuous = false;
+  recognizer.maxAlternatives = 1;
+
+  recognizer.onstart = () => {
+    listening = true;
+    capturedSpeech = "";
+    syncInputButtons();
+  };
+
+  recognizer.onresult = (e) => {
+    const stableText = extractStableRecognitionText(e.results);
+    capturedSpeech = stableText;
+    inputBox.value = stableText;
+    inputBox.style.height = "auto";
+    inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+    syncInputButtons();
+  };
+
+  recognizer.onerror = () => {
+    stopRecognition();
+    toast("Mikrofon hatası");
+  };
+
+  recognizer.onend = () => {
+    listening = false;
+    syncInputButtons();
+  };
+
+  try {
+    recognizer.start();
+  } catch {
+    stopRecognition();
+  }
 }
 
 async function requireLogin() {
@@ -611,22 +692,10 @@ function bindEvents() {
   inputBox.addEventListener("input", () => {
     inputBox.style.height = "auto";
     inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+    syncInputButtons();
   });
 
-  speakBtn.addEventListener("click", () => {
-    const t = normalizeText(resultBubble.textContent);
-    if (!t || t === "..." || t.startsWith("⚠️")) return;
-    speakText(t, canonical(toLang));
-  });
-
-  clearBtn.addEventListener("click", () => {
-    inputBox.value = "";
-    inputBox.style.height = "auto";
-    setOutput("...", "");
-    stopSpeak();
-    frameRoot.classList.remove("is-translating", "is-error");
-    frameRoot.classList.add("is-ready");
-  });
+  micBtn.addEventListener("click", startRecognition);
 
   homeLink.addEventListener("click", (e) => {
     e.preventDefault();
@@ -635,6 +704,16 @@ function bindEvents() {
 
   homeBtn.addEventListener("click", () => {
     location.href = "/pages/home.html";
+  });
+
+  clearBtn.addEventListener("click", () => {
+    inputBox.value = "";
+    inputBox.style.height = "auto";
+    setOutput("...", "");
+    stopSpeak();
+    stopRecognition();
+    frameRoot.classList.remove("is-translating", "is-error");
+    frameRoot.classList.add("is-ready");
   });
 }
 
@@ -650,9 +729,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   setOutput("...", "");
   ensureMockOfflineLicenseOnce();
 
+  inputBox.style.height = "auto";
+  syncInputButtons();
   frameRoot.classList.add("is-ready");
 });
 
 window.addEventListener("beforeunload", () => {
   stopSpeak();
+  stopRecognition();
 });
