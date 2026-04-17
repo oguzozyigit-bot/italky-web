@@ -495,24 +495,23 @@ async function processMessage(rawText) {
    STT
 ========================================================= */
 
-function normalizeRecognitionPieces(results) {
-  let finalText = "";
-  let interimText = "";
+function extractStableRecognitionText(results) {
+  let latestFinal = "";
+  let latestInterim = "";
 
   for (let i = 0; i < results.length; i++) {
     const piece = normalizeText(results[i]?.[0]?.transcript || "");
     if (!piece) continue;
 
     if (results[i].isFinal) {
-      finalText = normalizeText(`${finalText} ${piece}`);
+      latestFinal = piece;
     } else {
-      interimText = normalizeText(piece);
+      latestInterim = piece;
     }
   }
 
-  return normalizeText(`${finalText} ${interimText}`);
+  return normalizeText(latestFinal || latestInterim);
 }
-
 function stopRecognizer() {
   try { recognizer?.stop(); } catch {}
   recognizer = null;
@@ -553,9 +552,9 @@ function startRecognition() {
   };
 
   recognizer.onresult = (e) => {
-    const merged = normalizeRecognitionPieces(e.results);
-    finalCaptured = merged;
-    botInput.value = merged;
+    const stableText = extractStableRecognitionText(e.results);
+    finalCaptured = stableText;
+    botInput.value = stableText;
     autoResizeTextarea();
     syncComposerButtons();
   };
