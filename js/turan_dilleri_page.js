@@ -34,7 +34,6 @@ const UI = {
   topBody: $("topBody"),
   topKeyboardWrap: $("topKeyboardWrap"),
   topKeyboard: $("topKeyboard"),
-  topKbdBtn: $("topKbdBtn"),
   popTop: $("pop-top"),
   closeTop: $("close-top"),
   listTop: $("list-top"),
@@ -49,7 +48,6 @@ const UI = {
   botBody: $("botBody"),
   botKeyboardWrap: $("botKeyboardWrap"),
   botKeyboard: $("botKeyboard"),
-  botKbdBtn: $("botKbdBtn"),
 
   homeBtn: $("homeBtn"),
   homeLink: $("homeLink"),
@@ -74,7 +72,9 @@ const state = {
   shiftTop: false,
   shiftBot: false,
   topLastSpeech: "",
-  botLastSpeech: ""
+  botLastSpeech: "",
+  keyboardAudioCtx: null,
+  keyboardMasterGain: null
 };
 
 const KB_NUM_ROW = ["1","2","3","4","5","6","7","8","9","0"];
@@ -229,21 +229,136 @@ function renderTopLangList() {
   });
 }
 
-function createKey(label, cls = "", onClick = null) {
+function ensureKeyboardAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+
+    if (!state.keyboardAudioCtx) {
+      state.keyboardAudioCtx = new Ctx();
+      state.keyboardMasterGain = state.keyboardAudioCtx.createGain();
+      state.keyboardMasterGain.gain.value = 0.08;
+      state.keyboardMasterGain.connect(state.keyboardAudioCtx.destination);
+    }
+
+    return state.keyboardAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+async function unlockKeyboardAudio() {
+  const ctx = ensureKeyboardAudio();
+  if (!ctx) return;
+  try {
+    if (ctx.state === "suspended") await ctx.resume();
+  } catch {}
+}
+
+function playKeyClick(kind = "key") {
+  const ctx = ensureKeyboardAudio();
+  if (!ctx || !state.keyboardMasterGain) return;
+
+  if (ctx.state === "suspended") {
+    ctx.resume().catch(() => {});
+  }
+
+  const now = ctx.currentTime;
+
+  const oscA = ctx.createOscillator();
+  const oscB = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+
+  filter.type = "bandpass";
+  filter.frequency.value =
+    kind === "space" ? 1300 :
+    kind === "backspace" ? 1900 :
+    kind === "enter" ? 1700 :
+    kind === "shift" ? 1500 : 1600;
+
+  oscA.type = "square";
+  oscB.type = "triangle";
+
+  const base =
+    kind === "space" ? 120 :
+    kind === "backspace" ? 210 :
+    kind === "enter" ? 185 :
+    kind === "shift" ? 165 : 175;
+
+  oscA.frequency.setValueAtTime(base, now);
+  oscB.frequency.setValueAtTime(base * 2.6, now);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.11, now + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+
+  oscA.connect(filter);
+  oscB.connect(filter);
+  filter.connect(gain);
+  gain.connect(state.keyboardMasterGain);
+
+  try {
+    oscA.start(now);
+    oscB.start(now);
+    oscA.stop(now + 0.05);
+    oscB.stop(now + 0.05);
+  } catch {}
+}
+
+function createKey(label, cls = "", onClick = null, sound = "key") {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = `kb-key ${cls}`.trim();
   btn.textContent = label;
-  if (onClick) btn.addEventListener("click", onClick);
+
+  btn.addEventListener("pointerdown", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    btn.classList.add("pressing");
+    await unlockKeyboardAudio();
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    btn.classList.remove("pressing");
+    playKeyClick(sound);
+    onClick?.();
+  });
+
+  btn.addEventListener("pointerleave", () => {
+    btn.classList.remove("pressing");
+  });
+
   return btn;
 }
 
-function createIconKey(svg, cls = "", onClick = null) {
+function createIconKey(svg, cls = "", onClick = null, sound = "key") {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = `kb-key icon ${cls}`.trim();
   btn.innerHTML = svg;
-  if (onClick) btn.addEventListener("click", onClick);
+
+  btn.addEventListener("pointerdown", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    btn.classList.add("pressing");
+    await unlockKeyboardAudio();
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    btn.classList.remove("pressing");
+    playKeyClick(sound);
+    onClick?.();
+  });
+
+  btn.addEventListener("pointerleave", () => {
+    btn.classList.remove("pressing");
+  });
+
   return btn;
 }
 
@@ -310,7 +425,7 @@ function buildKeyboard(root, side) {
   const rowNums = document.createElement("div");
   rowNums.className = "kb-row";
   KB_NUM_ROW.forEach((ch) => {
-    rowNums.appendChild(createKey(ch, "", () => insertText(side, ch)));
+    rowNums.appendChild(createKey(ch, "", () => insertText(side, ch), "key"));
   });
   root.appendChild(rowNums);
 
@@ -322,7 +437,8 @@ function buildKeyboard(root, side) {
       const shiftKey = createIconKey(
         `<svg viewBox="0 0 24 24"><path d="M12 4l7 8h-4v8H9v-8H5l7-8z"></path></svg>`,
         "wide",
-        () => toggleShift(side)
+        () => toggleShift(side),
+        "shift"
       );
       if (shifted) shiftKey.classList.add("pressing");
       row.appendChild(shiftKey);
@@ -337,7 +453,7 @@ function buildKeyboard(root, side) {
           else state.shiftBot = false;
           buildKeyboard(root, side);
         }
-      }));
+      }, "key"));
     });
 
     if (rowIndex === 2) {
@@ -348,7 +464,8 @@ function buildKeyboard(root, side) {
           <path d="M15 9l-5 6"></path>
         </svg>`,
         "wide",
-        () => backspaceText(side)
+        () => backspaceText(side),
+        "backspace"
       ));
     }
 
@@ -358,14 +475,14 @@ function buildKeyboard(root, side) {
   const row4 = document.createElement("div");
   row4.className = "kb-row";
 
-  row4.appendChild(createKey(",", "", () => insertText(side, ",")));
-  row4.appendChild(createKey(".", "", () => insertText(side, ".")));
-  row4.appendChild(createKey("?", "", () => insertText(side, "?")));
-  row4.appendChild(createKey("boşluk", "xwide", () => insertText(side, " ")));
+  row4.appendChild(createKey(",", "", () => insertText(side, ","), "key"));
+  row4.appendChild(createKey(".", "", () => insertText(side, "."), "key"));
+  row4.appendChild(createKey("?", "", () => insertText(side, "?"), "key"));
+  row4.appendChild(createKey("boşluk", "xwide", () => insertText(side, " "), "space"));
   row4.appendChild(createKey("tamam", "wide", async () => {
     toggleKeyboard(side, false);
     await sendTyped(side);
-  }));
+  }, "enter"));
 
   root.appendChild(row4);
 }
@@ -383,7 +500,8 @@ function toggleKeyboard(side, force = null) {
 
   const input = side === "top" ? UI.topInput : UI.botInput;
   if (willShow && input) {
-    setTimeout(() => {
+    setTimeout(async () => {
+      await unlockKeyboardAudio();
       try {
         input.focus();
       } catch {}
@@ -737,6 +855,23 @@ function prepareInputs() {
     input.setAttribute("autocorrect", "off");
     input.setAttribute("autocapitalize", "off");
     input.setAttribute("spellcheck", "false");
+
+    input.addEventListener("pointerdown", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const side = input === UI.topInput ? "top" : "bot";
+      await unlockKeyboardAudio();
+      toggleKeyboard(side, true);
+    });
+
+    input.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const side = input === UI.topInput ? "top" : "bot";
+      await unlockKeyboardAudio();
+      toggleKeyboard(side, true);
+    });
+
     input.addEventListener("focus", () => {
       try { input.blur(); } catch {}
     });
@@ -790,9 +925,6 @@ function bindEvents() {
   UI.botMic?.addEventListener("click", () => startRecognition("bot"));
   UI.topSend?.addEventListener("click", () => sendTyped("top"));
   UI.botSend?.addEventListener("click", () => sendTyped("bot"));
-
-  UI.topKbdBtn?.addEventListener("click", () => toggleKeyboard("top"));
-  UI.botKbdBtn?.addEventListener("click", () => toggleKeyboard("bot"));
 
   UI.homeLink?.addEventListener("click", (e) => {
     e.preventDefault();
