@@ -43,8 +43,6 @@ const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
 const frameRoot = $("frameRoot");
-const centerHub = $("centerHub");
-
 const topBody = $("topBody");
 const botBody = $("botBody");
 
@@ -55,6 +53,9 @@ const topMic = $("topMic");
 const botMic = $("botMic");
 const topSend = $("topSend");
 const botSend = $("botSend");
+
+const topKbdBtn = $("topKbdBtn");
+const botKbdBtn = $("botKbdBtn");
 
 const topComposer = $("topComposer");
 const botComposer = $("botComposer");
@@ -84,15 +85,11 @@ const homeBtn = $("homeBtn");
 const homeLink = $("homeLink");
 
 const genericBackdrop = $("genericBackdrop");
-const genericTitle = $("genericTitle");
-const genericText = $("genericText");
 const genericCloseBtn = $("genericCloseBtn");
-
 const miniToast = $("miniToast");
 
 let topLang = "tr";
 let botLang = "ku";
-
 let recognizer = null;
 let recordingSide = null;
 let currentAudio = null;
@@ -104,7 +101,7 @@ const KEYBOARD_ROWS = [
   ["q","w","e","r","t","y","u","ı","o","p","ğ","ü"],
   ["a","s","d","f","g","h","j","k","l","ş","i"],
   ["z","x","c","v","b","n","m","ö","ç"],
-  ["123","space","backspace","clear","close"]
+  ["space","backspace","clear","close"]
 ];
 
 function canonical(code) {
@@ -137,7 +134,6 @@ function langObjBot(code) {
 function refreshLangLabels() {
   const top = langObjTop(topLang);
   const bot = langObjBot(botLang);
-
   topLangTxt.textContent = `${top.flag} ${top.name}`;
   botLangTxt.textContent = `${bot.flag} ${bot.name}`;
 }
@@ -208,16 +204,13 @@ function renderBotLangs() {
 
 function stopAudio() {
   speakRunId += 1;
-
   try {
     if (currentAudio) {
       currentAudio.pause();
       currentAudio.currentTime = 0;
     }
   } catch {}
-
   currentAudio = null;
-
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
@@ -240,8 +233,8 @@ function syncComposerButtons(side) {
   const input = side === "top" ? topInput : botInput;
   const mic = side === "top" ? topMic : botMic;
   const send = side === "top" ? topSend : botSend;
-  const listening = recordingSide === side;
   const hasText = String(input.value || "").trim().length > 0;
+  const listening = recordingSide === side;
 
   mic.classList.toggle("hidden", hasText && !listening);
   send.classList.toggle("hidden", !hasText);
@@ -261,6 +254,7 @@ function keepVisible() {
 
 function openKeyboard(side) {
   activeInputSide = side;
+
   if (side === "top") {
     topKeyboardWrap.classList.add("show");
     botKeyboardWrap.classList.remove("show");
@@ -268,6 +262,8 @@ function openKeyboard(side) {
     botKeyboardWrap.classList.add("show");
     topKeyboardWrap.classList.remove("show");
   }
+
+  keepVisible();
 }
 
 function closeKeyboard() {
@@ -285,7 +281,6 @@ function getActiveInput() {
 function insertTextToActiveInput(text) {
   const input = getActiveInput();
   if (!input) return;
-
   input.value = `${input.value || ""}${text}`;
   autoResizeTextarea(input);
   syncComposerButtons(activeInputSide);
@@ -294,7 +289,6 @@ function insertTextToActiveInput(text) {
 function backspaceActiveInput() {
   const input = getActiveInput();
   if (!input) return;
-
   input.value = String(input.value || "").slice(0, -1);
   autoResizeTextarea(input);
   syncComposerButtons(activeInputSide);
@@ -303,7 +297,6 @@ function backspaceActiveInput() {
 function clearActiveInput() {
   const input = getActiveInput();
   if (!input) return;
-
   input.value = "";
   autoResizeTextarea(input);
   syncComposerButtons(activeInputSide);
@@ -344,40 +337,19 @@ function buildKeyboard(container) {
       } else if (key === "close") {
         btn.classList.add("wide");
         btn.textContent = "KAPAT";
-      } else if (key === "123") {
-        btn.classList.add("wide");
-        btn.textContent = "123";
       } else {
         btn.textContent = key;
       }
 
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         pressKeyVisual(btn);
 
-        if (key === "space") {
-          insertTextToActiveInput(" ");
-          return;
-        }
-
-        if (key === "backspace") {
-          backspaceActiveInput();
-          return;
-        }
-
-        if (key === "clear") {
-          clearActiveInput();
-          return;
-        }
-
-        if (key === "close") {
-          closeKeyboard();
-          return;
-        }
-
-        if (key === "123") {
-          showToast("Şimdilik harf klavyesi aktif");
-          return;
-        }
+        if (key === "space") return insertTextToActiveInput(" ");
+        if (key === "backspace") return backspaceActiveInput();
+        if (key === "clear") return clearActiveInput();
+        if (key === "close") return closeKeyboard();
 
         insertTextToActiveInput(key);
       });
@@ -415,7 +387,6 @@ function createSpeakerButton(getText, langCode) {
 
 function addBubble(where, kind, text, opts = {}) {
   const wrap = where === "top" ? topBody : botBody;
-
   const row = document.createElement("div");
   row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
 
@@ -647,6 +618,7 @@ function stopRecognizer() {
   recognizer = null;
   const prevSide = recordingSide;
   recordingSide = null;
+
   if (prevSide === "top") {
     topComposer.classList.remove("listening");
     topMic.classList.remove("listening");
@@ -738,19 +710,30 @@ function startRecognition(side) {
   }
 }
 
-function bindKeyboardFocus() {
-  topInput.addEventListener("click", () => openKeyboard("top"));
-  botInput.addEventListener("click", () => openKeyboard("bot"));
-
-  topInput.addEventListener("focus", (e) => {
-    e.target.blur();
+function bindKeyboardTriggers() {
+  const openTop = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     openKeyboard("top");
-  });
+  };
 
-  botInput.addEventListener("focus", (e) => {
-    e.target.blur();
+  const openBot = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     openKeyboard("bot");
-  });
+  };
+
+  topKbdBtn.addEventListener("click", openTop);
+  botKbdBtn.addEventListener("click", openBot);
+
+  topComposer.addEventListener("click", openTop);
+  botComposer.addEventListener("click", openBot);
+
+  topComposer.addEventListener("touchstart", openTop, { passive: false });
+  botComposer.addEventListener("touchstart", openBot, { passive: false });
+
+  topInput.addEventListener("click", openTop);
+  botInput.addEventListener("click", openBot);
 }
 
 function bindEvents() {
@@ -786,9 +769,10 @@ function bindEvents() {
     const insideTop = popTop.contains(e.target);
     const insideBot = popBot.contains(e.target);
     const isBtn = e.target.closest("#topLangBtn,#botLangBtn");
-    const isKb = e.target.closest("#topKeyboardWrap,#botKeyboardWrap,.composer-input");
+    const isComposer = e.target.closest("#topComposer,#botComposer");
+    const isKeyboard = e.target.closest("#topKeyboardWrap,#botKeyboardWrap");
     if (!insideTop && !insideBot && !isBtn) closeAllPop();
-    if (!isKb && !e.target.closest("#topComposer,#botComposer")) closeKeyboard();
+    if (!isComposer && !isKeyboard) closeKeyboard();
   }, { capture: true });
 
   topSettingsMini.addEventListener("click", () => {
@@ -835,7 +819,7 @@ function bindEvents() {
     if (e.target === genericBackdrop) closeModal();
   });
 
-  bindKeyboardFocus();
+  bindKeyboardTriggers();
 }
 
 function init() {
@@ -847,7 +831,7 @@ function init() {
   syncAllComposerButtons();
   frameRoot.classList.add("is-ready");
   bindEvents();
-  showToast("Coğrafyanın Dili hazır");
+  showToast("Klavye hazır");
 }
 
 init();
