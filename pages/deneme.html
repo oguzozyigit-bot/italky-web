@@ -19,10 +19,10 @@
   --text:#fff7f7;
   --muted:rgba(255,255,255,.64);
   --kb-bg:rgba(16,7,8,.98);
-  --key-bg:#2a1113;
-  --key-line:rgba(255,255,255,.08);
-  --key-active:rgba(239,68,68,.22);
-  --key-text:#fff7f7;
+  --key-bg:#341518;
+  --key-line:rgba(255,255,255,.10);
+  --key-active:rgba(239,68,68,.28);
+  --key-text:#ffffff;
 }
 
 *{
@@ -399,7 +399,7 @@ body{
   font-weight:800;
 }
 
-.send-btn,.mic-btn,.kbd-btn{
+.send-btn,.mic-btn{
   width:42px;
   height:42px;
   border:none;
@@ -413,11 +413,6 @@ body{
   color:#fff;
   position:relative;
   z-index:2;
-}
-
-.kbd-btn{
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.10);
 }
 
 .mic-btn.listening::after{
@@ -443,8 +438,7 @@ body{
 }
 
 .send-btn svg,
-.mic-btn svg,
-.kbd-btn svg{
+.mic-btn svg{
   width:22px;
   height:22px;
   stroke:currentColor;
@@ -661,15 +655,17 @@ body{
 .kb-key{
   flex:1;
   min-width:0;
-  min-height:44px;
+  min-height:46px;
   border:none;
   border-radius:12px;
-  background:var(--key-bg);
-  border:1px solid var(--key-line);
-  color:var(--key-text);
+  background:#341518;
+  border:1px solid rgba(255,255,255,.10);
+  color:#ffffff;
   font-family:inherit;
-  font-size:18px;
-  font-weight:900;
+  font-size:20px;
+  font-weight:1000;
+  letter-spacing:.2px;
+  text-shadow:0 1px 0 rgba(0,0,0,.35);
   cursor:pointer;
   display:flex;
   align-items:center;
@@ -681,9 +677,12 @@ body{
 
 .kb-key:active,
 .kb-key.pressing{
-  background:var(--key-active);
+  background:rgba(239,68,68,.28);
   transform:scale(.98);
-  box-shadow:0 0 0 1px rgba(239,68,68,.28), 0 6px 16px rgba(239,68,68,.12);
+  box-shadow:
+    0 0 0 1px rgba(239,68,68,.34),
+    0 8px 18px rgba(239,68,68,.18),
+    inset 0 1px 0 rgba(255,255,255,.06);
 }
 
 .kb-key.wide{ flex:1.35; }
@@ -834,14 +833,6 @@ body{
 
       <div class="composer-stack">
         <div class="composer" id="topComposer">
-          <button id="topKbdBtn" class="kbd-btn" type="button" aria-label="Klavye aç">
-            <svg viewBox="0 0 24 24">
-              <rect x="3" y="6" width="18" height="12" rx="2"></rect>
-              <path d="M7 10h.01"></path><path d="M10 10h.01"></path><path d="M13 10h.01"></path><path d="M16 10h.01"></path>
-              <path d="M7 14h10"></path>
-            </svg>
-          </button>
-
           <div class="composer-center">
             <textarea id="topInput" class="composer-input" rows="1" placeholder="Seçili Turan dilinde yaz" readonly></textarea>
           </div>
@@ -910,14 +901,6 @@ body{
 
       <div class="composer-stack">
         <div class="composer" id="botComposer">
-          <button id="botKbdBtn" class="kbd-btn" type="button" aria-label="Klavye aç">
-            <svg viewBox="0 0 24 24">
-              <rect x="3" y="6" width="18" height="12" rx="2"></rect>
-              <path d="M7 10h.01"></path><path d="M10 10h.01"></path><path d="M13 10h.01"></path><path d="M16 10h.01"></path>
-              <path d="M7 14h10"></path>
-            </svg>
-          </button>
-
           <div class="composer-center">
             <textarea id="botInput" class="composer-input" rows="1" placeholder="Türkçe yaz" readonly></textarea>
           </div>
@@ -958,10 +941,10 @@ body{
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/turan_dilleri_page.js?v=TURAN_FINAL_V2"></script>
+  <script type="module" src="/js/turan_dilleri_page.js?v=TURAN_FINAL_V3"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     await initGlobalAccess({ allowPublicPageBypass: false });
   </script>
 </body>
-        </html>
+</html>
