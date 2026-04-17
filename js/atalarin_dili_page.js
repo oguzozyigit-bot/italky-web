@@ -1,9 +1,8 @@
 import { supabase } from "/js/supabase_client.js";
 
-const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
-const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
+const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
@@ -33,6 +32,119 @@ let currentAudio = null;
 let speakRunId = 0;
 let typewriterRunId = 0;
 
+/* =========================================================
+   GÖKTÜRK MOTORU - LOCAL
+========================================================= */
+
+const WORD_OVERRIDES = {
+  "türk": "𐱅𐰇𐰼𐰜",
+  "turk": "𐱅𐰇𐰼𐰜",
+  "göktürk": "𐰚𐰇𐰜𐱅𐰇𐰼𐰜",
+  "gokturk": "𐰚𐰇𐰜𐱅𐰇𐰼𐰜",
+  "gök": "𐰚𐰇𐰜",
+  "gok": "𐰚𐰇𐰜",
+  "tanrı": "𐱅𐰭𐰼𐰃",
+  "tanri": "𐱅𐰭𐰼𐰃"
+};
+
+const MULTI_CHAR_MAP = [
+  ["ng", "𐰭"],
+  ["ny", "𐰪"]
+];
+
+const CHAR_MAP = {
+  "a": "𐰀",
+  "b": "𐰉",
+  "c": "𐰲",
+  "ç": "𐰲",
+  "d": "𐰑",
+  "e": "𐰀",
+  "f": "𐰯",
+  "g": "𐰏",
+  "ğ": "𐰍",
+  "h": "𐰴",
+  "ı": "𐰃",
+  "i": "𐰃",
+  "j": "𐰖",
+  "k": "𐰚",
+  "l": "𐰞",
+  "m": "𐰢",
+  "n": "𐰤",
+  "o": "𐰆",
+  "ö": "𐰇",
+  "p": "𐰯",
+  "q": "𐰚",
+  "r": "𐰼",
+  "s": "𐰽",
+  "ş": "𐱁",
+  "t": "𐱅",
+  "u": "𐰆",
+  "ü": "𐰇",
+  "v": "𐰉",
+  "w": "𐰉",
+  "x": "𐰴𐰽",
+  "y": "𐰖",
+  "z": "𐰔"
+};
+
+function normalizeText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+function tokenizeWithSpaces(text) {
+  return String(text || "").split(/(\s+)/);
+}
+
+function cleanWord(word) {
+  return String(word || "").toLowerCase().replace(/[^\wçğıöşü]/g, "");
+}
+
+function convertWordToGokturk(word) {
+  const pure = cleanWord(word);
+
+  if (WORD_OVERRIDES[pure]) {
+    return WORD_OVERRIDES[pure];
+  }
+
+  let out = "";
+  let i = 0;
+  const lower = String(word || "").toLowerCase();
+
+  while (i < lower.length) {
+    let matched = false;
+
+    for (const [src, dst] of MULTI_CHAR_MAP) {
+      if (lower.startsWith(src, i)) {
+        out += dst;
+        i += src.length;
+        matched = true;
+        break;
+      }
+    }
+
+    if (matched) continue;
+
+    const ch = lower[i];
+    out += CHAR_MAP[ch] || ch;
+    i += 1;
+  }
+
+  return out;
+}
+
+function turkishToGokturk(text) {
+  const parts = tokenizeWithSpaces(text);
+  return parts.map((part) => {
+    if (!part) return "";
+    if (/^\s+$/.test(part)) return part;
+    return convertWordToGokturk(part);
+  }).join("").trim();
+}
+
+/* =========================================================
+   UI
+========================================================= */
+
 function showToast(msg = "") {
   miniToast.textContent = String(msg || "");
   miniToast.classList.add("show");
@@ -53,14 +165,13 @@ function closeModal() {
 }
 
 function getSelectedVoice() {
-  const mode = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "tts").trim().toLowerCase();
+  const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
   const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
 
   if (mode === "clone") return "mine";
   if (mode === "preset" && preset === "second") return "second";
   if (mode === "preset" && preset === "memory") return "memory";
-  if (["mine", "second", "memory", "tts", "auto"].includes(mode)) return mode;
-  return "tts";
+  return "auto";
 }
 
 function isAutoReadEnabled() {
@@ -138,6 +249,9 @@ function addBubble(where, kind, text, opts = {}) {
   const row = document.createElement("div");
   row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
 
+  const stack = document.createElement("div");
+  stack.className = "bubble-stack";
+
   const inner = document.createElement("div");
   inner.className = "bubble-row";
 
@@ -146,11 +260,20 @@ function addBubble(where, kind, text, opts = {}) {
   txt.textContent = String(text || "").trim();
 
   if (opts.speaker && kind === "me") {
-    inner.appendChild(createSpeakerButton(() => txt.textContent || ""));
+    inner.appendChild(createSpeakerButton(() => opts.speakText || txt.textContent || ""));
   }
 
   inner.appendChild(txt);
-  row.appendChild(inner);
+  stack.appendChild(inner);
+
+  if (opts.subText) {
+    const sub = document.createElement("div");
+    sub.className = "sub-txt";
+    sub.textContent = String(opts.subText || "").trim();
+    stack.appendChild(sub);
+  }
+
+  row.appendChild(stack);
   wrap.appendChild(row);
   keepVisible();
   return row;
@@ -160,6 +283,10 @@ function clearLatest(where) {
   const wrap = where === "top" ? topBody : botBody;
   wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
 }
+
+/* =========================================================
+   SES
+========================================================= */
 
 async function getCurrentUserId() {
   try {
@@ -201,7 +328,7 @@ async function speakViaApi(text) {
     apiPresetVoice = "memory";
   }
 
-  const resp = await fetch(`${API_BASE}/api/tts`, {
+  const resp = await fetch("https://italky-api.onrender.com/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -262,44 +389,9 @@ async function speak(text) {
   }
 }
 
-function normalizeText(text) {
-  return String(text || "").replace(/\s+/g, " ").trim();
-}
-
-async function translateToGokturk(text) {
-  const value = normalizeText(text);
-  if (!value) return null;
-
-  const resp = await fetch(`${API_BASE}/api/translate_ai`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: value,
-      from_lang: "tr",
-      to_lang: "tr",
-      source: "tr",
-      target: "tr",
-      mode: "normal",
-      use_ai: true,
-      cultural: false,
-      style: "balanced",
-      atalar_mode: true,
-      atalar_source: "tr",
-      atalar_target: "gokturk"
-    })
-  });
-
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) return null;
-
-  const out =
-    String(json?.gokturk_text || "").trim() ||
-    String(json?.translated || "").trim() ||
-    String(json?.translation || "").trim() ||
-    "";
-
-  return out || null;
-}
+/* =========================================================
+   TYPEWRITER
+========================================================= */
 
 async function typewriteText(el, finalText) {
   stopTypewriter();
@@ -323,6 +415,10 @@ async function typewriteText(el, finalText) {
   }
 }
 
+/* =========================================================
+   AKIŞ
+========================================================= */
+
 async function processMessage(rawText) {
   const text = normalizeText(rawText);
   if (!text) return;
@@ -339,16 +435,21 @@ async function processMessage(rawText) {
 
   const latestRow = addBubble("top", "me", "Çevriliyor...", {
     latest: true,
-    speaker: true
+    speaker: true,
+    speakText: text,
+    subText: ""
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const translated = await translateToGokturk(text);
+  const latestSub = latestRow?.querySelector(".sub-txt");
+
+  const translated = turkishToGokturk(text);
 
   if (!translated) {
     frameRoot.classList.remove("is-translating");
     frameRoot.classList.add("is-error");
     if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
+    if (latestSub) latestSub.textContent = "";
     setTimeout(() => {
       frameRoot.classList.remove("is-error");
       frameRoot.classList.add("is-ready");
@@ -359,12 +460,21 @@ async function processMessage(rawText) {
   if (latestTxt) {
     latestTxt.textContent = "";
     await typewriteText(latestTxt, translated);
-    await speak(translated);
   }
+
+  if (latestSub) {
+    latestSub.textContent = text;
+  }
+
+  await speak(text);
 
   frameRoot.classList.remove("is-translating", "is-error");
   frameRoot.classList.add("is-ready");
 }
+
+/* =========================================================
+   STT
+========================================================= */
 
 function stopRecognizer() {
   try { recognizer?.stop(); } catch {}
@@ -445,9 +555,13 @@ function startRecognition() {
   }
 }
 
+/* =========================================================
+   EVENTS
+========================================================= */
+
 function bindEvents() {
   settingsBtn.addEventListener("click", () => {
-    location.href = "/pages/facetoface_settings.html";
+    location.href = "/pages/premium_voice_settings.html?from=atalarin_dili";
   });
 
   clearBtn.addEventListener("click", () => {
