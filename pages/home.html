@@ -11,8 +11,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-  body{ visibility:hidden; }
-  body.home-ready{ visibility:visible; }
+  body{
+    visibility:hidden;
+  }
+
+  body.home-ready{
+    visibility:visible;
+  }
 </style>
 
 <style>
@@ -47,7 +52,7 @@ body::-webkit-scrollbar,
 body{
   background:
     radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
-    radial-gradient(circle at 20% 18%, rgba(244,114,182,.10) 0%, transparent 25%),
+    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
     radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
     linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
   overflow:hidden;
@@ -516,7 +521,7 @@ body.home-ready #pageContent{
   top:50%;
   width:20px;
   height:20px;
-  transform:translate(18px, 16px);
+  transform:translate(-50%, 18px);
   border-radius:50%;
   background:radial-gradient(circle, #fff 0%, #fecaca 45%, #ef4444 100%);
   box-shadow:0 0 16px rgba(239,68,68,.42);
@@ -596,10 +601,16 @@ body.home-ready #pageContent{
   display:flex;
   align-items:center;
   gap:16px;
-  padding:16px 52px 16px 16px;
+  padding:16px 56px 16px 16px;
   text-decoration:none;
   color:#fff;
   transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+
+.ai-chat-card{
+  background:
+    radial-gradient(circle at 82% 14%, rgba(255,255,255,.08) 0%, transparent 24%),
+    linear-gradient(90deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
 }
 
 .atalar-card{
@@ -655,7 +666,8 @@ body.home-ready #pageContent{
 .region-ico,
 .textwide-ico,
 .fun-ico,
-.level-ico{
+.level-ico,
+.ai-chat-ico{
   width:76px;
   height:76px;
   flex:0 0 auto;
@@ -664,6 +676,107 @@ body.home-ready #pageContent{
   background:rgba(255,255,255,.12);
   border:1.5px solid rgba(255,255,255,.15);
   box-shadow:inset 0 0 22px rgba(255,255,255,.05);
+}
+
+.ai-bubble-left,
+.ai-bubble-right{
+  position:absolute;
+  border-radius:10px;
+}
+
+.ai-bubble-left{
+  width:24px;
+  height:18px;
+  left:12px;
+  top:18px;
+  background:rgba(255,245,245,.94);
+}
+
+.ai-bubble-left::after{
+  content:"";
+  position:absolute;
+  left:4px;
+  bottom:-5px;
+  width:8px;
+  height:8px;
+  background:rgba(255,245,245,.94);
+  clip-path:polygon(0 0,100% 0,0 100%);
+}
+
+.ai-bubble-right{
+  width:22px;
+  height:16px;
+  right:12px;
+  top:36px;
+  background:rgba(243,232,255,.92);
+}
+
+.ai-bubble-right::after{
+  content:"";
+  position:absolute;
+  right:4px;
+  bottom:-5px;
+  width:8px;
+  height:8px;
+  background:rgba(243,232,255,.92);
+  clip-path:polygon(100% 0,0 0,100% 100%);
+}
+
+.ai-orb{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle, #fff 0%, #f0abfc 35%, #a855f7 100%);
+  box-shadow:0 0 14px rgba(168,85,247,.42);
+}
+
+.ai-corner{
+  position:absolute;
+  right:10px;
+  top:10px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 0 14px rgba(255,255,255,.10), 0 0 24px rgba(129,140,248,.18);
+  backdrop-filter:blur(10px);
+}
+
+.ai-corner::before{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.ai-corner::after{
+  content:"";
+  position:absolute;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.10);
+  animation:aiSpin 8s linear infinite;
+}
+
+.ai-corner span{
+  position:relative;
+  z-index:2;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.45px;
+  color:#fff;
+  text-shadow:0 0 10px rgba(255,255,255,.22);
 }
 
 .ata-rune{
@@ -966,6 +1079,11 @@ body.home-ready #pageContent{
   to{ transform:rotate(360deg); }
 }
 
+@keyframes aiSpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
 @media (max-width:390px){
   .holo-container{ width:190px; height:190px; margin-bottom:2px; }
   .crystal-cage{ width:136px; height:136px; }
@@ -1054,6 +1172,21 @@ body.home-ready #pageContent{
     </section>
 
     <section class="wide-stack">
+      <a id="aiChatCard" class="wide-card ai-chat-card" href="/pages/italkyai_chat.html">
+        <div class="ai-chat-ico">
+          <div class="ai-bubble-left"></div>
+          <div class="ai-orb"></div>
+          <div class="ai-bubble-right"></div>
+        </div>
+        <div class="wide-body">
+          <div class="card-topline">Akıllı Sohbet</div>
+          <h2 class="wide-title">Sohbet AI</h2>
+          <p class="wide-desc">Sor, yaz, konuş ve anında güçlü cevap al.</p>
+        </div>
+        <div class="ai-corner"><span>AI</span></div>
+        <div class="arrow-chip"></div>
+      </a>
+
       <a id="atalarCard" class="wide-card atalar-card" href="/pages/atalarin_dili.html">
         <div class="region-ico">
           <div class="ata-rune"></div>
@@ -1075,6 +1208,7 @@ body.home-ready #pageContent{
           <h2 class="wide-title">Turan Dilleri</h2>
           <p class="wide-desc">Türkçe ile Turan dilleri arasında canlı ve güçlü köprü kur.</p>
         </div>
+        <div class="ai-corner"><span>AI</span></div>
         <div class="arrow-chip"></div>
       </a>
 
@@ -1087,6 +1221,7 @@ body.home-ready #pageContent{
           <h2 class="wide-title">Kafkasların Dili</h2>
           <p class="wide-desc">Kafkas halklarının sesini Türkçe ile doğal akışta buluştur.</p>
         </div>
+        <div class="ai-corner"><span>AI</span></div>
         <div class="arrow-chip"></div>
       </a>
 
@@ -1099,6 +1234,7 @@ body.home-ready #pageContent{
           <h2 class="wide-title">Mezopotamya Dili</h2>
           <p class="wide-desc">Kurmanci, Sorani, Zazaca, Süryanice ve İbraniceyi Türkçeyle yakınlaştır.</p>
         </div>
+        <div class="ai-corner"><span>AI</span></div>
         <div class="arrow-chip"></div>
       </a>
 
@@ -1111,6 +1247,7 @@ body.home-ready #pageContent{
           <h2 class="wide-title">Balkanların Dili</h2>
           <p class="wide-desc">Balkanların çok sesli yapısını Türkçeyle sıcak biçimde buluştur.</p>
         </div>
+        <div class="ai-corner"><span>AI</span></div>
         <div class="arrow-chip"></div>
       </a>
 
