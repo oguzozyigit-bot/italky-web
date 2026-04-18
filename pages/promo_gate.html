@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>italkyAI • Aktivasyon</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#05070f;
+      font-family:'Outfit',sans-serif;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+    }
+
+    .card{
+      width:90%;
+      max-width:420px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:26px;
+      padding:26px;
+      text-align:center;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:26px;
+      font-weight:900;
+    }
+
+    p{
+      font-size:14px;
+      color:rgba(255,255,255,.7);
+      margin-bottom:20px;
+    }
+
+    input{
+      width:100%;
+      height:54px;
+      border-radius:16px;
+      border:none;
+      text-align:center;
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:2px;
+      margin-bottom:14px;
+      background:#111827;
+      color:#fff;
+    }
+
+    button{
+      width:100%;
+      height:54px;
+      border:none;
+      border-radius:16px;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      margin-bottom:10px;
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,#8bd3ff,#7c5cff,#ff66c4);
+      color:#fff;
+    }
+
+    .btn-secondary{
+      background:#1f2937;
+      color:#fff;
+    }
+
+    .error{
+      color:#ff6b6b;
+      font-size:13px;
+      margin-top:10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>Promosyon Kodunuz Var mı?</h1>
+  <p>
+    Kodunuz varsa girin. Yoksa devam ederek üyeliğinizi başlatabilirsiniz.
+  </p>
+
+  <input id="promoInput" placeholder="KOD GİR"/>
+
+  <button class="btn-primary" id="applyBtn">KODU ONAYLA</button>
+  <button class="btn-secondary" id="continueBtn">DEVAM ET</button>
+
+  <div id="errorText" class="error"></div>
+</div>
+
+<script type="module">
+import { supabase } from "/js/supabase_client.js";
+
+const API = "https://italky-api.onrender.com";
+
+const promoInput = document.getElementById("promoInput");
+const applyBtn = document.getElementById("applyBtn");
+const continueBtn = document.getElementById("continueBtn");
+const errorText = document.getElementById("errorText");
+
+async function getUser(){
+  const { data } = await supabase.auth.getUser();
+  return data?.user;
+}
+
+async function getToken(){
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.access_token || "";
+}
+
+applyBtn.onclick = async () => {
+
+  const code = promoInput.value.trim().toUpperCase();
+
+  if(!code){
+    errorText.innerText = "Lütfen kod giriniz";
+    return;
+  }
+
+  const user = await getUser();
+  const token = await getToken();
+
+  const res = await fetch(`${API}/api/promo/redeem`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":`Bearer ${token}`
+    },
+    body: JSON.stringify({
+      source:"manual",
+      code: code,
+      user_id: user.id
+    })
+  });
+
+  const json = await res.json();
+
+  if(json.ok){
+    location.href="/pages/home.html";
+  }else{
+    errorText.innerText = mapError(json.reason);
+  }
+};
+
+continueBtn.onclick = () => {
+  location.href="/pages/jetonbuy.html";
+};
+
+function mapError(r){
+  if(!r) return "Kod geçersiz";
+
+  r = r.toUpperCase();
+
+  if(r==="PROMO_NOT_FOUND") return "Kod bulunamadı";
+  if(r==="PROMO_ALREADY_USED") return "Kod kullanılmış";
+  if(r==="PROMO_NOT_ELIGIBLE_FOR_PAID_MEMBER") return "Bu kod bu hesapta kullanılamaz";
+  if(r==="PROMO_EXPIRED") return "Kod süresi dolmuş";
+
+  return "Kod geçersiz";
+}
+
+</script>
+
+</body>
+</html>
