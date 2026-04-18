@@ -1,10 +1,4 @@
-import { supabase } from "/js/supabase_client.js";
-
 const $ = (id) => document.getElementById(id);
-
-const F2F_VOICE_KEY = "facetoface_voice_mode";
-const F2F_PRESET_KEY = "facetoface_voice_preset";
-const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
 const frameRoot = $("frameRoot");
 const topBody = $("topBody");
@@ -15,7 +9,6 @@ const botMic = $("botMic");
 const botSend = $("botSend");
 const botComposer = $("botComposer");
 
-const settingsBtn = $("settingsBtn");
 const clearBtn = $("clearBtn");
 const homeBtn = $("homeBtn");
 const homeLink = $("homeLink");
@@ -28,62 +21,116 @@ const miniToast = $("miniToast");
 
 let recognizer = null;
 let recording = false;
-let currentAudio = null;
-let speakRunId = 0;
 
 /* =========================================================
-   GÖKTÜRK MOTORU - LOCAL
+   GÖKTÜRK MOTORU - GELİŞTİRİLMİŞ LOCAL
+   Not:
+   Modern Türkçeden Göktürkçeye birebir %100 akademik dönüşüm,
+   sadece tek harf eşleme ile yapılamaz. Bu yüzden burada:
+   1) özel kelime sözlüğü
+   2) ön/arka ünlü uyumu heuristiği
+   3) rune okunuşu üretimi
+   birlikte kullanılıyor.
 ========================================================= */
 
+const FRONT_VOWELS = new Set(["e", "i", "ö", "ü"]);
+const BACK_VOWELS  = new Set(["a", "ı", "o", "u"]);
+
 const WORD_OVERRIDES = {
-  "türk": "𐱅𐰇𐰼𐰜",
-  "turk": "𐱅𐰇𐰼𐰜",
-  "göktürk": "𐰚𐰇𐰜𐱅𐰇𐰼𐰜",
-  "gokturk": "𐰚𐰇𐰜𐱅𐰇𐰼𐰜",
-  "gök": "𐰚𐰇𐰜",
-  "gok": "𐰚𐰇𐰜",
-  "tanrı": "𐱅𐰭𐰼𐰃",
-  "tanri": "𐱅𐰭𐰼𐰃"
+  "türk": { rune: "𐱅𐰇𐰼𐰜", read: "türk" },
+  "turk": { rune: "𐱅𐰇𐰼𐰜", read: "türk" },
+  "göktürk": { rune: "𐰚𐰇𐰜𐱅𐰇𐰼𐰜", read: "göktürk" },
+  "gokturk": { rune: "𐰚𐰇𐰜𐱅𐰇𐰼𐰜", read: "göktürk" },
+  "gök": { rune: "𐰚𐰇𐰜", read: "gök" },
+  "gok": { rune: "𐰚𐰇𐰜", read: "gök" },
+  "tanrı": { rune: "𐱅𐰭𐰼𐰃", read: "tanrı" },
+  "tanri": { rune: "𐱅𐰭𐰼𐰃", read: "tanrı" },
+  "il": { rune: "𐰃𐰠", read: "il" },
+  "el": { rune: "𐰠", read: "el" },
+  "yurt": { rune: "𐰖𐰆𐰺𐱃", read: "yurt" },
+  "ordu": { rune: "𐰆𐰺𐰑𐰆", read: "ordu" },
+  "kut": { rune: "𐰴𐰆𐱃", read: "kut" },
+  "tegin": { rune: "𐱅𐰏𐰃𐰤", read: "tegin" },
+  "bilge": { rune: "𐰋𐰃𐰠𐰏𐰀", read: "bilge" },
+  "budun": { rune: "𐰉𐰆𐰑𐰆𐰣", read: "budun" }
 };
 
 const MULTI_CHAR_MAP = [
-  ["ng", "𐰭"],
-  ["ny", "𐰪"]
+  ["ng", { rune: "𐰭", read: "ng" }],
+  ["ny", { rune: "𐰪", read: "ny" }],
+  ["şt", { rune: "𐱁𐱃", read: "şt" }]
 ];
 
-const CHAR_MAP = {
-  "a": "𐰀",
-  "b": "𐰉",
-  "c": "𐰲",
-  "ç": "𐰲",
-  "d": "𐰑",
-  "e": "𐰀",
-  "f": "𐰯",
-  "g": "𐰏",
-  "ğ": "𐰍",
-  "h": "𐰴",
-  "ı": "𐰃",
-  "i": "𐰃",
-  "j": "𐰖",
-  "k": "𐰚",
-  "l": "𐰞",
-  "m": "𐰢",
-  "n": "𐰤",
-  "o": "𐰆",
-  "ö": "𐰇",
-  "p": "𐰯",
-  "q": "𐰚",
-  "r": "𐰼",
-  "s": "𐰽",
-  "ş": "𐱁",
-  "t": "𐱅",
-  "u": "𐰆",
-  "ü": "𐰇",
-  "v": "𐰉",
-  "w": "𐰉",
-  "x": "𐰴𐰽",
-  "y": "𐰖",
-  "z": "𐰔"
+const FRONT_MAP = {
+  "a": { rune: "𐰀", read: "a" },
+  "e": { rune: "𐰀", read: "e" },
+  "ı": { rune: "𐰃", read: "ı" },
+  "i": { rune: "𐰃", read: "i" },
+  "o": { rune: "𐰆", read: "o" },
+  "ö": { rune: "𐰇", read: "ö" },
+  "u": { rune: "𐰆", read: "u" },
+  "ü": { rune: "𐰇", read: "ü" },
+
+  "b": { rune: "𐰋", read: "b" },
+  "c": { rune: "𐰲", read: "c" },
+  "ç": { rune: "𐰲", read: "ç" },
+  "d": { rune: "𐰑", read: "d" },
+  "f": { rune: "𐰯", read: "f" },
+  "g": { rune: "𐰏", read: "g" },
+  "ğ": { rune: "𐰏", read: "g" },
+  "h": { rune: "𐰚", read: "h" },
+  "j": { rune: "𐰖", read: "y" },
+  "k": { rune: "𐰚", read: "k" },
+  "l": { rune: "𐰞", read: "l" },
+  "m": { rune: "𐰢", read: "m" },
+  "n": { rune: "𐰤", read: "n" },
+  "p": { rune: "𐰯", read: "p" },
+  "q": { rune: "𐰚", read: "k" },
+  "r": { rune: "𐰼", read: "r" },
+  "s": { rune: "𐰽", read: "s" },
+  "ş": { rune: "𐱁", read: "ş" },
+  "t": { rune: "𐱅", read: "t" },
+  "v": { rune: "𐰋", read: "v" },
+  "w": { rune: "𐰋", read: "v" },
+  "x": { rune: "𐰴𐰽", read: "ks" },
+  "y": { rune: "𐰘", read: "y" },
+  "z": { rune: "𐰔", read: "z" }
+};
+
+const BACK_MAP = {
+  "a": { rune: "𐰀", read: "a" },
+  "e": { rune: "𐰀", read: "e" },
+  "ı": { rune: "𐰃", read: "ı" },
+  "i": { rune: "𐰃", read: "i" },
+  "o": { rune: "𐰆", read: "o" },
+  "ö": { rune: "𐰇", read: "ö" },
+  "u": { rune: "𐰆", read: "u" },
+  "ü": { rune: "𐰇", read: "ü" },
+
+  "b": { rune: "𐰉", read: "b" },
+  "c": { rune: "𐰲", read: "c" },
+  "ç": { rune: "𐰲", read: "ç" },
+  "d": { rune: "𐰑", read: "d" },
+  "f": { rune: "𐰯", read: "f" },
+  "g": { rune: "𐰍", read: "g" },
+  "ğ": { rune: "𐰍", read: "ğ" },
+  "h": { rune: "𐰴", read: "h" },
+  "j": { rune: "𐰖", read: "y" },
+  "k": { rune: "𐰴", read: "k" },
+  "l": { rune: "𐰠", read: "l" },
+  "m": { rune: "𐰢", read: "m" },
+  "n": { rune: "𐰣", read: "n" },
+  "p": { rune: "𐰯", read: "p" },
+  "q": { rune: "𐰴", read: "k" },
+  "r": { rune: "𐰺", read: "r" },
+  "s": { rune: "𐰾", read: "s" },
+  "ş": { rune: "𐱁", read: "ş" },
+  "t": { rune: "𐱃", read: "t" },
+  "v": { rune: "𐰉", read: "v" },
+  "w": { rune: "𐰉", read: "v" },
+  "x": { rune: "𐰴𐰽", read: "ks" },
+  "y": { rune: "𐰖", read: "y" },
+  "z": { rune: "𐰔", read: "z" }
 };
 
 function normalizeText(text) {
@@ -95,26 +142,59 @@ function tokenizeWithSpaces(text) {
 }
 
 function cleanWord(word) {
-  return String(word || "").toLowerCase().replace(/[^\wçğıöşü]/g, "");
+  return String(word || "")
+    .toLowerCase()
+    .replace(/[^a-zçğıöşü]/g, "");
+}
+
+function getHarmony(word) {
+  const pure = cleanWord(word);
+  let front = 0;
+  let back = 0;
+
+  for (const ch of pure) {
+    if (FRONT_VOWELS.has(ch)) front += 1;
+    if (BACK_VOWELS.has(ch)) back += 1;
+  }
+
+  if (front > back) return "front";
+  return "back";
 }
 
 function convertWordToGokturk(word) {
   const pure = cleanWord(word);
 
-  if (WORD_OVERRIDES[pure]) {
-    return WORD_OVERRIDES[pure];
+  if (!pure) {
+    return { rune: word, read: word, units: [] };
   }
 
-  let out = "";
-  let i = 0;
-  const lower = String(word || "").toLowerCase();
+  if (WORD_OVERRIDES[pure]) {
+    return {
+      rune: WORD_OVERRIDES[pure].rune,
+      read: WORD_OVERRIDES[pure].read,
+      units: [...WORD_OVERRIDES[pure].rune].map((r, i) => ({
+        rune: r,
+        latin: [...WORD_OVERRIDES[pure].read][i] || ""
+      }))
+    };
+  }
 
-  while (i < lower.length) {
+  const harmony = getHarmony(pure);
+  const map = harmony === "front" ? FRONT_MAP : BACK_MAP;
+
+  let runeOut = "";
+  let readOut = "";
+  let units = [];
+  let i = 0;
+
+  while (i < pure.length) {
     let matched = false;
 
     for (const [src, dst] of MULTI_CHAR_MAP) {
-      if (lower.startsWith(src, i)) {
-        out += dst;
+      if (pure.startsWith(src, i)) {
+        runeOut += dst.rune;
+        readOut += dst.read;
+        units.push({ rune: dst.rune, latin: dst.read });
         i += src.length;
         matched = true;
         break;
@@ -123,21 +203,59 @@ function convertWordToGokturk(word) {
 
     if (matched) continue;
 
-    const ch = lower[i];
-    out += CHAR_MAP[ch] || ch;
+    const ch = pure[i];
+    const rule = map[ch] || FRONT_MAP[ch] || BACK_MAP[ch];
+
+    if (rule) {
+      runeOut += rule.rune;
+      readOut += rule.read;
+      units.push({ rune: rule.rune, latin: rule.read });
+    } else {
+      runeOut += ch;
+      readOut += ch;
+      units.push({ rune: ch, latin: ch });
+    }
+
     i += 1;
   }
 
-  return out;
+  return {
+    rune: runeOut,
+    read: readOut,
+    units
+  };
 }
 
 function turkishToGokturk(text) {
   const parts = tokenizeWithSpaces(text);
-  return parts.map((part) => {
-    if (!part) return "";
-    if (/^\s+$/.test(part)) return part;
-    return convertWordToGokturk(part);
-  }).join("").trim();
+  const converted = [];
+  const units = [];
+  const readings = [];
+
+  for (const part of parts) {
+    if (!part) continue;
+
+    if (/^\s+$/.test(part)) {
+      converted.push(part);
+      readings.push(part);
+      units.push({ space: true });
+      continue;
+    }
+
+    const result = convertWordToGokturk(part);
+    converted.push(result.rune);
+    readings.push(result.read);
+
+    for (const u of result.units) {
+      units.push(u);
+    }
+  }
+
+  return {
+    rune: converted.join("").trim(),
+    read: readings.join("").replace(/\s+/g, " ").trim(),
+    units
+  };
 }
 
 /* =========================================================
@@ -163,36 +281,6 @@ function closeModal() {
   genericBackdrop.classList.remove("show");
 }
 
-function getSelectedVoice() {
-  const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
-  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
-
-  if (mode === "clone") return "mine";
-  if (mode === "preset" && preset === "second") return "second";
-  if (mode === "preset" && preset === "memory") return "memory";
-  return "auto";
-}
-
-function isAutoReadEnabled() {
-  return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
-}
-
-function stopAudio() {
-  speakRunId += 1;
-
-  try {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-    }
-  } catch {}
-
-  currentAudio = null;
-
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  try { window.NativeTTS?.stop?.(); } catch {}
-}
-
 function autoResizeTextarea() {
   botInput.style.height = "auto";
   botInput.style.height = `${Math.min(botInput.scrollHeight, 120)}px`;
@@ -211,70 +299,28 @@ function keepVisible() {
   });
 }
 
-function createSpeakerButton(getText) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "spk-icon";
-  btn.setAttribute("aria-label", "Tekrar dinle");
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-      <path d="M16 8a4 4 0 0 1 0 8"></path>
-      <path d="M19 5a8 8 0 0 1 0 14"></path>
-    </svg>
-  `;
-
-  btn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const value = typeof getText === "function" ? String(getText() || "").trim() : "";
-    if (!value) return;
-    await speak(value);
-  });
-
-  return btn;
-}
-
-function buildCharGrid(gokturkText, latinText) {
+function buildCharGrid(units) {
   const grid = document.createElement("div");
   grid.className = "char-grid";
 
-  const latinChars = [...String(latinText || "")];
-  const gokturkChars = [...String(gokturkText || "")];
-
-  let latinIndex = 0;
-
-  for (let i = 0; i < gokturkChars.length; i++) {
-    const rune = gokturkChars[i];
-
-    if (rune === " ") {
+  for (const unit of units) {
+    if (unit.space) {
       const spacer = document.createElement("div");
       spacer.className = "char-space";
       grid.appendChild(spacer);
-
-      while (latinChars[latinIndex] === " ") {
-        latinIndex += 1;
-      }
       continue;
     }
-
-    while (latinChars[latinIndex] === " ") {
-      latinIndex += 1;
-    }
-
-    const latinChar = latinChars[latinIndex] || "";
-    latinIndex += 1;
 
     const col = document.createElement("div");
     col.className = "char-col";
 
     const top = document.createElement("div");
     top.className = "char-rune";
-    top.textContent = rune;
+    top.textContent = unit.rune;
 
     const bottom = document.createElement("div");
     bottom.className = "char-latin";
-    bottom.textContent = latinChar;
+    bottom.textContent = unit.latin;
 
     col.appendChild(top);
     col.appendChild(bottom);
@@ -289,23 +335,26 @@ function addBubble(where, kind, text, opts = {}) {
   const row = document.createElement("div");
   row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
 
-  if (opts.charMap && kind === "me") {
+  if (opts.gokturk && kind === "me") {
     const stack = document.createElement("div");
     stack.className = "bubble-stack";
 
     const inner = document.createElement("div");
     inner.className = "bubble-row";
 
-    if (opts.speaker) {
-      inner.appendChild(createSpeakerButton(() => opts.speakText || ""));
+    const txt = document.createElement("div");
+    txt.className = "txt gokturk-wrap";
+    txt.appendChild(buildCharGrid(opts.units || []));
+
+    if (opts.reading) {
+      const read = document.createElement("div");
+      read.className = "reading-line";
+      read.textContent = opts.reading;
+      txt.appendChild(read);
     }
 
-    const txt = document.createElement("div");
-    txt.className = "txt";
-    txt.appendChild(buildCharGrid(text, opts.subText || ""));
     inner.appendChild(txt);
     stack.appendChild(inner);
-
     row.appendChild(stack);
     wrap.appendChild(row);
     keepVisible();
@@ -323,10 +372,6 @@ function addBubble(where, kind, text, opts = {}) {
   txt.className = "txt";
   txt.textContent = String(text || "").trim();
 
-  if (opts.speaker && kind === "me") {
-    inner.appendChild(createSpeakerButton(() => opts.speakText || txt.textContent || ""));
-  }
-
   inner.appendChild(txt);
   stack.appendChild(inner);
   row.appendChild(stack);
@@ -339,111 +384,6 @@ function addBubble(where, kind, text, opts = {}) {
 function clearLatest(where) {
   const wrap = where === "top" ? topBody : botBody;
   wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
-}
-
-/* =========================================================
-   SES
-========================================================= */
-
-async function getCurrentUserId() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    return data?.user?.id || null;
-  } catch {
-    return null;
-  }
-}
-
-function chooseWebVoice() {
-  const voices = window.speechSynthesis?.getVoices?.() || [];
-  return voices.find(v => String(v.lang || "").toLowerCase().startsWith("tr")) || voices[0] || null;
-}
-
-async function speakViaApi(text) {
-  const selectedVoice = getSelectedVoice();
-  if (!["mine", "second", "memory"].includes(selectedVoice)) return false;
-
-  const userId = await getCurrentUserId();
-  if (!userId) return false;
-
-  const myRunId = ++speakRunId;
-
-  let apiVoiceMode = "auto";
-  let apiVoice = "auto";
-  let apiPresetVoice = "";
-
-  if (selectedVoice === "mine") {
-    apiVoiceMode = "clone";
-    apiVoice = "clone";
-  } else if (selectedVoice === "second") {
-    apiVoiceMode = "preset";
-    apiVoice = "second";
-    apiPresetVoice = "second";
-  } else if (selectedVoice === "memory") {
-    apiVoiceMode = "preset";
-    apiVoice = "memory";
-    apiPresetVoice = "memory";
-  }
-
-  const resp = await fetch("https://italky-api.onrender.com/api/tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: String(text || "").trim(),
-      lang: "tr",
-      user_id: userId,
-      module: "atalarin_dili",
-      voice: apiVoice,
-      voice_mode: apiVoiceMode,
-      preset_voice: apiPresetVoice,
-      selected_voice: selectedVoice,
-      tone: "neutral"
-    })
-  });
-
-  const json = await resp.json().catch(() => null);
-  if (!resp.ok || !json?.ok || !json?.audio_base64) return false;
-  if (myRunId !== speakRunId) return false;
-
-  const audio = new Audio(`data:audio/mp3;base64,${json.audio_base64}`);
-  audio.preload = "auto";
-  audio.playsInline = true;
-  currentAudio = audio;
-  await audio.play();
-  return true;
-}
-
-async function speak(text) {
-  if (!isAutoReadEnabled()) return;
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  stopAudio();
-
-  const ok = await speakViaApi(value).catch(() => false);
-  if (ok) return;
-
-  try {
-    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.speak(value, "tr");
-      return;
-    }
-  } catch {}
-
-  try {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(value);
-      utter.lang = "tr-TR";
-      const voice = chooseWebVoice();
-      if (voice) utter.voice = voice;
-      utter.rate = 0.95;
-      utter.pitch = 1;
-      window.speechSynthesis.speak(utter);
-    }
-  } catch {
-    showToast("Ses başlatılamadı");
-  }
 }
 
 /* =========================================================
@@ -466,7 +406,7 @@ async function processMessage(rawText) {
 
   const translated = turkishToGokturk(text);
 
-  if (!translated) {
+  if (!translated?.rune) {
     frameRoot.classList.remove("is-translating");
     frameRoot.classList.add("is-error");
     addBubble("top", "me", "⚠️ Çeviri hatası", { latest: true });
@@ -477,15 +417,12 @@ async function processMessage(rawText) {
     return;
   }
 
-  addBubble("top", "me", translated, {
+  addBubble("top", "me", translated.rune, {
     latest: true,
-    speaker: true,
-    speakText: text,
-    subText: text,
-    charMap: true
+    gokturk: true,
+    units: translated.units,
+    reading: translated.read
   });
-
-  await speak(text);
 
   frameRoot.classList.remove("is-translating", "is-error");
   frameRoot.classList.add("is-ready");
@@ -512,6 +449,7 @@ function extractStableRecognitionText(results) {
 
   return normalizeText(latestFinal || latestInterim);
 }
+
 function stopRecognizer() {
   try { recognizer?.stop(); } catch {}
   recognizer = null;
@@ -593,12 +531,7 @@ function startRecognition() {
 ========================================================= */
 
 function bindEvents() {
-  settingsBtn.addEventListener("click", () => {
-    location.href = "/pages/premium_voice_settings.html?from=atalarin_dili";
-  });
-
   clearBtn.addEventListener("click", () => {
-    stopAudio();
     stopRecognizer();
     topBody.innerHTML = "";
     botBody.innerHTML = "";
