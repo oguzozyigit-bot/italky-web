@@ -22,7 +22,7 @@ let recognizer = null;
 let recording = false;
 
 /* =========================================================
-   LOCAL SÖZLÜK + HARF ALT EŞLEME
+   LOCAL GÖKTÜRK MOTORU
 ========================================================= */
 
 const WORD_OVERRIDES = {
@@ -46,7 +46,8 @@ const WORD_OVERRIDES = {
   "ana": { rune: "𐰀𐰣𐰀", read: "ana" },
   "su": { rune: "𐰽𐰆", read: "su" },
   "taş": { rune: "𐱃𐰀𐱁", read: "taş" },
-  "selam": { rune: "𐰽𐰞𐰀𐰢", read: "selam" }
+  "selam": { rune: "𐰽𐰞𐰀𐰢", read: "selam" },
+  "merhaba": { rune: "𐰢𐰼𐰴𐰉𐰀", read: "merhaba" }
 };
 
 const FRONT_VOWELS = new Set(["e", "i", "ö", "ü"]);
@@ -97,7 +98,7 @@ const BACK_MAP = {
   "y": { rune: "𐰖", latin: "y" }, "z": { rune: "𐰔", latin: "z" }
 };
 
-function normalizeText(text) {
+function normalizeInput(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
 
@@ -113,10 +114,12 @@ function getHarmony(word) {
   const pure = cleanWord(word);
   let front = 0;
   let back = 0;
+
   for (const ch of pure) {
     if (FRONT_VOWELS.has(ch)) front += 1;
     if (BACK_VOWELS.has(ch)) back += 1;
   }
+
   return front > back ? "front" : "back";
 }
 
@@ -131,8 +134,14 @@ function buildUnitsFromOverride(override) {
       units.push({ space: true });
       continue;
     }
+
     while (latin[latinIndex] === " ") latinIndex += 1;
-    units.push({ rune, latin: latin[latinIndex] || "" });
+
+    units.push({
+      rune,
+      latin: latin[latinIndex] || ""
+    });
+
     latinIndex += 1;
   }
 
@@ -152,6 +161,7 @@ function localWordToGokturk(word) {
 
   const harmony = getHarmony(pure);
   const map = harmony === "front" ? FRONT_MAP : BACK_MAP;
+
   let runeOut = "";
   const units = [];
   let i = 0;
@@ -173,6 +183,7 @@ function localWordToGokturk(word) {
 
     const ch = pure[i];
     const rule = map[ch] || FRONT_MAP[ch] || BACK_MAP[ch];
+
     if (rule) {
       runeOut += rule.rune;
       units.push({ rune: rule.rune, latin: rule.latin });
@@ -180,6 +191,7 @@ function localWordToGokturk(word) {
       runeOut += ch;
       units.push({ rune: ch, latin: ch });
     }
+
     i += 1;
   }
 
@@ -277,37 +289,56 @@ function keepVisible() {
   });
 }
 
-function buildRuneTrack(units) {
-  const track = document.createElement("div");
-  track.className = "rune-track";
+function buildWordTrack(units) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "word-track";
 
-  const ordered = [...(units || [])].reverse();
+  const parts = [];
+  let current = [];
 
-  for (const unit of ordered) {
+  for (const unit of units || []) {
     if (unit.space) {
-      const spacer = document.createElement("div");
-      spacer.className = "rune-space";
-      track.appendChild(spacer);
+      if (current.length) parts.push(current);
+      current = [];
       continue;
     }
+    current.push(unit);
+  }
+  if (current.length) parts.push(current);
 
-    const col = document.createElement("div");
-    col.className = "rune-col";
+  const reversedWords = [...parts].reverse();
 
-    const rune = document.createElement("div");
-    rune.className = "rune-char";
-    rune.textContent = unit.rune;
+  for (const wordUnits of reversedWords) {
+    const wordBlock = document.createElement("div");
+    wordBlock.className = "word-block";
 
-    const latin = document.createElement("div");
-    latin.className = "latin-char";
-    latin.textContent = unit.latin;
+    const runeLine = document.createElement("div");
+    runeLine.className = "rune-line";
 
-    col.appendChild(rune);
-    col.appendChild(latin);
-    track.appendChild(col);
+    const latinLine = document.createElement("div");
+    latinLine.className = "latin-line";
+
+    const orderedUnits = [...wordUnits].reverse();
+
+    for (const unit of orderedUnits) {
+      const rune = document.createElement("div");
+      rune.className = "rune-char";
+      rune.textContent = unit.rune;
+
+      const latin = document.createElement("div");
+      latin.className = "latin-char";
+      latin.textContent = unit.latin;
+
+      runeLine.appendChild(rune);
+      latinLine.appendChild(latin);
+    }
+
+    wordBlock.appendChild(runeLine);
+    wordBlock.appendChild(latinLine);
+    wrapper.appendChild(wordBlock);
   }
 
-  return track;
+  return wrapper;
 }
 
 function addBubble(where, kind, text, opts = {}) {
@@ -324,7 +355,7 @@ function addBubble(where, kind, text, opts = {}) {
 
     const txt = document.createElement("div");
     txt.className = "txt gokturk-wrap";
-    txt.appendChild(buildRuneTrack(opts.units || []));
+    txt.appendChild(buildWordTrack(opts.units || []));
 
     if (opts.semanticText && opts.semanticReading) {
       const semanticBlock = document.createElement("div");
@@ -374,11 +405,11 @@ function clearLatest(where) {
 }
 
 /* =========================================================
-   AKIŞ
+   FLOW
 ========================================================= */
 
 async function processMessage(rawText) {
-  const text = normalizeText(rawText);
+  const text = normalizeInput(rawText);
   if (!text) return;
 
   botInput.value = "";
@@ -444,13 +475,13 @@ function extractStableRecognitionText(results) {
   let latestInterim = "";
 
   for (let i = 0; i < results.length; i++) {
-    const piece = normalizeText(results[i]?.[0]?.transcript || "");
+    const piece = normalizeInput(results[i]?.[0]?.transcript || "");
     if (!piece) continue;
     if (results[i].isFinal) latestFinal = piece;
     else latestInterim = piece;
   }
 
-  return normalizeText(latestFinal || latestInterim);
+  return normalizeInput(latestFinal || latestInterim);
 }
 
 function stopRecognizer() {
@@ -512,10 +543,11 @@ function startRecognition() {
   };
 
   recognizer.onend = async () => {
-    const finalText = normalizeText(finalCaptured || botInput.value);
+    const finalText = normalizeInput(finalCaptured || botInput.value);
     stopRecognizer();
-    if (finalText) await processMessage(finalText);
-    else {
+    if (finalText) {
+      await processMessage(finalText);
+    } else {
       frameRoot.classList.remove("is-listening");
       frameRoot.classList.add("is-ready");
     }
