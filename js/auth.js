@@ -7,6 +7,7 @@ import { STORAGE_KEY } from "/js/config.js";
 const CANONICAL_ORIGIN = "https://italky.ai";
 const HOME_REL   = "/pages/home.html";
 const LOGIN_REL  = "/pages/login.html";
+const PROMO_GATE_REL = "/pages/promo_gate.html";
 
 /* =========================================================
    🔐 SINGLE SESSION KEY
@@ -209,6 +210,7 @@ export async function loginWithGoogle(nextTarget = "") {
 
   if (error) throw error;
 }
+
 /* =========================================================
    🔓 LOGOUT
 ========================================================= */
@@ -218,6 +220,82 @@ export async function safeLogout(){
   localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY);
   nukeSupabaseLocal();
   location.replace(LOGIN_REL);
+}
+
+/* =========================================================
+   🧭 PROMO GATE HELPERS
+========================================================= */
+function isPromoGatePage(){
+  try{
+    return location.pathname === PROMO_GATE_REL;
+  }catch{
+    return false;
+  }
+}
+
+function isLoginPage(){
+  try{
+    return location.pathname === LOGIN_REL;
+  }catch{
+    return false;
+  }
+}
+
+function hasActiveMembership(profile){
+  const rawEnd = profile?.package_ends_at || "";
+  if(!rawEnd) return false;
+
+  try{
+    const end = new Date(rawEnd);
+    return end instanceof Date && !isNaN(end.getTime()) && end > new Date();
+  }catch{
+    return false;
+  }
+}
+
+function hasUsedPromo(profile){
+  return !!String(profile?.promo_used_at || "").trim();
+}
+
+async function getProfileForGate(userId){
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, promo_used_at, package_ends_at")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if(error) throw error;
+  return data || null;
+}
+
+async function routeUserAfterLogin(user){
+  const profile = await getProfileForGate(user.id);
+
+  const promoUsed = hasUsedPromo(profile);
+  const activeMembership = hasActiveMembership(profile);
+
+  // 1) Aktif üyelik varsa içeri
+  if(activeMembership){
+    return "ALLOW";
+  }
+
+  // 2) Promo kullanılmış ama üyelik bitmişse Play sayfasına
+  if(promoUsed && !activeMembership){
+    if(location.pathname !== "/pages/jetonbuy.html"){
+      location.replace("/pages/jetonbuy.html");
+    }
+    return "STOP";
+  }
+
+  // 3) Promo kullanılmamış ve aktif üyelik yoksa promo gate'e
+  if(!promoUsed && !activeMembership){
+    if(!isPromoGatePage()){
+      location.replace(PROMO_GATE_REL);
+    }
+    return "STOP";
+  }
+
+  return "ALLOW";
 }
 
 /* =========================================================
@@ -235,6 +313,17 @@ export async function startAuthState(callback) {
 
         startSingleSessionWatcher(user.id);
 
+        // Promo gate sayfasındaysak kullanıcı login olmuş halde sayfayı kullanabilsin
+        if(isPromoGatePage()){
+          callback({ user, wallet });
+          return;
+        }
+
+        const routeDecision = await routeUserAfterLogin(user);
+        if(routeDecision !== "ALLOW"){
+          return;
+        }
+
         callback({ user, wallet });
         return;
       }catch{
@@ -245,6 +334,10 @@ export async function startAuthState(callback) {
     }
 
     callback({ user:null, wallet:0 });
+
+    if(!isLoginPage()){
+      location.replace(LOGIN_REL);
+    }
   };
 
   const { data:{ session } } = await supabase.auth.getSession();
