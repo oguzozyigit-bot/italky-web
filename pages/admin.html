@@ -49,7 +49,7 @@
     }
     #pageContent.ready{opacity:1}
 
-    .page{max-width:1280px;margin:0 auto}
+    .page{max-width:1360px;margin:0 auto}
 
     .shell-header,.card,.panel{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
@@ -219,6 +219,7 @@
     .btn-secondary{background:#202834;color:#eef2f6;border:1px solid var(--line2)}
     .btn-warn{background:#c7ae7b;color:#1b1d21}
     .btn-danger{background:#a35f5f;color:#fff}
+    .btn-ok{background:#6d987c;color:#fff}
 
     .status-line{
       min-height:20px;
@@ -243,7 +244,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:980px;
+      min-width:1180px;
     }
 
     th,td{
@@ -301,6 +302,23 @@
       margin-top:8px;
     }
 
+    .quick-row{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .preview-box{
+      padding:14px;
+      border:1px solid var(--line2);
+      background:#151d26;
+      border-radius:18px;
+      line-height:1.65;
+      font-size:13px;
+      word-break:break-word;
+    }
+
     @media (min-width:980px){
       .shell-header{
         flex-direction:row;
@@ -310,7 +328,7 @@
       .grid-2{grid-template-columns:1fr 1fr}
       .grid-3{grid-template-columns:1fr 1fr 1fr}
       .tabs{display:flex;flex-wrap:wrap}
-      .tab{width:auto;min-width:140px;padding:0 16px}
+      .tab{width:auto;min-width:160px;padding:0 16px}
     }
   </style>
 </head>
@@ -322,7 +340,7 @@
           <div class="logo">AI</div>
           <div>
             <h1>italkyAI Yönetim Paneli</h1>
-            <p>Jeton, NFC, QR ve kullanıcı yönetimi</p>
+            <p>Promosyon, üyelik, kod, kullanıcı ve jeton yönetimi</p>
           </div>
         </div>
 
@@ -336,7 +354,7 @@
       <div class="tabs">
         <button class="tab active" data-tab="users" type="button">Kullanıcılar</button>
         <button class="tab" data-tab="wallet" type="button">Jeton Hareketleri</button>
-        <button class="tab" data-tab="nfc" type="button">NFC / QR Kartları</button>
+        <button class="tab" data-tab="promo" type="button">Promosyonlar</button>
         <button class="tab" data-tab="manual" type="button">Manuel Jeton</button>
       </div>
 
@@ -354,11 +372,11 @@
 
             <section class="card">
               <h3>Yetki Bilgisi</h3>
-              <div class="desc">Superadmin kullanıcılar manuel jeton yükleme yapabilir.</div>
+              <div class="desc">Admin promosyon yönetebilir. Superadmin manuel jeton yükleyebilir.</div>
               <div id="meLine"></div>
-              <div class="pill">NFC Jeton</div>
-              <div class="pill">QR Yönlendirme</div>
-              <div class="pill">Manuel Kod</div>
+              <div class="pill">Promo Campaign</div>
+              <div class="pill">Promo Code</div>
+              <div class="pill">Redemption</div>
             </section>
           </div>
 
@@ -372,11 +390,13 @@
                     <th>E-posta</th>
                     <th>Rol</th>
                     <th>Jeton</th>
+                    <th>Promo</th>
+                    <th>Üyelik Bitişi</th>
                     <th>UID</th>
                   </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                  <tr><td colspan="5" class="empty">Yükleniyor...</td></tr>
+                  <tr><td colspan="7" class="empty">Yükleniyor...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -386,7 +406,7 @@
         <div id="panelWallet" class="hidden">
           <section class="card">
             <h3>Jeton Hareketleri</h3>
-            <div class="desc">NFC, manuel yükleme ve harcama hareketleri burada görünür.</div>
+            <div class="desc">Manuel yükleme ve kullanım hareketleri burada görünür.</div>
             <div class="row">
               <input id="walletSearch" type="text" placeholder="Kullanıcı veya neden ara..." />
               <button id="walletRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
@@ -411,66 +431,128 @@
           </section>
         </div>
 
-        <div id="panelNfc" class="hidden">
+        <div id="panelPromo" class="hidden">
           <div class="grid grid-2">
             <section class="card">
-              <h3>Yeni Jeton Kartı Oluştur</h3>
-              <div class="desc">NFC veya QR için tek kullanımlık jeton kartı üret.</div>
+              <h3>Yeni Promosyon Oluştur</h3>
+              <div class="desc">Campaign ve ona bağlı tekil promosyon kodu oluşturur.</div>
 
               <div class="row">
-                <input id="uid" type="text" placeholder="Uzun tekil UID" />
-                <button id="genUidBtn" class="btn-secondary" type="button">UID Üret</button>
+                <input id="campaignCode" type="text" placeholder="Campaign kodu (örn: PROMO_1AY_2026)" />
+                <input id="campaignName" type="text" placeholder="Campaign adı" />
               </div>
 
               <div class="row" style="margin-top:10px">
-                <input id="amount" type="number" min="1" step="1" placeholder="Jeton miktarı" />
-                <input id="note" type="text" placeholder="Not (opsiyonel)" />
+                <select id="grantType">
+                  <option value="membership">Sadece Üyelik</option>
+                  <option value="tokens">Sadece Jeton</option>
+                  <option value="bundle">Üyelik + Jeton</option>
+                </select>
+
+                <select id="deliveryType">
+                  <option value="manual">Manual</option>
+                  <option value="qr">QR</option>
+                  <option value="nfc">NFC</option>
+                </select>
               </div>
 
               <div class="row" style="margin-top:10px">
-                <button class="btn-secondary" type="button" data-quick-amount="10">10 Jeton</button>
-                <button class="btn-secondary" type="button" data-quick-amount="25">25 Jeton</button>
-                <button class="btn-secondary" type="button" data-quick-amount="50">50 Jeton</button>
-                <button class="btn-secondary" type="button" data-quick-amount="100">100 Jeton</button>
+                <input id="membershipMonths" type="number" min="0" step="1" placeholder="Üyelik ayı" />
+                <input id="tokenAmount" type="number" min="0" step="1" placeholder="Jeton miktarı" />
               </div>
 
-              <button id="saveBtn" class="btn-primary" type="button" style="margin-top:10px">Kartı Kaydet</button>
-              <div id="nfcCreateStatus" class="status-line"></div>
+              <div class="row" style="margin-top:10px">
+                <input id="packageCode" type="text" placeholder="Paket kodu (örn: member)" />
+                <input id="perUserLimit" type="number" min="1" step="1" placeholder="Kullanıcı başı limit" value="1" />
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <input id="promoCodeValue" type="text" placeholder="Tekil promosyon kodu (boşsa üret)" />
+                <input id="promoNfcUid" type="text" placeholder="NFC UID (opsiyonel)" />
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <textarea id="campaignDescription" placeholder="Açıklama / not"></textarea>
+              </div>
+
+              <div class="quick-row">
+                <button class="btn-secondary" type="button" data-month="1">1 Ay</button>
+                <button class="btn-secondary" type="button" data-month="3">3 Ay</button>
+                <button class="btn-secondary" type="button" data-month="12">12 Ay</button>
+                <button class="btn-secondary" type="button" data-token="10">10 Jeton</button>
+                <button class="btn-secondary" type="button" data-token="25">25 Jeton</button>
+                <button class="btn-secondary" type="button" data-token="50">50 Jeton</button>
+              </div>
+
+              <button id="savePromoBtn" class="btn-primary" type="button" style="margin-top:10px">Promosyonu Kaydet</button>
+              <div id="promoStatus" class="status-line"></div>
             </section>
 
             <section class="card">
-              <h3>QR / Kod Bilgisi</h3>
-              <div class="desc">Kart oluşunca kısa kod ve QR linki otomatik üretilir.</div>
-              <div id="nfcPreview" class="empty">Henüz kart oluşturulmadı.</div>
+              <h3>Önizleme</h3>
+              <div class="desc">Oluşturulan promosyon bilgileri burada görünür.</div>
+              <div id="promoPreview" class="preview-box">Henüz promosyon oluşturulmadı.</div>
+
               <div class="row" style="margin-top:12px">
-             <button id="writeNfcBtn" class="btn-secondary" type="button">NFC'ye Yazdır</button>
-             <button id="printQrBtn" class="btn-primary" type="button">QR Yazdır</button>
-          </div>
+                <button id="printQrBtn" class="btn-primary" type="button">QR Yazdır</button>
+                <button id="copyPromoBtn" class="btn-secondary" type="button">Kodu Kopyala</button>
+              </div>
             </section>
           </div>
 
           <section class="card" style="margin-top:14px">
-            <h3>Kartlar</h3>
+            <h3>Promosyon Kodları</h3>
             <div class="row">
-              <input id="nfcSearch" type="text" placeholder="UID, manuel kod veya not ara..." />
-              <button id="nfcRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
+              <input id="promoSearch" type="text" placeholder="Kod, campaign veya uid ara..." />
+              <button id="promoRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
             </div>
 
             <div class="table">
               <table>
                 <thead>
                   <tr>
-                    <th>UID</th>
-                    <th>6 Haneli Kod</th>
+                    <th>Campaign</th>
+                    <th>Kod</th>
+                    <th>Teslim</th>
+                    <th>Tür</th>
+                    <th>Üyelik</th>
                     <th>Jeton</th>
                     <th>Durum</th>
                     <th>Kullanan</th>
-                    <th>QR</th>
+                    <th>UID</th>
                     <th>İşlem</th>
                   </tr>
                 </thead>
-                <tbody id="nfcTableBody">
-                  <tr><td colspan="7" class="empty">Yükleniyor...</td></tr>
+                <tbody id="promoTableBody">
+                  <tr><td colspan="10" class="empty">Yükleniyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card" style="margin-top:14px">
+            <h3>Promosyon Kullanım Logları</h3>
+            <div class="row">
+              <input id="promoLogSearch" type="text" placeholder="Kullanıcı, campaign veya kod ara..." />
+              <button id="promoLogRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
+            </div>
+
+            <div class="table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Kullanıcı</th>
+                    <th>Campaign</th>
+                    <th>Tür</th>
+                    <th>Üyelik</th>
+                    <th>Jeton</th>
+                    <th>Önce</th>
+                    <th>Sonra</th>
+                    <th>Tarih</th>
+                  </tr>
+                </thead>
+                <tbody id="promoLogTableBody">
+                  <tr><td colspan="8" class="empty">Yükleniyor...</td></tr>
                 </tbody>
               </table>
             </div>
