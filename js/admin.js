@@ -1,13 +1,5 @@
-// FILE: /js/admin.js
-
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
-import {
-  createNfcTokenCard,
-  listNfcTokenCards,
-  updateNfcCardStatus,
-  generateLongUid
-} from "/js/admin_nfc_tokens.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -15,30 +7,42 @@ const tabs = Array.from(document.querySelectorAll(".tab"));
 const panels = {
   users: $("panelUsers"),
   wallet: $("panelWallet"),
-  nfc: $("panelNfc"),
+  promo: $("panelPromo"),
   manual: $("panelManual")
 };
 
 const meLine = $("meLine");
 const usersTableBody = $("usersTableBody");
 const walletTableBody = $("walletTableBody");
+const promoTableBody = $("promoTableBody");
+const promoLogTableBody = $("promoLogTableBody");
+
 const userSearch = $("userSearch");
 const walletSearch = $("walletSearch");
+const promoSearch = $("promoSearch");
+const promoLogSearch = $("promoLogSearch");
+
 const userRefreshBtn = $("userRefreshBtn");
 const walletRefreshBtn = $("walletRefreshBtn");
+const promoRefreshBtn = $("promoRefreshBtn");
+const promoLogRefreshBtn = $("promoLogRefreshBtn");
 
-const uidInput = $("uid");
-const amountInput = $("amount");
-const noteInput = $("note");
-const saveBtn = $("saveBtn");
-const genUidBtn = $("genUidBtn");
-const nfcSearch = $("nfcSearch");
-const nfcRefreshBtn = $("nfcRefreshBtn");
-const nfcTableBody = $("nfcTableBody");
-const nfcCreateStatus = $("nfcCreateStatus");
-const nfcPreview = $("nfcPreview");
-const writeNfcBtn = $("writeNfcBtn");
+const campaignCode = $("campaignCode");
+const campaignName = $("campaignName");
+const campaignDescription = $("campaignDescription");
+const grantType = $("grantType");
+const deliveryType = $("deliveryType");
+const membershipMonths = $("membershipMonths");
+const tokenAmount = $("tokenAmount");
+const packageCode = $("packageCode");
+const perUserLimit = $("perUserLimit");
+const promoCodeValue = $("promoCodeValue");
+const promoNfcUid = $("promoNfcUid");
+const savePromoBtn = $("savePromoBtn");
+const promoStatus = $("promoStatus");
+const promoPreview = $("promoPreview");
 const printQrBtn = $("printQrBtn");
+const copyPromoBtn = $("copyPromoBtn");
 
 const manualUserId = $("manualUserId");
 const manualAmount = $("manualAmount");
@@ -52,7 +56,7 @@ const logoutBtnTop = $("logoutBtnTop");
 
 let currentUser = null;
 let currentProfile = null;
-let latestCreatedCard = null;
+let latestCreatedPromo = null;
 
 function setStatus(el, text, cls = "") {
   if (!el) return;
@@ -65,12 +69,24 @@ function fmt(v) {
   try { return new Date(v).toLocaleString("tr-TR"); } catch { return "-"; }
 }
 
-function statusText(v) {
-  const s = String(v || "").toLowerCase();
-  if (s === "active") return "Aktif";
-  if (s === "used") return "Kullanıldı";
-  if (s === "blocked") return "Engelli";
-  return s || "-";
+function safe(v, fallback = "-") {
+  if (v === null || v === undefined || v === "") return fallback;
+  return String(v);
+}
+
+function escapeHtml(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function statusTextFromCode(row) {
+  if (row.is_used) return "Kullanıldı";
+  if (row.is_active) return "Aktif";
+  return "Pasif";
 }
 
 function setActiveTab(name) {
@@ -85,6 +101,27 @@ function setActiveTab(name) {
   });
 }
 
+function randomPart(len = 6) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for (let i = 0; i < len; i++) {
+    out += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return out;
+}
+
+function generateCampaignCode() {
+  return `PROMO_${Date.now()}_${randomPart(4)}`;
+}
+
+function generatePromoCode() {
+  return `ITK-${randomPart(4)}-${randomPart(4)}`;
+}
+
+function buildQrUrl(code) {
+  return `${location.origin}/pages/promo_gate.html?code=${encodeURIComponent(code)}`;
+}
+
 async function getCurrentUserAndProfile() {
   const { data } = await supabase.auth.getUser();
   currentUser = data?.user || null;
@@ -96,16 +133,18 @@ async function getCurrentUserAndProfile() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, email, role, tokens")
+    .select("id, full_name, email, role, tokens, is_admin")
     .eq("id", currentUser.id)
     .maybeSingle();
 
   currentProfile = profile || null;
+
   meLine.textContent = currentProfile
     ? `${currentProfile.full_name || "-"} • ${currentProfile.email || "-"} • Rol: ${currentProfile.role || "-"}`
     : `${currentUser.email || "-"} • Profil bulunamadı`;
 
-  if ((currentProfile?.role || "").toLowerCase() !== "superadmin") {
+  const role = String(currentProfile?.role || "").toLowerCase();
+  if (role !== "superadmin") {
     if (manualLoadBtn) manualLoadBtn.disabled = true;
     setStatus(manualStatus, "Manuel jeton yükleme sadece superadmin içindir.", "status-warn");
   }
@@ -116,7 +155,7 @@ async function loadUsers() {
 
   let query = supabase
     .from("profiles")
-    .select("id, full_name, email, role, tokens")
+    .select("id, full_name, email, role, tokens, promo_used_at, package_ends_at")
     .order("id", { ascending: false });
 
   if (q) {
@@ -126,23 +165,25 @@ async function loadUsers() {
   const { data, error } = await query.limit(200);
 
   if (error) {
-    usersTableBody.innerHTML = `<tr><td colspan="5" class="empty">Kullanıcılar yüklenemedi.</td></tr>`;
+    usersTableBody.innerHTML = `<tr><td colspan="7" class="empty">Kullanıcılar yüklenemedi.</td></tr>`;
     return;
   }
 
   const rows = Array.isArray(data) ? data : [];
   if (!rows.length) {
-    usersTableBody.innerHTML = `<tr><td colspan="5" class="empty">Kullanıcı bulunamadı.</td></tr>`;
+    usersTableBody.innerHTML = `<tr><td colspan="7" class="empty">Kullanıcı bulunamadı.</td></tr>`;
     return;
   }
 
   usersTableBody.innerHTML = rows.map((row) => `
     <tr>
-      <td>${row.full_name || "-"}</td>
-      <td>${row.email || "-"}</td>
-      <td>${row.role || "-"}</td>
+      <td>${escapeHtml(row.full_name || "-")}</td>
+      <td>${escapeHtml(row.email || "-")}</td>
+      <td>${escapeHtml(row.role || "-")}</td>
       <td>${row.tokens ?? 0}</td>
-      <td>${row.id || "-"}</td>
+      <td>${row.promo_used_at ? "Kullanmış" : "Yok"}</td>
+      <td>${escapeHtml(fmt(row.package_ends_at))}</td>
+      <td>${escapeHtml(row.id || "-")}</td>
     </tr>
   `).join("");
 }
@@ -150,12 +191,11 @@ async function loadUsers() {
 async function loadWallet() {
   const q = String(walletSearch?.value || "").trim().toLowerCase();
 
-  let query = supabase
+  const { data, error } = await supabase
     .from("wallet_tx")
     .select("*")
-    .order("created_at", { ascending: false });
-
-  const { data, error } = await query.limit(200);
+    .order("created_at", { ascending: false })
+    .limit(200);
 
   if (error) {
     walletTableBody.innerHTML = `<tr><td colspan="5" class="empty">Hareketler yüklenemedi.</td></tr>`;
@@ -165,10 +205,7 @@ async function loadWallet() {
   let rows = Array.isArray(data) ? data : [];
 
   if (q) {
-    rows = rows.filter((row) => {
-      const blob = JSON.stringify(row).toLowerCase();
-      return blob.includes(q);
-    });
+    rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(q));
   }
 
   if (!rows.length) {
@@ -178,70 +215,251 @@ async function loadWallet() {
 
   walletTableBody.innerHTML = rows.map((row) => `
     <tr>
-      <td>${row.user_id || "-"}</td>
+      <td>${escapeHtml(row.user_id || "-")}</td>
       <td>${row.delta ?? row.amount ?? 0}</td>
-      <td>${row.reason || "-"}</td>
-      <td>${row.note || "-"}</td>
-      <td>${fmt(row.created_at)}</td>
+      <td>${escapeHtml(row.reason || "-")}</td>
+      <td>${escapeHtml(row.note || "-")}</td>
+      <td>${escapeHtml(fmt(row.created_at))}</td>
     </tr>
   `).join("");
 }
 
-function renderNfcPreview(row) {
-  latestCreatedCard = row || null;
+function renderPromoPreview(row) {
+  latestCreatedPromo = row || null;
 
   if (!row) {
-    nfcPreview.textContent = "Henüz kart oluşturulmadı.";
+    promoPreview.innerHTML = "Henüz promosyon oluşturulmadı.";
     return;
   }
 
-  nfcPreview.innerHTML = `
-    <div><b>UID:</b> ${row.uid || "-"}</div>
-    <div style="margin-top:8px"><b>6 Haneli Kod:</b> ${row.manual_code || "-"}</div>
-    <div style="margin-top:8px"><b>QR:</b><br>${row.qr_url || "-"}</div>
-    <div style="margin-top:8px"><b>Jeton:</b> ${row.token_amount ?? 0}</div>
-    <div style="margin-top:8px"><b>Kart Altı Yazı:</b><br>Kod: ${row.manual_code || "-"}</div>
+  promoPreview.innerHTML = `
+    <div><b>Campaign:</b> ${escapeHtml(row.campaign_name || "-")}</div>
+    <div><b>Campaign Code:</b> ${escapeHtml(row.campaign_code || "-")}</div>
+    <div><b>Promosyon Kodu:</b> ${escapeHtml(row.code_value || "-")}</div>
+    <div><b>Teslim:</b> ${escapeHtml(row.delivery_type || "-")}</div>
+    <div><b>Tür:</b> ${escapeHtml(row.grant_type || "-")}</div>
+    <div><b>Üyelik:</b> ${Number(row.membership_months || 0)} ay</div>
+    <div><b>Jeton:</b> ${Number(row.token_amount || 0)}</div>
+    <div><b>QR:</b><br>${escapeHtml(row.qr_url || "-")}</div>
   `;
 }
 
-async function loadNfcCards() {
+async function createPromoRecord(payload) {
+  const gType = String(payload.grant_type || "").trim();
+  const dType = String(payload.delivery_type || "").trim();
+  const cName = String(payload.campaign_name || "").trim();
+  const cCode = String(payload.campaign_code || "").trim().toUpperCase() || generateCampaignCode();
+  const desc = String(payload.description || "").trim();
+  const months = Number(payload.membership_months || 0);
+  const tokens = Number(payload.token_amount || 0);
+  const pkg = String(payload.package_code || "").trim() || "member";
+  const userLimit = Math.max(1, Number(payload.per_user_limit || 1));
+  const codeVal = String(payload.code_value || "").trim().toUpperCase() || generatePromoCode();
+  const nfcUid = String(payload.nfc_uid || "").trim() || null;
+
+  if (!cName) throw new Error("Campaign adı gerekli");
+  if (!["membership", "tokens", "bundle"].includes(gType)) throw new Error("Geçersiz tür");
+  if (!["manual", "qr", "nfc"].includes(dType)) throw new Error("Geçersiz teslim tipi");
+  if (gType === "membership" && months <= 0) throw new Error("Üyelik ayı gerekli");
+  if (gType === "tokens" && tokens <= 0) throw new Error("Jeton miktarı gerekli");
+  if (gType === "bundle" && months <= 0 && tokens <= 0) throw new Error("Bundle için üyelik veya jeton gerekli");
+
+  const { data: campaignData, error: campaignErr } = await supabase
+    .from("promo_campaigns")
+    .insert({
+      code: cCode,
+      name: cName,
+      description: desc || cName,
+      is_active: true,
+      grant_type: gType,
+      membership_months: months,
+      token_amount: tokens,
+      package_code: pkg,
+      stack_mode: "extend",
+      per_user_limit: userLimit
+    })
+    .select("*")
+    .single();
+
+  if (campaignErr || !campaignData) {
+    throw new Error(campaignErr?.message || "Campaign kaydedilemedi");
+  }
+
+  const { data: codeData, error: codeErr } = await supabase
+    .from("promo_codes")
+    .insert({
+      campaign_id: campaignData.id,
+      code_value: codeVal,
+      delivery_type: dType,
+      nfc_uid: dType === "nfc" ? nfcUid : null,
+      is_active: true,
+      is_used: false
+    })
+    .select("*")
+    .single();
+
+  if (codeErr || !codeData) {
+    throw new Error(codeErr?.message || "Promosyon kodu kaydedilemedi");
+  }
+
+  return {
+    ...codeData,
+    campaign_name: campaignData.name,
+    campaign_code: campaignData.code,
+    grant_type: campaignData.grant_type,
+    membership_months: campaignData.membership_months,
+    token_amount: campaignData.token_amount,
+    package_code: campaignData.package_code,
+    qr_url: buildQrUrl(codeVal)
+  };
+}
+
+async function listPromoRecords(searchTerm = "") {
+  const q = String(searchTerm || "").trim().toLowerCase();
+
+  const { data, error } = await supabase
+    .from("promo_codes")
+    .select(`
+      id,
+      campaign_id,
+      code_value,
+      delivery_type,
+      nfc_uid,
+      is_active,
+      is_used,
+      used_by,
+      used_at,
+      bound_user_id,
+      promo_campaigns (
+        id,
+        code,
+        name,
+        grant_type,
+        membership_months,
+        token_amount,
+        package_code,
+        is_active
+      )
+    `)
+    .order("created_at", { ascending: false })
+    .limit(300);
+
+  if (error) throw error;
+
+  let rows = Array.isArray(data) ? data.map((row) => {
+    const campaign = Array.isArray(row.promo_campaigns) ? row.promo_campaigns[0] : row.promo_campaigns;
+    return {
+      ...row,
+      campaign_name: campaign?.name || "-",
+      campaign_code: campaign?.code || "-",
+      grant_type: campaign?.grant_type || "-",
+      membership_months: campaign?.membership_months || 0,
+      token_amount: campaign?.token_amount || 0,
+      package_code: campaign?.package_code || "",
+      qr_url: buildQrUrl(row.code_value)
+    };
+  }) : [];
+
+  if (q) {
+    rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(q));
+  }
+
+  return rows;
+}
+
+async function updatePromoCodeStatus(codeValue, makeActive) {
+  const { error } = await supabase
+    .from("promo_codes")
+    .update({
+      is_active: !!makeActive
+    })
+    .eq("code_value", codeValue);
+
+  if (error) throw error;
+}
+
+async function loadPromoRecords() {
   try {
-    const rows = await listNfcTokenCards(nfcSearch?.value || "");
+    const rows = await listPromoRecords(promoSearch?.value || "");
 
     if (!rows.length) {
-      nfcTableBody.innerHTML = `<tr><td colspan="7" class="empty">Kart bulunamadı.</td></tr>`;
+      promoTableBody.innerHTML = `<tr><td colspan="10" class="empty">Promosyon bulunamadı.</td></tr>`;
       return;
     }
 
-    nfcTableBody.innerHTML = rows.map((row) => `
+    promoTableBody.innerHTML = rows.map((row) => `
       <tr>
-        <td>${row.uid || "-"}</td>
-        <td>${row.manual_code || "-"}</td>
-        <td>${row.token_amount ?? 0}</td>
-        <td>${statusText(row.status)}</td>
-        <td>${row.redeemed_by_user_id || row.assigned_user_id || "-"}</td>
-        <td style="max-width:220px;word-break:break-all">${row.qr_url || "-"}</td>
+        <td>${escapeHtml(row.campaign_name)}</td>
+        <td>${escapeHtml(row.code_value)}</td>
+        <td>${escapeHtml(row.delivery_type)}</td>
+        <td>${escapeHtml(row.grant_type)}</td>
+        <td>${Number(row.membership_months || 0)} ay</td>
+        <td>${Number(row.token_amount || 0)}</td>
+        <td>${escapeHtml(statusTextFromCode(row))}</td>
+        <td>${escapeHtml(row.used_by || row.bound_user_id || "-")}</td>
+        <td>${escapeHtml(row.nfc_uid || "-")}</td>
         <td>
           <div class="mini-actions">
-            <button class="btn-secondary" type="button" data-action="active" data-uid="${row.uid}">Aktif</button>
-            <button class="btn-danger" type="button" data-action="blocked" data-uid="${row.uid}">Blokla</button>
+            <button class="btn-ok" type="button" data-action="on" data-code="${escapeHtml(row.code_value)}">Aktif</button>
+            <button class="btn-danger" type="button" data-action="off" data-code="${escapeHtml(row.code_value)}">Pasif</button>
           </div>
         </td>
       </tr>
     `).join("");
 
-    nfcTableBody.querySelectorAll("[data-action]").forEach((btn) => {
+    promoTableBody.querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", async () => {
         try {
-          await updateNfcCardStatus(btn.dataset.uid, btn.dataset.action);
-          await loadNfcCards();
+          await updatePromoCodeStatus(btn.dataset.code, btn.dataset.action === "on");
+          setStatus(promoStatus, "Promosyon durumu güncellendi.", "status-ok");
+          await loadPromoRecords();
         } catch (e) {
-          setStatus(nfcCreateStatus, "Kart durumu güncellenemedi: " + (e.message || e), "status-err");
+          setStatus(promoStatus, "Promosyon durumu güncellenemedi: " + (e.message || e), "status-err");
         }
       });
     });
   } catch (e) {
-    nfcTableBody.innerHTML = `<tr><td colspan="7" class="empty">Kartlar yüklenemedi.</td></tr>`;
+    promoTableBody.innerHTML = `<tr><td colspan="10" class="empty">Promosyonlar yüklenemedi.</td></tr>`;
+  }
+}
+
+async function loadPromoLogs() {
+  try {
+    const search = String(promoLogSearch?.value || "").trim().toLowerCase();
+
+    const { data, error } = await supabase
+      .from("promo_redemptions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(300);
+
+    if (error) throw error;
+
+    let rows = Array.isArray(data) ? data : [];
+
+    if (search) {
+      rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(search));
+    }
+
+    if (!rows.length) {
+      promoLogTableBody.innerHTML = `<tr><td colspan="8" class="empty">Kayıt bulunamadı.</td></tr>`;
+      return;
+    }
+
+    promoLogTableBody.innerHTML = rows.map((row) => `
+      <tr>
+        <td>${escapeHtml(row.user_id || "-")}</td>
+        <td>${escapeHtml(row.campaign_id || "-")}</td>
+        <td>${escapeHtml(row.grant_type || "-")}</td>
+        <td>${Number(row.granted_membership_months || 0)} ay</td>
+        <td>${Number(row.granted_tokens || 0)}</td>
+        <td>${escapeHtml(row.before_package_code || "-")} / ${escapeHtml(row.before_membership_end || "-")}</td>
+        <td>${escapeHtml(row.after_package_code || "-")} / ${escapeHtml(row.after_membership_end || "-")}</td>
+        <td>${escapeHtml(fmt(row.created_at))}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    promoLogTableBody.innerHTML = `<tr><td colspan="8" class="empty">Log kayıtları yüklenemedi.</td></tr>`;
   }
 }
 
@@ -299,7 +517,7 @@ function bindTopActions() {
   });
 
   refreshBtn?.addEventListener("click", async () => {
-    await Promise.allSettled([loadUsers(), loadWallet(), loadNfcCards()]);
+    await Promise.allSettled([loadUsers(), loadWallet(), loadPromoRecords(), loadPromoLogs()]);
   });
 
   logoutBtnTop?.addEventListener("click", async () => {
@@ -318,115 +536,85 @@ function bindWallet() {
   walletSearch?.addEventListener("input", loadWallet);
 }
 
-function bindNativeAdminEvents() {
-  window.onNativeNfcWriteResult = function(ok, message) {
-    const cls = ok ? "status-ok" : "status-err";
-    setStatus(
-      nfcCreateStatus,
-      String(message || (ok ? "NFC yazdırma işlemi tamamlandı." : "NFC yazdırma işlemi başarısız oldu.")),
-      cls
-    );
-  };
-
-  window.addEventListener("italky:nfc-write", (e) => {
-    const detail = e?.detail || {};
-    const uid = String(detail.uid || "").trim();
-    const payload = String(detail.payload || "").trim();
-
-    if (uid || payload) {
-      setStatus(
-        nfcCreateStatus,
-        `NFC yazdırma tamamlandı • UID: ${uid || "-"} • Veri: ${payload || "-"}`,
-        "status-ok"
-      );
-    }
-  });
-
-  window.addEventListener("italky:nfc-error", (e) => {
-    const msg = String(e?.detail?.message || "NFC işlemi başarısız oldu.").trim();
-    setStatus(nfcCreateStatus, msg, "status-err");
-  });
-
-  window.addEventListener("italky:nfc-status", (e) => {
-    const msg = String(e?.detail?.message || "").trim();
-    if (msg) setStatus(nfcCreateStatus, msg, "status-warn");
-  });
-}
-
-function bindNfc() {
-  genUidBtn?.addEventListener("click", () => {
-    uidInput.value = generateLongUid();
-  });
-
-  document.querySelectorAll("[data-quick-amount]").forEach((el) => {
-    el.addEventListener("click", () => {
-      amountInput.value = el.getAttribute("data-quick-amount") || "";
-      if (!uidInput.value.trim()) {
-        uidInput.value = generateLongUid();
-      }
+function bindPromo() {
+  document.querySelectorAll("[data-month]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      membershipMonths.value = btn.dataset.month || "";
     });
   });
 
-  saveBtn?.addEventListener("click", async () => {
-    try {
-      setStatus(nfcCreateStatus, "Kart kaydediliyor...", "status-warn");
+  document.querySelectorAll("[data-token]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tokenAmount.value = btn.dataset.token || "";
+    });
+  });
 
-      const row = await createNfcTokenCard({
-        uid: uidInput.value,
-        tokenAmount: amountInput.value,
-        note: noteInput.value
+  campaignCode?.addEventListener("input", () => {
+    campaignCode.value = campaignCode.value.toUpperCase().replace(/[^A-Z0-9_]/g, "").slice(0, 60);
+  });
+
+  promoCodeValue?.addEventListener("input", () => {
+    promoCodeValue.value = promoCodeValue.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 40);
+  });
+
+  savePromoBtn?.addEventListener("click", async () => {
+    try {
+      setStatus(promoStatus, "Promosyon kaydediliyor...", "status-warn");
+
+      const row = await createPromoRecord({
+        campaign_code: campaignCode.value.trim(),
+        campaign_name: campaignName.value.trim(),
+        description: campaignDescription.value.trim(),
+        grant_type: grantType.value,
+        delivery_type: deliveryType.value,
+        membership_months: membershipMonths.value,
+        token_amount: tokenAmount.value,
+        package_code: packageCode.value.trim(),
+        per_user_limit: perUserLimit.value,
+        code_value: promoCodeValue.value.trim(),
+        nfc_uid: promoNfcUid.value.trim()
       });
 
       setStatus(
-        nfcCreateStatus,
-        `Kart oluşturuldu • UID: ${row.uid} • Kod: ${row.manual_code} • ${row.token_amount} jeton`,
+        promoStatus,
+        `Promosyon oluşturuldu • Kod: ${row.code_value} • Tür: ${row.grant_type} • ${row.membership_months || 0} ay • ${row.token_amount || 0} jeton`,
         "status-ok"
       );
 
-      renderNfcPreview(row);
-      uidInput.value = "";
-      amountInput.value = "";
-      noteInput.value = "";
+      renderPromoPreview(row);
 
-      await loadNfcCards();
+      campaignCode.value = "";
+      campaignName.value = "";
+      campaignDescription.value = "";
+      membershipMonths.value = "";
+      tokenAmount.value = "";
+      packageCode.value = "";
+      perUserLimit.value = "1";
+      promoCodeValue.value = "";
+      promoNfcUid.value = "";
+
+      await Promise.allSettled([loadPromoRecords(), loadPromoLogs()]);
     } catch (e) {
-      setStatus(nfcCreateStatus, "Kart oluşturulamadı: " + (e.message || e), "status-err");
-    }
-  });
-
-  writeNfcBtn?.addEventListener("click", async () => {
-    try {
-      if (!latestCreatedCard?.uid) {
-        setStatus(nfcCreateStatus, "Önce kart oluştur.", "status-warn");
-        return;
-      }
-
-      if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcText === "function") {
-        window.NativeAdmin.writeNfcText(String(latestCreatedCard.uid));
-        setStatus(nfcCreateStatus, `Kartı telefona yaklaştırın • Yazılacak UID: ${latestCreatedCard.uid}`, "status-warn");
-        return;
-      }
-
-      setStatus(nfcCreateStatus, "Bu cihazda NFC yazdırma köprüsü yok.", "status-err");
-    } catch (e) {
-      setStatus(nfcCreateStatus, "NFC yazdırma hatası: " + (e.message || e), "status-err");
+      setStatus(promoStatus, "Promosyon oluşturulamadı: " + (e.message || e), "status-err");
     }
   });
 
   printQrBtn?.addEventListener("click", () => {
     try {
-      if (!latestCreatedCard?.qr_url || !latestCreatedCard?.manual_code) {
-        setStatus(nfcCreateStatus, "Önce kart oluştur.", "status-warn");
+      if (!latestCreatedPromo?.qr_url || !latestCreatedPromo?.code_value) {
+        setStatus(promoStatus, "Önce promosyon oluştur.", "status-warn");
         return;
       }
 
-      const qrText = latestCreatedCard.qr_url;
-      const shortCode = latestCreatedCard.manual_code;
-      const tokenAmount = latestCreatedCard.token_amount || 0;
+      const qrText = latestCreatedPromo.qr_url;
+      const shortCode = latestCreatedPromo.code_value;
+      const months = Number(latestCreatedPromo.membership_months || 0);
+      const tokens = Number(latestCreatedPromo.token_amount || 0);
+      const campaign = latestCreatedPromo.campaign_name || "Promosyon";
 
-      const w = window.open("", "_blank", "width=480,height=760");
+      const w = window.open("", "_blank", "width=520,height=780");
       if (!w) {
-        setStatus(nfcCreateStatus, "QR yazdırma penceresi açılamadı.", "status-err");
+        setStatus(promoStatus, "QR yazdırma penceresi açılamadı.", "status-err");
         return;
       }
 
@@ -437,7 +625,7 @@ function bindNfc() {
         <html lang="tr">
         <head>
           <meta charset="utf-8">
-          <title>Jeton Kartı Yazdır</title>
+          <title>Promosyon Kartı Yazdır</title>
           <style>
             body{
               margin:0;
@@ -450,7 +638,7 @@ function bindNfc() {
               min-height:100vh;
             }
             .card{
-              width:340px;
+              width:360px;
               border:2px solid #111;
               border-radius:24px;
               padding:24px;
@@ -459,12 +647,17 @@ function bindNfc() {
             .brand{
               font-size:28px;
               font-weight:900;
-              margin-bottom:10px;
+              margin-bottom:8px;
             }
-            .amount{
-              font-size:26px;
+            .campaign{
+              font-size:20px;
               font-weight:900;
-              margin-bottom:18px;
+              margin-bottom:8px;
+            }
+            .benefit{
+              font-size:18px;
+              font-weight:800;
+              margin-bottom:16px;
             }
             .qr{
               width:280px;
@@ -474,9 +667,9 @@ function bindNfc() {
               display:block;
             }
             .code{
-              font-size:34px;
+              font-size:26px;
               font-weight:900;
-              letter-spacing:4px;
+              letter-spacing:2px;
               margin-top:10px;
             }
             .sub{
@@ -489,10 +682,11 @@ function bindNfc() {
         <body>
           <div class="card">
             <div class="brand">italkyAI</div>
-            <div class="amount">${tokenAmount} JETON</div>
+            <div class="campaign">${campaign}</div>
+            <div class="benefit">${months > 0 ? `${months} AY ÜYELİK` : ""}${months > 0 && tokens > 0 ? " + " : ""}${tokens > 0 ? `${tokens} JETON` : ""}</div>
             <img class="qr" src="${qrImg}" alt="QR">
             <div class="code">${shortCode}</div>
-            <div class="sub">QR okutun veya uygulamada bu 6 haneli kodu girin.</div>
+            <div class="sub">QR okutun veya promosyon kodunu giriş ekranında kullanın.</div>
           </div>
           <script>
             window.onload = () => {
@@ -504,12 +698,29 @@ function bindNfc() {
       `);
       w.document.close();
     } catch (e) {
-      setStatus(nfcCreateStatus, "QR yazdırma hatası: " + (e.message || e), "status-err");
+      setStatus(promoStatus, "QR yazdırma hatası: " + (e.message || e), "status-err");
     }
   });
 
-  nfcRefreshBtn?.addEventListener("click", loadNfcCards);
-  nfcSearch?.addEventListener("input", loadNfcCards);
+  copyPromoBtn?.addEventListener("click", async () => {
+    try {
+      const code = latestCreatedPromo?.code_value || "";
+      if (!code) {
+        setStatus(promoStatus, "Kopyalanacak promosyon kodu yok.", "status-warn");
+        return;
+      }
+      await navigator.clipboard.writeText(code);
+      setStatus(promoStatus, "Promosyon kodu kopyalandı.", "status-ok");
+    } catch (e) {
+      setStatus(promoStatus, "Kod kopyalanamadı.", "status-err");
+    }
+  });
+
+  promoRefreshBtn?.addEventListener("click", loadPromoRecords);
+  promoSearch?.addEventListener("input", loadPromoRecords);
+
+  promoLogRefreshBtn?.addEventListener("click", loadPromoLogs);
+  promoLogSearch?.addEventListener("input", loadPromoLogs);
 }
 
 function bindManual() {
@@ -551,18 +762,16 @@ async function init() {
     document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
   } catch {}
 
-  bindNativeAdminEvents();
-
   await getCurrentUserAndProfile();
 
   bindTabs();
   bindTopActions();
   bindUsers();
   bindWallet();
-  bindNfc();
+  bindPromo();
   bindManual();
 
-  await Promise.allSettled([loadUsers(), loadWallet(), loadNfcCards()]);
+  await Promise.allSettled([loadUsers(), loadWallet(), loadPromoRecords(), loadPromoLogs()]);
 
   document.getElementById("pageContent")?.classList.add("ready");
 }
