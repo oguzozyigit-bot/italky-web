@@ -15,8 +15,6 @@ const homeBtn = $("homeBtn");
 const homeLink = $("homeLink");
 
 const genericBackdrop = $("genericBackdrop");
-const genericTitle = $("genericTitle");
-const genericText = $("genericText");
 const genericCloseBtn = $("genericCloseBtn");
 const miniToast = $("miniToast");
 
@@ -47,7 +45,8 @@ const WORD_OVERRIDES = {
   "ata": { rune: "𐰀𐱃𐰀", read: "ata" },
   "ana": { rune: "𐰀𐰣𐰀", read: "ana" },
   "su": { rune: "𐰽𐰆", read: "su" },
-  "taş": { rune: "𐱃𐰀𐱁", read: "taş" }
+  "taş": { rune: "𐱃𐰀𐱁", read: "taş" },
+  "selam": { rune: "𐰽𐰞𐰀𐰢", read: "selam" }
 };
 
 const FRONT_VOWELS = new Set(["e", "i", "ö", "ü"]);
@@ -67,7 +66,6 @@ const FRONT_MAP = {
   "ö": { rune: "𐰇", latin: "ö" },
   "u": { rune: "𐰆", latin: "u" },
   "ü": { rune: "𐰇", latin: "ü" },
-
   "b": { rune: "𐰋", latin: "b" },
   "c": { rune: "𐰲", latin: "c" },
   "ç": { rune: "𐰲", latin: "ç" },
@@ -103,7 +101,6 @@ const BACK_MAP = {
   "ö": { rune: "𐰇", latin: "ö" },
   "u": { rune: "𐰆", latin: "u" },
   "ü": { rune: "𐰇", latin: "ü" },
-
   "b": { rune: "𐰉", latin: "b" },
   "c": { rune: "𐰲", latin: "c" },
   "ç": { rune: "𐰲", latin: "ç" },
@@ -139,7 +136,7 @@ function cleanWord(word) {
 }
 
 function tokenizeWithSpaces(text) {
-  return String(text || "").split(/(\s+)/);
+  return String(text || "").split(/(\\s+)/);
 }
 
 function getHarmony(word) {
@@ -159,7 +156,6 @@ function buildUnitsFromOverride(override) {
   const runes = [...override.rune];
   const latin = [...override.read];
   const units = [];
-
   let latinIndex = 0;
 
   for (const rune of runes) {
@@ -169,10 +165,12 @@ function buildUnitsFromOverride(override) {
     }
 
     while (latin[latinIndex] === " ") latinIndex += 1;
+
     units.push({
       rune,
       latin: latin[latinIndex] || ""
     });
+
     latinIndex += 1;
   }
 
@@ -239,7 +237,7 @@ function localTurkishToGokturk(text) {
   for (const part of parts) {
     if (!part) continue;
 
-    if (/^\s+$/.test(part)) {
+    if (/^\\s+$/.test(part)) {
       runeParts.push(part);
       units.push({ space: true });
       continue;
@@ -263,7 +261,7 @@ function getKnownReadingLine(text) {
   for (const part of parts) {
     if (!part) continue;
 
-    if (/^\s+$/.test(part)) {
+    if (/^\\s+$/.test(part)) {
       out.push(part);
       continue;
     }
@@ -278,7 +276,7 @@ function getKnownReadingLine(text) {
     out.push(WORD_OVERRIDES[pure].read);
   }
 
-  return out.join("").replace(/\s+/g, " ").trim();
+  return out.join("").replace(/\\s+/g, " ").trim();
 }
 
 /* =========================================================
