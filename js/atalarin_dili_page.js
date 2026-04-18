@@ -50,7 +50,7 @@ const WORD_OVERRIDES = {
 };
 
 const FRONT_VOWELS = new Set(["e", "i", "ö", "ü"]);
-const BACK_VOWELS  = new Set(["a", "ı", "o", "u"]);
+const BACK_VOWELS = new Set(["a", "ı", "o", "u"]);
 
 const MULTI_CHAR_MAP = [
   ["ng", { rune: "𐰭", latin: "ng" }],
@@ -58,73 +58,43 @@ const MULTI_CHAR_MAP = [
 ];
 
 const FRONT_MAP = {
-  "a": { rune: "𐰀", latin: "a" },
-  "e": { rune: "𐰀", latin: "e" },
-  "ı": { rune: "𐰃", latin: "ı" },
-  "i": { rune: "𐰃", latin: "i" },
-  "o": { rune: "𐰆", latin: "o" },
-  "ö": { rune: "𐰇", latin: "ö" },
-  "u": { rune: "𐰆", latin: "u" },
-  "ü": { rune: "𐰇", latin: "ü" },
-  "b": { rune: "𐰋", latin: "b" },
-  "c": { rune: "𐰲", latin: "c" },
-  "ç": { rune: "𐰲", latin: "ç" },
-  "d": { rune: "𐰑", latin: "d" },
-  "f": { rune: "𐰯", latin: "f" },
-  "g": { rune: "𐰏", latin: "g" },
-  "ğ": { rune: "𐰏", latin: "ğ" },
-  "h": { rune: "𐰚", latin: "h" },
-  "j": { rune: "𐰘", latin: "y" },
-  "k": { rune: "𐰚", latin: "k" },
-  "l": { rune: "𐰞", latin: "l" },
-  "m": { rune: "𐰢", latin: "m" },
-  "n": { rune: "𐰤", latin: "n" },
-  "p": { rune: "𐰯", latin: "p" },
-  "q": { rune: "𐰚", latin: "k" },
-  "r": { rune: "𐰼", latin: "r" },
-  "s": { rune: "𐰽", latin: "s" },
-  "ş": { rune: "𐱁", latin: "ş" },
-  "t": { rune: "𐱅", latin: "t" },
-  "v": { rune: "𐰋", latin: "v" },
-  "w": { rune: "𐰋", latin: "v" },
-  "x": { rune: "𐰴𐰽", latin: "ks" },
-  "y": { rune: "𐰘", latin: "y" },
-  "z": { rune: "𐰔", latin: "z" }
+  "a": { rune: "𐰀", latin: "a" }, "e": { rune: "𐰀", latin: "e" },
+  "ı": { rune: "𐰃", latin: "ı" }, "i": { rune: "𐰃", latin: "i" },
+  "o": { rune: "𐰆", latin: "o" }, "ö": { rune: "𐰇", latin: "ö" },
+  "u": { rune: "𐰆", latin: "u" }, "ü": { rune: "𐰇", latin: "ü" },
+
+  "b": { rune: "𐰋", latin: "b" }, "c": { rune: "𐰲", latin: "c" },
+  "ç": { rune: "𐰲", latin: "ç" }, "d": { rune: "𐰑", latin: "d" },
+  "f": { rune: "𐰯", latin: "f" }, "g": { rune: "𐰏", latin: "g" },
+  "ğ": { rune: "𐰏", latin: "ğ" }, "h": { rune: "𐰚", latin: "h" },
+  "j": { rune: "𐰘", latin: "y" }, "k": { rune: "𐰚", latin: "k" },
+  "l": { rune: "𐰞", latin: "l" }, "m": { rune: "𐰢", latin: "m" },
+  "n": { rune: "𐰤", latin: "n" }, "p": { rune: "𐰯", latin: "p" },
+  "q": { rune: "𐰚", latin: "k" }, "r": { rune: "𐰼", latin: "r" },
+  "s": { rune: "𐰽", latin: "s" }, "ş": { rune: "𐱁", latin: "ş" },
+  "t": { rune: "𐱅", latin: "t" }, "v": { rune: "𐰋", latin: "v" },
+  "w": { rune: "𐰋", latin: "v" }, "x": { rune: "𐰴𐰽", latin: "ks" },
+  "y": { rune: "𐰘", latin: "y" }, "z": { rune: "𐰔", latin: "z" }
 };
 
 const BACK_MAP = {
-  "a": { rune: "𐰀", latin: "a" },
-  "e": { rune: "𐰀", latin: "e" },
-  "ı": { rune: "𐰃", latin: "ı" },
-  "i": { rune: "𐰃", latin: "i" },
-  "o": { rune: "𐰆", latin: "o" },
-  "ö": { rune: "𐰇", latin: "ö" },
-  "u": { rune: "𐰆", latin: "u" },
-  "ü": { rune: "𐰇", latin: "ü" },
-  "b": { rune: "𐰉", latin: "b" },
-  "c": { rune: "𐰲", latin: "c" },
-  "ç": { rune: "𐰲", latin: "ç" },
-  "d": { rune: "𐰑", latin: "d" },
-  "f": { rune: "𐰯", latin: "f" },
-  "g": { rune: "𐰍", latin: "g" },
-  "ğ": { rune: "𐰍", latin: "ğ" },
-  "h": { rune: "𐰴", latin: "h" },
-  "j": { rune: "𐰖", latin: "y" },
-  "k": { rune: "𐰴", latin: "k" },
-  "l": { rune: "𐰠", latin: "l" },
-  "m": { rune: "𐰢", latin: "m" },
-  "n": { rune: "𐰣", latin: "n" },
-  "p": { rune: "𐰯", latin: "p" },
-  "q": { rune: "𐰴", latin: "k" },
-  "r": { rune: "𐰺", latin: "r" },
-  "s": { rune: "𐰾", latin: "s" },
-  "ş": { rune: "𐱁", latin: "ş" },
-  "t": { rune: "𐱃", latin: "t" },
-  "v": { rune: "𐰉", latin: "v" },
-  "w": { rune: "𐰉", latin: "v" },
-  "x": { rune: "𐰴𐰽", latin: "ks" },
-  "y": { rune: "𐰖", latin: "y" },
-  "z": { rune: "𐰔", latin: "z" }
+  "a": { rune: "𐰀", latin: "a" }, "e": { rune: "𐰀", latin: "e" },
+  "ı": { rune: "𐰃", latin: "ı" }, "i": { rune: "𐰃", latin: "i" },
+  "o": { rune: "𐰆", latin: "o" }, "ö": { rune: "𐰇", latin: "ö" },
+  "u": { rune: "𐰆", latin: "u" }, "ü": { rune: "𐰇", latin: "ü" },
+
+  "b": { rune: "𐰉", latin: "b" }, "c": { rune: "𐰲", latin: "c" },
+  "ç": { rune: "𐰲", latin: "ç" }, "d": { rune: "𐰑", latin: "d" },
+  "f": { rune: "𐰯", latin: "f" }, "g": { rune: "𐰍", latin: "g" },
+  "ğ": { rune: "𐰍", latin: "ğ" }, "h": { rune: "𐰴", latin: "h" },
+  "j": { rune: "𐰖", latin: "y" }, "k": { rune: "𐰴", latin: "k" },
+  "l": { rune: "𐰠", latin: "l" }, "m": { rune: "𐰢", latin: "m" },
+  "n": { rune: "𐰣", latin: "n" }, "p": { rune: "𐰯", latin: "p" },
+  "q": { rune: "𐰴", latin: "k" }, "r": { rune: "𐰺", latin: "r" },
+  "s": { rune: "𐰾", latin: "s" }, "ş": { rune: "𐱁", latin: "ş" },
+  "t": { rune: "𐱃", latin: "t" }, "v": { rune: "𐰉", latin: "v" },
+  "w": { rune: "𐰉", latin: "v" }, "x": { rune: "𐰴𐰽", latin: "ks" },
+  "y": { rune: "𐰖", latin: "y" }, "z": { rune: "𐰔", latin: "z" }
 };
 
 function normalizeText(text) {
@@ -136,19 +106,17 @@ function cleanWord(word) {
 }
 
 function tokenizeWithSpaces(text) {
-  return String(text || "").split(/(\\s+)/);
+  return String(text || "").split(/(\s+)/);
 }
 
 function getHarmony(word) {
   const pure = cleanWord(word);
   let front = 0;
   let back = 0;
-
   for (const ch of pure) {
     if (FRONT_VOWELS.has(ch)) front += 1;
     if (BACK_VOWELS.has(ch)) back += 1;
   }
-
   return front > back ? "front" : "back";
 }
 
@@ -163,14 +131,8 @@ function buildUnitsFromOverride(override) {
       units.push({ space: true });
       continue;
     }
-
     while (latin[latinIndex] === " ") latinIndex += 1;
-
-    units.push({
-      rune,
-      latin: latin[latinIndex] || ""
-    });
-
+    units.push({ rune, latin: latin[latinIndex] || "" });
     latinIndex += 1;
   }
 
@@ -179,9 +141,7 @@ function buildUnitsFromOverride(override) {
 
 function localWordToGokturk(word) {
   const pure = cleanWord(word);
-  if (!pure) {
-    return { rune: word, units: [] };
-  }
+  if (!pure) return { rune: word, units: [] };
 
   if (WORD_OVERRIDES[pure]) {
     return {
@@ -192,7 +152,6 @@ function localWordToGokturk(word) {
 
   const harmony = getHarmony(pure);
   const map = harmony === "front" ? FRONT_MAP : BACK_MAP;
-
   let runeOut = "";
   const units = [];
   let i = 0;
@@ -214,7 +173,6 @@ function localWordToGokturk(word) {
 
     const ch = pure[i];
     const rule = map[ch] || FRONT_MAP[ch] || BACK_MAP[ch];
-
     if (rule) {
       runeOut += rule.rune;
       units.push({ rune: rule.rune, latin: rule.latin });
@@ -222,7 +180,6 @@ function localWordToGokturk(word) {
       runeOut += ch;
       units.push({ rune: ch, latin: ch });
     }
-
     i += 1;
   }
 
@@ -237,7 +194,7 @@ function localTurkishToGokturk(text) {
   for (const part of parts) {
     if (!part) continue;
 
-    if (/^\\s+$/.test(part)) {
+    if (/^\s+$/.test(part)) {
       runeParts.push(part);
       units.push({ space: true });
       continue;
@@ -248,35 +205,7 @@ function localTurkishToGokturk(text) {
     result.units.forEach((u) => units.push(u));
   }
 
-  return {
-    rune: runeParts.join("").trim(),
-    units
-  };
-}
-
-function getKnownReadingLine(text) {
-  const parts = tokenizeWithSpaces(text);
-  const out = [];
-
-  for (const part of parts) {
-    if (!part) continue;
-
-    if (/^\\s+$/.test(part)) {
-      out.push(part);
-      continue;
-    }
-
-    const pure = cleanWord(part);
-    if (!pure) continue;
-
-    if (!WORD_OVERRIDES[pure]?.read) {
-      return "";
-    }
-
-    out.push(WORD_OVERRIDES[pure].read);
-  }
-
-  return out.join("").replace(/\\s+/g, " ").trim();
+  return { rune: runeParts.join("").trim(), units };
 }
 
 /* =========================================================
@@ -286,9 +215,7 @@ function getKnownReadingLine(text) {
 async function aiTranslateToGokturk(text) {
   const resp = await fetch(`${API_BASE}/api/translate_ai`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       text: String(text || "").trim(),
       from_lang: "tr",
@@ -302,7 +229,6 @@ async function aiTranslateToGokturk(text) {
   });
 
   const json = await resp.json().catch(() => null);
-
   const translated =
     String(json?.gokturk_text || "").trim() ||
     String(json?.translated || "").trim();
@@ -326,9 +252,7 @@ function showToast(msg = "") {
   miniToast.textContent = String(msg || "");
   miniToast.classList.add("show");
   clearTimeout(window.__atalarToast);
-  window.__atalarToast = setTimeout(() => {
-    miniToast.classList.remove("show");
-  }, 1800);
+  window.__atalarToast = setTimeout(() => miniToast.classList.remove("show"), 1800);
 }
 
 function closeModal() {
@@ -357,7 +281,9 @@ function buildRuneTrack(units) {
   const track = document.createElement("div");
   track.className = "rune-track";
 
-  for (const unit of units) {
+  const ordered = [...(units || [])].reverse();
+
+  for (const unit of ordered) {
     if (unit.space) {
       const spacer = document.createElement("div");
       spacer.className = "rune-space";
@@ -520,12 +446,8 @@ function extractStableRecognitionText(results) {
   for (let i = 0; i < results.length; i++) {
     const piece = normalizeText(results[i]?.[0]?.transcript || "");
     if (!piece) continue;
-
-    if (results[i].isFinal) {
-      latestFinal = piece;
-    } else {
-      latestInterim = piece;
-    }
+    if (results[i].isFinal) latestFinal = piece;
+    else latestInterim = piece;
   }
 
   return normalizeText(latestFinal || latestInterim);
@@ -592,9 +514,8 @@ function startRecognition() {
   recognizer.onend = async () => {
     const finalText = normalizeText(finalCaptured || botInput.value);
     stopRecognizer();
-    if (finalText) {
-      await processMessage(finalText);
-    } else {
+    if (finalText) await processMessage(finalText);
+    else {
       frameRoot.classList.remove("is-listening");
       frameRoot.classList.add("is-ready");
     }
