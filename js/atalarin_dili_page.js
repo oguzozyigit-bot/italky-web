@@ -24,7 +24,7 @@ let recognizer = null;
 let recording = false;
 
 /* =========================================================
-   LOCAL SÖZLÜK + OKUNUŞ
+   LOCAL SÖZLÜK + HARF ALT EŞLEME
 ========================================================= */
 
 const WORD_OVERRIDES = {
@@ -54,24 +54,80 @@ const FRONT_VOWELS = new Set(["e", "i", "ö", "ü"]);
 const BACK_VOWELS  = new Set(["a", "ı", "o", "u"]);
 
 const MULTI_CHAR_MAP = [
-  ["ng", "𐰭"],
-  ["ny", "𐰪"]
+  ["ng", { rune: "𐰭", latin: "ng" }],
+  ["ny", { rune: "𐰪", latin: "ny" }]
 ];
 
 const FRONT_MAP = {
-  "a": "𐰀", "e": "𐰀", "ı": "𐰃", "i": "𐰃", "o": "𐰆", "ö": "𐰇", "u": "𐰆", "ü": "𐰇",
-  "b": "𐰋", "c": "𐰲", "ç": "𐰲", "d": "𐰑", "f": "𐰯", "g": "𐰏", "ğ": "𐰏",
-  "h": "𐰚", "j": "𐰘", "k": "𐰚", "l": "𐰞", "m": "𐰢", "n": "𐰤", "p": "𐰯",
-  "q": "𐰚", "r": "𐰼", "s": "𐰽", "ş": "𐱁", "t": "𐱅", "v": "𐰋", "w": "𐰋",
-  "x": "𐰴𐰽", "y": "𐰘", "z": "𐰔"
+  "a": { rune: "𐰀", latin: "a" },
+  "e": { rune: "𐰀", latin: "e" },
+  "ı": { rune: "𐰃", latin: "ı" },
+  "i": { rune: "𐰃", latin: "i" },
+  "o": { rune: "𐰆", latin: "o" },
+  "ö": { rune: "𐰇", latin: "ö" },
+  "u": { rune: "𐰆", latin: "u" },
+  "ü": { rune: "𐰇", latin: "ü" },
+
+  "b": { rune: "𐰋", latin: "b" },
+  "c": { rune: "𐰲", latin: "c" },
+  "ç": { rune: "𐰲", latin: "ç" },
+  "d": { rune: "𐰑", latin: "d" },
+  "f": { rune: "𐰯", latin: "f" },
+  "g": { rune: "𐰏", latin: "g" },
+  "ğ": { rune: "𐰏", latin: "ğ" },
+  "h": { rune: "𐰚", latin: "h" },
+  "j": { rune: "𐰘", latin: "y" },
+  "k": { rune: "𐰚", latin: "k" },
+  "l": { rune: "𐰞", latin: "l" },
+  "m": { rune: "𐰢", latin: "m" },
+  "n": { rune: "𐰤", latin: "n" },
+  "p": { rune: "𐰯", latin: "p" },
+  "q": { rune: "𐰚", latin: "k" },
+  "r": { rune: "𐰼", latin: "r" },
+  "s": { rune: "𐰽", latin: "s" },
+  "ş": { rune: "𐱁", latin: "ş" },
+  "t": { rune: "𐱅", latin: "t" },
+  "v": { rune: "𐰋", latin: "v" },
+  "w": { rune: "𐰋", latin: "v" },
+  "x": { rune: "𐰴𐰽", latin: "ks" },
+  "y": { rune: "𐰘", latin: "y" },
+  "z": { rune: "𐰔", latin: "z" }
 };
 
 const BACK_MAP = {
-  "a": "𐰀", "e": "𐰀", "ı": "𐰃", "i": "𐰃", "o": "𐰆", "ö": "𐰇", "u": "𐰆", "ü": "𐰇",
-  "b": "𐰉", "c": "𐰲", "ç": "𐰲", "d": "𐰑", "f": "𐰯", "g": "𐰍", "ğ": "𐰍",
-  "h": "𐰴", "j": "𐰖", "k": "𐰴", "l": "𐰠", "m": "𐰢", "n": "𐰣", "p": "𐰯",
-  "q": "𐰴", "r": "𐰺", "s": "𐰾", "ş": "𐱁", "t": "𐱃", "v": "𐰉", "w": "𐰉",
-  "x": "𐰴𐰽", "y": "𐰖", "z": "𐰔"
+  "a": { rune: "𐰀", latin: "a" },
+  "e": { rune: "𐰀", latin: "e" },
+  "ı": { rune: "𐰃", latin: "ı" },
+  "i": { rune: "𐰃", latin: "i" },
+  "o": { rune: "𐰆", latin: "o" },
+  "ö": { rune: "𐰇", latin: "ö" },
+  "u": { rune: "𐰆", latin: "u" },
+  "ü": { rune: "𐰇", latin: "ü" },
+
+  "b": { rune: "𐰉", latin: "b" },
+  "c": { rune: "𐰲", latin: "c" },
+  "ç": { rune: "𐰲", latin: "ç" },
+  "d": { rune: "𐰑", latin: "d" },
+  "f": { rune: "𐰯", latin: "f" },
+  "g": { rune: "𐰍", latin: "g" },
+  "ğ": { rune: "𐰍", latin: "ğ" },
+  "h": { rune: "𐰴", latin: "h" },
+  "j": { rune: "𐰖", latin: "y" },
+  "k": { rune: "𐰴", latin: "k" },
+  "l": { rune: "𐰠", latin: "l" },
+  "m": { rune: "𐰢", latin: "m" },
+  "n": { rune: "𐰣", latin: "n" },
+  "p": { rune: "𐰯", latin: "p" },
+  "q": { rune: "𐰴", latin: "k" },
+  "r": { rune: "𐰺", latin: "r" },
+  "s": { rune: "𐰾", latin: "s" },
+  "ş": { rune: "𐱁", latin: "ş" },
+  "t": { rune: "𐱃", latin: "t" },
+  "v": { rune: "𐰉", latin: "v" },
+  "w": { rune: "𐰉", latin: "v" },
+  "x": { rune: "𐰴𐰽", latin: "ks" },
+  "y": { rune: "𐰖", latin: "y" },
+  "z": { rune: "𐰔", latin: "z" }
 };
 
 function normalizeText(text) {
@@ -99,18 +155,48 @@ function getHarmony(word) {
   return front > back ? "front" : "back";
 }
 
+function buildUnitsFromOverride(override) {
+  const runes = [...override.rune];
+  const latin = [...override.read];
+  const units = [];
+
+  let latinIndex = 0;
+
+  for (const rune of runes) {
+    if (rune === " ") {
+      units.push({ space: true });
+      continue;
+    }
+
+    while (latin[latinIndex] === " ") latinIndex += 1;
+    units.push({
+      rune,
+      latin: latin[latinIndex] || ""
+    });
+    latinIndex += 1;
+  }
+
+  return units;
+}
+
 function localWordToGokturk(word) {
   const pure = cleanWord(word);
-  if (!pure) return word;
+  if (!pure) {
+    return { rune: word, units: [] };
+  }
 
   if (WORD_OVERRIDES[pure]) {
-    return WORD_OVERRIDES[pure].rune;
+    return {
+      rune: WORD_OVERRIDES[pure].rune,
+      units: buildUnitsFromOverride(WORD_OVERRIDES[pure])
+    };
   }
 
   const harmony = getHarmony(pure);
   const map = harmony === "front" ? FRONT_MAP : BACK_MAP;
 
-  let out = "";
+  let runeOut = "";
+  const units = [];
   let i = 0;
 
   while (i < pure.length) {
@@ -118,7 +204,8 @@ function localWordToGokturk(word) {
 
     for (const [src, dst] of MULTI_CHAR_MAP) {
       if (pure.startsWith(src, i)) {
-        out += dst;
+        runeOut += dst.rune;
+        units.push({ rune: dst.rune, latin: dst.latin });
         i += src.length;
         matched = true;
         break;
@@ -128,20 +215,45 @@ function localWordToGokturk(word) {
     if (matched) continue;
 
     const ch = pure[i];
-    out += map[ch] || ch;
+    const rule = map[ch] || FRONT_MAP[ch] || BACK_MAP[ch];
+
+    if (rule) {
+      runeOut += rule.rune;
+      units.push({ rune: rule.rune, latin: rule.latin });
+    } else {
+      runeOut += ch;
+      units.push({ rune: ch, latin: ch });
+    }
+
     i += 1;
   }
 
-  return out;
+  return { rune: runeOut, units };
 }
 
 function localTurkishToGokturk(text) {
   const parts = tokenizeWithSpaces(text);
-  return parts.map((part) => {
-    if (!part) return "";
-    if (/^\s+$/.test(part)) return part;
-    return localWordToGokturk(part);
-  }).join("").trim();
+  const runeParts = [];
+  const units = [];
+
+  for (const part of parts) {
+    if (!part) continue;
+
+    if (/^\s+$/.test(part)) {
+      runeParts.push(part);
+      units.push({ space: true });
+      continue;
+    }
+
+    const result = localWordToGokturk(part);
+    runeParts.push(result.rune);
+    result.units.forEach((u) => units.push(u));
+  }
+
+  return {
+    rune: runeParts.join("").trim(),
+    units
+  };
 }
 
 function getKnownReadingLine(text) {
@@ -170,7 +282,7 @@ function getKnownReadingLine(text) {
 }
 
 /* =========================================================
-   BACKEND BAĞLANTISI
+   BACKEND AI
 ========================================================= */
 
 async function aiTranslateToGokturk(text) {
@@ -186,11 +298,13 @@ async function aiTranslateToGokturk(text) {
       mode: "normal",
       atalar_mode: true,
       atalar_source: "tr",
-      atalar_target: "gokturk"
+      atalar_target: "gokturk",
+      historical_mode: true
     })
   });
 
   const json = await resp.json().catch(() => null);
+
   const translated =
     String(json?.gokturk_text || "").trim() ||
     String(json?.translated || "").trim();
@@ -199,7 +313,11 @@ async function aiTranslateToGokturk(text) {
     throw new Error(json?.error || "atalar_translate_failed");
   }
 
-  return translated;
+  return {
+    translated,
+    historicalText: String(json?.historical_text || "").trim(),
+    historicalReading: String(json?.historical_reading || "").trim()
+  };
 }
 
 /* =========================================================
@@ -237,6 +355,37 @@ function keepVisible() {
   });
 }
 
+function buildRuneTrack(units) {
+  const track = document.createElement("div");
+  track.className = "rune-track";
+
+  for (const unit of units) {
+    if (unit.space) {
+      const spacer = document.createElement("div");
+      spacer.className = "rune-space";
+      track.appendChild(spacer);
+      continue;
+    }
+
+    const col = document.createElement("div");
+    col.className = "rune-col";
+
+    const rune = document.createElement("div");
+    rune.className = "rune-char";
+    rune.textContent = unit.rune;
+
+    const latin = document.createElement("div");
+    latin.className = "latin-char";
+    latin.textContent = unit.latin;
+
+    col.appendChild(rune);
+    col.appendChild(latin);
+    track.appendChild(col);
+  }
+
+  return track;
+}
+
 function addBubble(where, kind, text, opts = {}) {
   const wrap = where === "top" ? topBody : botBody;
   const row = document.createElement("div");
@@ -251,17 +400,23 @@ function addBubble(where, kind, text, opts = {}) {
 
     const txt = document.createElement("div");
     txt.className = "txt gokturk-wrap";
+    txt.appendChild(buildRuneTrack(opts.units || []));
 
-    const line = document.createElement("div");
-    line.className = "gokturk-line";
-    line.textContent = String(text || "").trim();
-    txt.appendChild(line);
+    if (opts.semanticText && opts.semanticReading) {
+      const semanticBlock = document.createElement("div");
+      semanticBlock.className = "semantic-block";
 
-    if (opts.reading) {
-      const read = document.createElement("div");
-      read.className = "reading-line";
-      read.textContent = opts.reading;
-      txt.appendChild(read);
+      const semanticRune = document.createElement("div");
+      semanticRune.className = "semantic-rune";
+      semanticRune.textContent = opts.semanticText;
+
+      const semanticRead = document.createElement("div");
+      semanticRead.className = "semantic-read";
+      semanticRead.textContent = opts.semanticReading;
+
+      semanticBlock.appendChild(semanticRune);
+      semanticBlock.appendChild(semanticRead);
+      txt.appendChild(semanticBlock);
     }
 
     inner.appendChild(txt);
@@ -313,11 +468,20 @@ async function processMessage(rawText) {
   frameRoot.classList.add("is-translating");
 
   let gokturkText = "";
+  let semanticText = "";
+  let semanticReading = "";
+
   try {
-    gokturkText = await aiTranslateToGokturk(text);
+    const ai = await aiTranslateToGokturk(text);
+    gokturkText = ai.translated || "";
+    semanticText = ai.historicalText || "";
+    semanticReading = ai.historicalReading || "";
   } catch {
-    gokturkText = localTurkishToGokturk(text);
+    const local = localTurkishToGokturk(text);
+    gokturkText = local.rune || "";
   }
+
+  const localMap = localTurkishToGokturk(text);
 
   if (!gokturkText) {
     frameRoot.classList.remove("is-translating");
@@ -330,12 +494,17 @@ async function processMessage(rawText) {
     return;
   }
 
-  const reading = getKnownReadingLine(text);
+  if (!semanticText || !semanticReading) {
+    semanticText = "";
+    semanticReading = "";
+  }
 
   addBubble("top", "me", gokturkText, {
     latest: true,
     gokturk: true,
-    reading
+    units: localMap.units,
+    semanticText,
+    semanticReading
   });
 
   frameRoot.classList.remove("is-translating", "is-error");
