@@ -54,6 +54,8 @@ const homeBtn = $("homeBtn");
 const refreshBtn = $("refreshBtn");
 const logoutBtnTop = $("logoutBtnTop");
 
+const API_BASE = "https://italky-api.onrender.com/admin";
+
 let currentUser = null;
 let currentProfile = null;
 let latestCreatedPromo = null;
@@ -66,7 +68,11 @@ function setStatus(el, text, cls = "") {
 
 function fmt(v) {
   if (!v) return "-";
-  try { return new Date(v).toLocaleString("tr-TR"); } catch { return "-"; }
+  try {
+    return new Date(v).toLocaleString("tr-TR");
+  } catch {
+    return "-";
+  }
 }
 
 function safe(v, fallback = "-") {
@@ -83,12 +89,6 @@ function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
-function statusTextFromCode(row) {
-  if (row.is_used) return "Kullanıldı";
-  if (row.is_active) return "Aktif";
-  return "Pasif";
-}
-
 function setActiveTab(name) {
   tabs.forEach((tab) => {
     const active = tab.dataset.tab === name;
@@ -101,10 +101,10 @@ function setActiveTab(name) {
   });
 }
 
-function randomPart(len = 6) {
+function randomPart(length = 6) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < length; i++) {
     out += chars[Math.floor(Math.random() * chars.length)];
   }
   return out;
@@ -120,6 +120,45 @@ function generatePromoCode() {
 
 function buildQrUrl(code) {
   return `${location.origin}/pages/promo_gate.html?code=${encodeURIComponent(code)}`;
+}
+
+async function getAuthToken() {
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.access_token || "";
+}
+
+async function apiGet(path) {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(json?.detail || `GET ${path} failed`);
+  }
+  return json;
+}
+
+async function apiPost(path, body) {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(body || {})
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(json?.detail || `POST ${path} failed`);
+  }
+  return json;
 }
 
 async function getCurrentUserAndProfile() {
@@ -151,77 +190,70 @@ async function getCurrentUserAndProfile() {
 }
 
 async function loadUsers() {
-  const q = String(userSearch?.value || "").trim().toLowerCase();
+  try {
+    const json = await apiGet("/users");
+    let rows = Array.isArray(json?.items) ? json.items : [];
+    const q = String(userSearch?.value || "").trim().toLowerCase();
 
-  let query = supabase
-    .from("profiles")
-    .select("id, full_name, email, role, tokens, promo_used_at, package_ends_at")
-    .order("id", { ascending: false });
+    if (q) {
+      rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(q));
+    }
 
-  if (q) {
-    query = query.or(`full_name.ilike.%${q}%,email.ilike.%${q}%,id.ilike.%${q}%`);
-  }
+    if (!rows.length) {
+      usersTableBody.innerHTML = `<tr><td colspan="7" class="empty">Kullanıcı bulunamadı.</td></tr>`;
+      return;
+    }
 
-  const { data, error } = await query.limit(200);
-
-  if (error) {
+    usersTableBody.innerHTML = rows.map((row) => `
+      <tr>
+        <td>${escapeHtml(row.full_name || "-")}</td>
+        <td>${escapeHtml(row.email || "-")}</td>
+        <td>${escapeHtml(row.role || "-")}</td>
+        <td>${Number(row.tokens || 0)}</td>
+        <td>${row.promo_used_at ? "Kullanmış" : "Yok"}</td>
+        <td>${escapeHtml(fmt(row.package_ends_at))}</td>
+        <td>${escapeHtml(row.id || "-")}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
     usersTableBody.innerHTML = `<tr><td colspan="7" class="empty">Kullanıcılar yüklenemedi.</td></tr>`;
-    return;
   }
-
-  const rows = Array.isArray(data) ? data : [];
-  if (!rows.length) {
-    usersTableBody.innerHTML = `<tr><td colspan="7" class="empty">Kullanıcı bulunamadı.</td></tr>`;
-    return;
-  }
-
-  usersTableBody.innerHTML = rows.map((row) => `
-    <tr>
-      <td>${escapeHtml(row.full_name || "-")}</td>
-      <td>${escapeHtml(row.email || "-")}</td>
-      <td>${escapeHtml(row.role || "-")}</td>
-      <td>${row.tokens ?? 0}</td>
-      <td>${row.promo_used_at ? "Kullanmış" : "Yok"}</td>
-      <td>${escapeHtml(fmt(row.package_ends_at))}</td>
-      <td>${escapeHtml(row.id || "-")}</td>
-    </tr>
-  `).join("");
 }
 
 async function loadWallet() {
-  const q = String(walletSearch?.value || "").trim().toLowerCase();
+  try {
+    const { data, error } = await supabase
+      .from("wallet_tx")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(300);
 
-  const { data, error } = await supabase
-    .from("wallet_tx")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(200);
+    if (error) throw error;
 
-  if (error) {
+    let rows = Array.isArray(data) ? data : [];
+    const q = String(walletSearch?.value || "").trim().toLowerCase();
+
+    if (q) {
+      rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(q));
+    }
+
+    if (!rows.length) {
+      walletTableBody.innerHTML = `<tr><td colspan="5" class="empty">Hareket bulunamadı.</td></tr>`;
+      return;
+    }
+
+    walletTableBody.innerHTML = rows.map((row) => `
+      <tr>
+        <td>${escapeHtml(row.user_id || "-")}</td>
+        <td>${row.delta ?? row.amount ?? 0}</td>
+        <td>${escapeHtml(row.reason || "-")}</td>
+        <td>${escapeHtml(row.note || "-")}</td>
+        <td>${escapeHtml(fmt(row.created_at))}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
     walletTableBody.innerHTML = `<tr><td colspan="5" class="empty">Hareketler yüklenemedi.</td></tr>`;
-    return;
   }
-
-  let rows = Array.isArray(data) ? data : [];
-
-  if (q) {
-    rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(q));
-  }
-
-  if (!rows.length) {
-    walletTableBody.innerHTML = `<tr><td colspan="5" class="empty">Hareket bulunamadı.</td></tr>`;
-    return;
-  }
-
-  walletTableBody.innerHTML = rows.map((row) => `
-    <tr>
-      <td>${escapeHtml(row.user_id || "-")}</td>
-      <td>${row.delta ?? row.amount ?? 0}</td>
-      <td>${escapeHtml(row.reason || "-")}</td>
-      <td>${escapeHtml(row.note || "-")}</td>
-      <td>${escapeHtml(fmt(row.created_at))}</td>
-    </tr>
-  `).join("");
 }
 
 function renderPromoPreview(row) {
@@ -244,6 +276,14 @@ function renderPromoPreview(row) {
   `;
 }
 
+async function createCampaign(payload) {
+  return await apiPost("/promo/campaigns", payload);
+}
+
+async function createCode(payload) {
+  return await apiPost("/promo/codes", payload);
+}
+
 async function createPromoRecord(payload) {
   const gType = String(payload.grant_type || "").trim();
   const dType = String(payload.delivery_type || "").trim();
@@ -264,123 +304,67 @@ async function createPromoRecord(payload) {
   if (gType === "tokens" && tokens <= 0) throw new Error("Jeton miktarı gerekli");
   if (gType === "bundle" && months <= 0 && tokens <= 0) throw new Error("Bundle için üyelik veya jeton gerekli");
 
-  const { data: campaignData, error: campaignErr } = await supabase
-    .from("promo_campaigns")
-    .insert({
-      code: cCode,
-      name: cName,
-      description: desc || cName,
-      is_active: true,
-      grant_type: gType,
-      membership_months: months,
-      token_amount: tokens,
-      package_code: pkg,
-      stack_mode: "extend",
-      per_user_limit: userLimit
-    })
-    .select("*")
-    .single();
+  const campaignRes = await createCampaign({
+    code: cCode,
+    name: cName,
+    description: desc || cName,
+    is_active: true,
+    grant_type: gType,
+    membership_months: months,
+    token_amount: tokens,
+    package_code: pkg,
+    stack_mode: "extend",
+    per_user_limit: userLimit
+  });
 
-  if (campaignErr || !campaignData) {
-    throw new Error(campaignErr?.message || "Campaign kaydedilemedi");
-  }
+  const campaignRow = Array.isArray(campaignRes?.item) ? campaignRes.item[0] : campaignRes?.item;
+  const campaignId = campaignRow?.id;
+  if (!campaignId) throw new Error("Campaign id alınamadı");
 
-  const { data: codeData, error: codeErr } = await supabase
-    .from("promo_codes")
-    .insert({
-      campaign_id: campaignData.id,
-      code_value: codeVal,
-      delivery_type: dType,
-      nfc_uid: dType === "nfc" ? nfcUid : null,
-      is_active: true,
-      is_used: false
-    })
-    .select("*")
-    .single();
+  const codeRes = await createCode({
+    campaign_id: campaignId,
+    code_value: codeVal,
+    delivery_type: dType,
+    nfc_uid: dType === "nfc" ? nfcUid : null,
+    is_active: true
+  });
 
-  if (codeErr || !codeData) {
-    throw new Error(codeErr?.message || "Promosyon kodu kaydedilemedi");
-  }
+  const codeRow = Array.isArray(codeRes?.item) ? codeRes.item[0] : codeRes?.item;
 
   return {
-    ...codeData,
-    campaign_name: campaignData.name,
-    campaign_code: campaignData.code,
-    grant_type: campaignData.grant_type,
-    membership_months: campaignData.membership_months,
-    token_amount: campaignData.token_amount,
-    package_code: campaignData.package_code,
+    ...codeRow,
+    campaign_name: cName,
+    campaign_code: cCode,
+    grant_type: gType,
+    membership_months: months,
+    token_amount: tokens,
+    package_code: pkg,
     qr_url: buildQrUrl(codeVal)
   };
 }
 
-async function listPromoRecords(searchTerm = "") {
-  const q = String(searchTerm || "").trim().toLowerCase();
-
-  const { data, error } = await supabase
-    .from("promo_codes")
-    .select(`
-      id,
-      campaign_id,
-      code_value,
-      delivery_type,
-      nfc_uid,
-      is_active,
-      is_used,
-      used_by,
-      used_at,
-      bound_user_id,
-      promo_campaigns (
-        id,
-        code,
-        name,
-        grant_type,
-        membership_months,
-        token_amount,
-        package_code,
-        is_active
-      )
-    `)
-    .order("created_at", { ascending: false })
-    .limit(300);
-
-  if (error) throw error;
-
-  let rows = Array.isArray(data) ? data.map((row) => {
-    const campaign = Array.isArray(row.promo_campaigns) ? row.promo_campaigns[0] : row.promo_campaigns;
-    return {
-      ...row,
-      campaign_name: campaign?.name || "-",
-      campaign_code: campaign?.code || "-",
-      grant_type: campaign?.grant_type || "-",
-      membership_months: campaign?.membership_months || 0,
-      token_amount: campaign?.token_amount || 0,
-      package_code: campaign?.package_code || "",
-      qr_url: buildQrUrl(row.code_value)
-    };
-  }) : [];
-
-  if (q) {
-    rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(q));
-  }
-
-  return rows;
-}
-
-async function updatePromoCodeStatus(codeValue, makeActive) {
-  const { error } = await supabase
-    .from("promo_codes")
-    .update({
-      is_active: !!makeActive
-    })
-    .eq("code_value", codeValue);
-
-  if (error) throw error;
-}
-
 async function loadPromoRecords() {
   try {
-    const rows = await listPromoRecords(promoSearch?.value || "");
+    const json = await apiGet("/promo/codes");
+    let rows = Array.isArray(json?.items) ? json.items : [];
+    const q = String(promoSearch?.value || "").trim().toLowerCase();
+
+    rows = rows.map((row) => {
+      const campaign = Array.isArray(row.promo_campaigns) ? row.promo_campaigns[0] : row.promo_campaigns;
+      return {
+        ...row,
+        campaign_name: campaign?.name || "-",
+        campaign_code: campaign?.code || "-",
+        grant_type: campaign?.grant_type || "-",
+        membership_months: campaign?.membership_months || 0,
+        token_amount: campaign?.token_amount || 0,
+        package_code: campaign?.package_code || "",
+      };
+    });
+
+    if (q) {
+      rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(q));
+    }
 
     if (!rows.length) {
       promoTableBody.innerHTML = `<tr><td colspan="10" class="empty">Promosyon bulunamadı.</td></tr>`;
@@ -395,7 +379,7 @@ async function loadPromoRecords() {
         <td>${escapeHtml(row.grant_type)}</td>
         <td>${Number(row.membership_months || 0)} ay</td>
         <td>${Number(row.token_amount || 0)}</td>
-        <td>${escapeHtml(statusTextFromCode(row))}</td>
+        <td>${row.is_used ? "Kullanıldı" : (row.is_active ? "Aktif" : "Pasif")}</td>
         <td>${escapeHtml(row.used_by || row.bound_user_id || "-")}</td>
         <td>${escapeHtml(row.nfc_uid || "-")}</td>
         <td>
@@ -410,7 +394,10 @@ async function loadPromoRecords() {
     promoTableBody.querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", async () => {
         try {
-          await updatePromoCodeStatus(btn.dataset.code, btn.dataset.action === "on");
+          await apiPost("/promo/codes/status", {
+            code_value: btn.dataset.code,
+            is_active: btn.dataset.action === "on"
+          });
           setStatus(promoStatus, "Promosyon durumu güncellendi.", "status-ok");
           await loadPromoRecords();
         } catch (e) {
@@ -425,17 +412,9 @@ async function loadPromoRecords() {
 
 async function loadPromoLogs() {
   try {
+    const json = await apiGet("/promo/redemptions");
+    let rows = Array.isArray(json?.items) ? json.items : [];
     const search = String(promoLogSearch?.value || "").trim().toLowerCase();
-
-    const { data, error } = await supabase
-      .from("promo_redemptions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(300);
-
-    if (error) throw error;
-
-    let rows = Array.isArray(data) ? data : [];
 
     if (search) {
       rows = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(search));
@@ -464,43 +443,11 @@ async function loadPromoLogs() {
 }
 
 async function createManualTokenLoad(userId, amount, note) {
-  const n = Number(amount || 0);
-  if (!userId) throw new Error("Kullanıcı UID gerekli");
-  if (!Number.isFinite(n) || n <= 0) throw new Error("Geçerli jeton miktarı gerekli");
-
-  const { data: prof, error: profErr } = await supabase
-    .from("profiles")
-    .select("tokens")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (profErr || !prof) throw new Error("Kullanıcı bulunamadı");
-
-  const currentTokens = Number(prof.tokens || 0);
-  const nextTokens = currentTokens + n;
-
-  const { error: updErr } = await supabase
-    .from("profiles")
-    .update({ tokens: nextTokens })
-    .eq("id", userId);
-
-  if (updErr) throw updErr;
-
-  const { error: txErr } = await supabase
-    .from("wallet_tx")
-    .insert({
-      user_id: userId,
-      type: "credit",
-      amount: n,
-      delta: n,
-      reason: "manual_admin_load",
-      note: String(note || "").trim() || "Manual admin token load",
-      created_at: new Date().toISOString()
-    });
-
-  if (txErr) throw txErr;
-
-  return { tokens_after: nextTokens };
+  return await apiPost("/wallet/manual-load", {
+    user_id: userId,
+    amount: Number(amount || 0),
+    note: note || ""
+  });
 }
 
 function bindTabs() {
