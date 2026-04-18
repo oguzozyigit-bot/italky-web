@@ -20,9 +20,10 @@ const miniToast = $("miniToast");
 
 let recognizer = null;
 let recording = false;
+let currentAudio = null;
 
 /* =========================================================
-   LOCAL GÖKTÜRK MOTORU
+   LOCAL FALLBACK
 ========================================================= */
 
 const WORD_OVERRIDES = {
@@ -50,54 +51,6 @@ const WORD_OVERRIDES = {
   "merhaba": { rune: "𐰢𐰼𐰴𐰉𐰀", read: "merhaba" }
 };
 
-const FRONT_VOWELS = new Set(["e", "i", "ö", "ü"]);
-const BACK_VOWELS = new Set(["a", "ı", "o", "u"]);
-
-const MULTI_CHAR_MAP = [
-  ["ng", { rune: "𐰭", latin: "ng" }],
-  ["ny", { rune: "𐰪", latin: "ny" }]
-];
-
-const FRONT_MAP = {
-  "a": { rune: "𐰀", latin: "a" }, "e": { rune: "𐰀", latin: "e" },
-  "ı": { rune: "𐰃", latin: "ı" }, "i": { rune: "𐰃", latin: "i" },
-  "o": { rune: "𐰆", latin: "o" }, "ö": { rune: "𐰇", latin: "ö" },
-  "u": { rune: "𐰆", latin: "u" }, "ü": { rune: "𐰇", latin: "ü" },
-
-  "b": { rune: "𐰋", latin: "b" }, "c": { rune: "𐰲", latin: "c" },
-  "ç": { rune: "𐰲", latin: "ç" }, "d": { rune: "𐰑", latin: "d" },
-  "f": { rune: "𐰯", latin: "f" }, "g": { rune: "𐰏", latin: "g" },
-  "ğ": { rune: "𐰏", latin: "ğ" }, "h": { rune: "𐰚", latin: "h" },
-  "j": { rune: "𐰘", latin: "y" }, "k": { rune: "𐰚", latin: "k" },
-  "l": { rune: "𐰞", latin: "l" }, "m": { rune: "𐰢", latin: "m" },
-  "n": { rune: "𐰤", latin: "n" }, "p": { rune: "𐰯", latin: "p" },
-  "q": { rune: "𐰚", latin: "k" }, "r": { rune: "𐰼", latin: "r" },
-  "s": { rune: "𐰽", latin: "s" }, "ş": { rune: "𐱁", latin: "ş" },
-  "t": { rune: "𐱅", latin: "t" }, "v": { rune: "𐰋", latin: "v" },
-  "w": { rune: "𐰋", latin: "v" }, "x": { rune: "𐰴𐰽", latin: "ks" },
-  "y": { rune: "𐰘", latin: "y" }, "z": { rune: "𐰔", latin: "z" }
-};
-
-const BACK_MAP = {
-  "a": { rune: "𐰀", latin: "a" }, "e": { rune: "𐰀", latin: "e" },
-  "ı": { rune: "𐰃", latin: "ı" }, "i": { rune: "𐰃", latin: "i" },
-  "o": { rune: "𐰆", latin: "o" }, "ö": { rune: "𐰇", latin: "ö" },
-  "u": { rune: "𐰆", latin: "u" }, "ü": { rune: "𐰇", latin: "ü" },
-
-  "b": { rune: "𐰉", latin: "b" }, "c": { rune: "𐰲", latin: "c" },
-  "ç": { rune: "𐰲", latin: "ç" }, "d": { rune: "𐰑", latin: "d" },
-  "f": { rune: "𐰯", latin: "f" }, "g": { rune: "𐰍", latin: "g" },
-  "ğ": { rune: "𐰍", latin: "ğ" }, "h": { rune: "𐰴", latin: "h" },
-  "j": { rune: "𐰖", latin: "y" }, "k": { rune: "𐰴", latin: "k" },
-  "l": { rune: "𐰠", latin: "l" }, "m": { rune: "𐰢", latin: "m" },
-  "n": { rune: "𐰣", latin: "n" }, "p": { rune: "𐰯", latin: "p" },
-  "q": { rune: "𐰴", latin: "k" }, "r": { rune: "𐰺", latin: "r" },
-  "s": { rune: "𐰾", latin: "s" }, "ş": { rune: "𐱁", latin: "ş" },
-  "t": { rune: "𐱃", latin: "t" }, "v": { rune: "𐰉", latin: "v" },
-  "w": { rune: "𐰉", latin: "v" }, "x": { rune: "𐰴𐰽", latin: "ks" },
-  "y": { rune: "𐰖", latin: "y" }, "z": { rune: "𐰔", latin: "z" }
-};
-
 function normalizeInput(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
@@ -108,19 +61,6 @@ function cleanWord(word) {
 
 function tokenizeWithSpaces(text) {
   return String(text || "").split(/(\s+)/);
-}
-
-function getHarmony(word) {
-  const pure = cleanWord(word);
-  let front = 0;
-  let back = 0;
-
-  for (const ch of pure) {
-    if (FRONT_VOWELS.has(ch)) front += 1;
-    if (BACK_VOWELS.has(ch)) back += 1;
-  }
-
-  return front > back ? "front" : "back";
 }
 
 function buildUnitsFromOverride(override) {
@@ -148,86 +88,51 @@ function buildUnitsFromOverride(override) {
   return units;
 }
 
-function localWordToGokturk(word) {
-  const pure = cleanWord(word);
-  if (!pure) return { rune: word, units: [] };
-
-  if (WORD_OVERRIDES[pure]) {
-    return {
-      rune: WORD_OVERRIDES[pure].rune,
-      units: buildUnitsFromOverride(WORD_OVERRIDES[pure])
-    };
-  }
-
-  const harmony = getHarmony(pure);
-  const map = harmony === "front" ? FRONT_MAP : BACK_MAP;
-
-  let runeOut = "";
-  const units = [];
-  let i = 0;
-
-  while (i < pure.length) {
-    let matched = false;
-
-    for (const [src, dst] of MULTI_CHAR_MAP) {
-      if (pure.startsWith(src, i)) {
-        runeOut += dst.rune;
-        units.push({ rune: dst.rune, latin: dst.latin });
-        i += src.length;
-        matched = true;
-        break;
-      }
-    }
-
-    if (matched) continue;
-
-    const ch = pure[i];
-    const rule = map[ch] || FRONT_MAP[ch] || BACK_MAP[ch];
-
-    if (rule) {
-      runeOut += rule.rune;
-      units.push({ rune: rule.rune, latin: rule.latin });
-    } else {
-      runeOut += ch;
-      units.push({ rune: ch, latin: ch });
-    }
-
-    i += 1;
-  }
-
-  return { rune: runeOut, units };
-}
-
-function localTurkishToGokturk(text) {
+function localFallback(text) {
   const parts = tokenizeWithSpaces(text);
-  const runeParts = [];
   const units = [];
+  const runeWords = [];
+  const readWords = [];
 
   for (const part of parts) {
     if (!part) continue;
 
     if (/^\s+$/.test(part)) {
-      runeParts.push(part);
       units.push({ space: true });
+      runeWords.push(" ");
+      readWords.push(" ");
       continue;
     }
 
-    const result = localWordToGokturk(part);
-    runeParts.push(result.rune);
-    result.units.forEach((u) => units.push(u));
+    const pure = cleanWord(part);
+    const found = WORD_OVERRIDES[pure];
+    if (!found) return null;
+
+    runeWords.push(found.rune);
+    readWords.push(found.read);
+
+    buildUnitsFromOverride(found).forEach((u) => units.push(u));
   }
 
-  return { rune: runeParts.join("").trim(), units };
+  return {
+    literalText: runeWords.join("").trim(),
+    literalReading: readWords.join("").replace(/\s+/g, " ").trim(),
+    historicalText: "",
+    historicalReading: "",
+    units
+  };
 }
 
 /* =========================================================
-   BACKEND AI
+   AI BACKEND
 ========================================================= */
 
 async function aiTranslateToGokturk(text) {
   const resp = await fetch(`${API_BASE}/api/translate_ai`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       text: String(text || "").trim(),
       from_lang: "tr",
@@ -236,24 +141,99 @@ async function aiTranslateToGokturk(text) {
       atalar_mode: true,
       atalar_source: "tr",
       atalar_target: "gokturk",
-      historical_mode: true
+      historical_mode: true,
+      reading_mode: true
     })
   });
 
   const json = await resp.json().catch(() => null);
-  const translated =
-    String(json?.gokturk_text || "").trim() ||
-    String(json?.translated || "").trim();
 
-  if (!resp.ok || !translated) {
+  if (!resp.ok || !json?.ok) {
     throw new Error(json?.error || "atalar_translate_failed");
   }
 
+  const literalText =
+    String(json?.gokturk_text || "").trim() ||
+    String(json?.translated || "").trim();
+
+  const literalReading =
+    String(json?.gokturk_reading || "").trim() ||
+    String(json?.literal_reading || "").trim();
+
+  const historicalText = String(json?.historical_text || "").trim();
+  const historicalReading = String(json?.historical_reading || "").trim();
+
+  if (!literalText) {
+    throw new Error("atalar_literal_empty");
+  }
+
   return {
-    translated,
-    historicalText: String(json?.historical_text || "").trim(),
-    historicalReading: String(json?.historical_reading || "").trim()
+    literalText,
+    literalReading,
+    historicalText,
+    historicalReading
   };
+}
+
+/* =========================================================
+   TTS - SADECE 3. SATIR
+========================================================= */
+
+function stopAudio() {
+  try {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+  } catch {}
+  currentAudio = null;
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try { window.NativeTTS?.stop?.(); } catch {}
+}
+
+async function speakMeaning(text) {
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  stopAudio();
+
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(value, "tr");
+      return;
+    }
+  } catch {}
+
+  try {
+    if (window.speechSynthesis) {
+      const utter = new SpeechSynthesisUtterance(value);
+      utter.lang = "tr-TR";
+      utter.rate = 0.95;
+      utter.pitch = 1;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    }
+  } catch {}
+}
+
+function createSpeakerButton(text) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "speaker-btn";
+  btn.setAttribute("aria-label", "3. satırı dinle");
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    </svg>
+  `;
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await speakMeaning(text);
+  });
+  return btn;
 }
 
 /* =========================================================
@@ -357,20 +337,24 @@ function addBubble(where, kind, text, opts = {}) {
     txt.className = "txt gokturk-wrap";
     txt.appendChild(buildWordTrack(opts.units || []));
 
-    if (opts.semanticText && opts.semanticReading) {
+    if (opts.historicalText) {
       const semanticBlock = document.createElement("div");
       semanticBlock.className = "semantic-block";
 
-      const semanticRune = document.createElement("div");
-      semanticRune.className = "semantic-rune";
-      semanticRune.textContent = opts.semanticText;
+      if (opts.historicalReading) {
+        const semanticRune = document.createElement("div");
+        semanticRune.className = "semantic-rune";
+        semanticRune.textContent = opts.historicalReading;
+        semanticBlock.appendChild(semanticRune);
+      }
 
-      const semanticRead = document.createElement("div");
-      semanticRead.className = "semantic-read";
-      semanticRead.textContent = opts.semanticReading;
+      const semanticMeaning = document.createElement("div");
+      semanticMeaning.className = "semantic-meaning";
+      semanticMeaning.textContent = opts.historicalText;
+      semanticBlock.appendChild(semanticMeaning);
 
-      semanticBlock.appendChild(semanticRune);
-      semanticBlock.appendChild(semanticRead);
+      semanticBlock.appendChild(createSpeakerButton(opts.historicalText));
+
       txt.appendChild(semanticBlock);
     }
 
@@ -422,23 +406,15 @@ async function processMessage(rawText) {
   frameRoot.classList.remove("is-ready", "is-error");
   frameRoot.classList.add("is-translating");
 
-  let gokturkText = "";
-  let semanticText = "";
-  let semanticReading = "";
+  let payload = null;
 
   try {
-    const ai = await aiTranslateToGokturk(text);
-    gokturkText = ai.translated || "";
-    semanticText = ai.historicalText || "";
-    semanticReading = ai.historicalReading || "";
+    payload = await aiTranslateToGokturk(text);
   } catch {
-    const local = localTurkishToGokturk(text);
-    gokturkText = local.rune || "";
+    payload = localFallback(text);
   }
 
-  const localMap = localTurkishToGokturk(text);
-
-  if (!gokturkText) {
+  if (!payload?.literalText) {
     frameRoot.classList.remove("is-translating");
     frameRoot.classList.add("is-error");
     addBubble("top", "me", "⚠️ Çeviri hatası", { latest: true });
@@ -449,17 +425,18 @@ async function processMessage(rawText) {
     return;
   }
 
-  if (!semanticText || !semanticReading) {
-    semanticText = "";
-    semanticReading = "";
+  let units = payload.units;
+  if (!units) {
+    const local = localFallback(text);
+    units = local?.units || [];
   }
 
-  addBubble("top", "me", gokturkText, {
+  addBubble("top", "me", payload.literalText, {
     latest: true,
     gokturk: true,
-    units: localMap.units,
-    semanticText,
-    semanticReading
+    units,
+    historicalText: payload.historicalText,
+    historicalReading: payload.historicalReading
   });
 
   frameRoot.classList.remove("is-translating", "is-error");
@@ -567,6 +544,7 @@ function startRecognition() {
 function bindEvents() {
   clearBtn.addEventListener("click", () => {
     stopRecognizer();
+    stopAudio();
     topBody.innerHTML = "";
     botBody.innerHTML = "";
     botInput.value = "";
