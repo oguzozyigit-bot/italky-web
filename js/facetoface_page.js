@@ -54,10 +54,11 @@ const ALT_CHARS = {
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
+const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
+const F2F_PRESET_KEY = "facetoface_voice_preset";
 const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
 const F2F_MODE_KEY = "facetoface_runtime_mode";
 const NATIVE_LANG_KEY = "italky_native_lang_v7";
-const F2F_CULTURAL_INFO_SEEN_KEY = "facetoface_cultural_info_seen_v1";
 
 function isFaceAutoReadEnabled() {
   return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
@@ -191,17 +192,8 @@ const botModeToggle = $("botModeToggle");
 const topModeToggleLabel = $("topModeToggleLabel");
 const botModeToggleLabel = $("botModeToggleLabel");
 
-const botVoiceToggle = $("botVoiceToggle");
-const botVoiceToggleLabel = $("botVoiceToggleLabel");
-
-const culturalToggle = $("culturalToggle");
-const culturalToggleLabel = $("culturalToggleLabel");
-
-const culturalModal = $("culturalModal");
-const culturalModalTitle = $("culturalModalTitle");
-const culturalModalText = $("culturalModalText");
-const culturalModalContinue = $("culturalModalContinue");
-const culturalModalCancel = $("culturalModalCancel");
+const topSettingsMini = $("topSettingsMini");
+const botSettingsMini = $("botSettingsMini");
 
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
@@ -281,11 +273,22 @@ uiModal?.addEventListener("click", (e) => {
 });
 
 function getResolvedFaceVoice() {
+  const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
+  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+
+  if (mode === "clone") return "mine";
+  if (mode === "preset" && preset === "second") return "second";
+  if (mode === "preset" && preset === "memory") return "memory";
+  if (mode === "auto") return "auto";
+
+  const shared = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "").trim().toLowerCase();
+  if (["auto", "mine", "second", "memory"].includes(shared)) return shared;
+
   return "auto";
 }
 
 function getFaceVoiceMode() {
-  return "auto";
+  return getResolvedFaceVoice();
 }
 
 function getFaceTranslateMode() {
@@ -293,24 +296,50 @@ function getFaceTranslateMode() {
   return value === "cultural" ? "cultural" : "normal";
 }
 
-function setFaceTranslateMode(mode) {
-  const safeMode = String(mode || "normal").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
-  localStorage.setItem(F2F_TRANSLATE_KEY, safeMode);
-  syncCulturalToggleUi();
-}
-
-function setFaceAutoReadEnabled(enabled) {
-  localStorage.setItem(F2F_AUTO_READ_KEY, enabled ? "1" : "0");
-  localStorage.setItem(F2F_VOICE_KEY, enabled ? "auto" : "off");
-  syncVoiceToggleUi();
-}
-
 function isPaidFaceTextMode() {
   return getFaceTranslateMode() === "cultural";
 }
 
+async function hasReadyVoiceProfile() {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return false;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(`
+        voice_sample_path,
+        tts_voice_ready,
+        tts_voice_id,
+        second_voice_sample_path,
+        second_tts_voice_ready,
+        second_tts_voice_id,
+        memory_voice_sample_path,
+        memory_tts_voice_ready,
+        memory_tts_voice_id
+      `)
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+
+    const mode = getResolvedFaceVoice();
+    if (mode === "mine") return !!data.voice_sample_path || (!!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim());
+    if (mode === "second") return !!data.second_voice_sample_path || (!!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim());
+    if (mode === "memory") return !!data.memory_voice_sample_path || (!!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim());
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function isPaidFaceVoiceMode() {
+  const v = getResolvedFaceVoice();
+  return v === "mine" || v === "second" || v === "memory";
+}
+
 async function ensureCurrentFacePremiumModeAccess() {
-  const needsPremium = isPaidFaceTextMode();
+  const needsPremium = isPaidFaceTextMode() || isPaidFaceVoiceMode();
   if (!needsPremium) return true;
   return await ensureFaceToFacePremiumAccess();
 }
@@ -325,92 +354,6 @@ function faceTextUsageNote() {
     usageKind: "text",
     mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
   });
-}
-
-async function getCurrentUserTokens() {
-  try {
-    const userId = await getCurrentUserId();
-    if (!userId) return 0;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("tokens")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error) return 0;
-    return Number(data?.tokens || 0);
-  } catch {
-    return 0;
-  }
-}
-
-function closeCulturalModal() {
-  culturalModal?.classList.remove("open");
-  culturalModal?.classList.remove("show");
-}
-
-function openCulturalModal({ title, text, mode }) {
-  if (!culturalModal) return;
-  culturalModal.dataset.mode = mode || "info";
-  if (culturalModalTitle) culturalModalTitle.textContent = title || "Kültürel Çeviri";
-  if (culturalModalText) culturalModalText.textContent = text || "";
-  culturalModal.classList.add("open");
-}
-
-function syncVoiceToggleUi() {
-  const isOn = isFaceAutoReadEnabled();
-
-  if (botVoiceToggle) {
-    botVoiceToggle.classList.toggle("on", isOn);
-    botVoiceToggle.classList.toggle("off", !isOn);
-  }
-
-  if (botVoiceToggleLabel) botVoiceToggleLabel.textContent = isOn ? "SES AÇIK" : "SES KAPALI";
-}
-
-function syncCulturalToggleUi() {
-  const isCultural = getFaceTranslateMode() === "cultural";
-
-  if (culturalToggle) {
-    culturalToggle.classList.toggle("on", isCultural);
-    culturalToggle.classList.toggle("off", !isCultural);
-  }
-
-  if (culturalToggleLabel) {
-    culturalToggleLabel.textContent = "Kültürel Çeviri";
-  }
-}
-
-async function tryEnableCulturalMode() {
-  const alreadySeen = localStorage.getItem(F2F_CULTURAL_INFO_SEEN_KEY) === "1";
-
-  if (!alreadySeen) {
-    openCulturalModal({
-      mode: "info",
-      title: "Kültürel Çeviri",
-      text: "Kültürel çeviriler normal çeviriye göre daha yavaştır ve jeton gerektirir."
-    });
-    return;
-  }
-
-  const tokens = await getCurrentUserTokens();
-  if (tokens <= 0) {
-    openCulturalModal({
-      mode: "tokens",
-      title: "Jeton Gerekli",
-      text: "Devam etmek için lütfen jeton yükleyiniz."
-    });
-    return;
-  }
-
-  setFaceTranslateMode("cultural");
-  showToast("Kültürel çeviri açık");
-}
-
-function disableCulturalMode() {
-  setFaceTranslateMode("normal");
-  showToast("Kültürel çeviri kapalı");
 }
 
 function canonTone(value) {
@@ -1181,10 +1124,12 @@ async function warmAudio() {
 }
 
 function buildTtsCacheKey(text, langCode, tone = "neutral") {
+  const voice = getResolvedFaceVoice();
+
   return JSON.stringify({
     t: String(text || "").trim(),
     l: canonical(langCode),
-    v: "auto",
+    v: voice,
     n: canonTone(tone)
   });
 }
@@ -1268,6 +1213,67 @@ function chooseWebVoice(langCode) {
   return pool[0] || voices[0] || null;
 }
 
+async function speakViaApi(text, langCode, tone = "neutral") {
+  if (!isFaceAutoReadEnabled()) return false;
+
+  const value = String(text || "").trim();
+  if (!value) return false;
+
+  const myRunId = ++speakRunId;
+  const userId = await getCurrentUserId();
+  const selectedVoice = getResolvedFaceVoice();
+
+  if (!userId) throw new Error("USER_ID_MISSING");
+
+  let apiVoiceMode = "auto";
+  let apiVoice = "auto";
+  let apiPresetVoice = "";
+
+  if (selectedVoice === "mine") {
+    apiVoiceMode = "clone";
+    apiVoice = "clone";
+  } else if (selectedVoice === "second") {
+    apiVoiceMode = "preset";
+    apiVoice = "second";
+    apiPresetVoice = "second";
+  } else if (selectedVoice === "memory") {
+    apiVoiceMode = "preset";
+    apiVoice = "memory";
+    apiPresetVoice = "memory";
+  }
+
+  const payload = {
+    text: value,
+    lang: canonical(langCode),
+    user_id: userId,
+    module: "facetoface",
+    voice: apiVoice,
+    voice_mode: apiVoiceMode,
+    preset_voice: apiPresetVoice,
+    selected_voice: selectedVoice,
+    tone: canonTone(tone),
+  };
+
+  const r = await fetch(`${API_BASE}/api/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (myRunId !== speakRunId) return false;
+
+  const j = await r.json().catch(() => null);
+
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
+  }
+
+  const audioSrc = `data:audio/mp3;base64,${j.audio_base64}`;
+  rememberTtsCache(buildTtsCacheKey(value, langCode, tone), audioSrc);
+
+  return await playCachedAudio(audioSrc, myRunId);
+}
+
 function speakFallback(text, langCode) {
   const value = String(text || "").trim();
   if (!value) return false;
@@ -1308,6 +1314,7 @@ async function speak(text, langCode, tone = "neutral") {
   stopAudio();
   await warmAudio();
 
+  const selectedVoice = getResolvedFaceVoice();
   const cacheKey = buildTtsCacheKey(value, langCode, tone);
   const cachedAudio = ttsMemoryCache.get(cacheKey);
 
@@ -1316,6 +1323,30 @@ async function speak(text, langCode, tone = "neutral") {
       const ok = await playCachedAudio(cachedAudio, ++speakRunId);
       if (ok) return;
     } catch {}
+  }
+
+  const wantsApiVoice = ["mine", "second", "memory"].includes(selectedVoice);
+
+  if (wantsApiVoice) {
+    const ready = await hasReadyVoiceProfile();
+
+    if (!ready) {
+      if (selectedVoice === "mine") showToast("Kendi Sesim hazır değil");
+      else if (selectedVoice === "second") showToast("2. Ses hazır değil");
+      else if (selectedVoice === "memory") showToast("Hatıra Sesi hazır değil");
+      return;
+    }
+
+    try {
+      const ok = await speakViaApi(value, langCode, tone);
+      if (ok) return;
+    } catch (e) {
+      console.warn("[facetoface custom voice failed]", e);
+
+      if (selectedVoice === "mine") showToast("Kendi Sesim üretilemedi, normal sese dönüldü");
+      else if (selectedVoice === "second") showToast("2. Ses üretilemedi, normal sese dönüldü");
+      else if (selectedVoice === "memory") showToast("Hatıra Sesi üretilemedi, normal sese dönüldü");
+    }
   }
 
   const fallbackOk = speakFallback(value, langCode);
@@ -1809,8 +1840,6 @@ function startBoot() {
 
     currentRuntimeMode = "online";
     syncModeUi();
-    syncVoiceToggleUi();
-    syncCulturalToggleUi();
 
     bootReady = true;
     setSystemReadyUI();
@@ -1929,72 +1958,21 @@ function bindModeControls() {
   });
 }
 
-function bindFeatureToggles() {
-  botVoiceToggle?.addEventListener("click", (e) => {
+function bindSettingsButtons() {
+  const go = () => {
+    location.href = "/pages/facetoface_settings.html";
+  };
+
+  topSettingsMini?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setFaceAutoReadEnabled(!isFaceAutoReadEnabled());
-    showToast(isFaceAutoReadEnabled() ? "Ses açık" : "Ses kapalı");
+    go();
   });
 
-  culturalToggle?.addEventListener("click", async (e) => {
+  botSettingsMini?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (getFaceTranslateMode() === "cultural") {
-      disableCulturalMode();
-      return;
-    }
-
-    const premiumOk = await ensureFaceToFacePremiumAccess();
-    if (!premiumOk) {
-      syncCulturalToggleUi();
-      return;
-    }
-
-    await tryEnableCulturalMode();
-  });
-
-  culturalModalCancel?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeCulturalModal();
-    syncCulturalToggleUi();
-  });
-
-  culturalModal?.addEventListener("click", (e) => {
-    if (e.target === culturalModal) {
-      closeCulturalModal();
-      syncCulturalToggleUi();
-    }
-  });
-
-  culturalModalContinue?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const mode = String(culturalModal?.dataset?.mode || "info");
-
-    if (mode === "tokens") {
-      location.href = "/pages/jetonbuy.html";
-      return;
-    }
-
-    localStorage.setItem(F2F_CULTURAL_INFO_SEEN_KEY, "1");
-    closeCulturalModal();
-
-    const tokens = await getCurrentUserTokens();
-    if (tokens <= 0) {
-      openCulturalModal({
-        mode: "tokens",
-        title: "Jeton Gerekli",
-        text: "Devam etmek için lütfen jeton yükleyiniz."
-      });
-      return;
-    }
-
-    setFaceTranslateMode("cultural");
-    showToast("Kültürel çeviri açık");
+    go();
   });
 }
 
@@ -2121,16 +2099,13 @@ function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
   bindModeControls();
-  bindFeatureToggles();
+  bindSettingsButtons();
   bindLanguageButtons();
   bindGlobalClicks();
   bindUtilityButtons();
   bindMicButtons();
   bindInputs();
   bindSpeechVoices();
-  syncModeUi();
-  syncVoiceToggleUi();
-  syncCulturalToggleUi();
 
   try {
     startBoot();
@@ -2173,15 +2148,8 @@ const requiredDomOk =
   !!botModeToggle &&
   !!topModeToggleLabel &&
   !!botModeToggleLabel &&
-  !!botVoiceToggle &&
-  !!botVoiceToggleLabel &&
-  !!culturalToggle &&
-  !!culturalToggleLabel &&
-  !!culturalModal &&
-  !!culturalModalTitle &&
-  !!culturalModalText &&
-  !!culturalModalContinue &&
-  !!culturalModalCancel &&
+  !!topSettingsMini &&
+  !!botSettingsMini &&
   !!offlineRequiredBackdrop &&
   !!offlineRequiredTitle &&
   !!offlineRequiredText &&
@@ -2195,4 +2163,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-                           }
+  }
