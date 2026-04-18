@@ -191,9 +191,7 @@ const botModeToggle = $("botModeToggle");
 const topModeToggleLabel = $("topModeToggleLabel");
 const botModeToggleLabel = $("botModeToggleLabel");
 
-const topVoiceToggle = $("topVoiceToggle");
 const botVoiceToggle = $("botVoiceToggle");
-const topVoiceToggleLabel = $("topVoiceToggleLabel");
 const botVoiceToggleLabel = $("botVoiceToggleLabel");
 
 const culturalToggle = $("culturalToggle");
@@ -311,10 +309,6 @@ function isPaidFaceTextMode() {
   return getFaceTranslateMode() === "cultural";
 }
 
-function isPaidFaceVoiceMode() {
-  return false;
-}
-
 async function ensureCurrentFacePremiumModeAccess() {
   const needsPremium = isPaidFaceTextMode();
   if (!needsPremium) return true;
@@ -367,13 +361,11 @@ function openCulturalModal({ title, text, mode }) {
 function syncVoiceToggleUi() {
   const isOn = isFaceAutoReadEnabled();
 
-  [topVoiceToggle, botVoiceToggle].forEach((el) => {
-    if (!el) return;
-    el.classList.toggle("on", isOn);
-    el.classList.toggle("off", !isOn);
-  });
+  if (botVoiceToggle) {
+    botVoiceToggle.classList.toggle("on", isOn);
+    botVoiceToggle.classList.toggle("off", !isOn);
+  }
 
-  if (topVoiceToggleLabel) topVoiceToggleLabel.textContent = isOn ? "SES AÇIK" : "SES KAPALI";
   if (botVoiceToggleLabel) botVoiceToggleLabel.textContent = isOn ? "SES AÇIK" : "SES KAPALI";
 }
 
@@ -1189,12 +1181,10 @@ async function warmAudio() {
 }
 
 function buildTtsCacheKey(text, langCode, tone = "neutral") {
-  const voice = getResolvedFaceVoice();
-
   return JSON.stringify({
     t: String(text || "").trim(),
     l: canonical(langCode),
-    v: voice,
+    v: "auto",
     n: canonTone(tone)
   });
 }
@@ -1940,15 +1930,12 @@ function bindModeControls() {
 }
 
 function bindFeatureToggles() {
-  const toggleVoice = (e) => {
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
+  botVoiceToggle?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     setFaceAutoReadEnabled(!isFaceAutoReadEnabled());
     showToast(isFaceAutoReadEnabled() ? "Ses açık" : "Ses kapalı");
-  };
-
-  topVoiceToggle?.addEventListener("click", toggleVoice);
-  botVoiceToggle?.addEventListener("click", toggleVoice);
+  });
 
   culturalToggle?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -2141,6 +2128,7 @@ function bind() {
   bindMicButtons();
   bindInputs();
   bindSpeechVoices();
+  syncModeUi();
   syncVoiceToggleUi();
   syncCulturalToggleUi();
 
@@ -2185,9 +2173,7 @@ const requiredDomOk =
   !!botModeToggle &&
   !!topModeToggleLabel &&
   !!botModeToggleLabel &&
-  !!topVoiceToggle &&
   !!botVoiceToggle &&
-  !!topVoiceToggleLabel &&
   !!botVoiceToggleLabel &&
   !!culturalToggle &&
   !!culturalToggleLabel &&
@@ -2209,4 +2195,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-                       }
+                           }
