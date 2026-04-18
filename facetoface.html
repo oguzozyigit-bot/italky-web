@@ -94,7 +94,7 @@
     .lang-row-inner{
       width:min(92vw, 420px);
       display:grid;
-      grid-template-columns:76px 1fr 38px;
+      grid-template-columns:96px 1fr 96px;
       align-items:center;
       gap:8px;
       margin:0 auto;
@@ -149,10 +149,13 @@
       justify-content:center;
       font-size:9px;
       font-weight:1000;
-      letter-spacing:.4px;
+      letter-spacing:.3px;
       color:#fff;
       z-index:1;
       pointer-events:none;
+      text-align:center;
+      line-height:1.05;
+      padding:0 8px;
     }
 
     .mode-toggle-inline.online .mode-toggle-inline-track{
@@ -173,33 +176,90 @@
       background:#fff0f2;
     }
 
-    .lang-tools-btn{
-      width:38px;
-      min-width:38px;
+    .setting-toggle{
+      width:96px;
+      min-width:96px;
       height:38px;
-      border-radius:50%;
+      border-radius:999px;
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.06);
-      color:#fff;
+      padding:4px;
+      display:flex;
+      align-items:center;
+      cursor:pointer;
+      overflow:hidden;
+      backdrop-filter:blur(10px);
+      position:relative;
+      flex:0 0 auto;
+      pointer-events:auto;
+      z-index:3002;
+      justify-self:center;
+    }
+
+    .setting-toggle-track{
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      opacity:.20;
+      transition:.2s ease;
+    }
+
+    .setting-toggle-thumb{
+      position:relative;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 6px 16px rgba(0,0,0,.24);
+      transition:transform .22s ease, background .22s ease;
+      z-index:2;
+    }
+
+    .setting-toggle-label{
+      position:absolute;
+      inset:0;
       display:flex;
       align-items:center;
       justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-      justify-self:center;
-      align-self:center;
-      pointer-events:auto;
-      z-index:3002;
+      font-size:8px;
+      font-weight:1000;
+      letter-spacing:.25px;
+      color:#fff;
+      z-index:1;
+      pointer-events:none;
+      text-align:center;
+      line-height:1.05;
+      padding:0 8px;
     }
 
-    .lang-tools-btn svg{
-      width:18px;
-      height:18px;
-      stroke:currentColor;
-      stroke-width:2.1;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
+    .setting-toggle.off .setting-toggle-track{
+      background:rgba(239,68,68,.95);
+    }
+
+    .setting-toggle.off .setting-toggle-thumb{
+      transform:translateX(0);
+      background:#fff0f2;
+    }
+
+    .setting-toggle.on .setting-toggle-track{
+      background:rgba(34,197,94,.95);
+    }
+
+    .setting-toggle.on .setting-toggle-thumb{
+      transform:translateX(60px);
+      background:#ecfff3;
+    }
+
+    .setting-toggle.cultural.on .setting-toggle-track{
+      background:rgba(168,85,247,.95);
+    }
+
+    .setting-toggle.cultural.on .setting-toggle-thumb{
+      background:#f4e8ff;
+    }
+
+    .voice-toggle.upright-ui{
+      transform:rotate(180deg);
     }
 
     .lang-trigger{
@@ -217,11 +277,11 @@
       justify-content:center;
       gap:10px;
       min-height:38px;
-      width:min(64vw, 272px);
+      width:min(56vw, 240px);
       text-decoration:none;
       flex:0 1 auto;
       white-space:nowrap;
-      justify-self:end;
+      justify-self:center;
       pointer-events:auto;
       z-index:3002;
     }
@@ -910,20 +970,19 @@
     @media (max-width:390px){
       .lang-row-inner{
         width:min(94vw, 410px);
-        grid-template-columns:72px 1fr 38px;
-      }
-
-      .mode-toggle-inline{
-        width:72px;
-        min-width:72px;
+        grid-template-columns:92px 1fr 92px;
       }
 
       .mode-toggle-inline.offline .mode-toggle-inline-thumb{
         transform:translateX(32px);
       }
 
+      .setting-toggle.on .setting-toggle-thumb{
+        transform:translateX(56px);
+      }
+
       .lang-trigger{
-        width:min(62vw, 238px);
+        width:min(48vw, 190px);
       }
 
       .half-screen.top .popover,
@@ -948,11 +1007,10 @@
             <span id="topLangTxt">🇬🇧 English</span> ⌵
           </button>
 
-          <button id="topSettingsMini" class="lang-tools-btn" type="button" aria-label="Ayarlar">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3.2"></circle>
-              <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a2 2 0 1 1 0 4H20a1 1 0 0 0-.6.6z"></path>
-            </svg>
+          <button id="topVoiceToggle" class="setting-toggle voice-toggle upright-ui on" type="button" aria-label="Ses aç kapa">
+            <span class="setting-toggle-track"></span>
+            <span class="setting-toggle-thumb"></span>
+            <span class="setting-toggle-label" id="topVoiceToggleLabel">SES AÇIK</span>
           </button>
         </div>
       </div>
@@ -1022,21 +1080,20 @@
     <div class="half-screen bottom" id="botSection">
       <div class="lang-row">
         <div class="lang-row-inner">
-          <button id="botModeToggle" class="mode-toggle-inline online" type="button" aria-label="Online offline geçiş" onclick="window.f2fToggleMode && window.f2fToggleMode(event)">
-            <span class="mode-toggle-inline-track"></span>
-            <span class="mode-toggle-inline-thumb"></span>
-            <span class="mode-toggle-inline-label" id="botModeToggleLabel">ONLINE</span>
+          <button id="culturalToggle" class="setting-toggle cultural off" type="button" aria-label="Kültürel çeviri aç kapa">
+            <span class="setting-toggle-track"></span>
+            <span class="setting-toggle-thumb"></span>
+            <span class="setting-toggle-label" id="culturalToggleLabel">KÜLTÜREL KAPALI</span>
           </button>
 
           <button class="lang-trigger" id="botLangBtn" type="button">
             <span id="botLangTxt">🇹🇷 Türkçe</span> ⌵
           </button>
 
-          <button id="botSettingsMini" class="lang-tools-btn" type="button" aria-label="Ayarlar">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3.2"></circle>
-              <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a2 2 0 1 1 0 4H20a1 1 0 0 0-.6.6z"></path>
-            </svg>
+          <button id="botVoiceToggle" class="setting-toggle voice-toggle on" type="button" aria-label="Ses aç kapa">
+            <span class="setting-toggle-track"></span>
+            <span class="setting-toggle-thumb"></span>
+            <span class="setting-toggle-label" id="botVoiceToggleLabel">SES AÇIK</span>
           </button>
         </div>
       </div>
@@ -1092,6 +1149,17 @@
     </div>
   </div>
 
+  <div class="modal" id="culturalModal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="culturalModalTitle">Kültürel Çeviri</h3>
+      <p class="modal-text" id="culturalModalText">Kültürel çeviriler normal çeviriye göre daha yavaştır ve jeton gerektirir.</p>
+      <div class="modal-actions">
+        <button class="modal-btn primary" id="culturalModalContinue">Devam Et</button>
+        <button class="modal-btn secondary" id="culturalModalCancel">Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
   <div id="offlineRequiredBackdrop" class="modal">
     <div class="modal-card">
       <h3 class="modal-title" id="offlineRequiredTitle">Dil yüklemeniz gerekli</h3>
@@ -1104,10 +1172,10 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/facetoface_page.js?v=F2F_PAGE_V122"></script>
+  <script type="module" src="/js/facetoface_page.js?v=F2F_PAGE_V123"></script>
   <script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-  await initGlobalAccess({ allowPublicPageBypass: false });
-</script>
+    import { initGlobalAccess } from "/js/global_access.js";
+    await initGlobalAccess({ allowPublicPageBypass: false });
+  </script>
 </body>
 </html>
