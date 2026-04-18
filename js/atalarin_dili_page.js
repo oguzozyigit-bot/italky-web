@@ -1,779 +1,585 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Ataların Dili</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
-
-  <style>
-    :root{
-      --ai-gradient: linear-gradient(135deg,#67e8f9,#3b82f6,#60a5fa);
-      --gold-gradient: linear-gradient(135deg,#dbeafe,#93c5fd,#fde68a);
-      --bg:#04101b;
-      --border:rgba(255,255,255,0.14);
-      --composer-bg:rgba(8,14,24,.96);
-      --composer-line:rgba(255,255,255,.08);
-      --safe-bottom:env(safe-area-inset-bottom, 0px);
-      --safe-top:env(safe-area-inset-top, 0px);
-      --text:#f8fafc;
-      --muted:rgba(255,255,255,.64);
-    }
-
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
-
-    html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      background:var(--bg);
-      color:var(--text);
-      font-family:Outfit,sans-serif;
-      overflow:hidden;
-    }
-
-    body{
-      min-height:100dvh;
-      background:
-        radial-gradient(circle at top, rgba(103,232,249,.08), transparent 24%),
-        radial-gradient(circle at bottom, rgba(250,204,21,.05), transparent 20%),
-        #04101b;
-    }
-
-    .container{
-      display:flex;
-      flex-direction:column;
-      width:100%;
-      height:100dvh;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .topbar{
-      flex:0 0 auto;
-      padding:calc(8px + var(--safe-top)) 10px 8px;
-      background:linear-gradient(180deg, rgba(4,16,27,.98), rgba(4,16,27,.82));
-      border-bottom:1px solid rgba(255,255,255,.06);
-      backdrop-filter:blur(14px);
-      z-index:700;
-    }
-
-    .topbar-inner{
-      width:min(94vw,460px);
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      align-items:center;
-      gap:8px;
-    }
-
-    .lang-pill{
-      min-height:40px;
-      border:none;
-      border-radius:999px;
-      padding:8px 14px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.2px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      cursor:default;
-    }
-
-    .half-screen{
-      flex:1;
-      position:relative;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:space-between;
-      overflow:hidden;
-      min-height:0;
-    }
-
-    .half-screen.top{
-      background:linear-gradient(180deg, rgba(14,116,144,.22), rgba(4,16,27,.98));
-      padding:10px 8px 8px;
-    }
-
-    .half-screen.bottom{
-      background:linear-gradient(180deg, rgba(30,64,175,.16), rgba(4,16,27,.98));
-      padding:6px 8px calc(6px + var(--safe-bottom));
-    }
-
-    .panel-head{
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:0 8px;
-      min-height:32px;
-      flex:0 0 auto;
-    }
-
-    .panel-label{
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.4px;
-      color:rgba(255,255,255,.72);
-      text-transform:uppercase;
-      text-align:center;
-    }
-
-    .chat-body{
-      flex:1 1 auto;
-      min-height:0;
-      width:100%;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:14px;
-      padding:12px 0 20px;
-      mask-image:linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-      scrollbar-width:none;
-    }
-
-    .chat-body::-webkit-scrollbar{ display:none; }
-
-    .bubble{
-      text-align:center;
-      max-width:94%;
-      line-height:1.28;
-      word-break:break-word;
-    }
-
-    .bubble.them{
-      opacity:.72;
-      font-size:18px;
-      font-weight:650;
-    }
-
-    .bubble.me{
-      font-size:18px;
-      font-weight:650;
-      opacity:.84;
-    }
-
-    .bubble.me.is-latest{
-      font-size:30px;
-      font-weight:900;
-      opacity:1;
-      line-height:1.08;
-    }
-
-    .bubble-stack{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:10px;
-      width:100%;
-    }
-
-    .bubble-row{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      width:100%;
-    }
-
-    .bubble-row .txt{
-      display:block;
-      width:100%;
-    }
-
-    .gokturk-wrap{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:10px;
-      width:100%;
-    }
-
-    .rune-track{
-      display:flex;
-      flex-direction:row;
-      flex-wrap:wrap;
-      justify-content:center;
-      align-items:flex-start;
-      gap:10px 8px;
-      max-width:100%;
-    }
-
-    .rune-col{
-      min-width:20px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-start;
-      gap:4px;
-    }
-
-    .rune-char{
-      font-size:1em;
-      line-height:1;
-      font-weight:900;
-      color:#fff;
-      direction:rtl;
-      unicode-bidi:bidi-override;
-    }
-
-    .latin-char{
-      font-size:13px;
-      line-height:1;
-      font-weight:900;
-      color:rgba(255,255,255,.70);
-      direction:ltr;
-      unicode-bidi:isolate;
-      text-transform:none;
-    }
-
-    .rune-space{
-      width:14px;
-      min-width:14px;
-      height:1px;
-    }
-
-    .semantic-block{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-      width:100%;
-      margin-top:2px;
-    }
-
-    .semantic-rune{
-      font-size:22px;
-      line-height:1.2;
-      font-weight:900;
-      color:#dbeafe;
-      direction:rtl;
-      unicode-bidi:isolate;
-      text-align:center;
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
-    .semantic-read{
-      font-size:14px;
-      line-height:1.2;
-      font-weight:900;
-      color:rgba(255,255,255,.78);
-      direction:ltr;
-      unicode-bidi:isolate;
-      text-align:center;
-      white-space:pre-wrap;
-      word-break:break-word;
-      letter-spacing:.35px;
-    }
-
-    .bubble.me.is-latest .latin-char{
-      font-size:15px;
-      color:rgba(255,255,255,.78);
-    }
-
-    .bubble.me.is-latest .semantic-rune{
-      font-size:24px;
-    }
-
-    .bubble.me.is-latest .semantic-read{
-      font-size:15px;
-      color:rgba(255,255,255,.84);
-    }
-
-    .center-hub{
-      height:82px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      background:rgba(0,0,0,.58);
-      backdrop-filter:blur(16px);
-      z-index:600;
-      flex:0 0 auto;
-      border-top:1px solid rgba(255,255,255,.05);
-      border-bottom:1px solid rgba(255,255,255,.05);
-    }
-
-    .nav-btn{
-      position:absolute;
-      padding:10px 18px;
-      border-radius:100px;
-      background:transparent;
-      border:1px solid var(--border);
-      color:#fff;
-      font-size:10px;
-      font-weight:900;
-      cursor:pointer;
-      z-index:650;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-    }
-
-    .btn-clear{ right:14px; }
-
-    .orb-container{
-      width:82px;
-      height:82px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-    }
-
-    .energy-orbit{
-      position:absolute;
-      width:82px;
-      height:82px;
-      border-radius:50%;
-      animation:rotateOrbit 5s linear infinite;
-    }
-
-    .ball-1, .ball-2{
-      position:absolute;
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      filter:blur(1.5px);
-      transition:background .25s ease, box-shadow .25s ease;
-    }
-
-    .ball-1{
-      top:-5px;
-      left:50%;
-      transform:translateX(-50%);
-      background:#3b82f6;
-      box-shadow:0 0 15px #3b82f6;
-    }
-
-    .ball-2{
-      bottom:-5px;
-      left:50%;
-      transform:translateX(-50%);
-      background:#facc15;
-      box-shadow:0 0 15px #facc15;
-    }
-
-    .ai-core{
-      width:66px;
-      height:66px;
-      border-radius:50%;
-      background:#000;
-      border:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:"Space Grotesk",sans-serif;
-      font-weight:700;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .logo-text{
-      color:#fff;
-      letter-spacing:.4px;
-      font-size:13px;
-    }
-
-    .logo-ai{
-      background:var(--gold-gradient);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .eq-wrap{
-      display:flex;
-      align-items:center;
-      gap:3px;
-      height:20px;
-      position:absolute;
-      opacity:0;
-      transition:.25s;
-      z-index:20;
-    }
-
-    #frameRoot.is-listening .eq-wrap,
-    #frameRoot.is-translating .eq-wrap{
-      opacity:1;
-    }
-
-    #frameRoot.is-listening .logo-text,
-    #frameRoot.is-translating .logo-text{
-      opacity:0;
-    }
-
-    .eq-bar{
-      width:3px;
-      background:var(--gold-gradient);
-      border-radius:10px;
-      animation:eqAnim .7s infinite ease-in-out;
-    }
-
-    #frameRoot.is-idle .ball-1,
-    #frameRoot.is-idle .ball-2,
-    #frameRoot.is-error .ball-1,
-    #frameRoot.is-error .ball-2{
-      background:#ef4444;
-      box-shadow:0 0 18px rgba(239,68,68,.9);
-    }
-
-    #frameRoot.is-listening .ball-1,
-    #frameRoot.is-translating .ball-1{
-      background:#3b82f6;
-      box-shadow:0 0 18px rgba(59,130,246,.95);
-    }
-
-    #frameRoot.is-listening .ball-2,
-    #frameRoot.is-translating .ball-2{
-      background:#facc15;
-      box-shadow:0 0 18px rgba(250,204,21,.95);
-    }
-
-    #frameRoot.is-ready .ball-1,
-    #frameRoot.is-ready .ball-2{
-      background:#22c55e;
-      box-shadow:0 0 18px rgba(34,197,94,.9);
-    }
-
-    .composer-stack{
-      width:100%;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-      z-index:30;
-      padding-bottom:0;
-      flex:0 0 auto;
-    }
-
-    .composer{
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      min-height:62px;
-      padding:9px 12px;
-      border-radius:22px;
-      background:var(--composer-bg);
-      border:1px solid var(--composer-line);
-      box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03);
-      position:relative;
-    }
-
-    .composer.listening{
-      box-shadow:
-        0 0 0 1px rgba(59,130,246,.30),
-        0 0 0 8px rgba(59,130,246,.08),
-        0 0 30px rgba(59,130,246,.20),
-        inset 0 1px 0 rgba(255,255,255,.04);
-      animation:composerPulse 1.2s ease-in-out infinite;
-    }
-
-    @keyframes composerPulse{
-      0%,100%{ transform:scale(1); }
-      50%{ transform:scale(1.006); }
-    }
-
-    .composer-center{
-      flex:1;
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .composer-input{
-      width:100%;
-      min-height:24px;
-      max-height:120px;
-      resize:none;
-      border:none;
-      outline:none;
-      background:transparent;
-      color:#fff;
-      font-size:17px;
-      font-weight:800;
-      line-height:1.4;
-      font-family:inherit;
-      overflow:auto;
-      padding:0;
-      margin:0;
-      scrollbar-width:none;
-      text-align:left;
-    }
-
-    .composer-input::-webkit-scrollbar{ display:none; }
-
-    .composer-input::placeholder{
-      color:rgba(255,255,255,.72);
-      font-weight:800;
-    }
-
-    .send-btn,.mic-btn{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:50%;
-      cursor:pointer;
-      flex:0 0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:transparent;
-      color:#fff;
-      position:relative;
-      z-index:2;
-    }
-
-    .mic-btn.listening::after{
-      content:"";
-      position:absolute;
-      inset:-6px;
-      border-radius:50%;
-      border:2px solid rgba(34,197,94,.72);
-      box-shadow:0 0 0 8px rgba(34,197,94,.10), 0 0 24px rgba(34,197,94,.18);
-      animation:micPulse 1s ease-out infinite;
-    }
-
-    @keyframes micPulse{
-      0%{ transform:scale(.92); opacity:.95; }
-      70%{ transform:scale(1.14); opacity:.14; }
-      100%{ transform:scale(1.18); opacity:0; }
-    }
-
-    .send-btn{
-      background:#fff;
-      color:#000;
-      box-shadow:0 0 24px rgba(255,255,255,.10);
-    }
-
-    .send-btn svg,
-    .mic-btn svg{
-      width:22px;
-      height:22px;
-      stroke:currentColor;
-      stroke-width:2.2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .hidden{ display:none !important; }
-
-    .mini-toast{
-      position:fixed;
-      left:50%;
-      bottom:24px;
-      transform:translateX(-50%) translateY(120px);
-      min-height:44px;
-      padding:10px 16px;
-      border-radius:16px;
-      background:rgba(12,16,28,.96);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:12px;
-      font-weight:1000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      max-width:min(92vw,420px);
-      z-index:99999;
-      box-shadow:0 18px 36px rgba(0,0,0,.35);
-      transition:.22s ease;
-      backdrop-filter:blur(14px);
-      pointer-events:none;
-    }
-
-    .mini-toast.show{
-      transform:translateX(-50%) translateY(0);
-    }
-
-    @keyframes rotateOrbit{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
-    }
-
-    @keyframes eqAnim{
-      0%,100%{ height:5px; opacity:.6; }
-      50%{ height:25px; opacity:1; }
-    }
-
-    .modal{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.52);
-      backdrop-filter:blur(6px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:999999;
-      padding:20px;
-    }
-
-    .modal.open,
-    .modal.show{
-      display:flex;
-    }
-
-    .modal-card{
-      width:min(100%, 420px);
-      border-radius:24px;
-      padding:18px;
-      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 24px 50px rgba(0,0,0,.30);
-    }
-
-    .modal-title{
-      margin:0 0 8px;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:20px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .modal-text{
-      margin:0;
-      font-size:13px;
-      line-height:1.6;
-      color:rgba(255,255,255,.76);
-    }
-
-    .modal-actions{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-      margin-top:16px;
-    }
-
-    .modal-btn{
-      min-height:46px;
-      border:none;
-      border-radius:16px;
-      cursor:pointer;
-      font-family:inherit;
-      font-size:13px;
-      font-weight:900;
-    }
-
-    .modal-btn.secondary{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-    }
-  </style>
-</head>
-<body id="frameRoot" class="to-bot">
-  <div class="container">
-    <div class="topbar">
-      <div class="topbar-inner">
-        <div class="lang-pill">
-          <span id="sourceLangTxt">🇹🇷 Türkçe</span>
-        </div>
-
-        <div class="lang-pill">
-          <span id="targetLangTxt">𐱅𐰇𐰼𐰜 • Göktürkçe</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="half-screen top">
-      <div class="panel-head">
-        <div class="panel-label">GÖKTÜRKÇE ÇIKTI</div>
-      </div>
-
-      <div class="chat-body" id="topBody"></div>
-    </div>
-
-    <div class="center-hub" id="centerHub">
-      <a class="nav-btn" id="homeLink" href="/pages/home.html" style="left:14px;">ANA SAYFA</a>
-
-      <div class="orb-container" id="homeBtn" title="Ana sayfa">
-        <div class="energy-orbit">
-          <div class="ball-1"></div>
-          <div class="ball-2"></div>
-        </div>
-        <div class="ai-core">
-          <div class="eq-wrap" aria-hidden="true">
-            <div class="eq-bar" style="animation-delay:0s"></div>
-            <div class="eq-bar" style="animation-delay:.2s"></div>
-            <div class="eq-bar" style="animation-delay:.4s"></div>
-          </div>
-          <span class="logo-text">italky<span class="logo-ai">AI</span></span>
-        </div>
-      </div>
-
-      <div class="nav-btn btn-clear" id="clearBtn">TEMİZLE</div>
-    </div>
-
-    <div class="half-screen bottom">
-      <div class="panel-head">
-        <div class="panel-label">TÜRKÇE GİRİŞ</div>
-      </div>
-
-      <div class="chat-body" id="botBody"></div>
-
-      <div class="composer-stack">
-        <div class="composer" id="botComposer">
-          <div class="composer-center">
-            <textarea id="botInput" class="composer-input" rows="1" placeholder="Türkçe yaz veya konuş"></textarea>
-          </div>
-
-          <button id="botMic" class="mic-btn" type="button" aria-label="Mikrofon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-              <path d="M19 10a7 7 0 0 1-14 0"></path>
-              <path d="M12 17v4"></path>
-              <path d="M8 21h8"></path>
-            </svg>
-          </button>
-
-          <button id="botSend" class="send-btn hidden" type="button" aria-label="Gönder">
-            <svg viewBox="0 0 24 24">
-              <path d="M5 12h14"></path>
-              <path d="M13 6l6 6-6 6"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="genericBackdrop" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title" id="genericTitle">Bilgi</h3>
-      <p class="modal-text" id="genericText">İşlem yapılamadı.</p>
-      <div class="modal-actions">
-        <button class="modal-btn secondary" id="genericCloseBtn">Kapat</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="mini-toast" id="miniToast"></div>
-
-  <script type="module" src="/js/atalarin_dili_page.js?v=ATALAR_AI_RTL_V3"></script>
-  <script type="module">
-    import { initGlobalAccess } from "/js/global_access.js";
-    await initGlobalAccess({ allowPublicPageBypass: false });
-  </script>
-</body>
-</html>
+const API_BASE = "https://italky-api.onrender.com";
+const $ = (id) => document.getElementById(id);
+
+const frameRoot = $("frameRoot");
+const topBody = $("topBody");
+const botBody = $("botBody");
+
+const botInput = $("botInput");
+const botMic = $("botMic");
+const botSend = $("botSend");
+const botComposer = $("botComposer");
+
+const clearBtn = $("clearBtn");
+const homeBtn = $("homeBtn");
+const homeLink = $("homeLink");
+
+const genericBackdrop = $("genericBackdrop");
+const genericCloseBtn = $("genericCloseBtn");
+const miniToast = $("miniToast");
+
+let recognizer = null;
+let recording = false;
+
+/* =========================================================
+   LOCAL SÖZLÜK + HARF ALT EŞLEME
+========================================================= */
+
+const WORD_OVERRIDES = {
+  "türk": { rune: "𐱅𐰇𐰼𐰜", read: "türk" },
+  "turk": { rune: "𐱅𐰇𐰼𐰜", read: "türk" },
+  "göktürk": { rune: "𐰚𐰇𐰜𐱅𐰇𐰼𐰜", read: "göktürk" },
+  "gokturk": { rune: "𐰚𐰇𐰜𐱅𐰇𐰼𐰜", read: "göktürk" },
+  "gök": { rune: "𐰚𐰇𐰜", read: "gök" },
+  "gok": { rune: "𐰚𐰇𐰜", read: "gök" },
+  "tanrı": { rune: "𐱅𐰭𐰼𐰃", read: "tanrı" },
+  "tanri": { rune: "𐱅𐰭𐰼𐰃", read: "tanrı" },
+  "il": { rune: "𐰃𐰠", read: "il" },
+  "el": { rune: "𐰠", read: "el" },
+  "yurt": { rune: "𐰖𐰆𐰺𐱃", read: "yurt" },
+  "ordu": { rune: "𐰆𐰺𐰑𐰆", read: "ordu" },
+  "kut": { rune: "𐰴𐰆𐱃", read: "kut" },
+  "tegin": { rune: "𐱅𐰏𐰃𐰤", read: "tegin" },
+  "bilge": { rune: "𐰋𐰃𐰠𐰏𐰀", read: "bilge" },
+  "budun": { rune: "𐰉𐰆𐰑𐰆𐰣", read: "budun" },
+  "ata": { rune: "𐰀𐱃𐰀", read: "ata" },
+  "ana": { rune: "𐰀𐰣𐰀", read: "ana" },
+  "su": { rune: "𐰽𐰆", read: "su" },
+  "taş": { rune: "𐱃𐰀𐱁", read: "taş" },
+  "selam": { rune: "𐰽𐰞𐰀𐰢", read: "selam" }
+};
+
+const FRONT_VOWELS = new Set(["e", "i", "ö", "ü"]);
+const BACK_VOWELS = new Set(["a", "ı", "o", "u"]);
+
+const MULTI_CHAR_MAP = [
+  ["ng", { rune: "𐰭", latin: "ng" }],
+  ["ny", { rune: "𐰪", latin: "ny" }]
+];
+
+const FRONT_MAP = {
+  "a": { rune: "𐰀", latin: "a" }, "e": { rune: "𐰀", latin: "e" },
+  "ı": { rune: "𐰃", latin: "ı" }, "i": { rune: "𐰃", latin: "i" },
+  "o": { rune: "𐰆", latin: "o" }, "ö": { rune: "𐰇", latin: "ö" },
+  "u": { rune: "𐰆", latin: "u" }, "ü": { rune: "𐰇", latin: "ü" },
+
+  "b": { rune: "𐰋", latin: "b" }, "c": { rune: "𐰲", latin: "c" },
+  "ç": { rune: "𐰲", latin: "ç" }, "d": { rune: "𐰑", latin: "d" },
+  "f": { rune: "𐰯", latin: "f" }, "g": { rune: "𐰏", latin: "g" },
+  "ğ": { rune: "𐰏", latin: "ğ" }, "h": { rune: "𐰚", latin: "h" },
+  "j": { rune: "𐰘", latin: "y" }, "k": { rune: "𐰚", latin: "k" },
+  "l": { rune: "𐰞", latin: "l" }, "m": { rune: "𐰢", latin: "m" },
+  "n": { rune: "𐰤", latin: "n" }, "p": { rune: "𐰯", latin: "p" },
+  "q": { rune: "𐰚", latin: "k" }, "r": { rune: "𐰼", latin: "r" },
+  "s": { rune: "𐰽", latin: "s" }, "ş": { rune: "𐱁", latin: "ş" },
+  "t": { rune: "𐱅", latin: "t" }, "v": { rune: "𐰋", latin: "v" },
+  "w": { rune: "𐰋", latin: "v" }, "x": { rune: "𐰴𐰽", latin: "ks" },
+  "y": { rune: "𐰘", latin: "y" }, "z": { rune: "𐰔", latin: "z" }
+};
+
+const BACK_MAP = {
+  "a": { rune: "𐰀", latin: "a" }, "e": { rune: "𐰀", latin: "e" },
+  "ı": { rune: "𐰃", latin: "ı" }, "i": { rune: "𐰃", latin: "i" },
+  "o": { rune: "𐰆", latin: "o" }, "ö": { rune: "𐰇", latin: "ö" },
+  "u": { rune: "𐰆", latin: "u" }, "ü": { rune: "𐰇", latin: "ü" },
+
+  "b": { rune: "𐰉", latin: "b" }, "c": { rune: "𐰲", latin: "c" },
+  "ç": { rune: "𐰲", latin: "ç" }, "d": { rune: "𐰑", latin: "d" },
+  "f": { rune: "𐰯", latin: "f" }, "g": { rune: "𐰍", latin: "g" },
+  "ğ": { rune: "𐰍", latin: "ğ" }, "h": { rune: "𐰴", latin: "h" },
+  "j": { rune: "𐰖", latin: "y" }, "k": { rune: "𐰴", latin: "k" },
+  "l": { rune: "𐰠", latin: "l" }, "m": { rune: "𐰢", latin: "m" },
+  "n": { rune: "𐰣", latin: "n" }, "p": { rune: "𐰯", latin: "p" },
+  "q": { rune: "𐰴", latin: "k" }, "r": { rune: "𐰺", latin: "r" },
+  "s": { rune: "𐰾", latin: "s" }, "ş": { rune: "𐱁", latin: "ş" },
+  "t": { rune: "𐱃", latin: "t" }, "v": { rune: "𐰉", latin: "v" },
+  "w": { rune: "𐰉", latin: "v" }, "x": { rune: "𐰴𐰽", latin: "ks" },
+  "y": { rune: "𐰖", latin: "y" }, "z": { rune: "𐰔", latin: "z" }
+};
+
+function normalizeText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+function cleanWord(word) {
+  return String(word || "").toLowerCase().replace(/[^a-zçğıöşü]/g, "");
+}
+
+function tokenizeWithSpaces(text) {
+  return String(text || "").split(/(\s+)/);
+}
+
+function getHarmony(word) {
+  const pure = cleanWord(word);
+  let front = 0;
+  let back = 0;
+  for (const ch of pure) {
+    if (FRONT_VOWELS.has(ch)) front += 1;
+    if (BACK_VOWELS.has(ch)) back += 1;
+  }
+  return front > back ? "front" : "back";
+}
+
+function buildUnitsFromOverride(override) {
+  const runes = [...override.rune];
+  const latin = [...override.read];
+  const units = [];
+  let latinIndex = 0;
+
+  for (const rune of runes) {
+    if (rune === " ") {
+      units.push({ space: true });
+      continue;
+    }
+    while (latin[latinIndex] === " ") latinIndex += 1;
+    units.push({ rune, latin: latin[latinIndex] || "" });
+    latinIndex += 1;
+  }
+
+  return units;
+}
+
+function localWordToGokturk(word) {
+  const pure = cleanWord(word);
+  if (!pure) return { rune: word, units: [] };
+
+  if (WORD_OVERRIDES[pure]) {
+    return {
+      rune: WORD_OVERRIDES[pure].rune,
+      units: buildUnitsFromOverride(WORD_OVERRIDES[pure])
+    };
+  }
+
+  const harmony = getHarmony(pure);
+  const map = harmony === "front" ? FRONT_MAP : BACK_MAP;
+  let runeOut = "";
+  const units = [];
+  let i = 0;
+
+  while (i < pure.length) {
+    let matched = false;
+
+    for (const [src, dst] of MULTI_CHAR_MAP) {
+      if (pure.startsWith(src, i)) {
+        runeOut += dst.rune;
+        units.push({ rune: dst.rune, latin: dst.latin });
+        i += src.length;
+        matched = true;
+        break;
+      }
+    }
+
+    if (matched) continue;
+
+    const ch = pure[i];
+    const rule = map[ch] || FRONT_MAP[ch] || BACK_MAP[ch];
+    if (rule) {
+      runeOut += rule.rune;
+      units.push({ rune: rule.rune, latin: rule.latin });
+    } else {
+      runeOut += ch;
+      units.push({ rune: ch, latin: ch });
+    }
+    i += 1;
+  }
+
+  return { rune: runeOut, units };
+}
+
+function localTurkishToGokturk(text) {
+  const parts = tokenizeWithSpaces(text);
+  const runeParts = [];
+  const units = [];
+
+  for (const part of parts) {
+    if (!part) continue;
+
+    if (/^\s+$/.test(part)) {
+      runeParts.push(part);
+      units.push({ space: true });
+      continue;
+    }
+
+    const result = localWordToGokturk(part);
+    runeParts.push(result.rune);
+    result.units.forEach((u) => units.push(u));
+  }
+
+  return { rune: runeParts.join("").trim(), units };
+}
+
+/* =========================================================
+   BACKEND AI
+========================================================= */
+
+async function aiTranslateToGokturk(text) {
+  const resp = await fetch(`${API_BASE}/api/translate_ai`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      from_lang: "tr",
+      to_lang: "gokturk",
+      mode: "normal",
+      atalar_mode: true,
+      atalar_source: "tr",
+      atalar_target: "gokturk",
+      historical_mode: true
+    })
+  });
+
+  const json = await resp.json().catch(() => null);
+  const translated =
+    String(json?.gokturk_text || "").trim() ||
+    String(json?.translated || "").trim();
+
+  if (!resp.ok || !translated) {
+    throw new Error(json?.error || "atalar_translate_failed");
+  }
+
+  return {
+    translated,
+    historicalText: String(json?.historical_text || "").trim(),
+    historicalReading: String(json?.historical_reading || "").trim()
+  };
+}
+
+/* =========================================================
+   UI
+========================================================= */
+
+function showToast(msg = "") {
+  miniToast.textContent = String(msg || "");
+  miniToast.classList.add("show");
+  clearTimeout(window.__atalarToast);
+  window.__atalarToast = setTimeout(() => miniToast.classList.remove("show"), 1800);
+}
+
+function closeModal() {
+  genericBackdrop.classList.remove("show");
+}
+
+function autoResizeTextarea() {
+  botInput.style.height = "auto";
+  botInput.style.height = `${Math.min(botInput.scrollHeight, 120)}px`;
+}
+
+function syncComposerButtons() {
+  const hasText = String(botInput.value || "").trim().length > 0;
+  botMic.classList.toggle("hidden", hasText && !recording);
+  botSend.classList.toggle("hidden", !hasText);
+}
+
+function keepVisible() {
+  requestAnimationFrame(() => {
+    topBody.scrollTop = topBody.scrollHeight + 300;
+    botBody.scrollTop = botBody.scrollHeight + 300;
+  });
+}
+
+function buildRuneTrack(units) {
+  const track = document.createElement("div");
+  track.className = "rune-track";
+
+  const ordered = [...(units || [])].reverse();
+
+  for (const unit of ordered) {
+    if (unit.space) {
+      const spacer = document.createElement("div");
+      spacer.className = "rune-space";
+      track.appendChild(spacer);
+      continue;
+    }
+
+    const col = document.createElement("div");
+    col.className = "rune-col";
+
+    const rune = document.createElement("div");
+    rune.className = "rune-char";
+    rune.textContent = unit.rune;
+
+    const latin = document.createElement("div");
+    latin.className = "latin-char";
+    latin.textContent = unit.latin;
+
+    col.appendChild(rune);
+    col.appendChild(latin);
+    track.appendChild(col);
+  }
+
+  return track;
+}
+
+function addBubble(where, kind, text, opts = {}) {
+  const wrap = where === "top" ? topBody : botBody;
+  const row = document.createElement("div");
+  row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}`;
+
+  if (opts.gokturk && kind === "me") {
+    const stack = document.createElement("div");
+    stack.className = "bubble-stack";
+
+    const inner = document.createElement("div");
+    inner.className = "bubble-row";
+
+    const txt = document.createElement("div");
+    txt.className = "txt gokturk-wrap";
+    txt.appendChild(buildRuneTrack(opts.units || []));
+
+    if (opts.semanticText && opts.semanticReading) {
+      const semanticBlock = document.createElement("div");
+      semanticBlock.className = "semantic-block";
+
+      const semanticRune = document.createElement("div");
+      semanticRune.className = "semantic-rune";
+      semanticRune.textContent = opts.semanticText;
+
+      const semanticRead = document.createElement("div");
+      semanticRead.className = "semantic-read";
+      semanticRead.textContent = opts.semanticReading;
+
+      semanticBlock.appendChild(semanticRune);
+      semanticBlock.appendChild(semanticRead);
+      txt.appendChild(semanticBlock);
+    }
+
+    inner.appendChild(txt);
+    stack.appendChild(inner);
+    row.appendChild(stack);
+    wrap.appendChild(row);
+    keepVisible();
+    return;
+  }
+
+  const stack = document.createElement("div");
+  stack.className = "bubble-stack";
+
+  const inner = document.createElement("div");
+  inner.className = "bubble-row";
+
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text || "").trim();
+
+  inner.appendChild(txt);
+  stack.appendChild(inner);
+  row.appendChild(stack);
+  wrap.appendChild(row);
+  keepVisible();
+}
+
+function clearLatest(where) {
+  const wrap = where === "top" ? topBody : botBody;
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
+}
+
+/* =========================================================
+   AKIŞ
+========================================================= */
+
+async function processMessage(rawText) {
+  const text = normalizeText(rawText);
+  if (!text) return;
+
+  botInput.value = "";
+  autoResizeTextarea();
+  syncComposerButtons();
+
+  addBubble("bot", "them", text);
+  clearLatest("top");
+
+  frameRoot.classList.remove("is-ready", "is-error");
+  frameRoot.classList.add("is-translating");
+
+  let gokturkText = "";
+  let semanticText = "";
+  let semanticReading = "";
+
+  try {
+    const ai = await aiTranslateToGokturk(text);
+    gokturkText = ai.translated || "";
+    semanticText = ai.historicalText || "";
+    semanticReading = ai.historicalReading || "";
+  } catch {
+    const local = localTurkishToGokturk(text);
+    gokturkText = local.rune || "";
+  }
+
+  const localMap = localTurkishToGokturk(text);
+
+  if (!gokturkText) {
+    frameRoot.classList.remove("is-translating");
+    frameRoot.classList.add("is-error");
+    addBubble("top", "me", "⚠️ Çeviri hatası", { latest: true });
+    setTimeout(() => {
+      frameRoot.classList.remove("is-error");
+      frameRoot.classList.add("is-ready");
+    }, 1200);
+    return;
+  }
+
+  if (!semanticText || !semanticReading) {
+    semanticText = "";
+    semanticReading = "";
+  }
+
+  addBubble("top", "me", gokturkText, {
+    latest: true,
+    gokturk: true,
+    units: localMap.units,
+    semanticText,
+    semanticReading
+  });
+
+  frameRoot.classList.remove("is-translating", "is-error");
+  frameRoot.classList.add("is-ready");
+}
+
+/* =========================================================
+   STT
+========================================================= */
+
+function extractStableRecognitionText(results) {
+  let latestFinal = "";
+  let latestInterim = "";
+
+  for (let i = 0; i < results.length; i++) {
+    const piece = normalizeText(results[i]?.[0]?.transcript || "");
+    if (!piece) continue;
+    if (results[i].isFinal) latestFinal = piece;
+    else latestInterim = piece;
+  }
+
+  return normalizeText(latestFinal || latestInterim);
+}
+
+function stopRecognizer() {
+  try { recognizer?.stop(); } catch {}
+  recognizer = null;
+  recording = false;
+  botComposer.classList.remove("listening");
+  botMic.classList.remove("listening");
+  syncComposerButtons();
+}
+
+function startRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast("Bu cihazda sesli giriş desteklenmiyor");
+    return;
+  }
+
+  if (recording) {
+    stopRecognizer();
+    return;
+  }
+
+  recognizer = new SR();
+  recognizer.lang = "tr-TR";
+  recognizer.interimResults = true;
+  recognizer.continuous = true;
+  recognizer.maxAlternatives = 1;
+
+  let finalCaptured = "";
+
+  recognizer.onstart = () => {
+    recording = true;
+    finalCaptured = "";
+    botComposer.classList.add("listening");
+    botMic.classList.add("listening");
+    syncComposerButtons();
+    frameRoot.classList.remove("is-ready", "is-error");
+    frameRoot.classList.add("is-listening");
+  };
+
+  recognizer.onresult = (e) => {
+    const stableText = extractStableRecognitionText(e.results);
+    finalCaptured = stableText;
+    botInput.value = stableText;
+    autoResizeTextarea();
+    syncComposerButtons();
+  };
+
+  recognizer.onerror = () => {
+    stopRecognizer();
+    frameRoot.classList.remove("is-listening");
+    frameRoot.classList.add("is-error");
+    showToast("Mikrofon hatası");
+    setTimeout(() => {
+      frameRoot.classList.remove("is-error");
+      frameRoot.classList.add("is-ready");
+    }, 1200);
+  };
+
+  recognizer.onend = async () => {
+    const finalText = normalizeText(finalCaptured || botInput.value);
+    stopRecognizer();
+    if (finalText) await processMessage(finalText);
+    else {
+      frameRoot.classList.remove("is-listening");
+      frameRoot.classList.add("is-ready");
+    }
+  };
+
+  try {
+    recognizer.start();
+  } catch {
+    stopRecognizer();
+  }
+}
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+function bindEvents() {
+  clearBtn.addEventListener("click", () => {
+    stopRecognizer();
+    topBody.innerHTML = "";
+    botBody.innerHTML = "";
+    botInput.value = "";
+    autoResizeTextarea();
+    syncComposerButtons();
+    frameRoot.classList.remove("is-listening", "is-translating", "is-error");
+    frameRoot.classList.add("is-ready");
+  });
+
+  homeLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = "/pages/home.html";
+  });
+
+  homeBtn.addEventListener("click", () => {
+    location.href = "/pages/home.html";
+  });
+
+  botInput.addEventListener("input", () => {
+    autoResizeTextarea();
+    syncComposerButtons();
+  });
+
+  botInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      processMessage(botInput.value);
+    }
+  });
+
+  botSend.addEventListener("click", () => processMessage(botInput.value));
+  botMic.addEventListener("click", startRecognition);
+
+  genericCloseBtn.addEventListener("click", closeModal);
+  genericBackdrop.addEventListener("click", (e) => {
+    if (e.target === genericBackdrop) closeModal();
+  });
+}
+
+function init() {
+  autoResizeTextarea();
+  syncComposerButtons();
+  frameRoot.classList.add("is-ready");
+  bindEvents();
+  showToast("Ataların Dili hazır");
+}
+
+init();
