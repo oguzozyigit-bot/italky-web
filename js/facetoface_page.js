@@ -378,7 +378,7 @@ function syncCulturalToggleUi() {
   }
 
   if (culturalToggleLabel) {
-    culturalToggleLabel.textContent = isCultural ? "KÜLTÜREL AÇIK" : "KÜLTÜREL KAPALI";
+    culturalToggleLabel.textContent = "Kültürel Çeviri";
   }
 }
 
