@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Kod İle Yükle</title>
+  <title>italkyAI • Promosyon Kodu Gir</title>
   <meta name="theme-color" content="#05070f"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,26 +16,12 @@
       --muted:rgba(255,255,255,.62);
       --line:rgba(255,255,255,.10);
       --ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
-      --ok:#9df0b9;
-      --err:#ffb2b2;
     }
-
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
-
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
     html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      overflow:hidden;
-      background:#05070f;
-      color:var(--txt);
+      margin:0;width:100%;height:100%;overflow:hidden;background:#05070f;color:#fff;
       font-family:'Outfit',sans-serif;
     }
-
     body{
       background:
         radial-gradient(circle at 18% 14%, rgba(124,92,255,.16), transparent 28%),
@@ -43,7 +29,6 @@
         radial-gradient(circle at 50% 100%, rgba(255,102,196,.08), transparent 25%),
         linear-gradient(180deg,#05070f 0%, #090d19 100%);
     }
-
     #pageContent{
       height:100%;
       max-width:560px;
@@ -53,7 +38,6 @@
       display:flex;
       align-items:center;
     }
-
     .hero{
       width:100%;
       border-radius:28px;
@@ -63,14 +47,12 @@
       text-align:center;
       box-shadow:0 18px 40px rgba(0,0,0,.22);
     }
-
     .title{
       margin:0 0 12px;
       font-size:28px;
       font-weight:1000;
       line-height:1.12;
     }
-
     .desc{
       margin:0 0 24px;
       color:var(--muted);
@@ -78,7 +60,6 @@
       font-weight:800;
       line-height:1.7;
     }
-
     .code-box{
       width:100%;
       min-height:76px;
@@ -87,14 +68,14 @@
       background:rgba(255,255,255,.03);
       color:#fff;
       text-align:center;
-      font-size:34px;
+      font-size:24px;
       font-weight:1000;
-      letter-spacing:10px;
+      letter-spacing:2px;
       margin-bottom:16px;
       padding:0 12px;
       font-family:'Outfit',sans-serif;
+      text-transform:uppercase;
     }
-
     .submit-btn{
       width:100%;
       min-height:58px;
@@ -107,12 +88,7 @@
       background:var(--ai-grad);
       box-shadow:0 14px 28px rgba(124,92,255,.18);
     }
-
-    .submit-btn:disabled{
-      opacity:.72;
-      cursor:default;
-    }
-
+    .submit-btn:disabled{opacity:.72;cursor:default}
     .result{
       margin-top:18px;
       border-radius:22px;
@@ -122,38 +98,31 @@
       display:none;
       text-align:left;
     }
-
-    .result.show{ display:block; }
-
+    .result.show{display:block}
     .result.ok{
       border-color:rgba(157,240,185,.28);
       background:linear-gradient(135deg, rgba(157,240,185,.10), rgba(255,255,255,.03));
     }
-
     .result.err{
       border-color:rgba(255,178,178,.28);
       background:linear-gradient(135deg, rgba(255,178,178,.10), rgba(255,255,255,.03));
     }
-
     .result-title{
       font-size:18px;
       font-weight:1000;
       margin:0 0 8px;
     }
-
     .result-text{
       font-size:14px;
       line-height:1.65;
       font-weight:800;
       color:rgba(255,255,255,.88);
     }
-
     .result-actions{
       display:flex;
       gap:12px;
       margin-top:14px;
     }
-
     .result-btn{
       flex:1;
       min-height:52px;
@@ -165,7 +134,6 @@
       color:#fff;
       background:var(--ai-grad);
     }
-
     .result-btn.secondary{
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.10);
@@ -175,14 +143,13 @@
 <body>
   <main id="pageContent">
     <section class="hero">
-      <h1 class="title">Kod İle Yükle</h1>
+      <h1 class="title">Promosyon Kodu Gir</h1>
       <p class="desc">
-        Satın aldığınız kart üzerindeki 6 haneli kodu yazarak,
-        jeton yükleme işlemini tamamlayınız.
+        Size verilen promosyon kodunu girerek üyelik, kampanya veya hediye hakkınızı hesabınıza tanımlayabilirsiniz.
       </p>
 
-      <input id="manualCode" class="code-box" type="text" maxlength="6" inputmode="numeric" placeholder="000000"/>
-      <button id="loadBtn" class="submit-btn" type="button">YÜKLE</button>
+      <input id="manualCode" class="code-box" type="text" maxlength="32" placeholder="KODUNUZU GİRİN"/>
+      <button id="loadBtn" class="submit-btn" type="button">KODU UYGULA</button>
 
       <div id="resultBox" class="result">
         <div id="resultTitle" class="result-title"></div>
@@ -211,39 +178,55 @@
     const goHomeBtn = document.getElementById("goHomeBtn");
     const retryBtn = document.getElementById("retryBtn");
 
-    function showResult(ok, title, text) {
+    function showResult(ok, title, html) {
       resultBox.className = "result show " + (ok ? "ok" : "err");
       resultTitle.textContent = title;
-      resultText.innerHTML = text;
+      resultText.innerHTML = html;
     }
 
-    function mapCodeLoadError(reasonRaw, detailRaw = "") {
+    function mapPromoError(reasonRaw) {
       const reason = String(reasonRaw || "").trim().toUpperCase();
-      const detail = String(detailRaw || "").trim();
 
-      if (reason === "CODE_NOT_FOUND") {
-        return "Bu kod sistemde kayıtlı değil.";
-      }
-      if (reason === "CARD_ALREADY_USED") {
-        return "Bu kod daha önce kullanılmış.";
-      }
-      if (reason === "CARD_BLOCKED") {
-        return "Bu kart kullanıma kapatılmış.";
-      }
-      if (reason === "CARD_EXPIRED") {
-        return "Bu kartın kullanım süresi dolmuş.";
-      }
-      if (reason === "INVALID_TOKEN_AMOUNT") {
-        return "Bu kartta yüklenebilir jeton bulunamadı.";
-      }
-      if (reason === "CARD_NOT_FOUND") {
-        return "Bu karta ait kayıt bulunamadı.";
-      }
-      if (detail) {
-        return "İşlem sırasında sistem hatası oluştu.";
+      if (reason === "PROMO_NOT_FOUND") return "Bu promosyon kodu sistemde kayıtlı değil.";
+      if (reason === "PROMO_ALREADY_USED") return "Bu promosyon kodu daha önce kullanılmış.";
+      if (reason === "PROMO_INACTIVE") return "Bu promosyon kullanıma kapalı.";
+      if (reason === "PROMO_EXPIRED") return "Bu promosyonun süresi dolmuş.";
+      if (reason === "PROMO_NOT_STARTED") return "Bu promosyon henüz aktif değil.";
+      if (reason === "PROMO_USER_LIMIT_REACHED") return "Bu kampanya için kullanım hakkınız dolmuş.";
+      if (reason === "PROMO_GLOBAL_LIMIT_REACHED") return "Bu kampanyanın toplam kullanım limiti dolmuş.";
+      if (reason === "PROMO_ACCOUNT_MISMATCH") return "Bu promosyon başka bir hesapla eşleşmiş.";
+      if (reason === "PROMO_SKIPPED_ACTIVE_MEMBERSHIP") return "Aktif üyelik nedeniyle bu promosyon uygulanmadı.";
+      if (reason === "PROFILE_NOT_FOUND") return "Kullanıcı profili bulunamadı.";
+
+      return "İşlem sırasında sistem hatası oluştu.";
+    }
+
+    function renderSuccessMessage(json) {
+      const parts = [];
+
+      if ((json.membership_months || 0) > 0) {
+        parts.push(`<b>${json.membership_months} aylık üyelik</b> hesabınıza tanımlandı.`);
       }
 
-      return "İşlem sırasında bağlantı veya sistem hatası oluştu.";
+      if ((json.tokens_loaded || 0) > 0) {
+        parts.push(`<b>${json.tokens_loaded} jeton</b> hesabınıza yüklendi.`);
+      }
+
+      if (json.membership_ends_at) {
+        const d = new Date(json.membership_ends_at);
+        parts.push(`Yeni üyelik bitişi: <b>${d.toLocaleDateString("tr-TR")}</b>`);
+      }
+
+      if (typeof json.tokens_after === "number") {
+        try { setHeaderTokens(json.tokens_after); } catch {}
+        parts.push(`Toplam jeton: <b>${json.tokens_after}</b>`);
+      }
+
+      if (!parts.length && json.message) {
+        parts.push(json.message);
+      }
+
+      return parts.join("<br>");
     }
 
     async function getAuthHeaders() {
@@ -261,10 +244,10 @@
     }
 
     async function redeemCode() {
-      const code = String(manualCode.value || "").trim();
+      const code = String(manualCode.value || "").trim().toUpperCase();
 
-      if (code.length !== 6) {
-        showResult(false, "İşlem Başarısız", "Lütfen 6 haneli kodu eksiksiz giriniz.");
+      if (code.length < 4) {
+        showResult(false, "İşlem Başarısız", "Lütfen promosyon kodunu eksiksiz giriniz.");
         return;
       }
 
@@ -277,11 +260,12 @@
       loadBtn.disabled = true;
 
       try {
-        const res = await fetch(`${API_BASE}/api/nfc/redeem-manual-code`, {
+        const res = await fetch(`${API_BASE}/api/promo/redeem`, {
           method: "POST",
           headers: await getAuthHeaders(),
           body: JSON.stringify({
-            manual_code: code,
+            source: "manual",
+            code: code,
             user_id: userId
           })
         });
@@ -289,44 +273,21 @@
         const json = await res.json().catch(() => null);
 
         if (!json) {
-          showResult(
-            false,
-            "İşlem Başarısız",
-            "Kod ile yükleme işlemi gerçekleştirilemedi."
-          );
+          showResult(false, "İşlem Başarısız", "Promosyon kodu uygulanamadı.");
           loadBtn.disabled = false;
           return;
         }
 
         if (json.ok) {
-          if (typeof json.tokens_after === "number") {
-            try { setHeaderTokens(json.tokens_after); } catch {}
-          }
-
-          showResult(
-            true,
-            "Kod ile Yükleme İşlemi Gerçekleşmiştir",
-            `Yüklenen: <b>${json.loaded_tokens}</b><br>Toplam Bakiye: <b>${json.tokens_after}</b>`
-          );
+          showResult(true, "Promosyon Başarıyla Tanımlandı", renderSuccessMessage(json));
           loadBtn.disabled = false;
           return;
         }
 
-        const reasonText = mapCodeLoadError(json.reason, json.detail);
-
-        showResult(
-          false,
-          "İşlem Başarısız",
-          `Kod ile yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${reasonText}</b>`
-        );
-
+        showResult(false, "İşlem Başarısız", mapPromoError(json.reason));
         loadBtn.disabled = false;
       } catch (e) {
-        showResult(
-          false,
-          "İşlem Başarısız",
-          "Kod ile yükleme işlemi gerçekleştirilemedi."
-        );
+        showResult(false, "İşlem Başarısız", "Promosyon kodu uygulanamadı.");
         loadBtn.disabled = false;
       }
     }
@@ -334,7 +295,10 @@
     loadBtn?.addEventListener("click", redeemCode);
 
     manualCode?.addEventListener("input", () => {
-      manualCode.value = manualCode.value.replace(/\D/g, "").slice(0, 6);
+      manualCode.value = manualCode.value
+        .toUpperCase()
+        .replace(/[^A-Z0-9_-]/g, "")
+        .slice(0, 32);
     });
 
     goHomeBtn?.addEventListener("click", () => {
