@@ -119,6 +119,7 @@ function localFallback(text) {
     literalReading: readWords.join("").replace(/\s+/g, " ").trim(),
     historicalText: "",
     historicalReading: "",
+    historicalMeaning: "",
     units
   };
 }
@@ -162,6 +163,7 @@ async function aiTranslateToGokturk(text) {
 
   const historicalText = String(json?.historical_text || "").trim();
   const historicalReading = String(json?.historical_reading || "").trim();
+  const historicalMeaning = String(json?.historical_meaning || "").trim();
 
   if (!literalText) {
     throw new Error("atalar_literal_empty");
@@ -171,12 +173,13 @@ async function aiTranslateToGokturk(text) {
     literalText,
     literalReading,
     historicalText,
-    historicalReading
+    historicalReading,
+    historicalMeaning
   };
 }
 
 /* =========================================================
-   TTS - SADECE 3. SATIR
+   TTS - SADECE TÜRKÇE ANLAM SATIRI
 ========================================================= */
 
 function stopAudio() {
@@ -187,6 +190,7 @@ function stopAudio() {
     }
   } catch {}
   currentAudio = null;
+
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
@@ -220,7 +224,7 @@ function createSpeakerButton(text) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "speaker-btn";
-  btn.setAttribute("aria-label", "3. satırı dinle");
+  btn.setAttribute("aria-label", "Türkçe anlamı dinle");
   btn.innerHTML = `
     <svg viewBox="0 0 24 24">
       <path d="M3 10v4h4l5 4V6L7 10H3"></path>
@@ -335,27 +339,46 @@ function addBubble(where, kind, text, opts = {}) {
 
     const txt = document.createElement("div");
     txt.className = "txt gokturk-wrap";
+
+    // 1. literal rune
     txt.appendChild(buildWordTrack(opts.units || []));
 
-    if (opts.historicalText) {
-      const semanticBlock = document.createElement("div");
-      semanticBlock.className = "semantic-block";
+    // 2. literal okunuş
+    if (opts.literalReading) {
+      const literalRead = document.createElement("div");
+      literalRead.className = "semantic-read";
+      literalRead.textContent = opts.literalReading;
+      txt.appendChild(literalRead);
+    }
 
-      if (opts.historicalReading) {
-        const semanticRune = document.createElement("div");
-        semanticRune.className = "semantic-rune";
-        semanticRune.textContent = opts.historicalReading;
-        semanticBlock.appendChild(semanticRune);
-      }
+    // 3. AI tarihî/anlamsal Göktürk karşılık
+    if (opts.historicalText) {
+      const histRune = document.createElement("div");
+      histRune.className = "semantic-rune";
+      histRune.textContent = opts.historicalText;
+      txt.appendChild(histRune);
+    }
+
+    // 4. onun okunuşu
+    if (opts.historicalReading) {
+      const histRead = document.createElement("div");
+      histRead.className = "semantic-read";
+      histRead.textContent = opts.historicalReading;
+      txt.appendChild(histRead);
+    }
+
+    // 5. Türkçe anlam/açıklama + sadece bunu oku
+    if (opts.historicalMeaning) {
+      const meaningWrap = document.createElement("div");
+      meaningWrap.className = "semantic-block";
 
       const semanticMeaning = document.createElement("div");
       semanticMeaning.className = "semantic-meaning";
-      semanticMeaning.textContent = opts.historicalText;
-      semanticBlock.appendChild(semanticMeaning);
+      semanticMeaning.textContent = opts.historicalMeaning;
+      meaningWrap.appendChild(semanticMeaning);
 
-      semanticBlock.appendChild(createSpeakerButton(opts.historicalText));
-
-      txt.appendChild(semanticBlock);
+      meaningWrap.appendChild(createSpeakerButton(opts.historicalMeaning));
+      txt.appendChild(meaningWrap);
     }
 
     inner.appendChild(txt);
@@ -435,8 +458,10 @@ async function processMessage(rawText) {
     latest: true,
     gokturk: true,
     units,
+    literalReading: payload.literalReading,
     historicalText: payload.historicalText,
-    historicalReading: payload.historicalReading
+    historicalReading: payload.historicalReading,
+    historicalMeaning: payload.historicalMeaning
   });
 
   frameRoot.classList.remove("is-translating", "is-error");
