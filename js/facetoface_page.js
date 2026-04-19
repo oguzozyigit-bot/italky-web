@@ -277,8 +277,10 @@ function getResolvedFaceVoice() {
   const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
 
   if (mode === "clone") return "mine";
-  if (mode === "preset" && preset === "second") return "second";
-  if (mode === "preset" && preset === "memory") return "memory";
+  if (mode === "preset") {
+    if (preset === "second") return "second";
+    if (preset === "memory") return "memory";
+  }
   if (mode === "auto") return "auto";
 
   const shared = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "").trim().toLowerCase();
@@ -321,14 +323,25 @@ async function hasReadyVoiceProfile() {
       .eq("id", userId)
       .maybeSingle();
 
+    console.log("[facetoface voice profile] userId =", userId);
+    console.log("[facetoface voice profile] error =", error);
+    console.log("[facetoface voice profile] data =", data);
+
     if (error || !data) return false;
 
     const mode = getResolvedFaceVoice();
-    if (mode === "mine") return !!data.voice_sample_path || (!!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim());
-    if (mode === "second") return !!data.second_voice_sample_path || (!!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim());
-    if (mode === "memory") return !!data.memory_voice_sample_path || (!!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim());
+    if (mode === "mine") {
+      return !!data.voice_sample_path || (!!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim());
+    }
+    if (mode === "second") {
+      return !!data.second_voice_sample_path || (!!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim());
+    }
+    if (mode === "memory") {
+      return !!data.memory_voice_sample_path || (!!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim());
+    }
     return false;
-  } catch {
+  } catch (e) {
+    console.log("[facetoface voice profile] catch =", e);
     return false;
   }
 }
@@ -1225,6 +1238,9 @@ async function speakViaApi(text, langCode, tone = "neutral") {
 
   if (!userId) throw new Error("USER_ID_MISSING");
 
+  const { data: { session } = {} } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+  const accessToken = session?.access_token || "";
+
   let apiVoiceMode = "auto";
   let apiVoice = "auto";
   let apiPresetVoice = "";
@@ -1254,15 +1270,24 @@ async function speakViaApi(text, langCode, tone = "neutral") {
     tone: canonTone(tone),
   };
 
+  console.log("[facetoface tts] selectedVoice =", selectedVoice);
+  console.log("[facetoface tts] payload =", payload);
+  console.log("[facetoface tts] has access token =", !!accessToken);
+
   const r = await fetch(`${API_BASE}/api/tts`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {})
+    },
     body: JSON.stringify(payload),
   });
 
   if (myRunId !== speakRunId) return false;
 
   const j = await r.json().catch(() => null);
+  console.log("[facetoface tts] response status =", r.status);
+  console.log("[facetoface tts] response body =", j);
 
   if (!r.ok || !j?.ok || !j?.audio_base64) {
     throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
@@ -1343,9 +1368,9 @@ async function speak(text, langCode, tone = "neutral") {
     } catch (e) {
       console.warn("[facetoface custom voice failed]", e);
 
-      if (selectedVoice === "mine") showToast("Kendi Sesim üretilemedi, normal sese dönüldü");
-      else if (selectedVoice === "second") showToast("2. Ses üretilemedi, normal sese dönüldü");
-      else if (selectedVoice === "memory") showToast("Hatıra Sesi üretilemedi, normal sese dönüldü");
+      if (selectedVoice === "mine") showToast("Kendi Sesim şu anda üretilemedi");
+      else if (selectedVoice === "second") showToast("2. Ses şu anda üretilemedi");
+      else if (selectedVoice === "memory") showToast("Hatıra Sesi şu anda üretilemedi");
     }
   }
 
@@ -1462,6 +1487,9 @@ async function translateText(text, from, to, tone = "neutral") {
     } catch {}
   }
 
+  const { data: { session } = {} } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+  const accessToken = session?.access_token || "";
+
   const endpoints = [
     `${API_BASE}/api/translate_ai`,
     `${API_BASE}/api/translate-ai`,
@@ -1470,28 +1498,43 @@ async function translateText(text, from, to, tone = "neutral") {
 
   for (const endpoint of endpoints) {
     try {
+      const payload = {
+        text: String(text || "").trim(),
+        from_lang: src,
+        to_lang: dst,
+        source: src,
+        target: dst,
+        mode,
+        use_ai: mode === "cultural",
+        cultural: mode === "cultural",
+        tone: canonTone(tone),
+        style
+      };
+
+      console.log("[facetoface translate] endpoint =", endpoint);
+      console.log("[facetoface translate] payload =", payload);
+      console.log("[facetoface translate] has access token =", !!accessToken);
+
       const r = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: String(text || "").trim(),
-          from_lang: src,
-          to_lang: dst,
-          source: src,
-          target: dst,
-          mode,
-          use_ai: mode === "cultural",
-          cultural: mode === "cultural",
-          tone: canonTone(tone),
-          style
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify(payload),
       });
 
-      if (!r.ok) continue;
       const j = await r.json().catch(() => null);
+      console.log("[facetoface translate] response status =", r.status);
+      console.log("[facetoface translate] response body =", j);
+
+      if (!r.ok) continue;
+
       const value = String(j?.translated || j?.translation || j?.text || "").trim();
       if (value) return value;
-    } catch {}
+    } catch (e) {
+      console.warn("[facetoface translate] request failed:", endpoint, e);
+    }
   }
 
   return null;
@@ -2163,4 +2206,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-  }
+    }
