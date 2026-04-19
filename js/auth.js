@@ -1,22 +1,9 @@
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
-/* =========================================================
-   🔐 DOMAIN SABİT
-========================================================= */
-const CANONICAL_ORIGIN = "https://italky.ai";
-const HOME_REL = "/pages/home.html";
-const LOGIN_REL = "/pages/login.html";
-
-/* =========================================================
-   🔐 SINGLE SESSION KEY
-========================================================= */
 const ACTIVE_SESSION_LOCAL_KEY = "ITALKY_ACTIVE_SESSION_KEY";
 let __singleWatcherStarted = false;
 
-/* =========================================================
-   📱 NAC ID
-========================================================= */
 function getOrCreateNacId() {
   const key = "NAC_ID";
   try {
@@ -41,9 +28,6 @@ async function lockThisDevice() {
   return nacId;
 }
 
-/* =========================================================
-   🧠 CACHE
-========================================================= */
 function buildCache(user, profile) {
   return {
     id: profile?.id || user?.id || null,
@@ -74,9 +58,7 @@ export function readCachedUser() {
 }
 
 export function clearCachedUser() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {}
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
 function nukeSupabaseLocal() {
@@ -91,18 +73,11 @@ function nukeSupabaseLocal() {
 }
 
 function clearLocalAuthArtifacts() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {}
-  try {
-    localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY);
-  } catch {}
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  try { localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY); } catch {}
   nukeSupabaseLocal();
 }
 
-/* =========================================================
-   🔑 ACTIVE SESSION
-========================================================= */
 function newSessionKey() {
   return crypto?.randomUUID?.() || `sess-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
 }
@@ -124,7 +99,6 @@ async function claimActiveSessionIfNeeded(userId) {
     .eq("id", userId);
 
   if (error) throw error;
-
   return myKey;
 }
 
@@ -134,8 +108,6 @@ function startSingleSessionWatcher(userId) {
 
   setInterval(async () => {
     try {
-      if (location.pathname === LOGIN_REL) return;
-
       const myKey = (localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || "").trim();
       if (!myKey) return;
 
@@ -148,18 +120,14 @@ function startSingleSessionWatcher(userId) {
       const liveKey = String(data?.active_session_key || "").trim();
 
       if (liveKey && liveKey !== myKey) {
-        await supabase.auth.signOut({ scope: "global" });
+        try { await supabase.auth.signOut({ scope: "global" }); } catch {}
         clearLocalAuthArtifacts();
-        alert("Hesabınız başka bir cihazda açıldığı için bu oturum kapatıldı.");
-        location.replace(LOGIN_REL);
+        location.replace("/pages/login.html");
       }
     } catch {}
   }, 5000);
 }
 
-/* =========================================================
-   🛠 PROFILE
-========================================================= */
 async function readProfile(userId) {
   const { data, error } = await supabase
     .from("profiles")
@@ -175,17 +143,21 @@ async function ensureProfileFallback(user) {
   let profile = null;
 
   try {
-    const { data, error } = await supabase.rpc("ensure_profile");
-    if (error) throw error;
-    if (data) profile = data;
+    const { data, error } = await supabase.rpc("ensure_profile_and_welcome");
+    if (!error && data) profile = data;
   } catch {}
 
   if (profile) return profile;
 
   try {
-    profile = await readProfile(user.id);
-    if (profile) return profile;
+    const { data, error } = await supabase.rpc("ensure_profile");
+    if (!error && data) profile = data;
   } catch {}
+
+  if (profile) return profile;
+
+  profile = await readProfile(user.id);
+  if (profile) return profile;
 
   const fallbackProfile = {
     id: user.id,
@@ -199,6 +171,12 @@ async function ensureProfileFallback(user) {
       user?.user_metadata?.picture ||
       "",
     tokens: 0,
+    package_active: false,
+    selected_package_code: null,
+    package_started_at: null,
+    package_ends_at: null,
+    trial_started_at: null,
+    trial_ends_at: null,
   };
 
   const { error } = await supabase
@@ -210,15 +188,8 @@ async function ensureProfileFallback(user) {
   return await readProfile(user.id);
 }
 
-/* =========================================================
-   🛠 ENSURE PROFILE + CACHE
-========================================================= */
 export async function ensureAuthAndCacheUser() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-
+  const { data: { session }, error } = await supabase.auth.getSession();
   if (error) throw error;
   if (!session?.user) return null;
 
@@ -227,7 +198,6 @@ export async function ensureAuthAndCacheUser() {
   await lockThisDevice();
 
   const profile = await ensureProfileFallback(user);
-
   if (!profile?.id) {
     throw new Error("Profil oluşturulamadı");
   }
@@ -237,97 +207,13 @@ export async function ensureAuthAndCacheUser() {
   const cached = buildCache(user, profile);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
 
+  startSingleSessionWatcher(user.id);
+
   return cached;
 }
 
-/* =========================================================
-   🚀 GOOGLE LOGIN (SADECE WEB OAUTH)
-========================================================= */
-export async function loginWithGoogle(nextTarget = "") {
-  try {
-    await supabase.auth.signOut({ scope: "local" });
-  } catch {}
-
-  clearLocalAuthArtifacts();
-
-  let redirectTo = `${CANONICAL_ORIGIN}/pages/auth_callback.html`;
-
-  const cleanNext = String(nextTarget || "").trim();
-  if (cleanNext) {
-    redirectTo += `?next=${encodeURIComponent(cleanNext)}`;
-  }
-
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo,
-      queryParams: {
-        access_type: "offline",
-        prompt: "select_account consent",
-      },
-    },
-  });
-
-  if (error) throw error;
-}
-
-/* =========================================================
-   🔓 LOGOUT
-========================================================= */
 export async function safeLogout() {
-  try {
-    await supabase.auth.signOut({ scope: "global" });
-  } catch {}
+  try { await supabase.auth.signOut({ scope: "global" }); } catch {}
   clearLocalAuthArtifacts();
-  location.replace(LOGIN_REL);
+  location.replace("/pages/login.html");
 }
-
-/* =========================================================
-   🧭 AUTH STATE WATCHER
-========================================================= */
-export async function startAuthState(callback) {
-  const handleAuth = async (session) => {
-    const user = session?.user || null;
-
-    if (user) {
-      try {
-        const cached = await ensureAuthAndCacheUser();
-        const wallet = Number(cached?.tokens ?? 0);
-
-        startSingleSessionWatcher(user.id);
-
-        callback({ user, wallet });
-        return;
-      } catch (e) {
-        console.error("startAuthState ensureAuthAndCacheUser error:", e);
-        try {
-          await supabase.auth.signOut({ scope: "global" });
-        } catch {}
-        clearLocalAuthArtifacts();
-        callback({ user: null, wallet: 0 });
-        location.replace(LOGIN_REL);
-        return;
-      }
-    }
-
-    callback({ user: null, wallet: 0 });
-  };
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  await handleAuth(session);
-
-  supabase.auth.onAuthStateChange(async (_event, session2) => {
-    await handleAuth(session2);
-  });
-}
-
-/* =========================================================
-   📲 NATIVE BRIDGE TEST İÇİN KAPALI
-========================================================= */
-window.onNativeLoginSuccess = async function () {
-  console.warn("[NATIVE LOGIN DISABLED] Native login geçici olarak kapatıldı.");
-  alert("Native Google login test için kapatıldı. Lütfen normal Google giriş yolunu kullanın.");
-};
