@@ -17,19 +17,10 @@
     --bg:#02000f;
     --text:#fff;
     --muted:rgba(255,255,255,.64);
-    --muted2:rgba(255,255,255,.46);
     --line:rgba(255,255,255,.10);
-    --line2:rgba(255,255,255,.14);
-
     --ai:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#a855f7 72%,#ec4899 100%);
-    --ok:#22c55e;
-    --ok2:#16a34a;
-    --bad:#ef4444;
-    --bad2:#dc2626;
-
     --safe-bottom:env(safe-area-inset-bottom,0px);
     --safe-top:env(safe-area-inset-top,0px);
-    --shellLift:0px;
   }
 
   *{
@@ -58,15 +49,14 @@
     padding:
       calc(8px + var(--safe-top))
       12px
-      calc(10px + var(--safe-bottom) + var(--shellLift))
+      calc(10px + var(--safe-bottom))
       12px;
     opacity:0;
-    transition:opacity .28s ease;
+    transition:opacity .25s ease;
   }
   #pageContent.ready{ opacity:1; }
 
   .wrap{
-    position:relative;
     width:100%;
     max-width:520px;
     height:100%;
@@ -74,6 +64,71 @@
     display:flex;
     flex-direction:column;
     gap:8px;
+  }
+
+  .appTop{
+    flex:0 0 auto;
+    height:52px;
+    display:grid;
+    grid-template-columns:44px 1fr 44px;
+    align-items:center;
+    gap:8px;
+  }
+
+  .topIconBtn{
+    width:44px;
+    height:44px;
+    border:none;
+    border-radius:14px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.10);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 10px 22px rgba(0,0,0,.18);
+  }
+
+  .topIconBtn:active{
+    transform:scale(.985);
+  }
+
+  .topIconBtn svg{
+    width:19px;
+    height:19px;
+    display:block;
+  }
+
+  .brandBtn{
+    height:44px;
+    border:none;
+    border-radius:16px;
+    background:transparent;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+
+  .brandLine{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:22px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:-.35px;
+    color:#fff;
+  }
+
+  .brandLine .ai{
+    background:var(--ai);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .topSpacer{
+    width:44px;
+    height:44px;
   }
 
   .topCard{
@@ -104,7 +159,6 @@
     display:flex;
     align-items:center;
     justify-content:flex-end;
-    gap:10px;
     margin-bottom:6px;
   }
 
@@ -209,7 +263,7 @@
 
   .planetCard{
     flex:0 0 auto;
-    min-height:150px;
+    min-height:145px;
     border-radius:24px;
     border:1px solid var(--line);
     background:
@@ -224,8 +278,8 @@
   }
 
   .planetWrap{
-    width:98px;
-    height:98px;
+    width:96px;
+    height:96px;
     position:relative;
     display:flex;
     align-items:center;
@@ -295,8 +349,8 @@
 
   .planet-core{
     position:relative;
-    width:98px;
-    height:98px;
+    width:96px;
+    height:96px;
     border-radius:50%;
     display:flex;
     align-items:center;
@@ -342,18 +396,10 @@
     opacity:.9;
   }
 
-  .planetCenter{
-    position:relative;
-    z-index:3;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-
   .planetBadge{
     position:relative;
-    width:46px;
-    height:46px;
+    width:44px;
+    height:44px;
     border-radius:50%;
     display:flex;
     align-items:center;
@@ -362,6 +408,7 @@
     border:1px solid rgba(255,255,255,.18);
     box-shadow:0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20);
     backdrop-filter:blur(10px);
+    z-index:3;
   }
 
   .planetBadge::before{
@@ -375,8 +422,8 @@
   .planetBadge::after{
     content:"";
     position:absolute;
-    width:56px;
-    height:56px;
+    width:54px;
+    height:54px;
     border-radius:50%;
     border:1px solid rgba(255,255,255,.10);
     animation:aiSpin 8s linear infinite;
@@ -435,9 +482,14 @@
       radial-gradient(circle at 8% 50%, rgba(59,130,246,.20), transparent 13%);
     box-shadow:0 14px 28px rgba(0,0,0,.22);
     padding:14px 14px 12px;
-    overflow:hidden;
-    -webkit-overflow-scrolling:auto;
+    overflow:auto;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
     position:relative;
+  }
+
+  .card::-webkit-scrollbar{
+    display:none;
   }
 
   .card::before{
@@ -496,9 +548,10 @@
     text-align:left;
     margin-bottom:8px;
     cursor:pointer;
-    display:flex;
+    display:grid;
+    grid-template-columns:38px 1fr 24px;
     align-items:center;
-    gap:10px;
+    column-gap:10px;
     transition:transform .16s ease, background .18s ease, border-color .18s ease, opacity .18s ease, box-shadow .18s ease;
   }
 
@@ -541,6 +594,7 @@
     color:#d7e4ff;
     font-size:18px;
     font-weight:1000;
+    align-self:start;
   }
 
   .opt.correct .optKey{
@@ -556,10 +610,11 @@
   }
 
   .optText{
-    flex:1;
     min-width:0;
     font-size:15px;
     line-height:1.2;
+    word-break:break-word;
+    overflow-wrap:anywhere;
   }
 
   .optIcon{
@@ -575,6 +630,7 @@
     color:rgba(255,255,255,.26);
     font-size:12px;
     font-weight:1000;
+    align-self:center;
   }
 
   .opt.correct .optIcon{
@@ -626,6 +682,21 @@
     color:var(--muted);
     font-weight:800;
     line-height:1.35;
+  }
+
+  .footerLine{
+    flex:0 0 auto;
+    text-align:center;
+    font-size:11px;
+    font-weight:900;
+    color:rgba(255,255,255,.72);
+    padding:2px 0 0;
+  }
+
+  .footerLine .ai{
+    background:var(--ai);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
   }
 
   .errBox{
@@ -800,12 +871,24 @@
       padding:
         calc(8px + var(--safe-top))
         10px
-        calc(10px + var(--safe-bottom) + var(--shellLift))
+        calc(10px + var(--safe-bottom))
         10px;
     }
 
-    .wrap{
-      gap:7px;
+    .wrap{ gap:7px; }
+
+    .appTop{
+      height:48px;
+      grid-template-columns:40px 1fr 40px;
+    }
+
+    .topIconBtn,.topSpacer{
+      width:40px;
+      height:40px;
+    }
+
+    .brandLine{
+      font-size:20px;
     }
 
     .topCard{
@@ -814,27 +897,27 @@
     }
 
     .planetCard{
-      min-height:136px;
+      min-height:132px;
       border-radius:22px;
     }
 
     .planetWrap{
-      width:88px;
-      height:88px;
+      width:84px;
+      height:84px;
     }
 
     .planet-core{
-      width:88px;
-      height:88px;
+      width:84px;
+      height:84px;
     }
 
     .planetBadge{
-      width:42px;
-      height:42px;
+      width:40px;
+      height:40px;
     }
 
     .planetBadge span{
-      font-size:14px;
+      font-size:13px;
     }
 
     .card{
@@ -852,6 +935,8 @@
       padding:9px 10px;
       margin-bottom:7px;
       border-radius:16px;
+      grid-template-columns:34px 1fr 22px;
+      column-gap:8px;
     }
 
     .optKey{
@@ -884,6 +969,21 @@
 
   <main id="pageContent">
     <div class="wrap">
+
+      <div class="appTop">
+        <button class="topIconBtn" id="backBtn" aria-label="Geri">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M14.5 5L8 12L14.5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <button class="brandBtn" id="homeBtn" aria-label="Ana sayfa">
+          <div class="brandLine">italky<span class="ai">AI</span></div>
+        </button>
+
+        <div class="topSpacer"></div>
+      </div>
+
       <section class="topCard">
         <div class="topHead">
           <div class="heroPill" id="heroPill">Soru 1 / 50</div>
@@ -912,10 +1012,8 @@
           <div class="planet-glow" id="planetGlow"></div>
           <div class="planet-rays"></div>
           <div class="planet-core" id="planetCore">
-            <div class="planetCenter">
-              <div class="planetBadge">
-                <span>AI</span>
-              </div>
+            <div class="planetBadge">
+              <span>AI</span>
             </div>
           </div>
         </div>
@@ -935,6 +1033,10 @@
       <div class="note">
         Bilmediğin soruyu <b>Atla</b>. Süre varsa atladıkların tekrar gelir. Her soru en fazla <b>2 tur</b> gösterilir.
       </div>
+
+      <div class="footerLine">
+        <span>italky<span class="ai">AI</span> By Ozyigit's • 2026</span>
+      </div>
     </div>
   </main>
 
@@ -951,34 +1053,60 @@
   </div>
 
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
   import { supabase } from "/js/supabase_client.js";
-
-  mountShell({ scroll: "none" });
-
-  try{
-    const root = getComputedStyle(document.documentElement);
-    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-    document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
-  }catch{}
 
   const $ = (id)=>document.getElementById(id);
   const qCard = $("qCard");
   const btnPrev = $("btnPrev");
   const btnSkip = $("btnSkip");
   const btnNext = $("btnNext");
-
   const heroPill = $("heroPill");
   const levelLabels = $("levelLabels");
   const levelFill = $("levelFill");
   const levelKnob = $("levelKnob");
   const levelTitle = $("levelTitle");
-
   const planetWrap = $("planetWrap");
   const planetCore = $("planetCore");
   const planetGlow = $("planetGlow");
   const planetStatus = $("planetStatus");
   const fxBurst = $("fxBurst");
+  const backBtn = $("backBtn");
+  const homeBtn = $("homeBtn");
+
+  function qs(k){
+    return new URLSearchParams(location.search).get(k);
+  }
+
+  const testId = String(qs("test_id") || "").trim();
+  const langParamRaw = String(qs("lang") || "").trim().toLowerCase();
+  const redirect = String(qs("redirect") || "").trim();
+  const next = String(qs("next") || "").trim();
+
+  function buildReturnUrl() {
+    if (next) return `/pages/${next}.html`;
+    if (redirect === "practice_ai") return "/pages/practice_ai.html";
+    if (redirect === "hangman") return "/pages/hangman.html";
+    if (redirect) return `/pages/${redirect}.html`;
+    return "/pages/level_test_hub.html";
+  }
+
+  function buildCloseUrl() {
+    if (redirect) {
+      if (next) return `/pages/${next}.html`;
+      if (redirect === "practice_ai") return "/pages/practice_ai.html";
+      if (redirect === "hangman") return "/pages/hangman.html";
+      return `/pages/${redirect}.html`;
+    }
+    return "/pages/home.html";
+  }
+
+  backBtn.onclick = () => {
+    location.href = buildReturnUrl();
+  };
+
+  homeBtn.onclick = () => {
+    location.href = "/pages/home.html";
+  };
 
   function setLevelUI(levelCode){
     const lv = String(levelCode || "A1").trim().toUpperCase();
@@ -1110,15 +1238,6 @@
     qCard.innerHTML = `<div class="infoBox">${msg}</div>`;
   }
 
-  function qs(k){
-    return new URLSearchParams(location.search).get(k);
-  }
-
-  const testId = String(qs("test_id") || "").trim();
-  const langParamRaw = String(qs("lang") || "").trim().toLowerCase();
-  const redirect = String(qs("redirect") || "").trim();
-  const next = String(qs("next") || "").trim();
-
   if(!testId){
     showError("Test ID yok.", "Bu sayfa Seviye Tespit merkezinden açılmalı.");
     throw new Error("missing test_id");
@@ -1194,15 +1313,21 @@
   }
 
   function normQ(q){
-    return String(q || "")
-      .toLowerCase()
-      .replace(/\s+/g, " ")
-      .trim();
+    return String(q || "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+
+  function shuffleArray(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
   }
 
   async function buildUniquePool(lang){
     const MAX_V = 6;
-    const picked = [];
+    const allQuestions = [];
     const seen = new Set();
 
     for(let v=1; v<=MAX_V; v++){
@@ -1217,25 +1342,22 @@
         seen.add(qtxt);
 
         const optsRaw = Array.isArray(q?.options) ? q.options : [];
-        const opts = optsRaw.map(stripChoiceLabel);
+        const opts = optsRaw.map(stripChoiceLabel).filter(Boolean);
         const ci = (q?.correct_index != null) ? Number(q.correct_index) : Number(q?.correct ?? -1);
 
-        picked.push({
-          id: q?.id ?? null,
-          level: String(q?.level || "").trim() || "-",
+        allQuestions.push({
+          id: q?.id ?? crypto.randomUUID(),
+          level: String(q?.level || "").trim() || "A1",
           type: "mcq",
           question: String(q?.question || "").trim(),
           options: opts,
           correct_index: Number.isFinite(ci) ? ci : 0
         });
-
-        if(picked.length >= 50) break;
       }
-
-      if(picked.length >= 50) break;
     }
 
-    return picked;
+    const shuffled = shuffleArray(allQuestions);
+    return shuffled.slice(0, 50);
   }
 
   async function attachQuestionsToDB(langCode, questions){
@@ -1245,37 +1367,6 @@
       p_language_code: langCode
     });
     if(error) throw error;
-  }
-
-  function buildReturnUrl() {
-    if (next) {
-      return `/pages/${next}.html`;
-    }
-
-    if (redirect === "practice_ai") {
-      return "/pages/practice_ai.html";
-    }
-
-    if (redirect === "hangman") {
-      return "/pages/hangman.html";
-    }
-
-    if (redirect) {
-      return `/pages/${redirect}.html`;
-    }
-
-    return "/pages/level_test_hub.html";
-  }
-
-  function buildCloseUrl() {
-    if (redirect) {
-      if (next) return `/pages/${next}.html`;
-      if (redirect === "practice_ai") return "/pages/practice_ai.html";
-      if (redirect === "hangman") return "/pages/hangman.html";
-      return `/pages/${redirect}.html`;
-    }
-
-    return "/pages/home.html";
   }
 
   showInfo("Test yükleniyor…");
