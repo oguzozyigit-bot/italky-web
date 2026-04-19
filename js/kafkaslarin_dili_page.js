@@ -13,14 +13,14 @@ const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
 const KAFKAS_POOL = [
-  { code: "ab",  name: "Abhazca",           flag: "𐱅" },
-  { code: "ady", name: "Adigece",           flag: "𐱅" },
-  { code: "kbd", name: "Kabardeyce",        flag: "𐱅" },
-  { code: "ce",  name: "Çeçence",           flag: "𐱅" },
-  { code: "ka",  name: "Gürcüce",           flag: "🇬🇪" },
-  { code: "os",  name: "Osetçe",            flag: "𐱅" },
-  { code: "lez", name: "Lezgice",           flag: "𐱅" },
-  { code: "av",  name: "Avarca",            flag: "𐱅" }
+  { code: "ab",  name: "Abhazca",        flag: "🏔️" },
+  { code: "ady", name: "Adigece",        flag: "🛡️" },
+  { code: "kbd", name: "Kabardeyce",     flag: "⚔️" },
+  { code: "ce",  name: "Çeçence",        flag: "🦅" },
+  { code: "ka",  name: "Gürcüce",        flag: "🇬🇪" },
+  { code: "os",  name: "Osetçe",         flag: "⛰️" },
+  { code: "lez", name: "Lezgice",        flag: "🌄" },
+  { code: "av",  name: "Avarca",         flag: "🗻" }
 ];
 
 const BCP = {
