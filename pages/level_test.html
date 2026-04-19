@@ -10,14 +10,26 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
   :root{
     --bg:#02000f;
-    --card:rgba(255,255,255,0.04);
-    --border:rgba(255,255,255,0.10);
-    --muted:rgba(255,255,255,0.65);
+    --text:#fff;
+    --muted:rgba(255,255,255,.64);
+    --muted2:rgba(255,255,255,.46);
+    --line:rgba(255,255,255,.10);
+    --line2:rgba(255,255,255,.14);
+
+    --ai:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#a855f7 72%,#ec4899 100%);
+    --ok:#22c55e;
+    --ok2:#16a34a;
+    --bad:#ef4444;
+    --bad2:#dc2626;
+
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --safe-top:env(safe-area-inset-top,0px);
+    --shellLift:0px;
   }
 
   *{
@@ -26,61 +38,450 @@
     outline:none;
   }
 
-  #pageContent{
+  html,body{
+    margin:0;
+    width:100%;
     height:100%;
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(103,232,249,.10) 0%, transparent 26%),
+      radial-gradient(circle at 15% 20%, rgba(244,114,182,.08) 0%, transparent 18%),
+      radial-gradient(circle at 85% 18%, rgba(96,165,250,.09) 0%, transparent 18%),
+      linear-gradient(180deg,#08101d 0%, #02000f 100%);
+    color:var(--text);
+    font-family:'Plus Jakarta Sans',sans-serif;
   }
+
+  #pageContent{
+    width:100%;
+    height:100%;
+    padding:
+      calc(10px + var(--safe-top))
+      14px
+      calc(14px + var(--safe-bottom) + var(--shellLift))
+      14px;
+    opacity:0;
+    transition:opacity .28s ease;
+  }
+  #pageContent.ready{ opacity:1; }
 
   .wrap{
     position:relative;
-    max-width:480px;
+    width:100%;
+    max-width:520px;
     height:100%;
     margin:0 auto;
-    padding:12px 14px 14px;
     display:flex;
     flex-direction:column;
     gap:12px;
-    background:rgba(10,10,30,0.18);
-    border:1px solid rgba(255,255,255,0.06);
-    border-radius:26px;
-    backdrop-filter:blur(18px);
-    -webkit-backdrop-filter:blur(18px);
   }
 
-  .topbar{
+  .topCard{
+    flex:0 0 auto;
+    border-radius:28px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.04);
+    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    overflow:hidden;
+    padding:14px;
+    position:relative;
+  }
+
+  .topCard::before{
+    content:"";
+    position:absolute;
+    inset:-20%;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(103,232,249,.14), transparent 26%),
+      radial-gradient(circle at 80% 25%, rgba(236,72,153,.10), transparent 24%);
+    filter:blur(26px);
+    pointer-events:none;
+  }
+
+  .topHead{
+    position:relative;
+    z-index:2;
     display:flex;
+    align-items:center;
     justify-content:space-between;
     gap:10px;
-    align-items:center;
+    margin-bottom:12px;
   }
 
-  .chip{
+  .brand{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
+  }
+
+  .brandLine{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:-.35px;
+    color:#fff;
+  }
+
+  .brandLine .ai{
+    background:var(--ai);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .brandSub{
+    font-size:10px;
+    font-weight:900;
+    color:rgba(255,255,255,.44);
+    letter-spacing:1.8px;
+    text-transform:uppercase;
+  }
+
+  .heroPill{
+    min-height:36px;
     padding:8px 12px;
     border-radius:999px;
-    border:1px solid var(--border);
-    background:rgba(0,0,0,0.22);
-    color:rgba(165,180,252,0.92);
-    font-weight:1000;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.06);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
     font-size:12px;
+    font-weight:1000;
     white-space:nowrap;
+    color:#fff;
   }
 
-  .chip.timer{
+  .progressWrap{
+    position:relative;
+    z-index:2;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .levelLabels{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:6px;
+    text-align:center;
+  }
+
+  .levelLabels span{
+    font-size:11px;
+    font-weight:1000;
+    color:rgba(255,255,255,.50);
+    transition:.18s ease;
+  }
+
+  .levelLabels span.active{
+    color:#a8c7ff;
+    text-shadow:0 0 14px rgba(110,168,255,.28);
+  }
+
+  .track{
+    position:relative;
+    height:16px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.05);
+    overflow:hidden;
+  }
+
+  .fill{
+    position:absolute;
+    left:2px;
+    top:2px;
+    bottom:2px;
+    width:20%;
+    border-radius:999px;
+    background:var(--ai);
+    box-shadow:0 0 20px rgba(91,124,255,.26);
+    transition:width .32s ease;
+  }
+
+  .knob{
+    position:absolute;
+    top:50%;
+    left:calc(20% - 13px);
+    width:26px;
+    height:26px;
+    transform:translateY(-50%);
+    border-radius:50%;
+    background:#10192c;
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 0 0 4px rgba(110,168,255,.10), 0 12px 24px rgba(0,0,0,.26);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:left .32s ease;
+    z-index:3;
+  }
+
+  .knob::before{
+    content:"▶";
+    font-size:10px;
     color:#fff;
-    border-color:rgba(255,255,255,0.12);
+    transform:translateX(1px);
+    opacity:.92;
+  }
+
+  .levelTitle{
+    text-align:center;
+    font-size:13px;
+    font-weight:1000;
+    color:#6ea8ff;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    text-shadow:0 0 18px rgba(110,168,255,.20);
+  }
+
+  .planetCard{
+    flex:0 0 auto;
+    min-height:200px;
+    border-radius:30px;
+    border:1px solid var(--line);
+    background:
+      radial-gradient(circle at 50% 10%, rgba(255,255,255,.05), transparent 26%),
+      linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 18px 40px rgba(0,0,0,.28);
+  }
+
+  .planetWrap{
+    width:128px;
+    height:128px;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .26s ease, filter .26s ease;
+  }
+
+  .planetWrap.okFlash{ animation:planetSuccess .8s ease; }
+  .planetWrap.badFlash{ animation:planetFail .8s ease; }
+
+  .planet-glow{
+    position:absolute;
+    inset:-18px;
+    border-radius:50%;
+    background:
+      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+      radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%);
+    filter:blur(12px);
+    animation:planetGlow 3.2s ease-in-out infinite;
+    z-index:1;
+  }
+
+  .planet-rays{
+    position:absolute;
+    inset:-18px;
+    border-radius:50%;
+    pointer-events:none;
+    z-index:1;
+  }
+
+  .planet-rays::before,
+  .planet-rays::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:
+      conic-gradient(
+        from 0deg,
+        transparent 0deg 18deg,
+        rgba(255,255,255,.28) 24deg,
+        transparent 36deg 62deg,
+        rgba(255,255,255,.16) 70deg,
+        transparent 84deg 116deg,
+        rgba(255,255,255,.22) 124deg,
+        transparent 136deg 180deg,
+        rgba(255,255,255,.18) 192deg,
+        transparent 206deg 250deg,
+        rgba(255,255,255,.24) 258deg,
+        transparent 270deg 310deg,
+        rgba(255,255,255,.15) 318deg,
+        transparent 330deg 360deg
+      );
+    mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+    -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+    filter:blur(1px);
+    opacity:.55;
+    animation:planetRaySpin 12s linear infinite;
+  }
+
+  .planet-rays::after{
+    opacity:.34;
+    transform:scale(1.14);
+    animation-duration:18s;
+    animation-direction:reverse;
+  }
+
+  .planet-core{
+    position:relative;
+    width:128px;
+    height:128px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    z-index:2;
+    background:
+      radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
+      radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
+      linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 34px rgba(103,232,249,.20),
+      0 0 64px rgba(129,140,248,.18);
+    animation:planetBreath 2.8s ease-in-out infinite;
+    transition:box-shadow .18s ease, transform .18s ease;
+  }
+
+  .planet-core::before{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:inset 0 0 12px rgba(255,255,255,.05);
+  }
+
+  .planet-core::after{
+    content:"";
+    position:absolute;
+    left:20px;
+    top:15px;
+    width:34px;
+    height:17px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
+    filter:blur(2px);
+    transform:rotate(-18deg);
+    opacity:.9;
+  }
+
+  .planetCenter{
+    position:relative;
+    z-index:3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .planetBadge{
+    position:relative;
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow:0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20);
+    backdrop-filter:blur(10px);
+  }
+
+  .planetBadge::before{
+    content:"";
+    position:absolute;
+    inset:7px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.10);
+  }
+
+  .planetBadge::after{
+    content:"";
+    position:absolute;
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.10);
+    animation:aiSpin 8s linear infinite;
+  }
+
+  .planetBadge span{
+    position:relative;
+    z-index:2;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:.5px;
+    color:#fff;
+    text-shadow:0 0 12px rgba(255,255,255,.22);
+  }
+
+  .planetStatus{
+    position:absolute;
+    left:50%;
+    bottom:14px;
+    transform:translateX(-50%);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    font-size:11px;
+    font-weight:1000;
+    color:rgba(255,255,255,.78);
+    white-space:nowrap;
+    z-index:5;
+  }
+
+  .planetStatus.ok{
+    color:#d9ffe8;
+    border-color:rgba(34,197,94,.22);
+    background:rgba(34,197,94,.12);
+  }
+
+  .planetStatus.bad{
+    color:#ffe2e2;
+    border-color:rgba(239,68,68,.24);
+    background:rgba(239,68,68,.12);
   }
 
   .card{
     flex:1;
-    border-radius:22px;
-    border:1px solid var(--border);
-    background:var(--card);
-    padding:16px 14px;
+    min-height:0;
+    border-radius:24px;
+    border:1px solid rgba(110,168,255,.16);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)),
+      radial-gradient(circle at 8% 50%, rgba(59,130,246,.20), transparent 13%);
+    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    padding:18px 16px 16px;
     overflow:auto;
     -webkit-overflow-scrolling:touch;
+    position:relative;
   }
 
-  .card::-webkit-scrollbar{
-    display:none;
+  .card::-webkit-scrollbar{ display:none; }
+
+  .card::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:5px;
+    border-radius:12px;
+    background:var(--ai);
+    box-shadow:0 0 18px rgba(110,168,255,.30);
   }
 
   .q-meta{
@@ -88,46 +489,140 @@
     justify-content:space-between;
     gap:10px;
     margin-bottom:10px;
+    flex-wrap:wrap;
   }
 
   .meta{
     font-size:11px;
     font-weight:900;
-    color:rgba(255,255,255,0.55);
+    color:rgba(255,255,255,.55);
+  }
+
+  .q-type{
+    text-align:center;
+    font-size:13px;
+    font-weight:1000;
+    color:rgba(255,255,255,.92);
+    margin-bottom:8px;
   }
 
   .q-text{
+    text-align:center;
     font-size:18px;
     font-weight:1000;
-    line-height:1.3;
+    line-height:1.35;
     margin:6px 0 14px;
     white-space:pre-wrap;
+    color:#fff;
   }
 
   .opt{
     width:100%;
-    padding:14px;
-    border-radius:18px;
-    border:1px solid rgba(255,255,255,0.12);
+    min-height:72px;
+    padding:12px 14px;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.12);
     background:rgba(0,0,0,0.22);
     color:#fff;
     font-weight:900;
     text-align:left;
     margin-bottom:10px;
     cursor:pointer;
-    white-space:pre-wrap;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition:transform .16s ease, background .18s ease, border-color .18s ease, opacity .18s ease, box-shadow .18s ease;
   }
 
-  .opt:active{
-    transform:scale(.99);
+  .opt:active{ transform:scale(.99); }
+
+  .opt.dim{
+    opacity:.42;
+    transform:none!important;
   }
 
   .opt.sel{
-    background:rgba(99,102,241,0.55);
-    border-color:rgba(99,102,241,0.75);
+    background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(168,85,247,.10));
+    border-color:rgba(110,168,255,.38);
+    box-shadow:0 14px 30px rgba(59,130,246,.18);
+  }
+
+  .opt.correct{
+    border-color:rgba(34,197,94,.46);
+    background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(22,163,74,.11));
+    box-shadow:0 16px 34px rgba(34,197,94,.18);
+  }
+
+  .opt.wrong{
+    border-color:rgba(239,68,68,.44);
+    background:linear-gradient(135deg, rgba(239,68,68,.20), rgba(220,38,38,.10));
+    box-shadow:0 16px 34px rgba(239,68,68,.16);
+    animation:shakeX .32s ease;
+  }
+
+  .optKey{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08);
+    color:#d7e4ff;
+    font-size:20px;
+    font-weight:1000;
+  }
+
+  .opt.correct .optKey{
+    background:rgba(34,197,94,.16);
+    border-color:rgba(34,197,94,.28);
+    color:#e6fff0;
+  }
+
+  .opt.wrong .optKey{
+    background:rgba(239,68,68,.16);
+    border-color:rgba(239,68,68,.28);
+    color:#ffe4e4;
+  }
+
+  .optText{
+    flex:1;
+    min-width:0;
+    font-size:17px;
+    line-height:1.24;
+  }
+
+  .optIcon{
+    width:28px;
+    height:28px;
+    min-width:28px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    color:rgba(255,255,255,.26);
+    font-size:14px;
+    font-weight:1000;
+  }
+
+  .opt.correct .optIcon{
+    background:linear-gradient(135deg,#4ade80 0%,#16a34a 100%);
+    border-color:transparent;
+    color:#fff;
+  }
+
+  .opt.wrong .optIcon{
+    background:linear-gradient(135deg,#fb7185 0%,#dc2626 100%);
+    border-color:transparent;
+    color:#fff;
   }
 
   .nav{
+    flex:0 0 auto;
     display:flex;
     gap:10px;
   }
@@ -141,7 +636,10 @@
     color:#fff;
     font-weight:1000;
     cursor:pointer;
+    transition:transform .16s ease, opacity .16s ease, filter .16s ease;
   }
+
+  .btn:active{ transform:scale(.985); }
 
   .btn-primary{
     background:#fff;
@@ -155,6 +653,7 @@
   }
 
   .note{
+    flex:0 0 auto;
     font-size:12px;
     color:var(--muted);
     font-weight:800;
@@ -237,18 +736,166 @@
     gap:10px;
     margin-top:12px;
   }
+
+  #fxBurst{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:99999;
+  }
+
+  .particle{
+    position:absolute;
+    width:12px;
+    height:12px;
+    border-radius:4px;
+    opacity:.98;
+    animation:burstFly .84s ease-out forwards;
+    box-shadow:0 0 16px rgba(255,255,255,.18);
+  }
+
+  @keyframes aiSpin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
+  }
+
+  @keyframes planetBreath{
+    0%,100%{
+      transform:scale(1);
+      box-shadow:
+        inset -10px -12px 20px rgba(0,0,0,.72),
+        inset 10px 12px 22px rgba(255,255,255,.04),
+        inset 0 0 26px rgba(255,255,255,.04),
+        0 0 18px rgba(255,255,255,.10),
+        0 0 34px rgba(103,232,249,.20),
+        0 0 64px rgba(129,140,248,.18);
+    }
+    50%{
+      transform:scale(1.045);
+      box-shadow:
+        inset -10px -12px 20px rgba(0,0,0,.72),
+        inset 10px 12px 24px rgba(255,255,255,.05),
+        inset 0 0 28px rgba(255,255,255,.06),
+        0 0 22px rgba(255,255,255,.12),
+        0 0 42px rgba(103,232,249,.28),
+        0 0 78px rgba(129,140,248,.24);
+    }
+  }
+
+  @keyframes planetGlow{
+    0%,100%{ opacity:.55; transform:scale(1); }
+    50%{ opacity:.92; transform:scale(1.16); }
+  }
+
+  @keyframes planetRaySpin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
+  }
+
+  @keyframes shakeX{
+    0%{ transform:translateX(0); }
+    25%{ transform:translateX(-7px); }
+    50%{ transform:translateX(6px); }
+    75%{ transform:translateX(-4px); }
+    100%{ transform:translateX(0); }
+  }
+
+  @keyframes burstFly{
+    0%{
+      transform:translate(0,0) scale(1);
+      opacity:1;
+    }
+    100%{
+      transform:translate(var(--x), var(--y)) scale(.2) rotate(180deg);
+      opacity:0;
+    }
+  }
+
+  @keyframes planetSuccess{
+    0%{ transform:scale(1); }
+    20%{ transform:scale(1.06); }
+    50%{ transform:scale(1.12); }
+    100%{ transform:scale(1); }
+  }
+
+  @keyframes planetFail{
+    0%{ transform:scale(1) rotate(0deg); }
+    20%{ transform:scale(1.03) rotate(-3deg); }
+    40%{ transform:scale(1.06) rotate(3deg); }
+    60%{ transform:scale(1.03) rotate(-2deg); }
+    100%{ transform:scale(1) rotate(0deg); }
+  }
+
+  @media (max-width:390px){
+    #pageContent{
+      padding:
+        calc(10px + var(--safe-top))
+        12px
+        calc(12px + var(--safe-bottom) + var(--shellLift))
+        12px;
+    }
+
+    .planetCard{ min-height:180px; }
+    .planetWrap{ width:114px; height:114px; }
+    .planet-core{ width:114px; height:114px; }
+    .q-text{ font-size:17px; }
+    .opt{ min-height:68px; }
+    .optText{ font-size:16px; }
+  }
 </style>
 </head>
 
 <body>
+  <div id="fxBurst"></div>
+
   <main id="pageContent">
     <div class="wrap">
-      <div class="topbar">
-        <div class="chip" id="langChip">Seviye Sınavı</div>
-        <div class="chip timer" id="timerChip">40:00</div>
-      </div>
+      <section class="topCard">
+        <div class="topHead">
+          <div class="brand">
+            <div class="brandLine">italky<span class="ai">AI</span></div>
+            <div class="brandSub">Seviye Tespit</div>
+          </div>
+          <div class="heroPill" id="heroPill">Soru 1 / 50</div>
+        </div>
 
-      <div class="card" id="qCard"><div class="q-text">Yükleniyor…</div></div>
+        <div class="progressWrap">
+          <div class="levelLabels" id="levelLabels">
+            <span class="active">A1</span>
+            <span>A2</span>
+            <span>B1</span>
+            <span>B2</span>
+            <span>C1</span>
+          </div>
+
+          <div class="track">
+            <div class="fill" id="levelFill"></div>
+            <div class="knob" id="levelKnob"></div>
+          </div>
+
+          <div class="levelTitle" id="levelTitle">Başlangıç Seviyesi</div>
+        </div>
+      </section>
+
+      <section class="planetCard">
+        <div class="planetWrap" id="planetWrap">
+          <div class="planet-glow" id="planetGlow"></div>
+          <div class="planet-rays"></div>
+          <div class="planet-core" id="planetCore">
+            <div class="planetCenter">
+              <div class="planetBadge">
+                <span>AI</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="planetStatus" id="planetStatus">Hazır</div>
+      </section>
+
+      <section class="card" id="qCard">
+        <div class="q-text">Yükleniyor…</div>
+      </section>
 
       <div class="nav">
         <button class="btn" id="btnPrev" disabled>GERİ</button>
@@ -280,11 +927,150 @@
 
   mountShell({ scroll: "none" });
 
+  try{
+    const root = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+    document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
+  }catch{}
+
   const $ = (id)=>document.getElementById(id);
   const qCard = $("qCard");
   const btnPrev = $("btnPrev");
   const btnSkip = $("btnSkip");
   const btnNext = $("btnNext");
+
+  const heroPill = $("heroPill");
+  const levelLabels = $("levelLabels");
+  const levelFill = $("levelFill");
+  const levelKnob = $("levelKnob");
+  const levelTitle = $("levelTitle");
+
+  const planetWrap = $("planetWrap");
+  const planetCore = $("planetCore");
+  const planetGlow = $("planetGlow");
+  const planetStatus = $("planetStatus");
+  const fxBurst = $("fxBurst");
+
+  function setLevelUI(levelCode){
+    const lv = String(levelCode || "A1").trim().toUpperCase();
+    const MAP = {
+      A1:{ fill:20, title:"Başlangıç Seviyesi" },
+      A2:{ fill:40, title:"Temel Seviye" },
+      B1:{ fill:60, title:"Orta Seviye" },
+      B2:{ fill:80, title:"İyi Seviye" },
+      C1:{ fill:100, title:"İleri Seviye" }
+    };
+    const meta = MAP[lv] || MAP.A1;
+
+    levelFill.style.width = `${meta.fill}%`;
+    levelKnob.style.left = `calc(${meta.fill}% - 13px)`;
+    levelTitle.textContent = meta.title;
+
+    [...levelLabels.children].forEach(el => {
+      el.classList.toggle("active", el.textContent.trim() === lv);
+    });
+  }
+
+  function setPlanetNeutral(text="Hazır"){
+    planetWrap.classList.remove("okFlash","badFlash");
+    planetCore.style.boxShadow = `
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 34px rgba(103,232,249,.20),
+      0 0 64px rgba(129,140,248,.18)
+    `;
+    planetGlow.style.background = `
+      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+      radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%)
+    `;
+    planetStatus.className = "planetStatus";
+    planetStatus.textContent = text;
+  }
+
+  function setPlanetSuccess(){
+    planetWrap.classList.remove("badFlash");
+    void planetWrap.offsetWidth;
+    planetWrap.classList.add("okFlash");
+
+    planetCore.style.boxShadow = `
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.12),
+      0 0 36px rgba(34,197,94,.28),
+      0 0 78px rgba(34,197,94,.34)
+    `;
+    planetGlow.style.background = `
+      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+      radial-gradient(circle, rgba(34,197,94,.35) 0%, transparent 70%)
+    `;
+    planetStatus.className = "planetStatus ok";
+    planetStatus.textContent = "Doğru Cevap";
+    burstFromPlanet("ok");
+  }
+
+  function setPlanetFail(){
+    planetWrap.classList.remove("okFlash");
+    void planetWrap.offsetWidth;
+    planetWrap.classList.add("badFlash");
+
+    planetCore.style.boxShadow = `
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 36px rgba(239,68,68,.30),
+      0 0 82px rgba(220,38,38,.32)
+    `;
+    planetGlow.style.background = `
+      radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,.03) 28%, transparent 62%),
+      radial-gradient(circle, rgba(239,68,68,.34) 0%, transparent 70%)
+    `;
+    planetStatus.className = "planetStatus bad";
+    planetStatus.textContent = "Yanlış Cevap";
+    burstFromPlanet("bad");
+  }
+
+  function burstFromPlanet(type = "ok"){
+    const rect = planetWrap.getBoundingClientRect();
+    const x0 = rect.left + rect.width / 2;
+    const y0 = rect.top + rect.height / 2;
+    const count = type === "ok" ? 28 : 34;
+
+    for(let i=0; i<count; i++){
+      const p = document.createElement("span");
+      p.className = "particle";
+      p.style.left = `${x0}px`;
+      p.style.top = `${y0}px`;
+
+      const angle = (Math.PI * 2 * i) / count;
+      const distance = (type === "ok" ? 42 : 52) + Math.random() * 52;
+      const jitterX = Math.random() * 26 - 13;
+      const jitterY = Math.random() * 26 - 13;
+      const dx = Math.cos(angle) * distance + jitterX;
+      const dy = Math.sin(angle) * distance + jitterY;
+
+      p.style.setProperty("--x", `${dx}px`);
+      p.style.setProperty("--y", `${dy}px`);
+
+      if(type === "ok"){
+        p.style.background = Math.random() > .5
+          ? "linear-gradient(135deg,#dcfce7,#22c55e)"
+          : "linear-gradient(135deg,#86efac,#16a34a)";
+        p.style.borderRadius = Math.random() > .5 ? "50%" : "4px";
+      }else{
+        p.style.background = Math.random() > .5
+          ? "linear-gradient(135deg,#fecaca,#ef4444)"
+          : "linear-gradient(135deg,#fb7185,#dc2626)";
+        p.style.borderRadius = Math.random() > .5 ? "50%" : "3px";
+      }
+
+      fxBurst.appendChild(p);
+      setTimeout(() => p.remove(), 860);
+    }
+  }
 
   function showError(title, detail){
     qCard.innerHTML = `<div class="errBox">${title}\n\n${detail || ""}</div>`;
@@ -385,14 +1171,14 @@
       .trim();
   }
 
-  async function buildUniquePool(langCode){
+  async function buildUniquePool(lang){
     const MAX_V = 6;
     const picked = [];
     const seen = new Set();
 
     for(let v=1; v<=MAX_V; v++){
-      showInfo(`Test hazırlanıyor…\n\n${langCode.toUpperCase()} • v${v} yükleniyor…`);
-      const arr = await loadStaticTest(langCode, v);
+      showInfo(`Test hazırlanıyor…\n\n${lang.toUpperCase()} • v${v} yükleniyor…`);
+      const arr = await loadStaticTest(lang, v);
       if(!arr || !Array.isArray(arr) || !arr.length) continue;
 
       for(const q of arr){
@@ -464,6 +1250,7 @@
   }
 
   showInfo("Test yükleniyor…");
+  setPlanetNeutral("Hazırlanıyor");
 
   let testRow;
   try{
@@ -476,7 +1263,7 @@
   const langCode = normLang(testRow?.language_code || langParamRaw || "en");
   const langNameTR = LANG_NAMES_TR[langCode] || langCode.toUpperCase();
   const testVer = Number(testRow?.test_version || 1) || 1;
-  $("langChip").textContent = `${langCode.toUpperCase()} • Seviye Sınavı (v${testVer})`;
+  $("heroPill").textContent = `Soru 1 / 50`;
 
   const QUESTIONS = await buildUniquePool(langCode);
 
@@ -511,15 +1298,12 @@
   const seenCount = Array(QUESTIONS.length).fill(0);
 
   let idx = 0;
+  let answeredLocked = false;
 
   function fmtTime(sec){
     const m = String(Math.floor(sec / 60)).padStart(2,"0");
     const s = String(sec % 60).padStart(2,"0");
     return `${m}:${s}`;
-  }
-
-  function updateTimer(){
-    $("timerChip").textContent = fmtTime(remaining);
   }
 
   function nextIndex(from){
@@ -539,11 +1323,16 @@
       return;
     }
 
+    answeredLocked = false;
     seenCount[idx] = Math.min(2, seenCount[idx] + 1);
 
     const picked = answers[idx];
     const status = picked !== null ? "Cevaplandı" : (seenCount[idx] >= 2 ? "Son Tur" : "Bekliyor");
     const passInfo = `Tur: ${seenCount[idx]}/2`;
+
+    heroPill.textContent = `Soru ${idx+1} / ${QUESTIONS.length}`;
+    setLevelUI(q.level || "A1");
+    setPlanetNeutral(picked !== null ? "Cevaplandı" : "Hazır");
 
     const opts = Array.isArray(q.options) ? q.options : [];
 
@@ -552,22 +1341,71 @@
         <div class="meta">Soru ${idx+1}/${QUESTIONS.length} • ${q.level || "-"}</div>
         <div class="meta">${status} • ${passInfo}</div>
       </div>
+      <div class="q-type">nasıl söylenir:</div>
       <div class="q-text">${q.question || ""}</div>
-      ${opts.map((opt, i) => `<button class="opt ${picked===i ? "sel" : ""}" data-i="${i}" type="button">${opt}</button>`).join("")}
+      ${opts.map((opt, i) => `
+        <button class="opt ${picked===i ? "sel" : ""}" data-i="${i}" type="button">
+          <div class="optKey">${["A","B","C","D"][i] || i+1}</div>
+          <div class="optText">${opt}</div>
+          <div class="optIcon">${picked===i ? "●" : "○"}</div>
+        </button>
+      `).join("")}
     `;
 
     qCard.querySelectorAll(".opt").forEach(btn => {
       btn.addEventListener("click", () => {
+        if(answeredLocked) return;
+
         const i = Number(btn.getAttribute("data-i"));
         answers[idx] = i;
-        render();
+        answeredLocked = true;
+
+        const buttons = [...qCard.querySelectorAll(".opt")];
+        const correctBtn = buttons[q.correct_index];
+        const isCorrect = i === q.correct_index;
+
+        buttons.forEach(b => {
+          b.classList.add("dim");
+          b.classList.remove("sel");
+        });
+
+        const selectedBtn = buttons[i];
+        selectedBtn.classList.remove("dim");
+        selectedBtn.classList.add("sel");
+
+        setTimeout(() => {
+          if(isCorrect){
+            selectedBtn.classList.remove("sel");
+            selectedBtn.classList.add("correct");
+            const icon = selectedBtn.querySelector(".optIcon");
+            if(icon) icon.textContent = "✓";
+            setPlanetSuccess();
+          }else{
+            selectedBtn.classList.remove("sel");
+            selectedBtn.classList.add("wrong");
+            const badIcon = selectedBtn.querySelector(".optIcon");
+            if(badIcon) badIcon.textContent = "✕";
+
+            if(correctBtn){
+              correctBtn.classList.remove("dim");
+              correctBtn.classList.add("correct");
+              const okIcon = correctBtn.querySelector(".optIcon");
+              if(okIcon) okIcon.textContent = "✓";
+            }
+            setPlanetFail();
+          }
+
+          btnPrev.disabled = (idx === 0);
+          btnNext.disabled = false;
+          btnSkip.disabled = false;
+          btnNext.textContent = (nextIndex(idx) === -1) ? "SINAVI TAMAMLA" : "İLERİ";
+        }, 120);
       });
     });
 
     btnPrev.disabled = (idx === 0);
     btnNext.disabled = (answers[idx] === null);
     btnSkip.disabled = false;
-
     btnNext.textContent = (nextIndex(idx) === -1) ? "SINAVI TAMAMLA" : "İLERİ";
   }
 
@@ -654,12 +1492,17 @@ Sonuç profilinize işlendi.`;
     }
   };
 
-  updateTimer();
+  function updateTimerUI(){
+    const mm = String(Math.floor(remaining / 60)).padStart(2,"0");
+    const ss = String(remaining % 60).padStart(2,"0");
+    heroPill.textContent = `Soru ${idx+1} / ${QUESTIONS.length}`;
+    document.title = `italkyAI • ${mm}:${ss}`;
+  }
 
   const timer = setInterval(() => {
     remaining--;
     if(remaining < 0) remaining = 0;
-    updateTimer();
+    updateTimerUI();
 
     if(remaining === 0){
       clearInterval(timer);
@@ -667,7 +1510,9 @@ Sonuç profilinize işlendi.`;
     }
   }, 1000);
 
+  updateTimerUI();
   render();
+  $("pageContent").classList.add("ready");
 </script>
 </body>
 </html>
