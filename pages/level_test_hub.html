@@ -1,43 +1,45 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
-  <title>italkyAI • Seviye Tespit Sınavı</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Seviye Tespit</title>
 
-  <meta name="theme-color" content="#050816" />
-  <style>html,body{background:#050816!important;}</style>
+  <meta name="theme-color" content="#0b1220"/>
+  <style>html,body{background:#0b1220!important;}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#050816;
-      --bg2:#091126;
-      --card:rgba(255,255,255,.05);
-      --card2:rgba(255,255,255,.04);
+      --bg:#0b1220;
+      --bg2:#10192c;
       --line:rgba(255,255,255,.10);
+      --line-2:rgba(255,255,255,.14);
       --text:#fff;
       --muted:rgba(255,255,255,.62);
-      --muted2:rgba(255,255,255,.42);
+      --muted2:rgba(255,255,255,.44);
+
       --blue:#6ea8ff;
       --blue2:#3b82f6;
-      --purple:#7c3aed;
       --pink:#ec4899;
-      --ok:#18d26e;
-      --ok2:#22c55e;
-      --bad:#ff4d6d;
-      --bad2:#ef4444;
-      --warn:#f59e0b;
+      --purple:#8b5cf6;
+
+      --ok:#22c55e;
+      --ok2:#16a34a;
+      --bad:#ef4444;
+      --bad2:#dc2626;
+      --gold:#f59e0b;
+
+      --ai:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#a855f7 72%,#ec4899 100%);
+      --okGrad:linear-gradient(135deg,#4ade80 0%,#16a34a 100%);
+      --badGrad:linear-gradient(135deg,#fb7185 0%,#dc2626 100%);
+
       --shellLift:0px;
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --safe-top:env(safe-area-inset-top,0px);
-      --grad:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 40%,#a855f7 72%,#ec4899 100%);
-      --okGrad:linear-gradient(135deg,#34d399 0%,#22c55e 100%);
-      --badGrad:linear-gradient(135deg,#fb7185 0%,#ef4444 100%);
-      --shadow:0 14px 40px rgba(0,0,0,.32);
     }
 
     *{
@@ -48,49 +50,26 @@
 
     html,body{
       margin:0;
-      padding:0;
       width:100%;
       height:100%;
       overflow:hidden;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(110,168,255,.13), transparent 34%),
-        radial-gradient(circle at 85% 20%, rgba(236,72,153,.12), transparent 24%),
-        radial-gradient(circle at 10% 85%, rgba(124,58,237,.14), transparent 30%),
-        linear-gradient(180deg,#050816 0%, #081022 100%);
       color:var(--text);
-      font-family:"Plus Jakarta Sans",sans-serif;
-    }
-
-    body::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
+      font-family:'Plus Jakarta Sans',sans-serif;
       background:
-        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-      background-size:28px 28px;
-      opacity:.18;
-      mask-image:radial-gradient(circle at center, #000 45%, transparent 100%);
-      -webkit-mask-image:radial-gradient(circle at center, #000 45%, transparent 100%);
-    }
-
-    #fxBurst{
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      z-index:9999;
-      overflow:hidden;
+        radial-gradient(circle at 50% 0%, rgba(103,232,249,.12) 0%, transparent 26%),
+        radial-gradient(circle at 15% 20%, rgba(244,114,182,.09) 0%, transparent 18%),
+        radial-gradient(circle at 85% 18%, rgba(96,165,250,.10) 0%, transparent 18%),
+        linear-gradient(180deg,#0d1423 0%, #0b1220 100%);
     }
 
     #page{
-      position:relative;
       width:100%;
       height:100%;
       display:flex;
       flex-direction:column;
+      gap:12px;
       padding:
-        calc(12px + var(--safe-top))
+        calc(10px + var(--safe-top))
         14px
         calc(14px + var(--safe-bottom) + var(--shellLift))
         14px;
@@ -99,36 +78,29 @@
     }
     #page.ready{ opacity:1; }
 
-    .wrap{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .topbar{
-      position:relative;
-      border:1px solid rgba(255,255,255,.10);
+    .topCard{
+      flex:0 0 auto;
+      border-radius:28px;
+      border:1px solid var(--line);
       background:rgba(255,255,255,.04);
-      border-radius:26px;
-      padding:14px 14px 12px;
-      box-shadow:var(--shadow);
+      box-shadow:0 18px 40px rgba(0,0,0,.28);
       overflow:hidden;
+      padding:14px;
+      position:relative;
     }
 
-    .topbar::before{
+    .topCard::before{
       content:"";
       position:absolute;
       inset:-20%;
       background:
-        radial-gradient(circle at 16% 25%, rgba(110,168,255,.16), transparent 28%),
-        radial-gradient(circle at 88% 32%, rgba(236,72,153,.12), transparent 22%);
-      filter:blur(28px);
+        radial-gradient(circle at 20% 20%, rgba(103,232,249,.14), transparent 26%),
+        radial-gradient(circle at 80% 25%, rgba(236,72,153,.10), transparent 24%);
+      filter:blur(26px);
       pointer-events:none;
     }
 
-    .topbarHead{
+    .topHead{
       position:relative;
       z-index:2;
       display:flex;
@@ -141,20 +113,21 @@
     .brand{
       display:flex;
       flex-direction:column;
-      gap:3px;
+      gap:2px;
       min-width:0;
     }
 
     .brandLine{
-      font-family:"Space Grotesk",sans-serif;
+      font-family:'Space Grotesk',sans-serif;
       font-size:20px;
-      font-weight:700;
-      letter-spacing:-.3px;
       line-height:1;
+      font-weight:700;
+      letter-spacing:-.35px;
+      color:#fff;
     }
 
     .brandLine .ai{
-      background:var(--grad);
+      background:var(--ai);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
@@ -162,28 +135,26 @@
     .brandSub{
       font-size:10px;
       font-weight:900;
-      color:rgba(255,255,255,.42);
-      text-transform:uppercase;
+      color:rgba(255,255,255,.44);
       letter-spacing:1.8px;
+      text-transform:uppercase;
     }
 
     .pill{
-      flex:0 0 auto;
       min-height:34px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
       padding:8px 12px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.06);
-      color:#fff;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       font-size:11px;
-      font-weight:900;
+      font-weight:1000;
       white-space:nowrap;
     }
 
-    .levelTrackWrap{
+    .progressWrap{
       position:relative;
       z-index:2;
       display:flex;
@@ -196,60 +167,64 @@
       grid-template-columns:repeat(5,1fr);
       gap:6px;
       text-align:center;
+    }
+
+    .levelLabels span{
       font-size:11px;
-      font-weight:900;
-      color:rgba(255,255,255,.58);
+      font-weight:1000;
+      color:rgba(255,255,255,.50);
+      transition:.18s ease;
     }
 
     .levelLabels span.active{
-      color:#b9cdff;
-      text-shadow:0 0 12px rgba(110,168,255,.34);
+      color:#a8c7ff;
+      text-shadow:0 0 14px rgba(110,168,255,.28);
     }
 
-    .levelTrack{
+    .track{
       position:relative;
       height:16px;
       border-radius:999px;
-      padding:2px;
-      background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
       overflow:hidden;
     }
 
-    .levelFill{
+    .fill{
       position:absolute;
       left:2px;
       top:2px;
       bottom:2px;
       width:20%;
       border-radius:999px;
-      background:var(--grad);
-      box-shadow:0 0 24px rgba(110,168,255,.30);
-      transition:width .35s ease;
+      background:var(--ai);
+      box-shadow:0 0 20px rgba(91,124,255,.26);
+      transition:width .32s ease;
     }
 
-    .levelKnob{
+    .knob{
       position:absolute;
       top:50%;
-      left:calc(20% - 15px);
-      width:28px;
-      height:28px;
-      border-radius:50%;
+      left:calc(20% - 14px);
+      width:26px;
+      height:26px;
       transform:translateY(-50%);
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(10,14,28,.95);
-      box-shadow:0 0 0 4px rgba(110,168,255,.12), 0 10px 24px rgba(0,0,0,.30);
+      border-radius:50%;
+      background:#10192c;
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:0 0 0 4px rgba(110,168,255,.10), 0 12px 24px rgba(0,0,0,.26);
       display:flex;
       align-items:center;
       justify-content:center;
-      transition:left .35s ease;
+      transition:left .32s ease;
+      z-index:3;
     }
 
-    .levelKnob::before{
+    .knob::before{
       content:"▶";
-      font-size:11px;
-      transform:translateX(1px);
+      font-size:10px;
       color:#fff;
+      transform:translateX(1px);
       opacity:.92;
     }
 
@@ -257,10 +232,10 @@
       text-align:center;
       font-size:13px;
       font-weight:1000;
-      letter-spacing:2px;
-      color:#77a7ff;
+      color:#6ea8ff;
       text-transform:uppercase;
-      text-shadow:0 0 20px rgba(110,168,255,.28);
+      letter-spacing:2px;
+      text-shadow:0 0 18px rgba(110,168,255,.20);
     }
 
     .main{
@@ -271,56 +246,243 @@
       gap:12px;
     }
 
-    .characterCard{
-      position:relative;
+    .planetCard{
+      flex:0 0 auto;
       min-height:180px;
-      border-radius:28px;
-      border:1px solid rgba(255,255,255,.10);
+      border-radius:30px;
+      border:1px solid var(--line);
       background:
-        radial-gradient(circle at 50% 0%, rgba(110,168,255,.10), transparent 40%),
+        radial-gradient(circle at 50% 10%, rgba(255,255,255,.05), transparent 26%),
         linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      overflow:hidden;
-      box-shadow:var(--shadow);
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:12px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 18px 40px rgba(0,0,0,.28);
     }
 
-    .characterGlow{
+    .planetWrap{
+      width:128px;
+      height:128px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:transform .26s ease, filter .26s ease;
+    }
+
+    .planetWrap.okFlash{
+      animation:planetSuccess .8s ease;
+    }
+
+    .planetWrap.badFlash{
+      animation:planetFail .8s ease;
+    }
+
+    .planet-glow{
       position:absolute;
-      width:170px;
-      height:170px;
+      inset:-18px;
       border-radius:50%;
-      background:radial-gradient(circle, rgba(110,168,255,.24), rgba(168,85,247,.14), transparent 70%);
-      filter:blur(10px);
-      animation:pulseGlow 2.2s ease-in-out infinite;
+      background:
+        radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+        radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%);
+      filter:blur(12px);
+      animation:planetGlow 3.2s ease-in-out infinite;
+      z-index:1;
     }
 
-    .avatar{
+    .planet-rays{
+      position:absolute;
+      inset:-18px;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:1;
+    }
+
+    .planet-rays::before,
+    .planet-rays::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      background:
+        conic-gradient(
+          from 0deg,
+          transparent 0deg 18deg,
+          rgba(255,255,255,.28) 24deg,
+          transparent 36deg 62deg,
+          rgba(255,255,255,.16) 70deg,
+          transparent 84deg 116deg,
+          rgba(255,255,255,.22) 124deg,
+          transparent 136deg 180deg,
+          rgba(255,255,255,.18) 192deg,
+          transparent 206deg 250deg,
+          rgba(255,255,255,.24) 258deg,
+          transparent 270deg 310deg,
+          rgba(255,255,255,.15) 318deg,
+          transparent 330deg 360deg
+        );
+      mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+      -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+      filter:blur(1px);
+      opacity:.55;
+      animation:planetRaySpin 12s linear infinite;
+    }
+
+    .planet-rays::after{
+      opacity:.34;
+      transform:scale(1.14);
+      animation-duration:18s;
+      animation-direction:reverse;
+    }
+
+    .planet-core{
+      position:relative;
+      width:128px;
+      height:128px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      z-index:2;
+      background:
+        radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
+        radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
+        linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
+      box-shadow:
+        inset -10px -12px 20px rgba(0,0,0,.72),
+        inset 10px 12px 22px rgba(255,255,255,.04),
+        inset 0 0 26px rgba(255,255,255,.04),
+        0 0 18px rgba(255,255,255,.10),
+        0 0 34px rgba(103,232,249,.20),
+        0 0 64px rgba(129,140,248,.18);
+      animation:planetBreath 2.8s ease-in-out infinite;
+      transition:box-shadow .18s ease, transform .18s ease;
+    }
+
+    .planet-core::before{
+      content:"";
+      position:absolute;
+      inset:6px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 0 12px rgba(255,255,255,.05);
+    }
+
+    .planet-core::after{
+      content:"";
+      position:absolute;
+      left:20px;
+      top:15px;
+      width:34px;
+      height:17px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
+      filter:blur(2px);
+      transform:rotate(-18deg);
+      opacity:.9;
+    }
+
+    .planetCenter{
+      position:relative;
+      z-index:3;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .planetBadge{
+      position:relative;
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20);
+      backdrop-filter:blur(10px);
+    }
+
+    .planetBadge::before{
+      content:"";
+      position:absolute;
+      inset:7px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .planetBadge::after{
+      content:"";
+      position:absolute;
+      width:70px;
+      height:70px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.10);
+      animation:aiSpin 8s linear infinite;
+    }
+
+    .planetBadge span{
       position:relative;
       z-index:2;
-      width:150px;
-      max-width:52vw;
-      filter:drop-shadow(0 14px 30px rgba(0,0,0,.35));
-      user-select:none;
-      pointer-events:none;
-      animation:floaty 3s ease-in-out infinite;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:.5px;
+      color:#fff;
+      text-shadow:0 0 12px rgba(255,255,255,.22);
+    }
+
+    .planetStatus{
+      position:absolute;
+      left:50%;
+      bottom:14px;
+      transform:translateX(-50%);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:30px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:11px;
+      font-weight:1000;
+      color:rgba(255,255,255,.78);
+      white-space:nowrap;
+      z-index:5;
+    }
+
+    .planetStatus.ok{
+      color:#d9ffe8;
+      border-color:rgba(34,197,94,.22);
+      background:rgba(34,197,94,.12);
+    }
+
+    .planetStatus.bad{
+      color:#ffe2e2;
+      border-color:rgba(239,68,68,.24);
+      background:rgba(239,68,68,.12);
     }
 
     .questionCard{
-      position:relative;
-      border-radius:26px;
-      border:1px solid rgba(110,168,255,.18);
+      flex:0 0 auto;
+      border-radius:28px;
+      border:1px solid rgba(110,168,255,.16);
       background:
         linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)),
-        radial-gradient(circle at 8% 50%, rgba(59,130,246,.20), transparent 14%);
-      box-shadow:0 16px 40px rgba(0,0,0,.34);
+        radial-gradient(circle at 8% 50%, rgba(59,130,246,.20), transparent 13%);
+      box-shadow:0 18px 40px rgba(0,0,0,.28);
       padding:18px 18px 16px;
+      position:relative;
       overflow:hidden;
     }
 
-    .questionCard::after{
+    .questionCard::before{
       content:"";
       position:absolute;
       left:0;
@@ -328,21 +490,21 @@
       bottom:0;
       width:5px;
       border-radius:12px;
-      background:var(--grad);
-      box-shadow:0 0 18px rgba(110,168,255,.34);
+      background:var(--ai);
+      box-shadow:0 0 18px rgba(110,168,255,.30);
     }
 
-    .questionLabel{
+    .questionType{
+      text-align:center;
       font-size:13px;
       font-weight:1000;
-      text-align:center;
       color:rgba(255,255,255,.92);
       margin-bottom:8px;
     }
 
     .questionText{
       text-align:center;
-      font-size:17px;
+      font-size:18px;
       line-height:1.35;
       font-weight:900;
       color:#fff;
@@ -351,67 +513,96 @@
     .questionText .qWord{
       display:block;
       margin:8px 0 4px;
-      font-size:25px;
-      line-height:1.15;
-      color:#9ec2ff;
-      text-shadow:0 0 18px rgba(110,168,255,.20);
+      font-size:28px;
+      color:#9fc3ff;
+      text-shadow:0 0 18px rgba(110,168,255,.18);
     }
 
     .questionMeta{
       margin-top:10px;
       text-align:center;
       font-size:11px;
-      color:rgba(255,255,255,.46);
       font-weight:800;
-      letter-spacing:.4px;
+      color:rgba(255,255,255,.44);
     }
 
     .answers{
-      display:grid;
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
       gap:10px;
+      overflow:auto;
+      padding-right:2px;
+      scrollbar-width:none;
     }
+    .answers::-webkit-scrollbar{ display:none; }
 
-    .answer{
+    .answerBtn{
       position:relative;
       width:100%;
-      min-height:72px;
+      min-height:74px;
       border:none;
       border-radius:22px;
       display:flex;
       align-items:center;
       gap:12px;
       padding:12px 14px;
-      background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.035));
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      cursor:pointer;
       text-align:left;
+      cursor:pointer;
+      color:#fff;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.035));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 12px 24px rgba(0,0,0,.18);
       transition:
         transform .16s ease,
-        background .22s ease,
-        border-color .22s ease,
-        box-shadow .22s ease,
-        opacity .22s ease;
-      box-shadow:0 10px 24px rgba(0,0,0,.18);
+        background .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease,
+        opacity .18s ease;
       overflow:hidden;
     }
 
-    .answer::before{
+    .answerBtn::before{
       content:"";
       position:absolute;
       inset:0;
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent);
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.045), transparent);
       transform:translateX(-100%);
       transition:transform .4s ease;
       pointer-events:none;
     }
 
-    .answer:active{
+    .answerBtn:hover::before{
+      transform:translateX(100%);
+    }
+
+    .answerBtn:active{
       transform:scale(.986);
     }
 
-    .answer:hover::before{
-      transform:translateX(100%);
+    .answerBtn.dim{
+      opacity:.42;
+      transform:none!important;
+    }
+
+    .answerBtn.selected{
+      border-color:rgba(110,168,255,.38);
+      background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(168,85,247,.10));
+      box-shadow:0 14px 30px rgba(59,130,246,.18);
+    }
+
+    .answerBtn.correct{
+      border-color:rgba(34,197,94,.46);
+      background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(22,163,74,.11));
+      box-shadow:0 16px 34px rgba(34,197,94,.18);
+    }
+
+    .answerBtn.wrong{
+      border-color:rgba(239,68,68,.44);
+      background:linear-gradient(135deg, rgba(239,68,68,.20), rgba(220,38,38,.10));
+      box-shadow:0 16px 34px rgba(239,68,68,.16);
+      animation:shakeX .32s ease;
     }
 
     .answerKey{
@@ -422,104 +613,81 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:20px;
-      font-weight:1000;
-      color:#cddcff;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.08);
+      color:#d7e4ff;
+      font-size:20px;
+      font-weight:1000;
       box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .answerBtn.correct .answerKey{
+      background:rgba(34,197,94,.16);
+      border-color:rgba(34,197,94,.28);
+      color:#e6fff0;
+    }
+
+    .answerBtn.wrong .answerKey{
+      background:rgba(239,68,68,.16);
+      border-color:rgba(239,68,68,.28);
+      color:#ffe4e4;
     }
 
     .answerText{
       flex:1;
       min-width:0;
       font-size:18px;
-      line-height:1.2;
       font-weight:900;
+      line-height:1.22;
       color:#fff;
     }
 
     .answerIcon{
-      flex:0 0 auto;
-      width:26px;
-      height:26px;
+      width:28px;
+      height:28px;
+      min-width:28px;
       border-radius:50%;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:15px;
-      color:rgba(255,255,255,.26);
       border:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.04);
+      color:rgba(255,255,255,.26);
+      font-size:14px;
+      font-weight:1000;
     }
 
-    .answer.dim{
-      opacity:.42;
-      transform:none!important;
-    }
-
-    .answer.selected{
-      border-color:rgba(110,168,255,.38);
-      background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(168,85,247,.10));
-      box-shadow:0 14px 32px rgba(59,130,246,.18);
-    }
-
-    .answer.correct{
-      border-color:rgba(34,197,94,.45);
-      background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(16,185,129,.10));
-      box-shadow:0 16px 36px rgba(34,197,94,.18);
-    }
-
-    .answer.correct .answerKey{
-      background:rgba(34,197,94,.16);
-      border-color:rgba(34,197,94,.30);
-      color:#d9ffeb;
-    }
-
-    .answer.correct .answerIcon{
-      color:#fff;
-      background:linear-gradient(135deg,#34d399,#22c55e);
+    .answerBtn.correct .answerIcon{
+      background:var(--okGrad);
       border-color:transparent;
-    }
-
-    .answer.wrong{
-      border-color:rgba(239,68,68,.46);
-      background:linear-gradient(135deg, rgba(239,68,68,.20), rgba(244,63,94,.10));
-      box-shadow:0 16px 36px rgba(239,68,68,.16);
-      animation:shakeX .32s ease;
-    }
-
-    .answer.wrong .answerKey{
-      background:rgba(239,68,68,.16);
-      border-color:rgba(239,68,68,.28);
-      color:#ffe0e6;
-    }
-
-    .answer.wrong .answerIcon{
       color:#fff;
-      background:linear-gradient(135deg,#fb7185,#ef4444);
+    }
+
+    .answerBtn.wrong .answerIcon{
+      background:var(--badGrad);
       border-color:transparent;
+      color:#fff;
     }
 
     .bottomBar{
+      flex:0 0 auto;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      padding:10px 4px 2px;
+      padding:2px 2px 0;
     }
 
     .statusText{
       min-width:0;
       font-size:12px;
       font-weight:900;
-      color:rgba(255,255,255,.60);
       line-height:1.45;
+      color:rgba(255,255,255,.60);
     }
 
     .nextBtn{
-      flex:0 0 auto;
-      min-height:48px;
+      min-height:50px;
       padding:0 18px;
       border:none;
       border-radius:16px;
@@ -527,9 +695,9 @@
       color:#fff;
       font-size:14px;
       font-weight:1000;
-      background:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#ec4899 100%);
-      box-shadow:0 14px 32px rgba(91,124,255,.26);
-      transition:transform .16s ease, opacity .18s ease, filter .18s ease;
+      background:var(--ai);
+      box-shadow:0 14px 30px rgba(91,124,255,.24);
+      transition:transform .16s ease, opacity .16s ease, filter .16s ease;
     }
 
     .nextBtn:active{
@@ -537,48 +705,90 @@
     }
 
     .nextBtn:disabled{
-      opacity:.45;
-      filter:grayscale(.12);
+      opacity:.42;
+      filter:grayscale(.15);
       cursor:not-allowed;
       box-shadow:none;
     }
 
     .toast{
       position:fixed;
-      top:18px;
       left:50%;
+      top:18px;
       transform:translateX(-50%) translateY(-120px);
-      z-index:10000;
-      max-width:min(92vw,520px);
-      padding:11px 15px;
-      border-radius:999px;
-      background:rgba(10,12,22,.94);
+      background:rgba(8,10,20,.95);
       border:1px solid rgba(255,255,255,.12);
+      padding:10px 14px;
+      border-radius:999px;
       color:#fff;
+      z-index:999999;
+      font-weight:1000;
       font-size:12px;
-      font-weight:900;
-      text-align:center;
-      pointer-events:none;
+      transition:.25s;
       backdrop-filter:blur(12px);
-      transition:.24s ease;
+      pointer-events:none;
+      max-width:min(92vw,520px);
+      text-align:center;
     }
 
     .toast.show{
       transform:translateX(-50%) translateY(0);
     }
 
-    .hidden{
-      display:none!important;
+    #fxBurst{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:99999;
     }
 
-    @keyframes pulseGlow{
-      0%,100%{ transform:scale(.96); opacity:.72; }
-      50%{ transform:scale(1.05); opacity:1; }
+    .particle{
+      position:absolute;
+      width:12px;
+      height:12px;
+      border-radius:4px;
+      opacity:.98;
+      animation:burstFly .84s ease-out forwards;
+      box-shadow:0 0 16px rgba(255,255,255,.18);
     }
 
-    @keyframes floaty{
-      0%,100%{ transform:translateY(0px); }
-      50%{ transform:translateY(-6px); }
+    @keyframes aiSpin{
+      from{ transform:rotate(0deg); }
+      to{ transform:rotate(360deg); }
+    }
+
+    @keyframes planetBreath{
+      0%,100%{
+        transform:scale(1);
+        box-shadow:
+          inset -10px -12px 20px rgba(0,0,0,.72),
+          inset 10px 12px 22px rgba(255,255,255,.04),
+          inset 0 0 26px rgba(255,255,255,.04),
+          0 0 18px rgba(255,255,255,.10),
+          0 0 34px rgba(103,232,249,.20),
+          0 0 64px rgba(129,140,248,.18);
+      }
+      50%{
+        transform:scale(1.045);
+        box-shadow:
+          inset -10px -12px 20px rgba(0,0,0,.72),
+          inset 10px 12px 24px rgba(255,255,255,.05),
+          inset 0 0 28px rgba(255,255,255,.06),
+          0 0 22px rgba(255,255,255,.12),
+          0 0 42px rgba(103,232,249,.28),
+          0 0 78px rgba(129,140,248,.24);
+      }
+    }
+
+    @keyframes planetGlow{
+      0%,100%{ opacity:.55; transform:scale(1); }
+      50%{ opacity:.92; transform:scale(1.16); }
+    }
+
+    @keyframes planetRaySpin{
+      from{ transform:rotate(0deg); }
+      to{ transform:rotate(360deg); }
     }
 
     @keyframes shakeX{
@@ -600,14 +810,19 @@
       }
     }
 
-    .particle{
-      position:absolute;
-      width:10px;
-      height:10px;
-      border-radius:3px;
-      background:linear-gradient(135deg,#fff,#9ec2ff);
-      box-shadow:0 0 12px rgba(255,255,255,.25);
-      animation:burstFly .72s ease-out forwards;
+    @keyframes planetSuccess{
+      0%{ transform:scale(1); }
+      20%{ transform:scale(1.06); }
+      50%{ transform:scale(1.12); }
+      100%{ transform:scale(1); }
+    }
+
+    @keyframes planetFail{
+      0%{ transform:scale(1) rotate(0deg); }
+      20%{ transform:scale(1.03) rotate(-3deg); }
+      40%{ transform:scale(1.06) rotate(3deg); }
+      60%{ transform:scale(1.03) rotate(-2deg); }
+      100%{ transform:scale(1) rotate(0deg); }
     }
 
     @media (max-width:390px){
@@ -619,107 +834,88 @@
           12px;
       }
 
-      .characterCard{
-        min-height:160px;
-      }
-
-      .questionText{
-        font-size:16px;
-      }
-
-      .questionText .qWord{
-        font-size:22px;
-      }
-
-      .answer{
-        min-height:68px;
-        border-radius:20px;
-      }
-
-      .answerText{
-        font-size:17px;
-      }
+      .planetCard{ min-height:166px; }
+      .planetWrap{ width:114px; height:114px; }
+      .planet-core{ width:114px; height:114px; }
+      .questionText{ font-size:17px; }
+      .questionText .qWord{ font-size:24px; }
+      .answerBtn{ min-height:70px; }
+      .answerText{ font-size:17px; }
     }
   </style>
 </head>
+
 <body>
   <div id="fxBurst"></div>
 
   <main id="page">
-    <div class="wrap">
-      <section class="topbar">
-        <div class="topbarHead">
-          <div class="brand">
-            <div class="brandLine">italky<span class="ai">AI</span></div>
-            <div class="brandSub">Seviye Tespit</div>
+    <section class="topCard">
+      <div class="topHead">
+        <div class="brand">
+          <div class="brandLine">italky<span class="ai">AI</span></div>
+          <div class="brandSub">Seviye Tespit</div>
+        </div>
+        <div class="pill" id="heroPill">Soru 1 / 50</div>
+      </div>
+
+      <div class="progressWrap">
+        <div class="levelLabels" id="levelLabels">
+          <span class="active">A1</span>
+          <span>A2</span>
+          <span>B1</span>
+          <span>B2</span>
+          <span>C1</span>
+        </div>
+
+        <div class="track">
+          <div class="fill" id="levelFill"></div>
+          <div class="knob" id="levelKnob"></div>
+        </div>
+
+        <div class="levelTitle" id="levelTitle">Başlangıç Seviyesi</div>
+      </div>
+    </section>
+
+    <section class="main">
+      <div class="planetCard">
+        <div class="planetWrap" id="planetWrap">
+          <div class="planet-glow" id="planetGlow"></div>
+          <div class="planet-rays"></div>
+          <div class="planet-core" id="planetCore">
+            <div class="planetCenter">
+              <div class="planetBadge">
+                <span>AI</span>
+              </div>
+            </div>
           </div>
-          <div class="pill" id="pillInfo">Soru 1 / 12</div>
         </div>
 
-        <div class="levelTrackWrap">
-          <div class="levelLabels" id="levelLabels">
-            <span class="active">A1</span>
-            <span>A2</span>
-            <span>B1</span>
-            <span>B2</span>
-            <span>C1</span>
-          </div>
+        <div class="planetStatus" id="planetStatus">Hazır</div>
+      </div>
 
-          <div class="levelTrack">
-            <div class="levelFill" id="levelFill"></div>
-            <div class="levelKnob" id="levelKnob"></div>
-          </div>
-
-          <div class="levelTitle" id="levelTitle">Başlangıç Seviyesi</div>
+      <div class="questionCard">
+        <div class="questionType" id="questionType">nasıl söylenir:</div>
+        <div class="questionText" id="questionText">
+          <span class="qWord">“...”</span>
+          ?
         </div>
-      </section>
+        <div class="questionMeta" id="questionMeta">Doğru cevabı seç ve devam et.</div>
+      </div>
 
-      <section class="main">
-        <div class="characterCard">
-          <div class="characterGlow"></div>
+      <div class="answers" id="answers"></div>
 
-          <svg class="avatar" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <ellipse cx="110" cy="176" rx="70" ry="16" fill="rgba(0,0,0,.25)"/>
-            <path d="M71 190C75 149 79 129 91 114H129C141 129 145 149 149 190C125 198 95 198 71 190Z" fill="#E7E7EA"/>
-            <path d="M73 188C78 148 82 128 92 114H101C91 128 88 149 84 190C80 190 76 189 73 188Z" fill="#CFCFD3"/>
-            <path d="M147 188C142 148 138 128 128 114H119C129 128 132 149 136 190C140 190 144 189 147 188Z" fill="#F4F4F5"/>
-            <circle cx="110" cy="79" r="47" fill="#D8A06D"/>
-            <path d="M69 66C74 42 90 30 111 31C134 32 150 47 151 70C142 56 128 48 111 48C91 48 79 54 69 66Z" fill="#C99261"/>
-            <path d="M72 73C75 51 91 36 111 36C130 36 147 49 148 73V84C148 106 131 124 110 124C89 124 72 106 72 84V73Z" fill="#D8A06D" stroke="#111827" stroke-width="2.5"/>
-            <circle cx="95" cy="81" r="4.4" fill="#111827"/>
-            <circle cx="125" cy="81" r="4.4" fill="#111827"/>
-            <path d="M88 65C91 63 95 62 100 63" stroke="#111827" stroke-width="3.5" stroke-linecap="round"/>
-            <path d="M120 63C125 62 129 63 132 65" stroke="#111827" stroke-width="3.5" stroke-linecap="round"/>
-            <path d="M95 101C103 100 117 99 125 98" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
-            <path d="M65 145L56 188" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
-            <path d="M155 145L164 188" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
-            <path d="M92 114H128" stroke="#111827" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-
-        <div class="questionCard">
-          <div class="questionLabel" id="questionLabel">nasıl söylenir:</div>
-          <div class="questionText" id="questionText">
-            <span class="qWord">“Görüyorum”</span>
-            ?
-          </div>
-          <div class="questionMeta" id="questionMeta">Doğru cevabı seç ve devam et.</div>
-        </div>
-
-        <div class="answers" id="answers"></div>
-
-        <div class="bottomBar">
-          <div class="statusText" id="statusText">Bir şık seçerek devam edebilirsin.</div>
-          <button class="nextBtn" id="nextBtn" disabled>Sonraki</button>
-        </div>
-      </section>
-    </div>
+      <div class="bottomBar">
+        <div class="statusText" id="statusText">Bir şık seçerek devam et.</div>
+        <button class="nextBtn" id="nextBtn" disabled>Sonraki</button>
+      </div>
+    </section>
   </main>
 
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
+    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
 
     mountShell({ scroll:"hidden" });
 
@@ -732,91 +928,285 @@
     const $ = (id) => document.getElementById(id);
 
     const page = $("page");
-    const answersEl = $("answers");
-    const nextBtn = $("nextBtn");
-    const toastEl = $("toast");
-    const statusText = $("statusText");
-    const pillInfo = $("pillInfo");
-    const questionText = $("questionText");
-    const questionMeta = $("questionMeta");
+    const heroPill = $("heroPill");
+    const levelLabels = $("levelLabels");
     const levelFill = $("levelFill");
     const levelKnob = $("levelKnob");
     const levelTitle = $("levelTitle");
-    const levelLabels = $("levelLabels");
+
+    const questionType = $("questionType");
+    const questionText = $("questionText");
+    const questionMeta = $("questionMeta");
+    const answersEl = $("answers");
+    const statusText = $("statusText");
+    const nextBtn = $("nextBtn");
+
+    const planetWrap = $("planetWrap");
+    const planetCore = $("planetCore");
+    const planetGlow = $("planetGlow");
+    const planetStatus = $("planetStatus");
+
+    const toastEl = $("toast");
     const fxBurst = $("fxBurst");
 
+    const params = new URLSearchParams(location.search);
+    const testId = String(params.get("test_id") || "").trim();
+    const lang = String(params.get("lang") || "en").trim().toLowerCase();
+    const redirect = String(params.get("redirect") || "").trim();
+    const next = String(params.get("next") || "").trim();
+
     const LEVELS = [
-      { code:"A1", title:"Başlangıç Seviyesi", fill:20 },
-      { code:"A2", title:"Temel Seviye", fill:40 },
-      { code:"B1", title:"Orta Seviye", fill:60 },
-      { code:"B2", title:"İyi Seviye", fill:80 },
-      { code:"C1", title:"İleri Seviye", fill:100 }
+      { code:"A1", fill:20, title:"Başlangıç Seviyesi" },
+      { code:"A2", fill:40, title:"Temel Seviye" },
+      { code:"B1", fill:60, title:"Orta Seviye" },
+      { code:"B2", fill:80, title:"İyi Seviye" },
+      { code:"C1", fill:100, title:"İleri Seviye" }
     ];
 
-    const DEMO_QUESTIONS = [
-      {
-        level:"A1",
-        text:'<span class="qWord">"Görüyorum"</span>?',
-        correct:2,
-        options:["I look","I watch","I see","I stare"]
-      },
-      {
-        level:"A1",
-        text:'<span class="qWord">"Kapıyı aç"</span>?',
-        correct:1,
-        options:["Close the door","Open the door","Break the door","Knock the door"]
-      },
-      {
-        level:"A2",
-        text:'<span class="qWord">"Dün onu aradım"</span>?',
-        correct:0,
-        options:["I called him yesterday","I call him tomorrow","I am calling him now","I will call him later"]
-      }
-    ];
-
+    let QUESTIONS = [];
     let currentIndex = 0;
-    let locked = false;
-    let answered = false;
     let selectedIndex = null;
+    let locked = false;
+    let busy = false;
+    let currentQuestionId = null;
+    let currentCorrectIndex = null;
+    let totalCount = 50;
 
     function toast(msg){
       toastEl.textContent = String(msg || "");
       toastEl.classList.add("show");
-      clearTimeout(window.__lvToast);
-      window.__lvToast = setTimeout(() => toastEl.classList.remove("show"), 1400);
+      clearTimeout(window.__levelToast);
+      window.__levelToast = setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, 1500);
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
+    }
+
+    function normalizeLevel(level){
+      const x = String(level || "A1").trim().toUpperCase();
+      return ["A1","A2","B1","B2","C1"].includes(x) ? x : "A1";
     }
 
     function setLevelUI(levelCode){
-      const lv = LEVELS.find(x => x.code === levelCode) || LEVELS[0];
+      const lv = LEVELS.find(x => x.code === normalizeLevel(levelCode)) || LEVELS[0];
       levelFill.style.width = `${lv.fill}%`;
-      levelKnob.style.left = `calc(${lv.fill}% - 15px)`;
+      levelKnob.style.left = `calc(${lv.fill}% - 13px)`;
       levelTitle.textContent = lv.title;
 
-      [...levelLabels.children].forEach((el) => {
+      [...levelLabels.children].forEach(el => {
         el.classList.toggle("active", el.textContent.trim() === lv.code);
       });
     }
 
+    function setPlanetNeutral(text = "Hazır"){
+      planetWrap.classList.remove("okFlash","badFlash");
+      planetCore.style.boxShadow = `
+        inset -10px -12px 20px rgba(0,0,0,.72),
+        inset 10px 12px 22px rgba(255,255,255,.04),
+        inset 0 0 26px rgba(255,255,255,.04),
+        0 0 18px rgba(255,255,255,.10),
+        0 0 34px rgba(103,232,249,.20),
+        0 0 64px rgba(129,140,248,.18)
+      `;
+      planetGlow.style.background = `
+        radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+        radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%)
+      `;
+      planetStatus.className = "planetStatus";
+      planetStatus.textContent = text;
+    }
+
+    function setPlanetSuccess(){
+      planetWrap.classList.remove("badFlash");
+      void planetWrap.offsetWidth;
+      planetWrap.classList.add("okFlash");
+
+      planetCore.style.boxShadow = `
+        inset -10px -12px 20px rgba(0,0,0,.72),
+        inset 10px 12px 22px rgba(255,255,255,.04),
+        inset 0 0 26px rgba(255,255,255,.04),
+        0 0 18px rgba(255,255,255,.12),
+        0 0 36px rgba(34,197,94,.28),
+        0 0 78px rgba(34,197,94,.34)
+      `;
+      planetGlow.style.background = `
+        radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+        radial-gradient(circle, rgba(34,197,94,.35) 0%, transparent 70%)
+      `;
+      planetStatus.className = "planetStatus ok";
+      planetStatus.textContent = "Doğru Cevap";
+      burstFromPlanet("ok");
+    }
+
+    function setPlanetFail(){
+      planetWrap.classList.remove("okFlash");
+      void planetWrap.offsetWidth;
+      planetWrap.classList.add("badFlash");
+
+      planetCore.style.boxShadow = `
+        inset -10px -12px 20px rgba(0,0,0,.72),
+        inset 10px 12px 22px rgba(255,255,255,.04),
+        inset 0 0 26px rgba(255,255,255,.04),
+        0 0 18px rgba(255,255,255,.10),
+        0 0 36px rgba(239,68,68,.30),
+        0 0 82px rgba(220,38,38,.32)
+      `;
+      planetGlow.style.background = `
+        radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,.03) 28%, transparent 62%),
+        radial-gradient(circle, rgba(239,68,68,.34) 0%, transparent 70%)
+      `;
+      planetStatus.className = "planetStatus bad";
+      planetStatus.textContent = "Yanlış Cevap";
+      burstFromPlanet("bad");
+    }
+
+    function burstFromPlanet(type = "ok"){
+      const rect = planetWrap.getBoundingClientRect();
+      const x0 = rect.left + rect.width / 2;
+      const y0 = rect.top + rect.height / 2;
+
+      const count = type === "ok" ? 28 : 34;
+
+      for(let i=0; i<count; i++){
+        const p = document.createElement("span");
+        p.className = "particle";
+        p.style.left = `${x0}px`;
+        p.style.top = `${y0}px`;
+
+        const angle = (Math.PI * 2 * i) / count;
+        const distance = (type === "ok" ? 42 : 52) + Math.random() * 52;
+        const jitterX = Math.random() * 26 - 13;
+        const jitterY = Math.random() * 26 - 13;
+        const dx = Math.cos(angle) * distance + jitterX;
+        const dy = Math.sin(angle) * distance + jitterY;
+
+        p.style.setProperty("--x", `${dx}px`);
+        p.style.setProperty("--y", `${dy}px`);
+
+        if(type === "ok"){
+          p.style.background = Math.random() > .5
+            ? "linear-gradient(135deg,#dcfce7,#22c55e)"
+            : "linear-gradient(135deg,#86efac,#16a34a)";
+          p.style.borderRadius = Math.random() > .5 ? "50%" : "4px";
+        }else{
+          p.style.background = Math.random() > .5
+            ? "linear-gradient(135deg,#fecaca,#ef4444)"
+            : "linear-gradient(135deg,#fb7185,#dc2626)";
+          p.style.borderRadius = Math.random() > .5 ? "50%" : "3px";
+        }
+
+        fxBurst.appendChild(p);
+        setTimeout(() => p.remove(), 860);
+      }
+    }
+
+    async function loadQuestions(){
+      if(!testId){
+        throw new Error("test_id bulunamadı.");
+      }
+
+      /*
+        Beklenen tablo/sonuç yapısı örneği:
+        level_test_questions:
+        - id
+        - test_id
+        - order_no
+        - level_code
+        - question_type
+        - prompt_text
+        - highlighted_text
+        - option_a
+        - option_b
+        - option_c
+        - option_d
+        - correct_option   // A/B/C/D veya 0/1/2/3
+      */
+
+      const { data, error } = await supabase
+        .from("level_test_questions")
+        .select("*")
+        .eq("test_id", testId)
+        .order("order_no", { ascending:true });
+
+      if(error) throw error;
+      if(!Array.isArray(data) || !data.length){
+        throw new Error("Soru bulunamadı.");
+      }
+
+      QUESTIONS = data.map((row, idx) => {
+        const options = [
+          row.option_a,
+          row.option_b,
+          row.option_c,
+          row.option_d
+        ].map(x => String(x || "").trim()).filter(Boolean);
+
+        let correctIndex = 0;
+        const co = row.correct_option;
+
+        if(typeof co === "number"){
+          correctIndex = Math.max(0, Math.min(options.length - 1, Number(co)));
+        }else{
+          const m = String(co || "").trim().toUpperCase();
+          if(m === "A") correctIndex = 0;
+          else if(m === "B") correctIndex = 1;
+          else if(m === "C") correctIndex = 2;
+          else if(m === "D") correctIndex = 3;
+          else {
+            const parsed = Number(m);
+            if(Number.isFinite(parsed)) correctIndex = Math.max(0, Math.min(options.length - 1, parsed));
+          }
+        }
+
+        return {
+          id: row.id || idx + 1,
+          orderNo: Number(row.order_no || idx + 1),
+          level: normalizeLevel(row.level_code),
+          questionType: row.question_type || "nasıl söylenir:",
+          promptText: String(row.prompt_text || "").trim(),
+          highlightedText: String(row.highlighted_text || row.prompt_text || "").trim(),
+          options,
+          correctIndex
+        };
+      });
+
+      totalCount = QUESTIONS.length;
+    }
+
     function renderQuestion(){
-      const q = DEMO_QUESTIONS[currentIndex];
+      const q = QUESTIONS[currentIndex];
       if(!q) return;
 
-      locked = false;
-      answered = false;
       selectedIndex = null;
+      locked = false;
+      currentQuestionId = q.id;
+      currentCorrectIndex = q.correctIndex;
 
-      pillInfo.textContent = `Soru ${currentIndex + 1} / ${DEMO_QUESTIONS.length}`;
-      questionText.innerHTML = q.text;
-      questionMeta.textContent = "Doğru cevabı seç ve devam et.";
-      statusText.textContent = "Bir şık seçerek devam edebilirsin.";
-      nextBtn.disabled = true;
-
+      heroPill.textContent = `Soru ${currentIndex + 1} / ${totalCount}`;
       setLevelUI(q.level);
+      setPlanetNeutral("Hazır");
+
+      questionType.textContent = q.questionType || "nasıl söylenir:";
+      questionText.innerHTML = `
+        <span class="qWord">"${escapeHtml(q.highlightedText)}"</span>
+        ${q.promptText && q.promptText !== q.highlightedText ? escapeHtml(q.promptText) : "?"}
+      `;
+      questionMeta.textContent = "Doğru cevabı seç ve devam et.";
+      statusText.textContent = "Bir şık seçerek devam et.";
+      nextBtn.disabled = true;
 
       answersEl.innerHTML = q.options.map((opt, i) => {
         const key = ["A","B","C","D"][i] || String(i + 1);
         return `
-          <button class="answer" data-index="${i}" type="button">
+          <button class="answerBtn" data-index="${i}" type="button">
             <div class="answerKey">${key}</div>
             <div class="answerText">${escapeHtml(opt)}</div>
             <div class="answerIcon">○</div>
@@ -824,23 +1214,24 @@
         `;
       }).join("");
 
-      answersEl.querySelectorAll(".answer").forEach(btn => {
-        btn.addEventListener("click", () => pickAnswer(btn));
+      answersEl.querySelectorAll(".answerBtn").forEach(btn => {
+        btn.addEventListener("click", () => handleAnswer(btn));
       });
     }
 
-    function pickAnswer(btn){
-      if(locked) return;
-
-      const q = DEMO_QUESTIONS[currentIndex];
-      const index = Number(btn.getAttribute("data-index"));
-      const buttons = [...answersEl.querySelectorAll(".answer")];
-
-      selectedIndex = index;
-      answered = true;
+    async function handleAnswer(btn){
+      if(locked || busy) return;
       locked = true;
 
-      buttons.forEach((b) => {
+      const q = QUESTIONS[currentIndex];
+      const selected = Number(btn.getAttribute("data-index"));
+      selectedIndex = selected;
+
+      const buttons = [...answersEl.querySelectorAll(".answerBtn")];
+      const correctBtn = buttons[q.correctIndex];
+      const isCorrect = selected === q.correctIndex;
+
+      buttons.forEach(b => {
         b.classList.add("dim");
         b.classList.remove("selected");
       });
@@ -848,26 +1239,22 @@
       btn.classList.remove("dim");
       btn.classList.add("selected");
 
-      const isCorrect = index === q.correct;
-      const correctBtn = buttons[q.correct];
-
-      setTimeout(() => {
+      setTimeout(async () => {
         if(isCorrect){
           btn.classList.remove("selected");
           btn.classList.add("correct");
           const icon = btn.querySelector(".answerIcon");
           if(icon) icon.textContent = "✓";
 
-          statusText.textContent = "Harika! Doğru cevap.";
-          questionMeta.textContent = "Güzel gidiyorsun, aynen devam.";
-          nextBtn.disabled = false;
-          burstFromElement(btn, 24);
+          setPlanetSuccess();
+          questionMeta.textContent = "Harika, doğru bildin.";
+          statusText.textContent = "Güzel gidiyorsun. Devam et.";
           toast("Doğru cevap");
-        }else{
+        } else {
           btn.classList.remove("selected");
           btn.classList.add("wrong");
-          const wrongIcon = btn.querySelector(".answerIcon");
-          if(wrongIcon) wrongIcon.textContent = "✕";
+          const badIcon = btn.querySelector(".answerIcon");
+          if(badIcon) badIcon.textContent = "✕";
 
           if(correctBtn){
             correctBtn.classList.remove("dim");
@@ -876,68 +1263,149 @@
             if(okIcon) okIcon.textContent = "✓";
           }
 
-          statusText.textContent = "Olmadı, doğru cevap işaretlendi.";
-          questionMeta.textContent = "Sorun yok, burası öğrenme alanı da.";
-          nextBtn.disabled = false;
+          setPlanetFail();
+          questionMeta.textContent = "Doğru cevap işaretlendi.";
+          statusText.textContent = "Sorun değil. Öğrenerek ilerliyoruz.";
           toast("Yanlış cevap");
         }
+
+        try{
+          await saveAnswer({
+            questionId: currentQuestionId,
+            selectedIndex: selected,
+            correctIndex: q.correctIndex,
+            isCorrect
+          });
+        }catch(err){
+          console.error("[level_test] answer save error:", err);
+        }
+
+        nextBtn.disabled = false;
       }, 120);
     }
 
-    nextBtn.addEventListener("click", () => {
-      if(!answered) return;
+    async function saveAnswer({ questionId, selectedIndex, correctIndex, isCorrect }){
+      /*
+        Burada iki olasılık bıraktım:
 
-      currentIndex += 1;
+        1) Tabloya direkt insert/update
+        2) RPC ile kaydetme
 
-      if(currentIndex >= DEMO_QUESTIONS.length){
-        toast("Sınav bitti");
-        statusText.textContent = "Bu demo tamamlandı.";
-        nextBtn.disabled = true;
-        questionMeta.textContent = "Burada sonucu backend’e kaydedip sonuç ekranına geçirebilirsin.";
+        Senin backend’de hangi yapı varsa onu aktif tutarsın.
+      */
+
+      const payload = {
+        test_id: testId,
+        question_id: questionId,
+        selected_index: selectedIndex,
+        correct_index: correctIndex,
+        is_correct: isCorrect
+      };
+
+      // Tercih 1: RPC
+      const { error: rpcError } = await supabase.rpc("submit_level_test_answer", {
+        p_test_id: payload.test_id,
+        p_question_id: payload.question_id,
+        p_selected_index: payload.selected_index,
+        p_correct_index: payload.correct_index,
+        p_is_correct: payload.is_correct
+      });
+
+      if(rpcError){
+        console.warn("[level_test] rpc save failed, trying table insert...", rpcError);
+
+        // Tercih 2: fallback insert
+        const { error: insertError } = await supabase
+          .from("level_test_answers")
+          .upsert(payload, { onConflict: "test_id,question_id" });
+
+        if(insertError) throw insertError;
+      }
+    }
+
+    async function finishTest(){
+      busy = true;
+      nextBtn.disabled = true;
+      statusText.textContent = "Sınav tamamlanıyor...";
+      questionMeta.textContent = "Sonuç hesaplanıyor...";
+      setPlanetNeutral("Hesaplanıyor");
+      toast("Sınav tamamlanıyor...");
+
+      try{
+        const { data, error } = await supabase.rpc("finish_level_test", {
+          p_test_id: testId
+        });
+
+        if(error) throw error;
+
+        const row = Array.isArray(data) ? (data[0] || null) : data;
+        const finalLevel = normalizeLevel(row?.final_level || row?.level_code || QUESTIONS[QUESTIONS.length - 1]?.level || "A1");
+
+        setLevelUI(finalLevel);
+        setPlanetSuccess();
+        planetStatus.textContent = `Sonuç: ${finalLevel}`;
+        statusText.textContent = `Seviyen belirlendi: ${finalLevel}`;
+        questionMeta.textContent = "Profiline işlendi. Yönlendiriliyorsun...";
+
+        if(typeof row?.tokens_after === "number"){
+          try{ setHeaderTokens(row.tokens_after); }catch{}
+        }
+
+        setTimeout(() => {
+          let url = "/pages/level_result.html";
+          url += `?test_id=${encodeURIComponent(testId)}&lang=${encodeURIComponent(lang)}&level=${encodeURIComponent(finalLevel)}`;
+
+          if(redirect) url += `&redirect=${encodeURIComponent(redirect)}`;
+          if(next) url += `&next=${encodeURIComponent(next)}`;
+
+          location.href = url;
+        }, 900);
+
+      }catch(e){
+        console.error("[level_test] finish error:", e);
+        toast("Sınav sonucu hesaplanamadı.");
+        busy = false;
+        nextBtn.disabled = false;
+        statusText.textContent = "Sonuç alınamadı. Tekrar deneyebilirsin.";
+        questionMeta.textContent = "Bir hata oluştu.";
+      }
+    }
+
+    nextBtn.addEventListener("click", async () => {
+      if(busy) return;
+
+      const nextIndex = currentIndex + 1;
+      if(nextIndex >= QUESTIONS.length){
+        await finishTest();
         return;
       }
 
+      currentIndex = nextIndex;
       renderQuestion();
     });
 
-    function burstFromElement(el, count = 20){
-      const rect = el.getBoundingClientRect();
-      const startX = rect.left + rect.width / 2;
-      const startY = rect.top + rect.height / 2;
+    async function init(){
+      try{
+        const { data:{ session } } = await supabase.auth.getSession();
+        if(!session?.user){
+          location.replace("/pages/login.html");
+          return;
+        }
 
-      for(let i=0; i<count; i++){
-        const p = document.createElement("span");
-        p.className = "particle";
-        p.style.left = `${startX}px`;
-        p.style.top = `${startY}px`;
-
-        const angle = (Math.PI * 2 * i) / count;
-        const distance = 35 + Math.random() * 55;
-        const x = Math.cos(angle) * distance + (Math.random() * 20 - 10);
-        const y = Math.sin(angle) * distance + (Math.random() * 20 - 10);
-
-        p.style.setProperty("--x", `${x}px`);
-        p.style.setProperty("--y", `${y}px`);
-        p.style.background = Math.random() > .5
-          ? "linear-gradient(135deg,#ffffff,#9ec2ff)"
-          : "linear-gradient(135deg,#86efac,#22c55e)";
-
-        fxBurst.appendChild(p);
-        setTimeout(() => p.remove(), 760);
+        await loadQuestions();
+        renderQuestion();
+        page.classList.add("ready");
+      }catch(e){
+        console.error("[level_test] init error:", e);
+        toast("Sınav yüklenemedi.");
+        questionText.innerHTML = `<span class="qWord">Bir sorun oluştu</span> Lütfen tekrar dene.`;
+        questionMeta.textContent = "Soru verisi alınamadı.";
+        statusText.textContent = "Yeniden giriş yapıp tekrar deneyebilirsin.";
+        page.classList.add("ready");
       }
     }
 
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#39;");
-    }
-
-    renderQuestion();
-    page.classList.add("ready");
+    init();
   </script>
 
   <script type="module">
