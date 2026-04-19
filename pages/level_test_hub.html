@@ -5,41 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Seviye Tespit</title>
 
-  <meta name="theme-color" content="#0b1220"/>
-  <style>html,body{background:#0b1220!important;}</style>
+  <meta name="theme-color" content="#02000f">
+  <style>html,body{background:#02000f !important;}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#0b1220;
-      --bg2:#10192c;
-      --line:rgba(255,255,255,.10);
-      --line-2:rgba(255,255,255,.14);
-      --text:#fff;
-      --muted:rgba(255,255,255,.62);
-      --muted2:rgba(255,255,255,.44);
-
-      --blue:#6ea8ff;
-      --blue2:#3b82f6;
-      --pink:#ec4899;
-      --purple:#8b5cf6;
-
-      --ok:#22c55e;
-      --ok2:#16a34a;
-      --bad:#ef4444;
-      --bad2:#dc2626;
-      --gold:#f59e0b;
-
-      --ai:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#a855f7 72%,#ec4899 100%);
-      --okGrad:linear-gradient(135deg,#4ade80 0%,#16a34a 100%);
-      --badGrad:linear-gradient(135deg,#fb7185 0%,#dc2626 100%);
-
-      --shellLift:0px;
+      --ai: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --glass-border: rgba(255,255,255,0.10);
+      --bg-dark:#02000f;
+      --text:#ffffff;
+      --muted:rgba(255,255,255,0.46);
+      --muted-2:rgba(255,255,255,0.62);
+      --card:rgba(255,255,255,0.03);
+      --card-2:rgba(255,255,255,0.02);
+      --ok:#a5b4fc;
       --safe-bottom:env(safe-area-inset-bottom,0px);
-      --safe-top:env(safe-area-inset-top,0px);
+      --shellLift:0px;
     }
 
     *{
@@ -50,665 +35,357 @@
 
     html,body{
       margin:0;
-      width:100%;
+      padding:0;
       height:100%;
+      width:100%;
       overflow:hidden;
-      color:var(--text);
+      background:var(--bg-dark);
       font-family:'Plus Jakarta Sans',sans-serif;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(103,232,249,.12) 0%, transparent 26%),
-        radial-gradient(circle at 15% 20%, rgba(244,114,182,.09) 0%, transparent 18%),
-        radial-gradient(circle at 85% 18%, rgba(96,165,250,.10) 0%, transparent 18%),
-        linear-gradient(180deg,#0d1423 0%, #0b1220 100%);
+      color:var(--text);
     }
 
-    #page{
+    #pageContent{
+      height:100%;
       width:100%;
+      display:flex;
+      flex-direction:column;
+      padding:10px 15px calc(10px + var(--safe-bottom) + var(--shellLift));
+      box-sizing:border-box;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(165,180,252,0.12), transparent 48%),
+        radial-gradient(circle at 85% 20%, rgba(236,72,153,0.10), transparent 25%),
+        radial-gradient(circle at 20% 80%, rgba(99,102,241,0.08), transparent 28%);
+      opacity:0;
+      transition:opacity .35s ease;
+    }
+    #pageContent.ui-ready{ opacity:1; }
+
+    .wrap{
       height:100%;
       display:flex;
       flex-direction:column;
-      gap:12px;
-      padding:
-        calc(10px + var(--safe-top))
-        14px
-        calc(14px + var(--safe-bottom) + var(--shellLift))
-        14px;
-      opacity:0;
-      transition:opacity .28s ease;
+      gap:10px;
+      min-height:0;
     }
-    #page.ready{ opacity:1; }
 
-    .topCard{
+    .hero{
       flex:0 0 auto;
-      border-radius:28px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      box-shadow:0 18px 40px rgba(0,0,0,.28);
-      overflow:hidden;
-      padding:14px;
+      padding:16px;
+      border-radius:24px;
+      border:1px solid var(--glass-border);
+      background:rgba(255,255,255,0.03);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
       position:relative;
+      overflow:hidden;
     }
 
-    .topCard::before{
+    .hero::before{
       content:"";
       position:absolute;
       inset:-20%;
       background:
-        radial-gradient(circle at 20% 20%, rgba(103,232,249,.14), transparent 26%),
-        radial-gradient(circle at 80% 25%, rgba(236,72,153,.10), transparent 24%);
-      filter:blur(26px);
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.18), transparent 35%),
+        radial-gradient(circle at 78% 28%, rgba(236,72,153,0.14), transparent 30%);
+      filter:blur(28px);
       pointer-events:none;
     }
 
-    .topHead{
+    .hero-top{
       position:relative;
       z-index:2;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      margin-bottom:12px;
+      margin-bottom:10px;
     }
 
     .brand{
       display:flex;
       flex-direction:column;
-      gap:2px;
-      min-width:0;
+      gap:3px;
     }
 
-    .brandLine{
-      font-family:'Space Grotesk',sans-serif;
+    .brand-line{
+      font-family:"Space Grotesk",sans-serif;
       font-size:20px;
+      font-weight:900;
+      letter-spacing:-.25px;
       line-height:1;
-      font-weight:700;
-      letter-spacing:-.35px;
-      color:#fff;
     }
 
-    .brandLine .ai{
+    .brand-line .ai{
       background:var(--ai);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
 
-    .brandSub{
+    .brand-sub{
       font-size:10px;
-      font-weight:900;
-      color:rgba(255,255,255,.44);
-      letter-spacing:1.8px;
+      font-weight:1000;
+      color:rgba(255,255,255,0.42);
       text-transform:uppercase;
+      letter-spacing:2px;
     }
 
-    .pill{
+    .hero-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       min-height:34px;
       padding:8px 12px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.06);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.05);
+      color:#fff;
       font-size:11px;
       font-weight:1000;
       white-space:nowrap;
     }
 
-    .progressWrap{
+    .hero h1{
       position:relative;
       z-index:2;
+      margin:0;
+      font-size:19px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+      letter-spacing:-.2px;
+    }
+
+    .hero p{
+      position:relative;
+      z-index:2;
+      margin:6px 0 0;
+      font-size:12px;
+      color:rgba(255,255,255,0.58);
+      line-height:1.5;
+      font-weight:700;
+    }
+
+    .focusBox{
+      position:relative;
+      z-index:2;
+      margin-top:12px;
+      display:none;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(165,180,252,0.22);
+      background:rgba(99,102,241,0.10);
+    }
+
+    .focusBox.show{
+      display:flex;
+    }
+
+    .focusFlag{
+      width:36px;
+      height:36px;
+      min-width:36px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,0.07);
+      border:1px solid rgba(255,255,255,0.10);
+      font-size:18px;
+    }
+
+    .focusText{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .focusTitle{
+      font-size:12px;
+      font-weight:1000;
+      color:#fff;
+      line-height:1.2;
+    }
+
+    .focusSub{
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,0.70);
+      line-height:1.35;
+    }
+
+    .list{
+      flex:1;
+      min-height:0;
       display:flex;
       flex-direction:column;
       gap:8px;
-    }
-
-    .levelLabels{
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:6px;
-      text-align:center;
-    }
-
-    .levelLabels span{
-      font-size:11px;
-      font-weight:1000;
-      color:rgba(255,255,255,.50);
-      transition:.18s ease;
-    }
-
-    .levelLabels span.active{
-      color:#a8c7ff;
-      text-shadow:0 0 14px rgba(110,168,255,.28);
-    }
-
-    .track{
-      position:relative;
-      height:16px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.05);
-      overflow:hidden;
-    }
-
-    .fill{
-      position:absolute;
-      left:2px;
-      top:2px;
-      bottom:2px;
-      width:20%;
-      border-radius:999px;
-      background:var(--ai);
-      box-shadow:0 0 20px rgba(91,124,255,.26);
-      transition:width .32s ease;
-    }
-
-    .knob{
-      position:absolute;
-      top:50%;
-      left:calc(20% - 14px);
-      width:26px;
-      height:26px;
-      transform:translateY(-50%);
-      border-radius:50%;
-      background:#10192c;
-      border:1px solid rgba(255,255,255,.16);
-      box-shadow:0 0 0 4px rgba(110,168,255,.10), 0 12px 24px rgba(0,0,0,.26);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transition:left .32s ease;
-      z-index:3;
-    }
-
-    .knob::before{
-      content:"▶";
-      font-size:10px;
-      color:#fff;
-      transform:translateX(1px);
-      opacity:.92;
-    }
-
-    .levelTitle{
-      text-align:center;
-      font-size:13px;
-      font-weight:1000;
-      color:#6ea8ff;
-      text-transform:uppercase;
-      letter-spacing:2px;
-      text-shadow:0 0 18px rgba(110,168,255,.20);
-    }
-
-    .main{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .planetCard{
-      flex:0 0 auto;
-      min-height:180px;
-      border-radius:30px;
-      border:1px solid var(--line);
-      background:
-        radial-gradient(circle at 50% 10%, rgba(255,255,255,.05), transparent 26%),
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      overflow:hidden;
-      box-shadow:0 18px 40px rgba(0,0,0,.28);
-    }
-
-    .planetWrap{
-      width:128px;
-      height:128px;
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transition:transform .26s ease, filter .26s ease;
-    }
-
-    .planetWrap.okFlash{
-      animation:planetSuccess .8s ease;
-    }
-
-    .planetWrap.badFlash{
-      animation:planetFail .8s ease;
-    }
-
-    .planet-glow{
-      position:absolute;
-      inset:-18px;
-      border-radius:50%;
-      background:
-        radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-        radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%);
-      filter:blur(12px);
-      animation:planetGlow 3.2s ease-in-out infinite;
-      z-index:1;
-    }
-
-    .planet-rays{
-      position:absolute;
-      inset:-18px;
-      border-radius:50%;
-      pointer-events:none;
-      z-index:1;
-    }
-
-    .planet-rays::before,
-    .planet-rays::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      border-radius:50%;
-      background:
-        conic-gradient(
-          from 0deg,
-          transparent 0deg 18deg,
-          rgba(255,255,255,.28) 24deg,
-          transparent 36deg 62deg,
-          rgba(255,255,255,.16) 70deg,
-          transparent 84deg 116deg,
-          rgba(255,255,255,.22) 124deg,
-          transparent 136deg 180deg,
-          rgba(255,255,255,.18) 192deg,
-          transparent 206deg 250deg,
-          rgba(255,255,255,.24) 258deg,
-          transparent 270deg 310deg,
-          rgba(255,255,255,.15) 318deg,
-          transparent 330deg 360deg
-        );
-      mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-      -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-      filter:blur(1px);
-      opacity:.55;
-      animation:planetRaySpin 12s linear infinite;
-    }
-
-    .planet-rays::after{
-      opacity:.34;
-      transform:scale(1.14);
-      animation-duration:18s;
-      animation-direction:reverse;
-    }
-
-    .planet-core{
-      position:relative;
-      width:128px;
-      height:128px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-      z-index:2;
-      background:
-        radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
-        radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
-        radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
-        linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
-      box-shadow:
-        inset -10px -12px 20px rgba(0,0,0,.72),
-        inset 10px 12px 22px rgba(255,255,255,.04),
-        inset 0 0 26px rgba(255,255,255,.04),
-        0 0 18px rgba(255,255,255,.10),
-        0 0 34px rgba(103,232,249,.20),
-        0 0 64px rgba(129,140,248,.18);
-      animation:planetBreath 2.8s ease-in-out infinite;
-      transition:box-shadow .18s ease, transform .18s ease;
-    }
-
-    .planet-core::before{
-      content:"";
-      position:absolute;
-      inset:6px;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:inset 0 0 12px rgba(255,255,255,.05);
-    }
-
-    .planet-core::after{
-      content:"";
-      position:absolute;
-      left:20px;
-      top:15px;
-      width:34px;
-      height:17px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
-      filter:blur(2px);
-      transform:rotate(-18deg);
-      opacity:.9;
-    }
-
-    .planetCenter{
-      position:relative;
-      z-index:3;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .planetBadge{
-      position:relative;
-      width:58px;
-      height:58px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
-      border:1px solid rgba(255,255,255,.18);
-      box-shadow:0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20);
-      backdrop-filter:blur(10px);
-    }
-
-    .planetBadge::before{
-      content:"";
-      position:absolute;
-      inset:7px;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.10);
-    }
-
-    .planetBadge::after{
-      content:"";
-      position:absolute;
-      width:70px;
-      height:70px;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.10);
-      animation:aiSpin 8s linear infinite;
-    }
-
-    .planetBadge span{
-      position:relative;
-      z-index:2;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
-      font-weight:900;
-      letter-spacing:.5px;
-      color:#fff;
-      text-shadow:0 0 12px rgba(255,255,255,.22);
-    }
-
-    .planetStatus{
-      position:absolute;
-      left:50%;
-      bottom:14px;
-      transform:translateX(-50%);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:30px;
-      padding:7px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      font-size:11px;
-      font-weight:1000;
-      color:rgba(255,255,255,.78);
-      white-space:nowrap;
-      z-index:5;
-    }
-
-    .planetStatus.ok{
-      color:#d9ffe8;
-      border-color:rgba(34,197,94,.22);
-      background:rgba(34,197,94,.12);
-    }
-
-    .planetStatus.bad{
-      color:#ffe2e2;
-      border-color:rgba(239,68,68,.24);
-      background:rgba(239,68,68,.12);
-    }
-
-    .questionCard{
-      flex:0 0 auto;
-      border-radius:28px;
-      border:1px solid rgba(110,168,255,.16);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)),
-        radial-gradient(circle at 8% 50%, rgba(59,130,246,.20), transparent 13%);
-      box-shadow:0 18px 40px rgba(0,0,0,.28);
-      padding:18px 18px 16px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .questionCard::before{
-      content:"";
-      position:absolute;
-      left:0;
-      top:0;
-      bottom:0;
-      width:5px;
-      border-radius:12px;
-      background:var(--ai);
-      box-shadow:0 0 18px rgba(110,168,255,.30);
-    }
-
-    .questionType{
-      text-align:center;
-      font-size:13px;
-      font-weight:1000;
-      color:rgba(255,255,255,.92);
-      margin-bottom:8px;
-    }
-
-    .questionText{
-      text-align:center;
-      font-size:18px;
-      line-height:1.35;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .questionText .qWord{
-      display:block;
-      margin:8px 0 4px;
-      font-size:28px;
-      color:#9fc3ff;
-      text-shadow:0 0 18px rgba(110,168,255,.18);
-    }
-
-    .questionMeta{
-      margin-top:10px;
-      text-align:center;
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.44);
-    }
-
-    .answers{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+      justify-content:flex-start;
       overflow:auto;
       padding-right:2px;
       scrollbar-width:none;
     }
-    .answers::-webkit-scrollbar{ display:none; }
+    .list::-webkit-scrollbar{ display:none; }
 
-    .answerBtn{
-      position:relative;
+    .langCard{
       width:100%;
-      min-height:74px;
-      border:none;
-      border-radius:22px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:12px 14px;
-      text-align:left;
-      cursor:pointer;
-      color:#fff;
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.035));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 12px 24px rgba(0,0,0,.18);
-      transition:
-        transform .16s ease,
-        background .18s ease,
-        border-color .18s ease,
-        box-shadow .18s ease,
-        opacity .18s ease;
-      overflow:hidden;
-    }
-
-    .answerBtn::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.045), transparent);
-      transform:translateX(-100%);
-      transition:transform .4s ease;
-      pointer-events:none;
-    }
-
-    .answerBtn:hover::before{
-      transform:translateX(100%);
-    }
-
-    .answerBtn:active{
-      transform:scale(.986);
-    }
-
-    .answerBtn.dim{
-      opacity:.42;
-      transform:none!important;
-    }
-
-    .answerBtn.selected{
-      border-color:rgba(110,168,255,.38);
-      background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(168,85,247,.10));
-      box-shadow:0 14px 30px rgba(59,130,246,.18);
-    }
-
-    .answerBtn.correct{
-      border-color:rgba(34,197,94,.46);
-      background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(22,163,74,.11));
-      box-shadow:0 16px 34px rgba(34,197,94,.18);
-    }
-
-    .answerBtn.wrong{
-      border-color:rgba(239,68,68,.44);
-      background:linear-gradient(135deg, rgba(239,68,68,.20), rgba(220,38,38,.10));
-      box-shadow:0 16px 34px rgba(239,68,68,.16);
-      animation:shakeX .32s ease;
-    }
-
-    .answerKey{
-      width:42px;
-      height:42px;
-      min-width:42px;
-      border-radius:14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.08);
-      color:#d7e4ff;
-      font-size:20px;
-      font-weight:1000;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
-    }
-
-    .answerBtn.correct .answerKey{
-      background:rgba(34,197,94,.16);
-      border-color:rgba(34,197,94,.28);
-      color:#e6fff0;
-    }
-
-    .answerBtn.wrong .answerKey{
-      background:rgba(239,68,68,.16);
-      border-color:rgba(239,68,68,.28);
-      color:#ffe4e4;
-    }
-
-    .answerText{
-      flex:1;
-      min-width:0;
-      font-size:18px;
-      font-weight:900;
-      line-height:1.22;
-      color:#fff;
-    }
-
-    .answerIcon{
-      width:28px;
-      height:28px;
-      min-width:28px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      color:rgba(255,255,255,.26);
-      font-size:14px;
-      font-weight:1000;
-    }
-
-    .answerBtn.correct .answerIcon{
-      background:var(--okGrad);
-      border-color:transparent;
-      color:#fff;
-    }
-
-    .answerBtn.wrong .answerIcon{
-      background:var(--badGrad);
-      border-color:transparent;
-      color:#fff;
-    }
-
-    .bottomBar{
-      flex:0 0 auto;
+      border-radius:20px;
+      border:1px solid var(--glass-border);
+      background:var(--card);
+      padding:0 18px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
-      padding:2px 2px 0;
-    }
-
-    .statusText{
-      min-width:0;
-      font-size:12px;
-      font-weight:900;
-      line-height:1.45;
-      color:rgba(255,255,255,.60);
-    }
-
-    .nextBtn{
-      min-height:50px;
-      padding:0 18px;
-      border:none;
-      border-radius:16px;
       cursor:pointer;
-      color:#fff;
-      font-size:14px;
-      font-weight:1000;
-      background:var(--ai);
-      box-shadow:0 14px 30px rgba(91,124,255,.24);
-      transition:transform .16s ease, opacity .16s ease, filter .16s ease;
+      transition:all .24s cubic-bezier(.2,1,.3,1);
+      position:relative;
+      overflow:hidden;
+      min-height:78px;
+      text-align:left;
     }
 
-    .nextBtn:active{
-      transform:scale(.985);
+    .langCard:active{
+      transform:scale(.985) translateY(1px);
+      background:rgba(255,255,255,0.06);
     }
 
-    .nextBtn:disabled{
-      opacity:.42;
+    .langCard:disabled{
+      opacity:.55;
       filter:grayscale(.15);
       cursor:not-allowed;
-      box-shadow:none;
+    }
+
+    .langCard::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      opacity:0;
+      transition:opacity .25s ease;
+      pointer-events:none;
+    }
+
+    .langCard:hover::after,
+    .langCard.activeLang::after{
+      opacity:1;
+    }
+
+    .langCard.activeLang{
+      border-color:rgba(165,180,252,0.34);
+      background:linear-gradient(135deg, rgba(99,102,241,0.16), rgba(236,72,153,0.08));
+      box-shadow:0 12px 28px rgba(0,0,0,.18);
+    }
+
+    .langCard.activeLang .name{
+      color:#fff;
+    }
+
+    .langCard.activeLang .sub{
+      color:rgba(255,255,255,0.76);
+    }
+
+    .left{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      z-index:2;
+      min-width:0;
+    }
+
+    .flagRing{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      background:var(--ai);
+      padding:2px;
+      animation:rotateRing 12s linear infinite;
+      flex:0 0 auto;
+      box-shadow:0 0 22px rgba(99,102,241,.18);
+    }
+
+    .flagBox{
+      width:100%;
+      height:100%;
+      border-radius:12px;
+      background:#000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .txt{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .txt .name{
+      font-size:16px;
+      font-weight:900;
+      color:#fff;
+      display:block;
+      line-height:1.1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .txt .sub{
+      font-size:10px;
+      color:rgba(255,255,255,0.42);
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .txt .sub.ok{
+      color:var(--ok);
+      filter:brightness(1.15);
+    }
+
+    .right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      z-index:2;
+      flex:0 0 auto;
+    }
+
+    .badge{
+      font-size:10px;
+      font-weight:1000;
+      color:#fff;
+      padding:5px 8px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--glass-border);
+      min-width:40px;
+      text-align:center;
+    }
+
+    .chev{
+      color:rgba(255,255,255,0.22);
+      font-size:18px;
+      line-height:1;
+      font-weight:900;
+    }
+
+    .footerNote{
+      flex:0 0 auto;
+      padding:10px 4px 2px;
+      text-align:center;
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,0.42);
+      line-height:1.45;
     }
 
     .toast{
@@ -716,18 +393,18 @@
       left:50%;
       top:18px;
       transform:translateX(-50%) translateY(-120px);
-      background:rgba(8,10,20,.95);
-      border:1px solid rgba(255,255,255,.12);
+      background:rgba(10,10,18,.95);
+      border:1px solid rgba(165,180,252,.35);
       padding:10px 14px;
       border-radius:999px;
       color:#fff;
       z-index:999999;
-      font-weight:1000;
+      font-weight:900;
       font-size:12px;
       transition:.25s;
       backdrop-filter:blur(12px);
       pointer-events:none;
-      max-width:min(92vw,520px);
+      max-width:min(92vw, 520px);
       text-align:center;
     }
 
@@ -735,682 +412,493 @@
       transform:translateX(-50%) translateY(0);
     }
 
-    #fxBurst{
+    .tokenModal{
       position:fixed;
       inset:0;
-      pointer-events:none;
+      z-index:1000000;
+      background:rgba(2,4,12,.72);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .tokenModal.show{
+      display:flex;
+    }
+
+    .tokenCard{
+      width:min(100%, 430px);
+      border-radius:30px;
       overflow:hidden;
-      z-index:99999;
+      border:1px solid rgba(255,255,255,0.12);
+      background:linear-gradient(180deg, rgba(10,12,26,.98), rgba(6,8,20,.98));
+      box-shadow:0 28px 90px rgba(0,0,0,.42);
     }
 
-    .particle{
-      position:absolute;
-      width:12px;
-      height:12px;
-      border-radius:4px;
-      opacity:.98;
-      animation:burstFly .84s ease-out forwards;
-      box-shadow:0 0 16px rgba(255,255,255,.18);
+    .tokenTop{
+      padding:20px 20px 16px;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
     }
 
-    @keyframes aiSpin{
+    .tokenChip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.18);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+    }
+
+    .tokenTitle{
+      margin:14px 0 6px;
+      font-size:28px;
+      line-height:1.08;
+      font-weight:1000;
+      color:#fff;
+      letter-spacing:-.6px;
+    }
+
+    .tokenSub{
+      margin:0;
+      font-size:14px;
+      line-height:1.55;
+      font-weight:800;
+      color:rgba(255,255,255,.90);
+    }
+
+    .tokenBody{
+      padding:18px;
+      display:grid;
+      gap:12px;
+    }
+
+    .tokenInfo{
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      padding:14px 14px;
+    }
+
+    .tokenLabel{
+      font-size:11px;
+      font-weight:1000;
+      color:rgba(255,255,255,.50);
+      text-transform:uppercase;
+      letter-spacing:.8px;
+      margin-bottom:5px;
+    }
+
+    .tokenValue{
+      font-size:20px;
+      font-weight:1000;
+      color:#fff;
+      line-height:1.15;
+    }
+
+    .tokenDesc{
+      margin:2px 0 0;
+      font-size:12px;
+      line-height:1.45;
+      font-weight:800;
+      color:rgba(255,255,255,.62);
+    }
+
+    .tokenActions{
+      display:grid;
+      gap:10px;
+      margin-top:2px;
+    }
+
+    .tokenBtn{
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:1000;
+      transition:transform .16s ease, opacity .16s ease;
+    }
+
+    .tokenBtn:active{
+      transform:scale(.985);
+    }
+
+    .tokenBtn.primary{
+      color:#fff;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      box-shadow:0 14px 34px rgba(99,102,241,.26);
+    }
+
+    .tokenBtn.secondary{
+      color:#fff;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    @keyframes rotateRing{
       from{ transform:rotate(0deg); }
       to{ transform:rotate(360deg); }
-    }
-
-    @keyframes planetBreath{
-      0%,100%{
-        transform:scale(1);
-        box-shadow:
-          inset -10px -12px 20px rgba(0,0,0,.72),
-          inset 10px 12px 22px rgba(255,255,255,.04),
-          inset 0 0 26px rgba(255,255,255,.04),
-          0 0 18px rgba(255,255,255,.10),
-          0 0 34px rgba(103,232,249,.20),
-          0 0 64px rgba(129,140,248,.18);
-      }
-      50%{
-        transform:scale(1.045);
-        box-shadow:
-          inset -10px -12px 20px rgba(0,0,0,.72),
-          inset 10px 12px 24px rgba(255,255,255,.05),
-          inset 0 0 28px rgba(255,255,255,.06),
-          0 0 22px rgba(255,255,255,.12),
-          0 0 42px rgba(103,232,249,.28),
-          0 0 78px rgba(129,140,248,.24);
-      }
-    }
-
-    @keyframes planetGlow{
-      0%,100%{ opacity:.55; transform:scale(1); }
-      50%{ opacity:.92; transform:scale(1.16); }
-    }
-
-    @keyframes planetRaySpin{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
-    }
-
-    @keyframes shakeX{
-      0%{ transform:translateX(0); }
-      25%{ transform:translateX(-7px); }
-      50%{ transform:translateX(6px); }
-      75%{ transform:translateX(-4px); }
-      100%{ transform:translateX(0); }
-    }
-
-    @keyframes burstFly{
-      0%{
-        transform:translate(0,0) scale(1);
-        opacity:1;
-      }
-      100%{
-        transform:translate(var(--x), var(--y)) scale(.2) rotate(180deg);
-        opacity:0;
-      }
-    }
-
-    @keyframes planetSuccess{
-      0%{ transform:scale(1); }
-      20%{ transform:scale(1.06); }
-      50%{ transform:scale(1.12); }
-      100%{ transform:scale(1); }
-    }
-
-    @keyframes planetFail{
-      0%{ transform:scale(1) rotate(0deg); }
-      20%{ transform:scale(1.03) rotate(-3deg); }
-      40%{ transform:scale(1.06) rotate(3deg); }
-      60%{ transform:scale(1.03) rotate(-2deg); }
-      100%{ transform:scale(1) rotate(0deg); }
     }
 
     @media (max-width:390px){
-      #page{
-        padding:
-          calc(10px + var(--safe-top))
-          12px
-          calc(12px + var(--safe-bottom) + var(--shellLift))
-          12px;
+      #pageContent{
+        padding:10px 12px calc(10px + var(--safe-bottom) + var(--shellLift));
       }
 
-      .planetCard{ min-height:166px; }
-      .planetWrap{ width:114px; height:114px; }
-      .planet-core{ width:114px; height:114px; }
-      .questionText{ font-size:17px; }
-      .questionText .qWord{ font-size:24px; }
-      .answerBtn{ min-height:70px; }
-      .answerText{ font-size:17px; }
+      .hero{
+        padding:14px;
+      }
+
+      .langCard{
+        min-height:74px;
+        padding:0 14px;
+      }
+
+      .txt .name{
+        font-size:15px;
+      }
+
+      .tokenTitle{
+        font-size:24px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div id="fxBurst"></div>
-
-  <main id="page">
-    <section class="topCard">
-      <div class="topHead">
-        <div class="brand">
-          <div class="brandLine">italky<span class="ai">AI</span></div>
-          <div class="brandSub">Seviye Tespit</div>
-        </div>
-        <div class="pill" id="heroPill">Soru 1 / 50</div>
-      </div>
-
-      <div class="progressWrap">
-        <div class="levelLabels" id="levelLabels">
-          <span class="active">A1</span>
-          <span>A2</span>
-          <span>B1</span>
-          <span>B2</span>
-          <span>C1</span>
+  <main id="pageContent">
+    <div class="wrap">
+      <section class="hero">
+        <div class="hero-top">
+          <div class="brand">
+            <div class="brand-line">italky<span class="ai">AI</span></div>
+            <div class="brand-sub">Seviye Tespit</div>
+          </div>
+          <div class="hero-pill" id="heroPill">Dil Seç</div>
         </div>
 
-        <div class="track">
-          <div class="fill" id="levelFill"></div>
-          <div class="knob" id="levelKnob"></div>
-        </div>
+        <h1>Doğru seviyeden başla....</h1>
+        <p>
+          Buradan dilini seç, mevcut seviyeni gör ve istersen yeni seviye tespit sınavını başlat.
+          Sistem sonucu profiline otomatik işler.
+        </p>
 
-        <div class="levelTitle" id="levelTitle">Başlangıç Seviyesi</div>
-      </div>
-    </section>
-
-    <section class="main">
-      <div class="planetCard">
-        <div class="planetWrap" id="planetWrap">
-          <div class="planet-glow" id="planetGlow"></div>
-          <div class="planet-rays"></div>
-          <div class="planet-core" id="planetCore">
-            <div class="planetCenter">
-              <div class="planetBadge">
-                <span>AI</span>
-              </div>
-            </div>
+        <div class="focusBox" id="focusBox">
+          <div class="focusFlag" id="focusFlag">🏁</div>
+          <div class="focusText">
+            <div class="focusTitle" id="focusTitle">Öncelikli dil seçildi</div>
+            <div class="focusSub" id="focusSub">Bu dil için yönlendirme ile geldin.</div>
           </div>
         </div>
+      </section>
 
-        <div class="planetStatus" id="planetStatus">Hazır</div>
+      <section class="list" id="list"></section>
+
+      <div class="footerNote">
+        Seviye olmayan dil için sınav başlatılır. Seviye olan dil için mevcut durum burada görünür.
       </div>
-
-      <div class="questionCard">
-        <div class="questionType" id="questionType">nasıl söylenir:</div>
-        <div class="questionText" id="questionText">
-          <span class="qWord">“...”</span>
-          ?
-        </div>
-        <div class="questionMeta" id="questionMeta">Doğru cevabı seç ve devam et.</div>
-      </div>
-
-      <div class="answers" id="answers"></div>
-
-      <div class="bottomBar">
-        <div class="statusText" id="statusText">Bir şık seçerek devam et.</div>
-        <button class="nextBtn" id="nextBtn" disabled>Sonraki</button>
-      </div>
-    </section>
+    </div>
   </main>
 
   <div class="toast" id="toast"></div>
+
+  <div class="tokenModal" id="tokenModal">
+    <div class="tokenCard">
+      <div class="tokenTop">
+        <div class="tokenChip">italkyAI • Jeton Gerekli</div>
+        <div class="tokenTitle">Seviye sınavı için jeton lazım</div>
+        <p class="tokenSub">
+          Bu sınava giriş için 1 jeton kullanılır. Açılan erişimle 7 gün boyunca sınırsız giriş yapabilirsin.
+        </p>
+      </div>
+
+      <div class="tokenBody">
+        <div class="tokenInfo">
+          <div class="tokenLabel">Sınav erişim kuralı</div>
+          <div class="tokenValue">1 Jeton • 7 Gün</div>
+          <p class="tokenDesc">Bir kez açılır, 7 gün boyunca tekrar tekrar kullanılabilir.</p>
+        </div>
+
+        <div class="tokenInfo">
+          <div class="tokenLabel">Devam etmek için</div>
+          <div class="tokenValue">Jeton Market</div>
+          <p class="tokenDesc">Jeton alıp geri dönerek sınavı anında başlatabilirsin.</p>
+        </div>
+
+        <div class="tokenActions">
+          <button class="tokenBtn primary" id="goTokenMarketBtn">Jeton Market’e Git</button>
+          <button class="tokenBtn secondary" id="closeTokenModalBtn">Şimdilik Kapat</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
     import { supabase } from "/js/supabase_client.js";
 
-    mountShell({ scroll:"hidden" });
+    mountShell({ scroll:"auto" });
 
-    try{
+    try {
       const root = getComputedStyle(document.documentElement);
       const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-      document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
-    }catch{}
+      document.documentElement.style.setProperty(
+        "--shellLift",
+        footerH ? `${footerH + 10}px` : "0px"
+      );
+    } catch {}
 
     const $ = (id) => document.getElementById(id);
-
-    const page = $("page");
+    const list = $("list");
     const heroPill = $("heroPill");
-    const levelLabels = $("levelLabels");
-    const levelFill = $("levelFill");
-    const levelKnob = $("levelKnob");
-    const levelTitle = $("levelTitle");
-
-    const questionType = $("questionType");
-    const questionText = $("questionText");
-    const questionMeta = $("questionMeta");
-    const answersEl = $("answers");
-    const statusText = $("statusText");
-    const nextBtn = $("nextBtn");
-
-    const planetWrap = $("planetWrap");
-    const planetCore = $("planetCore");
-    const planetGlow = $("planetGlow");
-    const planetStatus = $("planetStatus");
-
-    const toastEl = $("toast");
-    const fxBurst = $("fxBurst");
+    const focusBox = $("focusBox");
+    const focusFlag = $("focusFlag");
+    const focusTitle = $("focusTitle");
+    const focusSub = $("focusSub");
+    const tokenModal = $("tokenModal");
+    const goTokenMarketBtn = $("goTokenMarketBtn");
+    const closeTokenModalBtn = $("closeTokenModalBtn");
 
     const params = new URLSearchParams(location.search);
-    const testId = String(params.get("test_id") || "").trim();
-    const lang = String(params.get("lang") || "en").trim().toLowerCase();
+    const selectedLang = String(params.get("lang") || "").trim().toLowerCase();
     const redirect = String(params.get("redirect") || "").trim();
     const next = String(params.get("next") || "").trim();
 
-    const LEVELS = [
-      { code:"A1", fill:20, title:"Başlangıç Seviyesi" },
-      { code:"A2", fill:40, title:"Temel Seviye" },
-      { code:"B1", fill:60, title:"Orta Seviye" },
-      { code:"B2", fill:80, title:"İyi Seviye" },
-      { code:"C1", fill:100, title:"İleri Seviye" }
+    const LANGS = [
+      { code:"en", name:"English",  flag:"🇬🇧" },
+      { code:"de", name:"German",   flag:"🇩🇪" },
+      { code:"fr", name:"French",   flag:"🇫🇷" },
+      { code:"it", name:"Italian",  flag:"🇮🇹" },
+      { code:"ru", name:"Russian",  flag:"🇷🇺" },
+      { code:"es", name:"Spanish",  flag:"🇪🇸" }
     ];
 
-    let QUESTIONS = [];
-    let currentIndex = 0;
-    let selectedIndex = null;
-    let locked = false;
-    let busy = false;
-    let currentQuestionId = null;
-    let currentCorrectIndex = null;
-    let totalCount = 50;
-
     function toast(msg){
-      toastEl.textContent = String(msg || "");
-      toastEl.classList.add("show");
-      clearTimeout(window.__levelToast);
-      window.__levelToast = setTimeout(() => {
-        toastEl.classList.remove("show");
+      const t = $("toast");
+      if(!t) return;
+      t.textContent = String(msg || "");
+      t.classList.add("show");
+      clearTimeout(window.__levelHubToast);
+      window.__levelHubToast = setTimeout(() => {
+        t.classList.remove("show");
       }, 1500);
     }
 
-    function escapeHtml(s){
-      return String(s ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#39;");
+    function langInfo(code){
+      return LANGS.find(x => x.code === code) || { code, name: code?.toUpperCase() || "Dil", flag: "🏁" };
     }
 
-    function normalizeLevel(level){
-      const x = String(level || "A1").trim().toUpperCase();
-      return ["A1","A2","B1","B2","C1"].includes(x) ? x : "A1";
+    function openTokenModal() {
+      tokenModal?.classList.add("show");
     }
 
-    function setLevelUI(levelCode){
-      const lv = LEVELS.find(x => x.code === normalizeLevel(levelCode)) || LEVELS[0];
-      levelFill.style.width = `${lv.fill}%`;
-      levelKnob.style.left = `calc(${lv.fill}% - 13px)`;
-      levelTitle.textContent = lv.title;
-
-      [...levelLabels.children].forEach(el => {
-        el.classList.toggle("active", el.textContent.trim() === lv.code);
-      });
+    function closeTokenModal() {
+      tokenModal?.classList.remove("show");
     }
 
-    function setPlanetNeutral(text = "Hazır"){
-      planetWrap.classList.remove("okFlash","badFlash");
-      planetCore.style.boxShadow = `
-        inset -10px -12px 20px rgba(0,0,0,.72),
-        inset 10px 12px 22px rgba(255,255,255,.04),
-        inset 0 0 26px rgba(255,255,255,.04),
-        0 0 18px rgba(255,255,255,.10),
-        0 0 34px rgba(103,232,249,.20),
-        0 0 64px rgba(129,140,248,.18)
-      `;
-      planetGlow.style.background = `
-        radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-        radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%)
-      `;
-      planetStatus.className = "planetStatus";
-      planetStatus.textContent = text;
-    }
+    goTokenMarketBtn?.addEventListener("click", () => {
+      location.href = "/pages/jetonbuy.html";
+    });
 
-    function setPlanetSuccess(){
-      planetWrap.classList.remove("badFlash");
-      void planetWrap.offsetWidth;
-      planetWrap.classList.add("okFlash");
+    closeTokenModalBtn?.addEventListener("click", closeTokenModal);
 
-      planetCore.style.boxShadow = `
-        inset -10px -12px 20px rgba(0,0,0,.72),
-        inset 10px 12px 22px rgba(255,255,255,.04),
-        inset 0 0 26px rgba(255,255,255,.04),
-        0 0 18px rgba(255,255,255,.12),
-        0 0 36px rgba(34,197,94,.28),
-        0 0 78px rgba(34,197,94,.34)
-      `;
-      planetGlow.style.background = `
-        radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-        radial-gradient(circle, rgba(34,197,94,.35) 0%, transparent 70%)
-      `;
-      planetStatus.className = "planetStatus ok";
-      planetStatus.textContent = "Doğru Cevap";
-      burstFromPlanet("ok");
-    }
+    tokenModal?.addEventListener("click", (e) => {
+      if (e.target === tokenModal) closeTokenModal();
+    });
 
-    function setPlanetFail(){
-      planetWrap.classList.remove("okFlash");
-      void planetWrap.offsetWidth;
-      planetWrap.classList.add("badFlash");
+    async function ensureLevelTestAccess() {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user || null;
 
-      planetCore.style.boxShadow = `
-        inset -10px -12px 20px rgba(0,0,0,.72),
-        inset 10px 12px 22px rgba(255,255,255,.04),
-        inset 0 0 26px rgba(255,255,255,.04),
-        0 0 18px rgba(255,255,255,.10),
-        0 0 36px rgba(239,68,68,.30),
-        0 0 82px rgba(220,38,38,.32)
-      `;
-      planetGlow.style.background = `
-        radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,.03) 28%, transparent 62%),
-        radial-gradient(circle, rgba(239,68,68,.34) 0%, transparent 70%)
-      `;
-      planetStatus.className = "planetStatus bad";
-      planetStatus.textContent = "Yanlış Cevap";
-      burstFromPlanet("bad");
-    }
-
-    function burstFromPlanet(type = "ok"){
-      const rect = planetWrap.getBoundingClientRect();
-      const x0 = rect.left + rect.width / 2;
-      const y0 = rect.top + rect.height / 2;
-
-      const count = type === "ok" ? 28 : 34;
-
-      for(let i=0; i<count; i++){
-        const p = document.createElement("span");
-        p.className = "particle";
-        p.style.left = `${x0}px`;
-        p.style.top = `${y0}px`;
-
-        const angle = (Math.PI * 2 * i) / count;
-        const distance = (type === "ok" ? 42 : 52) + Math.random() * 52;
-        const jitterX = Math.random() * 26 - 13;
-        const jitterY = Math.random() * 26 - 13;
-        const dx = Math.cos(angle) * distance + jitterX;
-        const dy = Math.sin(angle) * distance + jitterY;
-
-        p.style.setProperty("--x", `${dx}px`);
-        p.style.setProperty("--y", `${dy}px`);
-
-        if(type === "ok"){
-          p.style.background = Math.random() > .5
-            ? "linear-gradient(135deg,#dcfce7,#22c55e)"
-            : "linear-gradient(135deg,#86efac,#16a34a)";
-          p.style.borderRadius = Math.random() > .5 ? "50%" : "4px";
-        }else{
-          p.style.background = Math.random() > .5
-            ? "linear-gradient(135deg,#fecaca,#ef4444)"
-            : "linear-gradient(135deg,#fb7185,#dc2626)";
-          p.style.borderRadius = Math.random() > .5 ? "50%" : "3px";
-        }
-
-        fxBurst.appendChild(p);
-        setTimeout(() => p.remove(), 860);
-      }
-    }
-
-    async function loadQuestions(){
-      if(!testId){
-        throw new Error("test_id bulunamadı.");
+      if (!user?.id) {
+        location.replace("/pages/login.html");
+        return false;
       }
 
-      /*
-        Beklenen tablo/sonuç yapısı örneği:
-        level_test_questions:
-        - id
-        - test_id
-        - order_no
-        - level_code
-        - question_type
-        - prompt_text
-        - highlighted_text
-        - option_a
-        - option_b
-        - option_c
-        - option_d
-        - correct_option   // A/B/C/D veya 0/1/2/3
-      */
-
-      const { data, error } = await supabase
-        .from("level_test_questions")
-        .select("*")
-        .eq("test_id", testId)
-        .order("order_no", { ascending:true });
-
-      if(error) throw error;
-      if(!Array.isArray(data) || !data.length){
-        throw new Error("Soru bulunamadı.");
-      }
-
-      QUESTIONS = data.map((row, idx) => {
-        const options = [
-          row.option_a,
-          row.option_b,
-          row.option_c,
-          row.option_d
-        ].map(x => String(x || "").trim()).filter(Boolean);
-
-        let correctIndex = 0;
-        const co = row.correct_option;
-
-        if(typeof co === "number"){
-          correctIndex = Math.max(0, Math.min(options.length - 1, Number(co)));
-        }else{
-          const m = String(co || "").trim().toUpperCase();
-          if(m === "A") correctIndex = 0;
-          else if(m === "B") correctIndex = 1;
-          else if(m === "C") correctIndex = 2;
-          else if(m === "D") correctIndex = 3;
-          else {
-            const parsed = Number(m);
-            if(Number.isFinite(parsed)) correctIndex = Math.max(0, Math.min(options.length - 1, parsed));
-          }
-        }
-
-        return {
-          id: row.id || idx + 1,
-          orderNo: Number(row.order_no || idx + 1),
-          level: normalizeLevel(row.level_code),
-          questionType: row.question_type || "nasıl söylenir:",
-          promptText: String(row.prompt_text || "").trim(),
-          highlightedText: String(row.highlighted_text || row.prompt_text || "").trim(),
-          options,
-          correctIndex
-        };
-      });
-
-      totalCount = QUESTIONS.length;
-    }
-
-    function renderQuestion(){
-      const q = QUESTIONS[currentIndex];
-      if(!q) return;
-
-      selectedIndex = null;
-      locked = false;
-      currentQuestionId = q.id;
-      currentCorrectIndex = q.correctIndex;
-
-      heroPill.textContent = `Soru ${currentIndex + 1} / ${totalCount}`;
-      setLevelUI(q.level);
-      setPlanetNeutral("Hazır");
-
-      questionType.textContent = q.questionType || "nasıl söylenir:";
-      questionText.innerHTML = `
-        <span class="qWord">"${escapeHtml(q.highlightedText)}"</span>
-        ${q.promptText && q.promptText !== q.highlightedText ? escapeHtml(q.promptText) : "?"}
-      `;
-      questionMeta.textContent = "Doğru cevabı seç ve devam et.";
-      statusText.textContent = "Bir şık seçerek devam et.";
-      nextBtn.disabled = true;
-
-      answersEl.innerHTML = q.options.map((opt, i) => {
-        const key = ["A","B","C","D"][i] || String(i + 1);
-        return `
-          <button class="answerBtn" data-index="${i}" type="button">
-            <div class="answerKey">${key}</div>
-            <div class="answerText">${escapeHtml(opt)}</div>
-            <div class="answerIcon">○</div>
-          </button>
-        `;
-      }).join("");
-
-      answersEl.querySelectorAll(".answerBtn").forEach(btn => {
-        btn.addEventListener("click", () => handleAnswer(btn));
-      });
-    }
-
-    async function handleAnswer(btn){
-      if(locked || busy) return;
-      locked = true;
-
-      const q = QUESTIONS[currentIndex];
-      const selected = Number(btn.getAttribute("data-index"));
-      selectedIndex = selected;
-
-      const buttons = [...answersEl.querySelectorAll(".answerBtn")];
-      const correctBtn = buttons[q.correctIndex];
-      const isCorrect = selected === q.correctIndex;
-
-      buttons.forEach(b => {
-        b.classList.add("dim");
-        b.classList.remove("selected");
-      });
-
-      btn.classList.remove("dim");
-      btn.classList.add("selected");
-
-      setTimeout(async () => {
-        if(isCorrect){
-          btn.classList.remove("selected");
-          btn.classList.add("correct");
-          const icon = btn.querySelector(".answerIcon");
-          if(icon) icon.textContent = "✓";
-
-          setPlanetSuccess();
-          questionMeta.textContent = "Harika, doğru bildin.";
-          statusText.textContent = "Güzel gidiyorsun. Devam et.";
-          toast("Doğru cevap");
-        } else {
-          btn.classList.remove("selected");
-          btn.classList.add("wrong");
-          const badIcon = btn.querySelector(".answerIcon");
-          if(badIcon) badIcon.textContent = "✕";
-
-          if(correctBtn){
-            correctBtn.classList.remove("dim");
-            correctBtn.classList.add("correct");
-            const okIcon = correctBtn.querySelector(".answerIcon");
-            if(okIcon) okIcon.textContent = "✓";
-          }
-
-          setPlanetFail();
-          questionMeta.textContent = "Doğru cevap işaretlendi.";
-          statusText.textContent = "Sorun değil. Öğrenerek ilerliyoruz.";
-          toast("Yanlış cevap");
-        }
-
-        try{
-          await saveAnswer({
-            questionId: currentQuestionId,
-            selectedIndex: selected,
-            correctIndex: q.correctIndex,
-            isCorrect
-          });
-        }catch(err){
-          console.error("[level_test] answer save error:", err);
-        }
-
-        nextBtn.disabled = false;
-      }, 120);
-    }
-
-    async function saveAnswer({ questionId, selectedIndex, correctIndex, isCorrect }){
-      /*
-        Burada iki olasılık bıraktım:
-
-        1) Tabloya direkt insert/update
-        2) RPC ile kaydetme
-
-        Senin backend’de hangi yapı varsa onu aktif tutarsın.
-      */
-
-      const payload = {
-        test_id: testId,
-        question_id: questionId,
-        selected_index: selectedIndex,
-        correct_index: correctIndex,
-        is_correct: isCorrect
-      };
-
-      // Tercih 1: RPC
-      const { error: rpcError } = await supabase.rpc("submit_level_test_answer", {
-        p_test_id: payload.test_id,
-        p_question_id: payload.question_id,
-        p_selected_index: payload.selected_index,
-        p_correct_index: payload.correct_index,
-        p_is_correct: payload.is_correct
-      });
-
-      if(rpcError){
-        console.warn("[level_test] rpc save failed, trying table insert...", rpcError);
-
-        // Tercih 2: fallback insert
-        const { error: insertError } = await supabase
-          .from("level_test_answers")
-          .upsert(payload, { onConflict: "test_id,question_id" });
-
-        if(insertError) throw insertError;
-      }
-    }
-
-    async function finishTest(){
-      busy = true;
-      nextBtn.disabled = true;
-      statusText.textContent = "Sınav tamamlanıyor...";
-      questionMeta.textContent = "Sonuç hesaplanıyor...";
-      setPlanetNeutral("Hesaplanıyor");
-      toast("Sınav tamamlanıyor...");
-
-      try{
-        const { data, error } = await supabase.rpc("finish_level_test", {
-          p_test_id: testId
+      try {
+        const { data, error } = await supabase.rpc("ensure_level_test_access", {
+          p_user_id: user.id
         });
 
-        if(error) throw error;
-
-        const row = Array.isArray(data) ? (data[0] || null) : data;
-        const finalLevel = normalizeLevel(row?.final_level || row?.level_code || QUESTIONS[QUESTIONS.length - 1]?.level || "A1");
-
-        setLevelUI(finalLevel);
-        setPlanetSuccess();
-        planetStatus.textContent = `Sonuç: ${finalLevel}`;
-        statusText.textContent = `Seviyen belirlendi: ${finalLevel}`;
-        questionMeta.textContent = "Profiline işlendi. Yönlendiriliyorsun...";
-
-        if(typeof row?.tokens_after === "number"){
-          try{ setHeaderTokens(row.tokens_after); }catch{}
+        if (error) {
+          console.error("[level_test_hub] ensure access rpc error:", error);
+          toast("Sınav erişimi kontrol edilemedi.");
+          return false;
         }
 
-        setTimeout(() => {
-          let url = "/pages/level_result.html";
-          url += `?test_id=${encodeURIComponent(testId)}&lang=${encodeURIComponent(lang)}&level=${encodeURIComponent(finalLevel)}`;
+        const json = data || null;
 
-          if(redirect) url += `&redirect=${encodeURIComponent(redirect)}`;
-          if(next) url += `&next=${encodeURIComponent(next)}`;
+        if (!json) {
+          toast("Sınav erişimi şu anda kontrol edilemedi.");
+          return false;
+        }
 
-          location.href = url;
-        }, 900);
+        if (!json.ok && json.reason === "INSUFFICIENT_TOKENS") {
+          openTokenModal();
+          return false;
+        }
 
-      }catch(e){
-        console.error("[level_test] finish error:", e);
-        toast("Sınav sonucu hesaplanamadı.");
-        busy = false;
-        nextBtn.disabled = false;
-        statusText.textContent = "Sonuç alınamadı. Tekrar deneyebilirsin.";
-        questionMeta.textContent = "Bir hata oluştu.";
+        if (!json.ok) {
+          toast("Sınav erişimi kontrolünde hata oluştu.");
+          return false;
+        }
+
+        if (typeof json.tokens_after === "number") {
+          try { setHeaderTokens(json.tokens_after); } catch {}
+        }
+
+        return true;
+      } catch (e) {
+        console.error("[level_test_hub] ensure access exception:", e);
+        toast("Sınav başlatılamadı.");
+        return false;
       }
     }
 
-    nextBtn.addEventListener("click", async () => {
-      if(busy) return;
-
-      const nextIndex = currentIndex + 1;
-      if(nextIndex >= QUESTIONS.length){
-        await finishTest();
+    function updateFocusArea() {
+      if (!selectedLang) {
+        heroPill.textContent = "Dil Seç";
+        focusBox.classList.remove("show");
         return;
       }
 
-      currentIndex = nextIndex;
-      renderQuestion();
-    });
+      const info = langInfo(selectedLang);
+      heroPill.textContent = `${info.flag} ${info.code.toUpperCase()}`;
+      focusFlag.textContent = info.flag;
+      focusTitle.textContent = `${info.name} için geldin`;
+      focusSub.textContent = redirect
+        ? `Bu dil seçili modüle geri dönmek için kullanılacak.`
+        : `Bu dil için seviyeni görüntüleyebilir veya yeni sınav başlatabilirsin.`;
+      focusBox.classList.add("show");
+    }
 
-    async function init(){
-      try{
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session?.user){
-          location.replace("/pages/login.html");
+    async function init() {
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session?.user){
+        location.replace("/pages/login.html");
+        return;
+      }
+
+      const { data: prof, error } = await supabase
+        .from("profiles")
+        .select("levels")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("[level_test_hub] profile read error:", error);
+      }
+
+      const levels = prof?.levels || {};
+      updateFocusArea();
+
+      list.innerHTML = LANGS
+        .slice()
+        .sort((a, b) => {
+          if (selectedLang && a.code === selectedLang) return -1;
+          if (selectedLang && b.code === selectedLang) return 1;
+          return 0;
+        })
+        .map((l) => {
+          const lv = String(levels[l.code] || "").trim();
+          const isSelected = selectedLang === l.code;
+
+          return `
+            <button class="langCard ${isSelected ? "activeLang" : ""}" data-code="${l.code}" type="button">
+              <div class="left">
+                <div class="flagRing"><div class="flagBox">${l.flag}</div></div>
+                <div class="txt">
+                  <span class="name">${l.name}</span>
+                  <span class="sub ${lv ? "ok" : ""}">
+                    ${lv ? `Mevcut Seviye: ${lv}` : "Sınava Henüz Girilmedi"}
+                  </span>
+                </div>
+              </div>
+              <div class="right">
+                <div class="badge">${l.code.toUpperCase()}</div>
+                <div class="chev">›</div>
+              </div>
+            </button>
+          `;
+        })
+        .join("");
+
+      bindEvents();
+      document.getElementById("pageContent")?.classList.add("ui-ready");
+    }
+
+    function bindEvents() {
+      list.querySelectorAll(".langCard").forEach((btn) => {
+        btn.onclick = async () => {
+          const code = btn.getAttribute("data-code");
+          await startTest(code, btn);
+        };
+      });
+    }
+
+    let busy = false;
+
+    async function startTest(code, btn) {
+      if (busy) return;
+      busy = true;
+      btn.disabled = true;
+      toast("Sınav erişimi kontrol ediliyor...");
+
+      try {
+        const accessOk = await ensureLevelTestAccess();
+        if (!accessOk) {
+          btn.disabled = false;
+          busy = false;
           return;
         }
 
-        await loadQuestions();
-        renderQuestion();
-        page.classList.add("ready");
-      }catch(e){
-        console.error("[level_test] init error:", e);
-        toast("Sınav yüklenemedi.");
-        questionText.innerHTML = `<span class="qWord">Bir sorun oluştu</span> Lütfen tekrar dene.`;
-        questionMeta.textContent = "Soru verisi alınamadı.";
-        statusText.textContent = "Yeniden giriş yapıp tekrar deneyebilirsin.";
-        page.classList.add("ready");
+        toast("Sınav başlatılıyor...");
+
+        const { data, error } = await supabase.rpc("start_level_test", {
+          p_language_code: code
+        });
+
+        if (error) throw error;
+
+        const row = Array.isArray(data) ? (data[0] || null) : data;
+        const testId = row?.test_id || row?.id || null;
+
+        if (!testId) {
+          throw new Error("test_id alınamadı.");
+        }
+
+        let url = `/pages/level_test.html?test_id=${encodeURIComponent(testId)}&lang=${encodeURIComponent(code)}`;
+
+        if (redirect) {
+          url += `&redirect=${encodeURIComponent(redirect)}`;
+        }
+
+        if (next) {
+          url += `&next=${encodeURIComponent(next)}`;
+        }
+
+        location.href = url;
+      } catch (e) {
+        console.error("[level_test_hub] start test error:", e);
+        toast("Sınav başlatılamadı.");
+        btn.disabled = false;
+        busy = false;
       }
     }
 
     init();
   </script>
-
   <script type="module">
-    import { initGlobalAccess } from "/js/global_access.js";
-    await initGlobalAccess({ allowPublicPageBypass:false });
-  </script>
+  import { initGlobalAccess } from "/js/global_access.js";
+  await initGlobalAccess({ allowPublicPageBypass: false });
+</script>
 </body>
 </html>
