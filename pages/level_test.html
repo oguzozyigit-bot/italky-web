@@ -100,6 +100,11 @@
     display:block;
   }
 
+  .topIconBtn.soundOn{
+    box-shadow:0 10px 22px rgba(91,124,255,.18);
+    border-color:rgba(143,181,255,.22);
+  }
+
   .brandBtn{
     height:44px;
     border:none;
@@ -124,11 +129,6 @@
     background:var(--ai);
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
-  }
-
-  .topSpacer{
-    width:44px;
-    height:44px;
   }
 
   .topCard{
@@ -158,8 +158,9 @@
     z-index:2;
     display:flex;
     align-items:center;
-    justify-content:flex-end;
+    justify-content:space-between;
     margin-bottom:6px;
+    gap:10px;
   }
 
   .heroPill{
@@ -175,6 +176,13 @@
     font-weight:1000;
     white-space:nowrap;
     color:#fff;
+  }
+
+  .miniTimer{
+    font-size:11px;
+    font-weight:1000;
+    color:rgba(255,255,255,.72);
+    padding-left:4px;
   }
 
   .progressWrap{
@@ -882,7 +890,7 @@
       grid-template-columns:40px 1fr 40px;
     }
 
-    .topIconBtn,.topSpacer{
+    .topIconBtn{
       width:40px;
       height:40px;
     }
@@ -981,11 +989,23 @@
           <div class="brandLine">italky<span class="ai">AI</span></div>
         </button>
 
-        <div class="topSpacer"></div>
+        <button class="topIconBtn soundOn" id="soundToggleBtn" aria-label="Ses Aç Kapat" title="Ses Aç Kapat">
+          <svg id="soundOnIcon" viewBox="0 0 24 24" fill="none">
+            <path d="M5 14H8L13 18V6L8 10H5V14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M17 9C18.3 10.1 19 11.5 19 12.9C19 14.3 18.3 15.7 17 16.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M19.5 6.8C21.4 8.4 22.5 10.6 22.5 12.9C22.5 15.2 21.4 17.4 19.5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <svg id="soundOffIcon" viewBox="0 0 24 24" fill="none" style="display:none;">
+            <path d="M5 14H8L13 18V6L8 10H5V14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M17 9L22 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M22 9L17 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
 
       <section class="topCard">
         <div class="topHead">
+          <div class="miniTimer" id="timerMini">40:00</div>
           <div class="heroPill" id="heroPill">Soru 1 / 50</div>
         </div>
 
@@ -1072,6 +1092,15 @@
   const fxBurst = $("fxBurst");
   const backBtn = $("backBtn");
   const homeBtn = $("homeBtn");
+  const soundToggleBtn = $("soundToggleBtn");
+  const soundOnIcon = $("soundOnIcon");
+  const soundOffIcon = $("soundOffIcon");
+  const timerMini = $("timerMini");
+
+  let soundEnabled = true;
+  let ttsEnabled = true;
+  let audioCtx = null;
+  let ttsTimer = null;
 
   function qs(k){
     return new URLSearchParams(location.search).get(k);
@@ -1101,30 +1130,210 @@
   }
 
   backBtn.onclick = () => {
+    stopSpeech();
     location.href = buildReturnUrl();
   };
 
   homeBtn.onclick = () => {
+    stopSpeech();
     location.href = "/pages/home.html";
   };
 
-  function setLevelUI(levelCode){
-    const lv = String(levelCode || "A1").trim().toUpperCase();
-    const MAP = {
-      A1:{ fill:20, title:"Başlangıç Seviyesi" },
-      A2:{ fill:40, title:"Temel Seviye" },
-      B1:{ fill:60, title:"Orta Seviye" },
-      B2:{ fill:80, title:"İyi Seviye" },
-      C1:{ fill:100, title:"İleri Seviye" }
-    };
-    const meta = MAP[lv] || MAP.A1;
+  function updateSoundToggleUI(){
+    soundToggleBtn.classList.toggle("soundOn", soundEnabled);
+    soundOnIcon.style.display = soundEnabled ? "block" : "none";
+    soundOffIcon.style.display = soundEnabled ? "none" : "block";
+  }
 
-    levelFill.style.width = `${meta.fill}%`;
-    levelKnob.style.left = `calc(${meta.fill}% - 12px)`;
-    levelTitle.textContent = meta.title;
+  soundToggleBtn.onclick = async () => {
+    soundEnabled = !soundEnabled;
+    ttsEnabled = soundEnabled;
+    updateSoundToggleUI();
+
+    if (soundEnabled) {
+      await ensureAudioContext();
+      speakCurrentQuestion();
+    } else {
+      stopSpeech();
+    }
+  };
+
+  async function ensureAudioContext(){
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      audioCtx = new AudioContextClass();
+    }
+    if (audioCtx.state === "suspended") {
+      try { await audioCtx.resume(); } catch {}
+    }
+    return audioCtx;
+  }
+
+  function stopSpeech(){
+    try{
+      clearTimeout(ttsTimer);
+      window.speechSynthesis?.cancel();
+    }catch{}
+  }
+
+  function getTTSLang(code){
+    const m = {
+      en:"en-US",
+      de:"de-DE",
+      fr:"fr-FR",
+      it:"it-IT",
+      ru:"ru-RU",
+      es:"es-ES",
+      zh:"zh-CN",
+      ja:"ja-JP",
+      ko:"ko-KR",
+      ar:"ar-SA",
+      el:"el-GR",
+      cs:"cs-CZ",
+      sr:"sr-RS",
+      sv:"sv-SE",
+      uk:"uk-UA",
+      fa:"fa-IR",
+      pt:"pt-PT",
+      ro:"ro-RO",
+      hr:"hr-HR",
+      th:"th-TH",
+      bg:"bg-BG",
+      tr:"tr-TR"
+    };
+    return m[code] || "en-US";
+  }
+
+  function speakText(text, lang){
+    if (!ttsEnabled || !soundEnabled || !("speechSynthesis" in window)) return;
+    stopSpeech();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = getTTSLang(lang);
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    utter.volume = 1;
+    try{
+      window.speechSynthesis.speak(utter);
+    }catch{}
+  }
+
+  function speakCurrentQuestion(){
+    if (!QUESTIONS.length) return;
+    const q = QUESTIONS[idx];
+    if (!q || !soundEnabled || !ttsEnabled) return;
+
+    const opts = Array.isArray(q.options) ? q.options : [];
+    const spoken = [
+      q.question || "",
+      ...opts.map((opt, i) => `${["A","B","C","D"][i] || i+1}. ${opt}`)
+    ].join(". ");
+
+    stopSpeech();
+    ttsTimer = setTimeout(() => {
+      speakText(spoken, langCode);
+    }, 250);
+  }
+
+  function playSuccessSound(){
+    if (!soundEnabled) return;
+    ensureAudioContext().then((ctx) => {
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(520, now);
+      osc1.frequency.exponentialRampToValueAtTime(760, now + 0.18);
+      gain1.gain.setValueAtTime(0.0001, now);
+      gain1.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+      osc1.connect(gain1).connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.3);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(860, now + 0.02);
+      osc2.frequency.exponentialRampToValueAtTime(1080, now + 0.20);
+      gain2.gain.setValueAtTime(0.0001, now + 0.02);
+      gain2.gain.exponentialRampToValueAtTime(0.05, now + 0.05);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+      osc2.connect(gain2).connect(ctx.destination);
+      osc2.start(now + 0.02);
+      osc2.stop(now + 0.28);
+    });
+  }
+
+  function playFailSound(){
+    if (!soundEnabled) return;
+    ensureAudioContext().then((ctx) => {
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      const bufferSize = ctx.sampleRate * 0.45;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        const decay = 1 - i / bufferSize;
+        data[i] = (Math.random() * 2 - 1) * decay * 0.8;
+      }
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1400, now);
+      filter.frequency.exponentialRampToValueAtTime(180, now + 0.34);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.22, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(48, now + 0.34);
+      oscGain.gain.setValueAtTime(0.0001, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+      oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+
+      noise.connect(filter).connect(gain).connect(ctx.destination);
+      osc.connect(oscGain).connect(ctx.destination);
+
+      noise.start(now);
+      noise.stop(now + 0.42);
+      osc.start(now);
+      osc.stop(now + 0.34);
+    });
+  }
+
+  function setProgressByQuestion(index, total){
+    const current = index + 1;
+    const ratio = Math.max(0, Math.min(1, current / total));
+    const fill = Math.max(8, Math.min(100, ratio * 100));
+
+    let levelCode = "A1";
+    let title = "Başlangıç Seviyesi";
+
+    if (ratio <= 0.20) { levelCode = "A1"; title = "Başlangıç Seviyesi"; }
+    else if (ratio <= 0.40) { levelCode = "A2"; title = "Temel Seviye"; }
+    else if (ratio <= 0.60) { levelCode = "B1"; title = "Orta Seviye"; }
+    else if (ratio <= 0.80) { levelCode = "B2"; title = "İyi Seviye"; }
+    else { levelCode = "C1"; title = "İleri Seviye"; }
+
+    levelFill.style.width = `${fill}%`;
+    levelKnob.style.left = `calc(${fill}% - 12px)`;
+    levelTitle.textContent = title;
 
     [...levelLabels.children].forEach(el => {
-      el.classList.toggle("active", el.textContent.trim() === lv);
+      el.classList.toggle("active", el.textContent.trim() === levelCode);
     });
   }
 
@@ -1166,6 +1375,7 @@
     planetStatus.className = "planetStatus ok";
     planetStatus.textContent = "Doğru Cevap";
     burstFromPlanet("ok");
+    playSuccessSound();
   }
 
   function setPlanetFail(){
@@ -1188,6 +1398,7 @@
     planetStatus.className = "planetStatus bad";
     planetStatus.textContent = "Yanlış Cevap";
     burstFromPlanet("bad");
+    playFailSound();
   }
 
   function burstFromPlanet(type = "ok"){
@@ -1371,6 +1582,7 @@
 
   showInfo("Test yükleniyor…");
   setPlanetNeutral("Hazırlanıyor");
+  updateSoundToggleUI();
 
   let testRow;
   try{
@@ -1443,7 +1655,7 @@
     const passInfo = `Tur: ${seenCount[idx]}/2`;
 
     heroPill.textContent = `Soru ${idx+1} / ${QUESTIONS.length}`;
-    setLevelUI(q.level || "A1");
+    setProgressByQuestion(idx, QUESTIONS.length);
     setPlanetNeutral(picked !== null ? "Cevaplandı" : "Hazır");
 
     const opts = Array.isArray(q.options) ? q.options : [];
@@ -1465,12 +1677,17 @@
     `;
 
     qCard.querySelectorAll(".opt").forEach(btn => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         if(answeredLocked) return;
+
+        if (soundEnabled) {
+          await ensureAudioContext();
+        }
 
         const i = Number(btn.getAttribute("data-i"));
         answers[idx] = i;
         answeredLocked = true;
+        stopSpeech();
 
         const buttons = [...qCard.querySelectorAll(".opt")];
         const correctBtn = buttons[q.correct_index];
@@ -1519,6 +1736,8 @@
     btnNext.disabled = (answers[idx] === null);
     btnSkip.disabled = false;
     btnNext.textContent = (nextIndex(idx) === -1) ? "SINAVI TAMAMLA" : "İLERİ";
+
+    speakCurrentQuestion();
   }
 
   function requireAnswerToast(){
@@ -1533,6 +1752,8 @@
   }
 
   async function finishExam(){
+    stopSpeech();
+
     const { data, error } = await supabase.rpc("finish_level_test", {
       p_test_id: testId,
       p_answers: answers,
@@ -1570,6 +1791,7 @@ Sonuç profilinize işlendi.`;
   }
 
   btnPrev.onclick = () => {
+    stopSpeech();
     if(idx > 0){
       idx--;
       render();
@@ -1577,6 +1799,7 @@ Sonuç profilinize işlendi.`;
   };
 
   btnSkip.onclick = () => {
+    stopSpeech();
     if(seenCount[idx] >= 2 && answers[idx] === null){
       requireAnswerToast();
       return;
@@ -1591,6 +1814,7 @@ Sonuç profilinize işlendi.`;
   };
 
   btnNext.onclick = () => {
+    stopSpeech();
     if(answers[idx] === null){
       requireAnswerToast();
       return;
@@ -1607,6 +1831,7 @@ Sonuç profilinize işlendi.`;
   function updateTimerUI(){
     const mm = String(Math.floor(remaining / 60)).padStart(2,"0");
     const ss = String(remaining % 60).padStart(2,"0");
+    timerMini.textContent = `${mm}:${ss}`;
     document.title = `italkyAI • ${mm}:${ss}`;
   }
 
