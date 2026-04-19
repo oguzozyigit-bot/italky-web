@@ -270,6 +270,7 @@
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.08);
       font-size:18px;
+      font-weight:900;
     }
 
     .ai-note-body{
@@ -500,13 +501,15 @@
     </button>
 
     <section class="page-head">
-      <div class="page-kicker"></div>
+      <div class="page-kicker">italkyAI</div>
       <h1 class="title">Ses ve Çeviri <span class="ai">Ayarları</span></h1>
+      <p class="page-sub">FaceToFace modu için temel ayarları buradan yönetebilirsiniz.</p>
     </section>
   </div>
 
   <section class="panel soft">
     <h2 class="panel-title">Okuma ve Çeviri</h2>
+    <p class="panel-sub">Bu ayarlar FaceToFace içinde doğrudan kullanılır.</p>
 
     <div class="setting-row">
       <div class="setting-meta">
@@ -529,8 +532,8 @@
       <div class="ai-note-body">
         <div class="ai-note-title">Yapay Zekâ Bilgilendirmesi</div>
         <div class="ai-note-text">
-          Kültürel seçimde çeviri ve ses işlemleri yapay zekâ tarafından gerçekleştirilmektedir.
-          Bu nedenle çeviri sürecinde zaman zaman yavaşlamalar olabilir. Her 1000 Karekterde 1 jeton gereklidir.
+          Kültürel çeviri ve özel ses seçimlerinde çeviri ile ses işlemleri yapay zekâ tarafından gerçekleştirilmektedir.
+          Bu nedenle zaman zaman standart kullanıma göre daha yavaş yanıt alınabilir. Her 1000 karakter için 1 jeton gereklidir.
         </div>
       </div>
     </div>
@@ -538,7 +541,7 @@
 
   <section class="panel">
     <h2 class="panel-title">Ses Seç</h2>
-    <p class="panel-sub">Ses kayıtlıysa ve jeton varsa seçilir. Kayıt yoksa seni ses oluşturma sayfasına yönlendirir.</p>
+    <p class="panel-sub">Ses kayıtlıysa ve jeton varsa seçilir. Kayıt yoksa ses oluşturma sayfasına yönlendirilirsiniz.</p>
 
     <div class="choice-grid" id="voiceGrid">
       <button class="choice-card active" data-voice="auto" type="button">
@@ -579,8 +582,7 @@
       <div class="ai-note-body">
         <div class="ai-note-title">Performans Notu</div>
         <div class="ai-note-text">
-          Kendi Sesim, 2. Ses, Hatıra Sesi ve Kültürel Çeviri seçeneklerinde işlemler
-          yapay zekâ desteğiyle üretildiği için standart kullanıma göre daha yavaş yanıt alınabilir. Her 1000 karakterde 1 jeton gereklidir.
+          Kendi Sesim, 2. Ses, Hatıra Sesi ve Kültürel Çeviri seçeneklerinde işlemler yapay zekâ desteğiyle üretildiği için standart kullanıma göre daha yavaş yanıt alınabilir. Her 1000 karakter için 1 jeton gereklidir.
         </div>
       </div>
     </div>
@@ -630,7 +632,6 @@
   const F2F_PRESET_KEY = "facetoface_voice_preset";
   const F2F_SELECTED_NAME_KEY = "facetoface_selected_voice_name";
   const ADVANCED_URL = "/pages/translation_settings.html?from=facetoface";
-  const RETURN_URL = "/facetoface.html";
 
   const $ = (id) => document.getElementById(id);
 
@@ -676,6 +677,20 @@
       memoryReady: false
     }
   };
+
+  function safeReturnUrl() {
+    return "/facetoface.html";
+  }
+
+  function goBackSmart() {
+    try {
+      if (window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+    } catch {}
+    location.href = safeReturnUrl();
+  }
 
   function readCurrentVoice() {
     const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
@@ -865,11 +880,11 @@
       localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
     }
 
-    location.href = RETURN_URL;
+    goBackSmart();
   }
 
   function bindEvents() {
-    UI.backBtn.addEventListener("click", () => location.href = RETURN_URL);
+    UI.backBtn.addEventListener("click", goBackSmart);
 
     UI.autoReadToggle.addEventListener("click", () => {
       state.autoRead = !state.autoRead;
