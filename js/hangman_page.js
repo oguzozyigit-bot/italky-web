@@ -23,14 +23,14 @@ const LANGS = {
 const GAME_LANG_KEY = "italky_hangman_lang";
 const GAME_CODE = "hangman_nitro";
 const SET_SIZE = 12;
-const MAX_LIVES = 3;
-const MAX_JOKERS = 2;
+const MAX_LIVES = 9;
+const START_LIVES = 5;
 
 let currentLang = localStorage.getItem(GAME_LANG_KEY) || "en";
 let puzzles = [];
 let currentIdx = 0;
 let score = 0;
-let lives = MAX_LIVES;
+let lives = START_LIVES;
 let isBusy = false;
 let currentPuzzle = null;
 let guessedLetters = new Set();
@@ -39,6 +39,7 @@ let bestScore = 0;
 let jokerRevealUsed = false;
 let jokerCleanUsed = false;
 let userId = null;
+let pageReady = false;
 
 let audioCtx = null;
 function getAudioCtx(){
@@ -72,8 +73,10 @@ function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
   g.gain.setValueAtTime(.0001, now);
   g.gain.exponentialRampToValueAtTime(gain, now + .01);
   g.gain.exponentialRampToValueAtTime(.0001, now + duration);
-  osc.connect(g); g.connect(ctx.destination);
-  osc.start(now); osc.stop(now + duration + .02);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + .02);
 }
 
 function playGood(){
@@ -376,11 +379,11 @@ function launchFireworks(){
 function updateHearts(){
   const heartsEl = $("hearts");
   heartsEl.innerHTML = "";
-  for(let i=0; i<MAX_LIVES; i++){
+  for(let i=0; i<START_LIVES; i++){
     const span = document.createElement("span");
     span.className = "heart";
-    span.textContent = i < lives ? "❤️" : "🖤";
-    if(i >= lives) span.style.filter = "none";
+    span.textContent = i < Math.min(lives, START_LIVES) ? "❤️" : "🖤";
+    if(i >= Math.min(lives, START_LIVES)) span.style.filter = "none";
     heartsEl.appendChild(span);
   }
 }
@@ -504,9 +507,17 @@ async function handleSolvedWord(){
   score += 20 + Math.max(0, 8 - wrongLetters.size) * 2;
   updateScoreUI();
 
+  const flawless = wrongLetters.size === 0 && !jokerRevealUsed && !jokerCleanUsed;
+  if (flawless && lives < MAX_LIVES) {
+    lives = Math.min(MAX_LIVES, lives + 1);
+    toast("Kusursuz çözüm! +1 can");
+  } else {
+    toast("Doğru bildin!");
+  }
+
   playGood();
-  toast("Doğru bildin!");
   speak(currentPuzzle.w);
+  renderPuzzle();
 
   const newRecord = await saveBestScoreIfNeeded();
   if(newRecord){
@@ -675,7 +686,7 @@ async function startGame(){
   await unlockAudio();
 
   score = 0;
-  lives = MAX_LIVES;
+  lives = START_LIVES;
   currentIdx = 0;
   isBusy = false;
   guessedLetters = new Set();
@@ -723,24 +734,37 @@ function renderLangs(){
 $("j0").onclick = () => revealRandomLetter();
 $("j1").onclick = () => cleanWrongKeys();
 
-$("toRulesBtn").onclick = () => {
+$("toRulesBtn").onclick = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
   $("langSheet").classList.remove("show");
   $("rulesSheet").classList.add("show");
 };
 
-$("langSheetClose").onclick = () => {
+$("langSheetClose").onclick = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
   $("langSheet").classList.remove("show");
 };
 
-$("rulesClose").onclick = () => {
+$("rulesClose").onclick = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
   $("rulesSheet").classList.remove("show");
-  $("langSheet").classList.add("show");
 };
 
-$("startGameBtn").onclick = startGame;
+$("startGameBtn").onclick = async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  await startGame();
+};
 
 window.addEventListener("keydown", (e) => {
-  if (!$("langSheet").classList.contains("show") && !$("rulesSheet").classList.contains("show") && !$("modal").classList.contains("on")) {
+  const langOpen = $("langSheet").classList.contains("show");
+  const rulesOpen = $("rulesSheet").classList.contains("show");
+  const modalOpen = $("modal").classList.contains("on");
+
+  if (!langOpen && !rulesOpen && !modalOpen) {
     const key = String(e.key || "").toUpperCase();
     if (/^[A-Z]$/.test(key)) handleGuess(key);
   }
@@ -760,5 +784,9 @@ window.onload = async () => {
   renderLangs();
   buildKeyboard();
 
+  $("rulesSheet").classList.remove("show");
+  $("modal").classList.remove("on");
   $("langSheet").classList.add("show");
+
+  $("pageContent").classList.add("ready");
 };
