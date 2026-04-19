@@ -38,6 +38,8 @@ const packageCode = $("packageCode");
 const perUserLimit = $("perUserLimit");
 const promoCodeValue = $("promoCodeValue");
 const promoNfcUid = $("promoNfcUid");
+const promoQuantity = $("promoQuantity");
+const generatePromoBtn = $("generatePromoBtn");
 const savePromoBtn = $("savePromoBtn");
 const promoStatus = $("promoStatus");
 const promoPreview = $("promoPreview");
@@ -59,6 +61,7 @@ const API_BASE = "https://italky-api.onrender.com/admin";
 let currentUser = null;
 let currentProfile = null;
 let latestCreatedPromo = null;
+let latestCreatedPromoList = [];
 
 function setStatus(el, text, cls = "") {
   if (!el) return;
@@ -73,11 +76,6 @@ function fmt(v) {
   } catch {
     return "-";
   }
-}
-
-function safe(v, fallback = "-") {
-  if (v === null || v === undefined || v === "") return fallback;
-  return String(v);
 }
 
 function escapeHtml(str) {
@@ -256,14 +254,36 @@ async function loadWallet() {
   }
 }
 
-function renderPromoPreview(row) {
-  latestCreatedPromo = row || null;
-
-  if (!row) {
+function renderPromoPreview(rowOrList) {
+  if (!rowOrList) {
+    latestCreatedPromo = null;
+    latestCreatedPromoList = [];
     promoPreview.innerHTML = "Henüz promosyon oluşturulmadı.";
     return;
   }
 
+  if (Array.isArray(rowOrList)) {
+    latestCreatedPromoList = rowOrList.slice();
+    latestCreatedPromo = rowOrList[0] || null;
+
+    const first = rowOrList[0];
+    promoPreview.innerHTML = `
+      <div><b>Campaign:</b> ${escapeHtml(first?.campaign_name || "-")}</div>
+      <div><b>Campaign Code:</b> ${escapeHtml(first?.campaign_code || "-")}</div>
+      <div><b>Üretilen Kod Adedi:</b> ${rowOrList.length}</div>
+      <div><b>İlk Kod:</b> ${escapeHtml(first?.code_value || "-")}</div>
+      <div><b>Teslim:</b> ${escapeHtml(first?.delivery_type || "-")}</div>
+      <div><b>Tür:</b> ${escapeHtml(first?.grant_type || "-")}</div>
+      <div><b>Üyelik:</b> ${Number(first?.membership_months || 0)} ay</div>
+      <div><b>Jeton:</b> ${Number(first?.token_amount || 0)}</div>
+    `;
+    return;
+  }
+
+  latestCreatedPromo = rowOrList;
+  latestCreatedPromoList = [rowOrList];
+
+  const row = rowOrList;
   promoPreview.innerHTML = `
     <div><b>Campaign:</b> ${escapeHtml(row.campaign_name || "-")}</div>
     <div><b>Campaign Code:</b> ${escapeHtml(row.campaign_code || "-")}</div>
@@ -284,18 +304,17 @@ async function createCode(payload) {
   return await apiPost("/promo/codes", payload);
 }
 
-async function createPromoRecord(payload) {
-  const gType = String(payload.grant_type || "").trim();
-  const dType = String(payload.delivery_type || "").trim();
-  const cName = String(payload.campaign_name || "").trim();
-  const cCode = String(payload.campaign_code || "").trim().toUpperCase() || generateCampaignCode();
-  const desc = String(payload.description || "").trim();
-  const months = Number(payload.membership_months || 0);
-  const tokens = Number(payload.token_amount || 0);
-  const pkg = String(payload.package_code || "").trim() || "member";
-  const userLimit = Math.max(1, Number(payload.per_user_limit || 1));
-  const codeVal = String(payload.code_value || "").trim().toUpperCase() || generatePromoCode();
-  const nfcUid = String(payload.nfc_uid || "").trim() || null;
+function buildPromoPayload() {
+  const gType = String(grantType?.value || "").trim();
+  const dType = String(deliveryType?.value || "").trim();
+  const cName = String(campaignName?.value || "").trim();
+  const cCode = String(campaignCode?.value || "").trim().toUpperCase() || generateCampaignCode();
+  const desc = String(campaignDescription?.value || "").trim();
+  const months = Number(membershipMonths?.value || 0);
+  const tokens = Number(tokenAmount?.value || 0);
+  const pkg = String(packageCode?.value || "").trim() || "member";
+  const userLimit = Math.max(1, Number(perUserLimit?.value || 1));
+  const nfcUid = String(promoNfcUid?.value || "").trim() || null;
 
   if (!cName) throw new Error("Campaign adı gerekli");
   if (!["membership", "tokens", "bundle"].includes(gType)) throw new Error("Geçersiz tür");
@@ -304,43 +323,95 @@ async function createPromoRecord(payload) {
   if (gType === "tokens" && tokens <= 0) throw new Error("Jeton miktarı gerekli");
   if (gType === "bundle" && months <= 0 && tokens <= 0) throw new Error("Bundle için üyelik veya jeton gerekli");
 
-  const campaignRes = await createCampaign({
-    code: cCode,
-    name: cName,
+  return {
+    campaign_code: cCode,
+    campaign_name: cName,
     description: desc || cName,
-    is_active: true,
     grant_type: gType,
+    delivery_type: dType,
     membership_months: months,
     token_amount: tokens,
     package_code: pkg,
+    per_user_limit: userLimit,
+    nfc_uid: dType === "nfc" ? nfcUid : null
+  };
+}
+
+async function createCampaignOnce(base) {
+  const campaignRes = await createCampaign({
+    code: base.campaign_code,
+    name: base.campaign_name,
+    description: base.description,
+    is_active: true,
+    grant_type: base.grant_type,
+    membership_months: base.membership_months,
+    token_amount: base.token_amount,
+    package_code: base.package_code,
     stack_mode: "extend",
-    per_user_limit: userLimit
+    per_user_limit: base.per_user_limit
   });
 
   const campaignRow = Array.isArray(campaignRes?.item) ? campaignRes.item[0] : campaignRes?.item;
   const campaignId = campaignRow?.id;
   if (!campaignId) throw new Error("Campaign id alınamadı");
 
+  return { campaignId, campaignRow };
+}
+
+function mapCreatedCode(codeRow, base) {
+  return {
+    ...codeRow,
+    campaign_name: base.campaign_name,
+    campaign_code: base.campaign_code,
+    grant_type: base.grant_type,
+    membership_months: base.membership_months,
+    token_amount: base.token_amount,
+    package_code: base.package_code,
+    qr_url: buildQrUrl(codeRow?.code_value || "")
+  };
+}
+
+async function createSinglePromoRecord() {
+  const base = buildPromoPayload();
+  const singleCode = String(promoCodeValue?.value || "").trim().toUpperCase() || generatePromoCode();
+
+  const { campaignId } = await createCampaignOnce(base);
+
   const codeRes = await createCode({
     campaign_id: campaignId,
-    code_value: codeVal,
-    delivery_type: dType,
-    nfc_uid: dType === "nfc" ? nfcUid : null,
+    code_value: singleCode,
+    delivery_type: base.delivery_type,
+    nfc_uid: base.delivery_type === "nfc" ? base.nfc_uid : null,
     is_active: true
   });
 
   const codeRow = Array.isArray(codeRes?.item) ? codeRes.item[0] : codeRes?.item;
+  return mapCreatedCode(codeRow, base);
+}
 
-  return {
-    ...codeRow,
-    campaign_name: cName,
-    campaign_code: cCode,
-    grant_type: gType,
-    membership_months: months,
-    token_amount: tokens,
-    package_code: pkg,
-    qr_url: buildQrUrl(codeVal)
-  };
+async function createBulkPromoRecords() {
+  const base = buildPromoPayload();
+  const qty = Math.max(1, Number(promoQuantity?.value || 1));
+
+  const { campaignId } = await createCampaignOnce(base);
+  const rows = [];
+
+  for (let i = 0; i < qty; i++) {
+    const codeVal = generatePromoCode();
+
+    const codeRes = await createCode({
+      campaign_id: campaignId,
+      code_value: codeVal,
+      delivery_type: base.delivery_type,
+      nfc_uid: null,
+      is_active: true
+    });
+
+    const codeRow = Array.isArray(codeRes?.item) ? codeRes.item[0] : codeRes?.item;
+    rows.push(mapCreatedCode(codeRow, base));
+  }
+
+  return rows;
 }
 
 async function loadPromoRecords() {
@@ -483,6 +554,19 @@ function bindWallet() {
   walletSearch?.addEventListener("input", loadWallet);
 }
 
+function resetPromoFormAfterCreate() {
+  campaignCode.value = "";
+  campaignName.value = "";
+  campaignDescription.value = "";
+  membershipMonths.value = "";
+  tokenAmount.value = "";
+  packageCode.value = "";
+  perUserLimit.value = "1";
+  promoCodeValue.value = "";
+  promoNfcUid.value = "";
+  promoQuantity.value = "1";
+}
+
 function bindPromo() {
   document.querySelectorAll("[data-month]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -504,42 +588,30 @@ function bindPromo() {
     promoCodeValue.value = promoCodeValue.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 40);
   });
 
+  generatePromoBtn?.addEventListener("click", async () => {
+    try {
+      setStatus(promoStatus, "Kodlar üretiliyor...", "status-warn");
+      const rows = await createBulkPromoRecords();
+      renderPromoPreview(rows);
+      setStatus(promoStatus, `${rows.length} adet promosyon kodu üretildi.`, "status-ok");
+      resetPromoFormAfterCreate();
+      await Promise.allSettled([loadPromoRecords(), loadPromoLogs()]);
+    } catch (e) {
+      setStatus(promoStatus, "Kod üretilemedi: " + (e.message || e), "status-err");
+    }
+  });
+
   savePromoBtn?.addEventListener("click", async () => {
     try {
-      setStatus(promoStatus, "Promosyon kaydediliyor...", "status-warn");
-
-      const row = await createPromoRecord({
-        campaign_code: campaignCode.value.trim(),
-        campaign_name: campaignName.value.trim(),
-        description: campaignDescription.value.trim(),
-        grant_type: grantType.value,
-        delivery_type: deliveryType.value,
-        membership_months: membershipMonths.value,
-        token_amount: tokenAmount.value,
-        package_code: packageCode.value.trim(),
-        per_user_limit: perUserLimit.value,
-        code_value: promoCodeValue.value.trim(),
-        nfc_uid: promoNfcUid.value.trim()
-      });
-
+      setStatus(promoStatus, "Tekli promosyon kaydediliyor...", "status-warn");
+      const row = await createSinglePromoRecord();
+      renderPromoPreview(row);
       setStatus(
         promoStatus,
         `Promosyon oluşturuldu • Kod: ${row.code_value} • Tür: ${row.grant_type} • ${row.membership_months || 0} ay • ${row.token_amount || 0} jeton`,
         "status-ok"
       );
-
-      renderPromoPreview(row);
-
-      campaignCode.value = "";
-      campaignName.value = "";
-      campaignDescription.value = "";
-      membershipMonths.value = "";
-      tokenAmount.value = "";
-      packageCode.value = "";
-      perUserLimit.value = "1";
-      promoCodeValue.value = "";
-      promoNfcUid.value = "";
-
+      resetPromoFormAfterCreate();
       await Promise.allSettled([loadPromoRecords(), loadPromoLogs()]);
     } catch (e) {
       setStatus(promoStatus, "Promosyon oluşturulamadı: " + (e.message || e), "status-err");
