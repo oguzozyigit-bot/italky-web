@@ -47,6 +47,12 @@
       height:100%;
       padding:14px 14px calc(var(--dockH) + var(--shellLift) + 24px) 14px;
       position:relative;
+      opacity:0;
+      transition:opacity .2s ease;
+    }
+
+    #pageContent.ready{
+      opacity:1;
     }
 
     .top{
@@ -89,7 +95,7 @@
 
     .hearts{
       display:grid;
-      grid-template-columns:repeat(3, max-content);
+      grid-template-columns:repeat(5, max-content);
       gap:6px;
     }
 
@@ -100,7 +106,7 @@
     }
 
     .rightHud{
-      min-width:140px;
+      min-width:156px;
       display:flex;
       flex-direction:column;
       align-items:flex-end;
@@ -135,7 +141,7 @@
     }
 
     .joker{
-      width:52px;
+      width:64px;
       height:44px;
       border:none;
       border-radius:14px;
@@ -150,12 +156,19 @@
       cursor:pointer;
       transition:.2s ease;
       box-shadow:0 10px 24px rgba(0,0,0,.20);
+      gap:6px;
+    }
+
+    .joker span{
+      font-size:16px;
+      line-height:1;
     }
 
     .joker small{
       font-size:11px;
       opacity:.9;
       font-weight:900;
+      line-height:1;
     }
 
     .joker:active{ transform:scale(.96); }
@@ -531,6 +544,22 @@
       font-weight:700;
     }
 
+    .sheetBtn{
+      margin-top:14px;
+      width:100%;
+      height:54px;
+      border:none;
+      border-radius:18px;
+      background:var(--grad);
+      color:#fff;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      position:relative;
+      z-index:5;
+      pointer-events:auto;
+    }
+
     .toast{
       position:fixed;
       left:50%;
@@ -627,8 +656,12 @@
           </div>
 
           <div class="jokerCol">
-            <button class="joker" id="j0" type="button" aria-label="Harf Aç Jokeri" title="Harf Aç Jokeri">🔍</button>
-            <button class="joker" id="j1" type="button" aria-label="Yanlış Harfleri Temizle" title="Yanlış Harfleri Temizle">💣</button>
+            <button class="joker" id="j0" type="button" aria-label="Harf Aç Jokeri" title="Harf Aç Jokeri">
+              <span>🔍</span><small>x1</small>
+            </button>
+            <button class="joker" id="j1" type="button" aria-label="Yanlış Harfleri Temizle" title="Yanlış Harfleri Temizle">
+              <span>💣</span><small>x1</small>
+            </button>
           </div>
         </div>
       </div>
@@ -679,9 +712,7 @@
 
         <div class="langGrid" id="langGrid"></div>
 
-        <button class="mainbtn" id="toRulesBtn" type="button" style="margin-top:14px;width:100%;height:54px;border:none;border-radius:18px;background:var(--grad);color:#fff;font-size:16px;font-weight:900;cursor:pointer;">
-          DEVAM ET
-        </button>
+        <button class="sheetBtn" id="toRulesBtn" type="button">DEVAM ET</button>
       </div>
     </div>
 
@@ -698,17 +729,16 @@
 
         <ul style="text-align:left;margin:0;padding-left:18px;line-height:1.8;color:rgba(255,255,255,.88);font-size:14px;font-weight:800;">
           <li>Her yanlış tahmin adamı tamamlamaya yaklaştırır.</li>
-          <li>Toplam 3 canın vardır.</li>
-          <li>Kelimeyi açtıkça puan kazanırsın.</li>
+          <li>Toplam <b>5 canın</b> vardır.</li>
           <li><b>2 joker hakkın</b> var.</li>
           <li><b>🔍 Joker:</b> Kelimeden rastgele doğru bir harfi açar.</li>
           <li><b>💣 Joker:</b> Klavyeden yanlış harflerin bir kısmını temizler.</li>
+          <li>Bir kelimeyi <b>jokersiz ve hatasız</b> çözersen <b>+1 can</b> kazanırsın.</li>
+          <li>Can sayısı en fazla <b>9</b> olabilir.</li>
           <li>Yeni en yüksek skoru geçersen kutlama başlar.</li>
         </ul>
 
-        <button class="mainbtn" id="startGameBtn" type="button" style="margin-top:14px;width:100%;height:54px;border:none;border-radius:18px;background:var(--grad);color:#fff;font-size:16px;font-weight:900;cursor:pointer;">
-          ANLADIM, BAŞLA
-        </button>
+        <button class="sheetBtn" id="startGameBtn" type="button">ANLADIM, BAŞLA</button>
       </div>
     </div>
 
