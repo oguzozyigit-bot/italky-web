@@ -1,30 +1,43 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Seviye Tespit</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+  <title>italkyAI • Seviye Tespit Sınavı</title>
 
-  <meta name="theme-color" content="#02000f">
-  <style>html,body{background:#02000f !important;}</style>
+  <meta name="theme-color" content="#050816" />
+  <style>html,body{background:#050816!important;}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --ai: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-      --glass-border: rgba(255,255,255,0.10);
-      --bg-dark:#02000f;
-      --text:#ffffff;
-      --muted:rgba(255,255,255,0.46);
-      --muted-2:rgba(255,255,255,0.62);
-      --card:rgba(255,255,255,0.03);
-      --card-2:rgba(255,255,255,0.02);
-      --ok:#a5b4fc;
-      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --bg:#050816;
+      --bg2:#091126;
+      --card:rgba(255,255,255,.05);
+      --card2:rgba(255,255,255,.04);
+      --line:rgba(255,255,255,.10);
+      --text:#fff;
+      --muted:rgba(255,255,255,.62);
+      --muted2:rgba(255,255,255,.42);
+      --blue:#6ea8ff;
+      --blue2:#3b82f6;
+      --purple:#7c3aed;
+      --pink:#ec4899;
+      --ok:#18d26e;
+      --ok2:#22c55e;
+      --bad:#ff4d6d;
+      --bad2:#ef4444;
+      --warn:#f59e0b;
       --shellLift:0px;
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --safe-top:env(safe-area-inset-top,0px);
+      --grad:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 40%,#a855f7 72%,#ec4899 100%);
+      --okGrad:linear-gradient(135deg,#34d399 0%,#22c55e 100%);
+      --badGrad:linear-gradient(135deg,#fb7185 0%,#ef4444 100%);
+      --shadow:0 14px 40px rgba(0,0,0,.32);
     }
 
     *{
@@ -36,869 +49,900 @@
     html,body{
       margin:0;
       padding:0;
-      height:100%;
       width:100%;
+      height:100%;
       overflow:hidden;
-      background:var(--bg-dark);
-      font-family:'Plus Jakarta Sans',sans-serif;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(110,168,255,.13), transparent 34%),
+        radial-gradient(circle at 85% 20%, rgba(236,72,153,.12), transparent 24%),
+        radial-gradient(circle at 10% 85%, rgba(124,58,237,.14), transparent 30%),
+        linear-gradient(180deg,#050816 0%, #081022 100%);
       color:var(--text);
+      font-family:"Plus Jakarta Sans",sans-serif;
     }
 
-    #pageContent{
-      height:100%;
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size:28px 28px;
+      opacity:.18;
+      mask-image:radial-gradient(circle at center, #000 45%, transparent 100%);
+      -webkit-mask-image:radial-gradient(circle at center, #000 45%, transparent 100%);
+    }
+
+    #fxBurst{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:9999;
+      overflow:hidden;
+    }
+
+    #page{
+      position:relative;
       width:100%;
+      height:100%;
       display:flex;
       flex-direction:column;
-      padding:10px 15px calc(10px + var(--safe-bottom) + var(--shellLift));
-      box-sizing:border-box;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(165,180,252,0.12), transparent 48%),
-        radial-gradient(circle at 85% 20%, rgba(236,72,153,0.10), transparent 25%),
-        radial-gradient(circle at 20% 80%, rgba(99,102,241,0.08), transparent 28%);
+      padding:
+        calc(12px + var(--safe-top))
+        14px
+        calc(14px + var(--safe-bottom) + var(--shellLift))
+        14px;
       opacity:0;
-      transition:opacity .35s ease;
+      transition:opacity .28s ease;
     }
-    #pageContent.ui-ready{ opacity:1; }
+    #page.ready{ opacity:1; }
 
     .wrap{
-      height:100%;
+      flex:1;
+      min-height:0;
       display:flex;
       flex-direction:column;
-      gap:10px;
-      min-height:0;
+      gap:12px;
     }
 
-    .hero{
-      flex:0 0 auto;
-      padding:16px;
-      border-radius:24px;
-      border:1px solid var(--glass-border);
-      background:rgba(255,255,255,0.03);
-      backdrop-filter:blur(20px);
-      -webkit-backdrop-filter:blur(20px);
+    .topbar{
       position:relative;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      border-radius:26px;
+      padding:14px 14px 12px;
+      box-shadow:var(--shadow);
       overflow:hidden;
     }
 
-    .hero::before{
+    .topbar::before{
       content:"";
       position:absolute;
       inset:-20%;
       background:
-        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.18), transparent 35%),
-        radial-gradient(circle at 78% 28%, rgba(236,72,153,0.14), transparent 30%);
+        radial-gradient(circle at 16% 25%, rgba(110,168,255,.16), transparent 28%),
+        radial-gradient(circle at 88% 32%, rgba(236,72,153,.12), transparent 22%);
       filter:blur(28px);
       pointer-events:none;
     }
 
-    .hero-top{
+    .topbarHead{
       position:relative;
       z-index:2;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      margin-bottom:10px;
+      margin-bottom:12px;
     }
 
     .brand{
       display:flex;
       flex-direction:column;
       gap:3px;
+      min-width:0;
     }
 
-    .brand-line{
+    .brandLine{
       font-family:"Space Grotesk",sans-serif;
       font-size:20px;
-      font-weight:900;
-      letter-spacing:-.25px;
+      font-weight:700;
+      letter-spacing:-.3px;
       line-height:1;
     }
 
-    .brand-line .ai{
-      background:var(--ai);
+    .brandLine .ai{
+      background:var(--grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
 
-    .brand-sub{
+    .brandSub{
       font-size:10px;
-      font-weight:1000;
-      color:rgba(255,255,255,0.42);
+      font-weight:900;
+      color:rgba(255,255,255,.42);
       text-transform:uppercase;
-      letter-spacing:2px;
+      letter-spacing:1.8px;
     }
 
-    .hero-pill{
+    .pill{
+      flex:0 0 auto;
+      min-height:34px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:34px;
       padding:8px 12px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
       color:#fff;
       font-size:11px;
-      font-weight:1000;
+      font-weight:900;
       white-space:nowrap;
     }
 
-    .hero h1{
+    .levelTrackWrap{
       position:relative;
       z-index:2;
-      margin:0;
-      font-size:19px;
-      font-weight:900;
-      color:#fff;
-      line-height:1.2;
-      letter-spacing:-.2px;
-    }
-
-    .hero p{
-      position:relative;
-      z-index:2;
-      margin:6px 0 0;
-      font-size:12px;
-      color:rgba(255,255,255,0.58);
-      line-height:1.5;
-      font-weight:700;
-    }
-
-    .focusBox{
-      position:relative;
-      z-index:2;
-      margin-top:12px;
-      display:none;
-      align-items:center;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:16px;
-      border:1px solid rgba(165,180,252,0.22);
-      background:rgba(99,102,241,0.10);
-    }
-
-    .focusBox.show{
       display:flex;
+      flex-direction:column;
+      gap:8px;
     }
 
-    .focusFlag{
-      width:36px;
-      height:36px;
-      min-width:36px;
-      border-radius:12px;
+    .levelLabels{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      text-align:center;
+      font-size:11px;
+      font-weight:900;
+      color:rgba(255,255,255,.58);
+    }
+
+    .levelLabels span.active{
+      color:#b9cdff;
+      text-shadow:0 0 12px rgba(110,168,255,.34);
+    }
+
+    .levelTrack{
+      position:relative;
+      height:16px;
+      border-radius:999px;
+      padding:2px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+
+    .levelFill{
+      position:absolute;
+      left:2px;
+      top:2px;
+      bottom:2px;
+      width:20%;
+      border-radius:999px;
+      background:var(--grad);
+      box-shadow:0 0 24px rgba(110,168,255,.30);
+      transition:width .35s ease;
+    }
+
+    .levelKnob{
+      position:absolute;
+      top:50%;
+      left:calc(20% - 15px);
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      transform:translateY(-50%);
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(10,14,28,.95);
+      box-shadow:0 0 0 4px rgba(110,168,255,.12), 0 10px 24px rgba(0,0,0,.30);
       display:flex;
       align-items:center;
       justify-content:center;
-      background:rgba(255,255,255,0.07);
-      border:1px solid rgba(255,255,255,0.10);
-      font-size:18px;
+      transition:left .35s ease;
     }
 
-    .focusText{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-
-    .focusTitle{
-      font-size:12px;
-      font-weight:1000;
-      color:#fff;
-      line-height:1.2;
-    }
-
-    .focusSub{
+    .levelKnob::before{
+      content:"▶";
       font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,0.70);
-      line-height:1.35;
+      transform:translateX(1px);
+      color:#fff;
+      opacity:.92;
     }
 
-    .list{
+    .levelTitle{
+      text-align:center;
+      font-size:13px;
+      font-weight:1000;
+      letter-spacing:2px;
+      color:#77a7ff;
+      text-transform:uppercase;
+      text-shadow:0 0 20px rgba(110,168,255,.28);
+    }
+
+    .main{
       flex:1;
       min-height:0;
       display:flex;
       flex-direction:column;
-      gap:8px;
-      justify-content:flex-start;
-      overflow:auto;
-      padding-right:2px;
-      scrollbar-width:none;
+      gap:12px;
     }
-    .list::-webkit-scrollbar{ display:none; }
 
-    .langCard{
-      width:100%;
-      border-radius:20px;
-      border:1px solid var(--glass-border);
-      background:var(--card);
-      padding:0 18px;
+    .characterCard{
+      position:relative;
+      min-height:180px;
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(110,168,255,.10), transparent 40%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      overflow:hidden;
+      box-shadow:var(--shadow);
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      cursor:pointer;
-      transition:all .24s cubic-bezier(.2,1,.3,1);
+      justify-content:center;
+      padding:12px;
+    }
+
+    .characterGlow{
+      position:absolute;
+      width:170px;
+      height:170px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(110,168,255,.24), rgba(168,85,247,.14), transparent 70%);
+      filter:blur(10px);
+      animation:pulseGlow 2.2s ease-in-out infinite;
+    }
+
+    .avatar{
       position:relative;
+      z-index:2;
+      width:150px;
+      max-width:52vw;
+      filter:drop-shadow(0 14px 30px rgba(0,0,0,.35));
+      user-select:none;
+      pointer-events:none;
+      animation:floaty 3s ease-in-out infinite;
+    }
+
+    .questionCard{
+      position:relative;
+      border-radius:26px;
+      border:1px solid rgba(110,168,255,.18);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)),
+        radial-gradient(circle at 8% 50%, rgba(59,130,246,.20), transparent 14%);
+      box-shadow:0 16px 40px rgba(0,0,0,.34);
+      padding:18px 18px 16px;
       overflow:hidden;
-      min-height:78px;
-      text-align:left;
     }
 
-    .langCard:active{
-      transform:scale(.985) translateY(1px);
-      background:rgba(255,255,255,0.06);
-    }
-
-    .langCard:disabled{
-      opacity:.55;
-      filter:grayscale(.15);
-      cursor:not-allowed;
-    }
-
-    .langCard::after{
+    .questionCard::after{
       content:"";
       position:absolute;
-      inset:0;
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-      opacity:0;
-      transition:opacity .25s ease;
-      pointer-events:none;
+      left:0;
+      top:0;
+      bottom:0;
+      width:5px;
+      border-radius:12px;
+      background:var(--grad);
+      box-shadow:0 0 18px rgba(110,168,255,.34);
     }
 
-    .langCard:hover::after,
-    .langCard.activeLang::after{
-      opacity:1;
+    .questionLabel{
+      font-size:13px;
+      font-weight:1000;
+      text-align:center;
+      color:rgba(255,255,255,.92);
+      margin-bottom:8px;
     }
 
-    .langCard.activeLang{
-      border-color:rgba(165,180,252,0.34);
-      background:linear-gradient(135deg, rgba(99,102,241,0.16), rgba(236,72,153,0.08));
-      box-shadow:0 12px 28px rgba(0,0,0,.18);
-    }
-
-    .langCard.activeLang .name{
+    .questionText{
+      text-align:center;
+      font-size:17px;
+      line-height:1.35;
+      font-weight:900;
       color:#fff;
     }
 
-    .langCard.activeLang .sub{
-      color:rgba(255,255,255,0.76);
+    .questionText .qWord{
+      display:block;
+      margin:8px 0 4px;
+      font-size:25px;
+      line-height:1.15;
+      color:#9ec2ff;
+      text-shadow:0 0 18px rgba(110,168,255,.20);
     }
 
-    .left{
+    .questionMeta{
+      margin-top:10px;
+      text-align:center;
+      font-size:11px;
+      color:rgba(255,255,255,.46);
+      font-weight:800;
+      letter-spacing:.4px;
+    }
+
+    .answers{
+      display:grid;
+      gap:10px;
+    }
+
+    .answer{
+      position:relative;
+      width:100%;
+      min-height:72px;
+      border:none;
+      border-radius:22px;
       display:flex;
       align-items:center;
       gap:12px;
-      z-index:2;
-      min-width:0;
+      padding:12px 14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.035));
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      cursor:pointer;
+      text-align:left;
+      transition:
+        transform .16s ease,
+        background .22s ease,
+        border-color .22s ease,
+        box-shadow .22s ease,
+        opacity .22s ease;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+      overflow:hidden;
     }
 
-    .flagRing{
-      width:44px;
-      height:44px;
+    .answer::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent);
+      transform:translateX(-100%);
+      transition:transform .4s ease;
+      pointer-events:none;
+    }
+
+    .answer:active{
+      transform:scale(.986);
+    }
+
+    .answer:hover::before{
+      transform:translateX(100%);
+    }
+
+    .answerKey{
+      width:42px;
+      height:42px;
+      min-width:42px;
       border-radius:14px;
-      background:var(--ai);
-      padding:2px;
-      animation:rotateRing 12s linear infinite;
-      flex:0 0 auto;
-      box-shadow:0 0 22px rgba(99,102,241,.18);
-    }
-
-    .flagBox{
-      width:100%;
-      height:100%;
-      border-radius:12px;
-      background:#000;
       display:flex;
       align-items:center;
       justify-content:center;
       font-size:20px;
-      border:1px solid rgba(255,255,255,0.08);
+      font-weight:1000;
+      color:#cddcff;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
     }
 
-    .txt{
+    .answerText{
+      flex:1;
       min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-
-    .txt .name{
-      font-size:16px;
+      font-size:18px;
+      line-height:1.2;
       font-weight:900;
       color:#fff;
-      display:block;
-      line-height:1.1;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
     }
 
-    .txt .sub{
-      font-size:10px;
-      color:rgba(255,255,255,0.42);
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.7px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .txt .sub.ok{
-      color:var(--ok);
-      filter:brightness(1.15);
-    }
-
-    .right{
+    .answerIcon{
+      flex:0 0 auto;
+      width:26px;
+      height:26px;
+      border-radius:50%;
       display:flex;
       align-items:center;
-      gap:8px;
-      z-index:2;
-      flex:0 0 auto;
+      justify-content:center;
+      font-size:15px;
+      color:rgba(255,255,255,.26);
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
     }
 
-    .badge{
-      font-size:10px;
-      font-weight:1000;
+    .answer.dim{
+      opacity:.42;
+      transform:none!important;
+    }
+
+    .answer.selected{
+      border-color:rgba(110,168,255,.38);
+      background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(168,85,247,.10));
+      box-shadow:0 14px 32px rgba(59,130,246,.18);
+    }
+
+    .answer.correct{
+      border-color:rgba(34,197,94,.45);
+      background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(16,185,129,.10));
+      box-shadow:0 16px 36px rgba(34,197,94,.18);
+    }
+
+    .answer.correct .answerKey{
+      background:rgba(34,197,94,.16);
+      border-color:rgba(34,197,94,.30);
+      color:#d9ffeb;
+    }
+
+    .answer.correct .answerIcon{
       color:#fff;
-      padding:5px 8px;
-      border-radius:10px;
-      background:rgba(255,255,255,0.05);
-      border:1px solid var(--glass-border);
-      min-width:40px;
-      text-align:center;
+      background:linear-gradient(135deg,#34d399,#22c55e);
+      border-color:transparent;
     }
 
-    .chev{
-      color:rgba(255,255,255,0.22);
-      font-size:18px;
-      line-height:1;
-      font-weight:900;
+    .answer.wrong{
+      border-color:rgba(239,68,68,.46);
+      background:linear-gradient(135deg, rgba(239,68,68,.20), rgba(244,63,94,.10));
+      box-shadow:0 16px 36px rgba(239,68,68,.16);
+      animation:shakeX .32s ease;
     }
 
-    .footerNote{
-      flex:0 0 auto;
+    .answer.wrong .answerKey{
+      background:rgba(239,68,68,.16);
+      border-color:rgba(239,68,68,.28);
+      color:#ffe0e6;
+    }
+
+    .answer.wrong .answerIcon{
+      color:#fff;
+      background:linear-gradient(135deg,#fb7185,#ef4444);
+      border-color:transparent;
+    }
+
+    .bottomBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
       padding:10px 4px 2px;
-      text-align:center;
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,0.42);
+    }
+
+    .statusText{
+      min-width:0;
+      font-size:12px;
+      font-weight:900;
+      color:rgba(255,255,255,.60);
       line-height:1.45;
+    }
+
+    .nextBtn{
+      flex:0 0 auto;
+      min-height:48px;
+      padding:0 18px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      color:#fff;
+      font-size:14px;
+      font-weight:1000;
+      background:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#ec4899 100%);
+      box-shadow:0 14px 32px rgba(91,124,255,.26);
+      transition:transform .16s ease, opacity .18s ease, filter .18s ease;
+    }
+
+    .nextBtn:active{
+      transform:scale(.985);
+    }
+
+    .nextBtn:disabled{
+      opacity:.45;
+      filter:grayscale(.12);
+      cursor:not-allowed;
+      box-shadow:none;
     }
 
     .toast{
       position:fixed;
-      left:50%;
       top:18px;
+      left:50%;
       transform:translateX(-50%) translateY(-120px);
-      background:rgba(10,10,18,.95);
-      border:1px solid rgba(165,180,252,.35);
-      padding:10px 14px;
+      z-index:10000;
+      max-width:min(92vw,520px);
+      padding:11px 15px;
       border-radius:999px;
+      background:rgba(10,12,22,.94);
+      border:1px solid rgba(255,255,255,.12);
       color:#fff;
-      z-index:999999;
-      font-weight:900;
       font-size:12px;
-      transition:.25s;
-      backdrop-filter:blur(12px);
-      pointer-events:none;
-      max-width:min(92vw, 520px);
+      font-weight:900;
       text-align:center;
+      pointer-events:none;
+      backdrop-filter:blur(12px);
+      transition:.24s ease;
     }
 
     .toast.show{
       transform:translateX(-50%) translateY(0);
     }
 
-    .tokenModal{
-      position:fixed;
-      inset:0;
-      z-index:1000000;
-      background:rgba(2,4,12,.72);
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
+    .hidden{
+      display:none!important;
     }
 
-    .tokenModal.show{
-      display:flex;
+    @keyframes pulseGlow{
+      0%,100%{ transform:scale(.96); opacity:.72; }
+      50%{ transform:scale(1.05); opacity:1; }
     }
 
-    .tokenCard{
-      width:min(100%, 430px);
-      border-radius:30px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,0.12);
-      background:linear-gradient(180deg, rgba(10,12,26,.98), rgba(6,8,20,.98));
-      box-shadow:0 28px 90px rgba(0,0,0,.42);
+    @keyframes floaty{
+      0%,100%{ transform:translateY(0px); }
+      50%{ transform:translateY(-6px); }
     }
 
-    .tokenTop{
-      padding:20px 20px 16px;
-      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+    @keyframes shakeX{
+      0%{ transform:translateX(0); }
+      25%{ transform:translateX(-7px); }
+      50%{ transform:translateX(6px); }
+      75%{ transform:translateX(-4px); }
+      100%{ transform:translateX(0); }
     }
 
-    .tokenChip{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:34px;
-      padding:8px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.16);
-      border:1px solid rgba(255,255,255,.18);
-      color:#fff;
-      font-size:12px;
-      font-weight:1000;
+    @keyframes burstFly{
+      0%{
+        transform:translate(0,0) scale(1);
+        opacity:1;
+      }
+      100%{
+        transform:translate(var(--x), var(--y)) scale(.2) rotate(180deg);
+        opacity:0;
+      }
     }
 
-    .tokenTitle{
-      margin:14px 0 6px;
-      font-size:28px;
-      line-height:1.08;
-      font-weight:1000;
-      color:#fff;
-      letter-spacing:-.6px;
-    }
-
-    .tokenSub{
-      margin:0;
-      font-size:14px;
-      line-height:1.55;
-      font-weight:800;
-      color:rgba(255,255,255,.90);
-    }
-
-    .tokenBody{
-      padding:18px;
-      display:grid;
-      gap:12px;
-    }
-
-    .tokenInfo{
-      border-radius:20px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      padding:14px 14px;
-    }
-
-    .tokenLabel{
-      font-size:11px;
-      font-weight:1000;
-      color:rgba(255,255,255,.50);
-      text-transform:uppercase;
-      letter-spacing:.8px;
-      margin-bottom:5px;
-    }
-
-    .tokenValue{
-      font-size:20px;
-      font-weight:1000;
-      color:#fff;
-      line-height:1.15;
-    }
-
-    .tokenDesc{
-      margin:2px 0 0;
-      font-size:12px;
-      line-height:1.45;
-      font-weight:800;
-      color:rgba(255,255,255,.62);
-    }
-
-    .tokenActions{
-      display:grid;
-      gap:10px;
-      margin-top:2px;
-    }
-
-    .tokenBtn{
-      min-height:54px;
-      border:none;
-      border-radius:18px;
-      cursor:pointer;
-      font-size:15px;
-      font-weight:1000;
-      transition:transform .16s ease, opacity .16s ease;
-    }
-
-    .tokenBtn:active{
-      transform:scale(.985);
-    }
-
-    .tokenBtn.primary{
-      color:#fff;
-      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-      box-shadow:0 14px 34px rgba(99,102,241,.26);
-    }
-
-    .tokenBtn.secondary{
-      color:#fff;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-    }
-
-    @keyframes rotateRing{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
+    .particle{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:3px;
+      background:linear-gradient(135deg,#fff,#9ec2ff);
+      box-shadow:0 0 12px rgba(255,255,255,.25);
+      animation:burstFly .72s ease-out forwards;
     }
 
     @media (max-width:390px){
-      #pageContent{
-        padding:10px 12px calc(10px + var(--safe-bottom) + var(--shellLift));
+      #page{
+        padding:
+          calc(10px + var(--safe-top))
+          12px
+          calc(12px + var(--safe-bottom) + var(--shellLift))
+          12px;
       }
 
-      .hero{
-        padding:14px;
+      .characterCard{
+        min-height:160px;
       }
 
-      .langCard{
-        min-height:74px;
-        padding:0 14px;
+      .questionText{
+        font-size:16px;
       }
 
-      .txt .name{
-        font-size:15px;
+      .questionText .qWord{
+        font-size:22px;
       }
 
-      .tokenTitle{
-        font-size:24px;
+      .answer{
+        min-height:68px;
+        border-radius:20px;
+      }
+
+      .answerText{
+        font-size:17px;
       }
     }
   </style>
 </head>
-
 <body>
-  <main id="pageContent">
+  <div id="fxBurst"></div>
+
+  <main id="page">
     <div class="wrap">
-      <section class="hero">
-        <div class="hero-top">
+      <section class="topbar">
+        <div class="topbarHead">
           <div class="brand">
-            <div class="brand-line">italky<span class="ai">AI</span></div>
-            <div class="brand-sub">Seviye Tespit</div>
+            <div class="brandLine">italky<span class="ai">AI</span></div>
+            <div class="brandSub">Seviye Tespit</div>
           </div>
-          <div class="hero-pill" id="heroPill">Dil Seç</div>
+          <div class="pill" id="pillInfo">Soru 1 / 12</div>
         </div>
 
-        <h1>Doğru seviyeden başla....</h1>
-        <p>
-          Buradan dilini seç, mevcut seviyeni gör ve istersen yeni seviye tespit sınavını başlat.
-          Sistem sonucu profiline otomatik işler.
-        </p>
-
-        <div class="focusBox" id="focusBox">
-          <div class="focusFlag" id="focusFlag">🏁</div>
-          <div class="focusText">
-            <div class="focusTitle" id="focusTitle">Öncelikli dil seçildi</div>
-            <div class="focusSub" id="focusSub">Bu dil için yönlendirme ile geldin.</div>
+        <div class="levelTrackWrap">
+          <div class="levelLabels" id="levelLabels">
+            <span class="active">A1</span>
+            <span>A2</span>
+            <span>B1</span>
+            <span>B2</span>
+            <span>C1</span>
           </div>
+
+          <div class="levelTrack">
+            <div class="levelFill" id="levelFill"></div>
+            <div class="levelKnob" id="levelKnob"></div>
+          </div>
+
+          <div class="levelTitle" id="levelTitle">Başlangıç Seviyesi</div>
         </div>
       </section>
 
-      <section class="list" id="list"></section>
+      <section class="main">
+        <div class="characterCard">
+          <div class="characterGlow"></div>
 
-      <div class="footerNote">
-        Seviye olmayan dil için sınav başlatılır. Seviye olan dil için mevcut durum burada görünür.
-      </div>
+          <svg class="avatar" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="110" cy="176" rx="70" ry="16" fill="rgba(0,0,0,.25)"/>
+            <path d="M71 190C75 149 79 129 91 114H129C141 129 145 149 149 190C125 198 95 198 71 190Z" fill="#E7E7EA"/>
+            <path d="M73 188C78 148 82 128 92 114H101C91 128 88 149 84 190C80 190 76 189 73 188Z" fill="#CFCFD3"/>
+            <path d="M147 188C142 148 138 128 128 114H119C129 128 132 149 136 190C140 190 144 189 147 188Z" fill="#F4F4F5"/>
+            <circle cx="110" cy="79" r="47" fill="#D8A06D"/>
+            <path d="M69 66C74 42 90 30 111 31C134 32 150 47 151 70C142 56 128 48 111 48C91 48 79 54 69 66Z" fill="#C99261"/>
+            <path d="M72 73C75 51 91 36 111 36C130 36 147 49 148 73V84C148 106 131 124 110 124C89 124 72 106 72 84V73Z" fill="#D8A06D" stroke="#111827" stroke-width="2.5"/>
+            <circle cx="95" cy="81" r="4.4" fill="#111827"/>
+            <circle cx="125" cy="81" r="4.4" fill="#111827"/>
+            <path d="M88 65C91 63 95 62 100 63" stroke="#111827" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M120 63C125 62 129 63 132 65" stroke="#111827" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M95 101C103 100 117 99 125 98" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
+            <path d="M65 145L56 188" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
+            <path d="M155 145L164 188" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
+            <path d="M92 114H128" stroke="#111827" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="questionCard">
+          <div class="questionLabel" id="questionLabel">nasıl söylenir:</div>
+          <div class="questionText" id="questionText">
+            <span class="qWord">“Görüyorum”</span>
+            ?
+          </div>
+          <div class="questionMeta" id="questionMeta">Doğru cevabı seç ve devam et.</div>
+        </div>
+
+        <div class="answers" id="answers"></div>
+
+        <div class="bottomBar">
+          <div class="statusText" id="statusText">Bir şık seçerek devam edebilirsin.</div>
+          <button class="nextBtn" id="nextBtn" disabled>Sonraki</button>
+        </div>
+      </section>
     </div>
   </main>
 
   <div class="toast" id="toast"></div>
 
-  <div class="tokenModal" id="tokenModal">
-    <div class="tokenCard">
-      <div class="tokenTop">
-        <div class="tokenChip">italkyAI • Jeton Gerekli</div>
-        <div class="tokenTitle">Seviye sınavı için jeton lazım</div>
-        <p class="tokenSub">
-          Bu sınava giriş için 1 jeton kullanılır. Açılan erişimle 7 gün boyunca sınırsız giriş yapabilirsin.
-        </p>
-      </div>
-
-      <div class="tokenBody">
-        <div class="tokenInfo">
-          <div class="tokenLabel">Sınav erişim kuralı</div>
-          <div class="tokenValue">1 Jeton • 7 Gün</div>
-          <p class="tokenDesc">Bir kez açılır, 7 gün boyunca tekrar tekrar kullanılabilir.</p>
-        </div>
-
-        <div class="tokenInfo">
-          <div class="tokenLabel">Devam etmek için</div>
-          <div class="tokenValue">Jeton Market</div>
-          <p class="tokenDesc">Jeton alıp geri dönerek sınavı anında başlatabilirsin.</p>
-        </div>
-
-        <div class="tokenActions">
-          <button class="tokenBtn primary" id="goTokenMarketBtn">Jeton Market’e Git</button>
-          <button class="tokenBtn secondary" id="closeTokenModalBtn">Şimdilik Kapat</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script type="module">
-    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
-    import { supabase } from "/js/supabase_client.js";
+    import { mountShell } from "/js/ui_shell.js";
 
-    mountShell({ scroll:"auto" });
+    mountShell({ scroll:"hidden" });
 
-    try {
+    try{
       const root = getComputedStyle(document.documentElement);
       const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-      document.documentElement.style.setProperty(
-        "--shellLift",
-        footerH ? `${footerH + 10}px` : "0px"
-      );
-    } catch {}
+      document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
+    }catch{}
 
     const $ = (id) => document.getElementById(id);
-    const list = $("list");
-    const heroPill = $("heroPill");
-    const focusBox = $("focusBox");
-    const focusFlag = $("focusFlag");
-    const focusTitle = $("focusTitle");
-    const focusSub = $("focusSub");
-    const tokenModal = $("tokenModal");
-    const goTokenMarketBtn = $("goTokenMarketBtn");
-    const closeTokenModalBtn = $("closeTokenModalBtn");
 
-    const params = new URLSearchParams(location.search);
-    const selectedLang = String(params.get("lang") || "").trim().toLowerCase();
-    const redirect = String(params.get("redirect") || "").trim();
-    const next = String(params.get("next") || "").trim();
+    const page = $("page");
+    const answersEl = $("answers");
+    const nextBtn = $("nextBtn");
+    const toastEl = $("toast");
+    const statusText = $("statusText");
+    const pillInfo = $("pillInfo");
+    const questionText = $("questionText");
+    const questionMeta = $("questionMeta");
+    const levelFill = $("levelFill");
+    const levelKnob = $("levelKnob");
+    const levelTitle = $("levelTitle");
+    const levelLabels = $("levelLabels");
+    const fxBurst = $("fxBurst");
 
-    const LANGS = [
-      { code:"en", name:"English",  flag:"🇬🇧" },
-      { code:"de", name:"German",   flag:"🇩🇪" },
-      { code:"fr", name:"French",   flag:"🇫🇷" },
-      { code:"it", name:"Italian",  flag:"🇮🇹" },
-      { code:"ru", name:"Russian",  flag:"🇷🇺" },
-      { code:"es", name:"Spanish",  flag:"🇪🇸" }
+    const LEVELS = [
+      { code:"A1", title:"Başlangıç Seviyesi", fill:20 },
+      { code:"A2", title:"Temel Seviye", fill:40 },
+      { code:"B1", title:"Orta Seviye", fill:60 },
+      { code:"B2", title:"İyi Seviye", fill:80 },
+      { code:"C1", title:"İleri Seviye", fill:100 }
     ];
 
+    const DEMO_QUESTIONS = [
+      {
+        level:"A1",
+        text:'<span class="qWord">"Görüyorum"</span>?',
+        correct:2,
+        options:["I look","I watch","I see","I stare"]
+      },
+      {
+        level:"A1",
+        text:'<span class="qWord">"Kapıyı aç"</span>?',
+        correct:1,
+        options:["Close the door","Open the door","Break the door","Knock the door"]
+      },
+      {
+        level:"A2",
+        text:'<span class="qWord">"Dün onu aradım"</span>?',
+        correct:0,
+        options:["I called him yesterday","I call him tomorrow","I am calling him now","I will call him later"]
+      }
+    ];
+
+    let currentIndex = 0;
+    let locked = false;
+    let answered = false;
+    let selectedIndex = null;
+
     function toast(msg){
-      const t = $("toast");
-      if(!t) return;
-      t.textContent = String(msg || "");
-      t.classList.add("show");
-      clearTimeout(window.__levelHubToast);
-      window.__levelHubToast = setTimeout(() => {
-        t.classList.remove("show");
-      }, 1500);
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      clearTimeout(window.__lvToast);
+      window.__lvToast = setTimeout(() => toastEl.classList.remove("show"), 1400);
     }
 
-    function langInfo(code){
-      return LANGS.find(x => x.code === code) || { code, name: code?.toUpperCase() || "Dil", flag: "🏁" };
-    }
+    function setLevelUI(levelCode){
+      const lv = LEVELS.find(x => x.code === levelCode) || LEVELS[0];
+      levelFill.style.width = `${lv.fill}%`;
+      levelKnob.style.left = `calc(${lv.fill}% - 15px)`;
+      levelTitle.textContent = lv.title;
 
-    function openTokenModal() {
-      tokenModal?.classList.add("show");
-    }
-
-    function closeTokenModal() {
-      tokenModal?.classList.remove("show");
-    }
-
-    goTokenMarketBtn?.addEventListener("click", () => {
-      location.href = "/pages/jetonbuy.html";
-    });
-
-    closeTokenModalBtn?.addEventListener("click", closeTokenModal);
-
-    tokenModal?.addEventListener("click", (e) => {
-      if (e.target === tokenModal) closeTokenModal();
-    });
-
-    async function ensureLevelTestAccess() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user || null;
-
-      if (!user?.id) {
-        location.replace("/pages/login.html");
-        return false;
-      }
-
-      try {
-        const { data, error } = await supabase.rpc("ensure_level_test_access", {
-          p_user_id: user.id
-        });
-
-        if (error) {
-          console.error("[level_test_hub] ensure access rpc error:", error);
-          toast("Sınav erişimi kontrol edilemedi.");
-          return false;
-        }
-
-        const json = data || null;
-
-        if (!json) {
-          toast("Sınav erişimi şu anda kontrol edilemedi.");
-          return false;
-        }
-
-        if (!json.ok && json.reason === "INSUFFICIENT_TOKENS") {
-          openTokenModal();
-          return false;
-        }
-
-        if (!json.ok) {
-          toast("Sınav erişimi kontrolünde hata oluştu.");
-          return false;
-        }
-
-        if (typeof json.tokens_after === "number") {
-          try { setHeaderTokens(json.tokens_after); } catch {}
-        }
-
-        return true;
-      } catch (e) {
-        console.error("[level_test_hub] ensure access exception:", e);
-        toast("Sınav başlatılamadı.");
-        return false;
-      }
-    }
-
-    function updateFocusArea() {
-      if (!selectedLang) {
-        heroPill.textContent = "Dil Seç";
-        focusBox.classList.remove("show");
-        return;
-      }
-
-      const info = langInfo(selectedLang);
-      heroPill.textContent = `${info.flag} ${info.code.toUpperCase()}`;
-      focusFlag.textContent = info.flag;
-      focusTitle.textContent = `${info.name} için geldin`;
-      focusSub.textContent = redirect
-        ? `Bu dil seçili modüle geri dönmek için kullanılacak.`
-        : `Bu dil için seviyeni görüntüleyebilir veya yeni sınav başlatabilirsin.`;
-      focusBox.classList.add("show");
-    }
-
-    async function init() {
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session?.user){
-        location.replace("/pages/login.html");
-        return;
-      }
-
-      const { data: prof, error } = await supabase
-        .from("profiles")
-        .select("levels")
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("[level_test_hub] profile read error:", error);
-      }
-
-      const levels = prof?.levels || {};
-      updateFocusArea();
-
-      list.innerHTML = LANGS
-        .slice()
-        .sort((a, b) => {
-          if (selectedLang && a.code === selectedLang) return -1;
-          if (selectedLang && b.code === selectedLang) return 1;
-          return 0;
-        })
-        .map((l) => {
-          const lv = String(levels[l.code] || "").trim();
-          const isSelected = selectedLang === l.code;
-
-          return `
-            <button class="langCard ${isSelected ? "activeLang" : ""}" data-code="${l.code}" type="button">
-              <div class="left">
-                <div class="flagRing"><div class="flagBox">${l.flag}</div></div>
-                <div class="txt">
-                  <span class="name">${l.name}</span>
-                  <span class="sub ${lv ? "ok" : ""}">
-                    ${lv ? `Mevcut Seviye: ${lv}` : "Sınava Henüz Girilmedi"}
-                  </span>
-                </div>
-              </div>
-              <div class="right">
-                <div class="badge">${l.code.toUpperCase()}</div>
-                <div class="chev">›</div>
-              </div>
-            </button>
-          `;
-        })
-        .join("");
-
-      bindEvents();
-      document.getElementById("pageContent")?.classList.add("ui-ready");
-    }
-
-    function bindEvents() {
-      list.querySelectorAll(".langCard").forEach((btn) => {
-        btn.onclick = async () => {
-          const code = btn.getAttribute("data-code");
-          await startTest(code, btn);
-        };
+      [...levelLabels.children].forEach((el) => {
+        el.classList.toggle("active", el.textContent.trim() === lv.code);
       });
     }
 
-    let busy = false;
+    function renderQuestion(){
+      const q = DEMO_QUESTIONS[currentIndex];
+      if(!q) return;
 
-    async function startTest(code, btn) {
-      if (busy) return;
-      busy = true;
-      btn.disabled = true;
-      toast("Sınav erişimi kontrol ediliyor...");
+      locked = false;
+      answered = false;
+      selectedIndex = null;
 
-      try {
-        const accessOk = await ensureLevelTestAccess();
-        if (!accessOk) {
-          btn.disabled = false;
-          busy = false;
-          return;
+      pillInfo.textContent = `Soru ${currentIndex + 1} / ${DEMO_QUESTIONS.length}`;
+      questionText.innerHTML = q.text;
+      questionMeta.textContent = "Doğru cevabı seç ve devam et.";
+      statusText.textContent = "Bir şık seçerek devam edebilirsin.";
+      nextBtn.disabled = true;
+
+      setLevelUI(q.level);
+
+      answersEl.innerHTML = q.options.map((opt, i) => {
+        const key = ["A","B","C","D"][i] || String(i + 1);
+        return `
+          <button class="answer" data-index="${i}" type="button">
+            <div class="answerKey">${key}</div>
+            <div class="answerText">${escapeHtml(opt)}</div>
+            <div class="answerIcon">○</div>
+          </button>
+        `;
+      }).join("");
+
+      answersEl.querySelectorAll(".answer").forEach(btn => {
+        btn.addEventListener("click", () => pickAnswer(btn));
+      });
+    }
+
+    function pickAnswer(btn){
+      if(locked) return;
+
+      const q = DEMO_QUESTIONS[currentIndex];
+      const index = Number(btn.getAttribute("data-index"));
+      const buttons = [...answersEl.querySelectorAll(".answer")];
+
+      selectedIndex = index;
+      answered = true;
+      locked = true;
+
+      buttons.forEach((b) => {
+        b.classList.add("dim");
+        b.classList.remove("selected");
+      });
+
+      btn.classList.remove("dim");
+      btn.classList.add("selected");
+
+      const isCorrect = index === q.correct;
+      const correctBtn = buttons[q.correct];
+
+      setTimeout(() => {
+        if(isCorrect){
+          btn.classList.remove("selected");
+          btn.classList.add("correct");
+          const icon = btn.querySelector(".answerIcon");
+          if(icon) icon.textContent = "✓";
+
+          statusText.textContent = "Harika! Doğru cevap.";
+          questionMeta.textContent = "Güzel gidiyorsun, aynen devam.";
+          nextBtn.disabled = false;
+          burstFromElement(btn, 24);
+          toast("Doğru cevap");
+        }else{
+          btn.classList.remove("selected");
+          btn.classList.add("wrong");
+          const wrongIcon = btn.querySelector(".answerIcon");
+          if(wrongIcon) wrongIcon.textContent = "✕";
+
+          if(correctBtn){
+            correctBtn.classList.remove("dim");
+            correctBtn.classList.add("correct");
+            const okIcon = correctBtn.querySelector(".answerIcon");
+            if(okIcon) okIcon.textContent = "✓";
+          }
+
+          statusText.textContent = "Olmadı, doğru cevap işaretlendi.";
+          questionMeta.textContent = "Sorun yok, burası öğrenme alanı da.";
+          nextBtn.disabled = false;
+          toast("Yanlış cevap");
         }
+      }, 120);
+    }
 
-        toast("Sınav başlatılıyor...");
+    nextBtn.addEventListener("click", () => {
+      if(!answered) return;
 
-        const { data, error } = await supabase.rpc("start_level_test", {
-          p_language_code: code
-        });
+      currentIndex += 1;
 
-        if (error) throw error;
+      if(currentIndex >= DEMO_QUESTIONS.length){
+        toast("Sınav bitti");
+        statusText.textContent = "Bu demo tamamlandı.";
+        nextBtn.disabled = true;
+        questionMeta.textContent = "Burada sonucu backend’e kaydedip sonuç ekranına geçirebilirsin.";
+        return;
+      }
 
-        const row = Array.isArray(data) ? (data[0] || null) : data;
-        const testId = row?.test_id || row?.id || null;
+      renderQuestion();
+    });
 
-        if (!testId) {
-          throw new Error("test_id alınamadı.");
-        }
+    function burstFromElement(el, count = 20){
+      const rect = el.getBoundingClientRect();
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 2;
 
-        let url = `/pages/level_test.html?test_id=${encodeURIComponent(testId)}&lang=${encodeURIComponent(code)}`;
+      for(let i=0; i<count; i++){
+        const p = document.createElement("span");
+        p.className = "particle";
+        p.style.left = `${startX}px`;
+        p.style.top = `${startY}px`;
 
-        if (redirect) {
-          url += `&redirect=${encodeURIComponent(redirect)}`;
-        }
+        const angle = (Math.PI * 2 * i) / count;
+        const distance = 35 + Math.random() * 55;
+        const x = Math.cos(angle) * distance + (Math.random() * 20 - 10);
+        const y = Math.sin(angle) * distance + (Math.random() * 20 - 10);
 
-        if (next) {
-          url += `&next=${encodeURIComponent(next)}`;
-        }
+        p.style.setProperty("--x", `${x}px`);
+        p.style.setProperty("--y", `${y}px`);
+        p.style.background = Math.random() > .5
+          ? "linear-gradient(135deg,#ffffff,#9ec2ff)"
+          : "linear-gradient(135deg,#86efac,#22c55e)";
 
-        location.href = url;
-      } catch (e) {
-        console.error("[level_test_hub] start test error:", e);
-        toast("Sınav başlatılamadı.");
-        btn.disabled = false;
-        busy = false;
+        fxBurst.appendChild(p);
+        setTimeout(() => p.remove(), 760);
       }
     }
 
-    init();
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
+    }
+
+    renderQuestion();
+    page.classList.add("ready");
   </script>
+
   <script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-  await initGlobalAccess({ allowPublicPageBypass: false });
-</script>
+    import { initGlobalAccess } from "/js/global_access.js";
+    await initGlobalAccess({ allowPublicPageBypass:false });
+  </script>
 </body>
 </html>
