@@ -100,7 +100,7 @@
     }
 
     .rightHud{
-      min-width:120px;
+      min-width:140px;
       display:flex;
       flex-direction:column;
       align-items:flex-end;
@@ -135,19 +135,27 @@
     }
 
     .joker{
-      width:44px;
+      width:52px;
       height:44px;
       border:none;
       border-radius:14px;
       background:rgba(99,102,241,.12);
       border:1px solid rgba(99,102,241,.55);
       color:#fff;
-      font-size:22px;
+      font-size:18px;
+      font-weight:900;
       display:flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
       transition:.2s ease;
+      box-shadow:0 10px 24px rgba(0,0,0,.20);
+    }
+
+    .joker small{
+      font-size:11px;
+      opacity:.9;
+      font-weight:900;
     }
 
     .joker:active{ transform:scale(.96); }
@@ -373,76 +381,6 @@
       box-shadow:0 0 14px rgba(255,0,51,.45);
     }
 
-    .ready-gate{
-      position:fixed;
-      inset:0;
-      z-index:60000;
-      background:rgba(3,0,20,.96);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      text-align:center;
-      backdrop-filter:blur(10px);
-    }
-
-    .gate-logo{
-      font-size:58px;
-      margin-bottom:10px;
-      filter:drop-shadow(0 0 18px rgba(99,102,241,.32));
-    }
-
-    .gate-title{
-      margin:0 0 10px;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:40px;
-      font-weight:900;
-      letter-spacing:8px;
-    }
-
-    .gate-sub{
-      max-width:320px;
-      margin:0 0 26px;
-      line-height:1.45;
-      opacity:.85;
-      font-size:14px;
-      font-weight:800;
-    }
-
-    .start-btn{
-      width:220px;
-      height:60px;
-      border:none;
-      border-radius:20px;
-      background:var(--grad);
-      color:#fff;
-      font-size:18px;
-      font-weight:900;
-      cursor:pointer;
-      box-shadow:0 10px 35px rgba(99,102,241,.28);
-    }
-
-    .langChangeBtn{
-      margin-top:12px;
-      width:220px;
-      height:52px;
-      border:none;
-      border-radius:18px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:14px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .start-btn:disabled{
-      opacity:.55;
-      pointer-events:none;
-      filter:grayscale(.2);
-    }
-
     .modal{
       position:fixed;
       inset:0;
@@ -494,22 +432,24 @@
       inset:0;
       z-index:70000;
       display:none;
-      align-items:flex-end;
-      background:rgba(0,0,0,.50);
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.65);
       backdrop-filter:blur(6px);
+      padding:18px;
     }
 
     .langSheet.show{ display:flex; }
 
     .langPanel{
-      width:100%;
-      max-height:82vh;
+      width:min(100%, 420px);
+      max-height:88vh;
       overflow:auto;
-      border-radius:26px 26px 0 0;
+      border-radius:26px;
       border:1px solid rgba(255,255,255,.10);
       background:linear-gradient(180deg, rgba(14,14,28,.98), rgba(5,0,20,.98));
       padding:18px 16px calc(16px + var(--safeB));
-      box-shadow:0 -20px 60px rgba(0,0,0,.45);
+      box-shadow:0 0 0 1px rgba(255,255,255,.04), 0 28px 60px rgba(0,0,0,.45);
     }
 
     .langPanelTop{
@@ -594,7 +534,7 @@
     .toast{
       position:fixed;
       left:50%;
-      bottom:calc(var(--safeB) + var(--shellLift) + 16px);
+      bottom:calc(var(--safeB) + 16px);
       transform:translateX(-50%) translateY(120px);
       z-index:80000;
       min-width:180px;
@@ -614,27 +554,63 @@
       transform:translateX(-50%) translateY(0);
     }
 
+    .confettiLayer,
+    .fireworksLayer{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:95000;
+      overflow:hidden;
+    }
+
+    .confetti{
+      position:absolute;
+      width:10px;
+      height:16px;
+      opacity:.96;
+      animation:confettiFall linear forwards;
+    }
+
+    .firework{
+      position:absolute;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      animation:fireworkBurst .9s ease-out forwards;
+      box-shadow:0 0 12px currentColor;
+    }
+
+    @keyframes confettiFall{
+      0%{
+        transform:translateY(-20px) rotate(0deg);
+        opacity:1;
+      }
+      100%{
+        transform:translateY(110vh) rotate(720deg);
+        opacity:.2;
+      }
+    }
+
+    @keyframes fireworkBurst{
+      0%{
+        transform:translate(0,0) scale(1);
+        opacity:1;
+      }
+      100%{
+        transform:translate(var(--dx), var(--dy)) scale(.3);
+        opacity:0;
+      }
+    }
+
     @media (max-width:420px){
       .langGrid{
         grid-template-columns:1fr 1fr;
-      }
-      .gate-title{
-        font-size:34px;
-        letter-spacing:6px;
       }
     }
   </style>
 </head>
 <body>
   <div id="pageContent">
-
-    <div class="ready-gate" id="readyGate">
-      <div class="gate-logo">🎯</div>
-      <div class="gate-title">HANGMAN</div>
-      <div class="gate-sub" id="gateInfo">BAĞLANILIYOR...</div>
-      <button class="start-btn" id="realStartBtn" type="button">BAŞLA</button>
-      <button class="langChangeBtn" id="langChangeBtn" type="button">Dil Değiştir</button>
-    </div>
 
     <div class="top">
       <h1 class="title">HANGMAN</h1>
@@ -651,8 +627,8 @@
           </div>
 
           <div class="jokerCol">
-            <button class="joker" id="j0" type="button" aria-label="Joker 1">🃏</button>
-            <button class="joker" id="j1" type="button" aria-label="Joker 2">🃏</button>
+            <button class="joker" id="j0" type="button" aria-label="Harf Aç Jokeri" title="Harf Aç Jokeri">🔍</button>
+            <button class="joker" id="j1" type="button" aria-label="Yanlış Harfleri Temizle" title="Yanlış Harfleri Temizle">💣</button>
           </div>
         </div>
       </div>
@@ -702,10 +678,43 @@
         </div>
 
         <div class="langGrid" id="langGrid"></div>
+
+        <button class="mainbtn" id="toRulesBtn" type="button" style="margin-top:14px;width:100%;height:54px;border:none;border-radius:18px;background:var(--grad);color:#fff;font-size:16px;font-weight:900;cursor:pointer;">
+          DEVAM ET
+        </button>
+      </div>
+    </div>
+
+    <div class="langSheet" id="rulesSheet">
+      <div class="langPanel">
+        <div class="langPanelTop">
+          <div class="langPanelTitle">Oyun Kuralları</div>
+          <button class="langClose" id="rulesClose" type="button">×</button>
+        </div>
+
+        <div class="langPanelSub">
+          Hangman NITRO hızlıdır ama acımaz. Önce kuralları oku, sonra başlayalım.
+        </div>
+
+        <ul style="text-align:left;margin:0;padding-left:18px;line-height:1.8;color:rgba(255,255,255,.88);font-size:14px;font-weight:800;">
+          <li>Her yanlış tahmin adamı tamamlamaya yaklaştırır.</li>
+          <li>Toplam 3 canın vardır.</li>
+          <li>Kelimeyi açtıkça puan kazanırsın.</li>
+          <li><b>2 joker hakkın</b> var.</li>
+          <li><b>🔍 Joker:</b> Kelimeden rastgele doğru bir harfi açar.</li>
+          <li><b>💣 Joker:</b> Klavyeden yanlış harflerin bir kısmını temizler.</li>
+          <li>Yeni en yüksek skoru geçersen kutlama başlar.</li>
+        </ul>
+
+        <button class="mainbtn" id="startGameBtn" type="button" style="margin-top:14px;width:100%;height:54px;border:none;border-radius:18px;background:var(--grad);color:#fff;font-size:16px;font-weight:900;cursor:pointer;">
+          ANLADIM, BAŞLA
+        </button>
       </div>
     </div>
 
     <div class="toast" id="toast"></div>
+    <div class="confettiLayer" id="confettiLayer"></div>
+    <div class="fireworksLayer" id="fireworksLayer"></div>
   </div>
 
   <script type="module" src="/js/hangman_page.js"></script>
