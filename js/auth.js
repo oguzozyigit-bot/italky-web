@@ -5,8 +5,8 @@ import { STORAGE_KEY } from "/js/config.js";
    🔐 DOMAIN SABİT
 ========================================================= */
 const CANONICAL_ORIGIN = "https://italky.ai";
-const HOME_REL   = "/pages/home.html";
-const LOGIN_REL  = "/pages/login.html";
+const HOME_REL = "/pages/home.html";
+const LOGIN_REL = "/pages/login.html";
 const PROMO_GATE_REL = "/pages/promo_gate.html";
 
 /* =========================================================
@@ -18,31 +18,31 @@ let __singleWatcherStarted = false;
 /* =========================================================
    📱 NAC ID
 ========================================================= */
-function getOrCreateNacId(){
+function getOrCreateNacId() {
   const key = "NAC_ID";
-  try{
+  try {
     const existing = localStorage.getItem(key);
-    if(existing && existing.length >= 6) return existing;
+    if (existing && existing.length >= 6) return existing;
 
-    const id = (crypto?.randomUUID?.() || `web-${Date.now()}-${Math.floor(Math.random()*1e9)}`);
+    const id = crypto?.randomUUID?.() || `web-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
     localStorage.setItem(key, id);
     return id;
-  }catch{
-    return `web-${Date.now()}-${Math.floor(Math.random()*1e9)}`;
+  } catch {
+    return `web-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
   }
 }
 
-async function lockThisDevice(){
+async function lockThisDevice() {
   const nacId = getOrCreateNacId();
   const { error } = await supabase.rpc("lock_device", { p_nac_id: nacId });
-  if(error) throw error;
+  if (error) throw error;
   return nacId;
 }
 
 /* =========================================================
    🧠 CACHE
 ========================================================= */
-function buildCache(user, profile){
+function buildCache(user, profile) {
   return {
     id: profile?.id || user?.id || null,
     email: profile?.email || user?.email || "",
@@ -62,44 +62,55 @@ function buildCache(user, profile){
   };
 }
 
-export function readCachedUser(){
-  try{
+export function readCachedUser() {
+  try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
-  }catch{
+  } catch {
     return null;
   }
 }
 
-export function clearCachedUser(){
-  try{ localStorage.removeItem(STORAGE_KEY); }catch{}
+export function clearCachedUser() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
-function nukeSupabaseLocal(){
-  try{
-    const keys=[];
-    for(let i=0;i<localStorage.length;i++){
+function nukeSupabaseLocal() {
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if(k && k.startsWith("sb-")) keys.push(k);
+      if (k && k.startsWith("sb-")) keys.push(k);
     }
-    keys.forEach(k=>localStorage.removeItem(k));
-  }catch{}
+    keys.forEach((k) => localStorage.removeItem(k));
+  } catch {}
+}
+
+function clearLocalAuthArtifacts() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  try { localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY); } catch {}
+  nukeSupabaseLocal();
+}
+
+async function hardResetAuthState() {
+  try { await supabase.auth.signOut({ scope: "global" }); } catch {}
+  clearLocalAuthArtifacts();
 }
 
 /* =========================================================
    🔑 ACTIVE SESSION
 ========================================================= */
-function newSessionKey(){
-  return (crypto?.randomUUID?.() || `sess-${Date.now()}-${Math.floor(Math.random()*1e9)}`);
+function newSessionKey() {
+  return crypto?.randomUUID?.() || `sess-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
 }
 
-async function claimActiveSessionIfNeeded(userId){
-  let myKey = localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || "";
-  myKey = myKey.trim();
+async function claimActiveSessionIfNeeded(userId) {
+  let myKey = (localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || "").trim();
 
-  if(myKey) return myKey;
-
-  myKey = newSessionKey();
+  if (!myKey) {
+    myKey = newSessionKey();
+    localStorage.setItem(ACTIVE_SESSION_LOCAL_KEY, myKey);
+  }
 
   const { error } = await supabase
     .from("profiles")
@@ -109,22 +120,21 @@ async function claimActiveSessionIfNeeded(userId){
     })
     .eq("id", userId);
 
-  if(error) throw error;
+  if (error) throw error;
 
-  localStorage.setItem(ACTIVE_SESSION_LOCAL_KEY, myKey);
   return myKey;
 }
 
-function startSingleSessionWatcher(userId){
-  if(__singleWatcherStarted) return;
+function startSingleSessionWatcher(userId) {
+  if (__singleWatcherStarted) return;
   __singleWatcherStarted = true;
 
-  setInterval(async ()=>{
-    try{
-      if(location.pathname === LOGIN_REL) return;
+  setInterval(async () => {
+    try {
+      if (location.pathname === LOGIN_REL) return;
 
       const myKey = (localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || "").trim();
-      if(!myKey) return;
+      if (!myKey) return;
 
       const { data } = await supabase
         .from("profiles")
@@ -134,43 +144,84 @@ function startSingleSessionWatcher(userId){
 
       const liveKey = String(data?.active_session_key || "").trim();
 
-      if(liveKey && liveKey !== myKey){
-        await supabase.auth.signOut({ scope:"global" });
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY);
-        nukeSupabaseLocal();
-
+      if (liveKey && liveKey !== myKey) {
+        await hardResetAuthState();
         alert("Hesabınız başka bir cihazda açıldığı için bu oturum kapatıldı.");
         location.replace(LOGIN_REL);
       }
-    }catch{}
+    } catch {}
   }, 5000);
 }
 
 /* =========================================================
-   🛠 ENSURE PROFILE
+   🛠 PROFILE
 ========================================================= */
-export async function ensureAuthAndCacheUser(){
-  const { data:{ session }, error } = await supabase.auth.getSession();
-  if(error) throw error;
-  if(!session?.user) return null;
+async function readProfile(userId) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data || null;
+}
+
+async function ensureProfileFallback(user) {
+  let profile = null;
+
+  try {
+    const { data, error } = await supabase.rpc("ensure_profile");
+    if (error) throw error;
+    if (data) profile = data;
+  } catch {}
+
+  if (profile) return profile;
+
+  try {
+    profile = await readProfile(user.id);
+    if (profile) return profile;
+  } catch {}
+
+  const fallbackProfile = {
+    id: user.id,
+    email: user.email || "",
+    full_name:
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      "",
+    avatar_url:
+      user?.user_metadata?.avatar_url ||
+      user?.user_metadata?.picture ||
+      "",
+    tokens: 0
+  };
+
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(fallbackProfile, { onConflict: "id" });
+
+  if (error) throw error;
+
+  return await readProfile(user.id);
+}
+
+/* =========================================================
+   🛠 ENSURE PROFILE + CACHE
+========================================================= */
+export async function ensureAuthAndCacheUser() {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  if (!session?.user) return null;
 
   const user = session.user;
 
   await lockThisDevice();
 
-  let profile = null;
+  const profile = await ensureProfileFallback(user);
 
-  try{
-    const { data } = await supabase.rpc("ensure_profile");
-    profile = data;
-  }catch{
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-    profile = data;
+  if (!profile?.id) {
+    throw new Error("Profil oluşturulamadı");
   }
 
   await claimActiveSessionIfNeeded(user.id);
@@ -185,6 +236,12 @@ export async function ensureAuthAndCacheUser(){
    🚀 GOOGLE LOGIN
 ========================================================= */
 export async function loginWithGoogle(nextTarget = "") {
+  try {
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {}
+
+  clearLocalAuthArtifacts();
+
   let redirectTo = `${CANONICAL_ORIGIN}/pages/auth_callback.html`;
 
   let cleanNext = String(nextTarget || "").trim();
@@ -203,7 +260,7 @@ export async function loginWithGoogle(nextTarget = "") {
       redirectTo,
       queryParams: {
         access_type: "offline",
-        prompt: "consent"
+        prompt: "select_account consent"
       }
     }
   });
@@ -214,82 +271,83 @@ export async function loginWithGoogle(nextTarget = "") {
 /* =========================================================
    🔓 LOGOUT
 ========================================================= */
-export async function safeLogout(){
-  await supabase.auth.signOut({ scope:"global" });
-  clearCachedUser();
-  localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY);
-  nukeSupabaseLocal();
+export async function safeLogout() {
+  await hardResetAuthState();
   location.replace(LOGIN_REL);
 }
 
 /* =========================================================
    🧭 PROMO GATE HELPERS
 ========================================================= */
-function isPromoGatePage(){
-  try{
+function isPromoGatePage() {
+  try {
     return location.pathname === PROMO_GATE_REL;
-  }catch{
+  } catch {
     return false;
   }
 }
 
-function isLoginPage(){
-  try{
+function isLoginPage() {
+  try {
     return location.pathname === LOGIN_REL;
-  }catch{
+  } catch {
     return false;
   }
 }
 
-function hasActiveMembership(profile){
+function hasActiveMembership(profile) {
   const rawEnd = profile?.package_ends_at || "";
-  if(!rawEnd) return false;
+  if (!rawEnd) return false;
 
-  try{
+  try {
     const end = new Date(rawEnd);
     return end instanceof Date && !isNaN(end.getTime()) && end > new Date();
-  }catch{
+  } catch {
     return false;
   }
 }
 
-function hasUsedPromo(profile){
+function hasUsedPromo(profile) {
   return !!String(profile?.promo_used_at || "").trim();
 }
 
-async function getProfileForGate(userId){
+async function getProfileForGate(userId) {
   const { data, error } = await supabase
     .from("profiles")
     .select("id, promo_used_at, package_ends_at")
     .eq("id", userId)
     .maybeSingle();
 
-  if(error) throw error;
+  if (error) throw error;
   return data || null;
 }
 
-async function routeUserAfterLogin(user){
+async function routeUserAfterLogin(user) {
   const profile = await getProfileForGate(user.id);
+
+  if (!profile) {
+    if (!isPromoGatePage()) {
+      location.replace(PROMO_GATE_REL);
+    }
+    return "STOP";
+  }
 
   const promoUsed = hasUsedPromo(profile);
   const activeMembership = hasActiveMembership(profile);
 
-  // 1) Aktif üyelik varsa içeri
-  if(activeMembership){
+  if (activeMembership) {
     return "ALLOW";
   }
 
-  // 2) Promo kullanılmış ama üyelik bitmişse Play sayfasına
-  if(promoUsed && !activeMembership){
-    if(location.pathname !== "/pages/jetonbuy.html"){
+  if (promoUsed && !activeMembership) {
+    if (location.pathname !== "/pages/jetonbuy.html") {
       location.replace("/pages/jetonbuy.html");
     }
     return "STOP";
   }
 
-  // 3) Promo kullanılmamış ve aktif üyelik yoksa promo gate'e
-  if(!promoUsed && !activeMembership){
-    if(!isPromoGatePage()){
+  if (!promoUsed && !activeMembership) {
+    if (!isPromoGatePage()) {
       location.replace(PROMO_GATE_REL);
     }
     return "STOP";
@@ -302,48 +360,48 @@ async function routeUserAfterLogin(user){
    🧭 AUTH STATE WATCHER
 ========================================================= */
 export async function startAuthState(callback) {
-
   const handleAuth = async (session) => {
     const user = session?.user || null;
 
-    if(user){
-      try{
+    if (user) {
+      try {
         const cached = await ensureAuthAndCacheUser();
         const wallet = Number(cached?.tokens ?? 0);
 
         startSingleSessionWatcher(user.id);
 
-        // Promo gate sayfasındaysak kullanıcı login olmuş halde sayfayı kullanabilsin
-        if(isPromoGatePage()){
+        if (isPromoGatePage()) {
           callback({ user, wallet });
           return;
         }
 
         const routeDecision = await routeUserAfterLogin(user);
-        if(routeDecision !== "ALLOW"){
+        if (routeDecision !== "ALLOW") {
           return;
         }
 
         callback({ user, wallet });
         return;
-      }catch{
-        callback({ user:null, wallet:0 });
+      } catch (e) {
+        console.error("startAuthState ensureAuthAndCacheUser error:", e);
+        await hardResetAuthState();
+        callback({ user: null, wallet: 0 });
         location.replace(LOGIN_REL);
         return;
       }
     }
 
-    callback({ user:null, wallet:0 });
+    callback({ user: null, wallet: 0 });
 
-    if(!isLoginPage()){
+    if (!isLoginPage()) {
       location.replace(LOGIN_REL);
     }
   };
 
-  const { data:{ session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabase.auth.getSession();
   await handleAuth(session);
 
-  supabase.auth.onAuthStateChange(async (_event, session2)=>{
+  supabase.auth.onAuthStateChange(async (_event, session2) => {
     await handleAuth(session2);
   });
 }
