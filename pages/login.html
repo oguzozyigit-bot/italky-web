@@ -238,10 +238,6 @@
       window.__to = setTimeout(() => toastEl.classList.remove("show"), 2200);
     }
 
-    function isNative(){
-      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
-    }
-
     function getNextTarget(){
       try{
         const u = new URL(location.href);
@@ -312,57 +308,15 @@
       }
     })();
 
-    window.onNativeLoginSuccess = async function(payload){
-      try{
-        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
-        const idToken = String(data?.id_token || data?.idToken || "").trim();
-
-        if(!idToken){
-          toast("Token yok, giriş tamamlanamadı.");
-          return;
-        }
-
-        googleBtn.disabled = true;
-        toast("Oturum açılıyor...");
-
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider: "google",
-          token: idToken
-        });
-
-        if(error){
-          googleBtn.disabled = false;
-          toast("Oturum açılamadı.");
-          return;
-        }
-
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          googleBtn.disabled = false;
-          toast("Oturum bulunamadı.");
-          return;
-        }
-
-        toast("Hoş geldin!");
-        setTimeout(() => routeAfterLogin(), 300);
-      }catch(e){
-        console.error("onNativeLoginSuccess error:", e);
-        googleBtn.disabled = false;
-        toast("Giriş hatası");
-      }
+    window.onNativeLoginSuccess = async function(){
+      console.warn("Native login test için kapatıldı.");
     };
 
     googleBtn?.addEventListener("click", async () => {
       try{
         const next = getNextTarget();
 
-        if(isNative()){
-          googleBtn.disabled = true;
-          toast("Güvenli giriş başlatılıyor…");
-          window.Native.startGoogleLogin();
-          return;
-        }
-
+        googleBtn.disabled = true;
         toast("Google yönlendiriliyor…");
         await loginWithGoogle(next);
       }catch(e){
