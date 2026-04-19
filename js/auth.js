@@ -507,21 +507,40 @@ window.onNativeLoginSuccess = async function (payload) {
     location.replace(next);
     return result;
   } catch (e) {
-    console.error("[NATIVE LOGIN] failed full:", e);
+  console.error("[NATIVE LOGIN] failed full:", e);
 
-    const msg =
-      e?.message ||
-      e?.error_description ||
-      e?.description ||
-      e?.name ||
-      JSON.stringify(e);
-
-    alert("Oturum açılamadı: " + msg);
-
+  let raw = "";
+  try {
+    raw = JSON.stringify(e, Object.getOwnPropertyNames(e));
+  } catch {
     try {
-      await hardResetAuthState();
-    } catch {}
-
-    location.replace(LOGIN_REL);
+      raw = String(e);
+    } catch {
+      raw = "";
+    }
   }
+
+  const msg =
+    e?.message ||
+    e?.error_description ||
+    e?.description ||
+    e?.name ||
+    raw ||
+    "unknown_native_login_error";
+
+  alert("Oturum açılamadı: " + msg);
+
+  try {
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<pre id="nativeLoginErr" style="position:fixed;left:10px;right:10px;bottom:10px;z-index:999999;background:#111;color:#0f0;padding:12px;border-radius:12px;max-height:40vh;overflow:auto;font-size:12px;white-space:pre-wrap;">${msg}</pre>`
+    );
+  } catch {}
+
+  try {
+    await hardResetAuthState();
+  } catch {}
+
+  location.replace(LOGIN_REL);
+}
 };
