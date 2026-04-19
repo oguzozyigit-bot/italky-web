@@ -11,12 +11,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-  body{
-    visibility:hidden;
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: #120d16;
   }
 
-  body.home-ready{
-    visibility:visible;
+  body {
+    visibility: hidden;
+  }
+
+  body.home-ready {
+    visibility: visible;
   }
 </style>
 
@@ -264,44 +271,70 @@ body.home-ready #pageContent{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:3px;
+  gap:5px;
 }
 
-.planet-nfc-icon{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.08);
+.ai-logo-orb{
   position:relative;
-  box-shadow:0 0 14px rgba(103,232,249,.22);
+  width:44px;
+  height:44px;
 }
 
-.planet-nfc-icon::before,
-.planet-nfc-icon::after{
+.ai-logo-frame{
+  position:absolute;
+  inset:0;
+  border-radius:16px;
+  border:3px solid transparent;
+  border-left-color:#6ee7d8;
+  border-bottom-color:#38bdf8;
+  border-right-color:#6ee7d8;
+  border-top-color:#f5b1dc;
+  opacity:.95;
+  box-shadow:0 0 12px rgba(103,232,249,.22);
+}
+
+.ai-logo-frame::before{
   content:"";
   position:absolute;
-  top:50%;
-  left:50%;
-  border:2px solid rgba(103,232,249,.95);
-  border-left-color:transparent;
-  border-bottom-color:transparent;
-  border-radius:50%;
-  transform:translate(-50%,-50%) rotate(45deg);
+  inset:-3px;
+  border-radius:16px;
+  border-top:3px solid #f5b1dc;
+  border-right:3px solid #6ee7d8;
+  border-bottom:3px solid #38bdf8;
+  border-left:3px solid transparent;
+  clip-path:inset(0 0 0 12px round 16px);
+  opacity:.88;
 }
 
-.planet-nfc-icon::before{
-  width:12px;
-  height:12px;
+.ai-logo-text{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:.4px;
+  color:#73eed6;
+  text-shadow:0 0 14px rgba(103,232,249,.28);
 }
 
-.planet-nfc-icon::after{
-  width:20px;
-  height:20px;
-  opacity:.72;
+.ai-logo-spark{
+  position:absolute;
+  width:9px;
+  height:9px;
+  background:linear-gradient(135deg, #f5b1dc, #ffd8ef);
+  transform:rotate(45deg);
+  border-radius:2px;
+  box-shadow:0 0 10px rgba(245,177,220,.28);
 }
 
-.planet-nfc-text{
+.ai-logo-spark.s1{ left:-2px; top:4px; width:7px; height:7px; }
+.ai-logo-spark.s2{ left:8px; top:-6px; width:10px; height:10px; }
+.ai-logo-spark.s3{ left:2px; top:22px; width:8px; height:8px; }
+
+.planet-ai-text{
   font-family:'Space Grotesk',sans-serif;
   font-size:13px;
   font-weight:900;
@@ -779,6 +812,29 @@ body.home-ready #pageContent{
   text-shadow:0 0 10px rgba(255,255,255,.22);
 }
 
+.ai-badge{
+  position:absolute;
+  right:8px;
+  top:8px;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 0 12px rgba(103,232,249,.18);
+}
+
+.ai-badge span{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:10px;
+  font-weight:900;
+  color:#fff;
+  letter-spacing:.3px;
+}
+
 .ata-rune{
   position:absolute;
   inset:10px;
@@ -1127,8 +1183,14 @@ body.home-ready #pageContent{
             <div class="planet-rays"></div>
             <div class="planet-core">
               <div class="planet-center">
-                <div class="planet-nfc-icon"></div>
-                <div class="planet-nfc-text">NFC</div>
+                <div class="ai-logo-orb">
+                  <div class="ai-logo-spark s1"></div>
+                  <div class="ai-logo-spark s2"></div>
+                  <div class="ai-logo-spark s3"></div>
+                  <div class="ai-logo-frame"></div>
+                  <div class="ai-logo-text">AI</div>
+                </div>
+                <div class="planet-ai-text">AI</div>
               </div>
             </div>
           </div>
@@ -1190,6 +1252,7 @@ body.home-ready #pageContent{
       <a id="atalarCard" class="wide-card atalar-card" href="/pages/atalarin_dili.html">
         <div class="region-ico">
           <div class="ata-rune"></div>
+          <div class="ai-badge"><span>AI</span></div>
         </div>
         <div class="wide-body">
           <div class="card-topline">Tarihî Miras</div>
@@ -1298,6 +1361,8 @@ body.home-ready #pageContent{
   import { initGlobalAccess } from "/js/global_access.js";
   import { supabase } from "/js/supabase_client.js";
 
+  mountShell({ scroll: "auto" });
+
   async function fillUserName() {
     try {
       const heroUserName = document.getElementById("heroUserName");
@@ -1327,13 +1392,10 @@ body.home-ready #pageContent{
 
   async function bootHome() {
     try {
-      mountShell({ scroll: "auto" });
-
       const result = await initGlobalAccess({ allowPublicPageBypass: false });
       if (!result?.ok) return;
 
       await fillUserName();
-      document.body.classList.add("home-ready");
 
       const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
       if (skipWelcome) {
@@ -1341,6 +1403,8 @@ body.home-ready #pageContent{
       }
     } catch (e) {
       console.error("home boot error:", e);
+    } finally {
+      document.body.classList.add("home-ready");
     }
   }
 
