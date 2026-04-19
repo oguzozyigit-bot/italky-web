@@ -1,792 +1,561 @@
+/* FILE: /js/hangman_page.js */
 import { mountShell } from "/js/ui_shell.js";
-import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { supabase } from "/js/supabase_client.js";
-
-mountShell({ scroll: "none" });
-
-try{
-  const root = getComputedStyle(document.documentElement);
-  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-  document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
-}catch{}
 
 const $ = (id) => document.getElementById(id);
 
-const LANGS = {
-  en:{ name:"İngilizce", flag:"🇬🇧" },
-  de:{ name:"Almanca", flag:"🇩🇪" },
-  fr:{ name:"Fransızca", flag:"🇫🇷" },
-  es:{ name:"İspanyolca", flag:"🇪🇸" },
-  it:{ name:"İtalyanca", flag:"🇮🇹" }
-};
+// UI shell
+mountShell({ scroll: "none" });
+try {
+  const root = getComputedStyle(document.documentElement);
+  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+  document.documentElement.style.setProperty(
+    "--shellLift",
+    footerH ? `${footerH + 10}px` : "0px"
+  );
+} catch (e) {}
 
-const GAME_LANG_KEY = "italky_hangman_lang";
-const GAME_CODE = "hangman_nitro";
-const SET_SIZE = 12;
-const MAX_LIVES = 9;
-const START_LIVES = 5;
-
-let currentLang = localStorage.getItem(GAME_LANG_KEY) || "en";
-let puzzles = [];
-let currentIdx = 0;
-let score = 0;
-let lives = START_LIVES;
-let isBusy = false;
-let currentPuzzle = null;
-let guessedLetters = new Set();
-let wrongLetters = new Set();
-let bestScore = 0;
-let jokerRevealUsed = false;
-let jokerCleanUsed = false;
-let userId = null;
-let pageReady = false;
-
-let audioCtx = null;
-function getAudioCtx(){
-  try{
-    if(!audioCtx){
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if(!Ctx) return null;
-      audioCtx = new Ctx();
-    }
-    return audioCtx;
-  }catch{
+/* -----------------------------
+   HELPERS
+----------------------------- */
+function qp(name) {
+  try {
+    return new URLSearchParams(location.search).get(name);
+  } catch {
     return null;
   }
 }
-async function unlockAudio(){
-  try{
-    const ctx = getAudioCtx();
-    if(ctx && ctx.state === "suspended") await ctx.resume();
-  }catch{}
+
+function normalizeLang(v) {
+  return String(v || "en").trim().toLowerCase();
 }
 
-function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
-  const ctx = getAudioCtx();
-  if(!ctx) return;
-  if(ctx.state === "suspended") ctx.resume().catch(() => {});
-  const now = ctx.currentTime + when;
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, now);
-  g.gain.setValueAtTime(.0001, now);
-  g.gain.exponentialRampToValueAtTime(gain, now + .01);
-  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
-  osc.connect(g);
-  g.connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + duration + .02);
+function normalizeLevel(v) {
+  const raw = String(v || "").trim().toUpperCase();
+  const allowed = ["A1", "A2", "B1", "B2", "C1", "C2"];
+  return allowed.includes(raw) ? raw : null;
 }
 
-function playGood(){
-  beep({freq:620,duration:.08,type:"triangle",gain:.05});
-  beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08});
+function setGate(msg) {
+  const el = $("gateInfo");
+  if (el) el.textContent = msg;
 }
 
-function playBad(){
-  beep({freq:180,duration:.12,type:"sawtooth",gain:.05});
-  beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06});
+function disableStartBtn(disabled = true, text = "BAŞLA") {
+  const btn = $("realStartBtn");
+  if (!btn) return;
+  btn.disabled = disabled;
+  btn.style.opacity = disabled ? "0.5" : "1";
+  btn.style.pointerEvents = disabled ? "none" : "auto";
+  btn.textContent = text;
 }
 
-function playFinish(){
-  beep({freq:700,duration:.10,type:"triangle",gain:.05});
-  beep({freq:920,duration:.12,type:"triangle",gain:.05,when:.10});
-  beep({freq:1180,duration:.15,type:"triangle",gain:.05,when:.22});
+function escapeHtml(str) {
+  return String(str || "").replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
 }
 
-function playApplause(){
-  const ctx = getAudioCtx();
-  if(!ctx) return;
-  if(ctx.state === "suspended") ctx.resume().catch(() => {});
-  const now = ctx.currentTime;
-  const duration = 1.8;
-  const bufferSize = Math.floor(ctx.sampleRate * duration);
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-
-  for(let i=0; i<bufferSize; i++){
-    const t = i / ctx.sampleRate;
-    const burst = (Math.random() * 2 - 1) * (0.4 + 0.6 * Math.sin(t * 38) ** 2);
-    const env = Math.max(0, 1 - (t / duration) * 0.7);
-    data[i] = burst * env * 0.7;
-  }
-
-  const src = ctx.createBufferSource();
-  const filter = ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 1800;
-  filter.Q.value = 0.9;
-
-  const gain = ctx.createGain();
-  gain.gain.value = 0.08;
-
-  src.buffer = buffer;
-  src.connect(filter).connect(gain).connect(ctx.destination);
-  src.start(now);
-  src.stop(now + duration);
-}
-
-["click","touchstart","pointerdown","keydown"].forEach(evt => {
-  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
-});
-
-function normalize(s){
-  return String(s || "")
-    .toLowerCase()
-    .replace(/ß/g,"ss")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .trim();
-}
-
-function toast(msg){
+function toast(msg) {
   const el = $("toast");
+  if (!el) return;
   el.textContent = msg;
   el.classList.add("show");
   clearTimeout(window.__hangToast);
-  window.__hangToast = setTimeout(() => el.classList.remove("show"), 1800);
+  window.__hangToast = setTimeout(() => {
+    el.classList.remove("show");
+  }, 1600);
 }
 
-function speak(t) {
-  const text = String(t || "").trim();
-  if (!text) return;
-
-  const langMap = {
-    en: "en-US",
-    de: "de-DE",
-    fr: "fr-FR",
-    es: "es-ES",
-    it: "it-IT"
-  };
-  const bcp = langMap[currentLang] || "en-US";
+function speakText(text) {
+  const t = String(text || "").trim();
+  if (!t) return;
 
   try {
     if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.speak(text, bcp);
+      const map = {
+        en: "en-US",
+        de: "de-DE",
+        fr: "fr-FR",
+        es: "es-ES",
+        it: "it-IT"
+      };
+      window.NativeTTS.speak(t, map[state.lang] || "en-US");
       return;
     }
   } catch (e) {
-    console.warn("NativeTTS speak failed:", e);
+    console.warn("NativeTTS failed:", e);
   }
 
   try {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
 
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = bcp;
-    u.rate = 0.9;
-    u.pitch = 1;
-    u.volume = 1;
+    const utter = new SpeechSynthesisUtterance(t);
+    const map = {
+      en: "en-US",
+      de: "de-DE",
+      fr: "fr-FR",
+      es: "es-ES",
+      it: "it-IT"
+    };
+    utter.lang = map[state.lang] || "en-US";
+    utter.rate = 0.9;
+    utter.pitch = 1;
+    utter.volume = 1;
 
     const voices = window.speechSynthesis.getVoices?.() || [];
     const found = voices.find(v =>
-      String(v.lang || "").toLowerCase().startsWith(bcp.split("-")[0].toLowerCase())
+      String(v.lang || "").toLowerCase().startsWith(String(utter.lang).split("-")[0].toLowerCase())
     );
-    if (found) u.voice = found;
+    if (found) utter.voice = found;
 
     setTimeout(() => {
-      try { window.speechSynthesis.speak(u); } catch {}
+      try { window.speechSynthesis.speak(utter); } catch {}
     }, 120);
-  } catch {}
-}
-
-function getPublicLangUrl(langCode){
-  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
-}
-
-async function fileExists(url){
-  try{
-    const res = await fetch(url, { method:"HEAD", cache:"no-store" });
-    return res.ok;
-  }catch{
-    return false;
+  } catch (e) {
+    console.warn("speechSynthesis failed:", e);
   }
 }
 
-function extractItems(payload){
-  if (Array.isArray(payload)) return payload;
-  if (payload && typeof payload === "object") {
-    const keys = ["items","words","data","list","entries","pool"];
-    for (const key of keys) {
-      if (Array.isArray(payload[key])) return payload[key];
-    }
-  }
-  return [];
-}
-
-function normalizePoolItems(items){
-  return items.map((item) => {
-    const rawWord =
-      item?.word ??
-      item?.w ??
-      item?.text ??
-      item?.term ??
-      item?.answer ??
-      "";
-
-    const rawMeaning =
-      item?.meaning ??
-      item?.tr ??
-      item?.translation ??
-      "";
-
-    return {
-      w: String(rawWord || "").trim(),
-      tr: String(rawMeaning || "").trim()
-    };
-  }).filter(x => x.w && x.tr && !x.w.includes(" "));
-}
-
-async function loadLangPool(langCode){
-  const url = getPublicLangUrl(langCode);
-  const ok = await fileExists(url);
-  if (!ok) return { items: [] };
-
-  const res = await fetch(url, { cache:"no-store" });
-  if (!res.ok) return { items: [] };
-
-  const json = await res.json();
-  return { items: normalizePoolItems(extractItems(json)) };
-}
-
-function shuffleArray(arr){
-  const a = arr.slice();
-  for(let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function pickFreshSet(items, count){
-  const filtered = items.filter(x => /^[a-zA-ZÀ-ÿÄÖÜäöüßÇçĞğİıÖöŞşÜü-]+$/.test(x.w));
-  return shuffleArray(filtered).slice(0, count);
-}
-
-async function loadBestScore(){
-  try{
-    const { data:{ session } } = await supabase.auth.getSession();
-    userId = session?.user?.id || null;
-    if(!userId) return 0;
-
-    const { data, error } = await supabase
-      .from("user_game_best_scores")
-      .select("best_score")
-      .eq("user_id", userId)
-      .eq("game_code", GAME_CODE)
-      .eq("language_code", currentLang)
-      .maybeSingle();
-
-    if(error){
-      console.warn("best score load error:", error);
-      return 0;
-    }
-
-    return Number(data?.best_score || 0);
-  }catch(e){
-    console.warn("best score load exception:", e);
-    return 0;
-  }
-}
-
-async function saveBestScoreIfNeeded(){
-  if(!userId) return false;
-  if(score <= bestScore) return false;
-
-  try{
-    const { error } = await supabase
-      .from("user_game_best_scores")
-      .upsert({
-        user_id: userId,
-        game_code: GAME_CODE,
-        language_code: currentLang,
-        best_score: score,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: "user_id,game_code,language_code"
-      });
-
-    if(error){
-      console.warn("best score save error:", error);
-      return false;
-    }
-
-    bestScore = score;
-    $("bestVal").textContent = String(bestScore);
-    return true;
-  }catch(e){
-    console.warn("best score save exception:", e);
-    return false;
-  }
-}
-
-function launchConfetti(){
-  const layer = $("confettiLayer");
-  layer.innerHTML = "";
-  const colors = ["#22c55e", "#60a5fa", "#ec4899", "#f59e0b", "#ffffff", "#a5b4fc"];
-
-  for(let i=0; i<120; i++){
-    const c = document.createElement("span");
-    c.className = "confetti";
-    c.style.left = `${Math.random() * 100}%`;
-    c.style.top = `${-20 - Math.random() * 100}px`;
-    c.style.background = colors[Math.floor(Math.random() * colors.length)];
-    c.style.animationDuration = `${2.2 + Math.random() * 2.4}s`;
-    c.style.animationDelay = `${Math.random() * 0.4}s`;
-    c.style.transform = `rotate(${Math.random() * 360}deg)`;
-    layer.appendChild(c);
-  }
-
-  setTimeout(() => { layer.innerHTML = ""; }, 5000);
-}
-
-function launchFireworks(){
-  const layer = $("fireworksLayer");
-  layer.innerHTML = "";
-  const colors = ["#22c55e", "#60a5fa", "#ec4899", "#f59e0b", "#ffffff"];
-
-  const centers = [
-    {x:20, y:25},
-    {x:50, y:18},
-    {x:78, y:28},
-    {x:30, y:45},
-    {x:70, y:42}
-  ];
-
-  centers.forEach((center) => {
-    const count = 22;
-    for(let i=0; i<count; i++){
-      const p = document.createElement("span");
-      p.className = "firework";
-      p.style.left = `${center.x}%`;
-      p.style.top = `${center.y}%`;
-      p.style.color = colors[Math.floor(Math.random() * colors.length)];
-
-      const angle = (Math.PI * 2 * i) / count;
-      const distance = 40 + Math.random() * 60;
-      p.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
-      p.style.setProperty("--dy", `${Math.sin(angle) * distance}px`);
-
-      layer.appendChild(p);
-    }
-  });
-
-  setTimeout(() => { layer.innerHTML = ""; }, 1400);
-}
-
-function updateHearts(){
-  const heartsEl = $("hearts");
-  heartsEl.innerHTML = "";
-  for(let i=0; i<START_LIVES; i++){
-    const span = document.createElement("span");
-    span.className = "heart";
-    span.textContent = i < Math.min(lives, START_LIVES) ? "❤️" : "🖤";
-    if(i >= Math.min(lives, START_LIVES)) span.style.filter = "none";
-    heartsEl.appendChild(span);
-  }
-}
-
-function updateHangman(){
-  const parts = ["p_head","p_body","p_larm","p_rarm","p_lleg","p_rleg"];
-  const wrongCount = wrongLetters.size;
-  parts.forEach((id, idx) => {
-    $(id).classList.toggle("on", idx < wrongCount);
-  });
-  $("man").classList.toggle("swing", wrongCount >= 6);
-}
-
-function renderWordSlots(){
-  const matrix = $("matrix");
-  matrix.innerHTML = "";
-
-  const word = currentPuzzle?.w || "";
-  for(const ch of word){
-    const slot = document.createElement("div");
-    slot.className = "slot";
-
-    if(ch === "-" || ch === " "){
-      slot.textContent = ch;
-      slot.classList.add("found");
-    } else if(guessedLetters.has(normalize(ch))){
-      slot.textContent = ch.toUpperCase();
-      slot.classList.add("found");
-    } else {
-      slot.textContent = "";
-    }
-
-    matrix.appendChild(slot);
-  }
-}
-
-function buildKeyboard(){
-  const kb = $("kb");
-  kb.innerHTML = "";
-
-  const rows = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  rows.split("").forEach(letter => {
-    const btn = document.createElement("button");
-    btn.className = "key";
-    btn.textContent = letter;
-    btn.dataset.letter = normalize(letter);
-    btn.type = "button";
-    btn.onclick = () => handleGuess(letter);
-    kb.appendChild(btn);
-  });
-
-  refreshKeyboardState();
-}
-
-function refreshKeyboardState(){
-  document.querySelectorAll(".key").forEach(btn => {
-    const l = btn.dataset.letter;
-    btn.disabled = guessedLetters.has(l) || wrongLetters.has(l) || isBusy;
-
-    btn.classList.remove("hit","miss");
-
-    if(guessedLetters.has(l)) btn.classList.add("hit");
-    if(wrongLetters.has(l)) btn.classList.add("miss");
-  });
-}
-
-function updateScoreUI(){
-  $("scoreVal").textContent = String(score);
-  $("bestVal").textContent = String(bestScore);
-}
-
-function updateJokersUI(){
-  $("j0").classList.toggle("spent", jokerRevealUsed);
-  $("j1").classList.toggle("spent", jokerCleanUsed);
-}
-
-function isWordSolved(){
-  const word = currentPuzzle?.w || "";
-  return [...normalize(word)].every(ch => {
-    if(ch === "-" || ch === " ") return true;
-    return guessedLetters.has(ch);
-  });
-}
-
-function renderPuzzle(){
-  if(!currentPuzzle) return;
-
-  $("trText").textContent = currentPuzzle.tr || "—";
-  renderWordSlots();
-  refreshKeyboardState();
-  updateHearts();
-  updateHangman();
-  updateScoreUI();
-  updateJokersUI();
-}
-
-async function nextPuzzle(){
-  if(lives <= 0){
-    await showFinal(true);
-    return;
-  }
-
-  if(currentIdx >= puzzles.length){
-    await showFinal(false);
-    return;
-  }
-
-  currentPuzzle = puzzles[currentIdx];
-  guessedLetters = new Set();
-  wrongLetters = new Set();
-  jokerRevealUsed = false;
-  jokerCleanUsed = false;
-  isBusy = false;
-
-  renderPuzzle();
-  speak(currentPuzzle.w);
-}
-
-async function handleSolvedWord(){
-  isBusy = true;
-  score += 20 + Math.max(0, 8 - wrongLetters.size) * 2;
-  updateScoreUI();
-
-  const flawless = wrongLetters.size === 0 && !jokerRevealUsed && !jokerCleanUsed;
-  if (flawless && lives < MAX_LIVES) {
-    lives = Math.min(MAX_LIVES, lives + 1);
-    toast("Kusursuz çözüm! +1 can");
-  } else {
-    toast("Doğru bildin!");
-  }
-
-  playGood();
-  speak(currentPuzzle.w);
-  renderPuzzle();
-
-  const newRecord = await saveBestScoreIfNeeded();
-  if(newRecord){
-    launchConfetti();
-    launchFireworks();
-    playApplause();
-    toast("Yeni rekor! 🔥");
-  }
-
-  setTimeout(async () => {
-    currentIdx++;
-    await nextPuzzle();
-  }, 1200);
-}
-
-async function handleGameOver(){
-  isBusy = true;
-  playBad();
-  toast("Canlar bitti!");
-  setTimeout(async () => {
-    await showFinal(true);
-  }, 900);
-}
-
-async function handleGuess(rawLetter){
-  if(isBusy || !currentPuzzle) return;
-  await unlockAudio();
-
-  const letter = normalize(rawLetter);
-  const word = normalize(currentPuzzle.w);
-
-  if(guessedLetters.has(letter) || wrongLetters.has(letter)) return;
-
-  if(word.includes(letter)){
-    guessedLetters.add(letter);
-    playGood();
-    toast("Doğru harf!");
-    renderPuzzle();
-
-    if(isWordSolved()){
-      await handleSolvedWord();
-    }
-  } else {
-    wrongLetters.add(letter);
-    playBad();
-    lives--;
-    renderPuzzle();
-
-    if(lives <= 0){
-      await handleGameOver();
-    } else {
-      toast("Yanlış harf!");
-    }
-  }
-}
-
-function revealRandomLetter(){
-  if(jokerRevealUsed || !currentPuzzle || isBusy) return;
-
-  const wordChars = [...normalize(currentPuzzle.w)].filter(ch => ch !== "-" && ch !== " ");
-  const hidden = [...new Set(wordChars)].filter(ch => !guessedLetters.has(ch));
-
-  if(!hidden.length){
-    toast("Açılacak harf kalmadı.");
-    return;
-  }
-
-  const picked = hidden[Math.floor(Math.random() * hidden.length)];
-  guessedLetters.add(picked);
-  jokerRevealUsed = true;
-  renderPuzzle();
-  playGood();
-  toast(`Joker açtı: ${picked.toUpperCase()}`);
-
-  if(isWordSolved()){
-    handleSolvedWord();
-  }
-}
-
-function cleanWrongKeys(){
-  if(jokerCleanUsed || !currentPuzzle || isBusy) return;
-
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const wordSet = new Set([...normalize(currentPuzzle.w)].filter(ch => ch !== "-" && ch !== " "));
-
-  const candidates = alphabet
-    .map(x => normalize(x))
-    .filter(ch => !wordSet.has(ch) && !wrongLetters.has(ch) && !guessedLetters.has(ch));
-
-  if(!candidates.length){
-    toast("Temizlenecek yanlış harf yok.");
-    return;
-  }
-
-  const removeCount = Math.min(6, candidates.length);
-  const shuffled = shuffleArray(candidates).slice(0, removeCount);
-
-  document.querySelectorAll(".key").forEach(btn => {
-    if(shuffled.includes(btn.dataset.letter)){
-      btn.disabled = true;
-      btn.classList.add("miss");
-      btn.style.opacity = ".15";
-    }
-  });
-
-  jokerCleanUsed = true;
-  updateJokersUI();
-  playGood();
-  toast("Yanlış harfler temizlendi.");
-}
-
-async function showFinal(gameEnded){
-  const newRecord = await saveBestScoreIfNeeded();
-  if(newRecord){
-    launchConfetti();
-    launchFireworks();
-    playApplause();
-  } else {
-    playFinish();
-  }
-
-  const title = gameEnded ? "OYUN BİTTİ" : "SET TAMAMLANDI";
-  const color = gameEnded ? "var(--red)" : "var(--green)";
-
-  $("modal").classList.add("on");
-  $("mTitle").textContent = title;
-  $("mTitle").style.color = color;
-  $("mWord").textContent = `SKOR ${score}`;
-  $("mTr").textContent = newRecord ? "Yeni en yüksek skor!" : `En yüksek skor: ${bestScore}`;
-
-  setTimeout(() => {
-    $("modal").classList.remove("on");
-    const endCardHtml = `
-      <div class="modalCard">
-        <h1 style="margin:0;font-size:28px;color:${gameEnded ? "var(--red)" : "var(--green)"};">${title}</h1>
-        <div style="margin:18px 0 8px;font-size:18px;font-weight:900;">Skor: ${score}</div>
-        <div style="font-size:14px;line-height:1.8;opacity:.86;">
-          Dil: <b>${LANGS[currentLang]?.name || currentLang.toUpperCase()}</b><br>
-          En yüksek skor: <b>${bestScore}</b><br>
-          ${newRecord ? "Yeni rekor kırdın 🎉" : "Bir sonraki turda daha yukarı çıkalım."}
-        </div>
-        <button id="hangReplayBtn" style="margin-top:16px;width:100%;height:54px;border:none;border-radius:18px;background:var(--grad);color:#fff;font-size:16px;font-weight:900;cursor:pointer;">YENİDEN OYNA</button>
-        <button id="hangCloseBtn" style="margin-top:10px;width:100%;height:50px;border:none;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff;font-size:14px;font-weight:900;cursor:pointer;">ANA MENÜ</button>
-      </div>
-    `;
-    $("modal").innerHTML = endCardHtml;
-    $("modal").classList.add("on");
-
-    $("hangReplayBtn").onclick = async () => {
-      $("modal").classList.remove("on");
-      await startGame();
-    };
-    $("hangCloseBtn").onclick = () => {
-      location.href = "/pages/game_menu.html";
-    };
-  }, 1300);
-}
-
-async function startGame(){
-  const ok = await ensureAuthAndCacheUser();
-  if (!ok) {
-    location.href = "/pages/login.html";
-    return;
-  }
-
-  await unlockAudio();
-
-  score = 0;
-  lives = START_LIVES;
-  currentIdx = 0;
-  isBusy = false;
-  guessedLetters = new Set();
-  wrongLetters = new Set();
-  jokerRevealUsed = false;
-  jokerCleanUsed = false;
-
-  const pool = await loadLangPool(currentLang);
-  const items = [...(pool?.items || [])];
-  puzzles = pickFreshSet(items, SET_SIZE);
-
-  if (!puzzles.length) {
-    toast("Kelime havuzu yüklenemedi.");
-    return;
-  }
-
-  $("langSheet").classList.remove("show");
-  $("rulesSheet").classList.remove("show");
-  $("modal").classList.remove("on");
-
-  buildKeyboard();
-  await nextPuzzle();
-}
-
-function renderLangs(){
-  $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
-    <button class="langCard ${currentLang===code ? "active" : ""}" data-lang="${code}" type="button">
+/* -----------------------------
+   STATE
+----------------------------- */
+let state = {
+  lang: normalizeLang(qp("lang") || localStorage.getItem("italky_game_lang") || "en"),
+  level: normalizeLevel(qp("level") || localStorage.getItem("italky_game_level")) || null,
+  pool: [],
+  target: null,
+  lastWord: null,
+  lives: 3,
+  MAX_LIVES: 9,
+  totalScore: 0,
+  roundScore: 100,
+  guessed: new Set(),
+  mistakes: 0,
+  flawless: true,
+  jokerUsed: false,
+  lock: false,
+  userId: "anon",
+  placementOk: false
+};
+
+const LANG_META = {
+  en: { name: "İngilizce", flag: "🇬🇧" },
+  de: { name: "Almanca", flag: "🇩🇪" },
+  fr: { name: "Fransızca", flag: "🇫🇷" },
+  es: { name: "İspanyolca", flag: "🇪🇸" },
+  it: { name: "İtalyanca", flag: "🇮🇹" }
+};
+
+/* -----------------------------
+   LANGUAGE + RULES
+----------------------------- */
+function renderLangCards() {
+  const box = $("langGrid");
+  if (!box) return;
+
+  box.innerHTML = Object.entries(LANG_META).map(([code, meta]) => `
+    <button class="langCard ${state.lang === code ? "active" : ""}" data-lang="${code}" type="button">
       <div class="langFlag">${meta.flag}</div>
       <div class="langName">${meta.name}</div>
       <div class="langHint">${code.toUpperCase()}</div>
     </button>
   `).join("");
 
-  $("langGrid").querySelectorAll(".langCard").forEach(btn => {
-    btn.onclick = async () => {
-      currentLang = btn.dataset.lang;
-      localStorage.setItem(GAME_LANG_KEY, currentLang);
-      renderLangs();
-      bestScore = await loadBestScore();
-      updateScoreUI();
+  box.querySelectorAll(".langCard").forEach(btn => {
+    btn.onclick = () => {
+      state.lang = normalizeLang(btn.dataset.lang);
+      localStorage.setItem("italky_game_lang", state.lang);
+      renderLangCards();
+      setGate(`${state.lang.toUpperCase()} SEÇİLDİ`);
     };
   });
 }
 
-$("j0").onclick = () => revealRandomLetter();
-$("j1").onclick = () => cleanWrongKeys();
+function openLangSheet() {
+  $("langSheet")?.classList.add("show");
+}
 
-$("toRulesBtn").onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  $("langSheet").classList.remove("show");
-  $("rulesSheet").classList.add("show");
-};
+function closeLangSheet() {
+  $("langSheet")?.classList.remove("show");
+}
 
-$("langSheetClose").onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  $("langSheet").classList.remove("show");
-};
+function openRulesSheet() {
+  $("rulesSheet")?.classList.add("show");
+}
 
-$("rulesClose").onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  $("rulesSheet").classList.remove("show");
-};
+function closeRulesSheet() {
+  $("rulesSheet")?.classList.remove("show");
+}
 
-$("startGameBtn").onclick = async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  await startGame();
-};
+/* -----------------------------
+   PROFILE / AUTH / DATA LOAD
+----------------------------- */
+async function loadGameData() {
+  try {
+    disableStartBtn(true, "YÜKLENİYOR...");
+    setGate("OYUN VERİSİ HAZIRLANIYOR...");
 
-window.addEventListener("keydown", (e) => {
-  const langOpen = $("langSheet").classList.contains("show");
-  const rulesOpen = $("rulesSheet").classList.contains("show");
-  const modalOpen = $("modal").classList.contains("on");
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
 
-  if (!langOpen && !rulesOpen && !modalOpen) {
-    const key = String(e.key || "").toUpperCase();
-    if (/^[A-Z]$/.test(key)) handleGuess(key);
+    state.userId = session?.user?.id || "anon";
+
+    let profile = null;
+    if (state.userId !== "anon") {
+      const { data: prof, error: profErr } = await supabase
+        .from("profiles")
+        .select("id, game_lang, current_level, english_level, placement_completed, hangman_best")
+        .eq("id", state.userId)
+        .maybeSingle();
+
+      if (!profErr) profile = prof || null;
+    }
+
+    if (!state.lang) {
+      state.lang = normalizeLang(profile?.game_lang || "en");
+    }
+
+    if (!state.level) {
+      state.level =
+        normalizeLevel(profile?.current_level) ||
+        normalizeLevel(profile?.english_level) ||
+        null;
+    }
+
+    state.placementOk = Boolean(
+      profile?.placement_completed ||
+      state.level
+    );
+
+    if (!state.placementOk) {
+      setGate("Önce seviye tespit sınavını tamamlamalısın.");
+      disableStartBtn(true, "KİLİTLİ");
+      return;
+    }
+
+    if (!state.level) {
+      setGate("Seviye bilgisi bulunamadı. Önce seviye tespitini tamamla.");
+      disableStartBtn(true, "KİLİTLİ");
+      return;
+    }
+
+    localStorage.setItem("italky_game_lang", state.lang);
+    localStorage.setItem("italky_game_level", state.level);
+
+    setGate(`${state.lang.toUpperCase()} • ${state.level} YÜKLENİYOR...`);
+
+    const { data: words, error } = await supabase
+      .from("hangman_pool")
+      .select("w, tr")
+      .eq("lang", state.lang)
+      .eq("level", state.level);
+
+    if (error) {
+      console.error("hangman_pool error:", error);
+      setGate("Kelime havuzu alınamadı.");
+      disableStartBtn(true, "HATA");
+      return;
+    }
+
+    state.pool = Array.isArray(words)
+      ? words.filter(x => x && x.w && String(x.w).trim())
+      : [];
+
+    let best = 0;
+    if (profile?.hangman_best) {
+      const key = `${state.lang}::${state.level}`;
+      best = profile.hangman_best?.[key] || 0;
+    }
+    $("bestVal").textContent = String(best);
+
+    if (!state.pool.length) {
+      setGate(`${state.lang.toUpperCase()} • ${state.level} için havuz boş.`);
+      disableStartBtn(true, "HAZIR DEĞİL");
+      return;
+    }
+
+    setGate(`${state.lang.toUpperCase()} • ${state.level} HAZIR`);
+    disableStartBtn(false, "BAŞLA");
+  } catch (err) {
+    console.error("loadGameData failed:", err);
+    setGate("Beklenmeyen bir hata oluştu.");
+    disableStartBtn(true, "HATA");
   }
-});
+}
 
-window.onload = async () => {
-  const ok = await ensureAuthAndCacheUser();
-  if (!ok) {
-    location.href = "/pages/login.html";
+async function updateBestScore(newScore) {
+  try {
+    if (state.userId === "anon") return;
+
+    const key = `${state.lang}::${state.level}`;
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("hangman_best")
+      .eq("id", state.userId)
+      .maybeSingle();
+
+    let map = prof?.hangman_best || {};
+    if (newScore > (map[key] || 0)) {
+      map[key] = newScore;
+      await supabase
+        .from("profiles")
+        .update({ hangman_best: map })
+        .eq("id", state.userId);
+
+      $("bestVal").textContent = String(newScore);
+    }
+  } catch (err) {
+    console.error("updateBestScore failed:", err);
+  }
+}
+
+/* -----------------------------
+   GAME LOGIC
+----------------------------- */
+function pickWord() {
+  if (!state.pool.length) return null;
+  if (state.pool.length === 1) return state.pool[0];
+
+  let tries = 0;
+  let chosen = null;
+
+  do {
+    chosen = state.pool[Math.floor(Math.random() * state.pool.length)];
+    tries++;
+  } while (tries < 10 && chosen?.w === state.lastWord);
+
+  return chosen;
+}
+
+function startRound() {
+  if (!state.pool.length) return;
+
+  state.lock = false;
+  state.guessed.clear();
+  state.mistakes = 0;
+  state.roundScore = 100;
+  state.flawless = true;
+  state.jokerUsed = false;
+
+  $("j0").classList.remove("spent");
+  $("j1").classList.remove("spent");
+
+  state.target = pickWord();
+
+  if (!state.target?.w) {
+    setGate("Kelime seçilemedi.");
     return;
   }
 
-  bestScore = await loadBestScore();
-  updateScoreUI();
-  updateHearts();
-  updateHangman();
-  renderLangs();
-  buildKeyboard();
+  state.lastWord = state.target.w;
 
-  $("rulesSheet").classList.remove("show");
+  renderWord();
+  renderKeyboard();
+  renderHearts();
+  resetMan();
+
+  $("trText").textContent = String(state.target.tr || "—").toUpperCase();
+  $("scoreVal").textContent = String(state.totalScore);
+}
+
+function renderWord() {
+  const w = String(state.target?.w || "").toUpperCase();
+  $("matrix").innerHTML = w.split("").map(ch => {
+    const isLetter = /[A-Z]/.test(ch);
+    const found = !isLetter || state.guessed.has(ch);
+
+    return `
+      <div class="slot ${found && isLetter ? "found" : ""}">
+        ${found ? escapeHtml(ch) : ""}
+      </div>
+    `;
+  }).join("");
+}
+
+function renderKeyboard() {
+  const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  $("kb").innerHTML = abc.map(l =>
+    `<button class="key" id="key-${l}" data-l="${l}">${l}</button>`
+  ).join("");
+
+  $("kb").querySelectorAll(".key").forEach(btn => {
+    btn.onclick = () => makeGuess(btn.dataset.l);
+  });
+}
+
+function makeGuess(l) {
+  if (!state.target?.w) return;
+  if (state.lock || state.guessed.has(l)) return;
+
+  state.guessed.add(l);
+
+  const btn = $(`key-${l}`);
+  const w = String(state.target.w).toUpperCase();
+
+  if (w.includes(l)) {
+    btn?.classList.add("hit");
+    renderWord();
+
+    const completed = w
+      .split("")
+      .filter(ch => /[A-Z]/.test(ch))
+      .every(ch => state.guessed.has(ch));
+
+    if (completed) endRound(true);
+  } else {
+    btn?.classList.add("miss");
+    state.mistakes++;
+    state.flawless = false;
+    state.roundScore = Math.max(0, state.roundScore - 15);
+    updateMan(state.mistakes);
+
+    if (state.mistakes >= 6) endRound(false);
+  }
+}
+
+function updateMan(errs) {
+  const seq = ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"];
+  seq.forEach((id, i) => $(id)?.classList.toggle("on", i < errs));
+  $("man")?.classList.toggle("swing", errs >= 6);
+}
+
+function resetMan() {
+  ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"].forEach(id => {
+    $(id)?.classList.remove("on");
+  });
+  $("man")?.classList.remove("swing");
+}
+
+function renderHearts() {
+  let html = "";
+  for (let i = 0; i < state.lives; i++) {
+    html += `<span class="heart">❤️</span>`;
+  }
+  $("hearts").innerHTML = html;
+}
+
+async function endRound(win) {
+  state.lock = true;
+
+  const solvedWord = String(state.target?.w || "").toUpperCase();
+  const solvedTr = String(state.target?.tr || "—");
+
+  // Eğitim amaçlı: son durumda doğru kelimeyi her zaman göster + okut
+  speakText(solvedWord);
+
+  if (win) {
+    state.totalScore += state.roundScore;
+    if (state.flawless && !state.jokerUsed && state.lives < state.MAX_LIVES) {
+      state.lives++;
+    }
+    await updateBestScore(state.totalScore);
+  } else {
+    state.lives--;
+  }
+
+  renderHearts();
+
+  $("mTitle").textContent = win ? "BAŞARILI!" : "DOĞRU CEVAP";
+  $("mTitle").style.color = win ? "var(--green)" : "#60a5fa";
+  $("mWord").textContent = solvedWord;
+  $("mTr").textContent = `(${solvedTr})`;
+  $("modal").classList.add("on");
+}
+
+function useJ(i) {
+  if (state.lock || !state.target?.w) return;
+
+  const b = $(`j${i}`);
+  if (!b || b.classList.contains("spent")) return;
+
+  state.jokerUsed = true;
+  b.classList.add("spent");
+  state.roundScore = Math.max(0, state.roundScore - 20);
+
+  const remaining = String(state.target.w)
+    .toUpperCase()
+    .split("")
+    .filter(l => /[A-Z]/.test(l) && !state.guessed.has(l));
+
+  if (remaining.length > 0) {
+    makeGuess(remaining[0]);
+  }
+}
+
+$("j0").onclick = () => useJ(0);
+$("j1").onclick = () => useJ(1);
+
+$("mBtn").onclick = () => {
   $("modal").classList.remove("on");
-  $("langSheet").classList.add("show");
 
-  $("pageContent").classList.add("ready");
+  if (state.lives > 0) {
+    startRound();
+  } else {
+    const again = confirm(`Oyun bitti! Skor: ${state.totalScore}. Yeniden başla?`);
+    if (again) {
+      state.totalScore = 0;
+      state.lives = 3;
+      $("scoreVal").textContent = "0";
+      renderHearts();
+      startRound();
+    } else {
+      location.href = "/pages/game_menu.html";
+    }
+  }
+};
+
+$("realStartBtn").onclick = () => {
+  if (!state.placementOk) {
+    alert("Önce seviye tespit sınavını tamamlamalısın.");
+    return;
+  }
+
+  if (!state.pool.length) {
+    alert("Bu dil ve seviyede henüz oyun havuzu bulunamadı.");
+    return;
+  }
+
+  $("readyGate").style.display = "none";
+  startRound();
+};
+
+/* -----------------------------
+   LANGUAGE + RULES EVENTS
+----------------------------- */
+$("langChangeBtn").onclick = () => {
+  openLangSheet();
+};
+
+$("langSheetClose").onclick = () => {
+  closeLangSheet();
+};
+
+$("toRulesBtn").onclick = () => {
+  closeLangSheet();
+  openRulesSheet();
+};
+
+$("rulesClose").onclick = () => {
+  closeRulesSheet();
+};
+
+$("finishRulesBtn").onclick = async () => {
+  closeRulesSheet();
+  await loadGameData();
+};
+
+/* -----------------------------
+   BOOT
+----------------------------- */
+window.onload = async () => {
+  renderLangCards();
+  openLangSheet();
+  await loadGameData();
 };
