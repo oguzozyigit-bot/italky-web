@@ -308,6 +308,8 @@ export async function loginWithNativeGoogleIdToken(idToken, nfcUid = "") {
     token: cleanToken,
   });
 
+  console.log("[NATIVE LOGIN] signInWithIdToken response", { data, error });
+
   if (error) {
     console.error("[NATIVE LOGIN] signInWithIdToken error:", error);
     throw error;
@@ -505,8 +507,16 @@ window.onNativeLoginSuccess = async function (payload) {
     location.replace(next);
     return result;
   } catch (e) {
-    console.error("[NATIVE LOGIN] failed:", e);
-    alert("Oturum açılamadı: " + (e?.message || JSON.stringify(e)));
+    console.error("[NATIVE LOGIN] failed full:", e);
+
+    const msg =
+      e?.message ||
+      e?.error_description ||
+      e?.description ||
+      e?.name ||
+      JSON.stringify(e);
+
+    alert("Oturum açılamadı: " + msg);
 
     try {
       await hardResetAuthState();
