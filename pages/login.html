@@ -30,7 +30,6 @@
       --muted:rgba(255,255,255,.65);
       --safeB:env(safe-area-inset-bottom, 0px);
     }
-
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
     html,body{ height:100%; width:100%; }
 
@@ -222,12 +221,11 @@
 
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
-    import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
+    import { ensureAuthAndCacheUser } from "/js/auth.js";
 
     const toastEl = document.getElementById("toast");
     const HOME = "/pages/home.html";
     const MEMBERSHIP = "/pages/membership.html";
-    const CALLBACK = "/pages/auth_callback.html";
     const googleBtn = document.getElementById("googleBtn");
 
     function toast(msg){
@@ -248,13 +246,9 @@
     }
 
     async function resolveTarget(access){
-      if (!access?.access_open) {
-        return MEMBERSHIP;
-      }
-
+      if (!access?.access_open) return MEMBERSHIP;
       const next = getNextTarget();
-      if (next) return next;
-      return HOME;
+      return next || HOME;
     }
 
     async function getAccessState() {
@@ -283,15 +277,7 @@
     async function routeAfterLogin(){
       try{
         await ensureAuthAndCacheUser();
-
         const access = await getAccessState();
-
-        if (!access?.access_open) {
-          toast("Üyelik gerekli");
-          location.replace(MEMBERSHIP);
-          return;
-        }
-
         const target = await resolveTarget(access);
         location.replace(target);
       }catch(e){
@@ -300,79 +286,65 @@
       }
     }
 
-    (function bounceToCallbackIfNeeded(){
-      const hasCode = new URLSearchParams(location.search).has("code");
-      const hasToken = location.hash.includes("access_token=");
-      if((hasCode || hasToken) && !location.pathname.endsWith("/pages/auth_callback.html")){
-        location.replace(CALLBACK + location.search + location.hash);
-      }
-    })();
-
     window.onNativeLoginSuccess = async function(payload){
-  try{
-    const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
-    const idToken = String(data?.id_token || data?.idToken || "").trim();
+      try{
+        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+        const idToken = String(data?.id_token || data?.idToken || "").trim();
 
-    if(!idToken){
-      googleBtn.disabled = false;
-      alert("NATIVE TOKEN YOK");
-      return;
-    }
+        if(!idToken){
+          googleBtn.disabled = false;
+          toast("Token alınamadı");
+          return;
+        }
 
-    googleBtn.disabled = true;
-    toast("Oturum açılıyor...");
+        googleBtn.disabled = true;
+        toast("Oturum açılıyor...");
 
-    const { data: authData, error } = await supabase.auth.signInWithIdToken({
-      provider: "google",
-      token: idToken
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: idToken
+        });
+
+        if (error) {
+          googleBtn.disabled = false;
+          toast("Oturum açılamadı");
+          console.error("signInWithIdToken error:", error);
+          return;
+        }
+
+        const { data:{ session } } = await supabase.auth.getSession();
+        if(!session){
+          googleBtn.disabled = false;
+          toast("Oturum bulunamadı");
+          return;
+        }
+
+        setTimeout(() => routeAfterLogin(), 300);
+      }catch(e){
+        console.error("onNativeLoginSuccess error:", e);
+        googleBtn.disabled = false;
+        toast("Giriş hatası");
+      }
+    };
+
+    googleBtn?.addEventListener("click", async () => {
+      try{
+        googleBtn.disabled = true;
+        toast("Güvenli giriş başlatılıyor…");
+
+        if (window.Native && typeof window.Native.startGoogleLogin === "function") {
+          window.Native.startGoogleLogin();
+          return;
+        }
+
+        googleBtn.disabled = false;
+        toast("Native köprü yok");
+      }catch(e){
+        console.error("googleBtn click error:", e);
+        googleBtn.disabled = false;
+        toast("Giriş başlatılamadı");
+      }
     });
-
-    if (error) {
-      googleBtn.disabled = false;
-      alert("SUPABASE AUTH HATASI: " + (error.message || JSON.stringify(error)));
-      return;
-    }
-
-    if (authData?.user) {
-      alert("GİRİŞ BAŞARILI: " + (authData.user.email || authData.user.id));
-    } else {
-      alert("AUTH DATA GELDİ AMA USER YOK");
-    }
-
-    const { data:{ session } } = await supabase.auth.getSession();
-
-    if(!session){
-      googleBtn.disabled = false;
-      alert("SESSION YOK");
-      return;
-    }
-
-    setTimeout(() => routeAfterLogin(), 300);
-  }catch(e){
-    console.error("onNativeLoginSuccess error:", e);
-    googleBtn.disabled = false;
-    alert("NATIVE LOGIN BLOĞU HATASI: " + (e?.message || JSON.stringify(e)));
-  }
-};
-
-googleBtn?.addEventListener("click", async () => {
-  try{
-    googleBtn.disabled = true;
-    toast("Güvenli giriş başlatılıyor…");
-
-    if (window.Native && typeof window.Native.startGoogleLogin === "function") {
-      window.Native.startGoogleLogin();
-      return;
-    }
-
-    googleBtn.disabled = false;
-    alert("NATIVE BRIDGE YOK");
-  }catch(e){
-    console.error("googleBtn click error:", e);
-    googleBtn.disabled = false;
-    alert("GİRİŞ BAŞLATMA HATASI: " + (e?.message || JSON.stringify(e)));
-  }
-});
 
     const phrases = [
       "Dünyayı küçülttük, Cebinize sığdırdık...",
@@ -399,12 +371,10 @@ googleBtn?.addEventListener("click", async () => {
     (async function boot(){
       try{
         const { data:{ session } } = await supabase.auth.getSession();
-
         if(!session){
           document.body.classList.add("login-ready");
           return;
         }
-
         await routeAfterLogin();
       }catch(e){
         console.error("boot error:", e);
