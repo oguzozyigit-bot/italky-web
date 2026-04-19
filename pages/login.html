@@ -308,23 +308,71 @@
       }
     })();
 
-    window.onNativeLoginSuccess = async function(){
-      console.warn("Native login test için kapatıldı.");
-    };
+    window.onNativeLoginSuccess = async function(payload){
+  try{
+    const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+    const idToken = String(data?.id_token || data?.idToken || "").trim();
 
-    googleBtn?.addEventListener("click", async () => {
-      try{
-        const next = getNextTarget();
+    if(!idToken){
+      googleBtn.disabled = false;
+      alert("NATIVE TOKEN YOK");
+      return;
+    }
 
-        googleBtn.disabled = true;
-        toast("Google yönlendiriliyor…");
-        await loginWithGoogle(next);
-      }catch(e){
-        console.error("googleBtn click error:", e);
-        googleBtn.disabled = false;
-        toast(e?.message || "Giriş başlatılamadı");
-      }
+    googleBtn.disabled = true;
+    toast("Oturum açılıyor...");
+
+    const { data: authData, error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: idToken
     });
+
+    if (error) {
+      googleBtn.disabled = false;
+      alert("SUPABASE AUTH HATASI: " + (error.message || JSON.stringify(error)));
+      return;
+    }
+
+    if (authData?.user) {
+      alert("GİRİŞ BAŞARILI: " + (authData.user.email || authData.user.id));
+    } else {
+      alert("AUTH DATA GELDİ AMA USER YOK");
+    }
+
+    const { data:{ session } } = await supabase.auth.getSession();
+
+    if(!session){
+      googleBtn.disabled = false;
+      alert("SESSION YOK");
+      return;
+    }
+
+    setTimeout(() => routeAfterLogin(), 300);
+  }catch(e){
+    console.error("onNativeLoginSuccess error:", e);
+    googleBtn.disabled = false;
+    alert("NATIVE LOGIN BLOĞU HATASI: " + (e?.message || JSON.stringify(e)));
+  }
+};
+
+googleBtn?.addEventListener("click", async () => {
+  try{
+    googleBtn.disabled = true;
+    toast("Güvenli giriş başlatılıyor…");
+
+    if (window.Native && typeof window.Native.startGoogleLogin === "function") {
+      window.Native.startGoogleLogin();
+      return;
+    }
+
+    googleBtn.disabled = false;
+    alert("NATIVE BRIDGE YOK");
+  }catch(e){
+    console.error("googleBtn click error:", e);
+    googleBtn.disabled = false;
+    alert("GİRİŞ BAŞLATMA HATASI: " + (e?.message || JSON.stringify(e)));
+  }
+});
 
     const phrases = [
       "Dünyayı küçülttük, Cebinize sığdırdık...",
