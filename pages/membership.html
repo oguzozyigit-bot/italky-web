@@ -432,6 +432,7 @@
 
     let currentUserId = "";
     let currentSession = null;
+    let pendingSubscriptionMode = "unknown"; // purchase | restore | unknown
 
     function toast(msg = "") {
       if (!UI.toast) return;
@@ -523,7 +524,7 @@
       if (accessOpen) {
         setStatus(
           "ok",
-          `Sayın ${escapeHtml(displayName)}<br>Dünyayı cebinize sığdırmaya bir adım kaldı.`,
+          `Sayın ${escapeHtml(displayName)}<br>Aktif üyeliğiniz hazır görünüyor.`,
           true
         );
         UI.buyBtn.textContent = "Uygulamaya Git";
@@ -565,6 +566,7 @@
           return;
         }
 
+        pendingSubscriptionMode = "purchase";
         UI.buyBtn.disabled = true;
         toast("Google Play ödeme ekranı açılıyor...");
         window.AndroidBilling.buy(PRODUCT_ID);
@@ -577,44 +579,72 @@
       }
     }
 
-    async function recheckAndRoute() {
+    function handleSuccessMessage(mode, access) {
+      const hasAccess = !!access?.access_open;
+      const hasTokens = Number(access?.tokens ?? 0) > 0;
+
+      if (!hasAccess) {
+        toast("Üyelik henüz aktif görünmüyor");
+        return;
+      }
+
+      if (mode === "restore") {
+        toast("Aktif Google Play üyeliğiniz geri yüklendi.");
+        setTimeout(() => location.replace(HOME), 800);
+        return;
+      }
+
+      if (mode === "purchase") {
+        if (hasTokens) {
+          toast("Üyeliğiniz etkinleştirildi. Hoş geldin bonusunuz tanımlandı.");
+          setTimeout(() => location.replace("/pages/welcome_bonus.html"), 800);
+        } else {
+          toast("Üyeliğiniz başarıyla etkinleştirildi.");
+          setTimeout(() => location.replace(HOME), 800);
+        }
+        return;
+      }
+
+      toast("Üyelik doğrulandı!");
+      setTimeout(() => location.replace(HOME), 800);
+    }
+
+    async function recheckAndRoute(mode = "unknown") {
       try {
         await getSessionOrLogin();
         sendUserIdToNative();
 
-        if (window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function") {
-          toast("Mevcut üyelik kontrol ediliyor...");
-          window.AndroidBilling.restorePurchases();
-          await new Promise((r) => setTimeout(r, 1800));
-        }
-
         const access = await getAccessState();
         syncAccessUi(access);
-
-        if (access?.access_open) {
-          toast("Üyelik doğrulandı!");
-          setTimeout(() => location.replace("/pages/welcome_bonus.html"), 800);
-          return;
-        }
-
-        toast("Üyelik henüz aktif görünmüyor");
+        handleSuccessMessage(mode, access);
       } catch (e) {
         console.error("recheckAndRoute error:", e);
         toast(e?.message || "Güncelleme başarısız");
+      } finally {
+        pendingSubscriptionMode = "unknown";
       }
     }
 
     window.onNativeSubscriptionSuccess = async function () {
-      toast("Ödeme başarılı! Erişim tanımlanıyor...");
-      setTimeout(recheckAndRoute, 1500);
+      if (pendingSubscriptionMode === "purchase") {
+        toast("Ödeme tamamlandı. Erişim tanımlanıyor...");
+      } else {
+        toast("Üyelik kontrol ediliyor...");
+      }
+      setTimeout(() => recheckAndRoute(pendingSubscriptionMode), 1500);
     };
 
     window.addEventListener("italky-subscription-success", () => {
-      toast("Üyelik başarılı!");
-      setTimeout(recheckAndRoute, 1500);
+      if (pendingSubscriptionMode === "purchase") {
+        toast("Ödeme tamamlandı. Erişim doğrulanıyor...");
+      } else {
+        toast("Aktif üyelik kontrol ediliyor...");
+      }
+      setTimeout(() => recheckAndRoute(pendingSubscriptionMode), 1500);
     });
 
     window.addEventListener("italky-billing-error", (e) => {
+      pendingSubscriptionMode = "unknown";
       toast(e?.detail?.message || "İşlem iptal edildi");
     });
 
@@ -632,9 +662,11 @@
         if (!access?.access_open && window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === "function") {
           setTimeout(() => {
             try {
+              pendingSubscriptionMode = "restore";
               window.AndroidBilling.restorePurchases();
             } catch (e) {
               console.error("auto restore error:", e);
+              pendingSubscriptionMode = "unknown";
             }
           }, 600);
         }
