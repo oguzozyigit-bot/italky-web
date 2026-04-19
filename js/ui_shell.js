@@ -1,5 +1,3 @@
-// FILE: /js/ui_shell.js
-
 import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
@@ -150,32 +148,7 @@ const HOME_HEADER_HTML = `
     </div>
 
     <nav class="menu-nav">
-      <div class="menu-accordion" id="jetonAccordion">
-        <button class="menu-link-jeton accordion-trigger" id="jetonAccordionBtn" type="button">
-          <span>Jeton Yükle</span>
-          <span class="accordion-arrow">⌄</span>
-        </button>
-
-        <div class="accordion-body" id="jetonAccordionBody">
-          <div class="accordion-body-inner">
-            <button class="accordion-subbtn sub-google" id="jetonPlayBtn" type="button">
-              <span class="sub-dot"></span>
-              Google Hesabınla Yükle
-            </button>
-
-            <button class="accordion-subbtn sub-nfc" id="jetonNfcBtn" type="button">
-              <span class="sub-dot"></span>
-              NFC Kart İle Yükle
-            </button>
-
-            <button class="accordion-subbtn sub-code" id="jetonCodeBtn" type="button">
-              <span class="sub-dot"></span>
-              Kod İle Yükle
-            </button>
-          </div>
-        </div>
-      </div>
-
+      <a href="/pages/jetonbuy.html" id="jetonDirectLink">Jeton Yükle</a>
       <a href="/pages/wallet_history.html" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
       <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
       <a href="/pages/deneme.html" id="italkyAiTestLink" class="hidden">italkyAI</a>
@@ -186,8 +159,8 @@ const HOME_HEADER_HTML = `
       <a href="/pages/privacy.html" data-i18n="menu_privacy">Gizlilik</a>
       <a href="/pages/contact.html" data-i18n="menu_contact">İletişim</a>
 
-      <button class="menu-action danger-lite" id="logoutBtn" type="button" data-i18n="menu_logout">Güvenli Çıkış</button>
-      <button class="menu-action danger" id="deleteAccountBtn" type="button" data-i18n="menu_delete_account">Hesabımı Sil</button>
+      <button class="menu-action logout-action" id="logoutBtn" type="button" data-i18n="menu_logout">Güvenli Çıkış</button>
+      <button class="menu-action delete-action" id="deleteAccountBtn" type="button" data-i18n="menu_delete_account">Hesabımı Sil</button>
     </nav>
 
     <div class="menu-orbit-wrap" aria-hidden="true">
@@ -227,6 +200,7 @@ const SHELL_CSS = `
   --shell-text:#f5f7ff;
   --trendyol-orange:#f27a1a;
   --trendyol-orange-dark:#e46f17;
+  --danger-red:#d95f5f;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 .hidden{display:none !important;}
@@ -350,43 +324,28 @@ body.ui-menu-open{overflow:hidden;}
 .menu-token-link-wrap{display:flex;justify-content:center;width:100%;}
 .menu-token-link{font-size:12px;font-weight:900;color:#f4d8ff;text-decoration:none;padding:4px 0 0;text-align:center;}
 .menu-nav{display:flex;flex-direction:column;gap:7px;overflow:visible;padding-right:0;position:relative;z-index:3;flex:0 0 auto;}
-.menu-nav a,.menu-action,.accordion-trigger,.accordion-subbtn{
+.menu-nav a,.menu-action{
   width:100%;text-align:left;text-decoration:none;color:#f3f6ff;padding:12px 13px;border-radius:14px;
   background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
   border:1px solid rgba(255,255,255,.06);font-size:13px;font-weight:700;letter-spacing:.1px;cursor:pointer;
   font-family:'Outfit',sans-serif;line-height:1.15;
-  transition:transform .18s ease,filter .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
+  transition:transform .18s ease,filter .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease;
 }
-.menu-nav a:hover,.menu-nav a:active,.menu-action:hover,.menu-action:active,.accordion-trigger:hover,.accordion-trigger:active,.accordion-subbtn:hover,.accordion-subbtn:active{
+.menu-nav a:hover,.menu-nav a:active,.menu-action:hover,.menu-action:active{
   background:linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
 }
-.menu-link-jeton,.accordion-trigger{
-  color:#fffaf2 !important;background:linear-gradient(135deg, var(--trendyol-orange) 0%, var(--trendyol-orange-dark) 100%) !important;
-  border:1px solid rgba(255,173,96,.34) !important;box-shadow:0 10px 24px rgba(242,122,26,.22), inset 0 1px 0 rgba(255,255,255,.08);
+#jetonDirectLink{
+  color:#fffaf2 !important;
+  background:linear-gradient(135deg, var(--trendyol-orange) 0%, var(--trendyol-orange-dark) 100%) !important;
+  border:1px solid rgba(255,173,96,.34) !important;
+  box-shadow:0 10px 24px rgba(242,122,26,.22), inset 0 1px 0 rgba(255,255,255,.08);
 }
-.accordion-trigger{display:flex;align-items:center;justify-content:space-between;min-height:60px;}
-.menu-accordion{display:flex;flex-direction:column;gap:8px;}
-.accordion-arrow{font-size:22px;font-weight:900;opacity:.9;transition:transform .22s ease, opacity .22s ease;}
-.menu-accordion.open .accordion-arrow{transform:rotate(180deg) scale(1.08);opacity:1;}
-.accordion-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .24s ease;}
-.menu-accordion.open .accordion-body{grid-template-rows:1fr;}
-.accordion-body-inner{overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:0 2px 2px 10px;}
-.accordion-subbtn{
-  min-height:50px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:900;border:1px solid rgba(255,255,255,.08);
-  transform:translateY(-4px);opacity:.92;
+.logout-action{
+  color:var(--trendyol-orange) !important;
 }
-.menu-accordion.open .accordion-subbtn{transform:translateY(0);opacity:1;}
-.accordion-subbtn .sub-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 10px currentColor;}
-.accordion-subbtn.sub-google{background:linear-gradient(135deg, rgba(255,86,86,.18), rgba(255,126,126,.10));border-color:rgba(255,106,106,.24);color:#ffecec;box-shadow:0 8px 18px rgba(255,86,86,.08);}
-.accordion-subbtn.sub-google .sub-dot{background:#ff5f5f;color:#ff5f5f;}
-.accordion-subbtn.sub-nfc{background:linear-gradient(135deg, rgba(70,155,255,.18), rgba(100,190,255,.10));border-color:rgba(100,190,255,.22);color:#ecf7ff;box-shadow:0 8px 18px rgba(70,155,255,.08);}
-.accordion-subbtn.sub-nfc .sub-dot{background:#4ea8ff;color:#4ea8ff;}
-.accordion-subbtn.sub-code{background:linear-gradient(135deg, rgba(60,210,140,.16), rgba(90,230,170,.10));border-color:rgba(90,230,170,.20);color:#ecfff5;box-shadow:0 8px 18px rgba(65,216,143,.08);}
-.accordion-subbtn.sub-code .sub-dot{background:#41d88f;color:#41d88f;}
-.accordion-subbtn:active{transform:scale(.985);}
-.menu-action{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));}
-.menu-action.danger-lite{border-color:rgba(255,180,180,.10);}
-.menu-action.danger{border-color:rgba(255,120,120,.18);color:#ffd6d6;}
+.delete-action{
+  color:var(--danger-red) !important;
+}
 .menu-orbit-wrap{
   position:absolute;left:50%;bottom:62px;transform:translateX(-50%);width:170px;height:170px;margin:0;
   pointer-events:none;z-index:1;opacity:.92;
@@ -527,11 +486,7 @@ function bindMenu() {
   const menuJetonInfoLink = document.getElementById("menuJetonInfoLink");
   const adminPanelLink = document.getElementById("adminPanelLink");
   const italkyAiTestLink = document.getElementById("italkyAiTestLink");
-  const jetonAccordion = document.getElementById("jetonAccordion");
-  const jetonAccordionBtn = document.getElementById("jetonAccordionBtn");
-  const jetonPlayBtn = document.getElementById("jetonPlayBtn");
-  const jetonNfcBtn = document.getElementById("jetonNfcBtn");
-  const jetonCodeBtn = document.getElementById("jetonCodeBtn");
+  const jetonDirectLink = document.getElementById("jetonDirectLink");
 
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
@@ -585,31 +540,18 @@ function bindMenu() {
     location.href = "/pages/jeton-nedir.html";
   });
 
+  jetonDirectLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeMenu();
+    location.href = "/pages/jetonbuy.html";
+  });
+
   adminPanelLink?.addEventListener("click", () => {
     closeMenu();
   });
 
   italkyAiTestLink?.addEventListener("click", () => {
     closeMenu();
-  });
-
-  jetonAccordionBtn?.addEventListener("click", () => {
-    jetonAccordion?.classList.toggle("open");
-  });
-
-  jetonPlayBtn?.addEventListener("click", () => {
-    closeMenu();
-    location.href = "/pages/jetonbuy.html";
-  });
-
-  jetonNfcBtn?.addEventListener("click", () => {
-    closeMenu();
-    location.href = "/pages/nfc_load.html";
-  });
-
-  jetonCodeBtn?.addEventListener("click", () => {
-    closeMenu();
-    location.href = "/pages/code_load.html";
   });
 
   sideMenu.querySelectorAll(".menu-nav a").forEach((link) => {
@@ -689,7 +631,6 @@ async function hydratePlanUi() {
 
       const access = await resp.json().catch(() => ({}));
       const accessOpen = !!access?.access_open;
-
       subLabel = accessOpen ? "Aktif" : "Kapalı";
     }
   } catch (e) {
