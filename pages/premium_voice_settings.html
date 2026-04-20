@@ -506,7 +506,7 @@
   </div>
 
   <section class="panel soft">
-    <h2 class="panel-title"> Sesli Okuma Ayarı</h2>
+    <h2 class="panel-title">Sesli Okuma Ayarı</h2>
 
     <div class="setting-row">
       <div class="setting-meta">
@@ -515,12 +515,11 @@
       </div>
       <button class="toggle active" id="autoReadToggle" type="button"></button>
     </div>
-
   </section>
 
   <section class="panel">
     <h2 class="panel-title">Ses Seç</h2>
-  
+
     <div class="choice-grid" id="voiceGrid">
       <button class="choice-card active" data-voice="auto" type="button">
         <div class="choice-top">
@@ -574,7 +573,7 @@
 
   <section class="action-grid">
     <button class="btn btn-secondary" id="goAdvancedBtn" type="button">Gelişmiş Ses Ayarları</button>
-    <button class="btn btn-primary" id="saveBtn" type="button">Kaydet</button>
+    <button class="btn btn-primary" id="saveBtn" type="button">Geri Dön</button>
   </section>
 </div>
 
@@ -716,6 +715,28 @@
     UI.voiceSummary.textContent = voiceLabel(state.selectedVoice);
   }
 
+  function persistSettings() {
+    localStorage.setItem(AUTO_READ_KEY, state.autoRead ? "1" : "0");
+
+    if (state.selectedVoice === "auto") {
+      localStorage.setItem(F2F_VOICE_KEY, "auto");
+      localStorage.removeItem(F2F_PRESET_KEY);
+      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
+    } else if (state.selectedVoice === "mine") {
+      localStorage.setItem(F2F_VOICE_KEY, "clone");
+      localStorage.removeItem(F2F_PRESET_KEY);
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
+    } else if (state.selectedVoice === "second") {
+      localStorage.setItem(F2F_VOICE_KEY, "preset");
+      localStorage.setItem(F2F_PRESET_KEY, "second");
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "2. Ses");
+    } else if (state.selectedVoice === "memory") {
+      localStorage.setItem(F2F_VOICE_KEY, "preset");
+      localStorage.setItem(F2F_PRESET_KEY, "memory");
+      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
+    }
+  }
+
   function hasJeton() {
     return Number(state.walletTokens || 0) > 0;
   }
@@ -736,14 +757,13 @@
 
   async function loadWallet() {
     try {
-      const { data: wallet } = await state.supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", state.currentUser.id)
+      const { data: profile } = await state.supabase
+        .from("profiles")
+        .select("tokens")
+        .eq("id", state.currentUser.id)
         .maybeSingle();
 
-      state.walletTokens =
-        Number(wallet?.tokens ?? wallet?.balance ?? wallet?.amount ?? wallet?.jeton ?? wallet?.credit ?? 0) || 0;
+      state.walletTokens = Number(profile?.tokens || 0) || 0;
     } catch {
       state.walletTokens = 0;
     }
@@ -811,6 +831,7 @@
   function trySelectVoice(voiceKey) {
     if (voiceKey === "auto") {
       state.selectedVoice = "auto";
+      persistSettings();
       syncVoiceCards();
       showToast("Otomatik Ses seçildi");
       return;
@@ -827,31 +848,13 @@
     }
 
     state.selectedVoice = voiceKey;
+    persistSettings();
     syncVoiceCards();
     showToast(`${voiceLabel(voiceKey)} seçildi`);
   }
 
   function saveSettings() {
-    localStorage.setItem(AUTO_READ_KEY, state.autoRead ? "1" : "0");
-
-    if (state.selectedVoice === "auto") {
-      localStorage.setItem(F2F_VOICE_KEY, "auto");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
-    } else if (state.selectedVoice === "mine") {
-      localStorage.setItem(F2F_VOICE_KEY, "clone");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
-    } else if (state.selectedVoice === "second") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "second");
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "2. Ses");
-    } else if (state.selectedVoice === "memory") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "memory");
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
-    }
-
+    persistSettings();
     goBackSmart();
   }
 
@@ -860,6 +863,7 @@
 
     UI.autoReadToggle.addEventListener("click", () => {
       state.autoRead = !state.autoRead;
+      persistSettings();
       syncToggle();
       showToast(state.autoRead ? "Mesajı otomatik oku açıldı" : "Mesajı otomatik oku kapatıldı");
     });
