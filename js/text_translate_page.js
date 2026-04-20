@@ -554,6 +554,11 @@ async function translateText() {
 
     setOutput(out, text);
 
+    inputBox.value = "";
+    inputBox.style.height = "auto";
+    syncInputPreview();
+    syncInputButtons();
+
     frameRoot.classList.remove("is-translating", "is-error");
     frameRoot.classList.add("is-ready");
 
