@@ -340,7 +340,7 @@
           <div class="logo">AI</div>
           <div>
             <h1>italkyAI Yönetim Paneli</h1>
-            <p>Promosyon, üyelik, kod, kullanıcı ve jeton yönetimi</p>
+            <p>Promosyon, üyelik, kod, kullanıcı, jeton ve bildirim yönetimi</p>
           </div>
         </div>
 
@@ -356,6 +356,7 @@
         <button class="tab" data-tab="wallet" type="button">Jeton Hareketleri</button>
         <button class="tab" data-tab="promo" type="button">Promosyonlar</button>
         <button class="tab" data-tab="manual" type="button">Manuel Jeton</button>
+        <button class="tab" data-tab="push" type="button">Bildirim</button>
       </div>
 
       <div class="panel">
@@ -372,11 +373,12 @@
 
             <section class="card">
               <h3>Yetki Bilgisi</h3>
-              <div class="desc">Admin promosyon yönetebilir. Superadmin manuel jeton yükleyebilir.</div>
+              <div class="desc">Admin promosyon ve bildirim yönetebilir. Superadmin manuel jeton yükleyebilir.</div>
               <div id="meLine"></div>
               <div class="pill">Promo Campaign</div>
               <div class="pill">Promo Code</div>
               <div class="pill">Redemption</div>
+              <div class="pill">Push Bildirim</div>
             </section>
           </div>
 
@@ -452,7 +454,6 @@
                 <select id="deliveryType">
                   <option value="manual">Manual</option>
                   <option value="qr">QR</option>
-                  <option value="nfc">NFC</option>
                 </select>
               </div>
 
@@ -468,11 +469,10 @@
 
               <div class="row" style="margin-top:10px">
                 <input id="promoCodeValue" type="text" placeholder="Tekil promosyon kodu (tekli üretim için opsiyonel)" />
-                <input id="promoNfcUid" type="text" placeholder="NFC UID (opsiyonel)" />
+                <input id="promoQuantity" type="number" min="1" step="1" value="1" placeholder="Üretilecek kod adeti" />
               </div>
 
               <div class="row" style="margin-top:10px">
-                <input id="promoQuantity" type="number" min="1" step="1" value="1" placeholder="Üretilecek kod adeti" />
                 <button id="generatePromoBtn" class="btn-primary" type="button">Kodları Üret</button>
               </div>
 
@@ -508,7 +508,7 @@
           <section class="card" style="margin-top:14px">
             <h3>Promosyon Kodları</h3>
             <div class="row">
-              <input id="promoSearch" type="text" placeholder="Kod, campaign veya uid ara..." />
+              <input id="promoSearch" type="text" placeholder="Kod veya campaign ara..." />
               <button id="promoRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
             </div>
 
@@ -524,12 +524,11 @@
                     <th>Jeton</th>
                     <th>Durum</th>
                     <th>Kullanan</th>
-                    <th>UID</th>
                     <th>İşlem</th>
                   </tr>
                 </thead>
                 <tbody id="promoTableBody">
-                  <tr><td colspan="10" class="empty">Yükleniyor...</td></tr>
+                  <tr><td colspan="9" class="empty">Yükleniyor...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -589,6 +588,71 @@
             </section>
           </div>
         </div>
+
+        <div id="panelPush" class="hidden">
+          <div class="grid grid-2">
+            <section class="card">
+              <h3>Bildirim Gönder</h3>
+              <div class="desc">Tek kullanıcıya veya tüm kullanıcılara push bildirim gönder.</div>
+
+              <div class="row">
+                <select id="pushTargetMode">
+                  <option value="single">Tek Kullanıcı</option>
+                  <option value="all">Tüm Kullanıcılar</option>
+                </select>
+
+                <select id="pushType">
+                  <option value="general">genel</option>
+                  <option value="new_feature">yeni_özellik</option>
+                  <option value="app_update">uygulama_güncellendi</option>
+                  <option value="membership">üyelik</option>
+                  <option value="payment">ödeme</option>
+                  <option value="bonus">bonus</option>
+                  <option value="campaign">kampanya</option>
+                  <option value="promo">promo</option>
+                  <option value="chat">sohbet</option>
+                </select>
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <input id="pushUserId" type="text" placeholder="Tek kullanıcı için UID" />
+                <input id="pushTargetUrl" type="text" value="/pages/home.html" placeholder="/pages/home.html" />
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <input id="pushTitle" type="text" placeholder="Başlık" />
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <textarea id="pushBody" placeholder="Mesaj içeriği"></textarea>
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <button id="pushSendBtn" class="btn-primary" type="button">Bildirimi Gönder</button>
+              </div>
+
+              <div id="pushStatus" class="status-line"></div>
+            </section>
+
+            <section class="card">
+              <h3>Önizleme</h3>
+              <div class="desc">Gönderilecek bildirimin görünümü.</div>
+              <div id="pushPreview" class="preview-box">
+                <div><b>Başlık:</b> italkyAI</div>
+                <div><b>Mesaj:</b> Yeni bildirimin var</div>
+                <div><b>Tip:</b> general</div>
+                <div><b>Hedef:</b> /pages/home.html</div>
+              </div>
+
+              <div class="row" style="margin-top:12px">
+                <button id="pushTestFillBtn" class="btn-secondary" type="button">Test İçeriği Doldur</button>
+              </div>
+
+              <pre id="pushResultBox" class="preview-box" style="margin-top:12px;white-space:pre-wrap;min-height:140px;"></pre>
+            </section>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
