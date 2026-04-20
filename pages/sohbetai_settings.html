@@ -15,7 +15,6 @@
       --muted: rgba(255,255,255,.60);
       --panel-border: rgba(255,255,255,.08);
       --chat-grad: linear-gradient(135deg, rgba(249,115,22,.85) 0%, rgba(251,146,60,.72) 35%, rgba(163,230,53,.70) 100%);
-      --danger-grad: linear-gradient(135deg, rgba(239,68,68,.82) 0%, rgba(248,113,113,.66) 100%);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
@@ -113,13 +112,6 @@
       background:var(--chat-grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
-    }
-
-    .page-sub{
-      margin:0;
-      font-size:12px;
-      line-height:1.45;
-      color:var(--muted);
     }
 
     .panel{
@@ -468,7 +460,7 @@
   </div>
 
   <section class="panel">
-    <h2 class="panel-title">Seli Okuma</h2>
+    <h2 class="panel-title">Sesli Okuma</h2>
     <p class="panel-sub">Sohbet AI cevaplarını otomatik sesli okuyabilir.</p>
 
     <div class="setting-row">
@@ -478,6 +470,7 @@
       </div>
       <button class="toggle active" id="autoReadToggle" type="button"></button>
     </div>
+  </section>
 
   <section class="panel">
     <h2 class="panel-title">Ses Seçimi</h2>
@@ -523,7 +516,7 @@
         <div class="ai-note-title">Performans Notu</div>
         <div class="ai-note-text">
           Kendi Sesim, 2. Ses ve Hatıra Sesi seçeneklerinde işlemler yapay zekâ desteğiyle üretildiği için
-          TTS sesine göre daha geç yanıt alınabilir. Her 1000 karekter için 1 jeton gereklidir. 
+          TTS sesine göre daha geç yanıt alınabilir. Her 1000 karakter için 1 jeton gereklidir.
         </div>
       </div>
     </div>
@@ -537,25 +530,13 @@
 
   <section class="action-grid">
     <button class="btn btn-secondary" id="goAdvancedBtn" type="button">Ses Kaydı Oluştur / Güncelle</button>
-    <button class="btn btn-primary" id="saveBtn" type="button">Kaydet</button>
-    <button class="btn btn-secondary" id="cancelBtn" type="button">Vazgeç</button>
+    <button class="btn btn-secondary" id="bottomBackBtn" type="button">Geri Dön</button>
   </section>
 
   <div class="note"></div>
 </div>
 
 <div class="toast" id="toast"></div>
-
-<div class="modal" id="leaveModal">
-  <div class="modal-card">
-    <h3 class="modal-title">Seçimlerinizi kaydetmediniz</h3>
-    <p class="modal-text">Bu sayfadan ayrılmadan önce seçimlerinizi kaydetmek ister misiniz?</p>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" id="leaveNoBtn" type="button">Hayır</button>
-      <button class="btn btn-primary" id="leaveYesBtn" type="button">Evet</button>
-    </div>
-  </div>
-</div>
 
 <div class="modal" id="tokenModal">
   <div class="modal-card">
@@ -604,14 +585,9 @@
     memoryVoiceDesc: $("memoryVoiceDesc"),
 
     goAdvancedBtn: $("goAdvancedBtn"),
-    saveBtn: $("saveBtn"),
-    cancelBtn: $("cancelBtn"),
+    bottomBackBtn: $("bottomBackBtn"),
 
     toast: $("toast"),
-
-    leaveModal: $("leaveModal"),
-    leaveYesBtn: $("leaveYesBtn"),
-    leaveNoBtn: $("leaveNoBtn"),
 
     tokenModal: $("tokenModal"),
     tokenCancelBtn: $("tokenCancelBtn"),
@@ -631,16 +607,8 @@
       localStorage.getItem(LEGACY_TTS_KEY) ||
       "tts"
     ),
-    savedVoiceMode: normalizeVoiceMode(
-      localStorage.getItem(SHARED_VOICE_NAME_KEY) ||
-      localStorage.getItem(SHARED_VOICE_MODE_KEY) ||
-      localStorage.getItem(LEGACY_TTS_KEY) ||
-      "tts"
-    ),
     autoRead: localStorage.getItem(CHAT_AUTO_READ_KEY) !== "0",
-    savedAutoRead: localStorage.getItem(CHAT_AUTO_READ_KEY) !== "0",
     walletTokens: 0,
-    pendingLeaveAction: null,
     profileVoiceState: {
       mineReady: false,
       secondReady: false,
@@ -683,24 +651,6 @@
     UI.autoReadToggle.classList.toggle("active", !!state.autoRead);
   }
 
-  function hasUnsavedChanges(){
-    return state.voiceMode !== state.savedVoiceMode || state.autoRead !== state.savedAutoRead;
-  }
-
-  function hasJeton(){
-    return Number(state.walletTokens || 0) > 0;
-  }
-
-  function openLeaveModal(action){
-    state.pendingLeaveAction = action;
-    UI.leaveModal.classList.add("open");
-  }
-
-  function closeLeaveModal(){
-    state.pendingLeaveAction = null;
-    UI.leaveModal.classList.remove("open");
-  }
-
   function openTokenModal(){
     UI.tokenModal.classList.add("open");
   }
@@ -717,15 +667,12 @@
     UI.voiceMissingModal.classList.remove("open");
   }
 
-  function saveSettings(){
+  function persistState(){
     localStorage.setItem(SHARED_VOICE_NAME_KEY, state.voiceMode);
     localStorage.setItem(SHARED_VOICE_MODE_KEY, state.voiceMode);
     localStorage.setItem(LEGACY_TTS_KEY, state.voiceMode);
     localStorage.setItem(LEGACY_LIVE_KEY, state.voiceMode);
     localStorage.setItem(CHAT_AUTO_READ_KEY, state.autoRead ? "1" : "0");
-
-    state.savedVoiceMode = state.voiceMode;
-    state.savedAutoRead = state.autoRead;
   }
 
   function goBackSmart(){
@@ -738,16 +685,19 @@
     location.href = "/pages/italkyai_chat.html";
   }
 
+  function hasJeton(){
+    return Number(state.walletTokens || 0) > 0;
+  }
+
   async function loadWallet(){
     try {
-      const { data: wallet } = await state.supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", state.currentUser.id)
+      const { data: profile } = await state.supabase
+        .from("profiles")
+        .select("tokens")
+        .eq("id", state.currentUser.id)
         .maybeSingle();
 
-      state.walletTokens =
-        Number(wallet?.tokens ?? wallet?.balance ?? wallet?.amount ?? wallet?.jeton ?? wallet?.credit ?? 0) || 0;
+      state.walletTokens = Number(profile?.tokens || 0) || 0;
     } catch {
       state.walletTokens = 0;
     }
@@ -829,6 +779,7 @@
   function trySelectVoice(voiceKey){
     if (voiceKey === "tts") {
       state.voiceMode = "tts";
+      persistState();
       paintSelections();
       refreshSummary();
       showToast("TTS seçildi");
@@ -846,19 +797,19 @@
     }
 
     state.voiceMode = voiceKey;
+    persistState();
     paintSelections();
     refreshSummary();
     showToast(`${voiceLabel(voiceKey)} seçildi`);
   }
 
   function bindEvents(){
-    UI.backBtn.addEventListener("click", () => {
-      if (hasUnsavedChanges()) openLeaveModal(goBackSmart);
-      else goBackSmart();
-    });
+    UI.backBtn.addEventListener("click", goBackSmart);
+    UI.bottomBackBtn.addEventListener("click", goBackSmart);
 
     UI.autoReadToggle.addEventListener("click", () => {
       state.autoRead = !state.autoRead;
+      persistState();
       refreshSummary();
       showToast(state.autoRead ? "Mesajı otomatik oku açıldı" : "Mesajı otomatik oku kapatıldı");
     });
@@ -871,30 +822,6 @@
 
     UI.goAdvancedBtn.addEventListener("click", () => {
       location.href = ADVANCED_URL;
-    });
-
-    UI.saveBtn.addEventListener("click", () => {
-      saveSettings();
-      showToast("Ayarlar kaydedildi");
-      setTimeout(goBackSmart, 250);
-    });
-
-    UI.cancelBtn.addEventListener("click", () => {
-      if (hasUnsavedChanges()) openLeaveModal(goBackSmart);
-      else goBackSmart();
-    });
-
-    UI.leaveNoBtn.addEventListener("click", () => {
-      const action = state.pendingLeaveAction;
-      closeLeaveModal();
-      if (typeof action === "function") action();
-    });
-
-    UI.leaveYesBtn.addEventListener("click", () => {
-      saveSettings();
-      const action = state.pendingLeaveAction;
-      closeLeaveModal();
-      if (typeof action === "function") action();
     });
 
     UI.tokenCancelBtn.addEventListener("click", closeTokenModal);
