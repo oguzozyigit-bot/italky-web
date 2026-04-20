@@ -590,6 +590,7 @@
 
   <section class="action-grid">
     <button class="btn btn-secondary" id="goAdvancedBtn" type="button">Gelişmiş Ses Ayarları</button>
+    <button class="btn btn-secondary" id="bottomBackBtn" type="button">Geri Dön</button>
   </section>
 </div>
 
@@ -643,6 +644,7 @@
     voiceSummary: $("voiceSummary"),
 
     goAdvancedBtn: $("goAdvancedBtn"),
+    bottomBackBtn: $("bottomBackBtn"),
 
     toast: $("toast"),
 
@@ -770,14 +772,13 @@
 
   async function loadWallet() {
     try {
-      const { data: wallet } = await state.supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", state.currentUser.id)
+      const { data: profile } = await state.supabase
+        .from("profiles")
+        .select("tokens")
+        .eq("id", state.currentUser.id)
         .maybeSingle();
 
-      state.walletTokens =
-        Number(wallet?.tokens ?? wallet?.balance ?? wallet?.amount ?? wallet?.jeton ?? wallet?.credit ?? 0) || 0;
+      state.walletTokens = Number(profile?.tokens || 0) || 0;
     } catch {
       state.walletTokens = 0;
     }
@@ -877,6 +878,7 @@
 
   function bindEvents() {
     UI.backBtn.addEventListener("click", goBackSmart);
+    UI.bottomBackBtn.addEventListener("click", goBackSmart);
 
     UI.autoReadToggle.addEventListener("click", () => {
       state.autoRead = !state.autoRead;
