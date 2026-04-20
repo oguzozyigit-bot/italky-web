@@ -553,7 +553,7 @@
       <div class="upload-box">
         <p class="upload-title">mp3 Yükleme</p>
         <p class="upload-sub">Maksimum dosya boyutu: <strong>10 MB</strong>.</p>
-        <input class="hidden" id="memoryMp3Input" type="file" accept=".mp3,audio/mpeg">
+        <input id="memoryMp3Input" type="file" accept=".mp3,audio/mpeg" style="display:none;">
         <button class="file-btn" id="memoryPickBtn" type="button">mp3 Yükle</button>
         <div class="file-name" id="memoryFileName">Henüz dosya seçilmedi.</div>
       </div>
@@ -679,7 +679,15 @@
     secondStream: null,
 
     mineCountdown: null,
-    secondCountdown: null
+    secondCountdown: null,
+
+    isSaving: false,
+
+    unsaved: {
+      mine: false,
+      second: false,
+      memory: false
+    }
   };
 
   function resolveReturnUrl() {
@@ -708,12 +716,50 @@
     UI.replaceModal.classList.remove("open");
   }
 
+  function hasUnsavedChanges() {
+    return !!(state.unsaved.mine || state.unsaved.second || state.unsaved.memory);
+  }
+
+  function updateSummary() {
+    if (state.isSaving) {
+      UI.poolSummary.textContent = "Kayıt işlemi sürüyor...";
+      return;
+    }
+
+    if (hasUnsavedChanges()) {
+      UI.poolSummary.textContent = "Kaydedilmemiş işlem var";
+    } else {
+      UI.poolSummary.textContent = "Ortak ses havuzu aktif";
+    }
+  }
+
+  function markUnsaved(type, value) {
+    if (!Object.prototype.hasOwnProperty.call(state.unsaved, type)) return;
+    state.unsaved[type] = !!value;
+    updateSummary();
+  }
+
   function openLeaveModal() {
+    if (state.isSaving) {
+      showToast("Kayıt işlemi sürüyor, lütfen bekleyin.");
+      return;
+    }
+
+    if (!hasUnsavedChanges()) {
+      goBack();
+      return;
+    }
+
     UI.leaveModal.classList.add("open");
   }
 
   function closeLeaveModal() {
     UI.leaveModal.classList.remove("open");
+  }
+
+  function setSaving(value) {
+    state.isSaving = !!value;
+    updateSummary();
   }
 
   function setButtonState(button, enabled) {
@@ -850,10 +896,14 @@
 
   async function beginMineRecording() {
     try {
+      clearInterval(state.mineCountdown);
       state.mineChunks = [];
       state.mineBlob = null;
+
+      UI.mineAudio.pause();
       UI.mineAudio.removeAttribute("src");
       UI.mineAudio.load();
+
       setButtonState(UI.listenMineBtn, false);
       setButtonState(UI.saveMineBtn, false);
 
@@ -862,24 +912,31 @@
         state.mineStream,
         (data) => state.mineChunks.push(data),
         () => {
+          clearInterval(state.mineCountdown);
+          state.mineCountdown = null;
+
           state.mineBlob = new Blob(state.mineChunks, { type: "audio/webm" });
           UI.mineAudio.src = URL.createObjectURL(state.mineBlob);
           UI.mineStatus.textContent = "Kayıt tamamlandı. Dinleyebilir veya kaydedebilirsiniz.";
           setButtonState(UI.listenMineBtn, true);
           setButtonState(UI.saveMineBtn, true);
           stopTracks(state.mineStream);
+          state.mineStream = null;
+
+          markUnsaved("mine", true);
         }
       );
 
       state.mineRecorder.start();
       UI.mineStatus.textContent = "Kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.";
 
-      clearInterval(state.mineCountdown);
       state.mineCountdown = startCountdown(UI.mineTimer, () => {
         if (state.mineRecorder && state.mineRecorder.state !== "inactive") state.mineRecorder.stop();
       });
     } catch (e) {
       UI.mineStatus.textContent = e.message || "Kayıt başlatılamadı.";
+      stopTracks(state.mineStream);
+      state.mineStream = null;
     }
   }
 
@@ -892,10 +949,14 @@
     const secondName = String(UI.secondVoiceNameInput.value || "").trim();
 
     try {
+      clearInterval(state.secondCountdown);
       state.secondChunks = [];
       state.secondBlob = null;
+
+      UI.secondAudio.pause();
       UI.secondAudio.removeAttribute("src");
       UI.secondAudio.load();
+
       setButtonState(UI.listenSecondBtn, false);
       setButtonState(UI.saveSecondBtn, false);
 
@@ -904,29 +965,43 @@
         state.secondStream,
         (data) => state.secondChunks.push(data),
         () => {
+          clearInterval(state.secondCountdown);
+          state.secondCountdown = null;
+
           state.secondBlob = new Blob(state.secondChunks, { type: "audio/webm" });
           UI.secondAudio.src = URL.createObjectURL(state.secondBlob);
           UI.secondStatus.textContent = `${secondName} kaydı tamamlandı. Dinleyebilir veya kaydedebilirsiniz.`;
           setButtonState(UI.listenSecondBtn, true);
           setButtonState(UI.saveSecondBtn, true);
           stopTracks(state.secondStream);
+          state.secondStream = null;
+
+          markUnsaved("second", true);
         }
       );
 
       state.secondRecorder.start();
       UI.secondStatus.textContent = `${secondName} için kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.`;
 
-      clearInterval(state.secondCountdown);
       state.secondCountdown = startCountdown(UI.secondTimer, () => {
         if (state.secondRecorder && state.secondRecorder.state !== "inactive") state.secondRecorder.stop();
       });
     } catch (e) {
       UI.secondStatus.textContent = e.message || "2. Ses kaydı başlatılamadı.";
+      stopTracks(state.secondStream);
+      state.secondStream = null;
     }
   }
 
   async function saveMineVoice() {
+    if (!state.mineBlob) {
+      UI.mineStatus.textContent = "Önce kayıt al.";
+      return;
+    }
+
     try {
+      setSaving(true);
+
       UI.mineStatus.textContent = "Kayıt yükleniyor...";
       await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
 
@@ -934,9 +1009,13 @@
       await enrollVoice("mine");
 
       UI.mineStatus.textContent = "Kendi Sesim hazır.";
+      markUnsaved("mine", false);
       showToast("Kendi Sesim kaydedildi");
     } catch (e) {
       UI.mineStatus.textContent = e.message || "Kendi Sesim hazırlanamadı.";
+      markUnsaved("mine", true);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -946,9 +1025,16 @@
       return;
     }
 
+    if (!state.secondBlob) {
+      UI.secondStatus.textContent = "Önce kayıt al.";
+      return;
+    }
+
     const secondName = String(UI.secondVoiceNameInput.value || "").trim();
 
     try {
+      setSaving(true);
+
       UI.secondStatus.textContent = "Kayıt yükleniyor...";
       await uploadVoice(state.secondBlob, "second", secondName);
 
@@ -956,9 +1042,13 @@
       await enrollVoice("second");
 
       UI.secondStatus.textContent = `${secondName} hazır.`;
+      markUnsaved("second", false);
       showToast(`${secondName} sesi kaydedildi`);
     } catch (e) {
       UI.secondStatus.textContent = e.message || "2. Ses hazırlanamadı.";
+      markUnsaved("second", true);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -974,12 +1064,15 @@
       UI.memoryStatus.textContent = "Önce bir mp3 seç.";
       return;
     }
+
     if (state.memoryMp3File.size > 10 * 1024 * 1024) {
       UI.memoryStatus.textContent = "mp3 en fazla 10 MB olabilir.";
       return;
     }
 
     try {
+      setSaving(true);
+
       UI.memoryStatus.textContent = `${memoryName} yükleniyor...`;
       await uploadVoice(state.memoryMp3File, "memory", memoryName);
 
@@ -987,9 +1080,13 @@
       await enrollVoice("memory");
 
       UI.memoryStatus.textContent = `${memoryName} hazır.`;
+      markUnsaved("memory", false);
       showToast(`${memoryName} sesi kaydedildi`);
     } catch (e) {
       UI.memoryStatus.textContent = e.message || "Hatıra Sesi hazırlanamadı.";
+      markUnsaved("memory", true);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -1056,9 +1153,15 @@
         UI.memoryFileName.textContent = file.name;
         UI.memoryStatus.textContent = `${file.name} seçildi. Kaydet diyerek devam et.`;
         setButtonState(UI.listenMemoryBtn, true);
+        markUnsaved("memory", true);
       } else {
+        UI.memoryAudio.pause();
+        UI.memoryAudio.removeAttribute("src");
+        UI.memoryAudio.load();
         UI.memoryFileName.textContent = "Henüz dosya seçilmedi.";
+        UI.memoryStatus.textContent = "Hatıra Sesi için mp3 bekleniyor.";
         setButtonState(UI.listenMemoryBtn, false);
+        markUnsaved("memory", false);
       }
     });
 
@@ -1073,6 +1176,13 @@
 
     UI.leaveNoBtn.addEventListener("click", closeLeaveModal);
     UI.leaveYesBtn.addEventListener("click", goBack);
+
+    window.addEventListener("beforeunload", (e) => {
+      if (hasUnsavedChanges() && !state.isSaving) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    });
   }
 
   async function init() {
@@ -1081,7 +1191,7 @@
     setButtonState(UI.listenMemoryBtn, false);
     setTimer(UI.mineTimer, MAX_RECORD_SECONDS);
     setTimer(UI.secondTimer, MAX_RECORD_SECONDS);
-    UI.poolSummary.textContent = "Ortak ses havuzu aktif";
+    updateSummary();
 
     bindEvents();
     await bootAuth();
