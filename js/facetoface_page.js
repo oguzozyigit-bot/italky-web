@@ -1468,7 +1468,7 @@ async function translateText(text, from, to, tone = "neutral") {
   const src = canonical(from);
   const dst = canonical(to);
   const mode = getFaceTranslateMode();
-  const style = mode === "cultural" ? "warm" : "balanced";
+  const style = mode === "normal" ? "warm" : "balanced";
 
   if (currentRuntimeMode === "offline") {
     try {
@@ -1497,19 +1497,19 @@ async function translateText(text, from, to, tone = "neutral") {
   ];
 
   for (const endpoint of endpoints) {
-    try {
-      const payload = {
-        text: String(text || "").trim(),
-        from_lang: src,
-        to_lang: dst,
-        source: src,
-        target: dst,
-        mode,
-        use_ai: mode === "cultural",
-        cultural: mode === "cultural",
-        tone: canonTone(tone),
-        style
-      };
+  try {
+    const payload = {
+      text: String(text || "").trim(),
+      from_lang: src,
+      to_lang: dst,
+      source: src,
+      target: dst,
+      mode: "normal",
+      use_ai: false,
+      cultural: false,
+      tone: canonTone(tone),
+      style
+    };
 
       console.log("[facetoface translate] endpoint =", endpoint);
       console.log("[facetoface translate] payload =", payload);
