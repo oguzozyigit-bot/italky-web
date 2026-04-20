@@ -8,7 +8,8 @@ const panels = {
   users: $("panelUsers"),
   wallet: $("panelWallet"),
   promo: $("panelPromo"),
-  manual: $("panelManual")
+  manual: $("panelManual"),
+  push: $("panelPush")
 };
 
 const meLine = $("meLine");
@@ -37,7 +38,6 @@ const tokenAmount = $("tokenAmount");
 const packageCode = $("packageCode");
 const perUserLimit = $("perUserLimit");
 const promoCodeValue = $("promoCodeValue");
-const promoNfcUid = $("promoNfcUid");
 const promoQuantity = $("promoQuantity");
 const generatePromoBtn = $("generatePromoBtn");
 const savePromoBtn = $("savePromoBtn");
@@ -52,11 +52,24 @@ const manualNote = $("manualNote");
 const manualLoadBtn = $("manualLoadBtn");
 const manualStatus = $("manualStatus");
 
+const pushTargetMode = $("pushTargetMode");
+const pushType = $("pushType");
+const pushUserId = $("pushUserId");
+const pushTargetUrl = $("pushTargetUrl");
+const pushTitle = $("pushTitle");
+const pushBody = $("pushBody");
+const pushSendBtn = $("pushSendBtn");
+const pushStatus = $("pushStatus");
+const pushPreview = $("pushPreview");
+const pushResultBox = $("pushResultBox");
+const pushTestFillBtn = $("pushTestFillBtn");
+
 const homeBtn = $("homeBtn");
 const refreshBtn = $("refreshBtn");
 const logoutBtnTop = $("logoutBtnTop");
 
 const API_BASE = "https://italky-api.onrender.com/admin";
+const PUSH_API = "https://italky-api.onrender.com/api/admin/push";
 
 let currentUser = null;
 let currentProfile = null;
@@ -144,6 +157,24 @@ async function apiGet(path) {
 async function apiPost(path, body) {
   const token = await getAuthToken();
   const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(body || {})
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(json?.detail || `POST ${path} failed`);
+  }
+  return json;
+}
+
+async function pushPost(path, body) {
+  const token = await getAuthToken();
+  const res = await fetch(`${PUSH_API}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -314,11 +345,10 @@ function buildPromoPayload() {
   const tokens = Number(tokenAmount?.value || 0);
   const pkg = String(packageCode?.value || "").trim() || "member";
   const userLimit = Math.max(1, Number(perUserLimit?.value || 1));
-  const nfcUid = String(promoNfcUid?.value || "").trim() || null;
 
   if (!cName) throw new Error("Campaign adı gerekli");
   if (!["membership", "tokens", "bundle"].includes(gType)) throw new Error("Geçersiz tür");
-  if (!["manual", "qr", "nfc"].includes(dType)) throw new Error("Geçersiz teslim tipi");
+  if (!["manual", "qr"].includes(dType)) throw new Error("Geçersiz teslim tipi");
   if (gType === "membership" && months <= 0) throw new Error("Üyelik ayı gerekli");
   if (gType === "tokens" && tokens <= 0) throw new Error("Jeton miktarı gerekli");
   if (gType === "bundle" && months <= 0 && tokens <= 0) throw new Error("Bundle için üyelik veya jeton gerekli");
@@ -332,8 +362,7 @@ function buildPromoPayload() {
     membership_months: months,
     token_amount: tokens,
     package_code: pkg,
-    per_user_limit: userLimit,
-    nfc_uid: dType === "nfc" ? nfcUid : null
+    per_user_limit: userLimit
   };
 }
 
@@ -381,7 +410,6 @@ async function createSinglePromoRecord() {
     campaign_id: campaignId,
     code_value: singleCode,
     delivery_type: base.delivery_type,
-    nfc_uid: base.delivery_type === "nfc" ? base.nfc_uid : null,
     is_active: true
   });
 
@@ -403,7 +431,6 @@ async function createBulkPromoRecords() {
       campaign_id: campaignId,
       code_value: codeVal,
       delivery_type: base.delivery_type,
-      nfc_uid: null,
       is_active: true
     });
 
@@ -438,7 +465,7 @@ async function loadPromoRecords() {
     }
 
     if (!rows.length) {
-      promoTableBody.innerHTML = `<tr><td colspan="10" class="empty">Promosyon bulunamadı.</td></tr>`;
+      promoTableBody.innerHTML = `<tr><td colspan="9" class="empty">Promosyon bulunamadı.</td></tr>`;
       return;
     }
 
@@ -452,7 +479,6 @@ async function loadPromoRecords() {
         <td>${Number(row.token_amount || 0)}</td>
         <td>${row.is_used ? "Kullanıldı" : (row.is_active ? "Aktif" : "Pasif")}</td>
         <td>${escapeHtml(row.used_by || row.bound_user_id || "-")}</td>
-        <td>${escapeHtml(row.nfc_uid || "-")}</td>
         <td>
           <div class="mini-actions">
             <button class="btn-ok" type="button" data-action="on" data-code="${escapeHtml(row.code_value)}">Aktif</button>
@@ -477,7 +503,7 @@ async function loadPromoRecords() {
       });
     });
   } catch (e) {
-    promoTableBody.innerHTML = `<tr><td colspan="10" class="empty">Promosyonlar yüklenemedi.</td></tr>`;
+    promoTableBody.innerHTML = `<tr><td colspan="9" class="empty">Promosyonlar yüklenemedi.</td></tr>`;
   }
 }
 
@@ -519,6 +545,35 @@ async function createManualTokenLoad(userId, amount, note) {
     amount: Number(amount || 0),
     note: note || ""
   });
+}
+
+function renderPushPreview() {
+  if (!pushPreview) return;
+  pushPreview.innerHTML = `
+    <div><b>Başlık:</b> ${escapeHtml(pushTitle?.value || "italkyAI")}</div>
+    <div><b>Mesaj:</b> ${escapeHtml(pushBody?.value || "Yeni bildirimin var")}</div>
+    <div><b>Tip:</b> ${escapeHtml(pushType?.value || "general")}</div>
+    <div><b>Hedef:</b> ${escapeHtml(pushTargetUrl?.value || "/pages/home.html")}</div>
+    <div><b>Mod:</b> ${escapeHtml(pushTargetMode?.value || "single")}</div>
+    ${String(pushTargetMode?.value || "") === "single" ? `<div><b>Kullanıcı:</b> ${escapeHtml(pushUserId?.value || "-")}</div>` : ""}
+  `;
+}
+
+async function sendPushNotification() {
+  const payload = {
+    target_mode: String(pushTargetMode?.value || "single"),
+    user_id: String(pushUserId?.value || "").trim(),
+    title: String(pushTitle?.value || "").trim(),
+    body: String(pushBody?.value || "").trim(),
+    push_type: String(pushType?.value || "general").trim(),
+    target_url: String(pushTargetUrl?.value || "/pages/home.html").trim() || "/pages/home.html"
+  };
+
+  if (!payload.title) throw new Error("Başlık gerekli");
+  if (!payload.body) throw new Error("Mesaj gerekli");
+  if (payload.target_mode === "single" && !payload.user_id) throw new Error("Tek kullanıcı için kullanıcı UID gerekli");
+
+  return await pushPost("/send", payload);
 }
 
 function bindTabs() {
@@ -563,7 +618,6 @@ function resetPromoFormAfterCreate() {
   packageCode.value = "";
   perUserLimit.value = "1";
   promoCodeValue.value = "";
-  promoNfcUid.value = "";
   promoQuantity.value = "1";
 }
 
@@ -646,56 +700,14 @@ function bindPromo() {
           <meta charset="utf-8">
           <title>Promosyon Kartı Yazdır</title>
           <style>
-            body{
-              margin:0;
-              font-family:Arial,sans-serif;
-              background:#fff;
-              color:#111;
-              display:flex;
-              justify-content:center;
-              align-items:center;
-              min-height:100vh;
-            }
-            .card{
-              width:360px;
-              border:2px solid #111;
-              border-radius:24px;
-              padding:24px;
-              text-align:center;
-            }
-            .brand{
-              font-size:28px;
-              font-weight:900;
-              margin-bottom:8px;
-            }
-            .campaign{
-              font-size:20px;
-              font-weight:900;
-              margin-bottom:8px;
-            }
-            .benefit{
-              font-size:18px;
-              font-weight:800;
-              margin-bottom:16px;
-            }
-            .qr{
-              width:280px;
-              height:280px;
-              object-fit:contain;
-              margin:0 auto 16px;
-              display:block;
-            }
-            .code{
-              font-size:26px;
-              font-weight:900;
-              letter-spacing:2px;
-              margin-top:10px;
-            }
-            .sub{
-              margin-top:10px;
-              font-size:14px;
-              line-height:1.5;
-            }
+            body{margin:0;font-family:Arial,sans-serif;background:#fff;color:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}
+            .card{width:360px;border:2px solid #111;border-radius:24px;padding:24px;text-align:center}
+            .brand{font-size:28px;font-weight:900;margin-bottom:8px}
+            .campaign{font-size:20px;font-weight:900;margin-bottom:8px}
+            .benefit{font-size:18px;font-weight:800;margin-bottom:16px}
+            .qr{width:280px;height:280px;object-fit:contain;margin:0 auto 16px;display:block}
+            .code{font-size:26px;font-weight:900;letter-spacing:2px;margin-top:10px}
+            .sub{margin-top:10px;font-size:14px;line-height:1.5}
           </style>
         </head>
         <body>
@@ -708,9 +720,7 @@ function bindPromo() {
             <div class="sub">QR okutun veya promosyon kodunu giriş ekranında kullanın.</div>
           </div>
           <script>
-            window.onload = () => {
-              setTimeout(() => window.print(), 250);
-            };
+            window.onload = () => { setTimeout(() => window.print(), 250); };
           <\/script>
         </body>
         </html>
@@ -770,6 +780,44 @@ function bindManual() {
   });
 }
 
+function bindPush() {
+  const rerender = () => renderPushPreview();
+
+  pushTargetMode?.addEventListener("change", rerender);
+  pushType?.addEventListener("change", rerender);
+  pushUserId?.addEventListener("input", rerender);
+  pushTargetUrl?.addEventListener("input", rerender);
+  pushTitle?.addEventListener("input", rerender);
+  pushBody?.addEventListener("input", rerender);
+
+  pushTestFillBtn?.addEventListener("click", () => {
+    pushTitle.value = "italkyAI güncellendi";
+    pushBody.value = "Yeni sürüm yayında. Yeni özellikleri hemen keşfedin.";
+    pushType.value = "app_update";
+    pushTargetUrl.value = "/pages/home.html";
+    renderPushPreview();
+  });
+
+  pushSendBtn?.addEventListener("click", async () => {
+    try {
+      setStatus(pushStatus, "Bildirim gönderiliyor...", "status-warn");
+      pushSendBtn.disabled = true;
+      pushResultBox.textContent = "Gönderiliyor...";
+
+      const result = await sendPushNotification();
+      pushResultBox.textContent = JSON.stringify(result, null, 2);
+      setStatus(pushStatus, `Bildirim tamamlandı. Gönderilen: ${result.sent || 0}, Hata: ${result.failed || 0}`, "status-ok");
+    } catch (e) {
+      pushResultBox.textContent = String(e?.message || e);
+      setStatus(pushStatus, "Bildirim gönderilemedi: " + (e.message || e), "status-err");
+    } finally {
+      pushSendBtn.disabled = false;
+    }
+  });
+
+  renderPushPreview();
+}
+
 async function init() {
   try {
     mountShell({ scroll: "auto" });
@@ -789,6 +837,7 @@ async function init() {
   bindWallet();
   bindPromo();
   bindManual();
+  bindPush();
 
   await Promise.allSettled([loadUsers(), loadWallet(), loadPromoRecords(), loadPromoLogs()]);
 
