@@ -1,14 +1,8 @@
 /* italky ortak klavye modülü
-   Tüm modüllerde tek merkezden kullan.
-   Özellikler:
-   - Telefon tarzı özel klavye
-   - Uzun basınca alternatif harfler
-   - Tuş sesi
-   - Titreşim
-   - Shift / backspace / enter
-   - Rakam satırı
-   - Türkçe / Latin düzen
-   - Tek dosya, kendi stilini enjekte eder
+   Düzeltmeler:
+   - Taşma engellendi
+   - Uzun basınca alternatif harfler görünür
+   - Input klavye altında kalmaz, sayfa yukarı alınır
 */
 
 const DEFAULT_ALT_CHARS = {
@@ -47,7 +41,7 @@ const KEYBOARD_LAYOUTS = {
   }
 };
 
-const STYLE_ID = "italky-keyboard-style-v1";
+const STYLE_ID = "italky-keyboard-style-v2";
 
 function injectStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -80,6 +74,7 @@ function injectStyles() {
       flex-direction:column;
       gap:10px;
       max-width:980px;
+      width:100%;
       margin:0 auto;
     }
 
@@ -88,11 +83,12 @@ function injectStyles() {
       gap:8px;
       justify-content:center;
       width:100%;
+      min-width:0;
     }
 
     .itk-kb-key{
       height:54px;
-      min-width:42px;
+      min-width:0;
       border:none;
       border-radius:16px;
       background:#2b2d33;
@@ -106,8 +102,9 @@ function injectStyles() {
       padding:0 8px;
       box-shadow:inset 0 -1px 0 rgba(255,255,255,.04);
       position:relative;
-      overflow:hidden;
+      overflow:visible;
       flex:1 1 0;
+      max-width:100%;
     }
 
     .itk-kb-key.dark{
@@ -158,8 +155,9 @@ function injectStyles() {
       background:#101117;
       border:1px solid rgba(255,255,255,.10);
       box-shadow:0 18px 36px rgba(0,0,0,.45);
-      z-index:3;
+      z-index:100001;
       min-width:max-content;
+      white-space:nowrap;
     }
 
     .itk-kb-alt-btn{
@@ -179,6 +177,7 @@ function injectStyles() {
 
     .itk-kb-gap{
       flex:.35 1 0;
+      min-width:0;
     }
 
     @media (max-width:480px){
@@ -188,13 +187,24 @@ function injectStyles() {
       .itk-kb-key{
         height:50px;
         border-radius:14px;
-        min-width:34px;
+        min-width:0;
         font-size:19px;
+        padding:0 6px;
       }
       .itk-kb-key.wide{ font-size:16px; }
       .itk-kb-key.xwide{ font-size:16px; }
       .itk-kb-key.smalltxt{ font-size:14px; }
       .itk-kb-key svg{ width:22px; height:22px; }
+      .itk-kb-alt{
+        bottom:58px;
+        gap:4px;
+        padding:6px;
+      }
+      .itk-kb-alt-btn{
+        min-width:40px;
+        height:40px;
+        font-size:20px;
+      }
     }
   `;
   document.head.appendChild(style);
@@ -337,6 +347,8 @@ class ItalkyKeyboard {
     this.shift = false;
     this.altMenuEl = null;
     this.holdTimer = null;
+    this.savedBodyPaddingBottom = "";
+    this.savedHtmlPaddingBottom = "";
 
     this.root = document.createElement("div");
     this.root.className = "itk-kb-wrap";
@@ -358,6 +370,7 @@ class ItalkyKeyboard {
     document.removeEventListener("pointerdown", this.onDocPointer, true);
     this.hideAltMenu();
     this.root?.remove();
+    this.restoreViewportSpace();
   }
 
   onDocPointer(e) {
@@ -380,10 +393,43 @@ class ItalkyKeyboard {
     this.render();
   }
 
+  applyViewportSpace() {
+    const h = Math.ceil(this.root.getBoundingClientRect().height || 0);
+    this.savedBodyPaddingBottom = document.body.style.paddingBottom || "";
+    this.savedHtmlPaddingBottom = document.documentElement.style.paddingBottom || "";
+    document.body.style.paddingBottom = `${h + 8}px`;
+    document.documentElement.style.paddingBottom = `${h + 8}px`;
+  }
+
+  restoreViewportSpace() {
+    document.body.style.paddingBottom = this.savedBodyPaddingBottom;
+    document.documentElement.style.paddingBottom = this.savedHtmlPaddingBottom;
+  }
+
+  bringTargetAboveKeyboard() {
+    const input = this.options.target;
+    if (!input) return;
+
+    const keyboardHeight = Math.ceil(this.root.getBoundingClientRect().height || 0);
+    input.style.scrollMarginBottom = `${keyboardHeight + 40}px`;
+
+    requestAnimationFrame(() => {
+      try {
+        input.scrollIntoView({ block: "center", behavior: "smooth" });
+      } catch {}
+    });
+  }
+
   show(target = null) {
     if (target) this.setTarget(target);
     this.visible = true;
     this.root.classList.add("show");
+
+    requestAnimationFrame(() => {
+      this.applyViewportSpace();
+      this.bringTargetAboveKeyboard();
+    });
+
     this.options.onShow?.();
   }
 
@@ -391,6 +437,7 @@ class ItalkyKeyboard {
     this.visible = false;
     this.root.classList.remove("show");
     this.hideAltMenu();
+    this.restoreViewportSpace();
     this.options.onHide?.();
   }
 
@@ -430,6 +477,8 @@ class ItalkyKeyboard {
     input.dispatchEvent(new Event("input", { bubbles: true }));
     this.options.onChange?.(input.value, input);
 
+    requestAnimationFrame(() => this.bringTargetAboveKeyboard());
+
     if (this.shift && !this.options.keepShiftOnce) {
       this.shift = false;
       this.render();
@@ -453,6 +502,7 @@ class ItalkyKeyboard {
 
     input.dispatchEvent(new Event("input", { bubbles: true }));
     this.options.onChange?.(input.value, input);
+    requestAnimationFrame(() => this.bringTargetAboveKeyboard());
   }
 
   doEnter() {
