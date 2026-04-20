@@ -1,27 +1,38 @@
 /* italky ortak klavye modülü
    Düzeltmeler:
-   - Taşma engellendi
-   - Uzun basınca alternatif harfler görünür
-   - Input klavye altında kalmaz, sayfa yukarı alınır
+   - Klavyeye dokununca sayfanın aşağı kayması engellendi
+   - Daktilo tipi tuş sesi
+   - Uzun basınca alternatif harfler düzeltildi
+   - Space tuşu üstünde italkyAI yazıyor
 */
 
 const DEFAULT_ALT_CHARS = {
   a: ["â", "á", "à"],
   A: ["Â", "Á", "À"],
+
   c: ["ç"],
   C: ["Ç"],
+
   g: ["ğ"],
   G: ["Ğ"],
-  i: ["ı", "î", "í"],
-  I: ["İ", "Î", "Í"],
+
+  i: ["ı", "î", "í", "i"],
+  I: ["İ", "Î", "Í", "I"],
+  ı: ["i", "î", "í", "ı"],
+  İ: ["I", "Î", "Í", "İ"],
+
   o: ["ö", "ô", "ó"],
   O: ["Ö", "Ô", "Ó"],
+
   s: ["ş"],
   S: ["Ş"],
+
   u: ["ü", "û", "ú"],
   U: ["Ü", "Û", "Ú"],
+
   e: ["é", "è", "ê"],
   E: ["É", "È", "Ê"],
+
   n: ["ñ"],
   N: ["Ñ"]
 };
@@ -41,7 +52,7 @@ const KEYBOARD_LAYOUTS = {
   }
 };
 
-const STYLE_ID = "italky-keyboard-style-v2";
+const STYLE_ID = "italky-keyboard-style-v3";
 
 function injectStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -121,11 +132,12 @@ function injectStyles() {
       flex:3.2 1 0;
       font-size:18px;
       font-weight:700;
+      letter-spacing:.2px;
     }
 
     .itk-kb-key.smalltxt{
-      font-size:16px;
-      font-weight:700;
+      font-size:15px;
+      font-weight:800;
     }
 
     .itk-kb-key.pressing{
@@ -192,8 +204,8 @@ function injectStyles() {
         padding:0 6px;
       }
       .itk-kb-key.wide{ font-size:16px; }
-      .itk-kb-key.xwide{ font-size:16px; }
-      .itk-kb-key.smalltxt{ font-size:14px; }
+      .itk-kb-key.xwide{ font-size:15px; }
+      .itk-kb-key.smalltxt{ font-size:13px; }
       .itk-kb-key svg{ width:22px; height:22px; }
       .itk-kb-alt{
         bottom:58px;
@@ -285,31 +297,32 @@ class KeyboardAudio {
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
 
-    filter.type = "highpass";
+    filter.type = "bandpass";
     filter.frequency.value =
-      kind === "space" ? 900 :
-      kind === "backspace" ? 1450 :
-      kind === "enter" ? 1380 :
-      kind === "shift" ? 1240 :
-      1180;
+      kind === "space" ? 2400 :
+      kind === "backspace" ? 1800 :
+      kind === "enter" ? 2100 :
+      kind === "shift" ? 2000 :
+      2300;
+    filter.Q.value = 1.1;
 
-    osc.type = kind === "space" ? "triangle" : "square";
+    osc.type = "square";
     osc.frequency.setValueAtTime(
-      kind === "space" ? 450 :
-      kind === "backspace" ? 690 :
-      kind === "enter" ? 620 :
-      kind === "shift" ? 610 :
-      550,
+      kind === "space" ? 1200 :
+      kind === "backspace" ? 980 :
+      kind === "enter" ? 1080 :
+      kind === "shift" ? 1020 :
+      1150,
       now
     );
     osc.frequency.exponentialRampToValueAtTime(
-      kind === "space" ? 320 : 220,
-      now + 0.028
+      kind === "space" ? 880 : 760,
+      now + 0.018
     );
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(kind === "space" ? 0.028 : 0.022, now + 0.003);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.032);
+    gain.gain.exponentialRampToValueAtTime(0.018, now + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.022);
 
     osc.connect(filter);
     filter.connect(gain);
@@ -317,7 +330,7 @@ class KeyboardAudio {
 
     try {
       osc.start(now);
-      osc.stop(now + 0.038);
+      osc.stop(now + 0.024);
     } catch {}
   }
 }
@@ -347,8 +360,7 @@ class ItalkyKeyboard {
     this.shift = false;
     this.altMenuEl = null;
     this.holdTimer = null;
-    this.savedBodyPaddingBottom = "";
-    this.savedHtmlPaddingBottom = "";
+    this.scrollTicking = false;
 
     this.root = document.createElement("div");
     this.root.className = "itk-kb-wrap";
@@ -361,13 +373,19 @@ class ItalkyKeyboard {
     document.body.appendChild(this.root);
 
     this.onDocPointer = this.onDocPointer.bind(this);
+    this.onVisualViewport = this.onVisualViewport.bind(this);
+
     document.addEventListener("pointerdown", this.onDocPointer, true);
+    window.visualViewport?.addEventListener?.("resize", this.onVisualViewport);
+    window.visualViewport?.addEventListener?.("scroll", this.onVisualViewport);
 
     this.render();
   }
 
   destroy() {
     document.removeEventListener("pointerdown", this.onDocPointer, true);
+    window.visualViewport?.removeEventListener?.("resize", this.onVisualViewport);
+    window.visualViewport?.removeEventListener?.("scroll", this.onVisualViewport);
     this.hideAltMenu();
     this.root?.remove();
     this.restoreViewportSpace();
@@ -384,6 +402,16 @@ class ItalkyKeyboard {
     }
   }
 
+  onVisualViewport() {
+    if (!this.visible) return;
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.scrollTicking = false;
+      this.bringTargetAboveKeyboard();
+    });
+  }
+
   setTarget(target) {
     this.options.target = target;
   }
@@ -395,15 +423,13 @@ class ItalkyKeyboard {
 
   applyViewportSpace() {
     const h = Math.ceil(this.root.getBoundingClientRect().height || 0);
-    this.savedBodyPaddingBottom = document.body.style.paddingBottom || "";
-    this.savedHtmlPaddingBottom = document.documentElement.style.paddingBottom || "";
-    document.body.style.paddingBottom = `${h + 8}px`;
-    document.documentElement.style.paddingBottom = `${h + 8}px`;
+    document.documentElement.style.setProperty("--itkKeyboardH", `${h}px`);
+    document.body.style.paddingBottom = `${h + 10}px`;
   }
 
   restoreViewportSpace() {
-    document.body.style.paddingBottom = this.savedBodyPaddingBottom;
-    document.documentElement.style.paddingBottom = this.savedHtmlPaddingBottom;
+    document.documentElement.style.removeProperty("--itkKeyboardH");
+    document.body.style.paddingBottom = "";
   }
 
   bringTargetAboveKeyboard() {
@@ -411,13 +437,18 @@ class ItalkyKeyboard {
     if (!input) return;
 
     const keyboardHeight = Math.ceil(this.root.getBoundingClientRect().height || 0);
-    input.style.scrollMarginBottom = `${keyboardHeight + 40}px`;
+    input.style.scrollMarginBottom = `${keyboardHeight + 48}px`;
 
-    requestAnimationFrame(() => {
-      try {
-        input.scrollIntoView({ block: "center", behavior: "smooth" });
-      } catch {}
-    });
+    const rect = input.getBoundingClientRect();
+    const vv = window.visualViewport;
+    const viewportHeight = vv ? vv.height : window.innerHeight;
+    const safeBottom = keyboardHeight + 18;
+    const visibleBottom = viewportHeight - safeBottom;
+
+    if (rect.bottom > visibleBottom || rect.top < 12) {
+      const delta = rect.bottom - visibleBottom + 24;
+      window.scrollBy({ top: Math.max(delta, 0), behavior: "smooth" });
+    }
   }
 
   show(target = null) {
@@ -549,6 +580,18 @@ class ItalkyKeyboard {
 
     hostBtn.appendChild(wrap);
     this.altMenuEl = wrap;
+
+    const altRect = wrap.getBoundingClientRect();
+    const pad = 8;
+
+    if (altRect.left < pad) {
+      wrap.style.left = "0";
+      wrap.style.transform = "translateX(0)";
+    } else if (altRect.right > window.innerWidth - pad) {
+      wrap.style.left = "auto";
+      wrap.style.right = "0";
+      wrap.style.transform = "translateX(0)";
+    }
   }
 
   hideAltMenu() {
@@ -711,7 +754,7 @@ class ItalkyKeyboard {
     }));
 
     row4.appendChild(this.createKey({
-      label: " ",
+      label: "italkyAI",
       className: "xwide smalltxt",
       sound: "space",
       onTap: () => {
