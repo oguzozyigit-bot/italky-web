@@ -496,14 +496,14 @@
 
     <section class="page-head">
       <div class="page-kicker">italkyAI</div>
-      <h1 class="title">Ses ve Çeviri <span class="ai">Ayarları</span></h1>
+      <h1 class="title">Ses Ayarları <span class="ai">FaceToFace</span></h1>
       <p class="page-sub">FaceToFace modu için temel ayarları buradan yönetebilirsiniz.</p>
     </section>
   </div>
 
   <section class="panel soft">
-    <h2 class="panel-title">Okuma ve Çeviri</h2>
-    <p class="panel-sub">Bu ayarlar FaceToFace içinde doğrudan kullanılır.</p>
+    <h2 class="panel-title">Okuma</h2>
+    <p class="panel-sub">Bu ayar FaceToFace içinde doğrudan kullanılır.</p>
 
     <div class="setting-row">
       <div class="setting-meta">
@@ -513,20 +513,12 @@
       <button class="toggle active" id="autoReadToggle" type="button"></button>
     </div>
 
-    <div class="setting-row">
-      <div class="setting-meta">
-        <div class="setting-title">Kültürel çeviri</div>
-        <div class="setting-sub">Daha doğal ve bağlama uygun çeviri kullanılsın.</div>
-      </div>
-      <button class="toggle" id="culturalToggle" type="button"></button>
-    </div>
-
     <div class="ai-note">
       <div class="ai-note-icon">AI</div>
       <div class="ai-note-body">
-        <div class="ai-note-title">Yapay Zekâ Bilgilendirmesi</div>
+        <div class="ai-note-title">Bilgilendirme</div>
         <div class="ai-note-text">
-          Kültürel çeviri ve özel ses seçimlerinde çeviri ile ses işlemleri yapay zekâ tarafından gerçekleştirilmektedir.
+          Özel ses seçimlerinde ses işlemleri yapay zekâ tarafından gerçekleştirilmektedir.
           Bu nedenle zaman zaman standart kullanıma göre daha yavaş yanıt alınabilir. Her 1000 karakter için 1 jeton gereklidir.
         </div>
       </div>
@@ -576,7 +568,7 @@
       <div class="ai-note-body">
         <div class="ai-note-title">Performans Notu</div>
         <div class="ai-note-text">
-          Kendi Sesim, 2. Ses, Hatıra Sesi ve Kültürel Çeviri seçeneklerinde işlemler yapay zekâ desteğiyle üretildiği için standart kullanıma göre daha yavaş yanıt alınabilir. Her 1000 karakter için 1 jeton gereklidir.
+          Kendi Sesim, 2. Ses ve Hatıra Sesi seçeneklerinde işlemler yapay zekâ desteğiyle üretildiği için standart kullanıma göre daha yavaş yanıt alınabilir. Her 1000 karakter için 1 jeton gereklidir.
         </div>
       </div>
     </div>
@@ -584,7 +576,6 @@
 
   <section class="panel">
     <div class="summary-line"><strong>Mesajı Otomatik Oku:</strong> <span id="autoReadSummary">Açık</span></div>
-    <div class="summary-line"><strong>Kültürel Çeviri:</strong> <span id="translateSummary">Kapalı</span></div>
     <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">Otomatik Ses</span></div>
   </section>
 
@@ -621,7 +612,6 @@
 <script type="module">
 (() => {
   const AUTO_READ_KEY = "facetoface_auto_read";
-  const TRANSLATE_KEY = "facetoface_translate_mode";
   const F2F_VOICE_KEY = "facetoface_voice_mode";
   const F2F_PRESET_KEY = "facetoface_voice_preset";
   const F2F_SELECTED_NAME_KEY = "facetoface_selected_voice_name";
@@ -632,7 +622,6 @@
   const UI = {
     backBtn: $("backBtn"),
     autoReadToggle: $("autoReadToggle"),
-    culturalToggle: $("culturalToggle"),
 
     voiceGrid: $("voiceGrid"),
     mineVoiceDesc: $("mineVoiceDesc"),
@@ -640,7 +629,6 @@
     memoryVoiceDesc: $("memoryVoiceDesc"),
 
     autoReadSummary: $("autoReadSummary"),
-    translateSummary: $("translateSummary"),
     voiceSummary: $("voiceSummary"),
 
     goAdvancedBtn: $("goAdvancedBtn"),
@@ -662,7 +650,6 @@
     currentUser: null,
     selectedVoice: readCurrentVoice(),
     autoRead: localStorage.getItem(AUTO_READ_KEY) !== "0",
-    cultural: localStorage.getItem(TRANSLATE_KEY) === "cultural",
     pendingVoice: null,
     walletTokens: 0,
     profileVoiceState: {
@@ -688,7 +675,6 @@
 
   function persistState() {
     localStorage.setItem(AUTO_READ_KEY, state.autoRead ? "1" : "0");
-    localStorage.setItem(TRANSLATE_KEY, state.cultural ? "cultural" : "normal");
 
     if (state.selectedVoice === "auto") {
       localStorage.setItem(F2F_VOICE_KEY, "auto");
@@ -733,9 +719,7 @@
 
   function syncToggles() {
     UI.autoReadToggle.classList.toggle("active", !!state.autoRead);
-    UI.culturalToggle.classList.toggle("active", !!state.cultural);
     UI.autoReadSummary.textContent = state.autoRead ? "Açık" : "Kapalı";
-    UI.translateSummary.textContent = state.cultural ? "Açık" : "Kapalı";
   }
 
   function voiceLabel(v) {
@@ -887,17 +871,6 @@
       showToast(state.autoRead ? "Mesajı otomatik oku açıldı" : "Mesajı otomatik oku kapatıldı");
     });
 
-    UI.culturalToggle.addEventListener("click", () => {
-      if (!state.cultural && !hasJeton()) {
-        askToken();
-        return;
-      }
-      state.cultural = !state.cultural;
-      persistState();
-      syncToggles();
-      showToast(state.cultural ? "Kültürel çeviri açıldı" : "Kültürel çeviri kapatıldı");
-    });
-
     UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
       card.addEventListener("click", () => {
         trySelectVoice(card.dataset.voice);
@@ -920,6 +893,8 @@
   async function init() {
     const ok = await bootAuth();
     if (!ok) return;
+
+    localStorage.setItem("facetoface_translate_mode", "normal");
 
     await loadWallet();
     await loadProfileVoiceState();
