@@ -17,12 +17,7 @@
       --txt:#fff;
       --muted:rgba(255,255,255,.64);
       --line:rgba(255,255,255,.09);
-      --card:rgba(255,255,255,.05);
       --grad:linear-gradient(135deg,#8bd3ff 0%, #7c5cff 45%, #ff66c4 100%);
-      --green:#22c55e;
-      --red:#ef4444;
-      --orange:#f59e0b;
-      --cyan:#67e8f9;
       --shadow:0 20px 55px rgba(0,0,0,.28);
     }
 
@@ -61,18 +56,6 @@
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       margin-bottom:16px;
-    }
-
-    .hero::after{
-      content:"";
-      position:absolute;
-      right:-42px;
-      bottom:-42px;
-      width:140px;
-      height:140px;
-      border-radius:50%;
-      background:rgba(255,255,255,.05);
-      filter:blur(10px);
     }
 
     .hero h1{
@@ -420,26 +403,26 @@
     <section class="hero">
       <h1>Jeton Ekstresi</h1>
       <p>
-        Hesabına yüklenen, harcanan, hediye edilen ve yükseltmeden gelen tüm jeton hareketlerini buradan takip edebilirsin.
+        Yüklenen ve kullanılan jetonlarını sade şekilde buradan takip edebilirsin.
       </p>
 
       <div class="summary">
         <div class="sum-card">
           <div class="sum-label">Mevcut Bakiye</div>
           <div class="sum-value" id="currentBalance">0</div>
-          <div class="sum-sub">Hesabındaki kullanılabilir toplam jeton</div>
+          <div class="sum-sub">Kullanılabilir jetonların</div>
         </div>
 
         <div class="sum-card">
           <div class="sum-label">Toplam Yüklenen</div>
           <div class="sum-value" id="totalLoaded">0</div>
-          <div class="sum-sub">Play, NFC, kod, bonus ve hediye dahil</div>
+          <div class="sum-sub">Hesabına eklenen toplam jeton</div>
         </div>
 
         <div class="sum-card">
           <div class="sum-label">Toplam Harcanan</div>
           <div class="sum-value" id="totalSpent">0</div>
-          <div class="sum-sub">Çeviri, sohbet ve ses kullanımından düşen jeton</div>
+          <div class="sum-sub">Kullanımda düşen toplam jeton</div>
         </div>
       </div>
     </section>
@@ -458,11 +441,11 @@
         <button class="chip" data-filter="spent" type="button">Harcanan</button>
         <button class="chip" data-filter="gift" type="button">Hediye</button>
         <button class="chip" data-filter="package_bonus" type="button">Paket Bonusu</button>
-        <button class="chip" data-filter="upgrade_credit" type="button">Yükseltme Kredisi</button>
+        <button class="chip" data-filter="upgrade_credit" type="button">Yükseltme</button>
       </div>
 
       <div class="search-row">
-        <input id="searchInput" type="text" placeholder="Açıklama veya işlem tipi ara"/>
+        <input id="searchInput" type="text" placeholder="İşlem ara"/>
         <button id="clearFilterBtn" type="button">Temizle</button>
       </div>
     </section>
@@ -539,15 +522,14 @@
       "game_pass_use",
       "translate_ai_gemini",
       "translate_ai_openai",
-      "arkadasla_translate_gemini",
-      "arkadasla_translate_openai",
       "chat_text_gemini",
       "chat_text_openai",
       "chat_voice_gemini",
       "chat_voice_openai",
       "tts_mine",
       "tts_second",
-      "tts_memory"
+      "tts_memory",
+      "usage"
     ]);
 
     function formatInt(val){
@@ -591,16 +573,7 @@
 
     function getRowSource(row){
       const meta = parseMeta(row?.meta);
-      return String(
-        row?.source ||
-        meta?.source ||
-        row?.reason ||
-        ""
-      ).trim().toLowerCase();
-    }
-
-    function getRowUsageKind(row){
-      return String(row?.usage_kind || parseMeta(row?.meta)?.usage_kind || "").trim().toLowerCase();
+      return String(row?.source || meta?.source || row?.reason || "").trim().toLowerCase();
     }
 
     function getSignedAmount(row){
@@ -616,7 +589,11 @@
       if (Number.isFinite(delta) && delta !== 0) return delta;
 
       const amount = Number(row?.amount || 0);
-      if (Number.isFinite(amount) && amount !== 0) return amount;
+      if (Number.isFinite(amount) && amount !== 0) {
+        if (txType === "debit") return -Math.abs(amount);
+        if (txType === "credit") return Math.abs(amount);
+        return amount;
+      }
 
       return 0;
     }
@@ -625,7 +602,6 @@
       const txType = getRowTxType(row);
       const source = getRowSource(row);
       const amt = getSignedAmount(row);
-
       return amt > 0 || txType === "credit" || txType === "gift" || LOADED_TYPES.has(source);
     }
 
@@ -633,14 +609,12 @@
       const txType = getRowTxType(row);
       const source = getRowSource(row);
       const amt = getSignedAmount(row);
-
       return amt < 0 || txType === "debit" || SPENT_TYPES.has(source);
     }
 
     function typeLabel(row){
       const txType = getRowTxType(row);
       const source = getRowSource(row);
-      const usageKind = getRowUsageKind(row);
 
       const map = {
         purchase: "Satın Alma",
@@ -650,16 +624,14 @@
         welcome_bonus: "Hoş Geldin Bonusu",
         manual_add: "Manuel Ekleme",
         manual_deduct: "Manuel Düşüm",
-        nfc_token_load: "NFC Kart Yükleme",
+        nfc_token_load: "NFC Yükleme",
         manual_code_token_load: "Kod ile Yükleme",
         google_play_token_load: "Google Play Yükleme",
         billing_google_confirm: "Play Satın Alma",
         billing_google: "Play Satın Alma",
         subscription_bonus: "Üyelik Bonusu",
-        translate_ai_gemini: "Kültürel Translate",
-        translate_ai_openai: "Kültürel Translate",
-        arkadasla_translate_gemini: "Arkadaşla Çeviri",
-        arkadasla_translate_openai: "Arkadaşla Çeviri",
+        translate_ai_gemini: "Çeviri",
+        translate_ai_openai: "Çeviri",
         chat_text_gemini: "Yazılı Sohbet",
         chat_text_openai: "Yazılı Sohbet",
         chat_voice_gemini: "Sesli Sohbet",
@@ -668,22 +640,15 @@
         tts_second: "2. Ses",
         tts_memory: "Hatıra Sesi",
         usage_text: "Metin Kullanımı",
-        usage_voice: "Ses Kullanımı"
+        usage_voice: "Ses Kullanımı",
+        usage: "Kullanım"
       };
 
       if (map[source]) return map[source];
-      if (map[txType]) return map[txType];
-
-      if (source === "usage") {
-        if (usageKind === "text") return "Text Kullanımı";
-        if (usageKind === "voice") return "Ses Kullanımı";
-      }
-
       if (txType === "credit") return "Yüklenen";
       if (txType === "debit") return "Harcanan";
       if (txType === "gift") return "Hediye";
-
-      return row?.description || row?.reason || row?.type || "İşlem";
+      return "İşlem";
     }
 
     function typeIcon(row){
@@ -718,32 +683,40 @@
       return "neutral";
     }
 
-    function formatEntryTitle(row){
-      return row?.description || row?.reason || typeLabel(row) || "Jeton işlemi";
+    function shortDescription(row){
+      const source = getRowSource(row);
+      const label = typeLabel(row);
+
+      if (source === "welcome_bonus") return "İlk üyelik bonusu";
+      if (source === "gift") return "Hediye jeton";
+      if (source === "package_bonus") return "Paketle gelen bonus";
+      if (source === "upgrade_credit") return "Yükseltmeden gelen kredi";
+      if (source === "nfc_token_load") return "NFC kart ile yüklendi";
+      if (source === "manual_code_token_load") return "Kod ile yüklendi";
+      if (source === "google_play_token_load" || source === "billing_google_confirm" || source === "billing_google" || source === "purchase") {
+        return "Google Play üzerinden işlendi";
+      }
+      if (source === "tts_mine") return "Kendi sesin kullanıldı";
+      if (source === "tts_second") return "2. ses kullanıldı";
+      if (source === "tts_memory") return "Hatıra sesi kullanıldı";
+      if (source === "translate_ai_gemini" || source === "translate_ai_openai") return "Çeviri sırasında kullanıldı";
+      if (source === "chat_text_gemini" || source === "chat_text_openai") return "Yazılı sohbette kullanıldı";
+      if (source === "chat_voice_gemini" || source === "chat_voice_openai") return "Sesli sohbette kullanıldı";
+
+      return row?.description || row?.reason || label;
     }
 
     function filterRows(rows){
       const q = String(searchInput.value || "").trim().toLowerCase();
 
       return rows.filter((row) => {
-        const txType = getRowTxType(row);
         const source = getRowSource(row);
-        const usageKind = getRowUsageKind(row);
-        const meta = parseMeta(row.meta);
-
+        const txType = getRowTxType(row);
         const searchBlob = [
-          txType,
           source,
-          usageKind,
-          row.description || "",
-          row.reason || "",
-          row.note || "",
-          meta?.module || "",
-          meta?.provider || "",
-          meta?.voice_mode || "",
-          meta?.from_lang || "",
-          meta?.to_lang || "",
-          meta?.lang || ""
+          txType,
+          typeLabel(row),
+          shortDescription(row)
         ].join(" ").toLowerCase();
 
         const matchesSearch = !q || searchBlob.includes(q);
@@ -793,41 +766,6 @@
       }catch{}
     }
 
-    function buildSubText(row, meta){
-      const bits = [];
-      const txType = getRowTxType(row);
-      const source = getRowSource(row);
-      const usageKind = getRowUsageKind(row);
-
-      if (txType) bits.push(`İşlem: ${txType}`);
-      if (source) bits.push(`Kaynak: ${source}`);
-      if (usageKind) bits.push(`Tür: ${usageKind}`);
-
-      if (meta?.module) bits.push(`Modül: ${meta.module}`);
-      if (meta?.provider) bits.push(`Sağlayıcı: ${meta.provider}`);
-      if (meta?.voice_mode) bits.push(`Ses: ${meta.voice_mode}`);
-      if (meta?.from_lang && meta?.to_lang) bits.push(`Dil: ${meta.from_lang}→${meta.to_lang}`);
-      if (meta?.lang) bits.push(`Dil: ${meta.lang}`);
-      if (meta?.tone) bits.push(`Ton: ${meta.tone}`);
-      if (meta?.chars_used) bits.push(`Karakter: ${meta.chars_used}`);
-      if (meta?.used_chars) bits.push(`Karakter: ${meta.used_chars}`);
-      if (meta?.input_mode) bits.push(`Giriş: ${meta.input_mode}`);
-      if (meta?.session_id) bits.push(`Oturum bağlı`);
-      if (meta?.module === "arkadasla") bits.push("Arkadaşla modülünde kullanıldı");
-
-      if (source === "nfc_token_load") bits.push("NFC kart ile jeton yüklendi");
-      if (source === "manual_code_token_load") bits.push("Kod ile jeton yüklendi");
-      if (source === "google_play_token_load" || source === "billing_google_confirm" || source === "billing_google" || source === "purchase") {
-        bits.push("Google Play üzerinden jeton yüklendi");
-      }
-      if (source === "package_bonus") bits.push("Paketle gelen bonus jeton");
-      if (source === "upgrade_credit") bits.push("Paket yükseltmesinden çevrilen kredi");
-      if (source === "gift") bits.push("Hediye jeton hareketi");
-      if (source === "welcome_bonus") bits.push("İlk üyelikte verilen 5 jeton hoş geldin bonusu");
-
-      return bits.join(" • ") || "Jeton hareket kaydı";
-    }
-
     function renderRows(rows){
       const filtered = filterRows(rows);
 
@@ -837,7 +775,7 @@
         listWrap.innerHTML = `
           <div class="empty">
             Bu filtre için kayıt bulunamadı.<br>
-            Filtreyi değiştirerek tüm hareketleri görebilirsin.
+            Filtreyi değiştirerek diğer hareketleri görebilirsin.
           </div>
         `;
         return;
@@ -847,13 +785,10 @@
         const amt = getSignedAmount(row);
         const group = typeGroup(row);
         const icon = typeIcon(row);
-        const meta = parseMeta(row.meta);
 
         const balanceAfterRaw =
           row?.balance_after ??
-          meta?.balance_after ??
-          row?.tokens_after ??
-          row?.after_balance ??
+          parseMeta(row?.meta)?.balance_after ??
           null;
 
         const balanceAfter = Number.isFinite(Number(balanceAfterRaw))
@@ -871,8 +806,7 @@
                 <div class="type-pill">${escapeHtml(typeLabel(row))}</div>
               </div>
 
-              <div class="title">${escapeHtml(formatEntryTitle(row))}</div>
-              <div class="sub">${escapeHtml(buildSubText(row, meta))}</div>
+              <div class="title">${escapeHtml(shortDescription(row))}</div>
               <div class="date">${escapeHtml(formatDate(row.created_at))}</div>
             </div>
 
