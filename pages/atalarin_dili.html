@@ -287,17 +287,17 @@
     }
 
     .semantic-read{
-  font-size:14px;
-  line-height:1.2;
-  font-weight:900;
-  color:rgba(255,255,255,.78);
-  direction:rtl;
-  unicode-bidi:bidi-override;
-  text-align:center;
-  white-space:pre-wrap;
-  word-break:break-word;
-  letter-spacing:.35px;
-}
+      font-size:14px;
+      line-height:1.2;
+      font-weight:900;
+      color:rgba(255,255,255,.78);
+      direction:rtl;
+      unicode-bidi:bidi-override;
+      text-align:center;
+      white-space:pre-wrap;
+      word-break:break-word;
+      letter-spacing:.35px;
+    }
 
     .semantic-meaning{
       font-size:14px;
@@ -821,9 +821,82 @@
     </div>
   </div>
 
+  <div id="jetonModal" class="modal open">
+    <div class="modal-card">
+      <h3 class="modal-title">Jeton Gerekli</h3>
+      <p class="modal-text">Bu modülü kullanabilmek için jeton gereklidir. Lütfen önce jeton yükleyiniz.</p>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" id="jetonGoBtn">Jeton Yükle</button>
+        <button class="modal-btn secondary" id="jetonCloseBtn">Kapat</button>
+      </div>
+    </div>
+  </div>
+
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/atalarin_dili_page.js?v=ATALAR_AI_RTL_V5"></script>
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+
+    async function gateAtalarinDili() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          location.replace("/pages/login.html");
+          return false;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("tokens")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        const tokens = Number(profile?.tokens || 0) || 0;
+        const modal = document.getElementById("jetonModal");
+        const goBtn = document.getElementById("jetonGoBtn");
+        const closeBtn = document.getElementById("jetonCloseBtn");
+
+        if (tokens > 0) {
+          modal?.classList.remove("open");
+          return true;
+        }
+
+        modal?.classList.add("open");
+
+        goBtn?.addEventListener("click", () => {
+          location.href = "/pages/jetonbuy.html";
+        }, { once: true });
+
+        closeBtn?.addEventListener("click", () => {
+          location.href = "/pages/home.html";
+        }, { once: true });
+
+        return false;
+      } catch {
+        const modal = document.getElementById("jetonModal");
+        const goBtn = document.getElementById("jetonGoBtn");
+        const closeBtn = document.getElementById("jetonCloseBtn");
+        modal?.classList.add("open");
+
+        goBtn?.addEventListener("click", () => {
+          location.href = "/pages/jetonbuy.html";
+        }, { once: true });
+
+        closeBtn?.addEventListener("click", () => {
+          location.href = "/pages/home.html";
+        }, { once: true });
+
+        return false;
+      }
+    }
+
+    const allowed = await gateAtalarinDili();
+
+    if (allowed) {
+      await import("/js/atalarin_dili_page.js?v=ATALAR_AI_RTL_V5");
+    }
+  </script>
+
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     await initGlobalAccess({ allowPublicPageBypass: false });
