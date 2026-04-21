@@ -7,109 +7,187 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
     :root{
       --txt:#fff;
-      --muted:rgba(255,255,255,.66);
+      --muted:rgba(255,255,255,.68);
       --bg:#090816;
-      --bg2:#120f24;
+      --bg2:#15112a;
+      --card:rgba(255,255,255,.06);
       --line:rgba(255,255,255,.10);
+      --soft:rgba(255,255,255,.05);
       --grad:linear-gradient(135deg,#6366f1 0%,#a855f7 55%,#ec4899 100%);
       --danger:linear-gradient(135deg,#ef4444 0%,#991b1b 100%);
+      --ok:linear-gradient(135deg,#10b981 0%,#34d399 100%);
+      --shadow:0 20px 48px rgba(0,0,0,.28);
     }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
     html,body{
-      margin:0;padding:0;width:100%;min-height:100%;
-      background:var(--bg);color:var(--txt);font-family:'Outfit',sans-serif;
+      margin:0;
+      padding:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
     }
+
     body::before{
-      content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+      content:"";
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      pointer-events:none;
       background:
-        radial-gradient(circle at 10% 10%, rgba(99,102,241,.18) 0%, transparent 36%),
-        radial-gradient(circle at 90% 20%, rgba(236,72,153,.12) 0%, transparent 32%),
+        radial-gradient(circle at 10% 10%, rgba(99,102,241,.18) 0%, transparent 34%),
+        radial-gradient(circle at 90% 18%, rgba(236,72,153,.12) 0%, transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(34,211,238,.06) 0%, transparent 30%),
         linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
     }
+
     #pageContent{
-      max-width:620px;
+      max-width:640px;
       margin:0 auto;
-      padding:env(safe-area-inset-top) 16px 90px;
+      padding:env(safe-area-inset-top) 16px 96px;
       display:flex;
       flex-direction:column;
       gap:18px;
     }
+
     .topRow{
-      display:flex;align-items:center;gap:12px;padding-top:18px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding-top:18px;
     }
+
     .backBtn{
-      width:46px;height:46px;border-radius:16px;border:1px solid var(--line);
-      background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;
-      cursor:pointer;flex:0 0 auto;
+      width:46px;
+      height:46px;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
     }
-    .backBtn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.4}
+
+    .backBtn svg{
+      width:20px;
+      height:20px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2.4;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
     .pageHead{min-width:0}
     .kicker{
-      font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
-      color:#67e8f9;margin-bottom:4px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:#67e8f9;
+      margin-bottom:4px;
     }
+
     .title{
-      margin:0;font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:800;letter-spacing:-1px;
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:30px;
+      font-weight:800;
+      letter-spacing:-1px;
+      line-height:1;
     }
+
     .title span{
-      background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
+
+    .hero,
     .card{
-      background:linear-gradient(165deg,rgba(255,255,255,.07),rgba(255,255,255,.03));
+      background:linear-gradient(165deg,rgba(255,255,255,.08),rgba(255,255,255,.04));
       border:1px solid var(--line);
       border-radius:24px;
       padding:18px;
-      backdrop-filter:blur(14px);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(16px);
     }
+
+    .heroText{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+      font-weight:700;
+    }
+
     .sectionTitle{
       margin:0 0 6px;
       font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
+      font-size:19px;
       font-weight:800;
+      line-height:1.2;
     }
+
     .desc{
       margin:0 0 14px;
       color:var(--muted);
       font-size:13px;
-      line-height:1.5;
+      line-height:1.55;
       font-weight:700;
     }
+
     .input{
       width:100%;
       min-height:52px;
+      border:none;
       border-radius:16px;
-      border:1px solid var(--line);
       background:rgba(255,255,255,.05);
+      border:1px solid var(--line);
       color:#fff;
       padding:0 16px;
       font:inherit;
       font-size:15px;
       font-weight:700;
     }
+
     .input.invalid{
       border-color:rgba(239,68,68,.45);
       background:rgba(239,68,68,.08);
     }
+
     .fieldError{
       display:none;
       margin-top:8px;
       color:#fca5a5;
       font-size:12px;
       font-weight:800;
-      padding-left:2px;
     }
+
     .fieldError.show{display:block}
+
     .row{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:10px;
       margin-top:12px;
     }
+
     .btn{
       min-height:50px;
       border:none;
@@ -122,17 +200,29 @@
       align-items:center;
       justify-content:center;
       padding:0 16px;
-      width:100%;
+      text-align:center;
+      transition:transform .16s ease, opacity .16s ease;
     }
+
     .btn:active{transform:scale(.98)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
-    .btnMain{background:var(--grad);color:#fff}
+
+    .btnMain{
+      background:var(--grad);
+      color:#fff;
+    }
+
     .btnSoft{
       background:rgba(255,255,255,.06);
       border:1px solid var(--line);
       color:#fff;
     }
-    .btnDanger{background:var(--danger);color:#fff}
+
+    .btnDanger{
+      background:var(--danger);
+      color:#fff;
+    }
+
     .fileBtn{
       width:100%;
       min-height:52px;
@@ -143,7 +233,7 @@
       font-size:14px;
       font-weight:800;
       background:rgba(255,255,255,.06);
-      border:1px dashed rgba(255,255,255,.16);
+      border:1px dashed rgba(255,255,255,.18);
       color:#fff;
       display:flex;
       align-items:center;
@@ -152,21 +242,43 @@
       padding:0 16px;
       margin-top:12px;
     }
+
     .status{
       margin-top:10px;
       font-size:12px;
       font-weight:800;
       color:var(--muted);
-      line-height:1.45;
+      line-height:1.5;
     }
+
+    .tip{
+      margin-top:8px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:rgba(255,255,255,.78);
+      font-size:12px;
+      line-height:1.5;
+      font-weight:700;
+    }
+
+    .listTitle{
+      margin:16px 0 8px;
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+    }
+
     .list{
       display:flex;
       flex-direction:column;
       gap:10px;
-      margin-top:14px;
+      margin-top:8px;
     }
+
     .item{
-      min-height:54px;
+      min-height:56px;
       border-radius:18px;
       border:1px solid var(--line);
       background:rgba(255,255,255,.04);
@@ -176,6 +288,7 @@
       gap:10px;
       align-items:center;
     }
+
     .itemName{
       font-size:14px;
       font-weight:800;
@@ -183,52 +296,271 @@
       line-height:1.35;
       word-break:break-word;
     }
+
     .trashBtn{
-      min-width:44px;width:44px;height:44px;border:none;border-radius:14px;cursor:pointer;
-      background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.18);
-      color:#fff;display:flex;align-items:center;justify-content:center;
+      min-width:44px;
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:14px;
+      cursor:pointer;
+      background:rgba(239,68,68,.10);
+      border:1px solid rgba(239,68,68,.18);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-    .trashBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2}
+
+    .trashBtn svg{
+      width:18px;
+      height:18px;
+      stroke:currentColor;
+      fill:none;
+      stroke-width:2.2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
     .empty{
-      padding:14px;border-radius:16px;border:1px dashed rgba(255,255,255,.10);
-      color:var(--muted);font-size:12px;font-weight:700;text-align:center;
+      padding:14px;
+      border-radius:16px;
+      border:1px dashed rgba(255,255,255,.10);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      text-align:center;
+      margin-top:8px;
     }
+
     .summary{
-      text-align:center;color:var(--muted);font-size:12px;font-weight:800;
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
     }
+
     .toast{
-      position:fixed;left:50%;top:20px;transform:translateX(-50%) translateY(-120px);
-      min-height:44px;padding:10px 16px;border-radius:18px;background:rgba(10,10,22,.92);
-      border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(16px);color:#fff;
-      font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;
-      text-align:center;max-width:min(92vw,520px);z-index:99999;transition:.22s ease;
+      position:fixed;
+      left:50%;
+      top:20px;
+      transform:translateX(-50%) translateY(-120px);
+      min-height:44px;
+      padding:10px 16px;
+      border-radius:18px;
+      background:rgba(10,10,22,.92);
+      border:1px solid rgba(255,255,255,.12);
+      backdrop-filter:blur(16px);
+      color:#fff;
+      font-size:12px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      max-width:min(92vw,520px);
+      z-index:99999;
+      transition:.22s ease;
     }
+
     .toast.show{transform:translateX(-50%) translateY(0)}
+
     .modal{
-      position:fixed; inset:0; z-index:99998; display:none; align-items:center; justify-content:center;
-      padding:20px; background:rgba(0,0,0,.72); backdrop-filter:blur(8px);
+      position:fixed;
+      inset:0;
+      z-index:99998;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(0,0,0,.72);
+      backdrop-filter:blur(8px);
     }
+
     .modal.open{display:flex}
+
     .modalCard{
-      width:min(100%,420px); border-radius:26px; border:1px solid var(--line);
+      width:min(100%,420px);
+      border-radius:26px;
+      border:1px solid var(--line);
       background:linear-gradient(165deg,rgba(18,15,36,.98),rgba(10,9,20,.98));
-      padding:22px; text-align:center;
+      padding:22px;
+      text-align:center;
+      box-shadow:var(--shadow);
     }
+
     .modalTitle{
-      margin:0 0 8px; font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:800;
+      margin:0 0 8px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;
+      font-weight:800;
+      line-height:1.2;
     }
+
     .modalText{
-      margin:0; color:var(--muted); font-size:14px; line-height:1.55; font-weight:700;
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.55;
+      font-weight:700;
     }
+
     .modalActions{
-      display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:20px;
     }
+
+    .countdownModal{
+      position:fixed;
+      inset:0;
+      z-index:100000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(0,0,0,.78);
+      backdrop-filter:blur(10px);
+    }
+
+    .countdownModal.open{display:flex}
+
+    .countdownCard{
+      width:min(100%,460px);
+      text-align:center;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:18px;
+    }
+
+    .countdownTitle{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:24px;
+      font-weight:800;
+      line-height:1.25;
+    }
+
+    .countdownText{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.65;
+      font-weight:700;
+      max-width:360px;
+    }
+
+    .countCircle{
+      width:180px;
+      height:180px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(165deg,rgba(255,255,255,.10),rgba(255,255,255,.04));
+      box-shadow:0 0 0 12px rgba(255,255,255,.03), 0 20px 48px rgba(0,0,0,.32);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .countCircle::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 50% 30%, rgba(99,102,241,.28), transparent 45%);
+      pointer-events:none;
+    }
+
+    .countNumber{
+      position:relative;
+      z-index:2;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:72px;
+      font-weight:800;
+      line-height:1;
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .recordingGlow{
+      width:180px;
+      height:180px;
+      border-radius:50%;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      background:radial-gradient(circle, rgba(236,72,153,.20) 0%, rgba(99,102,241,.08) 55%, transparent 75%);
+      box-shadow:0 0 0 12px rgba(236,72,153,.05);
+    }
+
+    .recordingGlow.active{display:flex}
+
+    .recordingGlow::before,
+    .recordingGlow::after{
+      content:"";
+      position:absolute;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.16);
+      animation:pulse 1.4s infinite ease-out;
+    }
+
+    .recordingGlow::before{
+      inset:18px;
+    }
+
+    .recordingGlow::after{
+      inset:0;
+      animation-delay:.35s;
+    }
+
+    .recordMic{
+      width:74px;
+      height:74px;
+      border-radius:50%;
+      background:var(--grad);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 16px 30px rgba(0,0,0,.28);
+    }
+
+    .recordMic svg{
+      width:30px;
+      height:30px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2.4;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .recordingStatus{
+      font-size:14px;
+      font-weight:800;
+      color:#fff;
+      line-height:1.4;
+      min-height:20px;
+    }
+
     .hidden{display:none !important}
+
+    @keyframes pulse{
+      0%{transform:scale(.86);opacity:.9}
+      100%{transform:scale(1.14);opacity:0}
+    }
+
     @media (max-width:480px){
       .row,.modalActions{grid-template-columns:1fr}
       .title{font-size:27px}
       .item{grid-template-columns:1fr}
       .trashBtn{width:100%}
+      .countCircle,.recordingGlow{width:160px;height:160px}
+      .countNumber{font-size:62px}
     }
   </style>
 </head>
@@ -246,9 +578,17 @@
     </div>
   </div>
 
+  <section class="hero">
+    <p class="heroText">
+      Kullanıcı tek bakışta ne yapacağını anlasın diye bu ekran sade tutuldu. Sesini kaydet, tanıdık ses ekle, hatıra ses yükle.
+    </p>
+  </section>
+
   <section class="card">
     <h2 class="sectionTitle">Kendi Sesim</h2>
-    <p class="desc">Şu an kayıtlı sesiniz bulunmaktadır. Kayıtlı sesi dilerseniz güncelleyebilirsiniz.</p>
+    <p class="desc">
+      Şu an kayıtlı sesiniz bulunmaktadır. Kayıtlı sesi dilerseniz güncelleyebilirsiniz.
+    </p>
 
     <div class="row">
       <button class="btn btnSoft" id="recordMineBtn" type="button">Ses Ekle / Güncelle</button>
@@ -260,8 +600,10 @@
   </section>
 
   <section class="card">
-    <h2 class="sectionTitle">2. Ses</h2>
-    <p class="desc">İsim verip kayıt ekleyebilirsin. En fazla 5 kayıt.</p>
+    <h2 class="sectionTitle">Tanıdık Ses</h2>
+    <p class="desc">
+      Sevgili, eş, çocuk veya yakın birinin sesi. En fazla 5 kayıt ekleyebilirsiniz.
+    </p>
 
     <input class="input" id="secondVoiceNameInput" type="text" placeholder="İsim ver">
     <div class="fieldError" id="secondNameError">Lütfen bir isim yaz.</div>
@@ -273,13 +615,16 @@
 
     <div class="status" id="secondStatus">Kayıt bekleniyor.</div>
 
+    <div class="listTitle">Kayıtlı Tanıdık Sesler</div>
     <div class="list" id="secondList"></div>
-    <div class="empty hidden" id="secondEmpty">Henüz kayıtlı 2. ses yok.</div>
+    <div class="empty hidden" id="secondEmpty">Henüz kayıtlı tanıdık ses yok.</div>
   </section>
 
   <section class="card">
     <h2 class="sectionTitle">Hatıra Ses</h2>
-    <p class="desc">İsim verip mp3 yükleyebilirsin. En fazla 5 kayıt.</p>
+    <p class="desc">
+      Anne, baba, dede, nine veya özel kayıtlar. En az 20 saniyelik, en fazla 10 MB boyutunda mp3 dosyası yükleyin.
+    </p>
 
     <input class="input" id="memoryVoiceNameInput" type="text" placeholder="İsim ver">
     <div class="fieldError" id="memoryNameError">Lütfen bir isim yaz.</div>
@@ -296,8 +641,9 @@
 
     <div class="status" id="memoryStatus">Dosya bekleniyor.</div>
 
+    <div class="listTitle">Kayıtlı Hatıra Sesler</div>
     <div class="list" id="memoryList"></div>
-    <div class="empty hidden" id="memoryEmpty">Henüz kayıtlı hatıra sesi yok.</div>
+    <div class="empty hidden" id="memoryEmpty">Henüz kayıtlı hatıra ses yok.</div>
   </section>
 
   <button class="btn btnSoft" id="backOnlyBtn" type="button">Geri Dön</button>
@@ -329,6 +675,32 @@
   </div>
 </div>
 
+<div class="countdownModal" id="countdownModal">
+  <div class="countdownCard">
+    <h3 class="countdownTitle" id="countdownTitle">Hazır olun</h3>
+    <p class="countdownText" id="countdownText">
+      Sizden 20 saniye boyunca doğal konuşmanızı istiyoruz.
+    </p>
+
+    <div class="countCircle" id="countCircle">
+      <div class="countNumber" id="countNumber">5</div>
+    </div>
+
+    <div class="recordingGlow" id="recordingGlow">
+      <div class="recordMic">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+          <path d="M19 10a7 7 0 0 1-14 0"></path>
+          <path d="M12 17v4"></path>
+          <path d="M8 21h8"></path>
+        </svg>
+      </div>
+    </div>
+
+    <div class="recordingStatus" id="recordingStatus">Hazırlanıyor...</div>
+  </div>
+</div>
+
 <script type="module">
 (() => {
   const RETURN_PARAM = new URLSearchParams(location.search).get("from") || "";
@@ -337,6 +709,7 @@
   const MAX_RECORD_SECONDS = 20;
   const MAX_SECOND = 5;
   const MAX_MEMORY = 5;
+  const COUNTDOWN_SECONDS = 5;
   const $ = (id) => document.getElementById(id);
 
   const UI = {
@@ -376,7 +749,15 @@
     deleteModal: $("deleteModal"),
     deleteModalText: $("deleteModalText"),
     deleteNoBtn: $("deleteNoBtn"),
-    deleteYesBtn: $("deleteYesBtn")
+    deleteYesBtn: $("deleteYesBtn"),
+
+    countdownModal: $("countdownModal"),
+    countdownTitle: $("countdownTitle"),
+    countdownText: $("countdownText"),
+    countCircle: $("countCircle"),
+    countNumber: $("countNumber"),
+    recordingGlow: $("recordingGlow"),
+    recordingStatus: $("recordingStatus")
   };
 
   const state = {
@@ -409,7 +790,10 @@
       mineReady: false,
       secondItems: [],
       memoryItems: []
-    }
+    },
+
+    countdownTimer: null,
+    activeRecordFlow: null
   };
 
   function resolveReturnUrl() {
@@ -547,9 +931,7 @@
     rows.forEach((item) => {
       const row = document.createElement("div");
       row.className = "item";
-      row.innerHTML = `
-        <div class="itemName">${escapeHtml(item.voice_name || "İsimsiz Ses")}</div>
-      `;
+      row.innerHTML = `<div class="itemName">${escapeHtml(item.voice_name || "İsimsiz Ses")}</div>`;
 
       const trash = document.createElement("button");
       trash.type = "button";
@@ -564,7 +946,7 @@
         </svg>
       `;
       trash.addEventListener("click", () => {
-        openDeleteModal("second", item.id, item.voice_name || "2. Ses");
+        openDeleteModal("second", item.id, item.voice_name || "Tanıdık Ses");
       });
 
       row.appendChild(trash);
@@ -580,9 +962,7 @@
     rows.forEach((item) => {
       const row = document.createElement("div");
       row.className = "item";
-      row.innerHTML = `
-        <div class="itemName">${escapeHtml(item.voice_name || "İsimsiz Ses")}</div>
-      `;
+      row.innerHTML = `<div class="itemName">${escapeHtml(item.voice_name || "İsimsiz Ses")}</div>`;
 
       const trash = document.createElement("button");
       trash.type = "button";
@@ -609,8 +989,59 @@
     UI.mineInfo.textContent = state.serverState.mineReady
       ? "Şu an kayıtlı sesiniz bulunmaktadır. Kayıtlı sesi dilerseniz güncelleyebilirsiniz."
       : "Henüz kayıtlı sesiniz yok.";
+
     renderSecondList();
     renderMemoryList();
+  }
+
+  function openCountdownModal(title, text) {
+    UI.countdownTitle.textContent = title;
+    UI.countdownText.textContent = text;
+    UI.countNumber.textContent = COUNTDOWN_SECONDS;
+    UI.countCircle.classList.remove("hidden");
+    UI.recordingGlow.classList.remove("active");
+    UI.recordingGlow.classList.add("hidden");
+    UI.recordingStatus.textContent = "Hazırlanıyor...";
+    UI.countdownModal.classList.add("open");
+  }
+
+  function switchCountdownToRecording() {
+    UI.countCircle.classList.add("hidden");
+    UI.recordingGlow.classList.remove("hidden");
+    UI.recordingGlow.classList.add("active");
+    UI.recordingStatus.textContent = "Kayıt başladı. Lütfen doğal konuşun...";
+  }
+
+  function closeCountdownModal() {
+    clearInterval(state.countdownTimer);
+    state.countdownTimer = null;
+    UI.countdownModal.classList.remove("open");
+    UI.countCircle.classList.remove("hidden");
+    UI.recordingGlow.classList.remove("active");
+    UI.recordingGlow.classList.add("hidden");
+  }
+
+  function playBeep() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.value = 0.08;
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+
+      setTimeout(() => {
+        osc.stop();
+        ctx.close().catch(() => {});
+      }, 180);
+    } catch {}
   }
 
   async function askMicPermission() {
@@ -714,7 +1145,7 @@
       if (profile?.second_voice_sample_path || (profile?.second_tts_voice_ready && profile?.second_tts_voice_id)) {
         state.serverState.secondItems.push({
           id: "legacy-second",
-          voice_name: String(profile?.second_voice_name || "2. Ses").trim()
+          voice_name: String(profile?.second_voice_name || "Tanıdık Ses").trim()
         });
       }
 
@@ -752,7 +1183,39 @@
     }
   }
 
-  async function handleMineRecord() {
+  async function startCountdownAndRecord(flowType) {
+    state.activeRecordFlow = flowType;
+
+    const title = flowType === "mine" ? "Kendi Sesim" : "Tanıdık Ses";
+    const text = flowType === "mine"
+      ? "Lütfen hazır olun. Sizden 20 saniye boyunca kendi sesinizle doğal konuşmanızı istiyoruz."
+      : "Lütfen hazır olun. Sizden 20 saniye boyunca doğal konuşmanızı istiyoruz.";
+
+    openCountdownModal(title, text);
+
+    let count = COUNTDOWN_SECONDS;
+    UI.countNumber.textContent = count;
+
+    state.countdownTimer = setInterval(async () => {
+      count -= 1;
+      UI.countNumber.textContent = Math.max(count, 0);
+
+      if (count <= 0) {
+        clearInterval(state.countdownTimer);
+        state.countdownTimer = null;
+        playBeep();
+        switchCountdownToRecording();
+
+        if (flowType === "mine") {
+          await startMineRecordingNow();
+        } else {
+          await startSecondRecordingNow();
+        }
+      }
+    }, 1000);
+  }
+
+  async function startMineRecordingNow() {
     try {
       UI.mineStatus.textContent = "Kayıt alınıyor...";
       setButtonState(UI.saveMineBtn, false);
@@ -769,31 +1232,27 @@
           state.mineBlob = new Blob(state.mineChunks, { type: "audio/webm" });
           stopTracks(state.mineStream);
           state.mineStream = null;
-          UI.mineStatus.textContent = "Yeni kayıt hazır. Kaydet diyerek devam et.";
+          closeCountdownModal();
+          UI.mineStatus.textContent = "Ses tanımlama işleminiz tamamlandı. Lütfen sesinizi kaydedin.";
           setButtonState(UI.saveMineBtn, true);
           markUnsaved("mine", true);
         }
       );
 
       state.mineRecorder.start();
+
       setTimeout(() => {
         try {
           if (state.mineRecorder?.state !== "inactive") state.mineRecorder.stop();
         } catch {}
       }, MAX_RECORD_SECONDS * 1000);
     } catch (e) {
+      closeCountdownModal();
       UI.mineStatus.textContent = e.message || "Kayıt başlatılamadı.";
     }
   }
 
-  async function handleSecondRecord() {
-    if (!validateSecondName()) return;
-
-    if ((state.serverState.secondItems || []).length >= MAX_SECOND) {
-      showToast("5 ses eklenebilir. Yeni ses eklemek için önce kayıtlı seslerinizden birini silmeniz gereklidir.");
-      return;
-    }
-
+  async function startSecondRecordingNow() {
     const secondName = String(UI.secondVoiceNameInput.value || "").trim();
 
     try {
@@ -812,21 +1271,39 @@
           state.secondBlob = new Blob(state.secondChunks, { type: "audio/webm" });
           stopTracks(state.secondStream);
           state.secondStream = null;
-          UI.secondStatus.textContent = `${secondName} hazır. Kaydet diyerek devam et.`;
+          closeCountdownModal();
+          UI.secondStatus.textContent = `${secondName} için ses tanımlama işlemi tamamlandı. Lütfen kaydedin.`;
           setButtonState(UI.saveSecondBtn, true);
           markUnsaved("second", true);
         }
       );
 
       state.secondRecorder.start();
+
       setTimeout(() => {
         try {
           if (state.secondRecorder?.state !== "inactive") state.secondRecorder.stop();
         } catch {}
       }, MAX_RECORD_SECONDS * 1000);
     } catch (e) {
+      closeCountdownModal();
       UI.secondStatus.textContent = e.message || "Kayıt başlatılamadı.";
     }
+  }
+
+  async function handleMineRecord() {
+    await startCountdownAndRecord("mine");
+  }
+
+  async function handleSecondRecord() {
+    if (!validateSecondName()) return;
+
+    if ((state.serverState.secondItems || []).length >= MAX_SECOND) {
+      showToast("5 ses eklenebilir. Yeni ses eklemek için önce kayıtlı seslerinizden birini silmeniz gereklidir.");
+      return;
+    }
+
+    await startCountdownAndRecord("second");
   }
 
   async function saveMine() {
@@ -883,7 +1360,7 @@
       UI.secondVoiceNameInput.value = "";
       state.secondBlob = null;
       setButtonState(UI.saveSecondBtn, false);
-      showToast("2. ses kaydedildi");
+      showToast("Tanıdık ses kaydedildi");
     } catch (e) {
       UI.secondStatus.textContent = e.message || "Kaydetme başarısız.";
     } finally {
@@ -1000,7 +1477,8 @@
 
     UI.saveMemoryBtn.addEventListener("click", saveMemory);
 
-    UI.deleteMineBtn.addEventListener("click", () => openDeleteModal("mine", "mine", "Kendi sesiniz"));
+    UI.deleteMineBtn = null; /* bu sürümde yok */
+
     UI.deleteNoBtn.addEventListener("click", closeDeleteModal);
     UI.deleteYesBtn.addEventListener("click", handleDeleteConfirmed);
 
