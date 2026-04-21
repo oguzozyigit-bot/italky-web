@@ -14,13 +14,10 @@
       --txt: #ffffff;
       --muted: rgba(255,255,255,.65);
       --bg-dark: #07051a;
-      --bg-card: rgba(255, 255, 255, 0.04);
       --panel-border: rgba(255, 255, 255, 0.1);
-      --accent-violet: #8b5cf6;
-      --accent-cyan: #22d3ee;
       --ai-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
       --danger-grad: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
-      --glass: rgba(255, 255, 255, 0.03);
+      --ok-grad: linear-gradient(135deg, #10b981 0%, #34d399 100%);
       --glass-heavy: rgba(10, 10, 25, 0.85);
     }
 
@@ -41,16 +38,16 @@
       overflow-x: hidden;
     }
 
-    /* Vay be dedirten Arka Plan */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      background: 
+      background:
         radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
         radial-gradient(circle at 90% 90%, rgba(236, 72, 153, 0.12) 0%, transparent 40%),
         radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.05) 0%, transparent 50%);
       z-index: -1;
+      pointer-events: none;
     }
 
     #pageContent {
@@ -62,7 +59,6 @@
       gap: 24px;
     }
 
-    /* Header Tasarımı */
     .top-nav {
       display: flex;
       align-items: center;
@@ -74,116 +70,152 @@
       width: 48px;
       height: 48px;
       border-radius: 18px;
-      background: var(--glass);
+      background: rgba(255,255,255,.04);
       border: 1px solid var(--panel-border);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       backdrop-filter: blur(10px);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.25s ease;
+      flex: 0 0 auto;
     }
 
-    .back-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+    .back-btn:active {
+      transform: scale(0.94);
+    }
 
-    .page-title-area { flex: 1; }
-    .kicker { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent-cyan); margin-bottom: 4px; }
-    .main-title { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-    .main-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .page-title-area {
+      flex: 1;
+      min-width: 0;
+    }
 
-    /* Hero Bölümü */
-    .hero-card {
+    .kicker {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #22d3ee;
+      margin-bottom: 4px;
+    }
+
+    .main-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 30px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .main-title span {
+      background: var(--ai-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-card,
+    .voice-card,
+    .info-card {
       background: linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
       border: 1px solid var(--panel-border);
-      border-radius: 32px;
-      padding: 24px;
+      border-radius: 28px;
+      padding: 20px;
       backdrop-filter: blur(20px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.28);
     }
 
-    .hero-text { font-size: 14px; line-height: 1.6; color: var(--muted); margin-bottom: 20px; font-weight: 500; }
+    .hero-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+      margin: 0 0 16px;
+      font-weight: 500;
+    }
 
-    /* Kart Yapıları */
-    .voice-section {
+    .hero-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .section-head {
       display: flex;
-      flex-direction: column;
-      gap: 16px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     .section-label {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 18px;
       font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       padding: 0 4px;
     }
 
-    .voice-card {
-      background: var(--bg-card);
-      border: 1px solid var(--panel-border);
-      border-radius: 28px;
-      padding: 20px;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .voice-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 4px;
-      background: var(--ai-grad);
-      opacity: 0; transition: 0.3s;
-    }
-
-    .voice-card:focus-within { border-color: rgba(139, 92, 246, 0.4); }
-    .voice-card:focus-within::before { opacity: 1; }
-
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-    .v-info h4 { margin: 0; font-size: 17px; font-weight: 800; color: #fff; }
-    .v-info p { margin: 4px 0 0; font-size: 12px; color: var(--muted); font-weight: 600; }
-
-    /* Pill / Badge */
     .status-pill {
+      min-height: 30px;
       padding: 6px 12px;
       border-radius: 999px;
       font-size: 10px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: rgba(255,255,255,0.05);
-    }
-    .status-pill.ok { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .status-pill.warn { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
-
-    /* Butonlar */
-    .btn-group { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-top: 16px; }
-
-    .btn {
-      height: 52px;
-      border-radius: 18px;
-      border: none;
-      font-family: inherit;
-      font-weight: 800;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
+      letter-spacing: .5px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      color: #fff;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      width: max-content;
     }
 
-    .btn:active { transform: scale(0.96); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+    .status-pill.ok {
+      background: rgba(16,185,129,.16);
+      color: #6ee7b7;
+      border-color: rgba(16,185,129,.28);
+    }
 
-    .btn-main { background: var(--ai-grad); color: #fff; box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }
-    .btn-outline { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--panel-border); }
-    .btn-icon { width: 52px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .status-pill.warn {
+      background: rgba(245,158,11,.16);
+      color: #fbbf24;
+      border-color: rgba(245,158,11,.28);
+    }
 
-    /* Input Tasarımı */
+    .status-pill.soft {
+      color: rgba(255,255,255,.72);
+    }
+
+    .status-pill.action {
+      cursor: pointer;
+      border: none;
+      background: rgba(255,255,255,.08);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .v-info h4 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .v-info p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
     .italky-input {
       width: 100%;
       height: 56px;
@@ -195,34 +227,36 @@
       font-family: inherit;
       font-size: 15px;
       font-weight: 600;
-      transition: all 0.3s;
+      transition: all 0.25s ease;
       margin-top: 12px;
     }
-    .italky-input:focus { border-color: var(--accent-cyan); background: rgba(0,0,0,0.4); box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.1); }
 
-    /* Audio Player Custom */
-    .audio-wrapper {
-      margin-top: 16px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 16px;
-      padding: 8px;
+    .italky-input:focus {
+      border-color: #22d3ee;
+      background: rgba(0,0,0,0.35);
+      box-shadow: 0 0 0 4px rgba(34,211,238,0.10);
     }
-    audio { width: 100%; height: 36px; filter: invert(1); opacity: 0.8; }
 
-    /* Upload Box */
-    .upload-zone {
-      margin-top: 12px;
-      border: 2px dashed var(--panel-border);
-      border-radius: 20px;
-      padding: 20px;
-      text-align: center;
-      transition: 0.3s;
-      cursor: pointer;
+    .italky-input.invalid {
+      border-color: rgba(239,68,68,.45);
+      background: rgba(239,68,68,.08);
+      box-shadow: 0 0 0 4px rgba(239,68,68,.08);
     }
-    .upload-zone:hover { border-color: var(--accent-violet); background: rgba(139, 92, 246, 0.05); }
-    .file-label { font-size: 13px; font-weight: 700; color: var(--muted); }
 
-    /* Timer & Status */
+    .field-error {
+      display: none;
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #f87171;
+      font-weight: 800;
+      padding-left: 2px;
+    }
+
+    .field-error.show {
+      display: block;
+    }
+
     .record-info {
       display: flex;
       align-items: center;
@@ -231,29 +265,157 @@
       padding: 10px 15px;
       background: rgba(255,255,255,0.03);
       border-radius: 14px;
+      gap: 10px;
     }
-    .timer-badge { font-family: 'Space Grotesk', sans-serif; font-weight: 800; color: var(--accent-cyan); font-size: 14px; }
-    .status-text { font-size: 12px; font-weight: 600; color: var(--muted); }
 
-    /* Toast & Modals */
+    .timer-badge {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 800;
+      color: #22d3ee;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .status-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .audio-wrapper {
+      margin-top: 14px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 16px;
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,.06);
+    }
+
+    audio {
+      width: 100%;
+      height: 36px;
+      filter: invert(1);
+      opacity: 0.85;
+    }
+
+    .upload-zone {
+      margin-top: 12px;
+      border: 2px dashed rgba(255,255,255,.14);
+      border-radius: 20px;
+      padding: 18px;
+      text-align: center;
+      transition: 0.25s ease;
+      cursor: pointer;
+      background: rgba(255,255,255,.02);
+    }
+
+    .upload-zone:hover {
+      border-color: rgba(168,85,247,.45);
+      background: rgba(168,85,247,.06);
+    }
+
+    .file-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      min-height: 52px;
+      border-radius: 18px;
+      border: none;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      padding: 0 16px;
+      width: 100%;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+
+    .btn-main {
+      background: var(--ai-grad);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(139, 92, 246, 0.25);
+    }
+
+    .btn-outline {
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      border: 1px solid var(--panel-border);
+    }
+
+    .btn-danger {
+      background: var(--danger-grad);
+      color: #fff;
+    }
+
+    .btn-icon {
+      width: 52px;
+      min-width: 52px;
+      background: rgba(239,68,68,0.10);
+      color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.20);
+      padding: 0;
+    }
+
+    .btn-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
     .toast {
       position: fixed;
-      top: 30px;
+      top: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
       background: var(--glass-heavy);
       backdrop-filter: blur(20px);
-      padding: 12px 24px;
+      padding: 12px 20px;
       border-radius: 20px;
       border: 1px solid var(--panel-border);
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       z-index: 100000;
-      transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: .35s ease;
       font-weight: 700;
       text-align: center;
-      min-width: 250px;
+      min-width: 240px;
+      max-width: min(92vw, 520px);
     }
-    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
 
     .modal {
       position: fixed;
@@ -266,26 +428,80 @@
       z-index: 99999;
       padding: 20px;
     }
-    .modal.open { display: flex; animation: fadeIn 0.3s ease; }
+
+    .modal.open {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
     .modal-content {
       background: #0f0c29;
       border: 1px solid var(--panel-border);
-      border-radius: 32px;
-      padding: 30px;
+      border-radius: 30px;
+      padding: 26px;
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       text-align: center;
     }
 
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-content h3 {
+      margin: 0 0 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 21px;
+      font-weight: 800;
+      color: #fff;
+    }
 
-    .hidden { display: none !important; }
+    .modal-content p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 600;
+    }
 
-    /* Mobil Optimizasyon */
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .pool-summary {
+      text-align: center;
+      opacity: .6;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
     @media (max-width: 480px) {
-      .btn-group { grid-template-columns: 1fr 1fr; }
-      .btn-icon { grid-column: span 2; width: 100%; }
-      .main-title { font-size: 28px; }
+      #pageContent {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .hero-actions,
+      .modal-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-group {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .btn-icon {
+        grid-column: span 2;
+        width: 100%;
+      }
+
+      .main-title {
+        font-size: 27px;
+      }
     }
   </style>
 </head>
@@ -293,7 +509,7 @@
 
 <div id="pageContent">
   <div class="top-nav">
-    <button class="back-btn" id="backBtn">
+    <button class="back-btn" id="backBtn" type="button" aria-label="Geri dön">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
     <div class="page-title-area">
@@ -304,167 +520,981 @@
 
   <section class="hero-card">
     <p class="hero-text">
-      Seslerin, italkyAI ekosistemindeki tüm modüllerle (FaceToFace, Chat vb.) senkronize çalışır. Arşivini dilediğin gibi yönetebilirsin.
+      Tüm modüllerde kullanılacak seslerini buradan yönet. Yeni kayıt eklemek mevcut sesi otomatik silmez.
     </p>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <button class="btn btn-main" id="openMineAddBtn">Kendi Sesim</button>
-      <button class="btn btn-outline" id="backOnlyBtn">Geri Dön</button>
+    <div class="hero-actions">
+      <button class="btn btn-main" id="openMineAddBtn" type="button">Kendi Sesim</button>
+      <button class="btn btn-outline" id="backOnlyBtn" type="button">Geri Dön</button>
     </div>
   </section>
 
-  <div class="voice-section">
-    <div class="section-label">Ana Profil</div>
-    <div class="voice-card">
-      <div class="card-header">
-        <div class="v-info">
-          <h4 id="mineCardName">Kendi Sesim</h4>
-          <p id="mineCardSub">Analiz ediliyor...</p>
-        </div>
-        <div class="status-pill" id="mineReadyPill">Kontrol</div>
-      </div>
-
-      <div class="audio-wrapper">
-        <audio id="mineAudio" controls></audio>
-      </div>
-
-      <div class="field-wrap hidden" id="mineCreateArea" style="margin-top: 15px;">
-        <div class="record-info">
-          <span class="status-text" id="mineStatus">Kayıt bekleniyor...</span>
-          <span class="timer-badge" id="mineTimer">20 sn</span>
-        </div>
-        <div class="btn-group">
-          <button class="btn btn-outline" id="startMineRecordBtn">Kaydı Başlat</button>
-          <button class="btn btn-main" id="saveMineBtn" disabled style="grid-column: span 2;">Kaydet</button>
-        </div>
-      </div>
-
-      <div class="btn-group" id="mineMainActions">
-        <button class="btn btn-outline" id="recordMineBtn">Ses Ekle</button>
-        <button class="btn btn-outline" id="listenMineBtn" disabled>Dinle</button>
-        <button class="btn btn-icon" id="deleteMineBtn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-        </button>
-      </div>
+  <section class="voice-card">
+    <div class="section-head">
+      <div class="section-label">Ana Profil</div>
     </div>
-  </div>
 
-  <div class="voice-section">
-    <div class="section-label">
-      İkinci Profil
-      <button class="status-pill ok" id="openSecondAddBtn" style="cursor:pointer; border:none;">+ EKLE</button>
-    </div>
-    <div class="voice-card">
-      <div class="card-header">
-        <div class="v-info">
-          <h4 id="secondCardName">Yakın Çevre</h4>
-          <p id="secondCardSub">Henüz ses tanımlanmadı.</p>
-        </div>
-        <div class="status-pill" id="secondReadyPill">Boş</div>
+    <div class="card-header">
+      <div class="v-info">
+        <h4 id="mineCardName">Kendi Sesim</h4>
+        <p id="mineCardSub">Analiz ediliyor...</p>
       </div>
+      <div class="status-pill soft" id="mineReadyPill">Kontrol</div>
+    </div>
 
-      <input class="italky-input" id="secondVoiceNameInput" type="text" placeholder="Örn: Eşim, Annem...">
-      
+    <div class="audio-wrapper">
+      <audio id="mineAudio" controls></audio>
+    </div>
+
+    <div class="hidden" id="mineCreateArea" style="margin-top:14px;">
       <div class="record-info">
-        <span class="status-text" id="secondStatus">İsim ve kayıt bekleniyor...</span>
-        <span class="timer-badge" id="secondTimer">20 sn</span>
-      </div>
-
-      <div class="audio-wrapper">
-        <audio id="secondAudio" controls></audio>
+        <span class="status-text" id="mineStatus">Kayıt bekleniyor...</span>
+        <span class="timer-badge" id="mineTimer">20 sn</span>
       </div>
 
       <div class="btn-group">
-        <button class="btn btn-outline" id="recordSecondBtn">Kayıt Al</button>
-        <button class="btn btn-main" id="saveSecondBtn" disabled>Kaydet</button>
-        <button class="btn btn-icon" id="deleteSecondBtn">
-           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-        </button>
+        <button class="btn btn-outline" id="startMineRecordBtn" type="button">Kaydı Başlat</button>
+        <button class="btn btn-main" id="saveMineBtn" type="button" disabled style="grid-column: span 2;">Kaydet</button>
       </div>
-      <button class="btn btn-outline" id="listenSecondBtn" disabled style="width:100%; margin-top:10px;">Mevcut Kaydı Dinle</button>
     </div>
-  </div>
 
-  <div class="voice-section">
-    <div class="section-label">
-      Hatıra Arşivi
-      <button class="status-pill warn" id="openMemoryAddBtn" style="cursor:pointer; border:none;">+ MP3 YÜKLE</button>
+    <div class="btn-group" id="mineMainActions">
+      <button class="btn btn-outline" id="recordMineBtn" type="button">Ses Ekle</button>
+      <button class="btn btn-outline" id="listenMineBtn" type="button" disabled>Dinle</button>
+      <button class="btn btn-icon" id="deleteMineBtn" type="button" aria-label="Kendi sesimi sil">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      </button>
     </div>
-    <div class="voice-card">
-      <div class="card-header">
-        <div class="v-info">
-          <h4 id="memoryCardName">Özel Sesler</h4>
-          <p id="memoryCardSub">MP3 yükleyerek sakla.</p>
-        </div>
-        <div class="status-pill" id="memoryReadyPill">Boş</div>
-      </div>
+  </section>
 
-      <input class="italky-input" id="memoryVoiceNameInput" type="text" placeholder="Örn: Dedemin Sesi">
-      
-      <div class="upload-zone" id="memoryPickBtn">
-        <div class="file-label" id="memoryFileName">Dosya seçmek için dokun (.mp3)</div>
-        <input id="memoryMp3Input" type="file" accept=".mp3" style="display:none;">
-      </div>
-
-      <div class="audio-wrapper">
-        <audio id="memoryAudio" controls></audio>
-      </div>
-
-      <div class="btn-group">
-        <button class="btn btn-outline" id="listenMemoryBtn" disabled>Dinle</button>
-        <button class="btn btn-main" id="saveMemoryMp3Btn" style="grid-column: span 1;">Kaydet</button>
-        <button class="btn btn-icon" id="deleteMemoryBtn">
-           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-        </button>
-      </div>
-      <div class="status-text" id="memoryStatus" style="margin-top:10px; text-align:center;">Dosya bekleniyor...</div>
+  <section class="voice-card">
+    <div class="section-head">
+      <div class="section-label">İkinci Profil</div>
+      <button class="status-pill action ok" id="openSecondAddBtn" type="button">+ Ekle</button>
     </div>
-  </div>
 
-  <div style="text-align:center; opacity:0.5; font-size:12px; font-weight:700;" id="poolSummary">
-    Ortak ses havuzu aktif • italkyAI
-  </div>
+    <div class="card-header">
+      <div class="v-info">
+        <h4 id="secondCardName">Yakın Çevre</h4>
+        <p id="secondCardSub">Henüz ses tanımlanmadı.</p>
+      </div>
+      <div class="status-pill soft" id="secondReadyPill">Boş</div>
+    </div>
+
+    <input class="italky-input" id="secondVoiceNameInput" type="text" placeholder="Örn: Eşim, Annem...">
+    <div class="field-error" id="secondNameError">Lütfen 2. Ses için bir isim yaz.</div>
+
+    <div class="record-info">
+      <span class="status-text" id="secondStatus">İsim ve kayıt bekleniyor...</span>
+      <span class="timer-badge" id="secondTimer">20 sn</span>
+    </div>
+
+    <div class="audio-wrapper">
+      <audio id="secondAudio" controls></audio>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-outline" id="recordSecondBtn" type="button">Kayıt Al</button>
+      <button class="btn btn-main" id="saveSecondBtn" type="button" disabled>Kaydet</button>
+      <button class="btn btn-icon" id="deleteSecondBtn" type="button" aria-label="2. sesi sil">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      </button>
+    </div>
+
+    <button class="btn btn-outline" id="listenSecondBtn" type="button" disabled style="margin-top:10px;">Mevcut Kaydı Dinle</button>
+  </section>
+
+  <section class="voice-card">
+    <div class="section-head">
+      <div class="section-label">Hatıra Arşivi</div>
+      <button class="status-pill action warn" id="openMemoryAddBtn" type="button">+ mp3 Yükle</button>
+    </div>
+
+    <div class="card-header">
+      <div class="v-info">
+        <h4 id="memoryCardName">Özel Sesler</h4>
+        <p id="memoryCardSub">mp3 yükleyerek sakla.</p>
+      </div>
+      <div class="status-pill soft" id="memoryReadyPill">Boş</div>
+    </div>
+
+    <input class="italky-input" id="memoryVoiceNameInput" type="text" placeholder="Örn: Dedemin Sesi">
+    <div class="field-error" id="memoryNameError">Lütfen Hatıra Sesi için bir isim yaz.</div>
+
+    <div class="upload-zone" id="memoryPickBtn">
+      <div class="file-label" id="memoryFileName">Dosya seçmek için dokun (.mp3)</div>
+      <input id="memoryMp3Input" type="file" accept=".mp3,audio/mpeg" class="hidden">
+    </div>
+
+    <div class="audio-wrapper">
+      <audio id="memoryAudio" controls></audio>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-outline" id="listenMemoryBtn" type="button" disabled>Dinle</button>
+      <button class="btn btn-main" id="saveMemoryMp3Btn" type="button">Kaydet</button>
+      <button class="btn btn-icon" id="deleteMemoryBtn" type="button" aria-label="Hatıra sesini sil">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      </button>
+    </div>
+
+    <div class="status-text" id="memoryStatus" style="margin-top:10px; text-align:center;">Dosya bekleniyor...</div>
+  </section>
+
+  <div class="pool-summary" id="poolSummary">Ortak ses havuzu aktif • italkyAI</div>
 </div>
 
 <div class="toast" id="toast">Bildirim</div>
 
 <div class="modal" id="leaveModal">
   <div class="modal-content">
-    <h3 style="margin-top:0">Ayrılıyor musunuz?</h3>
-    <p style="color:var(--muted); font-size:14px;">Kaydedilmemiş değişiklikler kaybolabilir.</p>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:25px;">
-      <button class="btn btn-outline" id="leaveNoBtn">Kal</button>
-      <button class="btn btn-main" id="leaveYesBtn">Çık</button>
+    <h3>Ayrılıyor musunuz?</h3>
+    <p>Kaydedilmemiş değişiklikler kaybolabilir.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="leaveNoBtn" type="button">Kal</button>
+      <button class="btn btn-main" id="leaveYesBtn" type="button">Çık</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="deleteModal">
   <div class="modal-content">
-    <h3 style="margin-top:0; color:#ef4444;">Sesi Sil?</h3>
-    <p id="deleteModalText" style="color:var(--muted); font-size:14px;">Bu işlem geri alınamaz.</p>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:25px;">
-      <button class="btn btn-outline" id="deleteNoBtn">Vazgeç</button>
-      <button class="btn btn-main" id="deleteYesBtn" style="background:var(--danger-grad);">Evet, Sil</button>
+    <h3 style="color:#ef4444;">Sesi Sil?</h3>
+    <p id="deleteModalText">Bu işlem geri alınamaz.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="deleteNoBtn" type="button">Vazgeç</button>
+      <button class="btn btn-danger" id="deleteYesBtn" type="button">Evet, Sil</button>
     </div>
   </div>
 </div>
 
 <script type="module">
-  // Not: Orijinal Script bloğunuz buraya aynen gelecek. 
-  // Sadece yukarıdaki yeni ID'lerle eşleştiğinden emin olduk.
-  // İşlevsellik (upload, record, enroll) değişmedi.
-  
-  (() => {
-    const RETURN_PARAM = new URLSearchParams(location.search).get("from") || "";
-    const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
-    const ENROLL_API = "https://italky-api.onrender.com/api/voice/enroll";
-    const MAX_RECORD_SECONDS = 20;
-    const $ = (id) => document.getElementById(id);
+(() => {
+  const RETURN_PARAM = new URLSearchParams(location.search).get("from") || "";
 
-    // ... Orijinal script içeriğinizin geri kalanı ...
-    // UI objesi ve fonksiyonlarınız buraya entegre edilecek.
-    // Tasarımı giydirdiğim için tüm selectorler (ID'ler) hazır.
-  })();
+  const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
+  const ENROLL_API = "https://italky-api.onrender.com/api/voice/enroll";
+  const MAX_RECORD_SECONDS = 20;
+  const $ = (id) => document.getElementById(id);
+
+  const UI = {
+    backBtn: $("backBtn"),
+    backOnlyBtn: $("backOnlyBtn"),
+
+    openMineAddBtn: $("openMineAddBtn"),
+    openSecondAddBtn: $("openSecondAddBtn"),
+    openMemoryAddBtn: $("openMemoryAddBtn"),
+
+    mineCardName: $("mineCardName"),
+    mineCardSub: $("mineCardSub"),
+    mineReadyPill: $("mineReadyPill"),
+
+    secondCardName: $("secondCardName"),
+    secondCardSub: $("secondCardSub"),
+    secondReadyPill: $("secondReadyPill"),
+
+    memoryCardName: $("memoryCardName"),
+    memoryCardSub: $("memoryCardSub"),
+    memoryReadyPill: $("memoryReadyPill"),
+
+    secondVoiceNameInput: $("secondVoiceNameInput"),
+    memoryVoiceNameInput: $("memoryVoiceNameInput"),
+    secondNameError: $("secondNameError"),
+    memoryNameError: $("memoryNameError"),
+
+    mineCreateArea: $("mineCreateArea"),
+    startMineRecordBtn: $("startMineRecordBtn"),
+    recordMineBtn: $("recordMineBtn"),
+    listenMineBtn: $("listenMineBtn"),
+    saveMineBtn: $("saveMineBtn"),
+
+    recordSecondBtn: $("recordSecondBtn"),
+    listenSecondBtn: $("listenSecondBtn"),
+    saveSecondBtn: $("saveSecondBtn"),
+
+    memoryPickBtn: $("memoryPickBtn"),
+    listenMemoryBtn: $("listenMemoryBtn"),
+    saveMemoryMp3Btn: $("saveMemoryMp3Btn"),
+    memoryMp3Input: $("memoryMp3Input"),
+    memoryFileName: $("memoryFileName"),
+
+    deleteMineBtn: $("deleteMineBtn"),
+    deleteSecondBtn: $("deleteSecondBtn"),
+    deleteMemoryBtn: $("deleteMemoryBtn"),
+
+    mineAudio: $("mineAudio"),
+    secondAudio: $("secondAudio"),
+    memoryAudio: $("memoryAudio"),
+
+    mineStatus: $("mineStatus"),
+    secondStatus: $("secondStatus"),
+    memoryStatus: $("memoryStatus"),
+
+    mineTimer: $("mineTimer"),
+    secondTimer: $("secondTimer"),
+
+    poolSummary: $("poolSummary"),
+    toast: $("toast"),
+
+    leaveModal: $("leaveModal"),
+    leaveYesBtn: $("leaveYesBtn"),
+    leaveNoBtn: $("leaveNoBtn"),
+
+    deleteModal: $("deleteModal"),
+    deleteModalText: $("deleteModalText"),
+    deleteYesBtn: $("deleteYesBtn"),
+    deleteNoBtn: $("deleteNoBtn")
+  };
+
+  const state = {
+    supabase: null,
+    currentUser: null,
+
+    mineRecorder: null,
+    secondRecorder: null,
+
+    mineChunks: [],
+    secondChunks: [],
+
+    mineBlob: null,
+    secondBlob: null,
+    memoryMp3File: null,
+
+    mineStream: null,
+    secondStream: null,
+
+    mineCountdown: null,
+    secondCountdown: null,
+
+    isSaving: false,
+    pendingDeleteType: null,
+
+    unsaved: {
+      mine: false,
+      second: false,
+      memory: false
+    },
+
+    serverState: {
+      mineReady: false,
+      secondReady: false,
+      memoryReady: false,
+      secondName: "",
+      memoryName: ""
+    }
+  };
+
+  function resolveReturnUrl() {
+    const from = String(RETURN_PARAM || "").trim().toLowerCase();
+    if (from === "arkadasla") return "/pages/arkadasla.html";
+    if (from === "sohbetai") return "/pages/italkyai_chat.html";
+    if (from === "facetoface") return "/facetoface.html";
+    return "/pages/home.html";
+  }
+
+  function goBack() {
+    location.href = resolveReturnUrl();
+  }
+
+  function showToast(msg) {
+    UI.toast.textContent = String(msg || "");
+    UI.toast.classList.add("show");
+    clearTimeout(window.__voiceLibraryToast);
+    window.__voiceLibraryToast = setTimeout(() => {
+      UI.toast.classList.remove("show");
+    }, 1700);
+  }
+
+  function setButtonState(button, enabled) {
+    if (!button) return;
+    button.disabled = !enabled;
+  }
+
+  function setTimer(el, seconds) {
+    if (!el) return;
+    el.textContent = `${seconds} sn`;
+  }
+
+  function stopTracks(stream) {
+    try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
+  }
+
+  function showFieldError(inputEl, errorEl, message) {
+    if (inputEl) inputEl.classList.add("invalid");
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.classList.add("show");
+    }
+  }
+
+  function hideFieldError(inputEl, errorEl) {
+    if (inputEl) inputEl.classList.remove("invalid");
+    if (errorEl) errorEl.classList.remove("show");
+  }
+
+  function validateSecondName() {
+    const value = String(UI.secondVoiceNameInput.value || "").trim();
+    if (!value) {
+      showFieldError(UI.secondVoiceNameInput, UI.secondNameError, "Lütfen 2. Ses için bir isim yaz.");
+      return false;
+    }
+    hideFieldError(UI.secondVoiceNameInput, UI.secondNameError);
+    return true;
+  }
+
+  function validateMemoryName() {
+    const value = String(UI.memoryVoiceNameInput.value || "").trim();
+    if (!value) {
+      showFieldError(UI.memoryVoiceNameInput, UI.memoryNameError, "Lütfen Hatıra Sesi için bir isim yaz.");
+      return false;
+    }
+    hideFieldError(UI.memoryVoiceNameInput, UI.memoryNameError);
+    return true;
+  }
+
+  function markUnsaved(type, value) {
+    if (!Object.prototype.hasOwnProperty.call(state.unsaved, type)) return;
+    state.unsaved[type] = !!value;
+    updateSummary();
+  }
+
+  function hasUnsavedChanges() {
+    return !!(state.unsaved.mine || state.unsaved.second || state.unsaved.memory);
+  }
+
+  function setSaving(value) {
+    state.isSaving = !!value;
+    updateSummary();
+  }
+
+  function updateSummary() {
+    if (state.isSaving) {
+      UI.poolSummary.textContent = "Kayıt işlemi sürüyor...";
+      return;
+    }
+    if (hasUnsavedChanges()) {
+      UI.poolSummary.textContent = "Kaydedilmemiş işlem var";
+      return;
+    }
+    UI.poolSummary.textContent = "Ortak ses havuzu aktif • italkyAI";
+  }
+
+  function openLeaveModal() {
+    if (state.isSaving) {
+      showToast("Kayıt işlemi sürüyor, lütfen bekleyin.");
+      return;
+    }
+
+    if (!hasUnsavedChanges()) {
+      goBack();
+      return;
+    }
+
+    UI.leaveModal.classList.add("open");
+  }
+
+  function closeLeaveModal() {
+    UI.leaveModal.classList.remove("open");
+  }
+
+  function openDeleteModal(type) {
+    state.pendingDeleteType = type;
+
+    const labelMap = {
+      mine: "Kendi Sesim",
+      second: "2. Ses",
+      memory: "Hatıra Sesi"
+    };
+
+    UI.deleteModalText.textContent = `${labelMap[type] || "Ses"} kaydını silmek istediğinize emin misiniz?`;
+    UI.deleteModal.classList.add("open");
+  }
+
+  function closeDeleteModal() {
+    state.pendingDeleteType = null;
+    UI.deleteModal.classList.remove("open");
+  }
+
+  function repaintCards() {
+    UI.mineCardSub.textContent = state.serverState.mineReady
+      ? "Kayıtlı ve kullanıma hazır."
+      : "Henüz kayıtlı değil.";
+    UI.mineReadyPill.textContent = state.serverState.mineReady ? "Hazır" : "Boş";
+    UI.mineReadyPill.className = `status-pill ${state.serverState.mineReady ? "ok" : "soft"}`;
+
+    UI.secondCardName.textContent = state.serverState.secondName || "Yakın Çevre";
+    UI.secondCardSub.textContent = state.serverState.secondReady
+      ? "Kayıtlı ve kullanıma hazır."
+      : "Henüz ses tanımlanmadı.";
+    UI.secondReadyPill.textContent = state.serverState.secondReady ? "Hazır" : "Boş";
+    UI.secondReadyPill.className = `status-pill ${state.serverState.secondReady ? "ok" : "soft"}`;
+
+    UI.memoryCardName.textContent = state.serverState.memoryName || "Özel Sesler";
+    UI.memoryCardSub.textContent = state.serverState.memoryReady
+      ? "Kayıtlı ve kullanıma hazır."
+      : "mp3 yükleyerek sakla.";
+    UI.memoryReadyPill.textContent = state.serverState.memoryReady ? "Hazır" : "Boş";
+    UI.memoryReadyPill.className = `status-pill ${state.serverState.memoryReady ? "warn" : "soft"}`;
+  }
+
+  function clearMineDraft() {
+    clearInterval(state.mineCountdown);
+    state.mineCountdown = null;
+    state.mineChunks = [];
+    state.mineBlob = null;
+    stopTracks(state.mineStream);
+    state.mineStream = null;
+    UI.mineAudio.pause();
+    UI.mineAudio.removeAttribute("src");
+    UI.mineAudio.load();
+    UI.mineStatus.textContent = state.serverState.mineReady ? "Kayıtlı ses korunuyor." : "Kayıt bekleniyor...";
+    setButtonState(UI.listenMineBtn, state.serverState.mineReady);
+    setButtonState(UI.saveMineBtn, false);
+    markUnsaved("mine", false);
+  }
+
+  function clearSecondDraft() {
+    clearInterval(state.secondCountdown);
+    state.secondCountdown = null;
+    state.secondChunks = [];
+    state.secondBlob = null;
+    stopTracks(state.secondStream);
+    state.secondStream = null;
+    UI.secondAudio.pause();
+    UI.secondAudio.removeAttribute("src");
+    UI.secondAudio.load();
+    UI.secondStatus.textContent = state.serverState.secondReady ? "Mevcut kayıt korunuyor." : "İsim ve kayıt bekleniyor...";
+    setButtonState(UI.listenSecondBtn, state.serverState.secondReady);
+    setButtonState(UI.saveSecondBtn, false);
+    markUnsaved("second", false);
+  }
+
+  function clearMemoryDraft() {
+    state.memoryMp3File = null;
+    UI.memoryMp3Input.value = "";
+    UI.memoryAudio.pause();
+    UI.memoryAudio.removeAttribute("src");
+    UI.memoryAudio.load();
+    UI.memoryFileName.textContent = "Dosya seçmek için dokun (.mp3)";
+    UI.memoryStatus.textContent = state.serverState.memoryReady ? "Mevcut kayıt korunuyor." : "Dosya bekleniyor...";
+    setButtonState(UI.listenMemoryBtn, state.serverState.memoryReady);
+    markUnsaved("memory", false);
+  }
+
+  async function askMicPermission() {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      throw new Error("Mikrofon izni alınamadı.");
+    }
+  }
+
+  function createRecorder(stream, onData, onStop) {
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : "audio/webm";
+
+    const recorder = new MediaRecorder(stream, { mimeType });
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) onData(e.data);
+    };
+    recorder.onstop = onStop;
+    return recorder;
+  }
+
+  async function uploadVoice(blobOrFile, voiceType, voiceName) {
+    if (!state.currentUser?.id) throw new Error("Kullanıcı bilgisi yok.");
+    if (!blobOrFile) throw new Error("Yüklenecek ses bulunamadı.");
+
+    const fileExt =
+      blobOrFile.name?.split(".").pop() ||
+      (voiceType === "memory" ? "mp3" : "webm");
+
+    const form = new FormData();
+    form.append("user_id", state.currentUser.id);
+    form.append("voice_type", voiceType);
+    form.append("voice_name", voiceName || "");
+    form.append("audio_file", blobOrFile, `${voiceType}.${fileExt}`);
+
+    const resp = await fetch(VOICE_API, { method: "POST", body: form });
+    const json = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !json?.ok) {
+      throw new Error(json?.detail || json?.error || "Ses kaydı backend’e gönderilemedi.");
+    }
+
+    return json;
+  }
+
+  async function enrollVoice(voiceType) {
+    if (!state.supabase) throw new Error("Supabase hazır değil.");
+
+    const { data: { session } } = await state.supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error("Oturum bulunamadı.");
+    }
+
+    const resp = await fetch(`${ENROLL_API}/${voiceType}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${session.access_token}`
+      }
+    });
+
+    const json = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !json?.ok) {
+      throw new Error(json?.detail || json?.error || "Voice enroll başarısız.");
+    }
+
+    return json;
+  }
+
+  function startCountdown(timerEl, onDone) {
+    let remain = MAX_RECORD_SECONDS;
+    setTimer(timerEl, remain);
+
+    const interval = setInterval(() => {
+      remain -= 1;
+      setTimer(timerEl, remain);
+      if (remain <= 0) {
+        clearInterval(interval);
+        onDone();
+      }
+    }, 1000);
+
+    return interval;
+  }
+
+  async function beginMineRecording() {
+    try {
+      UI.mineCreateArea.classList.remove("hidden");
+
+      clearInterval(state.mineCountdown);
+      state.mineChunks = [];
+      state.mineBlob = null;
+
+      UI.mineAudio.pause();
+      UI.mineAudio.removeAttribute("src");
+      UI.mineAudio.load();
+
+      setButtonState(UI.listenMineBtn, false);
+      setButtonState(UI.saveMineBtn, false);
+
+      state.mineStream = await askMicPermission();
+      state.mineRecorder = createRecorder(
+        state.mineStream,
+        (data) => state.mineChunks.push(data),
+        () => {
+          clearInterval(state.mineCountdown);
+          state.mineCountdown = null;
+
+          state.mineBlob = new Blob(state.mineChunks, { type: "audio/webm" });
+          UI.mineAudio.src = URL.createObjectURL(state.mineBlob);
+          UI.mineStatus.textContent = "Yeni kayıt hazır. Kaydedersen mevcut sesin üzerine yazılır.";
+          setButtonState(UI.listenMineBtn, true);
+          setButtonState(UI.saveMineBtn, true);
+          stopTracks(state.mineStream);
+          state.mineStream = null;
+
+          markUnsaved("mine", true);
+        }
+      );
+
+      state.mineRecorder.start();
+      UI.mineStatus.textContent = "Kayıt alınıyor. Lütfen doğal akışınızda konuşunuz.";
+
+      state.mineCountdown = startCountdown(UI.mineTimer, () => {
+        if (state.mineRecorder && state.mineRecorder.state !== "inactive") state.mineRecorder.stop();
+      });
+    } catch (e) {
+      UI.mineStatus.textContent = e.message || "Kayıt başlatılamadı.";
+      stopTracks(state.mineStream);
+      state.mineStream = null;
+    }
+  }
+
+  async function beginSecondRecording() {
+    if (!validateSecondName()) {
+      UI.secondStatus.textContent = "İsim yaz.";
+      return;
+    }
+
+    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+
+    try {
+      clearInterval(state.secondCountdown);
+      state.secondChunks = [];
+      state.secondBlob = null;
+
+      UI.secondAudio.pause();
+      UI.secondAudio.removeAttribute("src");
+      UI.secondAudio.load();
+
+      setButtonState(UI.listenSecondBtn, false);
+      setButtonState(UI.saveSecondBtn, false);
+
+      state.secondStream = await askMicPermission();
+      state.secondRecorder = createRecorder(
+        state.secondStream,
+        (data) => state.secondChunks.push(data),
+        () => {
+          clearInterval(state.secondCountdown);
+          state.secondCountdown = null;
+
+          state.secondBlob = new Blob(state.secondChunks, { type: "audio/webm" });
+          UI.secondAudio.src = URL.createObjectURL(state.secondBlob);
+          UI.secondStatus.textContent = `${secondName} kaydı hazır. Kaydedersen mevcut profil güncellenir.`;
+          setButtonState(UI.listenSecondBtn, true);
+          setButtonState(UI.saveSecondBtn, true);
+          stopTracks(state.secondStream);
+          state.secondStream = null;
+
+          markUnsaved("second", true);
+        }
+      );
+
+      state.secondRecorder.start();
+      UI.secondStatus.textContent = `${secondName} için kayıt alınıyor...`;
+
+      state.secondCountdown = startCountdown(UI.secondTimer, () => {
+        if (state.secondRecorder && state.secondRecorder.state !== "inactive") state.secondRecorder.stop();
+      });
+    } catch (e) {
+      UI.secondStatus.textContent = e.message || "Kayıt başlatılamadı.";
+      stopTracks(state.secondStream);
+      state.secondStream = null;
+    }
+  }
+
+  async function saveMineVoice() {
+    if (!state.mineBlob) {
+      UI.mineStatus.textContent = "Önce kayıt al.";
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      UI.mineStatus.textContent = "Kayıt yükleniyor...";
+      await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
+
+      UI.mineStatus.textContent = "Ses hazırlanıyor...";
+      await enrollVoice("mine");
+
+      state.serverState.mineReady = true;
+      repaintCards();
+
+      UI.mineStatus.textContent = "Kendi Sesim hazır.";
+      markUnsaved("mine", false);
+      showToast("Kendi Sesim kaydedildi");
+    } catch (e) {
+      UI.mineStatus.textContent = e.message || "Kayıt hazırlanamadı.";
+      markUnsaved("mine", true);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveSecondVoice() {
+    if (!validateSecondName()) {
+      UI.secondStatus.textContent = "İsim yaz.";
+      return;
+    }
+
+    if (!state.secondBlob) {
+      UI.secondStatus.textContent = "Önce kayıt al.";
+      return;
+    }
+
+    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
+
+    try {
+      setSaving(true);
+
+      UI.secondStatus.textContent = "Kayıt yükleniyor...";
+      await uploadVoice(state.secondBlob, "second", secondName);
+
+      UI.secondStatus.textContent = "Ses hazırlanıyor...";
+      await enrollVoice("second");
+
+      state.serverState.secondReady = true;
+      state.serverState.secondName = secondName;
+      repaintCards();
+
+      UI.secondStatus.textContent = `${secondName} hazır.`;
+      markUnsaved("second", false);
+      showToast(`${secondName} sesi kaydedildi`);
+    } catch (e) {
+      UI.secondStatus.textContent = e.message || "2. Ses hazırlanamadı.";
+      markUnsaved("second", true);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveMemoryVoiceFromMp3() {
+    if (!validateMemoryName()) {
+      UI.memoryStatus.textContent = "İsim yaz.";
+      return;
+    }
+
+    const memoryName = String(UI.memoryVoiceNameInput.value || "").trim();
+
+    if (!state.memoryMp3File) {
+      UI.memoryStatus.textContent = "Önce mp3 seç.";
+      return;
+    }
+
+    if (state.memoryMp3File.size > 10 * 1024 * 1024) {
+      UI.memoryStatus.textContent = "mp3 en fazla 10 MB olabilir.";
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      UI.memoryStatus.textContent = "mp3 yükleniyor...";
+      await uploadVoice(state.memoryMp3File, "memory", memoryName);
+
+      UI.memoryStatus.textContent = "Ses hazırlanıyor...";
+      await enrollVoice("memory");
+
+      state.serverState.memoryReady = true;
+      state.serverState.memoryName = memoryName;
+      repaintCards();
+
+      UI.memoryStatus.textContent = `${memoryName} hazır.`;
+      markUnsaved("memory", false);
+      showToast(`${memoryName} sesi kaydedildi`);
+    } catch (e) {
+      UI.memoryStatus.textContent = e.message || "Hatıra Sesi hazırlanamadı.";
+      markUnsaved("memory", true);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function loadProfileState() {
+    if (!state.supabase || !state.currentUser?.id) return;
+
+    try {
+      const { data: profile } = await state.supabase
+        .from("profiles")
+        .select(`
+          voice_sample_path,
+          tts_voice_ready,
+          tts_voice_id,
+          second_voice_name,
+          second_voice_sample_path,
+          second_tts_voice_ready,
+          second_tts_voice_id,
+          memory_voice_name,
+          memory_voice_sample_path,
+          memory_tts_voice_ready,
+          memory_tts_voice_id
+        `)
+        .eq("id", state.currentUser.id)
+        .maybeSingle();
+
+      state.serverState.mineReady =
+        !!profile?.voice_sample_path ||
+        (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+
+      state.serverState.secondReady =
+        !!profile?.second_voice_sample_path ||
+        (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+
+      state.serverState.memoryReady =
+        !!profile?.memory_voice_sample_path ||
+        (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+
+      state.serverState.secondName = String(profile?.second_voice_name || "").trim();
+      state.serverState.memoryName = String(profile?.memory_voice_name || "").trim();
+
+      if (state.serverState.secondName) UI.secondVoiceNameInput.value = state.serverState.secondName;
+      if (state.serverState.memoryName) UI.memoryVoiceNameInput.value = state.serverState.memoryName;
+
+      setButtonState(UI.listenMineBtn, state.serverState.mineReady);
+      setButtonState(UI.listenSecondBtn, state.serverState.secondReady);
+      setButtonState(UI.listenMemoryBtn, state.serverState.memoryReady);
+
+      UI.mineStatus.textContent = state.serverState.mineReady ? "Kayıtlı ses korunuyor." : "Kayıt bekleniyor...";
+      UI.secondStatus.textContent = state.serverState.secondReady ? "Mevcut kayıt korunuyor." : "İsim ve kayıt bekleniyor...";
+      UI.memoryStatus.textContent = state.serverState.memoryReady ? "Mevcut kayıt korunuyor." : "Dosya bekleniyor...";
+
+      repaintCards();
+    } catch {
+      repaintCards();
+    }
+  }
+
+  async function bootAuth() {
+    try {
+      const mod = await import("/js/supabase_client.js");
+      state.supabase = mod.supabase;
+
+      const { data: { session } } = await state.supabase.auth.getSession();
+      if (!session?.user) {
+        location.replace("/pages/login.html");
+        return false;
+      }
+
+      state.currentUser = session.user;
+      await loadProfileState();
+      return true;
+    } catch (e) {
+      console.error("Supabase yüklenemedi:", e);
+      showToast("Bağlantı kontrol ediliyor.");
+      return false;
+    }
+  }
+
+  async function handleDeleteConfirmed() {
+    const type = state.pendingDeleteType;
+    closeDeleteModal();
+    if (!type) return;
+
+    if (type === "mine") {
+      clearMineDraft();
+      state.serverState.mineReady = false;
+      repaintCards();
+      UI.mineStatus.textContent = "Silme altyapısı sonra bağlanacak. Şimdilik görünüm temizlendi.";
+      showToast("Silme ekranı hazır");
+      return;
+    }
+
+    if (type === "second") {
+      clearSecondDraft();
+      state.serverState.secondReady = false;
+      state.serverState.secondName = "";
+      UI.secondVoiceNameInput.value = "";
+      repaintCards();
+      UI.secondStatus.textContent = "Silme altyapısı sonra bağlanacak. Şimdilik görünüm temizlendi.";
+      showToast("Silme ekranı hazır");
+      return;
+    }
+
+    if (type === "memory") {
+      clearMemoryDraft();
+      state.serverState.memoryReady = false;
+      state.serverState.memoryName = "";
+      UI.memoryVoiceNameInput.value = "";
+      repaintCards();
+      UI.memoryStatus.textContent = "Silme altyapısı sonra bağlanacak. Şimdilik görünüm temizlendi.";
+      showToast("Silme ekranı hazır");
+    }
+  }
+
+  function bindEvents() {
+    UI.backBtn.addEventListener("click", openLeaveModal);
+    UI.backOnlyBtn.addEventListener("click", openLeaveModal);
+
+    UI.openMineAddBtn.addEventListener("click", () => {
+      UI.mineCreateArea.classList.remove("hidden");
+      showToast("Kendi Sesim alanı açıldı");
+    });
+
+    UI.openSecondAddBtn.addEventListener("click", () => {
+      UI.secondVoiceNameInput.focus();
+      showToast("İsim yazıp kayıt başlatabilirsin");
+    });
+
+    UI.openMemoryAddBtn.addEventListener("click", () => {
+      UI.memoryVoiceNameInput.focus();
+      showToast("İsim verip mp3 yükleyebilirsin");
+    });
+
+    UI.secondVoiceNameInput.addEventListener("input", () => {
+      hideFieldError(UI.secondVoiceNameInput, UI.secondNameError);
+    });
+
+    UI.memoryVoiceNameInput.addEventListener("input", () => {
+      hideFieldError(UI.memoryVoiceNameInput, UI.memoryNameError);
+    });
+
+    UI.startMineRecordBtn.addEventListener("click", beginMineRecording);
+    UI.recordMineBtn.addEventListener("click", () => {
+      UI.mineCreateArea.classList.remove("hidden");
+      beginMineRecording();
+    });
+
+    UI.recordSecondBtn.addEventListener("click", beginSecondRecording);
+
+    UI.listenMineBtn.addEventListener("click", () => {
+      if (UI.mineAudio.src) UI.mineAudio.play();
+    });
+
+    UI.listenSecondBtn.addEventListener("click", () => {
+      if (UI.secondAudio.src) UI.secondAudio.play();
+    });
+
+    UI.listenMemoryBtn.addEventListener("click", () => {
+      if (UI.memoryAudio.src) UI.memoryAudio.play();
+    });
+
+    UI.saveMineBtn.addEventListener("click", saveMineVoice);
+    UI.saveSecondBtn.addEventListener("click", saveSecondVoice);
+
+    UI.memoryPickBtn.addEventListener("click", () => {
+      UI.memoryMp3Input.click();
+    });
+
+    UI.memoryMp3Input.addEventListener("change", (e) => {
+      const file = e.target.files?.[0] || null;
+      state.memoryMp3File = file;
+
+      if (file) {
+        UI.memoryAudio.src = URL.createObjectURL(file);
+        UI.memoryFileName.textContent = file.name;
+        UI.memoryStatus.textContent = `${file.name} seçildi. Kaydet diyerek devam et.`;
+        setButtonState(UI.listenMemoryBtn, true);
+        markUnsaved("memory", true);
+      } else {
+        UI.memoryAudio.pause();
+        UI.memoryAudio.removeAttribute("src");
+        UI.memoryAudio.load();
+        UI.memoryFileName.textContent = "Dosya seçmek için dokun (.mp3)";
+        UI.memoryStatus.textContent = state.serverState.memoryReady ? "Mevcut kayıt korunuyor." : "Dosya bekleniyor...";
+        setButtonState(UI.listenMemoryBtn, state.serverState.memoryReady);
+        markUnsaved("memory", false);
+      }
+    });
+
+    UI.saveMemoryMp3Btn.addEventListener("click", saveMemoryVoiceFromMp3);
+
+    UI.deleteMineBtn.addEventListener("click", () => openDeleteModal("mine"));
+    UI.deleteSecondBtn.addEventListener("click", () => openDeleteModal("second"));
+    UI.deleteMemoryBtn.addEventListener("click", () => openDeleteModal("memory"));
+
+    UI.leaveNoBtn.addEventListener("click", closeLeaveModal);
+    UI.leaveYesBtn.addEventListener("click", goBack);
+
+    UI.deleteNoBtn.addEventListener("click", closeDeleteModal);
+    UI.deleteYesBtn.addEventListener("click", handleDeleteConfirmed);
+
+    window.addEventListener("beforeunload", (e) => {
+      if (hasUnsavedChanges() && !state.isSaving) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    });
+  }
+
+  async function init() {
+    setButtonState(UI.listenMineBtn, false);
+    setButtonState(UI.listenSecondBtn, false);
+    setButtonState(UI.listenMemoryBtn, false);
+    setTimer(UI.mineTimer, MAX_RECORD_SECONDS);
+    setTimer(UI.secondTimer, MAX_RECORD_SECONDS);
+    repaintCards();
+    updateSummary();
+
+    bindEvents();
+    await bootAuth();
+  }
+
+  init();
+})();
 </script>
 </body>
 </html>
