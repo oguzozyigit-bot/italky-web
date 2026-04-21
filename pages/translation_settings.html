@@ -963,17 +963,37 @@
     return item?.preview_signed_url || item?.sample_signed_url || "";
   }
 
-  function playVoiceItem(item) {
-    const url = getPlayableUrl(item);
-    if (!url) {
-      showToast("Dinlenecek kayıt bulunamadı");
-      return;
-    }
-    const audio = new Audio(url);
-    audio.play().catch(() => {
-      showToast("Ses çalınamadı");
-    });
+  async function playVoiceItem(item) {
+  const url = getPlayableUrl(item);
+  if (!url) {
+    showToast("Dinlenecek kayıt bulunamadı");
+    return;
   }
+
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      throw new Error("audio_fetch_failed");
+    }
+
+    const blob = await resp.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
+    const audio = new Audio(objectUrl);
+    audio.onended = () => {
+      try { URL.revokeObjectURL(objectUrl); } catch {}
+    };
+    audio.onerror = () => {
+      try { URL.revokeObjectURL(objectUrl); } catch {}
+      showToast("Ses çalınamadı");
+    };
+
+    await audio.play();
+  } catch (e) {
+    console.error("playVoiceItem error:", e);
+    showToast("Ses çalınamadı");
+  }
+}
 
   function buildItemRow(item, type) {
     const row = document.createElement("div");
