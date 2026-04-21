@@ -25,15 +25,15 @@ const KAFKAS_POOL = [
 ];
 
 const BCP = {
-  tr:  "tr-TR",
-  ab:  "tr-TR",
+  tr: "tr-TR",
+  ab: "tr-TR",
   ady: "tr-TR",
   kbd: "tr-TR",
-  ce:  "tr-TR",
-  ka:  "ka-GE",
-  os:  "ru-RU",
+  ce: "tr-TR",
+  ka: "ka-GE",
+  os: "ru-RU",
   lez: "tr-TR",
-  av:  "ru-RU"
+  av: "ru-RU"
 };
 
 const TTS_FALLBACK_LANG = {
@@ -675,7 +675,6 @@ function startRecognition(side) {
 function prepareInputs() {
   [UI.topInput, UI.botInput].forEach((input) => {
     if (!input) return;
-
     input.readOnly = true;
     input.disabled = false;
     input.setAttribute("inputmode", "none");
@@ -688,6 +687,7 @@ function prepareInputs() {
   state.topKeyboardController = attachKeyboard({
     target: UI.topInput,
     layout: "latin",
+    rotate180: true,
     enableSound: true,
     enableVibration: true,
     showNumberRow: true,
@@ -705,6 +705,7 @@ function prepareInputs() {
   state.botKeyboardController = attachKeyboard({
     target: UI.botInput,
     layout: "tr",
+    rotate180: false,
     enableSound: true,
     enableVibration: true,
     showNumberRow: true,
