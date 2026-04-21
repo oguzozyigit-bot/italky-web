@@ -13,29 +13,10 @@
     :root{
       --txt: rgba(255,255,255,.96);
       --muted: rgba(255,255,255,.62);
-
       --bg1:#08102a;
       --bg2:#13204a;
-
       --panel-border: rgba(255,255,255,.08);
-
-      --cyan:#67e8f9;
       --cyan-soft:rgba(103,232,249,.16);
-
-      --indigo:#6366f1;
-      --indigo-soft:rgba(99,102,241,.14);
-
-      --blue:#3b82f6;
-      --blue-soft:rgba(59,130,246,.14);
-
-      --ok:#86efac;
-      --ok-bg:rgba(34,197,94,.10);
-      --ok-br:rgba(34,197,94,.20);
-
-      --warn:#fde68a;
-      --warn-bg:rgba(245,158,11,.10);
-      --warn-br:rgba(245,158,11,.20);
-
       --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#60a5fa 100%);
     }
 
@@ -70,12 +51,12 @@
 
     #pageContent{
       max-width:560px;
+      min-height:100dvh;
       margin:0 auto;
       padding:14px 16px 28px;
       display:flex;
       flex-direction:column;
       gap:18px;
-      scroll-behavior:smooth;
     }
 
     .topRow{
@@ -142,13 +123,6 @@
       -webkit-text-fill-color:transparent;
     }
 
-    .page-sub{
-      margin:0;
-      font-size:12px;
-      line-height:1.45;
-      color:var(--muted);
-    }
-
     .panel{
       display:flex;
       flex-direction:column;
@@ -182,6 +156,7 @@
       font-size:11px;
       line-height:1.45;
       color:var(--muted);
+      font-weight:700;
     }
 
     .setting-row{
@@ -249,6 +224,48 @@
       left:28px;
     }
 
+    .pickerBtn{
+      min-height:62px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+    }
+
+    .pickerMeta{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .pickerTitle{
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .pickerValue{
+      font-size:13px;
+      line-height:1.45;
+      color:rgba(255,255,255,.74);
+      font-weight:700;
+      word-break:break-word;
+    }
+
+    .pickerArrow{
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+      opacity:.8;
+      flex:0 0 auto;
+    }
+
     .ai-note{
       display:flex;
       gap:12px;
@@ -290,75 +307,6 @@
       line-height:1.5;
       color:rgba(255,255,255,.78);
       font-weight:700;
-    }
-
-    .choice-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .choice-card{
-      padding:14px;
-      border-radius:18px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
-      cursor:pointer;
-      transition:.2s ease;
-      min-height:128px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      gap:8px;
-    }
-
-    .choice-card.active{
-      border-color: rgba(103,232,249,.42);
-      background: rgba(99,102,241,.14);
-      box-shadow: 0 0 0 1px rgba(103,232,249,.16) inset;
-    }
-
-    .choice-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-    }
-
-    .choice-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      line-height:1.2;
-    }
-
-    .choice-badge{
-      font-size:10px;
-      font-weight:900;
-      letter-spacing:.4px;
-      padding:6px 8px;
-      border-radius:999px;
-      white-space:nowrap;
-      border:1px solid rgba(255,255,255,.12);
-    }
-
-    .choice-badge.free{
-      color: var(--ok);
-      background: var(--ok-bg);
-      border-color: var(--ok-br);
-    }
-
-    .choice-badge.paid{
-      color: var(--warn);
-      background: var(--warn-bg);
-      border-color: var(--warn-br);
-    }
-
-    .choice-desc{
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.70);
-      word-break:break-word;
     }
 
     .summary-line{
@@ -406,6 +354,7 @@
       display:grid;
       grid-template-columns:1fr;
       gap:12px;
+      margin-top:auto;
     }
 
     .toast{
@@ -451,7 +400,9 @@
     }
 
     .modal-card{
-      width:min(100%, 420px);
+      width:min(100%, 440px);
+      max-height:min(84vh, 760px);
+      overflow:auto;
       border-radius:24px;
       padding:18px;
       background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
@@ -482,12 +433,93 @@
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:10px;
+      margin-top:6px;
+    }
+
+    .voiceList{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:4px;
+    }
+
+    .voiceItem{
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+    }
+
+    .voiceItem.active{
+      border-color: rgba(103,232,249,.42);
+      background: rgba(99,102,241,.14);
+      box-shadow: 0 0 0 1px rgba(103,232,249,.16) inset;
+    }
+
+    .voiceItemLeft{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .voiceItemName{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+      word-break:break-word;
+    }
+
+    .voiceItemSub{
+      font-size:11px;
+      line-height:1.35;
+      color:rgba(255,255,255,.64);
+      font-weight:700;
+    }
+
+    .voiceItemTag{
+      font-size:10px;
+      font-weight:900;
+      padding:6px 8px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+
+    .voiceGroupTitle{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.62);
+      padding:4px 4px 0;
+    }
+
+    .emptyBox{
+      border-radius:16px;
+      border:1px dashed rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      padding:14px;
+      text-align:center;
+      color:rgba(255,255,255,.64);
+      font-size:12px;
+      font-weight:700;
+      line-height:1.5;
     }
 
     @media (max-width:390px){
       #pageContent{ padding:12px 14px 22px; }
       .title{ font-size:25px; }
-      .choice-grid{ grid-template-columns:1fr; }
+      .modal-actions{ grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -519,48 +551,22 @@
 
   <section class="panel">
     <h2 class="panel-title">Ses Seç</h2>
+    <p class="panel-sub">Bir sesi seçtiğinde otomatik kaydolur.</p>
 
-    <div class="choice-grid" id="voiceGrid">
-      <button class="choice-card active" data-voice="auto" type="button">
-        <div class="choice-top">
-          <div class="choice-name">Otomatik Ses</div>
-          <div class="choice-badge free">Ücretsiz</div>
-        </div>
-        <div class="choice-desc">Varsayılan sistem sesi kullanılır.</div>
-      </button>
-
-      <button class="choice-card" data-voice="mine" type="button">
-        <div class="choice-top">
-          <div class="choice-name">Kendi Sesim</div>
-          <div class="choice-badge paid">Jetonla Çalışır</div>
-        </div>
-        <div class="choice-desc" id="mineVoiceDesc">Kayıt durumu kontrol ediliyor.</div>
-      </button>
-
-      <button class="choice-card" data-voice="second" type="button">
-        <div class="choice-top">
-          <div class="choice-name">2. Ses</div>
-          <div class="choice-badge paid">Jetonla Çalışır</div>
-        </div>
-        <div class="choice-desc" id="secondVoiceDesc">Kayıt durumu kontrol ediliyor.</div>
-      </button>
-
-      <button class="choice-card" data-voice="memory" type="button">
-        <div class="choice-top">
-          <div class="choice-name">Hatıra Sesi</div>
-          <div class="choice-badge paid">Jetonla Çalışır</div>
-        </div>
-        <div class="choice-desc" id="memoryVoiceDesc">Kayıt durumu kontrol ediliyor.</div>
-      </button>
-    </div>
+    <button class="pickerBtn" id="voicePickerBtn" type="button">
+      <div class="pickerMeta">
+        <div class="pickerTitle">Seçili Ses</div>
+        <div class="pickerValue" id="selectedVoiceText">Otomatik Ses • Sistem sesi</div>
+      </div>
+      <div class="pickerArrow">›</div>
+    </button>
 
     <div class="ai-note" style="margin-top:2px;">
       <div class="ai-note-icon">⚡</div>
       <div class="ai-note-body">
         <div class="ai-note-title">Performans Notu</div>
         <div class="ai-note-text">
-          Kendi Sesim, 2. Ses ve Hatıra Sesi seçeneklerinde işlemler yapay zekâ desteğiyle üretildiği için
-          otomatik sese göre daha geç yanıt alınabilir. Her 1000 karakterde 1 Jeton gereklidir.
+          Premium seslerde yanıt hazırlığı biraz daha uzun sürebilir. Her 1000 karakterde 1 jeton gereklidir.
         </div>
       </div>
     </div>
@@ -572,7 +578,7 @@
   </section>
 
   <section class="action-grid">
-    <button class="btn btn-secondary" id="goAdvancedBtn" type="button">Gelişmiş Ses Ayarları</button>
+    <button class="btn btn-secondary" id="goAdvancedBtn" type="button">Ses Kütüphanesi</button>
     <button class="btn btn-primary" id="saveBtn" type="button">Geri Dön</button>
   </section>
 </div>
@@ -593,10 +599,21 @@
 <div class="modal" id="voiceMissingModal">
   <div class="modal-card">
     <h3 class="modal-title">Ses Kaydı Yok</h3>
-    <p class="modal-text">Henüz ses kaydı oluşturmadınız. Ses kaydı oluşturmak istiyor musunuz?</p>
+    <p class="modal-text">Henüz uygun kayıtlı ses bulunmuyor. Önce Ses Kütüphanesi içinden ses eklemek ister misiniz?</p>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="voiceMissingNoBtn" type="button">Hayır</button>
       <button class="btn btn-primary" id="voiceMissingYesBtn" type="button">Evet</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="voicePickerModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Ses Seç</h3>
+    <p class="modal-text">Bir sesi seçtiğinde otomatik kaydolur.</p>
+    <div class="voiceList" id="voiceList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="voicePickerCloseBtn" type="button">Kapat</button>
     </div>
   </div>
 </div>
@@ -607,22 +624,21 @@
   const F2F_VOICE_KEY = "facetoface_voice_mode";
   const F2F_PRESET_KEY = "facetoface_voice_preset";
   const F2F_SELECTED_NAME_KEY = "facetoface_selected_voice_name";
+  const F2F_SELECTED_ID_KEY = "facetoface_selected_voice_id";
 
   const FROM_PARAM = new URLSearchParams(location.search).get("from") || "";
   const ADVANCED_URL = `/pages/translation_settings.html?from=${encodeURIComponent(FROM_PARAM)}&cv=20260417b`;
+  const LIBRARY_API = "https://italky-api.onrender.com/api/italkyai/voice/library";
 
   const $ = (id) => document.getElementById(id);
 
   const UI = {
     backBtn: $("backBtn"),
     autoReadToggle: $("autoReadToggle"),
-
-    voiceGrid: $("voiceGrid"),
-    mineVoiceDesc: $("mineVoiceDesc"),
-    secondVoiceDesc: $("secondVoiceDesc"),
-    memoryVoiceDesc: $("memoryVoiceDesc"),
-
     autoReadSummary: $("autoReadSummary"),
+
+    voicePickerBtn: $("voicePickerBtn"),
+    selectedVoiceText: $("selectedVoiceText"),
     voiceSummary: $("voiceSummary"),
 
     goAdvancedBtn: $("goAdvancedBtn"),
@@ -636,22 +652,50 @@
 
     voiceMissingModal: $("voiceMissingModal"),
     voiceMissingNoBtn: $("voiceMissingNoBtn"),
-    voiceMissingYesBtn: $("voiceMissingYesBtn")
+    voiceMissingYesBtn: $("voiceMissingYesBtn"),
+
+    voicePickerModal: $("voicePickerModal"),
+    voicePickerCloseBtn: $("voicePickerCloseBtn"),
+    voiceList: $("voiceList")
   };
 
   const state = {
     supabase: null,
     currentUser: null,
-    selectedVoice: readCurrentVoice(),
-    autoRead: localStorage.getItem(AUTO_READ_KEY) !== "0",
-    pendingVoice: null,
     walletTokens: 0,
-    profileVoiceState: {
-      mineReady: false,
-      secondReady: false,
-      memoryReady: false
+    autoRead: localStorage.getItem(AUTO_READ_KEY) !== "0",
+    voiceMode: readCurrentVoiceMode(),
+    voiceId: String(localStorage.getItem(F2F_SELECTED_ID_KEY) || "").trim(),
+    voiceName: String(localStorage.getItem(F2F_SELECTED_NAME_KEY) || "").trim(),
+    libraryLoaded: false,
+    library: {
+      mine_items: [],
+      second_items: [],
+      memory_items: []
     }
   };
+
+  function readCurrentVoiceMode() {
+    const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
+    const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+
+    if (mode === "clone") return "mine";
+    if (mode === "preset" && preset === "second") return "second";
+    if (mode === "preset" && preset === "memory") return "memory";
+    return "auto";
+  }
+
+  function showToast(msg) {
+    UI.toast.textContent = String(msg || "");
+    UI.toast.classList.add("show");
+    clearTimeout(window.__premiumVoiceToast);
+    window.__premiumVoiceToast = setTimeout(() => {
+      UI.toast.classList.remove("show");
+    }, 1600);
+  }
+
+  function openModal(el) { el.classList.add("open"); }
+  function closeModal(el) { el.classList.remove("open"); }
 
   function safeFallbackReturnUrl() {
     const from = String(FROM_PARAM || "").trim().toLowerCase();
@@ -674,85 +718,172 @@
     location.href = safeFallbackReturnUrl();
   }
 
-  function readCurrentVoice() {
-    const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
-    const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
-
-    if (mode === "clone") return "mine";
-    if (mode === "preset" && preset === "second") return "second";
-    if (mode === "preset" && preset === "memory") return "memory";
-    return "auto";
+  function hasJeton() {
+    return Number(state.walletTokens || 0) > 0;
   }
 
-  function showToast(msg) {
-    UI.toast.textContent = msg;
-    UI.toast.classList.add("show");
-    clearTimeout(window.__premiumVoiceToast);
-    window.__premiumVoiceToast = setTimeout(() => {
-      UI.toast.classList.remove("show");
-    }, 1600);
-  }
+  function persistSettings() {
+    localStorage.setItem(AUTO_READ_KEY, state.autoRead ? "1" : "0");
 
-  function openModal(el) { el.classList.add("open"); }
-  function closeModal(el) { el.classList.remove("open"); }
+    if (state.voiceMode === "auto") {
+      localStorage.setItem(F2F_VOICE_KEY, "auto");
+      localStorage.removeItem(F2F_PRESET_KEY);
+      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
+      localStorage.removeItem(F2F_SELECTED_ID_KEY);
+      return;
+    }
+
+    if (state.voiceMode === "mine") {
+      localStorage.setItem(F2F_VOICE_KEY, "clone");
+      localStorage.removeItem(F2F_PRESET_KEY);
+    } else if (state.voiceMode === "second") {
+      localStorage.setItem(F2F_VOICE_KEY, "preset");
+      localStorage.setItem(F2F_PRESET_KEY, "second");
+    } else if (state.voiceMode === "memory") {
+      localStorage.setItem(F2F_VOICE_KEY, "preset");
+      localStorage.setItem(F2F_PRESET_KEY, "memory");
+    }
+
+    localStorage.setItem(F2F_SELECTED_NAME_KEY, state.voiceName || "");
+    localStorage.setItem(F2F_SELECTED_ID_KEY, state.voiceId || "");
+  }
 
   function syncToggle() {
     UI.autoReadToggle.classList.toggle("active", !!state.autoRead);
     UI.autoReadSummary.textContent = state.autoRead ? "Açık" : "Kapalı";
   }
 
-  function voiceLabel(v) {
-    if (v === "mine") return "Kendi Sesim";
-    if (v === "second") return "2. Ses";
-    if (v === "memory") return "Hatıra Sesi";
-    return "Otomatik Ses";
+  function syncSelectedVoiceNameFromLibrary() {
+    if (state.voiceMode === "auto") {
+      state.voiceName = "Otomatik Ses";
+      return;
+    }
+
+    const all = [
+      ...(state.library.mine_items || []),
+      ...(state.library.second_items || []),
+      ...(state.library.memory_items || [])
+    ];
+
+    const found = all.find((x) => String(x.id || "") === String(state.voiceId || ""));
+    if (found) {
+      state.voiceName = String(found.voice_name || "").trim();
+      return;
+    }
+
+    const storedName = String(localStorage.getItem(F2F_SELECTED_NAME_KEY) || "").trim();
+    if (storedName) {
+      state.voiceName = storedName;
+      return;
+    }
+
+    if (state.voiceMode === "mine") state.voiceName = "Kendi Sesim";
+    else if (state.voiceMode === "second") state.voiceName = "2. Ses";
+    else if (state.voiceMode === "memory") state.voiceName = "Hatıra Sesi";
+    else state.voiceName = "Otomatik Ses";
   }
 
-  function syncVoiceCards() {
-    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
-      card.classList.toggle("active", card.dataset.voice === state.selectedVoice);
+  function refreshSummary() {
+    syncSelectedVoiceNameFromLibrary();
+
+    const finalName = state.voiceMode === "auto"
+      ? "Otomatik Ses"
+      : (state.voiceName || "Özel Ses");
+
+    UI.selectedVoiceText.textContent =
+      state.voiceMode === "auto"
+        ? "Otomatik Ses • Sistem sesi"
+        : `${finalName} • Premium ses`;
+
+    UI.voiceSummary.textContent = finalName;
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#39;");
+  }
+
+  function renderVoicePicker(){
+    UI.voiceList.innerHTML = "";
+
+    const groups = [
+      {
+        title: "Temel",
+        items: [{ mode: "auto", id: "", name: "Otomatik Ses", sub: "Sistem sesi", premium: false }]
+      },
+      {
+        title: "Kendi Sesim",
+        items: (state.library.mine_items || []).map(x => ({
+          mode: "mine",
+          id: String(x.id || ""),
+          name: String(x.voice_name || "Kendi Sesim"),
+          sub: "Kendi Sesim",
+          premium: true
+        }))
+      },
+      {
+        title: "2. Ses",
+        items: (state.library.second_items || []).map(x => ({
+          mode: "second",
+          id: String(x.id || ""),
+          name: String(x.voice_name || "2. Ses"),
+          sub: "2. Ses",
+          premium: true
+        }))
+      },
+      {
+        title: "Hatıra Ses",
+        items: (state.library.memory_items || []).map(x => ({
+          mode: "memory",
+          id: String(x.id || ""),
+          name: String(x.voice_name || "Hatıra Ses"),
+          sub: "Hatıra Ses",
+          premium: true
+        }))
+      }
+    ];
+
+    groups.forEach(group => {
+      const title = document.createElement("div");
+      title.className = "voiceGroupTitle";
+      title.textContent = group.title;
+      UI.voiceList.appendChild(title);
+
+      if (!group.items.length) {
+        const empty = document.createElement("div");
+        empty.className = "emptyBox";
+        empty.textContent = `${group.title} için kayıtlı ses yok.`;
+        UI.voiceList.appendChild(empty);
+        return;
+      }
+
+      group.items.forEach(item => {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "voiceItem";
+
+        const active =
+          item.mode === state.voiceMode &&
+          (item.mode === "auto" ? true : String(item.id || "") === String(state.voiceId || ""));
+
+        if (active) el.classList.add("active");
+
+        el.innerHTML = `
+          <div class="voiceItemLeft">
+            <div class="voiceItemName">${escapeHtml(item.name)}</div>
+            <div class="voiceItemSub">${escapeHtml(item.sub)}</div>
+          </div>
+          <div class="voiceItemTag">${item.premium ? "Premium" : "Hazır"}</div>
+        `;
+
+        el.addEventListener("click", () => selectVoice(item.mode, item.id, item.name));
+        UI.voiceList.appendChild(el);
+      });
     });
-    UI.voiceSummary.textContent = voiceLabel(state.selectedVoice);
-  }
-
-  function persistSettings() {
-    localStorage.setItem(AUTO_READ_KEY, state.autoRead ? "1" : "0");
-
-    if (state.selectedVoice === "auto") {
-      localStorage.setItem(F2F_VOICE_KEY, "auto");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
-    } else if (state.selectedVoice === "mine") {
-      localStorage.setItem(F2F_VOICE_KEY, "clone");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Kendi Sesim");
-    } else if (state.selectedVoice === "second") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "second");
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "2. Ses");
-    } else if (state.selectedVoice === "memory") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "memory");
-      localStorage.setItem(F2F_SELECTED_NAME_KEY, "Hatıra Sesi");
-    }
-  }
-
-  function hasJeton() {
-    return Number(state.walletTokens || 0) > 0;
-  }
-
-  async function bootAuth() {
-    const mod = await import("/js/supabase_client.js");
-    state.supabase = mod.supabase;
-
-    const { data: { session } } = await state.supabase.auth.getSession();
-    if (!session?.user) {
-      location.replace("/pages/login.html");
-      return false;
-    }
-
-    state.currentUser = session.user;
-    return true;
   }
 
   async function loadWallet() {
@@ -769,93 +900,96 @@
     }
   }
 
-  async function loadProfileVoiceState() {
+  async function loadLibrary() {
     try {
-      const { data: profile } = await state.supabase
-        .from("profiles")
-        .select(`
-          voice_sample_path,
-          tts_voice_ready,
-          tts_voice_id,
-          second_voice_name,
-          second_voice_sample_path,
-          second_tts_voice_ready,
-          second_tts_voice_id,
-          memory_voice_name,
-          memory_voice_sample_path,
-          memory_tts_voice_ready,
-          memory_tts_voice_id
-        `)
-        .eq("id", state.currentUser.id)
-        .maybeSingle();
+      const { data: { session } } = await state.supabase.auth.getSession();
+      const token = session?.access_token || "";
+      if (!token) {
+        state.libraryLoaded = true;
+        return;
+      }
 
-      state.profileVoiceState.mineReady =
-        !!profile?.voice_sample_path ||
-        (!!profile?.tts_voice_ready && !!profile?.tts_voice_id);
+      const resp = await fetch(LIBRARY_API, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
 
-      state.profileVoiceState.secondReady =
-        !!profile?.second_voice_sample_path ||
-        (!!profile?.second_tts_voice_ready && !!profile?.second_tts_voice_id);
+      const json = await resp.json().catch(() => ({}));
 
-      state.profileVoiceState.memoryReady =
-        !!profile?.memory_voice_sample_path ||
-        (!!profile?.memory_tts_voice_ready && !!profile?.memory_tts_voice_id);
+      if (!resp.ok || !json?.ok) {
+        state.libraryLoaded = true;
+        return;
+      }
 
-      UI.mineVoiceDesc.textContent = state.profileVoiceState.mineReady ? "Ses kayıtlı." : "Henüz kayıtlı değil.";
-      UI.secondVoiceDesc.textContent = state.profileVoiceState.secondReady ? "Ses kayıtlı." : "Henüz kayıtlı değil.";
-      UI.memoryVoiceDesc.textContent = state.profileVoiceState.memoryReady ? "Ses kayıtlı." : "Henüz kayıtlı değil.";
+      state.library.mine_items = Array.isArray(json.mine_items) ? json.mine_items : [];
+      state.library.second_items = Array.isArray(json.second_items) ? json.second_items : [];
+      state.library.memory_items = Array.isArray(json.memory_items) ? json.memory_items : [];
+      state.libraryLoaded = true;
+
+      refreshSummary();
+      renderVoicePicker();
     } catch {
-      UI.mineVoiceDesc.textContent = "Kayıt durumu okunamadı.";
-      UI.secondVoiceDesc.textContent = "Kayıt durumu okunamadı.";
-      UI.memoryVoiceDesc.textContent = "Kayıt durumu okunamadı.";
+      state.libraryLoaded = true;
     }
   }
 
-  function askToken() {
-    openModal(UI.tokenModal);
+  async function refreshLibraryBeforeOpen(){
+    state.libraryLoaded = false;
+    await loadLibrary();
   }
 
-  function askVoiceMissing(targetVoice) {
-    state.pendingVoice = targetVoice;
-    openModal(UI.voiceMissingModal);
+  async function bootAuth() {
+    const mod = await import("/js/supabase_client.js");
+    state.supabase = mod.supabase;
+
+    const { data: { session } } = await state.supabase.auth.getSession();
+    if (!session?.user) {
+      location.replace("/pages/login.html");
+      return false;
+    }
+
+    state.currentUser = session.user;
+    return true;
   }
 
-  function canUseVoice(voiceKey) {
-    if (voiceKey === "auto") return true;
-    if (voiceKey === "mine") return state.profileVoiceState.mineReady;
-    if (voiceKey === "second") return state.profileVoiceState.secondReady;
-    if (voiceKey === "memory") return state.profileVoiceState.memoryReady;
-    return false;
+  function hasAnyPremiumVoice() {
+    return (
+      state.library.mine_items.length > 0 ||
+      state.library.second_items.length > 0 ||
+      state.library.memory_items.length > 0
+    );
   }
 
-  function trySelectVoice(voiceKey) {
-    if (voiceKey === "auto") {
-      state.selectedVoice = "auto";
-      persistSettings();
-      syncVoiceCards();
-      showToast("Otomatik Ses seçildi");
+  function selectVoice(mode, voiceId = "", voiceName = "") {
+    if (mode !== "auto" && !hasJeton()) {
+      closeModal(UI.voicePickerModal);
+      openModal(UI.tokenModal);
       return;
     }
 
-    if (!canUseVoice(voiceKey)) {
-      askVoiceMissing(voiceKey);
-      return;
-    }
+    state.voiceMode = mode;
+    state.voiceId = String(voiceId || "").trim();
+    state.voiceName = String(voiceName || "").trim();
 
-    if (!hasJeton()) {
-      askToken();
-      return;
-    }
-
-    state.selectedVoice = voiceKey;
     persistSettings();
-    syncVoiceCards();
-    showToast(`${voiceLabel(voiceKey)} seçildi`);
+    refreshSummary();
+    renderVoicePicker();
+    closeModal(UI.voicePickerModal);
+    showToast(`${state.voiceName || "Ses"} seçildi`);
   }
 
-  function saveSettings() {
-    persistSettings();
-    goBackSmart();
+  async function openPicker(){
+    await refreshLibraryBeforeOpen();
+
+    if (!hasAnyPremiumVoice()) {
+      openModal(UI.voiceMissingModal);
+      return;
+    }
+
+    renderVoicePicker();
+    openModal(UI.voicePickerModal);
   }
 
   function bindEvents() {
@@ -868,14 +1002,10 @@
       showToast(state.autoRead ? "Mesajı otomatik oku açıldı" : "Mesajı otomatik oku kapatıldı");
     });
 
-    UI.voiceGrid.querySelectorAll(".choice-card").forEach(card => {
-      card.addEventListener("click", () => {
-        trySelectVoice(card.dataset.voice);
-      });
-    });
+    UI.voicePickerBtn.addEventListener("click", openPicker);
 
     UI.goAdvancedBtn.addEventListener("click", () => location.href = ADVANCED_URL);
-    UI.saveBtn.addEventListener("click", saveSettings);
+    UI.saveBtn.addEventListener("click", goBackSmart);
 
     UI.tokenCancelBtn.addEventListener("click", () => closeModal(UI.tokenModal));
     UI.tokenGoBtn.addEventListener("click", () => {
@@ -886,6 +1016,8 @@
     UI.voiceMissingYesBtn.addEventListener("click", () => {
       location.href = ADVANCED_URL;
     });
+
+    UI.voicePickerCloseBtn.addEventListener("click", () => closeModal(UI.voicePickerModal));
   }
 
   async function init() {
@@ -893,14 +1025,11 @@
     if (!ok) return;
 
     await loadWallet();
-    await loadProfileVoiceState();
-
-    if (!["auto","mine","second","memory"].includes(state.selectedVoice)) {
-      state.selectedVoice = "auto";
-    }
+    await loadLibrary();
 
     syncToggle();
-    syncVoiceCards();
+    refreshSummary();
+    renderVoicePicker();
     bindEvents();
   }
 
