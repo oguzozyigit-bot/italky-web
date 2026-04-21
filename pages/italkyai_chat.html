@@ -723,17 +723,20 @@
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
 
+  const API_BASE = "https://italky-api.onrender.com";
   const $ = (id) => document.getElementById(id);
 
   const STORAGE = {
-    voice: "italkyai_shared_voice_name",
     savedChats: "italkyai_local_saved_chats",
-    autoRead: "italkyai_chat_auto_read"
+    autoRead: "italkyai_chat_auto_read",
+    sharedVoiceMode: "italkyai_shared_voice_mode",
+    sharedVoiceName: "italkyai_shared_voice_name",
+    sharedVoiceId: "italkyai_shared_voice_id"
   };
 
   const API = {
-    chat: "https://italky-api.onrender.com/api/italkyai/chat",
-    tts: "https://italky-api.onrender.com/api/tts"
+    chat: `${API_BASE}/api/italkyai/chat`,
+    tts: `${API_BASE}/api/tts`
   };
 
   const UI = {
@@ -835,9 +838,20 @@
     });
   }
 
-  function getSelectedVoice() {
-    const v = localStorage.getItem(STORAGE.voice) || "tts";
-    return ["tts", "mine", "second", "memory"].includes(v) ? v : "tts";
+  function getSelectedVoicePayload() {
+    const modeRaw = localStorage.getItem(STORAGE.sharedVoiceMode) || "tts";
+    const name = String(localStorage.getItem(STORAGE.sharedVoiceName) || "").trim();
+    const voiceId = String(localStorage.getItem(STORAGE.sharedVoiceId) || "").trim();
+
+    const mode = ["tts", "mine", "second", "memory"].includes(String(modeRaw || "").trim().toLowerCase())
+      ? String(modeRaw || "").trim().toLowerCase()
+      : "tts";
+
+    return {
+      mode,
+      name: name || (mode === "tts" ? "TTS" : "Özel Ses"),
+      voiceId
+    };
   }
 
   function isAutoReadEnabled() {
@@ -967,6 +981,15 @@
     }
   }
 
+  async function getAccessToken() {
+    try {
+      const { data } = await supabase.auth.getSession();
+      return data?.session?.access_token || "";
+    } catch {
+      return "";
+    }
+  }
+
   function speakWithBrowser(text) {
     const value = String(text || "").trim();
     if (!value) return;
@@ -990,6 +1013,43 @@
     } catch {}
   }
 
+  async function loadFriendlyUserName() {
+    try {
+      const hitap =
+        localStorage.getItem("kaynana_hitap") ||
+        localStorage.getItem("user_hitap") ||
+        localStorage.getItem("profile_hitap");
+
+      if (hitap && String(hitap).trim()) {
+        return String(hitap).trim();
+      }
+
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user;
+
+      const metaName =
+        user?.user_metadata?.hitap ||
+        user?.user_metadata?.name ||
+        user?.user_metadata?.full_name ||
+        user?.email?.split("@")?.[0];
+
+      if (metaName && String(metaName).trim()) {
+        return String(metaName).trim().split(" ")[0];
+      }
+    } catch {}
+
+    return "arkadaşım";
+  }
+
+  function buildHiddenMemory(currentUserName) {
+    return [
+      {
+        role: "assistant",
+        text: `Sen Friend AI'sın. Samimi, sıcak, doğal ve kısa-orta uzunlukta konuş. Gereksiz resmi olma. Emoji kullanma. Markdown kullanma. Yıldız, hashtag, özel sembol kullanma. Kullanıcıya uygun olduğunda adıyla hitap et. Kullanıcının adı: ${currentUserName}. Kim geliştirdi sorulursa 'Ben italky Teknoloji tarafından geliştirildim.' de. OpenAI, Gemini, ChatGPT veya Google kimliği sahiplenme.`
+      }
+    ];
+  }
+
   async function speakReplyText(text) {
     const value = String(text || "").trim();
     if (!value || !isAutoReadEnabled()) {
@@ -999,58 +1059,41 @@
 
     stopReplyAudio();
 
-    const selectedVoice = getSelectedVoice();
-
-    if (selectedVoice === "tts") {
-      setAudioWait(false);
-      speakWithBrowser(value);
-      return;
-    }
-
-    setAudioWait(true, "Özel ses hazırlanıyor...");
-
     try {
       const userId = await getCurrentUserId();
-      if (!userId) {
+      const accessToken = await getAccessToken();
+      const selected = getSelectedVoicePayload();
+
+      if (selected.mode === "tts") {
         setAudioWait(false);
         speakWithBrowser(value);
         return;
       }
 
-      let apiVoiceMode = "auto";
-      let apiVoice = "auto";
-      let apiPresetVoice = "";
-
-      if (selectedVoice === "mine") {
-        apiVoiceMode = "clone";
-        apiVoice = "clone";
-      } else if (selectedVoice === "second") {
-        apiVoiceMode = "preset";
-        apiVoice = "second";
-        apiPresetVoice = "second";
-      } else if (selectedVoice === "memory") {
-        apiVoiceMode = "preset";
-        apiVoice = "memory";
-        apiPresetVoice = "memory";
-      }
+      setAudioWait(true, "Özel ses hazırlanıyor...");
 
       const resp = await fetch(API.tts, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {})
+        },
         body: JSON.stringify({
           text: value,
           lang: "tr",
           user_id: userId,
-          module: "chat_ai",
-          voice: apiVoice,
-          voice_mode: apiVoiceMode,
-          preset_voice: apiPresetVoice,
-          selected_voice: selectedVoice,
-          tone: "neutral"
+          module: "sohbetai",
+          tone: "neutral",
+          voice: selected.mode,
+          voice_mode: selected.mode,
+          selected_voice: selected.mode,
+          selected_voice_id: selected.voiceId,
+          voice_id: selected.voiceId
         })
       });
 
       const json = await resp.json().catch(() => ({}));
+
       const audioBase64 =
         json?.audio_base64 ||
         json?.audio ||
@@ -1058,23 +1101,27 @@
         json?.result?.audio_base64 ||
         "";
 
-      if (!resp.ok || !audioBase64) {
+      if (!resp.ok || !json?.ok || !audioBase64) {
         setAudioWait(false);
         speakWithBrowser(value);
         return;
       }
 
-      const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+      const blob = new Blob([Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0))], { type: "audio/mpeg" });
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
       audio.preload = "auto";
       audio.playsInline = true;
       state.currentAudio = audio;
 
       audio.onended = () => {
+        URL.revokeObjectURL(url);
         if (state.currentAudio === audio) state.currentAudio = null;
         setAudioWait(false);
       };
 
       audio.onerror = () => {
+        URL.revokeObjectURL(url);
         if (state.currentAudio === audio) state.currentAudio = null;
         setAudioWait(false);
       };
@@ -1192,6 +1239,8 @@
     if (!UI.chatMessages.querySelector(".msg")) {
       addMessage("left", `Merhaba ${firstName}. Ben buradayım, rahat rahat yazabilirsin.`);
     }
+
+    return firstName;
   }
 
   async function persistCurrentChatSnapshot(autoTitle = "") {
@@ -1227,6 +1276,54 @@
     renderSavedChats();
   }
 
+  function isBrandIdentityQuestion(text) {
+    const q = String(text || "").toLowerCase();
+    return [
+      "sen kimsin",
+      "seni kim yaptı",
+      "seni kim geliştirdi",
+      "seni kim oluşturdu",
+      "hangi firmasın",
+      "hangi şirket",
+      "sen gemini misin",
+      "sen openai misin",
+      "sen chatgpt misin",
+      "kimin yapay zekasısın",
+      "who made you",
+      "who created you",
+      "who developed you",
+      "are you gemini",
+      "are you openai",
+      "are you chatgpt"
+    ].some((x) => q.includes(x));
+  }
+
+  function normalizeFriendReply(text) {
+    let out = String(text || "").trim();
+    const lower = out.toLowerCase();
+
+    const identityTriggers = [
+      "openai",
+      "gemini",
+      "google tarafından",
+      "google tarafından geliştirildim",
+      "created by google",
+      "created by openai",
+      "i am gemini",
+      "i'm gemini",
+      "i am chatgpt",
+      "i'm chatgpt",
+      "large language model",
+      "language model"
+    ];
+
+    if (identityTriggers.some((x) => lower.includes(x))) {
+      return "Ben italky Teknoloji tarafından geliştirildim. Ben Friend AI, italkyAI ekosisteminin samimi sohbet asistanıyım.";
+    }
+
+    return out;
+  }
+
   async function sendCurrentMessage(forcedText = "", inputMode = "text") {
     const text = String(forcedText || UI.chatInput.value || "").trim();
     if (!text || state.isSending) return;
@@ -1254,7 +1351,18 @@
         return;
       }
 
+      if (isBrandIdentityQuestion(text)) {
+        const finalReply = "Ben italky Teknoloji tarafından geliştirildim. Ben Friend AI, italkyAI ekosisteminin samimi sohbet asistanıyım.";
+        const shell = createAssistantMessageShell("italkyAI • şimdi");
+        setTyping(false);
+        await typeReplyIntoBubble(shell.bubble, finalReply);
+        await speakReplyText(finalReply);
+        state.isSending = false;
+        return;
+      }
+
       const history = collectRecentHistory(20);
+      const selected = getSelectedVoicePayload();
 
       const resp = await fetch(API.chat, {
         method: "POST",
@@ -1264,7 +1372,7 @@
           session_id: state.currentSessionId,
           text,
           history,
-          voice_mode: getSelectedVoice(),
+          voice_mode: selected.mode,
           input_mode: inputMode
         })
       });
@@ -1295,7 +1403,7 @@
         return;
       }
 
-      const finalReply = reply || "Şu an cevap üretirken bir sorun oluştu. Bir daha dener misin.";
+      const finalReply = normalizeFriendReply(reply || "Şu an cevap üretirken bir sorun oluştu. Bir daha dener misin.");
       const shell = createAssistantMessageShell("italkyAI • şimdi");
 
       setTyping(false);
@@ -1374,6 +1482,7 @@
 
     if (!state.currentSavedChatId) {
       clearChatDom();
+      state.currentSavedChatId = null;
       state.currentSessionId = crypto.randomUUID();
       addMessage("left", "Yeni sohbet hazır. İçini dökebilirsin.");
       closeMenu();
@@ -1546,7 +1655,7 @@
     autoResizeTextarea();
     syncInputActionState();
     renderSavedChats();
-    await hydrateProfileUI();
+    const firstName = await hydrateProfileUI();
     updateViewportLayout();
     scrollChatToBottom();
   }
