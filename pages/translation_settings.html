@@ -200,6 +200,7 @@
       padding:0 16px;
       text-align:center;
       transition:transform .16s ease, opacity .16s ease;
+      text-decoration:none;
     }
 
     .btn:active{transform:scale(.98)}
@@ -562,7 +563,6 @@
       .title{font-size:27px}
       .item{grid-template-columns:1fr}
       .itemActions{width:100%}
-      .trashBtn{width:40px}
       .countCircle,.recordingGlow{width:160px;height:160px}
       .countNumber{font-size:62px}
     }
@@ -590,16 +590,14 @@
 
   <section class="card">
     <h2 class="sectionTitle">Kendi Sesim</h2>
-    <p class="desc">
-      Örn: Duygusal, Neşeli, Yumuşak. En fazla 5 kayıt ekleyebilirsiniz.
-    </p>
+    <p class="desc">Örn: Duygusal, Neşeli, Yumuşak. En fazla 5 kayıt ekleyebilirsiniz.</p>
 
     <input class="input" id="mineVoiceNameInput" type="text" placeholder="İsim ver">
     <div class="fieldError" id="mineNameError">Lütfen bir isim yaz.</div>
 
     <div class="row">
       <button class="btn btnSoft" id="recordMineBtn" type="button">Ekle</button>
-      <button class="btn btnMain" id="saveMineBtn" type="button" disabled>Kaydet</button>
+      <div></div>
     </div>
 
     <div class="status" id="mineStatus">Kayıt bekleniyor.</div>
@@ -611,16 +609,14 @@
 
   <section class="card">
     <h2 class="sectionTitle">Tanıdık Ses</h2>
-    <p class="desc">
-      Örn: Eşim, Çocuğum, Annem. En fazla 5 kayıt ekleyebilirsiniz.
-    </p>
+    <p class="desc">Örn: Eşim, Çocuğum, Annem. En fazla 5 kayıt ekleyebilirsiniz.</p>
 
     <input class="input" id="secondVoiceNameInput" type="text" placeholder="İsim ver">
     <div class="fieldError" id="secondNameError">Lütfen bir isim yaz.</div>
 
     <div class="row">
       <button class="btn btnSoft" id="recordSecondBtn" type="button">Ekle</button>
-      <button class="btn btnMain" id="saveSecondBtn" type="button" disabled>Kaydet</button>
+      <div></div>
     </div>
 
     <div class="status" id="secondStatus">Kayıt bekleniyor.</div>
@@ -632,9 +628,7 @@
 
   <section class="card">
     <h2 class="sectionTitle">Hatıra Ses</h2>
-    <p class="desc">
-      Örn: Babam, Dedem, Anneannem. En az 20 saniyelik, en fazla 10 MB boyutunda mp3 dosyası yükleyin.
-    </p>
+    <p class="desc">Örn: Babam, Dedem, Anneannem. En az 20 saniyelik, en fazla 10 MB boyutunda mp3 dosyası yükleyin.</p>
 
     <input class="input" id="memoryVoiceNameInput" type="text" placeholder="İsim ver">
     <div class="fieldError" id="memoryNameError">Lütfen bir isim yaz.</div>
@@ -666,7 +660,7 @@
 <div class="modal" id="leaveModal">
   <div class="modalCard">
     <h3 class="modalTitle">Çıkmak istiyor musunuz?</h3>
-    <p class="modalText">Kaydedilmemiş işlem varsa kaybolur.</p>
+    <p class="modalText">Sesiniz işleniyorsa şimdi çıkarsanız kaydedilmeyecektir.</p>
     <div class="modalActions">
       <button class="btn btnSoft" id="leaveNoBtn" type="button">Hayır</button>
       <button class="btn btnMain" id="leaveYesBtn" type="button">Evet</button>
@@ -685,12 +679,21 @@
   </div>
 </div>
 
+<div class="modal" id="tokenModal">
+  <div class="modalCard">
+    <h3 class="modalTitle">Jeton Gerekli</h3>
+    <p class="modalText">Premium özelliklerde jeton gereklidir. Lütfen jeton yüklemesi yapınız.</p>
+    <div class="modalActions">
+      <button class="btn btnSoft" id="tokenNoBtn" type="button">Vazgeç</button>
+      <a class="btn btnMain" id="tokenYesBtn" href="/pages/jetonbuy.html">Jeton Yükle</a>
+    </div>
+  </div>
+</div>
+
 <div class="countdownModal" id="countdownModal">
   <div class="countdownCard">
     <h3 class="countdownTitle" id="countdownTitle">Hazır olun</h3>
-    <p class="countdownText" id="countdownText">
-      Sizden 20 saniye boyunca doğal konuşmanızı istiyoruz.
-    </p>
+    <p class="countdownText" id="countdownText">Sizden 20 saniye boyunca doğal konuşmanızı istiyoruz.</p>
 
     <div class="countCircle" id="countCircle">
       <div class="countNumber" id="countNumber">5</div>
@@ -718,7 +721,7 @@
   const LIBRARY_API = "https://italky-api.onrender.com/api/italkyai/voice/library";
   const DELETE_API = "https://italky-api.onrender.com/api/italkyai/voice/delete";
   const ENROLL_API = "https://italky-api.onrender.com/api/voice/enroll";
-  const VOICE_BUCKET = "voice-samples";
+  const ACCESS_STATE_API = "https://italky-api.onrender.com/api/session/access-state";
   const MAX_RECORD_SECONDS = 20;
   const MAX_MINE = 5;
   const MAX_SECOND = 5;
@@ -734,7 +737,6 @@
     mineVoiceNameInput: $("mineVoiceNameInput"),
     mineNameError: $("mineNameError"),
     recordMineBtn: $("recordMineBtn"),
-    saveMineBtn: $("saveMineBtn"),
     mineStatus: $("mineStatus"),
     mineList: $("mineList"),
     mineEmpty: $("mineEmpty"),
@@ -742,7 +744,6 @@
     secondVoiceNameInput: $("secondVoiceNameInput"),
     secondNameError: $("secondNameError"),
     recordSecondBtn: $("recordSecondBtn"),
-    saveSecondBtn: $("saveSecondBtn"),
     secondStatus: $("secondStatus"),
     secondList: $("secondList"),
     secondEmpty: $("secondEmpty"),
@@ -768,6 +769,9 @@
     deleteModalText: $("deleteModalText"),
     deleteNoBtn: $("deleteNoBtn"),
     deleteYesBtn: $("deleteYesBtn"),
+
+    tokenModal: $("tokenModal"),
+    tokenNoBtn: $("tokenNoBtn"),
 
     countdownModal: $("countdownModal"),
     countdownTitle: $("countdownTitle"),
@@ -809,7 +813,8 @@
     serverState: {
       mineItems: [],
       secondItems: [],
-      memoryItems: []
+      memoryItems: [],
+      tokens: 0
     },
 
     countdownTimer: null,
@@ -873,6 +878,18 @@
     return true;
   }
 
+  function hasEnoughTokens() {
+    return Number(state.serverState.tokens || 0) > 0;
+  }
+
+  function openTokenModal() {
+    UI.tokenModal.classList.add("open");
+  }
+
+  function closeTokenModal() {
+    UI.tokenModal.classList.remove("open");
+  }
+
   function markUnsaved(type, value) {
     state.unsaved[type] = !!value;
     updateSummary();
@@ -889,7 +906,7 @@
 
   function updateSummary() {
     if (state.isSaving) {
-      UI.poolSummary.textContent = "Kayıt işlemi sürüyor...";
+      UI.poolSummary.textContent = "Lütfen bekleyiniz. Sesiniz işleniyor. Şimdi çıkarsanız sesiniz kaydedilmeyecektir.";
       return;
     }
     if (hasUnsavedChanges()) {
@@ -901,7 +918,7 @@
 
   function openLeaveModal() {
     if (state.isSaving) {
-      showToast("Kayıt işlemi sürüyor.");
+      UI.leaveModal.classList.add("open");
       return;
     }
     if (!hasUnsavedChanges()) {
@@ -942,23 +959,8 @@
     return session?.access_token || "";
   }
 
-  function getPublicUrl(path) {
-    const p = String(path || "").trim();
-    if (!p) return "";
-    try {
-      return state.supabase.storage.from(VOICE_BUCKET).getPublicUrl(p).data.publicUrl || "";
-    } catch {
-      return "";
-    }
-  }
-
   function getPlayableUrl(item) {
-    return (
-      getPublicUrl(item?.preview_audio_path) ||
-      getPublicUrl(item?.sample_path) ||
-      item?.audio_url ||
-      ""
-    );
+    return item?.preview_signed_url || item?.sample_signed_url || "";
   }
 
   function playVoiceItem(item) {
@@ -1121,8 +1123,6 @@
   }
 
   async function enrollVoice(voiceType, voiceId = null) {
-    if (!state.supabase) throw new Error("Supabase hazır değil.");
-
     const token = await getAccessToken();
     if (!token) {
       throw new Error("Oturum bulunamadı.");
@@ -1146,6 +1146,23 @@
     }
 
     return json;
+  }
+
+  async function loadAccessState() {
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      const resp = await fetch(ACCESS_STATE_API, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (resp.ok) {
+        state.serverState.tokens = Number(json?.tokens || json?.wallet?.tokens || 0);
+      }
+    } catch {}
   }
 
   async function loadLibraryState() {
@@ -1182,6 +1199,7 @@
       }
 
       state.currentUser = session.user;
+      await loadAccessState();
       await loadLibraryState();
       return true;
     } catch (e) {
@@ -1194,13 +1212,10 @@
   async function startCountdownAndRecord(flowType) {
     state.activeRecordFlow = flowType;
 
-    const title =
-      flowType === "mine" ? "Kendi Sesim" : "Tanıdık Ses";
-
-    const text =
-      flowType === "mine"
-        ? "Lütfen hazır olun. Sizden 20 saniye boyunca kendi sesinizle doğal konuşmanızı istiyoruz."
-        : "Lütfen hazır olun. Sizden 20 saniye boyunca doğal konuşmanızı istiyoruz.";
+    const title = flowType === "mine" ? "Kendi Sesim" : "Tanıdık Ses";
+    const text = flowType === "mine"
+      ? "Lütfen hazır olun. Sizden 20 saniye boyunca kendi sesinizle doğal konuşmanızı istiyoruz."
+      : "Lütfen hazır olun. Sizden 20 saniye boyunca doğal konuşmanızı istiyoruz.";
 
     openCountdownModal(title, text);
 
@@ -1229,8 +1244,6 @@
   async function startMineRecordingNow() {
     try {
       UI.mineStatus.textContent = "Kayıt alınıyor...";
-      setButtonState(UI.saveMineBtn, false);
-
       state.mineChunks = [];
       state.mineBlob = null;
       stopTracks(state.mineStream);
@@ -1239,14 +1252,31 @@
       state.mineRecorder = createRecorder(
         state.mineStream,
         (data) => state.mineChunks.push(data),
-        () => {
+        async () => {
           state.mineBlob = new Blob(state.mineChunks, { type: "audio/webm" });
           stopTracks(state.mineStream);
           state.mineStream = null;
+
           closeCountdownModal();
-          UI.mineStatus.textContent = "Sesiniz işleniyor. Lütfen kaydedin.";
-          setButtonState(UI.saveMineBtn, true);
-          markUnsaved("mine", true);
+          setSaving(true);
+          UI.mineStatus.textContent = "Lütfen bekleyiniz. Sesiniz işleniyor...";
+
+          try {
+            const upload = await uploadVoice(state.mineBlob, "mine", state.minePendingName || "Kendi Ses");
+            UI.mineStatus.textContent = "Benzer sesiniz hazırlanıyor...";
+            await enrollVoice("mine", upload.voice_id);
+            await loadLibraryState();
+            markUnsaved("mine", false);
+            UI.mineStatus.textContent = "Benzer sesinizi listeden dinleyebilirsiniz.";
+            UI.mineVoiceNameInput.value = "";
+            state.mineBlob = null;
+            state.minePendingName = "";
+            showToast("Kendi ses kaydedildi");
+          } catch (e) {
+            UI.mineStatus.textContent = e.message || "Kaydetme başarısız.";
+          } finally {
+            setSaving(false);
+          }
         }
       );
 
@@ -1270,16 +1300,13 @@
     } catch (e) {
       closeCountdownModal();
       UI.mineStatus.textContent = e.message || "Kayıt başlatılamadı.";
+      setSaving(false);
     }
   }
 
   async function startSecondRecordingNow() {
-    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
-
     try {
       UI.secondStatus.textContent = "Kayıt alınıyor...";
-      setButtonState(UI.saveSecondBtn, false);
-
       state.secondChunks = [];
       state.secondBlob = null;
       stopTracks(state.secondStream);
@@ -1288,14 +1315,31 @@
       state.secondRecorder = createRecorder(
         state.secondStream,
         (data) => state.secondChunks.push(data),
-        () => {
+        async () => {
           state.secondBlob = new Blob(state.secondChunks, { type: "audio/webm" });
           stopTracks(state.secondStream);
           state.secondStream = null;
+
           closeCountdownModal();
-          UI.secondStatus.textContent = `${secondName} işleniyor. Lütfen kaydedin.`;
-          setButtonState(UI.saveSecondBtn, true);
-          markUnsaved("second", true);
+          setSaving(true);
+          UI.secondStatus.textContent = "Lütfen bekleyiniz. Sesiniz işleniyor...";
+
+          try {
+            const upload = await uploadVoice(state.secondBlob, "second", state.secondPendingName || "Tanıdık");
+            UI.secondStatus.textContent = "Benzer ses hazırlanıyor...";
+            await enrollVoice("second", upload.voice_id);
+            await loadLibraryState();
+            markUnsaved("second", false);
+            UI.secondStatus.textContent = "Kayıt tamamlandı. Alttaki listeden dinleyebilirsiniz.";
+            UI.secondVoiceNameInput.value = "";
+            state.secondBlob = null;
+            state.secondPendingName = "";
+            showToast("Tanıdık ses kaydedildi");
+          } catch (e) {
+            UI.secondStatus.textContent = e.message || "Kaydetme başarısız.";
+          } finally {
+            setSaving(false);
+          }
         }
       );
 
@@ -1319,90 +1363,43 @@
     } catch (e) {
       closeCountdownModal();
       UI.secondStatus.textContent = e.message || "Kayıt başlatılamadı.";
+      setSaving(false);
     }
   }
 
   async function handleMineRecord() {
+    if (!hasEnoughTokens()) {
+      openTokenModal();
+      return;
+    }
     if (!validateName(UI.mineVoiceNameInput, UI.mineNameError)) return;
-
     if ((state.serverState.mineItems || []).length >= MAX_MINE) {
       showToast("5 ses eklenebilir. Yeni ses eklemek için önce kayıtlı seslerinizden birini silmeniz gereklidir.");
       return;
     }
-
     state.minePendingName = String(UI.mineVoiceNameInput.value || "").trim();
     await startCountdownAndRecord("mine");
   }
 
   async function handleSecondRecord() {
+    if (!hasEnoughTokens()) {
+      openTokenModal();
+      return;
+    }
     if (!validateName(UI.secondVoiceNameInput, UI.secondNameError)) return;
-
     if ((state.serverState.secondItems || []).length >= MAX_SECOND) {
       showToast("5 ses eklenebilir. Yeni ses eklemek için önce kayıtlı seslerinizden birini silmeniz gereklidir.");
       return;
     }
-
     state.secondPendingName = String(UI.secondVoiceNameInput.value || "").trim();
     await startCountdownAndRecord("second");
   }
 
-  async function saveMine() {
-    if (!state.mineBlob) {
-      UI.mineStatus.textContent = "Önce ses ekle.";
-      return;
-    }
-
-    try {
-      setSaving(true);
-      UI.mineStatus.textContent = "Ses işleniyor...";
-      const upload = await uploadVoice(state.mineBlob, "mine", state.minePendingName || "Kendi Sesim");
-      UI.mineStatus.textContent = "Benzer sesiniz hazırlanıyor...";
-      await enrollVoice("mine", upload.voice_id);
-      await loadLibraryState();
-
-      markUnsaved("mine", false);
-      UI.mineStatus.textContent = "Benzer sesinizi dinleyebilirsiniz.";
-      UI.mineVoiceNameInput.value = "";
-      state.mineBlob = null;
-      state.minePendingName = "";
-      setButtonState(UI.saveMineBtn, false);
-      showToast("Kendi ses kaydedildi");
-    } catch (e) {
-      UI.mineStatus.textContent = e.message || "Kaydetme başarısız.";
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function saveSecond() {
-    if (!state.secondBlob) {
-      UI.secondStatus.textContent = "Önce ses ekle.";
-      return;
-    }
-
-    try {
-      setSaving(true);
-      UI.secondStatus.textContent = "Ses işleniyor...";
-      const upload = await uploadVoice(state.secondBlob, "second", state.secondPendingName || "Tanıdık Ses");
-      UI.secondStatus.textContent = "Benzer ses hazırlanıyor...";
-      await enrollVoice("second", upload.voice_id);
-      await loadLibraryState();
-
-      markUnsaved("second", false);
-      UI.secondStatus.textContent = "Kayıt tamamlandı. Alttaki listeden dinleyebilirsiniz.";
-      UI.secondVoiceNameInput.value = "";
-      state.secondBlob = null;
-      state.secondPendingName = "";
-      setButtonState(UI.saveSecondBtn, false);
-      showToast("Tanıdık ses kaydedildi");
-    } catch (e) {
-      UI.secondStatus.textContent = e.message || "Kaydetme başarısız.";
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function saveMemory() {
+    if (!hasEnoughTokens()) {
+      openTokenModal();
+      return;
+    }
     if (!validateName(UI.memoryVoiceNameInput, UI.memoryNameError)) return;
 
     if ((state.serverState.memoryItems || []).length >= MAX_MEMORY) {
@@ -1419,7 +1416,7 @@
 
     try {
       setSaving(true);
-      UI.memoryStatus.textContent = "Dosya yükleniyor...";
+      UI.memoryStatus.textContent = "Lütfen bekleyiniz. Sesiniz işleniyor...";
       const upload = await uploadVoice(state.memoryMp3File, "memory", memoryName);
       UI.memoryStatus.textContent = "Ses üretiliyor...";
       await enrollVoice("memory", upload.voice_id);
@@ -1475,21 +1472,14 @@
     UI.backBtn.addEventListener("click", openLeaveModal);
     UI.backOnlyBtn.addEventListener("click", openLeaveModal);
 
-    UI.mineVoiceNameInput.addEventListener("input", () => {
-      hideFieldError(UI.mineVoiceNameInput, UI.mineNameError);
-    });
-    UI.secondVoiceNameInput.addEventListener("input", () => {
-      hideFieldError(UI.secondVoiceNameInput, UI.secondNameError);
-    });
-    UI.memoryVoiceNameInput.addEventListener("input", () => {
-      hideFieldError(UI.memoryVoiceNameInput, UI.memoryNameError);
-    });
+    UI.tokenNoBtn.addEventListener("click", closeTokenModal);
+
+    UI.mineVoiceNameInput.addEventListener("input", () => hideFieldError(UI.mineVoiceNameInput, UI.mineNameError));
+    UI.secondVoiceNameInput.addEventListener("input", () => hideFieldError(UI.secondVoiceNameInput, UI.secondNameError));
+    UI.memoryVoiceNameInput.addEventListener("input", () => hideFieldError(UI.memoryVoiceNameInput, UI.memoryNameError));
 
     UI.recordMineBtn.addEventListener("click", handleMineRecord);
-    UI.saveMineBtn.addEventListener("click", saveMine);
-
     UI.recordSecondBtn.addEventListener("click", handleSecondRecord);
-    UI.saveSecondBtn.addEventListener("click", saveSecond);
 
     UI.memoryPickBtn.addEventListener("click", () => UI.memoryMp3Input.click());
 
@@ -1515,6 +1505,13 @@
 
     UI.leaveNoBtn.addEventListener("click", closeLeaveModal);
     UI.leaveYesBtn.addEventListener("click", goBack);
+
+    window.addEventListener("beforeunload", (e) => {
+      if (state.isSaving) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    });
   }
 
   async function init() {
@@ -1527,3 +1524,5 @@
   init();
 })();
 </script>
+</body>
+</html>
