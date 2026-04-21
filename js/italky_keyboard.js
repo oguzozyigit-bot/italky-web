@@ -1,9 +1,9 @@
 /* italky ortak klavye modülü
-   Düzeltmeler:
-   - Klavyeye dokununca sayfanın aşağı kayması engellendi
-   - Daktilo tipi tuş sesi
-   - Uzun basınca alternatif harfler düzeltildi
-   - Space tuşu üstünde italkyAI yazıyor
+   - Güçlü daktilo hissi
+   - Daha belirgin titreşim
+   - Input klavyenin altında kalmaz
+   - Uzun basınca alternatif harfler
+   - Space tuşunda italkyAI yazısı
 */
 
 const DEFAULT_ALT_CHARS = {
@@ -52,7 +52,7 @@ const KEYBOARD_LAYOUTS = {
   }
 };
 
-const STYLE_ID = "italky-keyboard-style-v3";
+const STYLE_ID = "italky-keyboard-style-v4";
 
 function injectStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -250,9 +250,9 @@ function svgEnter() {
   `;
 }
 
-function vibrate(ms = 8) {
+function vibrate(ms = 14) {
   try {
-    if (navigator.vibrate) navigator.vibrate(ms);
+    if (navigator.vibrate) navigator.vibrate([ms]);
   } catch {}
 }
 
@@ -269,7 +269,7 @@ class KeyboardAudio {
       if (!this.ctx) {
         this.ctx = new Ctx();
         this.master = this.ctx.createGain();
-        this.master.gain.value = 0.05;
+        this.master.gain.value = 0.09;
         this.master.connect(this.ctx.destination);
       }
       return true;
@@ -299,30 +299,33 @@ class KeyboardAudio {
 
     filter.type = "bandpass";
     filter.frequency.value =
-      kind === "space" ? 2400 :
-      kind === "backspace" ? 1800 :
-      kind === "enter" ? 2100 :
-      kind === "shift" ? 2000 :
-      2300;
-    filter.Q.value = 1.1;
+      kind === "space" ? 2100 :
+      kind === "backspace" ? 1750 :
+      kind === "enter" ? 1950 :
+      kind === "shift" ? 1850 :
+      2250;
+    filter.Q.value = 1.4;
 
     osc.type = "square";
     osc.frequency.setValueAtTime(
-      kind === "space" ? 1200 :
-      kind === "backspace" ? 980 :
-      kind === "enter" ? 1080 :
-      kind === "shift" ? 1020 :
-      1150,
+      kind === "space" ? 950 :
+      kind === "backspace" ? 820 :
+      kind === "enter" ? 900 :
+      kind === "shift" ? 860 :
+      1080,
       now
     );
     osc.frequency.exponentialRampToValueAtTime(
-      kind === "space" ? 880 : 760,
-      now + 0.018
+      kind === "space" ? 720 : 760,
+      now + 0.022
     );
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.018, now + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.022);
+    gain.gain.exponentialRampToValueAtTime(
+      kind === "space" ? 0.03 : 0.04,
+      now + 0.002
+    );
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
 
     osc.connect(filter);
     filter.connect(gain);
@@ -330,7 +333,7 @@ class KeyboardAudio {
 
     try {
       osc.start(now);
-      osc.stop(now + 0.024);
+      osc.stop(now + 0.032);
     } catch {}
   }
 }
@@ -437,17 +440,24 @@ class ItalkyKeyboard {
     if (!input) return;
 
     const keyboardHeight = Math.ceil(this.root.getBoundingClientRect().height || 0);
-    input.style.scrollMarginBottom = `${keyboardHeight + 48}px`;
+    input.style.scrollMarginBottom = `${keyboardHeight + 120}px`;
 
     const rect = input.getBoundingClientRect();
     const vv = window.visualViewport;
     const viewportHeight = vv ? vv.height : window.innerHeight;
-    const safeBottom = keyboardHeight + 18;
-    const visibleBottom = viewportHeight - safeBottom;
 
-    if (rect.bottom > visibleBottom || rect.top < 12) {
-      const delta = rect.bottom - visibleBottom + 24;
-      window.scrollBy({ top: Math.max(delta, 0), behavior: "smooth" });
+    const visibleBottom = viewportHeight - keyboardHeight - 28;
+    const desiredTop = 90;
+
+    if (rect.bottom > visibleBottom) {
+      const delta = rect.bottom - visibleBottom + 40;
+      window.scrollBy({ top: delta, behavior: "smooth" });
+      return;
+    }
+
+    if (rect.top < desiredTop) {
+      const delta = desiredTop - rect.top;
+      window.scrollBy({ top: -delta, behavior: "smooth" });
     }
   }
 
@@ -459,6 +469,8 @@ class ItalkyKeyboard {
     requestAnimationFrame(() => {
       this.applyViewportSpace();
       this.bringTargetAboveKeyboard();
+      setTimeout(() => this.bringTargetAboveKeyboard(), 80);
+      setTimeout(() => this.bringTargetAboveKeyboard(), 180);
     });
 
     this.options.onShow?.();
@@ -508,7 +520,10 @@ class ItalkyKeyboard {
     input.dispatchEvent(new Event("input", { bubbles: true }));
     this.options.onChange?.(input.value, input);
 
-    requestAnimationFrame(() => this.bringTargetAboveKeyboard());
+    requestAnimationFrame(() => {
+      this.bringTargetAboveKeyboard();
+      setTimeout(() => this.bringTargetAboveKeyboard(), 60);
+    });
 
     if (this.shift && !this.options.keepShiftOnce) {
       this.shift = false;
@@ -533,7 +548,11 @@ class ItalkyKeyboard {
 
     input.dispatchEvent(new Event("input", { bubbles: true }));
     this.options.onChange?.(input.value, input);
-    requestAnimationFrame(() => this.bringTargetAboveKeyboard());
+
+    requestAnimationFrame(() => {
+      this.bringTargetAboveKeyboard();
+      setTimeout(() => this.bringTargetAboveKeyboard(), 60);
+    });
   }
 
   doEnter() {
@@ -545,7 +564,7 @@ class ItalkyKeyboard {
   }
 
   playFeedback(kind = "key", strongVibrate = false) {
-    if (this.options.enableVibration) vibrate(strongVibrate ? 12 : 8);
+    if (this.options.enableVibration) vibrate(strongVibrate ? 20 : 14);
     if (this.options.enableSound) this.audio.play(kind);
   }
 
