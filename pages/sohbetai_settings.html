@@ -585,12 +585,9 @@
   <div class="modal-card">
     <h3 class="modal-title">Ses Seç</h3>
     <p class="modal-text">Bir sesi seçtiğinde otomatik kaydolur.</p>
-
     <div class="voiceList" id="voiceList"></div>
-
     <div class="modal-actions">
       <button class="btn btn-secondary" id="voicePickerCloseBtn" type="button">Kapat</button>
-      <button class="btn btn-secondary" id="voiceLibraryBtn" type="button">Ses Kütüphanesi</button>
     </div>
   </div>
 </div>
@@ -627,7 +624,6 @@
     voiceMissingYesBtn: $("voiceMissingYesBtn"),
     voicePickerModal: $("voicePickerModal"),
     voicePickerCloseBtn: $("voicePickerCloseBtn"),
-    voiceLibraryBtn: $("voiceLibraryBtn"),
     voiceList: $("voiceList")
   };
 
@@ -644,6 +640,7 @@
     ),
     voiceId: String(localStorage.getItem(SHARED_VOICE_ID_KEY) || "").trim(),
     voiceName: String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "").trim(),
+    libraryLoaded: false,
     library: {
       mine_items: [],
       second_items: [],
@@ -864,7 +861,10 @@
     try {
       const { data: { session } } = await state.supabase.auth.getSession();
       const token = session?.access_token || "";
-      if (!token) return;
+      if (!token) {
+        state.libraryLoaded = true;
+        return;
+      }
 
       const resp = await fetch(LIBRARY_API, {
         method: "GET",
@@ -874,16 +874,28 @@
       });
 
       const json = await resp.json().catch(() => ({}));
-      if (!resp.ok || !json?.ok) return;
+
+      if (!resp.ok || !json?.ok) {
+        state.libraryLoaded = true;
+        return;
+      }
 
       state.library.mine_items = Array.isArray(json.mine_items) ? json.mine_items : [];
       state.library.second_items = Array.isArray(json.second_items) ? json.second_items : [];
       state.library.memory_items = Array.isArray(json.memory_items) ? json.memory_items : [];
+      state.libraryLoaded = true;
 
       syncSelectedVoiceNameFromLibrary();
       renderVoicePicker();
       refreshSummary();
-    } catch {}
+    } catch {
+      state.libraryLoaded = true;
+    }
+  }
+
+  async function refreshLibraryBeforeOpen(){
+    state.libraryLoaded = false;
+    await loadLibrary();
   }
 
   async function bootAuth(){
@@ -935,11 +947,14 @@
     showToast(`${state.voiceName || "Ses"} seçildi`);
   }
 
-  function openPicker(){
+  async function openPicker(){
+    await refreshLibraryBeforeOpen();
+
     if (!hasAnyPremiumVoice()) {
       openVoiceMissingModal();
       return;
     }
+
     renderVoicePicker();
     openVoicePickerModal();
   }
@@ -958,10 +973,6 @@
     UI.voicePickerBtn.addEventListener("click", openPicker);
 
     UI.goAdvancedBtn.addEventListener("click", () => {
-      location.href = ADVANCED_URL;
-    });
-
-    UI.voiceLibraryBtn.addEventListener("click", () => {
       location.href = ADVANCED_URL;
     });
 
