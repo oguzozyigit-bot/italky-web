@@ -15,12 +15,9 @@
       --muted:rgba(255,255,255,.68);
       --bg:#090816;
       --bg2:#15112a;
-      --card:rgba(255,255,255,.06);
       --line:rgba(255,255,255,.10);
-      --soft:rgba(255,255,255,.05);
       --grad:linear-gradient(135deg,#6366f1 0%,#a855f7 55%,#ec4899 100%);
       --danger:linear-gradient(135deg,#ef4444 0%,#991b1b 100%);
-      --ok:linear-gradient(135deg,#10b981 0%,#34d399 100%);
       --shadow:0 20px 48px rgba(0,0,0,.28);
     }
 
@@ -94,6 +91,7 @@
     }
 
     .pageHead{min-width:0}
+
     .kicker{
       font-size:11px;
       font-weight:900;
@@ -251,18 +249,6 @@
       line-height:1.5;
     }
 
-    .tip{
-      margin-top:8px;
-      padding:12px 14px;
-      border-radius:16px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      color:rgba(255,255,255,.78);
-      font-size:12px;
-      line-height:1.5;
-      font-weight:700;
-    }
-
     .listTitle{
       margin:16px 0 8px;
       font-size:13px;
@@ -297,12 +283,34 @@
       word-break:break-word;
     }
 
-    .trashBtn{
-      min-width:44px;
-      width:44px;
-      height:44px;
+    .itemActions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .miniBtn{
+      min-height:40px;
+      min-width:78px;
       border:none;
-      border-radius:14px;
+      border-radius:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:#fff;
+      font:inherit;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      padding:0 12px;
+    }
+
+    .trashBtn{
+      min-width:40px;
+      width:40px;
+      height:40px;
+      border:none;
+      border-radius:12px;
       cursor:pointer;
       background:rgba(239,68,68,.10);
       border:1px solid rgba(239,68,68,.18);
@@ -330,7 +338,6 @@
       font-size:12px;
       font-weight:700;
       text-align:center;
-      margin-top:8px;
     }
 
     .summary{
@@ -509,14 +516,8 @@
       animation:pulse 1.4s infinite ease-out;
     }
 
-    .recordingGlow::before{
-      inset:18px;
-    }
-
-    .recordingGlow::after{
-      inset:0;
-      animation-delay:.35s;
-    }
+    .recordingGlow::before{inset:18px}
+    .recordingGlow::after{inset:0;animation-delay:.35s}
 
     .recordMic{
       width:74px;
@@ -545,6 +546,8 @@
       color:#fff;
       line-height:1.4;
       min-height:20px;
+      text-align:center;
+      max-width:360px;
     }
 
     .hidden{display:none !important}
@@ -558,7 +561,8 @@
       .row,.modalActions{grid-template-columns:1fr}
       .title{font-size:27px}
       .item{grid-template-columns:1fr}
-      .trashBtn{width:100%}
+      .itemActions{width:100%}
+      .trashBtn{width:40px}
       .countCircle,.recordingGlow{width:160px;height:160px}
       .countNumber{font-size:62px}
     }
@@ -580,29 +584,35 @@
 
   <section class="hero">
     <p class="heroText">
-  
+      Sesini kaydet, tanıdık ses ekle, hatıra sesi yükle. Kayıtlar burada saklanır ve sonradan tekrar dinlenebilir.
     </p>
   </section>
 
   <section class="card">
     <h2 class="sectionTitle">Kendi Sesim</h2>
     <p class="desc">
-      Şu an kayıtlı sesiniz bulunmaktadır. Kayıtlı sesi dilerseniz güncelleyebilirsiniz.
+      Örn: Duygusal, Neşeli, Yumuşak. En fazla 5 kayıt ekleyebilirsiniz.
     </p>
 
+    <input class="input" id="mineVoiceNameInput" type="text" placeholder="İsim ver">
+    <div class="fieldError" id="mineNameError">Lütfen bir isim yaz.</div>
+
     <div class="row">
-      <button class="btn btnSoft" id="recordMineBtn" type="button">Ses Ekle / Güncelle</button>
+      <button class="btn btnSoft" id="recordMineBtn" type="button">Ekle</button>
       <button class="btn btnMain" id="saveMineBtn" type="button" disabled>Kaydet</button>
     </div>
 
     <div class="status" id="mineStatus">Kayıt bekleniyor.</div>
-    <div class="status" id="mineInfo">Kayıtlı ses durumu kontrol ediliyor.</div>
+
+    <div class="listTitle">Kayıtlı Kendi Seslerim</div>
+    <div class="list" id="mineList"></div>
+    <div class="empty hidden" id="mineEmpty">Henüz kayıtlı kendi ses yok.</div>
   </section>
 
   <section class="card">
     <h2 class="sectionTitle">Tanıdık Ses</h2>
     <p class="desc">
-      Sevgili, eş, çocuk veya yakın birinin sesi. En fazla 5 kayıt ekleyebilirsiniz.
+      Örn: Eşim, Çocuğum, Annem. En fazla 5 kayıt ekleyebilirsiniz.
     </p>
 
     <input class="input" id="secondVoiceNameInput" type="text" placeholder="İsim ver">
@@ -623,7 +633,7 @@
   <section class="card">
     <h2 class="sectionTitle">Hatıra Ses</h2>
     <p class="desc">
-      Anne, baba, dede, nine veya özel kayıtlar. En az 20 saniyelik, en fazla 10 MB boyutunda mp3 dosyası yükleyin.
+      Örn: Babam, Dedem, Anneannem. En az 20 saniyelik, en fazla 10 MB boyutunda mp3 dosyası yükleyin.
     </p>
 
     <input class="input" id="memoryVoiceNameInput" type="text" placeholder="İsim ver">
@@ -686,7 +696,7 @@
       <div class="countNumber" id="countNumber">5</div>
     </div>
 
-    <div class="recordingGlow" id="recordingGlow">
+    <div class="recordingGlow hidden" id="recordingGlow">
       <div class="recordMic">
         <svg viewBox="0 0 24 24">
           <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
@@ -710,6 +720,7 @@
   const ENROLL_API = "https://italky-api.onrender.com/api/voice/enroll";
   const VOICE_BUCKET = "voice-samples";
   const MAX_RECORD_SECONDS = 20;
+  const MAX_MINE = 5;
   const MAX_SECOND = 5;
   const MAX_MEMORY = 5;
   const COUNTDOWN_SECONDS = 5;
@@ -720,10 +731,13 @@
     backBtn: $("backBtn"),
     backOnlyBtn: $("backOnlyBtn"),
 
+    mineVoiceNameInput: $("mineVoiceNameInput"),
+    mineNameError: $("mineNameError"),
     recordMineBtn: $("recordMineBtn"),
     saveMineBtn: $("saveMineBtn"),
     mineStatus: $("mineStatus"),
-    mineInfo: $("mineInfo"),
+    mineList: $("mineList"),
+    mineEmpty: $("mineEmpty"),
 
     secondVoiceNameInput: $("secondVoiceNameInput"),
     secondNameError: $("secondNameError"),
@@ -772,18 +786,19 @@
     mineChunks: [],
     mineBlob: null,
     mineStream: null,
+    minePendingName: "",
 
     secondRecorder: null,
     secondChunks: [],
     secondBlob: null,
     secondStream: null,
+    secondPendingName: "",
 
     memoryMp3File: null,
 
     isSaving: false,
     pendingDeleteType: null,
     pendingDeleteId: null,
-    pendingDeleteLabel: null,
 
     unsaved: {
       mine: false,
@@ -792,8 +807,7 @@
     },
 
     serverState: {
-      mineReady: false,
-      mineItem: null,
+      mineItems: [],
       secondItems: [],
       memoryItems: []
     },
@@ -845,31 +859,17 @@
     if (errorEl) errorEl.classList.remove("show");
   }
 
-  function validateSecondName() {
-    const value = String(UI.secondVoiceNameInput.value || "").trim();
+  function validateName(inputEl, errorEl) {
+    const value = String(inputEl.value || "").trim();
     if (!value) {
-      showFieldError(UI.secondVoiceNameInput, UI.secondNameError, "Lütfen bir isim yaz.");
+      showFieldError(inputEl, errorEl, "Lütfen bir isim yaz.");
       return false;
     }
     if (value.length > 10) {
-      showFieldError(UI.secondVoiceNameInput, UI.secondNameError, "İsim en fazla 10 karakter olabilir.");
+      showFieldError(inputEl, errorEl, "İsim en fazla 10 karakter olabilir.");
       return false;
     }
-    hideFieldError(UI.secondVoiceNameInput, UI.secondNameError);
-    return true;
-  }
-
-  function validateMemoryName() {
-    const value = String(UI.memoryVoiceNameInput.value || "").trim();
-    if (!value) {
-      showFieldError(UI.memoryVoiceNameInput, UI.memoryNameError, "Lütfen bir isim yaz.");
-      return false;
-    }
-    if (value.length > 10) {
-      showFieldError(UI.memoryVoiceNameInput, UI.memoryNameError, "İsim en fazla 10 karakter olabilir.");
-      return false;
-    }
-    hideFieldError(UI.memoryVoiceNameInput, UI.memoryNameError);
+    hideFieldError(inputEl, errorEl);
     return true;
   }
 
@@ -918,7 +918,6 @@
   function openDeleteModal(type, id, label) {
     state.pendingDeleteType = type;
     state.pendingDeleteId = id;
-    state.pendingDeleteLabel = label;
     UI.deleteModalText.textContent = `${label} silinecek. Emin misiniz?`;
     UI.deleteModal.classList.add("open");
   }
@@ -926,7 +925,6 @@
   function closeDeleteModal() {
     state.pendingDeleteType = null;
     state.pendingDeleteId = null;
-    state.pendingDeleteLabel = null;
     UI.deleteModal.classList.remove("open");
   }
 
@@ -984,15 +982,11 @@
     left.textContent = item.voice_name || "İsimsiz Ses";
 
     const right = document.createElement("div");
-    right.style.display = "flex";
-    right.style.gap = "8px";
-    right.style.flexWrap = "wrap";
+    right.className = "itemActions";
 
     const listenBtn = document.createElement("button");
     listenBtn.type = "button";
-    listenBtn.className = "btn btnSoft";
-    listenBtn.style.minHeight = "44px";
-    listenBtn.style.width = "92px";
+    listenBtn.className = "miniBtn";
     listenBtn.textContent = "Dinle";
     listenBtn.addEventListener("click", () => playVoiceItem(item));
 
@@ -1020,32 +1014,18 @@
     return row;
   }
 
-  function renderSecondList() {
-    const rows = state.serverState.secondItems || [];
-    UI.secondList.innerHTML = "";
-    UI.secondEmpty.classList.toggle("hidden", rows.length > 0);
-
+  function renderList(container, emptyEl, rows, type) {
+    container.innerHTML = "";
+    emptyEl.classList.toggle("hidden", rows.length > 0);
     rows.forEach((item) => {
-      UI.secondList.appendChild(buildItemRow(item, "second"));
-    });
-  }
-
-  function renderMemoryList() {
-    const rows = state.serverState.memoryItems || [];
-    UI.memoryList.innerHTML = "";
-    UI.memoryEmpty.classList.toggle("hidden", rows.length > 0);
-
-    rows.forEach((item) => {
-      UI.memoryList.appendChild(buildItemRow(item, "memory"));
+      container.appendChild(buildItemRow(item, type));
     });
   }
 
   function repaintPage() {
-    UI.mineInfo.textContent = state.serverState.mineReady
-      ? "Şu an kayıtlı sesiniz bulunmaktadır. Kayıtlı sesi dilerseniz güncelleyebilirsiniz."
-      : "Henüz kayıtlı sesiniz yok.";
-    renderSecondList();
-    renderMemoryList();
+    renderList(UI.mineList, UI.mineEmpty, state.serverState.mineItems || [], "mine");
+    renderList(UI.secondList, UI.secondEmpty, state.serverState.secondItems || [], "second");
+    renderList(UI.memoryList, UI.memoryEmpty, state.serverState.memoryItems || [], "memory");
   }
 
   function openCountdownModal(title, text) {
@@ -1184,8 +1164,7 @@
       throw new Error(json?.detail || json?.error || "Ses kütüphanesi alınamadı.");
     }
 
-    state.serverState.mineItem = json.mine || null;
-    state.serverState.mineReady = !!json.mine;
+    state.serverState.mineItems = Array.isArray(json.mine_items) ? json.mine_items : [];
     state.serverState.secondItems = Array.isArray(json.second_items) ? json.second_items : [];
     state.serverState.memoryItems = Array.isArray(json.memory_items) ? json.memory_items : [];
     repaintPage();
@@ -1215,10 +1194,13 @@
   async function startCountdownAndRecord(flowType) {
     state.activeRecordFlow = flowType;
 
-    const title = flowType === "mine" ? "Kendi Sesim" : "Tanıdık Ses";
-    const text = flowType === "mine"
-      ? "Lütfen hazır olun. Sizden 20 saniye boyunca kendi sesinizle doğal konuşmanızı istiyoruz."
-      : "Lütfen hazır olun. Sizden 20 saniye boyunca doğal konuşmanızı istiyoruz.";
+    const title =
+      flowType === "mine" ? "Kendi Sesim" : "Tanıdık Ses";
+
+    const text =
+      flowType === "mine"
+        ? "Lütfen hazır olun. Sizden 20 saniye boyunca kendi sesinizle doğal konuşmanızı istiyoruz."
+        : "Lütfen hazır olun. Sizden 20 saniye boyunca doğal konuşmanızı istiyoruz.";
 
     openCountdownModal(title, text);
 
@@ -1262,7 +1244,7 @@
           stopTracks(state.mineStream);
           state.mineStream = null;
           closeCountdownModal();
-          UI.mineStatus.textContent = "Ses tanımlama işleminiz tamamlandı. Lütfen sesinizi kaydedin.";
+          UI.mineStatus.textContent = "Sesiniz işleniyor. Lütfen kaydedin.";
           setButtonState(UI.saveMineBtn, true);
           markUnsaved("mine", true);
         }
@@ -1271,7 +1253,7 @@
       state.mineRecorder.start();
 
       let remain = MAX_RECORD_SECONDS;
-      UI.recordingStatus.textContent = `${remain} saniyelik kayıt başladı...`;
+      UI.recordingStatus.textContent = `${remain} saniye kaldı...`;
 
       const tick = setInterval(() => {
         remain -= 1;
@@ -1311,7 +1293,7 @@
           stopTracks(state.secondStream);
           state.secondStream = null;
           closeCountdownModal();
-          UI.secondStatus.textContent = `${secondName} için ses tanımlama işlemi tamamlandı. Lütfen kaydedin.`;
+          UI.secondStatus.textContent = `${secondName} işleniyor. Lütfen kaydedin.`;
           setButtonState(UI.saveSecondBtn, true);
           markUnsaved("second", true);
         }
@@ -1320,7 +1302,7 @@
       state.secondRecorder.start();
 
       let remain = MAX_RECORD_SECONDS;
-      UI.recordingStatus.textContent = `${remain} saniyelik kayıt başladı...`;
+      UI.recordingStatus.textContent = `${remain} saniye kaldı...`;
 
       const tick = setInterval(() => {
         remain -= 1;
@@ -1341,38 +1323,50 @@
   }
 
   async function handleMineRecord() {
+    if (!validateName(UI.mineVoiceNameInput, UI.mineNameError)) return;
+
+    if ((state.serverState.mineItems || []).length >= MAX_MINE) {
+      showToast("5 ses eklenebilir. Yeni ses eklemek için önce kayıtlı seslerinizden birini silmeniz gereklidir.");
+      return;
+    }
+
+    state.minePendingName = String(UI.mineVoiceNameInput.value || "").trim();
     await startCountdownAndRecord("mine");
   }
 
   async function handleSecondRecord() {
-    if (!validateSecondName()) return;
+    if (!validateName(UI.secondVoiceNameInput, UI.secondNameError)) return;
 
     if ((state.serverState.secondItems || []).length >= MAX_SECOND) {
       showToast("5 ses eklenebilir. Yeni ses eklemek için önce kayıtlı seslerinizden birini silmeniz gereklidir.");
       return;
     }
 
+    state.secondPendingName = String(UI.secondVoiceNameInput.value || "").trim();
     await startCountdownAndRecord("second");
   }
 
   async function saveMine() {
     if (!state.mineBlob) {
-      UI.mineStatus.textContent = "Önce ses ekle / güncelle.";
+      UI.mineStatus.textContent = "Önce ses ekle.";
       return;
     }
 
     try {
       setSaving(true);
-      UI.mineStatus.textContent = "Kaydediliyor...";
-
-      await uploadVoice(state.mineBlob, "mine", "Kendi Sesim");
-      await enrollVoice("mine");
-
+      UI.mineStatus.textContent = "Ses işleniyor...";
+      const upload = await uploadVoice(state.mineBlob, "mine", state.minePendingName || "Kendi Sesim");
+      UI.mineStatus.textContent = "Benzer sesiniz hazırlanıyor...";
+      await enrollVoice("mine", upload.voice_id);
       await loadLibraryState();
 
       markUnsaved("mine", false);
-      UI.mineStatus.textContent = "Kaydedildi.";
-      showToast("Kendi sesiniz kaydedildi");
+      UI.mineStatus.textContent = "Benzer sesinizi dinleyebilirsiniz.";
+      UI.mineVoiceNameInput.value = "";
+      state.mineBlob = null;
+      state.minePendingName = "";
+      setButtonState(UI.saveMineBtn, false);
+      showToast("Kendi ses kaydedildi");
     } catch (e) {
       UI.mineStatus.textContent = e.message || "Kaydetme başarısız.";
     } finally {
@@ -1381,27 +1375,24 @@
   }
 
   async function saveSecond() {
-    if (!validateSecondName()) return;
     if (!state.secondBlob) {
       UI.secondStatus.textContent = "Önce ses ekle.";
       return;
     }
 
-    const secondName = String(UI.secondVoiceNameInput.value || "").trim();
-
     try {
       setSaving(true);
-      UI.secondStatus.textContent = "Kaydediliyor...";
-
-      const upload = await uploadVoice(state.secondBlob, "second", secondName);
+      UI.secondStatus.textContent = "Ses işleniyor...";
+      const upload = await uploadVoice(state.secondBlob, "second", state.secondPendingName || "Tanıdık Ses");
+      UI.secondStatus.textContent = "Benzer ses hazırlanıyor...";
       await enrollVoice("second", upload.voice_id);
-
       await loadLibraryState();
 
       markUnsaved("second", false);
-      UI.secondStatus.textContent = "Kaydedildi.";
+      UI.secondStatus.textContent = "Kayıt tamamlandı. Alttaki listeden dinleyebilirsiniz.";
       UI.secondVoiceNameInput.value = "";
       state.secondBlob = null;
+      state.secondPendingName = "";
       setButtonState(UI.saveSecondBtn, false);
       showToast("Tanıdık ses kaydedildi");
     } catch (e) {
@@ -1412,7 +1403,7 @@
   }
 
   async function saveMemory() {
-    if (!validateMemoryName()) return;
+    if (!validateName(UI.memoryVoiceNameInput, UI.memoryNameError)) return;
 
     if ((state.serverState.memoryItems || []).length >= MAX_MEMORY) {
       showToast("5 ses eklenebilir. Yeni ses eklemek için önce kayıtlı seslerden birini silmeniz gereklidir.");
@@ -1428,15 +1419,14 @@
 
     try {
       setSaving(true);
-      UI.memoryStatus.textContent = "Kaydediliyor...";
-
+      UI.memoryStatus.textContent = "Dosya yükleniyor...";
       const upload = await uploadVoice(state.memoryMp3File, "memory", memoryName);
+      UI.memoryStatus.textContent = "Ses üretiliyor...";
       await enrollVoice("memory", upload.voice_id);
-
       await loadLibraryState();
 
       markUnsaved("memory", false);
-      UI.memoryStatus.textContent = "Kaydedildi.";
+      UI.memoryStatus.textContent = "Kayıt tamamlandı. Alttaki listeden dinleyebilirsiniz.";
       UI.memoryVoiceNameInput.value = "";
       UI.memoryMp3Input.value = "";
       UI.memoryFileName.textContent = "Henüz dosya seçilmedi.";
@@ -1485,16 +1475,18 @@
     UI.backBtn.addEventListener("click", openLeaveModal);
     UI.backOnlyBtn.addEventListener("click", openLeaveModal);
 
-    UI.recordMineBtn.addEventListener("click", handleMineRecord);
-    UI.saveMineBtn.addEventListener("click", saveMine);
-
+    UI.mineVoiceNameInput.addEventListener("input", () => {
+      hideFieldError(UI.mineVoiceNameInput, UI.mineNameError);
+    });
     UI.secondVoiceNameInput.addEventListener("input", () => {
       hideFieldError(UI.secondVoiceNameInput, UI.secondNameError);
     });
-
     UI.memoryVoiceNameInput.addEventListener("input", () => {
       hideFieldError(UI.memoryVoiceNameInput, UI.memoryNameError);
     });
+
+    UI.recordMineBtn.addEventListener("click", handleMineRecord);
+    UI.saveMineBtn.addEventListener("click", saveMine);
 
     UI.recordSecondBtn.addEventListener("click", handleSecondRecord);
     UI.saveSecondBtn.addEventListener("click", saveSecond);
@@ -1535,5 +1527,3 @@
   init();
 })();
 </script>
-</body>
-</html>
