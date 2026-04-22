@@ -184,9 +184,15 @@
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
     import { getSiteLang } from "/js/i18n.js";
 
-    mountShell({ scroll: "auto" });
+    const { data: { session } } = await supabase.auth.getSession();
+
+    mountShell({
+      scroll: "auto",
+      publicPage: !session?.user
+    });
 
     function render(){
       const lang = (getSiteLang?.() || localStorage.getItem("site_lang") || "tr").toLowerCase();
