@@ -18,6 +18,7 @@
       --panel-border: rgba(255,255,255,.08);
       --cyan-soft:rgba(103,232,249,.16);
       --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#60a5fa 100%);
+      --lavender-grad: linear-gradient(135deg,#c4b5fd 0%, #a78bfa 48%, #8b5cf6 100%);
     }
 
     *{
@@ -286,6 +287,13 @@
       border:1px solid var(--panel-border);
     }
 
+    .btn-lavender{
+      background:var(--lavender-grad);
+      color:#fff;
+      box-shadow:0 12px 26px rgba(139,92,246,.24);
+      border:1px solid rgba(196,181,253,.24);
+    }
+
     .action-grid{
       display:grid;
       grid-template-columns:1fr;
@@ -501,7 +509,7 @@
   </section>
 
   <section class="action-grid">
-    <button class="btn btn-secondary" id="goAdvancedBtn" type="button">Yeni Ses Kaydet</button>
+    <button class="btn btn-lavender" id="goAdvancedBtn" type="button">Yeni Ses Kaydet</button>
     <button class="btn btn-primary" id="saveBtn" type="button">Geri Dön</button>
   </section>
 </div>
@@ -511,7 +519,7 @@
 <div class="modal" id="tokenModal">
   <div class="modal-card">
     <h3 class="modal-title">Jeton Gerekli</h3>
-    <p class="modal-text">Bu özelliği kullanabilmek için lütfen jeton yükleyiniz.</p>
+    <p class="modal-text">Bu modülü kullanabilmek için jeton gereklidir. Lütfen önce jeton yükleyiniz.</p>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="tokenCancelBtn" type="button">Vazgeç</button>
       <button class="btn btn-primary" id="tokenGoBtn" type="button">Jeton Yükle</button>
@@ -555,6 +563,7 @@ mountShell({ scroll: "auto" });
 
   const FROM_PARAM = new URLSearchParams(location.search).get("from") || "";
   const ADVANCED_URL = `/pages/voice_library.html?from=${encodeURIComponent(FROM_PARAM || "facetoface")}`;
+  const JETON_URL = "/pages/jetonbuy.html";
   const LIBRARY_API = "https://italky-api.onrender.com/api/italkyai/voice/library";
 
   const $ = (id) => document.getElementById(id);
@@ -620,12 +629,18 @@ mountShell({ scroll: "auto" });
     }, 1600);
   }
 
-  function openModal(el) { el.classList.add("open"); }
-  function closeModal(el) { el.classList.remove("open"); }
+  function openModal(el) {
+    el?.classList.add("open");
+  }
+
+  function closeModal(el) {
+    el?.classList.remove("open");
+  }
 
   function safeFallbackReturnUrl() {
     const from = String(FROM_PARAM || "").trim().toLowerCase();
     if (from === "facetoface") return "/facetoface.html";
+    if (from === "sohbetai") return "/pages/italkyai_chat.html";
     if (from === "atalarin_dili") return "/pages/atalarin_dili.html";
     if (from === "turklerin_dili") return "/pages/turklerin_dili.html";
     if (from === "kafkaslarin_dili") return "/pages/kafkaslarin_dili.html";
@@ -724,7 +739,7 @@ mountShell({ scroll: "auto" });
     UI.voiceSummary.textContent = finalName;
   }
 
-  function escapeHtml(str){
+  function escapeHtml(str) {
     return String(str ?? "")
       .replaceAll("&","&amp;")
       .replaceAll("<","&lt;")
@@ -733,7 +748,7 @@ mountShell({ scroll: "auto" });
       .replaceAll("'","&#39;");
   }
 
-  function renderVoicePicker(){
+  function renderVoicePicker() {
     UI.voiceList.innerHTML = "";
 
     const groups = [
@@ -861,23 +876,28 @@ mountShell({ scroll: "auto" });
     }
   }
 
-  async function refreshLibraryBeforeOpen(){
+  async function refreshLibraryBeforeOpen() {
     state.libraryLoaded = false;
     await loadLibrary();
   }
 
   async function bootAuth() {
-    const mod = await import("/js/supabase_client.js");
-    state.supabase = mod.supabase;
+    try {
+      const mod = await import("/js/supabase_client.js");
+      state.supabase = mod.supabase;
 
-    const { data: { session } } = await state.supabase.auth.getSession();
-    if (!session?.user) {
+      const { data: { session } } = await state.supabase.auth.getSession();
+      if (!session?.user) {
+        location.replace("/pages/login.html");
+        return false;
+      }
+
+      state.currentUser = session.user;
+      return true;
+    } catch {
       location.replace("/pages/login.html");
       return false;
     }
-
-    state.currentUser = session.user;
-    return true;
   }
 
   function hasAnyPremiumVoice() {
@@ -906,7 +926,12 @@ mountShell({ scroll: "auto" });
     showToast(`${state.voiceName || "Ses"} seçildi`);
   }
 
-  async function openPicker(){
+  async function openPicker() {
+    if (!hasJeton()) {
+      openModal(UI.tokenModal);
+      return;
+    }
+
     await refreshLibraryBeforeOpen();
 
     if (!hasAnyPremiumVoice()) {
@@ -928,12 +953,19 @@ mountShell({ scroll: "auto" });
 
     UI.voicePickerBtn.addEventListener("click", openPicker);
 
-    UI.goAdvancedBtn.addEventListener("click", () => location.href = ADVANCED_URL);
+    UI.goAdvancedBtn.addEventListener("click", () => {
+      if (!hasJeton()) {
+        openModal(UI.tokenModal);
+        return;
+      }
+      location.href = ADVANCED_URL;
+    });
+
     UI.saveBtn.addEventListener("click", goBackSmart);
 
-    UI.tokenCancelBtn.addEventListener("click", () => closeModal(UI.tokenModal));
+    UI.tokenCancelBtn.addEventListener("click", goBackSmart);
     UI.tokenGoBtn.addEventListener("click", () => {
-      location.href = "/pages/jetonbuy.html";
+      location.href = JETON_URL;
     });
 
     UI.voiceMissingNoBtn.addEventListener("click", () => closeModal(UI.voiceMissingModal));
@@ -949,6 +981,15 @@ mountShell({ scroll: "auto" });
     if (!ok) return;
 
     await loadWallet();
+
+    if (!hasJeton()) {
+      openModal(UI.tokenModal);
+      bindEvents();
+      syncToggle();
+      refreshSummary();
+      return;
+    }
+
     await loadLibrary();
 
     syncToggle();
