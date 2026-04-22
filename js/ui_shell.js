@@ -57,10 +57,22 @@ const QUICK_SITE_LANGS = [
   "sv","no","uk","fa"
 ];
 
+function syncSiteLangKeys() {
+  const siteLang = String(localStorage.getItem(SITE_LANG_STORAGE_KEY) || "").trim().toLowerCase();
+  const nativeLang = String(localStorage.getItem(NATIVE_LANG_STORAGE_KEY) || "").trim().toLowerCase();
+
+  if (siteLang && siteLang !== nativeLang) {
+    localStorage.setItem(NATIVE_LANG_STORAGE_KEY, siteLang);
+  } else if (!siteLang && nativeLang) {
+    localStorage.setItem(SITE_LANG_STORAGE_KEY, nativeLang);
+  }
+}
+
 function getNativeLangCode() {
+  syncSiteLangKeys();
   return String(
-    localStorage.getItem(NATIVE_LANG_STORAGE_KEY) ||
     localStorage.getItem(SITE_LANG_STORAGE_KEY) ||
+    localStorage.getItem(NATIVE_LANG_STORAGE_KEY) ||
     "tr"
   ).trim().toLowerCase();
 }
@@ -75,6 +87,8 @@ function getNativeLangInfo() {
 }
 
 function hydrateNativeLangPill() {
+  syncSiteLangKeys();
+
   const info = getNativeLangInfo();
   const flagEl = document.getElementById("headerNativeLangFlag");
   const textEl = document.getElementById("siteLangCurrentText");
@@ -161,18 +175,18 @@ const HOME_HEADER_HTML = `
             <span class="menu-brand-ai" data-no-translate="1">AI</span>
           </div>
 
-          <div class="menu-username" id="menuUserName">Kullanıcı</div>
-          <div class="menu-last-login" id="menuLastLogin">S.G.T: -</div>
-          <div class="menu-plan-line" id="menuPlanLine">Üyelik • Aktif</div>
+          <div class="menu-username" id="menuUserName">Misafir</div>
+          <div class="menu-last-login" id="menuLastLogin">Hoş geldiniz</div>
+          <div class="menu-plan-line" id="menuPlanLine">Ziyaretçi Modu</div>
 
-          <div class="menu-token-row">
+          <div class="menu-token-row" id="menuTokenRow">
             <div class="menu-token-pill">
               <span>Jeton Bakiyesi</span>
               <strong id="menuHeaderJeton">0</strong>
             </div>
           </div>
 
-          <div class="menu-token-link-wrap">
+          <div class="menu-token-link-wrap" id="menuTokenLinkWrap">
             <a class="menu-token-link" id="menuJetonInfoLink" href="/pages/jeton-nedir.html">Jeton Nedir?</a>
           </div>
         </div>
@@ -180,14 +194,16 @@ const HOME_HEADER_HTML = `
     </div>
 
     <nav class="menu-nav">
+      <a href="/pages/login.html" id="menuLoginLink" class="hidden">Giriş Yap</a>
+
       <a href="/pages/jetonbuy.html" id="jetonDirectLink">Jeton Yükle</a>
       <button class="menu-action" id="siteLangBtn" type="button">Site Dili • Türkçe</button>
-      <a href="/pages/wallet_history.html" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
+      <a href="/pages/wallet_history.html" id="walletHistoryLink" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
       <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
       <a href="/pages/deneme.html" id="italkyAiTestLink" class="hidden">italkyAI</a>
-      <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
+      <a href="/pages/profile.html" id="profileLink" data-i18n="menu_profile">Profil</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
-      <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
+      <a href="/pages/jeton-nedir.html" id="whatIsTokenLink" data-i18n="menu_what_is_token">Jeton Nedir</a>
       <a href="/pages/faq.html" data-i18n="menu_faq">SSS</a>
       <a href="/pages/privacy.html" data-i18n="menu_privacy">Gizlilik</a>
       <a href="/pages/contact.html" data-i18n="menu_contact">İletişim</a>
@@ -540,6 +556,66 @@ let __shellAutoTranslateInstalled = false;
 let __shellResizeBound = false;
 let __shellEscapeBound = false;
 
+function setGuestMenuMode(isGuest) {
+  const menuLoginLink = document.getElementById("menuLoginLink");
+  const walletHistoryLink = document.getElementById("walletHistoryLink");
+  const profileLink = document.getElementById("profileLink");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+  const jetonDirectLink = document.getElementById("jetonDirectLink");
+  const menuTokenRow = document.getElementById("menuTokenRow");
+  const menuTokenLinkWrap = document.getElementById("menuTokenLinkWrap");
+  const headerPlusBtn = document.getElementById("headerPlusBtn");
+  const headerSettingsBtn = document.getElementById("headerSettingsBtn");
+  const menuUserName = document.getElementById("menuUserName");
+  const menuLastLogin = document.getElementById("menuLastLogin");
+  const menuPlanLine = document.getElementById("menuPlanLine");
+  const menuProfileTop = document.getElementById("menuProfileTop");
+
+  const show = (el) => {
+    if (!el) return;
+    el.classList.remove("hidden");
+    el.style.display = "";
+  };
+
+  const hide = (el) => {
+    if (!el) return;
+    el.classList.add("hidden");
+    el.style.display = "none";
+  };
+
+  if (isGuest) {
+    show(menuLoginLink);
+    hide(walletHistoryLink);
+    hide(profileLink);
+    hide(logoutBtn);
+    hide(deleteAccountBtn);
+    hide(jetonDirectLink);
+    hide(menuTokenRow);
+    hide(menuTokenLinkWrap);
+    hide(headerPlusBtn);
+    hide(headerSettingsBtn);
+
+    if (menuUserName) menuUserName.textContent = "Misafir";
+    if (menuLastLogin) menuLastLogin.textContent = "Giriş yapmadan görüntüleniyor";
+    if (menuPlanLine) menuPlanLine.textContent = "Ziyaretçi Modu";
+    if (menuProfileTop) menuProfileTop.style.cursor = "default";
+  } else {
+    hide(menuLoginLink);
+    show(walletHistoryLink);
+    show(profileLink);
+    show(logoutBtn);
+    show(deleteAccountBtn);
+    show(jetonDirectLink);
+    show(menuTokenRow);
+    show(menuTokenLinkWrap);
+    show(headerPlusBtn);
+    show(headerSettingsBtn);
+
+    if (menuProfileTop) menuProfileTop.style.cursor = "pointer";
+  }
+}
+
 export function mountShell(options = {}) {
   document.documentElement.style.backgroundColor = "#05070f";
 
@@ -591,7 +667,7 @@ export function mountShell(options = {}) {
     location.href = "/pages/home.html";
   });
 
-  bindMenu();
+  bindMenu(options);
   finishMount(options);
 
   if (!__shellResizeBound) {
@@ -604,19 +680,31 @@ function finishMount(options) {
   const main = document.getElementById("shellMain");
   const shell = document.getElementById("italkyAppShell");
   const content = document.getElementById("pageContent");
+  const isPublicPage = options?.publicPage === true;
 
   if (main) {
     main.style.overflow = options?.scroll === "none" ? "hidden" : "auto";
   }
 
-  requestAnimationFrame(() => {
+  requestAnimationFrame(async () => {
     document.body.classList.add("ui-ready");
     hydrateFromCache();
     syncFooterHeight();
-    hydrateShellMeta();
-    hydratePlanUi();
-    hydrateAdminButton();
     hydrateNativeLangPill();
+
+    if (isPublicPage) {
+      try {
+        const { supabase } = await import("/js/supabase_client.js");
+        const { data: { session } } = await supabase.auth.getSession();
+        setGuestMenuMode(!session?.user);
+      } catch {
+        setGuestMenuMode(true);
+      }
+    } else {
+      hydrateShellMeta();
+      hydratePlanUi();
+      hydrateAdminButton();
+    }
 
     try {
       if (!window.italkySiteLanguage) {
@@ -651,7 +739,9 @@ function finishMount(options) {
   });
 }
 
-function bindMenu() {
+function bindMenu(options = {}) {
+  const isPublicPage = options?.publicPage === true;
+
   const menuBtn = document.getElementById("menuBtn");
   const headerSettingsBtn = document.getElementById("headerSettingsBtn");
   const headerPlusBtn = document.getElementById("headerPlusBtn");
@@ -666,6 +756,7 @@ function bindMenu() {
   const italkyAiTestLink = document.getElementById("italkyAiTestLink");
   const jetonDirectLink = document.getElementById("jetonDirectLink");
   const siteLangBtn = document.getElementById("siteLangBtn");
+  const menuLoginLink = document.getElementById("menuLoginLink");
 
   const siteLangModal = document.getElementById("siteLangModal");
   const siteLangBackdrop = document.getElementById("siteLangBackdrop");
@@ -676,13 +767,27 @@ function bindMenu() {
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
 
-  const openMenu = () => {
+  const openMenu = async () => {
+    if (isPublicPage) {
+      try {
+        const { supabase } = await import("/js/supabase_client.js");
+        const { data: { session } } = await supabase.auth.getSession();
+        setGuestMenuMode(!session?.user);
+      } catch {
+        setGuestMenuMode(true);
+      }
+    }
+
     sideMenu.classList.add("open");
     sideMenu.setAttribute("aria-hidden", "false");
     document.body.classList.add("ui-menu-open");
-    hydrateShellMeta();
-    hydratePlanUi();
-    hydrateAdminButton();
+
+    if (!isPublicPage) {
+      hydrateShellMeta();
+      hydratePlanUi();
+      hydrateAdminButton();
+    }
+
     hydrateNativeLangPill();
   };
 
@@ -708,16 +813,19 @@ function bindMenu() {
   };
 
   const goProfile = () => {
+    if (isPublicPage) return;
     closeMenu();
     location.href = "/pages/profile.html";
   };
 
   const goSettings = () => {
+    if (isPublicPage) return;
     closeMenu();
     location.href = "/pages/translation_settings.html";
   };
 
   const goPlus = () => {
+    if (isPublicPage) return;
     closeMenu();
     location.href = "/pages/jetonbuy.html";
   };
@@ -745,6 +853,12 @@ function bindMenu() {
     e.preventDefault();
     closeMenu();
     location.href = "/pages/jetonbuy.html";
+  });
+
+  menuLoginLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeMenu();
+    location.href = "/pages/login.html";
   });
 
   siteLangBtn?.addEventListener("click", () => {
@@ -818,21 +932,26 @@ function bindMenu() {
 
 async function applySiteLanguage(lang) {
   const code = String(lang || "tr").trim().toLowerCase();
-  localStorage.setItem(NATIVE_LANG_STORAGE_KEY, code);
+
   localStorage.setItem(SITE_LANG_STORAGE_KEY, code);
+  localStorage.setItem(NATIVE_LANG_STORAGE_KEY, code);
 
   hydrateNativeLangPill();
+  setDocumentDirFromLang(code);
 
   try {
     if (window.italkySiteLanguage && typeof window.italkySiteLanguage.setLanguage === "function") {
       await window.italkySiteLanguage.setLanguage(code);
+
+      localStorage.setItem(SITE_LANG_STORAGE_KEY, code);
+      localStorage.setItem(NATIVE_LANG_STORAGE_KEY, code);
+      hydrateNativeLangPill();
       return;
     }
   } catch (e) {
     console.warn("[ui_shell setLanguage]", e);
   }
 
-  setDocumentDirFromLang(code);
   window.location.reload();
 }
 
@@ -1148,6 +1267,19 @@ try {
 
 window.addEventListener("storage", (e) => {
   if (e.key === NATIVE_LANG_STORAGE_KEY || e.key === SITE_LANG_STORAGE_KEY) {
+    syncSiteLangKeys();
     hydrateNativeLangPill();
   }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    syncSiteLangKeys();
+    hydrateNativeLangPill();
+  }
+});
+
+window.addEventListener("focus", () => {
+  syncSiteLangKeys();
+  hydrateNativeLangPill();
 });
