@@ -293,6 +293,25 @@ async function ensureOfflineModelReady(from, to) {
   await requestOfflineModelDownload(from, to, false);
 }
 
+async function translateOfflineSafely(from, to, text) {
+  try {
+    await ensureOfflineModelReady(from, to);
+    return await requestOfflineTranslate(from, to, text);
+  } catch (e) {
+    const msg = String(e?.message || "");
+    const retryable =
+      msg.includes("model") ||
+      msg.includes("download") ||
+      msg.includes("not_ready") ||
+      msg.includes("missing");
+
+    if (!retryable) throw e;
+
+    await ensureOfflineModelReady(from, to);
+    return await requestOfflineTranslate(from, to, text);
+  }
+}
+
 async function translateGoogleFree(text, from, to) {
   const params = new URLSearchParams({
     client: "gtx",
@@ -525,8 +544,8 @@ async function manualDownloadOfflineCurrentModel() {
 }
 
 async function translateText() {
-  const text = normalizeText(inputBox.value);
-  if (!text) {
+  const sourceText = normalizeText(inputBox.value);
+  if (!sourceText) {
     setOutput("...", "");
     toast("Önce çevrilecek bir metin yaz.");
     return;
@@ -536,28 +555,29 @@ async function translateText() {
   const from = canonical(fromLang);
   const to = canonical(toLang);
 
+  // Hemen temizle
+  inputBox.value = "";
+  inputBox.style.height = "auto";
+  syncInputPreview();
+  syncInputButtons();
+
   frameRoot.classList.remove("is-ready", "is-error");
   frameRoot.classList.add("is-translating");
-  setOutput("Çevriliyor...", text);
+  setOutput("Çevriliyor...", sourceText);
 
   try {
     let out = "";
 
     if (offlineEnabled) {
       if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
-      out = await requestOfflineTranslate(from, to, text);
+      out = await translateOfflineSafely(from, to, sourceText);
     } else {
-      out = await translateGoogleFree(text, from, to);
+      out = await translateGoogleFree(sourceText, from, to);
     }
 
     if (myToken !== lastTranslateToken) return;
 
-    setOutput(out, text);
-
-    inputBox.value = "";
-    inputBox.style.height = "auto";
-    syncInputPreview();
-    syncInputButtons();
+    setOutput(out, sourceText);
 
     frameRoot.classList.remove("is-translating", "is-error");
     frameRoot.classList.add("is-ready");
@@ -570,7 +590,7 @@ async function translateText() {
   } catch (e) {
     if (myToken !== lastTranslateToken) return;
 
-    setOutput("⚠️ Çeviri şu an yapılamadı.", text);
+    setOutput("⚠️ Çeviri şu an yapılamadı.", sourceText);
     frameRoot.classList.remove("is-translating");
     frameRoot.classList.add("is-error");
     toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
