@@ -93,9 +93,7 @@
       overflow:hidden;
       text-overflow:ellipsis;
       cursor:pointer;
-      pointer-events:auto;
       position:relative;
-      z-index:5;
       min-width:0;
     }
 
@@ -167,9 +165,6 @@
       gap:8px;
       cursor:pointer;
       white-space:nowrap;
-      pointer-events:auto;
-      position:relative;
-      z-index:5;
     }
 
     .tool-toggle .dot{
@@ -229,20 +224,14 @@
       width:min(96vw,560px);
       margin:0 auto;
       display:grid;
-      grid-template-columns:1fr auto 1fr;
+      grid-template-columns:1fr auto;
       align-items:center;
       gap:8px;
     }
 
     .panel-head-grid.simple{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-    }
-
-    .panel-head-spacer{
-      min-width:1px;
-      min-height:1px;
+      grid-template-columns:1fr;
+      justify-items:center;
     }
 
     .panel-label{
@@ -761,6 +750,9 @@
       .lang-text{ font-size:11px; }
       .bubble.latest{ font-size:26px; }
       .bubble.normal{ font-size:17px; }
+      .panel-head-grid{
+        width:min(96vw,560px);
+      }
     }
   </style>
 </head>
@@ -770,39 +762,30 @@
 
     <div class="topbar">
       <div class="topbar-inner">
-        <div class="topbar-tools">
-          <button class="tool-toggle right active" id="soundToggle" type="button" aria-label="Sesi aç kapat">
-            <span class="dot"></span>
-            <span>SES</span>
-          </button>
-        </div>
+        <button class="lang-pill" id="fromBtn" type="button" aria-label="Kaynak dili seç">
+          <span class="lang-left">
+            <span class="lang-flag" id="fromFlag">🇹🇷</span>
+            <span class="lang-text" id="fromText">Türkçe</span>
+          </span>
+          <span class="lang-caret">▾</span>
+        </button>
 
-        <div class="topbar-langs">
-          <button class="lang-pill" id="fromBtn" type="button" aria-label="Kaynak dili seç">
-            <span class="lang-left">
-              <span class="lang-flag" id="fromFlag">🇹🇷</span>
-              <span class="lang-text" id="fromText">Türkçe</span>
-            </span>
-            <span class="lang-caret">▾</span>
-          </button>
+        <button class="swap-btn" id="swapBtn" type="button" aria-label="Dilleri değiştir">
+          <svg viewBox="0 0 24 24">
+            <path d="M8 7h11"></path>
+            <path d="M15 3l4 4-4 4"></path>
+            <path d="M16 17H5"></path>
+            <path d="M9 13l-4 4 4 4"></path>
+          </svg>
+        </button>
 
-          <button class="swap-btn" id="swapBtn" type="button" aria-label="Dilleri değiştir">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 7h11"></path>
-              <path d="M15 3l4 4-4 4"></path>
-              <path d="M16 17H5"></path>
-              <path d="M9 13l-4 4 4 4"></path>
-            </svg>
-          </button>
-
-          <button class="lang-pill" id="toBtn" type="button" aria-label="Hedef dili seç">
-            <span class="lang-left">
-              <span class="lang-flag" id="toFlag">🇬🇧</span>
-              <span class="lang-text" id="toText">İngilizce</span>
-            </span>
-            <span class="lang-caret">▾</span>
-          </button>
-        </div>
+        <button class="lang-pill" id="toBtn" type="button" aria-label="Hedef dili seç">
+          <span class="lang-left">
+            <span class="lang-flag" id="toFlag">🇬🇧</span>
+            <span class="lang-text" id="toText">İngilizce</span>
+          </span>
+          <span class="lang-caret">▾</span>
+        </button>
       </div>
     </div>
 
@@ -810,9 +793,8 @@
       <div class="half-screen top">
         <div class="panel-head">
           <div class="panel-head-grid">
-            <div class="panel-head-spacer"></div>
             <div class="panel-label">ÇEVİRİ ÇIKTISI</div>
-            <button class="tool-toggle right active panel-sound" id="soundToggleClone" type="button" aria-label="Sesi aç kapat">
+            <button class="tool-toggle panel-sound active" id="soundToggle" type="button" aria-label="Sesi aç kapat">
               <span class="dot"></span>
               <span>SES</span>
             </button>
@@ -902,7 +884,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="/js/text_translate_page.js?v=TEXT_TRANSLATE_SINGLE_V5"></script>
+  <script type="module" src="/js/text_translate_page.js?v=TEXT_TRANSLATE_SINGLE_V6"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     await initGlobalAccess({ allowPublicPageBypass: false });
