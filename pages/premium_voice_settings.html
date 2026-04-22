@@ -555,11 +555,17 @@ import { mountShell } from "/js/ui_shell.js";
 mountShell({ scroll: "auto" });
 
 (() => {
-  const AUTO_READ_KEY = "facetoface_auto_read";
-  const F2F_VOICE_KEY = "facetoface_voice_mode";
-  const F2F_PRESET_KEY = "facetoface_voice_preset";
-  const F2F_SELECTED_NAME_KEY = "facetoface_selected_voice_name";
-  const F2F_SELECTED_ID_KEY = "facetoface_selected_voice_id";
+  const SHARED_AUTO_READ_KEY = "italkyai_auto_read";
+  const SHARED_VOICE_KEY = "italkyai_voice_mode";
+  const SHARED_PRESET_KEY = "italkyai_voice_preset";
+  const SHARED_SELECTED_NAME_KEY = "italkyai_selected_voice_name";
+  const SHARED_SELECTED_ID_KEY = "italkyai_selected_voice_id";
+
+  const LEGACY_AUTO_READ_KEY = "facetoface_auto_read";
+  const LEGACY_VOICE_KEY = "facetoface_voice_mode";
+  const LEGACY_PRESET_KEY = "facetoface_voice_preset";
+  const LEGACY_SELECTED_NAME_KEY = "facetoface_selected_voice_name";
+  const LEGACY_SELECTED_ID_KEY = "facetoface_selected_voice_id";
 
   const FROM_PARAM = new URLSearchParams(location.search).get("from") || "";
   const ADVANCED_URL = `/pages/voice_library.html?from=${encodeURIComponent(FROM_PARAM || "facetoface")}`;
@@ -571,24 +577,18 @@ mountShell({ scroll: "auto" });
   const UI = {
     autoReadToggle: $("autoReadToggle"),
     autoReadSummary: $("autoReadSummary"),
-
     voicePickerBtn: $("voicePickerBtn"),
     selectedVoiceText: $("selectedVoiceText"),
     voiceSummary: $("voiceSummary"),
-
     goAdvancedBtn: $("goAdvancedBtn"),
     saveBtn: $("saveBtn"),
-
     toast: $("toast"),
-
     tokenModal: $("tokenModal"),
     tokenCancelBtn: $("tokenCancelBtn"),
     tokenGoBtn: $("tokenGoBtn"),
-
     voiceMissingModal: $("voiceMissingModal"),
     voiceMissingNoBtn: $("voiceMissingNoBtn"),
     voiceMissingYesBtn: $("voiceMissingYesBtn"),
-
     voicePickerModal: $("voicePickerModal"),
     voicePickerCloseBtn: $("voicePickerCloseBtn"),
     voiceList: $("voiceList")
@@ -598,10 +598,18 @@ mountShell({ scroll: "auto" });
     supabase: null,
     currentUser: null,
     walletTokens: 0,
-    autoRead: localStorage.getItem(AUTO_READ_KEY) !== "0",
+    autoRead: localStorage.getItem(SHARED_AUTO_READ_KEY) !== "0",
     voiceMode: readCurrentVoiceMode(),
-    voiceId: String(localStorage.getItem(F2F_SELECTED_ID_KEY) || "").trim(),
-    voiceName: String(localStorage.getItem(F2F_SELECTED_NAME_KEY) || "").trim(),
+    voiceId: String(
+      localStorage.getItem(SHARED_SELECTED_ID_KEY) ||
+      localStorage.getItem(LEGACY_SELECTED_ID_KEY) ||
+      ""
+    ).trim(),
+    voiceName: String(
+      localStorage.getItem(SHARED_SELECTED_NAME_KEY) ||
+      localStorage.getItem(LEGACY_SELECTED_NAME_KEY) ||
+      ""
+    ).trim(),
     libraryLoaded: false,
     library: {
       mine_items: [],
@@ -611,10 +619,21 @@ mountShell({ scroll: "auto" });
   };
 
   function readCurrentVoiceMode() {
-    const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
-    const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+    const mode = String(
+      localStorage.getItem(SHARED_VOICE_KEY) ||
+      localStorage.getItem(LEGACY_VOICE_KEY) ||
+      "auto"
+    ).trim().toLowerCase();
 
-    if (mode === "clone") return "mine";
+    const preset = String(
+      localStorage.getItem(SHARED_PRESET_KEY) ||
+      localStorage.getItem(LEGACY_PRESET_KEY) ||
+      ""
+    ).trim().toLowerCase();
+
+    if (mode === "mine" || mode === "clone") return "mine";
+    if (mode === "second") return "second";
+    if (mode === "memory") return "memory";
     if (mode === "preset" && preset === "second") return "second";
     if (mode === "preset" && preset === "memory") return "memory";
     return "auto";
@@ -664,29 +683,49 @@ mountShell({ scroll: "auto" });
   }
 
   function persistSettings() {
-    localStorage.setItem(AUTO_READ_KEY, state.autoRead ? "1" : "0");
+    const autoReadValue = state.autoRead ? "1" : "0";
+
+    localStorage.setItem(SHARED_AUTO_READ_KEY, autoReadValue);
+    localStorage.setItem(LEGACY_AUTO_READ_KEY, autoReadValue);
 
     if (state.voiceMode === "auto") {
-      localStorage.setItem(F2F_VOICE_KEY, "auto");
-      localStorage.removeItem(F2F_PRESET_KEY);
-      localStorage.removeItem(F2F_SELECTED_NAME_KEY);
-      localStorage.removeItem(F2F_SELECTED_ID_KEY);
+      localStorage.setItem(SHARED_VOICE_KEY, "auto");
+      localStorage.removeItem(SHARED_PRESET_KEY);
+      localStorage.removeItem(SHARED_SELECTED_NAME_KEY);
+      localStorage.removeItem(SHARED_SELECTED_ID_KEY);
+
+      localStorage.setItem(LEGACY_VOICE_KEY, "auto");
+      localStorage.removeItem(LEGACY_PRESET_KEY);
+      localStorage.removeItem(LEGACY_SELECTED_NAME_KEY);
+      localStorage.removeItem(LEGACY_SELECTED_ID_KEY);
       return;
     }
 
     if (state.voiceMode === "mine") {
-      localStorage.setItem(F2F_VOICE_KEY, "clone");
-      localStorage.removeItem(F2F_PRESET_KEY);
+      localStorage.setItem(SHARED_VOICE_KEY, "mine");
+      localStorage.removeItem(SHARED_PRESET_KEY);
+
+      localStorage.setItem(LEGACY_VOICE_KEY, "clone");
+      localStorage.removeItem(LEGACY_PRESET_KEY);
     } else if (state.voiceMode === "second") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "second");
+      localStorage.setItem(SHARED_VOICE_KEY, "second");
+      localStorage.setItem(SHARED_PRESET_KEY, "second");
+
+      localStorage.setItem(LEGACY_VOICE_KEY, "preset");
+      localStorage.setItem(LEGACY_PRESET_KEY, "second");
     } else if (state.voiceMode === "memory") {
-      localStorage.setItem(F2F_VOICE_KEY, "preset");
-      localStorage.setItem(F2F_PRESET_KEY, "memory");
+      localStorage.setItem(SHARED_VOICE_KEY, "memory");
+      localStorage.setItem(SHARED_PRESET_KEY, "memory");
+
+      localStorage.setItem(LEGACY_VOICE_KEY, "preset");
+      localStorage.setItem(LEGACY_PRESET_KEY, "memory");
     }
 
-    localStorage.setItem(F2F_SELECTED_NAME_KEY, state.voiceName || "");
-    localStorage.setItem(F2F_SELECTED_ID_KEY, state.voiceId || "");
+    localStorage.setItem(SHARED_SELECTED_NAME_KEY, state.voiceName || "");
+    localStorage.setItem(SHARED_SELECTED_ID_KEY, state.voiceId || "");
+
+    localStorage.setItem(LEGACY_SELECTED_NAME_KEY, state.voiceName || "");
+    localStorage.setItem(LEGACY_SELECTED_ID_KEY, state.voiceId || "");
   }
 
   function syncToggle() {
@@ -712,7 +751,12 @@ mountShell({ scroll: "auto" });
       return;
     }
 
-    const storedName = String(localStorage.getItem(F2F_SELECTED_NAME_KEY) || "").trim();
+    const storedName = String(
+      localStorage.getItem(SHARED_SELECTED_NAME_KEY) ||
+      localStorage.getItem(LEGACY_SELECTED_NAME_KEY) ||
+      ""
+    ).trim();
+
     if (storedName) {
       state.voiceName = storedName;
       return;
