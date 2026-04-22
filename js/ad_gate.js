@@ -275,7 +275,6 @@ function getOrCreateAdInfoModal() {
       </div>
       <div class="italky-ad-info-body">
         <div class="italky-ad-info-actions">
-          <button class="italky-ad-info-btn secondary" id="italkyAdInfoCancel" type="button">Daha Sonra</button>
           <button class="italky-ad-info-btn primary" id="italkyAdInfoOk" type="button">Tamam</button>
         </div>
       </div>
@@ -288,7 +287,7 @@ function getOrCreateAdInfoModal() {
 
 function showSoftAdModal({
   title = "Küçük Bir Bilgilendirme",
-  text = "Uygulamayı ücretsiz sunabilmemiz için, sayfalar arasında geçişlerde günde yalnızca 1 kez kısa bir reklam gösterilebilir.\nOffline dil indirmelerinde ise, her dil için indirme öncesinde bir kez reklam gösterilebilir.\nAnlayışınız için teşekkür ederiz."
+  text = "Uygulamayı ücretsiz sunabilmemiz için, sayfalar arasında geçişlerde günde yalnızca 1 kez kısa bir reklam gösterilir.\nOffline dil indirmelerinde ise, her dil için indirme öncesinde gösterilen reklamı izlemeniz gereklidir.\ Anlayışınız için teşekkür ederiz."
 } = {}) {
   return new Promise((resolve) => {
     const modal = getOrCreateAdInfoModal();
@@ -619,7 +618,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   if (hasNativeRewarded()) {
     rewarded = await showNativeRewarded(key, "offline_download");
   } else {
-    showFallbackAdInfo("Bu dili indirmek için kısa bir video izlenmesi gerekebilir. İndirme tamamlandıktan sonra aynı dil için tekrar reklam gösterilmez.");
+    showFallbackAdInfo("Bu dili indirmek için kısa bir video izlenmesi gerekelidir. İndirme tamamlandıktan sonra aynı dil için tekrar reklam gösterilmez.İndirilen çevirim dışı dili, 365 gün boyunca internete bağlanmadan ve herhangi bir ücret ödemeden dünyanın her ülkesinde kullanabilirsiniz");
     rewarded = true;
   }
 
