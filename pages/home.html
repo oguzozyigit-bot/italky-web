@@ -1357,25 +1357,26 @@ body.home-ready #pageContent{
   }
 
   async function bootHome() {
-    try {
-      const result = await initGlobalAccess({ allowPublicPageBypass: false });
-      if (!result?.ok) return;
+  try {
+    const result = await initGlobalAccess({ allowPublicPageBypass: false });
+    if (!result?.ok) return;
 
-      await fillUserName();
+    await fillUserName();
 
-      const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
-      if (skipWelcome) {
-        sessionStorage.removeItem("italky_skip_welcome_once");
-      }
-    } catch (e) {
-      console.error("home boot error:", e);
-    } finally {
-      document.body.classList.add("home-ready");
+    const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
+    if (skipWelcome) {
+      sessionStorage.removeItem("italky_skip_welcome_once");
     }
+  } catch (e) {
+    console.error("home boot error:", e);
+  } finally {
+    document.body.classList.add("home-ready");
   }
+}
 
-  bootHome();
+bootHome();
 </script>
 
+<script type="module" src="/js/site_language_boot.js"></script>
 </body>
 </html>
