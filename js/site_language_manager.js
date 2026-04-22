@@ -66,7 +66,7 @@ function shouldSkipElement(el) {
   return false;
 }
 
-function detectInitialLanguage() {
+async function detectInitialLanguage() {
   const saved = normalizeLang(localStorage.getItem(STORAGE_KEY) || "");
   if (saved !== DEFAULT_LANG || localStorage.getItem(STORAGE_KEY)) return saved;
 
@@ -76,7 +76,16 @@ function detectInitialLanguage() {
 
   for (const lang of langs) {
     const n = normalizeLang(lang);
-    if (n) return n;
+    if (n && n !== DEFAULT_LANG) return n;
+  }
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/site-country`);
+    const json = await resp.json().catch(() => ({}));
+    const suggested = normalizeLang(json?.suggested_lang || "");
+    if (suggested) return suggested;
+  } catch (e) {
+    console.warn("[site country detect]", e);
   }
 
   return DEFAULT_LANG;
@@ -172,7 +181,7 @@ async function fetchTranslations(texts, sourceLang, targetLang) {
 
 class SiteLanguageManager {
   constructor() {
-    this.currentLang = detectInitialLanguage();
+    this.currentLang = DEFAULT_LANG;
     this.observer = null;
     this.isApplying = false;
   }
@@ -182,6 +191,7 @@ class SiteLanguageManager {
   }
 
   async init() {
+    this.currentLang = await detectInitialLanguage();
     setDocumentDirection(this.currentLang);
 
     if (this.currentLang !== DEFAULT_LANG) {
