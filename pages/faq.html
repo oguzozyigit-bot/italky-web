@@ -20,27 +20,53 @@
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body{
+      overflow-x:hidden;
+    }
 
     .bg-layer {
-      position: fixed; inset: 0; z-index: 1;
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
       background:
         radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.18) 0%, transparent 40%),
         linear-gradient(180deg, #0f0816 0%, #060408 100%);
     }
 
     .crystal-wrap {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      perspective: 1200px; pointer-events: none; z-index: 2;
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1200px;
+      pointer-events: none;
+      z-index: 2;
     }
 
     .crystal-cage {
-      width: 300px; height: 300px; transform-style: preserve-3d;
-      animation: rotateCrystal 22s linear infinite; opacity: 0.18;
+      width: 300px;
+      height: 300px;
+      transform-style: preserve-3d;
+      animation: rotateCrystal 22s linear infinite;
+      opacity: 0.18;
     }
 
     .side {
-      position: absolute; inset: 0; border: 1.5px solid var(--neon);
+      position: absolute;
+      inset: 0;
+      border: 1.5px solid var(--neon);
       background: radial-gradient(circle, rgba(0, 242, 255, 0.08), transparent);
     }
     .s1{ transform:rotateY(0deg) translateZ(150px); }
@@ -52,72 +78,147 @@
       to { transform: rotateX(360deg) rotateY(720deg); }
     }
 
-    .mobile-frame {
-      width: 100%; max-width: 480px; height: 100dvh; margin: 0 auto;
-      position: relative; z-index: 10; display: flex; flex-direction: column;
+    #pageContent {
+      position: relative;
+      z-index: 10;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 0 6px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
     }
 
-    .top-nav {
-      display: flex; align-items: center; gap: 15px; padding: 20px;
-      position: sticky; top: 0; z-index: 30; background: transparent;
-    }
-
-    .btn-back {
-      background: transparent; border: none; color: #fff; font-size: 26px;
-      font-weight: 900; cursor: pointer; display: flex; align-items: center;
-    }
-    .btn-back:hover { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
-
-    .brand {
-      font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800;
-      background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .hero { margin-bottom: 8px; text-align: center; }
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      margin: 10px 0;
       letter-spacing: -1px;
     }
-
-    .page-content {
-      flex: 1; overflow-y: auto; padding: 0 20px 140px;
-      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    .hero h1 span {
+      background: var(--ai-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .page-content::-webkit-scrollbar { display: none; }
+    .hero p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.6;
+      margin:0;
+    }
 
-    .hero { margin-bottom: 25px; text-align: center; }
-    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; margin: 10px 0; letter-spacing: -1px; }
-    .hero h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero p { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
-
-    .search-wrap { margin: 20px 0; position: relative; }
+    .search-wrap { margin: 10px 0 0; position: relative; }
     .search-input {
-      width: 100%; height: 54px; border-radius: 20px;
-      border: 1px solid var(--border); background: rgba(255,255,255,0.06);
-      color: #fff; font-family: inherit; font-size: 15px; padding: 0 50px 0 20px;
-      transition: 0.3s; backdrop-filter: blur(15px);
+      width: 100%;
+      height: 54px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      padding: 0 18px;
+      transition: 0.3s;
+      backdrop-filter: blur(15px);
     }
-    .search-input:focus { border-color: var(--neon); box-shadow: 0 0 25px rgba(0, 242, 255, 0.25); }
+    .search-input:focus {
+      border-color: var(--neon);
+      box-shadow: 0 0 25px rgba(0, 242, 255, 0.25);
+    }
 
     .faq-card {
-      background: var(--glass); border: 1px solid var(--border);
-      border-radius: 32px; padding: 25px 20px; backdrop-filter: blur(25px);
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      padding: 24px 18px;
+      backdrop-filter: blur(25px);
       box-shadow: 0 20px 50px rgba(0,0,0,0.4);
     }
 
     .faq-section-title {
-      display: flex; align-items: center; gap: 10px; margin: 30px 0 15px;
-      color: var(--neon); font-size: 12px; font-weight: 900; letter-spacing: 1.5px;
-      text-transform: uppercase; text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 26px 0 15px;
+      color: var(--neon);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
     }
 
-    .faq-item { border-bottom: 1px solid rgba(255,255,255,0.08); padding: 18px 0; transition: 0.3s; }
+    .faq-section-title:first-child{
+      margin-top: 0;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 18px 0;
+      transition: 0.3s;
+    }
+
+    .faq-item:last-of-type{
+      border-bottom:none;
+    }
+
     .faq-item.hidden { display: none; }
 
-    .faq-q { font-size: 16px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; line-height: 1.4; color: #fff; }
-    .faq-q::after { content: "＋"; font-size: 18px; color: var(--neon); transition: 0.3s; flex-shrink: 0; }
+    .faq-q {
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      color: #fff;
+    }
 
-    .faq-a { max-height: 0; overflow: hidden; opacity: 0; font-size: 14px; color: rgba(255,255,255,0.82); line-height: 1.7; transition: 0.4s ease; }
+    .faq-q::after {
+      content: "＋";
+      font-size: 18px;
+      color: var(--neon);
+      transition: 0.3s;
+      flex-shrink: 0;
+    }
 
-    .faq-item.active .faq-a { max-height: 1200px; opacity: 1; padding-top: 15px; }
-    .faq-item.active .faq-q::after { content: "－"; transform: rotate(180deg); color: var(--pink); }
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      font-size: 14px;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.7;
+      transition: 0.4s ease;
+    }
 
-    .tag { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .faq-item.active .faq-a {
+      max-height: 1200px;
+      opacity: 1;
+      padding-top: 15px;
+    }
+
+    .faq-item.active .faq-q::after {
+      content: "－";
+      transform: rotate(180deg);
+      color: var(--pink);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
     .tag.ai { background: rgba(0, 242, 255, 0.15); color: var(--neon); }
     .tag.pro { background: rgba(255, 0, 122, 0.15); color: var(--pink); }
     .tag.info { background: rgba(255, 255, 255, 0.10); color: #fff; }
@@ -176,13 +277,20 @@
       color: #fff;
     }
 
-    .footer-bar {
-      position: absolute; bottom: 0; width: 100%; padding: 25px;
-      background: linear-gradient(to top, var(--bg) 60%, transparent);
-      display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 40;
-    }
+    @media (max-width: 520px){
+      #pageContent{
+        padding: 18px 0 6px;
+      }
 
-    .footer-copy { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 700; }
+      .hero h1{
+        font-size: 28px;
+      }
+
+      .faq-card{
+        border-radius: 28px;
+        padding: 20px 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -196,20 +304,7 @@
     </div>
   </div>
 
-  <div class="mobile-frame">
-    <div class="top-nav">
-      <button class="btn-back" id="backBtn">←</button>
-      <div class="brand">italkyAI</div>
-    </div>
-
-    <div class="page-content" id="contentHost"></div>
-
-    <div class="footer-bar">
-      <div class="footer-copy">italkyAI By <b>Ozyigit's</b> • 2026</div>
-    </div>
-  </div>
-
-  <template id="faq_tr">
+  <div id="pageContent">
     <div class="hero">
       <h1>Sıkça Sorulan <span>Sorular</span></h1>
       <p>Yeni modüller, üyelik, jeton, promosyon ve yapay zekâ destek akışı hakkında en çok merak edilenler burada.</p>
@@ -219,141 +314,147 @@
       </div>
     </div>
 
-    <div class="faq-card">
-      <div class="faq-section-title">Üyelik & Erişim</div>
+    <div class="faq-card" id="contentHost"></div>
+  </div>
 
-      <div class="faq-item active" data-search="üyelik erişim giriş paket kapalı açık">
-        <span class="tag info">ERİŞİM</span>
-        <div class="faq-q">italkyAI’yi kullanmak için üyelik gerekli mi?</div>
-        <div class="faq-a">
-          Evet. italkyAI modülleri üyelik mantığıyla çalışır. Aktif üyelik veya geçerli promosyon hakkınız varsa sisteme erişebilirsiniz.
-        </div>
+  <template id="faq_tr">
+    <div class="faq-section-title">Üyelik & Erişim</div>
+
+    <div class="faq-item active" data-search="üyelik erişim giriş paket kapalı açık">
+      <span class="tag info">ERİŞİM</span>
+      <div class="faq-q">italkyAI’yi kullanmak için üyelik gerekli mi?</div>
+      <div class="faq-a">
+        Evet. italkyAI modülleri üyelik mantığıyla çalışır. Aktif üyelik veya geçerli promosyon hakkınız varsa sisteme erişebilirsiniz.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="promosyon kodu giriş aktivasyon ilk giriş">
-        <span class="tag pro">PROMOSYON</span>
-        <div class="faq-q">Promosyon kodu nasıl kullanılır?</div>
-        <div class="faq-a">
-          Girişten sonra sistem size promosyon kodunuz olup olmadığını sorar. Kodunuz varsa girersiniz, onaylanırsa üyeliğiniz hesabınıza işlenir. Kodunuz yoksa üyelik akışına devam edersiniz.
-        </div>
+    <div class="faq-item" data-search="promosyon kodu giriş aktivasyon ilk giriş">
+      <span class="tag pro">PROMOSYON</span>
+      <div class="faq-q">Promosyon kodu nasıl kullanılır?</div>
+      <div class="faq-a">
+        Girişten sonra sistem size promosyon kodunuz olup olmadığını sorar. Kodunuz varsa girersiniz, onaylanırsa üyeliğiniz hesabınıza işlenir. Kodunuz yoksa üyelik akışına devam edersiniz.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="hesabımı sil silme tekrar kayıt promosyon geçmiş">
-        <span class="tag info">HESAP</span>
-        <div class="faq-q">Hesabımı silersem ne olur?</div>
-        <div class="faq-a">
-          Hesabınızı sildiğinizde size bağlı kayıtlar sistemden kaldırılır. Daha sonra yeniden hesap açarsanız yeni kullanıcı gibi başlarsınız. Google Play aboneliklerinizi ise ayrıca kendiniz yönetmeniz gerekir.
-        </div>
+    <div class="faq-item" data-search="hesabımı sil silme tekrar kayıt promosyon geçmiş">
+      <span class="tag info">HESAP</span>
+      <div class="faq-q">Hesabımı silersem ne olur?</div>
+      <div class="faq-a">
+        Hesabınızı sildiğinizde size bağlı kayıtlar sistemden kaldırılır. Daha sonra yeniden hesap açarsanız yeni kullanıcı gibi başlarsınız. Google Play aboneliklerinizi ise ayrıca kendiniz yönetmeniz gerekir.
       </div>
+    </div>
 
-      <div class="faq-section-title">Jeton Sistemi</div>
+    <div class="faq-section-title">Jeton Sistemi</div>
 
-      <div class="faq-item" data-search="jeton nedir ne işe yarar bakiye kullanımı">
-        <span class="tag pro">JETON</span>
-        <div class="faq-q">Jeton ne işe yarar?</div>
-        <div class="faq-a">
-          Jetonlar, üyelik içindeki bazı gelişmiş yapay zekâ özelliklerini kullanmak için gerekir. Özellikle premium çeviri, bazı özel modüller ve ileri seviye işlemler jeton tüketebilir.
-        </div>
+    <div class="faq-item" data-search="jeton nedir ne işe yarar bakiye kullanımı">
+      <span class="tag pro">JETON</span>
+      <div class="faq-q">Jeton ne işe yarar?</div>
+      <div class="faq-a">
+        Jetonlar, üyelik içindeki bazı gelişmiş yapay zekâ özelliklerini kullanmak için gerekir. Özellikle premium çeviri, bazı özel modüller ve ileri seviye işlemler jeton tüketebilir.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="jeton yükleme google play satın alma">
-        <span class="tag pro">ÖDEME</span>
-        <div class="faq-q">Jeton nasıl yüklenir?</div>
-        <div class="faq-a">
-          Jeton yükleme işlemi Google Play üzerinden yapılır. Menüdeki Jeton Yükle alanı sizi doğrudan ilgili satın alma sayfasına götürür.
-        </div>
+    <div class="faq-item" data-search="jeton yükleme google play satın alma">
+      <span class="tag pro">ÖDEME</span>
+      <div class="faq-q">Jeton nasıl yüklenir?</div>
+      <div class="faq-a">
+        Jeton yükleme işlemi Google Play üzerinden yapılır. Menüdeki Jeton Yükle alanı sizi doğrudan ilgili satın alma sayfasına götürür.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="jeton hareketleri bakiye geçmişi">
-        <span class="tag info">GEÇMİŞ</span>
-        <div class="faq-q">Jeton hareketlerimi görebilir miyim?</div>
-        <div class="faq-a">
-          Evet. Menüdeki Jeton Hareketleri bölümünden yükleme ve kullanım geçmişinizi görüntüleyebilirsiniz.
-        </div>
+    <div class="faq-item" data-search="jeton hareketleri bakiye geçmişi">
+      <span class="tag info">GEÇMİŞ</span>
+      <div class="faq-q">Jeton hareketlerimi görebilir miyim?</div>
+      <div class="faq-a">
+        Evet. Menüdeki Jeton Hareketleri bölümünden yükleme ve kullanım geçmişinizi görüntüleyebilirsiniz.
       </div>
+    </div>
 
-      <div class="faq-section-title">Modüller</div>
+    <div class="faq-section-title">Modüller</div>
 
-      <div class="faq-item" data-search="yüzyüze çeviri face to face tek telefon">
-        <span class="tag ai">YÜZYÜZE</span>
-        <div class="faq-q">YüzYüze Çeviri ne işe yarar?</div>
-        <div class="faq-a">
-          Tek cihaz üzerinde iki kişi arasında canlı iletişimi kolaylaştırır. Bir taraf kendi dilinde konuşur ya da yazar, sistem karşı tarafa çevrilmiş çıktıyı verir.
-        </div>
+    <div class="faq-item" data-search="yüzyüze çeviri face to face tek telefon">
+      <span class="tag ai">YÜZYÜZE</span>
+      <div class="faq-q">YüzYüze Çeviri ne işe yarar?</div>
+      <div class="faq-a">
+        Tek cihaz üzerinde iki kişi arasında canlı iletişimi kolaylaştırır. Bir taraf kendi dilinde konuşur ya da yazar, sistem karşı tarafa çevrilmiş çıktıyı verir.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="yazıdan çeviri metin text translate">
-        <span class="tag ai">METİN</span>
-        <div class="faq-q">Yazıdan Çeviri modülü ne yapar?</div>
-        <div class="faq-a">
-          Yazdığınız metni seçtiğiniz dillere hızlı şekilde çevirir. Kopyalama, dinleme ve pratik kullanım için uygundur.
-        </div>
+    <div class="faq-item" data-search="yazıdan çeviri metin text translate">
+      <span class="tag ai">METİN</span>
+      <div class="faq-q">Yazıdan Çeviri modülü ne yapar?</div>
+      <div class="faq-a">
+        Yazdığınız metni seçtiğiniz dillere hızlı şekilde çevirir. Kopyalama, dinleme ve pratik kullanım için uygundur.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="sohbet ai chat ai soru cevap asistan">
-        <span class="tag ai">SOHBET AI</span>
-        <div class="faq-q">Sohbet AI ne yapar?</div>
-        <div class="faq-a">
-          Sohbet AI, italkyAI içindeki yapay zekâ destekli konuşma ve yardım alanıdır. Yazabilir, sorular sorabilir ve farklı konularda hızlı yanıt alabilirsiniz.
-        </div>
+    <div class="faq-item" data-search="sohbet ai chat ai soru cevap asistan">
+      <span class="tag ai">SOHBET AI</span>
+      <div class="faq-q">Sohbet AI ne yapar?</div>
+      <div class="faq-a">
+        Sohbet AI, italkyAI içindeki yapay zekâ destekli konuşma ve yardım alanıdır. Yazabilir, sorular sorabilir ve farklı konularda hızlı yanıt alabilirsiniz.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="ataların dili göktürk turan dilleri balkan kafkas mezopotamya">
-        <span class="tag ai">ÖZEL MODÜLLER</span>
-        <div class="faq-q">Özel dil modülleri nelerdir?</div>
-        <div class="faq-a">
-          italkyAI içinde standart çevirinin yanında kültürel ve bölgesel modüller de vardır. Bunlar arasında Ataların Dili, Turan Dilleri, Kafkasların Dili, Mezopotamya Dili ve Balkanların Dili gibi özel alanlar bulunur.
-        </div>
+    <div class="faq-item" data-search="ataların dili göktürk turan dilleri balkan kafkas mezopotamya">
+      <span class="tag ai">ÖZEL MODÜLLER</span>
+      <div class="faq-q">Özel dil modülleri nelerdir?</div>
+      <div class="faq-a">
+        italkyAI içinde standart çevirinin yanında kültürel ve bölgesel modüller de vardır. Bunlar arasında Ataların Dili, Turan Dilleri, Kafkasların Dili, Mezopotamya Dili ve Balkanların Dili gibi özel alanlar bulunur.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="oyunlar eğlenerek öğren seviye tespit">
-        <span class="tag info">ÖĞRENME</span>
-        <div class="faq-q">Oyunlar ve seviye tespit ne işe yarar?</div>
-        <div class="faq-a">
-          Oyunlar dili daha eğlenceli şekilde pekiştirmenize yardımcı olur. Seviye tespit ise hangi seviyeden başlamanız gerektiğini görmenizi sağlar.
-        </div>
+    <div class="faq-item" data-search="oyunlar eğlenerek öğren seviye tespit">
+      <span class="tag info">ÖĞRENME</span>
+      <div class="faq-q">Oyunlar ve seviye tespit ne işe yarar?</div>
+      <div class="faq-a">
+        Oyunlar dili daha eğlenceli şekilde pekiştirmenize yardımcı olur. Seviye tespit ise hangi seviyeden başlamanız gerektiğini görmenizi sağlar.
       </div>
+    </div>
 
-      <div class="faq-section-title">Offline & Kullanım</div>
+    <div class="faq-section-title">Offline & Kullanım</div>
 
-      <div class="faq-item" data-search="offline çevrimdışı dil paketi internet yok">
-        <span class="tag pro">OFFLINE</span>
-        <div class="faq-q">Çevrimdışı Diller nasıl çalışır?</div>
-        <div class="faq-a">
-          Uygun dil paketleri cihazınıza indirildiğinde, internet olmasa bile belirli çeviri işlemlerini sürdürebilirsiniz. Seyahat ve bağlantı sorunu yaşanan durumlar için idealdir.
-        </div>
+    <div class="faq-item" data-search="offline çevrimdışı dil paketi internet yok">
+      <span class="tag pro">OFFLINE</span>
+      <div class="faq-q">Çevrimdışı Diller nasıl çalışır?</div>
+      <div class="faq-a">
+        Uygun dil paketleri cihazınıza indirildiğinde, internet olmasa bile belirli çeviri işlemlerini sürdürebilirsiniz. Seyahat ve bağlantı sorunu yaşanan durumlar için idealdir.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="mikrofon çalışmıyor izin ses algılama">
-        <span class="tag info">MİKROFON</span>
-        <div class="faq-q">Mikrofon çalışmıyorsa ne yapmalıyım?</div>
-        <div class="faq-a">
-          Önce cihaz ve tarayıcı uygulama izinlerinde mikrofona erişim verildiğinden emin olun. Ardından başka bir uygulamanın mikrofonu kullanmadığını kontrol edin.
-        </div>
+    <div class="faq-item" data-search="mikrofon çalışmıyor izin ses algılama">
+      <span class="tag info">MİKROFON</span>
+      <div class="faq-q">Mikrofon çalışmıyorsa ne yapmalıyım?</div>
+      <div class="faq-a">
+        Önce cihaz ve tarayıcı uygulama izinlerinde mikrofona erişim verildiğinden emin olun. Ardından başka bir uygulamanın mikrofonu kullanmadığını kontrol edin.
       </div>
+    </div>
 
-      <div class="faq-item" data-search="klavye ses titreşim yazma">
-        <span class="tag info">KLAVYE</span>
-        <div class="faq-q">Yazma ekranlarında özel klavye neden var?</div>
-        <div class="faq-a">
-          Bazı modüllerde daha hızlı ve kontrollü kullanım için uygulama içi özel klavye kullanılır. Böylece yazı, çeviri ve konuşma akışı tek ekranda daha rahat yönetilir.
-        </div>
+    <div class="faq-item" data-search="klavye ses titreşim yazma">
+      <span class="tag info">KLAVYE</span>
+      <div class="faq-q">Yazma ekranlarında özel klavye neden var?</div>
+      <div class="faq-a">
+        Bazı modüllerde daha hızlı ve kontrollü kullanım için uygulama içi özel klavye kullanılır. Böylece yazı, çeviri ve konuşma akışı tek ekranda daha rahat yönetilir.
       </div>
+    </div>
 
-      <div class="faq-section-title">Destek</div>
+    <div class="faq-section-title">Destek</div>
 
-      <div class="support-box">
-        <h3>Yapay Zekâ Destek</h3>
-        <p>Aradığınız cevabı burada bulamadıysanız destek alanından yapay zekâ destekli yardım alabilirsiniz. Sistem zamanla daha iyi yanıtlar vermek için gelişir.</p>
-        <div class="support-actions">
-          <a class="support-btn primary" href="/pages/italkyai_chat.html">Yapay Zekâ Desteğe Git</a>
-          <a class="support-btn secondary" href="/pages/contact.html">İletişim Sayfası</a>
-        </div>
+    <div class="support-box">
+      <h3>Yapay Zekâ Destek</h3>
+      <p>Aradığınız cevabı burada bulamadıysanız destek alanından yapay zekâ destekli yardım alabilirsiniz. Sistem zamanla daha iyi yanıtlar vermek için gelişir.</p>
+      <div class="support-actions">
+        <a class="support-btn primary" href="/pages/italkyai_chat.html">Yapay Zekâ Desteğe Git</a>
+        <a class="support-btn secondary" href="/pages/contact.html">İletişim Sayfası</a>
       </div>
     </div>
   </template>
 
   <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+
+    mountShell({ scroll: "auto" });
+
     function render() {
       const host = document.getElementById("contentHost");
       const tpl = document.getElementById("faq_tr");
@@ -361,11 +462,12 @@
       host.appendChild(tpl.content.cloneNode(true));
 
       const items = host.querySelectorAll(".faq-item");
-      const searchInput = host.querySelector("#faqSearch");
+      const searchInput = document.getElementById("faqSearch");
       const sectionTitles = host.querySelectorAll(".faq-section-title");
 
       items.forEach(item => {
-        item.querySelector(".faq-q").onclick = () => {
+        const q = item.querySelector(".faq-q");
+        q.onclick = () => {
           const isActive = item.classList.contains("active");
           items.forEach(i => i.classList.remove("active"));
           if (!isActive) item.classList.add("active");
@@ -401,11 +503,6 @@
     }
 
     render();
-
-    document.getElementById("backBtn").onclick = () => {
-      if(history.length > 1) history.back();
-      else location.href = "/pages/home.html";
-    };
   </script>
 </body>
 </html>
