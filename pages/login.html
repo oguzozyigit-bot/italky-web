@@ -456,9 +456,9 @@
     }
 
     async function resolveTarget(access){
-      const next = getNextTarget();
-      return next || HOME;
-    }
+  const next = getNextTarget();
+  return next || HOME;
+}
 
     async function getAccessState() {
       const { data:{ session } } = await supabase.auth.getSession();
@@ -484,16 +484,16 @@
     }
 
     async function routeAfterLogin(){
-      try{
-        await ensureAuthAndCacheUser();
-        const access = await getAccessState();
-        const target = await resolveTarget(access);
-        location.replace(target);
-      }catch(e){
-        console.error("routeAfterLogin error:", e);
-        location.replace(HOME);
-      }
-    }
+  try{
+    await ensureAuthAndCacheUser();
+    const access = await getAccessState();
+    const target = await resolveTarget(access);
+    location.replace(target);
+  }catch(e){
+    console.error("routeAfterLogin error:", e);
+    location.replace(HOME);
+  }
+}
 
     function hasNativeGoogleLogin() {
       return !!(
