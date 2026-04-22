@@ -284,8 +284,6 @@ const botModeToggle = $("botModeToggle");
 const topModeToggleLabel = $("topModeToggleLabel");
 const botModeToggleLabel = $("botModeToggleLabel");
 
-const topSettingsMini = $("topSettingsMini");
-const botSettingsMini = $("botSettingsMini");
 
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
@@ -2097,23 +2095,6 @@ function bindModeControls() {
   });
 }
 
-function bindSettingsButtons() {
-  const go = () => {
-    location.href = "/pages/premium_voice_settings.html";
-  };
-
-  topSettingsMini?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    go();
-  });
-
-  botSettingsMini?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    go();
-  });
-}
 
 function bindLanguageButtons() {
   topLangBtn?.addEventListener("click", (e) => {
@@ -2238,7 +2219,6 @@ function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
   bindModeControls();
-  bindSettingsButtons();
   bindLanguageButtons();
   bindGlobalClicks();
   bindUtilityButtons();
@@ -2287,8 +2267,6 @@ const requiredDomOk =
   !!botModeToggle &&
   !!topModeToggleLabel &&
   !!botModeToggleLabel &&
-  !!topSettingsMini &&
-  !!botSettingsMini &&
   !!offlineRequiredBackdrop &&
   !!offlineRequiredTitle &&
   !!offlineRequiredText &&
