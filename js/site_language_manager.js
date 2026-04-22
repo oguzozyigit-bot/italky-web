@@ -2,7 +2,14 @@ const API_BASE = "https://italky-api.onrender.com";
 
 const STORAGE_KEY = "site_lang";
 const DEFAULT_LANG = "tr";
-const RTL_LANGS = new Set(["ar"]);
+const RTL_LANGS = new Set(["ar", "fa", "ur"]);
+
+const SUPPORTED_LANGS = new Set([
+  "tr","en","de","fr","it","es","ar",
+  "ru","bg","bn","ca","cs","da","el","et","eu","fi","gl","hu","id","lt","lv",
+  "ms","nl","pl","ro","sk","sl","sq","th","ur","vi","zh","pt","hi","ja","ko",
+  "sv","no","uk","fa"
+]);
 
 const TEXT_SELECTOR_BLOCKLIST = new Set([
   "SCRIPT",
@@ -16,7 +23,7 @@ const TEXT_SELECTOR_BLOCKLIST = new Set([
 function normalizeLang(code = "") {
   const val = String(code || "").trim().toLowerCase().replace("_", "-");
   const base = val.split("-")[0];
-  if (["tr", "en", "de", "fr", "it", "es", "ar"].includes(base)) return base;
+  if (SUPPORTED_LANGS.has(base)) return base;
   return DEFAULT_LANG;
 }
 
