@@ -286,6 +286,31 @@
       }
     }
 
+    function hasNativeGoogleLogin() {
+      return !!(
+        window.Native &&
+        typeof window.Native.startGoogleLogin === "function"
+      );
+    }
+
+    async function startWebGoogleLogin() {
+      const next = getNextTarget();
+      const redirectTo = next
+        ? `${location.origin}/pages/login.html?next=${encodeURIComponent(next)}`
+        : `${location.origin}/pages/login.html`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+    }
+
     window.onNativeLoginSuccess = async function(payload){
       try{
         const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
@@ -332,13 +357,12 @@
         googleBtn.disabled = true;
         toast("Güvenli giriş başlatılıyor…");
 
-        if (window.Native && typeof window.Native.startGoogleLogin === "function") {
+        if (hasNativeGoogleLogin()) {
           window.Native.startGoogleLogin();
           return;
         }
 
-        googleBtn.disabled = false;
-        toast("Native köprü yok");
+        await startWebGoogleLogin();
       }catch(e){
         console.error("googleBtn click error:", e);
         googleBtn.disabled = false;
