@@ -20,11 +20,25 @@ function normalizeLang(code = "") {
   return DEFAULT_LANG;
 }
 
+function getTranslateRoot() {
+  return (
+    document.getElementById("shellMain") ||
+    document.getElementById("pageContent") ||
+    document.body
+  );
+}
+
 function shouldSkipElement(el) {
   if (!el) return true;
   if (TEXT_SELECTOR_BLOCKLIST.has(el.tagName)) return true;
   if (el.closest("[data-no-translate='1']")) return true;
   if (el.closest("[translate='no']")) return true;
+  if (el.closest("#shellOverlay")) return true;
+  if (el.closest("#siteLangModal")) return true;
+  if (el.closest("#menuBackdrop")) return true;
+  if (el.closest(".menu-backdrop")) return true;
+  if (el.closest(".shell-modal")) return true;
+  if (el.closest(".side-menu")) return true;
   return false;
 }
 
@@ -51,7 +65,7 @@ function setDocumentDirection(lang) {
   document.documentElement.setAttribute("lang", lang);
 }
 
-function getTextNodes(root = document.body) {
+function getTextNodes(root) {
   const nodes = [];
   if (!root) return nodes;
 
@@ -80,13 +94,13 @@ function getTextNodes(root = document.body) {
   return nodes;
 }
 
-function getAttributeTargets(root = document.body) {
+function getAttributeTargets(root) {
   const targets = [];
   if (!root) return targets;
 
   const attrs = ["placeholder", "title", "aria-label"];
-
   const all = root.querySelectorAll("*");
+
   for (const el of all) {
     if (shouldSkipElement(el)) continue;
 
@@ -165,10 +179,13 @@ class SiteLanguageManager {
         } catch (e) {
           console.warn("[site language observer]", e);
         }
-      }, 220);
+      }, 250);
     });
 
-    this.observer.observe(document.body, {
+    const root = getTranslateRoot();
+    if (!root) return;
+
+    this.observer.observe(root, {
       childList: true,
       subtree: true
     });
@@ -184,16 +201,24 @@ class SiteLanguageManager {
 
   async applyLanguage(lang) {
     const nextLang = normalizeLang(lang);
+    const root = getTranslateRoot();
+    if (!root) return;
+
     this.isApplying = true;
 
     try {
-      const textNodes = getTextNodes(document.body);
-      const attrTargets = getAttributeTargets(document.body);
+      const textNodes = getTextNodes(root);
+      const attrTargets = getAttributeTargets(root);
 
       for (const node of textNodes) {
         const parent = node.parentElement;
         if (!parent) continue;
-        ensureOriginalMap(parent, "origTextNode", node.nodeValue || "");
+
+        const key = `origTextNode_${Array.from(parent.childNodes).indexOf(node)}`;
+        if (!parent.dataset[key]) {
+          parent.dataset[key] = node.nodeValue || "";
+        }
+        node.__origKey = key;
       }
 
       for (const item of attrTargets) {
@@ -204,8 +229,8 @@ class SiteLanguageManager {
       if (nextLang === DEFAULT_LANG) {
         for (const node of textNodes) {
           const parent = node.parentElement;
-          if (!parent) continue;
-          const original = parent.dataset.origTextNode;
+          if (!parent || !node.__origKey) continue;
+          const original = parent.dataset[node.__origKey];
           if (typeof original === "string") {
             node.nodeValue = original;
           }
@@ -218,7 +243,6 @@ class SiteLanguageManager {
             item.el.setAttribute(item.attr, original);
           }
         }
-
         return;
       }
 
@@ -227,8 +251,9 @@ class SiteLanguageManager {
 
       for (const node of textNodes) {
         const parent = node.parentElement;
-        if (!parent) continue;
-        const original = parent.dataset.origTextNode;
+        if (!parent || !node.__origKey) continue;
+
+        const original = parent.dataset[node.__origKey];
         if (!original || !String(original).trim()) continue;
 
         textPayload.push(String(original));
