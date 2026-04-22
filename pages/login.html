@@ -150,7 +150,7 @@
       width:100%; text-align:center; z-index:20;
       padding-bottom:calc(20px + var(--safeB));
     }
-    .footer-nav{ display:flex; justify-content:center; gap:18px; margin-bottom:12px; }
+    .footer-nav{ display:flex; justify-content:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
     .footer-nav a{
       text-decoration:none; color:rgba(255,255,255,0.4); font-size:11px;
       font-weight:800; text-transform:uppercase; letter-spacing:1px; transition:0.3s;
@@ -176,16 +176,16 @@
   <div class="nebula"></div>
 
   <div class="main">
-    <div class="brand-section">
-      <h1>italky<span class="ai">AI</span></h1>
-      <div class="brand-sub">BE FREE</div>
+    <div class="brand-section" data-no-translate="1">
+      <h1 data-no-translate="1">italky<span class="ai" data-no-translate="1">AI</span></h1>
+      <div class="brand-sub" id="brandSub" data-no-translate="1">BE FREE</div>
     </div>
 
     <div class="world-container" aria-hidden="true">
       <div class="earth-glow"></div>
       <div class="earth">
-        <div class="ai-stamp ai-front">ITALKY</div>
-        <div class="ai-stamp ai-back">AI</div>
+        <div class="ai-stamp ai-front" data-no-translate="1">ITALKY</div>
+        <div class="ai-stamp ai-back" data-no-translate="1">AI</div>
       </div>
     </div>
 
@@ -201,20 +201,20 @@
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
         </svg>
-        <span>Google ile devam et</span>
+        <span id="googleBtnText">Google ile devam et</span>
       </button>
     </div>
   </div>
 
   <footer>
     <div class="footer-nav">
-      <a href="/pages/about.html">Hakkımızda</a>
-      <a href="/pages/faq.html">SSS</a>
-      <a href="/pages/privacy.html">Gizlilik</a>
-      <a href="/pages/contact.html">İletişim</a>
+      <a href="/pages/about.html" id="footerAbout">Hakkımızda</a>
+      <a href="/pages/faq.html" id="footerFaq">SSS</a>
+      <a href="/pages/privacy.html" id="footerPrivacy">Gizlilik</a>
+      <a href="/pages/contact.html" id="footerContact">İletişim</a>
     </div>
-    <div class="technology-title"><b>italky</b><span>TECHNOLOGY</span></div>
-    <div class="prestige-signature">italkyAI By Ozyigit's 2026</div>
+    <div class="technology-title" data-no-translate="1"><b data-no-translate="1">italky</b><span data-no-translate="1">TECHNOLOGY</span></div>
+    <div class="prestige-signature" data-no-translate="1">italkyAI By Ozyigit's 2026</div>
   </footer>
 
   <div id="toast"></div>
@@ -227,6 +227,217 @@
     const HOME = "/pages/home.html";
     const MEMBERSHIP = "/pages/membership.html";
     const googleBtn = document.getElementById("googleBtn");
+
+    const SITE_LANG_KEY = "site_lang";
+    const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+
+    const I18N = {
+      tr: {
+        pageTitle: "italkyAI • Giriş",
+        googleBtn: "Google ile devam et",
+        footerAbout: "Hakkımızda",
+        footerFaq: "SSS",
+        footerPrivacy: "Gizlilik",
+        footerContact: "İletişim",
+        toastStarting: "Güvenli giriş başlatılıyor…",
+        toastSigningIn: "Oturum açılıyor...",
+        toastNoToken: "Token alınamadı",
+        toastLoginFailed: "Oturum açılamadı",
+        toastNoSession: "Oturum bulunamadı",
+        toastLoginError: "Giriş hatası",
+        toastStartFailed: "Giriş başlatılamadı",
+        phrases: [
+          "Dünyayı küçülttük, Cebinize sığdırdık...",
+          "Dünyada ilk ve tek…",
+          "Kültürel çeviri ile…",
+          "Kelimeyi değil, anlamı çeviriyoruz…",
+          "Offline çeviri ile kasıntısız yaşa…",
+          "Dünya artık senin dilinde…",
+          "Başlamak için sadece giriş yap…"
+        ]
+      },
+      en: {
+        pageTitle: "italkyAI • Login",
+        googleBtn: "Continue with Google",
+        footerAbout: "About",
+        footerFaq: "FAQ",
+        footerPrivacy: "Privacy",
+        footerContact: "Contact",
+        toastStarting: "Secure sign-in is starting…",
+        toastSigningIn: "Signing in...",
+        toastNoToken: "Token could not be received",
+        toastLoginFailed: "Sign-in failed",
+        toastNoSession: "Session not found",
+        toastLoginError: "Login error",
+        toastStartFailed: "Could not start sign-in",
+        phrases: [
+          "We made the world smaller, and fit it in your pocket...",
+          "The first and only in the world…",
+          "With cultural translation…",
+          "We translate meaning, not just words…",
+          "Use offline translation without stress…",
+          "The world now speaks your language…",
+          "Just sign in to begin…"
+        ]
+      },
+      de: {
+        pageTitle: "italkyAI • Anmeldung",
+        googleBtn: "Mit Google fortfahren",
+        footerAbout: "Über uns",
+        footerFaq: "FAQ",
+        footerPrivacy: "Datenschutz",
+        footerContact: "Kontakt",
+        toastStarting: "Sichere Anmeldung wird gestartet…",
+        toastSigningIn: "Anmeldung läuft...",
+        toastNoToken: "Token konnte nicht abgerufen werden",
+        toastLoginFailed: "Anmeldung fehlgeschlagen",
+        toastNoSession: "Keine Sitzung gefunden",
+        toastLoginError: "Anmeldefehler",
+        toastStartFailed: "Anmeldung konnte nicht gestartet werden",
+        phrases: [
+          "Wir haben die Welt kleiner gemacht und in deine Tasche gesteckt...",
+          "Die erste und einzige ihrer Art…",
+          "Mit kultureller Übersetzung…",
+          "Wir übersetzen Bedeutung, nicht nur Wörter…",
+          "Offline-Übersetzung ganz entspannt…",
+          "Die Welt spricht jetzt deine Sprache…",
+          "Melde dich einfach an, um zu starten…"
+        ]
+      },
+      fr: {
+        pageTitle: "italkyAI • Connexion",
+        googleBtn: "Continuer avec Google",
+        footerAbout: "À propos",
+        footerFaq: "FAQ",
+        footerPrivacy: "Confidentialité",
+        footerContact: "Contact",
+        toastStarting: "Connexion sécurisée en cours…",
+        toastSigningIn: "Connexion en cours...",
+        toastNoToken: "Le jeton n’a pas pu être obtenu",
+        toastLoginFailed: "Échec de la connexion",
+        toastNoSession: "Session introuvable",
+        toastLoginError: "Erreur de connexion",
+        toastStartFailed: "Impossible de démarrer la connexion",
+        phrases: [
+          "Nous avons réduit le monde et l’avons mis dans votre poche...",
+          "Le premier et le seul au monde…",
+          "Avec la traduction culturelle…",
+          "Nous traduisons le sens, pas seulement les mots…",
+          "La traduction hors ligne, sans stress…",
+          "Le monde parle désormais votre langue…",
+          "Connectez-vous simplement pour commencer…"
+        ]
+      },
+      it: {
+        pageTitle: "italkyAI • Accesso",
+        googleBtn: "Continua con Google",
+        footerAbout: "Chi siamo",
+        footerFaq: "FAQ",
+        footerPrivacy: "Privacy",
+        footerContact: "Contatto",
+        toastStarting: "Avvio accesso sicuro…",
+        toastSigningIn: "Accesso in corso...",
+        toastNoToken: "Impossibile ottenere il token",
+        toastLoginFailed: "Accesso non riuscito",
+        toastNoSession: "Sessione non trovata",
+        toastLoginError: "Errore di accesso",
+        toastStartFailed: "Impossibile avviare l’accesso",
+        phrases: [
+          "Abbiamo reso il mondo più piccolo e l’abbiamo messo in tasca...",
+          "Il primo e unico al mondo…",
+          "Con la traduzione culturale…",
+          "Traduciamo il significato, non solo le parole…",
+          "Traduzione offline senza stress…",
+          "Il mondo ora parla la tua lingua…",
+          "Accedi per iniziare…"
+        ]
+      },
+      es: {
+        pageTitle: "italkyAI • Iniciar sesión",
+        googleBtn: "Continuar con Google",
+        footerAbout: "Acerca de",
+        footerFaq: "Preguntas frecuentes",
+        footerPrivacy: "Privacidad",
+        footerContact: "Contacto",
+        toastStarting: "Inicio de sesión seguro en curso…",
+        toastSigningIn: "Iniciando sesión...",
+        toastNoToken: "No se pudo obtener el token",
+        toastLoginFailed: "No se pudo iniciar sesión",
+        toastNoSession: "No se encontró sesión",
+        toastLoginError: "Error de inicio de sesión",
+        toastStartFailed: "No se pudo iniciar el acceso",
+        phrases: [
+          "Hicimos el mundo más pequeño y lo pusimos en tu bolsillo...",
+          "El primero y único en el mundo…",
+          "Con traducción cultural…",
+          "Traducimos el significado, no solo las palabras…",
+          "Traducción sin conexión sin complicaciones…",
+          "El mundo ahora habla tu idioma…",
+          "Solo inicia sesión para comenzar…"
+        ]
+      },
+      ar: {
+        pageTitle: "italkyAI • تسجيل الدخول",
+        googleBtn: "المتابعة باستخدام Google",
+        footerAbout: "من نحن",
+        footerFaq: "الأسئلة الشائعة",
+        footerPrivacy: "الخصوصية",
+        footerContact: "اتصل بنا",
+        toastStarting: "جارٍ بدء تسجيل دخول آمن…",
+        toastSigningIn: "جارٍ تسجيل الدخول...",
+        toastNoToken: "تعذر الحصول على الرمز",
+        toastLoginFailed: "فشل تسجيل الدخول",
+        toastNoSession: "لم يتم العثور على جلسة",
+        toastLoginError: "خطأ في تسجيل الدخول",
+        toastStartFailed: "تعذر بدء تسجيل الدخول",
+        phrases: [
+          "لقد صغّرنا العالم ووضعناه في جيبك...",
+          "الأول والوحيد في العالم…",
+          "مع الترجمة الثقافية…",
+          "نترجم المعنى لا الكلمات فقط…",
+          "ترجمة دون اتصال بلا تعقيد…",
+          "العالم الآن يتحدث لغتك…",
+          "فقط سجّل الدخول للبدء…"
+        ]
+      }
+    };
+
+    function getSiteLangCode() {
+      const raw = String(
+        localStorage.getItem(SITE_LANG_KEY) ||
+        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+        "tr"
+      ).trim().toLowerCase();
+
+      return I18N[raw] ? raw : "tr";
+    }
+
+    function currentDict() {
+      return I18N[getSiteLangCode()] || I18N.tr;
+    }
+
+    function applyLoginTranslations() {
+      const dict = currentDict();
+
+      document.documentElement.lang = getSiteLangCode();
+      document.title = dict.pageTitle;
+
+      const googleBtnText = document.getElementById("googleBtnText");
+      const footerAbout = document.getElementById("footerAbout");
+      const footerFaq = document.getElementById("footerFaq");
+      const footerPrivacy = document.getElementById("footerPrivacy");
+      const footerContact = document.getElementById("footerContact");
+      const typeEl = document.getElementById("typewriter");
+
+      if (googleBtnText) googleBtnText.textContent = dict.googleBtn;
+      if (footerAbout) footerAbout.textContent = dict.footerAbout;
+      if (footerFaq) footerFaq.textContent = dict.footerFaq;
+      if (footerPrivacy) footerPrivacy.textContent = dict.footerPrivacy;
+      if (footerContact) footerContact.textContent = dict.footerContact;
+      if (typeEl) typeEl.textContent = dict.phrases[0] || "";
+
+      return dict;
+    }
 
     function toast(msg){
       if(!toastEl) return;
@@ -312,18 +523,20 @@
     }
 
     window.onNativeLoginSuccess = async function(payload){
+      const dict = currentDict();
+
       try{
         const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
         const idToken = String(data?.id_token || data?.idToken || "").trim();
 
         if(!idToken){
           googleBtn.disabled = false;
-          toast("Token alınamadı");
+          toast(dict.toastNoToken);
           return;
         }
 
         googleBtn.disabled = true;
-        toast("Oturum açılıyor...");
+        toast(dict.toastSigningIn);
 
         const { error } = await supabase.auth.signInWithIdToken({
           provider: "google",
@@ -332,7 +545,7 @@
 
         if (error) {
           googleBtn.disabled = false;
-          toast("Oturum açılamadı");
+          toast(dict.toastLoginFailed);
           console.error("signInWithIdToken error:", error);
           return;
         }
@@ -340,7 +553,7 @@
         const { data:{ session } } = await supabase.auth.getSession();
         if(!session){
           googleBtn.disabled = false;
-          toast("Oturum bulunamadı");
+          toast(dict.toastNoSession);
           return;
         }
 
@@ -348,14 +561,16 @@
       }catch(e){
         console.error("onNativeLoginSuccess error:", e);
         googleBtn.disabled = false;
-        toast("Giriş hatası");
+        toast(dict.toastLoginError);
       }
     };
 
     googleBtn?.addEventListener("click", async () => {
+      const dict = currentDict();
+
       try{
         googleBtn.disabled = true;
-        toast("Güvenli giriş başlatılıyor…");
+        toast(dict.toastStarting);
 
         if (hasNativeGoogleLogin()) {
           window.Native.startGoogleLogin();
@@ -366,23 +581,16 @@
       }catch(e){
         console.error("googleBtn click error:", e);
         googleBtn.disabled = false;
-        toast("Giriş başlatılamadı");
+        toast(dict.toastStartFailed);
       }
     });
 
-    const phrases = [
-      "Dünyayı küçülttük, Cebinize sığdırdık...",
-      "Dünyada ilk ve tek…",
-      "Kültürel çeviri ile…",
-      "Kelimeyi değil, anlamı çeviriyoruz…",
-      "Offline çeviri ile kasıntısız yaşa…",
-      "Dünya artık senin dilinde…",
-      "Başlamak için sadece giriş yap…"
-    ];
-
+    let phrases = applyLoginTranslations().phrases.slice();
     let pi = 0;
     const typeEl = document.getElementById("typewriter");
+
     setInterval(() => {
+      phrases = currentDict().phrases.slice();
       pi = (pi + 1) % phrases.length;
       if(typeEl){
         typeEl.style.animation = "none";
@@ -392,8 +600,18 @@
       }
     }, 5600);
 
+    window.addEventListener("storage", (e) => {
+      if (e.key === SITE_LANG_KEY || e.key === LEGACY_SITE_LANG_KEY) {
+        const dict = applyLoginTranslations();
+        phrases = dict.phrases.slice();
+        pi = 0;
+      }
+    });
+
     (async function boot(){
       try{
+        applyLoginTranslations();
+
         const { data:{ session } } = await supabase.auth.getSession();
         if(!session){
           document.body.classList.add("login-ready");
