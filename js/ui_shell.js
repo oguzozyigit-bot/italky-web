@@ -992,8 +992,6 @@ async function hydratePlanUi() {
   const line = document.getElementById("menuPlanLine");
   if (!line) return;
 
-  let mainLabel = "Üyelik";
-  let subLabel = "Aktif";
 
   try {
     const { supabase } = await import("/js/supabase_client.js");
