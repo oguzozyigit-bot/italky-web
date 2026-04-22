@@ -127,7 +127,7 @@ function speakText(text) {
 ----------------------------- */
 let state = {
   lang: normalizeLang(qp("lang") || localStorage.getItem("italky_game_lang") || "en"),
-  level: normalizeLevel(qp("level") || localStorage.getItem("italky_game_level")) || null,
+  level: normalizeLevel(qp("level") || localStorage.getItem("italky_game_level")) || "A1",
   pool: [],
   target: null,
   lastWord: null,
@@ -140,8 +140,7 @@ let state = {
   flawless: true,
   jokerUsed: false,
   lock: false,
-  userId: "anon",
-  placementOk: false
+  userId: "anon"
 };
 
 const LANG_META = {
@@ -194,7 +193,7 @@ function closeRulesSheet() {
 }
 
 /* -----------------------------
-   PROFILE / AUTH / DATA LOAD
+   AUTH / DATA LOAD
 ----------------------------- */
 async function loadGameData() {
   try {
@@ -207,44 +206,19 @@ async function loadGameData() {
 
     state.userId = session?.user?.id || "anon";
 
-    let profile = null;
-    if (state.userId !== "anon") {
-      const { data: prof, error: profErr } = await supabase
-        .from("profiles")
-        .select("id, game_lang, current_level, english_level, placement_completed, hangman_best")
-        .eq("id", state.userId)
-        .maybeSingle();
-
-      if (!profErr) profile = prof || null;
-    }
-
-    if (!state.lang) {
-      state.lang = normalizeLang(profile?.game_lang || "en");
-    }
-
-    if (!state.level) {
-      state.level =
-        normalizeLevel(profile?.current_level) ||
-        normalizeLevel(profile?.english_level) ||
-        null;
-    }
-
-    state.placementOk = Boolean(
-      profile?.placement_completed ||
-      state.level
+    state.lang = normalizeLang(
+      qp("lang") ||
+      localStorage.getItem("italky_game_lang") ||
+      state.lang ||
+      "en"
     );
 
-    if (!state.placementOk) {
-      setGate("Önce seviye tespit sınavını tamamlamalısın.");
-      disableStartBtn(true, "KİLİTLİ");
-      return;
-    }
-
-    if (!state.level) {
-      setGate("Seviye bilgisi bulunamadı. Önce seviye tespitini tamamla.");
-      disableStartBtn(true, "KİLİTLİ");
-      return;
-    }
+    state.level = normalizeLevel(
+      qp("level") ||
+      localStorage.getItem("italky_game_level") ||
+      state.level ||
+      "A1"
+    ) || "A1";
 
     localStorage.setItem("italky_game_lang", state.lang);
     localStorage.setItem("italky_game_level", state.level);
@@ -269,9 +243,17 @@ async function loadGameData() {
       : [];
 
     let best = 0;
-    if (profile?.hangman_best) {
-      const key = `${state.lang}::${state.level}`;
-      best = profile.hangman_best?.[key] || 0;
+    if (state.userId !== "anon") {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("hangman_best")
+        .eq("id", state.userId)
+        .maybeSingle();
+
+      if (prof?.hangman_best) {
+        const key = `${state.lang}::${state.level}`;
+        best = prof.hangman_best?.[key] || 0;
+      }
     }
     $("bestVal").textContent = String(best);
 
@@ -447,7 +429,6 @@ async function endRound(win) {
   const solvedWord = String(state.target?.w || "").toUpperCase();
   const solvedTr = String(state.target?.tr || "—");
 
-  // Eğitim amaçlı: son durumda doğru kelimeyi her zaman göster + okut
   speakText(solvedWord);
 
   if (win) {
@@ -512,11 +493,6 @@ $("mBtn").onclick = () => {
 };
 
 $("realStartBtn").onclick = () => {
-  if (!state.placementOk) {
-    alert("Önce seviye tespit sınavını tamamlamalısın.");
-    return;
-  }
-
   if (!state.pool.length) {
     alert("Bu dil ve seviyede henüz oyun havuzu bulunamadı.");
     return;
@@ -537,8 +513,9 @@ $("langSheetClose").onclick = () => {
   closeLangSheet();
 };
 
-$("toRulesBtn").onclick = () => {
+$("toRulesBtn").onclick = async () => {
   closeLangSheet();
+  await loadGameData();
   openRulesSheet();
 };
 
