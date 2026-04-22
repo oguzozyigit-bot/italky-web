@@ -1,5 +1,3 @@
-/js/site_language_boot.js
-
 import { initSiteLanguageManager } from "/js/site_language_manager.js";
 
 (async () => {
