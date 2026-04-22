@@ -53,67 +53,10 @@
     #pageContent{
       max-width:640px;
       margin:0 auto;
-      padding:env(safe-area-inset-top) 16px 96px;
+      padding:20px 16px 6px;
       display:flex;
       flex-direction:column;
       gap:18px;
-    }
-
-    .topRow{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding-top:18px;
-    }
-
-    .backBtn{
-      width:46px;
-      height:46px;
-      border:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.06);
-      border:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .backBtn svg{
-      width:20px;
-      height:20px;
-      stroke:#fff;
-      fill:none;
-      stroke-width:2.4;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .pageHead{min-width:0}
-
-    .kicker{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      color:#67e8f9;
-      margin-bottom:4px;
-    }
-
-    .title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:30px;
-      font-weight:800;
-      letter-spacing:-1px;
-      line-height:1;
-    }
-
-    .title span{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
     }
 
     .hero,
@@ -346,6 +289,7 @@
       color:var(--muted);
       font-size:12px;
       font-weight:800;
+      padding-bottom:4px;
     }
 
     .toast{
@@ -560,7 +504,6 @@
 
     @media (max-width:480px){
       .row,.modalActions{grid-template-columns:1fr}
-      .title{font-size:27px}
       .item{grid-template-columns:1fr}
       .itemActions{width:100%}
       .countCircle,.recordingGlow{width:160px;height:160px}
@@ -570,6 +513,7 @@
 </head>
 <body>
 
+<div id="pageContent">
   <section class="hero">
     <p class="heroText">
       Sesini kaydet, tanıdık ses ekle, hatıra sesi yükle. Kayıtlar burada saklanır ve sonradan tekrar dinlenebilir.
@@ -639,7 +583,7 @@
   </section>
 
   <button class="btn btnSoft" id="backOnlyBtn" type="button">Geri Dön</button>
-
+  <div class="summary" id="poolSummary">Ortak ses havuzu aktif</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -722,7 +666,6 @@ mountShell({ scroll: "auto" });
   const $ = (id) => document.getElementById(id);
 
   const UI = {
-    backBtn: $("backBtn"),
     backOnlyBtn: $("backOnlyBtn"),
 
     mineVoiceNameInput: $("mineVoiceNameInput"),
@@ -1464,7 +1407,6 @@ mountShell({ scroll: "auto" });
   }
 
   function bindEvents() {
-    UI.backBtn.addEventListener("click", openLeaveModal);
     UI.backOnlyBtn.addEventListener("click", openLeaveModal);
 
     UI.tokenNoBtn.addEventListener("click", closeTokenModal);
