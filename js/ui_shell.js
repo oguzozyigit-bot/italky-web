@@ -51,10 +51,10 @@ const NATIVE_LANG_META = {
 };
 
 const QUICK_SITE_LANGS = [
-  "tr","en","de","fr","it","es","ar",
-  "ru","bg","bn","ca","cs","da","el","et","eu","fi","gl","hu","id","lt","lv",
-  "ms","nl","pl","ro","sk","sl","sq","th","ur","vi","zh","pt","hi","ja","ko",
-  "sv","no","uk","fa"
+  "tr", "en", "de", "fr", "it", "es", "ar",
+  "ru", "bg", "bn", "ca", "cs", "da", "el", "et", "eu", "fi", "gl", "hu", "id", "lt", "lv",
+  "ms", "nl", "pl", "ro", "sk", "sl", "sq", "th", "ur", "vi", "zh", "pt", "hi", "ja", "ko",
+  "sv", "no", "uk", "fa"
 ];
 
 function syncSiteLangKeys() {
@@ -111,17 +111,13 @@ const LOADING_OVERLAY_HTML = `
 ">
   <div style="text-align:center; font-family:Outfit,sans-serif;" data-no-translate="1">
     <div style="font-size:30px; font-weight:800; color:#f5f7ff;" data-no-translate="1">
-      <span data-no-translate="1"></span>
+      <span data-no-translate="1">italky</span>
       <span data-no-translate="1" style="
         background:linear-gradient(135deg,#8bd3ff 0%, #7c5cff 45%, #ff66c4 100%);
         -webkit-background-clip:text;
         -webkit-text-fill-color:transparent;
-      "></span>
+      ">AI</span>
     </div>
-    <div style="
-      font-size:10px; letter-spacing:4px; color:rgba(255,255,255,.36);
-      margin-top:8px; font-weight:800;
-    " data-no-translate="1">BE FREE</div>
   </div>
 </div>`;
 
@@ -132,9 +128,9 @@ const HOME_HEADER_HTML = `
       <span data-no-translate="1">italky</span>
       <span class="ai" data-no-translate="1">AI</span>
     </h1>
-    <div class="brand-slogan" data-no-translate="1">BE FREE</div>
   </div>
 
+  <div class="header-actions">
     <button class="menu-btn flat-top-btn" id="menuBtn" aria-label="Menü" type="button">
       <span></span><span></span><span></span>
     </button>
@@ -154,19 +150,16 @@ const HOME_HEADER_HTML = `
         </div>
 
         <div class="menu-user-meta">
-          <div class="menu-brandline" data-no-translate="1">
-            <span class="menu-brand-main" data-no-translate="1">italky</span>
-            <span class="menu-brand-ai" data-no-translate="1">AI</span>
-          </div>
-
-          <div class="menu-token-row" id="menuTokenRow">
-            <div class="menu-token-pill">
-              <span>Jeton Bakiye</span>
-              <strong id="menuHeaderJeton">0</strong>
+          <div class="menu-brandblock" data-no-translate="1">
+            <div class="menu-brandline" data-no-translate="1">
+              <span class="menu-brand-main" data-no-translate="1">italky</span>
+              <span class="menu-brand-ai" data-no-translate="1">AI</span>
             </div>
+            <div class="menu-brand-sub" data-no-translate="1">BE FREE</div>
           </div>
 
-          <div class="menu-token-link-wrap" id="menuTokenLinkWrap"></div>
+          <div class="menu-username" id="menuUserName">Kullanıcı</div>
+          <div class="menu-login-date" id="menuLoginDate">Sisteme son giriş tarihi: -</div>
         </div>
       </div>
     </div>
@@ -174,9 +167,7 @@ const HOME_HEADER_HTML = `
     <nav class="menu-nav">
       <a href="/pages/login.html" id="menuLoginLink" class="hidden">Giriş Yap</a>
 
-      <a href="/pages/jetonbuy.html" id="jetonDirectLink">Jeton Yükle</a>
       <button class="menu-action" id="siteLangBtn" type="button">Site Dili • Türkçe</button>
-      <a href="/pages/wallet_history.html" id="walletHistoryLink" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
       <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
       <a href="/pages/deneme.html" id="italkyAiTestLink" class="hidden">italkyAI</a>
       <a href="/pages/profile.html" id="profileLink" data-i18n="menu_profile">Profil</a>
@@ -252,8 +243,6 @@ const SHELL_CSS = `
   --ai-gradient: linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
   --footerH:0px;
   --shell-text:#f5f7ff;
-  --trendyol-orange:#f27a1a;
-  --trendyol-orange-dark:#e46f17;
   --danger-red:#d95f5f;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -300,7 +289,12 @@ body.ui-menu-open{overflow:hidden;}
   content:"";position:absolute;left:18px;right:18px;bottom:-1px;height:1px;
   background:linear-gradient(90deg, transparent, rgba(139,211,255,.18), transparent);
 }
-.brand-group{display:flex;flex-direction:column;gap:3px;}
+.brand-group{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+}
 .brand-group h1{
   margin:0;display:flex;gap:2px;align-items:center;font-size:26px;line-height:1;
   font-weight:800;letter-spacing:-0.4px;color:#f6f8ff;
@@ -309,17 +303,16 @@ body.ui-menu-open{overflow:hidden;}
   background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
   filter:drop-shadow(0 0 10px rgba(124,92,255,.25));
 }
-.brand-slogan{font-size:9px;font-weight:800;letter-spacing:3.8px;color:rgba(255,255,255,.38);margin-left:1px;}
 .header-actions{display:flex;align-items:center;gap:6px;}
 .flat-top-btn{
   width:38px;height:38px;border:none;border-radius:12px;background:transparent;box-shadow:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;
 }
-.plus-btn svg,
-.settings-btn svg{
-  width:18px;height:18px;stroke:#f2f5ff;stroke-width:2;fill:none;opacity:.96;
+.menu-btn{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
 }
-.menu-btn{flex-direction:column;gap:4px;}
 .menu-btn span{display:block;width:18px;height:2px;border-radius:999px;background:#f2f5ff;}
 .shellMain{flex:1;min-height:0;overflow-y:auto;padding-bottom:calc(var(--footerH) + 10px);position:relative;}
 .premium-footer{
@@ -347,42 +340,80 @@ body.ui-menu-open{overflow:hidden;}
 .side-menu.open .menu-panel{transform:translateX(0);}
 .menu-top{display:flex;flex-direction:column;gap:10px;position:relative;z-index:3;flex:0 0 auto;}
 .menu-user-card{
-  width:100%;display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:22px;
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px;
+  border-radius:22px;
   background:linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.03));
-  border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.03);cursor:pointer;min-height:112px;
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+  cursor:pointer;
+  min-height:124px;
 }
-.menu-avatar-wrap{flex:0 0 auto;padding-top:20px;}
+.menu-avatar-wrap{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 .menu-avatar{
-  width:62px;height:62px;border-radius:20px;overflow:hidden;background:linear-gradient(135deg, rgba(139,211,255,.18), rgba(255,102,196,.14));
-  border:1px solid rgba(255,255,255,.10);cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;
+  width:64px;
+  height:64px;
+  border-radius:20px;
+  overflow:hidden;
+  background:linear-gradient(135deg, rgba(139,211,255,.18), rgba(255,102,196,.14));
+  border:1px solid rgba(255,255,255,.10);
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease;
 }
 .menu-avatar:active{transform:scale(.97);}
 .menu-avatar:hover{box-shadow:0 0 0 3px rgba(139,211,255,.10);}
 .menu-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
-.menu-user-meta{min-width:0;display:flex;flex-direction:column;gap:6px;flex:1;}
-.menu-brandline{display:flex;align-items:center;gap:2px;font-size:20px;line-height:1;font-weight:800;margin-top:-12px;}
+.menu-user-meta{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:7px;
+  flex:1;
+}
+.menu-brandblock{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+.menu-brandline{
+  display:flex;
+  align-items:center;
+  gap:2px;
+  font-size:20px;
+  line-height:1;
+  font-weight:800;
+}
 .menu-brand-main{color:#f6f8ff;}
 .menu-brand-ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.menu-username{font-size:14px;font-weight:800;color:#ffffff;line-height:1.2;word-break:break-word;}
-.menu-token-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.menu-token-pill{
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;width:max-content;max-width:100%;
-  padding:10px 14px;border-radius:999px;
-  background:
-    linear-gradient(135deg, rgba(239,68,68,.34), rgba(153,27,27,.26)),
-    radial-gradient(circle at top left, rgba(255,255,255,.14), transparent 42%);
-  border:1px solid rgba(239,68,68,.42);
-  color:#fff5f5;
-  font-size:13px;
-  font-weight:1000;
-  box-shadow:
-    0 12px 26px rgba(239,68,68,.18),
-    0 0 18px rgba(220,38,38,.12),
-    inset 0 1px 0 rgba(255,255,255,.10);
+.menu-brand-sub{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:3.2px;
+  color:rgba(255,255,255,.42);
 }
-.menu-token-pill strong{font-size:16px;font-weight:1000;color:#ffffff;}
-.menu-token-link-wrap{display:flex;justify-content:center;width:100%;}
-.menu-token-link{font-size:12px;font-weight:900;color:#f4d8ff;text-decoration:none;padding:4px 0 0;text-align:center;}
+.menu-username{
+  font-size:15px;
+  font-weight:900;
+  color:#ffffff;
+  line-height:1.25;
+  word-break:break-word;
+}
+.menu-login-date{
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.64);
+  line-height:1.45;
+}
 .menu-nav{display:flex;flex-direction:column;gap:7px;overflow:visible;padding-right:0;position:relative;z-index:3;flex:0 0 auto;}
 .menu-nav a,.menu-action{
   width:100%;text-align:left;text-decoration:none;color:#f3f6ff;padding:12px 13px;border-radius:14px;
@@ -394,18 +425,8 @@ body.ui-menu-open{overflow:hidden;}
 .menu-nav a:hover,.menu-nav a:active,.menu-action:hover,.menu-action:active{
   background:linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
 }
-#jetonDirectLink{
-  color:#fffaf2 !important;
-  background:linear-gradient(135deg, var(--trendyol-orange) 0%, var(--trendyol-orange-dark) 100%) !important;
-  border:1px solid rgba(255,173,96,.34) !important;
-  box-shadow:0 10px 24px rgba(242,122,26,.22), inset 0 1px 0 rgba(255,255,255,.08);
-}
-.logout-action{
-  color:var(--trendyol-orange) !important;
-}
-.delete-action{
-  color:var(--danger-red) !important;
-}
+.logout-action{color:#f27a1a !important;}
+.delete-action{color:var(--danger-red) !important;}
 .menu-orbit-wrap{
   position:absolute;left:50%;bottom:62px;transform:translateX(-50%);width:170px;height:170px;margin:0;
   pointer-events:none;z-index:1;opacity:.92;
@@ -538,18 +559,23 @@ let __shellAutoTranslateInstalled = false;
 let __shellResizeBound = false;
 let __shellEscapeBound = false;
 
+function formatLoginDate(value) {
+  if (!value) return "-";
+  try {
+    return new Date(value).toLocaleString("tr-TR");
+  } catch {
+    return value;
+  }
+}
+
 function setGuestMenuMode(isGuest) {
   const menuLoginLink = document.getElementById("menuLoginLink");
   const walletHistoryLink = document.getElementById("walletHistoryLink");
   const profileLink = document.getElementById("profileLink");
   const logoutBtn = document.getElementById("logoutBtn");
   const deleteAccountBtn = document.getElementById("deleteAccountBtn");
-  const jetonDirectLink = document.getElementById("jetonDirectLink");
-  const menuTokenRow = document.getElementById("menuTokenRow");
-  const menuTokenLinkWrap = document.getElementById("menuTokenLinkWrap");
-  const headerPlusBtn = document.getElementById("headerPlusBtn");
-  const headerSettingsBtn = document.getElementById("headerSettingsBtn");
   const menuUserName = document.getElementById("menuUserName");
+  const menuLoginDate = document.getElementById("menuLoginDate");
   const menuProfileTop = document.getElementById("menuProfileTop");
 
   const show = (el) => {
@@ -570,25 +596,16 @@ function setGuestMenuMode(isGuest) {
     hide(profileLink);
     hide(logoutBtn);
     hide(deleteAccountBtn);
-    hide(jetonDirectLink);
-    hide(menuTokenRow);
-    hide(menuTokenLinkWrap);
-    hide(headerPlusBtn);
-    hide(headerSettingsBtn);
 
     if (menuUserName) menuUserName.textContent = "Misafir";
+    if (menuLoginDate) menuLoginDate.textContent = "Sisteme son giriş tarihi: -";
     if (menuProfileTop) menuProfileTop.style.cursor = "default";
   } else {
     hide(menuLoginLink);
-    show(walletHistoryLink);
+    hide(walletHistoryLink);
     show(profileLink);
     show(logoutBtn);
     show(deleteAccountBtn);
-    show(jetonDirectLink);
-    show(menuTokenRow);
-    show(menuTokenLinkWrap);
-    show(headerPlusBtn);
-    show(headerSettingsBtn);
 
     if (menuProfileTop) menuProfileTop.style.cursor = "pointer";
   }
@@ -729,10 +746,8 @@ function bindMenu(options = {}) {
   const deleteAccountBtn = document.getElementById("deleteAccountBtn");
   const menuProfileTop = document.getElementById("menuProfileTop");
   const menuAvatarClick = document.getElementById("menuAvatarClick");
-  const menuJetonInfoLink = document.getElementById("menuJetonInfoLink");
   const adminPanelLink = document.getElementById("adminPanelLink");
   const italkyAiTestLink = document.getElementById("italkyAiTestLink");
-  const jetonDirectLink = document.getElementById("jetonDirectLink");
   const siteLangBtn = document.getElementById("siteLangBtn");
   const menuLoginLink = document.getElementById("menuLoginLink");
 
@@ -820,19 +835,6 @@ function bindMenu(options = {}) {
     goProfile();
   });
 
-  menuJetonInfoLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    location.href = "/pages/jeton-nedir.html";
-  });
-
-  jetonDirectLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    closeMenu();
-    location.href = "/pages/jetonbuy.html";
-  });
-
   menuLoginLink?.addEventListener("click", (e) => {
     e.preventDefault();
     closeMenu();
@@ -867,18 +869,11 @@ function bindMenu(options = {}) {
     });
   });
 
-  adminPanelLink?.addEventListener("click", () => {
-    closeMenu();
-  });
-
-  italkyAiTestLink?.addEventListener("click", () => {
-    closeMenu();
-  });
+  adminPanelLink?.addEventListener("click", closeMenu);
+  italkyAiTestLink?.addEventListener("click", closeMenu);
 
   sideMenu.querySelectorAll(".menu-nav a").forEach((link) => {
-    link.addEventListener("click", () => {
-      closeMenu();
-    });
+    link.addEventListener("click", closeMenu);
   });
 
   logoutBtn?.addEventListener("click", async () => {
@@ -949,7 +944,6 @@ export function hydrateFromCache() {
 
     const nm = u?.display_name || u?.name || u?.full_name || u?.email || "Kullanıcı";
     const pic = String(u?.picture || u?.avatar || "").trim();
-    const tokens = Number(u?.tokens ?? 0);
 
     const nameEl = document.getElementById("menuUserName");
     if (nameEl) nameEl.textContent = nm;
@@ -960,8 +954,10 @@ export function hydrateFromCache() {
       picEl.referrerPolicy = "no-referrer";
     }
 
-    const jetonEl = document.getElementById("menuHeaderJeton");
-    if (jetonEl) jetonEl.textContent = String(tokens);
+    const loginDateEl = document.getElementById("menuLoginDate");
+    if (loginDateEl) {
+      loginDateEl.textContent = `Sisteme son giriş tarihi: ${formatLoginDate(u?.last_login_at || "")}`;
+    }
   } catch {}
 }
 
@@ -980,20 +976,20 @@ async function hydrateShellMeta() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("role, is_admin, tokens, full_name, avatar_url, email")
+      .select("last_login_at, role, is_admin, full_name, avatar_url, email")
       .eq("id", userId)
       .maybeSingle();
 
     if (error || !data) return;
 
-    const jetonEl = document.getElementById("menuHeaderJeton");
-    if (jetonEl && typeof data.tokens !== "undefined" && data.tokens !== null) {
-      jetonEl.textContent = String(Number(data.tokens || 0));
-    }
-
     const nameEl = document.getElementById("menuUserName");
     if (nameEl && data.full_name) {
       nameEl.textContent = data.full_name;
+    }
+
+    const loginDateEl = document.getElementById("menuLoginDate");
+    if (loginDateEl) {
+      loginDateEl.textContent = `Sisteme son giriş tarihi: ${formatLoginDate(data.last_login_at || "")}`;
     }
 
     const pic = String(data.avatar_url || "").trim();
@@ -1039,9 +1035,9 @@ async function hydrateShellMeta() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const cached = raw ? JSON.parse(raw) : {};
-      cached.tokens = Number(data.tokens || 0);
       cached.role = role;
       cached.is_admin = data.is_admin === true;
+      cached.last_login_at = data.last_login_at || "";
       cached.email = email || cached.email || "";
       if (data.full_name) cached.full_name = data.full_name;
       if (pic) cached.avatar = pic;
@@ -1188,9 +1184,6 @@ function removeOverlaySoon() {
 }
 
 export function setHeaderTokens(val) {
-  const jetonEl = document.getElementById("menuHeaderJeton");
-  if (jetonEl) jetonEl.textContent = String(val ?? "0");
-
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const u = raw ? JSON.parse(raw) : {};
