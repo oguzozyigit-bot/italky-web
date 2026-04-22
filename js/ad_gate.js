@@ -147,45 +147,118 @@ function getOrCreateAdInfoModal() {
   style.id = "italkyAdInfoModalStyle";
   style.textContent = `
     .italky-ad-info-backdrop{
-      position:fixed; inset:0; z-index:999999; display:none; align-items:center; justify-content:center;
-      padding:20px; background:rgba(0,0,0,.54); backdrop-filter:blur(8px);
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(4,8,18,.58);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
     }
-    .italky-ad-info-backdrop.open{ display:flex; }
+
+    .italky-ad-info-backdrop.open{
+      display:flex;
+    }
+
     .italky-ad-info-card{
-      width:min(100%,430px); border-radius:24px; overflow:hidden; border:1px solid rgba(255,255,255,.10);
-      background:linear-gradient(145deg, rgba(16,16,24,.98), rgba(10,10,18,.98));
-      box-shadow:0 24px 50px rgba(0,0,0,.30); color:#fff; font-family:Outfit,system-ui,sans-serif;
+      width:min(100%, 430px);
+      border-radius:26px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(10,16,30,.98), rgba(8,12,24,.98));
+      box-shadow:0 24px 50px rgba(0,0,0,.34);
+      color:#fff;
+      font-family:Outfit, system-ui, sans-serif;
     }
+
     .italky-ad-info-top{
       padding:18px 18px 14px;
-      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      background:
+        radial-gradient(circle at top left, rgba(191,219,254,.16), transparent 38%),
+        linear-gradient(135deg, #142033 0%, #1a2740 52%, #202b46 100%);
+      border-bottom:1px solid rgba(255,255,255,.06);
     }
+
     .italky-ad-info-chip{
-      display:inline-flex; align-items:center; justify-content:center; min-height:32px; padding:8px 14px;
-      border-radius:999px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.18);
-      color:#fff; font-size:12px; font-weight:1000;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:32px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.92);
+      font-size:12px;
+      font-weight:1000;
     }
+
     .italky-ad-info-title{
-      margin:12px 0 6px; font-size:24px; line-height:1.08; font-weight:1000; letter-spacing:-.5px;
+      margin:12px 0 8px;
+      font-size:24px;
+      line-height:1.08;
+      font-weight:1000;
+      letter-spacing:-.5px;
+      color:#eef4ff;
     }
+
     .italky-ad-info-text{
-      margin:0; font-size:13px; line-height:1.65; font-weight:800; color:rgba(255,255,255,.92); white-space:pre-line;
+      margin:0;
+      font-size:13px;
+      line-height:1.68;
+      font-weight:800;
+      color:rgba(235,242,255,.82);
+      white-space:pre-line;
     }
-    .italky-ad-info-body{ padding:16px; display:grid; gap:10px; }
+
+    .italky-ad-info-body{
+      padding:16px;
+      display:grid;
+      gap:10px;
+      background:linear-gradient(180deg, rgba(9,13,24,.98), rgba(7,10,20,.98));
+    }
+
     .italky-ad-info-btn{
-      min-height:50px; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:1000;
+      min-height:50px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:14px;
+      font-weight:1000;
+      transition:transform .14s ease, opacity .14s ease;
     }
+
+    .italky-ad-info-btn:active{
+      transform:scale(.985);
+    }
+
     .italky-ad-info-btn.primary{
-      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%); color:#05060d;
+      background:linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 50%, #ddd6fe 100%);
+      color:#111827;
+      box-shadow:0 12px 24px rgba(99,102,241,.16);
     }
+
     .italky-ad-info-btn.secondary{
-      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); color:#fff;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#eef2ff;
     }
+
     .italky-ad-info-actions{
-      display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:4px;
     }
+
     @media (max-width:390px){
-      .italky-ad-info-actions{ grid-template-columns:1fr; }
+      .italky-ad-info-actions{
+        grid-template-columns:1fr;
+      }
     }
   `;
   document.head.appendChild(style);
@@ -202,8 +275,8 @@ function getOrCreateAdInfoModal() {
       </div>
       <div class="italky-ad-info-body">
         <div class="italky-ad-info-actions">
-          <button class="italky-ad-info-btn secondary" id="italkyAdInfoCancel" type="button">Vazgeç</button>
-          <button class="italky-ad-info-btn primary" id="italkyAdInfoOk" type="button">Devam Et</button>
+          <button class="italky-ad-info-btn secondary" id="italkyAdInfoCancel" type="button">Daha Sonra</button>
+          <button class="italky-ad-info-btn primary" id="italkyAdInfoOk" type="button">Tamam</button>
         </div>
       </div>
     </div>
@@ -531,4 +604,4 @@ export function resetOfflineAdStateForDebug() {
   try {
     localStorage.removeItem(OFFLINE_AD_STATE_KEY);
   } catch {}
-          }
+}
