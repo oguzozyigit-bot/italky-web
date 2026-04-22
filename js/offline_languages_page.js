@@ -123,7 +123,7 @@ function ensureMockOfflineLicenseOnce() {
     const key = "italky_offline_mock_license_offline_page_v2";
     if (localStorage.getItem(key) === "1") return;
 
-    window.OfflineTranslate.setMockOfflineLicense(45);
+    window.OfflineTranslate.setMockOfflineLicense(365);
     localStorage.setItem(key, "1");
   } catch (e) {
     console.error("Mock lisans yazılamadı:", e);
@@ -144,8 +144,8 @@ function canonical(code) {
 }
 
 function getOfflineLicenseDays() {
-  const v = Number(localStorage.getItem(STORAGE.offlineLicenseDays) || "45");
-  return Number.isFinite(v) && v > 0 ? v : 45;
+  const v = Number(localStorage.getItem(STORAGE.offlineLicenseDays) || "365");
+  return Number.isFinite(v) && v > 0 ? v : 365;
 }
 
 function getPreferredInitialNativeLang() {
