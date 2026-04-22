@@ -111,12 +111,12 @@ const LOADING_OVERLAY_HTML = `
 ">
   <div style="text-align:center; font-family:Outfit,sans-serif;" data-no-translate="1">
     <div style="font-size:30px; font-weight:800; color:#f5f7ff;" data-no-translate="1">
-      <span data-no-translate="1">italky</span>
+      <span data-no-translate="1"></span>
       <span data-no-translate="1" style="
         background:linear-gradient(135deg,#8bd3ff 0%, #7c5cff 45%, #ff66c4 100%);
         -webkit-background-clip:text;
         -webkit-text-fill-color:transparent;
-      ">AI</span>
+      "></span>
     </div>
     <div style="
       font-size:10px; letter-spacing:4px; color:rgba(255,255,255,.36);
@@ -134,22 +134,6 @@ const HOME_HEADER_HTML = `
     </h1>
     <div class="brand-slogan" data-no-translate="1">BE FREE</div>
   </div>
-
-  <div class="header-actions">
-    <button class="plus-btn flat-top-btn" id="headerPlusBtn" aria-label="Jeton Yükle" type="button" title="Jeton Yükle">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 5v14"></path>
-        <path d="M5 12h14"></path>
-      </svg>
-    </button>
-
-    <button class="settings-btn flat-top-btn" id="headerSettingsBtn" aria-label="Ayarlar" type="button" title="Ayarlar">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 3l1.2 2.4 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4L12 3z"></path>
-        <circle cx="12" cy="12" r="3.2"></circle>
-        <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.6z"></path>
-      </svg>
-    </button>
 
     <button class="menu-btn flat-top-btn" id="menuBtn" aria-label="Menü" type="button">
       <span></span><span></span><span></span>
