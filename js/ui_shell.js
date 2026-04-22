@@ -95,10 +95,10 @@ const LOADING_OVERLAY_HTML = `
   display:flex; align-items:center; justify-content:center;
   transition:opacity .35s ease;
 ">
-  <div style="text-align:center; font-family:Outfit,sans-serif;">
-    <div style="font-size:30px; font-weight:800; color:#f5f7ff;">
-      italky
-      <span style="
+  <div style="text-align:center; font-family:Outfit,sans-serif;" data-no-translate="1">
+    <div style="font-size:30px; font-weight:800; color:#f5f7ff;" data-no-translate="1">
+      <span data-no-translate="1">italky</span>
+      <span data-no-translate="1" style="
         background:linear-gradient(135deg,#8bd3ff 0%, #7c5cff 45%, #ff66c4 100%);
         -webkit-background-clip:text;
         -webkit-text-fill-color:transparent;
@@ -107,16 +107,16 @@ const LOADING_OVERLAY_HTML = `
     <div style="
       font-size:10px; letter-spacing:4px; color:rgba(255,255,255,.36);
       margin-top:8px; font-weight:800;
-    ">BE FREE</div>
+    " data-no-translate="1">BE FREE</div>
   </div>
 </div>`;
 
 const HOME_HEADER_HTML = `
 <header class="premium-header" id="italkyHeader">
   <div class="brand-group" id="brandHome" style="cursor:pointer;" data-no-translate="1">
-    <h1>
-      <span>italky</span>
-      <span class="ai">AI</span>
+    <h1 data-no-translate="1">
+      <span data-no-translate="1">italky</span>
+      <span class="ai" data-no-translate="1">AI</span>
     </h1>
     <div class="brand-slogan" data-no-translate="1">BE FREE</div>
   </div>
@@ -157,8 +157,8 @@ const HOME_HEADER_HTML = `
 
         <div class="menu-user-meta">
           <div class="menu-brandline" data-no-translate="1">
-            <span class="menu-brand-main">italky</span>
-            <span class="menu-brand-ai">AI</span>
+            <span class="menu-brand-main" data-no-translate="1">italky</span>
+            <span class="menu-brand-ai" data-no-translate="1">AI</span>
           </div>
 
           <div class="menu-username" id="menuUserName">Kullanıcı</div>
@@ -197,7 +197,7 @@ const HOME_HEADER_HTML = `
     </nav>
 
     <div class="menu-orbit-wrap" aria-hidden="true">
-      <div class="menu-orbit-core">italkyAI</div>
+      <div class="menu-orbit-core" data-no-translate="1">italkyAI</div>
       <div class="menu-orbit-ring ring-1">
         <span class="orbit-dot dot-red"></span>
       </div>
@@ -210,9 +210,9 @@ const HOME_HEADER_HTML = `
     </div>
 
     <div class="menu-sign" data-no-translate="1">
-      <span class="menu-sign-main">italkyAI By Ozyigit's</span>
-      <span class="menu-sign-dot">•</span>
-      <span class="menu-sign-year">2026</span>
+      <span class="menu-sign-main" data-no-translate="1">italkyAI By Ozyigit's</span>
+      <span class="menu-sign-dot" data-no-translate="1">•</span>
+      <span class="menu-sign-year" data-no-translate="1">2026</span>
     </div>
   </div>
 </aside>`;
@@ -220,9 +220,9 @@ const HOME_HEADER_HTML = `
 const HOME_FOOTER_HTML = `
 <footer class="premium-footer" id="italkyFooter">
   <div class="signature" data-no-translate="1">
-    <span class="signature-main">italkyAI By Ozyigit's</span>
-    <span class="signature-dot">•</span>
-    <span class="signature-year">2026</span>
+    <span class="signature-main" data-no-translate="1">italkyAI By Ozyigit's</span>
+    <span class="signature-dot" data-no-translate="1">•</span>
+    <span class="signature-year" data-no-translate="1">2026</span>
   </div>
 </footer>`;
 
