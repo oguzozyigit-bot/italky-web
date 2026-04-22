@@ -70,11 +70,12 @@ const ALT_CHARS = {
   N: ["Ñ"]
 };
 
-const F2F_VOICE_KEY = "facetoface_voice_mode";
+const F2F_VOICE_KEY = "italkyai_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
-const F2F_AUTO_READ_KEY = "facetoface_auto_read";
-const SHARED_VOICE_NAME_KEY = "italkyai_shared_voice_name";
-const F2F_PRESET_KEY = "facetoface_voice_preset";
+const F2F_AUTO_READ_KEY = "italkyai_auto_read";
+const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
+const SHARED_VOICE_ID_KEY = "italkyai_selected_voice_id";
+const F2F_PRESET_KEY = "italkyai_voice_preset";
 const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
 const F2F_MODE_KEY = "facetoface_runtime_mode";
 const NATIVE_LANG_KEY = "italky_native_lang_v7";
@@ -374,8 +375,8 @@ function getResolvedFaceVoice() {
   }
   if (mode === "auto") return "auto";
 
-  const shared = String(localStorage.getItem(SHARED_VOICE_NAME_KEY) || "").trim().toLowerCase();
-  if (["auto", "mine", "second", "memory"].includes(shared)) return shared;
+  const sharedMode = String(localStorage.getItem(F2F_VOICE_KEY) || "").trim().toLowerCase();
+if (["auto", "mine", "second", "memory"].includes(sharedMode)) return sharedMode;
 
   return "auto";
 }
