@@ -2099,7 +2099,7 @@ function bindModeControls() {
 
 function bindSettingsButtons() {
   const go = () => {
-    location.href = "/pages/facetoface_settings.html";
+    location.href = "/pages/premium_voice_settings.html";
   };
 
   topSettingsMini?.addEventListener("click", (e) => {
