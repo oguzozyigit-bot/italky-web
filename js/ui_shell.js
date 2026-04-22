@@ -2,55 +2,75 @@ import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
 const NATIVE_LANG_STORAGE_KEY = "italky_native_lang_v1";
+const SITE_LANG_STORAGE_KEY = "site_lang";
 
 const NATIVE_LANG_META = {
-  tr: { flag: "🇹🇷", name: "Türkçe" },
-  en: { flag: "🇬🇧", name: "İngilizce" },
-  de: { flag: "🇩🇪", name: "Almanca" },
-  fr: { flag: "🇫🇷", name: "Fransızca" },
-  ru: { flag: "🇷🇺", name: "Rusça" },
-  bg: { flag: "🇧🇬", name: "Bulgarca" },
-  bn: { flag: "🇧🇩", name: "Bengalce" },
-  ca: { flag: "🇪🇸", name: "Katalanca" },
-  cs: { flag: "🇨🇿", name: "Çekçe" },
-  da: { flag: "🇩🇰", name: "Danca" },
-  el: { flag: "🇬🇷", name: "Yunanca" },
-  et: { flag: "🇪🇪", name: "Estonca" },
-  eu: { flag: "🇪🇸", name: "Baskça" },
-  fi: { flag: "🇫🇮", name: "Fince" },
-  gl: { flag: "🇪🇸", name: "Galiçyaca" },
-  hu: { flag: "🇭🇺", name: "Macarca" },
-  id: { flag: "🇮🇩", name: "Endonezce" },
-  lt: { flag: "🇱🇹", name: "Litvanca" },
-  lv: { flag: "🇱🇻", name: "Letonca" },
-  ms: { flag: "🇲🇾", name: "Malayca" },
-  nl: { flag: "🇳🇱", name: "Hollandaca" },
-  pl: { flag: "🇵🇱", name: "Lehçe" },
-  ro: { flag: "🇷🇴", name: "Romence" },
-  sk: { flag: "🇸🇰", name: "Slovakça" },
-  sl: { flag: "🇸🇮", name: "Slovence" },
-  sq: { flag: "🇦🇱", name: "Arnavutça" },
-  th: { flag: "🇹🇭", name: "Tayca" },
-  ur: { flag: "🇵🇰", name: "Urduca" },
-  vi: { flag: "🇻🇳", name: "Vietnamca" },
-  zh: { flag: "🇨🇳", name: "Çince" }
+  tr: { flag: "🇹🇷", name: "Türkçe", dir: "ltr" },
+  en: { flag: "🇬🇧", name: "İngilizce", dir: "ltr" },
+  de: { flag: "🇩🇪", name: "Almanca", dir: "ltr" },
+  fr: { flag: "🇫🇷", name: "Fransızca", dir: "ltr" },
+  it: { flag: "🇮🇹", name: "İtalyanca", dir: "ltr" },
+  es: { flag: "🇪🇸", name: "İspanyolca", dir: "ltr" },
+  ar: { flag: "🇸🇦", name: "Arapça", dir: "rtl" },
+
+  ru: { flag: "🇷🇺", name: "Rusça", dir: "ltr" },
+  bg: { flag: "🇧🇬", name: "Bulgarca", dir: "ltr" },
+  bn: { flag: "🇧🇩", name: "Bengalce", dir: "ltr" },
+  ca: { flag: "🇪🇸", name: "Katalanca", dir: "ltr" },
+  cs: { flag: "🇨🇿", name: "Çekçe", dir: "ltr" },
+  da: { flag: "🇩🇰", name: "Danca", dir: "ltr" },
+  el: { flag: "🇬🇷", name: "Yunanca", dir: "ltr" },
+  et: { flag: "🇪🇪", name: "Estonca", dir: "ltr" },
+  eu: { flag: "🇪🇸", name: "Baskça", dir: "ltr" },
+  fi: { flag: "🇫🇮", name: "Fince", dir: "ltr" },
+  gl: { flag: "🇪🇸", name: "Galiçyaca", dir: "ltr" },
+  hu: { flag: "🇭🇺", name: "Macarca", dir: "ltr" },
+  id: { flag: "🇮🇩", name: "Endonezce", dir: "ltr" },
+  lt: { flag: "🇱🇹", name: "Litvanca", dir: "ltr" },
+  lv: { flag: "🇱🇻", name: "Letonca", dir: "ltr" },
+  ms: { flag: "🇲🇾", name: "Malayca", dir: "ltr" },
+  nl: { flag: "🇳🇱", name: "Hollandaca", dir: "ltr" },
+  pl: { flag: "🇵🇱", name: "Lehçe", dir: "ltr" },
+  ro: { flag: "🇷🇴", name: "Romence", dir: "ltr" },
+  sk: { flag: "🇸🇰", name: "Slovakça", dir: "ltr" },
+  sl: { flag: "🇸🇮", name: "Slovence", dir: "ltr" },
+  sq: { flag: "🇦🇱", name: "Arnavutça", dir: "ltr" },
+  th: { flag: "🇹🇭", name: "Tayca", dir: "ltr" },
+  ur: { flag: "🇵🇰", name: "Urduca", dir: "rtl" },
+  vi: { flag: "🇻🇳", name: "Vietnamca", dir: "ltr" },
+  zh: { flag: "🇨🇳", name: "Çince", dir: "ltr" }
 };
 
-function getNativeLangInfo() {
-  const code = String(localStorage.getItem(NATIVE_LANG_STORAGE_KEY) || "tr")
+const QUICK_SITE_LANGS = ["tr", "en", "de", "fr", "it", "es", "ar"];
+
+function getNativeLangCode() {
+  return String(
+    localStorage.getItem(NATIVE_LANG_STORAGE_KEY) ||
+    localStorage.getItem(SITE_LANG_STORAGE_KEY) ||
+    "tr"
+  )
     .trim()
     .toLowerCase();
+}
 
+function getNativeLangInfo() {
+  const code = getNativeLangCode();
   return NATIVE_LANG_META[code] || {
     flag: "🌐",
-    name: code.toUpperCase() || "Dil"
+    name: code.toUpperCase() || "Dil",
+    dir: "ltr"
   };
 }
 
 function hydrateNativeLangPill() {
   const info = getNativeLangInfo();
   const flagEl = document.getElementById("headerNativeLangFlag");
+  const textEl = document.getElementById("siteLangCurrentText");
+  const btnEl = document.getElementById("siteLangBtn");
+
   if (flagEl) flagEl.textContent = info.flag;
+  if (textEl) textEl.textContent = `${info.flag} ${info.name}`;
+  if (btnEl) btnEl.textContent = `Site Dili • ${info.name}`;
 }
 
 export function refreshHeaderNativeLang() {
@@ -149,6 +169,7 @@ const HOME_HEADER_HTML = `
 
     <nav class="menu-nav">
       <a href="/pages/jetonbuy.html" id="jetonDirectLink">Jeton Yükle</a>
+      <button class="menu-action" id="siteLangBtn" type="button">Site Dili • Türkçe</button>
       <a href="/pages/wallet_history.html" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
       <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
       <a href="/pages/deneme.html" id="italkyAiTestLink" class="hidden">italkyAI</a>
@@ -192,6 +213,29 @@ const HOME_FOOTER_HTML = `
     <span class="signature-year">2026</span>
   </div>
 </footer>`;
+
+const SITE_LANG_MODAL_HTML = `
+<div class="shell-modal" id="siteLangModal" aria-hidden="true">
+  <div class="shell-modal-backdrop" id="siteLangBackdrop"></div>
+  <div class="shell-modal-card">
+    <div class="shell-modal-head">
+      <h3>Site Dili</h3>
+      <button type="button" class="shell-modal-close" id="siteLangCloseBtn" aria-label="Kapat">✕</button>
+    </div>
+    <div class="shell-modal-sub" id="siteLangCurrentText">🇹🇷 Türkçe</div>
+    <div class="site-lang-grid" id="siteLangGrid">
+      ${QUICK_SITE_LANGS.map(code => {
+        const meta = NATIVE_LANG_META[code];
+        return `
+          <button class="site-lang-item" type="button" data-lang="${code}">
+            <span class="site-lang-flag">${meta.flag}</span>
+            <span class="site-lang-name">${meta.name}</span>
+          </button>
+        `;
+      }).join("")}
+    </div>
+  </div>
+</div>`;
 
 const SHELL_CSS = `
 :root{
@@ -371,6 +415,46 @@ body.ui-menu-open{overflow:hidden;}
 .menu-sign-main{font-size:13px;font-weight:900;background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 12px rgba(124,92,255,.18);}
 .menu-sign-year{color:rgba(139,211,255,.82);}
 .menu-sign-dot{color:rgba(255,255,255,.30);}
+.shell-modal{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:400;padding:18px;
+}
+.shell-modal.open{display:flex;}
+.shell-modal-backdrop{
+  position:absolute;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(5px);
+}
+.shell-modal-card{
+  position:relative;z-index:2;width:min(100%, 420px);border-radius:22px;
+  background:linear-gradient(180deg, rgba(12,16,29,.98) 0%, rgba(8,11,21,.98) 100%);
+  border:1px solid rgba(255,255,255,.08);box-shadow:0 22px 48px rgba(0,0,0,.38);
+  padding:16px;
+}
+.shell-modal-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;
+}
+.shell-modal-head h3{
+  margin:0;font-size:18px;font-weight:900;color:#fff;
+}
+.shell-modal-close{
+  width:34px;height:34px;border:none;border-radius:12px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:14px;font-weight:900;
+}
+.shell-modal-sub{
+  color:rgba(255,255,255,.68);font-size:12px;font-weight:800;margin-bottom:12px;
+}
+.site-lang-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.site-lang-item{
+  min-height:52px;border:none;border-radius:16px;padding:10px 12px;text-align:left;
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.07);color:#fff;cursor:pointer;
+  display:flex;align-items:center;gap:10px;font-family:'Outfit',sans-serif;
+}
+.site-lang-item:hover,.site-lang-item:active{
+  background:linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
+}
+.site-lang-flag{font-size:18px;line-height:1;}
+.site-lang-name{font-size:13px;font-weight:800;line-height:1.2;}
 `;
 
 let __shellAutoTranslateInstalled = false;
@@ -420,6 +504,10 @@ export function mountShell(options = {}) {
 
   document.body.prepend(bg, shell);
 
+  if (!document.getElementById("siteLangModal")) {
+    document.body.insertAdjacentHTML("beforeend", SITE_LANG_MODAL_HTML);
+  }
+
   document.getElementById("brandHome")?.addEventListener("click", () => {
     location.href = "/pages/home.html";
   });
@@ -449,6 +537,7 @@ function finishMount(options) {
     hydrateShellMeta();
     hydratePlanUi();
     hydrateAdminButton();
+    hydrateNativeLangPill();
 
     try {
       if (!__shellAutoTranslateInstalled) {
@@ -487,6 +576,12 @@ function bindMenu() {
   const adminPanelLink = document.getElementById("adminPanelLink");
   const italkyAiTestLink = document.getElementById("italkyAiTestLink");
   const jetonDirectLink = document.getElementById("jetonDirectLink");
+  const siteLangBtn = document.getElementById("siteLangBtn");
+
+  const siteLangModal = document.getElementById("siteLangModal");
+  const siteLangBackdrop = document.getElementById("siteLangBackdrop");
+  const siteLangCloseBtn = document.getElementById("siteLangCloseBtn");
+  const siteLangGrid = document.getElementById("siteLangGrid");
 
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
@@ -498,12 +593,22 @@ function bindMenu() {
     hydrateShellMeta();
     hydratePlanUi();
     hydrateAdminButton();
+    hydrateNativeLangPill();
   };
 
   const closeMenu = () => {
     sideMenu.classList.remove("open");
     sideMenu.setAttribute("aria-hidden", "true");
     document.body.classList.remove("ui-menu-open");
+  };
+
+  const openSiteLangModal = () => {
+    siteLangModal?.classList.add("open");
+    hydrateNativeLangPill();
+  };
+
+  const closeSiteLangModal = () => {
+    siteLangModal?.classList.remove("open");
   };
 
   const goProfile = () => {
@@ -546,6 +651,23 @@ function bindMenu() {
     location.href = "/pages/jetonbuy.html";
   });
 
+  siteLangBtn?.addEventListener("click", async () => {
+    closeMenu();
+    openSiteLangModal();
+  });
+
+  siteLangBackdrop?.addEventListener("click", closeSiteLangModal);
+  siteLangCloseBtn?.addEventListener("click", closeSiteLangModal);
+
+  siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const lang = String(btn.getAttribute("data-lang") || "tr").trim().toLowerCase();
+      await applySiteLanguage(lang);
+      closeSiteLangModal();
+      hydrateNativeLangPill();
+    });
+  });
+
   adminPanelLink?.addEventListener("click", () => {
     closeMenu();
   });
@@ -578,12 +700,41 @@ function bindMenu() {
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         closeMenu();
+        closeSiteLangModal();
       }
     });
     __shellEscapeBound = true;
   }
 
   menuBtn.dataset.bound = "1";
+}
+
+async function applySiteLanguage(lang) {
+  const code = String(lang || "tr").trim().toLowerCase();
+  localStorage.setItem(NATIVE_LANG_STORAGE_KEY, code);
+  localStorage.setItem(SITE_LANG_STORAGE_KEY, code);
+
+  hydrateNativeLangPill();
+
+  try {
+    if (window.italkySiteLanguage && typeof window.italkySiteLanguage.setLanguage === "function") {
+      await window.italkySiteLanguage.setLanguage(code);
+      return;
+    }
+  } catch (e) {
+    console.warn("[ui_shell setLanguage]", e);
+  }
+
+  setDocumentDirFromLang(code);
+  window.location.reload();
+}
+
+function setDocumentDirFromLang(code) {
+  const info = NATIVE_LANG_META[code] || { dir: "ltr" };
+  const dir = info.dir || "ltr";
+  document.documentElement.setAttribute("dir", dir);
+  document.documentElement.setAttribute("lang", code);
+  document.body?.setAttribute("dir", dir);
 }
 
 export function hydrateFromCache() {
@@ -889,7 +1040,7 @@ try {
 } catch {}
 
 window.addEventListener("storage", (e) => {
-  if (e.key === NATIVE_LANG_STORAGE_KEY) {
+  if (e.key === NATIVE_LANG_STORAGE_KEY || e.key === SITE_LANG_STORAGE_KEY) {
     hydrateNativeLangPill();
   }
 });
