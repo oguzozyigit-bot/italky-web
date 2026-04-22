@@ -1,4 +1,5 @@
 import { mountShell } from "/js/ui_shell.js";
+import { maybeShowOfflineDownloadAd } from "/js/ad_gate.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -26,7 +27,9 @@ const STORAGE = {
   installed: "italky_offline_installed_pairs_v7",
   downloading: "italky_offline_downloading_pairs_v7",
   nativeLang: "italky_native_lang_v7",
-  offlineLicenseDays: "italky_offline_license_days_v7"
+  offlineLicenseDays: "italky_offline_license_days_v7",
+  siteLang: "site_lang",
+  legacySiteLang: "italky_site_lang_v1"
 };
 
 const ALL_OFFLINE_LANGS = [
@@ -145,6 +148,20 @@ function getOfflineLicenseDays() {
   return Number.isFinite(v) && v > 0 ? v : 45;
 }
 
+function getPreferredInitialNativeLang() {
+  const savedNative = canonical(localStorage.getItem(STORAGE.nativeLang) || "");
+  if (savedNative) return savedNative;
+
+  const siteLang = canonical(
+    localStorage.getItem(STORAGE.siteLang) ||
+    localStorage.getItem(STORAGE.legacySiteLang) ||
+    ""
+  );
+  if (siteLang) return siteLang;
+
+  return "tr";
+}
+
 function canUseNativeMirror() {
   return !!(
     window.OfflineTranslate &&
@@ -175,8 +192,10 @@ function syncStorageFromNative() {
   if (!canUseNativeMirror()) return;
 
   try {
-    const nativeLang = canonical(window.OfflineTranslate.getNativeOfflineLang() || "tr");
-    localStorage.setItem(STORAGE.nativeLang, nativeLang || "tr");
+    const nativeLang = canonical(window.OfflineTranslate.getNativeOfflineLang() || "");
+    if (nativeLang) {
+      localStorage.setItem(STORAGE.nativeLang, nativeLang);
+    }
   } catch (e) {
     console.warn("Native dil okunamadı:", e);
   }
@@ -221,7 +240,7 @@ function mergeInstalledPairsWithNative() {
 }
 
 function getNativeLang() {
-  const raw = canonical(localStorage.getItem(STORAGE.nativeLang) || "tr");
+  const raw = canonical(localStorage.getItem(STORAGE.nativeLang) || getPreferredInitialNativeLang());
   return raw || "tr";
 }
 
@@ -393,17 +412,19 @@ function normalizeInstalledVsProgress() {
   if (changed) saveDownloadingMap(downloading);
 }
 
-function showConfirm(title, text) {
+function showConfirm(title, text, okText = "İndir") {
   return new Promise((resolve) => {
     confirmResolver = resolve;
     if (confirmTitle) confirmTitle.textContent = title;
     if (confirmText) confirmText.textContent = text;
+    if (confirmOk) confirmOk.textContent = okText;
     confirmBackdrop?.classList.add("show");
   });
 }
 
 function closeConfirm(result) {
   confirmBackdrop?.classList.remove("show");
+  if (confirmOk) confirmOk.textContent = "İndir";
   const resolver = confirmResolver;
   confirmResolver = null;
   if (typeof resolver === "function") resolver(result);
@@ -457,7 +478,8 @@ async function tryChangeNativeLanguage(newCode) {
 Bu işlem mevcut offline dil yüklemelerinizi sıfırlar.
 Eski hazır diller silinecek ve yeni kendi dilinize göre dilleri tekrar indirmeniz gerekecek.
 
-Devam etmek istiyor musunuz?`
+Devam etmek istiyor musunuz?`,
+    "Devam Et"
   );
 
   if (!confirmed) return;
@@ -630,6 +652,32 @@ async function startLanguageInstallFlow(langCode) {
     return;
   }
 
+  const adAccepted = await showConfirm(
+    `${info.name} indirilsin mi?`,
+    `Bu dili indirmek için kısa bir video izlemeniz gereklidir.
+
+İndirme tamamlandıktan sonra, bu dil için sonraki kullanımlarda reklam gösterilmeyecektir.
+
+Devam etmek istiyor musunuz?`,
+    "Video İzle"
+  );
+
+  if (!adAccepted) {
+    renderInstalledList();
+    return;
+  }
+
+  const adWatched = await maybeShowOfflineDownloadAd({
+    fromLang: nativeInfo.code,
+    toLang: info.code
+  });
+
+  if (!adWatched) {
+    toast("Video tamamlanmadan indirme başlatılamadı.");
+    renderInstalledList();
+    return;
+  }
+
   const confirmed = await showConfirm(
     `${info.name} indirilsin mi?`,
     `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
@@ -640,7 +688,8 @@ Ortalama 30 saniye ile 3 dakika arasındadır.
 Uygulamayı kapatmadan diğer modüllerde gezinebilirsiniz.
 Bu durum indirmeyi engellemez.
 
-Her bir çevrimdışı dil paketi telefonda yaklaşık 140-190 MB yer kaplar.`
+Her bir çevrimdışı dil paketi telefonda yaklaşık 140-190 MB yer kaplar.`,
+    "İndir"
   );
 
   if (!confirmed) {
@@ -789,8 +838,17 @@ async function init() {
     console.warn("[offline_languages_page] shell vars:", e);
   }
 
+  const initialNative = getPreferredInitialNativeLang();
+  if (!localStorage.getItem(STORAGE.nativeLang)) {
+    localStorage.setItem(STORAGE.nativeLang, initialNative || "tr");
+  }
+
   syncStorageFromNative();
   clearStaleDownloadingState();
+
+  if (!localStorage.getItem(STORAGE.nativeLang)) {
+    localStorage.setItem(STORAGE.nativeLang, initialNative || "tr");
+  }
 
   LANGS = buildSupportedLangList();
 
