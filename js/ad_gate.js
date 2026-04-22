@@ -423,7 +423,47 @@ function showFallbackAdInfo(message = "Uygulamayı ücretsiz sunabilmemiz için 
   } catch {}
 
   try {
-    alert(message);
+    const old = document.getElementById("italkyAdMiniToast");
+    if (old) old.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "italkyAdMiniToast";
+    toast.textContent = String(message || "");
+
+    toast.style.position = "fixed";
+    toast.style.left = "50%";
+    toast.style.bottom = "28px";
+    toast.style.transform = "translateX(-50%) translateY(120px)";
+    toast.style.maxWidth = "min(92vw, 520px)";
+    toast.style.padding = "14px 18px";
+    toast.style.borderRadius = "18px";
+    toast.style.background = "rgba(10,16,30,.96)";
+    toast.style.border = "1px solid rgba(255,255,255,.10)";
+    toast.style.boxShadow = "0 18px 36px rgba(0,0,0,.32)";
+    toast.style.backdropFilter = "blur(12px)";
+    toast.style.webkitBackdropFilter = "blur(12px)";
+    toast.style.color = "#eef4ff";
+    toast.style.fontFamily = "Outfit, system-ui, sans-serif";
+    toast.style.fontSize = "13px";
+    toast.style.fontWeight = "800";
+    toast.style.lineHeight = "1.55";
+    toast.style.textAlign = "center";
+    toast.style.zIndex = "1000000";
+    toast.style.transition = "transform .22s ease, opacity .22s ease";
+    toast.style.opacity = "0";
+
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.style.transform = "translateX(-50%) translateY(0)";
+      toast.style.opacity = "1";
+    });
+
+    setTimeout(() => {
+      toast.style.transform = "translateX(-50%) translateY(120px)";
+      toast.style.opacity = "0";
+      setTimeout(() => toast.remove(), 260);
+    }, 2400);
   } catch {}
 }
 
@@ -579,7 +619,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   if (hasNativeRewarded()) {
     rewarded = await showNativeRewarded(key, "offline_download");
   } else {
-    showFallbackAdInfo("Bu dili indirmeden önce kısa bir video gösterilebilir.");
+    showFallbackAdInfo("Bu dili indirmek için kısa bir video izlenmesi gerekebilir. İndirme tamamlandıktan sonra aynı dil için tekrar reklam gösterilmez.");
     rewarded = true;
   }
 
