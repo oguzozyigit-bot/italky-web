@@ -175,19 +175,19 @@ const HOME_HEADER_HTML = `
             <span class="menu-brand-ai" data-no-translate="1">AI</span>
           </div>
 
-          <div class="menu-username" id="menuUserName">Misafir</div>
+          
           <div class="menu-last-login" id="menuLastLogin">Hoş geldiniz</div>
-          <div class="menu-plan-line" id="menuPlanLine">Ziyaretçi Modu</div>
+          
 
           <div class="menu-token-row" id="menuTokenRow">
             <div class="menu-token-pill">
-              <span>Jeton Bakiyesi</span>
+              <span>Jeton Bakiye</span>
               <strong id="menuHeaderJeton">0</strong>
             </div>
           </div>
 
           <div class="menu-token-link-wrap" id="menuTokenLinkWrap">
-            <a class="menu-token-link" id="menuJetonInfoLink" href="/pages/jeton-nedir.html">Jeton Nedir?</a>
+      
           </div>
         </div>
       </div>
@@ -203,8 +203,6 @@ const HOME_HEADER_HTML = `
       <a href="/pages/deneme.html" id="italkyAiTestLink" class="hidden">italkyAI</a>
       <a href="/pages/profile.html" id="profileLink" data-i18n="menu_profile">Profil</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
-      <a href="/pages/jeton-nedir.html" id="whatIsTokenLink" data-i18n="menu_what_is_token">Jeton Nedir</a>
-      <a href="/pages/faq.html" data-i18n="menu_faq">SSS</a>
       <a href="/pages/privacy.html" data-i18n="menu_privacy">Gizlilik</a>
       <a href="/pages/contact.html" data-i18n="menu_contact">İletişim</a>
 
