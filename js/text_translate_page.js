@@ -1,12 +1,6 @@
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
-import {
-  getOfflineStatus,
-  setMockOfflineLicense,
-  downloadOfflineModel,
-  translateOffline
-} from "/js/offline_translate_bridge.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -20,7 +14,6 @@ const toFlag = $("toFlag");
 const fromText = $("fromText");
 const toText = $("toText");
 
-const offlineToggle = $("offlineToggle");
 const soundToggle = $("soundToggle");
 
 const resultBubble = $("resultBubble");
@@ -56,9 +49,7 @@ let lastTranslateToken = 0;
 
 let recognizer = null;
 let listening = false;
-let capturedSpeech = "";
 
-let offlineEnabled = localStorage.getItem("text_single_offline_enabled") === "1";
 let soundEnabled = localStorage.getItem("text_single_sound_enabled") !== "0";
 
 function canonical(code) {
@@ -215,103 +206,6 @@ async function speakText(text, langCode) {
   }
 }
 
-function hasOfflineBridge() {
-  return typeof translateOffline === "function" && typeof downloadOfflineModel === "function";
-}
-
-function ensureMockOfflineLicenseOnce() {
-  if (!hasOfflineBridge()) return;
-
-  const key = "italky_offline_mock_license_set_text_single_v3";
-  if (localStorage.getItem(key) === "1") return;
-
-  try {
-    setMockOfflineLicense(30);
-    localStorage.setItem(key, "1");
-  } catch {}
-}
-
-function readOfflineStatusSafe() {
-  try {
-    return getOfflineStatus();
-  } catch {
-    return { ok: false, error: "offline_status_failed" };
-  }
-}
-
-function waitForCustomEventOnce(eventName, timeoutMs = 120000) {
-  return new Promise((resolve, reject) => {
-    let done = false;
-
-    const finish = (fn, value) => {
-      if (done) return;
-      done = true;
-      window.removeEventListener(eventName, onEvent);
-      clearTimeout(timer);
-      fn(value);
-    };
-
-    const onEvent = (e) => {
-      finish(resolve, e?.detail || {});
-    };
-
-    const timer = setTimeout(() => {
-      finish(reject, new Error(`${eventName}_timeout`));
-    }, timeoutMs);
-
-    window.addEventListener(eventName, onEvent, { once: true });
-  });
-}
-
-async function requestOfflineModelDownload(from, to, wifiOnly = false) {
-  const waiter = waitForCustomEventOnce("offlineModelDownloadResult", 120000);
-  downloadOfflineModel(from, to, wifiOnly);
-  const detail = await waiter;
-
-  if (!detail?.ok) {
-    throw new Error(detail?.error || "offline_model_download_failed");
-  }
-
-  return detail;
-}
-
-async function requestOfflineTranslate(from, to, text) {
-  const waiter = waitForCustomEventOnce("offlineTranslateResult", 120000);
-  translateOffline(from, to, text);
-  const detail = await waiter;
-
-  if (!detail?.ok) {
-    throw new Error(detail?.error || "offline_translate_failed");
-  }
-
-  return String(detail?.translatedText || "").trim();
-}
-
-async function ensureOfflineModelReady(from, to) {
-  const status = readOfflineStatusSafe();
-  if (!status?.licenseValid) throw new Error("offline_license_invalid");
-  await requestOfflineModelDownload(from, to, false);
-}
-
-async function translateOfflineSafely(from, to, text) {
-  try {
-    await ensureOfflineModelReady(from, to);
-    return await requestOfflineTranslate(from, to, text);
-  } catch (e) {
-    const msg = String(e?.message || "");
-    const retryable =
-      msg.includes("model") ||
-      msg.includes("download") ||
-      msg.includes("not_ready") ||
-      msg.includes("missing");
-
-    if (!retryable) throw e;
-
-    await ensureOfflineModelReady(from, to);
-    return await requestOfflineTranslate(from, to, text);
-  }
-}
-
 async function translateGoogleFree(text, from, to) {
   const params = new URLSearchParams({
     client: "gtx",
@@ -445,13 +339,11 @@ function renderTopLanguageButtons() {
 }
 
 function renderToggles() {
-  offlineToggle.classList.toggle("active", !!offlineEnabled);
-  offlineToggle.classList.toggle("inactive", !offlineEnabled);
+  if (soundToggle) {
+    soundToggle.classList.toggle("active", !!soundEnabled);
+    soundToggle.classList.toggle("inactive", !soundEnabled);
+  }
 
-  soundToggle.classList.toggle("active", !!soundEnabled);
-  soundToggle.classList.toggle("inactive", !soundEnabled);
-
-  localStorage.setItem("text_single_offline_enabled", offlineEnabled ? "1" : "0");
   localStorage.setItem("text_single_sound_enabled", soundEnabled ? "1" : "0");
 }
 
@@ -519,30 +411,6 @@ function closeLangPopover() {
   langPopover.classList.remove("show");
 }
 
-async function manualDownloadOfflineCurrentModel() {
-  if (!hasOfflineBridge()) {
-    toast("Offline köprüsü bulunamadı.");
-    return;
-  }
-
-  const status = readOfflineStatusSafe();
-  if (!status?.licenseValid) {
-    toast("Offline lisans yok veya süresi dolmuş.");
-    return;
-  }
-
-  const from = canonical(fromLang);
-  const to = canonical(toLang);
-
-  try {
-    toast(`Model indiriliyor: ${from.toUpperCase()} → ${to.toUpperCase()}`);
-    await ensureOfflineModelReady(from, to);
-    toast(`Offline model hazır: ${from.toUpperCase()} → ${to.toUpperCase()}`);
-  } catch (e) {
-    toast(`Model indirme hatası: ${e?.message || "bilinmeyen hata"}`);
-  }
-}
-
 async function translateText() {
   const sourceText = normalizeText(inputBox.value);
   if (!sourceText) {
@@ -555,7 +423,6 @@ async function translateText() {
   const from = canonical(fromLang);
   const to = canonical(toLang);
 
-  // Hemen temizle
   inputBox.value = "";
   inputBox.style.height = "auto";
   syncInputPreview();
@@ -566,14 +433,7 @@ async function translateText() {
   setOutput("Çevriliyor...", sourceText);
 
   try {
-    let out = "";
-
-    if (offlineEnabled) {
-      if (!hasOfflineBridge()) throw new Error("offline_bridge_missing");
-      out = await translateOfflineSafely(from, to, sourceText);
-    } else {
-      out = await translateGoogleFree(sourceText, from, to);
-    }
+    const out = await translateGoogleFree(sourceText, from, to);
 
     if (myToken !== lastTranslateToken) return;
 
@@ -624,7 +484,6 @@ function stopRecognition() {
   try { recognizer?.stop(); } catch {}
   recognizer = null;
   listening = false;
-  capturedSpeech = "";
   syncInputButtons();
 }
 
@@ -648,13 +507,11 @@ function startRecognition() {
 
   recognizer.onstart = () => {
     listening = true;
-    capturedSpeech = "";
     syncInputButtons();
   };
 
   recognizer.onresult = (e) => {
     const stableText = extractStableRecognitionText(e.results);
-    capturedSpeech = stableText;
     inputBox.value = stableText;
     inputBox.style.height = "auto";
     inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
@@ -718,26 +575,14 @@ function bindEvents() {
     }
   });
 
-  offlineToggle.addEventListener("click", async () => {
-    offlineEnabled = !offlineEnabled;
-    renderToggles();
-
-    if (offlineEnabled) {
-      toast("Offline modu açıldı");
-      try {
-        await manualDownloadOfflineCurrentModel();
-      } catch {}
-    } else {
-      toast("Offline modu kapatıldı");
-    }
-  });
-
-  soundToggle.addEventListener("click", () => {
-    soundEnabled = !soundEnabled;
-    renderToggles();
-    if (!soundEnabled) stopSpeak();
-    toast(soundEnabled ? "Ses açıldı" : "Ses kapatıldı");
-  });
+  if (soundToggle) {
+    soundToggle.addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      renderToggles();
+      if (!soundEnabled) stopSpeak();
+      toast(soundEnabled ? "Ses açıldı" : "Ses kapatıldı");
+    });
+  }
 
   translateBtn.addEventListener("click", translateText);
 
@@ -781,6 +626,11 @@ function bindEvents() {
 document.addEventListener("DOMContentLoaded", async () => {
   if (!(await requireLogin())) return;
 
+  const offlineToggleEl = $("offlineToggle");
+  if (offlineToggleEl) {
+    offlineToggleEl.style.display = "none";
+  }
+
   ALL_LANGS = sanitizeLangPool();
   ensureValidLanguages();
   renderTopLanguageButtons();
@@ -788,7 +638,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindEvents();
 
   setOutput("...", "");
-  ensureMockOfflineLicenseOnce();
 
   inputBox.style.height = "auto";
   inputBox.removeAttribute("readonly");
