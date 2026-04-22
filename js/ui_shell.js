@@ -661,12 +661,11 @@ function bindMenu() {
 
   siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const lang = String(btn.getAttribute("data-lang") || "tr").trim().toLowerCase();
-      await applySiteLanguage(lang);
-      closeSiteLangModal();
-      hydrateNativeLangPill();
-    });
-  });
+  const lang = String(btn.getAttribute("data-lang") || "tr").trim().toLowerCase();
+  closeSiteLangModal();
+  await applySiteLanguage(lang);
+  hydrateNativeLangPill();
+});
 
   adminPanelLink?.addEventListener("click", () => {
     closeMenu();
