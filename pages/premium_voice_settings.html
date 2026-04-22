@@ -51,76 +51,12 @@
 
     #pageContent{
       max-width:560px;
-      min-height:100dvh;
+      min-height:100%;
       margin:0 auto;
-      padding:14px 16px 28px;
+      padding:20px 16px 6px;
       display:flex;
       flex-direction:column;
       gap:18px;
-    }
-
-    .topRow{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .backBtn{
-      width:42px;
-      height:42px;
-      border-radius:14px;
-      border:1px solid var(--panel-border);
-      background:rgba(255,255,255,.05);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .backBtn svg{
-      width:20px;
-      height:20px;
-      stroke:#fff;
-      fill:none;
-      stroke-width:2.5;
-    }
-
-    .page-head{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      min-width:0;
-    }
-
-    .page-kicker{
-      display:inline-flex;
-      width:max-content;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--panel-border);
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.5px;
-      color:rgba(255,255,255,.82);
-    }
-
-    .title{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
-      font-weight:700;
-      margin:0;
-      line-height:1;
-      letter-spacing:-1px;
-    }
-
-    .title .ai{
-      background:var(--ai-grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
     }
 
     .panel{
@@ -354,7 +290,6 @@
       display:grid;
       grid-template-columns:1fr;
       gap:12px;
-      margin-top:auto;
     }
 
     .toast{
@@ -517,8 +452,7 @@
     }
 
     @media (max-width:390px){
-      #pageContent{ padding:12px 14px 22px; }
-      .title{ font-size:25px; }
+      #pageContent{ padding:16px 14px 6px; }
       .modal-actions{ grid-template-columns:1fr; }
     }
   </style>
@@ -526,17 +460,6 @@
 <body>
 
 <div id="pageContent">
-  <div class="topRow">
-    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
-      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-
-    <section class="page-head">
-      <div class="page-kicker">italkyAI</div>
-      <h1 class="title">Premium Ses <span class="ai">Ayarları</span></h1>
-    </section>
-  </div>
-
   <section class="panel soft">
     <h2 class="panel-title">Sesli Okuma Ayarı</h2>
 
@@ -619,6 +542,10 @@
 </div>
 
 <script type="module">
+import { mountShell } from "/js/ui_shell.js";
+
+mountShell({ scroll: "auto" });
+
 (() => {
   const AUTO_READ_KEY = "facetoface_auto_read";
   const F2F_VOICE_KEY = "facetoface_voice_mode";
@@ -627,13 +554,12 @@
   const F2F_SELECTED_ID_KEY = "facetoface_selected_voice_id";
 
   const FROM_PARAM = new URLSearchParams(location.search).get("from") || "";
-  const ADVANCED_URL = `/pages/translation_settings.html?from=${encodeURIComponent(FROM_PARAM)}&cv=20260417b`;
+  const ADVANCED_URL = `/pages/voice_library.html?from=${encodeURIComponent(FROM_PARAM || "facetoface")}`;
   const LIBRARY_API = "https://italky-api.onrender.com/api/italkyai/voice/library";
 
   const $ = (id) => document.getElementById(id);
 
   const UI = {
-    backBtn: $("backBtn"),
     autoReadToggle: $("autoReadToggle"),
     autoReadSummary: $("autoReadSummary"),
 
@@ -993,8 +919,6 @@
   }
 
   function bindEvents() {
-    UI.backBtn.addEventListener("click", goBackSmart);
-
     UI.autoReadToggle.addEventListener("click", () => {
       state.autoRead = !state.autoRead;
       persistSettings();
