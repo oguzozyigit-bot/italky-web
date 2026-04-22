@@ -1,56 +1,68 @@
 import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
+import { initSiteLanguageManager } from "/js/site_language_manager.js";
 
 const NATIVE_LANG_STORAGE_KEY = "italky_native_lang_v1";
 const SITE_LANG_STORAGE_KEY = "site_lang";
 
 const NATIVE_LANG_META = {
   tr: { flag: "🇹🇷", name: "Türkçe", dir: "ltr" },
-  en: { flag: "🇬🇧", name: "İngilizce", dir: "ltr" },
-  de: { flag: "🇩🇪", name: "Almanca", dir: "ltr" },
-  fr: { flag: "🇫🇷", name: "Fransızca", dir: "ltr" },
-  it: { flag: "🇮🇹", name: "İtalyanca", dir: "ltr" },
-  es: { flag: "🇪🇸", name: "İspanyolca", dir: "ltr" },
-  ar: { flag: "🇸🇦", name: "Arapça", dir: "rtl" },
+  en: { flag: "🇬🇧", name: "English", dir: "ltr" },
+  de: { flag: "🇩🇪", name: "Deutsch", dir: "ltr" },
+  fr: { flag: "🇫🇷", name: "Français", dir: "ltr" },
+  it: { flag: "🇮🇹", name: "Italiano", dir: "ltr" },
+  es: { flag: "🇪🇸", name: "Español", dir: "ltr" },
+  ar: { flag: "🇸🇦", name: "العربية", dir: "rtl" },
 
-  ru: { flag: "🇷🇺", name: "Rusça", dir: "ltr" },
-  bg: { flag: "🇧🇬", name: "Bulgarca", dir: "ltr" },
-  bn: { flag: "🇧🇩", name: "Bengalce", dir: "ltr" },
-  ca: { flag: "🇪🇸", name: "Katalanca", dir: "ltr" },
-  cs: { flag: "🇨🇿", name: "Çekçe", dir: "ltr" },
-  da: { flag: "🇩🇰", name: "Danca", dir: "ltr" },
-  el: { flag: "🇬🇷", name: "Yunanca", dir: "ltr" },
-  et: { flag: "🇪🇪", name: "Estonca", dir: "ltr" },
-  eu: { flag: "🇪🇸", name: "Baskça", dir: "ltr" },
-  fi: { flag: "🇫🇮", name: "Fince", dir: "ltr" },
-  gl: { flag: "🇪🇸", name: "Galiçyaca", dir: "ltr" },
-  hu: { flag: "🇭🇺", name: "Macarca", dir: "ltr" },
-  id: { flag: "🇮🇩", name: "Endonezce", dir: "ltr" },
-  lt: { flag: "🇱🇹", name: "Litvanca", dir: "ltr" },
-  lv: { flag: "🇱🇻", name: "Letonca", dir: "ltr" },
-  ms: { flag: "🇲🇾", name: "Malayca", dir: "ltr" },
-  nl: { flag: "🇳🇱", name: "Hollandaca", dir: "ltr" },
-  pl: { flag: "🇵🇱", name: "Lehçe", dir: "ltr" },
-  ro: { flag: "🇷🇴", name: "Romence", dir: "ltr" },
-  sk: { flag: "🇸🇰", name: "Slovakça", dir: "ltr" },
-  sl: { flag: "🇸🇮", name: "Slovence", dir: "ltr" },
-  sq: { flag: "🇦🇱", name: "Arnavutça", dir: "ltr" },
-  th: { flag: "🇹🇭", name: "Tayca", dir: "ltr" },
-  ur: { flag: "🇵🇰", name: "Urduca", dir: "rtl" },
-  vi: { flag: "🇻🇳", name: "Vietnamca", dir: "ltr" },
-  zh: { flag: "🇨🇳", name: "Çince", dir: "ltr" }
+  ru: { flag: "🇷🇺", name: "Русский", dir: "ltr" },
+  bg: { flag: "🇧🇬", name: "Български", dir: "ltr" },
+  bn: { flag: "🇧🇩", name: "বাংলা", dir: "ltr" },
+  ca: { flag: "🇪🇸", name: "Català", dir: "ltr" },
+  cs: { flag: "🇨🇿", name: "Čeština", dir: "ltr" },
+  da: { flag: "🇩🇰", name: "Dansk", dir: "ltr" },
+  el: { flag: "🇬🇷", name: "Ελληνικά", dir: "ltr" },
+  et: { flag: "🇪🇪", name: "Eesti", dir: "ltr" },
+  eu: { flag: "🇪🇸", name: "Euskara", dir: "ltr" },
+  fi: { flag: "🇫🇮", name: "Suomi", dir: "ltr" },
+  gl: { flag: "🇪🇸", name: "Galego", dir: "ltr" },
+  hu: { flag: "🇭🇺", name: "Magyar", dir: "ltr" },
+  id: { flag: "🇮🇩", name: "Bahasa Indonesia", dir: "ltr" },
+  lt: { flag: "🇱🇹", name: "Lietuvių", dir: "ltr" },
+  lv: { flag: "🇱🇻", name: "Latviešu", dir: "ltr" },
+  ms: { flag: "🇲🇾", name: "Bahasa Melayu", dir: "ltr" },
+  nl: { flag: "🇳🇱", name: "Nederlands", dir: "ltr" },
+  pl: { flag: "🇵🇱", name: "Polski", dir: "ltr" },
+  ro: { flag: "🇷🇴", name: "Română", dir: "ltr" },
+  sk: { flag: "🇸🇰", name: "Slovenčina", dir: "ltr" },
+  sl: { flag: "🇸🇮", name: "Slovenščina", dir: "ltr" },
+  sq: { flag: "🇦🇱", name: "Shqip", dir: "ltr" },
+  th: { flag: "🇹🇭", name: "ไทย", dir: "ltr" },
+  ur: { flag: "🇵🇰", name: "اردو", dir: "rtl" },
+  vi: { flag: "🇻🇳", name: "Tiếng Việt", dir: "ltr" },
+  zh: { flag: "🇨🇳", name: "中文", dir: "ltr" },
+  pt: { flag: "🇵🇹", name: "Português", dir: "ltr" },
+  hi: { flag: "🇮🇳", name: "हिन्दी", dir: "ltr" },
+  ja: { flag: "🇯🇵", name: "日本語", dir: "ltr" },
+  ko: { flag: "🇰🇷", name: "한국어", dir: "ltr" },
+  sv: { flag: "🇸🇪", name: "Svenska", dir: "ltr" },
+  no: { flag: "🇳🇴", name: "Norsk", dir: "ltr" },
+  uk: { flag: "🇺🇦", name: "Українська", dir: "ltr" },
+  fa: { flag: "🇮🇷", name: "فارسی", dir: "rtl" }
 };
 
-const QUICK_SITE_LANGS = ["tr", "en", "de", "fr", "it", "es", "ar"];
+const QUICK_SITE_LANGS = [
+  "tr","en","de","fr","it","es","ar",
+  "ru","bg","bn","ca","cs","da","el","et","eu","fi","gl","hu","id","lt","lv",
+  "ms","nl","pl","ro","sk","sl","sq","th","ur","vi","zh","pt","hi","ja","ko",
+  "sv","no","uk","fa"
+];
 
 function getNativeLangCode() {
   return String(
     localStorage.getItem(NATIVE_LANG_STORAGE_KEY) ||
     localStorage.getItem(SITE_LANG_STORAGE_KEY) ||
     "tr"
-  )
-    .trim()
-    .toLowerCase();
+  ).trim().toLowerCase();
 }
 
 function getNativeLangInfo() {
@@ -217,17 +229,23 @@ const HOME_FOOTER_HTML = `
 const SITE_LANG_MODAL_HTML = `
 <div class="shell-modal" id="siteLangModal" aria-hidden="true">
   <div class="shell-modal-backdrop" id="siteLangBackdrop"></div>
-  <div class="shell-modal-card">
+  <div class="shell-modal-card modern">
     <div class="shell-modal-head">
       <h3>Site Dili</h3>
       <button type="button" class="shell-modal-close" id="siteLangCloseBtn" aria-label="Kapat">✕</button>
     </div>
+
     <div class="shell-modal-sub" id="siteLangCurrentText">🇹🇷 Türkçe</div>
-    <div class="site-lang-grid" id="siteLangGrid">
+
+    <div class="site-lang-search-wrap">
+      <input type="text" id="siteLangSearch" class="site-lang-search" placeholder="Dil ara..." />
+    </div>
+
+    <div class="site-lang-grid modern" id="siteLangGrid">
       ${QUICK_SITE_LANGS.map(code => {
-        const meta = NATIVE_LANG_META[code];
+        const meta = NATIVE_LANG_META[code] || { flag: "🌐", name: code.toUpperCase(), dir: "ltr" };
         return `
-          <button class="site-lang-item" type="button" data-lang="${code}">
+          <button class="site-lang-item modern" type="button" data-lang="${code}" data-name="${meta.name.toLowerCase()}">
             <span class="site-lang-flag">${meta.flag}</span>
             <span class="site-lang-name">${meta.name}</span>
           </button>
@@ -428,6 +446,12 @@ body.ui-menu-open{overflow:hidden;}
   border:1px solid rgba(255,255,255,.08);box-shadow:0 22px 48px rgba(0,0,0,.38);
   padding:16px;
 }
+.shell-modal-card.modern{
+  width:min(100%, 440px);
+  max-height:min(84vh, 760px);
+  overflow:auto;
+  border-radius:24px;
+}
 .shell-modal-head{
   display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;
 }
@@ -441,20 +465,75 @@ body.ui-menu-open{overflow:hidden;}
 .shell-modal-sub{
   color:rgba(255,255,255,.68);font-size:12px;font-weight:800;margin-bottom:12px;
 }
+.site-lang-search-wrap{
+  margin-bottom:12px;
+}
+.site-lang-search{
+  width:100%;
+  min-height:46px;
+  border:none;
+  outline:none;
+  border-radius:14px;
+  padding:0 14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.07);
+  color:#fff;
+  font-family:'Outfit',sans-serif;
+  font-size:14px;
+  font-weight:700;
+}
+.site-lang-search::placeholder{
+  color:rgba(255,255,255,.45);
+}
 .site-lang-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.site-lang-grid.modern{
+  max-height:min(54vh, 430px);
+  overflow:auto;
+  padding-right:4px;
+  scrollbar-width:thin;
 }
 .site-lang-item{
-  min-height:52px;border:none;border-radius:16px;padding:10px 12px;text-align:left;
+  min-height:52px;
+  border:none;
+  border-radius:16px;
+  padding:10px 12px;
+  text-align:left;
   background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
-  border:1px solid rgba(255,255,255,.07);color:#fff;cursor:pointer;
-  display:flex;align-items:center;gap:10px;font-family:'Outfit',sans-serif;
+  border:1px solid rgba(255,255,255,.07);
+  color:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:'Outfit',sans-serif;
 }
-.site-lang-item:hover,.site-lang-item:active{
-  background:linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
+.site-lang-item.modern{
+  min-height:58px;
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
 }
-.site-lang-flag{font-size:18px;line-height:1;}
-.site-lang-name{font-size:13px;font-weight:800;line-height:1.2;}
+.site-lang-item:hover,.site-lang-item:active,
+.site-lang-item.modern:hover,.site-lang-item.modern:active{
+  background:linear-gradient(180deg, rgba(139,211,255,.16), rgba(124,92,255,.12));
+}
+.site-lang-item.modern.hidden{
+  display:none !important;
+}
+.site-lang-flag{
+  font-size:20px;
+  line-height:1;
+}
+.site-lang-name{
+  font-size:13px;
+  font-weight:800;
+  line-height:1.2;
+}
 `;
 
 let __shellAutoTranslateInstalled = false;
@@ -540,6 +619,16 @@ function finishMount(options) {
     hydrateNativeLangPill();
 
     try {
+      if (!window.italkySiteLanguage) {
+        initSiteLanguageManager().catch((e) => {
+          console.warn("[ui_shell site language init]", e);
+        });
+      }
+    } catch (e) {
+      console.warn("[ui_shell site language init sync]", e);
+    }
+
+    try {
       if (!__shellAutoTranslateInstalled) {
         installAutoTranslate(document.body);
         __shellAutoTranslateInstalled = true;
@@ -582,6 +671,7 @@ function bindMenu() {
   const siteLangBackdrop = document.getElementById("siteLangBackdrop");
   const siteLangCloseBtn = document.getElementById("siteLangCloseBtn");
   const siteLangGrid = document.getElementById("siteLangGrid");
+  const siteLangSearch = document.getElementById("siteLangSearch");
 
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
@@ -605,6 +695,12 @@ function bindMenu() {
   const openSiteLangModal = () => {
     siteLangModal?.classList.add("open");
     hydrateNativeLangPill();
+    if (siteLangSearch) {
+      siteLangSearch.value = "";
+      siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
+        btn.classList.remove("hidden");
+      });
+    }
   };
 
   const closeSiteLangModal = () => {
@@ -658,6 +754,17 @@ function bindMenu() {
 
   siteLangBackdrop?.addEventListener("click", closeSiteLangModal);
   siteLangCloseBtn?.addEventListener("click", closeSiteLangModal);
+
+  siteLangSearch?.addEventListener("input", () => {
+    const q = String(siteLangSearch.value || "").trim().toLowerCase();
+
+    siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
+      const name = String(btn.getAttribute("data-name") || "").toLowerCase();
+      const code = String(btn.getAttribute("data-lang") || "").toLowerCase();
+      const visible = !q || name.includes(q) || code.includes(q);
+      btn.classList.toggle("hidden", !visible);
+    });
+  });
 
   siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
     btn.addEventListener("click", async () => {
