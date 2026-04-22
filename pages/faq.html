@@ -30,9 +30,7 @@
       font-family: 'Outfit', sans-serif;
     }
 
-    body{
-      overflow-x:hidden;
-    }
+    body{ overflow-x:hidden; }
 
     .bg-layer {
       position: fixed;
@@ -150,9 +148,7 @@
       text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
     }
 
-    .faq-section-title:first-child{
-      margin-top: 0;
-    }
+    .faq-section-title:first-child{ margin-top: 0; }
 
     .faq-item {
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -160,10 +156,7 @@
       transition: 0.3s;
     }
 
-    .faq-item:last-of-type{
-      border-bottom:none;
-    }
-
+    .faq-item:last-of-type{ border-bottom:none; }
     .faq-item.hidden { display: none; }
 
     .faq-q {
@@ -278,14 +271,8 @@
     }
 
     @media (max-width: 520px){
-      #pageContent{
-        padding: 18px 0 6px;
-      }
-
-      .hero h1{
-        font-size: 28px;
-      }
-
+      #pageContent{ padding: 18px 0 6px; }
+      .hero h1{ font-size: 28px; }
       .faq-card{
         border-radius: 28px;
         padding: 20px 16px;
@@ -452,8 +439,14 @@
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
 
-    mountShell({ scroll: "auto" });
+    const { data: { session } } = await supabase.auth.getSession();
+
+    mountShell({
+      scroll: "auto",
+      publicPage: !session?.user
+    });
 
     function render() {
       const host = document.getElementById("contentHost");
