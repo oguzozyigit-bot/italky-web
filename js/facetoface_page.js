@@ -92,6 +92,7 @@ function getSiteLang() {
     localStorage.getItem(SITE_LANG_KEY) ||
     localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
     localStorage.getItem(NATIVE_LANG_KEY) ||
+    navigator.language ||
     "en"
   );
   return raw || "en";
@@ -112,11 +113,11 @@ function getPreferredBaseLang() {
   const savedBot = canonical(localStorage.getItem(F2F_BOT_LANG_KEY));
   if (savedBot) return savedBot;
 
-  const savedTop = canonical(localStorage.getItem(F2F_TOP_LANG_KEY));
-  if (savedTop) return savedTop;
-
   const siteLang = getSiteLang();
   if (siteLang) return siteLang;
+
+  const nativeLang = getNativeLang();
+  if (nativeLang) return nativeLang;
 
   const navLang = canonical(navigator.language || navigator.userLanguage || "");
   if (navLang) return navLang;
@@ -210,7 +211,40 @@ function hasInstalledOfflinePair(source, target) {
   const s = canonical(source);
   const t = canonical(target);
   const installed = getInstalledOfflinePairs();
-  return !!installed[`${s}_${t}`] && !!installed[`${t}_${s}`];
+  return !!installed[`${s}_${t}`] || !!installed[`${t}_${s}`];
+}
+
+function getDifferentPairLang(baseLang) {
+  const base = canonical(baseLang);
+
+  const preferredOrder = base === "en"
+    ? ["tr", "de", "fr", "it", "es", "ar", "ru"]
+    : ["en", "tr", "de", "fr", "it", "es", "ar", "ru"];
+
+  for (const code of preferredOrder) {
+    if (code !== base && langExists(code)) return code;
+  }
+
+  const firstDifferent = LANGS.find((l) => canonical(l.code) !== base);
+  return canonical(firstDifferent?.code || "en");
+}
+
+function resolveInitialTopLang(botCode) {
+  const bot = canonical(botCode);
+  const savedTop = canonical(localStorage.getItem(F2F_TOP_LANG_KEY));
+
+  if (savedTop && savedTop !== bot && langExists(savedTop)) {
+    return savedTop;
+  }
+
+  return getDifferentPairLang(bot);
+}
+
+function persistFaceToFaceLangs() {
+  try {
+    localStorage.setItem(F2F_TOP_LANG_KEY, canonical(topLang));
+    localStorage.setItem(F2F_BOT_LANG_KEY, canonical(botLang));
+  } catch {}
 }
 
 const frameRoot = $("frameRoot");
@@ -299,13 +333,6 @@ let keyboardAudioCtx = null;
 let keyboardMasterGain = null;
 let currentRuntimeMode = "online";
 let offlinePickerPool = [];
-
-function persistFaceToFaceLangs() {
-  try {
-    localStorage.setItem(F2F_TOP_LANG_KEY, canonical(topLang));
-    localStorage.setItem(F2F_BOT_LANG_KEY, canonical(botLang));
-  } catch {}
-}
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -606,9 +633,9 @@ function applyOfflineStartLayout() {
 
   botLang = base || "en";
   if (!langExists(botLang)) botLang = getPreferredBaseLang();
+  if (!langExists(botLang)) botLang = "en";
 
-  topLang = canonical(localStorage.getItem(F2F_TOP_LANG_KEY) || botLang) || botLang;
-  if (!langExists(topLang)) topLang = botLang;
+  topLang = resolveInitialTopLang(botLang);
 
   window.topLang = topLang;
   window.botLang = botLang;
@@ -682,11 +709,17 @@ function renderPop(side) {
 
       if (side === "top") {
         topLang = code;
+        if (canonical(topLang) === canonical(botLang)) {
+          topLang = getDifferentPairLang(botLang);
+        }
         window.topLang = topLang;
       } else {
         botLang = code;
         window.botLang = botLang;
-        topLang = code;
+
+        if (canonical(topLang) === canonical(botLang)) {
+          topLang = getDifferentPairLang(botLang);
+        }
         window.topLang = topLang;
       }
 
@@ -826,6 +859,57 @@ function playKeyClick(kind = "key") {
   } catch {}
 }
 
+function buildTtsCacheKey(text, langCode, tone = "neutral") {
+  const voice = getResolvedFaceVoice();
+
+  return JSON.stringify({
+    t: String(text || "").trim(),
+    l: canonical(langCode),
+    v: voice,
+    n: canonTone(tone)
+  });
+}
+
+function rememberTtsCache(key, audioSrc) {
+  if (!key || !audioSrc) return;
+
+  if (ttsMemoryCache.has(key)) {
+    ttsMemoryCache.delete(key);
+  }
+
+  ttsMemoryCache.set(key, audioSrc);
+
+  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
+    const firstKey = ttsMemoryCache.keys().next().value;
+    ttsMemoryCache.delete(firstKey);
+  }
+}
+
+async function playCachedAudio(audioSrc, runId) {
+  if (!audioSrc || runId !== speakRunId) return false;
+
+  await warmAudio();
+  if (runId !== speakRunId) return false;
+
+  const audio = new Audio(audioSrc);
+  audio.preload = "auto";
+  audio.playsInline = true;
+  audio.crossOrigin = "anonymous";
+
+  currentAudio = audio;
+
+  audio.onended = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  await audio.play();
+  return true;
+}
+
 function createSpeakerButton(getText, langCode, tone = "neutral") {
   const btn = document.createElement("button");
   btn.type = "button";
@@ -963,57 +1047,6 @@ function speakFallback(text, langCode) {
   }
 }
 
-function buildTtsCacheKey(text, langCode, tone = "neutral") {
-  const voice = getResolvedFaceVoice();
-
-  return JSON.stringify({
-    t: String(text || "").trim(),
-    l: canonical(langCode),
-    v: voice,
-    n: canonTone(tone)
-  });
-}
-
-function rememberTtsCache(key, audioSrc) {
-  if (!key || !audioSrc) return;
-
-  if (ttsMemoryCache.has(key)) {
-    ttsMemoryCache.delete(key);
-  }
-
-  ttsMemoryCache.set(key, audioSrc);
-
-  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
-    const firstKey = ttsMemoryCache.keys().next().value;
-    ttsMemoryCache.delete(firstKey);
-  }
-}
-
-async function playCachedAudio(audioSrc, runId) {
-  if (!audioSrc || runId !== speakRunId) return false;
-
-  await warmAudio();
-  if (runId !== speakRunId) return false;
-
-  const audio = new Audio(audioSrc);
-  audio.preload = "auto";
-  audio.playsInline = true;
-  audio.crossOrigin = "anonymous";
-
-  currentAudio = audio;
-
-  audio.onended = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  audio.onerror = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  await audio.play();
-  return true;
-}
-
 async function speak(text, langCode, tone = "neutral") {
   if (!isFaceAutoReadEnabled()) return;
 
@@ -1049,7 +1082,9 @@ async function speak(text, langCode, tone = "neutral") {
     try {
       const ok = await speakViaApi(value, langCode, tone);
       if (ok) return;
-    } catch {
+    } catch (e) {
+      console.warn("[facetoface custom voice failed]", e);
+
       if (selectedVoice === "mine") showToast("Kendi Sesim şu anda üretilemedi");
       else if (selectedVoice === "second") showToast("2. Ses şu anda üretilemedi");
       else if (selectedVoice === "memory") showToast("Hatıra Sesi şu anda üretilemedi");
@@ -1203,7 +1238,6 @@ async function translateText(text, from, to, tone = "neutral") {
       });
 
       const j = await r.json().catch(() => null);
-
       if (!r.ok) continue;
 
       const value = String(j?.translated || j?.translation || j?.text || "").trim();
@@ -1928,7 +1962,7 @@ function startBoot() {
     const startupLang = resolveStartupLang();
 
     botLang = startupLang;
-    topLang = startupLang;
+    topLang = resolveInitialTopLang(botLang);
 
     window.topLang = topLang;
     window.botLang = botLang;
@@ -2268,4 +2302,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-}
+      }
