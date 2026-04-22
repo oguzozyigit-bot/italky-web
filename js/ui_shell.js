@@ -651,7 +651,7 @@ function bindMenu() {
     location.href = "/pages/jetonbuy.html";
   });
 
-  siteLangBtn?.addEventListener("click", async () => {
+  siteLangBtn?.addEventListener("click", () => {
     closeMenu();
     openSiteLangModal();
   });
@@ -661,11 +661,12 @@ function bindMenu() {
 
   siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
     btn.addEventListener("click", async () => {
-  const lang = String(btn.getAttribute("data-lang") || "tr").trim().toLowerCase();
-  closeSiteLangModal();
-  await applySiteLanguage(lang);
-  hydrateNativeLangPill();
-});
+      const lang = String(btn.getAttribute("data-lang") || "tr").trim().toLowerCase();
+      closeSiteLangModal();
+      await applySiteLanguage(lang);
+      hydrateNativeLangPill();
+    });
+  });
 
   adminPanelLink?.addEventListener("click", () => {
     closeMenu();
