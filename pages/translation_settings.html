@@ -577,7 +577,7 @@
     </button>
 
     <div class="pageHead">
-      <div class="kicker">italkyAI PRO</div>
+      <div class="kicker" data-no-translate="1">italkyAI PRO</div>
       <h1 class="title">Ses <span>Kütüphanesi</span></h1>
     </div>
   </div>
@@ -715,6 +715,10 @@
 </div>
 
 <script type="module">
+import { mountShell } from "/js/ui_shell.js";
+
+mountShell({ scroll: "auto" });
+
 (() => {
   const RETURN_PARAM = new URLSearchParams(location.search).get("from") || "";
   const VOICE_API = "https://italky-api.onrender.com/api/italkyai/voice/upload";
@@ -842,11 +846,6 @@
     }, 1800);
   }
 
-  function setButtonState(button, enabled) {
-    if (!button) return;
-    button.disabled = !enabled;
-  }
-
   function stopTracks(stream) {
     try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
   }
@@ -945,15 +944,6 @@
     UI.deleteModal.classList.remove("open");
   }
 
-  function escapeHtml(str) {
-    return String(str ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#39;");
-  }
-
   async function getAccessToken() {
     const { data: { session } } = await state.supabase.auth.getSession();
     return session?.access_token || "";
@@ -964,36 +954,34 @@
   }
 
   async function playVoiceItem(item) {
-  const url = getPlayableUrl(item);
-  if (!url) {
-    showToast("Dinlenecek kayıt bulunamadı");
-    return;
-  }
-
-  try {
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      throw new Error("audio_fetch_failed");
+    const url = getPlayableUrl(item);
+    if (!url) {
+      showToast("Dinlenecek kayıt bulunamadı");
+      return;
     }
 
-    const blob = await resp.blob();
-    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("audio_fetch_failed");
 
-    const audio = new Audio(objectUrl);
-    audio.onended = () => {
-      try { URL.revokeObjectURL(objectUrl); } catch {}
-    };
-    audio.onerror = () => {
-      try { URL.revokeObjectURL(objectUrl); } catch {}
+      const blob = await resp.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const audio = new Audio(objectUrl);
+      audio.onended = () => {
+        try { URL.revokeObjectURL(objectUrl); } catch {}
+      };
+      audio.onerror = () => {
+        try { URL.revokeObjectURL(objectUrl); } catch {}
+        showToast("Ses çalınamadı");
+      };
+
+      await audio.play();
+    } catch (e) {
+      console.error("playVoiceItem error:", e);
       showToast("Ses çalınamadı");
-    };
-
-    await audio.play();
-  } catch (e) {
-    console.error("playVoiceItem error:", e);
-    showToast("Ses çalınamadı");
+    }
   }
-}
 
   function buildItemRow(item, type) {
     const row = document.createElement("div");
