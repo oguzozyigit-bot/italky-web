@@ -1,6 +1,16 @@
-const MODULE_AD_STATE_KEY = "italky_module_ad_state_v1";
+const APP_AD_STATE_KEY = "italky_app_ad_state_v2";
 const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v1";
-const MODULE_AD_WAIT_MS = 3 * 60 * 1000;
+
+/*
+  Reklam mantığı:
+  - Kullanıcı uygulamaya/güne ilk girişte timer başlar
+  - Varsayılan bekleme: 90 saniye
+  - Süre dolduktan sonra ilk uygun sayfa geçişinde reklam gösterilir
+  - Günde sadece 1 kez
+  - Jeton yükleme sayfasına giderken reklam gösterilmez
+*/
+
+const DEFAULT_READY_DELAY_MS = 90 * 1000;
 
 function nowTs() {
   return Date.now();
@@ -31,40 +41,58 @@ function writeJson(key, value) {
   } catch {}
 }
 
-function getModuleAdState() {
-  const state = readJson(MODULE_AD_STATE_KEY, {});
+function normalizePath(path = "") {
+  try {
+    const url = new URL(path, location.origin);
+    return url.pathname.toLowerCase();
+  } catch {
+    return String(path || "").trim().toLowerCase();
+  }
+}
+
+function getCurrentPath() {
+  return normalizePath(location.pathname || "/");
+}
+
+function isJetonBuyPath(path = "") {
+  const p = normalizePath(path);
+  return p.includes("/pages/jetonbuy.html") || p.endsWith("/jetonbuy.html");
+}
+
+function getAppAdState() {
+  const state = readJson(APP_AD_STATE_KEY, {});
   const today = todayKey();
 
   if (state.day !== today) {
     const fresh = {
       day: today,
       shown_today: false,
-      active_module: "",
-      entered_at: 0,
-      eligible_at: 0
+      session_started_at: 0,
+      ready_after: 0,
+      current_page: ""
     };
-    writeJson(MODULE_AD_STATE_KEY, fresh);
+    writeJson(APP_AD_STATE_KEY, fresh);
     return fresh;
   }
 
   return {
     day: today,
     shown_today: !!state.shown_today,
-    active_module: String(state.active_module || ""),
-    entered_at: Number(state.entered_at || 0),
-    eligible_at: Number(state.eligible_at || 0)
+    session_started_at: Number(state.session_started_at || 0),
+    ready_after: Number(state.ready_after || 0),
+    current_page: String(state.current_page || "")
   };
 }
 
-function setModuleAdState(next) {
+function setAppAdState(next) {
   const merged = {
     day: todayKey(),
     shown_today: !!next.shown_today,
-    active_module: String(next.active_module || ""),
-    entered_at: Number(next.entered_at || 0),
-    eligible_at: Number(next.eligible_at || 0)
+    session_started_at: Number(next.session_started_at || 0),
+    ready_after: Number(next.ready_after || 0),
+    current_page: String(next.current_page || "")
   };
-  writeJson(MODULE_AD_STATE_KEY, merged);
+  writeJson(APP_AD_STATE_KEY, merged);
   return merged;
 }
 
@@ -94,10 +122,6 @@ function setOfflineAdState(next) {
   };
   writeJson(OFFLINE_AD_STATE_KEY, merged);
   return merged;
-}
-
-function normalizeModuleName(name) {
-  return String(name || "").trim().toLowerCase();
 }
 
 function normalizePairKey(fromLang, toLang) {
@@ -141,7 +165,7 @@ function waitForAdClosed(timeoutMs = 15000) {
   });
 }
 
-async function showNativeInterstitial(reason = "module_switch") {
+async function showNativeInterstitial(reason = "daily_transition") {
   if (!hasNativeInterstitial()) return false;
 
   try {
@@ -153,84 +177,84 @@ async function showNativeInterstitial(reason = "module_switch") {
   }
 }
 
-function showFallbackAdInfo(message = "Bugünlük kısa reklam hakkınız kullanılıyor.") {
+function showFallbackAdInfo(message = "Bugünlük kısa reklam gösterimi yapılıyor. Bu sadece günde 1 kez olur.") {
   try {
     if (typeof window.showToast === "function") {
       window.showToast(message);
       return;
     }
   } catch {}
+
   try {
     alert(message);
   } catch {}
 }
 
-export function beginModuleAdSession(moduleName) {
-  const mod = normalizeModuleName(moduleName);
-  if (!mod) return;
+/*
+  Uygulama/gün başlangıcı:
+  - İlk uygun girişte session başlatılır
+  - Aynı gün tekrar çağrılırsa sadece current_page güncellenir
+*/
+export function beginDailyAdSession(options = {}) {
+  const {
+    delayMs = DEFAULT_READY_DELAY_MS,
+    currentPage = getCurrentPath()
+  } = options;
 
-  const enteredAt = nowTs();
+  const state = getAppAdState();
 
-  setModuleAdState({
-    ...getModuleAdState(),
-    active_module: mod,
-    entered_at: enteredAt,
-    eligible_at: enteredAt + MODULE_AD_WAIT_MS
+  if (!state.session_started_at) {
+    const started = nowTs();
+    return setAppAdState({
+      ...state,
+      session_started_at: started,
+      ready_after: started + Number(delayMs || DEFAULT_READY_DELAY_MS),
+      current_page: normalizePath(currentPage)
+    });
+  }
+
+  return setAppAdState({
+    ...state,
+    current_page: normalizePath(currentPage)
   });
 }
 
-export function clearModuleAdSession(moduleName = "") {
-  const state = getModuleAdState();
-  const mod = normalizeModuleName(moduleName);
-
-  if (!mod || state.active_module === mod) {
-    setModuleAdState({
-      ...state,
-      active_module: "",
-      entered_at: 0,
-      eligible_at: 0
-    });
-  }
+export function getCurrentDailyAdState() {
+  return getAppAdState();
 }
 
-export function isModuleAdEligible() {
-  const state = getModuleAdState();
+export function isDailyAdEligible() {
+  const state = getAppAdState();
   if (state.shown_today) return false;
-  if (!state.active_module) return false;
-  if (!state.eligible_at) return false;
-  return nowTs() >= state.eligible_at;
+  if (!state.session_started_at || !state.ready_after) return false;
+  return nowTs() >= state.ready_after;
 }
 
-export function getCurrentModuleAdState() {
-  return getModuleAdState();
-}
-
-export async function maybeShowModuleExitAd(options = {}) {
+export async function maybeShowDailyTransitionAd(options = {}) {
   const {
-    fromModule = "",
-    toModule = "",
+    fromPage = getCurrentPath(),
+    toPage = "",
     onBeforeAd = null,
     onAfterAd = null,
     onNoAd = null,
     fallbackMessage = "Bugünlük reklam gösterimi yapılıyor. Bu sadece günde 1 kez olur."
   } = options;
 
-  const state = getModuleAdState();
-  const currentFrom = normalizeModuleName(fromModule || state.active_module);
-  const nextTo = normalizeModuleName(toModule);
+  const state = getAppAdState();
+  const currentFrom = normalizePath(fromPage || state.current_page || getCurrentPath());
+  const nextTo = normalizePath(toPage);
 
-  if (!currentFrom) {
+  if (!nextTo || nextTo === currentFrom) {
     if (typeof onNoAd === "function") await onNoAd();
     return false;
   }
 
-  const switchingModule = nextTo && nextTo !== currentFrom;
-  if (!switchingModule) {
+  if (isJetonBuyPath(nextTo)) {
     if (typeof onNoAd === "function") await onNoAd();
     return false;
   }
 
-  if (state.shown_today || nowTs() < Number(state.eligible_at || 0)) {
+  if (state.shown_today || !state.ready_after || nowTs() < state.ready_after) {
     if (typeof onNoAd === "function") await onNoAd();
     return false;
   }
@@ -242,16 +266,17 @@ export async function maybeShowModuleExitAd(options = {}) {
   let shown = false;
 
   if (hasNativeInterstitial()) {
-    shown = await showNativeInterstitial("module_switch");
+    shown = await showNativeInterstitial("daily_transition");
   } else {
     showFallbackAdInfo(fallbackMessage);
     shown = true;
   }
 
   if (shown) {
-    setModuleAdState({
+    setAppAdState({
       ...state,
-      shown_today: true
+      shown_today: true,
+      current_page: currentFrom
     });
   }
 
@@ -262,6 +287,21 @@ export async function maybeShowModuleExitAd(options = {}) {
   return shown;
 }
 
+/*
+  Sayfa gerçekten değiştiğinde yeni aktif sayfayı kaydetmek için
+*/
+export function markCurrentPageForAdSession(path = getCurrentPath()) {
+  const state = getAppAdState();
+  setAppAdState({
+    ...state,
+    current_page: normalizePath(path)
+  });
+}
+
+/*
+  Offline dil indirimi için ayrı günlük reklam:
+  Her dil çifti için günde 1 kez
+*/
 export function hasShownOfflineDownloadAd(fromLang, toLang) {
   const key = normalizePairKey(fromLang, toLang);
   if (!key) return false;
@@ -318,9 +358,9 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   return shown;
 }
 
-export function resetModuleAdStateForDebug() {
+export function resetDailyAdStateForDebug() {
   try {
-    localStorage.removeItem(MODULE_AD_STATE_KEY);
+    localStorage.removeItem(APP_AD_STATE_KEY);
   } catch {}
 }
 
