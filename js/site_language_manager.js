@@ -29,6 +29,7 @@ function normalizeLang(code = "") {
 
 function getTranslateRoot() {
   return (
+    document.getElementById("italkyAppShell") ||
     document.getElementById("shellMain") ||
     document.getElementById("pageContent") ||
     document.body
@@ -41,11 +42,13 @@ function shouldSkipElement(el) {
   if (el.closest("[data-no-translate='1']")) return true;
   if (el.closest("[translate='no']")) return true;
   if (el.closest("#shellOverlay")) return true;
-  if (el.closest("#siteLangModal")) return true;
+
+  // sadece arka plan/backdrop katmanlarını atla
   if (el.closest("#menuBackdrop")) return true;
   if (el.closest(".menu-backdrop")) return true;
-  if (el.closest(".shell-modal")) return true;
-  if (el.closest(".side-menu")) return true;
+  if (el.closest("#siteLangBackdrop")) return true;
+  if (el.closest(".shell-modal-backdrop")) return true;
+
   return false;
 }
 
