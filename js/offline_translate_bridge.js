@@ -29,18 +29,38 @@ export function downloadOfflineModel(from, to, wifiOnly = false) {
     throw new Error("OfflineTranslate bridge not available");
   }
 
-  window.OfflineTranslate.downloadModel(
-    JSON.stringify({
-      from,
-      to,
-      wifiOnly
-    })
-  );
+  if (typeof window.OfflineTranslate.downloadBiDirectionalPair === "function") {
+    window.OfflineTranslate.downloadBiDirectionalPair(
+      JSON.stringify({
+        source: from,
+        target: to,
+        wifiOnly: !!wifiOnly
+      })
+    );
+    return;
+  }
+
+  if (typeof window.OfflineTranslate.downloadModel === "function") {
+    window.OfflineTranslate.downloadModel(
+      JSON.stringify({
+        from,
+        to,
+        wifiOnly: !!wifiOnly
+      })
+    );
+    return;
+  }
+
+  throw new Error("OfflineTranslate download method not available");
 }
 
 export function translateOffline(from, to, text) {
   if (!window.OfflineTranslate) {
     throw new Error("OfflineTranslate bridge not available");
+  }
+
+  if (typeof window.OfflineTranslate.translate !== "function") {
+    throw new Error("OfflineTranslate translate method not available");
   }
 
   window.OfflineTranslate.translate(
