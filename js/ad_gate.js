@@ -1,5 +1,5 @@
-const APP_AD_STATE_KEY = "italky_app_ad_state_v2";
-const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v1";
+const APP_AD_STATE_KEY = "italky_app_ad_state_v3";
+const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v2";
 
 /*
   Reklam mantığı:
@@ -8,9 +8,14 @@ const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v1";
   - Süre dolduktan sonra ilk uygun sayfa geçişinde reklam gösterilir
   - Günde sadece 1 kez
   - Jeton yükleme sayfasına giderken reklam gösterilmez
+
+  Offline:
+  - Her dil çifti için ayrı reklam kontrolü
+  - Offline dil indirimi için ayrıca kullanılacaktır
 */
 
 const DEFAULT_READY_DELAY_MS = 90 * 1000;
+const AD_INFO_MODAL_ID = "italkyAdInfoModal";
 
 function nowTs() {
   return Date.now();
@@ -57,6 +62,13 @@ function getCurrentPath() {
 function isJetonBuyPath(path = "") {
   const p = normalizePath(path);
   return p.includes("/pages/jetonbuy.html") || p.endsWith("/jetonbuy.html");
+}
+
+function normalizePairKey(fromLang, toLang) {
+  const a = String(fromLang || "").trim().toLowerCase();
+  const b = String(toLang || "").trim().toLowerCase();
+  if (!a || !b) return "";
+  return `${a}_${b}`;
 }
 
 function getAppAdState() {
@@ -124,13 +136,6 @@ function setOfflineAdState(next) {
   return merged;
 }
 
-function normalizePairKey(fromLang, toLang) {
-  const a = String(fromLang || "").trim().toLowerCase();
-  const b = String(toLang || "").trim().toLowerCase();
-  if (!a || !b) return "";
-  return `${a}_${b}`;
-}
-
 function hasNativeInterstitial() {
   try {
     return !!(
@@ -142,26 +147,186 @@ function hasNativeInterstitial() {
   }
 }
 
-function waitForAdClosed(timeoutMs = 15000) {
-  return new Promise((resolve) => {
-    let done = false;
+function getOrCreateAdInfoModal() {
+  let modal = document.getElementById(AD_INFO_MODAL_ID);
+  if (modal) return modal;
 
-    const finish = (result) => {
-      if (done) return;
-      done = true;
-      window.removeEventListener("nativeInterstitialClosed", onClosed);
-      window.removeEventListener("nativeInterstitialFailed", onFailed);
-      clearTimeout(timer);
-      resolve(result);
+  const style = document.createElement("style");
+  style.id = "italkyAdInfoModalStyle";
+  style.textContent = `
+    .italky-ad-info-backdrop{
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(0,0,0,.54);
+      backdrop-filter:blur(8px);
+    }
+    .italky-ad-info-backdrop.open{
+      display:flex;
+    }
+    .italky-ad-info-card{
+      width:min(100%, 430px);
+      border-radius:24px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(145deg, rgba(16,16,24,.98), rgba(10,10,18,.98));
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+      color:#fff;
+      font-family:Outfit, system-ui, sans-serif;
+    }
+    .italky-ad-info-top{
+      padding:18px 18px 14px;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+    }
+    .italky-ad-info-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:32px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.18);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+    }
+    .italky-ad-info-title{
+      margin:12px 0 6px;
+      font-size:24px;
+      line-height:1.08;
+      font-weight:1000;
+      letter-spacing:-.5px;
+    }
+    .italky-ad-info-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.65;
+      font-weight:800;
+      color:rgba(255,255,255,.92);
+      white-space:pre-line;
+    }
+    .italky-ad-info-body{
+      padding:16px;
+      display:grid;
+      gap:10px;
+    }
+    .italky-ad-info-btn{
+      min-height:50px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:14px;
+      font-weight:1000;
+    }
+    .italky-ad-info-btn.primary{
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      color:#05060d;
+    }
+    .italky-ad-info-btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+    .italky-ad-info-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:4px;
+    }
+    @media (max-width:390px){
+      .italky-ad-info-actions{ grid-template-columns:1fr; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  modal = document.createElement("div");
+  modal.id = AD_INFO_MODAL_ID;
+  modal.className = "italky-ad-info-backdrop";
+  modal.innerHTML = `
+    <div class="italky-ad-info-card">
+      <div class="italky-ad-info-top">
+        <div class="italky-ad-info-chip">italkyAI</div>
+        <div class="italky-ad-info-title" id="italkyAdInfoTitle">Küçük Bir Bilgilendirme</div>
+        <p class="italky-ad-info-text" id="italkyAdInfoText"></p>
+      </div>
+      <div class="italky-ad-info-body">
+        <div class="italky-ad-info-actions">
+          <button class="italky-ad-info-btn secondary" id="italkyAdInfoCancel" type="button">Vazgeç</button>
+          <button class="italky-ad-info-btn primary" id="italkyAdInfoOk" type="button">Devam Et</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  return modal;
+}
+
+function showSoftAdModal({
+  title = "Küçük Bir Bilgilendirme",
+  text = "Uygulamayı ücretsiz sunabilmemiz için, sayfalar arasında geçişlerde günde yalnızca 1 kez kısa bir reklam gösterilebilir.\nOffline dil indirmelerinde ise, her dil için indirme öncesinde bir kez reklam gösterilebilir.\nAnlayışınız için teşekkür ederiz."
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = getOrCreateAdInfoModal();
+    const titleEl = modal.querySelector("#italkyAdInfoTitle");
+    const textEl = modal.querySelector("#italkyAdInfoText");
+    const okBtn = modal.querySelector("#italkyAdInfoOk");
+    const cancelBtn = modal.querySelector("#italkyAdInfoCancel");
+
+    if (titleEl) titleEl.textContent = title;
+    if (textEl) textEl.textContent = text;
+
+    const cleanup = (value) => {
+      modal.classList.remove("open");
+      okBtn?.removeEventListener("click", onOk);
+      cancelBtn?.removeEventListener("click", onCancel);
+      modal.removeEventListener("click", onBackdrop);
+      resolve(value);
     };
 
-    const onClosed = () => finish(true);
-    const onFailed = () => finish(false);
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    const onBackdrop = (e) => {
+      if (e.target === modal) cleanup(false);
+    };
 
-    window.addEventListener("nativeInterstitialClosed", onClosed, { once: true });
-    window.addEventListener("nativeInterstitialFailed", onFailed, { once: true });
+    okBtn?.addEventListener("click", onOk);
+    cancelBtn?.addEventListener("click", onCancel);
+    modal.addEventListener("click", onBackdrop);
 
-    const timer = setTimeout(() => finish(false), timeoutMs);
+    modal.classList.add("open");
+  });
+}
+
+function waitForInterstitialClosed(timeoutMs = 20000) {
+  return new Promise((resolve) => {
+    let done = false;
+    const previousHandler = window.onNativeInterstitialClosed;
+
+    const finish = (payload) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      window.onNativeInterstitialClosed = previousHandler;
+      resolve(payload || { shown: false });
+    };
+
+    window.onNativeInterstitialClosed = function (payload) {
+      try {
+        if (typeof previousHandler === "function") previousHandler(payload);
+      } catch {}
+      finish(payload);
+    };
+
+    const timer = setTimeout(() => {
+      finish({ shown: false, reason: "timeout" });
+    }, timeoutMs);
   });
 }
 
@@ -169,15 +334,16 @@ async function showNativeInterstitial(reason = "daily_transition") {
   if (!hasNativeInterstitial()) return false;
 
   try {
+    const waitPromise = waitForInterstitialClosed();
     window.Native.showInterstitialAd(reason);
-    const result = await waitForAdClosed();
-    return !!result;
+    const result = await waitPromise;
+    return !!result?.shown;
   } catch {
     return false;
   }
 }
 
-function showFallbackAdInfo(message = "Bugünlük kısa reklam gösterimi yapılıyor. Bu sadece günde 1 kez olur.") {
+function showFallbackAdInfo(message = "Uygulamayı ücretsiz sunabilmemiz için kısa bir reklam gösterilebilir.") {
   try {
     if (typeof window.showToast === "function") {
       window.showToast(message);
@@ -190,11 +356,6 @@ function showFallbackAdInfo(message = "Bugünlük kısa reklam gösterimi yapıl
   } catch {}
 }
 
-/*
-  Uygulama/gün başlangıcı:
-  - İlk uygun girişte session başlatılır
-  - Aynı gün tekrar çağrılırsa sadece current_page güncellenir
-*/
 export function beginDailyAdSession(options = {}) {
   const {
     delayMs = DEFAULT_READY_DELAY_MS,
@@ -236,8 +397,7 @@ export async function maybeShowDailyTransitionAd(options = {}) {
     toPage = "",
     onBeforeAd = null,
     onAfterAd = null,
-    onNoAd = null,
-    fallbackMessage = "Bugünlük reklam gösterimi yapılıyor. Bu sadece günde 1 kez olur."
+    onNoAd = null
   } = options;
 
   const state = getAppAdState();
@@ -263,12 +423,25 @@ export async function maybeShowDailyTransitionAd(options = {}) {
     if (typeof onBeforeAd === "function") await onBeforeAd();
   } catch {}
 
+  const accepted = await showSoftAdModal({
+    title: "Küçük Bir Bilgilendirme",
+    text:
+      "Uygulamayı ücretsiz sunabilmemiz için, sayfalar arasında geçişlerde günde yalnızca 1 kez kısa bir reklam gösterilebilir.\n" +
+      "Offline dil indirmelerinde ise, her dil için indirme öncesinde bir kez reklam gösterilebilir.\n" +
+      "Anlayışınız için teşekkür ederiz."
+  });
+
+  if (!accepted) {
+    if (typeof onAfterAd === "function") await onAfterAd(false);
+    return false;
+  }
+
   let shown = false;
 
   if (hasNativeInterstitial()) {
     shown = await showNativeInterstitial("daily_transition");
   } else {
-    showFallbackAdInfo(fallbackMessage);
+    showFallbackAdInfo("Bu uygulamada sayfalar arası geçişlerde günde sadece 1 reklam gösterilir.");
     shown = true;
   }
 
@@ -287,9 +460,6 @@ export async function maybeShowDailyTransitionAd(options = {}) {
   return shown;
 }
 
-/*
-  Sayfa gerçekten değiştiğinde yeni aktif sayfayı kaydetmek için
-*/
 export function markCurrentPageForAdSession(path = getCurrentPath()) {
   const state = getAppAdState();
   setAppAdState({
@@ -298,10 +468,6 @@ export function markCurrentPageForAdSession(path = getCurrentPath()) {
   });
 }
 
-/*
-  Offline dil indirimi için ayrı günlük reklam:
-  Her dil çifti için günde 1 kez
-*/
 export function hasShownOfflineDownloadAd(fromLang, toLang) {
   const key = normalizePairKey(fromLang, toLang);
   if (!key) return false;
@@ -323,8 +489,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
     fromLang = "",
     toLang = "",
     onBeforeAd = null,
-    onAfterAd = null,
-    fallbackMessage = "Bu dil indirimi için kısa reklam gösterimi yapılıyor."
+    onAfterAd = null
   } = options;
 
   const key = normalizePairKey(fromLang, toLang);
@@ -343,7 +508,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   if (hasNativeInterstitial()) {
     shown = await showNativeInterstitial("offline_download");
   } else {
-    showFallbackAdInfo(fallbackMessage);
+    showFallbackAdInfo("Bu dili indirmeden önce kısa bir reklam gösterilebilir.");
     shown = true;
   }
 
