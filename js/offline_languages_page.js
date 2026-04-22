@@ -162,6 +162,14 @@ function getPreferredInitialNativeLang() {
   return "tr";
 }
 
+function getCurrentSiteLang() {
+  return canonical(
+    localStorage.getItem(STORAGE.siteLang) ||
+    localStorage.getItem(STORAGE.legacySiteLang) ||
+    ""
+  );
+}
+
 function canUseNativeMirror() {
   return !!(
     window.OfflineTranslate &&
@@ -224,6 +232,21 @@ function syncStorageToNative() {
   } catch (e) {
     console.warn("Native installed pair yazılamadı:", e);
   }
+}
+
+function syncNativeLangWithSiteLang(force = false) {
+  const siteLang = getCurrentSiteLang();
+  if (!siteLang) return false;
+
+  const currentNative = getNativeLang();
+
+  if (force || !localStorage.getItem(STORAGE.nativeLang) || currentNative !== siteLang) {
+    localStorage.setItem(STORAGE.nativeLang, siteLang);
+    syncStorageToNative();
+    return true;
+  }
+
+  return false;
 }
 
 function mergeInstalledPairsWithNative() {
@@ -517,7 +540,7 @@ function renderLangPickerOptions() {
         <div class="picker-option-flag">${lang.flag}</div>
         <div class="picker-option-name">${lang.name}</div>
       </div>
-      <div class="picker-option-check">✓</div>
+      <div class="picker-option-check" aria-hidden="true">✓</div>
     </button>
   `).join("");
 
@@ -535,339 +558,4 @@ function setBusy(flag) {
 
 function renderLicenseInfo() {
   if (!licenseInfo) return;
-  const days = getOfflineLicenseDays();
-  const nativeInfo = getLangInfo(getNativeLang());
-  licenseInfo.textContent = `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Offline lisans: ${days} gün`;
-}
-
-function renderInstalledList() {
-  if (!installedList) return;
-
-  const q = String(searchInput?.value || "").trim().toLowerCase();
-  const nativeLang = getNativeLang();
-  const downloadingMap = getDownloadingMap();
-  const hasActiveDownload = Object.keys(downloadingMap).length > 0;
-  globalDownloadLock = hasActiveDownload;
-
-  const filtered = LANGS
-    .filter((l) => l.code !== nativeLang)
-    .filter((l) => !q || l.name.toLowerCase().includes(q) || l.code.includes(q));
-
-  if (!filtered.length) {
-    installedList.innerHTML = `
-      <div class="lang-card">
-        <div class="lang-head">
-          <div class="flag">✅</div>
-          <div>
-            <h3 class="lang-name">Uygun dil bulunamadı</h3>
-            <div class="lang-sub">Arama filtresini değiştirerek tekrar deneyin.</div>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  installedList.innerHTML = filtered.map((lang) => {
-    const installed = isLangInstalledBiDirectional(lang.code);
-    const progress = getLangProgress(lang.code);
-    const isDownloading = !!progress;
-
-    let btnClass = "lang-btn free";
-    let btnText = "İndir";
-    let disabled = false;
-
-    if (installed) {
-      btnClass = "lang-btn installed";
-      btnText = "Kurulu";
-      disabled = true;
-    } else if (isDownloading) {
-      btnClass = "lang-btn installing";
-      btnText = progress.label || "İndiriliyor...";
-      disabled = true;
-    }
-
-    const progressHtml = isDownloading ? `
-      <div class="progress-wrap">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:${Math.max(4, Math.min(100, Number(progress.percent || 0)))}%"></div>
-        </div>
-        <div class="progress-text">${progress.message || "Lütfen bekleyiniz. Kurulum devam ediyor."}</div>
-      </div>
-    ` : "";
-
-    return `
-      <div class="lang-card">
-        <div class="lang-head">
-          <div class="flag">${lang.flag}</div>
-          <div>
-            <h3 class="lang-name">${lang.name}</h3>
-            <div class="lang-sub">Offline kullanım için hazırla</div>
-          </div>
-        </div>
-
-        <button
-          class="${btnClass}"
-          type="button"
-          data-lang="${lang.code}"
-          ${busy || disabled ? "disabled" : ""}
-        >
-          ${btnText}
-        </button>
-
-        ${progressHtml}
-      </div>
-    `;
-  }).join("");
-
-  installedList.querySelectorAll("[data-lang]").forEach((btn) => {
-    btn.onclick = async () => {
-      const lang = btn.getAttribute("data-lang");
-      await startLanguageInstallFlow(lang);
-    };
-  });
-}
-
-async function startLanguageInstallFlow(langCode) {
-  const code = canonical(langCode);
-  if (!code || busy) return;
-
-  const info = getLangInfo(code);
-  const nativeInfo = getLangInfo(getNativeLang());
-
-  if (globalDownloadLock) {
-    toast("Şu anda başka bir dil indiriliyor. Lütfen mevcut indirme tamamlansın.");
-    return;
-  }
-
-  if (isLangInstalledBiDirectional(code)) {
-    toast(`${info.name} zaten hazır`);
-    renderInstalledList();
-    return;
-  }
-
-  if (getLangProgress(code)) {
-    toast("Bu dil için indirme zaten devam ediyor.");
-    renderInstalledList();
-    return;
-  }
-
-  const adAccepted = await showConfirm(
-    `${info.name} indirilsin mi?`,
-    `Bu dili indirmek için kısa bir video izlemeniz gereklidir.
-
-İndirme tamamlandıktan sonra, bu dil için sonraki kullanımlarda reklam gösterilmeyecektir.
-
-Devam etmek istiyor musunuz?`,
-    "Video İzle"
-  );
-
-  if (!adAccepted) {
-    renderInstalledList();
-    return;
-  }
-
-  const adWatched = await maybeShowOfflineDownloadAd({
-    fromLang: nativeInfo.code,
-    toLang: info.code
-  });
-
-  if (!adWatched) {
-    toast("Video tamamlanmadan indirme başlatılamadı.");
-    renderInstalledList();
-    return;
-  }
-
-  const confirmed = await showConfirm(
-    `${info.name} indirilsin mi?`,
-    `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
-
-İnternet bağlantınızdaki indirme hızına göre yükleme süresi değişebilir.
-Ortalama 30 saniye ile 3 dakika arasındadır.
-
-Uygulamayı kapatmadan diğer modüllerde gezinebilirsiniz.
-Bu durum indirmeyi engellemez.
-
-Her bir çevrimdışı dil paketi telefonda yaklaşık 140-190 MB yer kaplar.`,
-    "İndir"
-  );
-
-  if (!confirmed) {
-    renderInstalledList();
-    return;
-  }
-
-  await installBiDirectionalPair(code);
-}
-
-function canUseNativeOfflineInstaller() {
-  return !!(
-    window.OfflineTranslate &&
-    typeof window.OfflineTranslate.downloadBiDirectionalPair === "function"
-  );
-}
-
-async function installBiDirectionalPair(langCode) {
-  const code = canonical(langCode);
-  const info = getLangInfo(code);
-  const nativeLang = getNativeLang();
-
-  setBusy(true);
-  globalDownloadLock = true;
-
-  try {
-    setLangProgress(code, {
-      percent: 4,
-      label: "Hazırlanıyor...",
-      message: `${info.name} kurulumu hazırlanıyor. Lütfen bekleyiniz.`
-    });
-    renderInstalledList();
-
-    if (!canUseNativeOfflineInstaller()) {
-      clearLangProgress(code);
-      globalDownloadLock = false;
-      setBusy(false);
-      renderInstalledList();
-      toast("Gerçek kurulum için uygulama tarafı hazır değil.");
-      return;
-    }
-
-    const payload = JSON.stringify({
-      source: nativeLang,
-      target: code
-    });
-
-    window.OfflineTranslate.downloadBiDirectionalPair(payload);
-    toast(`${info.name} indirilmeye başladı`);
-  } catch (e) {
-    console.error("[offline_languages_page] installBiDirectionalPair:", e);
-    clearLangProgress(code);
-    globalDownloadLock = false;
-    setBusy(false);
-    renderInstalledList();
-    toast(`${info.name} şu an indirilemedi`);
-  } finally {
-    setBusy(false);
-  }
-}
-
-window.addEventListener("offlinePairDownloadStarted", (e) => {
-  const d = e.detail || {};
-  const code = canonical(d.target || "");
-  const info = getLangInfo(code);
-  if (!code) return;
-
-  setLangProgress(code, {
-    percent: 10,
-    label: "Başlatılıyor...",
-    message: d.message || `Lütfen bekleyiniz. Şu anda ${info.name} için indirme başladı.`
-  });
-  renderInstalledList();
-});
-
-window.addEventListener("offlinePairDownloadProgress", (e) => {
-  const d = e.detail || {};
-  const code = canonical(d.target || "");
-  const info = getLangInfo(code);
-  if (!code) return;
-
-  setLangProgress(code, {
-    percent: Number(d.percent || 0),
-    label: d.label || "İndiriliyor...",
-    message: d.message || `Lütfen bekleyiniz. Şu anda ${info.name} kurulumu devam ediyor.`
-  });
-  renderInstalledList();
-});
-
-window.addEventListener("offlinePairDownloadCompleted", (e) => {
-  const d = e.detail || {};
-  const code = canonical(d.target || "");
-  if (!code) return;
-
-  markInstalledBiDirectional(code);
-
-  try {
-    if (window.OfflineTranslate && typeof window.OfflineTranslate.setInstalledOfflinePairs === "function") {
-      window.OfflineTranslate.setInstalledOfflinePairs(JSON.stringify(getInstalledPairs()));
-    }
-  } catch (err) {
-    console.error("Native installed pair sync failed:", err);
-  }
-
-  clearLangProgress(code);
-  globalDownloadLock = false;
-  setBusy(false);
-  renderInstalledList();
-  toast(`${getLangInfo(code).name} artık hazır`);
-});
-
-window.addEventListener("offlinePairDownloadFailed", (e) => {
-  const d = e.detail || {};
-  const code = canonical(d.target || "");
-  const info = getLangInfo(code);
-  const message = d.error || `${info.name} şu an indirilemedi. Daha sonra tekrar deneyebilirsiniz.`;
-
-  if (code) clearLangProgress(code);
-  globalDownloadLock = false;
-  setBusy(false);
-  renderInstalledList();
-  toast(message);
-});
-
-async function init() {
-  try {
-    mountShell({ scroll: "auto" });
-  } catch (e) {
-    console.warn("[offline_languages_page] shell:", e);
-  }
-
-  try {
-    const applyShellVars = () => {
-      const root = getComputedStyle(document.documentElement);
-      const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-      const headerH = parseFloat(root.getPropertyValue("--headerH")) || 0;
-      document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
-      document.documentElement.style.setProperty("--safe-top", headerH ? `${Math.max(0, headerH - 6)}px` : "0px");
-    };
-
-    applyShellVars();
-    setTimeout(applyShellVars, 120);
-    setTimeout(applyShellVars, 500);
-    window.addEventListener("resize", applyShellVars);
-  } catch (e) {
-    console.warn("[offline_languages_page] shell vars:", e);
-  }
-
-  const initialNative = getPreferredInitialNativeLang();
-  if (!localStorage.getItem(STORAGE.nativeLang)) {
-    localStorage.setItem(STORAGE.nativeLang, initialNative || "tr");
-  }
-
-  syncStorageFromNative();
-  clearStaleDownloadingState();
-
-  if (!localStorage.getItem(STORAGE.nativeLang)) {
-    localStorage.setItem(STORAGE.nativeLang, initialNative || "tr");
-  }
-
-  LANGS = buildSupportedLangList();
-
-  ensureMockOfflineLicenseOnce();
-
-  mergeInstalledPairsWithNative();
-  normalizeInstalledVsProgress();
-
-  renderMyLanguageButton();
-  renderLicenseInfo();
-  renderInstalledList();
-
-  searchInput?.addEventListener("input", renderInstalledList);
-
-  console.log("OFFLINE_LANGUAGES_READY", {
-    langs: LANGS.length,
-    native: getNativeLang(),
-    nativeMirror: canUseNativeMirror()
-  });
-}
-
-init();
+  const days = getOfflineLicense
