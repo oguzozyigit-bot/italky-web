@@ -175,10 +175,6 @@ const HOME_HEADER_HTML = `
             <span class="menu-brand-ai" data-no-translate="1">AI</span>
           </div>
 
-          
-          <div class="menu-last-login hidden" id="menuLastLogin"></div>
-          
-
           <div class="menu-token-row" id="menuTokenRow">
             <div class="menu-token-pill">
               <span>Jeton Bakiye</span>
@@ -186,9 +182,7 @@ const HOME_HEADER_HTML = `
             </div>
           </div>
 
-          <div class="menu-token-link-wrap" id="menuTokenLinkWrap">
-      
-          </div>
+          <div class="menu-token-link-wrap" id="menuTokenLinkWrap"></div>
         </div>
       </div>
     </div>
@@ -386,8 +380,6 @@ body.ui-menu-open{overflow:hidden;}
 .menu-brand-main{color:#f6f8ff;}
 .menu-brand-ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .menu-username{font-size:14px;font-weight:800;color:#ffffff;line-height:1.2;word-break:break-word;}
-.menu-last-login{font-size:11px;font-weight:800;color:rgba(255,255,255,.56);line-height:1.3;}
-.menu-plan-line{font-size:12px;font-weight:800;color:rgba(255,255,255,.72);line-height:1.35;margin-top:-2px;}
 .menu-token-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .menu-token-pill{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;width:max-content;max-width:100%;
@@ -574,8 +566,6 @@ function setGuestMenuMode(isGuest) {
   const headerPlusBtn = document.getElementById("headerPlusBtn");
   const headerSettingsBtn = document.getElementById("headerSettingsBtn");
   const menuUserName = document.getElementById("menuUserName");
-  const menuLastLogin = document.getElementById("menuLastLogin");
-  const menuPlanLine = document.getElementById("menuPlanLine");
   const menuProfileTop = document.getElementById("menuProfileTop");
 
   const show = (el) => {
@@ -603,8 +593,6 @@ function setGuestMenuMode(isGuest) {
     hide(headerSettingsBtn);
 
     if (menuUserName) menuUserName.textContent = "Misafir";
-    if (menuLastLogin) { menuLastLogin.textContent = ""; menuLastLogin.classList.add("hidden");}
-    if (menuPlanLine) menuPlanLine.textContent = "Ziyaretçi Modu";
     if (menuProfileTop) menuProfileTop.style.cursor = "default";
   } else {
     hide(menuLoginLink);
@@ -948,7 +936,6 @@ async function applySiteLanguage(lang) {
   try {
     if (window.italkySiteLanguage && typeof window.italkySiteLanguage.setLanguage === "function") {
       await window.italkySiteLanguage.setLanguage(code);
-
       localStorage.setItem(SITE_LANG_STORAGE_KEY, code);
       localStorage.setItem(NATIVE_LANG_STORAGE_KEY, code);
       hydrateNativeLangPill();
@@ -994,38 +981,9 @@ export function hydrateFromCache() {
   } catch {}
 }
 
-async function hydratePlanUi() {
-  const line = document.getElementById("menuPlanLine");
-  if (!line) return;
-  line.textContent = "";
-  line.classList.add("hidden");
-}
-
-
-  try {
-    const { supabase } = await import("/js/supabase_client.js");
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (session?.access_token) {
-      const resp = await fetch("https://italky-api.onrender.com/api/session/access-state", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-
-      const access = await resp.json().catch(() => ({}));
-      const accessOpen = !!access?.access_open;
-      subLabel = accessOpen ? "Aktif" : "Kapalı";
-    }
-  } catch (e) {
-    console.warn("[ui_shell hydratePlanUi]", e);
-  }
-
-  line.textContent = `${mainLabel} • ${subLabel}`;
-}
+async function hydratePlanUi() {}
 
 async function hydrateShellMeta() {
-  const lastLoginEl = document.getElementById("menuLastLogin");
   const adminLink = document.getElementById("adminPanelLink");
   const aiTestLink = document.getElementById("italkyAiTestLink");
 
@@ -1038,16 +996,11 @@ async function hydrateShellMeta() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("last_login_at, role, is_admin, tokens, full_name, avatar_url, email")
+      .select("role, is_admin, tokens, full_name, avatar_url, email")
       .eq("id", userId)
       .maybeSingle();
 
     if (error || !data) return;
-
-    if (lastLoginEl) {
-  lastLoginEl.textContent = "";
-  lastLoginEl.classList.add("hidden");
-}
 
     const jetonEl = document.getElementById("menuHeaderJeton");
     if (jetonEl && typeof data.tokens !== "undefined" && data.tokens !== null) {
@@ -1105,7 +1058,6 @@ async function hydrateShellMeta() {
       cached.tokens = Number(data.tokens || 0);
       cached.role = role;
       cached.is_admin = data.is_admin === true;
-      cached.last_login_at = data.last_login_at || "";
       cached.email = email || cached.email || "";
       if (data.full_name) cached.full_name = data.full_name;
       if (pic) cached.avatar = pic;
