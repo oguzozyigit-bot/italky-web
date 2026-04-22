@@ -176,7 +176,7 @@ const HOME_HEADER_HTML = `
           </div>
 
           
-          <div class="menu-last-login" id="menuLastLogin">Hoş geldiniz</div>
+          <div class="menu-last-login hidden" id="menuLastLogin"></div>
           
 
           <div class="menu-token-row" id="menuTokenRow">
@@ -392,9 +392,17 @@ body.ui-menu-open{overflow:hidden;}
 .menu-token-pill{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;width:max-content;max-width:100%;
   padding:10px 14px;border-radius:999px;
-  background:linear-gradient(135deg, rgba(255,118,20,.35), rgba(255,184,92,.24)), radial-gradient(circle at top left, rgba(255,255,255,.18), transparent 42%);
-  border:1px solid rgba(255,167,71,.55);color:#fff8ef;font-size:13px;font-weight:1000;
-  box-shadow:0 12px 26px rgba(242,122,26,.22),0 0 18px rgba(255,145,50,.14),inset 0 1px 0 rgba(255,255,255,.12);
+  background:
+    linear-gradient(135deg, rgba(239,68,68,.34), rgba(153,27,27,.26)),
+    radial-gradient(circle at top left, rgba(255,255,255,.14), transparent 42%);
+  border:1px solid rgba(239,68,68,.42);
+  color:#fff5f5;
+  font-size:13px;
+  font-weight:1000;
+  box-shadow:
+    0 12px 26px rgba(239,68,68,.18),
+    0 0 18px rgba(220,38,38,.12),
+    inset 0 1px 0 rgba(255,255,255,.10);
 }
 .menu-token-pill strong{font-size:16px;font-weight:1000;color:#ffffff;}
 .menu-token-link-wrap{display:flex;justify-content:center;width:100%;}
@@ -595,7 +603,7 @@ function setGuestMenuMode(isGuest) {
     hide(headerSettingsBtn);
 
     if (menuUserName) menuUserName.textContent = "Misafir";
-    if (menuLastLogin) menuLastLogin.textContent = "Giriş yapmadan görüntüleniyor";
+    if (menuLastLogin) { menuLastLogin.textContent = ""; menuLastLogin.classList.add("hidden");}
     if (menuPlanLine) menuPlanLine.textContent = "Ziyaretçi Modu";
     if (menuProfileTop) menuProfileTop.style.cursor = "default";
   } else {
@@ -989,6 +997,9 @@ export function hydrateFromCache() {
 async function hydratePlanUi() {
   const line = document.getElementById("menuPlanLine");
   if (!line) return;
+  line.textContent = "";
+  line.classList.add("hidden");
+}
 
 
   try {
@@ -1034,14 +1045,9 @@ async function hydrateShellMeta() {
     if (error || !data) return;
 
     if (lastLoginEl) {
-      let text = "S.G.T: -";
-      if (data.last_login_at) {
-        try {
-          text = "S.G.T: " + new Date(data.last_login_at).toLocaleString("tr-TR");
-        } catch {}
-      }
-      lastLoginEl.textContent = text;
-    }
+  lastLoginEl.textContent = "";
+  lastLoginEl.classList.add("hidden");
+}
 
     const jetonEl = document.getElementById("menuHeaderJeton");
     if (jetonEl && typeof data.tokens !== "undefined" && data.tokens !== null) {
