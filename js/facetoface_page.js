@@ -12,6 +12,11 @@ const TTS_CACHE_LIMIT = 24;
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
+const SITE_LANG_KEY = "site_lang";
+const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+const F2F_TOP_LANG_KEY = "f2f_top_lang";
+const F2F_BOT_LANG_KEY = "f2f_bot_lang";
+
 const BCP = {
   tr: "tr-TR",
   en: "en-US",
@@ -19,15 +24,29 @@ const BCP = {
   fr: "fr-FR",
   it: "it-IT",
   es: "es-ES",
+  ar: "ar-SA",
+  ru: "ru-RU",
+  bg: "bg-BG",
+  pt: "pt-PT",
+  zh: "zh-CN",
+  ja: "ja-JP",
+  ko: "ko-KR"
 };
 
 const PLACEHOLDERS = {
-  tr: "Mesajını buraya yaz",
+  tr: "Mesaj yaz",
   en: "Write your message here",
   de: "Schreibe hier deine Nachricht",
   fr: "Écris ici ton message",
   it: "Scrivi qui il tuo messaggio",
   es: "Escribe aquí tu mensaje",
+  ar: "اكتب رسالتك هنا",
+  ru: "Напишите сообщение",
+  bg: "Напишете съобщението си",
+  pt: "Escreva sua mensagem",
+  zh: "在这里输入消息",
+  ja: "ここにメッセージを入力",
+  ko: "여기에 메시지를 입력"
 };
 
 const ALT_CHARS = {
@@ -68,11 +87,44 @@ function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
-function getNativeLang() {
-  return canonical(localStorage.getItem(NATIVE_LANG_KEY) || "tr") || "tr";
+function getSiteLang() {
+  const raw = canonical(
+    localStorage.getItem(SITE_LANG_KEY) ||
+    localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+    localStorage.getItem(NATIVE_LANG_KEY) ||
+    "en"
+  );
+  return raw || "en";
 }
 
-const SITE_LANG = "tr";
+function getNativeLang() {
+  const raw = canonical(
+    localStorage.getItem(NATIVE_LANG_KEY) ||
+    localStorage.getItem(SITE_LANG_KEY) ||
+    localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+    navigator.language ||
+    "en"
+  );
+  return raw || "en";
+}
+
+function getPreferredBaseLang() {
+  const savedBot = canonical(localStorage.getItem(F2F_BOT_LANG_KEY));
+  if (savedBot) return savedBot;
+
+  const savedTop = canonical(localStorage.getItem(F2F_TOP_LANG_KEY));
+  if (savedTop) return savedTop;
+
+  const siteLang = getSiteLang();
+  if (siteLang) return siteLang;
+
+  const navLang = canonical(navigator.language || navigator.userLanguage || "");
+  if (navLang) return navLang;
+
+  return "en";
+}
+
+const SITE_LANG = getSiteLang();
 const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
   ? getLangPoolForSite(SITE_LANG)
   : [];
@@ -89,6 +141,11 @@ const LANGS = RAW_LANG_POOL
     };
   })
   .filter(Boolean);
+
+function langExists(code) {
+  const c = canonical(code);
+  return !!LANGS.find((x) => x.code === c);
+}
 
 function langObj(code) {
   const c = canonical(code);
@@ -212,7 +269,7 @@ const offlineRequiredText = $("offlineRequiredText");
 const offlineRequiredCloseBtn = $("offlineRequiredCloseBtn");
 
 let topLang = "en";
-let botLang = getNativeLang();
+let botLang = "en";
 window.topLang = topLang;
 window.botLang = botLang;
 
@@ -242,6 +299,13 @@ let keyboardAudioCtx = null;
 let keyboardMasterGain = null;
 let currentRuntimeMode = "online";
 let offlinePickerPool = [];
+
+function persistFaceToFaceLangs() {
+  try {
+    localStorage.setItem(F2F_TOP_LANG_KEY, canonical(topLang));
+    localStorage.setItem(F2F_BOT_LANG_KEY, canonical(botLang));
+  } catch {}
+}
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -323,10 +387,6 @@ async function hasReadyVoiceProfile() {
       .eq("id", userId)
       .maybeSingle();
 
-    console.log("[facetoface voice profile] userId =", userId);
-    console.log("[facetoface voice profile] error =", error);
-    console.log("[facetoface voice profile] data =", data);
-
     if (error || !data) return false;
 
     const mode = getResolvedFaceVoice();
@@ -340,8 +400,7 @@ async function hasReadyVoiceProfile() {
       return !!data.memory_voice_sample_path || (!!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim());
     }
     return false;
-  } catch (e) {
-    console.log("[facetoface voice profile] catch =", e);
+  } catch {
     return false;
   }
 }
@@ -533,7 +592,7 @@ function syncModeUi() {
 }
 
 function getOfflinePickerPool() {
-  const native = getNativeLang();
+  const native = canonical(botLang || getPreferredBaseLang());
   const all = getAllInstalledOfflineLangs();
   const set = new Set(all);
   if (native) set.add(native);
@@ -541,16 +600,19 @@ function getOfflinePickerPool() {
 }
 
 function applyOfflineStartLayout() {
-  const native = getNativeLang();
+  const base = canonical(localStorage.getItem(F2F_BOT_LANG_KEY) || getPreferredBaseLang());
   const pool = getOfflinePickerPool();
   offlinePickerPool = pool;
 
-  botLang = native || "tr";
-  const firstOther = pool.find((x) => canonical(x) !== canonical(botLang));
-  topLang = firstOther || botLang || "en";
+  botLang = base || "en";
+  if (!langExists(botLang)) botLang = getPreferredBaseLang();
+
+  topLang = canonical(localStorage.getItem(F2F_TOP_LANG_KEY) || botLang) || botLang;
+  if (!langExists(topLang)) topLang = botLang;
 
   window.topLang = topLang;
   window.botLang = botLang;
+  persistFaceToFaceLangs();
   refreshLangLabels();
 }
 
@@ -569,15 +631,15 @@ function setModeOffline() {
 function tryEnableOfflineMode() {
   const pool = getOfflinePickerPool();
 
-  if (!pool.length || pool.length < 2) {
-    openOfflineRequiredPopup("Önce offline dillerden en az bir karşı dil yüklemeniz gereklidir.");
+  if (!pool.length || pool.length < 1) {
+    openOfflineRequiredPopup("Önce offline dillerden en az bir dil yüklemeniz gereklidir.");
     setModeOnline();
     return false;
   }
 
   applyOfflineStartLayout();
 
-  if (!hasInstalledOfflinePair(topLang, botLang)) {
+  if (!hasInstalledOfflinePair(topLang, botLang) && canonical(topLang) !== canonical(botLang)) {
     openOfflineRequiredPopup("Seçili dil çifti offline kullanım için hazır değil.");
     setModeOnline();
     return false;
@@ -624,14 +686,19 @@ function renderPop(side) {
       } else {
         botLang = code;
         window.botLang = botLang;
+        topLang = code;
+        window.topLang = topLang;
       }
 
-      if (currentRuntimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang)) {
+      persistFaceToFaceLangs();
+
+      if (currentRuntimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang) && canonical(topLang) !== canonical(botLang)) {
         showToast("Bu iki dil arasında offline çeviri hazır değil");
       }
 
       refreshLangLabels();
-      renderKeyboard(side);
+      renderKeyboard("top");
+      renderKeyboard("bot");
       closeAllPop();
     });
   });
@@ -759,434 +826,6 @@ function playKeyClick(kind = "key") {
   } catch {}
 }
 
-function showKeyboard(side) {
-  activeKeyboardSide = side;
-  topKeyboardWrap?.classList.toggle("show", side === "top");
-  botKeyboardWrap?.classList.toggle("show", side === "bot");
-  hideAltMenu();
-  renderKeyboard(side);
-  keepLatestVisible(side);
-}
-
-function hideKeyboards() {
-  activeKeyboardSide = null;
-  hideAltMenu();
-  topKeyboardWrap?.classList.remove("show");
-  botKeyboardWrap?.classList.remove("show");
-}
-
-function appendInputValue(side, value) {
-  const input = side === "top" ? topInput : botInput;
-  if (!input) return;
-  input.value = `${input.value || ""}${value}`;
-  autoResizeTextarea(input);
-  syncComposerButtons(side);
-}
-
-function backspaceInputValue(side) {
-  const input = side === "top" ? topInput : botInput;
-  if (!input) return;
-  input.value = String(input.value || "").slice(0, -1);
-  autoResizeTextarea(input);
-  syncComposerButtons(side);
-}
-
-function keyboardRows(lang, shift) {
-  const c = canonical(lang);
-  const upper = !!shift;
-  const numRow = ["1","2","3","4","5","6","7","8","9","0"];
-
-  if (c === "tr") {
-    return {
-      nums: numRow,
-      r1: upper ? ["Q","W","E","R","T","Y","U","I","O","P"] : ["q","w","e","r","t","y","u","ı","o","p"],
-      r2: upper ? ["A","S","D","F","G","H","J","K","L"] : ["a","s","d","f","g","h","j","k","l"],
-      r3: upper ? ["Z","X","C","V","B","N","M"] : ["z","x","c","v","b","n","m"],
-    };
-  }
-
-  const mapRow = (row) => upper ? row.map((x) => x.toUpperCase()) : row;
-  return {
-    nums: numRow,
-    r1: mapRow(["q","w","e","r","t","y","u","i","o","p"]),
-    r2: mapRow(["a","s","d","f","g","h","j","k","l"]),
-    r3: mapRow(["z","x","c","v","b","n","m"]),
-  };
-}
-
-function svgShift() {
-  return `
-    <svg viewBox="0 0 24 24">
-      <path d="M12 4l6 7h-4v8H10v-8H6l6-7z"></path>
-    </svg>
-  `;
-}
-
-function svgBackspace() {
-  return `
-    <svg viewBox="0 0 24 24">
-      <path d="M21 6H9l-6 6 6 6h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"></path>
-      <path d="M10 9l5 6"></path>
-      <path d="M15 9l-5 6"></path>
-    </svg>
-  `;
-}
-
-function createKey({ label = "", html = "", onTap, onLongPress = null, className = "", sound = "key" }) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = `kb-key ${className}`.trim();
-  if (html) btn.innerHTML = html;
-  else btn.textContent = label;
-
-  let longTriggered = false;
-
-  btn.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    longTriggered = false;
-    unlockKeyboardAudio();
-    btn.classList.add("pressing");
-
-    if (onLongPress) {
-      holdTimer = setTimeout(() => {
-        longTriggered = true;
-        playKeyClick(sound);
-        onLongPress(btn);
-      }, 320);
-    }
-  });
-
-  btn.addEventListener("pointerup", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    clearTimeout(holdTimer);
-    holdTimer = null;
-    btn.classList.remove("pressing");
-
-    if (!longTriggered && onTap) {
-      playKeyClick(sound);
-      onTap();
-    }
-  });
-
-  btn.addEventListener("pointerleave", () => {
-    clearTimeout(holdTimer);
-    holdTimer = null;
-    btn.classList.remove("pressing");
-  });
-
-  btn.addEventListener("contextmenu", (e) => e.preventDefault());
-  return btn;
-}
-
-function createAltMenu(hostBtn, chars, onPick) {
-  hideAltMenu();
-  if (!hostBtn || !chars?.length) return;
-
-  const wrap = document.createElement("div");
-  wrap.className = "alt-pop";
-
-  chars.forEach((ch) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "alt-key";
-    b.textContent = ch;
-    b.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    b.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      playKeyClick("key");
-      onPick(ch);
-      hideAltMenu();
-    });
-    wrap.appendChild(b);
-  });
-
-  hostBtn.appendChild(wrap);
-  altMenuEl = wrap;
-}
-
-function renderCharKeys(rowEl, chars, side) {
-  chars.forEach((ch) => {
-    const alts = ALT_CHARS[ch] || ALT_CHARS[String(ch).toLowerCase()] || [];
-    rowEl.appendChild(createKey({
-      label: ch,
-      sound: "key",
-      onTap: () => {
-        hideAltMenu();
-        appendInputValue(side, ch);
-        if (shiftState[side] && /[A-ZÇĞİÖŞÜ]/.test(ch)) {
-          shiftState[side] = false;
-          renderKeyboard(side);
-        }
-      },
-      onLongPress: alts.length
-        ? (btn) => createAltMenu(btn, alts, (picked) => appendInputValue(side, picked))
-        : null
-    }));
-  });
-}
-
-function renderKeyboard(side) {
-  const wrap = side === "top" ? topKeyboard : botKeyboard;
-  const lang = side === "top" ? topLang : botLang;
-  if (!wrap) return;
-
-  const rows = keyboardRows(lang, shiftState[side]);
-  wrap.innerHTML = "";
-
-  const rowNums = document.createElement("div");
-  rowNums.className = "kb-row";
-  renderCharKeys(rowNums, rows.nums, side);
-  wrap.appendChild(rowNums);
-
-  const row1 = document.createElement("div");
-  row1.className = "kb-row";
-  renderCharKeys(row1, rows.r1, side);
-  wrap.appendChild(row1);
-
-  const row2 = document.createElement("div");
-  row2.className = "kb-row";
-  row2.appendChild(document.createElement("div")).style.flex = "0.35";
-  renderCharKeys(row2, rows.r2, side);
-  row2.appendChild(document.createElement("div")).style.flex = "0.35";
-  wrap.appendChild(row2);
-
-  const row3 = document.createElement("div");
-  row3.className = "kb-row";
-
-  row3.appendChild(createKey({
-    html: svgShift(),
-    className: "icon wide",
-    sound: "shift",
-    onTap: () => {
-      hideAltMenu();
-      shiftState[side] = !shiftState[side];
-      renderKeyboard(side);
-    }
-  }));
-
-  renderCharKeys(row3, rows.r3, side);
-
-  row3.appendChild(createKey({
-    html: svgBackspace(),
-    className: "icon wide",
-    sound: "backspace",
-    onTap: () => {
-      hideAltMenu();
-      backspaceInputValue(side);
-    }
-  }));
-
-  wrap.appendChild(row3);
-
-  const row4 = document.createElement("div");
-  row4.className = "kb-row";
-
-  row4.appendChild(createKey({
-    label: ",",
-    sound: "key",
-    onTap: () => {
-      hideAltMenu();
-      appendInputValue(side, ",");
-    }
-  }));
-
-  row4.appendChild(createKey({
-    label: ".",
-    sound: "key",
-    onTap: () => {
-      hideAltMenu();
-      appendInputValue(side, ".");
-    }
-  }));
-
-  row4.appendChild(createKey({
-    label: " ",
-    className: "xwide",
-    sound: "space",
-    onTap: () => {
-      hideAltMenu();
-      appendInputValue(side, " ");
-    }
-  }));
-
-  row4.appendChild(createKey({
-    label: "?",
-    sound: "key",
-    onTap: () => {
-      hideAltMenu();
-      appendInputValue(side, "?");
-    }
-  }));
-
-  row4.appendChild(createKey({
-    label: "!",
-    sound: "key",
-    onTap: () => {
-      hideAltMenu();
-      appendInputValue(side, "!");
-    }
-  }));
-
-  wrap.appendChild(row4);
-}
-
-function keepLatestVisible(side) {
-  const wrap = side === "top" ? topBody : botBody;
-  if (!wrap) return;
-
-  const apply = () => {
-    try {
-      wrap.scrollTop = wrap.scrollHeight;
-    } catch {}
-  };
-
-  apply();
-  requestAnimationFrame(apply);
-  setTimeout(apply, 40);
-  setTimeout(apply, 120);
-}
-
-function getTypingProfile(text) {
-  const len = String(text || "").trim().length;
-  if (len <= 24) return { startChunk: 1, midChunk: 2, endChunk: 1, base: 9 };
-  if (len <= 70) return { startChunk: 1, midChunk: 2, endChunk: 1, base: 8 };
-  if (len <= 130) return { startChunk: 1, midChunk: 3, endChunk: 1, base: 7 };
-  return { startChunk: 2, midChunk: 3, endChunk: 1, base: 6 };
-}
-
-function getTypingDelay(ch, index, total, text) {
-  const profile = getTypingProfile(text);
-  const progress = total ? index / total : 0;
-  const tailBoost = progress > 0.82 ? 3 : 0;
-
-  if (ch === " ") return 0;
-  if (/[.!?]/.test(ch)) return 95 + tailBoost;
-  if (/[,]/.test(ch)) return 65 + tailBoost;
-  if (/[\n]/.test(ch)) return 45 + tailBoost;
-
-  return profile.base + tailBoost;
-}
-
-function getTypingChunkSize(index, total, text) {
-  const profile = getTypingProfile(text);
-  const progress = total ? index / total : 0;
-  if (progress < 0.18) return profile.startChunk;
-  if (progress < 0.78) return profile.midChunk;
-  return profile.endChunk;
-}
-
-async function typewriteText(el, finalText, side) {
-  if (!el) return;
-
-  stopTypewriter();
-  const runId = typewriterRunId;
-  const full = String(finalText || "").trim();
-
-  el.textContent = "";
-  if (!full) return;
-
-  let i = 0;
-  while (i < full.length) {
-    if (runId !== typewriterRunId) return;
-
-    const chunkSize = getTypingChunkSize(i, full.length, full);
-    const next = Math.min(full.length, i + chunkSize);
-
-    el.textContent = full.slice(0, next);
-    i = next;
-
-    const lastChar = full.charAt(i - 1);
-    keepLatestVisible(side);
-
-    await wait(getTypingDelay(lastChar, i, full.length, full));
-  }
-}
-
-async function getCurrentUserId() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    return data?.user?.id || localStorage.getItem("user_id") || null;
-  } catch {
-    return localStorage.getItem("user_id") || null;
-  }
-}
-
-async function warmAudio() {
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (Ctx) {
-      if (!audioCtx) audioCtx = new Ctx();
-      if (audioCtx.state === "suspended") await audioCtx.resume();
-    }
-  } catch {}
-
-  try {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.getVoices();
-      voicesReady = true;
-    }
-  } catch {}
-
-  await unlockKeyboardAudio();
-}
-
-function buildTtsCacheKey(text, langCode, tone = "neutral") {
-  const voice = getResolvedFaceVoice();
-
-  return JSON.stringify({
-    t: String(text || "").trim(),
-    l: canonical(langCode),
-    v: voice,
-    n: canonTone(tone)
-  });
-}
-
-function rememberTtsCache(key, audioSrc) {
-  if (!key || !audioSrc) return;
-
-  if (ttsMemoryCache.has(key)) {
-    ttsMemoryCache.delete(key);
-  }
-
-  ttsMemoryCache.set(key, audioSrc);
-
-  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
-    const firstKey = ttsMemoryCache.keys().next().value;
-    ttsMemoryCache.delete(firstKey);
-  }
-}
-
-async function playCachedAudio(audioSrc, runId) {
-  if (!audioSrc || runId !== speakRunId) return false;
-
-  await warmAudio();
-  if (runId !== speakRunId) return false;
-
-  const audio = new Audio(audioSrc);
-  audio.preload = "auto";
-  audio.playsInline = true;
-  audio.crossOrigin = "anonymous";
-
-  currentAudio = audio;
-
-  audio.onended = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  audio.onerror = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  await audio.play();
-  return true;
-}
-
 function createSpeakerButton(getText, langCode, tone = "neutral") {
   const btn = document.createElement("button");
   btn.type = "button";
@@ -1270,10 +909,6 @@ async function speakViaApi(text, langCode, tone = "neutral") {
     tone: canonTone(tone),
   };
 
-  console.log("[facetoface tts] selectedVoice =", selectedVoice);
-  console.log("[facetoface tts] payload =", payload);
-  console.log("[facetoface tts] has access token =", !!accessToken);
-
   const r = await fetch(`${API_BASE}/api/tts`, {
     method: "POST",
     headers: {
@@ -1286,8 +921,6 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   if (myRunId !== speakRunId) return false;
 
   const j = await r.json().catch(() => null);
-  console.log("[facetoface tts] response status =", r.status);
-  console.log("[facetoface tts] response body =", j);
 
   if (!r.ok || !j?.ok || !j?.audio_base64) {
     throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
@@ -1330,6 +963,57 @@ function speakFallback(text, langCode) {
   }
 }
 
+function buildTtsCacheKey(text, langCode, tone = "neutral") {
+  const voice = getResolvedFaceVoice();
+
+  return JSON.stringify({
+    t: String(text || "").trim(),
+    l: canonical(langCode),
+    v: voice,
+    n: canonTone(tone)
+  });
+}
+
+function rememberTtsCache(key, audioSrc) {
+  if (!key || !audioSrc) return;
+
+  if (ttsMemoryCache.has(key)) {
+    ttsMemoryCache.delete(key);
+  }
+
+  ttsMemoryCache.set(key, audioSrc);
+
+  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
+    const firstKey = ttsMemoryCache.keys().next().value;
+    ttsMemoryCache.delete(firstKey);
+  }
+}
+
+async function playCachedAudio(audioSrc, runId) {
+  if (!audioSrc || runId !== speakRunId) return false;
+
+  await warmAudio();
+  if (runId !== speakRunId) return false;
+
+  const audio = new Audio(audioSrc);
+  audio.preload = "auto";
+  audio.playsInline = true;
+  audio.crossOrigin = "anonymous";
+
+  currentAudio = audio;
+
+  audio.onended = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  await audio.play();
+  return true;
+}
+
 async function speak(text, langCode, tone = "neutral") {
   if (!isFaceAutoReadEnabled()) return;
 
@@ -1365,9 +1049,7 @@ async function speak(text, langCode, tone = "neutral") {
     try {
       const ok = await speakViaApi(value, langCode, tone);
       if (ok) return;
-    } catch (e) {
-      console.warn("[facetoface custom voice failed]", e);
-
+    } catch {
       if (selectedVoice === "mine") showToast("Kendi Sesim şu anda üretilemedi");
       else if (selectedVoice === "second") showToast("2. Ses şu anda üretilemedi");
       else if (selectedVoice === "memory") showToast("Hatıra Sesi şu anda üretilemedi");
@@ -1497,23 +1179,19 @@ async function translateText(text, from, to, tone = "neutral") {
   ];
 
   for (const endpoint of endpoints) {
-  try {
-    const payload = {
-      text: String(text || "").trim(),
-      from_lang: src,
-      to_lang: dst,
-      source: src,
-      target: dst,
-      mode: "normal",
-      use_ai: false,
-      cultural: false,
-      tone: canonTone(tone),
-      style
-    };
-
-      console.log("[facetoface translate] endpoint =", endpoint);
-      console.log("[facetoface translate] payload =", payload);
-      console.log("[facetoface translate] has access token =", !!accessToken);
+    try {
+      const payload = {
+        text: String(text || "").trim(),
+        from_lang: src,
+        to_lang: dst,
+        source: src,
+        target: dst,
+        mode: "normal",
+        use_ai: false,
+        cultural: false,
+        tone: canonTone(tone),
+        style
+      };
 
       const r = await fetch(endpoint, {
         method: "POST",
@@ -1525,16 +1203,12 @@ async function translateText(text, from, to, tone = "neutral") {
       });
 
       const j = await r.json().catch(() => null);
-      console.log("[facetoface translate] response status =", r.status);
-      console.log("[facetoface translate] response body =", j);
 
       if (!r.ok) continue;
 
       const value = String(j?.translated || j?.translation || j?.text || "").trim();
       if (value) return value;
-    } catch (e) {
-      console.warn("[facetoface translate] request failed:", endpoint, e);
-    }
+    } catch {}
   }
 
   return null;
@@ -1686,24 +1360,88 @@ async function finalizeTypedMessage(side, rawText) {
   setSystemReadyUI();
 }
 
-async function sendTyped(side) {
-  await ensureReady();
+function getTypingProfile(text) {
+  const len = String(text || "").trim().length;
+  if (len <= 24) return { startChunk: 1, midChunk: 2, endChunk: 1, base: 9 };
+  if (len <= 70) return { startChunk: 1, midChunk: 2, endChunk: 1, base: 8 };
+  if (len <= 130) return { startChunk: 1, midChunk: 3, endChunk: 1, base: 7 };
+  return { startChunk: 2, midChunk: 3, endChunk: 1, base: 6 };
+}
 
-  const premiumOk = await ensureCurrentFacePremiumModeAccess();
-  if (!premiumOk) return;
+function getTypingDelay(ch, index, total, text) {
+  const profile = getTypingProfile(text);
+  const progress = total ? index / total : 0;
+  const tailBoost = progress > 0.82 ? 3 : 0;
 
-  const input = side === "top" ? topInput : botInput;
-  if (!input) return;
+  if (ch === " ") return 0;
+  if (/[.!?]/.test(ch)) return 95 + tailBoost;
+  if (/[,]/.test(ch)) return 65 + tailBoost;
+  if (/[\n]/.test(ch)) return 45 + tailBoost;
 
-  const text = String(input.value || "").trim();
-  if (!text) return;
+  return profile.base + tailBoost;
+}
 
-  input.value = "";
-  autoResizeTextarea(input);
-  restoreInputPlaceholder(side);
-  syncComposerButtons(side);
+function getTypingChunkSize(index, total, text) {
+  const profile = getTypingProfile(text);
+  const progress = total ? index / total : 0;
+  if (progress < 0.18) return profile.startChunk;
+  if (progress < 0.78) return profile.midChunk;
+  return profile.endChunk;
+}
 
-  await finalizeTypedMessage(side, text);
+async function typewriteText(el, finalText, side) {
+  if (!el) return;
+
+  stopTypewriter();
+  const runId = typewriterRunId;
+  const full = String(finalText || "").trim();
+
+  el.textContent = "";
+  if (!full) return;
+
+  let i = 0;
+  while (i < full.length) {
+    if (runId !== typewriterRunId) return;
+
+    const chunkSize = getTypingChunkSize(i, full.length, full);
+    const next = Math.min(full.length, i + chunkSize);
+
+    el.textContent = full.slice(0, next);
+    i = next;
+
+    const lastChar = full.charAt(i - 1);
+    keepLatestVisible(side);
+
+    await wait(getTypingDelay(lastChar, i, full.length, full));
+  }
+}
+
+async function getCurrentUserId() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || localStorage.getItem("user_id") || null;
+  } catch {
+    return localStorage.getItem("user_id") || null;
+  }
+}
+
+async function warmAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) {
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") await audioCtx.resume();
+    }
+  } catch {}
+
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch {}
+
+  await unlockKeyboardAudio();
 }
 
 function startRecording(side) {
@@ -1821,6 +1559,319 @@ async function toggleRecording(side) {
   startRecording(side);
 }
 
+async function sendTyped(side) {
+  await ensureReady();
+
+  const premiumOk = await ensureCurrentFacePremiumModeAccess();
+  if (!premiumOk) return;
+
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+
+  const text = String(input.value || "").trim();
+  if (!text) return;
+
+  input.value = "";
+  autoResizeTextarea(input);
+  restoreInputPlaceholder(side);
+  syncComposerButtons(side);
+
+  await finalizeTypedMessage(side, text);
+}
+
+function keyboardRows(lang, shift) {
+  const c = canonical(lang);
+  const upper = !!shift;
+  const numRow = ["1","2","3","4","5","6","7","8","9","0"];
+
+  if (c === "tr") {
+    return {
+      nums: numRow,
+      r1: upper ? ["Q","W","E","R","T","Y","U","I","O","P"] : ["q","w","e","r","t","y","u","ı","o","p"],
+      r2: upper ? ["A","S","D","F","G","H","J","K","L"] : ["a","s","d","f","g","h","j","k","l"],
+      r3: upper ? ["Z","X","C","V","B","N","M"] : ["z","x","c","v","b","n","m"],
+    };
+  }
+
+  const mapRow = (row) => upper ? row.map((x) => x.toUpperCase()) : row;
+  return {
+    nums: numRow,
+    r1: mapRow(["q","w","e","r","t","y","u","i","o","p"]),
+    r2: mapRow(["a","s","d","f","g","h","j","k","l"]),
+    r3: mapRow(["z","x","c","v","b","n","m"]),
+  };
+}
+
+function svgShift() {
+  return `
+    <svg viewBox="0 0 24 24">
+      <path d="M12 4l6 7h-4v8H10v-8H6l6-7z"></path>
+    </svg>
+  `;
+}
+
+function svgBackspace() {
+  return `
+    <svg viewBox="0 0 24 24">
+      <path d="M21 6H9l-6 6 6 6h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"></path>
+      <path d="M10 9l5 6"></path>
+      <path d="M15 9l-5 6"></path>
+    </svg>
+  `;
+}
+
+function createKey({ label = "", html = "", onTap, onLongPress = null, className = "", sound = "key" }) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `kb-key ${className}`.trim();
+  if (html) btn.innerHTML = html;
+  else btn.textContent = label;
+
+  let longTriggered = false;
+
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    longTriggered = false;
+    unlockKeyboardAudio();
+    btn.classList.add("pressing");
+
+    if (onLongPress) {
+      holdTimer = setTimeout(() => {
+        longTriggered = true;
+        playKeyClick(sound);
+        onLongPress(btn);
+      }, 320);
+    }
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    btn.classList.remove("pressing");
+
+    if (!longTriggered && onTap) {
+      playKeyClick(sound);
+      onTap();
+    }
+  });
+
+  btn.addEventListener("pointerleave", () => {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    btn.classList.remove("pressing");
+  });
+
+  btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  return btn;
+}
+
+function createAltMenu(hostBtn, chars, onPick) {
+  hideAltMenu();
+  if (!hostBtn || !chars?.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "alt-pop";
+
+  chars.forEach((ch) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "alt-key";
+    b.textContent = ch;
+    b.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      playKeyClick("key");
+      onPick(ch);
+      hideAltMenu();
+    });
+    wrap.appendChild(b);
+  });
+
+  hostBtn.appendChild(wrap);
+  altMenuEl = wrap;
+}
+
+function renderCharKeys(rowEl, chars, side) {
+  chars.forEach((ch) => {
+    const alts = ALT_CHARS[ch] || ALT_CHARS[String(ch).toLowerCase()] || [];
+    rowEl.appendChild(createKey({
+      label: ch,
+      sound: "key",
+      onTap: () => {
+        hideAltMenu();
+        appendInputValue(side, ch);
+        if (shiftState[side] && /[A-ZÇĞİÖŞÜ]/.test(ch)) {
+          shiftState[side] = false;
+          renderKeyboard(side);
+        }
+      },
+      onLongPress: alts.length
+        ? (btn) => createAltMenu(btn, alts, (picked) => appendInputValue(side, picked))
+        : null
+    }));
+  });
+}
+
+function appendInputValue(side, value) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+  input.value = `${input.value || ""}${value}`;
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function backspaceInputValue(side) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+  input.value = String(input.value || "").slice(0, -1);
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function renderKeyboard(side) {
+  const wrap = side === "top" ? topKeyboard : botKeyboard;
+  const lang = side === "top" ? topLang : botLang;
+  if (!wrap) return;
+
+  const rows = keyboardRows(lang, shiftState[side]);
+  wrap.innerHTML = "";
+
+  const rowNums = document.createElement("div");
+  rowNums.className = "kb-row";
+  renderCharKeys(rowNums, rows.nums, side);
+  wrap.appendChild(rowNums);
+
+  const row1 = document.createElement("div");
+  row1.className = "kb-row";
+  renderCharKeys(row1, rows.r1, side);
+  wrap.appendChild(row1);
+
+  const row2 = document.createElement("div");
+  row2.className = "kb-row";
+  row2.appendChild(document.createElement("div")).style.flex = "0.35";
+  renderCharKeys(row2, rows.r2, side);
+  row2.appendChild(document.createElement("div")).style.flex = "0.35";
+  wrap.appendChild(row2);
+
+  const row3 = document.createElement("div");
+  row3.className = "kb-row";
+
+  row3.appendChild(createKey({
+    html: svgShift(),
+    className: "icon wide",
+    sound: "shift",
+    onTap: () => {
+      hideAltMenu();
+      shiftState[side] = !shiftState[side];
+      renderKeyboard(side);
+    }
+  }));
+
+  renderCharKeys(row3, rows.r3, side);
+
+  row3.appendChild(createKey({
+    html: svgBackspace(),
+    className: "icon wide",
+    sound: "backspace",
+    onTap: () => {
+      hideAltMenu();
+      backspaceInputValue(side);
+    }
+  }));
+
+  wrap.appendChild(row3);
+
+  const row4 = document.createElement("div");
+  row4.className = "kb-row";
+
+  row4.appendChild(createKey({
+    label: ",",
+    sound: "key",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, ",");
+    }
+  }));
+
+  row4.appendChild(createKey({
+    label: ".",
+    sound: "key",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, ".");
+    }
+  }));
+
+  row4.appendChild(createKey({
+    label: " ",
+    className: "xwide",
+    sound: "space",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, " ");
+    }
+  }));
+
+  row4.appendChild(createKey({
+    label: "?",
+    sound: "key",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, "?");
+    }
+  }));
+
+  row4.appendChild(createKey({
+    label: "!",
+    sound: "key",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, "!");
+    }
+  }));
+
+  wrap.appendChild(row4);
+}
+
+function showKeyboard(side) {
+  activeKeyboardSide = side;
+  topKeyboardWrap?.classList.toggle("show", side === "top");
+  botKeyboardWrap?.classList.toggle("show", side === "bot");
+  hideAltMenu();
+  renderKeyboard(side);
+  keepLatestVisible(side);
+}
+
+function hideKeyboards() {
+  activeKeyboardSide = null;
+  hideAltMenu();
+  topKeyboardWrap?.classList.remove("show");
+  botKeyboardWrap?.classList.remove("show");
+}
+
+function keepLatestVisible(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+
+  const apply = () => {
+    try {
+      wrap.scrollTop = wrap.scrollHeight;
+    } catch {}
+  };
+
+  apply();
+  requestAnimationFrame(apply);
+  setTimeout(apply, 40);
+  setTimeout(apply, 120);
+}
+
 async function warmApis() {
   try {
     const { data } = await supabase.auth.getUser();
@@ -1852,6 +1903,20 @@ function unlockOnFirstTouch() {
   window.addEventListener("click", once, { passive: true });
 }
 
+function resolveStartupLang() {
+  let base = getPreferredBaseLang();
+  if (!langExists(base)) {
+    const siteLang = getSiteLang();
+    if (langExists(siteLang)) base = siteLang;
+  }
+  if (!langExists(base)) {
+    const nativeLang = getNativeLang();
+    if (langExists(nativeLang)) base = nativeLang;
+  }
+  if (!langExists(base)) base = langExists("en") ? "en" : (LANGS[0]?.code || "en");
+  return canonical(base);
+}
+
 function startBoot() {
   if (bootStarted) return bootPromise;
   bootStarted = true;
@@ -1860,17 +1925,14 @@ function startBoot() {
     setSystemPreparingUI();
     pointOrbTo("bot");
 
-    botLang = getNativeLang();
-    topLang = "en";
+    const startupLang = resolveStartupLang();
+
+    botLang = startupLang;
+    topLang = startupLang;
 
     window.topLang = topLang;
     window.botLang = botLang;
-
-    const firstOther = getInstalledTargetLangsForNative(botLang)[0];
-    if (firstOther) {
-      topLang = firstOther;
-      window.topLang = topLang;
-    }
+    persistFaceToFaceLangs();
 
     refreshLangLabels();
 
@@ -2206,4 +2268,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-    }
+}
