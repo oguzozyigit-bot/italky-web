@@ -368,15 +368,14 @@ function getResolvedFaceVoice() {
   const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
   const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
 
-  if (mode === "clone") return "mine";
+  if (mode === "mine" || mode === "clone") return "mine";
+  if (mode === "second") return "second";
+  if (mode === "memory") return "memory";
+
   if (mode === "preset") {
     if (preset === "second") return "second";
     if (preset === "memory") return "memory";
   }
-  if (mode === "auto") return "auto";
-
-  const sharedMode = String(localStorage.getItem(F2F_VOICE_KEY) || "").trim().toLowerCase();
-if (["auto", "mine", "second", "memory"].includes(sharedMode)) return sharedMode;
 
   return "auto";
 }
@@ -2303,4 +2302,4 @@ if (!requiredDomOk) {
   } catch (e) {
     console.error("[facetoface bind error]", e);
   }
-      }
+}
