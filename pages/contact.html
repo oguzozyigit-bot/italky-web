@@ -20,30 +20,55 @@
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; }
 
-    /* --- CANLI ARKA PLAN (italkyAI DNA) --- */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body { overflow-x: hidden; }
+
     .bg-layer {
-      position: fixed; inset: 0; z-index: 1;
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
       background:
         radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.18) 0%, transparent 40%),
         linear-gradient(180deg, #0f0816 0%, #060408 100%);
     }
 
     .crystal-wrap {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      perspective: 1200px; pointer-events: none; z-index: 2;
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1200px;
+      pointer-events: none;
+      z-index: 2;
     }
 
     .crystal-cage {
-      width: 320px; height: 320px; transform-style: preserve-3d;
-      animation: rotateCrystal 22s linear infinite; opacity: 0.18;
+      width: 320px;
+      height: 320px;
+      transform-style: preserve-3d;
+      animation: rotateCrystal 22s linear infinite;
+      opacity: 0.18;
     }
 
     .side {
-      position: absolute; inset: 0; border: 1.5px solid var(--neon);
+      position: absolute;
+      inset: 0;
+      border: 1.5px solid var(--neon);
       background: radial-gradient(circle, rgba(0, 242, 255, 0.08), transparent);
     }
+
     .s1{ transform:rotateY(0deg) translateZ(160px); }
     .s2{ transform:rotateY(90deg) translateZ(160px); }
     .s3{ transform:rotateX(90deg) translateZ(160px); }
@@ -53,84 +78,168 @@
       to { transform: rotateX(360deg) rotateY(720deg); }
     }
 
-    /* --- MOBILE FRAME & CONTENT --- */
-    .mobile-frame {
-      width: 100%; max-width: 480px; height: 100dvh; margin: 0 auto;
-      position: relative; z-index: 10; display: flex; flex-direction: column;
+    #pageContent {
+      position: relative;
+      z-index: 10;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 0 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
 
-    .top-nav {
-      display: flex; align-items: center; gap: 15px; padding: 20px;
-      position: sticky; top: 0; z-index: 30;
-    }
-
-    .btn-back {
-      background: transparent; border: none; color: #fff; font-size: 26px;
-      font-weight: 900; cursor: pointer; display: flex; align-items: center;
-    }
-    .btn-back:hover { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
-
-    .brand {
-      font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800;
-      background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      letter-spacing: -1px;
-    }
-
-    .page-content {
-      flex: 1; overflow-y: auto; padding: 0 20px 140px;
-      scrollbar-width: none; -webkit-overflow-scrolling: touch;
-    }
-    .page-content::-webkit-scrollbar { display: none; }
-
-    /* --- CONTACT COMPONENTS --- */
     .contact-card {
-      background: var(--glass); border: 1px solid var(--border);
-      border-radius: 32px; padding: 35px 25px; backdrop-filter: blur(25px);
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      padding: 35px 25px;
+      backdrop-filter: blur(25px);
       box-shadow: 0 30px 60px rgba(0,0,0,0.4);
       animation: cardIn 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
     }
 
-    @keyframes cardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; margin: 0 0 10px; letter-spacing: -1.5px; }
-    h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    p { font-size: 15px; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 25px; }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      margin: 0 0 10px;
+      letter-spacing: -1.5px;
+    }
+
+    h1 span {
+      background: var(--ai-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      font-size: 15px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
 
     .input-group { margin-bottom: 16px; }
+
     .input-field {
-      width: 100%; height: 56px; border-radius: 20px; background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1); padding: 0 20px; color: #fff;
-      font-family: inherit; font-size: 16px; transition: 0.3s;
+      width: 100%;
+      height: 56px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 0 20px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 16px;
+      transition: 0.3s;
     }
-    textarea.input-field { height: 120px; padding: 18px 20px; resize: none; }
-    .input-field:focus { border-color: var(--neon); background: rgba(255,255,255,0.1); box-shadow: 0 0 20px rgba(0,242,255,0.2); }
-    .input-field::placeholder { color: rgba(255,255,255,0.3); }
+
+    textarea.input-field {
+      height: 120px;
+      padding: 18px 20px;
+      resize: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--neon);
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 20px rgba(0,242,255,0.2);
+    }
+
+    .input-field::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
 
     .send-btn {
-      width: 100%; height: 60px; border-radius: 20px; border: none;
-      background: var(--ai-grad); color: #000; font-weight: 900; font-size: 18px;
-      cursor: pointer; margin-top: 10px; box-shadow: 0 15px 40px rgba(0,242,255,0.4);
+      width: 100%;
+      height: 60px;
+      border-radius: 20px;
+      border: none;
+      background: var(--ai-grad);
+      color: #000;
+      font-weight: 900;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 10px;
+      box-shadow: 0 15px 40px rgba(0,242,255,0.4);
       transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+
     .send-btn:active { transform: scale(0.96); }
 
-    .info-row { display: flex; align-items: center; gap: 15px; margin-top: 30px; padding-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); }
-    .icon-circle { width: 44px; height: 44px; border-radius: 50%; background: rgba(0,242,255,0.1); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,242,255,0.2); }
-    .icon-circle svg { width: 22px; height: 22px; stroke: var(--neon); }
-    .info-text div { font-size: 10px; color: var(--neon); text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
-    .info-text span { font-size: 15px; color: #fff; font-weight: 600; }
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
 
-    /* --- FOOTER --- */
-    .footer-bar { position: absolute; bottom: 0; width: 100%; padding: 25px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 40; }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.3s; }
-    .footer-links a.active { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
-    .footer-copy { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 700; }
+    .icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(0,242,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0,242,255,0.2);
+      flex: 0 0 auto;
+    }
+
+    .icon-circle svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--neon);
+    }
+
+    .info-text div {
+      font-size: 10px;
+      color: var(--neon);
+      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .info-text span {
+      font-size: 15px;
+      color: #fff;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    @media (max-width: 520px) {
+      #pageContent {
+        padding: 18px 0 6px;
+      }
+
+      .contact-card {
+        border-radius: 28px;
+        padding: 24px 18px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      p,
+      .info-text span {
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div class="bg-layer"></div>
+
   <div class="crystal-wrap">
     <div class="crystal-cage">
       <div class="side s1"></div>
@@ -139,19 +248,8 @@
     </div>
   </div>
 
-  <div class="mobile-frame">
-    <div class="top-nav">
-      <button class="btn-back" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'">←</button>
-      <div class="brand">italkyAI</div>
-    </div>
-
-    <div class="page-content" id="contentHost"></div>
-
-    <div class="footer-bar">
-      <div class="footer-links">
-      </div>
-      <div class="footer-copy">italkyAI By <b>Ozyigit's</b> • 2026</div>
-    </div>
+  <div id="pageContent">
+    <div id="contentHost"></div>
   </div>
 
   <template id="contact_tr">
@@ -162,40 +260,90 @@
       <div class="input-group"><input type="text" class="input-field" placeholder="Adınız Soyadınız"></div>
       <div class="input-group"><input type="email" class="input-field" placeholder="E-posta Adresiniz"></div>
       <div class="input-group"><textarea class="input-field" placeholder="Mesajınız..."></textarea></div>
-      <button class="send-btn">Mesajı Gönder</button>
+      <button class="send-btn" type="button">Mesajı Gönder</button>
 
       <div class="info-row">
         <div class="icon-circle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
         </div>
-        <div class="info-text"><div>E-Posta</div><span>support@italkyai.com</span></div>
+        <div class="info-text">
+          <div>E-Posta</div>
+          <span>support@italkyai.com</span>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="contact_en">
+    <div class="contact-card">
+      <h1>Contact <span>Us</span></h1>
+      <p>You can reach us for your questions, suggestions, or collaboration requests.</p>
+
+      <div class="input-group"><input type="text" class="input-field" placeholder="Your Full Name"></div>
+      <div class="input-group"><input type="email" class="input-field" placeholder="Your Email Address"></div>
+      <div class="input-group"><textarea class="input-field" placeholder="Your Message..."></textarea></div>
+      <button class="send-btn" type="button">Send Message</button>
+
+      <div class="info-row">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div class="info-text">
+          <div>E-Mail</div>
+          <span>support@italkyai.com</span>
+        </div>
       </div>
     </div>
   </template>
 
   <script type="module">
-    import { getSiteLang, t } from "/js/i18n.js";
+    import { mountShell } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
+    import { getSiteLang } from "/js/i18n.js";
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    mountShell({
+      scroll: "auto",
+      publicPage: !session?.user
+    });
 
     function pickId(){
-      const lang = getSiteLang();
-      const map = { tr:"contact_tr", en:"contact_en", de:"contact_de", it:"contact_it", fr:"contact_fr" };
-      return map[lang] || "contact_en";
+      const lang = (getSiteLang?.() || localStorage.getItem("site_lang") || "tr").toLowerCase();
+      const map = {
+        tr: "contact_tr",
+        en: "contact_en"
+      };
+      return map[lang] || "contact_tr";
     }
 
     function render(){
       const host = document.getElementById("contentHost");
       host.innerHTML = "";
+
       const tpl = document.getElementById(pickId());
-      if(tpl) host.appendChild(tpl.content.cloneNode(true));
-      
-      const lang = getSiteLang();
-      const titles = { tr: "italkyAI • İletişim", en: "italkyAI • Contact" };
+      if (tpl) host.appendChild(tpl.content.cloneNode(true));
+
+      const lang = (getSiteLang?.() || localStorage.getItem("site_lang") || "tr").toLowerCase();
+      const titles = {
+        tr: "italkyAI • İletişim",
+        en: "italkyAI • Contact"
+      };
       document.title = titles[lang] || "italkyAI";
     }
 
     render();
-    window.addEventListener("storage",(e)=>{
-      if(e.key==="italky_site_lang_v1") render();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "italky_site_lang_v1" || e.key === "site_lang") {
+        render();
+      }
     });
   </script>
 </body>
