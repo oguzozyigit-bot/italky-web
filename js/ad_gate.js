@@ -1,5 +1,5 @@
-const APP_AD_STATE_KEY = "italky_app_ad_state_v4";
-const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v3";
+const APP_AD_STATE_KEY = "italky_app_ad_state_v5";
+const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v4";
 
 const DEFAULT_READY_DELAY_MS = 90 * 1000;
 const AD_INFO_MODAL_ID = "italkyAdInfoModal";
@@ -51,6 +51,11 @@ function isJetonBuyPath(path = "") {
   return p.includes("/pages/jetonbuy.html") || p.endsWith("/jetonbuy.html");
 }
 
+function isHomePath(path = "") {
+  const p = normalizePath(path);
+  return p === "/" || p === "/pages/home.html";
+}
+
 function normalizePairKey(fromLang, toLang) {
   const a = String(fromLang || "").trim().toLowerCase();
   const b = String(toLang || "").trim().toLowerCase();
@@ -68,7 +73,8 @@ function getAppAdState() {
       shown_today: false,
       session_started_at: 0,
       ready_after: 0,
-      current_page: ""
+      current_page: "",
+      startup_page: ""
     };
     writeJson(APP_AD_STATE_KEY, fresh);
     return fresh;
@@ -79,7 +85,8 @@ function getAppAdState() {
     shown_today: !!state.shown_today,
     session_started_at: Number(state.session_started_at || 0),
     ready_after: Number(state.ready_after || 0),
-    current_page: String(state.current_page || "")
+    current_page: String(state.current_page || ""),
+    startup_page: String(state.startup_page || "")
   };
 }
 
@@ -89,7 +96,8 @@ function setAppAdState(next) {
     shown_today: !!next.shown_today,
     session_started_at: Number(next.session_started_at || 0),
     ready_after: Number(next.ready_after || 0),
-    current_page: String(next.current_page || "")
+    current_page: String(next.current_page || ""),
+    startup_page: String(next.startup_page || "")
   };
   writeJson(APP_AD_STATE_KEY, merged);
   return merged;
@@ -158,11 +166,9 @@ function getOrCreateAdInfoModal() {
       backdrop-filter:blur(10px);
       -webkit-backdrop-filter:blur(10px);
     }
-
     .italky-ad-info-backdrop.open{
       display:flex;
     }
-
     .italky-ad-info-card{
       width:min(100%, 430px);
       border-radius:26px;
@@ -173,7 +179,6 @@ function getOrCreateAdInfoModal() {
       color:#fff;
       font-family:Outfit, system-ui, sans-serif;
     }
-
     .italky-ad-info-top{
       padding:18px 18px 14px;
       background:
@@ -181,7 +186,6 @@ function getOrCreateAdInfoModal() {
         linear-gradient(135deg, #142033 0%, #1a2740 52%, #202b46 100%);
       border-bottom:1px solid rgba(255,255,255,.06);
     }
-
     .italky-ad-info-chip{
       display:inline-flex;
       align-items:center;
@@ -195,7 +199,6 @@ function getOrCreateAdInfoModal() {
       font-size:12px;
       font-weight:1000;
     }
-
     .italky-ad-info-title{
       margin:12px 0 8px;
       font-size:24px;
@@ -204,7 +207,6 @@ function getOrCreateAdInfoModal() {
       letter-spacing:-.5px;
       color:#eef4ff;
     }
-
     .italky-ad-info-text{
       margin:0;
       font-size:13px;
@@ -213,14 +215,12 @@ function getOrCreateAdInfoModal() {
       color:rgba(235,242,255,.82);
       white-space:pre-line;
     }
-
     .italky-ad-info-body{
       padding:16px;
       display:grid;
       gap:10px;
       background:linear-gradient(180deg, rgba(9,13,24,.98), rgba(7,10,20,.98));
     }
-
     .italky-ad-info-btn{
       min-height:50px;
       border:none;
@@ -231,34 +231,13 @@ function getOrCreateAdInfoModal() {
       font-weight:1000;
       transition:transform .14s ease, opacity .14s ease;
     }
-
     .italky-ad-info-btn:active{
       transform:scale(.985);
     }
-
     .italky-ad-info-btn.primary{
       background:linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 50%, #ddd6fe 100%);
       color:#111827;
       box-shadow:0 12px 24px rgba(99,102,241,.16);
-    }
-
-    .italky-ad-info-btn.secondary{
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:#eef2ff;
-    }
-
-    .italky-ad-info-actions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:4px;
-    }
-
-    @media (max-width:390px){
-      .italky-ad-info-actions{
-        grid-template-columns:1fr;
-      }
     }
   `;
   document.head.appendChild(style);
@@ -274,9 +253,7 @@ function getOrCreateAdInfoModal() {
         <p class="italky-ad-info-text" id="italkyAdInfoText"></p>
       </div>
       <div class="italky-ad-info-body">
-        <div class="italky-ad-info-actions">
-          <button class="italky-ad-info-btn primary" id="italkyAdInfoOk" type="button">Tamam</button>
-        </div>
+        <button class="italky-ad-info-btn primary" id="italkyAdInfoOk" type="button">Tamam</button>
       </div>
     </div>
   `;
@@ -287,14 +264,13 @@ function getOrCreateAdInfoModal() {
 
 function showSoftAdModal({
   title = "Küçük Bir Bilgilendirme",
-  text = "Uygulamayı ücretsiz sunabilmemiz için, sayfalar arasında geçişlerde günde yalnızca 1 kez kısa bir reklam gösterilir.\nOffline dil indirmelerinde ise, her dil için indirme öncesinde gösterilen reklamı izlemeniz gereklidir.\ Anlayışınız için teşekkür ederiz."
+  text = "Uygulamayı ücretsiz sunabilmemiz için günde yalnızca 1 kez kısa bir reklam gösterilir.\nOffline dil indirmelerinde ise, ilgili dil için reklam izlendiğinde indirme otomatik başlar.\nAnlayışınız için teşekkür ederiz."
 } = {}) {
   return new Promise((resolve) => {
     const modal = getOrCreateAdInfoModal();
     const titleEl = modal.querySelector("#italkyAdInfoTitle");
     const textEl = modal.querySelector("#italkyAdInfoText");
     const okBtn = modal.querySelector("#italkyAdInfoOk");
-    const cancelBtn = modal.querySelector("#italkyAdInfoCancel");
 
     if (titleEl) titleEl.textContent = title;
     if (textEl) textEl.textContent = text;
@@ -302,19 +278,16 @@ function showSoftAdModal({
     const cleanup = (value) => {
       modal.classList.remove("open");
       okBtn?.removeEventListener("click", onOk);
-      cancelBtn?.removeEventListener("click", onCancel);
       modal.removeEventListener("click", onBackdrop);
       resolve(value);
     };
 
     const onOk = () => cleanup(true);
-    const onCancel = () => cleanup(false);
     const onBackdrop = (e) => {
-      if (e.target === modal) cleanup(false);
+      if (e.target === modal) cleanup(true);
     };
 
     okBtn?.addEventListener("click", onOk);
-    cancelBtn?.addEventListener("click", onCancel);
     modal.addEventListener("click", onBackdrop);
     modal.classList.add("open");
   });
@@ -387,7 +360,7 @@ function waitForRewardedResult(timeoutMs = 35000) {
   });
 }
 
-async function showNativeInterstitial(reason = "daily_transition") {
+async function showNativeInterstitial(reason = "app_open_daily") {
   if (!hasNativeInterstitial()) return false;
 
   try {
@@ -466,13 +439,24 @@ function showFallbackAdInfo(message = "Uygulamayı ücretsiz sunabilmemiz için 
   } catch {}
 }
 
+/*
+  Günlük reklam oturumu sadece uygulama ana girişinde başlasın.
+*/
 export function beginDailyAdSession(options = {}) {
   const {
     delayMs = DEFAULT_READY_DELAY_MS,
     currentPage = getCurrentPath()
   } = options;
 
+  const normalizedPage = normalizePath(currentPage);
   const state = getAppAdState();
+
+  if (!isHomePath(normalizedPage)) {
+    return setAppAdState({
+      ...state,
+      current_page: normalizedPage
+    });
+  }
 
   if (!state.session_started_at) {
     const started = nowTs();
@@ -480,13 +464,14 @@ export function beginDailyAdSession(options = {}) {
       ...state,
       session_started_at: started,
       ready_after: started + Number(delayMs || DEFAULT_READY_DELAY_MS),
-      current_page: normalizePath(currentPage)
+      current_page: normalizedPage,
+      startup_page: normalizedPage
     });
   }
 
   return setAppAdState({
     ...state,
-    current_page: normalizePath(currentPage)
+    current_page: normalizedPage
   });
 }
 
@@ -498,28 +483,26 @@ export function isDailyAdEligible() {
   const state = getAppAdState();
   if (state.shown_today) return false;
   if (!state.session_started_at || !state.ready_after) return false;
+  if (!isHomePath(state.startup_page || state.current_page || "")) return false;
   return nowTs() >= state.ready_after;
 }
 
+/*
+  Artık modül geçiş reklamı değil.
+  Sadece HOME üzerinde, günde 1 kez app-open reklamı.
+*/
 export async function maybeShowDailyTransitionAd(options = {}) {
   const {
-    fromPage = getCurrentPath(),
-    toPage = "",
+    currentPage = getCurrentPath(),
     onBeforeAd = null,
     onAfterAd = null,
     onNoAd = null
   } = options;
 
+  const page = normalizePath(currentPage);
   const state = getAppAdState();
-  const currentFrom = normalizePath(fromPage || state.current_page || getCurrentPath());
-  const nextTo = normalizePath(toPage);
 
-  if (!nextTo || nextTo === currentFrom) {
-    if (typeof onNoAd === "function") await onNoAd();
-    return false;
-  }
-
-  if (isJetonBuyPath(nextTo)) {
+  if (!isHomePath(page)) {
     if (typeof onNoAd === "function") await onNoAd();
     return false;
   }
@@ -536,8 +519,9 @@ export async function maybeShowDailyTransitionAd(options = {}) {
   const accepted = await showSoftAdModal({
     title: "Küçük Bir Bilgilendirme",
     text:
-      "Uygulamayı ücretsiz sunabilmemiz için, sayfalar arasında geçişlerde günde yalnızca 1 kez kısa bir reklam gösterilebilir.\n" +
-      "Offline dil indirmelerinde ise, her dil için indirme öncesinde bir kez reklam gösterilebilir.\n" +
+      "Uygulamayı ücretsiz sunabilmemiz için günde yalnızca 1 kez kısa bir reklam gösterilir.\n" +
+      "Bu reklam yalnızca uygulamaya ilk girişte gösterilir.\n" +
+      "Offline dil indirmelerinde ise reklam izlendiğinde indirme otomatik başlar.\n" +
       "Anlayışınız için teşekkür ederiz."
   });
 
@@ -549,9 +533,9 @@ export async function maybeShowDailyTransitionAd(options = {}) {
   let shown = false;
 
   if (hasNativeInterstitial()) {
-    shown = await showNativeInterstitial("daily_transition");
+    shown = await showNativeInterstitial("app_open_daily");
   } else {
-    showFallbackAdInfo("Bu uygulamada sayfalar arası geçişlerde günde sadece 1 reklam gösterilir.");
+    showFallbackAdInfo("Bu uygulamada günlük reklam yalnızca ana girişte 1 kez gösterilir.");
     shown = true;
   }
 
@@ -559,7 +543,8 @@ export async function maybeShowDailyTransitionAd(options = {}) {
     setAppAdState({
       ...state,
       shown_today: true,
-      current_page: currentFrom
+      current_page: page,
+      startup_page: page
     });
   }
 
@@ -594,6 +579,11 @@ export function markOfflineDownloadAdShown(fromLang, toLang) {
   setOfflineAdState(state);
 }
 
+/*
+  Offline ödüllü reklam:
+  reklam izlendiğinde true döner.
+  Çağıran sayfa bu true sonrası indirmeyi otomatik başlatmalıdır.
+*/
 export async function maybeShowOfflineDownloadAd(options = {}) {
   const {
     fromLang = "",
@@ -606,6 +596,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   if (!key) return false;
 
   if (hasShownOfflineDownloadAd(fromLang, toLang)) {
+    if (typeof onAfterAd === "function") await onAfterAd(true);
     return true;
   }
 
@@ -618,7 +609,9 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   if (hasNativeRewarded()) {
     rewarded = await showNativeRewarded(key, "offline_download");
   } else {
-    showFallbackAdInfo("Bu dili indirmek için kısa bir video izlenmesi gerekelidir. İndirme tamamlandıktan sonra aynı dil için tekrar reklam gösterilmez.İndirilen çevirim dışı dili, 365 gün boyunca internete bağlanmadan ve herhangi bir ücret ödemeden dünyanın her ülkesinde kullanabilirsiniz");
+    showFallbackAdInfo(
+      "Bu dili indirmek için kısa bir video izlenmesi gerekir. Reklam tamamlandığında indirme otomatik başlar ve aynı dil için tekrar reklam gösterilmez."
+    );
     rewarded = true;
   }
 
