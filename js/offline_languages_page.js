@@ -1,5 +1,5 @@
 import { mountShell } from "/js/ui_shell.js";
-import { maybeShowOfflineDownloadAd } from "/js/ad_gate.js?v=8";
+import { maybeShowOfflineDownloadAd } from "/js/ad_gate.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -823,13 +823,16 @@ async function init() {
     localStorage.setItem(STORAGE.nativeLang, initialNative || "tr");
   }
 
+  LANGS = buildSupportedLangList();
+  renderMyLanguageButton();
+  renderLicenseInfo();
+  renderInstalledList();
+
   const pageAccessOk = await ensureOfflinePageAccess();
   if (!pageAccessOk) {
     location.href = "/pages/home.html";
     return;
   }
-
-  LANGS = buildSupportedLangList();
 
   ensureMockOfflineLicenseOnce();
 
