@@ -435,7 +435,8 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
     title = "Bu dil için kısa bir reklam gösterilecek",
     text = "Bu dili indirmek için 1 kısa reklam izlemeniz gerekmektedir.\nReklamı tamamladıktan sonra bu dil için tekrar reklam gösterilmeden indirme başlatılır.",
     onBeforeAd = null,
-    onAfterAd = null
+    onAfterAd = null,
+    skipInfoModal = false
   } = options;
 
   const key = normalizePairKey(fromLang, toLang);
@@ -450,10 +451,12 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
     if (typeof onBeforeAd === "function") await onBeforeAd();
   } catch {}
 
-  const accepted = await showSoftAdModal({ title, text });
-  if (!accepted) {
-    if (typeof onAfterAd === "function") await onAfterAd(false);
-    return false;
+  if (!skipInfoModal) {
+    const accepted = await showSoftAdModal({ title, text });
+    if (!accepted) {
+      if (typeof onAfterAd === "function") await onAfterAd(false);
+      return false;
+    }
   }
 
   let rewarded = false;
@@ -477,7 +480,6 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
 
   return rewarded;
 }
-
 export function resetModuleAdStateForDebug() {
   try {
     localStorage.removeItem(MODULE_AD_STATE_KEY);
