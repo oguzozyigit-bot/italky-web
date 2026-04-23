@@ -547,8 +547,7 @@ function renderInstalledList() {
   const q = String(searchInput?.value || "").trim().toLowerCase();
   const nativeLang = getNativeLang();
   const downloadingMap = getDownloadingMap();
-  const hasActiveDownload = Object.keys(downloadingMap).length > 0;
-  globalDownloadLock = hasActiveDownload;
+  globalDownloadLock = Object.keys(downloadingMap).length > 0;
 
   const filtered = LANGS
     .filter((l) => l.code !== nativeLang)
