@@ -576,33 +576,6 @@
     await initGlobalAccess({ allowPublicPageBypass: false });
   </script>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-
-    try {
-      mountShell({ scroll: "auto" });
-    } catch (e) {
-      console.error("ui_shell error:", e);
-    }
-
-    const syncShellVars = () => {
-      try {
-        const root = getComputedStyle(document.documentElement);
-        const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-        const headerH = parseFloat(root.getPropertyValue("--headerH")) || 0;
-        document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
-        document.documentElement.style.setProperty("--safe-top", headerH ? `${Math.max(0, headerH - 6)}px` : "0px");
-      } catch (e) {
-        console.error("shell var sync error:", e);
-      }
-    };
-
-    syncShellVars();
-    setTimeout(syncShellVars, 120);
-    setTimeout(syncShellVars, 500);
-    window.addEventListener("resize", syncShellVars);
-  </script>
-
-  <script type="module" src="/js/offline_languages_page.js"></script>
+  <script type="module" src="/js/offline_languages_page.js?v=7"></script>
 </body>
 </html>
