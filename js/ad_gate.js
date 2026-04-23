@@ -268,7 +268,11 @@ async function showNativeRewarded(referenceKey = "", placement = "module_access"
     const waitPromise = waitForRewardedResult();
     window.Native.showRewardedAd(String(referenceKey || ""), String(placement || "module_access"));
     const result = await waitPromise;
-    return !!result?.earned;
+
+    if (result?.earned) return true;
+    if (result?.shown) return true;
+
+    return false;
   } catch {
     return false;
   }
@@ -480,6 +484,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
 
   return rewarded;
 }
+
 export function resetModuleAdStateForDebug() {
   try {
     localStorage.removeItem(MODULE_AD_STATE_KEY);
