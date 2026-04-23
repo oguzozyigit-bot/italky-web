@@ -628,7 +628,65 @@ function renderInstalledList() {
   });
 }
 
-function startLanguageInstallFlow
+async function startLanguageInstallFlow(langCode) {
+  const code = canonical(langCode);
+  if (!code || busy) return;
+
+  const info = getLangInfo(code);
+  const nativeCode = getNativeLang();
+  const nativeInfo = getLangInfo(nativeCode);
+
+  if (globalDownloadLock) {
+    toast("Şu anda başka bir dil indiriliyor. Lütfen mevcut indirme tamamlansın.");
+    return;
+  }
+
+  if (isLangInstalledBiDirectional(code)) {
+    toast(`${info.name} zaten hazır`);
+    renderInstalledList();
+    return;
+  }
+
+  if (getLangProgress(code)) {
+    toast("Bu dil için indirme zaten devam ediyor.");
+    renderInstalledList();
+    return;
+  }
+
+  const adAccepted = await showConfirm(
+    `${info.name} indirilsin mi?`,
+    `Bu dili indirmek için kısa bir video izlemeniz gereklidir.
+
+İndirme tamamlandıktan sonra, bu dil için sonraki kullanımlarda reklam gösterilmeyecektir.
+
+Devam etmek istiyor musunuz?`,
+    "Video İzle"
+  );
+
+  if (!adAccepted) {
+    renderInstalledList();
+    return;
+  }
+
+  const adWatched = await maybeShowOfflineDownloadAd({
+    fromLang: nativeCode,
+    toLang: code,
+    skipInfoModal: true
+  });
+
+  if (!adWatched) {
+    toast("Video tamamlanmadan indirme başlatılamadı.");
+    renderInstalledList();
+    return;
+  }
+
+  toast(`${nativeInfo.name} + ${info.name} indiriliyor...`);
+
+  setTimeout(async () => {
+    await installBiDirectionalPair(code);
+  }, 150);
+}
+
 function canUseNativeOfflineInstaller() {
   return !!(
     window.OfflineTranslate &&
