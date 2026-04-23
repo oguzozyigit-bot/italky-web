@@ -1,5 +1,4 @@
-const MODULE_AD_STATE_KEY = "italky_module_ad_state_v1";
-const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v5";
+const MODULE_AD_STATE_KEY = "italky_module_ad_state_v2";
 const AD_INFO_MODAL_ID = "italkyAdInfoModal";
 
 function nowTs() {
@@ -27,13 +26,6 @@ function normalizeModuleKey(moduleKey = "") {
   return String(moduleKey || "").trim().toLowerCase();
 }
 
-function normalizePairKey(fromLang, toLang) {
-  const a = String(fromLang || "").trim().toLowerCase();
-  const b = String(toLang || "").trim().toLowerCase();
-  if (!a || !b) return "";
-  return `${a}_${b}`;
-}
-
 function getModuleAdState() {
   const state = readJson(MODULE_AD_STATE_KEY, {});
   return state && typeof state === "object" ? state : {};
@@ -43,27 +35,6 @@ function setModuleAdState(next) {
   const safe = next && typeof next === "object" ? next : {};
   writeJson(MODULE_AD_STATE_KEY, safe);
   return safe;
-}
-
-function getOfflineAdState() {
-  const state = readJson(OFFLINE_AD_STATE_KEY, {});
-  return {
-    shown_pairs:
-      state?.shown_pairs && typeof state.shown_pairs === "object"
-        ? state.shown_pairs
-        : {}
-  };
-}
-
-function setOfflineAdState(next) {
-  const merged = {
-    shown_pairs:
-      next?.shown_pairs && typeof next.shown_pairs === "object"
-        ? next.shown_pairs
-        : {}
-  };
-  writeJson(OFFLINE_AD_STATE_KEY, merged);
-  return merged;
 }
 
 function hasNativeRewarded() {
@@ -97,7 +68,7 @@ function getOrCreateAdInfoModal() {
       display:flex;
     }
     .italky-ad-info-card{
-      width:min(100%, 430px);
+      width:min(100%,430px);
       border-radius:26px;
       overflow:hidden;
       border:1px solid rgba(255,255,255,.08);
@@ -190,7 +161,7 @@ function getOrCreateAdInfoModal() {
 }
 
 function showSoftAdModal({
-  title = "Küçük Bir Bilgilendirme",
+  title = "Bu modül için kısa bir reklam gösterilecek",
   text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden giriş yapabilirsiniz."
 } = {}) {
   return new Promise((resolve) => {
@@ -331,9 +302,6 @@ function showFallbackAdInfo(message = "Bu modül için kısa bir reklam gösteri
   } catch {}
 }
 
-/*
-  MODÜL BAZLI 24 SAAT ERİŞİM
-*/
 export function getModuleAccessState(moduleKey = "") {
   const key = normalizeModuleKey(moduleKey);
   const state = getModuleAdState();
@@ -413,40 +381,39 @@ export async function ensureModuleAdAccess(options = {}) {
   return rewarded;
 }
 
-/*
-  OFFLINE DİL BAŞINA 1 REKLAM
-*/
-export function hasShownOfflineDownloadAd(fromLang, toLang) {
-  const key = normalizePairKey(fromLang, toLang);
+export function hasShownOfflineDownloadAd(sessionKey = "offline_languages_page") {
+  const key = normalizeModuleKey(sessionKey);
   if (!key) return false;
+
   const state = getOfflineAdState();
-  return !!state.shown_pairs[key];
+  const until = Number(state.shown_pairs[key] || 0);
+  return until > nowTs();
 }
 
-export function markOfflineDownloadAdShown(fromLang, toLang) {
-  const key = normalizePairKey(fromLang, toLang);
+export function markOfflineDownloadAdShown(sessionKey = "offline_languages_page", hours = 24) {
+  const key = normalizeModuleKey(sessionKey);
   if (!key) return;
 
   const state = getOfflineAdState();
-  state.shown_pairs[key] = true;
+  state.shown_pairs[key] = nowTs() + Number(hours || 24) * 60 * 60 * 1000;
   setOfflineAdState(state);
 }
 
 export async function maybeShowOfflineDownloadAd(options = {}) {
   const {
-    fromLang = "",
-    toLang = "",
-    title = "Bu dil için kısa bir reklam gösterilecek",
-    text = "Bu dili indirmek için 1 kısa reklam izlemeniz gerekmektedir.\nReklamı tamamladıktan sonra bu dil için tekrar reklam gösterilmeden indirme başlatılır.",
+    sessionKey = "offline_languages_page",
+    title = "Bu modül için kısa bir reklam gösterilecek",
+    text = "Offline diller sayfasını kullanabilmeniz için 1 kısa reklam izlemeniz gerekmektedir.\nReklamı tamamladıktan sonra bu sayfayı 24 saat boyunca tekrar reklam görmeden kullanabilirsiniz.",
     onBeforeAd = null,
     onAfterAd = null,
-    skipInfoModal = false
+    skipInfoModal = false,
+    hours = 24
   } = options;
 
-  const key = normalizePairKey(fromLang, toLang);
+  const key = normalizeModuleKey(sessionKey);
   if (!key) return false;
 
-  if (hasShownOfflineDownloadAd(fromLang, toLang)) {
+  if (hasShownOfflineDownloadAd(key)) {
     if (typeof onAfterAd === "function") await onAfterAd(true);
     return true;
   }
@@ -466,16 +433,16 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   let rewarded = false;
 
   if (hasNativeRewarded()) {
-    rewarded = await showNativeRewarded(key, "offline_download");
+    rewarded = await showNativeRewarded(key, "offline_languages_access");
   } else {
     showFallbackAdInfo(
-      "Bu dili indirmek için kısa bir reklam gösterilebilir. Reklam tamamlandığında indirme otomatik başlar."
+      "Bu sayfayı kullanmak için kısa bir reklam gösterilebilir."
     );
     rewarded = true;
   }
 
   if (rewarded) {
-    markOfflineDownloadAdShown(fromLang, toLang);
+    markOfflineDownloadAdShown(key, hours);
   }
 
   try {
