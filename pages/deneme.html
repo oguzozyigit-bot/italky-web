@@ -33,7 +33,6 @@
       --composer-h:92px;
       --keyboard-offset:0px;
       --app-height:100dvh;
-      --sidepanel-w:min(84vw, 340px);
 
       --u1:#5eb2ff;
       --u2:#7cf0d4;
@@ -111,8 +110,7 @@
 
     .icon-btn svg,
     .send-btn svg,
-    .mic-btn svg,
-    .edge-tab svg{
+    .mic-btn svg{
       width:20px;
       height:20px;
       stroke:currentColor;
@@ -129,7 +127,6 @@
       justify-content:center;
       gap:1px;
       text-align:center;
-      cursor:pointer;
       user-select:none;
     }
 
@@ -155,6 +152,152 @@
       font-weight:900;
       letter-spacing:2.4px;
       color:rgba(255,255,255,.28);
+    }
+
+    .menu{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:120;
+    }
+
+    .menu.open{ pointer-events:auto; }
+
+    .menu-backdrop{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,.48);
+      backdrop-filter:blur(6px);
+      opacity:0;
+      transition:opacity .22s ease;
+    }
+
+    .menu.open .menu-backdrop{ opacity:1; }
+
+    .menu-panel{
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:min(84vw, 336px);
+      transform:translateX(-104%);
+      transition:transform .24s ease;
+      padding:calc(14px + var(--safe-top)) 12px calc(14px + var(--safe-bottom));
+      background:linear-gradient(180deg, rgba(10,20,38,.98), rgba(7,15,29,.98));
+      border-right:1px solid rgba(255,255,255,.08);
+      box-shadow:20px 0 40px rgba(0,0,0,.35);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .menu.open .menu-panel{ transform:translateX(0); }
+
+    .menu-box{
+      border-radius:20px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      padding:14px;
+    }
+
+    .mini-label{
+      font-size:10px;
+      color:rgba(255,255,255,.50);
+      font-weight:1000;
+      text-transform:uppercase;
+      letter-spacing:.9px;
+      margin-bottom:6px;
+    }
+
+    .my-id-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .my-id-pill{
+      flex:1;
+      min-width:0;
+      min-height:42px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      padding:0 12px;
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .copy-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+
+    .copy-btn svg{
+      width:18px;
+      height:18px;
+      stroke:currentColor;
+      stroke-width:2.2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .lang-select{
+      width:100%;
+      min-height:46px;
+      border:none;
+      outline:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      padding:0 14px;
+      font-size:14px;
+      font-weight:900;
+    }
+
+    .join-input{
+      width:100%;
+      min-height:48px;
+      border:none;
+      outline:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      padding:0 14px;
+      font-size:14px;
+      font-weight:900;
+      margin-bottom:10px;
+    }
+
+    .join-input::placeholder{
+      color:rgba(255,255,255,.44);
+    }
+
+    .join-btn{
+      width:100%;
+      min-height:48px;
+      border:none;
+      border-radius:16px;
+      background:linear-gradient(135deg, var(--blue2) 0%, var(--cyan) 100%);
+      color:#041427;
+      font-size:14px;
+      font-weight:1000;
+      cursor:pointer;
     }
 
     .main{
@@ -316,7 +459,6 @@
     .bubble-wrap{ max-width:88%; }
 
     .bubble{
-      position:relative;
       background:#0c1830;
       border:1px solid rgba(255,255,255,.08);
       padding:16px 16px 14px;
@@ -351,13 +493,6 @@
       padding:12px 14px;
     }
 
-    .msg-meta{
-      margin-top:7px;
-      font-size:11px;
-      font-weight:700;
-      color:var(--muted);
-    }
-
     .msg-name{
       font-size:10px;
       color:var(--muted2);
@@ -365,6 +500,13 @@
       margin-top:6px;
       padding-left:2px;
       letter-spacing:.2px;
+    }
+
+    .msg-meta{
+      margin-top:3px;
+      font-size:11px;
+      font-weight:700;
+      color:var(--muted);
     }
 
     .typing{
@@ -526,339 +668,6 @@
     .seal-dot{ color:rgba(255,255,255,.25); }
     .seal-year{ color:#bfe7ff; }
 
-    .participants-layer{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      z-index:140;
-    }
-
-    .participants-layer.open{
-      pointer-events:auto;
-    }
-
-    .participants-backdrop{
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.42);
-      backdrop-filter:blur(4px);
-      opacity:0;
-      transition:opacity .24s ease;
-    }
-
-    .participants-layer.open .participants-backdrop{
-      opacity:1;
-    }
-
-    .participants-panel{
-      position:absolute;
-      top:0;
-      right:0;
-      bottom:0;
-      width:var(--sidepanel-w);
-      transform:translateX(104%);
-      transition:transform .26s ease;
-      background:linear-gradient(180deg, rgba(10,20,38,.98), rgba(7,15,29,.98));
-      border-left:1px solid rgba(255,255,255,.08);
-      box-shadow:-16px 0 34px rgba(0,0,0,.32);
-      padding:calc(14px + var(--safe-top)) 12px calc(14px + var(--safe-bottom));
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      overflow:hidden;
-    }
-
-    .participants-layer.open .participants-panel{
-      transform:translateX(0);
-    }
-
-    .edge-tab{
-      position:absolute;
-      top:124px;
-      right:8px;
-      width:42px;
-      height:96px;
-      border:none;
-      border-radius:20px;
-      background:linear-gradient(180deg, rgba(86,166,255,.24), rgba(116,228,255,.16));
-      border:1px solid rgba(120,190,255,.24);
-      color:#fff;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      cursor:pointer;
-      z-index:145;
-      box-shadow:0 12px 24px rgba(0,0,0,.22);
-    }
-
-    .edge-tab-count{
-      font-size:10px;
-      font-weight:1000;
-      color:#d8f7ff;
-      line-height:1;
-    }
-
-    .participants-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .participants-title{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:20px;
-      font-weight:900;
-      line-height:1;
-      color:#fff;
-    }
-
-    .participants-sub{
-      margin-top:4px;
-      font-size:11px;
-      color:rgba(255,255,255,.60);
-      font-weight:800;
-      line-height:1.35;
-    }
-
-    .participants-close{
-      width:40px;
-      height:40px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex:0 0 auto;
-    }
-
-    .participants-close svg{
-      width:18px;
-      height:18px;
-      stroke:currentColor;
-      stroke-width:2.2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .me-box,
-    .join-box,
-    .lang-box{
-      border-radius:20px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      padding:14px;
-    }
-
-    .mini-label{
-      font-size:10px;
-      color:rgba(255,255,255,.50);
-      font-weight:1000;
-      text-transform:uppercase;
-      letter-spacing:.9px;
-      margin-bottom:6px;
-    }
-
-    .my-id-row{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    .my-id-pill{
-      flex:1;
-      min-width:0;
-      min-height:42px;
-      border-radius:14px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      padding:0 12px;
-      font-size:13px;
-      font-weight:900;
-      color:#fff;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-
-    .copy-btn{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .copy-btn svg{
-      width:18px;
-      height:18px;
-      stroke:currentColor;
-      stroke-width:2.2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .lang-select{
-      width:100%;
-      min-height:46px;
-      border:none;
-      outline:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      padding:0 14px;
-      font-size:14px;
-      font-weight:900;
-    }
-
-    .join-input{
-      width:100%;
-      min-height:48px;
-      border:none;
-      outline:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      padding:0 14px;
-      font-size:14px;
-      font-weight:900;
-      margin-bottom:10px;
-    }
-
-    .join-input::placeholder{
-      color:rgba(255,255,255,.44);
-    }
-
-    .join-btn{
-      width:100%;
-      min-height:48px;
-      border:none;
-      border-radius:16px;
-      background:linear-gradient(135deg, var(--blue2) 0%, var(--cyan) 100%);
-      color:#041427;
-      font-size:14px;
-      font-weight:1000;
-      cursor:pointer;
-    }
-
-    .participants-list{
-      flex:1;
-      min-height:0;
-      overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      scrollbar-width:none;
-    }
-
-    .participants-list::-webkit-scrollbar{ display:none; }
-
-    .participant-row{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      border-radius:18px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.07);
-      padding:10px;
-    }
-
-    .participant-row.speaking{
-      border-color:rgba(116,228,255,.26);
-      box-shadow:0 0 0 1px rgba(116,228,255,.08), 0 0 18px rgba(116,228,255,.10);
-    }
-
-    .participant-avatar{
-      width:46px;
-      height:46px;
-      border-radius:16px;
-      flex:0 0 auto;
-      background:linear-gradient(135deg,#17386b,#2d6dc1);
-      border:1px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:15px;
-      font-weight:1000;
-      color:#fff;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .participant-avatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .participant-avatar::after{
-      content:"";
-      position:absolute;
-      right:3px;
-      bottom:3px;
-      width:9px;
-      height:9px;
-      border-radius:50%;
-      background:var(--green);
-      border:1px solid #081a36;
-    }
-
-    .participant-meta{
-      min-width:0;
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:3px;
-    }
-
-    .participant-name{
-      font-size:14px;
-      font-weight:1000;
-      color:#fff;
-      line-height:1.1;
-      word-break:break-word;
-    }
-
-    .participant-id{
-      font-size:11px;
-      color:rgba(255,255,255,.58);
-      font-weight:800;
-      line-height:1.2;
-    }
-
-    .participant-role{
-      font-size:10px;
-      color:#cbeeff;
-      font-weight:900;
-      line-height:1.1;
-      text-transform:uppercase;
-      letter-spacing:.6px;
-    }
-
-    .participant-lang{
-      font-size:10px;
-      color:#bfe9ff;
-      font-weight:900;
-      line-height:1.1;
-    }
-
     .toast{
       position:fixed;
       left:50%;
@@ -886,41 +695,15 @@
       .chat-scroll{ inset:108px 0 0 0; }
       .meeting-title{ font-size:15px; }
       .bubble{ font-size:13.5px; }
-      .participants-panel{ width:min(86vw, 312px); }
     }
   </style>
 </head>
 <body>
 
-<div class="participants-layer" id="participantsLayer">
-  <div class="participants-backdrop" id="participantsBackdrop"></div>
-
-  <button class="edge-tab" id="participantsTab" type="button" aria-label="Katılımcılar">
-    <svg viewBox="0 0 24 24">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9.5" cy="7" r="3"></circle>
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-      <path d="M16 3.13a3 3 0 0 1 0 5.75"></path>
-    </svg>
-    <div class="edge-tab-count" id="participantsCountMini">0</div>
-  </button>
-
-  <aside class="participants-panel">
-    <div class="participants-head">
-      <div>
-        <div class="participants-title">Katılımcılar</div>
-        <div class="participants-sub" id="participantsSub">Toplantı odası katılımcıları burada görünür.</div>
-      </div>
-
-      <button class="participants-close" id="participantsClose" type="button" aria-label="Kapat">
-        <svg viewBox="0 0 24 24">
-          <path d="M18 6L6 18"></path>
-          <path d="M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-
-    <div class="me-box">
+<div class="menu" id="menu">
+  <div class="menu-backdrop" id="menuBackdrop"></div>
+  <aside class="menu-panel">
+    <div class="menu-box">
       <div class="mini-label">Benim ID</div>
       <div class="my-id-row">
         <div class="my-id-pill" id="myUserId">Hazırlanıyor...</div>
@@ -933,7 +716,7 @@
       </div>
     </div>
 
-    <div class="lang-box">
+    <div class="menu-box">
       <div class="mini-label">Benim Dilim</div>
       <select id="myLangSelect" class="lang-select">
         <option value="tr">Türkçe</option>
@@ -947,23 +730,22 @@
       </select>
     </div>
 
-    <div class="join-box">
+    <div class="menu-box">
       <div class="mini-label">Katıl</div>
       <input id="joinUserIdInput" class="join-input" type="text" placeholder="Kullanıcı ID gir">
       <button id="joinUserBtn" class="join-btn" type="button">Katılımcı Ekle</button>
     </div>
-
-    <div class="participants-list" id="participantsList"></div>
   </aside>
 </div>
 
 <main id="pageContent">
   <div class="app">
     <header class="header">
-      <button class="icon-btn" id="menuBtn" type="button" aria-label="Ana Sayfa">
+      <button class="icon-btn" id="menuBtn" type="button" aria-label="Menü">
         <svg viewBox="0 0 24 24">
+          <path d="M4 7h16"></path>
           <path d="M4 12h16"></path>
-          <path d="M12 4l8 8-8 8"></path>
+          <path d="M4 17h16"></path>
         </svg>
       </button>
 
@@ -972,17 +754,13 @@
         <p class="brand-sub">MEETING</p>
       </div>
 
-      <button class="icon-btn" id="topSettingsBtn" type="button" aria-label="Meeting Ayarları">
+      <button class="icon-btn" id="topSettingsBtn" type="button" aria-label="Ayarlar">
         <svg viewBox="0 0 24 24">
           <path d="M12 3v3"></path>
           <path d="M12 18v3"></path>
           <path d="M3 12h3"></path>
           <path d="M18 12h3"></path>
           <circle cx="12" cy="12" r="3.5"></circle>
-          <path d="M5.6 5.6l2.1 2.1"></path>
-          <path d="M16.3 16.3l2.1 2.1"></path>
-          <path d="M18.4 5.6l-2.1 2.1"></path>
-          <path d="M7.7 16.3l-2.1 2.1"></path>
         </svg>
       </button>
     </header>
@@ -992,7 +770,7 @@
         <div class="meeting-summary">
           <div class="meeting-line">
             <div>
-              <div class="meeting-title" id="meetingTitle">Canlı Meeting Odası</div>
+              <div class="meeting-title" id="meetingTitle">Meeting • Yükleniyor</div>
               <div class="meeting-sub" id="meetingSub">Herkes mesajları kendi dilinde görür.</div>
             </div>
             <div class="meeting-badge" id="meetingBadge">0 Kişi</div>
