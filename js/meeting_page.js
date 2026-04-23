@@ -1,5 +1,6 @@
 import { supabase } from "/js/supabase_client.js";
 import { ensureModuleAdAccess } from "/js/ad_gate.js";
+import { getLangPoolForSite } from "/js/lang_pool_full.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -14,6 +15,7 @@ const UI = {
   menu: $("menu"),
   menuBtn: $("menuBtn"),
   menuBackdrop: $("menuBackdrop"),
+  menuClose: $("menuClose"),
   brandHome: $("brandHome"),
   topSettingsBtn: $("topSettingsBtn"),
 
@@ -22,28 +24,29 @@ const UI = {
   meetingTitle: $("meetingTitle"),
   meetingSub: $("meetingSub"),
 
+  profileAvatar: $("profileAvatar"),
+  profileName: $("profileName"),
+  profileMemberNo: $("profileMemberNo"),
+
   myUserId: $("myUserId"),
-  myLangSelect: $("myLangSelect"),
   copyMyIdBtn: $("copyMyIdBtn"),
+
+  myLangPicker: $("myLangPicker"),
+  myLangPickerText: $("myLangPickerText"),
+
   joinUserIdInput: $("joinUserIdInput"),
   joinUserBtn: $("joinUserBtn"),
+
+  langModal: $("langModal"),
+  langModalClose: $("langModalClose"),
+  langSearch: $("langSearch"),
+  langList: $("langList"),
 
   toast: $("toast")
 };
 
 const MODULE_KEY = "meeting_room_access";
 const STORAGE_LANG_KEY = "meeting_my_lang";
-
-const LANG_LABELS = {
-  tr: "Türkçe",
-  en: "English",
-  de: "Deutsch",
-  fr: "Français",
-  es: "Español",
-  it: "Italiano",
-  ar: "العربية",
-  ru: "Русский"
-};
 
 const COLOR_POOL = ["c1", "c2", "c3", "c4", "c5", "c6"];
 
@@ -54,7 +57,8 @@ const state = {
   isListening: false,
   meetingId: new URLSearchParams(location.search).get("meeting_id") || "MEET-001",
   myLang: localStorage.getItem(STORAGE_LANG_KEY) || "tr",
-  participants: []
+  participants: [],
+  langPool: []
 };
 
 function showToast(message = "") {
@@ -73,6 +77,15 @@ function openMenu() {
 
 function closeMenu() {
   UI.menu?.classList.remove("open");
+}
+
+function openLangModal() {
+  UI.langModal?.classList.add("open");
+  renderLangList(UI.langSearch?.value || "");
+}
+
+function closeLangModal() {
+  UI.langModal?.classList.remove("open");
 }
 
 function autoResizeTextarea() {
@@ -131,6 +144,80 @@ function participantColorClass(id = "") {
   return COLOR_POOL[sum % COLOR_POOL.length];
 }
 
+function normalizeMemberNo(profile, user) {
+  return (
+    profile?.member_no ||
+    profile?.membership_no ||
+    profile?.user_no ||
+    profile?.public_user_id ||
+    profile?.short_id ||
+    profile?.id ||
+    user?.id ||
+    "Bilinmiyor"
+  );
+}
+
+function getLanguageName(code) {
+  const c = String(code || "").trim().toLowerCase();
+  const found = state.langPool.find((x) => x.code === c);
+  return found?.name || c.toUpperCase();
+}
+
+function getLanguageFlag(code) {
+  const c = String(code || "").trim().toLowerCase();
+  const found = state.langPool.find((x) => x.code === c);
+  return found?.flag || "🌐";
+}
+
+function renderLangPickerText() {
+  if (!UI.myLangPickerText) return;
+  UI.myLangPickerText.textContent = `${getLanguageFlag(state.myLang)} ${getLanguageName(state.myLang)}`;
+}
+
+function renderLangList(query = "") {
+  if (!UI.langList) return;
+  const q = String(query || "").trim().toLowerCase();
+
+  const filtered = !q
+    ? state.langPool
+    : state.langPool.filter((lang) => {
+        const hay = `${lang.name} ${lang.code}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+  UI.langList.innerHTML = filtered.map((lang) => `
+    <button class="lang-item ${lang.code === state.myLang ? "active" : ""}" type="button" data-code="${escapeHtml(lang.code)}">
+      <div class="lang-left">
+        <div class="lang-flag">${lang.flag || "🌐"}</div>
+        <div>
+          <div class="lang-name">${escapeHtml(lang.name)}</div>
+          <div class="lang-code">${escapeHtml(lang.code)}</div>
+        </div>
+      </div>
+      <div>${lang.code === state.myLang ? "✓" : ""}</div>
+    </button>
+  `).join("");
+
+  UI.langList.querySelectorAll(".lang-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const code = String(btn.dataset.code || "").trim().toLowerCase();
+      if (!code) return;
+
+      state.myLang = code;
+      localStorage.setItem(STORAGE_LANG_KEY, state.myLang);
+
+      renderLangPickerText();
+
+      if (UI.meetingSub) {
+        UI.meetingSub.textContent = `Herkes mesajları kendi dilinde görür. Senin dilin: ${getLanguageName(state.myLang)}`;
+      }
+
+      closeLangModal();
+      showToast(`Dil seçildi: ${getLanguageName(state.myLang)}`);
+    });
+  });
+}
+
 function addSystemMessage(text) {
   if (!UI.chatMessages) return;
   const row = document.createElement("div");
@@ -177,7 +264,7 @@ function addTranslatedMessage({ senderId, senderName, translatedText, timeLabel 
 
 function fakeTranslateForViewer(originalText, originalLang, viewerLang) {
   if (viewerLang === originalLang) return originalText;
-  return `[${LANG_LABELS[viewerLang] || viewerLang}] ${originalText}`;
+  return `[${getLanguageName(viewerLang)}] ${originalText}`;
 }
 
 async function getCurrentUserAndProfile() {
@@ -188,11 +275,40 @@ async function getCurrentUserAndProfile() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, avatar_url, email")
+    .select("*")
     .eq("id", user.id)
     .maybeSingle();
 
   return { user, profile: profile || null };
+}
+
+function renderProfile(profile, user) {
+  const name =
+    profile?.full_name ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "Kullanıcı";
+
+  const avatar =
+    profile?.avatar_url ||
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    "";
+
+  const memberNo = normalizeMemberNo(profile, user);
+
+  if (UI.profileName) UI.profileName.textContent = name;
+  if (UI.profileMemberNo) UI.profileMemberNo.textContent = `Üyelik No: ${memberNo}`;
+  if (UI.myUserId) UI.myUserId.textContent = memberNo;
+
+  if (UI.profileAvatar) {
+    if (avatar) {
+      UI.profileAvatar.innerHTML = `<img src="${avatar}" alt="${escapeHtml(name)}">`;
+    } else {
+      UI.profileAvatar.textContent = initialsFromName(name);
+    }
+  }
 }
 
 function renderParticipants() {
@@ -225,6 +341,8 @@ async function hydrateUser() {
       return;
     }
 
+    renderProfile(profile, user);
+
     const myName =
       profile?.full_name ||
       user?.user_metadata?.full_name ||
@@ -238,16 +356,14 @@ async function hydrateUser() {
       user?.user_metadata?.picture ||
       "";
 
-    const myId = profile?.id || user?.id || "Bilinmiyor";
+    const myMemberNo = normalizeMemberNo(profile, user);
 
-    if (UI.myUserId) UI.myUserId.textContent = myId;
     if (UI.meetingTitle) UI.meetingTitle.textContent = `Meeting • ${state.meetingId}`;
-    if (UI.meetingSub) UI.meetingSub.textContent = `Herkes mesajları kendi dilinde görür. Senin dilin: ${LANG_LABELS[state.myLang] || state.myLang}`;
-    if (UI.myLangSelect) UI.myLangSelect.value = state.myLang;
+    if (UI.meetingSub) UI.meetingSub.textContent = `Herkes mesajları kendi dilinde görür. Senin dilin: ${getLanguageName(state.myLang)}`;
 
     state.participants = [
       {
-        id: myId,
+        id: myMemberNo,
         name: myName,
         avatar: myAvatar,
         active: true,
@@ -259,7 +375,7 @@ async function hydrateUser() {
     renderParticipants();
 
     if (!UI.chatMessages?.querySelector(".msg")) {
-      addSystemMessage("Meeting odası hazır. Menüden kendi dilini seçebilir ve kullanıcı ID ile katılımcı ekleyebilirsin.");
+      addSystemMessage("Meeting odası hazır. Menüden kendi dilini seçebilir ve üyelik numarası ile katılımcı ekleyebilirsin.");
     }
   } catch (e) {
     console.error("meeting hydrate hata:", e);
@@ -272,21 +388,21 @@ function collectExistingIds() {
 }
 
 async function addParticipantById(rawId) {
-  const id = String(rawId || "").trim();
-  if (!id) {
-    showToast("Önce kullanıcı ID gir.");
+  const memberNo = String(rawId || "").trim();
+  if (!memberNo) {
+    showToast("Önce üyelik numarası gir.");
     return;
   }
 
   const ids = collectExistingIds();
-  if (ids.has(id)) {
+  if (ids.has(memberNo)) {
     showToast("Bu kullanıcı zaten listede.");
     return;
   }
 
   state.participants.push({
-    id,
-    name: `Kullanıcı ${String(state.participants.length + 1).padStart(2, "0")}`,
+    id: memberNo,
+    name: `Üye ${String(state.participants.length + 1).padStart(2, "0")}`,
     avatar: "",
     active: true,
     speaking: false,
@@ -295,7 +411,7 @@ async function addParticipantById(rawId) {
 
   renderParticipants();
   if (UI.joinUserIdInput) UI.joinUserIdInput.value = "";
-  addSystemMessage(`${id} meeting listesine eklendi.`);
+  addSystemMessage(`${memberNo} meeting listesine eklendi.`);
   showToast("Katılımcı eklendi");
   closeMenu();
 }
@@ -451,9 +567,34 @@ async function ensureMeetingAdAccess() {
   return ok;
 }
 
+function buildLangPool() {
+  try {
+    const raw = getLangPoolForSite("tr") || [];
+    const seen = new Set();
+
+    state.langPool = raw
+      .map((item) => ({
+        code: String(item.code || "").trim().toLowerCase(),
+        name: String(item.name || item.tr_name || item.code || "").trim(),
+        flag: item.flag || "🌐"
+      }))
+      .filter((item) => item.code && !seen.has(item.code) && seen.add(item.code))
+      .sort((a, b) => a.name.localeCompare(b.name, "tr"));
+  } catch (e) {
+    console.error("lang pool hata:", e);
+    state.langPool = [
+      { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+      { code: "en", name: "English", flag: "🇬🇧" }
+    ];
+  }
+
+  renderLangPickerText();
+}
+
 function bindEvents() {
   UI.menuBtn?.addEventListener("click", openMenu);
   UI.menuBackdrop?.addEventListener("click", closeMenu);
+  UI.menuClose?.addEventListener("click", closeMenu);
 
   UI.brandHome?.addEventListener("click", () => {
     location.href = "/pages/home.html";
@@ -467,26 +608,20 @@ function bindEvents() {
     const id = UI.myUserId?.textContent || "";
     try {
       await navigator.clipboard.writeText(id);
-      showToast("Kullanıcı ID kopyalandı");
+      showToast("Üyelik numarası kopyalandı");
     } catch {
-      showToast("ID kopyalanamadı");
+      showToast("Numara kopyalanamadı");
     }
   });
 
-  UI.myLangSelect?.addEventListener("change", () => {
-    state.myLang = UI.myLangSelect.value || "tr";
-    localStorage.setItem(STORAGE_LANG_KEY, state.myLang);
+  UI.myLangPicker?.addEventListener("click", openLangModal);
+  UI.langModalClose?.addEventListener("click", closeLangModal);
+  UI.langModal?.addEventListener("click", (e) => {
+    if (e.target === UI.langModal) closeLangModal();
+  });
 
-    const me = state.participants.find((p) => p.id === UI.myUserId?.textContent);
-    if (me) me.lang = state.myLang;
-
-    if (UI.meetingSub) {
-      UI.meetingSub.textContent = `Herkes mesajları kendi dilinde görür. Senin dilin: ${LANG_LABELS[state.myLang] || state.myLang}`;
-    }
-
-    renderParticipants();
-    showToast(`Dil seçildi: ${LANG_LABELS[state.myLang] || state.myLang}`);
-    closeMenu();
+  UI.langSearch?.addEventListener("input", () => {
+    renderLangList(UI.langSearch.value || "");
   });
 
   UI.joinUserBtn?.addEventListener("click", () => {
@@ -532,6 +667,8 @@ function bindEvents() {
 }
 
 async function init() {
+  buildLangPool();
+
   const accessOk = await ensureMeetingAdAccess();
   if (!accessOk) return;
 
