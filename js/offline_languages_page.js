@@ -1,5 +1,5 @@
 import { mountShell } from "/js/ui_shell.js";
-import { maybeShowOfflineDownloadAd } from "/js/ad_gate.js?v=7";
+import { maybeShowOfflineDownloadAd } from "/js/ad_gate.js?v=8";
 
 const $ = (id) => document.getElementById(id);
 
@@ -95,6 +95,7 @@ const ALL_OFFLINE_LANGS = [
 ];
 
 const PRIORITY_ORDER = ["tr", "en", "de", "fr", "ru", "ar", "es", "it"];
+const OFFLINE_PAGE_SESSION_KEY = "offline_languages_page";
 
 let LANGS = [];
 let busy = false;
@@ -628,13 +629,21 @@ function renderInstalledList() {
   });
 }
 
+async function ensureOfflinePageAccess() {
+  return await maybeShowOfflineDownloadAd({
+    sessionKey: OFFLINE_PAGE_SESSION_KEY,
+    skipInfoModal: false,
+    title: "Bu modül için kısa bir reklam gösterilecek",
+    text: "Offline diller sayfasını kullanabilmeniz için 1 kısa reklam izlemeniz gerekmektedir.\nReklamı tamamladıktan sonra bu sayfayı 24 saat boyunca tekrar reklam görmeden kullanabilirsiniz."
+  });
+}
+
 async function startLanguageInstallFlow(langCode) {
   const code = canonical(langCode);
   if (!code || busy || globalDownloadLock) return;
 
   const info = getLangInfo(code);
-  const nativeCode = getNativeLang();
-  const nativeInfo = getLangInfo(nativeCode);
+  const nativeInfo = getLangInfo(getNativeLang());
 
   if (isLangInstalledBiDirectional(code)) {
     toast(`${info.name} zaten hazır`);
@@ -648,37 +657,22 @@ async function startLanguageInstallFlow(langCode) {
     return;
   }
 
-  const accepted = await showConfirm(
+  const confirmed = await showConfirm(
     `${info.name} indirilsin mi?`,
-    `Bu dili indirmek için kısa bir video izlemeniz gereklidir.
+    `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
 
-İndirme tamamlandıktan sonra bu dil için sonraki kullanımlarda tekrar reklam gösterilmeyecektir.
-
-Devam etmek istiyor musunuz?`,
-    "Video İzle"
+İnternet bağlantınıza göre indirme süresi değişebilir.
+Bu sayfaya erişiminiz açık olduğu için tekrar reklam gösterilmeyecektir.`,
+    "İndir"
   );
 
-  if (!accepted) {
+  if (!confirmed) {
     renderInstalledList();
     return;
   }
 
   busy = true;
-
   try {
-    const adWatched = await maybeShowOfflineDownloadAd({
-      fromLang: nativeCode,
-      toLang: code,
-      skipInfoModal: true
-    });
-
-    if (!adWatched) {
-      toast("Video tamamlanmadan indirme başlatılamadı.");
-      renderInstalledList();
-      return;
-    }
-
-    toast(`${nativeInfo.name} + ${info.name} indiriliyor...`);
     await installBiDirectionalPair(code);
   } finally {
     busy = false;
@@ -828,6 +822,12 @@ async function init() {
 
   if (!localStorage.getItem(STORAGE.nativeLang)) {
     localStorage.setItem(STORAGE.nativeLang, initialNative || "tr");
+  }
+
+  const pageAccessOk = await ensureOfflinePageAccess();
+  if (!pageAccessOk) {
+    location.href = "/pages/home.html";
+    return;
   }
 
   LANGS = buildSupportedLangList();
