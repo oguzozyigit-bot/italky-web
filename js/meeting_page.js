@@ -61,7 +61,6 @@ const state = {
   meetingCode: new URLSearchParams(location.search).get("meeting_code") || "",
   myLang: localStorage.getItem(STORAGE_LANG_KEY) || "tr",
   participants: [],
-  messages: [],
   langPool: [],
   memberNo: "",
   displayName: "",
