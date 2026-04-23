@@ -27,6 +27,7 @@ const UI = {
   meetingSub: $("meetingSub"),
 
   myUserId: $("myUserId"),
+  myLangSelect: $("myLangSelect"),
   copyMyIdBtn: $("copyMyIdBtn"),
   joinUserIdInput: $("joinUserIdInput"),
   joinUserBtn: $("joinUserBtn"),
@@ -34,12 +35,26 @@ const UI = {
   toast: $("toast")
 };
 
+const LANG_LABELS = {
+  tr: "Türkçe",
+  en: "English",
+  de: "Deutsch",
+  fr: "Français",
+  es: "Español",
+  it: "Italiano",
+  ar: "العربية",
+  ru: "Русский"
+};
+
+const COLOR_POOL = ["c1", "c2", "c3", "c4", "c5", "c6"];
+
 const state = {
   currentUser: null,
   currentProfile: null,
   recognition: null,
   isListening: false,
   meetingId: new URLSearchParams(location.search).get("meeting_id") || "MEET-001",
+  myLang: localStorage.getItem("meeting_my_lang") || "tr",
   participants: [],
   messages: []
 };
@@ -87,8 +102,7 @@ function updateViewportLayout() {
 
   document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
   const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-  document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px}`);
-
+  document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
   requestAnimationFrame(scrollChatToBottom);
 }
 
@@ -109,90 +123,6 @@ function toggleParticipantsPanel() {
   UI.participantsLayer?.classList.toggle("open");
 }
 
-function addMessage(side, text, meta = "") {
-  if (!UI.chatMessages) return;
-
-  const row = document.createElement("div");
-  row.className = `msg ${side}`;
-
-  const wrap = document.createElement("div");
-  wrap.className = "bubble-wrap";
-
-  const bubble = document.createElement("div");
-  bubble.className = `bubble ${side}`;
-  bubble.textContent = text;
-
-  const metaEl = document.createElement("div");
-  metaEl.className = "msg-meta";
-  metaEl.textContent = meta || (side === "right" ? "Sen • şimdi" : "Meeting • şimdi");
-
-  wrap.appendChild(bubble);
-  wrap.appendChild(metaEl);
-  row.appendChild(wrap);
-  UI.chatMessages.appendChild(row);
-  scrollChatToBottom();
-}
-
-function addSystemMessage(text) {
-  if (!UI.chatMessages) return;
-
-  const row = document.createElement("div");
-  row.className = "msg center";
-
-  const wrap = document.createElement("div");
-  wrap.className = "bubble-wrap";
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble system";
-  bubble.textContent = text;
-
-  wrap.appendChild(bubble);
-  row.appendChild(wrap);
-  UI.chatMessages.appendChild(row);
-  scrollChatToBottom();
-}
-
-function renderParticipants() {
-  const list = state.participants || [];
-
-  if (UI.participantsList) UI.participantsList.innerHTML = "";
-  if (UI.avatarStrip) UI.avatarStrip.innerHTML = "";
-
-  if (UI.participantsCountMini) UI.participantsCountMini.textContent = String(list.length);
-  if (UI.meetingBadge) UI.meetingBadge.textContent = `${list.length} Kişi`;
-  if (UI.participantsSub) UI.participantsSub.textContent = `${list.length} katılımcı bu meeting odasında görünür.`;
-
-  list.forEach((p) => {
-    if (UI.participantsList) {
-      const row = document.createElement("div");
-      row.className = `participant-row ${p.speaking ? "speaking" : ""}`;
-      row.innerHTML = `
-        <div class="participant-avatar">
-          ${p.avatar ? `<img src="${p.avatar}" alt="${escapeHtmlAttr(p.name)}">` : `<span>${initialsFromName(p.name)}</span>`}
-        </div>
-        <div class="participant-meta">
-          <div class="participant-name">${escapeHtml(p.name)}</div>
-          <div class="participant-id">ID: ${escapeHtml(p.id)}</div>
-          <div class="participant-role">${escapeHtml(p.role || "Katılımcı")}</div>
-        </div>
-      `;
-      UI.participantsList.appendChild(row);
-    }
-
-    if (UI.avatarStrip) {
-      const mini = document.createElement("div");
-      mini.className = "mini-user";
-      mini.innerHTML = `
-        <div class="mini-avatar ${p.active ? "active" : ""} ${p.speaking ? "speaking" : ""}">
-          ${p.avatar ? `<img src="${p.avatar}" alt="${escapeHtmlAttr(p.name)}">` : `<span>${initialsFromName(p.name)}</span>`}
-        </div>
-        <div class="mini-name">${escapeHtml((p.name || "").split(" ")[0] || p.name)}</div>
-      `;
-      UI.avatarStrip.appendChild(mini);
-    }
-  });
-}
-
 function escapeHtml(value = "") {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -202,8 +132,92 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#39;");
 }
 
-function escapeHtmlAttr(value = "") {
-  return escapeHtml(value);
+function participantColorClass(id = "") {
+  const sum = String(id).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  return COLOR_POOL[sum % COLOR_POOL.length];
+}
+
+function renderParticipants() {
+  const list = state.participants || [];
+  UI.participantsList.innerHTML = "";
+  UI.avatarStrip.innerHTML = "";
+
+  UI.participantsCountMini.textContent = String(list.length);
+  UI.meetingBadge.textContent = `${list.length} Kişi`;
+  UI.participantsSub.textContent = `${list.length} katılımcı bu meeting odasında görünür.`;
+
+  list.forEach((p) => {
+    const row = document.createElement("div");
+    row.className = `participant-row ${p.speaking ? "speaking" : ""}`;
+    row.innerHTML = `
+      <div class="participant-avatar">
+        ${p.avatar ? `<img src="${p.avatar}" alt="${escapeHtml(p.name)}">` : `<span>${initialsFromName(p.name)}</span>`}
+      </div>
+      <div class="participant-meta">
+        <div class="participant-name">${escapeHtml(p.name)}</div>
+        <div class="participant-id">ID: ${escapeHtml(p.id)}</div>
+        <div class="participant-role">${escapeHtml(p.role || "Katılımcı")}</div>
+        <div class="participant-lang">Dil: ${escapeHtml(LANG_LABELS[p.lang] || p.lang || "—")}</div>
+      </div>
+    `;
+    UI.participantsList.appendChild(row);
+
+    const mini = document.createElement("div");
+    mini.className = "mini-user";
+    mini.innerHTML = `
+      <div class="mini-avatar ${p.active ? "active" : ""} ${p.speaking ? "speaking" : ""}">
+        ${p.avatar ? `<img src="${p.avatar}" alt="${escapeHtml(p.name)}">` : `<span>${initialsFromName(p.name)}</span>`}
+      </div>
+      <div class="mini-name">${escapeHtml((p.name || "").split(" ")[0] || p.name)}</div>
+    `;
+    UI.avatarStrip.appendChild(mini);
+  });
+}
+
+function addSystemMessage(text) {
+  const row = document.createElement("div");
+  row.className = "msg center";
+  row.innerHTML = `
+    <div class="bubble-wrap">
+      <div class="bubble system">${escapeHtml(text)}</div>
+    </div>
+  `;
+  UI.chatMessages.appendChild(row);
+  scrollChatToBottom();
+}
+
+function addTranslatedMessage({ senderId, senderName, translatedText, timeLabel = "şimdi", isMine = false }) {
+  const side = isMine ? "right" : "left";
+  const colorClass = participantColorClass(senderId);
+
+  const row = document.createElement("div");
+  row.className = `msg ${side}`;
+
+  if (isMine) {
+    row.innerHTML = `
+      <div class="bubble-wrap">
+        <div class="bubble right">${escapeHtml(translatedText)}</div>
+        <div class="msg-name">${escapeHtml(senderName)}</div>
+        <div class="msg-meta">${escapeHtml(timeLabel)}</div>
+      </div>
+    `;
+  } else {
+    row.innerHTML = `
+      <div class="bubble-wrap user-${colorClass}">
+        <div class="bubble left">${escapeHtml(translatedText)}</div>
+        <div class="msg-name">${escapeHtml(senderName)}</div>
+        <div class="msg-meta">${escapeHtml(timeLabel)}</div>
+      </div>
+    `;
+  }
+
+  UI.chatMessages.appendChild(row);
+  scrollChatToBottom();
+}
+
+function fakeTranslateForViewer(originalText, originalLang, viewerLang) {
+  if (viewerLang === originalLang) return originalText;
+  return `[${LANG_LABELS[viewerLang] || viewerLang}] ${originalText}`;
 }
 
 async function hydrateUser() {
@@ -213,7 +227,7 @@ async function hydrateUser() {
     state.currentUser = user;
 
     if (!user) {
-      if (UI.myUserId) UI.myUserId.textContent = "Giriş gerekli";
+      UI.myUserId.textContent = "Giriş gerekli";
       return;
     }
 
@@ -239,8 +253,9 @@ async function hydrateUser() {
       "";
 
     const myId = profile?.id || user?.id || "Bilinmiyor";
-    if (UI.myUserId) UI.myUserId.textContent = myId;
-    if (UI.meetingTitle) UI.meetingTitle.textContent = `Meeting • ${state.meetingId}`;
+    UI.myUserId.textContent = myId;
+    UI.meetingTitle.textContent = `Meeting • ${state.meetingId}`;
+    UI.myLangSelect.value = state.myLang;
 
     state.participants = [
       {
@@ -249,7 +264,8 @@ async function hydrateUser() {
         avatar: myAvatar,
         role: "Sen",
         active: true,
-        speaking: false
+        speaking: false,
+        lang: state.myLang
       },
       {
         id: "MEET-102",
@@ -257,7 +273,8 @@ async function hydrateUser() {
         avatar: "",
         role: "Katılımcı",
         active: true,
-        speaking: true
+        speaking: true,
+        lang: "tr"
       },
       {
         id: "MEET-103",
@@ -265,7 +282,8 @@ async function hydrateUser() {
         avatar: "",
         role: "Katılımcı",
         active: true,
-        speaking: false
+        speaking: false,
+        lang: "en"
       },
       {
         id: "MEET-104",
@@ -273,19 +291,25 @@ async function hydrateUser() {
         avatar: "",
         role: "Katılımcı",
         active: true,
-        speaking: false
+        speaking: false,
+        lang: "es"
       }
     ];
 
     renderParticipants();
 
-    if (!UI.chatMessages?.querySelector(".msg")) {
-      addSystemMessage("Meeting odası hazır. Sağdaki panelden katılımcıları görebilir, ID ile yeni kişi ekleyebilirsin.");
-      addMessage("left", "Toplantı sohbet akışı burada görünecek. Katılımcılar sağ panelden açılır.", "Meeting • şimdi");
+    if (!UI.chatMessages.querySelector(".msg")) {
+      addSystemMessage("Meeting odası hazır. Sağ panelden kendi dilini seçebilir ve kullanıcı ID ile katılımcı ekleyebilirsin.");
+      addTranslatedMessage({
+        senderId: "MEET-102",
+        senderName: "Ayşe Demir",
+        translatedText: fakeTranslateForViewer("Toplantı başladı, herkese merhaba.", "tr", state.myLang),
+        isMine: false
+      });
     }
   } catch (e) {
     console.error("meeting hydrate hata:", e);
-    if (UI.myUserId) UI.myUserId.textContent = "Yüklenemedi";
+    UI.myUserId.textContent = "Yüklenemedi";
   }
 }
 
@@ -313,12 +337,13 @@ function addParticipantById(rawId) {
     avatar: "",
     role: "Yeni Katılan",
     active: true,
-    speaking: false
+    speaking: false,
+    lang: "en"
   });
 
   renderParticipants();
   addSystemMessage(`${fakeName} meeting odasına eklendi.`);
-  if (UI.joinUserIdInput) UI.joinUserIdInput.value = "";
+  UI.joinUserIdInput.value = "";
   showToast("Katılımcı eklendi");
 }
 
@@ -387,7 +412,7 @@ function startRecognitionOnce() {
     const transcript = buildStableTranscript(event.results);
     lastTranscript = transcript;
 
-    if (transcript && UI.chatInput) {
+    if (transcript) {
       UI.chatInput.value = transcript;
       autoResizeTextarea();
       syncInputActionState();
@@ -399,12 +424,12 @@ function startRecognitionOnce() {
     stopRecognition();
   };
 
-  recognition.onend = async () => {
-    const finalText = cleanupTranscript(UI.chatInput?.value || lastTranscript || "");
+  recognition.onend = () => {
+    const finalText = cleanupTranscript(UI.chatInput.value || lastTranscript || "");
     stopRecognition();
 
     if (finalText) {
-      if (UI.chatInput) UI.chatInput.value = "";
+      UI.chatInput.value = "";
       autoResizeTextarea();
       syncInputActionState();
       sendMeetingMessage(finalText, "voice");
@@ -422,25 +447,45 @@ function sendMeetingMessage(text, mode = "text") {
   const value = String(text || "").trim();
   if (!value) return;
 
-  addMessage("right", value, mode === "voice" ? "Sen • sesli" : "Sen • şimdi");
-  UI.typingState?.classList.add("show");
+  const myId = UI.myUserId.textContent || "me";
+  const myName = state.participants.find((p) => p.id === myId)?.name || "Sen";
+
+  addTranslatedMessage({
+    senderId: myId,
+    senderName: myName,
+    translatedText: value,
+    isMine: true
+  });
+
+  UI.typingState.classList.add("show");
 
   setTimeout(() => {
-    UI.typingState?.classList.remove("show");
-    const activeSpeaker = state.participants.find((p) => p.id !== UI.myUserId?.textContent);
+    UI.typingState.classList.remove("show");
+    const activeSpeaker = state.participants.find((p) => p.id !== myId) || state.participants[0];
     const replyName = activeSpeaker?.name || "Katılımcı";
-    addMessage("left", `${replyName}: Mesaj alındı. Meeting akışı üzerinden cevap veriyorum.`, `${replyName} • şimdi`);
-    scrollChatToBottom();
+    const replyLang = activeSpeaker?.lang || "en";
+    const originalReply = replyLang === "en"
+      ? "Message received. I am replying from the meeting flow."
+      : replyLang === "es"
+      ? "Mensaje recibido. Estoy respondiendo desde el flujo de reunión."
+      : "Mesaj alındı. Meeting akışı üzerinden cevap veriyorum.";
+
+    addTranslatedMessage({
+      senderId: activeSpeaker.id,
+      senderName: replyName,
+      translatedText: fakeTranslateForViewer(originalReply, replyLang, state.myLang),
+      isMine: false
+    });
   }, 800);
 }
 
 function bindEvents() {
-  UI.chatInput?.addEventListener("input", () => {
+  UI.chatInput.addEventListener("input", () => {
     autoResizeTextarea();
     syncInputActionState();
   });
 
-  UI.chatInput?.addEventListener("keydown", (e) => {
+  UI.chatInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       const value = UI.chatInput.value;
@@ -451,34 +496,34 @@ function bindEvents() {
     }
   });
 
-  UI.sendBtn?.addEventListener("click", () => {
-    const value = UI.chatInput?.value || "";
-    if (UI.chatInput) UI.chatInput.value = "";
+  UI.sendBtn.addEventListener("click", () => {
+    const value = UI.chatInput.value;
+    UI.chatInput.value = "";
     autoResizeTextarea();
     syncInputActionState();
     sendMeetingMessage(value, "text");
   });
 
-  UI.micBtn?.addEventListener("click", startRecognitionOnce);
+  UI.micBtn.addEventListener("click", startRecognitionOnce);
 
-  UI.menuBtn?.addEventListener("click", () => {
+  UI.menuBtn.addEventListener("click", () => {
     location.href = "/pages/home.html";
   });
 
-  UI.brandHome?.addEventListener("click", () => {
+  UI.brandHome.addEventListener("click", () => {
     location.href = "/pages/home.html";
   });
 
-  UI.topSettingsBtn?.addEventListener("click", () => {
+  UI.topSettingsBtn.addEventListener("click", () => {
     showToast("Meeting ayarları daha sonra açılacak");
   });
 
-  UI.participantsTab?.addEventListener("click", toggleParticipantsPanel);
-  UI.participantsClose?.addEventListener("click", closeParticipantsPanel);
-  UI.participantsBackdrop?.addEventListener("click", closeParticipantsPanel);
+  UI.participantsTab.addEventListener("click", toggleParticipantsPanel);
+  UI.participantsClose.addEventListener("click", closeParticipantsPanel);
+  UI.participantsBackdrop.addEventListener("click", closeParticipantsPanel);
 
-  UI.copyMyIdBtn?.addEventListener("click", async () => {
-    const id = UI.myUserId?.textContent || "";
+  UI.copyMyIdBtn.addEventListener("click", async () => {
+    const id = UI.myUserId.textContent || "";
     try {
       await navigator.clipboard.writeText(id);
       showToast("Kullanıcı ID kopyalandı");
@@ -487,15 +532,26 @@ function bindEvents() {
     }
   });
 
-  UI.joinUserBtn?.addEventListener("click", () => {
-    addParticipantById(UI.joinUserIdInput?.value || "");
+  UI.joinUserBtn.addEventListener("click", () => {
+    addParticipantById(UI.joinUserIdInput.value);
   });
 
-  UI.joinUserIdInput?.addEventListener("keydown", (e) => {
+  UI.joinUserIdInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      addParticipantById(UI.joinUserIdInput?.value || "");
+      addParticipantById(UI.joinUserIdInput.value);
     }
+  });
+
+  UI.myLangSelect.addEventListener("change", () => {
+    state.myLang = UI.myLangSelect.value || "tr";
+    localStorage.setItem("meeting_my_lang", state.myLang);
+
+    const me = state.participants.find((p) => p.id === UI.myUserId.textContent);
+    if (me) me.lang = state.myLang;
+
+    renderParticipants();
+    showToast(`Dil seçildi: ${LANG_LABELS[state.myLang] || state.myLang}`);
   });
 
   window.visualViewport?.addEventListener("resize", updateViewportLayout);
