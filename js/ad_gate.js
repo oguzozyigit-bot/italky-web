@@ -1,19 +1,9 @@
-const APP_AD_STATE_KEY = "italky_app_ad_state_v5";
-const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v4";
-
-const DEFAULT_READY_DELAY_MS = 90 * 1000;
+const MODULE_AD_STATE_KEY = "italky_module_ad_state_v1";
+const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v5";
 const AD_INFO_MODAL_ID = "italkyAdInfoModal";
 
 function nowTs() {
   return Date.now();
-}
-
-function todayKey() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
 }
 
 function readJson(key, fallback) {
@@ -33,27 +23,8 @@ function writeJson(key, value) {
   } catch {}
 }
 
-function normalizePath(path = "") {
-  try {
-    const url = new URL(path, location.origin);
-    return url.pathname.toLowerCase();
-  } catch {
-    return String(path || "").trim().toLowerCase();
-  }
-}
-
-function getCurrentPath() {
-  return normalizePath(location.pathname || "/");
-}
-
-function isJetonBuyPath(path = "") {
-  const p = normalizePath(path);
-  return p.includes("/pages/jetonbuy.html") || p.endsWith("/jetonbuy.html");
-}
-
-function isHomePath(path = "") {
-  const p = normalizePath(path);
-  return p === "/" || p === "/pages/home.html";
+function normalizeModuleKey(moduleKey = "") {
+  return String(moduleKey || "").trim().toLowerCase();
 }
 
 function normalizePairKey(fromLang, toLang) {
@@ -63,80 +34,36 @@ function normalizePairKey(fromLang, toLang) {
   return `${a}_${b}`;
 }
 
-function getAppAdState() {
-  const state = readJson(APP_AD_STATE_KEY, {});
-  const today = todayKey();
-
-  if (state.day !== today) {
-    const fresh = {
-      day: today,
-      shown_today: false,
-      session_started_at: 0,
-      ready_after: 0,
-      current_page: "",
-      startup_page: ""
-    };
-    writeJson(APP_AD_STATE_KEY, fresh);
-    return fresh;
-  }
-
-  return {
-    day: today,
-    shown_today: !!state.shown_today,
-    session_started_at: Number(state.session_started_at || 0),
-    ready_after: Number(state.ready_after || 0),
-    current_page: String(state.current_page || ""),
-    startup_page: String(state.startup_page || "")
-  };
+function getModuleAdState() {
+  const state = readJson(MODULE_AD_STATE_KEY, {});
+  return state && typeof state === "object" ? state : {};
 }
 
-function setAppAdState(next) {
-  const merged = {
-    day: todayKey(),
-    shown_today: !!next.shown_today,
-    session_started_at: Number(next.session_started_at || 0),
-    ready_after: Number(next.ready_after || 0),
-    current_page: String(next.current_page || ""),
-    startup_page: String(next.startup_page || "")
-  };
-  writeJson(APP_AD_STATE_KEY, merged);
-  return merged;
+function setModuleAdState(next) {
+  const safe = next && typeof next === "object" ? next : {};
+  writeJson(MODULE_AD_STATE_KEY, safe);
+  return safe;
 }
 
 function getOfflineAdState() {
   const state = readJson(OFFLINE_AD_STATE_KEY, {});
-  const today = todayKey();
-
-  if (state.day !== today) {
-    const fresh = {
-      day: today,
-      shown_pairs: {}
-    };
-    writeJson(OFFLINE_AD_STATE_KEY, fresh);
-    return fresh;
-  }
-
   return {
-    day: today,
-    shown_pairs: state.shown_pairs && typeof state.shown_pairs === "object" ? state.shown_pairs : {}
+    shown_pairs:
+      state?.shown_pairs && typeof state.shown_pairs === "object"
+        ? state.shown_pairs
+        : {}
   };
 }
 
 function setOfflineAdState(next) {
   const merged = {
-    day: todayKey(),
-    shown_pairs: next?.shown_pairs && typeof next.shown_pairs === "object" ? next.shown_pairs : {}
+    shown_pairs:
+      next?.shown_pairs && typeof next.shown_pairs === "object"
+        ? next.shown_pairs
+        : {}
   };
   writeJson(OFFLINE_AD_STATE_KEY, merged);
   return merged;
-}
-
-function hasNativeInterstitial() {
-  try {
-    return !!(window.Native && typeof window.Native.showInterstitialAd === "function");
-  } catch {
-    return false;
-  }
 }
 
 function hasNativeRewarded() {
@@ -264,7 +191,7 @@ function getOrCreateAdInfoModal() {
 
 function showSoftAdModal({
   title = "Küçük Bir Bilgilendirme",
-  text = "Uygulamayı ücretsiz sunabilmemiz için günde yalnızca 1 kez kısa bir reklam gösterilir.\nOffline dil indirmelerinde ise, ilgili dil için reklam izlendiğinde indirme otomatik başlar.\nAnlayışınız için teşekkür ederiz."
+  text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden giriş yapabilirsiniz."
 } = {}) {
   return new Promise((resolve) => {
     const modal = getOrCreateAdInfoModal();
@@ -290,32 +217,6 @@ function showSoftAdModal({
     okBtn?.addEventListener("click", onOk);
     modal.addEventListener("click", onBackdrop);
     modal.classList.add("open");
-  });
-}
-
-function waitForInterstitialClosed(timeoutMs = 20000) {
-  return new Promise((resolve) => {
-    let done = false;
-    const previousHandler = window.onNativeInterstitialClosed;
-
-    const finish = (payload) => {
-      if (done) return;
-      done = true;
-      clearTimeout(timer);
-      window.onNativeInterstitialClosed = previousHandler;
-      resolve(payload || { shown: false });
-    };
-
-    window.onNativeInterstitialClosed = function (payload) {
-      try {
-        if (typeof previousHandler === "function") previousHandler(payload);
-      } catch {}
-      finish(payload);
-    };
-
-    const timer = setTimeout(() => {
-      finish({ shown: false, reason: "timeout" });
-    }, timeoutMs);
   });
 }
 
@@ -360,25 +261,12 @@ function waitForRewardedResult(timeoutMs = 35000) {
   });
 }
 
-async function showNativeInterstitial(reason = "app_open_daily") {
-  if (!hasNativeInterstitial()) return false;
-
-  try {
-    const waitPromise = waitForInterstitialClosed();
-    window.Native.showInterstitialAd(reason);
-    const result = await waitPromise;
-    return !!result?.shown;
-  } catch {
-    return false;
-  }
-}
-
-async function showNativeRewarded(langCode = "", placement = "offline_download") {
+async function showNativeRewarded(referenceKey = "", placement = "module_access") {
   if (!hasNativeRewarded()) return false;
 
   try {
     const waitPromise = waitForRewardedResult();
-    window.Native.showRewardedAd(String(langCode || ""), String(placement || "offline_download"));
+    window.Native.showRewardedAd(String(referenceKey || ""), String(placement || "module_access"));
     const result = await waitPromise;
     return !!result?.earned;
   } catch {
@@ -386,7 +274,7 @@ async function showNativeRewarded(langCode = "", placement = "offline_download")
   }
 }
 
-function showFallbackAdInfo(message = "Uygulamayı ücretsiz sunabilmemiz için kısa bir reklam gösterilebilir.") {
+function showFallbackAdInfo(message = "Bu modül için kısa bir reklam gösterilebilir.") {
   try {
     if (typeof window.showToast === "function") {
       window.showToast(message);
@@ -440,129 +328,90 @@ function showFallbackAdInfo(message = "Uygulamayı ücretsiz sunabilmemiz için 
 }
 
 /*
-  Günlük reklam oturumu sadece uygulama ana girişinde başlasın.
+  MODÜL BAZLI 24 SAAT ERİŞİM
 */
-export function beginDailyAdSession(options = {}) {
+export function getModuleAccessState(moduleKey = "") {
+  const key = normalizeModuleKey(moduleKey);
+  const state = getModuleAdState();
+  const until = Number(state?.[key]?.until || 0);
+
+  return {
+    moduleKey: key,
+    until,
+    active: until > nowTs()
+  };
+}
+
+export function markModuleAdShown(moduleKey = "", hours = 24) {
+  const key = normalizeModuleKey(moduleKey);
+  if (!key) return null;
+
+  const state = getModuleAdState();
+  const until = nowTs() + Number(hours || 24) * 60 * 60 * 1000;
+
+  state[key] = { until };
+  setModuleAdState(state);
+
+  return {
+    moduleKey: key,
+    until,
+    active: true
+  };
+}
+
+export async function ensureModuleAdAccess(options = {}) {
   const {
-    delayMs = DEFAULT_READY_DELAY_MS,
-    currentPage = getCurrentPath()
-  } = options;
-
-  const normalizedPage = normalizePath(currentPage);
-  const state = getAppAdState();
-
-  if (!isHomePath(normalizedPage)) {
-    return setAppAdState({
-      ...state,
-      current_page: normalizedPage
-    });
-  }
-
-  if (!state.session_started_at) {
-    const started = nowTs();
-    return setAppAdState({
-      ...state,
-      session_started_at: started,
-      ready_after: started + Number(delayMs || DEFAULT_READY_DELAY_MS),
-      current_page: normalizedPage,
-      startup_page: normalizedPage
-    });
-  }
-
-  return setAppAdState({
-    ...state,
-    current_page: normalizedPage
-  });
-}
-
-export function getCurrentDailyAdState() {
-  return getAppAdState();
-}
-
-export function isDailyAdEligible() {
-  const state = getAppAdState();
-  if (state.shown_today) return false;
-  if (!state.session_started_at || !state.ready_after) return false;
-  if (!isHomePath(state.startup_page || state.current_page || "")) return false;
-  return nowTs() >= state.ready_after;
-}
-
-/*
-  Artık modül geçiş reklamı değil.
-  Sadece HOME üzerinde, günde 1 kez app-open reklamı.
-*/
-export async function maybeShowDailyTransitionAd(options = {}) {
-  const {
-    currentPage = getCurrentPath(),
+    moduleKey = "",
+    title = "Bu modül için kısa bir reklam gösterilecek",
+    text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden giriş yapabilirsiniz.",
+    placement = "module_access",
+    hours = 24,
     onBeforeAd = null,
-    onAfterAd = null,
-    onNoAd = null
+    onAfterAd = null
   } = options;
 
-  const page = normalizePath(currentPage);
-  const state = getAppAdState();
+  const key = normalizeModuleKey(moduleKey);
+  if (!key) return false;
 
-  if (!isHomePath(page)) {
-    if (typeof onNoAd === "function") await onNoAd();
-    return false;
-  }
-
-  if (state.shown_today || !state.ready_after || nowTs() < state.ready_after) {
-    if (typeof onNoAd === "function") await onNoAd();
-    return false;
+  const current = getModuleAccessState(key);
+  if (current.active) {
+    if (typeof onAfterAd === "function") await onAfterAd(true);
+    return true;
   }
 
   try {
     if (typeof onBeforeAd === "function") await onBeforeAd();
   } catch {}
 
-  const accepted = await showSoftAdModal({
-    title: "Küçük Bir Bilgilendirme",
-    text:
-      "Uygulamayı ücretsiz sunabilmemiz için günde yalnızca 1 kez kısa bir reklam gösterilir.\n" +
-      "Bu reklam yalnızca uygulamaya ilk girişte gösterilir.\n" +
-      "Offline dil indirmelerinde ise reklam izlendiğinde indirme otomatik başlar.\n" +
-      "Anlayışınız için teşekkür ederiz."
-  });
-
+  const accepted = await showSoftAdModal({ title, text });
   if (!accepted) {
     if (typeof onAfterAd === "function") await onAfterAd(false);
     return false;
   }
 
-  let shown = false;
+  let rewarded = false;
 
-  if (hasNativeInterstitial()) {
-    shown = await showNativeInterstitial("app_open_daily");
+  if (hasNativeRewarded()) {
+    rewarded = await showNativeRewarded(key, placement);
   } else {
-    showFallbackAdInfo("Bu uygulamada günlük reklam yalnızca ana girişte 1 kez gösterilir.");
-    shown = true;
+    showFallbackAdInfo("Bu modülü kullanmak için kısa bir reklam gösterilebilir.");
+    rewarded = true;
   }
 
-  if (shown) {
-    setAppAdState({
-      ...state,
-      shown_today: true,
-      current_page: page,
-      startup_page: page
-    });
+  if (rewarded) {
+    markModuleAdShown(key, hours);
   }
 
   try {
-    if (typeof onAfterAd === "function") await onAfterAd(shown);
+    if (typeof onAfterAd === "function") await onAfterAd(rewarded);
   } catch {}
 
-  return shown;
+  return rewarded;
 }
 
-export function markCurrentPageForAdSession(path = getCurrentPath()) {
-  const state = getAppAdState();
-  setAppAdState({
-    ...state,
-    current_page: normalizePath(path)
-  });
-}
-
+/*
+  OFFLINE DİL BAŞINA 1 REKLAM
+*/
 export function hasShownOfflineDownloadAd(fromLang, toLang) {
   const key = normalizePairKey(fromLang, toLang);
   if (!key) return false;
@@ -579,15 +428,12 @@ export function markOfflineDownloadAdShown(fromLang, toLang) {
   setOfflineAdState(state);
 }
 
-/*
-  Offline ödüllü reklam:
-  reklam izlendiğinde true döner.
-  Çağıran sayfa bu true sonrası indirmeyi otomatik başlatmalıdır.
-*/
 export async function maybeShowOfflineDownloadAd(options = {}) {
   const {
     fromLang = "",
     toLang = "",
+    title = "Bu dil için kısa bir reklam gösterilecek",
+    text = "Bu dili indirmek için 1 kısa reklam izlemeniz gerekmektedir.\nReklamı tamamladıktan sonra bu dil için tekrar reklam gösterilmeden indirme başlatılır.",
     onBeforeAd = null,
     onAfterAd = null
   } = options;
@@ -604,13 +450,19 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
     if (typeof onBeforeAd === "function") await onBeforeAd();
   } catch {}
 
+  const accepted = await showSoftAdModal({ title, text });
+  if (!accepted) {
+    if (typeof onAfterAd === "function") await onAfterAd(false);
+    return false;
+  }
+
   let rewarded = false;
 
   if (hasNativeRewarded()) {
     rewarded = await showNativeRewarded(key, "offline_download");
   } else {
     showFallbackAdInfo(
-      "Bu dili indirmek için kısa bir video izlenmesi gerekir. Reklam tamamlandığında indirme otomatik başlar ve aynı dil için tekrar reklam gösterilmez."
+      "Bu dili indirmek için kısa bir reklam gösterilebilir. Reklam tamamlandığında indirme otomatik başlar."
     );
     rewarded = true;
   }
@@ -626,9 +478,9 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   return rewarded;
 }
 
-export function resetDailyAdStateForDebug() {
+export function resetModuleAdStateForDebug() {
   try {
-    localStorage.removeItem(APP_AD_STATE_KEY);
+    localStorage.removeItem(MODULE_AD_STATE_KEY);
   } catch {}
 }
 
