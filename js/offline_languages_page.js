@@ -633,7 +633,8 @@ async function startLanguageInstallFlow(langCode) {
   if (!code || busy) return;
 
   const info = getLangInfo(code);
-  const nativeInfo = getLangInfo(getNativeLang());
+  const nativeCode = getNativeLang();
+  const nativeInfo = getLangInfo(nativeCode);
 
   if (globalDownloadLock) {
     toast("Şu anda başka bir dil indiriliyor. Lütfen mevcut indirme tamamlansın.");
@@ -668,8 +669,8 @@ Devam etmek istiyor musunuz?`,
   }
 
   const adWatched = await maybeShowOfflineDownloadAd({
-    fromLang: nativeInfo.code,
-    toLang: info.code
+    fromLang: nativeCode,
+    toLang: code
   });
 
   if (!adWatched) {
@@ -678,25 +679,7 @@ Devam etmek istiyor musunuz?`,
     return;
   }
 
-  const confirmed = await showConfirm(
-    `${info.name} indirilsin mi?`,
-    `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
-
-İnternet bağlantınızdaki indirme hızına göre yükleme süresi değişebilir.
-Ortalama 30 saniye ile 3 dakika arasındadır.
-
-Uygulamayı kapatmadan diğer modüllerde gezinebilirsiniz.
-Bu durum indirmeyi engellemez.
-
-Her bir çevrimdışı dil paketi telefonda yaklaşık 140-190 MB yer kaplar.`,
-    "İndir"
-  );
-
-  if (!confirmed) {
-    renderInstalledList();
-    return;
-  }
-
+  toast(`${nativeInfo.name} + ${info.name} indiriliyor...`);
   await installBiDirectionalPair(code);
 }
 
