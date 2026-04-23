@@ -1,6 +1,7 @@
 import { supabase } from "/js/supabase_client.js";
 import { ensureModuleAdAccess } from "/js/ad_gate.js";
 import { getLangPoolForSite } from "/js/lang_pool_full.js";
+import { STORAGE_KEY } from "/js/config.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -144,16 +145,23 @@ function participantColorClass(id = "") {
   return COLOR_POOL[sum % COLOR_POOL.length];
 }
 
-function normalizeMemberNo(profile, user) {
+function getCachedUser() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function buildMemberNo(user, cached) {
+  const meta = user?.user_metadata || {};
   return (
-    profile?.member_no ||
-    profile?.membership_no ||
-    profile?.user_no ||
-    profile?.public_user_id ||
-    profile?.short_id ||
-    profile?.id ||
-    user?.id ||
-    "Bilinmiyor"
+    meta.membership_no ||
+    meta.member_no ||
+    cached?.membership_no ||
+    cached?.uyelik_no ||
+    (user?.id ? user.id.replace(/-/g, "").slice(0, 8).toUpperCase() : null)
   );
 }
 
@@ -212,7 +220,11 @@ function renderLangList(query = "") {
         UI.meetingSub.textContent = `Herkes mesajları kendi dilinde görür. Senin dilin: ${getLanguageName(state.myLang)}`;
       }
 
+      const me = state.participants.find((p) => p.isMe);
+      if (me) me.lang = state.myLang;
+
       closeLangModal();
+      renderParticipants();
       showToast(`Dil seçildi: ${getLanguageName(state.myLang)}`);
     });
   });
@@ -282,11 +294,13 @@ async function getCurrentUserAndProfile() {
   return { user, profile: profile || null };
 }
 
-function renderProfile(profile, user) {
+function renderProfile(profile, user, cached) {
   const name =
     profile?.full_name ||
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
+    cached?.display_name ||
+    cached?.name ||
     user?.email?.split("@")[0] ||
     "Kullanıcı";
 
@@ -294,9 +308,12 @@ function renderProfile(profile, user) {
     profile?.avatar_url ||
     user?.user_metadata?.avatar_url ||
     user?.user_metadata?.picture ||
+    cached?.picture ||
+    cached?.avatar ||
+    cached?.avatar_url ||
     "";
 
-  const memberNo = normalizeMemberNo(profile, user);
+  const memberNo = buildMemberNo(user, cached) || "Üyelik numarası bulunamadı";
 
   if (UI.profileName) UI.profileName.textContent = name;
   if (UI.profileMemberNo) UI.profileMemberNo.textContent = `Üyelik No: ${memberNo}`;
@@ -309,6 +326,8 @@ function renderProfile(profile, user) {
       UI.profileAvatar.textContent = initialsFromName(name);
     }
   }
+
+  return { name, avatar, memberNo };
 }
 
 function renderParticipants() {
@@ -332,6 +351,7 @@ function renderParticipants() {
 
 async function hydrateUser() {
   try {
+    const cached = getCachedUser();
     const { user, profile } = await getCurrentUserAndProfile();
     state.currentUser = user;
     state.currentProfile = profile;
@@ -341,34 +361,20 @@ async function hydrateUser() {
       return;
     }
 
-    renderProfile(profile, user);
-
-    const myName =
-      profile?.full_name ||
-      user?.user_metadata?.full_name ||
-      user?.user_metadata?.name ||
-      user?.email?.split("@")[0] ||
-      "Katılımcı";
-
-    const myAvatar =
-      profile?.avatar_url ||
-      user?.user_metadata?.avatar_url ||
-      user?.user_metadata?.picture ||
-      "";
-
-    const myMemberNo = normalizeMemberNo(profile, user);
+    const profileData = renderProfile(profile, user, cached);
 
     if (UI.meetingTitle) UI.meetingTitle.textContent = `Meeting • ${state.meetingId}`;
     if (UI.meetingSub) UI.meetingSub.textContent = `Herkes mesajları kendi dilinde görür. Senin dilin: ${getLanguageName(state.myLang)}`;
 
     state.participants = [
       {
-        id: myMemberNo,
-        name: myName,
-        avatar: myAvatar,
+        id: profileData.memberNo,
+        name: profileData.name,
+        avatar: profileData.avatar,
         active: true,
         speaking: false,
-        lang: state.myLang
+        lang: state.myLang,
+        isMe: true
       }
     ];
 
@@ -406,7 +412,8 @@ async function addParticipantById(rawId) {
     avatar: "",
     active: true,
     speaking: false,
-    lang: "en"
+    lang: "en",
+    isMe: false
   });
 
   renderParticipants();
@@ -516,8 +523,8 @@ function sendMeetingMessage(text, mode = "text") {
   const value = String(text || "").trim();
   if (!value) return;
 
-  const myId = UI.myUserId?.textContent || "me";
-  const me = state.participants.find((p) => p.id === myId);
+  const me = state.participants.find((p) => p.isMe);
+  const myId = me?.id || "me";
   const myName = me?.name || "Sen";
 
   addTranslatedMessage({
@@ -531,7 +538,7 @@ function sendMeetingMessage(text, mode = "text") {
 
   setTimeout(() => {
     UI.typingState?.classList.remove("show");
-    const responder = state.participants.find((p) => p.id !== myId);
+    const responder = state.participants.find((p) => !p.isMe);
     if (!responder) return;
 
     const originalReply = responder.lang === "en"
