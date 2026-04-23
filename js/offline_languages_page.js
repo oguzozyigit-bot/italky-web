@@ -1,5 +1,5 @@
 import { mountShell } from "/js/ui_shell.js";
-import { maybeShowOfflineDownloadAd } from "/js/ad_gate.js";
+import { maybeShowOfflineDownloadAd } from "/js/ad_gate.js?v=7";
 
 const $ = (id) => document.getElementById(id);
 
@@ -630,16 +630,11 @@ function renderInstalledList() {
 
 async function startLanguageInstallFlow(langCode) {
   const code = canonical(langCode);
-  if (!code || busy) return;
+  if (!code || busy || globalDownloadLock) return;
 
   const info = getLangInfo(code);
   const nativeCode = getNativeLang();
   const nativeInfo = getLangInfo(nativeCode);
-
-  if (globalDownloadLock) {
-    toast("Şu anda başka bir dil indiriliyor. Lütfen mevcut indirme tamamlansın.");
-    return;
-  }
 
   if (isLangInstalledBiDirectional(code)) {
     toast(`${info.name} zaten hazır`);
@@ -653,38 +648,41 @@ async function startLanguageInstallFlow(langCode) {
     return;
   }
 
-  const adAccepted = await showConfirm(
+  const accepted = await showConfirm(
     `${info.name} indirilsin mi?`,
     `Bu dili indirmek için kısa bir video izlemeniz gereklidir.
 
-İndirme tamamlandıktan sonra, bu dil için sonraki kullanımlarda reklam gösterilmeyecektir.
+İndirme tamamlandıktan sonra bu dil için sonraki kullanımlarda tekrar reklam gösterilmeyecektir.
 
 Devam etmek istiyor musunuz?`,
     "Video İzle"
   );
 
-  if (!adAccepted) {
+  if (!accepted) {
     renderInstalledList();
     return;
   }
 
-  const adWatched = await maybeShowOfflineDownloadAd({
-    fromLang: nativeCode,
-    toLang: code,
-    skipInfoModal: true
-  });
+  busy = true;
 
-  if (!adWatched) {
-    toast("Video tamamlanmadan indirme başlatılamadı.");
-    renderInstalledList();
-    return;
-  }
+  try {
+    const adWatched = await maybeShowOfflineDownloadAd({
+      fromLang: nativeCode,
+      toLang: code,
+      skipInfoModal: true
+    });
 
-  toast(`${nativeInfo.name} + ${info.name} indiriliyor...`);
+    if (!adWatched) {
+      toast("Video tamamlanmadan indirme başlatılamadı.");
+      renderInstalledList();
+      return;
+    }
 
-  setTimeout(async () => {
+    toast(`${nativeInfo.name} + ${info.name} indiriliyor...`);
     await installBiDirectionalPair(code);
-  }, 150);
+  } finally {
+    busy = false;
+  }
 }
 
 function canUseNativeOfflineInstaller() {
@@ -699,7 +697,6 @@ async function installBiDirectionalPair(langCode) {
   const info = getLangInfo(code);
   const nativeLang = getNativeLang();
 
-  setBusy(true);
   globalDownloadLock = true;
 
   try {
@@ -713,7 +710,6 @@ async function installBiDirectionalPair(langCode) {
     if (!canUseNativeOfflineInstaller()) {
       clearLangProgress(code);
       globalDownloadLock = false;
-      setBusy(false);
       renderInstalledList();
       toast("Gerçek kurulum için uygulama tarafı hazır değil.");
       return;
@@ -730,11 +726,8 @@ async function installBiDirectionalPair(langCode) {
     console.error("[offline_languages_page] installBiDirectionalPair:", e);
     clearLangProgress(code);
     globalDownloadLock = false;
-    setBusy(false);
     renderInstalledList();
     toast(`${info.name} şu an indirilemedi`);
-  } finally {
-    setBusy(false);
   }
 }
 
@@ -783,7 +776,7 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
 
   clearLangProgress(code);
   globalDownloadLock = false;
-  setBusy(false);
+  busy = false;
   renderInstalledList();
   toast(`${getLangInfo(code).name} artık hazır`);
 });
@@ -796,7 +789,7 @@ window.addEventListener("offlinePairDownloadFailed", (e) => {
 
   if (code) clearLangProgress(code);
   globalDownloadLock = false;
-  setBusy(false);
+  busy = false;
   renderInstalledList();
   toast(message);
 });
