@@ -185,7 +185,6 @@ function scrollChatToBottom() {
 function updateViewportLayout() {
   const vv = window.visualViewport;
   if (!vv) return;
-
   document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
   const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
   document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
@@ -215,10 +214,8 @@ function getCachedUser() {
   }
 }
 
-function buildMemberNo(user, profile) {
+function buildMemberNo(user, profile, cached) {
   const meta = user?.user_metadata || {};
-  const cached = getCachedUser();
-
   return (
     profile?.member_no ||
     profile?.membership_no ||
@@ -229,7 +226,7 @@ function buildMemberNo(user, profile) {
     meta.member_no ||
     cached?.membership_no ||
     cached?.uyelik_no ||
-    (user?.id ? user.id.replace(/-/g, "").slice(0, 8).toUpperCase() : "")
+    (user?.id ? user.id.replace(/-/g, "").slice(0, 8).toUpperCase() : "—")
   );
 }
 
@@ -307,44 +304,49 @@ function participantColorClass(id = "") {
   return COLOR_POOL[sum % COLOR_POOL.length];
 }
 
-function renderProfile(profile, user) {
-  const cached = getCachedUser();
+function setProfileAvatar(name, avatarUrl) {
+  if (!UI.profileAvatar) return;
+  if (avatarUrl) {
+    UI.profileAvatar.innerHTML = `<img src="${avatarUrl}" alt="${escapeHtml(name)}">`;
+  } else {
+    UI.profileAvatar.textContent = initialsFromName(name);
+  }
+}
+
+function renderProfile(profile, user, cached) {
+  const meta = user?.user_metadata || {};
 
   const name =
     profile?.full_name ||
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
+    meta.full_name ||
+    meta.name ||
+    meta.display_name ||
     cached?.display_name ||
     cached?.name ||
-    user?.email?.split("@")[0] ||
-    "Kullanıcı";
+    user?.email ||
+    "italky Kullanıcısı";
 
-  const avatar =
+  const avatarUrl =
     profile?.avatar_url ||
-    user?.user_metadata?.avatar_url ||
-    user?.user_metadata?.picture ||
+    meta.avatar_url ||
+    meta.picture ||
+    meta.avatar ||
     cached?.picture ||
     cached?.avatar ||
     cached?.avatar_url ||
     "";
 
-  const memberNo = buildMemberNo(user, profile) || "Üyelik numarası bulunamadı";
+  const memberNo = buildMemberNo(user, profile, cached);
 
   state.displayName = name;
-  state.avatarUrl = avatar;
+  state.avatarUrl = avatarUrl;
   state.memberNo = memberNo;
 
   if (UI.profileName) UI.profileName.textContent = name;
   if (UI.profileMemberNo) UI.profileMemberNo.textContent = `Üyelik No: ${memberNo}`;
   if (UI.myUserId) UI.myUserId.textContent = memberNo;
 
-  if (UI.profileAvatar) {
-    if (avatar) {
-      UI.profileAvatar.innerHTML = `<img src="${avatar}" alt="${escapeHtml(name)}">`;
-    } else {
-      UI.profileAvatar.textContent = initialsFromName(name);
-    }
-  }
+  setProfileAvatar(name, avatarUrl);
 }
 
 function renderParticipants() {
@@ -586,6 +588,35 @@ async function apiPatch(path, body) {
   const json = await resp.json().catch(() => ({}));
   if (!resp.ok) throw new Error(json?.detail || json?.error || `PATCH ${path} failed`);
   return json;
+}
+
+async function getCurrentUserAndProfile() {
+  try {
+    let user = null;
+    let profile = null;
+
+    const userResp = await supabase.auth.getUser();
+    user = userResp?.data?.user || null;
+
+    if (!user) {
+      const sessionResp = await supabase.auth.getSession();
+      user = sessionResp?.data?.session?.user || null;
+    }
+
+    if (!user) return { user: null, profile: null };
+
+    const profileResp = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    profile = profileResp?.data || null;
+    return { user, profile };
+  } catch (e) {
+    console.error("getCurrentUserAndProfile hata:", e);
+    return { user: null, profile: null };
+  }
 }
 
 async function createMeetingIfNeeded() {
@@ -877,6 +908,7 @@ async function refreshAll() {
 }
 
 async function init() {
+  console.log("[meeting_page] init start");
   injectExtraStyles();
   buildLangPool();
 
@@ -888,10 +920,14 @@ async function init() {
   syncInputActionState();
 
   const { user, profile } = await getCurrentUserAndProfile();
+  console.log("[meeting_page] user:", user);
+  console.log("[meeting_page] profile:", profile);
+
   state.currentUser = user;
   state.currentProfile = profile;
 
   if (!user) {
+    showToast("Oturum bulunamadı");
     location.href = "/pages/login.html";
     return;
   }
@@ -903,5 +939,4 @@ async function init() {
   updateViewportLayout();
   scrollChatToBottom();
 }
-
 init();
