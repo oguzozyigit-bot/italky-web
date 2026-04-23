@@ -1330,21 +1330,8 @@ body.home-ready #pageContent{
   import { mountShell } from "/js/ui_shell.js";
   import { initGlobalAccess } from "/js/global_access.js";
   import { supabase } from "/js/supabase_client.js";
-  import {
-    beginDailyAdSession,
-    markCurrentPageForAdSession,
-    maybeShowDailyTransitionAd
-  } from "/js/ad_gate.js";
 
   mountShell({ scroll: "auto" });
-
-  const OPEN_IDS = [
-    "faceCard",
-    "offlineCard",
-    "textWideCard",
-    "funCard",
-    "levelCard"
-  ];
 
   async function fillUserName() {
     try {
@@ -1374,44 +1361,12 @@ body.home-ready #pageContent{
     }
   }
 
-  async function navigateWithDailyAd(href) {
-    const target = String(href || "").trim();
-    if (!target) return;
-
-    await maybeShowDailyTransitionAd({
-      fromPage: location.pathname,
-      toPage: target
-    });
-
-    markCurrentPageForAdSession(target);
-    location.href = target;
-  }
-
-  async function bindOpenCards() {
-    for (const id of OPEN_IDS) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-
-      el.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const href = el.getAttribute("href") || "/";
-        await navigateWithDailyAd(href);
-      });
-    }
-  }
-
   async function bootHome() {
     try {
       const result = await initGlobalAccess({ allowPublicPageBypass: false });
       if (!result?.ok) return;
 
-      beginDailyAdSession({ delayMs: 90 * 1000, currentPage: location.pathname });
-      markCurrentPageForAdSession(location.pathname);
-
       await fillUserName();
-      await bindOpenCards();
 
       const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
       if (skipWelcome) {
@@ -1429,4 +1384,4 @@ body.home-ready #pageContent{
 
 <script type="module" src="/js/site_language_boot.js"></script>
 </body>
-                                  </html>
+</html>
