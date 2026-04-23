@@ -1,85 +1,103 @@
-// FILE: /js/lang_pool_full.js
-
 export const LANG_POOL = [
-  { code:"tr", flag:"🇹🇷" },
-  { code:"en", flag:"🇬🇧" },
-  { code:"de", flag:"🇩🇪" },
-  { code:"fr", flag:"🇫🇷" },
-  { code:"it", flag:"🇮🇹" },
-  { code:"es", flag:"🇪🇸" },
-  { code:"pt", flag:"🇵🇹" },
-  { code:"pt-br", flag:"🇧🇷" },
-  { code:"nl", flag:"🇳🇱" },
-  { code:"sv", flag:"🇸🇪" },
-  { code:"no", flag:"🇳🇴" },
-  { code:"da", flag:"🇩🇰" },
-  { code:"fi", flag:"🇫🇮" },
-  { code:"pl", flag:"🇵🇱" },
-  { code:"cs", flag:"🇨🇿" },
-  { code:"sk", flag:"🇸🇰" },
-  { code:"hu", flag:"🇭🇺" },
-  { code:"ro", flag:"🇷🇴" },
-  { code:"bg", flag:"🇧🇬" },
-  { code:"el", flag:"🇬🇷" },
-  { code:"uk", flag:"🇺🇦" },
-  { code:"ru", flag:"🇷🇺" },
+  // Avrupa Dilleri
+  { code:"tr", flag:"🇹🇷", region:"europe", featured:true },
+  { code:"en", flag:"🇬🇧", region:"europe", featured:true },
+  { code:"de", flag:"🇩🇪", region:"europe", featured:true },
+  { code:"fr", flag:"🇫🇷", region:"europe", featured:true },
+  { code:"it", flag:"🇮🇹", region:"europe", featured:true },
+  { code:"es", flag:"🇪🇸", region:"europe", featured:true },
+  { code:"pt", flag:"🇵🇹", region:"europe", featured:true },
+  { code:"pt-br", flag:"🇧🇷", region:"americas", featured:true },
+  { code:"nl", flag:"🇳🇱", region:"europe", featured:false },
+  { code:"sv", flag:"🇸🇪", region:"europe", featured:false },
+  { code:"no", flag:"🇳🇴", region:"europe", featured:false },
+  { code:"da", flag:"🇩🇰", region:"europe", featured:false },
+  { code:"fi", flag:"🇫🇮", region:"europe", featured:false },
+  { code:"pl", flag:"🇵🇱", region:"europe", featured:false },
+  { code:"cs", flag:"🇨🇿", region:"europe", featured:false },
+  { code:"sk", flag:"🇸🇰", region:"europe", featured:false },
+  { code:"hu", flag:"🇭🇺", region:"europe", featured:false },
+  { code:"ro", flag:"🇷🇴", region:"europe", featured:false },
+  { code:"bg", flag:"🇧🇬", region:"europe", featured:false },
+  { code:"el", flag:"🇬🇷", region:"europe", featured:false },
+  { code:"uk", flag:"🇺🇦", region:"europe", featured:false },
+  { code:"ru", flag:"🇷🇺", region:"europe", featured:true },
 
-  { code:"ar", flag:"🇸🇦" },
-  { code:"he", flag:"🇮🇱" },
-  { code:"fa", flag:"🇮🇷" },
-  { code:"ur", flag:"🇵🇰" },
-  { code:"hi", flag:"🇮🇳" },
-  { code:"bn", flag:"🇧🇩" },
+  // Orta Doğu Dilleri
+  { code:"ar", flag:"🇸🇦", region:"middle_east", featured:true },
+  { code:"he", flag:"🇮🇱", region:"middle_east", featured:false },
+  { code:"fa", flag:"🇮🇷", region:"middle_east", featured:true },
+  { code:"ur", flag:"🇵🇰", region:"middle_east", featured:false },
 
-  { code:"id", flag:"🇮🇩" },
-  { code:"ms", flag:"🇲🇾" },
-  { code:"vi", flag:"🇻🇳" },
-  { code:"th", flag:"🇹🇭" },
-  { code:"zh", flag:"🇨🇳" },
-  { code:"ja", flag:"🇯🇵" },
-  { code:"ko", flag:"🇰🇷" },
+  // Asya Dilleri
+  { code:"hi", flag:"🇮🇳", region:"asia", featured:true },
+  { code:"bn", flag:"🇧🇩", region:"asia", featured:false },
+  { code:"id", flag:"🇮🇩", region:"asia", featured:false },
+  { code:"ms", flag:"🇲🇾", region:"asia", featured:false },
+  { code:"vi", flag:"🇻🇳", region:"asia", featured:false },
+  { code:"th", flag:"🇹🇭", region:"asia", featured:false },
+  { code:"zh", flag:"🇨🇳", region:"asia", featured:true },
+  { code:"ja", flag:"🇯🇵", region:"asia", featured:true },
+  { code:"ko", flag:"🇰🇷", region:"asia", featured:true },
+  { code:"fil", flag:"🇵🇭", region:"asia", featured:false },
+  { code:"mn", flag:"🇲🇳", region:"asia", featured:false },
+  { code:"ne", flag:"🇳🇵", region:"asia", featured:false },
+  { code:"si", flag:"🇱🇰", region:"asia", featured:false },
+  { code:"ta", flag:"🇮🇳", region:"asia", featured:false },
+  { code:"te", flag:"🇮🇳", region:"asia", featured:false },
+  { code:"mr", flag:"🇮🇳", region:"asia", featured:false },
+  { code:"gu", flag:"🇮🇳", region:"asia", featured:false },
 
-  { code:"az", flag:"🇦🇿" },
-  { code:"ka", flag:"🇬🇪" },
-  { code:"hy", flag:"🇦🇲" },
-  { code:"kk", flag:"🇰🇿" },
-  { code:"ky", flag:"🇰🇬" },
-  { code:"uz", flag:"🇺🇿" },
-  { code:"tk", flag:"🇹🇲" },
-  { code:"tg", flag:"🇹🇯" },
+  // Türk Dünyası Dilleri
+  { code:"az", flag:"🇦🇿", region:"turkic", featured:true },
+  { code:"kk", flag:"🇰🇿", region:"turkic", featured:true },
+  { code:"ky", flag:"🇰🇬", region:"turkic", featured:true },
+  { code:"uz", flag:"🇺🇿", region:"turkic", featured:true },
+  { code:"tk", flag:"🇹🇲", region:"turkic", featured:true },
 
-  { code:"sr", flag:"🇷🇸" },
-  { code:"hr", flag:"🇭🇷" },
-  { code:"bs", flag:"🇧🇦" },
-  { code:"sl", flag:"🇸🇮" },
-  { code:"mk", flag:"🇲🇰" },
-  { code:"sq", flag:"🇦🇱" },
+  // Kafkas / çevre
+  { code:"ka", flag:"🇬🇪", region:"caucasus", featured:true },
+  { code:"hy", flag:"🇦🇲", region:"caucasus", featured:false },
+  { code:"tg", flag:"🇹🇯", region:"asia", featured:false },
 
-  { code:"et", flag:"🇪🇪" },
-  { code:"lv", flag:"🇱🇻" },
-  { code:"lt", flag:"🇱🇹" },
+  // Balkan Dilleri
+  { code:"sr", flag:"🇷🇸", region:"balkans", featured:true },
+  { code:"hr", flag:"🇭🇷", region:"balkans", featured:true },
+  { code:"bs", flag:"🇧🇦", region:"balkans", featured:true },
+  { code:"sl", flag:"🇸🇮", region:"balkans", featured:false },
+  { code:"mk", flag:"🇲🇰", region:"balkans", featured:true },
+  { code:"sq", flag:"🇦🇱", region:"balkans", featured:true },
 
-  { code:"af", flag:"🇿🇦" },
-  { code:"sw", flag:"🇰🇪" },
-  { code:"am", flag:"🇪🇹" },
+  // Baltık / Avrupa devam
+  { code:"et", flag:"🇪🇪", region:"europe", featured:false },
+  { code:"lv", flag:"🇱🇻", region:"europe", featured:false },
+  { code:"lt", flag:"🇱🇹", region:"europe", featured:false },
 
-  { code:"ca", flag:"🇪🇸" },
-  { code:"eu", flag:"🇪🇸" },
-  { code:"gl", flag:"🇪🇸" },
+  // Afrika Dilleri
+  { code:"af", flag:"🇿🇦", region:"africa", featured:true },
+  { code:"sw", flag:"🇰🇪", region:"africa", featured:true },
+  { code:"am", flag:"🇪🇹", region:"africa", featured:true },
 
-  { code:"is", flag:"🇮🇸" },
-  { code:"ga", flag:"🇮🇪" },
-  { code:"cy", flag:"🏴" },
-
-  { code:"fil", flag:"🇵🇭" },
-  { code:"mn", flag:"🇲🇳" },
-  { code:"ne", flag:"🇳🇵" },
-  { code:"si", flag:"🇱🇰" },
-  { code:"ta", flag:"🇮🇳" },
-  { code:"te", flag:"🇮🇳" },
-  { code:"mr", flag:"🇮🇳" },
-  { code:"gu", flag:"🇮🇳" }
+  // Avrupa alt dilleri
+  { code:"ca", flag:"🇪🇸", region:"europe", featured:false },
+  { code:"eu", flag:"🇪🇸", region:"europe", featured:false },
+  { code:"gl", flag:"🇪🇸", region:"europe", featured:false },
+  { code:"is", flag:"🇮🇸", region:"europe", featured:false },
+  { code:"ga", flag:"🇮🇪", region:"europe", featured:false },
+  { code:"cy", flag:"🏴", region:"europe", featured:false }
 ];
+
+const REGION_NAMES = {
+  europe: "Avrupa Dilleri",
+  americas: "Amerika Dilleri",
+  asia: "Asya Dilleri",
+  middle_east: "Orta Doğu Dilleri",
+  africa: "Afrika Dilleri",
+  balkans: "Balkan Dilleri",
+  caucasus: "Kafkas Dilleri",
+  turkic: "Türk Dünyası Dilleri",
+  kurdish: "Kürt Dilleri"
+};
 
 const TR_NAMES = {
   tr:"Türkçe",
@@ -164,7 +182,12 @@ const BASE_NAMES = {
 
 export function getSiteLang() {
   try {
-    const value = String(localStorage.getItem("system_lang") || "tr").trim().toLowerCase();
+    const value = String(
+      localStorage.getItem("site_lang") ||
+      localStorage.getItem("system_lang") ||
+      "tr"
+    ).trim().toLowerCase();
+
     if (["tr", "en", "de", "fr", "it", "es"].includes(value)) return value;
   } catch {}
   return "tr";
@@ -176,10 +199,52 @@ export function getLangName(code, siteLang = getSiteLang()) {
   return dict[c] || BASE_NAMES.tr[c] || c.toUpperCase();
 }
 
-export function getLangPoolForSite(siteLang = getSiteLang()) {
-  return LANG_POOL.map((item) => ({
-    code: item.code,
-    flag: item.flag,
-    name: getLangName(item.code, siteLang)
-  }));
+function normalizeExcludeCode(options = {}) {
+  return String(
+    options.excludeCode ||
+    (options.excludeSiteLang ? getSiteLang() : "") ||
+    ""
+  ).trim().toLowerCase();
+}
+
+export function getLangPoolForSite(siteLang = getSiteLang(), options = {}) {
+  const excludeCode = normalizeExcludeCode(options);
+
+  return LANG_POOL
+    .filter((item) => item.code !== excludeCode)
+    .map((item) => ({
+      code: item.code,
+      flag: item.flag,
+      region: item.region,
+      regionName: REGION_NAMES[item.region] || "Diller",
+      featured: !!item.featured,
+      name: getLangName(item.code, siteLang)
+    }));
+}
+
+export function getCategorizedLangPoolForSite(siteLang = getSiteLang(), options = {}) {
+  const pool = getLangPoolForSite(siteLang, options);
+  const groups = {};
+
+  pool.forEach((item) => {
+    const key = item.region || "other";
+    if (!groups[key]) {
+      groups[key] = {
+        key,
+        title: REGION_NAMES[key] || "Diller",
+        items: []
+      };
+    }
+    groups[key].items.push(item);
+  });
+
+  const order = ["europe", "americas", "asia", "middle_east", "africa", "balkans", "caucasus", "turkic", "kurdish"];
+
+  return order
+    .filter((key) => groups[key])
+    .map((key) => groups[key]);
+}
+
+export function getFeaturedLangsForSite(siteLang = getSiteLang(), options = {}) {
+  return getLangPoolForSite(siteLang, options).filter((item) => item.featured);
 }
