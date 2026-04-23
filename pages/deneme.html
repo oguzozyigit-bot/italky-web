@@ -98,8 +98,8 @@
       width:44px;
       height:44px;
       border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.04);
+      border-radius:16px;
+      background:rgba(255,255,255,.045);
       color:#fff;
       display:flex;
       align-items:center;
@@ -110,7 +110,9 @@
 
     .icon-btn svg,
     .send-btn svg,
-    .mic-btn svg{
+    .mic-btn svg,
+    .copy-btn svg,
+    .menu-close svg{
       width:20px;
       height:20px;
       stroke:currentColor;
@@ -128,6 +130,7 @@
       gap:1px;
       text-align:center;
       user-select:none;
+      cursor:pointer;
     }
 
     .brand-title{
@@ -179,7 +182,7 @@
       left:0;
       top:0;
       bottom:0;
-      width:min(84vw, 336px);
+      width:min(86vw, 348px);
       transform:translateX(-104%);
       transition:transform .24s ease;
       padding:calc(14px + var(--safe-top)) 12px calc(14px + var(--safe-bottom));
@@ -189,15 +192,95 @@
       display:flex;
       flex-direction:column;
       gap:12px;
+      overflow:auto;
+      scrollbar-width:none;
     }
 
+    .menu-panel::-webkit-scrollbar{ display:none; }
     .menu.open .menu-panel{ transform:translateX(0); }
 
+    .menu-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .menu-title{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:20px;
+      font-weight:900;
+      color:#fff;
+      margin:0;
+    }
+
+    .menu-close{
+      width:40px;
+      height:40px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      cursor:pointer;
+    }
+
     .menu-box{
-      border-radius:20px;
+      border-radius:22px;
       background:rgba(255,255,255,.04);
       border:1px solid rgba(255,255,255,.08);
       padding:14px;
+    }
+
+    .profile-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .profile-avatar{
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      overflow:hidden;
+      flex:0 0 auto;
+      background:linear-gradient(135deg,#17386b,#2d6dc1);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      font-weight:1000;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .profile-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .profile-meta{
+      min-width:0;
+      flex:1;
+    }
+
+    .profile-name{
+      font-size:15px;
+      font-weight:1000;
+      color:#fff;
+      line-height:1.15;
+      word-break:break-word;
+    }
+
+    .profile-no{
+      margin-top:4px;
+      font-size:12px;
+      font-weight:800;
+      color:#cdeeff;
+      line-height:1.35;
+      word-break:break-all;
     }
 
     .mini-label{
@@ -206,7 +289,7 @@
       font-weight:1000;
       text-transform:uppercase;
       letter-spacing:.9px;
-      margin-bottom:6px;
+      margin-bottom:8px;
     }
 
     .my-id-row{
@@ -218,8 +301,8 @@
     .my-id-pill{
       flex:1;
       min-width:0;
-      min-height:42px;
-      border-radius:14px;
+      min-height:44px;
+      border-radius:16px;
       background:rgba(255,255,255,.04);
       border:1px solid rgba(255,255,255,.08);
       display:flex;
@@ -234,10 +317,10 @@
     }
 
     .copy-btn{
-      width:42px;
-      height:42px;
+      width:44px;
+      height:44px;
       border:none;
-      border-radius:14px;
+      border-radius:16px;
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.08);
       color:#fff;
@@ -245,19 +328,9 @@
       flex:0 0 auto;
     }
 
-    .copy-btn svg{
-      width:18px;
-      height:18px;
-      stroke:currentColor;
-      stroke-width:2.2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .lang-select{
+    .lang-picker{
       width:100%;
-      min-height:46px;
+      min-height:48px;
       border:none;
       outline:none;
       border-radius:16px;
@@ -265,8 +338,19 @@
       border:1px solid rgba(255,255,255,.08);
       color:#fff;
       padding:0 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      cursor:pointer;
       font-size:14px;
       font-weight:900;
+    }
+
+    .lang-picker-text{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .join-input{
@@ -304,14 +388,13 @@
       position:absolute;
       inset:calc(var(--header-h) + var(--safe-top)) 0 calc(var(--footer-h) + var(--safe-bottom)) 0;
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
     }
 
     .meeting-top{
-      position:absolute;
-      left:0;
-      right:0;
-      top:0;
-      z-index:10;
+      flex:0 0 auto;
       padding:10px 12px 8px;
       background:linear-gradient(180deg, rgba(8,26,54,.88), rgba(8,26,54,.24));
       backdrop-filter:blur(10px);
@@ -320,36 +403,36 @@
     .meeting-summary{
       border:1px solid var(--line2);
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border-radius:20px;
-      padding:12px 14px;
+      border-radius:22px;
+      padding:14px;
       box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
     }
 
     .meeting-line{
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:space-between;
       gap:10px;
     }
 
     .meeting-title{
-      font-size:16px;
+      font-size:18px;
       font-weight:1000;
       color:#fff;
       line-height:1.15;
     }
 
     .meeting-sub{
-      margin-top:4px;
-      font-size:11px;
+      margin-top:5px;
+      font-size:12px;
       color:var(--muted);
       font-weight:800;
       line-height:1.35;
     }
 
     .meeting-badge{
-      min-width:72px;
-      height:30px;
+      min-width:74px;
+      height:32px;
       padding:0 12px;
       border-radius:999px;
       border:1px solid rgba(116,228,255,.22);
@@ -361,31 +444,32 @@
       font-size:11px;
       font-weight:1000;
       white-space:nowrap;
+      flex:0 0 auto;
     }
 
     .avatar-strip{
       display:flex;
-      gap:8px;
+      gap:10px;
       overflow-x:auto;
       scrollbar-width:none;
-      margin-top:10px;
+      margin-top:12px;
       padding-bottom:2px;
     }
 
     .avatar-strip::-webkit-scrollbar{ display:none; }
 
     .mini-user{
-      min-width:44px;
+      min-width:50px;
       display:flex;
       flex-direction:column;
       align-items:center;
-      gap:4px;
+      gap:5px;
       flex:0 0 auto;
     }
 
     .mini-avatar{
-      width:40px;
-      height:40px;
+      width:44px;
+      height:44px;
       border-radius:50%;
       background:linear-gradient(135deg,#17386b,#2d6dc1);
       border:1px solid rgba(255,255,255,.10);
@@ -423,8 +507,8 @@
     }
 
     .mini-name{
-      max-width:56px;
-      font-size:9px;
+      max-width:60px;
+      font-size:10px;
       color:rgba(255,255,255,.76);
       font-weight:800;
       white-space:nowrap;
@@ -434,12 +518,12 @@
     }
 
     .chat-scroll{
-      position:absolute;
-      inset:104px 0 0 0;
+      flex:1;
+      min-height:0;
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
       overscroll-behavior:contain;
-      padding:8px 14px calc(var(--composer-h) + 30px + var(--keyboard-offset));
+      padding:8px 14px calc(var(--composer-h) + 20px + var(--keyboard-offset));
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -668,32 +752,150 @@
     .seal-dot{ color:rgba(255,255,255,.25); }
     .seal-year{ color:#bfe7ff; }
 
-    .toast{
+    .lang-modal{
       position:fixed;
-      left:50%;
-      bottom:calc(64px + var(--safe-bottom));
-      transform:translateX(-50%) translateY(120px);
-      background:rgba(10,14,24,.96);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      padding:12px 16px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-      z-index:9999;
-      transition:.25s ease;
-      box-shadow:0 18px 36px rgba(0,0,0,.30);
-      text-align:center;
-      max-width:min(92vw, 560px);
+      inset:0;
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      z-index:160;
+      background:rgba(0,0,0,.36);
+      backdrop-filter:blur(4px);
+      padding:16px;
     }
 
-    .toast.show{
-      transform:translateX(-50%) translateY(0);
+    .lang-modal.open{ display:flex; }
+
+    .lang-sheet{
+      width:min(100%, 430px);
+      max-height:76vh;
+      border-radius:28px;
+      overflow:hidden;
+      background:linear-gradient(180deg, rgba(18,26,42,.98), rgba(10,16,28,.98));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 24px 60px rgba(0,0,0,.34);
+      display:flex;
+      flex-direction:column;
+    }
+
+    .lang-sheet-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:16px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+
+    .lang-sheet-title{
+      font-size:18px;
+      font-weight:1000;
+      color:#fff;
+    }
+
+    .lang-sheet-close{
+      width:40px;
+      height:40px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      cursor:pointer;
+    }
+
+    .lang-search-wrap{
+      padding:12px 16px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+
+    .lang-search{
+      width:100%;
+      min-height:46px;
+      border:none;
+      outline:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      padding:0 14px;
+      font-size:14px;
+      font-weight:800;
+    }
+
+    .lang-search::placeholder{
+      color:rgba(255,255,255,.42);
+    }
+
+    .lang-list{
+      overflow:auto;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      scrollbar-width:none;
+    }
+
+    .lang-list::-webkit-scrollbar{ display:none; }
+
+    .lang-item{
+      width:100%;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.07);
+      color:#fff;
+      text-align:left;
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+    }
+
+    .lang-item.active{
+      border-color:rgba(116,228,255,.26);
+      background:rgba(116,228,255,.10);
+    }
+
+    .lang-left{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .lang-flag{
+      width:28px;
+      height:28px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,.05);
+      font-size:18px;
+      flex:0 0 auto;
+    }
+
+    .lang-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .lang-code{
+      font-size:11px;
+      font-weight:900;
+      color:rgba(255,255,255,.52);
+      text-transform:uppercase;
     }
 
     @media (max-width:390px){
-      .chat-scroll{ inset:108px 0 0 0; }
-      .meeting-title{ font-size:15px; }
+      .meeting-title{ font-size:16px; }
       .bubble{ font-size:13.5px; }
     }
   </style>
@@ -703,11 +905,32 @@
 <div class="menu" id="menu">
   <div class="menu-backdrop" id="menuBackdrop"></div>
   <aside class="menu-panel">
+    <div class="menu-top">
+      <h3 class="menu-title">Meeting</h3>
+      <button class="menu-close" id="menuClose" type="button" aria-label="Kapat">
+        <svg viewBox="0 0 24 24">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
     <div class="menu-box">
-      <div class="mini-label">Benim ID</div>
+      <div class="mini-label">Profil</div>
+      <div class="profile-row">
+        <div class="profile-avatar" id="profileAvatar"></div>
+        <div class="profile-meta">
+          <div class="profile-name" id="profileName">Kullanıcı</div>
+          <div class="profile-no" id="profileMemberNo">Üyelik No: —</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-box">
+      <div class="mini-label">Benim Üyelik Numaram</div>
       <div class="my-id-row">
         <div class="my-id-pill" id="myUserId">Hazırlanıyor...</div>
-        <button class="copy-btn" id="copyMyIdBtn" type="button" aria-label="ID kopyala">
+        <button class="copy-btn" id="copyMyIdBtn" type="button" aria-label="Numarayı kopyala">
           <svg viewBox="0 0 24 24">
             <rect x="9" y="9" width="13" height="13" rx="2"></rect>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -718,24 +941,31 @@
 
     <div class="menu-box">
       <div class="mini-label">Benim Dilim</div>
-      <select id="myLangSelect" class="lang-select">
-        <option value="tr">Türkçe</option>
-        <option value="en">English</option>
-        <option value="de">Deutsch</option>
-        <option value="fr">Français</option>
-        <option value="es">Español</option>
-        <option value="it">Italiano</option>
-        <option value="ar">العربية</option>
-        <option value="ru">Русский</option>
-      </select>
+      <button id="myLangPicker" class="lang-picker" type="button">
+        <span class="lang-picker-text" id="myLangPickerText">Türkçe</span>
+        <span>▾</span>
+      </button>
     </div>
 
     <div class="menu-box">
       <div class="mini-label">Katıl</div>
-      <input id="joinUserIdInput" class="join-input" type="text" placeholder="Kullanıcı ID gir">
+      <input id="joinUserIdInput" class="join-input" type="text" placeholder="Üyelik numarası gir">
       <button id="joinUserBtn" class="join-btn" type="button">Katılımcı Ekle</button>
     </div>
   </aside>
+</div>
+
+<div class="lang-modal" id="langModal">
+  <div class="lang-sheet">
+    <div class="lang-sheet-head">
+      <div class="lang-sheet-title">Dil Seç</div>
+      <button class="lang-sheet-close" id="langModalClose" type="button">✕</button>
+    </div>
+    <div class="lang-search-wrap">
+      <input id="langSearch" class="lang-search" type="text" placeholder="Dil ara">
+    </div>
+    <div class="lang-list" id="langList"></div>
+  </div>
 </div>
 
 <main id="pageContent">
