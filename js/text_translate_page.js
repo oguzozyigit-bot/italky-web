@@ -79,9 +79,9 @@ function toast(msg) {
   }, 2200);
 }
 
-function setOutput(main, sub = "") {
+function setOutput(main) {
   resultBubble.textContent = String(main || "");
-  resultSub.textContent = String(sub || "");
+  resultSub.textContent = "";
   resultBubble.className = `bubble ${String(main || "").trim() && String(main || "").trim() !== "..." ? "latest" : "normal"}`;
   resultArea.scrollTop = resultArea.scrollHeight + 300;
 }
@@ -414,7 +414,7 @@ function closeLangPopover() {
 async function translateText() {
   const sourceText = normalizeText(inputBox.value);
   if (!sourceText) {
-    setOutput("...", "");
+    setOutput("...");
     toast("Önce çevrilecek bir metin yaz.");
     return;
   }
@@ -430,14 +430,14 @@ async function translateText() {
 
   frameRoot.classList.remove("is-ready", "is-error");
   frameRoot.classList.add("is-translating");
-  setOutput("Çevriliyor...", sourceText);
+  setOutput("Çevriliyor...");
 
   try {
     const out = await translateGoogleFree(sourceText, from, to);
 
     if (myToken !== lastTranslateToken) return;
 
-    setOutput(out, sourceText);
+    setOutput(out);
 
     frameRoot.classList.remove("is-translating", "is-error");
     frameRoot.classList.add("is-ready");
@@ -450,7 +450,7 @@ async function translateText() {
   } catch (e) {
     if (myToken !== lastTranslateToken) return;
 
-    setOutput("⚠️ Çeviri şu an yapılamadı.", sourceText);
+    setOutput("⚠️ Çeviri şu an yapılamadı.");
     frameRoot.classList.remove("is-translating");
     frameRoot.classList.add("is-error");
     toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
@@ -614,7 +614,7 @@ function bindEvents() {
   clearBtn.addEventListener("click", () => {
     inputBox.value = "";
     inputBox.style.height = "auto";
-    setOutput("...", "");
+    setOutput("...");
     syncInputPreview();
     stopSpeak();
     stopRecognition();
@@ -637,7 +637,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderToggles();
   bindEvents();
 
-  setOutput("...", "");
+  setOutput("...");
 
   inputBox.style.height = "auto";
   inputBox.removeAttribute("readonly");
