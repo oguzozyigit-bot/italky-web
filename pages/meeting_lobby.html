@@ -2,341 +2,271 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Meeting Başlat</title>
   <meta name="theme-color" content="#081a36"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
 
   <style>
-    :root{
-      --bg:#081a36;
-      --bg2:#0b2246;
-      --line:rgba(255,255,255,.08);
-      --line2:rgba(125,190,255,.18);
-      --txt:#f7fbff;
-      --muted:rgba(255,255,255,.62);
-      --safe-top:env(safe-area-inset-top);
-      --safe-bottom:env(safe-area-inset-bottom);
-      --shellLift:0px;
+    :root {
+      --bg: #061325;
+      --accent: #8ad8ff;
+      --accent-glow: rgba(138, 216, 255, 0.3);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --txt: #f7fbff;
+      --muted: rgba(255, 255, 255, 0.62);
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      color:var(--txt);
-      font-family:Outfit,Arial,sans-serif;
-      background:
-        radial-gradient(circle at 12% 0%, rgba(120,190,255,.16), transparent 24%),
-        radial-gradient(circle at 88% 14%, rgba(118,235,255,.08), transparent 18%),
-        linear-gradient(180deg,#061325 0%, #081a36 58%, #07152c 100%);
-      overflow:hidden;
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      color: var(--txt);
+      font-family: 'Outfit', sans-serif;
+      background: #061325;
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(138, 216, 255, 0.15), transparent 30%),
+        radial-gradient(circle at 90% 90%, rgba(116, 223, 255, 0.1), transparent 30%);
+      overflow-x: hidden;
     }
 
-    body::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      opacity:.08;
-      background-image:
-        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-      background-size:100% 3px, 3px 100%;
+    /* Arka plan ızgara efekti */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.15;
+      background-image: 
+        linear-gradient(var(--card-border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--card-border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -1;
     }
 
-    #pageContent{
-      height:100dvh;
-      overflow-y:auto;
-      overflow-x:hidden;
-      padding-top:calc(14px + var(--safe-top));
-      padding-bottom:calc(18px + var(--safe-bottom) + var(--shellLift));
-      scrollbar-width:none;
-      -webkit-overflow-scrolling:touch;
+    #pageContent {
+      height: 100dvh;
+      overflow-y: auto;
+      padding: calc(20px + var(--safe-top)) 14px calc(40px + var(--safe-bottom));
+      scrollbar-width: none;
+    }
+    #pageContent::-webkit-scrollbar { display: none; }
+
+    .page { max-width: 800px; margin: 0 auto; }
+
+    /* Hero Bölümü - Animasyonlu */
+    .hero {
+      border-radius: 32px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      padding: 30px 24px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     }
 
-    #pageContent::-webkit-scrollbar{ display:none; }
-
-    .page{
-      width:100%;
-      max-width:760px;
-      margin:0 auto;
-      padding:0 14px;
+    .hero::after {
+      content: "";
+      position: absolute;
+      top: -50%; right: -20%;
+      width: 200px; height: 200px;
+      background: var(--accent-glow);
+      filter: blur(60px);
+      border-radius: 50%;
+      animation: pulse 8s infinite alternate;
     }
 
-    .hero{
-      border-radius:30px;
-      border:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      padding:22px 18px;
-      box-shadow:0 18px 38px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.03);
-      margin-bottom:16px;
-      overflow:hidden;
-      position:relative;
+    @keyframes pulse {
+      from { transform: scale(1); opacity: 0.5; }
+      to { transform: scale(1.5); opacity: 0.8; }
     }
 
-    .hero::before{
-      content:"";
-      position:absolute;
-      width:180px;
-      height:180px;
-      border-radius:50%;
-      right:-50px;
-      top:-60px;
-      background:radial-gradient(circle, rgba(143,221,255,.18), transparent 70%);
-      pointer-events:none;
+    .hero-title {
+      margin: 0 0 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(28px, 6vw, 36px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(to right, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    .hero-title{
-      margin:0 0 8px;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:30px;
-      line-height:1.04;
-      letter-spacing:-.8px;
-      font-weight:900;
+    .hero-sub {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--muted);
+      font-weight: 500;
     }
 
-    .hero-sub{
-      margin:0;
-      font-size:15px;
-      line-height:1.6;
-      color:var(--muted);
-      font-weight:800;
-      max-width:92%;
+    /* Kartlar - Cam Efekti */
+    .grid { display: grid; gap: 16px; }
+
+    .card {
+      border-radius: 28px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 24px;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: rgba(138, 216, 255, 0.4); }
+
+    .card-title { font-size: 24px; font-weight: 800; margin: 0 0 8px; color: #fff; }
+    .card-sub { font-size: 14px; color: var(--muted); margin: 0 0 20px; line-height: 1.4; }
+
+    .label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-weight: 900;
     }
 
-    .grid{
-      display:grid;
-      gap:14px;
+    .input {
+      width: 100%;
+      height: 58px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 0 18px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+      outline: none;
+    }
+    .input:focus {
+      border-color: var(--accent);
+      background: rgba(138, 216, 255, 0.05);
+      box-shadow: 0 0 20px var(--accent-glow);
     }
 
-    .card{
-      border-radius:28px;
-      border:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      padding:18px;
-      box-shadow:0 14px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03);
+    /* Butonlar */
+    .primary-btn {
+      width: 100%;
+      height: 58px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #8ad8ff, #4ebfff);
+      color: #061325;
+      font-weight: 800;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(78, 191, 255, 0.25);
+      transition: all 0.3s;
+    }
+    .primary-btn:active { transform: scale(0.96); }
+
+    .secondary-btn {
+      width: 100%;
+      height: 58px;
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      background: transparent;
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .secondary-btn:hover { background: rgba(255,255,255,0.05); }
+
+    .row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
+
+    .room-preview {
+      margin-top: 15px;
+      padding: 12px 18px;
+      background: rgba(138, 216, 255, 0.08);
+      border: 1px dashed var(--accent);
+      border-radius: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 0.4s ease;
     }
 
-    .card-title{
-      margin:0 0 6px;
-      font-size:22px;
-      line-height:1.05;
-      font-weight:1000;
-      color:#fff;
-    }
+    @keyframes slideIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-    .card-sub{
-      margin:0 0 14px;
-      font-size:13px;
-      line-height:1.55;
-      color:rgba(255,255,255,.66);
-      font-weight:800;
-    }
+    .room-code { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent); }
 
-    .field{
-      margin-bottom:12px;
-    }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 12px; font-weight: 500; }
 
-    .field:last-child{
-      margin-bottom:0;
-    }
-
-    .label{
-      display:block;
-      margin:0 0 8px;
-      font-size:11px;
-      letter-spacing:.9px;
-      text-transform:uppercase;
-      color:rgba(255,255,255,.48);
-      font-weight:1000;
-    }
-
-    .input{
-      width:100%;
-      min-height:54px;
-      border:none;
-      outline:none;
-      border-radius:18px;
-      padding:0 16px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      font-size:16px;
-      font-weight:900;
-      font-family:inherit;
-    }
-
-    .input::placeholder{
-      color:rgba(255,255,255,.42);
-    }
-
-    .primary-btn,
-    .secondary-btn{
-      width:100%;
-      min-height:54px;
-      border:none;
-      border-radius:18px;
-      font-family:inherit;
-      font-size:16px;
-      font-weight:1000;
-      cursor:pointer;
-    }
-
-    .primary-btn{
-      background:linear-gradient(135deg,#8ad8ff 0%, #74dfff 100%);
-      color:#07162f;
-      box-shadow:0 10px 22px rgba(116,223,255,.18);
-    }
-
-    .secondary-btn{
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-    }
-
-    .row{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-    }
-
-    .hint{
-      margin-top:10px;
-      font-size:12px;
-      line-height:1.5;
-      color:rgba(255,255,255,.55);
-      font-weight:800;
-    }
-
-    .room-preview{
-      margin-top:12px;
-      min-height:50px;
-      border-radius:18px;
-      padding:0 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      font-weight:1000;
-    }
-
-    .room-code{
-      font-family:"Space Grotesk",monospace;
-      font-size:18px;
-      letter-spacing:1px;
-      color:#fff;
-    }
-
-    .room-meta{
-      font-size:11px;
-      font-weight:900;
-      color:#bfe9ff;
-      white-space:nowrap;
-    }
-
-    .toast{
-      position:fixed;
-      left:50%;
-      bottom:calc(18px + var(--safe-bottom) + var(--shellLift));
-      transform:translateX(-50%) translateY(120px);
-      z-index:9999;
-      min-width:160px;
-      max-width:86%;
-      padding:12px 16px;
-      border-radius:999px;
-      text-align:center;
-      font-size:13px;
-      font-weight:1000;
-      color:#fff;
-      background:rgba(10,22,42,.94);
-      border:1px solid rgba(122,216,255,.24);
-      box-shadow:0 12px 28px rgba(0,0,0,.24);
-      transition:transform .22s ease, opacity .22s ease;
-      opacity:0;
-      pointer-events:none;
-    }
-
-    .toast.show{
-      transform:translateX(-50%) translateY(0);
-      opacity:1;
-    }
-
-    @media (min-width:720px){
-      .grid{
-        grid-template-columns:1fr 1fr;
-      }
+    @media (min-width: 720px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .row { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
+
   <main id="pageContent">
     <div class="page">
+      
       <section class="hero">
         <h1 class="hero-title">Meeting’e Başla</h1>
-        <p class="hero-sub">
-          Yeni bir oda oluşturabilir ya da elindeki oda koduyla mevcut görüşmeye katılabilirsin.
-        </p>
+        <p class="hero-sub">italkyAI ile sınırları kaldırın. Yeni bir oda oluşturun veya bir koda katılarak anında tercüme dünyasına girin.</p>
       </section>
 
       <section class="grid">
+        
         <div class="card">
-          <h2 class="card-title">Yeni Oda Oluştur</h2>
-          <p class="card-sub">İlk giren kullanıcı yönetici olur. Oda adı belirleyip toplantıyı başlat.</p>
-
+          <h2 class="card-title">Yeni Oda</h2>
+          <p class="card-sub">Toplantı adını belirle, odayı kur ve yönetici olarak hemen başla.</p>
+          
           <div class="field">
-            <label class="label" for="roomNameInput">Oda Adı</label>
-            <input id="roomNameInput" class="input" type="text" placeholder="Örn: Almanca Çalışma Grubu" maxlength="60">
+            <label class="label" for="roomNameInput">Oda Tanımı</label>
+            <input id="roomNameInput" class="input" type="text" placeholder="Örn: Global İş Toplantısı" maxlength="60">
           </div>
 
-          <button id="createRoomBtn" class="primary-btn" type="button">Oda Oluştur</button>
+          <button id="createRoomBtn" class="primary-btn">Odayı Oluştur</button>
 
           <div id="roomPreview" class="room-preview" style="display:none">
             <div class="room-code" id="roomPreviewCode">—</div>
-            <div class="room-meta">Kopyala ve paylaş</div>
+            <div style="font-size: 11px; font-weight: 800; color: var(--accent)">KOPYALA</div>
           </div>
 
-          <div class="hint">
-            Oda oluşturulduktan sonra otomatik olarak meeting ekranına geçilir.
-          </div>
+          <p class="hint">Oluşturulan oda koduyla başkalarını davet edebilirsin.</p>
         </div>
 
         <div class="card">
-          <h2 class="card-title">Kodla Katıl</h2>
-          <p class="card-sub">Oda sahibinin verdiği meeting kodunu yazarak doğrudan aynı odaya bağlan.</p>
+          <h2 class="card-title">Hızlı Katılım</h2>
+          <p class="card-sub">Eline ulaşan meeting kodunu buraya girerek doğrudan sohbete bağlan.</p>
 
           <div class="field">
-            <label class="label" for="joinCodeInput">Oda Kodu</label>
-            <input id="joinCodeInput" class="input" type="text" placeholder="Örn: M8F3AB1" maxlength="24" autocapitalize="characters">
+            <label class="label" for="joinCodeInput">Davet Kodu</label>
+            <input id="joinCodeInput" class="input" type="text" placeholder="Kodu buraya yapıştır" maxlength="24" autocapitalize="characters">
           </div>
 
           <div class="row">
-            <button id="joinRoomBtn" class="primary-btn" type="button">Koda Katıl</button>
-            <button id="goMeetingBtn" class="secondary-btn" type="button">Son Odaya Git</button>
+            <button id="joinRoomBtn" class="primary-btn">Koda Katıl</button>
+            <button id="goMeetingBtn" class="secondary-btn">Son Oda</button>
           </div>
 
-          <div class="hint">
-            Daha önce oluşturduğun veya katıldığın son oda kodu cihazda saklanır.
-          </div>
+          <p class="hint">Son katıldığın odalar otomatik olarak hatırlanır.</p>
         </div>
+
       </section>
+
     </div>
   </main>
-
-  <div class="toast" id="toast"></div>
 
   <script type="module" src="/js/meeting_lobby.js?v=1"></script>
 </body>
