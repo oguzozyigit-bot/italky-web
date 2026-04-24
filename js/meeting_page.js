@@ -1,143 +1,120 @@
 import { supabase } from "/js/supabase_client.js";
-import { ensureModuleAdAccess } from "/js/ad_gate.js";
-import { getLangPoolForSite } from "/js/lang_pool_full.js";
-import { STORAGE_KEY } from "/js/config.js";
 
-const API_BASE = "https://italky-api.onrender.com";
-const MODULE_KEY = "meeting_room_access";
-const STORAGE_LANG_KEY = "meeting_my_lang";
+let mountShell = null;
+try {
+  const shellModule = await import("/js/ui_shell.js");
+  mountShell = shellModule?.mountShell || null;
+} catch (_) {}
+
+try {
+  mountShell?.({ scroll: "hidden" });
+} catch (_) {}
 
 const $ = (id) => document.getElementById(id);
 
-const UI = {
-  chatMessages: $("chatMessages"),
-  chatInput: $("chatInput"),
+const API_ROOT =
+  window.ITALKY_API_BASE ||
+  localStorage.getItem("italky_api_base") ||
+  "https://italky-api.onrender.com/api";
+
+const MEETING_API = `${API_ROOT}/meeting`;
+
+const STORAGE = {
+  lang: "italky_meeting_lang_v2",
+  roomId: "italky_meeting_room_id_v2",
+  roomCode: "italky_meeting_room_code_v2",
+  adSeenAt: "italky_meeting_ad_seen_at"
+};
+
+const COLOR_POOL = [
+  "#84d6ff",
+  "#8af09f",
+  "#ffb86a",
+  "#f78cff",
+  "#73ebff",
+  "#ffd76f",
+  "#94b4ff",
+  "#ff8e8e",
+  "#78f0cd",
+  "#b48cff"
+];
+
+const FALLBACK_LANGS = [
+  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+  { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "de", name: "Deutsch", flag: "🇩🇪" },
+  { code: "fr", name: "Français", flag: "🇫🇷" },
+  { code: "it", name: "Italiano", flag: "🇮🇹" },
+  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "ar", name: "العربية", flag: "🇸🇦" },
+  { code: "ru", name: "Русский", flag: "🇷🇺" }
+];
+
+const el = {
+  menuBtn: $("menuBtn"),
+  participantCount: $("participantCount"),
+  participantsStrip: $("participantsStrip"),
+  chatScroll: $("chatScroll"),
+  chatFeed: $("chatFeed"),
+  messageInput: $("messageInput"),
   sendBtn: $("sendBtn"),
   micBtn: $("micBtn"),
-  typingState: $("typingState"),
-  chatComposer: $("chatComposer"),
 
-  menu: $("menu"),
-  menuBtn: $("menuBtn"),
-  menuBackdrop: $("menuBackdrop"),
-  menuClose: $("menuClose"),
-  brandHome: $("brandHome"),
+  drawerLayer: $("drawerLayer"),
+  drawerBackdrop: $("drawerBackdrop"),
+  drawerCloseBtn: $("drawerCloseBtn"),
+  drawerAvatar: $("drawerAvatar"),
+  drawerName: $("drawerName"),
+  drawerMemberSub: $("drawerMemberSub"),
+  myMembershipNo: $("myMembershipNo"),
+  copyMemberBtn: $("copyMemberBtn"),
+  joinInput: $("joinInput"),
+  joinBtn: $("joinBtn"),
 
-  avatarStrip: $("avatarStrip"),
-  meetingBadge: $("participantCountTop"),
-  meetingTitle: $("meetingTitle"),
-
-  profileAvatar: $("profileAvatar"),
-  profileName: $("profileName"),
-  profileMemberNo: $("profileMemberNo"),
-
-  myUserId: $("myUserId"),
-  copyMyIdBtn: $("copyMyIdBtn"),
-
-  myLangPicker: $("myLangPicker"),
-  myLangPickerText: $("myLangPickerText"),
-
-  joinUserIdInput: $("joinUserIdInput"),
-  joinUserBtn: $("joinUserBtn"),
-
-  langModal: $("langModal"),
-  langModalClose: $("langModalClose"),
-  langSearch: $("langSearch"),
+  langTrigger: $("langTrigger"),
+  selectedLangFlag: $("selectedLangFlag"),
+  selectedLangName: $("selectedLangName"),
+  langLayer: $("langLayer"),
+  langBackdrop: $("langBackdrop"),
+  langCloseBtn: $("langCloseBtn"),
   langList: $("langList"),
 
   toast: $("toast")
 };
 
-const COLOR_POOL = ["c1", "c2", "c3", "c4", "c5", "c6"];
-
 const state = {
-  currentUser: null,
-  currentProfile: null,
-  recognition: null,
-  isListening: false,
-  meetingId: new URLSearchParams(location.search).get("meeting_id") || "",
-  meetingCode: new URLSearchParams(location.search).get("meeting_code") || "",
-  myLang: localStorage.getItem(STORAGE_LANG_KEY) || "tr",
-  participants: [],
-  langPool: [],
-  memberNo: "",
+  user: null,
+  profile: null,
+  membershipNo: "",
   displayName: "",
   avatarUrl: "",
-  speakingAudio: null,
-  speakingAbort: null
+  roomId: localStorage.getItem(STORAGE.roomId) || "",
+  roomCode: localStorage.getItem(STORAGE.roomCode) || "",
+  selectedLang: localStorage.getItem(STORAGE.lang) || "tr",
+  participants: [],
+  messages: [],
+  langs: [...FALLBACK_LANGS],
+  pollTimer: null,
+  speechRec: null,
+  speaking: null
 };
 
 function showToast(message = "") {
-  if (!UI.toast) return;
-  UI.toast.textContent = String(message || "");
-  UI.toast.classList.add("show");
+  if (!el.toast) return;
+  el.toast.textContent = String(message);
+  el.toast.classList.add("show");
   clearTimeout(window.__meetingToastTimer);
   window.__meetingToastTimer = setTimeout(() => {
-    UI.toast.classList.remove("show");
+    el.toast.classList.remove("show");
   }, 2200);
 }
 
-function openMenu() {
-  UI.menu?.classList.add("open");
+function safeText(v, fallback = "") {
+  return String(v ?? fallback ?? "").trim();
 }
 
-function closeMenu() {
-  UI.menu?.classList.remove("open");
-}
-
-function openLangModal() {
-  UI.langModal?.classList.add("open");
-  renderLangList(UI.langSearch?.value || "");
-}
-
-function closeLangModal() {
-  UI.langModal?.classList.remove("open");
-}
-
-function autoResizeTextarea() {
-  if (!UI.chatInput) return;
-  UI.chatInput.style.height = "auto";
-  UI.chatInput.style.height = `${Math.min(UI.chatInput.scrollHeight, 140)}px`;
-}
-
-function syncInputActionState() {
-  if (!UI.chatInput || !UI.micBtn || !UI.sendBtn) return;
-  const hasText = String(UI.chatInput.value || "").trim().length > 0;
-  UI.micBtn.classList.toggle("hidden", hasText && !state.isListening);
-  UI.sendBtn.classList.toggle("hidden", !hasText);
-}
-
-function setListeningUi(isListening) {
-  state.isListening = !!isListening;
-  UI.chatComposer?.classList.toggle("listening", !!isListening);
-  UI.micBtn?.classList.toggle("listening", !!isListening);
-  syncInputActionState();
-}
-
-function scrollChatToBottom() {
-  if (!UI.chatMessages) return;
-  requestAnimationFrame(() => {
-    UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight + 500;
-  });
-}
-
-function updateViewportLayout() {
-  const vv = window.visualViewport;
-  if (!vv) return;
-
-  document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
-  const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-  document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
-  requestAnimationFrame(scrollChatToBottom);
-}
-
-function initialsFromName(name = "") {
-  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-  return (parts[0]?.[0] || "U") + (parts[1]?.[0] || "");
-}
-
-function escapeHtml(value = "") {
-  return String(value)
+function escapeHtml(v = "") {
+  return String(v)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -145,760 +122,846 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#39;");
 }
 
-function getCachedUser() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
+function formatInitials(name = "") {
+  const parts = safeText(name).split(/\s+/).filter(Boolean);
+  if (!parts.length) return "U";
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+function hashCode(str = "") {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
   }
+  return Math.abs(h);
 }
 
-function buildMemberNo(user, profile, cached) {
-  const meta = user?.user_metadata || {};
-  return (
-    profile?.member_no ||
-    profile?.membership_no ||
-    profile?.user_no ||
-    profile?.public_user_id ||
-    profile?.short_id ||
-    meta.membership_no ||
-    meta.member_no ||
-    cached?.membership_no ||
-    cached?.uyelik_no ||
-    (user?.id ? user.id.replace(/-/g, "").slice(0, 8).toUpperCase() : "—")
-  );
+function getColorForKey(key = "") {
+  return COLOR_POOL[hashCode(String(key)) % COLOR_POOL.length];
 }
 
-function getLanguageName(code) {
-  const c = String(code || "").trim().toLowerCase();
-  const found = state.langPool.find((x) => x.code === c);
-  return found?.name || c.toUpperCase();
-}
-
-function getLanguageFlag(code) {
-  const c = String(code || "").trim().toLowerCase();
-  const found = state.langPool.find((x) => x.code === c);
-  return found?.flag || "🌐";
-}
-
-function renderLangPickerText() {
-  if (!UI.myLangPickerText) return;
-  UI.myLangPickerText.textContent = `${getLanguageFlag(state.myLang)} ${getLanguageName(state.myLang)}`;
-}
-
-function buildLangPool() {
-  try {
-    const raw = getLangPoolForSite("tr") || [];
-    const seen = new Set();
-
-    state.langPool = raw
-      .map((item) => ({
-        code: String(item.code || "").trim().toLowerCase(),
-        name: String(item.name || item.tr_name || item.code || "").trim(),
-        flag: item.flag || "🌐"
-      }))
-      .filter((item) => item.code && !seen.has(item.code) && seen.add(item.code))
-      .sort((a, b) => a.name.localeCompare(b.name, "tr"));
-  } catch (e) {
-    console.error("lang pool hata:", e);
-    state.langPool = [
-      { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-      { code: "en", name: "English", flag: "🇬🇧" }
-    ];
-  }
-
-  renderLangPickerText();
-}
-
-function renderLangList(query = "") {
-  if (!UI.langList) return;
-  const q = String(query || "").trim().toLowerCase();
-
-  const filtered = !q
-    ? state.langPool
-    : state.langPool.filter((lang) => {
-        const hay = `${lang.name} ${lang.code}`.toLowerCase();
-        return hay.includes(q);
-      });
-
-  UI.langList.innerHTML = filtered.map((lang) => `
-    <button class="lang-item ${lang.code === state.myLang ? "active" : ""}" type="button" data-code="${escapeHtml(lang.code)}">
-      <div class="lang-left">
-        <div class="lang-flag">${lang.flag || "🌐"}</div>
-        <div>
-          <div class="lang-name">${escapeHtml(lang.name)}</div>
-          <div class="lang-code">${escapeHtml(lang.code)}</div>
-        </div>
-      </div>
-      <div>${lang.code === state.myLang ? "✓" : ""}</div>
-    </button>
-  `).join("");
-
-  UI.langList.querySelectorAll(".lang-item").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const code = String(btn.dataset.code || "").trim().toLowerCase();
-      if (!code) return;
-
-      state.myLang = code;
-      localStorage.setItem(STORAGE_LANG_KEY, state.myLang);
-      renderLangPickerText();
-
-      if (state.meetingId) {
-        try {
-          await patchMyLanguage(state.meetingId, state.myLang);
-        } catch (e) {
-          console.error("Dil güncellenemedi:", e);
-        }
-      }
-
-      closeLangModal();
-      showToast(`Dil seçildi: ${getLanguageName(state.myLang)}`);
-      await refreshAll();
-    });
-  });
-}
-
-function participantColorClass(id = "") {
-  const sum = String(id).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  return COLOR_POOL[sum % COLOR_POOL.length];
-}
-
-function setProfileAvatar(name, avatarUrl) {
-  if (!UI.profileAvatar) return;
-  if (avatarUrl) {
-    UI.profileAvatar.innerHTML = `<img src="${avatarUrl}" alt="${escapeHtml(name)}">`;
-  } else {
-    UI.profileAvatar.textContent = initialsFromName(name);
-  }
-}
-
-function renderProfile(profile, user) {
-  const cached = getCachedUser();
-  const meta = user?.user_metadata || {};
-
-  const name =
-    profile?.full_name ||
-    meta.full_name ||
-    meta.name ||
-    meta.display_name ||
-    cached?.display_name ||
-    cached?.name ||
-    user?.email ||
-    "italky Kullanıcısı";
-
-  const avatarUrl =
-    profile?.avatar_url ||
-    meta.avatar_url ||
-    meta.picture ||
-    meta.avatar ||
-    cached?.picture ||
-    cached?.avatar ||
-    cached?.avatar_url ||
-    "";
-
-  const memberNo = buildMemberNo(user, profile, cached);
-
-  state.displayName = name;
-  state.avatarUrl = avatarUrl;
-  state.memberNo = memberNo;
-
-  if (UI.profileName) UI.profileName.textContent = name;
-  if (UI.profileMemberNo) UI.profileMemberNo.textContent = `Üyelik No: ${memberNo}`;
-  if (UI.myUserId) UI.myUserId.textContent = memberNo;
-
-  setProfileAvatar(name, avatarUrl);
-}
-
-function renderParticipants() {
-  if (!UI.avatarStrip || !UI.meetingBadge) return;
-
-  UI.avatarStrip.innerHTML = "";
-  UI.meetingBadge.textContent = `${state.participants.length}`;
-
-  state.participants.forEach((p) => {
-    const mini = document.createElement("div");
-    mini.className = "mini-user";
-    mini.innerHTML = `
-      <div class="mini-avatar ${p.active ? "active" : ""} ${p.speaking ? "speaking" : ""}">
-        ${p.avatar ? `<img src="${p.avatar}" alt="${escapeHtml(p.name)}">` : `<span>${initialsFromName(p.name)}</span>`}
-      </div>
-      <div class="mini-name">${escapeHtml((p.name || "").split(" ")[0] || p.name)}</div>
-    `;
-    UI.avatarStrip.appendChild(mini);
-  });
-}
-
-function clearMessages() {
-  if (UI.chatMessages) UI.chatMessages.innerHTML = "";
-}
-
-function addSystemMessage(text) {
-  if (!UI.chatMessages) return;
-  const row = document.createElement("div");
-  row.className = "msg center";
-  row.innerHTML = `
-    <div class="bubble-wrap">
-      <div class="bubble system">${escapeHtml(text)}</div>
-    </div>
-  `;
-  UI.chatMessages.appendChild(row);
-  scrollChatToBottom();
-}
-
-function stopSpeaking() {
-  try {
-    if (state.speakingAbort) state.speakingAbort.abort();
-  } catch {}
-  state.speakingAbort = null;
-
-  try {
-    if (state.speakingAudio) {
-      state.speakingAudio.pause();
-      state.speakingAudio.currentTime = 0;
-    }
-  } catch {}
-  state.speakingAudio = null;
-
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  try { window.NativeTTS?.stop?.(); } catch {}
-}
-
-function getSpeechLang(code) {
-  const c = String(code || "tr").toLowerCase();
-  const map = {
-    tr: "tr-TR",
-    en: "en-US",
-    de: "de-DE",
-    fr: "fr-FR",
-    es: "es-ES",
-    it: "it-IT",
-    ar: "ar-SA",
-    ru: "ru-RU"
-  };
-  return map[c] || "tr-TR";
-}
-
-function chooseWebVoice(langCode) {
-  const voices = window.speechSynthesis?.getVoices?.() || [];
-  const target = getSpeechLang(langCode).toLowerCase();
-  const base = String(langCode || "").toLowerCase();
-
-  return (
-    voices.find((v) => String(v.lang || "").toLowerCase() === target) ||
-    voices.find((v) => String(v.lang || "").toLowerCase().startsWith(base)) ||
-    voices[0] ||
-    null
-  );
-}
-
-async function speakText(text, langCode) {
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  stopSpeaking();
-
-  try {
-    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.speak(value, String(langCode || "tr"));
-      return;
-    }
-  } catch {}
-
-  if (window.speechSynthesis) {
-    try {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(value);
-      utter.lang = getSpeechLang(langCode);
-      const voice = chooseWebVoice(langCode);
-      if (voice) utter.voice = voice;
-      utter.rate = 0.96;
-      utter.pitch = 1;
-      window.speechSynthesis.speak(utter);
-      return;
-    } catch {}
-  }
-
-  try {
-    state.speakingAbort = new AbortController();
-
-    const resp = await fetch(`${API_BASE}/api/tts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: value,
-        lang: String(langCode || "tr").toLowerCase()
-      }),
-      signal: state.speakingAbort.signal
-    });
-
-    const json = await resp.json().catch(() => ({}));
-    const audioBase64 = json?.audio_base64 || "";
-
-    if (!resp.ok || !audioBase64) return;
-
-    const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
-    state.speakingAudio = audio;
-    await audio.play();
-  } catch {}
-}
-
-function speakerButton(text, langCode) {
-  return `
-    <button class="speaker-btn" type="button" data-speak="${encodeURIComponent(text)}" data-lang="${encodeURIComponent(langCode)}" aria-label="Mesajı dinle">
-      <svg viewBox="0 0 24 24">
-        <path d="M5 14H8L13 18V6L8 10H5V14Z"></path>
-        <path d="M17 9C18.3 10.1 19 11.5 19 12.9C19 14.3 18.3 15.7 17 16.8"></path>
-      </svg>
-    </button>
-  `;
-}
-
-function addRenderedMessage(msg) {
-  const isSystem = msg.message_type === "system";
-  if (isSystem) {
-    addSystemMessage(msg.translated_text || msg.original_text || "");
-    return;
-  }
-
-  const isMine = String(msg.sender_member_no || "") === String(state.memberNo || "");
-  const side = isMine ? "left" : "right";
-  const colorClass = participantColorClass(msg.sender_member_no || msg.sender_user_id || msg.id || "");
-  const text = msg.translated_text || msg.original_text || "";
-  const speakLang = state.myLang;
-  const senderName = msg.sender_name || "Kullanıcı";
-
-  const row = document.createElement("div");
-  row.className = `msg ${side}`;
-
-  if (isMine) {
-    row.innerHTML = `
-      <div class="bubble-wrap self-bubble">
-        <div class="bubble left">
-          <div class="bubble-row">
-            <div class="bubble-text">${escapeHtml(text)}</div>
-            ${speakerButton(text, speakLang)}
-          </div>
-        </div>
-        <div class="msg-name">${escapeHtml(senderName)}</div>
-      </div>
-    `;
-  } else {
-    row.innerHTML = `
-      <div class="bubble-wrap user-${colorClass}">
-        <div class="bubble right">
-          <div class="bubble-row">
-            <div class="bubble-text">${escapeHtml(text)}</div>
-            ${speakerButton(text, speakLang)}
-          </div>
-        </div>
-        <div class="msg-name">${escapeHtml(senderName)}</div>
-      </div>
-    `;
-  }
-
-  UI.chatMessages.appendChild(row);
-}
-
-function bindSpeakerButtons() {
-  UI.chatMessages?.querySelectorAll(".speaker-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const text = decodeURIComponent(btn.dataset.speak || "");
-      const lang = decodeURIComponent(btn.dataset.lang || "tr");
-      await speakText(text, lang);
-    });
-  });
-}
-
-async function authHeaders() {
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token || "";
+function getAuthHeaders(token) {
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 }
 
-async function apiGet(path) {
-  const resp = await fetch(`${API_BASE}${path}`, {
-    method: "GET",
-    headers: await authHeaders()
-  });
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) throw new Error(json?.detail || json?.error || `GET ${path} failed`);
-  return json;
+async function getSession() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  return data?.session || null;
 }
 
-async function apiPost(path, body) {
-  const resp = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: await authHeaders(),
-    body: JSON.stringify(body || {})
-  });
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) throw new Error(json?.detail || json?.error || `POST ${path} failed`);
-  return json;
+async function getCurrentUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  return data?.user || null;
 }
 
-async function apiPatch(path, body) {
-  const resp = await fetch(`${API_BASE}${path}`, {
-    method: "PATCH",
-    headers: await authHeaders(),
-    body: JSON.stringify(body || {})
-  });
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) throw new Error(json?.detail || json?.error || `PATCH ${path} failed`);
-  return json;
-}
+async function getProfileByUserId(userId) {
+  if (!userId) return null;
 
-async function getCurrentUserAndProfile() {
   try {
-    let user = null;
-    let profile = null;
-
-    const userResp = await supabase.auth.getUser();
-    user = userResp?.data?.user || null;
-
-    if (!user) {
-      const sessionResp = await supabase.auth.getSession();
-      user = sessionResp?.data?.session?.user || null;
-    }
-
-    if (!user) return { user: null, profile: null };
-
-    const profileResp = await supabase
+    let res = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", user.id)
+      .eq("id", userId)
       .maybeSingle();
 
-    profile = profileResp?.data || null;
-    return { user, profile };
+    if (res?.data) return res.data;
+
+    res = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    return res?.data || null;
   } catch (e) {
-    console.error("getCurrentUserAndProfile hata:", e);
-    return { user: null, profile: null };
+    console.warn("[meeting] profile alınamadı:", e);
+    return null;
   }
 }
 
-async function createMeetingIfNeeded() {
-  if (state.meetingId) return;
+function pickMembershipNo(user, profile) {
+  const meta = user?.user_metadata || {};
+  return (
+    safeText(profile?.membership_no) ||
+    safeText(profile?.member_no) ||
+    safeText(profile?.membership_number) ||
+    safeText(profile?.uyelik_no) ||
+    safeText(meta?.membership_no) ||
+    safeText(meta?.member_no) ||
+    safeText(meta?.membership_number) ||
+    safeText(meta?.uyelik_no) ||
+    safeText(profile?.id).replaceAll("-", "").slice(0, 8).toUpperCase() ||
+    safeText(user?.id).replaceAll("-", "").slice(0, 8).toUpperCase()
+  );
+}
 
-  const created = await apiPost("/api/meeting/create", {
-    title: "Yeni Meeting",
-    lang_code: state.myLang
+function pickDisplayName(user, profile) {
+  const meta = user?.user_metadata || {};
+  return (
+    safeText(profile?.hitap) ||
+    safeText(profile?.display_name) ||
+    safeText(profile?.full_name) ||
+    safeText(profile?.name) ||
+    safeText(meta?.hitap) ||
+    safeText(meta?.full_name) ||
+    safeText(meta?.name) ||
+    safeText(meta?.display_name) ||
+    safeText(user?.email).split("@")[0] ||
+    "Kullanıcı"
+  );
+}
+
+function pickAvatar(user, profile) {
+  const meta = user?.user_metadata || {};
+  return (
+    safeText(profile?.avatar_url) ||
+    safeText(profile?.picture) ||
+    safeText(profile?.avatar) ||
+    safeText(meta?.avatar_url) ||
+    safeText(meta?.picture) ||
+    safeText(meta?.avatar) ||
+    ""
+  );
+}
+
+async function loadLangPool() {
+  const importPaths = [
+    "/LANG_POOL/langpool.js",
+    "/js/LANG_POOL/langpool.js",
+    "/js/langpool.js",
+    "/js/lang_pool.js",
+    "/js/lang_pool_full.js"
+  ];
+
+  for (const path of importPaths) {
+    try {
+      const mod = await import(path);
+      const raw =
+        mod?.LANG_POOL ||
+        mod?.default?.LANG_POOL ||
+        mod?.default ||
+        mod?.languages ||
+        mod?.LANGS ||
+        null;
+
+      const normalized = normalizeLangPool(raw);
+      if (normalized.length) {
+        state.langs = normalized;
+        return;
+      }
+    } catch (_) {}
+  }
+
+  state.langs = [...FALLBACK_LANGS];
+}
+
+function normalizeLangPool(raw) {
+  if (!raw) return [];
+
+  const arr = Array.isArray(raw)
+    ? raw
+    : typeof raw === "object"
+    ? Object.values(raw)
+    : [];
+
+  const list = arr
+    .map((item) => {
+      const code = safeText(item?.code || item?.lang || item?.value).toLowerCase();
+      const name = safeText(item?.name || item?.label || item?.title);
+      const flag = safeText(item?.flag || guessFlag(code));
+      if (!code || !name) return null;
+      return { code, name, flag: flag || "🌐" };
+    })
+    .filter(Boolean);
+
+  const uniq = [];
+  const seen = new Set();
+
+  for (const item of list) {
+    if (seen.has(item.code)) continue;
+    seen.add(item.code);
+    uniq.push(item);
+  }
+
+  return uniq;
+}
+
+function guessFlag(code) {
+  const map = {
+    tr: "🇹🇷",
+    en: "🇬🇧",
+    de: "🇩🇪",
+    fr: "🇫🇷",
+    it: "🇮🇹",
+    es: "🇪🇸",
+    ar: "🇸🇦",
+    ru: "🇷🇺",
+    pt: "🇵🇹",
+    nl: "🇳🇱",
+    pl: "🇵🇱",
+    uk: "🇺🇦",
+    ja: "🇯🇵",
+    ko: "🇰🇷",
+    zh: "🇨🇳"
+  };
+  return map[code] || "🌐";
+}
+
+function getLangInfo(code) {
+  return (
+    state.langs.find((x) => x.code === code) ||
+    FALLBACK_LANGS.find((x) => x.code === code) ||
+    { code, name: code?.toUpperCase?.() || "Dil", flag: "🌐" }
+  );
+}
+
+function renderSelectedLanguage() {
+  const info = getLangInfo(state.selectedLang);
+  el.selectedLangFlag.textContent = info.flag || "🌐";
+  el.selectedLangName.textContent = info.name || "Dil";
+}
+
+function renderLangOptions() {
+  const html = state.langs
+    .map((lang) => {
+      const active = lang.code === state.selectedLang ? "active" : "";
+      return `
+        <button class="lang-option ${active}" type="button" data-code="${escapeHtml(lang.code)}">
+          <div class="lang-option-left">
+            <div style="font-size:20px">${escapeHtml(lang.flag || "🌐")}</div>
+            <div class="lang-option-name">${escapeHtml(lang.name)}</div>
+          </div>
+          <div class="lang-check"></div>
+        </button>
+      `;
+    })
+    .join("");
+
+  el.langList.innerHTML = html;
+
+  Array.from(el.langList.querySelectorAll(".lang-option")).forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const code = btn.dataset.code || "tr";
+      state.selectedLang = code;
+      localStorage.setItem(STORAGE.lang, code);
+      renderSelectedLanguage();
+      renderLangOptions();
+      closeLangModal();
+      await updateMyLanguage();
+      await refreshRoomState(true);
+      showToast("Dil güncellendi");
+    });
+  });
+}
+
+function openDrawer() {
+  el.drawerLayer.classList.add("open");
+}
+
+function closeDrawer() {
+  el.drawerLayer.classList.remove("open");
+}
+
+function openLangModal() {
+  el.langLayer.classList.add("open");
+}
+
+function closeLangModal() {
+  el.langLayer.classList.remove("open");
+}
+
+function renderProfile() {
+  const name = state.displayName || "Kullanıcı";
+  const memberNo = state.membershipNo || "—";
+
+  el.drawerName.textContent = name;
+  el.drawerMemberSub.textContent = `Üyelik No: ${memberNo}`;
+  el.myMembershipNo.textContent = memberNo;
+
+  if (state.avatarUrl) {
+    el.drawerAvatar.innerHTML = `<img src="${escapeHtml(state.avatarUrl)}" alt="Avatar">`;
+  } else {
+    el.drawerAvatar.textContent = formatInitials(name);
+  }
+}
+
+function normalizeParticipant(item = {}) {
+  const id =
+    safeText(item.user_id) ||
+    safeText(item.id) ||
+    safeText(item.participant_id) ||
+    safeText(item.membership_no) ||
+    Math.random().toString(36).slice(2);
+
+  const name =
+    safeText(item.display_name) ||
+    safeText(item.name) ||
+    safeText(item.full_name) ||
+    safeText(item.hitap) ||
+    "Kullanıcı";
+
+  const avatar =
+    safeText(item.avatar_url) ||
+    safeText(item.avatar) ||
+    safeText(item.picture);
+
+  const membershipNo =
+    safeText(item.membership_no) ||
+    safeText(item.member_no) ||
+    safeText(item.membership_number);
+
+  const lang =
+    safeText(item.lang) ||
+    safeText(item.language) ||
+    safeText(item.target_lang) ||
+    state.selectedLang;
+
+  return {
+    id,
+    name,
+    avatar,
+    membershipNo,
+    lang
+  };
+}
+
+function renderParticipants() {
+  const participants = Array.isArray(state.participants) ? state.participants : [];
+  el.participantCount.textContent = String(participants.length || 1);
+
+  if (!participants.length) {
+    el.participantsStrip.innerHTML = "";
+    return;
+  }
+
+  el.participantsStrip.innerHTML = participants
+    .map((p) => {
+      const avatarHtml = p.avatar
+        ? `<img src="${escapeHtml(p.avatar)}" alt="${escapeHtml(p.name)}">`
+        : escapeHtml(formatInitials(p.name));
+      return `
+        <div class="participant-chip">
+          <div class="participant-avatar">${avatarHtml}</div>
+          <div class="participant-name">${escapeHtml(p.name)}</div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function normalizeMessage(msg = {}) {
+  return {
+    id:
+      safeText(msg.id) ||
+      safeText(msg.message_id) ||
+      Math.random().toString(36).slice(2),
+    senderId:
+      safeText(msg.sender_id) ||
+      safeText(msg.user_id) ||
+      safeText(msg.author_id),
+    senderName:
+      safeText(msg.sender_name) ||
+      safeText(msg.display_name) ||
+      safeText(msg.author_name) ||
+      "Kullanıcı",
+    text:
+      safeText(msg.text_local) ||
+      safeText(msg.translated_text) ||
+      safeText(msg.text) ||
+      safeText(msg.message),
+    originalText:
+      safeText(msg.original_text),
+    system:
+      Boolean(msg.system || msg.type === "system"),
+    createdAt:
+      safeText(msg.created_at) || new Date().toISOString()
+  };
+}
+
+function renderMessages() {
+  const messages = Array.isArray(state.messages) ? state.messages : [];
+
+  if (!messages.length) {
+    el.chatFeed.innerHTML = "";
+    scrollChatToBottom();
+    return;
+  }
+
+  const html = messages
+    .map((raw) => {
+      const msg = normalizeMessage(raw);
+      const mine = msg.senderId && state.user?.id && msg.senderId === state.user.id;
+
+      if (msg.system) {
+        return `
+          <div class="msg system">
+            <div class="system-badge">${escapeHtml(msg.text)}</div>
+          </div>
+        `;
+      }
+
+      const cls = mine ? "mine" : "other";
+      const author = mine ? state.displayName : msg.senderName;
+      const colorKey = msg.senderId || msg.senderName || msg.id;
+      const color = getColorForKey(colorKey);
+      const speechText = msg.text || msg.originalText || "";
+
+      return `
+        <div class="msg ${cls}">
+          <div class="msg-block">
+            <div class="msg-row">
+              <div class="bubble" style="--line-color:${color}">
+                <div class="bubble-text">${escapeHtml(msg.text)}</div>
+                <button
+                  class="speaker-btn"
+                  type="button"
+                  data-speech="${escapeHtml(speechText)}"
+                  aria-label="Oku"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <polygon points="11 5 6 9 3 9 3 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+                    <path d="M18.5 6a8.5 8.5 0 0 1 0 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="msg-author">${escapeHtml(author)}</div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  el.chatFeed.innerHTML = html;
+
+  Array.from(el.chatFeed.querySelectorAll(".speaker-btn")).forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const text = btn.dataset.speech || "";
+      speakText(text);
+    });
   });
 
-  state.meetingId = created.meeting_id || "";
-  state.meetingCode = created.meeting_code || "";
-
-  if (state.meetingId) {
-    const url = new URL(location.href);
-    url.searchParams.set("meeting_id", state.meetingId);
-    if (state.meetingCode) url.searchParams.set("meeting_code", state.meetingCode);
-    history.replaceState({}, "", url.toString());
-  }
-}
-
-async function loadMeeting() {
-  if (!state.meetingId) return;
-
-  const data = await apiGet(`/api/meeting/${state.meetingId}`);
-  const meeting = data?.meeting || {};
-  const participants = Array.isArray(data?.participants) ? data.participants : [];
-
-  if (UI.meetingTitle) {
-    UI.meetingTitle.textContent = `Meeting • ${meeting.meeting_code || state.meetingId}`;
-  }
-
-  state.participants = participants.map((p) => ({
-    id: p.member_no || p.user_id || p.id,
-    name: p.display_name || "Kullanıcı",
-    avatar: p.avatar_url || "",
-    active: !!p.is_active,
-    speaking: false,
-    lang: p.lang_code || "tr",
-    isMe: String(p.member_no || "") === String(state.memberNo || "")
-  }));
-
-  renderParticipants();
-}
-
-async function loadMessages() {
-  if (!state.meetingId) return;
-
-  const data = await apiGet(`/api/meeting/${state.meetingId}/messages`);
-  const rows = Array.isArray(data?.messages) ? data.messages : [];
-
-  clearMessages();
-  rows.forEach(addRenderedMessage);
-  bindSpeakerButtons();
   scrollChatToBottom();
 }
 
-async function patchMyLanguage(meetingId, langCode) {
-  return apiPatch(`/api/meeting/${meetingId}/my-language`, {
-    lang_code: langCode
+function scrollChatToBottom() {
+  requestAnimationFrame(() => {
+    el.chatScroll.scrollTop = el.chatScroll.scrollHeight + 9999;
   });
 }
 
-async function sendMeetingMessage(text) {
-  const value = String(text || "").trim();
-  if (!value || !state.meetingId) return;
-
-  await apiPost(`/api/meeting/${state.meetingId}/message`, {
-    text: value
-  });
-
-  await loadMessages();
+function autoResizeTextarea() {
+  el.messageInput.style.height = "28px";
+  el.messageInput.style.height = `${Math.min(el.messageInput.scrollHeight, 120)}px`;
 }
 
-async function addParticipantById(rawId) {
-  const memberNo = String(rawId || "").trim();
-  if (!memberNo) {
-    showToast("Önce üyelik numarası gir.");
-    return;
+function syncSendState() {
+  const hasText = !!safeText(el.messageInput.value);
+  el.sendBtn.classList.toggle("hidden", !hasText);
+  el.micBtn.classList.toggle("hidden", hasText);
+}
+
+function bindInputEvents() {
+  el.messageInput.addEventListener("input", () => {
+    autoResizeTextarea();
+    syncSendState();
+  });
+
+  el.messageInput.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (safeText(el.messageInput.value)) {
+        await sendMessage();
+      }
+    }
+  });
+}
+
+function bindDrawerEvents() {
+  el.menuBtn.addEventListener("click", openDrawer);
+  el.drawerBackdrop.addEventListener("click", closeDrawer);
+  el.drawerCloseBtn.addEventListener("click", closeDrawer);
+
+  el.langTrigger.addEventListener("click", openLangModal);
+  el.langBackdrop.addEventListener("click", closeLangModal);
+  el.langCloseBtn.addEventListener("click", closeLangModal);
+
+  el.copyMemberBtn.addEventListener("click", async () => {
+    try {
+      const text = state.membershipNo || "";
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      showToast("Üyelik numarası kopyalandı");
+    } catch (_) {
+      showToast("Kopyalama yapılamadı");
+    }
+  });
+
+  el.joinBtn.addEventListener("click", joinByMembershipNumber);
+}
+
+function bindActionEvents() {
+  el.sendBtn.addEventListener("click", sendMessage);
+  el.micBtn.addEventListener("click", toggleSpeechInput);
+}
+
+async function api(path, options = {}) {
+  const session = await getSession();
+  const token = session?.access_token || "";
+
+  const res = await fetch(`${MEETING_API}${path}`, {
+    method: options.method || "GET",
+    headers: getAuthHeaders(token),
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+
+  if (!res.ok) {
+    let msg = `İstek başarısız (${res.status})`;
+    try {
+      const err = await res.json();
+      msg = err?.detail || err?.message || msg;
+    } catch (_) {}
+    throw new Error(msg);
   }
 
-  if (!state.meetingCode) {
-    showToast("Meeting kodu bulunamadı");
+  try {
+    return await res.json();
+  } catch (_) {
+    return {};
+  }
+}
+
+async function ensureMeetingAccess() {
+  try {
+    const seenAt = Number(localStorage.getItem(STORAGE.adSeenAt) || 0);
+    const now = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
+
+    if (now - seenAt < DAY) return true;
+
+    if (window.AndroidAds?.showRewardedAd) {
+      await window.AndroidAds.showRewardedAd("meeting_entry");
+    }
+
+    localStorage.setItem(STORAGE.adSeenAt, String(now));
+    return true;
+  } catch (_) {
+    return true;
+  }
+}
+
+async function bootstrapUser() {
+  state.user = await getCurrentUser();
+
+  if (!state.user) {
+    showToast("Oturum bulunamadı");
+    location.href = "/pages/login.html";
+    return false;
+  }
+
+  state.profile = await getProfileByUserId(state.user.id);
+  state.membershipNo = pickMembershipNo(state.user, state.profile);
+  state.displayName = pickDisplayName(state.user, state.profile);
+  state.avatarUrl = pickAvatar(state.user, state.profile);
+
+  renderProfile();
+  return true;
+}
+
+async function bootstrapMeeting() {
+  try {
+    const payload = {
+      membership_no: state.membershipNo,
+      display_name: state.displayName,
+      avatar_url: state.avatarUrl,
+      lang: state.selectedLang
+    };
+
+    const data = await api("/bootstrap", {
+      method: "POST",
+      body: payload
+    });
+
+    state.roomId =
+      safeText(data.room_id) ||
+      safeText(data.id) ||
+      state.roomId ||
+      "";
+
+    state.roomCode =
+      safeText(data.room_code) ||
+      safeText(data.code) ||
+      state.roomCode ||
+      "";
+
+    if (state.roomId) localStorage.setItem(STORAGE.roomId, state.roomId);
+    if (state.roomCode) localStorage.setItem(STORAGE.roomCode, state.roomCode);
+
+    state.participants = Array.isArray(data.participants)
+      ? data.participants.map(normalizeParticipant)
+      : [
+          normalizeParticipant({
+            user_id: state.user.id,
+            display_name: state.displayName,
+            avatar_url: state.avatarUrl,
+            membership_no: state.membershipNo,
+            lang: state.selectedLang
+          })
+        ];
+
+    state.messages = Array.isArray(data.messages) ? data.messages.map(normalizeMessage) : [];
+  } catch (e) {
+    console.warn("[meeting bootstrap]", e);
+    state.participants = [
+      normalizeParticipant({
+        user_id: state.user.id,
+        display_name: state.displayName,
+        avatar_url: state.avatarUrl,
+        membership_no: state.membershipNo,
+        lang: state.selectedLang
+      })
+    ];
+    state.messages = [];
+  }
+
+  renderParticipants();
+  renderMessages();
+}
+
+async function refreshRoomState(silent = false) {
+  if (!state.roomId) {
+    renderParticipants();
+    renderMessages();
     return;
   }
 
   try {
-    await apiPost("/api/meeting/join", {
-      meeting_code: state.meetingCode,
-      member_no: memberNo,
-      lang_code: state.myLang
+    const data = await api(`/state?room_id=${encodeURIComponent(state.roomId)}`);
+
+    if (Array.isArray(data.participants)) {
+      state.participants = data.participants.map(normalizeParticipant);
+    }
+
+    if (Array.isArray(data.messages)) {
+      state.messages = data.messages.map(normalizeMessage);
+    }
+
+    renderParticipants();
+    renderMessages();
+  } catch (e) {
+    if (!silent) {
+      console.warn("[meeting state]", e);
+    }
+  }
+}
+
+async function updateMyLanguage() {
+  if (!state.roomId) return;
+
+  try {
+    await api("/language", {
+      method: "POST",
+      body: {
+        room_id: state.roomId,
+        lang: state.selectedLang
+      }
+    });
+  } catch (e) {
+    console.warn("[meeting language]", e);
+  }
+}
+
+async function joinByMembershipNumber() {
+  const target = safeText(el.joinInput.value).toUpperCase();
+  if (!target) {
+    showToast("Üyelik numarası gir");
+    return;
+  }
+
+  try {
+    await api("/join", {
+      method: "POST",
+      body: {
+        room_id: state.roomId,
+        target_membership_no: target,
+        inviter_membership_no: state.membershipNo
+      }
     });
 
-    if (UI.joinUserIdInput) UI.joinUserIdInput.value = "";
+    el.joinInput.value = "";
+    closeDrawer();
     showToast("Katılımcı eklendi");
-    closeMenu();
-    await refreshAll();
+    await refreshRoomState(true);
   } catch (e) {
-    console.error("Katılımcı ekleme hata:", e);
-    showToast("Katılımcı eklenemedi");
+    console.error(e);
+    showToast(e.message || "Katılımcı eklenemedi");
   }
 }
 
-async function ensureMeetingAdAccess() {
-  const ok = await ensureModuleAdAccess({
-    moduleKey: MODULE_KEY,
-    title: "Meeting için kısa bir reklam gösterilecek",
-    text: "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden giriş yapabilirsiniz.",
-    placement: "meeting_access",
-    hours: 24
-  });
-
-  if (!ok) {
-    location.href = "/pages/home.html";
+async function sendMessage() {
+  const text = safeText(el.messageInput.value);
+  if (!text) return;
+  if (!state.roomId) {
+    showToast("Meeting hazır değil");
+    return;
   }
 
-  return ok;
+  try {
+    await api("/message", {
+      method: "POST",
+      body: {
+        room_id: state.roomId,
+        text,
+        sender_lang: state.selectedLang,
+        target_lang: state.selectedLang
+      }
+    });
+
+    el.messageInput.value = "";
+    autoResizeTextarea();
+    syncSendState();
+
+    await refreshRoomState(true);
+  } catch (e) {
+    console.error(e);
+    showToast(e.message || "Mesaj gönderilemedi");
+  }
 }
 
-function bindEvents() {
-  UI.menuBtn?.addEventListener("click", openMenu);
-  UI.menuBackdrop?.addEventListener("click", closeMenu);
-  UI.menuClose?.addEventListener("click", closeMenu);
+function speakText(text) {
+  const msg = safeText(text);
+  if (!msg) return;
 
-  UI.brandHome?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
-  });
+  try {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(msg);
+      utter.lang = state.selectedLang || "tr-TR";
+      utter.rate = 0.96;
+      utter.pitch = 1;
+      state.speaking = utter;
+      window.speechSynthesis.speak(utter);
+    } else if (window.AndroidTTS?.speak) {
+      window.AndroidTTS.speak(msg, state.selectedLang || "tr");
+    } else {
+      showToast("Ses okuma desteklenmiyor");
+    }
+  } catch (_) {
+    showToast("Ses okuma başlatılamadı");
+  }
+}
 
-  UI.copyMyIdBtn?.addEventListener("click", async () => {
-    const id = UI.myUserId?.textContent || "";
+function toggleSpeechInput() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SR) {
+    showToast("Sesli giriş desteklenmiyor");
+    return;
+  }
+
+  if (state.speechRec) {
     try {
-      await navigator.clipboard.writeText(id);
-      showToast("Üyelik numarası kopyalandı");
-    } catch {
-      showToast("Numara kopyalanamadı");
-    }
-  });
-
-  UI.myLangPicker?.addEventListener("click", openLangModal);
-  UI.langModalClose?.addEventListener("click", closeLangModal);
-  UI.langModal?.addEventListener("click", (e) => {
-    if (e.target === UI.langModal) closeLangModal();
-  });
-
-  UI.langSearch?.addEventListener("input", () => {
-    renderLangList(UI.langSearch.value || "");
-  });
-
-  UI.joinUserBtn?.addEventListener("click", () => {
-    addParticipantById(UI.joinUserIdInput?.value || "");
-  });
-
-  UI.joinUserIdInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addParticipantById(UI.joinUserIdInput?.value || "");
-    }
-  });
-
-  UI.chatInput?.addEventListener("input", () => {
-    autoResizeTextarea();
-    syncInputActionState();
-  });
-
-  UI.chatInput?.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      const value = UI.chatInput.value;
-      UI.chatInput.value = "";
-      autoResizeTextarea();
-      syncInputActionState();
-      await sendMeetingMessage(value);
-    }
-  });
-
-  UI.sendBtn?.addEventListener("click", async () => {
-    const value = UI.chatInput?.value || "";
-    if (UI.chatInput) UI.chatInput.value = "";
-    autoResizeTextarea();
-    syncInputActionState();
-    await sendMeetingMessage(value);
-  });
-
-  UI.micBtn?.addEventListener("click", startRecognitionOnce);
-
-  window.visualViewport?.addEventListener("resize", updateViewportLayout);
-  window.visualViewport?.addEventListener("scroll", updateViewportLayout);
-  window.addEventListener("resize", updateViewportLayout);
-}
-
-function cleanupTranscript(text = "") {
-  return String(text || "")
-    .replace(/\s+/g, " ")
-    .replace(/\b(\S+)( \1\b)+/gi, "$1")
-    .trim();
-}
-
-function buildStableTranscript(results) {
-  const pieces = [];
-
-  for (let i = 0; i < results.length; i++) {
-    const chunk = String(results[i]?.[0]?.transcript || "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (!chunk) continue;
-
-    const prev = pieces[pieces.length - 1] || "";
-    if (prev === chunk) continue;
-    if (prev && chunk.startsWith(prev)) {
-      pieces[pieces.length - 1] = chunk;
-      continue;
-    }
-    if (prev && prev.startsWith(chunk)) continue;
-
-    pieces.push(chunk);
-  }
-
-  return cleanupTranscript(pieces.join(" "));
-}
-
-function stopRecognition() {
-  try { state.recognition?.stop(); } catch {}
-  state.recognition = null;
-  setListeningUi(false);
-}
-
-function startRecognitionOnce() {
-  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Recognition) {
-    showToast("Bu cihazda sesli giriş desteklenmiyor");
+      state.speechRec.stop();
+    } catch (_) {}
+    state.speechRec = null;
     return;
   }
 
-  if (state.isListening) {
-    stopRecognition();
-    return;
-  }
-
-  stopRecognition();
-
-  const recognition = new Recognition();
-  recognition.lang = "tr-TR";
+  const recognition = new SR();
+  recognition.lang = state.selectedLang || "tr-TR";
   recognition.interimResults = true;
-  recognition.continuous = true;
-  recognition.maxAlternatives = 1;
+  recognition.continuous = false;
 
-  state.recognition = recognition;
-  let lastTranscript = "";
-  setListeningUi(true);
+  recognition.onstart = () => {
+    state.speechRec = recognition;
+    showToast("Dinleniyor...");
+  };
 
   recognition.onresult = (event) => {
-    const transcript = buildStableTranscript(event.results);
-    lastTranscript = transcript;
-
-    if (transcript && UI.chatInput) {
-      UI.chatInput.value = transcript;
-      autoResizeTextarea();
-      syncInputActionState();
-      scrollChatToBottom();
+    let transcript = "";
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
     }
+    el.messageInput.value = transcript.trim();
+    autoResizeTextarea();
+    syncSendState();
   };
 
   recognition.onerror = () => {
-    stopRecognition();
+    state.speechRec = null;
+    showToast("Sesli giriş hatası");
   };
 
-  recognition.onend = async () => {
-    const finalText = cleanupTranscript(UI.chatInput?.value || lastTranscript || "");
-    stopRecognition();
-
-    if (finalText) {
-      if (UI.chatInput) UI.chatInput.value = "";
-      autoResizeTextarea();
-      syncInputActionState();
-      await sendMeetingMessage(finalText);
-    }
+  recognition.onend = () => {
+    state.speechRec = null;
   };
 
-  try {
-    recognition.start();
-  } catch {
-    stopRecognition();
+  recognition.start();
+}
+
+function startPolling() {
+  stopPolling();
+  state.pollTimer = setInterval(() => {
+    refreshRoomState(true);
+  }, 2500);
+}
+
+function stopPolling() {
+  if (state.pollTimer) {
+    clearInterval(state.pollTimer);
+    state.pollTimer = null;
   }
 }
 
-async function refreshAll() {
-  await loadMeeting();
-  await loadMessages();
-}
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopPolling();
+  } else {
+    startPolling();
+    refreshRoomState(true);
+  }
+});
+
+window.addEventListener("beforeunload", async () => {
+  try {
+    if (state.roomId) {
+      await api("/leave", {
+        method: "POST",
+        body: {
+          room_id: state.roomId
+        }
+      });
+    }
+  } catch (_) {}
+});
 
 async function init() {
-  console.log("[meeting_page] init start");
-  injectExtraStyles();
-  buildLangPool();
+  await loadLangPool();
+  renderSelectedLanguage();
+  renderLangOptions();
 
-  const accessOk = await ensureMeetingAdAccess();
+  bindInputEvents();
+  bindDrawerEvents();
+  bindActionEvents();
+  autoResizeTextarea();
+  syncSendState();
+
+  const accessOk = await ensureMeetingAccess();
   if (!accessOk) return;
 
-  bindEvents();
-  autoResizeTextarea();
-  syncInputActionState();
+  const userOk = await bootstrapUser();
+  if (!userOk) return;
 
-  const { user, profile } = await getCurrentUserAndProfile();
-  console.log("[meeting_page] user:", user);
-  console.log("[meeting_page] profile:", profile);
-
-  state.currentUser = user;
-  state.currentProfile = profile;
-
-  if (!user) {
-    showToast("Oturum bulunamadı");
-    location.href = "/pages/login.html";
-    return;
-  }
-
-  renderProfile(profile, user);
-  await createMeetingIfNeeded();
-  await refreshAll();
-
-  updateViewportLayout();
+  await bootstrapMeeting();
+  startPolling();
   scrollChatToBottom();
 }
 
