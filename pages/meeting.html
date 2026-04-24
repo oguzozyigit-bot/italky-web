@@ -14,12 +14,11 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap"
     rel="stylesheet"
-  >
+  />
 
   <style>
     :root{
       --bg:#081a36;
-      --bg2:#0b2246;
       --line:rgba(255,255,255,.08);
       --txt:#f7fbff;
       --muted:rgba(255,255,255,.62);
@@ -90,13 +89,14 @@
       backdrop-filter:blur(16px);
     }
 
-    .icon-btn,.send-btn,.mic-btn,.speaker-btn,.copy-btn,.close-btn{
+    .icon-btn,.send-btn,.mic-btn,.speaker-btn,.copy-btn,.action-btn{
       border:none;
       color:#fff;
       display:flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
+      font-family:inherit;
     }
 
     .icon-btn{
@@ -111,8 +111,7 @@
     .send-btn svg,
     .mic-btn svg,
     .speaker-btn svg,
-    .copy-btn svg,
-    .close-btn svg{
+    .copy-btn svg{
       width:22px;
       height:22px;
       stroke:currentColor;
@@ -126,6 +125,7 @@
       text-align:center;
       line-height:1;
       user-select:none;
+      cursor:pointer;
     }
 
     .brand-title{
@@ -192,12 +192,6 @@
       backdrop-filter:blur(6px);
     }
 
-    .meeting-strip{
-      background:transparent;
-      padding:0;
-      min-height:86px;
-    }
-
     .participants-strip{
       display:flex;
       gap:10px;
@@ -214,8 +208,8 @@
     }
 
     .participant-chip{
-      min-width:58px;
-      max-width:64px;
+      min-width:62px;
+      max-width:68px;
       flex:0 0 auto;
       display:flex;
       flex-direction:column;
@@ -224,8 +218,8 @@
     }
 
     .participant-avatar{
-      width:50px;
-      height:50px;
+      width:52px;
+      height:52px;
       border-radius:50%;
       overflow:hidden;
       background:linear-gradient(135deg,#2457a3,#4d8fff);
@@ -473,9 +467,7 @@
       flex:0 0 auto;
     }
 
-    .mic-btn{
-      background:transparent;
-    }
+    .mic-btn{ background:transparent; }
 
     .send-btn{
       background:#fff;
@@ -483,9 +475,7 @@
       box-shadow:0 0 24px rgba(255,255,255,.08);
     }
 
-    .hidden{
-      display:none !important;
-    }
+    .hidden{ display:none !important; }
 
     .footer{
       position:absolute;
@@ -518,21 +508,18 @@
       -webkit-text-fill-color:transparent;
     }
 
-    .seal-dot{ color:rgba(255,255,255,.28); }
-    .seal-year{ color:#bde9ff; }
-
-    .drawer-layer,.lang-layer{
+    .drawer-layer,.lang-layer,.confirm-layer{
       position:absolute;
       inset:0;
       z-index:120;
       pointer-events:none;
     }
 
-    .drawer-layer.open,.lang-layer.open{
+    .drawer-layer.open,.lang-layer.open,.confirm-layer.open{
       pointer-events:auto;
     }
 
-    .drawer-backdrop,.lang-backdrop{
+    .drawer-backdrop,.lang-backdrop,.confirm-backdrop{
       position:absolute;
       inset:0;
       background:rgba(0,0,0,.42);
@@ -542,7 +529,8 @@
     }
 
     .drawer-layer.open .drawer-backdrop,
-    .lang-layer.open .lang-backdrop{
+    .lang-layer.open .lang-backdrop,
+    .confirm-layer.open .confirm-backdrop{
       opacity:1;
     }
 
@@ -565,9 +553,7 @@
       scrollbar-width:none;
     }
 
-    .drawer-panel::-webkit-scrollbar{
-      display:none;
-    }
+    .drawer-panel::-webkit-scrollbar{ display:none; }
 
     .drawer-layer.open .drawer-panel{
       transform:translateX(0);
@@ -594,27 +580,78 @@
       transform:translateY(0);
     }
 
-    .drawer-head,.lang-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:4px 2px 2px;
+    .confirm-card{
+      position:absolute;
+      left:16px;
+      right:16px;
+      top:50%;
+      transform:translateY(-50%) scale(.96);
+      border-radius:28px;
+      background:linear-gradient(180deg, rgba(11,24,47,.98), rgba(8,20,40,.98));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 18px 40px rgba(0,0,0,.28);
+      padding:18px;
+      opacity:0;
+      transition:.22s ease;
     }
 
-    .drawer-title,.lang-title{
-      font-size:20px;
+    .confirm-layer.open .confirm-card{
+      opacity:1;
+      transform:translateY(-50%) scale(1);
+    }
+
+    .confirm-title{
+      font-size:22px;
       font-weight:1000;
       color:#fff;
+      margin:0 0 8px;
     }
 
-    .close-btn{
-      width:46px;
-      height:46px;
-      border-radius:18px;
-      background:rgba(255,255,255,.05);
+    .confirm-text{
+      font-size:14px;
+      line-height:1.55;
+      color:#dff4ff;
+      font-weight:800;
+      margin:0 0 16px;
+    }
+
+    .confirm-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .drawer-brand{
+      border-radius:26px;
       border:1px solid rgba(255,255,255,.08);
-      flex:0 0 auto;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(121,221,255,.12), transparent 28%),
+        rgba(255,255,255,.03);
+      padding:18px 16px;
+      text-align:center;
+    }
+
+    .drawer-brand-title{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:28px;
+      font-weight:800;
+      line-height:1;
+      color:#fff;
+      letter-spacing:-.6px;
+    }
+
+    .drawer-brand-title .ai{
+      background:linear-gradient(135deg,#8fddff 0%,#83b5ff 46%,#c18dff 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .drawer-brand-sub{
+      margin-top:6px;
+      font-size:12px;
+      font-weight:1000;
+      letter-spacing:3px;
+      color:#9fe8ff;
     }
 
     .card{
@@ -640,15 +677,15 @@
     }
 
     .drawer-avatar{
-      width:60px;
-      height:60px;
-      border-radius:20px;
+      width:64px;
+      height:64px;
+      border-radius:22px;
       overflow:hidden;
       background:linear-gradient(135deg,#2b68c1,#62a3ff);
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:20px;
+      font-size:22px;
       font-weight:1000;
       color:#fff;
       flex:0 0 auto;
@@ -667,7 +704,7 @@
     }
 
     .profile-name{
-      font-size:15px;
+      font-size:18px;
       font-weight:1000;
       color:#fff;
       white-space:nowrap;
@@ -675,54 +712,23 @@
       text-overflow:ellipsis;
     }
 
-    .profile-sub{
-      margin-top:4px;
-      font-size:13px;
+    .profile-status{
+      margin-top:6px;
+      font-size:14px;
       font-weight:900;
       color:#dff4ff;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
     }
 
-    .value-row{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    .value-pill{
-      min-height:48px;
-      flex:1;
-      border-radius:18px;
-      padding:0 14px;
-      display:flex;
-      align-items:center;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      font-size:16px;
-      font-weight:1000;
-      color:#fff;
-    }
-
-    .copy-btn{
-      width:48px;
-      height:48px;
-      border-radius:18px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      flex:0 0 auto;
-    }
-
-    .lang-trigger,.join-input,.primary-btn{
+    .lang-trigger,.primary-btn,.danger-btn,.ghost-btn,.action-btn{
       width:100%;
-      min-height:52px;
+      min-height:56px;
       border-radius:18px;
       border:1px solid rgba(255,255,255,.08);
       outline:none;
       font-family:inherit;
       font-size:16px;
       font-weight:900;
+      cursor:pointer;
     }
 
     .lang-trigger{
@@ -732,7 +738,6 @@
       align-items:center;
       justify-content:space-between;
       padding:0 16px;
-      cursor:pointer;
       gap:12px;
     }
 
@@ -755,22 +760,94 @@
       text-overflow:ellipsis;
     }
 
-    .join-input{
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      padding:0 16px;
+    .room-code-card{
+      border-radius:24px;
+      border:1px solid rgba(121,221,255,.16);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(121,221,255,.10), transparent 26%),
+        rgba(255,255,255,.04);
+      padding:14px;
     }
 
-    .join-input::placeholder{
-      color:rgba(255,255,255,.42);
+    .room-code-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .room-code-value{
+      flex:1;
+      min-height:58px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      padding:0 16px;
+      font-size:28px;
+      font-weight:1000;
+      color:#fff;
+      letter-spacing:.8px;
+    }
+
+    .copy-btn{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      flex:0 0 auto;
+    }
+
+    .room-help{
+      margin-top:12px;
+      font-size:13px;
+      line-height:1.45;
+      color:#d8f4ff;
+      font-weight:800;
+    }
+
+    .meeting-date-card{
+      display:none;
+    }
+
+    .meeting-date-value{
+      min-height:56px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      padding:0 16px;
+      font-size:18px;
+      font-weight:1000;
+      color:#fff;
     }
 
     .primary-btn{
-      border:none;
       background:linear-gradient(135deg,#8ad8ff 0%, #74dfff 100%);
       color:#07162f;
-      cursor:pointer;
-      box-shadow:0 10px 22px rgba(116,223,255,.18);
+    }
+
+    .danger-btn{
+      background:rgba(255,94,94,.14);
+      border:1px solid rgba(255,94,94,.22);
+      color:#ffd1d1;
+    }
+
+    .ghost-btn{
+      background:rgba(255,255,255,.05);
+      color:#fff;
+    }
+
+    .action-btn.secondary{
+      background:rgba(255,255,255,.05);
+      color:#fff;
+    }
+
+    .action-btn.primary{
+      background:linear-gradient(135deg,#8ad8ff 0%, #74dfff 100%);
+      color:#07162f;
     }
 
     .lang-list{
@@ -779,9 +856,7 @@
       scrollbar-width:none;
     }
 
-    .lang-list::-webkit-scrollbar{
-      display:none;
-    }
+    .lang-list::-webkit-scrollbar{ display:none; }
 
     .lang-option{
       width:100%;
@@ -799,9 +874,7 @@
       font-family:inherit;
     }
 
-    .lang-option:first-child{
-      border-top:none;
-    }
+    .lang-option:first-child{ border-top:none; }
 
     .lang-option-left{
       display:flex;
@@ -870,154 +943,152 @@
   </style>
 </head>
 <body>
+  <div id="pageContent">
+    <div class="app">
+      <header class="header">
+        <button id="menuBtn" class="icon-btn" type="button" aria-label="Menü">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+          </svg>
+        </button>
 
-<div id="pageContent">
-  <div class="app">
+        <div class="brand" id="brandBackHome">
+          <div class="brand-title">italky<span class="ai">AI</span></div>
+          <div class="brand-sub">MEETING</div>
+        </div>
 
-    <header class="header">
-      <button id="menuBtn" class="icon-btn" type="button" aria-label="Menü">
-        <svg viewBox="0 0 24 24">
-          <path d="M4 7h16"></path>
-          <path d="M4 12h16"></path>
-          <path d="M4 17h16"></path>
-        </svg>
-      </button>
+        <div class="count-pill">
+          <div class="count-num" id="participantCount">1</div>
+          <div class="count-label">Kişi</div>
+        </div>
+      </header>
 
-      <div class="brand">
-        <div class="brand-title">italky<span class="ai">AI</span></div>
-        <div class="brand-sub">MEETING</div>
-      </div>
-
-      <div class="count-pill">
-        <div class="count-num" id="participantCount">1</div>
-        <div class="count-label">Kişi</div>
-      </div>
-    </header>
-
-    <main class="main">
-      <div class="meeting-top">
-        <div class="meeting-strip">
+      <main class="main">
+        <div class="meeting-top">
           <div class="participants-strip" id="participantsStrip"></div>
         </div>
-      </div>
 
-      <div class="chat-scroll" id="chatScroll">
-        <div class="chat-feed" id="chatFeed"></div>
-      </div>
-
-      <div class="composer-wrap">
-        <div class="composer">
-          <div class="composer-center">
-            <textarea id="messageInput" class="composer-input" rows="1" placeholder="Toplantıya mesaj yaz"></textarea>
-          </div>
-
-          <button id="micBtn" class="mic-btn" type="button" aria-label="Sesle yaz">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-              <path d="M19 11a7 7 0 0 1-14 0"></path>
-              <path d="M12 18v3"></path>
-              <path d="M8 21h8"></path>
-            </svg>
-          </button>
-
-          <button id="sendBtn" class="send-btn hidden" type="button" aria-label="Gönder">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 19V5"></path>
-              <path d="M6 11l6-6 6 6"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="seal">
-        <span class="seal-main">italkyAI By Ozyiğit's</span>
-        <span class="seal-dot">•</span>
-        <span class="seal-year">2026</span>
-      </div>
-    </footer>
-
-    <div class="drawer-layer" id="drawerLayer">
-      <div class="drawer-backdrop" id="drawerBackdrop"></div>
-
-      <aside class="drawer-panel">
-        <div class="drawer-head">
-          <div class="drawer-title">Meeting</div>
-          <button id="drawerCloseBtn" class="close-btn" type="button" aria-label="Kapat">
-            <svg viewBox="0 0 24 24">
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
+        <div class="chat-scroll" id="chatScroll">
+          <div class="chat-feed" id="chatFeed"></div>
         </div>
 
-        <div class="card">
-          <div class="mini-label">Profil</div>
-          <div class="profile-row">
-            <div class="drawer-avatar" id="drawerAvatar">U</div>
-            <div class="profile-meta">
-              <div class="profile-name" id="drawerName">Kullanıcı</div>
-              <div class="profile-sub" id="drawerMemberSub">Üyelik No: —</div>
+        <div class="composer-wrap">
+          <div class="composer">
+            <div class="composer-center">
+              <textarea id="messageInput" class="composer-input" rows="1" placeholder="Toplantıya mesaj yaz"></textarea>
             </div>
-          </div>
-        </div>
 
-        <div class="card">
-          <div class="mini-label">Benim Üyelik Numaram</div>
-          <div class="value-row">
-            <div class="value-pill" id="myMembershipNo">Hazırlanıyor...</div>
-            <button id="copyMemberBtn" class="copy-btn" type="button" aria-label="Kopyala">
+            <button id="micBtn" class="mic-btn" type="button" aria-label="Sesle yaz">
               <svg viewBox="0 0 24 24">
-                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
+                <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+                <path d="M19 11a7 7 0 0 1-14 0"></path>
+                <path d="M12 18v3"></path>
+                <path d="M8 21h8"></path>
+              </svg>
+            </button>
+
+            <button id="sendBtn" class="send-btn hidden" type="button" aria-label="Gönder">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 19V5"></path>
+                <path d="M6 11l6-6 6 6"></path>
               </svg>
             </button>
           </div>
         </div>
+      </main>
 
-        <div class="card">
-          <div class="mini-label">Benim Dilim</div>
-          <button id="langTrigger" class="lang-trigger" type="button">
-            <div class="lang-left">
-              <div class="lang-flag" id="selectedLangFlag">🇹🇷</div>
-              <div class="lang-name" id="selectedLangName">Türkçe</div>
+      <footer class="footer">
+        <div class="seal">
+          <span class="seal-main">italkyAI By Ozyiğut's</span>
+          <span class="seal-dot">•</span>
+          <span class="seal-year">2026</span>
+        </div>
+      </footer>
+
+      <div class="drawer-layer" id="drawerLayer">
+        <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+        <aside class="drawer-panel">
+          <div class="drawer-brand">
+            <div class="drawer-brand-title">italky<span class="ai">AI</span></div>
+            <div class="drawer-brand-sub">BE FREE</div>
+          </div>
+
+          <div class="card">
+            <div class="profile-row">
+              <div class="drawer-avatar" id="drawerAvatar">U</div>
+              <div class="profile-meta">
+                <div class="profile-name" id="drawerName">Kullanıcı</div>
+                <div class="profile-status" id="drawerStatus">Katılımcı</div>
+              </div>
             </div>
-            <div>▾</div>
-          </button>
-        </div>
+          </div>
 
-        <div class="card">
-          <div class="mini-label">Katıl</div>
-          <input id="joinInput" class="join-input" type="text" placeholder="Üyelik numarası gir" autocomplete="off">
-          <div style="height:12px"></div>
-          <button id="joinBtn" class="primary-btn" type="button">Katılımcı Ekle</button>
+          <div class="card meeting-date-card" id="meetingDateCard">
+            <div class="mini-label">Toplantı Tarihi</div>
+            <div class="meeting-date-value" id="meetingDateValue">--/--/---- --:--</div>
+          </div>
+
+          <div class="card">
+            <div class="mini-label">Lütfen kendi dilinizi seçin</div>
+            <button id="langTrigger" class="lang-trigger" type="button">
+              <div class="lang-left">
+                <div class="lang-flag" id="selectedLangFlag">🇹🇷</div>
+                <div class="lang-name" id="selectedLangName">Türkçe</div>
+              </div>
+              <div>▾</div>
+            </button>
+          </div>
+
+          <div class="room-code-card">
+            <div class="mini-label">Oda Kodu</div>
+            <div class="room-code-row">
+              <div class="room-code-value" id="roomCodeValue">------</div>
+              <button id="copyRoomCodeBtn" class="copy-btn" type="button" aria-label="Kopyala">
+                <svg viewBox="0 0 24 24">
+                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                  <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="room-help">Lütfen kodu toplantıya katılmak isteyenlere veriniz.</div>
+          </div>
+
+          <button id="saveMeetingBtn" class="primary-btn" type="button">Kaydet</button>
+          <button id="goHomeBtn" class="ghost-btn" type="button">Ana Sayfaya Dön</button>
+          <button id="cancelMeetingBtn" class="danger-btn" type="button">Kayıtlı Toplantıyı İptal Et</button>
+          <button id="leaveMeetingBtn" class="ghost-btn" type="button">Toplantıdan Ayrıl</button>
+        </aside>
+      </div>
+
+      <div class="lang-layer" id="langLayer">
+        <div class="lang-backdrop" id="langBackdrop"></div>
+        <section class="lang-panel">
+          <div class="lang-head" style="padding:14px 14px 6px;">
+            <div class="lang-title">Dil Seç</div>
+          </div>
+          <div id="langList" class="lang-list"></div>
+        </section>
+      </div>
+
+      <div class="confirm-layer" id="confirmLayer">
+        <div class="confirm-backdrop"></div>
+        <div class="confirm-card">
+          <h3 class="confirm-title" id="confirmTitle">Emin misiniz?</h3>
+          <p class="confirm-text" id="confirmText">Bu işlem uygulanacaktır.</p>
+          <div class="confirm-actions">
+            <button id="confirmCancelBtn" class="action-btn secondary" type="button">Hayır</button>
+            <button id="confirmOkBtn" class="action-btn primary" type="button">Evet</button>
+          </div>
         </div>
-      </aside>
+      </div>
+
+      <div class="toast" id="toast"></div>
     </div>
-
-    <div class="lang-layer" id="langLayer">
-      <div class="lang-backdrop" id="langBackdrop"></div>
-
-      <section class="lang-panel">
-        <div class="lang-head" style="padding:14px 14px 6px;">
-          <div class="lang-title">Dil Seç</div>
-          <button id="langCloseBtn" class="close-btn" type="button" aria-label="Kapat">
-            <svg viewBox="0 0 24 24">
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-
-        <div id="langList" class="lang-list"></div>
-      </section>
-    </div>
-
-    <div class="toast" id="toast"></div>
   </div>
-</div>
 
-<script type="module" src="/js/meeting_page.js?v=15"></script>
+  <script type="module" src="/js/meeting_page.js?v=30"></script>
 </body>
 </html>
