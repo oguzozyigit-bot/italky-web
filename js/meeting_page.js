@@ -1,109 +1,86 @@
 import { supabase } from "/js/supabase_client.js";
-import { getLangPoolForSite } from "/js/lang_pool_full.js";
-import { STORAGE_KEY } from "/js/config.js";
-
-const API_ROOT =
-  window.ITALKY_API_BASE ||
-  localStorage.getItem("italky_api_base") ||
-  "https://italky-api.onrender.com/api";
-
-const MEETING_API = `${API_ROOT}/meeting`;
-
-const STORAGE = {
-  lang: "italky_meeting_lang_v7",
-  roomId: "italky_meeting_room_id_v7",
-  roomCode: "italky_meeting_room_code_v7"
-};
-
-const qs = new URLSearchParams(location.search);
-
-const COLOR_POOL = [
-  "#84d6ff",
-  "#8af09f",
-  "#ffb86a",
-  "#f78cff",
-  "#73ebff",
-  "#ffd76f",
-  "#94b4ff",
-  "#ff8e8e",
-  "#78f0cd",
-  "#b48cff"
-];
-
-const FALLBACK_LANGS = [
-  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-  { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "de", name: "Deutsch", flag: "🇩🇪" },
-  { code: "fr", name: "Français", flag: "🇫🇷" },
-  { code: "it", name: "Italiano", flag: "🇮🇹" },
-  { code: "es", name: "Español", flag: "🇪🇸" },
-  { code: "ar", name: "العربية", flag: "🇸🇦" },
-  { code: "ru", name: "Русский", flag: "🇷🇺" }
-];
+import { LANG_POOL } from "/js/lang_pool_full.js";
+import { ensureModuleAdAccess } from "/js/ad_gate.js?v=8";
 
 const $ = (id) => document.getElementById(id);
 
-const el = {
-  menuBtn: $("menuBtn"),
-  participantCount: $("participantCount"),
-  participantsStrip: $("participantsStrip"),
-  chatScroll: $("chatScroll"),
-  chatFeed: $("chatFeed"),
-  messageInput: $("messageInput"),
-  sendBtn: $("sendBtn"),
-  micBtn: $("micBtn"),
+const menuBtn = $("menuBtn");
+const brandBackHome = $("brandBackHome");
+const drawerLayer = $("drawerLayer");
+const drawerBackdrop = $("drawerBackdrop");
 
-  drawerLayer: $("drawerLayer"),
-  drawerBackdrop: $("drawerBackdrop"),
-  drawerCloseBtn: $("drawerCloseBtn"),
-  drawerAvatar: $("drawerAvatar"),
-  drawerName: $("drawerName"),
-  drawerMemberSub: $("drawerMemberSub"),
-  myMembershipNo: $("myMembershipNo"),
-  copyMemberBtn: $("copyMemberBtn"),
-  joinInput: $("joinInput"),
-  joinBtn: $("joinBtn"),
+const langTrigger = $("langTrigger");
+const langLayer = $("langLayer");
+const langBackdrop = $("langBackdrop");
+const langList = $("langList");
 
-  langTrigger: $("langTrigger"),
-  selectedLangFlag: $("selectedLangFlag"),
-  selectedLangName: $("selectedLangName"),
-  langLayer: $("langLayer"),
-  langBackdrop: $("langBackdrop"),
-  langCloseBtn: $("langCloseBtn"),
-  langList: $("langList"),
+const participantsStrip = $("participantsStrip");
+const participantCount = $("participantCount");
+const chatFeed = $("chatFeed");
+const chatScroll = $("chatScroll");
 
-  toast: $("toast")
-};
+const messageInput = $("messageInput");
+const micBtn = $("micBtn");
+const sendBtn = $("sendBtn");
+
+const drawerAvatar = $("drawerAvatar");
+const drawerName = $("drawerName");
+const drawerStatus = $("drawerStatus");
+
+const selectedLangFlag = $("selectedLangFlag");
+const selectedLangName = $("selectedLangName");
+
+const roomCodeValue = $("roomCodeValue");
+const copyRoomCodeBtn = $("copyRoomCodeBtn");
+
+const meetingDateCard = $("meetingDateCard");
+const meetingDateValue = $("meetingDateValue");
+
+const saveMeetingBtn = $("saveMeetingBtn");
+const goHomeBtn = $("goHomeBtn");
+const cancelMeetingBtn = $("cancelMeetingBtn");
+const leaveMeetingBtn = $("leaveMeetingBtn");
+
+const confirmLayer = $("confirmLayer");
+const confirmTitle = $("confirmTitle");
+const confirmText = $("confirmText");
+const confirmOkBtn = $("confirmOkBtn");
+const confirmCancelBtn = $("confirmCancelBtn");
+
+const toastEl = $("toast");
+
+const POLL_MS = 2800;
+let pollTimer = null;
+let speechRecognition = null;
+let recognitionActive = false;
+let confirmResolver = null;
 
 const state = {
-  user: null,
-  profile: null,
-  membershipNo: "",
-  displayName: "",
-  avatarUrl: "",
-  roomId: qs.get("room_id") || localStorage.getItem(STORAGE.roomId) || "",
-  roomCode: qs.get("room_code") || localStorage.getItem(STORAGE.roomCode) || "",
-  selectedLang: localStorage.getItem(STORAGE.lang) || "tr",
+  accessToken: "",
+  userId: "",
+  sessionUser: null,
+  roomId: "",
+  roomCode: "",
+  me: null,
   participants: [],
   messages: [],
-  langs: [...FALLBACK_LANGS],
-  pollTimer: null,
-  speechRec: null
+  langs: [],
+  myLang: "tr",
+  lastMessageKey: "",
+  meetingStarted: false,
+  savedMeetingStarted: false,
+  savedMeetingAt: null,
+  booted: false
 };
 
-function showToast(message = "") {
-  if (!el.toast) return;
-  el.toast.textContent = String(message);
-  el.toast.classList.add("show");
-  clearTimeout(window.__meetingToastTimer);
-  window.__meetingToastTimer = setTimeout(() => {
-    el.toast.classList.remove("show");
-  }, 2200);
-}
-
-function safeText(v, fallback = "") {
-  return String(v ?? fallback ?? "").trim();
-}
+const COLOR_MAP = {
+  c1: "#79ddff",
+  c2: "#ff8fe1",
+  c3: "#b88cff",
+  c4: "#7ff0ba",
+  c5: "#ffcc72",
+  c6: "#ff8a8a"
+};
 
 function escapeHtml(v = "") {
   return String(v)
@@ -111,780 +88,855 @@ function escapeHtml(v = "") {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll("'", "&#39;");
 }
 
-function formatInitials(name = "") {
-  const parts = safeText(name).split(/\s+/).filter(Boolean);
+function showToast(text = "") {
+  if (!toastEl) return;
+  toastEl.textContent = text;
+  toastEl.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => {
+    toastEl.classList.remove("show");
+  }, 2200);
+}
+
+function getInitials(name = "") {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "U";
-  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
+  return parts.slice(0, 2).map(x => x[0]).join("").toUpperCase();
 }
 
-function hashCode(str = "") {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (h << 5) - h + str.charCodeAt(i);
-    h |= 0;
+function normalizeLangPool() {
+  const list = Array.isArray(LANG_POOL) ? LANG_POOL : [];
+  const out = list.map(item => {
+    const code = item?.code || item?.lang || item?.value || item?.id || "";
+    const flag = item?.flag || item?.emoji || "🌐";
+    const name =
+      item?.name_tr ||
+      item?.tr ||
+      item?.name ||
+      item?.title ||
+      item?.label ||
+      item?.native ||
+      code;
+
+    return {
+      code: String(code).trim().toLowerCase(),
+      flag: String(flag || "🌐"),
+      name: String(name || code || "Dil")
+    };
+  }).filter(x => x.code);
+
+  const uniq = [];
+  const seen = new Set();
+
+  for (const row of out) {
+    if (seen.has(row.code)) continue;
+    seen.add(row.code);
+    uniq.push(row);
   }
-  return Math.abs(h);
+
+  if (!uniq.length) {
+    return [
+      { code: "tr", flag: "🇹🇷", name: "Türkçe" },
+      { code: "en", flag: "🇬🇧", name: "İngilizce" },
+      { code: "de", flag: "🇩🇪", name: "Almanca" },
+      { code: "fr", flag: "🇫🇷", name: "Fransızca" }
+    ];
+  }
+
+  return uniq;
 }
 
-function getColorForKey(key = "") {
-  return COLOR_POOL[hashCode(String(key)) % COLOR_POOL.length];
-}
-
-function getAuthHeaders(token) {
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
+function getLangRow(code = "tr") {
+  return state.langs.find(x => x.code === String(code).toLowerCase()) || {
+    code: String(code).toLowerCase(),
+    flag: "🌐",
+    name: String(code).toUpperCase()
   };
 }
 
-async function getSession() {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) throw error;
-  return data?.session || null;
+function updateSelectedLangUi() {
+  const row = getLangRow(state.myLang);
+  selectedLangFlag.textContent = row.flag;
+  selectedLangName.textContent = row.name;
 }
 
-async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) throw error;
-  return data?.user || null;
+function autoGrowInput() {
+  messageInput.style.height = "28px";
+  messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
 }
 
-async function getProfileByUserId(userId) {
-  if (!userId) return null;
-
-  try {
-    let res = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (res?.data) return res.data;
-
-    res = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    return res?.data || null;
-  } catch (e) {
-    console.warn("[meeting] profile alınamadı:", e);
-    return null;
-  }
-}
-
-function getCachedUser() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function pickMembershipNo(user, profile) {
-  const meta = user?.user_metadata || {};
-  const cached = getCachedUser();
-
-  return (
-    safeText(profile?.member_no) ||
-    safeText(profile?.user_key) ||
-    safeText(profile?.uid) ||
-    safeText(profile?.chat_code) ||
-    safeText(meta?.member_no) ||
-    safeText(meta?.user_key) ||
-    safeText(meta?.uid) ||
-    safeText(meta?.chat_code) ||
-    safeText(cached?.member_no) ||
-    safeText(cached?.membership_no) ||
-    safeText(cached?.uyelik_no) ||
-    safeText(cached?.uid) ||
-    safeText(cached?.chat_code) ||
-    safeText(profile?.id).replaceAll("-", "").slice(0, 8).toUpperCase() ||
-    safeText(user?.id).replaceAll("-", "").slice(0, 8).toUpperCase()
-  );
-}
-
-function pickDisplayName(user, profile) {
-  const meta = user?.user_metadata || {};
-  return (
-    safeText(profile?.hitap) ||
-    safeText(profile?.display_name) ||
-    safeText(profile?.full_name) ||
-    safeText(profile?.name) ||
-    safeText(meta?.hitap) ||
-    safeText(meta?.full_name) ||
-    safeText(meta?.name) ||
-    safeText(meta?.display_name) ||
-    safeText(user?.email).split("@")[0] ||
-    "Kullanıcı"
-  );
-}
-
-function pickAvatar(user, profile) {
-  const meta = user?.user_metadata || {};
-  return (
-    safeText(profile?.avatar_url) ||
-    safeText(profile?.picture) ||
-    safeText(profile?.avatar) ||
-    safeText(meta?.avatar_url) ||
-    safeText(meta?.picture) ||
-    safeText(meta?.avatar) ||
-    ""
-  );
-}
-
-async function loadLangPool() {
-  try {
-    const raw = getLangPoolForSite("tr");
-    if (Array.isArray(raw) && raw.length) {
-      state.langs = raw
-        .map((x) => ({
-          code: safeText(x.code).toLowerCase(),
-          name: safeText(x.name || x.tr_name || x.code),
-          flag: safeText(x.flag || "🌐")
-        }))
-        .filter((x) => x.code && x.name);
-      return;
-    }
-  } catch (_) {}
-
-  state.langs = [...FALLBACK_LANGS];
-}
-
-function getLangInfo(code) {
-  return (
-    state.langs.find((x) => x.code === code) ||
-    FALLBACK_LANGS.find((x) => x.code === code) || {
-      code,
-      name: code?.toUpperCase?.() || "Dil",
-      flag: "🌐"
-    }
-  );
-}
-
-function renderSelectedLanguage() {
-  const info = getLangInfo(state.selectedLang);
-  el.selectedLangFlag.textContent = info.flag || "🌐";
-  el.selectedLangName.textContent = info.name || "Dil";
-}
-
-function renderLangOptions() {
-  const html = state.langs
-    .map((lang) => {
-      const active = lang.code === state.selectedLang ? "active" : "";
-      return `
-        <button class="lang-option ${active}" type="button" data-code="${escapeHtml(lang.code)}">
-          <div class="lang-option-left">
-            <div style="font-size:20px">${escapeHtml(lang.flag || "🌐")}</div>
-            <div class="lang-option-name">${escapeHtml(lang.name)}</div>
-          </div>
-          <div class="lang-check"></div>
-        </button>
-      `;
-    })
-    .join("");
-
-  el.langList.innerHTML = html;
-
-  Array.from(el.langList.querySelectorAll(".lang-option")).forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const code = btn.dataset.code || "tr";
-      state.selectedLang = code;
-      localStorage.setItem(STORAGE.lang, code);
-      renderSelectedLanguage();
-      renderLangOptions();
-      closeLangModal();
-      await updateMyLanguage();
-      await refreshRoomState(true);
-      showToast("Dil güncellendi");
-    });
-  });
+function refreshSendButton() {
+  const hasText = String(messageInput.value || "").trim().length > 0;
+  sendBtn.classList.toggle("hidden", !hasText);
+  micBtn.classList.toggle("hidden", hasText);
 }
 
 function openDrawer() {
-  el.drawerLayer.classList.add("open");
+  drawerLayer.classList.add("open");
 }
 
 function closeDrawer() {
-  el.drawerLayer.classList.remove("open");
+  drawerLayer.classList.remove("open");
 }
 
-function openLangModal() {
-  el.langLayer.classList.add("open");
+function openLangLayer() {
+  renderLangList();
+  langLayer.classList.add("open");
 }
 
-function closeLangModal() {
-  el.langLayer.classList.remove("open");
+function closeLangLayer() {
+  langLayer.classList.remove("open");
 }
 
-function renderProfile() {
-  const name = state.displayName || "Kullanıcı";
-  const memberNo = state.membershipNo || "—";
+function openConfirm(title, text) {
+  return new Promise((resolve) => {
+    confirmResolver = resolve;
+    confirmTitle.textContent = title;
+    confirmText.textContent = text;
+    confirmLayer.classList.add("open");
+  });
+}
 
-  el.drawerName.textContent = name;
-  el.drawerMemberSub.textContent = `Üyelik No: ${memberNo}`;
-  el.myMembershipNo.textContent = memberNo;
-
-  if (state.avatarUrl) {
-    el.drawerAvatar.innerHTML = `<img src="${escapeHtml(state.avatarUrl)}" alt="Avatar">`;
-  } else {
-    el.drawerAvatar.textContent = formatInitials(name);
+function closeConfirm(result) {
+  confirmLayer.classList.remove("open");
+  if (typeof confirmResolver === "function") {
+    const fn = confirmResolver;
+    confirmResolver = null;
+    fn(result);
   }
 }
 
-function normalizeParticipant(item = {}) {
-  const id =
-    safeText(item.user_id) ||
-    safeText(item.id) ||
-    safeText(item.participant_id) ||
-    safeText(item.membership_no) ||
-    Math.random().toString(36).slice(2);
+function attachAvatar(el, name, avatarUrl) {
+  if (!el) return;
+  const safeName = escapeHtml(name || "Kullanıcı");
+  const safeAvatar = String(avatarUrl || "").trim();
 
-  const name =
-    safeText(item.display_name) ||
-    safeText(item.name) ||
-    safeText(item.full_name) ||
-    safeText(item.hitap) ||
-    "Kullanıcı";
-
-  const avatar =
-    safeText(item.avatar_url) ||
-    safeText(item.avatar) ||
-    safeText(item.picture);
-
-  const isHost = Boolean(item.is_host);
-
-  return { id, name, avatar, isHost };
+  if (safeAvatar) {
+    el.innerHTML = `<img src="${safeAvatar}" alt="${safeName}">`;
+  } else {
+    el.textContent = getInitials(name || "Kullanıcı");
+  }
 }
 
-function renderParticipants() {
-  const participants = Array.isArray(state.participants) ? state.participants : [];
-  el.participantCount.textContent = String(participants.length || 1);
+function renderDrawerProfile() {
+  const me = state.me || {};
+  attachAvatar(drawerAvatar, me.display_name || "Kullanıcı", me.avatar_url || "");
+  drawerName.textContent = me.display_name || "Kullanıcı";
+  drawerStatus.textContent = me.is_host ? "Yönetici" : "Katılımcı";
+  roomCodeValue.textContent = state.roomCode || "------";
+  updateSelectedLangUi();
 
-  const ordered = [...participants].sort((a, b) => {
-    if (a.isHost && !b.isHost) return -1;
-    if (!a.isHost && b.isHost) return 1;
-    if (a.id === state.user?.id && b.id !== state.user?.id) return 1;
-    if (a.id !== state.user?.id && b.id === state.user?.id) return -1;
-    return 0;
-  });
+  const showDate = Boolean(me.is_host) && !state.meetingStarted;
+  meetingDateCard.style.display = showDate ? "block" : "none";
 
-  el.participantsStrip.innerHTML = ordered
-    .map((p) => {
-      const avatarHtml = p.avatar
-        ? `<img src="${escapeHtml(p.avatar)}" alt="${escapeHtml(p.name)}">`
-        : escapeHtml(formatInitials(p.name));
+  const showCancelMeeting = Boolean(me.is_host) && !state.meetingStarted;
+  cancelMeetingBtn.style.display = showCancelMeeting ? "block" : "none";
 
-      const hostClass = p.isHost ? " participant-host" : "";
-
-      return `
-        <div class="participant-chip">
-          <div class="participant-avatar${hostClass}">${avatarHtml}</div>
-          <div class="participant-name">${escapeHtml(p.name)}</div>
-        </div>
-      `;
-    })
-    .join("");
-
-  requestAnimationFrame(() => {
-    el.participantsStrip.scrollLeft = el.participantsStrip.scrollWidth;
-  });
+  const showLeaveMeeting = state.meetingStarted;
+  leaveMeetingBtn.style.display = showLeaveMeeting ? "block" : "none";
 }
 
-function normalizeMessage(msg = {}) {
-  const senderId = safeText(msg.sender_id) || safeText(msg.user_id);
-  const senderName =
-    safeText(msg.sender_name) ||
-    safeText(msg.display_name) ||
-    safeText(msg.author_name) ||
-    safeText(msg.sender) ||
-    "";
+function participantColorKey(p) {
+  return COLOR_MAP[p?.color_key] || COLOR_MAP.c1;
+}
 
+function buildMessageKey(msg) {
+  return [
+    msg?.id || "",
+    msg?.created_at || "",
+    msg?.sender_id || "",
+    msg?.original_text || ""
+  ].join("|");
+}
+
+function normalizeParticipant(p = {}) {
   return {
-    id: safeText(msg.id) || Math.random().toString(36).slice(2),
-    senderId,
-    senderName,
-    text:
-      safeText(msg.translated_text) ||
-      safeText(msg.text_local) ||
-      safeText(msg.text) ||
-      safeText(msg.message),
-    originalText: safeText(msg.original_text),
-    system: Boolean(msg.system || msg.type === "system" || msg.message_type === "system")
+    ...p,
+    user_id: String(p.user_id || ""),
+    display_name: p.display_name || p.sender_name || "Kullanıcı",
+    avatar_url: p.avatar_url || "",
+    is_host: !!p.is_host,
+    is_active: p.is_active !== false,
+    color_key: p.color_key || "c1"
   };
 }
 
-function renderMessages() {
-  const messages = Array.isArray(state.messages) ? state.messages : [];
+function renderParticipants() {
+  const list = Array.isArray(state.participants) ? state.participants : [];
+  participantCount.textContent = String(list.length || 1);
 
-  const html = messages
-    .map((raw) => {
-      const msg = normalizeMessage(raw);
-      const mine = msg.senderId && state.user?.id && msg.senderId === state.user.id;
+  participantsStrip.innerHTML = list.map((p) => {
+    const safeName = escapeHtml(p.display_name || "Kullanıcı");
+    const avatarUrl = String(p.avatar_url || "").trim();
+    const hostClass = p.is_host ? "participant-host" : "";
+    const avatarContent = avatarUrl
+      ? `<img src="${avatarUrl}" alt="${safeName}">`
+      : escapeHtml(getInitials(p.display_name || "Kullanıcı"));
 
-      if (msg.system) {
-        return `
-          <div class="msg system">
-            <div class="system-badge">${escapeHtml(msg.text)}</div>
-          </div>
-        `;
-      }
-
-      const cls = mine ? "mine" : "other";
-      const author = mine ? state.displayName : (msg.senderName || "Katılımcı");
-      const colorKey = msg.senderId || msg.senderName || msg.id;
-      const color = getColorForKey(colorKey);
-      const speechText = msg.text || msg.originalText || "";
-
-      return `
-        <div class="msg ${cls}">
-          <div class="msg-block">
-            <div class="msg-row">
-              <div class="bubble" style="--line-color:${color}">
-                <div class="bubble-text">${escapeHtml(msg.text)}</div>
-                <button
-                  class="speaker-btn"
-                  type="button"
-                  data-speech="${escapeHtml(speechText)}"
-                  aria-label="Oku"
-                >
-                  <svg viewBox="0 0 24 24">
-                    <polygon points="11 5 6 9 3 9 3 15 6 15 11 19 11 5"></polygon>
-                    <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
-                    <path d="M18.5 6a8.5 8.5 0 0 1 0 12"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div class="msg-author">${escapeHtml(author)}</div>
-          </div>
+    return `
+      <div class="participant-chip" data-user-id="${escapeHtml(p.user_id)}">
+        <div class="participant-avatar ${hostClass}">
+          ${avatarContent}
         </div>
-      `;
-    })
-    .join("");
+        <div class="participant-name">${safeName}</div>
+      </div>
+    `;
+  }).join("");
 
-  el.chatFeed.innerHTML = html;
+  for (const chip of participantsStrip.querySelectorAll(".participant-chip")) {
+    const userId = chip.dataset.userId || "";
+    let holdTimer = null;
 
-  Array.from(el.chatFeed.querySelectorAll(".speaker-btn")).forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const text = btn.dataset.speech || "";
-      speakText(text);
-    });
-  });
+    const startHold = () => {
+      holdTimer = setTimeout(async () => {
+        await onParticipantHold(userId);
+      }, 550);
+    };
 
-  scrollChatToBottom();
-}
+    const clearHold = () => {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    };
 
-function scrollChatToBottom() {
-  requestAnimationFrame(() => {
-    el.chatScroll.scrollTop = el.chatScroll.scrollHeight + 9999;
-  });
-}
-
-function autoResizeTextarea() {
-  el.messageInput.style.height = "28px";
-  el.messageInput.style.height = `${Math.min(el.messageInput.scrollHeight, 120)}px`;
-}
-
-function syncSendState() {
-  const hasText = !!safeText(el.messageInput.value);
-  el.sendBtn.classList.toggle("hidden", !hasText);
-  el.micBtn.classList.toggle("hidden", hasText);
-}
-
-function syncKeyboardOffset() {
-  const vv = window.visualViewport;
-  if (!vv) return;
-  const keyboard = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-  document.documentElement.style.setProperty("--keyboard-offset", `${keyboard}px`);
-}
-
-function bindInputEvents() {
-  el.messageInput.addEventListener("input", () => {
-    autoResizeTextarea();
-    syncSendState();
-  });
-
-  el.messageInput.addEventListener("focus", () => {
-    setTimeout(syncKeyboardOffset, 60);
-    setTimeout(scrollChatToBottom, 100);
-  });
-
-  el.messageInput.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (safeText(el.messageInput.value)) {
-        await sendMessage();
-      }
-    }
-  });
-}
-
-function bindDrawerEvents() {
-  el.menuBtn.addEventListener("click", openDrawer);
-  el.drawerBackdrop.addEventListener("click", closeDrawer);
-  el.drawerCloseBtn.addEventListener("click", closeDrawer);
-
-  el.langTrigger.addEventListener("click", openLangModal);
-  el.langBackdrop.addEventListener("click", closeLangModal);
-  el.langCloseBtn.addEventListener("click", closeLangModal);
-
-  el.copyMemberBtn.addEventListener("click", async () => {
-    try {
-      const text = state.membershipNo || "";
-      if (!text) return;
-      await navigator.clipboard.writeText(text);
-      showToast("Üyelik numarası kopyalandı");
-    } catch (_) {
-      showToast("Kopyalama yapılamadı");
-    }
-  });
-
-  el.joinBtn.addEventListener("click", joinByMembershipNumber);
-}
-
-function bindActionEvents() {
-  el.sendBtn.addEventListener("click", sendMessage);
-  el.micBtn.addEventListener("click", toggleSpeechInput);
-}
-
-async function api(path, options = {}) {
-  const session = await getSession();
-  const token = session?.access_token || "";
-
-  const res = await fetch(`${MEETING_API}${path}`, {
-    method: options.method || "GET",
-    headers: getAuthHeaders(token),
-    body: options.body ? JSON.stringify(options.body) : undefined
-  });
-
-  if (!res.ok) {
-    let msg = `İstek başarısız (${res.status})`;
-    try {
-      const err = await res.json();
-      msg = err?.detail || err?.message || msg;
-    } catch (_) {}
-    throw new Error(msg);
+    chip.addEventListener("touchstart", startHold, { passive: true });
+    chip.addEventListener("touchend", clearHold, { passive: true });
+    chip.addEventListener("touchcancel", clearHold, { passive: true });
+    chip.addEventListener("mousedown", startHold);
+    chip.addEventListener("mouseup", clearHold);
+    chip.addEventListener("mouseleave", clearHold);
   }
+}
+
+async function onParticipantHold(userId) {
+  const me = state.me || {};
+  if (!me.is_host) return;
+  if (!userId || userId === state.userId) return;
+
+  const target = state.participants.find(p => String(p.user_id) === String(userId));
+  if (!target) return;
+
+  const ok = await openConfirm(
+    "Katılımcıyı Çıkar",
+    `${target.display_name || "Kullanıcı"} kişisini toplantıdan çıkartmak istiyor musunuz?`
+  );
+
+  if (!ok) return;
 
   try {
-    return await res.json();
-  } catch (_) {
-    return {};
+    await apiPost("/api/meeting/remove-participant", {
+      room_id: state.roomId,
+      target_user_id: userId
+    });
+    await refreshState();
+    showToast("Katılımcı çıkarıldı");
+  } catch (e) {
+    console.error("remove participant error:", e);
+    showToast("Katılımcı çıkarılamadı");
   }
+}
+
+function renderMessages() {
+  const participantsById = new Map((state.participants || []).map(p => [String(p.user_id || ""), p]));
+  const messages = Array.isArray(state.messages) ? state.messages : [];
+
+  state.meetingStarted = messages.some(m => m.message_type === "text");
+
+  chatFeed.innerHTML = messages.map((msg) => {
+    const isSystem = msg.message_type === "system";
+    const isMine = !isSystem && String(msg.sender_id || "") === String(state.userId || "");
+    const rowParticipant = participantsById.get(String(msg.sender_id || ""));
+    const authorName = isMine
+      ? (state.me?.display_name || "Ben")
+      : (msg.sender_name || rowParticipant?.display_name || "Katılımcı");
+
+    const lineColor = participantColorKey(rowParticipant || {});
+    const text = escapeHtml(msg.translated_text || msg.original_text || "");
+    const speakLang = getLangRow(state.myLang)?.code || "tr";
+
+    if (isSystem) {
+      return `
+        <div class="msg system">
+          <div class="system-badge">${escapeHtml(msg.original_text || msg.translated_text || "")}</div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="msg ${isMine ? "mine" : "other"}">
+        <div class="msg-block">
+          <div class="msg-row">
+            <div class="bubble" style="--line-color:${lineColor}">
+              <div class="bubble-text">${text}</div>
+              <button class="speaker-btn" type="button" data-speak="${escapeHtml(msg.translated_text || msg.original_text || "")}" data-lang="${escapeHtml(speakLang)}" aria-label="Dinle">
+                <svg viewBox="0 0 24 24">
+                  <path d="M11 5L6 9H3v6h3l5 4V5z"></path>
+                  <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+                  <path d="M17.8 6a8.5 8.5 0 0 1 0 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="msg-author">${escapeHtml(authorName)}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  for (const btn of chatFeed.querySelectorAll(".speaker-btn")) {
+    btn.addEventListener("click", () => {
+      speakText(btn.dataset.speak || "", btn.dataset.lang || "tr");
+    });
+  }
+
+  const last = messages[messages.length - 1];
+  const nextKey = last ? buildMessageKey(last) : "";
+  const shouldScroll = state.lastMessageKey !== nextKey || !state.lastMessageKey;
+  state.lastMessageKey = nextKey;
+
+  if (shouldScroll) {
+    requestAnimationFrame(() => {
+      chatScroll.scrollTop = chatScroll.scrollHeight + 500;
+    });
+  }
+
+  renderDrawerProfile();
+}
+
+function renderLangList() {
+  langList.innerHTML = state.langs.map((row) => {
+    const active = row.code === state.myLang ? "active" : "";
+    return `
+      <button class="lang-option ${active}" type="button" data-code="${escapeHtml(row.code)}">
+        <div class="lang-option-left">
+          <div class="lang-flag">${escapeHtml(row.flag)}</div>
+          <div class="lang-option-name">${escapeHtml(row.name)}</div>
+        </div>
+        <div class="lang-check"></div>
+      </button>
+    `;
+  }).join("");
+
+  for (const btn of langList.querySelectorAll(".lang-option")) {
+    btn.addEventListener("click", async () => {
+      const code = String(btn.dataset.code || "tr").toLowerCase();
+      if (code === state.myLang) {
+        closeLangLayer();
+        return;
+      }
+
+      state.myLang = code;
+      updateSelectedLangUi();
+      closeLangLayer();
+
+      if (!state.roomId) return;
+
+      try {
+        await apiPost("/api/meeting/language", {
+          room_id: state.roomId,
+          lang: state.myLang
+        });
+
+        await refreshState();
+        showToast("Dil güncellendi");
+      } catch (e) {
+        console.error("language update error:", e);
+        showToast("Dil güncellenemedi");
+      }
+    });
+  }
+}
+
+async function copyText(value, successText = "Kopyalandı") {
+  try {
+    await navigator.clipboard.writeText(String(value || ""));
+    showToast(successText);
+  } catch (e) {
+    console.error("copy error:", e);
+    showToast("Kopyalanamadı");
+  }
+}
+
+async function getSessionOrThrow() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  const session = data?.session;
+  if (!session?.access_token || !session?.user) {
+    window.location.href = "/pages/login.html";
+    throw new Error("session_missing");
+  }
+  state.accessToken = session.access_token;
+  state.userId = String(session.user.id || "");
+  state.sessionUser = session.user;
+  return session;
+}
+
+function buildBootstrapBody() {
+  const user = state.sessionUser || {};
+  const meta = user.user_metadata || {};
+
+  const displayName =
+    meta.hitap ||
+    meta.name ||
+    meta.full_name ||
+    (user.email ? String(user.email).split("@")[0] : "") ||
+    "Kullanıcı";
+
+  const avatarUrl =
+    meta.avatar_url ||
+    meta.picture ||
+    meta.avatar ||
+    "";
+
+  return {
+    membership_no: "",
+    display_name: displayName,
+    avatar_url: avatarUrl || null,
+    lang: state.myLang || "tr"
+  };
+}
+
+async function apiGet(path) {
+  const res = await fetch(path, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${state.accessToken}`
+    }
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.detail || `GET ${path} failed`);
+  }
+  return data;
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${state.accessToken}`
+    },
+    body: JSON.stringify(body || {})
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.detail || `POST ${path} failed`);
+  }
+  return data;
+}
+
+function deriveMeFromParticipants() {
+  const meRow = (state.participants || []).find(p => String(p.user_id || "") === String(state.userId || ""));
+  if (meRow) {
+    state.me = meRow;
+    if (meRow.lang) state.myLang = String(meRow.lang).toLowerCase();
+    return;
+  }
+
+  const user = state.sessionUser || {};
+  const meta = user.user_metadata || {};
+
+  state.me = {
+    user_id: state.userId,
+    display_name:
+      meta.hitap ||
+      meta.name ||
+      meta.full_name ||
+      (user.email ? String(user.email).split("@")[0] : "") ||
+      "Kullanıcı",
+    avatar_url:
+      meta.avatar_url ||
+      meta.picture ||
+      meta.avatar ||
+      "",
+    is_host: false,
+    lang: state.myLang
+  };
 }
 
 async function bootstrapMeeting() {
+  const body = buildBootstrapBody();
+  const data = await apiPost("/api/meeting/bootstrap", body);
+
+  state.roomId = data?.room_id || "";
+  state.roomCode = data?.room_code || "";
+  state.participants = (Array.isArray(data?.participants) ? data.participants : []).map(normalizeParticipant);
+  state.messages = Array.isArray(data?.messages) ? data.messages : [];
+
+  deriveMeFromParticipants();
+  renderDrawerProfile();
+  renderParticipants();
+  renderMessages();
+}
+
+async function refreshState() {
+  if (!state.roomId) return;
+  const data = await apiGet(`/api/meeting/state?room_id=${encodeURIComponent(state.roomId)}`);
+  state.participants = (Array.isArray(data?.participants) ? data.participants : []).map(normalizeParticipant);
+  state.messages = Array.isArray(data?.messages) ? data.messages : [];
+  deriveMeFromParticipants();
+  renderDrawerProfile();
+  renderParticipants();
+  renderMessages();
+}
+
+async function sendMessage() {
+  const text = String(messageInput.value || "").trim();
+  if (!text || !state.roomId) return;
+
   try {
+    sendBtn.disabled = true;
+
+    if (!state.meetingStarted) {
+      state.savedMeetingStarted = true;
+      localStorage.setItem(`meeting_started_${state.roomId}`, "1");
+    }
+
+    await apiPost("/api/meeting/message", {
+      room_id: state.roomId,
+      text,
+      sender_lang: state.myLang,
+      target_lang: state.myLang
+    });
+
+    messageInput.value = "";
+    autoGrowInput();
+    refreshSendButton();
+    await refreshState();
+  } catch (e) {
+    console.error("sendMessage error:", e);
+    showToast("Mesaj gönderilemedi");
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function speakText(text = "", lang = "tr") {
+  try {
+    if (!("speechSynthesis" in window)) {
+      showToast("Seslendirme desteklenmiyor");
+      return;
+    }
+    const utter = new SpeechSynthesisUtterance(String(text || ""));
+    utter.lang = lang || "tr-TR";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  } catch (e) {
+    console.error("speakText error:", e);
+  }
+}
+
+function setupKeyboardOffset() {
+  if (!window.visualViewport) return;
+
+  const update = () => {
+    const vv = window.visualViewport;
+    const keyboard = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.documentElement.style.setProperty("--keyboard-offset", `${keyboard}px`);
+  };
+
+  window.visualViewport.addEventListener("resize", update);
+  window.visualViewport.addEventListener("scroll", update);
+  update();
+}
+
+function setupRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+
+  speechRecognition = new SR();
+  speechRecognition.lang = "tr-TR";
+  speechRecognition.interimResults = false;
+  speechRecognition.maxAlternatives = 1;
+
+  speechRecognition.onstart = () => {
+    recognitionActive = true;
+    showToast("Dinliyorum...");
+  };
+
+  speechRecognition.onend = () => {
+    recognitionActive = false;
+  };
+
+  speechRecognition.onerror = (e) => {
+    recognitionActive = false;
+    console.error("speech recognition error:", e);
+    showToast("Ses algılanamadı");
+  };
+
+  speechRecognition.onresult = (event) => {
+    const text = event?.results?.[0]?.[0]?.transcript || "";
+    if (!text) return;
+    messageInput.value = `${String(messageInput.value || "").trim()} ${text}`.trim();
+    autoGrowInput();
+    refreshSendButton();
+  };
+}
+
+function formatDateTR(value) {
+  if (!value) return "--/--/---- --:--";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "--/--/---- --:--";
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(d);
+}
+
+function saveMeetingSnapshot() {
+  if (!state.roomId) return;
+
+  const records = JSON.parse(localStorage.getItem("italky_saved_meetings_v1") || "[]");
+  const me = state.me || {};
+  const next = {
+    room_id: state.roomId,
+    room_code: state.roomCode,
+    saved_at: new Date().toISOString(),
+    started: !!state.meetingStarted,
+    is_host: !!me.is_host,
+    title: me.is_host ? "Yönetici Toplantısı" : "Katıldığım Toplantı"
+  };
+
+  const merged = [next, ...records.filter(x => x.room_id !== state.roomId)].slice(0, 20);
+  localStorage.setItem("italky_saved_meetings_v1", JSON.stringify(merged));
+  showToast("Toplantı kaydedildi");
+}
+
+async function leaveMeetingFlow(goHomeAfter = false) {
+  try {
+    await apiPost("/api/meeting/leave", {
+      room_id: state.roomId
+    });
+  } catch (e) {
+    console.error("leaveMeeting error:", e);
+  }
+
+  if (goHomeAfter) {
+    window.location.href = "/pages/home.html";
+  }
+}
+
+async function handleGoHome() {
+  if (state.meetingStarted) {
+    const ok = await openConfirm(
+      "Toplantıdan Ayrıl",
+      "Toplantıdan ayrılmak istediğinize emin misiniz?"
+    );
+    if (!ok) return;
+    await leaveMeetingFlow(true);
+    return;
+  }
+
+  window.location.href = "/pages/home.html";
+}
+
+async function handleBrandHome() {
+  if (state.meetingStarted) {
+    const ok = await openConfirm(
+      "Toplantıdan Ayrıl",
+      "Toplantıdan ayrılmak istediğinize emin misiniz?"
+    );
+    if (!ok) return;
+    await leaveMeetingFlow(true);
+    return;
+  }
+
+  window.location.href = "/pages/home.html";
+}
+
+async function handleCancelMeeting() {
+  const ok = await openConfirm(
+    "Kayıtlı Toplantıyı İptal Et",
+    "Bu kayıtlı toplantıyı iptal etmek istediğinize emin misiniz?"
+  );
+  if (!ok) return;
+
+  try {
+    await apiPost("/api/meeting/cancel", {
+      room_id: state.roomId
+    });
+  } catch (e) {
+    console.error("cancel meeting error:", e);
+  }
+
+  const records = JSON.parse(localStorage.getItem("italky_saved_meetings_v1") || "[]");
+  localStorage.setItem(
+    "italky_saved_meetings_v1",
+    JSON.stringify(records.filter(x => x.room_id !== state.roomId))
+  );
+
+  showToast("Toplantı iptal edildi");
+  setTimeout(() => {
+    window.location.href = "/pages/meeting_lobby.html";
+  }, 400);
+}
+
+async function handleLeaveMeeting() {
+  const ok = await openConfirm(
+    "Toplantıdan Ayrıl",
+    "Toplantıdan ayrılmak istediğinize emin misiniz?"
+  );
+  if (!ok) return;
+  await leaveMeetingFlow(true);
+}
+
+function bindEvents() {
+  menuBtn.addEventListener("click", openDrawer);
+  drawerBackdrop.addEventListener("click", closeDrawer);
+
+  langTrigger.addEventListener("click", openLangLayer);
+  langBackdrop.addEventListener("click", closeLangLayer);
+
+  copyRoomCodeBtn.addEventListener("click", () => {
+    copyText(state.roomCode || "", "Oda kodu kopyalandı");
+  });
+
+  saveMeetingBtn.addEventListener("click", saveMeetingSnapshot);
+  goHomeBtn.addEventListener("click", handleGoHome);
+  cancelMeetingBtn.addEventListener("click", handleCancelMeeting);
+  leaveMeetingBtn.addEventListener("click", handleLeaveMeeting);
+  brandBackHome.addEventListener("click", handleBrandHome);
+
+  confirmCancelBtn.addEventListener("click", () => closeConfirm(false));
+  confirmOkBtn.addEventListener("click", () => closeConfirm(true));
+
+  messageInput.addEventListener("input", () => {
+    autoGrowInput();
+    refreshSendButton();
+  });
+
+  messageInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  sendBtn.addEventListener("click", sendMessage);
+
+  micBtn.addEventListener("click", () => {
+    if (!speechRecognition) {
+      showToast("Cihazda sesle yazma desteklenmiyor");
+      return;
+    }
+
+    if (recognitionActive) {
+      speechRecognition.stop();
+      return;
+    }
+
+    const langCode = getLangRow(state.myLang)?.code || "tr";
+    speechRecognition.lang = langCode === "tr" ? "tr-TR" : langCode;
+    speechRecognition.start();
+  });
+}
+
+function startPolling() {
+  stopPolling();
+  pollTimer = setInterval(async () => {
+    try {
+      await refreshState();
+    } catch (e) {
+      console.error("poll refresh error:", e);
+    }
+  }, POLL_MS);
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
+
+async function gateMeetingAd() {
+  try {
+    const ok = await ensureModuleAdAccess({
+      moduleKey: "meeting_room",
+      title: "Toplantı odası için kısa bir reklam gösterilecek",
+      text: "Toplantı odasını kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle gün içinde tekrar reklam görmeden giriş yapabilirsiniz.",
+      placement: "meeting_room",
+      hours: 24
+    });
+
+    if (!ok) {
+      window.location.href = "/pages/home.html";
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error("meeting ad gate error:", e);
+    return true;
+  }
+}
+
+async function boot() {
+  if (state.booted) return;
+  state.booted = true;
+
+  try {
+    const adOk = await gateMeetingAd();
+    if (!adOk) return;
+
+    state.langs = normalizeLangPool();
+
+    await getSessionOrThrow();
+
+    const user = state.sessionUser || {};
+    const meta = user.user_metadata || {};
+    const url = new URL(window.location.href);
+
+    const urlLang = url.searchParams.get("lang") || "";
+    const metaLang = meta.lang || meta.site_lang || meta.system_lang || "tr";
+
+    state.myLang = String(urlLang || metaLang || "tr").toLowerCase();
+    state.roomId = url.searchParams.get("room_id") || localStorage.getItem("italky_meeting_room_id_v7") || "";
+    state.roomCode = url.searchParams.get("room_code") || localStorage.getItem("italky_meeting_room_code_v7") || "";
+
+    const savedStarted = localStorage.getItem(`meeting_started_${state.roomId}`) === "1";
+    state.savedMeetingStarted = savedStarted;
+
+    const savedMeetings = JSON.parse(localStorage.getItem("italky_saved_meetings_v1") || "[]");
+    const currentSaved = savedMeetings.find(x => x.room_id === state.roomId) || null;
+    state.savedMeetingAt = currentSaved?.saved_at || new Date().toISOString();
+    meetingDateValue.textContent = formatDateTR(state.savedMeetingAt);
+
+    updateSelectedLangUi();
+
+    bindEvents();
+    setupKeyboardOffset();
+    setupRecognition();
+    autoGrowInput();
+    refreshSendButton();
+
     if (!state.roomId) {
       showToast("Oda bilgisi bulunamadı");
       return;
     }
 
-    const payload = {
-      membership_no: state.membershipNo,
-      display_name: state.displayName,
-      avatar_url: state.avatarUrl,
-      lang: state.selectedLang
-    };
-
-    const data = await api("/bootstrap", {
-      method: "POST",
-      body: payload
-    });
-
-    state.roomId = safeText(data.room_id) || state.roomId;
-    state.roomCode = safeText(data.room_code) || state.roomCode;
-
-    if (state.roomId) localStorage.setItem(STORAGE.roomId, state.roomId);
-    if (state.roomCode) localStorage.setItem(STORAGE.roomCode, state.roomCode);
-
-    state.participants = Array.isArray(data.participants)
-      ? data.participants.map(normalizeParticipant)
-      : [
-          normalizeParticipant({
-            user_id: state.user.id,
-            display_name: state.displayName,
-            avatar_url: state.avatarUrl,
-            is_host: true
-          })
-        ];
-
-    state.messages = Array.isArray(data.messages)
-      ? data.messages.map(normalizeMessage)
-      : [];
-  } catch (e) {
-    console.warn("[meeting bootstrap]", e);
-    state.participants = [
-      normalizeParticipant({
-        user_id: state.user.id,
-        display_name: state.displayName,
-        avatar_url: state.avatarUrl,
-        is_host: true
-      })
-    ];
-    state.messages = [];
-  }
-
-  renderParticipants();
-  renderMessages();
-}
-
-async function refreshRoomState(silent = false) {
-  if (!state.roomId) {
-    renderParticipants();
-    renderMessages();
-    return;
-  }
-
-  try {
-    const data = await api(`/state?room_id=${encodeURIComponent(state.roomId)}`);
-
-    if (Array.isArray(data.participants)) {
-      state.participants = data.participants.map(normalizeParticipant);
-    }
-
-    if (Array.isArray(data.messages)) {
-      state.messages = data.messages.map(normalizeMessage);
-    }
-
-    renderParticipants();
-    renderMessages();
-  } catch (e) {
-    if (!silent) console.warn("[meeting state]", e);
-  }
-}
-
-async function updateMyLanguage() {
-  if (!state.roomId) return;
-
-  try {
-    await api("/language", {
-      method: "POST",
-      body: {
-        room_id: state.roomId,
-        lang: state.selectedLang
-      }
-    });
-  } catch (e) {
-    console.warn("[meeting language]", e);
-  }
-}
-
-async function joinByMembershipNumber() {
-  const target = safeText(el.joinInput.value).toUpperCase();
-  if (!target) {
-    showToast("Üyelik numarası gir");
-    return;
-  }
-
-  try {
-    await api("/join", {
-      method: "POST",
-      body: {
-        room_id: state.roomId,
-        target_membership_no: target,
-        inviter_membership_no: state.membershipNo
-      }
-    });
-
-    el.joinInput.value = "";
-    closeDrawer();
-    showToast("Katılımcı eklendi");
-    await refreshRoomState(true);
-  } catch (e) {
-    console.error(e);
-    showToast(e.message || "Katılımcı eklenemedi");
-  }
-}
-
-async function sendMessage() {
-  const text = safeText(el.messageInput.value);
-  if (!text) return;
-  if (!state.roomId) {
-    showToast("Meeting hazır değil");
-    return;
-  }
-
-  try {
-    await api("/message", {
-      method: "POST",
-      body: {
-        room_id: state.roomId,
-        text,
-        sender_lang: state.selectedLang,
-        target_lang: state.selectedLang
-      }
-    });
-
-    el.messageInput.value = "";
-    autoResizeTextarea();
-    syncSendState();
-
-    await refreshRoomState(true);
-  } catch (e) {
-    console.error(e);
-    showToast(e.message || "Mesaj gönderilemedi");
-  }
-}
-
-function speakText(text) {
-  const msg = safeText(text);
-  if (!msg) return;
-
-  try {
-    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      try { window.NativeTTS.stop?.(); } catch (_) {}
-      setTimeout(() => {
-        try {
-          window.NativeTTS.speak(msg, state.selectedLang || "tr");
-        } catch (_) {
-          showToast("Ses okuma başlatılamadı");
-        }
-      }, 50);
-      return;
-    }
-
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(msg);
-      utter.lang = state.selectedLang || "tr-TR";
-      utter.rate = 0.96;
-      utter.pitch = 1;
-      window.speechSynthesis.speak(utter);
-      return;
-    }
-
-    showToast("Ses okuma desteklenmiyor");
-  } catch (_) {
-    showToast("Ses okuma başlatılamadı");
-  }
-}
-
-function toggleSpeechInput() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SR) {
-    showToast("Sesli giriş desteklenmiyor");
-    return;
-  }
-
-  if (state.speechRec) {
-    try { state.speechRec.stop(); } catch (_) {}
-    state.speechRec = null;
-    return;
-  }
-
-  const recognition = new SR();
-  recognition.lang = state.selectedLang || "tr-TR";
-  recognition.interimResults = true;
-  recognition.continuous = false;
-
-  recognition.onstart = () => {
-    state.speechRec = recognition;
-    showToast("Dinleniyor...");
-  };
-
-  recognition.onresult = (event) => {
-    let transcript = "";
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      transcript += event.results[i][0].transcript;
-    }
-    el.messageInput.value = transcript.trim();
-    autoResizeTextarea();
-    syncSendState();
-  };
-
-  recognition.onerror = () => {
-    state.speechRec = null;
-    showToast("Sesli giriş hatası");
-  };
-
-  recognition.onend = () => {
-    state.speechRec = null;
-  };
-
-  recognition.start();
-}
-
-function startPolling() {
-  stopPolling();
-  state.pollTimer = setInterval(() => {
-    refreshRoomState(true);
-  }, 2500);
-}
-
-function stopPolling() {
-  if (state.pollTimer) {
-    clearInterval(state.pollTimer);
-    state.pollTimer = null;
-  }
-}
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    stopPolling();
-  } else {
+    await bootstrapMeeting();
+    state.meetingStarted = state.savedMeetingStarted || state.meetingStarted;
+    renderDrawerProfile();
     startPolling();
-    refreshRoomState(true);
+  } catch (e) {
+    console.error("meeting boot error:", e);
+    showToast("Meeting yüklenemedi");
   }
-});
-
-window.visualViewport?.addEventListener("resize", syncKeyboardOffset);
-window.visualViewport?.addEventListener("scroll", syncKeyboardOffset);
-window.addEventListener("resize", syncKeyboardOffset);
-
-window.addEventListener("beforeunload", async () => {
-  try {
-    if (state.roomId) {
-      await api("/leave", {
-        method: "POST",
-        body: { room_id: state.roomId }
-      });
-    }
-  } catch (_) {}
-});
-
-async function init() {
-  await loadLangPool();
-  renderSelectedLanguage();
-  renderLangOptions();
-
-  bindInputEvents();
-  bindDrawerEvents();
-  bindActionEvents();
-  autoResizeTextarea();
-  syncSendState();
-  syncKeyboardOffset();
-
-  state.user = await getCurrentUser();
-  if (!state.user) {
-    showToast("Oturum bulunamadı");
-    location.href = "/pages/login.html";
-    return;
-  }
-
-  state.profile = await getProfileByUserId(state.user.id);
-  state.membershipNo = pickMembershipNo(state.user, state.profile);
-  state.displayName = pickDisplayName(state.user, state.profile);
-  state.avatarUrl = pickAvatar(state.user, state.profile);
-
-  renderProfile();
-
-  if (!state.roomId) {
-    showToast("Oda bilgisi bulunamadı");
-    return;
-  }
-
-  await bootstrapMeeting();
-  startPolling();
-  scrollChatToBottom();
 }
 
-init();
+window.addEventListener("beforeunload", stopPolling);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopPolling();
+  else if (state.roomId) startPolling();
+});
+
+boot();
