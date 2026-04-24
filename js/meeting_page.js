@@ -10,9 +10,9 @@ const API_ROOT =
 const MEETING_API = `${API_ROOT}/meeting`;
 
 const STORAGE = {
-  lang: "italky_meeting_lang_v4",
-  roomId: "italky_meeting_room_id_v4",
-  roomCode: "italky_meeting_room_code_v4"
+  lang: "italky_meeting_lang_v5",
+  roomId: "italky_meeting_room_id_v5",
+  roomCode: "italky_meeting_room_code_v5"
 };
 
 const COLOR_POOL = [
@@ -350,11 +350,7 @@ function normalizeParticipant(item = {}) {
     safeText(item.avatar) ||
     safeText(item.picture);
 
-  return {
-    id,
-    name,
-    avatar
-  };
+  return { id, name, avatar };
 }
 
 function renderParticipants() {
@@ -380,7 +376,7 @@ function normalizeMessage(msg = {}) {
   return {
     id: safeText(msg.id) || Math.random().toString(36).slice(2),
     senderId: safeText(msg.sender_id) || safeText(msg.user_id),
-    senderName: safeText(msg.sender_name) || safeText(msg.display_name) || "Kullanıcı",
+    senderName: safeText(msg.sender_name) || safeText(msg.display_name) || "",
     text:
       safeText(msg.translated_text) ||
       safeText(msg.text_local) ||
@@ -408,7 +404,7 @@ function renderMessages() {
       }
 
       const cls = mine ? "mine" : "other";
-      const author = mine ? state.displayName : msg.senderName;
+      const author = mine ? state.displayName : (msg.senderName || "Katılımcı");
       const colorKey = msg.senderId || msg.senderName || msg.id;
       const color = getColorForKey(colorKey);
       const speechText = msg.text || msg.originalText || "";
@@ -699,6 +695,16 @@ function speakText(text) {
   if (!msg) return;
 
   try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.stop?.();
+      setTimeout(() => {
+        try {
+          window.NativeTTS.speak(msg, state.selectedLang || "tr");
+        } catch (_) {}
+      }, 60);
+      return;
+    }
+
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(msg);
@@ -706,9 +712,10 @@ function speakText(text) {
       utter.rate = 0.96;
       utter.pitch = 1;
       window.speechSynthesis.speak(utter);
-    } else {
-      showToast("Ses okuma desteklenmiyor");
+      return;
     }
+
+    showToast("Ses okuma desteklenmiyor");
   } catch (_) {
     showToast("Ses okuma başlatılamadı");
   }
