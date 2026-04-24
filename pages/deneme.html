@@ -2,40 +2,33 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Meeting</title>
-  <meta name="theme-color" content="#07162f"/>
+  <meta name="theme-color" content="#081a36"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#07162f;
-      --bg2:#0a2042;
+      --bg:#081a36;
+      --bg2:#0b2246;
       --panel:rgba(255,255,255,.05);
       --panel2:rgba(255,255,255,.04);
       --line:rgba(255,255,255,.08);
-      --line2:rgba(120,190,255,.16);
+      --line2:rgba(125,190,255,.18);
       --txt:#f7fbff;
-      --muted:rgba(255,255,255,.64);
-      --muted2:rgba(255,255,255,.40);
-      --blue:#74bfff;
-      --blue2:#8fd7ff;
-      --cyan:#73ebff;
+      --muted:rgba(255,255,255,.62);
+      --blue:#78beff;
+      --blue2:#96d7ff;
+      --cyan:#76ebff;
+      --green:#32d399;
       --safe-top:env(safe-area-inset-top);
       --safe-bottom:env(safe-area-inset-bottom);
-      --header-h:88px;
-      --footer-h:54px;
+      --header-h:84px;
+      --footer-h:52px;
       --composer-h:96px;
-      --drawer-w:min(88vw, 360px);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -45,12 +38,12 @@
       width:100%;
       height:100%;
       overflow:hidden;
-      color:var(--txt);
       font-family:Outfit,Arial,sans-serif;
+      color:var(--txt);
       background:
-        radial-gradient(circle at 15% 0%, rgba(77,163,255,.18), transparent 25%),
-        radial-gradient(circle at 85% 18%, rgba(104,225,255,.09), transparent 20%),
-        linear-gradient(180deg,#061120 0%, #081932 55%, #07162d 100%);
+        radial-gradient(circle at 12% 0%, rgba(120,190,255,.16), transparent 24%),
+        radial-gradient(circle at 88% 14%, rgba(118,235,255,.08), transparent 18%),
+        linear-gradient(180deg,#061325 0%, #081a36 58%, #07152c 100%);
     }
 
     body::before{
@@ -58,18 +51,11 @@
       position:fixed;
       inset:0;
       pointer-events:none;
-      opacity:.12;
+      opacity:.08;
       background-image:
         linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
       background-size:100% 3px, 3px 100%;
-      mix-blend-mode:soft-light;
-    }
-
-    #pageContent{
-      width:100%;
-      height:100%;
-      overflow:hidden;
     }
 
     .app{
@@ -79,28 +65,24 @@
       height:100dvh;
       margin:0 auto;
       overflow:hidden;
-      background:
-        radial-gradient(circle at 16% 0%, rgba(77,163,255,.12), transparent 22%),
-        radial-gradient(circle at 88% 14%, rgba(104,225,255,.08), transparent 18%),
-        linear-gradient(180deg,#07152a 0%, #0a1b38 52%, #07162f 100%);
       border-left:1px solid rgba(255,255,255,.04);
       border-right:1px solid rgba(255,255,255,.04);
-      box-shadow:0 22px 46px rgba(0,0,0,.28);
+      box-shadow:0 18px 40px rgba(0,0,0,.24);
     }
 
     .header{
       position:absolute;
       inset:0 0 auto 0;
-      z-index:40;
+      z-index:30;
       height:calc(var(--header-h) + var(--safe-top));
       padding:calc(10px + var(--safe-top)) 16px 10px;
       display:grid;
-      grid-template-columns:56px 1fr 84px;
+      grid-template-columns:56px 1fr 82px;
       align-items:center;
       gap:12px;
-      border-bottom:1px solid rgba(255,255,255,.07);
-      background:linear-gradient(180deg, rgba(7,22,47,.96), rgba(7,22,47,.74));
-      backdrop-filter:blur(18px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(8,26,54,.96), rgba(8,26,54,.78));
+      backdrop-filter:blur(16px);
     }
 
     .icon-btn{
@@ -115,7 +97,6 @@
       align-items:center;
       justify-content:center;
       cursor:pointer;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
     }
 
     .icon-btn svg,
@@ -134,12 +115,8 @@
     }
 
     .brand{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      line-height:1;
       text-align:center;
+      line-height:1;
       user-select:none;
     }
 
@@ -147,12 +124,12 @@
       font-family:"Space Grotesk",sans-serif;
       font-size:26px;
       font-weight:800;
-      color:#fff;
       letter-spacing:-.6px;
+      color:#fff;
     }
 
     .brand-title .ai{
-      background:linear-gradient(135deg, #91dfff 0%, #77a8ff 45%, #bf7dff 100%);
+      background:linear-gradient(135deg,#8fddff 0%,#83b5ff 46%,#c18dff 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
@@ -162,49 +139,48 @@
       font-size:10px;
       font-weight:900;
       letter-spacing:3px;
-      color:rgba(255,255,255,.26);
+      color:rgba(255,255,255,.25);
     }
 
     .count-pill{
-      height:60px;
-      border-radius:22px;
+      height:58px;
+      border-radius:20px;
       border:1px solid rgba(143,215,255,.20);
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      line-height:1.05;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
     }
 
     .count-num{
       font-size:22px;
       font-weight:1000;
-      color:#fff;
+      line-height:1;
     }
 
     .count-label{
       margin-top:4px;
       font-size:11px;
       font-weight:900;
-      color:#dff5ff;
+      color:#def7ff;
+      line-height:1;
     }
 
     .main{
       position:absolute;
       inset:calc(var(--header-h) + var(--safe-top)) 0 calc(var(--footer-h) + var(--safe-bottom)) 0;
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
     }
 
     .meeting-top{
-      position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      z-index:10;
+      flex:0 0 auto;
       padding:14px 14px 10px;
-      background:linear-gradient(180deg, rgba(7,22,47,.85), rgba(7,22,47,.10));
+      background:linear-gradient(180deg, rgba(8,26,54,.84), rgba(8,26,54,.14));
       backdrop-filter:blur(8px);
     }
 
@@ -212,22 +188,14 @@
       border-radius:28px;
       border:1px solid var(--line2);
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      padding:16px 16px 14px;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
-    }
-
-    .meeting-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:12px;
+      padding:14px 14px 12px;
     }
 
     .meeting-title{
       font-size:18px;
       font-weight:1000;
       color:#fff;
+      margin-bottom:12px;
     }
 
     .participants-strip{
@@ -240,12 +208,10 @@
       padding-bottom:2px;
     }
 
-    .participants-strip::-webkit-scrollbar{
-      display:none;
-    }
+    .participants-strip::-webkit-scrollbar{ display:none; }
 
     .participant-chip{
-      min-width:58px;
+      min-width:60px;
       max-width:64px;
       flex:0 0 auto;
       display:flex;
@@ -264,12 +230,10 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:17px;
-      font-weight:1000;
       color:#fff;
+      font-size:16px;
+      font-weight:1000;
       position:relative;
-      flex:0 0 auto;
-      box-shadow:0 8px 18px rgba(0,0,0,.18);
     }
 
     .participant-avatar img{
@@ -282,40 +246,39 @@
     .participant-avatar::after{
       content:"";
       position:absolute;
-      right:3px;
-      bottom:3px;
+      right:2px;
+      bottom:2px;
       width:10px;
       height:10px;
       border-radius:50%;
-      background:#31d18b;
-      border:2px solid #0c1c38;
+      background:var(--green);
+      border:2px solid #0b1f3d;
     }
 
     .participant-name{
       width:100%;
+      text-align:center;
       font-size:11px;
       font-weight:900;
       color:#eef8ff;
-      text-align:center;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      line-height:1.1;
     }
 
     .chat-scroll{
-      position:absolute;
-      inset:126px 0 0 0;
+      flex:1;
+      min-height:0;
       overflow-y:auto;
       overflow-x:hidden;
-      -webkit-overflow-scrolling:touch;
       scrollbar-width:none;
-      padding:12px 14px calc(var(--composer-h) + 22px);
+      -webkit-overflow-scrolling:touch;
+      padding:10px 14px calc(var(--composer-h) + 18px);
       scroll-behavior:smooth;
     }
 
-    .chat-scroll::-webkit-scrollbar{
-      display:none;
-    }
+    .chat-scroll::-webkit-scrollbar{ display:none; }
 
     .chat-feed{
       min-height:100%;
@@ -331,17 +294,9 @@
       flex:0 0 auto;
     }
 
-    .msg.mine{
-      justify-content:flex-start;
-    }
-
-    .msg.other{
-      justify-content:flex-end;
-    }
-
-    .msg.system{
-      justify-content:center;
-    }
+    .msg.mine{ justify-content:flex-start; }
+    .msg.other{ justify-content:flex-end; }
+    .msg.system{ justify-content:center; }
 
     .msg-block{
       max-width:76%;
@@ -365,22 +320,17 @@
       flex-direction:row-reverse;
     }
 
-    .msg.system .msg-row{
-      justify-content:center;
-    }
-
     .bubble{
       position:relative;
-      display:inline-flex;
+      display:flex;
       align-items:center;
       gap:10px;
+      min-height:52px;
       padding:14px 14px 14px 16px;
       border-radius:26px;
-      background:linear-gradient(180deg, rgba(11,27,55,.96), rgba(9,22,46,.96));
+      background:linear-gradient(180deg, rgba(10,24,49,.96), rgba(9,21,43,.96));
       border:1px solid rgba(255,255,255,.07);
       box-shadow:0 8px 22px rgba(0,0,0,.16);
-      min-height:54px;
-      word-break:break-word;
     }
 
     .bubble::before{
@@ -391,7 +341,7 @@
       bottom:10px;
       width:4px;
       border-radius:999px;
-      background:var(--line-color, #86d4ff);
+      background:var(--line-color,#8cd7ff);
     }
 
     .msg.other .bubble::before{
@@ -400,6 +350,8 @@
     }
 
     .bubble-text{
+      flex:1 1 auto;
+      min-width:0;
       font-size:15px;
       font-weight:900;
       line-height:1.45;
@@ -409,18 +361,18 @@
     }
 
     .speaker-btn{
-      width:42px;
-      height:42px;
+      width:40px;
+      height:40px;
       border:none;
-      border-radius:16px;
+      border-radius:14px;
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.08);
       color:#fff;
-      cursor:pointer;
-      flex:0 0 auto;
       display:flex;
       align-items:center;
       justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
     }
 
     .msg-author{
@@ -429,6 +381,9 @@
       color:rgba(255,255,255,.72);
       padding:0 4px;
     }
+
+    .msg.mine .msg-author{ text-align:left; }
+    .msg.other .msg-author{ text-align:right; }
 
     .system-badge{
       display:inline-flex;
@@ -489,9 +444,7 @@
       scrollbar-width:none;
     }
 
-    .composer-input::-webkit-scrollbar{
-      display:none;
-    }
+    .composer-input::-webkit-scrollbar{ display:none; }
 
     .composer-input::placeholder{
       color:rgba(255,255,255,.70);
@@ -521,9 +474,7 @@
       box-shadow:0 0 24px rgba(255,255,255,.08);
     }
 
-    .hidden{
-      display:none !important;
-    }
+    .hidden{ display:none !important; }
 
     .footer{
       position:absolute;
@@ -551,7 +502,7 @@
     }
 
     .seal-main{
-      background:linear-gradient(135deg, #7fd8ff 0%, #82b8ff 45%, #d29bff 100%);
+      background:linear-gradient(135deg,#7fd8ff 0%,#82b8ff 45%,#d29bff 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
@@ -592,7 +543,7 @@
       top:0;
       left:0;
       bottom:0;
-      width:var(--drawer-w);
+      width:min(88vw,360px);
       transform:translateX(-105%);
       transition:transform .26s ease;
       background:linear-gradient(180deg, rgba(8,20,41,.98), rgba(7,17,34,.98));
@@ -606,9 +557,7 @@
       scrollbar-width:none;
     }
 
-    .drawer-panel::-webkit-scrollbar{
-      display:none;
-    }
+    .drawer-panel::-webkit-scrollbar{ display:none; }
 
     .drawer-layer.open .drawer-panel{
       transform:translateX(0);
@@ -836,9 +785,7 @@
       scrollbar-width:none;
     }
 
-    .lang-list::-webkit-scrollbar{
-      display:none;
-    }
+    .lang-list::-webkit-scrollbar{ display:none; }
 
     .lang-option{
       width:100%;
@@ -945,7 +892,7 @@
         <div class="brand-sub">MEETING</div>
       </div>
 
-      <div class="count-pill" id="topCountPill">
+      <div class="count-pill">
         <div class="count-num" id="participantCount">1</div>
         <div class="count-label">Kişi</div>
       </div>
@@ -954,10 +901,7 @@
     <main class="main">
       <div class="meeting-top">
         <div class="meeting-card">
-          <div class="meeting-head">
-            <div class="meeting-title">Meeting</div>
-          </div>
-
+          <div class="meeting-title">Meeting</div>
           <div class="participants-strip" id="participantsStrip"></div>
         </div>
       </div>
@@ -969,12 +913,7 @@
       <div class="composer-wrap">
         <div class="composer">
           <div class="composer-center">
-            <textarea
-              id="messageInput"
-              class="composer-input"
-              rows="1"
-              placeholder="Toplantıya mesaj yaz"
-            ></textarea>
+            <textarea id="messageInput" class="composer-input" rows="1" placeholder="Toplantıya mesaj yaz"></textarea>
           </div>
 
           <button id="micBtn" class="mic-btn" type="button" aria-label="Sesle yaz">
@@ -1055,13 +994,7 @@
 
         <div class="card">
           <div class="mini-label">Katıl</div>
-          <input
-            id="joinInput"
-            class="join-input"
-            type="text"
-            placeholder="Üyelik numarası gir"
-            autocomplete="off"
-          />
+          <input id="joinInput" class="join-input" type="text" placeholder="Üyelik numarası gir" autocomplete="off">
           <div style="height:12px"></div>
           <button id="joinBtn" class="primary-btn" type="button">Katılımcı Ekle</button>
         </div>
