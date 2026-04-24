@@ -1,16 +1,6 @@
 import { supabase } from "/js/supabase_client.js";
-
-let mountShell = null;
-try {
-  const shellModule = await import("/js/ui_shell.js");
-  mountShell = shellModule?.mountShell || null;
-} catch (_) {}
-
-try {
-  mountShell?.({ scroll: "hidden" });
-} catch (_) {}
-
-const $ = (id) => document.getElementById(id);
+import { getLangPoolForSite } from "/js/lang_pool_full.js";
+import { STORAGE_KEY } from "/js/config.js";
 
 const API_ROOT =
   window.ITALKY_API_BASE ||
@@ -20,10 +10,9 @@ const API_ROOT =
 const MEETING_API = `${API_ROOT}/meeting`;
 
 const STORAGE = {
-  lang: "italky_meeting_lang_v2",
-  roomId: "italky_meeting_room_id_v2",
-  roomCode: "italky_meeting_room_code_v2",
-  adSeenAt: "italky_meeting_ad_seen_at"
+  lang: "italky_meeting_lang_v3",
+  roomId: "italky_meeting_room_id_v3",
+  roomCode: "italky_meeting_room_code_v3"
 };
 
 const COLOR_POOL = [
@@ -49,6 +38,8 @@ const FALLBACK_LANGS = [
   { code: "ar", name: "العربية", flag: "🇸🇦" },
   { code: "ru", name: "Русский", flag: "🇷🇺" }
 ];
+
+const $ = (id) => document.getElementById(id);
 
 const el = {
   menuBtn: $("menuBtn"),
@@ -95,8 +86,7 @@ const state = {
   messages: [],
   langs: [...FALLBACK_LANGS],
   pollTimer: null,
-  speechRec: null,
-  speaking: null
+  speechRec: null
 };
 
 function showToast(message = "") {
@@ -119,7 +109,7 @@ function escapeHtml(v = "") {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replaceAll("'", "&#039;");
 }
 
 function formatInitials(name = "") {
@@ -186,8 +176,19 @@ async function getProfileByUserId(userId) {
   }
 }
 
+function getCachedUser() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 function pickMembershipNo(user, profile) {
   const meta = user?.user_metadata || {};
+  const cached = getCachedUser();
+
   return (
     safeText(profile?.membership_no) ||
     safeText(profile?.member_no) ||
@@ -197,6 +198,8 @@ function pickMembershipNo(user, profile) {
     safeText(meta?.member_no) ||
     safeText(meta?.membership_number) ||
     safeText(meta?.uyelik_no) ||
+    safeText(cached?.membership_no) ||
+    safeText(cached?.uyelik_no) ||
     safeText(profile?.id).replaceAll("-", "").slice(0, 8).toUpperCase() ||
     safeText(user?.id).replaceAll("-", "").slice(0, 8).toUpperCase()
   );
@@ -232,86 +235,21 @@ function pickAvatar(user, profile) {
 }
 
 async function loadLangPool() {
-  const importPaths = [
-    "/LANG_POOL/langpool.js",
-    "/js/LANG_POOL/langpool.js",
-    "/js/langpool.js",
-    "/js/lang_pool.js",
-    "/js/lang_pool_full.js"
-  ];
-
-  for (const path of importPaths) {
-    try {
-      const mod = await import(path);
-      const raw =
-        mod?.LANG_POOL ||
-        mod?.default?.LANG_POOL ||
-        mod?.default ||
-        mod?.languages ||
-        mod?.LANGS ||
-        null;
-
-      const normalized = normalizeLangPool(raw);
-      if (normalized.length) {
-        state.langs = normalized;
-        return;
-      }
-    } catch (_) {}
-  }
+  try {
+    const raw = getLangPoolForSite("tr");
+    if (Array.isArray(raw) && raw.length) {
+      state.langs = raw
+        .map((x) => ({
+          code: safeText(x.code).toLowerCase(),
+          name: safeText(x.name || x.tr_name || x.code),
+          flag: safeText(x.flag || "🌐")
+        }))
+        .filter((x) => x.code && x.name);
+      return;
+    }
+  } catch (_) {}
 
   state.langs = [...FALLBACK_LANGS];
-}
-
-function normalizeLangPool(raw) {
-  if (!raw) return [];
-
-  const arr = Array.isArray(raw)
-    ? raw
-    : typeof raw === "object"
-    ? Object.values(raw)
-    : [];
-
-  const list = arr
-    .map((item) => {
-      const code = safeText(item?.code || item?.lang || item?.value).toLowerCase();
-      const name = safeText(item?.name || item?.label || item?.title);
-      const flag = safeText(item?.flag || guessFlag(code));
-      if (!code || !name) return null;
-      return { code, name, flag: flag || "🌐" };
-    })
-    .filter(Boolean);
-
-  const uniq = [];
-  const seen = new Set();
-
-  for (const item of list) {
-    if (seen.has(item.code)) continue;
-    seen.add(item.code);
-    uniq.push(item);
-  }
-
-  return uniq;
-}
-
-function guessFlag(code) {
-  const map = {
-    tr: "🇹🇷",
-    en: "🇬🇧",
-    de: "🇩🇪",
-    fr: "🇫🇷",
-    it: "🇮🇹",
-    es: "🇪🇸",
-    ar: "🇸🇦",
-    ru: "🇷🇺",
-    pt: "🇵🇹",
-    nl: "🇳🇱",
-    pl: "🇵🇱",
-    uk: "🇺🇦",
-    ja: "🇯🇵",
-    ko: "🇰🇷",
-    zh: "🇨🇳"
-  };
-  return map[code] || "🌐";
 }
 
 function getLangInfo(code) {
@@ -417,29 +355,17 @@ function normalizeParticipant(item = {}) {
     safeText(item.member_no) ||
     safeText(item.membership_number);
 
-  const lang =
-    safeText(item.lang) ||
-    safeText(item.language) ||
-    safeText(item.target_lang) ||
-    state.selectedLang;
-
   return {
     id,
     name,
     avatar,
-    membershipNo,
-    lang
+    membershipNo
   };
 }
 
 function renderParticipants() {
   const participants = Array.isArray(state.participants) ? state.participants : [];
   el.participantCount.textContent = String(participants.length || 1);
-
-  if (!participants.length) {
-    el.participantsStrip.innerHTML = "";
-    return;
-  }
 
   el.participantsStrip.innerHTML = participants
     .map((p) => {
@@ -487,12 +413,6 @@ function normalizeMessage(msg = {}) {
 
 function renderMessages() {
   const messages = Array.isArray(state.messages) ? state.messages : [];
-
-  if (!messages.length) {
-    el.chatFeed.innerHTML = "";
-    scrollChatToBottom();
-    return;
-  }
 
   const html = messages
     .map((raw) => {
@@ -639,43 +559,6 @@ async function api(path, options = {}) {
   }
 }
 
-async function ensureMeetingAccess() {
-  try {
-    const seenAt = Number(localStorage.getItem(STORAGE.adSeenAt) || 0);
-    const now = Date.now();
-    const DAY = 24 * 60 * 60 * 1000;
-
-    if (now - seenAt < DAY) return true;
-
-    if (window.AndroidAds?.showRewardedAd) {
-      await window.AndroidAds.showRewardedAd("meeting_entry");
-    }
-
-    localStorage.setItem(STORAGE.adSeenAt, String(now));
-    return true;
-  } catch (_) {
-    return true;
-  }
-}
-
-async function bootstrapUser() {
-  state.user = await getCurrentUser();
-
-  if (!state.user) {
-    showToast("Oturum bulunamadı");
-    location.href = "/pages/login.html";
-    return false;
-  }
-
-  state.profile = await getProfileByUserId(state.user.id);
-  state.membershipNo = pickMembershipNo(state.user, state.profile);
-  state.displayName = pickDisplayName(state.user, state.profile);
-  state.avatarUrl = pickAvatar(state.user, state.profile);
-
-  renderProfile();
-  return true;
-}
-
 async function bootstrapMeeting() {
   try {
     const payload = {
@@ -712,8 +595,7 @@ async function bootstrapMeeting() {
             user_id: state.user.id,
             display_name: state.displayName,
             avatar_url: state.avatarUrl,
-            membership_no: state.membershipNo,
-            lang: state.selectedLang
+            membership_no: state.membershipNo
           })
         ];
 
@@ -725,8 +607,7 @@ async function bootstrapMeeting() {
         user_id: state.user.id,
         display_name: state.displayName,
         avatar_url: state.avatarUrl,
-        membership_no: state.membershipNo,
-        lang: state.selectedLang
+        membership_no: state.membershipNo
       })
     ];
     state.messages = [];
@@ -757,9 +638,7 @@ async function refreshRoomState(silent = false) {
     renderParticipants();
     renderMessages();
   } catch (e) {
-    if (!silent) {
-      console.warn("[meeting state]", e);
-    }
+    if (!silent) console.warn("[meeting state]", e);
   }
 }
 
@@ -847,7 +726,6 @@ function speakText(text) {
       utter.lang = state.selectedLang || "tr-TR";
       utter.rate = 0.96;
       utter.pitch = 1;
-      state.speaking = utter;
       window.speechSynthesis.speak(utter);
     } else if (window.AndroidTTS?.speak) {
       window.AndroidTTS.speak(msg, state.selectedLang || "tr");
@@ -868,9 +746,7 @@ function toggleSpeechInput() {
   }
 
   if (state.speechRec) {
-    try {
-      state.speechRec.stop();
-    } catch (_) {}
+    try { state.speechRec.stop(); } catch (_) {}
     state.speechRec = null;
     return;
   }
@@ -954,11 +830,19 @@ async function init() {
   autoResizeTextarea();
   syncSendState();
 
-  const accessOk = await ensureMeetingAccess();
-  if (!accessOk) return;
+  state.user = await getCurrentUser();
+  if (!state.user) {
+    showToast("Oturum bulunamadı");
+    location.href = "/pages/login.html";
+    return;
+  }
 
-  const userOk = await bootstrapUser();
-  if (!userOk) return;
+  state.profile = await getProfileByUserId(state.user.id);
+  state.membershipNo = pickMembershipNo(state.user, state.profile);
+  state.displayName = pickDisplayName(state.user, state.profile);
+  state.avatarUrl = pickAvatar(state.user, state.profile);
+
+  renderProfile();
 
   await bootstrapMeeting();
   startPolling();
