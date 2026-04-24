@@ -10,9 +10,9 @@ const API_ROOT =
 const MEETING_API = `${API_ROOT}/meeting`;
 
 const STORAGE = {
-  lang: "italky_meeting_lang_v3",
-  roomId: "italky_meeting_room_id_v3",
-  roomCode: "italky_meeting_room_code_v3"
+  lang: "italky_meeting_lang_v4",
+  roomId: "italky_meeting_room_id_v4",
+  roomCode: "italky_meeting_room_code_v4"
 };
 
 const COLOR_POOL = [
@@ -350,16 +350,10 @@ function normalizeParticipant(item = {}) {
     safeText(item.avatar) ||
     safeText(item.picture);
 
-  const membershipNo =
-    safeText(item.membership_no) ||
-    safeText(item.member_no) ||
-    safeText(item.membership_number);
-
   return {
     id,
     name,
-    avatar,
-    membershipNo
+    avatar
   };
 }
 
@@ -384,30 +378,16 @@ function renderParticipants() {
 
 function normalizeMessage(msg = {}) {
   return {
-    id:
-      safeText(msg.id) ||
-      safeText(msg.message_id) ||
-      Math.random().toString(36).slice(2),
-    senderId:
-      safeText(msg.sender_id) ||
-      safeText(msg.user_id) ||
-      safeText(msg.author_id),
-    senderName:
-      safeText(msg.sender_name) ||
-      safeText(msg.display_name) ||
-      safeText(msg.author_name) ||
-      "Kullanıcı",
+    id: safeText(msg.id) || Math.random().toString(36).slice(2),
+    senderId: safeText(msg.sender_id) || safeText(msg.user_id),
+    senderName: safeText(msg.sender_name) || safeText(msg.display_name) || "Kullanıcı",
     text:
-      safeText(msg.text_local) ||
       safeText(msg.translated_text) ||
+      safeText(msg.text_local) ||
       safeText(msg.text) ||
       safeText(msg.message),
-    originalText:
-      safeText(msg.original_text),
-    system:
-      Boolean(msg.system || msg.type === "system"),
-    createdAt:
-      safeText(msg.created_at) || new Date().toISOString()
+    originalText: safeText(msg.original_text),
+    system: Boolean(msg.system || msg.type === "system" || msg.message_type === "system")
   };
 }
 
@@ -489,10 +469,22 @@ function syncSendState() {
   el.micBtn.classList.toggle("hidden", hasText);
 }
 
+function syncKeyboardOffset() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const keyboard = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  document.documentElement.style.setProperty("--keyboard-offset", `${keyboard}px`);
+}
+
 function bindInputEvents() {
   el.messageInput.addEventListener("input", () => {
     autoResizeTextarea();
     syncSendState();
+  });
+
+  el.messageInput.addEventListener("focus", () => {
+    setTimeout(syncKeyboardOffset, 60);
+    setTimeout(scrollChatToBottom, 100);
   });
 
   el.messageInput.addEventListener("keydown", async (e) => {
@@ -573,43 +565,30 @@ async function bootstrapMeeting() {
       body: payload
     });
 
-    state.roomId =
-      safeText(data.room_id) ||
-      safeText(data.id) ||
-      state.roomId ||
-      "";
-
-    state.roomCode =
-      safeText(data.room_code) ||
-      safeText(data.code) ||
-      state.roomCode ||
-      "";
+    state.roomId = safeText(data.room_id) || state.roomId;
+    state.roomCode = safeText(data.room_code) || state.roomCode;
 
     if (state.roomId) localStorage.setItem(STORAGE.roomId, state.roomId);
     if (state.roomCode) localStorage.setItem(STORAGE.roomCode, state.roomCode);
 
     state.participants = Array.isArray(data.participants)
       ? data.participants.map(normalizeParticipant)
-      : [
-          normalizeParticipant({
-            user_id: state.user.id,
-            display_name: state.displayName,
-            avatar_url: state.avatarUrl,
-            membership_no: state.membershipNo
-          })
-        ];
+      : [normalizeParticipant({
+          user_id: state.user.id,
+          display_name: state.displayName,
+          avatar_url: state.avatarUrl
+        })];
 
-    state.messages = Array.isArray(data.messages) ? data.messages.map(normalizeMessage) : [];
+    state.messages = Array.isArray(data.messages)
+      ? data.messages.map(normalizeMessage)
+      : [];
   } catch (e) {
     console.warn("[meeting bootstrap]", e);
-    state.participants = [
-      normalizeParticipant({
-        user_id: state.user.id,
-        display_name: state.displayName,
-        avatar_url: state.avatarUrl,
-        membership_no: state.membershipNo
-      })
-    ];
+    state.participants = [normalizeParticipant({
+      user_id: state.user.id,
+      display_name: state.displayName,
+      avatar_url: state.avatarUrl
+    })];
     state.messages = [];
   }
 
@@ -727,8 +706,6 @@ function speakText(text) {
       utter.rate = 0.96;
       utter.pitch = 1;
       window.speechSynthesis.speak(utter);
-    } else if (window.AndroidTTS?.speak) {
-      window.AndroidTTS.speak(msg, state.selectedLang || "tr");
     } else {
       showToast("Ses okuma desteklenmiyor");
     }
@@ -806,14 +783,16 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
+window.visualViewport?.addEventListener("resize", syncKeyboardOffset);
+window.visualViewport?.addEventListener("scroll", syncKeyboardOffset);
+window.addEventListener("resize", syncKeyboardOffset);
+
 window.addEventListener("beforeunload", async () => {
   try {
     if (state.roomId) {
       await api("/leave", {
         method: "POST",
-        body: {
-          room_id: state.roomId
-        }
+        body: { room_id: state.roomId }
       });
     }
   } catch (_) {}
@@ -829,6 +808,7 @@ async function init() {
   bindActionEvents();
   autoResizeTextarea();
   syncSendState();
+  syncKeyboardOffset();
 
   state.user = await getCurrentUser();
   if (!state.user) {
