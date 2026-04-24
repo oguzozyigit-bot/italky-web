@@ -89,9 +89,18 @@ function persistRoom(roomId, roomCode, roomName = "") {
 }
 
 function goMeeting(roomId, roomCode) {
+  if (!roomId) {
+    showToast("Oda kimliği oluşturulamadı");
+    return;
+  }
+
   const url = new URL("/pages/meeting.html", location.origin);
-  if (roomId) url.searchParams.set("room_id", roomId);
-  if (roomCode) url.searchParams.set("room_code", roomCode);
+  url.searchParams.set("room_id", roomId);
+
+  if (roomCode) {
+    url.searchParams.set("room_code", roomCode);
+  }
+
   location.href = url.toString();
 }
 
@@ -132,10 +141,16 @@ async function resolveRoomByCode(roomCode) {
 
 async function createRoomFlow() {
   const roomName = safeText(el.roomNameInput?.value, "Yeni Meeting");
-  el.createRoomBtn.disabled = true;
+  if (!roomName) {
+    showToast("Oda adı gir");
+    return;
+  }
+
+  if (el.createRoomBtn) el.createRoomBtn.disabled = true;
 
   try {
     const room = await bootstrapCreateRoom(roomName);
+
     if (!room.roomId) {
       throw new Error("Oda oluşturulamadı");
     }
@@ -148,14 +163,15 @@ async function createRoomFlow() {
     }
 
     showToast("Oda oluşturuldu");
+
     setTimeout(() => {
       goMeeting(room.roomId, room.roomCode);
-    }, 350);
+    }, 250);
   } catch (e) {
     console.error(e);
     showToast(e.message || "Oda oluşturulamadı");
   } finally {
-    el.createRoomBtn.disabled = false;
+    if (el.createRoomBtn) el.createRoomBtn.disabled = false;
   }
 }
 
@@ -166,16 +182,18 @@ async function joinRoomFlow() {
     return;
   }
 
-  el.joinRoomBtn.disabled = true;
+  if (el.joinRoomBtn) el.joinRoomBtn.disabled = true;
 
   try {
     const room = await resolveRoomByCode(code);
+
     if (!room.roomId) {
       throw new Error("Oda bulunamadı");
     }
 
     persistRoom(room.roomId, room.roomCode);
     showToast("Odaya bağlanılıyor");
+
     setTimeout(() => {
       goMeeting(room.roomId, room.roomCode);
     }, 250);
@@ -183,7 +201,7 @@ async function joinRoomFlow() {
     console.error(e);
     showToast(e.message || "Odaya katılınamadı");
   } finally {
-    el.joinRoomBtn.disabled = false;
+    if (el.joinRoomBtn) el.joinRoomBtn.disabled = false;
   }
 }
 
