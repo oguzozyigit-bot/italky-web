@@ -22,12 +22,10 @@ const UI = {
   menuBackdrop: $("menuBackdrop"),
   menuClose: $("menuClose"),
   brandHome: $("brandHome"),
-  topSettingsBtn: $("topSettingsBtn"),
 
   avatarStrip: $("avatarStrip"),
-  meetingBadge: $("meetingBadge"),
+  meetingBadge: $("participantCountTop"),
   meetingTitle: $("meetingTitle"),
-  meetingSub: $("meetingSub"),
 
   profileAvatar: $("profileAvatar"),
   profileName: $("profileName"),
@@ -68,65 +66,6 @@ const state = {
   speakingAudio: null,
   speakingAbort: null
 };
-
-function injectExtraStyles() {
-  if (document.getElementById("meeting-page-extra-styles")) return;
-
-  const style = document.createElement("style");
-  style.id = "meeting-page-extra-styles";
-  style.textContent = `
-    .bubble-row{
-      display:flex;
-      align-items:flex-start;
-      gap:10px;
-    }
-
-    .bubble-text{
-      min-width:0;
-      flex:1;
-    }
-
-    .speaker-btn{
-      width:30px;
-      height:30px;
-      min-width:30px;
-      border:none;
-      border-radius:10px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex:0 0 auto;
-      margin-top:2px;
-    }
-
-    .speaker-btn svg{
-      width:15px;
-      height:15px;
-      stroke:currentColor;
-      stroke-width:2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .bubble-wrap.user-c1 .bubble.right{ border-right:4px solid var(--u1) !important; }
-    .bubble-wrap.user-c2 .bubble.right{ border-right:4px solid var(--u2) !important; }
-    .bubble-wrap.user-c3 .bubble.right{ border-right:4px solid var(--u3) !important; }
-    .bubble-wrap.user-c4 .bubble.right{ border-right:4px solid var(--u4) !important; }
-    .bubble-wrap.user-c5 .bubble.right{ border-right:4px solid var(--u5) !important; }
-    .bubble-wrap.user-c6 .bubble.right{ border-right:4px solid var(--u6) !important; }
-
-    .bubble-wrap.self-bubble .bubble.left{
-      border-left:4px solid var(--blue2) !important;
-      background:linear-gradient(180deg,#102343,#0d1d39) !important;
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 function showToast(message = "") {
   if (!UI.toast) return;
@@ -185,6 +124,7 @@ function scrollChatToBottom() {
 function updateViewportLayout() {
   const vv = window.visualViewport;
   if (!vv) return;
+
   document.documentElement.style.setProperty("--app-height", `${vv.height}px`);
   const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
   document.documentElement.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
@@ -247,6 +187,30 @@ function renderLangPickerText() {
   UI.myLangPickerText.textContent = `${getLanguageFlag(state.myLang)} ${getLanguageName(state.myLang)}`;
 }
 
+function buildLangPool() {
+  try {
+    const raw = getLangPoolForSite("tr") || [];
+    const seen = new Set();
+
+    state.langPool = raw
+      .map((item) => ({
+        code: String(item.code || "").trim().toLowerCase(),
+        name: String(item.name || item.tr_name || item.code || "").trim(),
+        flag: item.flag || "🌐"
+      }))
+      .filter((item) => item.code && !seen.has(item.code) && seen.add(item.code))
+      .sort((a, b) => a.name.localeCompare(b.name, "tr"));
+  } catch (e) {
+    console.error("lang pool hata:", e);
+    state.langPool = [
+      { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+      { code: "en", name: "English", flag: "🇬🇧" }
+    ];
+  }
+
+  renderLangPickerText();
+}
+
 function renderLangList(query = "") {
   if (!UI.langList) return;
   const q = String(query || "").trim().toLowerCase();
@@ -280,10 +244,6 @@ function renderLangList(query = "") {
       localStorage.setItem(STORAGE_LANG_KEY, state.myLang);
       renderLangPickerText();
 
-      if (UI.meetingSub) {
-        UI.meetingSub.textContent = `Herkes mesajları kendi dilinde görür. Senin dilin: ${getLanguageName(state.myLang)}`;
-      }
-
       if (state.meetingId) {
         try {
           await patchMyLanguage(state.meetingId, state.myLang);
@@ -313,7 +273,8 @@ function setProfileAvatar(name, avatarUrl) {
   }
 }
 
-function renderProfile(profile, user, cached) {
+function renderProfile(profile, user) {
+  const cached = getCachedUser();
   const meta = user?.user_metadata || {};
 
   const name =
@@ -353,7 +314,7 @@ function renderParticipants() {
   if (!UI.avatarStrip || !UI.meetingBadge) return;
 
   UI.avatarStrip.innerHTML = "";
-  UI.meetingBadge.textContent = `${state.participants.length} Kişi`;
+  UI.meetingBadge.textContent = `${state.participants.length}`;
 
   state.participants.forEach((p) => {
     const mini = document.createElement("div");
@@ -691,6 +652,35 @@ async function sendMeetingMessage(text) {
   await loadMessages();
 }
 
+async function addParticipantById(rawId) {
+  const memberNo = String(rawId || "").trim();
+  if (!memberNo) {
+    showToast("Önce üyelik numarası gir.");
+    return;
+  }
+
+  if (!state.meetingCode) {
+    showToast("Meeting kodu bulunamadı");
+    return;
+  }
+
+  try {
+    await apiPost("/api/meeting/join", {
+      meeting_code: state.meetingCode,
+      member_no: memberNo,
+      lang_code: state.myLang
+    });
+
+    if (UI.joinUserIdInput) UI.joinUserIdInput.value = "";
+    showToast("Katılımcı eklendi");
+    closeMenu();
+    await refreshAll();
+  } catch (e) {
+    console.error("Katılımcı ekleme hata:", e);
+    showToast("Katılımcı eklenemedi");
+  }
+}
+
 async function ensureMeetingAdAccess() {
   const ok = await ensureModuleAdAccess({
     moduleKey: MODULE_KEY,
@@ -707,30 +697,6 @@ async function ensureMeetingAdAccess() {
   return ok;
 }
 
-function buildLangPool() {
-  try {
-    const raw = getLangPoolForSite("tr") || [];
-    const seen = new Set();
-
-    state.langPool = raw
-      .map((item) => ({
-        code: String(item.code || "").trim().toLowerCase(),
-        name: String(item.name || item.tr_name || item.code || "").trim(),
-        flag: item.flag || "🌐"
-      }))
-      .filter((item) => item.code && !seen.has(item.code) && seen.add(item.code))
-      .sort((a, b) => a.name.localeCompare(b.name, "tr"));
-  } catch (e) {
-    console.error("lang pool hata:", e);
-    state.langPool = [
-      { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-      { code: "en", name: "English", flag: "🇬🇧" }
-    ];
-  }
-
-  renderLangPickerText();
-}
-
 function bindEvents() {
   UI.menuBtn?.addEventListener("click", openMenu);
   UI.menuBackdrop?.addEventListener("click", closeMenu);
@@ -738,10 +704,6 @@ function bindEvents() {
 
   UI.brandHome?.addEventListener("click", () => {
     location.href = "/pages/home.html";
-  });
-
-  UI.topSettingsBtn?.addEventListener("click", () => {
-    showToast("Meeting ayarları daha sonra açılacak");
   });
 
   UI.copyMyIdBtn?.addEventListener("click", async () => {
@@ -939,4 +901,5 @@ async function init() {
   updateViewportLayout();
   scrollChatToBottom();
 }
+
 init();
