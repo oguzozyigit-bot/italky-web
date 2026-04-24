@@ -10,9 +10,9 @@ const API_ROOT =
 const MEETING_API = `${API_ROOT}/meeting`;
 
 const STORAGE = {
-  lang: "italky_meeting_lang_v5",
-  roomId: "italky_meeting_room_id_v5",
-  roomCode: "italky_meeting_room_code_v5"
+  lang: "italky_meeting_lang_v7",
+  roomId: "italky_meeting_room_id_v7",
+  roomCode: "italky_meeting_room_code_v7"
 };
 
 const COLOR_POOL = [
@@ -357,7 +357,13 @@ function renderParticipants() {
   const participants = Array.isArray(state.participants) ? state.participants : [];
   el.participantCount.textContent = String(participants.length || 1);
 
-  el.participantsStrip.innerHTML = participants
+  const ordered = [...participants].sort((a, b) => {
+    const aMine = a.id === state.user?.id ? 1 : 0;
+    const bMine = b.id === state.user?.id ? 1 : 0;
+    return aMine - bMine;
+  });
+
+  el.participantsStrip.innerHTML = ordered
     .map((p) => {
       const avatarHtml = p.avatar
         ? `<img src="${escapeHtml(p.avatar)}" alt="${escapeHtml(p.name)}">`
@@ -370,13 +376,25 @@ function renderParticipants() {
       `;
     })
     .join("");
+
+  requestAnimationFrame(() => {
+    el.participantsStrip.scrollLeft = el.participantsStrip.scrollWidth;
+  });
 }
 
 function normalizeMessage(msg = {}) {
+  const senderId = safeText(msg.sender_id) || safeText(msg.user_id);
+  const senderName =
+    safeText(msg.sender_name) ||
+    safeText(msg.display_name) ||
+    safeText(msg.author_name) ||
+    safeText(msg.sender) ||
+    "";
+
   return {
     id: safeText(msg.id) || Math.random().toString(36).slice(2),
-    senderId: safeText(msg.sender_id) || safeText(msg.user_id),
-    senderName: safeText(msg.sender_name) || safeText(msg.display_name) || "",
+    senderId,
+    senderName,
     text:
       safeText(msg.translated_text) ||
       safeText(msg.text_local) ||
@@ -696,12 +714,14 @@ function speakText(text) {
 
   try {
     if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.stop?.();
+      try { window.NativeTTS.stop?.(); } catch (_) {}
       setTimeout(() => {
         try {
           window.NativeTTS.speak(msg, state.selectedLang || "tr");
-        } catch (_) {}
-      }, 60);
+        } catch (_) {
+          showToast("Ses okuma başlatılamadı");
+        }
+      }, 50);
       return;
     }
 
