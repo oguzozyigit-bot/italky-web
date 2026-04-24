@@ -1,4 +1,5 @@
 import { supabase } from "/js/supabase_client.js";
+import { mountShell } from "/js/ui_shell.js";
 
 const API_ROOT =
   window.ITALKY_API_BASE ||
@@ -22,9 +23,11 @@ const el = {
   createRoomBtn: $("createRoomBtn"),
   roomPreview: $("roomPreview"),
   roomPreviewCode: $("roomPreviewCode"),
+
   joinCodeInput: $("joinCodeInput"),
   joinRoomBtn: $("joinRoomBtn"),
   refreshMeetingsBtn: $("refreshMeetingsBtn"),
+
   meetingList: $("meetingList")
 };
 
@@ -54,6 +57,7 @@ async function getSession() {
 async function authHeaders() {
   const session = await getSession();
   const token = session?.access_token || "";
+
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -84,6 +88,7 @@ function persistRoom(roomId, roomCode, roomName = "") {
 
 function persistSavedMeeting(room) {
   const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
+
   const next = {
     room_id: room.room_id,
     room_code: room.room_code,
@@ -93,15 +98,26 @@ function persistSavedMeeting(room) {
     is_host: !!room.is_host
   };
 
-  const merged = [next, ...records.filter(x => x.room_id !== next.room_id)].slice(0, 20);
+  const merged = [next, ...records.filter((x) => x.room_id !== next.room_id)].slice(0, 50);
   localStorage.setItem(STORAGE.savedMeetings, JSON.stringify(merged));
+}
+
+function removeSavedMeeting(roomId) {
+  const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
+  const next = records.filter((x) => x.room_id !== roomId);
+  localStorage.setItem(STORAGE.savedMeetings, JSON.stringify(next));
 }
 
 function goMeeting(roomId, roomCode) {
   if (!roomId) return;
+
   const url = new URL("/pages/meeting.html", location.origin);
   url.searchParams.set("room_id", roomId);
-  if (roomCode) url.searchParams.set("room_code", roomCode);
+
+  if (roomCode) {
+    url.searchParams.set("room_code", roomCode);
+  }
+
   location.href = url.toString();
 }
 
@@ -136,7 +152,8 @@ async function resolveRoomByCode(roomCode) {
 
   return {
     roomId: safeText(data.room_id),
-    roomCode: safeText(data.room_code || code)
+    roomCode: safeText(data.room_code || code),
+    title: safeText(data.title || "Toplantı")
   };
 }
 
@@ -149,9 +166,12 @@ async function createRoomFlow() {
   try {
     const room = await bootstrapCreateRoom(roomName);
 
-    if (!room.roomId) throw new Error("Oda oluşturulamadı");
+    if (!room.roomId) {
+      throw new Error("Oda oluşturulamadı");
+    }
 
     persistRoom(room.roomId, room.roomCode, roomName);
+
     persistSavedMeeting({
       room_id: room.roomId,
       room_code: room.roomCode,
@@ -172,7 +192,7 @@ async function createRoomFlow() {
       goMeeting(room.roomId, room.roomCode);
     }, 300);
   } catch (e) {
-    console.error(e);
+    console.error("createRoomFlow error:", e);
   } finally {
     el.createRoomBtn.disabled = false;
   }
@@ -187,13 +207,16 @@ async function joinRoomFlow() {
   try {
     const room = await resolveRoomByCode(code);
 
-    if (!room.roomId) throw new Error("Oda bulunamadı");
+    if (!room.roomId) {
+      throw new Error("Oda bulunamadı");
+    }
 
-    persistRoom(room.roomId, room.roomCode);
+    persistRoom(room.roomId, room.roomCode, room.title);
+
     persistSavedMeeting({
       room_id: room.roomId,
       room_code: room.roomCode,
-      room_name: "Katıldığım Toplantı",
+      room_name: room.title || "Toplantı",
       saved_at: new Date().toISOString(),
       started: false,
       is_host: false
@@ -205,7 +228,7 @@ async function joinRoomFlow() {
       goMeeting(room.roomId, room.roomCode);
     }, 250);
   } catch (e) {
-    console.error(e);
+    console.error("joinRoomFlow error:", e);
   } finally {
     el.joinRoomBtn.disabled = false;
   }
@@ -223,15 +246,26 @@ function renderSavedMeetings() {
     return;
   }
 
-  el.meetingList.innerHTML = records.map((item) => {
+  const sorted = [...records].sort((a, b) => {
+    const da = new Date(a.saved_at || 0).getTime();
+    const db = new Date(b.saved_at || 0).getTime();
+    return db - da;
+  });
+
+  el.meetingList.innerHTML = sorted.map((item) => {
     return `
       <div class="meeting-item">
         <div class="meeting-item-top">
-          <div class="meeting-item-code">${item.room_code || "------"}</div>
+          <div class="meeting-item-code">${safeText(item.room_code || "------")}</div>
           <div class="meeting-item-date">${formatDateTR(item.saved_at)}</div>
         </div>
-        <div class="meeting-item-title">${item.room_name || "Toplantı"}</div>
-        <button class="meeting-item-btn" type="button" data-room-id="${item.room_id}" data-room-code="${item.room_code || ""}">
+        <div class="meeting-item-title">${safeText(item.room_name || "Toplantı")}</div>
+        <button
+          class="meeting-item-btn"
+          type="button"
+          data-room-id="${safeText(item.room_id)}"
+          data-room-code="${safeText(item.room_code || "")}"
+        >
           Toplantı Odasına Gir
         </button>
       </div>
@@ -269,7 +303,37 @@ function bindEvents() {
   });
 }
 
-function init() {
+function applyShellVars() {
+  try {
+    const root = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+    document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
+  } catch (e) {
+    console.warn("[meeting_lobby] shell vars error:", e);
+  }
+}
+
+function cleanupBrokenMeetings() {
+  const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
+  const filtered = records.filter((x) => safeText(x.room_id));
+  if (filtered.length !== records.length) {
+    localStorage.setItem(STORAGE.savedMeetings, JSON.stringify(filtered));
+  }
+}
+
+async function init() {
+  try {
+    mountShell({ scroll: "auto" });
+  } catch (e) {
+    console.warn("[meeting_lobby] mountShell error:", e);
+  }
+
+  applyShellVars();
+  setTimeout(applyShellVars, 120);
+  setTimeout(applyShellVars, 500);
+  window.addEventListener("resize", applyShellVars);
+
+  cleanupBrokenMeetings();
   bindEvents();
   renderSavedMeetings();
 }
