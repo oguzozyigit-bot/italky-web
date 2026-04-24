@@ -21,9 +21,14 @@
       --muted:rgba(255,255,255,.62);
       --safe-top:env(safe-area-inset-top);
       --safe-bottom:env(safe-area-inset-bottom);
+      --shellLift:0px;
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
     html,body{
       margin:0;
@@ -54,8 +59,9 @@
     #pageContent{
       height:100dvh;
       overflow-y:auto;
-      padding:calc(20px + var(--safe-top)) 14px calc(40px + var(--safe-bottom));
+      padding:calc(20px + var(--safe-top)) 14px calc(40px + var(--safe-bottom) + var(--shellLift));
       scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
     }
 
     #pageContent::-webkit-scrollbar{ display:none; }
@@ -75,7 +81,7 @@
       margin-bottom:20px;
       position:relative;
       overflow:hidden;
-      box-shadow:0 20px 40px rgba(0,0,0,.3);
+      box-shadow:0 20px 40px rgba(0,0,0,.30);
     }
 
     .hero::after{
@@ -115,8 +121,9 @@
       font-weight:500;
     }
 
-    .grid{
-      display:grid;
+    .stack{
+      display:flex;
+      flex-direction:column;
       gap:16px;
     }
 
@@ -157,7 +164,7 @@
     .input{
       width:100%;
       height:58px;
-      background:rgba(0,0,0,.2);
+      background:rgba(0,0,0,.20);
       border:1px solid var(--card-border);
       border-radius:18px;
       padding:0 18px;
@@ -189,7 +196,7 @@
     }
 
     .primary-btn{
-      background:linear-gradient(135deg,#8ad8ff,#4ebfff);
+      background:linear-gradient(135deg, #8ad8ff, #4ebfff);
       color:#061325;
       box-shadow:0 8px 20px rgba(78,191,255,.25);
     }
@@ -282,11 +289,6 @@
       font-size:14px;
       font-weight:1000;
     }
-
-    @media (min-width:720px){
-      .grid{ grid-template-columns:1fr 1fr; }
-      .row{ grid-template-columns:1fr 1fr; }
-    }
   </style>
 </head>
 <body>
@@ -294,12 +296,12 @@
     <div class="page">
       <section class="hero">
         <h1 class="hero-title">Toplantıya Başla</h1>
-        <p class="hero-sub">italkyAI ile yeni bir oda oluştur ya da kayıtlı toplantılardan birine anında gir.</p>
+        <p class="hero-sub">Yeni bir oda oluştur, kodla katıl ya da kayıtlı toplantılarından birine anında gir.</p>
       </section>
 
-      <section class="grid">
+      <section class="stack">
         <div class="card">
-          <h2 class="card-title">Yeni Oda</h2>
+          <h2 class="card-title">Oda Oluştur</h2>
           <p class="card-sub">Toplantı adını belirle, odayı kur ve yönetici olarak hemen başla.</p>
 
           <label class="label" for="roomNameInput">Oda Tanımı</label>
@@ -316,8 +318,8 @@
         </div>
 
         <div class="card">
-          <h2 class="card-title">Kayıtlı Toplantılar</h2>
-          <p class="card-sub">Gelecek toplantıları tarih ve saat bilgisiyle gör, tek dokunuşla içeri gir.</p>
+          <h2 class="card-title">Odaya Katıl</h2>
+          <p class="card-sub">Toplantı odası kodunu girerek doğrudan ilgili toplantıya bağlan.</p>
 
           <label class="label" for="joinCodeInput">Davet Kodu</label>
           <input id="joinCodeInput" class="input" type="text" placeholder="Kodu buraya yapıştır" maxlength="24" autocapitalize="characters"/>
@@ -326,13 +328,17 @@
             <button id="joinRoomBtn" class="primary-btn" type="button">Koda Katıl</button>
             <button id="refreshMeetingsBtn" class="secondary-btn" type="button">Listeyi Yenile</button>
           </div>
+        </div>
 
+        <div class="card">
+          <h2 class="card-title">Kayıtlı Toplantılar</h2>
+          <p class="card-sub">Başlayacak toplantıları tarih ve saat bilgisiyle gör, tek dokunuşla içeri gir.</p>
           <div id="meetingList" class="meeting-list"></div>
         </div>
       </section>
     </div>
   </main>
 
-  <script type="module" src="/js/meeting_lobby.js?v=30"></script>
+  <script type="module" src="/js/meeting_lobby.js?v=31"></script>
 </body>
 </html>
