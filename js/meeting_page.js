@@ -15,6 +15,8 @@ const STORAGE = {
   roomCode: "italky_meeting_room_code_v7"
 };
 
+const qs = new URLSearchParams(location.search);
+
 const COLOR_POOL = [
   "#84d6ff",
   "#8af09f",
@@ -79,8 +81,8 @@ const state = {
   membershipNo: "",
   displayName: "",
   avatarUrl: "",
-  roomId: localStorage.getItem(STORAGE.roomId) || "",
-  roomCode: localStorage.getItem(STORAGE.roomCode) || "",
+  roomId: qs.get("room_id") || localStorage.getItem(STORAGE.roomId) || "",
+  roomCode: qs.get("room_code") || localStorage.getItem(STORAGE.roomCode) || "",
   selectedLang: localStorage.getItem(STORAGE.lang) || "tr",
   participants: [],
   messages: [],
@@ -580,6 +582,11 @@ async function api(path, options = {}) {
 
 async function bootstrapMeeting() {
   try {
+    if (!state.roomId) {
+      showToast("Oda bilgisi bulunamadı");
+      return;
+    }
+
     const payload = {
       membership_no: state.membershipNo,
       display_name: state.displayName,
@@ -869,6 +876,11 @@ async function init() {
   state.avatarUrl = pickAvatar(state.user, state.profile);
 
   renderProfile();
+
+  if (!state.roomId) {
+    showToast("Oda bilgisi bulunamadı");
+    return;
+  }
 
   await bootstrapMeeting();
   startPolling();
