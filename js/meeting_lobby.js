@@ -1,5 +1,4 @@
 import { supabase } from "/js/supabase_client.js";
-import { mountShell } from "/js/ui_shell.js";
 
 const API_ROOT =
   window.ITALKY_API_BASE ||
@@ -12,7 +11,8 @@ const STORAGE = {
   roomId: "italky_meeting_room_id_v7",
   roomCode: "italky_meeting_room_code_v7",
   roomName: "italky_meeting_room_name_v1",
-  meetingLang: "italky_meeting_lang_v7"
+  meetingLang: "italky_meeting_lang_v7",
+  savedMeetings: "italky_saved_meetings_v1"
 };
 
 const $ = (id) => document.getElementById(id);
@@ -22,26 +22,27 @@ const el = {
   createRoomBtn: $("createRoomBtn"),
   roomPreview: $("roomPreview"),
   roomPreviewCode: $("roomPreviewCode"),
-
   joinCodeInput: $("joinCodeInput"),
   joinRoomBtn: $("joinRoomBtn"),
-  goMeetingBtn: $("goMeetingBtn"),
-
-  toast: $("toast")
+  refreshMeetingsBtn: $("refreshMeetingsBtn"),
+  meetingList: $("meetingList")
 };
-
-function showToast(message = "") {
-  if (!el.toast) return;
-  el.toast.textContent = String(message);
-  el.toast.classList.add("show");
-  clearTimeout(window.__meetingLobbyToastTimer);
-  window.__meetingLobbyToastTimer = setTimeout(() => {
-    el.toast.classList.remove("show");
-  }, 2200);
-}
 
 function safeText(v, fallback = "") {
   return String(v ?? fallback ?? "").trim();
+}
+
+function formatDateTR(value) {
+  if (!value) return "--/--/---- --:--";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "--/--/---- --:--";
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(d);
 }
 
 async function getSession() {
@@ -66,20 +67,13 @@ async function api(path, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined
   });
 
+  const data = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    let msg = `İstek başarısız (${res.status})`;
-    try {
-      const err = await res.json();
-      msg = err?.detail || err?.message || msg;
-    } catch (_) {}
-    throw new Error(msg);
+    throw new Error(data?.detail || data?.message || `İstek başarısız (${res.status})`);
   }
 
-  try {
-    return await res.json();
-  } catch (_) {
-    return {};
-  }
+  return data;
 }
 
 function persistRoom(roomId, roomCode, roomName = "") {
@@ -88,19 +82,26 @@ function persistRoom(roomId, roomCode, roomName = "") {
   if (roomName) localStorage.setItem(STORAGE.roomName, roomName);
 }
 
-function goMeeting(roomId, roomCode) {
-  if (!roomId) {
-    showToast("Oda kimliği oluşturulamadı");
-    return;
-  }
+function persistSavedMeeting(room) {
+  const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
+  const next = {
+    room_id: room.room_id,
+    room_code: room.room_code,
+    room_name: room.room_name || "Toplantı",
+    saved_at: room.saved_at || new Date().toISOString(),
+    started: !!room.started,
+    is_host: !!room.is_host
+  };
 
+  const merged = [next, ...records.filter(x => x.room_id !== next.room_id)].slice(0, 20);
+  localStorage.setItem(STORAGE.savedMeetings, JSON.stringify(merged));
+}
+
+function goMeeting(roomId, roomCode) {
+  if (!roomId) return;
   const url = new URL("/pages/meeting.html", location.origin);
   url.searchParams.set("room_id", roomId);
-
-  if (roomCode) {
-    url.searchParams.set("room_code", roomCode);
-  }
-
+  if (roomCode) url.searchParams.set("room_code", roomCode);
   location.href = url.toString();
 }
 
@@ -141,86 +142,117 @@ async function resolveRoomByCode(roomCode) {
 
 async function createRoomFlow() {
   const roomName = safeText(el.roomNameInput?.value, "Yeni Meeting");
-  if (!roomName) {
-    showToast("Oda adı gir");
-    return;
-  }
+  if (!roomName) return;
 
-  if (el.createRoomBtn) el.createRoomBtn.disabled = true;
+  el.createRoomBtn.disabled = true;
 
   try {
     const room = await bootstrapCreateRoom(roomName);
 
-    if (!room.roomId) {
-      throw new Error("Oda oluşturulamadı");
-    }
+    if (!room.roomId) throw new Error("Oda oluşturulamadı");
 
     persistRoom(room.roomId, room.roomCode, roomName);
+    persistSavedMeeting({
+      room_id: room.roomId,
+      room_code: room.roomCode,
+      room_name: roomName,
+      saved_at: new Date().toISOString(),
+      started: false,
+      is_host: true
+    });
 
     if (el.roomPreview && el.roomPreviewCode) {
       el.roomPreview.style.display = "flex";
       el.roomPreviewCode.textContent = room.roomCode || "—";
     }
 
-    showToast("Oda oluşturuldu");
+    renderSavedMeetings();
 
     setTimeout(() => {
       goMeeting(room.roomId, room.roomCode);
-    }, 250);
+    }, 300);
   } catch (e) {
     console.error(e);
-    showToast(e.message || "Oda oluşturulamadı");
   } finally {
-    if (el.createRoomBtn) el.createRoomBtn.disabled = false;
+    el.createRoomBtn.disabled = false;
   }
 }
 
 async function joinRoomFlow() {
   const code = safeText(el.joinCodeInput?.value).toUpperCase();
-  if (!code) {
-    showToast("Önce oda kodu gir");
-    return;
-  }
+  if (!code) return;
 
-  if (el.joinRoomBtn) el.joinRoomBtn.disabled = true;
+  el.joinRoomBtn.disabled = true;
 
   try {
     const room = await resolveRoomByCode(code);
 
-    if (!room.roomId) {
-      throw new Error("Oda bulunamadı");
-    }
+    if (!room.roomId) throw new Error("Oda bulunamadı");
 
     persistRoom(room.roomId, room.roomCode);
-    showToast("Odaya bağlanılıyor");
+    persistSavedMeeting({
+      room_id: room.roomId,
+      room_code: room.roomCode,
+      room_name: "Katıldığım Toplantı",
+      saved_at: new Date().toISOString(),
+      started: false,
+      is_host: false
+    });
+
+    renderSavedMeetings();
 
     setTimeout(() => {
       goMeeting(room.roomId, room.roomCode);
     }, 250);
   } catch (e) {
     console.error(e);
-    showToast(e.message || "Odaya katılınamadı");
   } finally {
-    if (el.joinRoomBtn) el.joinRoomBtn.disabled = false;
+    el.joinRoomBtn.disabled = false;
   }
 }
 
-function goLastRoom() {
-  const roomId = localStorage.getItem(STORAGE.roomId) || "";
-  const roomCode = localStorage.getItem(STORAGE.roomCode) || "";
+function renderSavedMeetings() {
+  const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
 
-  if (!roomId) {
-    showToast("Kayıtlı son oda yok");
+  if (!records.length) {
+    el.meetingList.innerHTML = `
+      <div class="meeting-item">
+        <div class="meeting-item-title">Henüz kayıtlı toplantı yok.</div>
+      </div>
+    `;
     return;
   }
 
-  goMeeting(roomId, roomCode);
+  el.meetingList.innerHTML = records.map((item) => {
+    return `
+      <div class="meeting-item">
+        <div class="meeting-item-top">
+          <div class="meeting-item-code">${item.room_code || "------"}</div>
+          <div class="meeting-item-date">${formatDateTR(item.saved_at)}</div>
+        </div>
+        <div class="meeting-item-title">${item.room_name || "Toplantı"}</div>
+        <button class="meeting-item-btn" type="button" data-room-id="${item.room_id}" data-room-code="${item.room_code || ""}">
+          Toplantı Odasına Gir
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  for (const btn of el.meetingList.querySelectorAll(".meeting-item-btn")) {
+    btn.addEventListener("click", () => {
+      const roomId = btn.dataset.roomId || "";
+      const roomCode = btn.dataset.roomCode || "";
+      if (!roomId) return;
+      persistRoom(roomId, roomCode);
+      goMeeting(roomId, roomCode);
+    });
+  }
 }
 
 function bindEvents() {
   el.createRoomBtn?.addEventListener("click", createRoomFlow);
   el.joinRoomBtn?.addEventListener("click", joinRoomFlow);
-  el.goMeetingBtn?.addEventListener("click", goLastRoom);
+  el.refreshMeetingsBtn?.addEventListener("click", renderSavedMeetings);
 
   el.joinCodeInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -237,25 +269,9 @@ function bindEvents() {
   });
 }
 
-function applyShellVars() {
-  try {
-    const root = getComputedStyle(document.documentElement);
-    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-    document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 8}px` : "0px");
-  } catch (_) {}
-}
-
-async function init() {
-  try {
-    mountShell({ scroll: "auto" });
-  } catch (_) {}
-
-  applyShellVars();
-  setTimeout(applyShellVars, 120);
-  setTimeout(applyShellVars, 500);
-  window.addEventListener("resize", applyShellVars);
-
+function init() {
   bindEvents();
+  renderSavedMeetings();
 }
 
 init();
