@@ -50,6 +50,11 @@ const confirmCancelBtn = $("confirmCancelBtn");
 const toastEl = $("toast");
 
 const POLL_MS = 2800;
+const API_ROOT =
+  window.ITALKY_API_BASE ||
+  localStorage.getItem("italky_api_base") ||
+  "https://italky-api.onrender.com/api";
+
 let pollTimer = null;
 let speechRecognition = null;
 let recognitionActive = false;
@@ -104,29 +109,31 @@ function showToast(text = "") {
 function getInitials(name = "") {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "U";
-  return parts.slice(0, 2).map(x => x[0]).join("").toUpperCase();
+  return parts.slice(0, 2).map((x) => x[0]).join("").toUpperCase();
 }
 
 function normalizeLangPool() {
   const list = Array.isArray(LANG_POOL) ? LANG_POOL : [];
-  const out = list.map(item => {
-    const code = item?.code || item?.lang || item?.value || item?.id || "";
-    const flag = item?.flag || item?.emoji || "🌐";
-    const name =
-      item?.name_tr ||
-      item?.tr ||
-      item?.name ||
-      item?.title ||
-      item?.label ||
-      item?.native ||
-      code;
+  const out = list
+    .map((item) => {
+      const code = item?.code || item?.lang || item?.value || item?.id || "";
+      const flag = item?.flag || item?.emoji || "🌐";
+      const name =
+        item?.name_tr ||
+        item?.tr ||
+        item?.name ||
+        item?.title ||
+        item?.label ||
+        item?.native ||
+        code;
 
-    return {
-      code: String(code).trim().toLowerCase(),
-      flag: String(flag || "🌐"),
-      name: String(name || code || "Dil")
-    };
-  }).filter(x => x.code);
+      return {
+        code: String(code).trim().toLowerCase(),
+        flag: String(flag || "🌐"),
+        name: String(name || code || "Dil")
+      };
+    })
+    .filter((x) => x.code);
 
   const uniq = [];
   const seen = new Set();
@@ -150,7 +157,7 @@ function normalizeLangPool() {
 }
 
 function getLangRow(code = "tr") {
-  return state.langs.find(x => x.code === String(code).toLowerCase()) || {
+  return state.langs.find((x) => x.code === String(code).toLowerCase()) || {
     code: String(code).toLowerCase(),
     flag: "🌐",
     name: String(code).toUpperCase()
@@ -211,11 +218,9 @@ function closeConfirm(result) {
 
 function attachAvatar(el, name, avatarUrl) {
   if (!el) return;
-  const safeName = escapeHtml(name || "Kullanıcı");
   const safeAvatar = String(avatarUrl || "").trim();
-
   if (safeAvatar) {
-    el.innerHTML = `<img src="${safeAvatar}" alt="${safeName}">`;
+    el.innerHTML = `<img src="${safeAvatar}" alt="${escapeHtml(name || "Kullanıcı")}">`;
   } else {
     el.textContent = getInitials(name || "Kullanıcı");
   }
@@ -268,23 +273,25 @@ function renderParticipants() {
   const list = Array.isArray(state.participants) ? state.participants : [];
   participantCount.textContent = String(list.length || 1);
 
-  participantsStrip.innerHTML = list.map((p) => {
-    const safeName = escapeHtml(p.display_name || "Kullanıcı");
-    const avatarUrl = String(p.avatar_url || "").trim();
-    const hostClass = p.is_host ? "participant-host" : "";
-    const avatarContent = avatarUrl
-      ? `<img src="${avatarUrl}" alt="${safeName}">`
-      : escapeHtml(getInitials(p.display_name || "Kullanıcı"));
+  participantsStrip.innerHTML = list
+    .map((p) => {
+      const safeName = escapeHtml(p.display_name || "Kullanıcı");
+      const avatarUrl = String(p.avatar_url || "").trim();
+      const hostClass = p.is_host ? "participant-host" : "";
+      const avatarContent = avatarUrl
+        ? `<img src="${avatarUrl}" alt="${safeName}">`
+        : escapeHtml(getInitials(p.display_name || "Kullanıcı"));
 
-    return `
-      <div class="participant-chip" data-user-id="${escapeHtml(p.user_id)}">
-        <div class="participant-avatar ${hostClass}">
-          ${avatarContent}
+      return `
+        <div class="participant-chip" data-user-id="${escapeHtml(p.user_id)}">
+          <div class="participant-avatar ${hostClass}">
+            ${avatarContent}
+          </div>
+          <div class="participant-name">${safeName}</div>
         </div>
-        <div class="participant-name">${safeName}</div>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
 
   for (const chip of participantsStrip.querySelectorAll(".participant-chip")) {
     const userId = chip.dataset.userId || "";
@@ -315,7 +322,7 @@ async function onParticipantHold(userId) {
   if (!me.is_host) return;
   if (!userId || userId === state.userId) return;
 
-  const target = state.participants.find(p => String(p.user_id) === String(userId));
+  const target = state.participants.find((p) => String(p.user_id) === String(userId));
   if (!target) return;
 
   const ok = await openConfirm(
@@ -326,7 +333,7 @@ async function onParticipantHold(userId) {
   if (!ok) return;
 
   try {
-    await apiPost("/api/meeting/remove-participant", {
+    await apiPost("/meeting/remove-participant", {
       room_id: state.roomId,
       target_user_id: userId
     });
@@ -339,51 +346,55 @@ async function onParticipantHold(userId) {
 }
 
 function renderMessages() {
-  const participantsById = new Map((state.participants || []).map(p => [String(p.user_id || ""), p]));
+  const participantsById = new Map(
+    (state.participants || []).map((p) => [String(p.user_id || ""), p])
+  );
   const messages = Array.isArray(state.messages) ? state.messages : [];
 
-  state.meetingStarted = messages.some(m => m.message_type === "text");
+  state.meetingStarted = messages.some((m) => m.message_type === "text");
 
-  chatFeed.innerHTML = messages.map((msg) => {
-    const isSystem = msg.message_type === "system";
-    const isMine = !isSystem && String(msg.sender_id || "") === String(state.userId || "");
-    const rowParticipant = participantsById.get(String(msg.sender_id || ""));
-    const authorName = isMine
-      ? (state.me?.display_name || "Ben")
-      : (msg.sender_name || rowParticipant?.display_name || "Katılımcı");
+  chatFeed.innerHTML = messages
+    .map((msg) => {
+      const isSystem = msg.message_type === "system";
+      const isMine = !isSystem && String(msg.sender_id || "") === String(state.userId || "");
+      const rowParticipant = participantsById.get(String(msg.sender_id || ""));
+      const authorName = isMine
+        ? state.me?.display_name || "Ben"
+        : msg.sender_name || rowParticipant?.display_name || "Katılımcı";
 
-    const lineColor = participantColorKey(rowParticipant || {});
-    const text = escapeHtml(msg.translated_text || msg.original_text || "");
-    const speakLang = getLangRow(state.myLang)?.code || "tr";
+      const lineColor = participantColorKey(rowParticipant || {});
+      const text = escapeHtml(msg.translated_text || msg.original_text || "");
+      const speakLang = getLangRow(state.myLang)?.code || "tr";
 
-    if (isSystem) {
+      if (isSystem) {
+        return `
+          <div class="msg system">
+            <div class="system-badge">${escapeHtml(msg.original_text || msg.translated_text || "")}</div>
+          </div>
+        `;
+      }
+
       return `
-        <div class="msg system">
-          <div class="system-badge">${escapeHtml(msg.original_text || msg.translated_text || "")}</div>
+        <div class="msg ${isMine ? "mine" : "other"}">
+          <div class="msg-block">
+            <div class="msg-row">
+              <div class="bubble" style="--line-color:${lineColor}">
+                <div class="bubble-text">${text}</div>
+                <button class="speaker-btn" type="button" data-speak="${escapeHtml(msg.translated_text || msg.original_text || "")}" data-lang="${escapeHtml(speakLang)}" aria-label="Dinle">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M11 5L6 9H3v6h3l5 4V5z"></path>
+                    <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+                    <path d="M17.8 6a8.5 8.5 0 0 1 0 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="msg-author">${escapeHtml(authorName)}</div>
+          </div>
         </div>
       `;
-    }
-
-    return `
-      <div class="msg ${isMine ? "mine" : "other"}">
-        <div class="msg-block">
-          <div class="msg-row">
-            <div class="bubble" style="--line-color:${lineColor}">
-              <div class="bubble-text">${text}</div>
-              <button class="speaker-btn" type="button" data-speak="${escapeHtml(msg.translated_text || msg.original_text || "")}" data-lang="${escapeHtml(speakLang)}" aria-label="Dinle">
-                <svg viewBox="0 0 24 24">
-                  <path d="M11 5L6 9H3v6h3l5 4V5z"></path>
-                  <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
-                  <path d="M17.8 6a8.5 8.5 0 0 1 0 12"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="msg-author">${escapeHtml(authorName)}</div>
-        </div>
-      </div>
-    `;
-  }).join("");
+    })
+    .join("");
 
   for (const btn of chatFeed.querySelectorAll(".speaker-btn")) {
     btn.addEventListener("click", () => {
@@ -406,18 +417,20 @@ function renderMessages() {
 }
 
 function renderLangList() {
-  langList.innerHTML = state.langs.map((row) => {
-    const active = row.code === state.myLang ? "active" : "";
-    return `
-      <button class="lang-option ${active}" type="button" data-code="${escapeHtml(row.code)}">
-        <div class="lang-option-left">
-          <div class="lang-flag">${escapeHtml(row.flag)}</div>
-          <div class="lang-option-name">${escapeHtml(row.name)}</div>
-        </div>
-        <div class="lang-check"></div>
-      </button>
-    `;
-  }).join("");
+  langList.innerHTML = state.langs
+    .map((row) => {
+      const active = row.code === state.myLang ? "active" : "";
+      return `
+        <button class="lang-option ${active}" type="button" data-code="${escapeHtml(row.code)}">
+          <div class="lang-option-left">
+            <div class="lang-flag">${escapeHtml(row.flag)}</div>
+            <div class="lang-option-name">${escapeHtml(row.name)}</div>
+          </div>
+          <div class="lang-check"></div>
+        </button>
+      `;
+    })
+    .join("");
 
   for (const btn of langList.querySelectorAll(".lang-option")) {
     btn.addEventListener("click", async () => {
@@ -434,7 +447,7 @@ function renderLangList() {
       if (!state.roomId) return;
 
       try {
-        await apiPost("/api/meeting/language", {
+        await apiPost("/meeting/language", {
           room_id: state.roomId,
           lang: state.myLang
         });
@@ -484,11 +497,7 @@ function buildBootstrapBody() {
     (user.email ? String(user.email).split("@")[0] : "") ||
     "Kullanıcı";
 
-  const avatarUrl =
-    meta.avatar_url ||
-    meta.picture ||
-    meta.avatar ||
-    "";
+  const avatarUrl = meta.avatar_url || meta.picture || meta.avatar || "";
 
   return {
     membership_no: "",
@@ -499,10 +508,10 @@ function buildBootstrapBody() {
 }
 
 async function apiGet(path) {
-  const res = await fetch(path, {
+  const res = await fetch(`${API_ROOT}${path}`, {
     method: "GET",
     headers: {
-      "Authorization": `Bearer ${state.accessToken}`
+      Authorization: `Bearer ${state.accessToken}`
     }
   });
 
@@ -514,11 +523,11 @@ async function apiGet(path) {
 }
 
 async function apiPost(path, body) {
-  const res = await fetch(path, {
+  const res = await fetch(`${API_ROOT}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${state.accessToken}`
+      Authorization: `Bearer ${state.accessToken}`
     },
     body: JSON.stringify(body || {})
   });
@@ -531,7 +540,10 @@ async function apiPost(path, body) {
 }
 
 function deriveMeFromParticipants() {
-  const meRow = (state.participants || []).find(p => String(p.user_id || "") === String(state.userId || ""));
+  const meRow = (state.participants || []).find(
+    (p) => String(p.user_id || "") === String(state.userId || "")
+  );
+
   if (meRow) {
     state.me = meRow;
     if (meRow.lang) state.myLang = String(meRow.lang).toLowerCase();
@@ -549,11 +561,7 @@ function deriveMeFromParticipants() {
       meta.full_name ||
       (user.email ? String(user.email).split("@")[0] : "") ||
       "Kullanıcı",
-    avatar_url:
-      meta.avatar_url ||
-      meta.picture ||
-      meta.avatar ||
-      "",
+    avatar_url: meta.avatar_url || meta.picture || meta.avatar || "",
     is_host: false,
     lang: state.myLang
   };
@@ -561,7 +569,7 @@ function deriveMeFromParticipants() {
 
 async function bootstrapMeeting() {
   const body = buildBootstrapBody();
-  const data = await apiPost("/api/meeting/bootstrap", body);
+  const data = await apiPost("/meeting/bootstrap", body);
 
   state.roomId = data?.room_id || "";
   state.roomCode = data?.room_code || "";
@@ -576,7 +584,7 @@ async function bootstrapMeeting() {
 
 async function refreshState() {
   if (!state.roomId) return;
-  const data = await apiGet(`/api/meeting/state?room_id=${encodeURIComponent(state.roomId)}`);
+  const data = await apiGet(`/meeting/state?room_id=${encodeURIComponent(state.roomId)}`);
   state.participants = (Array.isArray(data?.participants) ? data.participants : []).map(normalizeParticipant);
   state.messages = Array.isArray(data?.messages) ? data.messages : [];
   deriveMeFromParticipants();
@@ -597,7 +605,7 @@ async function sendMessage() {
       localStorage.setItem(`meeting_started_${state.roomId}`, "1");
     }
 
-    await apiPost("/api/meeting/message", {
+    await apiPost("/meeting/message", {
       room_id: state.roomId,
       text,
       sender_lang: state.myLang,
@@ -618,10 +626,16 @@ async function sendMessage() {
 
 function speakText(text = "", lang = "tr") {
   try {
+    if ("NativeTTS" in window && typeof window.NativeTTS?.speak === "function") {
+      window.NativeTTS.speak(String(text || ""), lang || "tr");
+      return;
+    }
+
     if (!("speechSynthesis" in window)) {
       showToast("Seslendirme desteklenmiyor");
       return;
     }
+
     const utter = new SpeechSynthesisUtterance(String(text || ""));
     utter.lang = lang || "tr-TR";
     window.speechSynthesis.cancel();
@@ -705,14 +719,14 @@ function saveMeetingSnapshot() {
     title: me.is_host ? "Yönetici Toplantısı" : "Katıldığım Toplantı"
   };
 
-  const merged = [next, ...records.filter(x => x.room_id !== state.roomId)].slice(0, 20);
+  const merged = [next, ...records.filter((x) => x.room_id !== state.roomId)].slice(0, 20);
   localStorage.setItem("italky_saved_meetings_v1", JSON.stringify(merged));
   showToast("Toplantı kaydedildi");
 }
 
 async function leaveMeetingFlow(goHomeAfter = false) {
   try {
-    await apiPost("/api/meeting/leave", {
+    await apiPost("/meeting/leave", {
       room_id: state.roomId
     });
   } catch (e) {
@@ -760,7 +774,7 @@ async function handleCancelMeeting() {
   if (!ok) return;
 
   try {
-    await apiPost("/api/meeting/cancel", {
+    await apiPost("/meeting/cancel", {
       room_id: state.roomId
     });
   } catch (e) {
@@ -770,7 +784,7 @@ async function handleCancelMeeting() {
   const records = JSON.parse(localStorage.getItem("italky_saved_meetings_v1") || "[]");
   localStorage.setItem(
     "italky_saved_meetings_v1",
-    JSON.stringify(records.filter(x => x.room_id !== state.roomId))
+    JSON.stringify(records.filter((x) => x.room_id !== state.roomId))
   );
 
   showToast("Toplantı iptal edildi");
@@ -862,7 +876,7 @@ async function gateMeetingAd() {
     const ok = await ensureModuleAdAccess({
       moduleKey: "meeting_room",
       title: "Toplantı odası için kısa bir reklam gösterilecek",
-      text: "Toplantı odasını kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle gün içinde tekrar reklam görmeden giriş yapabilirsiniz.",
+      text: "Toplantı odasını kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden girebilirsiniz.",
       placement: "meeting_room",
       hours: 24
     });
@@ -888,7 +902,6 @@ async function boot() {
     if (!adOk) return;
 
     state.langs = normalizeLangPool();
-
     await getSessionOrThrow();
 
     const user = state.sessionUser || {};
@@ -899,14 +912,20 @@ async function boot() {
     const metaLang = meta.lang || meta.site_lang || meta.system_lang || "tr";
 
     state.myLang = String(urlLang || metaLang || "tr").toLowerCase();
-    state.roomId = url.searchParams.get("room_id") || localStorage.getItem("italky_meeting_room_id_v7") || "";
-    state.roomCode = url.searchParams.get("room_code") || localStorage.getItem("italky_meeting_room_code_v7") || "";
+    state.roomId =
+      url.searchParams.get("room_id") ||
+      localStorage.getItem("italky_meeting_room_id_v7") ||
+      "";
+    state.roomCode =
+      url.searchParams.get("room_code") ||
+      localStorage.getItem("italky_meeting_room_code_v7") ||
+      "";
 
     const savedStarted = localStorage.getItem(`meeting_started_${state.roomId}`) === "1";
     state.savedMeetingStarted = savedStarted;
 
     const savedMeetings = JSON.parse(localStorage.getItem("italky_saved_meetings_v1") || "[]");
-    const currentSaved = savedMeetings.find(x => x.room_id === state.roomId) || null;
+    const currentSaved = savedMeetings.find((x) => x.room_id === state.roomId) || null;
     state.savedMeetingAt = currentSaved?.saved_at || new Date().toISOString();
     meetingDateValue.textContent = formatDateTR(state.savedMeetingAt);
 
