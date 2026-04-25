@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • İletişim</title>
+  <title>italkyAI • Gizlilik</title>
   <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,55 +20,30 @@
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: 100%;
-      background: var(--bg);
-      color: #fff;
-      font-family: 'Outfit', sans-serif;
-    }
-
-    body { overflow-x: hidden; }
-
+    /* --- CANLI ARKA PLAN (italkyAI DNA) --- */
     .bg-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
+      position: fixed; inset: 0; z-index: 1;
       background:
         radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.18) 0%, transparent 40%),
         linear-gradient(180deg, #0f0816 0%, #060408 100%);
     }
 
     .crystal-wrap {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      perspective: 1200px;
-      pointer-events: none;
-      z-index: 2;
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      perspective: 1200px; pointer-events: none; z-index: 2;
     }
 
     .crystal-cage {
-      width: 320px;
-      height: 320px;
-      transform-style: preserve-3d;
-      animation: rotateCrystal 22s linear infinite;
-      opacity: 0.18;
+      width: 320px; height: 320px; transform-style: preserve-3d;
+      animation: rotateCrystal 22s linear infinite; opacity: 0.18;
     }
 
     .side {
-      position: absolute;
-      inset: 0;
-      border: 1.5px solid var(--neon);
+      position: absolute; inset: 0; border: 1.5px solid var(--neon);
       background: radial-gradient(circle, rgba(0, 242, 255, 0.08), transparent);
     }
-
     .s1{ transform:rotateY(0deg) translateZ(160px); }
     .s2{ transform:rotateY(90deg) translateZ(160px); }
     .s3{ transform:rotateX(90deg) translateZ(160px); }
@@ -78,168 +53,72 @@
       to { transform: rotateX(360deg) rotateY(720deg); }
     }
 
-    #pageContent {
-      position: relative;
-      z-index: 10;
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 20px 0 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
+    /* --- MOBILE FRAME & CONTENT --- */
+    .mobile-frame {
+      width: 100%; max-width: 480px; height: 100dvh; margin: 0 auto;
+      position: relative; z-index: 10; display: flex; flex-direction: column;
     }
 
-    .contact-card {
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: 32px;
-      padding: 35px 25px;
-      backdrop-filter: blur(25px);
+    .top-nav {
+      display: flex; align-items: center; gap: 15px; padding: 20px;
+      position: sticky; top: 0; z-index: 30; background: transparent;
+    }
+
+    .btn-back {
+      background: transparent; border: none; color: #fff; font-size: 26px;
+      font-weight: 900; cursor: pointer; display: flex; align-items: center;
+    }
+    .btn-back:hover { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
+
+    .brand {
+      font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800;
+      background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+
+    .page-content {
+      flex: 1; overflow-y: auto; padding: 0 20px 140px;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .page-content::-webkit-scrollbar { display: none; }
+
+    /* --- PRIVACY COMPONENTS --- */
+    .privacy-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 32px; padding: 35px 25px; backdrop-filter: blur(25px);
       box-shadow: 0 30px 60px rgba(0,0,0,0.4);
       animation: cardIn 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
     }
 
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    h1 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 32px;
-      font-weight: 800;
-      margin: 0 0 10px;
-      letter-spacing: -1.5px;
-    }
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; margin: 0 0 15px; letter-spacing: -1.5px; }
+    h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    h1 span {
-      background: var(--ai-grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    .intro { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 30px; border-left: 2px solid var(--neon); padding-left: 15px; font-style: italic; }
 
-    p {
-      font-size: 15px;
-      color: rgba(255,255,255,0.6);
-      line-height: 1.6;
-      margin-bottom: 25px;
-    }
+    .section { margin-bottom: 30px; }
+    h3 { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 900; color: var(--neon); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    h3::before { content: ""; width: 8px; height: 8px; background: var(--pink); border-radius: 50%; box-shadow: 0 0 10px var(--pink); }
 
-    .input-group { margin-bottom: 16px; }
+    p { font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.7; margin-bottom: 12px; }
+    ul { padding: 0; list-style: none; margin-bottom: 15px; }
+    li { position: relative; padding-left: 20px; font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 10px; line-height: 1.5; }
+    li::before { content: "›"; position: absolute; left: 0; color: var(--neon); font-weight: 900; font-size: 18px; top: -2px; }
 
-    .input-field {
-      width: 100%;
-      height: 56px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 0 20px;
-      color: #fff;
-      font-family: inherit;
-      font-size: 16px;
-      transition: 0.3s;
-    }
+    .highlight { color: #fff; font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-    textarea.input-field {
-      height: 120px;
-      padding: 18px 20px;
-      resize: none;
-    }
-
-    .input-field:focus {
-      border-color: var(--neon);
-      background: rgba(255,255,255,0.1);
-      box-shadow: 0 0 20px rgba(0,242,255,0.2);
-    }
-
-    .input-field::placeholder {
-      color: rgba(255,255,255,0.3);
-    }
-
-    .send-btn {
-      width: 100%;
-      height: 60px;
-      border-radius: 20px;
-      border: none;
-      background: var(--ai-grad);
-      color: #000;
-      font-weight: 900;
-      font-size: 18px;
-      cursor: pointer;
-      margin-top: 10px;
-      box-shadow: 0 15px 40px rgba(0,242,255,0.4);
-      transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .send-btn:active { transform: scale(0.96); }
-
-    .info-row {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-top: 30px;
-      padding-top: 25px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .icon-circle {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: rgba(0,242,255,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(0,242,255,0.2);
-      flex: 0 0 auto;
-    }
-
-    .icon-circle svg {
-      width: 22px;
-      height: 22px;
-      stroke: var(--neon);
-    }
-
-    .info-text div {
-      font-size: 10px;
-      color: var(--neon);
-      text-transform: uppercase;
-      font-weight: 900;
-      letter-spacing: 1px;
-    }
-
-    .info-text span {
-      font-size: 15px;
-      color: #fff;
-      font-weight: 600;
-      word-break: break-word;
-    }
-
-    @media (max-width: 520px) {
-      #pageContent {
-        padding: 18px 0 6px;
-      }
-
-      .contact-card {
-        border-radius: 28px;
-        padding: 24px 18px;
-      }
-
-      h1 {
-        font-size: 28px;
-      }
-
-      p,
-      .info-text span {
-        font-size: 14px;
-      }
-    }
+    /* --- FOOTER --- */
+    .footer-bar { position: absolute; bottom: 0; width: 100%; padding: 25px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 40; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.3s; }
+    .footer-links a.active { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
+    .footer-copy { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 700; }
   </style>
 </head>
 <body>
 
   <div class="bg-layer"></div>
-
   <div class="crystal-wrap">
     <div class="crystal-cage">
       <div class="side s1"></div>
@@ -248,102 +127,78 @@
     </div>
   </div>
 
-  <div id="pageContent">
-    <div id="contentHost"></div>
+  <div class="mobile-frame">
+    <div class="top-nav">
+      <button class="btn-back" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'">←</button>
+      <div class="brand">italkyAI</div>
+    </div>
+
+    <div class="page-content" id="contentHost"></div>
+
+    <div class="footer-bar">
+      <div class="footer-links">
+      </div>
+      <div class="footer-copy">italkyAI By <b>Ozyigit's</b> • 2026</div>
+    </div>
   </div>
 
-  <template id="contact_tr">
-    <div class="contact-card">
-      <h1>Bize <span>Ulaşın</span></h1>
-      <p>Sorularınız, önerileriniz veya iş birliği için bizimle iletişime geçebilirsiniz.</p>
+  <template id="privacy_tr">
+    <div class="privacy-card">
+      <h1>Gizlilik <span>Politikası</span></h1>
+      <div class="intro">italkyAI olarak kişisel verilerinize saygı duyar ve verilerinizi global güvenlik standartlarına uygun şekilde koruruz.</div>
 
-      <div class="input-group"><input type="text" class="input-field" placeholder="Adınız Soyadınız"></div>
-      <div class="input-group"><input type="email" class="input-field" placeholder="E-posta Adresiniz"></div>
-      <div class="input-group"><textarea class="input-field" placeholder="Mesajınız..."></textarea></div>
-      <button class="send-btn" type="button">Mesajı Gönder</button>
-
-      <div class="info-row">
-        <div class="icon-circle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
-        </div>
-        <div class="info-text">
-          <div>E-Posta</div>
-          <span>support@italkyai.com</span>
-        </div>
+      <div class="section">
+        <h3>0. VERİ SORUMLUSU</h3>
+        <p>Veri sorumlusu: <span class="highlight">Oğuz Özyiğit</span></p>
+        <p>Adres: Şerefiye Mah. Uzunzade Sk. B Blok No: 11/1 İç Kapı No: 10 Merkez / Düzce – Türkiye</p>
+        <p>İletişim: <span class="highlight">privacy@italky.ai</span></p>
       </div>
-    </div>
-  </template>
 
-  <template id="contact_en">
-    <div class="contact-card">
-      <h1>Contact <span>Us</span></h1>
-      <p>You can reach us for your questions, suggestions, or collaboration requests.</p>
+      <div class="section">
+        <h3>1. TOPLANAN VERİLER</h3>
+        <ul>
+          <li><strong>Hesap Bilgileri:</strong> Google ile giriş yapıldığında alınan e-posta ve temel profil.</li>
+          <li><strong>Kullanım Verileri:</strong> Uygulama içi tercihler ve kullanım akışı.</li>
+          <li><strong>Ses Verileri:</strong> Canlı pratik sırasında anlık işlenir; <span class="highlight">asla kalıcı depolanmaz</span>.</li>
+        </ul>
+      </div>
 
-      <div class="input-group"><input type="text" class="input-field" placeholder="Your Full Name"></div>
-      <div class="input-group"><input type="email" class="input-field" placeholder="Your Email Address"></div>
-      <div class="input-group"><textarea class="input-field" placeholder="Your Message..."></textarea></div>
-      <button class="send-btn" type="button">Send Message</button>
+      <div class="section">
+        <h3>2. KAMERA VE MİKROFON</h3>
+        <p>Kamera ve mikrofon, yalnızca siz ilgili özelliği açtığınızda kullanılır ve kapattığınız anda erişim kesilir. Görüntüleriniz <span class="highlight">asla kaydedilmez</span>.</p>
+      </div>
 
-      <div class="info-row">
-        <div class="icon-circle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
-        </div>
-        <div class="info-text">
-          <div>E-Mail</div>
-          <span>support@italkyai.com</span>
-        </div>
+      <div class="section">
+        <h3>3. ÜÇÜNCÜ TARAF SERVİSLER</h3>
+        <p>Hizmetin sunulması için Google Auth, OpenAI (dil işleme), Supabase (veri saklama) ve Render altyapıları kullanılmaktadır.</p>
+      </div>
+
+      <div class="section">
+        <h3>4. KULLANICI HAKLARI</h3>
+        <p>Verilerinize erişebilir ve hesabınızı <strong>Profil > Hesabı Sil</strong> adımıyla her an kalıcı olarak silebilirsiniz.</p>
       </div>
     </div>
   </template>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { supabase } from "/js/supabase_client.js";
     import { getSiteLang } from "/js/i18n.js";
 
-    const { data: { session } } = await supabase.auth.getSession();
-
-    mountShell({
-      scroll: "auto",
-      publicPage: !session?.user
-    });
-
-    function pickId(){
-      const lang = (getSiteLang?.() || localStorage.getItem("site_lang") || "tr").toLowerCase();
-      const map = {
-        tr: "contact_tr",
-        en: "contact_en"
-      };
-      return map[lang] || "contact_tr";
-    }
-
     function render(){
+      const lang = (getSiteLang?.() || "tr").toLowerCase();
       const host = document.getElementById("contentHost");
+      let tpl = document.getElementById(`privacy_${lang}`);
+      if(!tpl) tpl = document.getElementById("privacy_tr");
+
       host.innerHTML = "";
-
-      const tpl = document.getElementById(pickId());
-      if (tpl) host.appendChild(tpl.content.cloneNode(true));
-
-      const lang = (getSiteLang?.() || localStorage.getItem("site_lang") || "tr").toLowerCase();
-      const titles = {
-        tr: "italkyAI • İletişim",
-        en: "italkyAI • Contact"
-      };
+      host.appendChild(tpl.content.cloneNode(true));
+      
+      const titles = { tr: "italkyAI • Gizlilik", en: "italkyAI • Privacy" };
       document.title = titles[lang] || "italkyAI";
     }
 
     render();
-
     window.addEventListener("storage", (e) => {
-      if (e.key === "italky_site_lang_v1" || e.key === "site_lang") {
-        render();
-      }
+      if(e.key === "italky_site_lang_v1") render();
     });
   </script>
 </body>
