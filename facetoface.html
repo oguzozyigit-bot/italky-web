@@ -1089,10 +1089,104 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/facetoface_page.js?v=F2F_PAGE_V122"></script>
   <script type="module">
-    import { initGlobalAccess } from "/js/global_access.js";
-    await initGlobalAccess({ allowPublicPageBypass: false });
-  </script>
+  import { getLangPoolForSite } from "/js/lang_pool_full.js";
+
+  const SITE_LANG_KEY = "site_lang";
+  const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+
+  const siteLang = String(
+    localStorage.getItem(SITE_LANG_KEY) ||
+    localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+    navigator.language ||
+    "tr"
+  ).toLowerCase().split("-")[0];
+
+  const pool = Array.isArray(getLangPoolForSite(siteLang))
+    ? getLangPoolForSite(siteLang)
+    : [];
+
+  const fallbackLangs = pool.length ? pool : [
+    { code:"tr", flag:"🇹🇷", name:"Türkçe" },
+    { code:"en", flag:"🇬🇧", name:"İngilizce" },
+    { code:"de", flag:"🇩🇪", name:"Almanca" },
+    { code:"fr", flag:"🇫🇷", name:"Fransızca" },
+    { code:"it", flag:"🇮🇹", name:"İtalyanca" },
+    { code:"es", flag:"🇪🇸", name:"İspanyolca" }
+  ];
+
+  const topLangTxt = document.getElementById("topLangTxt");
+  const botLangTxt = document.getElementById("botLangTxt");
+  const listTop = document.getElementById("list-top");
+  const listBot = document.getElementById("list-bot");
+  const topBtn = document.getElementById("topLangBtn");
+  const botBtn = document.getElementById("botLangBtn");
+  const popTop = document.getElementById("pop-top");
+  const popBot = document.getElementById("pop-bot");
+  const closeTop = document.getElementById("close-top");
+  const closeBot = document.getElementById("close-bot");
+
+  window.topLang = window.topLang || "en";
+  window.botLang = window.botLang || "tr";
+
+  function label(code){
+    const l = fallbackLangs.find(x => x.code === code) || fallbackLangs[0];
+    return `${l.flag || "🌐"} ${l.name || l.code.toUpperCase()}`;
+  }
+
+  function refresh(){
+    if(topLangTxt) topLangTxt.textContent = label(window.topLang);
+    if(botLangTxt) botLangTxt.textContent = label(window.botLang);
+  }
+
+  function render(list, side){
+    if(!list) return;
+
+    const selected = side === "top" ? window.topLang : window.botLang;
+
+    list.innerHTML = fallbackLangs.map(l => `
+      <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+        <div class="pop-left">
+          <div class="pop-flag">${l.flag || "🌐"}</div>
+          <div class="pop-name">${l.name || l.code.toUpperCase()}</div>
+        </div>
+        <div class="pop-code">${l.code.toUpperCase()}</div>
+      </div>
+    `).join("");
+
+    list.querySelectorAll(".pop-item").forEach(item => {
+      item.addEventListener("click", () => {
+        const code = item.dataset.code;
+
+        if(side === "top"){
+          window.topLang = code;
+          localStorage.setItem("f2f_top_lang", code);
+        }else{
+          window.botLang = code;
+          localStorage.setItem("f2f_bot_lang", code);
+        }
+
+        popTop?.classList.remove("show");
+        popBot?.classList.remove("show");
+        refresh();
+      });
+    });
+  }
+
+  topBtn?.addEventListener("click", () => {
+    render(listTop, "top");
+    popTop?.classList.add("show");
+  });
+
+  botBtn?.addEventListener("click", () => {
+    render(listBot, "bot");
+    popBot?.classList.add("show");
+  });
+
+  closeTop?.addEventListener("click", () => popTop?.classList.remove("show"));
+  closeBot?.addEventListener("click", () => popBot?.classList.remove("show"));
+
+  refresh();
+</script>
 </body>
 </html>
