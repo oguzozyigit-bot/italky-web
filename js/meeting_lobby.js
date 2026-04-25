@@ -20,6 +20,7 @@ const $ = (id) => document.getElementById(id);
 
 const el = {
   roomNameInput: $("roomNameInput"),
+  meetingAtInput: $("meetingAtInput"),
   createRoomBtn: $("createRoomBtn"),
   roomPreview: $("roomPreview"),
   roomPreviewCode: $("roomPreviewCode"),
@@ -35,6 +36,13 @@ function safeText(v, fallback = "") {
   return String(v ?? fallback ?? "").trim();
 }
 
+function toIsoFromLocal(localValue) {
+  if (!localValue) return "";
+  const d = new Date(localValue);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString();
+}
+
 function formatDateTR(value) {
   if (!value) return "--/--/---- --:--";
   const d = new Date(value);
@@ -46,6 +54,30 @@ function formatDateTR(value) {
     hour: "2-digit",
     minute: "2-digit"
   }).format(d);
+}
+
+function isFutureMeeting(value) {
+  if (!value) return false;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+  return d.getTime() > Date.now();
+}
+
+function setDefaultMeetingTime() {
+  if (!el.meetingAtInput) return;
+  if (el.meetingAtInput.value) return;
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 15);
+  now.setSeconds(0, 0);
+
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+
+  el.meetingAtInput.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
 }
 
 async function getSession() {
@@ -86,26 +118,47 @@ function persistRoom(roomId, roomCode, roomName = "") {
   if (roomName) localStorage.setItem(STORAGE.roomName, roomName);
 }
 
+function loadSavedMeetings() {
+  try {
+    const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
+    return Array.isArray(records) ? records : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSavedMeetings(records) {
+  localStorage.setItem(STORAGE.savedMeetings, JSON.stringify(records || []));
+}
+
 function persistSavedMeeting(room) {
-  const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
+  const records = loadSavedMeetings();
 
   const next = {
     room_id: room.room_id,
     room_code: room.room_code,
     room_name: room.room_name || "Toplantı",
+    meeting_at: room.meeting_at || "",
     saved_at: room.saved_at || new Date().toISOString(),
     started: !!room.started,
     is_host: !!room.is_host
   };
 
   const merged = [next, ...records.filter((x) => x.room_id !== next.room_id)].slice(0, 50);
-  localStorage.setItem(STORAGE.savedMeetings, JSON.stringify(merged));
+  saveSavedMeetings(merged);
 }
 
-function removeSavedMeeting(roomId) {
-  const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
-  const next = records.filter((x) => x.room_id !== roomId);
-  localStorage.setItem(STORAGE.savedMeetings, JSON.stringify(next));
+function cleanupSavedMeetings() {
+  const records = loadSavedMeetings();
+  const filtered = records.filter((x) => {
+    if (!safeText(x.room_id)) return false;
+    if (!safeText(x.meeting_at)) return false;
+    return isFutureMeeting(x.meeting_at);
+  });
+
+  if (filtered.length !== records.length) {
+    saveSavedMeetings(filtered);
+  }
 }
 
 function goMeeting(roomId, roomCode) {
@@ -159,7 +212,11 @@ async function resolveRoomByCode(roomCode) {
 
 async function createRoomFlow() {
   const roomName = safeText(el.roomNameInput?.value, "Yeni Meeting");
+  const meetingAtLocal = safeText(el.meetingAtInput?.value);
+  const meetingAt = toIsoFromLocal(meetingAtLocal);
+
   if (!roomName) return;
+  if (!meetingAt) return;
 
   el.createRoomBtn.disabled = true;
 
@@ -176,6 +233,7 @@ async function createRoomFlow() {
       room_id: room.roomId,
       room_code: room.roomCode,
       room_name: roomName,
+      meeting_at: meetingAt,
       saved_at: new Date().toISOString(),
       started: false,
       is_host: true
@@ -211,22 +269,31 @@ async function joinRoomFlow() {
       throw new Error("Oda bulunamadı");
     }
 
+    const records = loadSavedMeetings();
+    const matched = records.find((x) => safeText(x.room_code).toUpperCase() === code);
+
     persistRoom(room.roomId, room.roomCode, room.title);
 
-    persistSavedMeeting({
-      room_id: room.roomId,
-      room_code: room.roomCode,
-      room_name: room.title || "Toplantı",
-      saved_at: new Date().toISOString(),
-      started: false,
-      is_host: false
-    });
+    if (matched) {
+      persistSavedMeeting({
+        room_id: room.roomId,
+        room_code: room.roomCode,
+        room_name: matched.room_name || room.title || "Toplantı",
+        meeting_at: matched.meeting_at || "",
+        saved_at: matched.saved_at || new Date().toISOString(),
+        started: !!matched.started,
+        is_host: false
+      });
+    }
 
     renderSavedMeetings();
 
-    setTimeout(() => {
+    if (matched && !matched.started && matched.meeting_at && isFutureMeeting(matched.meeting_at)) {
       goMeeting(room.roomId, room.roomCode);
-    }, 250);
+      return;
+    }
+
+    goMeeting(room.roomId, room.roomCode);
   } catch (e) {
     console.error("joinRoomFlow error:", e);
   } finally {
@@ -235,29 +302,25 @@ async function joinRoomFlow() {
 }
 
 function renderSavedMeetings() {
-  const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
+  const records = loadSavedMeetings()
+    .filter((x) => x.meeting_at && isFutureMeeting(x.meeting_at))
+    .sort((a, b) => new Date(a.meeting_at).getTime() - new Date(b.meeting_at).getTime());
 
   if (!records.length) {
     el.meetingList.innerHTML = `
       <div class="meeting-item">
-        <div class="meeting-item-title">Henüz kayıtlı toplantı yok.</div>
+        <div class="meeting-item-title">Başlayacak kayıtlı toplantı yok.</div>
       </div>
     `;
     return;
   }
 
-  const sorted = [...records].sort((a, b) => {
-    const da = new Date(a.saved_at || 0).getTime();
-    const db = new Date(b.saved_at || 0).getTime();
-    return db - da;
-  });
-
-  el.meetingList.innerHTML = sorted.map((item) => {
+  el.meetingList.innerHTML = records.map((item) => {
     return `
       <div class="meeting-item">
         <div class="meeting-item-top">
           <div class="meeting-item-code">${safeText(item.room_code || "------")}</div>
-          <div class="meeting-item-date">${formatDateTR(item.saved_at)}</div>
+          <div class="meeting-item-date">${formatDateTR(item.meeting_at)}</div>
         </div>
         <div class="meeting-item-title">${safeText(item.room_name || "Toplantı")}</div>
         <button
@@ -286,7 +349,10 @@ function renderSavedMeetings() {
 function bindEvents() {
   el.createRoomBtn?.addEventListener("click", createRoomFlow);
   el.joinRoomBtn?.addEventListener("click", joinRoomFlow);
-  el.refreshMeetingsBtn?.addEventListener("click", renderSavedMeetings);
+  el.refreshMeetingsBtn?.addEventListener("click", () => {
+    cleanupSavedMeetings();
+    renderSavedMeetings();
+  });
 
   el.joinCodeInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -296,6 +362,13 @@ function bindEvents() {
   });
 
   el.roomNameInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      createRoomFlow();
+    }
+  });
+
+  el.meetingAtInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       createRoomFlow();
@@ -313,14 +386,6 @@ function applyShellVars() {
   }
 }
 
-function cleanupBrokenMeetings() {
-  const records = JSON.parse(localStorage.getItem(STORAGE.savedMeetings) || "[]");
-  const filtered = records.filter((x) => safeText(x.room_id));
-  if (filtered.length !== records.length) {
-    localStorage.setItem(STORAGE.savedMeetings, JSON.stringify(filtered));
-  }
-}
-
 async function init() {
   try {
     mountShell({ scroll: "auto" });
@@ -333,9 +398,27 @@ async function init() {
   setTimeout(applyShellVars, 500);
   window.addEventListener("resize", applyShellVars);
 
-  cleanupBrokenMeetings();
+  cleanupSavedMeetings();
+  setDefaultMeetingTime();
   bindEvents();
   renderSavedMeetings();
+}
+
+function setDefaultMeetingTime() {
+  if (!el.meetingAtInput) return;
+  if (el.meetingAtInput.value) return;
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 15);
+  now.setSeconds(0, 0);
+
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+
+  el.meetingAtInput.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
 }
 
 init();
