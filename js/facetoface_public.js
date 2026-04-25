@@ -210,7 +210,8 @@ function showToast(msg = ""){
   window.__publicF2fToastTimer = setTimeout(()=>{
     toast.classList.remove("show");
   },2200);
-  function todayKey(){
+  }
+function todayKey(){
   return new Date().toISOString().slice(0,10);
 }
 
@@ -752,6 +753,3 @@ function boot(){
 }
 
 boot();
-  
-  
-    }
