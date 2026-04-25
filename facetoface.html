@@ -215,13 +215,8 @@
 
     .popover.show{ display:flex; }
 
-    .half-screen.top .popover{
-      top:56px;
-    }
-
-    .half-screen.bottom .popover{
-      bottom:56px;
-    }
+    .half-screen.top .popover{ top:56px; }
+    .half-screen.bottom .popover{ bottom:56px; }
 
     .pop-head{
       padding:14px;
@@ -395,6 +390,30 @@
       position:relative;
     }
 
+    .composer.mic-only{
+      width:auto;
+      min-height:72px;
+      padding:0;
+      background:transparent;
+      border:none;
+      box-shadow:none;
+    }
+
+    .composer.mic-only .mic-btn{
+      width:70px;
+      height:70px;
+      background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.16), rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:
+        0 18px 40px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .composer.mic-only .mic-btn svg{
+      width:30px;
+      height:30px;
+    }
+
     .composer.listening{
       box-shadow:
         0 0 0 1px rgba(99,102,241,.30),
@@ -402,6 +421,11 @@
         0 0 30px rgba(99,102,241,.20),
         inset 0 1px 0 rgba(255,255,255,.04);
       animation:composerPulse 1.2s ease-in-out infinite;
+    }
+
+    .composer.mic-only.listening{
+      box-shadow:none;
+      animation:none;
     }
 
     @keyframes composerPulse{
@@ -894,9 +918,20 @@
       .lang-trigger{
         width:min(68vw, 260px);
       }
+
+      .composer.mic-only .mic-btn{
+        width:66px;
+        height:66px;
+      }
+
+      .composer.mic-only .mic-btn svg{
+        width:28px;
+        height:28px;
+      }
     }
   </style>
 </head>
+
 <body id="frameRoot" class="to-bot">
   <div class="container">
     <div class="half-screen top" id="topSection">
@@ -925,11 +960,7 @@
       <div class="chat-body" id="topBody"></div>
 
       <div class="composer-stack">
-        <div class="composer" id="topComposer">
-          <div class="composer-center">
-            <textarea id="topInput" class="composer-input" rows="1" placeholder="Mesaj yaz"></textarea>
-          </div>
-
+        <div class="composer mic-only" id="topComposer">
           <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
             <svg viewBox="0 0 24 24">
               <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
@@ -939,6 +970,10 @@
             </svg>
           </button>
 
+          <div class="composer-center hidden">
+            <textarea id="topInput" class="composer-input" rows="1" placeholder="Mesaj yaz"></textarea>
+          </div>
+
           <button id="topSend" class="send-btn hidden" type="button" aria-label="Üst mesaj gönder">
             <svg viewBox="0 0 24 24">
               <path d="M5 12h14"></path>
@@ -947,7 +982,7 @@
           </button>
         </div>
 
-        <div class="kb-wrap" id="topKeyboardWrap">
+        <div class="kb-wrap hidden" id="topKeyboardWrap">
           <div class="kb" id="topKeyboard"></div>
         </div>
       </div>
@@ -1002,11 +1037,7 @@
       <div class="chat-body" id="botBody"></div>
 
       <div class="composer-stack">
-        <div class="composer" id="botComposer">
-          <div class="composer-center">
-            <textarea id="botInput" class="composer-input" rows="1" placeholder="Mesaj yaz"></textarea>
-          </div>
-
+        <div class="composer mic-only" id="botComposer">
           <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
             <svg viewBox="0 0 24 24">
               <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
@@ -1016,6 +1047,10 @@
             </svg>
           </button>
 
+          <div class="composer-center hidden">
+            <textarea id="botInput" class="composer-input" rows="1" placeholder="Mesaj yaz"></textarea>
+          </div>
+
           <button id="botSend" class="send-btn hidden" type="button" aria-label="Alt mesaj gönder">
             <svg viewBox="0 0 24 24">
               <path d="M5 12h14"></path>
@@ -1024,7 +1059,7 @@
           </button>
         </div>
 
-        <div class="kb-wrap" id="botKeyboardWrap">
+        <div class="kb-wrap hidden" id="botKeyboardWrap">
           <div class="kb" id="botKeyboard"></div>
         </div>
       </div>
