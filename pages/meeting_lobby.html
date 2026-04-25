@@ -12,7 +12,6 @@
 
   <style>
     :root{
-      --bg:#061325;
       --accent:#8ad8ff;
       --accent-glow:rgba(138,216,255,.30);
       --card-bg:rgba(255,255,255,.05);
@@ -189,6 +188,60 @@
       box-shadow:0 0 20px var(--accent-glow);
     }
 
+    .datetime-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .picker-box{
+      min-height:58px;
+      border-radius:18px;
+      border:1px solid var(--card-border);
+      background:rgba(0,0,0,.20);
+      display:flex;
+      align-items:center;
+      padding:0 18px;
+      color:#fff;
+      font-size:16px;
+      font-weight:700;
+    }
+
+    .picker-box input{
+      width:100%;
+      border:none;
+      background:transparent;
+      color:#fff;
+      font:inherit;
+      outline:none;
+    }
+
+    .picker-box input::-webkit-calendar-picker-indicator{
+      filter:invert(1) brightness(1.2);
+      opacity:.9;
+      cursor:pointer;
+    }
+
+    .quick-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .quick-chip{
+      min-height:38px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
     .primary-btn,
     .secondary-btn,
     .meeting-item-btn{
@@ -296,6 +349,12 @@
       font-size:14px;
       font-weight:1000;
     }
+
+    @media (max-width:560px){
+      .datetime-grid{
+        grid-template-columns:1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -317,8 +376,22 @@
           </div>
 
           <div class="field">
-            <label class="label" for="meetingAtInput">Toplantı Tarihi ve Saati</label>
-            <input id="meetingAtInput" class="input" type="datetime-local"/>
+            <label class="label">Toplantı Tarihi ve Saati</label>
+
+            <div class="datetime-grid">
+              <div class="picker-box">
+                <input id="meetingDateInput" type="date"/>
+              </div>
+              <div class="picker-box">
+                <input id="meetingTimeInput" type="time"/>
+              </div>
+            </div>
+
+            <div class="quick-row">
+              <button id="pickTodayBtn" class="quick-chip" type="button">Bugün</button>
+              <button id="pickTomorrowBtn" class="quick-chip" type="button">Yarın</button>
+              <button id="pickThreeDayBtn" class="quick-chip" type="button">+3 Gün</button>
+            </div>
           </div>
 
           <button id="createRoomBtn" class="primary-btn" type="button">Odayı Oluştur</button>
@@ -355,6 +428,6 @@
     </div>
   </main>
 
-  <script type="module" src="/js/meeting_lobby.js?v=32"></script>
+  <script type="module" src="/js/meeting_lobby.js?v=33"></script>
 </body>
 </html>
