@@ -52,26 +52,11 @@
 
     .lang-row{
       width:100%;
-      display:grid;
-      grid-template-columns:76px 1fr 44px;
-      gap:8px;
+      display:flex;
       align-items:center;
+      justify-content:center;
       z-index:20;
     }
-
-    .mode-toggle{
-      height:38px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      color:#fff;
-      font-size:9px;
-      font-weight:1000;
-      cursor:pointer;
-    }
-
-    .mode-toggle.online{color:#8affb7}
-    .mode-toggle.offline{color:#ff9c9c}
 
     .lang-trigger{
       height:38px;
@@ -79,25 +64,13 @@
       border-radius:999px;
       background:transparent;
       color:#fff;
-      font-size:12px;
+      font-size:13px;
       font-weight:900;
       cursor:pointer;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
-    }
-
-    .menu-btn{
-      width:44px;
-      height:44px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.13);
-      color:#fff;
-      font-size:24px;
-      font-weight:900;
-      cursor:pointer;
+      max-width:82vw;
     }
 
     .popover{
@@ -183,44 +156,80 @@
       max-width:86%;
       line-height:1.18;
       word-break:break-word;
-      font-size:22px;
-      font-weight:800;
+      font-size:24px;
+      font-weight:900;
       opacity:.9;
     }
 
     .bubble.latest{
-      font-size:30px;
+      font-size:32px;
       font-weight:1000;
       opacity:1;
     }
 
-    .mic-wrap{
+    .mic-line{
       width:100%;
-      display:flex;
-      justify-content:center;
+      display:grid;
+      grid-template-columns:1fr 116px 1fr;
       align-items:center;
+      gap:12px;
+      padding:0 8px 4px;
       flex:0 0 auto;
     }
 
+    .mode-toggle{
+      min-height:44px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      font-size:10px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .mode-toggle.online{color:#8affb7}
+    .mode-toggle.offline{color:#ff9c9c}
+
+    .login-btn{
+      min-height:44px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      font-size:11px;
+      font-weight:1000;
+      text-decoration:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+      padding:0 10px;
+    }
+
+    .mic-placeholder{min-height:44px}
+
     .mic-btn{
-      width:86px;
-      height:86px;
+      width:116px;
+      height:116px;
       border:none;
       border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
+      background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.16), rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.18);
       color:#fff;
       display:flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
-      box-shadow:0 12px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04);
+      box-shadow:
+        0 18px 40px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.08);
       position:relative;
     }
 
     .mic-btn svg{
-      width:36px;
-      height:36px;
+      width:48px;
+      height:48px;
       stroke:currentColor;
       stroke-width:2.2;
       fill:none;
@@ -228,20 +237,38 @@
       stroke-linejoin:round;
     }
 
+    .mic-btn.listening{
+      background:
+        radial-gradient(circle at 50% 35%, rgba(216,180,254,.34), rgba(168,85,247,.18) 44%, rgba(255,255,255,.06));
+      box-shadow:
+        0 0 0 10px rgba(168,85,247,.12),
+        0 0 34px rgba(168,85,247,.50),
+        0 0 70px rgba(236,72,153,.28),
+        inset 0 1px 0 rgba(255,255,255,.10);
+      animation:purpleMicBreath 1.05s ease-in-out infinite;
+    }
+
     .mic-btn.listening::after{
       content:"";
       position:absolute;
-      inset:-8px;
+      inset:-13px;
       border-radius:50%;
-      border:2px solid rgba(34,197,94,.72);
-      box-shadow:0 0 0 10px rgba(34,197,94,.10),0 0 28px rgba(34,197,94,.22);
-      animation:micPulse 1s ease-out infinite;
+      border:2px solid rgba(216,180,254,.78);
+      box-shadow:
+        0 0 0 12px rgba(168,85,247,.10),
+        0 0 38px rgba(216,180,254,.35);
+      animation:purpleMicPulse 1s ease-out infinite;
     }
 
-    @keyframes micPulse{
-      0%{transform:scale(.92);opacity:.95}
-      70%{transform:scale(1.14);opacity:.14}
-      100%{transform:scale(1.18);opacity:0}
+    @keyframes purpleMicBreath{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.045); }
+    }
+
+    @keyframes purpleMicPulse{
+      0%{ transform:scale(.92); opacity:.95; }
+      70%{ transform:scale(1.18); opacity:.16; }
+      100%{ transform:scale(1.24); opacity:0; }
     }
 
     .center-hub{
@@ -292,55 +319,6 @@
       background:var(--ai-gradient);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
-    }
-
-    .menu-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.50);
-      backdrop-filter:blur(5px);
-      z-index:900;
-      display:none;
-    }
-
-    .menu-backdrop.show{display:block}
-
-    .side-menu{
-      position:fixed;
-      top:0;
-      right:-310px;
-      width:min(82vw,310px);
-      height:100%;
-      background:linear-gradient(180deg,rgba(12,12,20,.98),rgba(7,7,13,.98));
-      border-left:1px solid rgba(255,255,255,.10);
-      z-index:901;
-      padding:18px;
-      transition:.25s ease;
-      box-shadow:-20px 0 44px rgba(0,0,0,.38);
-    }
-
-    .side-menu.open{right:0}
-
-    .menu-title{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:22px;
-      font-weight:900;
-      margin-bottom:16px;
-    }
-
-    .menu-link{
-      display:block;
-      width:100%;
-      min-height:50px;
-      padding:15px 14px;
-      border-radius:16px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.09);
-      color:#fff;
-      text-decoration:none;
-      font-size:14px;
-      font-weight:900;
-      margin-bottom:10px;
     }
 
     .toast{
@@ -427,11 +405,12 @@
     .modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
 
     @media(max-width:390px){
-      .lang-row{grid-template-columns:72px 1fr 42px}
-      .mode-toggle{font-size:8px}
-      .bubble{font-size:20px}
-      .bubble.latest{font-size:28px}
-      .mic-btn{width:80px;height:80px}
+      .mic-line{grid-template-columns:1fr 104px 1fr}
+      .mic-btn{width:104px;height:104px}
+      .mic-btn svg{width:44px;height:44px}
+      .bubble{font-size:22px}
+      .bubble.latest{font-size:30px}
+      .login-btn,.mode-toggle{font-size:9px}
     }
   </style>
 </head>
@@ -441,24 +420,24 @@
 
     <section class="half-screen top" id="topSection">
       <div class="lang-row">
-        <button id="topModeToggle" class="mode-toggle online" type="button">ONLINE</button>
         <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-        <button id="topMenuBtn" class="menu-btn" type="button" aria-label="Menü">☰</button>
       </div>
 
       <div class="popover" id="pop-top">
         <div class="pop-head">
-          <div>ÜST DİL</div>
+          <div id="topPopTitle">ÜST DİL</div>
           <div class="pop-close" id="close-top">✕</div>
         </div>
         <div class="pop-list" id="list-top"></div>
       </div>
 
       <div class="chat-body" id="topBody">
-        <div class="bubble">Karşı taraf konuşsun</div>
+        <div class="bubble" id="topHint">Mikrofona bas</div>
       </div>
 
-      <div class="mic-wrap">
+      <div class="mic-line">
+        <button id="topModeToggle" class="mode-toggle online" type="button">ONLINE</button>
+
         <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
           <svg viewBox="0 0 24 24">
             <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
@@ -467,6 +446,8 @@
             <path d="M8 21h8"></path>
           </svg>
         </button>
+
+        <a id="loginBtnTop" class="login-btn" href="/pages/login.html">GİRİŞ YAP</a>
       </div>
     </section>
 
@@ -480,24 +461,24 @@
 
     <section class="half-screen bottom" id="botSection">
       <div class="lang-row">
-        <button id="botModeToggle" class="mode-toggle online" type="button">ONLINE</button>
         <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-        <button id="botMenuBtn" class="menu-btn" type="button" aria-label="Menü">☰</button>
       </div>
 
       <div class="popover" id="pop-bot">
         <div class="pop-head">
-          <div>ALT DİL</div>
+          <div id="botPopTitle">ALT DİL</div>
           <div class="pop-close" id="close-bot">✕</div>
         </div>
         <div class="pop-list" id="list-bot"></div>
       </div>
 
       <div class="chat-body" id="botBody">
-        <div class="bubble">Konuşmak için mikrofona bas</div>
+        <div class="bubble" id="botHint">Mikrofona bas</div>
       </div>
 
-      <div class="mic-wrap">
+      <div class="mic-line">
+        <button id="botModeToggle" class="mode-toggle online" type="button">ONLINE</button>
+
         <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
           <svg viewBox="0 0 24 24">
             <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
@@ -506,25 +487,17 @@
             <path d="M8 21h8"></path>
           </svg>
         </button>
+
+        <div class="mic-placeholder"></div>
       </div>
     </section>
 
   </main>
 
-  <div id="menuBackdrop" class="menu-backdrop"></div>
-
-  <nav id="sideMenu" class="side-menu">
-    <div class="menu-title">italky<span class="ai">AI</span></div>
-    <a class="menu-link" href="/pages/login.html">Giriş Yap</a>
-    <a class="menu-link" href="/pages/about.html">Hakkımızda</a>
-    <a class="menu-link" href="/pages/privacy.html">Gizlilik</a>
-    <a class="menu-link" href="/pages/contact.html">İletişim</a>
-  </nav>
-
   <div id="adModal" class="modal">
     <div class="modal-card">
-      <h3 class="modal-title">Ücretsiz Kullanım</h3>
-      <p class="modal-text">
+      <h3 class="modal-title" id="adTitle">Ücretsiz Kullanım</h3>
+      <p class="modal-text" id="adText">
         FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.
       </p>
       <div class="modal-actions">
@@ -536,6 +509,6 @@
 
   <div id="toast" class="toast"></div>
 
-  <script type="module" src="/js/facetoface_public.js?v=PUBLIC_F2F_V1"></script>
+  <script type="module" src="/js/facetoface_public.js?v=PUBLIC_F2F_V2"></script>
 </body>
 </html>
