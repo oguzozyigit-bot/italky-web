@@ -7,12 +7,57 @@ const SITE_LANG_KEY = "site_lang";
 const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
 const NATIVE_LANG_KEY = "italky_native_lang_v7";
 const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
-const PUBLIC_F2F_AD_KEY = "italkyai_public_f2f_ad_v1";
+const PUBLIC_F2F_AD_KEY = "italkyai_public_f2f_ad_v2";
 
 const BCP = {
   tr: "tr-TR", en: "en-US", de: "de-DE", fr: "fr-FR", it: "it-IT",
   es: "es-ES", ar: "ar-SA", ru: "ru-RU", bg: "bg-BG", pt: "pt-PT",
   zh: "zh-CN", ja: "ja-JP", ko: "ko-KR"
+};
+
+const UI = {
+  tr: {
+    mic: "Mikrofona bas",
+    download: "DİL İNDİR",
+    clear: "TEMİZLE",
+    login: "GİRİŞ YAP",
+    topLang: "ÜST DİL",
+    botLang: "ALT DİL",
+    offlineNeed: "İnternetsiz ortamda çeviri yapabilmek için dil paketi indirmeniz gereklidir.",
+    online: "Online mod aktif.",
+    offline: "Offline mod aktif.",
+    noOffline: "Bu dil çifti için önce dil paketi indirmeniz gerekli.",
+    adTitle: "Ücretsiz Kullanım",
+    adText: "FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.",
+    watchAd: "Reklam İzle",
+    close: "Şimdilik Kapat",
+    adNeeded: "Reklam izlenmeden çeviri başlatılmadı.",
+    micError: "Mikrofon hatası.",
+    micDenied: "Mikrofon izni gerekli.",
+    micUnsupported: "Bu cihazda konuşma algılama desteklenmiyor.",
+    translateError: "Çeviri yapılamadı"
+  },
+  en: {
+    mic: "Tap microphone",
+    download: "DOWNLOAD",
+    clear: "CLEAR",
+    login: "LOGIN",
+    topLang: "TOP LANGUAGE",
+    botLang: "BOTTOM LANGUAGE",
+    offlineNeed: "To translate without internet, you need to download a language pack.",
+    online: "Online mode is active.",
+    offline: "Offline mode is active.",
+    noOffline: "Please download this language pack first.",
+    adTitle: "Free Use",
+    adText: "FaceToFace free use includes ads. Watch the ad to continue translating.",
+    watchAd: "Watch Ad",
+    close: "Close",
+    adNeeded: "Translation was not started without watching the ad.",
+    micError: "Microphone error.",
+    micDenied: "Microphone permission is required.",
+    micUnsupported: "Speech recognition is not supported on this device.",
+    translateError: "Translation failed"
+  }
 };
 
 function canonical(code) {
@@ -29,11 +74,17 @@ function getSiteLang() {
   ) || "tr";
 }
 
-const SITE_LANG = getSiteLang();
+function getUiLang() {
+  const c = canonical(botLang);
+  return UI[c] ? c : "en";
+}
 
-const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
-  ? getLangPoolForSite(SITE_LANG)
-  : [];
+function tx(key) {
+  return UI[getUiLang()]?.[key] || UI.en[key] || key;
+}
+
+const SITE_LANG = getSiteLang();
+const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG)) ? getLangPoolForSite(SITE_LANG) : [];
 
 const LANGS = RAW_LANG_POOL
   .map((l) => {
@@ -80,6 +131,20 @@ function differentLang(base) {
   return LANGS.find((l) => l.code !== b)?.code || "en";
 }
 
+function resolveInitialBotLang() {
+  const raw = canonical(
+    localStorage.getItem(NATIVE_LANG_KEY) ||
+    localStorage.getItem(SITE_LANG_KEY) ||
+    localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+    navigator.language ||
+    "tr"
+  );
+
+  if (langExists(raw)) return raw;
+  if (langExists("tr")) return "tr";
+  return LANGS[0]?.code || "tr";
+}
+
 const topBody = $("topBody");
 const botBody = $("botBody");
 const topMic = $("topMic");
@@ -87,8 +152,6 @@ const botMic = $("botMic");
 
 const topLangBtn = $("topLangBtn");
 const botLangBtn = $("botLangBtn");
-const topLangTxt = topLangBtn;
-const botLangTxt = botLangBtn;
 
 const topModeToggle = $("topModeToggle");
 const botModeToggle = $("botModeToggle");
@@ -100,27 +163,30 @@ const listBot = $("list-bot");
 const closeTop = $("close-top");
 const closeBot = $("close-bot");
 
-const topMenuBtn = $("topMenuBtn");
-const botMenuBtn = $("botMenuBtn");
-const sideMenu = $("sideMenu");
-const menuBackdrop = $("menuBackdrop");
+const topPopTitle = $("topPopTitle");
+const botPopTitle = $("botPopTitle");
 
 const clearBtn = $("clearBtn");
 const downloadBtn = $("downloadBtn");
+const loginBtnTop = $("loginBtnTop");
+
+const topHint = $("topHint");
+const botHint = $("botHint");
 
 const adModal = $("adModal");
+const adTitle = $("adTitle");
+const adText = $("adText");
 const watchAdBtn = $("watchAdBtn");
 const closeAdBtn = $("closeAdBtn");
 const toast = $("toast");
 
-let topLang = langExists("en") ? "en" : differentLang("tr");
-let botLang = langExists("tr") ? "tr" : getSiteLang();
+let botLang = resolveInitialBotLang();
+let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
 
 if (topLang === botLang) topLang = differentLang(botLang);
 
 let runtimeMode = "online";
 let recognizer = null;
-let recordingSide = null;
 let liveText = "";
 
 function showToast(msg = "") {
@@ -128,9 +194,7 @@ function showToast(msg = "") {
   toast.textContent = String(msg || "");
   toast.classList.add("show");
   clearTimeout(window.__publicF2fToastTimer);
-  window.__publicF2fToastTimer = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2200);
+  window.__publicF2fToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
 function todayKey() {
@@ -158,6 +222,11 @@ function showAdBeforeTranslate() {
       return;
     }
 
+    adTitle.textContent = tx("adTitle");
+    adText.textContent = tx("adText");
+    watchAdBtn.textContent = tx("watchAd");
+    closeAdBtn.textContent = tx("close");
+
     adModal.classList.add("show");
 
     const clean = () => {
@@ -172,8 +241,6 @@ function showAdBeforeTranslate() {
           window.AndroidAdBridge.showRewardedAd("public_facetoface_daily");
         } else if (window.NativeAds?.showRewardedAd) {
           window.NativeAds.showRewardedAd("public_facetoface_daily");
-        } else {
-          showToast("Reklam sistemi hazır değil, bugünlük devam edebilirsiniz.");
         }
       } catch {}
 
@@ -221,13 +288,10 @@ function setMode(next) {
   syncModeUi();
 
   if (runtimeMode === "offline") {
-    if (!hasInstalledOfflinePair(topLang, botLang)) {
-      showToast("Bu dil çifti için önce dil paketi indirmeniz gerekli.");
-    } else {
-      showToast("Offline mod aktif.");
-    }
+    if (!hasInstalledOfflinePair(topLang, botLang)) showToast(tx("noOffline"));
+    else showToast(tx("offline"));
   } else {
-    showToast("Online mod aktif.");
+    showToast(tx("online"));
   }
 }
 
@@ -238,9 +302,21 @@ function toggleMode() {
 topModeToggle?.addEventListener("click", toggleMode);
 botModeToggle?.addEventListener("click", toggleMode);
 
+function refreshStaticTexts() {
+  if (downloadBtn) downloadBtn.textContent = tx("download");
+  if (clearBtn) clearBtn.textContent = tx("clear");
+  if (loginBtnTop) loginBtnTop.textContent = tx("login");
+  if (topPopTitle) topPopTitle.textContent = tx("topLang");
+  if (botPopTitle) botPopTitle.textContent = tx("botLang");
+
+  if (topHint) topHint.textContent = tx("mic");
+  if (botHint) botHint.textContent = tx("mic");
+}
+
 function refreshLangLabels() {
-  if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
-  if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
+  if (topLangBtn) topLangBtn.textContent = labelChip(topLang);
+  if (botLangBtn) botLangBtn.textContent = labelChip(botLang);
+  refreshStaticTexts();
 }
 
 function closeAllPop() {
@@ -282,7 +358,7 @@ function renderPop(side) {
       closeAllPop();
 
       if (runtimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang)) {
-        showToast("Bu dil çifti offline hazır değil. Dil İndir bölümünden paketi indirebilirsiniz.");
+        showToast(tx("noOffline"));
       }
     });
   });
@@ -316,31 +392,17 @@ document.addEventListener("click", (e) => {
   if (!inside) closeAllPop();
 }, { capture: true });
 
-function openMenu() {
-  sideMenu?.classList.add("open");
-  menuBackdrop?.classList.add("show");
-}
-
-function closeMenu() {
-  sideMenu?.classList.remove("open");
-  menuBackdrop?.classList.remove("show");
-}
-
-topMenuBtn?.addEventListener("click", openMenu);
-botMenuBtn?.addEventListener("click", openMenu);
-menuBackdrop?.addEventListener("click", closeMenu);
-
 downloadBtn?.addEventListener("click", (e) => {
   e.preventDefault();
   location.href = "/pages/offline_languages_public.html";
 });
 
-function clearBody(body, text) {
+function clearBody(body) {
   if (!body) return;
   body.innerHTML = "";
   const div = document.createElement("div");
   div.className = "bubble";
-  div.textContent = text;
+  div.textContent = tx("mic");
   body.appendChild(div);
 }
 
@@ -348,9 +410,7 @@ function addBubble(side, text, latest = false) {
   const body = side === "top" ? topBody : botBody;
   if (!body) return null;
 
-  if (latest) {
-    body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
-  }
+  if (latest) body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
 
   const div = document.createElement("div");
   div.className = `bubble${latest ? " latest" : ""}`;
@@ -456,14 +516,14 @@ function translateOffline(text, from, to) {
 async function translateText(text, from, to) {
   if (runtimeMode === "offline") {
     if (!hasInstalledOfflinePair(from, to)) {
-      showToast("Bu dil çifti offline hazır değil. Dil paketini indirmeniz gerekli.");
+      showToast(tx("noOffline"));
       return null;
     }
 
     const offline = await translateOffline(text, from, to);
     if (offline) return offline;
 
-    showToast("Offline çeviri yapılamadı.");
+    showToast(tx("translateError"));
     return null;
   }
 
@@ -502,7 +562,7 @@ async function finalizeSpeech(side, text) {
 
   const allowed = await showAdBeforeTranslate();
   if (!allowed) {
-    showToast("Reklam izlenmeden çeviri başlatılmadı.");
+    showToast(tx("adNeeded"));
     return;
   }
 
@@ -512,11 +572,11 @@ async function finalizeSpeech(side, text) {
 
   addBubble(side, clean, false);
 
-  const targetRow = addBubble(other, "Çevriliyor...", true);
+  const targetRow = addBubble(other, "", true);
   const translated = await translateText(clean, src, dst);
 
   if (!translated) {
-    if (targetRow) targetRow.textContent = "Çeviri yapılamadı";
+    if (targetRow) targetRow.textContent = tx("translateError");
     return;
   }
 
@@ -534,17 +594,15 @@ function startRecording(side) {
   const rec = buildRecognizer(sourceLang);
 
   if (!rec) {
-    showToast("Bu cihazda konuşma algılama desteklenmiyor.");
+    showToast(tx("micUnsupported"));
     return;
   }
 
   recognizer = rec;
-  recordingSide = side;
   liveText = "";
 
   rec.onstart = () => {
     setMicState(side, true);
-    addBubble(side, "Dinliyorum...", true);
   };
 
   rec.onresult = (e) => {
@@ -560,21 +618,15 @@ function startRecording(side) {
     }
 
     liveText = cleanupTranscript(finalText || interimText || liveText);
-
-    const body = side === "top" ? topBody : botBody;
-    const latest = body?.querySelector(".bubble.latest");
-
-    if (latest && liveText) latest.textContent = liveText;
   };
 
   rec.onerror = (e) => {
     const err = String(e?.error || "");
-    if (err.includes("not-allowed")) showToast("Mikrofon izni gerekli.");
-    else showToast("Mikrofon hatası.");
+    if (err.includes("not-allowed")) showToast(tx("micDenied"));
+    else showToast(tx("micError"));
 
     setMicState(side, false);
     recognizer = null;
-    recordingSide = null;
     liveText = "";
   };
 
@@ -583,21 +635,17 @@ function startRecording(side) {
 
     setMicState(side, false);
     recognizer = null;
-    recordingSide = null;
     liveText = "";
 
-    if (finalText) {
-      finalizeSpeech(side, finalText);
-    }
+    if (finalText) finalizeSpeech(side, finalText);
   };
 
   try {
     rec.start();
   } catch {
-    showToast("Mikrofon başlatılamadı.");
+    showToast(tx("micError"));
     setMicState(side, false);
     recognizer = null;
-    recordingSide = null;
     liveText = "";
   }
 }
@@ -612,22 +660,23 @@ clearBtn?.addEventListener("click", () => {
   try { window.NativeTTS?.stop?.(); } catch {}
 
   recognizer = null;
-  recordingSide = null;
   liveText = "";
 
   topMic?.classList.remove("listening");
   botMic?.classList.remove("listening");
 
-  clearBody(topBody, "Karşı taraf konuşsun");
-  clearBody(botBody, "Konuşmak için mikrofona bas");
+  clearBody(topBody);
+  clearBody(botBody);
 });
 
 function boot() {
   refreshLangLabels();
   syncModeUi();
+  clearBody(topBody);
+  clearBody(botBody);
 
   setTimeout(() => {
-    showToast("İnternetsiz ortamda çeviri yapabilmek için dil paketi indirmeniz gereklidir.");
+    showToast(tx("offlineNeed"));
   }, 800);
 }
 
