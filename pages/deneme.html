@@ -191,9 +191,9 @@
       display:flex;
       flex-direction:column;
       align-items:center;
-      justify-content:center;
+      justify-content:flex-end;
       gap:14px;
-      padding:14px 0;
+      padding:14px 0 22px;
       text-align:center;
       scrollbar-width:none;
       mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
@@ -226,45 +226,6 @@
       gap:12px;
       padding:0 8px 4px;
       flex:0 0 auto;
-    }
-
-    .mode-toggle{
-      min-height:40px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.07);
-      color:#fff;
-      font-size:10px;
-      font-weight:1000;
-      cursor:pointer;
-    }
-
-    .mode-toggle.online{
-      color:#8affb7;
-    }
-
-    .mode-toggle.offline{
-      color:#ff9c9c;
-    }
-
-    .login-btn{
-      min-height:40px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.15);
-      background:rgba(255,255,255,.07);
-      color:#fff;
-      font-size:10px;
-      font-weight:1000;
-      text-decoration:none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      white-space:nowrap;
-      padding:0 10px;
-    }
-
-    .half-screen.top .label-fix{
-      transform:rotate(180deg);
     }
 
     .mic-placeholder{
@@ -349,27 +310,6 @@
       border-bottom:1px solid rgba(255,255,255,.05);
     }
 
-    .nav-btn{
-      position:absolute;
-      padding:10px 16px;
-      border-radius:999px;
-      background:transparent;
-      border:1px solid var(--border);
-      color:#fff;
-      font-size:10px;
-      font-weight:1000;
-      text-decoration:none;
-      cursor:pointer;
-    }
-
-    .download-btn{
-      left:12px;
-    }
-
-    .clear-btn{
-      right:12px;
-    }
-
     .orb{
       width:66px;
       height:66px;
@@ -451,6 +391,115 @@
     @keyframes orbit4{
       from{ transform:rotate(270deg) translateX(56px) rotate(-270deg); }
       to{ transform:rotate(630deg) translateX(56px) rotate(-630deg); }
+    }
+
+    .edge-handle{
+      position:fixed;
+      right:0;
+      top:50%;
+      transform:translateY(-50%);
+      width:18px;
+      height:104px;
+      border:none;
+      border-radius:18px 0 0 18px;
+      background:rgba(255,255,255,.15);
+      border-left:1px solid rgba(255,255,255,.22);
+      z-index:9997;
+      cursor:pointer;
+      box-shadow:0 0 22px rgba(255,255,255,.08);
+    }
+
+    .edge-handle::before{
+      content:"";
+      position:absolute;
+      left:6px;
+      top:20px;
+      width:4px;
+      height:64px;
+      border-radius:999px;
+      background:rgba(255,255,255,.58);
+    }
+
+    .edge-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.38);
+      backdrop-filter:blur(4px);
+      z-index:9996;
+      display:none;
+    }
+
+    .edge-backdrop.show{
+      display:block;
+    }
+
+    .edge-menu{
+      position:fixed;
+      right:-238px;
+      top:50%;
+      transform:translateY(-50%);
+      width:218px;
+      padding:14px;
+      border-radius:30px 0 0 30px;
+      background:rgba(16,16,22,.95);
+      border:1px solid rgba(255,255,255,.12);
+      border-right:none;
+      z-index:9998;
+      transition:.24s ease;
+      box-shadow:-18px 0 40px rgba(0,0,0,.36);
+    }
+
+    .edge-menu.open{
+      right:0;
+    }
+
+    .edge-menu-btn{
+      width:100%;
+      min-height:48px;
+      margin-bottom:10px;
+      border:none;
+      border-radius:18px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:1000;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:12px;
+      padding:0 14px;
+      text-align:left;
+    }
+
+    .edge-menu-btn:last-child{
+      margin-bottom:0;
+    }
+
+    .edge-menu-btn.danger{
+      color:#ffb4b4;
+    }
+
+    .edge-icon{
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,.10);
+      font-size:17px;
+      flex:0 0 auto;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .edge-label{
+      flex:1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .toast{
@@ -571,8 +620,9 @@
         font-size:30px;
       }
 
-      .login-btn,.mode-toggle{
-        font-size:9px;
+      .edge-menu{
+        width:208px;
+        right:-228px;
       }
     }
   </style>
@@ -597,7 +647,7 @@
       <div class="chat-body" id="topBody"></div>
 
       <div class="mic-line">
-        <button id="topModeToggle" class="mode-toggle online label-fix" type="button">ONLINE</button>
+        <div class="mic-placeholder"></div>
 
         <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
           <svg viewBox="0 0 24 24">
@@ -608,13 +658,11 @@
           </svg>
         </button>
 
-        <a id="loginBtnTop" class="login-btn label-fix" href="/pages/login.html">+ GİRİŞ YAP</a>
+        <div class="mic-placeholder"></div>
       </div>
     </section>
 
     <section class="center-hub">
-      <a id="downloadBtn" class="nav-btn download-btn" href="/pages/offline_languages.html">DİL İNDİR</a>
-
       <div class="orb">
         <span class="sat sat1"></span>
         <span class="sat sat2"></span>
@@ -622,8 +670,6 @@
         <span class="sat sat4"></span>
         <span class="orb-main">italky<span class="ai">AI</span></span>
       </div>
-
-      <button id="clearBtn" class="nav-btn clear-btn" type="button">TEMİZLE</button>
     </section>
 
     <section class="half-screen bottom" id="botSection">
@@ -659,6 +705,47 @@
 
   </main>
 
+  <button id="edgeHandle" class="edge-handle" type="button" aria-label="Menü aç"></button>
+
+  <div id="edgeBackdrop" class="edge-backdrop"></div>
+
+  <aside id="edgeMenu" class="edge-menu">
+    <button id="edgeDownloadBtn" class="edge-menu-btn" type="button">
+      <span class="edge-icon">⬇️</span>
+      <span class="edge-label">DİL İNDİR</span>
+    </button>
+
+    <button id="edgeLoginBtn" class="edge-menu-btn" type="button">
+      <span class="edge-icon">＋</span>
+      <span class="edge-label">GİRİŞ YAP</span>
+    </button>
+
+    <button id="edgeModeBtn" class="edge-menu-btn" type="button">
+      <span class="edge-icon">🌐</span>
+      <span class="edge-label">ONLINE</span>
+    </button>
+
+    <button id="edgeClearBtn" class="edge-menu-btn danger" type="button">
+      <span class="edge-icon">🧹</span>
+      <span class="edge-label">TEMİZLE</span>
+    </button>
+
+    <button id="edgeAboutBtn" class="edge-menu-btn" type="button">
+      <span class="edge-icon">ℹ️</span>
+      <span class="edge-label">HAKKIMIZDA</span>
+    </button>
+
+    <button id="edgePrivacyBtn" class="edge-menu-btn" type="button">
+      <span class="edge-icon">🔒</span>
+      <span class="edge-label">GİZLİLİK</span>
+    </button>
+
+    <button id="edgeContactBtn" class="edge-menu-btn" type="button">
+      <span class="edge-icon">✉️</span>
+      <span class="edge-label">İLETİŞİM</span>
+    </button>
+  </aside>
+
   <div id="adModal" class="modal">
     <div class="modal-card">
       <h3 class="modal-title" id="adTitle">Ücretsiz Kullanım</h3>
@@ -674,6 +761,6 @@
 
   <div id="toast" class="toast"></div>
 
-  <script type="module" src="/js/facetoface_public.js?v=PUBLIC_F2F_V3"></script>
+  <script type="module" src="/js/facetoface_public.js?v=PUBLIC_F2F_EDGE_V1"></script>
 </body>
 </html>
