@@ -134,7 +134,6 @@
       backdrop-filter:blur(10px);
       -webkit-backdrop-filter:blur(10px);
       padding:24px;
-      transition:transform .25s ease, border-color .25s ease;
     }
 
     .card-title{
@@ -159,6 +158,14 @@
       color:var(--accent);
       margin-bottom:8px;
       font-weight:900;
+    }
+
+    .field{
+      margin-bottom:14px;
+    }
+
+    .field:last-child{
+      margin-bottom:0;
     }
 
     .input{
@@ -296,16 +303,23 @@
     <div class="page">
       <section class="hero">
         <h1 class="hero-title">Toplantıya Başla</h1>
-        <p class="hero-sub">Yeni bir oda oluştur, kodla katıl ya da kayıtlı toplantılarından birine anında gir.</p>
+        <p class="hero-sub">Yeni bir oda oluştur, kodla katıl ya da başlayacak toplantılarından birine anında gir.</p>
       </section>
 
       <section class="stack">
         <div class="card">
           <h2 class="card-title">Oda Oluştur</h2>
-          <p class="card-sub">Toplantı adını belirle, odayı kur ve yönetici olarak hemen başla.</p>
+          <p class="card-sub">Toplantı adını belirle, başlangıç zamanını seç, odayı kur ve yönetici olarak hemen başla.</p>
 
-          <label class="label" for="roomNameInput">Oda Tanımı</label>
-          <input id="roomNameInput" class="input" type="text" placeholder="Örn: Global İş Toplantısı" maxlength="60"/>
+          <div class="field">
+            <label class="label" for="roomNameInput">Oda Tanımı</label>
+            <input id="roomNameInput" class="input" type="text" placeholder="Örn: Global İş Toplantısı" maxlength="60"/>
+          </div>
+
+          <div class="field">
+            <label class="label" for="meetingAtInput">Toplantı Tarihi ve Saati</label>
+            <input id="meetingAtInput" class="input" type="datetime-local"/>
+          </div>
 
           <button id="createRoomBtn" class="primary-btn" type="button">Odayı Oluştur</button>
 
@@ -321,8 +335,10 @@
           <h2 class="card-title">Odaya Katıl</h2>
           <p class="card-sub">Toplantı odası kodunu girerek doğrudan ilgili toplantıya bağlan.</p>
 
-          <label class="label" for="joinCodeInput">Davet Kodu</label>
-          <input id="joinCodeInput" class="input" type="text" placeholder="Kodu buraya yapıştır" maxlength="24" autocapitalize="characters"/>
+          <div class="field">
+            <label class="label" for="joinCodeInput">Davet Kodu</label>
+            <input id="joinCodeInput" class="input" type="text" placeholder="Kodu buraya yapıştır" maxlength="24" autocapitalize="characters"/>
+          </div>
 
           <div class="row">
             <button id="joinRoomBtn" class="primary-btn" type="button">Koda Katıl</button>
@@ -331,14 +347,14 @@
         </div>
 
         <div class="card">
-          <h2 class="card-title">Kayıtlı Toplantılar</h2>
-          <p class="card-sub">Başlayacak toplantıları tarih ve saat bilgisiyle gör, tek dokunuşla içeri gir.</p>
+          <h2 class="card-title">Başlayacak Toplantılar</h2>
+          <p class="card-sub">Sadece ileri tarihli toplantılar burada görünür.</p>
           <div id="meetingList" class="meeting-list"></div>
         </div>
       </section>
     </div>
   </main>
 
-  <script type="module" src="/js/meeting_lobby.js?v=31"></script>
+  <script type="module" src="/js/meeting_lobby.js?v=32"></script>
 </body>
 </html>
