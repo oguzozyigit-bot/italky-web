@@ -1,111 +1,323 @@
-<!-- /pages/facetoface_public.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
-  <title>italkyAI • FaceToFace Public</title>
+  <title>italkyAI • FaceToFace</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
 
   <style>
-    :root{--ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);--bg:#050508;--border:rgba(255,255,255,.15);--safe-bottom:env(safe-area-inset-bottom,0px)}
+    :root{
+      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      --bg:#050508;
+      --border:rgba(255,255,255,.15);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
     html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:Outfit,Arial,sans-serif}
-    body{background:radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),#050508}
+
+    body{
+      background:
+        radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),
+        radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),
+        #050508;
+    }
+
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-    .half-screen{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:center;overflow:hidden;padding:10px 8px}
-    .half-screen.top{transform:rotate(180deg);background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg))}
-    .half-screen.bottom{background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg));padding-bottom:calc(10px + var(--safe-bottom))}
+
+    .half-screen{
+      flex:1;min-height:0;position:relative;display:flex;flex-direction:column;
+      justify-content:space-between;align-items:center;overflow:hidden;padding:10px 8px;
+    }
+
+    .half-screen.top{
+      transform:rotate(180deg);
+      background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg));
+    }
+
+    .half-screen.bottom{
+      background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg));
+      padding-bottom:calc(10px + var(--safe-bottom));
+    }
+
     .lang-row{width:100%;display:flex;align-items:center;justify-content:center;z-index:20}
-    .lang-trigger{min-height:38px;border:none;border-radius:999px;background:transparent;color:#fff;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:82vw;padding:8px 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-    .popover{position:absolute;left:50%;transform:translateX(-50%);width:min(92vw,360px);height:360px;background:#0a0a0f;border:1px solid var(--border);border-radius:24px;display:none;flex-direction:column;z-index:100;overflow:hidden;box-shadow:0 22px 60px rgba(0,0,0,.92)}
-    .popover.show{display:flex}.half-screen.top .popover{top:58px}.half-screen.bottom .popover{bottom:58px}
-    .pop-head{padding:14px;border-bottom:1px solid rgba(255,255,255,.10);display:flex;justify-content:space-between;align-items:center;font-weight:900}
-    .pop-close{cursor:pointer;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
-    .pop-list{flex:1;overflow-y:auto;padding:10px;scrollbar-width:none}.pop-list::-webkit-scrollbar{display:none}
-    .pop-item{padding:12px;border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;border:1px solid transparent}
+
+    .lang-trigger{
+      min-height:38px;border:none;border-radius:999px;background:transparent;color:#fff;
+      font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;max-width:82vw;padding:8px 14px;display:inline-flex;
+      align-items:center;justify-content:center;gap:8px;
+    }
+
+    .popover{
+      position:absolute;left:50%;transform:translateX(-50%);width:min(92vw,360px);height:360px;
+      background:#0a0a0f;border:1px solid var(--border);border-radius:24px;display:none;
+      flex-direction:column;z-index:100;overflow:hidden;box-shadow:0 22px 60px rgba(0,0,0,.92);
+    }
+
+    .popover.show{display:flex}
+    .half-screen.top .popover{top:58px}
+    .half-screen.bottom .popover{bottom:58px}
+
+    .pop-head{
+      padding:14px;border-bottom:1px solid rgba(255,255,255,.10);
+      display:flex;justify-content:space-between;align-items:center;font-weight:900;
+    }
+
+    .pop-close{
+      cursor:pointer;padding:8px 12px;border-radius:12px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    }
+
+    .pop-list{flex:1;overflow-y:auto;padding:10px;scrollbar-width:none}
+    .pop-list::-webkit-scrollbar{display:none}
+
+    .pop-item{
+      padding:12px;border-radius:16px;display:flex;align-items:center;
+      justify-content:space-between;gap:12px;cursor:pointer;border:1px solid transparent;
+    }
+
     .pop-item.active{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.25)}
-    .pop-left{display:flex;align-items:center;gap:10px;min-width:0}.pop-flag{font-size:18px}
-    .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pop-code{font-size:12px;font-weight:900;opacity:.7}
-    .chat-body{flex:1;width:100%;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:14px;padding:14px 0 22px;text-align:center;scrollbar-width:none;mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent)}
+    .pop-left{display:flex;align-items:center;gap:10px;min-width:0}
+    .pop-flag{font-size:18px}
+    .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pop-code{font-size:12px;font-weight:900;opacity:.7}
+
+    .chat-body{
+      flex:1;width:100%;min-height:0;overflow-y:auto;display:flex;flex-direction:column;
+      align-items:center;justify-content:flex-end;gap:14px;padding:14px 0 22px;
+      text-align:center;scrollbar-width:none;
+      mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
+    }
+
     .chat-body::-webkit-scrollbar{display:none}
-    .bubble{max-width:86%;line-height:1.18;word-break:break-word;font-size:24px;font-weight:900;opacity:.9}
+
+    .bubble{
+      max-width:86%;line-height:1.18;word-break:break-word;
+      font-size:24px;font-weight:900;opacity:.9;
+    }
+
     .bubble.latest{font-size:32px;font-weight:1000;opacity:1}
-    .mic-line{width:100%;display:grid;grid-template-columns:1fr 70px 1fr;align-items:end;gap:12px;padding:0 8px 4px;flex:0 0 auto}
+
+    .mic-line{
+      width:100%;display:grid;grid-template-columns:1fr 70px 1fr;
+      align-items:end;gap:12px;padding:0 8px 4px;flex:0 0 auto;
+    }
+
     .mic-side{min-height:70px;display:flex;align-items:flex-end;justify-content:center}
-    .privacy-link{color:rgba(255,255,255,.74);font-size:12px;font-weight:900;text-decoration:none;padding-bottom:8px}
-    .privacy-link:active{opacity:.7}
-    .mic-placeholder{min-height:1px;opacity:0;pointer-events:none}
-    .mic-btn{width:70px;height:70px;border:none;border-radius:999px;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);position:relative}
+
+    .privacy-link{
+      color:rgba(255,255,255,.74);font-size:12px;font-weight:900;
+      text-decoration:none;padding-bottom:8px;
+    }
+
+    .mic-btn{
+      width:70px;height:70px;border:none;border-radius:999px;
+      background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;
+      justify-content:center;cursor:pointer;box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
+      position:relative;
+    }
+
     .mic-btn svg{width:30px;height:30px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-    .mic-btn.listening{background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);animation:micBreath 1.05s ease-in-out infinite}
-    .mic-btn.listening::after{content:"";position:absolute;inset:-13px;border-radius:50%;border:2px solid rgba(165,180,252,.78);box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35);animation:micPulse 1s ease-out infinite}
-    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}@keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
-    .center-hub{height:82px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;position:relative;background:rgba(0,0,0,.58);backdrop-filter:blur(16px);z-index:50;border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05)}
-    .center-action{position:absolute;min-height:46px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.075);color:#fff;font-family:inherit;font-size:13px;font-weight:1000;cursor:pointer;padding:0 20px;display:flex;align-items:center;justify-content:center;text-decoration:none;backdrop-filter:blur(10px)}
-    .center-login{left:14px}.center-clear{right:14px}
-    .orb{width:66px;height:66px;border-radius:50%;background:#000;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:900;position:relative;overflow:visible}
-    .orb-main{position:relative;z-index:3}.orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .sat{position:absolute;left:50%;top:50%;width:10px;height:10px;margin-left:-5px;margin-top:-5px;border-radius:50%;z-index:1;filter:blur(1.5px)}
-    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}.sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
-    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}@keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
-    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);max-width:min(92vw,430px);min-height:44px;padding:11px 16px;border-radius:16px;background:rgba(12,16,28,.96);border:1px solid rgba(255,255,255,.10);color:#fff;font-size:12px;font-weight:1000;display:flex;align-items:center;justify-content:center;text-align:center;z-index:9999;box-shadow:0 18px 36px rgba(0,0,0,.35);transition:.22s ease;pointer-events:none}
+
+    .mic-btn.listening{
+      background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
+      box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
+      animation:micBreath 1.05s ease-in-out infinite;
+    }
+
+    .mic-btn.listening::after{
+      content:"";position:absolute;inset:-13px;border-radius:50%;
+      border:2px solid rgba(165,180,252,.78);
+      box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35);
+      animation:micPulse 1s ease-out infinite;
+    }
+
+    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+    @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
+
+    .center-hub{
+      height:82px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+      position:relative;background:rgba(0,0,0,.58);backdrop-filter:blur(16px);z-index:50;
+      border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);
+    }
+
+    .center-action{
+      position:absolute;border:none;background:transparent;color:#fff;font-family:inherit;
+      font-size:15px;font-weight:1000;cursor:pointer;padding:10px 12px;
+      display:flex;align-items:center;justify-content:center;text-decoration:none;
+      text-shadow:0 0 16px rgba(255,255,255,.18);
+    }
+
+    .center-login{left:12px}
+    .center-clear{right:12px}
+
+    .orb{
+      width:66px;height:66px;border-radius:50%;background:#000;border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk",sans-serif;
+      font-size:13px;font-weight:900;position:relative;overflow:visible;
+    }
+
+    .orb-main{position:relative;z-index:3}
+    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+    .sat{
+      position:absolute;left:50%;top:50%;width:10px;height:10px;margin-left:-5px;margin-top:-5px;
+      border-radius:50%;z-index:1;filter:blur(1.5px);
+    }
+
+    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
+    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
+
+    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
+    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
+
+    .modal{
+      position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+      display:none;align-items:center;justify-content:center;z-index:9998;padding:20px;
+    }
+
+    .modal.show{display:flex}
+
+    .modal-card{
+      width:min(100%,420px);border-radius:24px;padding:18px;
+      background:linear-gradient(145deg,rgba(16,16,24,.97),rgba(10,10,18,.97));
+      border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 50px rgba(0,0,0,.30);
+    }
+
+    .modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}
+    .modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76)}
+    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+
+    .modal-btn{
+      min-height:46px;border:none;border-radius:16px;cursor:pointer;
+      font-family:inherit;font-size:13px;font-weight:900;
+    }
+
+    .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
+    .modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
+
+    .toast{
+      position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);
+      max-width:min(92vw,430px);min-height:44px;padding:11px 16px;border-radius:16px;
+      background:rgba(12,16,28,.96);border:1px solid rgba(255,255,255,.10);color:#fff;
+      font-size:12px;font-weight:1000;display:flex;align-items:center;justify-content:center;text-align:center;
+      z-index:9999;box-shadow:0 18px 36px rgba(0,0,0,.35);transition:.22s ease;pointer-events:none;
+    }
+
     .toast.show{transform:translateX(-50%) translateY(0)}
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:9998;padding:20px}
-    .modal.show{display:flex}.modal-card{width:min(100%,420px);border-radius:24px;padding:18px;background:linear-gradient(145deg,rgba(16,16,24,.97),rgba(10,10,18,.97));border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 50px rgba(0,0,0,.30)}
-    .modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}.modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76)}
-    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.modal-btn{min-height:46px;border:none;border-radius:16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:900}
-    .modal-btn.primary{background:var(--ai-gradient);color:#05060d}.modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
-    @media(max-width:390px){.mic-line{grid-template-columns:1fr 66px 1fr}.mic-btn{width:66px;height:66px}.mic-btn svg{width:28px;height:28px}.bubble{font-size:22px}.bubble.latest{font-size:30px}.center-action{font-size:12px;padding:0 16px}}
+
+    @media(max-width:390px){
+      .mic-line{grid-template-columns:1fr 66px 1fr}
+      .mic-btn{width:66px;height:66px}
+      .mic-btn svg{width:28px;height:28px}
+      .bubble{font-size:22px}
+      .bubble.latest{font-size:30px}
+      .center-action{font-size:14px;padding:10px 8px}
+    }
   </style>
 </head>
 
 <body>
   <main class="container">
     <section class="half-screen top" id="topSection">
-      <div class="lang-row"><button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button></div>
+      <div class="lang-row">
+        <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
+      </div>
+
       <div class="popover" id="pop-top">
-        <div class="pop-head"><div id="topPopTitle">ÜST DİL</div><div class="pop-close" id="close-top">✕</div></div>
+        <div class="pop-head">
+          <div id="topPopTitle">ÜST DİL</div>
+          <div class="pop-close" id="close-top">✕</div>
+        </div>
         <div class="pop-list" id="list-top"></div>
       </div>
+
       <div class="chat-body" id="topBody"></div>
+
       <div class="mic-line">
         <div class="mic-side"></div>
         <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
-          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+            <path d="M19 10a7 7 0 0 1-14 0"></path>
+            <path d="M12 17v4"></path>
+            <path d="M8 21h8"></path>
+          </svg>
         </button>
         <div class="mic-side"></div>
       </div>
     </section>
 
     <section class="center-hub">
-      <a id="centerLoginBtn" class="center-action center-login" href="/pages/login.html?provider=google&next=/pages/home.html">Giriş Yap</a>
-      <div class="orb"><span class="sat sat1"></span><span class="sat sat2"></span><span class="orb-main">italky<span class="ai">AI</span></span></div>
+      <button id="centerLoginBtn" class="center-action center-login" type="button">Giriş Yap</button>
+
+      <div class="orb">
+        <span class="sat sat1"></span>
+        <span class="sat sat2"></span>
+        <span class="orb-main">italky<span class="ai">AI</span></span>
+      </div>
+
       <button id="centerClearBtn" class="center-action center-clear" type="button">Temizle</button>
     </section>
 
     <section class="half-screen bottom" id="botSection">
-      <div class="lang-row"><button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button></div>
+      <div class="lang-row">
+        <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
+      </div>
+
       <div class="popover" id="pop-bot">
-        <div class="pop-head"><div id="botPopTitle">ALT DİL</div><div class="pop-close" id="close-bot">✕</div></div>
+        <div class="pop-head">
+          <div id="botPopTitle">ALT DİL</div>
+          <div class="pop-close" id="close-bot">✕</div>
+        </div>
         <div class="pop-list" id="list-bot"></div>
       </div>
+
       <div class="chat-body" id="botBody"></div>
+
       <div class="mic-line">
-        <div class="mic-side"><a id="privacyLink" class="privacy-link" href="/pages/privacy.html">Gizlilik</a></div>
+        <div class="mic-side">
+          <a id="privacyLink" class="privacy-link" href="/pages/privacy.html">Gizlilik</a>
+        </div>
+
         <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
-          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+            <path d="M19 10a7 7 0 0 1-14 0"></path>
+            <path d="M12 17v4"></path>
+            <path d="M8 21h8"></path>
+          </svg>
         </button>
+
         <div class="mic-side"></div>
       </div>
     </section>
   </main>
 
+  <div id="loginOfferModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="loginOfferTitle">Daha Fazlası İçin Giriş Yap</h3>
+      <p class="modal-text" id="loginOfferText">
+        Daha fazla özellik ve offline diller için giriş yapmalısınız.
+      </p>
+      <div class="modal-actions">
+        <button id="loginOfferGo" class="modal-btn primary" type="button">Giriş Yap</button>
+        <button id="loginOfferSkip" class="modal-btn secondary" type="button">Giriş yapmadan devam et</button>
+      </div>
+    </div>
+  </div>
+
   <div id="adModal" class="modal">
     <div class="modal-card">
       <h3 class="modal-title" id="adTitle">Ücretsiz Kullanım</h3>
-      <p class="modal-text" id="adText">FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.</p>
+      <p class="modal-text" id="adText">
+        FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.
+      </p>
       <div class="modal-actions">
         <button id="watchAdBtn" class="modal-btn primary" type="button">Reklam İzle</button>
         <button id="closeAdBtn" class="modal-btn secondary" type="button">Şimdilik Kapat</button>
@@ -117,61 +329,640 @@
 
   <script type="module">
     import { getLangPoolForSite } from "/js/lang_pool_full.js";
+    import { supabase } from "/js/supabase_client.js";
+    import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-    const API_BASE="https://italky-api.onrender.com";
-    const $=(id)=>document.getElementById(id);
-    const BCP={tr:"tr-TR",en:"en-US",de:"de-DE",fr:"fr-FR",it:"it-IT",es:"es-ES",ar:"ar-SA",ru:"ru-RU",bg:"bg-BG",pt:"pt-PT",zh:"zh-CN",ja:"ja-JP",ko:"ko-KR"};
-    const UI={
-      tr:{login:"Giriş Yap",clear:"Temizle",privacy:"Gizlilik",topLang:"ÜST DİL",botLang:"ALT DİL",adTitle:"Ücretsiz Kullanım",adText:"FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.",watchAd:"Reklam İzle",close:"Şimdilik Kapat",micError:"Mikrofon hatası.",micDenied:"Mikrofon izni gerekli.",micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",translateError:"Çeviri yapılamadı"},
-      en:{login:"Login",clear:"Clear",privacy:"Privacy",topLang:"TOP LANGUAGE",botLang:"BOTTOM LANGUAGE",adTitle:"Free Use",adText:"FaceToFace free use includes ads. Watch the ad to continue translating.",watchAd:"Watch Ad",close:"Close",micError:"Microphone error.",micDenied:"Microphone permission is required.",micUnsupported:"Speech recognition is not supported on this device.",translateError:"Translation failed"},
-      de:{login:"Anmelden",clear:"Löschen",privacy:"Datenschutz",topLang:"OBERE SPRACHE",botLang:"UNTERE SPRACHE",adTitle:"Kostenlose Nutzung",adText:"FaceToFace enthält in der kostenlosen Nutzung Werbung.",watchAd:"Werbung ansehen",close:"Schließen",micError:"Mikrofonfehler.",micDenied:"Mikrofonberechtigung erforderlich.",micUnsupported:"Spracherkennung wird nicht unterstützt.",translateError:"Übersetzung fehlgeschlagen"},
-      fr:{login:"Connexion",clear:"Effacer",privacy:"Confidentialité",topLang:"LANGUE DU HAUT",botLang:"LANGUE DU BAS",adTitle:"Utilisation gratuite",adText:"FaceToFace gratuit contient des publicités.",watchAd:"Voir la pub",close:"Fermer",micError:"Erreur microphone.",micDenied:"Autorisation microphone requise.",micUnsupported:"Reconnaissance vocale non prise en charge.",translateError:"Échec de traduction"},
-      es:{login:"Iniciar sesión",clear:"Limpiar",privacy:"Privacidad",topLang:"IDIOMA SUPERIOR",botLang:"IDIOMA INFERIOR",adTitle:"Uso gratuito",adText:"FaceToFace gratuito incluye anuncios.",watchAd:"Ver anuncio",close:"Cerrar",micError:"Error de micrófono.",micDenied:"Se requiere permiso de micrófono.",micUnsupported:"Reconocimiento de voz no compatible.",translateError:"Error de traducción"}
+    const API_BASE = "https://italky-api.onrender.com";
+    const $ = (id) => document.getElementById(id);
+
+    const HOME = "/pages/home.html";
+
+    const BCP = {
+      tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
+      ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
     };
-    const COUNTRY_LANG={TR:"tr",CY:"tr",US:"en",GB:"en",IE:"en",AU:"en",CA:"en",NZ:"en",DE:"de",AT:"de",CH:"de",FR:"fr",BE:"fr",ES:"es",MX:"es",AR:"es",CO:"es",CL:"es",PE:"es",IT:"it",RU:"ru",BG:"bg",PT:"pt",BR:"pt",CN:"zh",JP:"ja",KR:"ko",SA:"ar",AE:"ar",EG:"ar"};
 
-    function canonical(code){return String(code||"").toLowerCase().split("-")[0].trim()}
-    function getInitialSiteLang(){return canonical(localStorage.getItem("site_lang")||localStorage.getItem("italky_site_lang_v1")||navigator.language||"tr")||"tr"}
-    const RAW_LANG_POOL=Array.isArray(getLangPoolForSite(getInitialSiteLang()))?getLangPoolForSite(getInitialSiteLang()):[];
-    const LANGS=RAW_LANG_POOL.map((l)=>{const code=canonical(l.code);if(!code)return null;return{code,flag:l.flag||"🌐",name:l.name||l.tr_name||code.toUpperCase(),bcp:BCP[code]||`${code}-${String(code).toUpperCase()}`}}).filter(Boolean);
-    function langExists(code){return !!LANGS.find((x)=>x.code===canonical(code))}
-    function langObj(code){const c=canonical(code);return LANGS.find((x)=>x.code===c)||{code:c||"en",flag:"🌐",name:(c||"en").toUpperCase(),bcp:BCP[c]||"en-US"}}
-    function labelChip(code){const o=langObj(code);return `${o.flag} ${o.name}`}
-    function differentLang(base){const b=canonical(base);const preferred=b==="tr"?["en","de","fr","es","it","ar","ru"]:["tr","en","de","fr","es","it","ar","ru"];for(const c of preferred)if(c!==b&&langExists(c))return c;return LANGS.find((l)=>l.code!==b)?.code||"en"}
+    const UI = {
+      tr:{
+        login:"Giriş Yap", clear:"Temizle", privacy:"Gizlilik",
+        topLang:"ÜST DİL", botLang:"ALT DİL",
+        adTitle:"Ücretsiz Kullanım",
+        adText:"FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.",
+        watchAd:"Reklam İzle", close:"Şimdilik Kapat",
+        loginOfferTitle:"Daha Fazlası İçin Giriş Yap",
+        loginOfferText:"Daha fazla özellik ve offline diller için giriş yapmalısınız.",
+        loginOfferGo:"Giriş Yap",
+        loginOfferSkip:"Giriş yapmadan devam et",
+        toastStarting:"Güvenli giriş başlatılıyor…",
+        toastLoginFailed:"Giriş başlatılamadı",
+        micError:"Mikrofon hatası.",
+        micDenied:"Mikrofon izni gerekli.",
+        micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
+        translateError:"Çeviri yapılamadı"
+      },
+      en:{
+        login:"Login", clear:"Clear", privacy:"Privacy",
+        topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE",
+        adTitle:"Free Use",
+        adText:"FaceToFace free use includes ads. Watch the ad to continue translating.",
+        watchAd:"Watch Ad", close:"Close",
+        loginOfferTitle:"Sign In For More",
+        loginOfferText:"Please sign in for more features and offline languages.",
+        loginOfferGo:"Login",
+        loginOfferSkip:"Continue without login",
+        toastStarting:"Secure sign-in is starting…",
+        toastLoginFailed:"Could not start sign-in",
+        micError:"Microphone error.",
+        micDenied:"Microphone permission is required.",
+        micUnsupported:"Speech recognition is not supported on this device.",
+        translateError:"Translation failed"
+      }
+    };
 
-    let botLang=langExists("tr")?"tr":(LANGS[0]?.code||"tr");
-    let topLang=langExists("en")&&botLang!=="en"?"en":differentLang(botLang);
+    function canonical(code){
+      return String(code || "").toLowerCase().split("-")[0].trim();
+    }
 
-    const topBody=$("topBody"),botBody=$("botBody"),topMic=$("topMic"),botMic=$("botMic"),topLangBtn=$("topLangBtn"),botLangBtn=$("botLangBtn"),popTop=$("pop-top"),popBot=$("pop-bot"),listTop=$("list-top"),listBot=$("list-bot"),closeTop=$("close-top"),closeBot=$("close-bot"),topPopTitle=$("topPopTitle"),botPopTitle=$("botPopTitle"),centerLoginBtn=$("centerLoginBtn"),centerClearBtn=$("centerClearBtn"),privacyLink=$("privacyLink"),adModal=$("adModal"),adTitle=$("adTitle"),adText=$("adText"),watchAdBtn=$("watchAdBtn"),closeAdBtn=$("closeAdBtn"),toast=$("toast");
+    function getInitialSiteLang(){
+      return canonical(
+        localStorage.getItem("site_lang") ||
+        localStorage.getItem("italky_site_lang_v1") ||
+        navigator.language ||
+        "tr"
+      ) || "tr";
+    }
 
-    let recognizer=null,liveText="",sessionStart=Date.now(),lastAdAt=0;
+    const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(getInitialSiteLang()))
+      ? getLangPoolForSite(getInitialSiteLang())
+      : [];
 
-    function tx(key){const c=UI[botLang]?botLang:"en";return UI[c]?.[key]||UI.en[key]||key}
-    function showToast(msg){if(!toast)return;toast.textContent=String(msg||"");toast.classList.add("show");clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>toast.classList.remove("show"),2600)}
-    function refreshTexts(){topLangBtn.textContent=`${labelChip(topLang)} ⌵`;botLangBtn.textContent=`${labelChip(botLang)} ⌵`;topPopTitle.textContent=tx("topLang");botPopTitle.textContent=tx("botLang");centerLoginBtn.textContent=tx("login");centerClearBtn.textContent=tx("clear");privacyLink.textContent=tx("privacy");adTitle.textContent=tx("adTitle");adText.textContent=tx("adText");watchAdBtn.textContent=tx("watchAd");closeAdBtn.textContent=tx("close")}
-    function closeAllPop(){popTop.classList.remove("show");popBot.classList.remove("show")}
-    function renderPop(side){const list=side==="top"?listTop:listBot;const selected=side==="top"?topLang:botLang;list.innerHTML=LANGS.map((l)=>`<div class="pop-item ${l.code===selected?"active":""}" data-code="${l.code}"><div class="pop-left"><div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div></div><div class="pop-code">${l.code.toUpperCase()}</div></div>`).join("");list.querySelectorAll(".pop-item").forEach((el)=>el.addEventListener("click",()=>{const code=canonical(el.dataset.code);if(side==="top"){topLang=code;if(topLang===botLang)botLang=differentLang(topLang)}else{botLang=code;if(botLang===topLang)topLang=differentLang(botLang)}closeAllPop();refreshTexts()}))}
-    topLangBtn.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();closeAllPop();renderPop("top");popTop.classList.add("show")});
-    botLangBtn.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();closeAllPop();renderPop("bot");popBot.classList.add("show")});
-    closeTop.addEventListener("click",closeAllPop);closeBot.addEventListener("click",closeAllPop);
-    document.addEventListener("click",(e)=>{const inside=popTop.contains(e.target)||popBot.contains(e.target)||e.target.closest("#topLangBtn,#botLangBtn");if(!inside)closeAllPop()},{capture:true});
+    const LANGS = RAW_LANG_POOL
+      .map((l) => {
+        const code = canonical(l.code);
+        if(!code) return null;
+        return {
+          code,
+          flag:l.flag || "🌐",
+          name:l.name || l.tr_name || code.toUpperCase(),
+          bcp:BCP[code] || `${code}-${String(code).toUpperCase()}`
+        };
+      })
+      .filter(Boolean);
 
-    function clearBody(body){if(body)body.innerHTML=""}
-    function addBubble(side,text,latest=false){const body=side==="top"?topBody:botBody;if(!body)return null;if(latest)body.querySelectorAll(".bubble.latest").forEach((x)=>x.classList.remove("latest"));const div=document.createElement("div");div.className=`bubble${latest?" latest":""}`;div.textContent=String(text||"").trim();body.appendChild(div);const scroll=()=>{try{body.scrollTop=body.scrollHeight}catch{}};scroll();requestAnimationFrame(scroll);setTimeout(scroll,60);return div}
-    function setMicState(side,listening){const mic=side==="top"?topMic:botMic;mic.classList.toggle("listening",!!listening)}
-    function buildRecognizer(langCode){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;const rec=new SR();rec.lang=langObj(langCode).bcp;rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;return rec}
-    function stopRecognizer(){try{recognizer?.stop?.()}catch{}}
-    function cleanupTranscript(text){return String(text||"").replace(/\s+/g," ").replace(/\b(\S+)( \1\b)+/gi,"$1").trim()}
-    async function maybeShowAd(){const now=Date.now();if(now-sessionStart<5*60*1000)return true;if(lastAdAt&&now-lastAdAt<5*60*1000)return true;return new Promise((resolve)=>{if(!adModal){lastAdAt=Date.now();resolve(true);return}refreshTexts();adModal.classList.add("show");const clean=()=>{watchAdBtn.onclick=null;closeAdBtn.onclick=null;adModal.classList.remove("show")};watchAdBtn.onclick=()=>{try{if(window.AndroidAdBridge?.showRewardedAd)window.AndroidAdBridge.showRewardedAd("public_facetoface_5min");else if(window.NativeAds?.showRewardedAd)window.NativeAds.showRewardedAd("public_facetoface_5min");else if(window.AdMobBridge?.showRewardedAd)window.AdMobBridge.showRewardedAd("public_facetoface_5min")}catch{}lastAdAt=Date.now();clean();resolve(true)};closeAdBtn.onclick=()=>{clean();resolve(false)}})}
-    async function translateOnline(text,from,to){const endpoints=[`${API_BASE}/api/translate_ai`,`${API_BASE}/api/translate-ai`,`${API_BASE}/api/translate`];for(const endpoint of endpoints){try{const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(text||"").trim(),from_lang:canonical(from),to_lang:canonical(to),source:canonical(from),target:canonical(to),mode:"normal",use_ai:false,cultural:false,tone:"neutral",style:"warm"})});const j=await r.json().catch(()=>null);const value=String(j?.translated||j?.translation||j?.text||"").trim();if(r.ok&&value)return value}catch{}}return null}
-    function speak(text,langCode){const value=String(text||"").trim();if(!value)return;try{window.speechSynthesis?.cancel?.();if(window.NativeTTS?.speak){window.NativeTTS.speak(value,canonical(langCode));return}const u=new SpeechSynthesisUtterance(value);u.lang=langObj(langCode).bcp;u.rate=.95;speechSynthesis.speak(u)}catch{}}
-    async function finalizeSpeech(side,text){const clean=cleanupTranscript(text);if(!clean)return;const adOk=await maybeShowAd();if(!adOk)return;const src=side==="top"?topLang:botLang;const dst=side==="top"?botLang:topLang;const other=side==="top"?"bot":"top";addBubble(side,clean,false);const targetRow=addBubble(other,"",true);const translated=await translateOnline(clean,src,dst);if(!translated){if(targetRow)targetRow.textContent=tx("translateError");return}targetRow.textContent=translated;speak(translated,dst)}
-    function startRecording(side){if(recognizer){stopRecognizer();return}const sourceLang=side==="top"?topLang:botLang;const rec=buildRecognizer(sourceLang);if(!rec){showToast(tx("micUnsupported"));return}recognizer=rec;liveText="";rec.onstart=()=>setMicState(side,true);rec.onresult=(e)=>{let finalText="",interimText="";for(let i=0;i<e.results.length;i++){const txt=String(e.results[i]?.[0]?.transcript||"").trim();if(!txt)continue;if(e.results[i].isFinal)finalText+=` ${txt}`;else interimText+=` ${txt}`}liveText=cleanupTranscript(finalText||interimText||liveText)};rec.onerror=(e)=>{const err=String(e?.error||"");showToast(err.includes("not-allowed")?tx("micDenied"):tx("micError"));setMicState(side,false);recognizer=null;liveText=""};rec.onend=()=>{const finalText=cleanupTranscript(liveText);setMicState(side,false);recognizer=null;liveText="";if(finalText)finalizeSpeech(side,finalText)};try{rec.start()}catch{showToast(tx("micError"));setMicState(side,false);recognizer=null;liveText=""}}
-    topMic.addEventListener("click",()=>startRecording("top"));botMic.addEventListener("click",()=>startRecording("bot"));
-    function clearChat(){stopRecognizer();try{window.speechSynthesis?.cancel?.()}catch{}try{window.NativeTTS?.stop?.()}catch{}recognizer=null;liveText="";topMic.classList.remove("listening");botMic.classList.remove("listening");clearBody(topBody);clearBody(botBody)}
+    function langExists(code){
+      return !!LANGS.find((x) => x.code === canonical(code));
+    }
+
+    function langObj(code){
+      const c = canonical(code);
+      return LANGS.find((x) => x.code === c) || {
+        code:c || "en",
+        flag:"🌐",
+        name:(c || "en").toUpperCase(),
+        bcp:BCP[c] || "en-US"
+      };
+    }
+
+    function labelChip(code){
+      const o = langObj(code);
+      return `${o.flag} ${o.name}`;
+    }
+
+    function differentLang(base){
+      const b = canonical(base);
+      const preferred = b === "tr"
+        ? ["en","de","fr","es","it","ar","ru"]
+        : ["tr","en","de","fr","es","it","ar","ru"];
+
+      for(const c of preferred){
+        if(c !== b && langExists(c)) return c;
+      }
+
+      return LANGS.find((l) => l.code !== b)?.code || "en";
+    }
+
+    let botLang = langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
+    let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+
+    const topBody = $("topBody");
+    const botBody = $("botBody");
+    const topMic = $("topMic");
+    const botMic = $("botMic");
+    const topLangBtn = $("topLangBtn");
+    const botLangBtn = $("botLangBtn");
+    const popTop = $("pop-top");
+    const popBot = $("pop-bot");
+    const listTop = $("list-top");
+    const listBot = $("list-bot");
+    const closeTop = $("close-top");
+    const closeBot = $("close-bot");
+    const topPopTitle = $("topPopTitle");
+    const botPopTitle = $("botPopTitle");
+    const centerLoginBtn = $("centerLoginBtn");
+    const centerClearBtn = $("centerClearBtn");
+    const privacyLink = $("privacyLink");
+
+    const loginOfferModal = $("loginOfferModal");
+    const loginOfferTitle = $("loginOfferTitle");
+    const loginOfferText = $("loginOfferText");
+    const loginOfferGo = $("loginOfferGo");
+    const loginOfferSkip = $("loginOfferSkip");
+
+    const adModal = $("adModal");
+    const adTitle = $("adTitle");
+    const adText = $("adText");
+    const watchAdBtn = $("watchAdBtn");
+    const closeAdBtn = $("closeAdBtn");
+    const toast = $("toast");
+
+    let recognizer = null;
+    let liveText = "";
+    let sessionStart = Date.now();
+    let lastAdAt = 0;
+
+    function tx(key){
+      const c = UI[botLang] ? botLang : "en";
+      return UI[c]?.[key] || UI.en[key] || key;
+    }
+
+    function showToast(msg){
+      if(!toast) return;
+      toast.textContent = String(msg || "");
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
+    }
+
+    function refreshTexts(){
+      topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
+      botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
+      topPopTitle.textContent = tx("topLang");
+      botPopTitle.textContent = tx("botLang");
+
+      centerLoginBtn.textContent = tx("login");
+      centerClearBtn.textContent = tx("clear");
+      privacyLink.textContent = tx("privacy");
+
+      adTitle.textContent = tx("adTitle");
+      adText.textContent = tx("adText");
+      watchAdBtn.textContent = tx("watchAd");
+      closeAdBtn.textContent = tx("close");
+
+      loginOfferTitle.textContent = tx("loginOfferTitle");
+      loginOfferText.textContent = tx("loginOfferText");
+      loginOfferGo.textContent = tx("loginOfferGo");
+      loginOfferSkip.textContent = tx("loginOfferSkip");
+    }
+
+    function closeAllPop(){
+      popTop.classList.remove("show");
+      popBot.classList.remove("show");
+    }
+
+    function renderPop(side){
+      const list = side === "top" ? listTop : listBot;
+      const selected = side === "top" ? topLang : botLang;
+
+      list.innerHTML = LANGS.map((l) => `
+        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+          <div class="pop-left">
+            <div class="pop-flag">${l.flag}</div>
+            <div class="pop-name">${l.name}</div>
+          </div>
+          <div class="pop-code">${l.code.toUpperCase()}</div>
+        </div>
+      `).join("");
+
+      list.querySelectorAll(".pop-item").forEach((el) => {
+        el.addEventListener("click",() => {
+          const code = canonical(el.dataset.code);
+
+          if(side === "top"){
+            topLang = code;
+            if(topLang === botLang) botLang = differentLang(topLang);
+          }else{
+            botLang = code;
+            if(botLang === topLang) topLang = differentLang(botLang);
+          }
+
+          closeAllPop();
+          refreshTexts();
+        });
+      });
+    }
+
+    topLangBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      renderPop("top");
+      popTop.classList.add("show");
+    });
+
+    botLangBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      renderPop("bot");
+      popBot.classList.add("show");
+    });
+
+    closeTop.addEventListener("click",closeAllPop);
+    closeBot.addEventListener("click",closeAllPop);
+
+    document.addEventListener("click",(e) => {
+      const inside =
+        popTop.contains(e.target) ||
+        popBot.contains(e.target) ||
+        e.target.closest("#topLangBtn,#botLangBtn");
+
+      if(!inside) closeAllPop();
+    },{capture:true});
+
+    function clearBody(body){
+      if(body) body.innerHTML = "";
+    }
+
+    function addBubble(side,text,latest=false){
+      const body = side === "top" ? topBody : botBody;
+      if(!body) return null;
+
+      if(latest){
+        body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
+      }
+
+      const div = document.createElement("div");
+      div.className = `bubble${latest ? " latest" : ""}`;
+      div.textContent = String(text || "").trim();
+
+      body.appendChild(div);
+
+      const scroll = () => {
+        try{ body.scrollTop = body.scrollHeight; }catch{}
+      };
+
+      scroll();
+      requestAnimationFrame(scroll);
+      setTimeout(scroll,60);
+
+      return div;
+    }
+
+    function setMicState(side,listening){
+      const mic = side === "top" ? topMic : botMic;
+      mic.classList.toggle("listening",!!listening);
+    }
+
+    function buildRecognizer(langCode){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR) return null;
+
+      const rec = new SR();
+      rec.lang = langObj(langCode).bcp;
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.maxAlternatives = 1;
+      return rec;
+    }
+
+    function stopRecognizer(){
+      try{ recognizer?.stop?.(); }catch{}
+    }
+
+    function cleanupTranscript(text){
+      return String(text || "")
+        .replace(/\s+/g," ")
+        .replace(/\b(\S+)( \1\b)+/gi,"$1")
+        .trim();
+    }
+
+    async function maybeShowAd(){
+      const now = Date.now();
+
+      if(now - sessionStart < 5 * 60 * 1000) return true;
+      if(lastAdAt && now - lastAdAt < 5 * 60 * 1000) return true;
+
+      return new Promise((resolve) => {
+        refreshTexts();
+        adModal.classList.add("show");
+
+        const clean = () => {
+          watchAdBtn.onclick = null;
+          closeAdBtn.onclick = null;
+          adModal.classList.remove("show");
+        };
+
+        watchAdBtn.onclick = () => {
+          try{
+            if(window.AndroidAdBridge?.showRewardedAd){
+              window.AndroidAdBridge.showRewardedAd("public_facetoface_5min");
+            }else if(window.NativeAds?.showRewardedAd){
+              window.NativeAds.showRewardedAd("public_facetoface_5min");
+            }else if(window.AdMobBridge?.showRewardedAd){
+              window.AdMobBridge.showRewardedAd("public_facetoface_5min");
+            }
+          }catch{}
+
+          lastAdAt = Date.now();
+          clean();
+          resolve(true);
+        };
+
+        closeAdBtn.onclick = () => {
+          clean();
+          resolve(false);
+        };
+      });
+    }
+
+    async function translateOnline(text,from,to){
+      const endpoints = [
+        `${API_BASE}/api/translate_ai`,
+        `${API_BASE}/api/translate-ai`,
+        `${API_BASE}/api/translate`
+      ];
+
+      for(const endpoint of endpoints){
+        try{
+          const r = await fetch(endpoint,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              text:String(text || "").trim(),
+              from_lang:canonical(from),
+              to_lang:canonical(to),
+              source:canonical(from),
+              target:canonical(to),
+              mode:"normal",
+              use_ai:false,
+              cultural:false,
+              tone:"neutral",
+              style:"warm"
+            })
+          });
+
+          const j = await r.json().catch(() => null);
+          const value = String(j?.translated || j?.translation || j?.text || "").trim();
+
+          if(r.ok && value) return value;
+        }catch{}
+      }
+
+      return null;
+    }
+
+    function speak(text,langCode){
+      const value = String(text || "").trim();
+      if(!value) return;
+
+      try{
+        window.speechSynthesis?.cancel?.();
+
+        if(window.NativeTTS?.speak){
+          window.NativeTTS.speak(value,canonical(langCode));
+          return;
+        }
+
+        const u = new SpeechSynthesisUtterance(value);
+        u.lang = langObj(langCode).bcp;
+        u.rate = .95;
+        speechSynthesis.speak(u);
+      }catch{}
+    }
+
+    async function finalizeSpeech(side,text){
+      const clean = cleanupTranscript(text);
+      if(!clean) return;
+
+      const adOk = await maybeShowAd();
+      if(!adOk) return;
+
+      const src = side === "top" ? topLang : botLang;
+      const dst = side === "top" ? botLang : topLang;
+      const other = side === "top" ? "bot" : "top";
+
+      addBubble(side,clean,false);
+
+      const targetRow = addBubble(other,"",true);
+      const translated = await translateOnline(clean,src,dst);
+
+      if(!translated){
+        if(targetRow) targetRow.textContent = tx("translateError");
+        return;
+      }
+
+      targetRow.textContent = translated;
+      speak(translated,dst);
+    }
+
+    function startRecording(side){
+      if(recognizer){
+        stopRecognizer();
+        return;
+      }
+
+      const sourceLang = side === "top" ? topLang : botLang;
+      const rec = buildRecognizer(sourceLang);
+
+      if(!rec){
+        showToast(tx("micUnsupported"));
+        return;
+      }
+
+      recognizer = rec;
+      liveText = "";
+
+      rec.onstart = () => setMicState(side,true);
+
+      rec.onresult = (e) => {
+        let finalText = "";
+        let interimText = "";
+
+        for(let i=0;i<e.results.length;i++){
+          const txt = String(e.results[i]?.[0]?.transcript || "").trim();
+          if(!txt) continue;
+
+          if(e.results[i].isFinal) finalText += ` ${txt}`;
+          else interimText += ` ${txt}`;
+        }
+
+        liveText = cleanupTranscript(finalText || interimText || liveText);
+      };
+
+      rec.onerror = (e) => {
+        const err = String(e?.error || "");
+
+        showToast(err.includes("not-allowed") ? tx("micDenied") : tx("micError"));
+
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+      };
+
+      rec.onend = () => {
+        const finalText = cleanupTranscript(liveText);
+
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+
+        if(finalText) finalizeSpeech(side,finalText);
+      };
+
+      try{
+        rec.start();
+      }catch{
+        showToast(tx("micError"));
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+      }
+    }
+
+    topMic.addEventListener("click",() => startRecording("top"));
+    botMic.addEventListener("click",() => startRecording("bot"));
+
+    function clearChat(){
+      stopRecognizer();
+
+      try{ window.speechSynthesis?.cancel?.(); }catch{}
+      try{ window.NativeTTS?.stop?.(); }catch{}
+
+      recognizer = null;
+      liveText = "";
+
+      topMic.classList.remove("listening");
+      botMic.classList.remove("listening");
+
+      clearBody(topBody);
+      clearBody(botBody);
+    }
+
     centerClearBtn.addEventListener("click",clearChat);
-    async function detectCountryLang(){try{const r=await fetch("https://ipapi.co/json/",{cache:"no-store"});const j=await r.json();const country=String(j?.country_code||"").toUpperCase();const code=COUNTRY_LANG[country];if(code&&langExists(code))return code}catch{}const nav=canonical(navigator.language||"");if(nav&&langExists(nav))return nav;return botLang}
-    async function boot(){const detected=await detectCountryLang();if(detected&&langExists(detected)){botLang=detected;if(topLang===botLang)topLang=differentLang(botLang)}refreshTexts();clearBody(topBody);clearBody(botBody)}
+
+    function hasNativeGoogleLogin(){
+      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+    }
+
+    async function routeAfterLogin(){
+      try{
+        await ensureAuthAndCacheUser();
+      }catch{}
+
+      location.replace(HOME);
+    }
+
+    async function startWebGoogleLogin(){
+      const redirectTo = `${location.origin}/pages/login.html?next=${encodeURIComponent(HOME)}`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider:"google",
+        options:{redirectTo}
+      });
+
+      if(error) throw error;
+    }
+
+    async function startGoogleLogin(){
+      try{
+        showToast(tx("toastStarting"));
+
+        if(hasNativeGoogleLogin()){
+          window.Native.startGoogleLogin();
+          return;
+        }
+
+        await startWebGoogleLogin();
+      }catch(e){
+        console.error("startGoogleLogin error:",e);
+        showToast(tx("toastLoginFailed"));
+      }
+    }
+
+    window.onNativeLoginSuccess = async function(payload){
+      try{
+        const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+        const idToken = String(data?.id_token || data?.idToken || "").trim();
+
+        if(!idToken){
+          showToast(tx("toastLoginFailed"));
+          return;
+        }
+
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider:"google",
+          token:idToken
+        });
+
+        if(error){
+          showToast(tx("toastLoginFailed"));
+          return;
+        }
+
+        await routeAfterLogin();
+      }catch(e){
+        console.error("onNativeLoginSuccess error:",e);
+        showToast(tx("toastLoginFailed"));
+      }
+    };
+
+    centerLoginBtn.addEventListener("click",startGoogleLogin);
+    loginOfferGo.addEventListener("click",startGoogleLogin);
+    loginOfferSkip.addEventListener("click",() => loginOfferModal.classList.remove("show"));
+
+    async function detectCountryLang(){
+      try{
+        const r = await fetch("https://ipapi.co/json/",{cache:"no-store"});
+        const j = await r.json();
+        const country = String(j?.country_code || "").toUpperCase();
+
+        const map = {
+          TR:"tr", CY:"tr",
+          US:"en", GB:"en", IE:"en", AU:"en", CA:"en", NZ:"en",
+          DE:"de", AT:"de", CH:"de",
+          FR:"fr", BE:"fr",
+          ES:"es", MX:"es", AR:"es", CO:"es", CL:"es", PE:"es",
+          IT:"it", RU:"ru", BG:"bg", PT:"pt", BR:"pt",
+          CN:"zh", JP:"ja", KR:"ko", SA:"ar", AE:"ar", EG:"ar"
+        };
+
+        const code = map[country];
+
+        if(code && langExists(code)) return code;
+      }catch{}
+
+      const nav = canonical(navigator.language || "");
+
+      if(nav && langExists(nav)) return nav;
+
+      return botLang;
+    }
+
+    async function boot(){
+      const { data:{ session } = {} } = await supabase.auth.getSession().catch(() => ({data:{session:null}}));
+
+      if(session){
+        await routeAfterLogin();
+        return;
+      }
+
+      const detected = await detectCountryLang();
+
+      if(detected && langExists(detected)){
+        botLang = detected;
+        if(topLang === botLang) topLang = differentLang(botLang);
+      }
+
+      refreshTexts();
+      clearBody(topBody);
+      clearBody(botBody);
+
+      setInterval(() => {
+        refreshTexts();
+        loginOfferModal.classList.add("show");
+      },2 * 60 * 1000);
+    }
+
     boot();
   </script>
 </body>
