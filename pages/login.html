@@ -1,625 +1,178 @@
-<!DOCTYPE html>
+<!-- /pages/facetoface_public.html -->
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Giriş</title>
-
-  <script>
-  (function(){
-    try{
-      if(navigator.onLine === false){
-        location.replace("/facetoface.html?mode=offline-forced");
-      }
-    }catch{}
-  })();
-  </script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <title>italkyAI • FaceToFace Public</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
 
   <style>
-    :root{
-      --bg-void:#060408;
-      --neon:#00f2ff;
-      --pink:#ff007a;
-      --brand-grad:linear-gradient(135deg,#00f2ff 0%,#6366f1 55%,#ff007a 100%);
-      --signature-grad:linear-gradient(to right,#fff,#00f2ff,#fff);
-      --accent:#00f2ff;
-      --muted:rgba(255,255,255,.65);
-      --safeB:env(safe-area-inset-bottom, 0px);
-    }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
-    html,body{ height:100%; width:100%; }
-
-    body{
-      background:var(--bg-void);
-      color:#fff;
-      font-family:'Outfit',sans-serif;
-      height:100dvh;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-    }
-
-    body:not(.login-ready) .main,
-    body:not(.login-ready) footer{
-      visibility:hidden;
-      opacity:0;
-    }
-
-    body.login-ready .main,
-    body.login-ready footer{
-      visibility:visible;
-      opacity:1;
-      transition:opacity .18s ease;
-    }
-
-    .nebula{
-      position:fixed; inset:0;
-      background:
-        radial-gradient(circle at 25% 20%, rgba(0,242,255,.12), transparent 45%),
-        radial-gradient(circle at 80% 80%, rgba(255,0,122,.10), transparent 55%),
-        radial-gradient(circle at 50% 50%, rgba(15, 8, 22, 1) 0%, #060408 100%);
-      z-index:0;
-    }
-
-    .main{
-      flex:1; width:100%;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      padding:0 26px; z-index:10;
-      margin-top:-10px;
-    }
-
-    .brand-section{ text-align:center; margin-bottom:5px; }
-    .brand-section h1{
-      font-family:'Space Grotesk', sans-serif;
-      font-size:64px; font-weight:1000;
-      letter-spacing:-4px; line-height:1;
-      filter:drop-shadow(0 0 15px rgba(0, 242, 255, 0.2));
-    }
-    .brand-section h1 span.ai{
-      background:var(--brand-grad);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    }
-    .brand-sub{
-      margin-top:8px; font-size:12px; font-weight:900;
-      letter-spacing:8px; text-transform:uppercase; color:#fff;
-      opacity:.9; text-shadow:0 0 10px rgba(255,255,255,0.3);
-    }
-
-    .world-container{
-      position:relative; width:280px; height:280px;
-      display:flex; align-items:center; justify-content:center;
-      margin-top:10px; margin-bottom:10px; perspective:1000px;
-    }
-    .earth-glow{
-      position:absolute; inset:10px; border-radius:50%;
-      background:radial-gradient(circle, rgba(0, 242, 255, 0.22) 0%, transparent 70%);
-      filter:blur(25px); opacity:.95; z-index:0;
-      animation:glowBreath 4.8s ease-in-out infinite alternate;
-    }
-    @keyframes glowBreath{ from{ transform:scale(.95); opacity:.6; } to{ transform:scale(1.1); opacity:.9; } }
-
-    .earth{
-      position:relative; width:210px; height:210px; border-radius:50%;
-      background-image:url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
-      background-size:cover; background-position:center;
-      box-shadow:inset -30px -30px 60px rgba(0,0,0,0.9), inset 10px 10px 30px rgba(255,255,255,0.1), 0 0 80px rgba(0,242,255,0.25);
-      transform-style:preserve-3d; animation:rotateSphere 34s linear infinite; z-index:2; overflow:hidden;
-    }
-    @keyframes rotateSphere{ from{ transform:rotateY(0deg); } to{ transform:rotateY(360deg); } }
-
-    .ai-stamp{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      font-weight:1000; letter-spacing:2px; color:rgba(255,255,255,0.95);
-      text-shadow:0 0 20px rgba(0,242,255,0.4); mix-blend-mode:screen; opacity:.95;
-      pointer-events:none; user-select:none; backface-visibility:hidden;
-    }
-    .ai-front{ font-size:44px; transform:translateZ(1px); z-index:4; }
-    .ai-back{ font-size:50px; letter-spacing:1px; transform:rotateY(180deg) translateZ(1px); z-index:3; }
-
-    .typewriter-container{ height:40px; margin-top:5px; margin-bottom:15px; display:flex; justify-content:center; align-items:center; width:100%; }
-    .typewriter{
-      font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--muted);
-      border-right:2px solid var(--accent); white-space:nowrap; overflow:hidden; width:0;
-      animation:typing 5.6s steps(46, end) infinite, blink .85s step-end infinite;
-      text-shadow:0 0 10px rgba(0, 242, 255, 0.2);
-    }
-    @keyframes typing { 0%,10%{ width:0 } 62%,86%{ width:100% } 100%{ width:0 } }
-    @keyframes blink { from,to{ border-color:transparent } 50%{ border-color:var(--accent) } }
-
-    .login-box{ width:100%; max-width:300px; z-index:20; }
-    .google-btn{
-      width:100%; height:54px; border:none; border-radius:27px;
-      background:#ffffff; color:#1f1f1f; font-family:'Outfit', sans-serif;
-      font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center;
-      gap:12px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,0.3);
-      transition:all .2s ease; user-select:none;
-    }
-    .google-btn:active{ transform:scale(.97); }
-    .google-btn:hover { box-shadow:0 12px 30px rgba(0,0,0,0.4); background:#fcfcfc; }
-    .google-btn:disabled{ opacity:.7; cursor:default; }
-    .g-icon{ width:20px; height:20px; display:block; }
-
-    footer{
-      width:100%; text-align:center; z-index:20;
-      padding-bottom:calc(20px + var(--safeB));
-    }
-    .footer-nav{ display:flex; justify-content:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
-    .footer-nav a{
-      text-decoration:none; color:rgba(255,255,255,0.4); font-size:11px;
-      font-weight:800; text-transform:uppercase; letter-spacing:1px; transition:0.3s;
-    }
-    .footer-nav a:hover { color:var(--neon); text-shadow:0 0 8px var(--neon); }
-    .technology-title{ font-size:20px; font-weight:1000; letter-spacing:6px; margin-bottom:6px; line-height:1; }
-    .technology-title b{ font-weight:1000; text-transform:lowercase; color:#fff; }
-    .technology-title span{ background:var(--brand-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase; }
-    .prestige-signature{ font-size:11px; font-weight:900; letter-spacing:1.2px; background:var(--signature-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-
-    #toast{
-      position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-120px);
-      background:rgba(6,6,12,0.95); border:1px solid var(--accent); padding:12px 24px;
-      border-radius:999px; color:#fff; z-index:9999; font-weight:900; font-size:13px;
-      transition:.3s ease; backdrop-filter:blur(15px); pointer-events:none;
-      max-width:90vw; text-align:center; box-shadow:0 10px 30px rgba(0, 242, 255, 0.2);
-    }
-    #toast.show{ transform:translateX(-50%) translateY(0); }
+    :root{--ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);--bg:#050508;--border:rgba(255,255,255,.15);--safe-bottom:env(safe-area-inset-bottom,0px)}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:Outfit,Arial,sans-serif}
+    body{background:radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),#050508}
+    .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+    .half-screen{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:center;overflow:hidden;padding:10px 8px}
+    .half-screen.top{transform:rotate(180deg);background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg))}
+    .half-screen.bottom{background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg));padding-bottom:calc(10px + var(--safe-bottom))}
+    .lang-row{width:100%;display:flex;align-items:center;justify-content:center;z-index:20}
+    .lang-trigger{min-height:38px;border:none;border-radius:999px;background:transparent;color:#fff;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:82vw;padding:8px 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .popover{position:absolute;left:50%;transform:translateX(-50%);width:min(92vw,360px);height:360px;background:#0a0a0f;border:1px solid var(--border);border-radius:24px;display:none;flex-direction:column;z-index:100;overflow:hidden;box-shadow:0 22px 60px rgba(0,0,0,.92)}
+    .popover.show{display:flex}.half-screen.top .popover{top:58px}.half-screen.bottom .popover{bottom:58px}
+    .pop-head{padding:14px;border-bottom:1px solid rgba(255,255,255,.10);display:flex;justify-content:space-between;align-items:center;font-weight:900}
+    .pop-close{cursor:pointer;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+    .pop-list{flex:1;overflow-y:auto;padding:10px;scrollbar-width:none}.pop-list::-webkit-scrollbar{display:none}
+    .pop-item{padding:12px;border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;border:1px solid transparent}
+    .pop-item.active{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.25)}
+    .pop-left{display:flex;align-items:center;gap:10px;min-width:0}.pop-flag{font-size:18px}
+    .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pop-code{font-size:12px;font-weight:900;opacity:.7}
+    .chat-body{flex:1;width:100%;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:14px;padding:14px 0 22px;text-align:center;scrollbar-width:none;mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent)}
+    .chat-body::-webkit-scrollbar{display:none}
+    .bubble{max-width:86%;line-height:1.18;word-break:break-word;font-size:24px;font-weight:900;opacity:.9}
+    .bubble.latest{font-size:32px;font-weight:1000;opacity:1}
+    .mic-line{width:100%;display:grid;grid-template-columns:1fr 70px 1fr;align-items:end;gap:12px;padding:0 8px 4px;flex:0 0 auto}
+    .mic-side{min-height:70px;display:flex;align-items:flex-end;justify-content:center}
+    .privacy-link{color:rgba(255,255,255,.74);font-size:12px;font-weight:900;text-decoration:none;padding-bottom:8px}
+    .privacy-link:active{opacity:.7}
+    .mic-placeholder{min-height:1px;opacity:0;pointer-events:none}
+    .mic-btn{width:70px;height:70px;border:none;border-radius:999px;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);position:relative}
+    .mic-btn svg{width:30px;height:30px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .mic-btn.listening{background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);animation:micBreath 1.05s ease-in-out infinite}
+    .mic-btn.listening::after{content:"";position:absolute;inset:-13px;border-radius:50%;border:2px solid rgba(165,180,252,.78);box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35);animation:micPulse 1s ease-out infinite}
+    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}@keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
+    .center-hub{height:82px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;position:relative;background:rgba(0,0,0,.58);backdrop-filter:blur(16px);z-index:50;border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05)}
+    .center-action{position:absolute;min-height:46px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.075);color:#fff;font-family:inherit;font-size:13px;font-weight:1000;cursor:pointer;padding:0 20px;display:flex;align-items:center;justify-content:center;text-decoration:none;backdrop-filter:blur(10px)}
+    .center-login{left:14px}.center-clear{right:14px}
+    .orb{width:66px;height:66px;border-radius:50%;background:#000;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:900;position:relative;overflow:visible}
+    .orb-main{position:relative;z-index:3}.orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sat{position:absolute;left:50%;top:50%;width:10px;height:10px;margin-left:-5px;margin-top:-5px;border-radius:50%;z-index:1;filter:blur(1.5px)}
+    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}.sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
+    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}@keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);max-width:min(92vw,430px);min-height:44px;padding:11px 16px;border-radius:16px;background:rgba(12,16,28,.96);border:1px solid rgba(255,255,255,.10);color:#fff;font-size:12px;font-weight:1000;display:flex;align-items:center;justify-content:center;text-align:center;z-index:9999;box-shadow:0 18px 36px rgba(0,0,0,.35);transition:.22s ease;pointer-events:none}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:9998;padding:20px}
+    .modal.show{display:flex}.modal-card{width:min(100%,420px);border-radius:24px;padding:18px;background:linear-gradient(145deg,rgba(16,16,24,.97),rgba(10,10,18,.97));border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 50px rgba(0,0,0,.30)}
+    .modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}.modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76)}
+    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.modal-btn{min-height:46px;border:none;border-radius:16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:900}
+    .modal-btn.primary{background:var(--ai-gradient);color:#05060d}.modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
+    @media(max-width:390px){.mic-line{grid-template-columns:1fr 66px 1fr}.mic-btn{width:66px;height:66px}.mic-btn svg{width:28px;height:28px}.bubble{font-size:22px}.bubble.latest{font-size:30px}.center-action{font-size:12px;padding:0 16px}}
   </style>
 </head>
 
 <body>
-  <div class="nebula"></div>
-
-  <div class="main">
-    <div class="brand-section" data-no-translate="1">
-      <h1 data-no-translate="1">italky<span class="ai" data-no-translate="1">AI</span></h1>
-      <div class="brand-sub" id="brandSub" data-no-translate="1">BE FREE</div>
-    </div>
-
-    <div class="world-container" aria-hidden="true">
-      <div class="earth-glow"></div>
-      <div class="earth">
-        <div class="ai-stamp ai-front" data-no-translate="1">ITALKY</div>
-        <div class="ai-stamp ai-back" data-no-translate="1">AI</div>
+  <main class="container">
+    <section class="half-screen top" id="topSection">
+      <div class="lang-row"><button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button></div>
+      <div class="popover" id="pop-top">
+        <div class="pop-head"><div id="topPopTitle">ÜST DİL</div><div class="pop-close" id="close-top">✕</div></div>
+        <div class="pop-list" id="list-top"></div>
       </div>
-    </div>
+      <div class="chat-body" id="topBody"></div>
+      <div class="mic-line">
+        <div class="mic-side"></div>
+        <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
+          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+        </button>
+        <div class="mic-side"></div>
+      </div>
+    </section>
 
-    <div class="typewriter-container">
-      <div class="typewriter" id="typewriter">Bağlanılıyor...</div>
-    </div>
+    <section class="center-hub">
+      <a id="centerLoginBtn" class="center-action center-login" href="/pages/login.html?provider=google&next=/pages/home.html">Giriş Yap</a>
+      <div class="orb"><span class="sat sat1"></span><span class="sat sat2"></span><span class="orb-main">italky<span class="ai">AI</span></span></div>
+      <button id="centerClearBtn" class="center-action center-clear" type="button">Temizle</button>
+    </section>
 
-    <div class="login-box">
-      <button class="google-btn" id="googleBtn" type="button">
-        <svg class="g-icon" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        <span id="googleBtnText">Google ile devam et</span>
-      </button>
+    <section class="half-screen bottom" id="botSection">
+      <div class="lang-row"><button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button></div>
+      <div class="popover" id="pop-bot">
+        <div class="pop-head"><div id="botPopTitle">ALT DİL</div><div class="pop-close" id="close-bot">✕</div></div>
+        <div class="pop-list" id="list-bot"></div>
+      </div>
+      <div class="chat-body" id="botBody"></div>
+      <div class="mic-line">
+        <div class="mic-side"><a id="privacyLink" class="privacy-link" href="/pages/privacy.html">Gizlilik</a></div>
+        <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
+          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+        </button>
+        <div class="mic-side"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="adModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="adTitle">Ücretsiz Kullanım</h3>
+      <p class="modal-text" id="adText">FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.</p>
+      <div class="modal-actions">
+        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklam İzle</button>
+        <button id="closeAdBtn" class="modal-btn secondary" type="button">Şimdilik Kapat</button>
+      </div>
     </div>
   </div>
 
-  <footer>
-    <div class="footer-nav">
-      <a href="/pages/about.html" id="footerAbout">Hakkımızda</a>
-      <a href="/pages/privacy.html" id="footerPrivacy">Gizlilik</a>
-      <a href="/pages/contact.html" id="footerContact">İletişim</a>
-    </div>
-    <div class="technology-title" data-no-translate="1"><b data-no-translate="1">italky</b><span data-no-translate="1">TECHNOLOGY</span></div>
-    <div class="prestige-signature" data-no-translate="1">italkyAI By Ozyigit's 2026</div>
-  </footer>
-
-  <div id="toast"></div>
+  <div id="toast" class="toast"></div>
 
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-    import { ensureAuthAndCacheUser } from "/js/auth.js";
+    import { getLangPoolForSite } from "/js/lang_pool_full.js";
 
-    const toastEl = document.getElementById("toast");
-    const HOME = "/pages/home.html";
-    const googleBtn = document.getElementById("googleBtn");
-
-    const SITE_LANG_KEY = "site_lang";
-    const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
-
-    const I18N = {
-      tr: {
-        pageTitle: "italkyAI • Giriş",
-        googleBtn: "Google ile devam et",
-        footerAbout: "Hakkımızda",
-        footerFaq: "SSS",
-        footerPrivacy: "Gizlilik",
-        footerContact: "İletişim",
-        toastStarting: "Güvenli giriş başlatılıyor…",
-        toastSigningIn: "Oturum açılıyor...",
-        toastNoToken: "Token alınamadı",
-        toastLoginFailed: "Oturum açılamadı",
-        toastNoSession: "Oturum bulunamadı",
-        toastLoginError: "Giriş hatası",
-        toastStartFailed: "Giriş başlatılamadı",
-        phrases: [
-          "Dünyayı küçülttük, Cebinize sığdırdık...",
-          "Dünyada ilk ve tek…",
-          "Kültürel çeviri ile…",
-          "Kelimeyi değil, anlamı çeviriyoruz…",
-          "Offline çeviri ile kasıntısız yaşa…",
-          "Dünya artık senin dilinde…",
-          "Başlamak için sadece giriş yap…"
-        ]
-      },
-      en: {
-        pageTitle: "italkyAI • Login",
-        googleBtn: "Continue with Google",
-        footerAbout: "About",
-        footerFaq: "FAQ",
-        footerPrivacy: "Privacy",
-        footerContact: "Contact",
-        toastStarting: "Secure sign-in is starting…",
-        toastSigningIn: "Signing in...",
-        toastNoToken: "Token could not be received",
-        toastLoginFailed: "Sign-in failed",
-        toastNoSession: "Session not found",
-        toastLoginError: "Login error",
-        toastStartFailed: "Could not start sign-in",
-        phrases: [
-          "We made the world smaller, and fit it in your pocket...",
-          "The first and only in the world…",
-          "With cultural translation…",
-          "We translate meaning, not just words…",
-          "Use offline translation without stress…",
-          "The world now speaks your language…",
-          "Just sign in to begin…"
-        ]
-      },
-      de: {
-        pageTitle: "italkyAI • Anmeldung",
-        googleBtn: "Mit Google fortfahren",
-        footerAbout: "Über uns",
-        footerFaq: "FAQ",
-        footerPrivacy: "Datenschutz",
-        footerContact: "Kontakt",
-        toastStarting: "Sichere Anmeldung wird gestartet…",
-        toastSigningIn: "Anmeldung läuft...",
-        toastNoToken: "Token konnte nicht abgerufen werden",
-        toastLoginFailed: "Anmeldung fehlgeschlagen",
-        toastNoSession: "Keine Sitzung gefunden",
-        toastLoginError: "Anmeldefehler",
-        toastStartFailed: "Anmeldung konnte nicht gestartet werden",
-        phrases: [
-          "Wir haben die Welt kleiner gemacht und in deine Tasche gesteckt...",
-          "Die erste und einzige ihrer Art…",
-          "Mit kultureller Übersetzung…",
-          "Wir übersetzen Bedeutung, nicht nur Wörter…",
-          "Offline-Übersetzung ganz entspannt…",
-          "Die Welt spricht jetzt deine Sprache…",
-          "Melde dich einfach an, um zu starten…"
-        ]
-      },
-      fr: {
-        pageTitle: "italkyAI • Connexion",
-        googleBtn: "Continuer avec Google",
-        footerAbout: "À propos",
-        footerFaq: "FAQ",
-        footerPrivacy: "Confidentialité",
-        footerContact: "Contact",
-        toastStarting: "Connexion sécurisée en cours…",
-        toastSigningIn: "Connexion en cours...",
-        toastNoToken: "Le jeton n’a pas pu être obtenu",
-        toastLoginFailed: "Échec de la connexion",
-        toastNoSession: "Session introuvable",
-        toastLoginError: "Erreur de connexion",
-        toastStartFailed: "Impossible de démarrer la connexion",
-        phrases: [
-          "Nous avons réduit le monde et l’avons mis dans votre poche...",
-          "Le premier et le seul au monde…",
-          "Avec la traduction culturelle…",
-          "Nous traduisons le sens, pas seulement les mots…",
-          "La traduction hors ligne, sans stress…",
-          "Le monde parle désormais votre langue…",
-          "Connectez-vous simplement pour commencer…"
-        ]
-      },
-      it: {
-        pageTitle: "italkyAI • Accesso",
-        googleBtn: "Continua con Google",
-        footerAbout: "Chi siamo",
-        footerFaq: "FAQ",
-        footerPrivacy: "Privacy",
-        footerContact: "Contatto",
-        toastStarting: "Avvio accesso sicuro…",
-        toastSigningIn: "Accesso in corso...",
-        toastNoToken: "Impossibile ottenere il token",
-        toastLoginFailed: "Accesso non riuscito",
-        toastNoSession: "Sessione non trovata",
-        toastLoginError: "Errore di accesso",
-        toastStartFailed: "Impossibile avviare l’accesso",
-        phrases: [
-          "Abbiamo reso il mondo più piccolo e l’abbiamo messo in tasca...",
-          "Il primo e unico al mondo…",
-          "Con la traduzione culturale…",
-          "Traduciamo il significato, non solo le parole…",
-          "Traduzione offline senza stress…",
-          "Il mondo ora parla la tua lingua…",
-          "Accedi per iniziare…"
-        ]
-      },
-      es: {
-        pageTitle: "italkyAI • Iniciar sesión",
-        googleBtn: "Continuar con Google",
-        footerAbout: "Acerca de",
-        footerFaq: "Preguntas frecuentes",
-        footerPrivacy: "Privacidad",
-        footerContact: "Contacto",
-        toastStarting: "Inicio de sesión seguro en curso…",
-        toastSigningIn: "Iniciando sesión...",
-        toastNoToken: "No se pudo obtener el token",
-        toastLoginFailed: "No se pudo iniciar sesión",
-        toastNoSession: "No se encontró sesión",
-        toastLoginError: "Error de inicio de sesión",
-        toastStartFailed: "No se pudo iniciar el acceso",
-        phrases: [
-          "Hicimos el mundo más pequeño y lo pusimos en tu bolsillo...",
-          "El primero y único en el mundo…",
-          "Con traducción cultural…",
-          "Traducimos el significado, no solo las palabras…",
-          "Traducción sin conexión sin complicaciones…",
-          "El mundo ahora habla tu idioma…",
-          "Solo inicia sesión para comenzar…"
-        ]
-      },
-      ar: {
-        pageTitle: "italkyAI • تسجيل الدخول",
-        googleBtn: "المتابعة باستخدام Google",
-        footerAbout: "من نحن",
-        footerFaq: "الأسئلة الشائعة",
-        footerPrivacy: "الخصوصية",
-        footerContact: "اتصل بنا",
-        toastStarting: "جارٍ بدء تسجيل دخول آمن…",
-        toastSigningIn: "جارٍ تسجيل الدخول...",
-        toastNoToken: "تعذر الحصول على الرمز",
-        toastLoginFailed: "فشل تسجيل الدخول",
-        toastNoSession: "لم يتم العثور على جلسة",
-        toastLoginError: "خطأ في تسجيل الدخول",
-        toastStartFailed: "تعذر بدء تسجيل الدخول",
-        phrases: [
-          "لقد صغّرنا العالم ووضعناه في جيبك...",
-          "الأول والوحيد في العالم…",
-          "مع الترجمة الثقافية…",
-          "نترجم المعنى لا الكلمات فقط…",
-          "ترجمة دون اتصال بلا تعقيد…",
-          "العالم الآن يتحدث لغتك…",
-          "فقط سجّل الدخول للبدء…"
-        ]
-      }
+    const API_BASE="https://italky-api.onrender.com";
+    const $=(id)=>document.getElementById(id);
+    const BCP={tr:"tr-TR",en:"en-US",de:"de-DE",fr:"fr-FR",it:"it-IT",es:"es-ES",ar:"ar-SA",ru:"ru-RU",bg:"bg-BG",pt:"pt-PT",zh:"zh-CN",ja:"ja-JP",ko:"ko-KR"};
+    const UI={
+      tr:{login:"Giriş Yap",clear:"Temizle",privacy:"Gizlilik",topLang:"ÜST DİL",botLang:"ALT DİL",adTitle:"Ücretsiz Kullanım",adText:"FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.",watchAd:"Reklam İzle",close:"Şimdilik Kapat",micError:"Mikrofon hatası.",micDenied:"Mikrofon izni gerekli.",micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",translateError:"Çeviri yapılamadı"},
+      en:{login:"Login",clear:"Clear",privacy:"Privacy",topLang:"TOP LANGUAGE",botLang:"BOTTOM LANGUAGE",adTitle:"Free Use",adText:"FaceToFace free use includes ads. Watch the ad to continue translating.",watchAd:"Watch Ad",close:"Close",micError:"Microphone error.",micDenied:"Microphone permission is required.",micUnsupported:"Speech recognition is not supported on this device.",translateError:"Translation failed"},
+      de:{login:"Anmelden",clear:"Löschen",privacy:"Datenschutz",topLang:"OBERE SPRACHE",botLang:"UNTERE SPRACHE",adTitle:"Kostenlose Nutzung",adText:"FaceToFace enthält in der kostenlosen Nutzung Werbung.",watchAd:"Werbung ansehen",close:"Schließen",micError:"Mikrofonfehler.",micDenied:"Mikrofonberechtigung erforderlich.",micUnsupported:"Spracherkennung wird nicht unterstützt.",translateError:"Übersetzung fehlgeschlagen"},
+      fr:{login:"Connexion",clear:"Effacer",privacy:"Confidentialité",topLang:"LANGUE DU HAUT",botLang:"LANGUE DU BAS",adTitle:"Utilisation gratuite",adText:"FaceToFace gratuit contient des publicités.",watchAd:"Voir la pub",close:"Fermer",micError:"Erreur microphone.",micDenied:"Autorisation microphone requise.",micUnsupported:"Reconnaissance vocale non prise en charge.",translateError:"Échec de traduction"},
+      es:{login:"Iniciar sesión",clear:"Limpiar",privacy:"Privacidad",topLang:"IDIOMA SUPERIOR",botLang:"IDIOMA INFERIOR",adTitle:"Uso gratuito",adText:"FaceToFace gratuito incluye anuncios.",watchAd:"Ver anuncio",close:"Cerrar",micError:"Error de micrófono.",micDenied:"Se requiere permiso de micrófono.",micUnsupported:"Reconocimiento de voz no compatible.",translateError:"Error de traducción"}
     };
+    const COUNTRY_LANG={TR:"tr",CY:"tr",US:"en",GB:"en",IE:"en",AU:"en",CA:"en",NZ:"en",DE:"de",AT:"de",CH:"de",FR:"fr",BE:"fr",ES:"es",MX:"es",AR:"es",CO:"es",CL:"es",PE:"es",IT:"it",RU:"ru",BG:"bg",PT:"pt",BR:"pt",CN:"zh",JP:"ja",KR:"ko",SA:"ar",AE:"ar",EG:"ar"};
 
-    function getSiteLangCode() {
-      const raw = String(
-        localStorage.getItem(SITE_LANG_KEY) ||
-        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
-        "tr"
-      ).trim().toLowerCase();
+    function canonical(code){return String(code||"").toLowerCase().split("-")[0].trim()}
+    function getInitialSiteLang(){return canonical(localStorage.getItem("site_lang")||localStorage.getItem("italky_site_lang_v1")||navigator.language||"tr")||"tr"}
+    const RAW_LANG_POOL=Array.isArray(getLangPoolForSite(getInitialSiteLang()))?getLangPoolForSite(getInitialSiteLang()):[];
+    const LANGS=RAW_LANG_POOL.map((l)=>{const code=canonical(l.code);if(!code)return null;return{code,flag:l.flag||"🌐",name:l.name||l.tr_name||code.toUpperCase(),bcp:BCP[code]||`${code}-${String(code).toUpperCase()}`}}).filter(Boolean);
+    function langExists(code){return !!LANGS.find((x)=>x.code===canonical(code))}
+    function langObj(code){const c=canonical(code);return LANGS.find((x)=>x.code===c)||{code:c||"en",flag:"🌐",name:(c||"en").toUpperCase(),bcp:BCP[c]||"en-US"}}
+    function labelChip(code){const o=langObj(code);return `${o.flag} ${o.name}`}
+    function differentLang(base){const b=canonical(base);const preferred=b==="tr"?["en","de","fr","es","it","ar","ru"]:["tr","en","de","fr","es","it","ar","ru"];for(const c of preferred)if(c!==b&&langExists(c))return c;return LANGS.find((l)=>l.code!==b)?.code||"en"}
 
-      return I18N[raw] ? raw : "tr";
-    }
+    let botLang=langExists("tr")?"tr":(LANGS[0]?.code||"tr");
+    let topLang=langExists("en")&&botLang!=="en"?"en":differentLang(botLang);
 
-    function currentDict() {
-      return I18N[getSiteLangCode()] || I18N.tr;
-    }
+    const topBody=$("topBody"),botBody=$("botBody"),topMic=$("topMic"),botMic=$("botMic"),topLangBtn=$("topLangBtn"),botLangBtn=$("botLangBtn"),popTop=$("pop-top"),popBot=$("pop-bot"),listTop=$("list-top"),listBot=$("list-bot"),closeTop=$("close-top"),closeBot=$("close-bot"),topPopTitle=$("topPopTitle"),botPopTitle=$("botPopTitle"),centerLoginBtn=$("centerLoginBtn"),centerClearBtn=$("centerClearBtn"),privacyLink=$("privacyLink"),adModal=$("adModal"),adTitle=$("adTitle"),adText=$("adText"),watchAdBtn=$("watchAdBtn"),closeAdBtn=$("closeAdBtn"),toast=$("toast");
 
-    function applyLoginTranslations() {
-      const dict = currentDict();
+    let recognizer=null,liveText="",sessionStart=Date.now(),lastAdAt=0;
 
-      document.documentElement.lang = getSiteLangCode();
-      document.title = dict.pageTitle;
+    function tx(key){const c=UI[botLang]?botLang:"en";return UI[c]?.[key]||UI.en[key]||key}
+    function showToast(msg){if(!toast)return;toast.textContent=String(msg||"");toast.classList.add("show");clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>toast.classList.remove("show"),2600)}
+    function refreshTexts(){topLangBtn.textContent=`${labelChip(topLang)} ⌵`;botLangBtn.textContent=`${labelChip(botLang)} ⌵`;topPopTitle.textContent=tx("topLang");botPopTitle.textContent=tx("botLang");centerLoginBtn.textContent=tx("login");centerClearBtn.textContent=tx("clear");privacyLink.textContent=tx("privacy");adTitle.textContent=tx("adTitle");adText.textContent=tx("adText");watchAdBtn.textContent=tx("watchAd");closeAdBtn.textContent=tx("close")}
+    function closeAllPop(){popTop.classList.remove("show");popBot.classList.remove("show")}
+    function renderPop(side){const list=side==="top"?listTop:listBot;const selected=side==="top"?topLang:botLang;list.innerHTML=LANGS.map((l)=>`<div class="pop-item ${l.code===selected?"active":""}" data-code="${l.code}"><div class="pop-left"><div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div></div><div class="pop-code">${l.code.toUpperCase()}</div></div>`).join("");list.querySelectorAll(".pop-item").forEach((el)=>el.addEventListener("click",()=>{const code=canonical(el.dataset.code);if(side==="top"){topLang=code;if(topLang===botLang)botLang=differentLang(topLang)}else{botLang=code;if(botLang===topLang)topLang=differentLang(botLang)}closeAllPop();refreshTexts()}))}
+    topLangBtn.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();closeAllPop();renderPop("top");popTop.classList.add("show")});
+    botLangBtn.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();closeAllPop();renderPop("bot");popBot.classList.add("show")});
+    closeTop.addEventListener("click",closeAllPop);closeBot.addEventListener("click",closeAllPop);
+    document.addEventListener("click",(e)=>{const inside=popTop.contains(e.target)||popBot.contains(e.target)||e.target.closest("#topLangBtn,#botLangBtn");if(!inside)closeAllPop()},{capture:true});
 
-      const googleBtnText = document.getElementById("googleBtnText");
-      const footerAbout = document.getElementById("footerAbout");
-      const footerFaq = document.getElementById("footerFaq");
-      const footerPrivacy = document.getElementById("footerPrivacy");
-      const footerContact = document.getElementById("footerContact");
-      const typeEl = document.getElementById("typewriter");
-
-      if (googleBtnText) googleBtnText.textContent = dict.googleBtn;
-      if (footerAbout) footerAbout.textContent = dict.footerAbout;
-      if (footerFaq) footerFaq.textContent = dict.footerFaq;
-      if (footerPrivacy) footerPrivacy.textContent = dict.footerPrivacy;
-      if (footerContact) footerContact.textContent = dict.footerContact;
-      if (typeEl) typeEl.textContent = dict.phrases[0] || "";
-
-      return dict;
-    }
-
-    function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = String(msg || "");
-      toastEl.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(() => toastEl.classList.remove("show"), 2200);
-    }
-
-    function getNextTarget(){
-      try{
-        const u = new URL(location.href);
-        return String(u.searchParams.get("next") || "").trim();
-      }catch{
-        return "";
-      }
-    }
-
-    async function resolveTarget(access){
-  const next = getNextTarget();
-  return next || HOME;
-}
-
-    async function getAccessState() {
-      const { data:{ session } } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error("Oturum bulunamadı");
-      }
-
-      const resp = await fetch("https://italky-api.onrender.com/api/session/access-state", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`
-        }
-      });
-
-      const json = await resp.json().catch(() => ({}));
-
-      if (!resp.ok) {
-        throw new Error(json?.detail || "Erişim kontrolü yapılamadı");
-      }
-
-      return json;
-    }
-
-    async function routeAfterLogin(){
-  try{
-    await ensureAuthAndCacheUser();
-    const access = await getAccessState();
-    const target = await resolveTarget(access);
-    location.replace(target);
-  }catch(e){
-    console.error("routeAfterLogin error:", e);
-    location.replace(HOME);
-  }
-}
-
-    function hasNativeGoogleLogin() {
-      return !!(
-        window.Native &&
-        typeof window.Native.startGoogleLogin === "function"
-      );
-    }
-
-    async function startWebGoogleLogin() {
-      const next = getNextTarget();
-      const redirectTo = next
-        ? `${location.origin}/pages/login.html?next=${encodeURIComponent(next)}`
-        : `${location.origin}/pages/login.html`;
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-    }
-
-    window.onNativeLoginSuccess = async function(payload){
-      const dict = currentDict();
-
-      try{
-        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
-        const idToken = String(data?.id_token || data?.idToken || "").trim();
-
-        if(!idToken){
-          googleBtn.disabled = false;
-          toast(dict.toastNoToken);
-          return;
-        }
-
-        googleBtn.disabled = true;
-        toast(dict.toastSigningIn);
-
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider: "google",
-          token: idToken
-        });
-
-        if (error) {
-          googleBtn.disabled = false;
-          toast(dict.toastLoginFailed);
-          console.error("signInWithIdToken error:", error);
-          return;
-        }
-
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          googleBtn.disabled = false;
-          toast(dict.toastNoSession);
-          return;
-        }
-
-        setTimeout(() => routeAfterLogin(), 300);
-      }catch(e){
-        console.error("onNativeLoginSuccess error:", e);
-        googleBtn.disabled = false;
-        toast(dict.toastLoginError);
-      }
-    };
-
-    googleBtn?.addEventListener("click", async () => {
-      const dict = currentDict();
-
-      try{
-        googleBtn.disabled = true;
-        toast(dict.toastStarting);
-
-        if (hasNativeGoogleLogin()) {
-          window.Native.startGoogleLogin();
-          return;
-        }
-
-        await startWebGoogleLogin();
-      }catch(e){
-        console.error("googleBtn click error:", e);
-        googleBtn.disabled = false;
-        toast(dict.toastStartFailed);
-      }
-    });
-
-    let phrases = applyLoginTranslations().phrases.slice();
-    let pi = 0;
-    const typeEl = document.getElementById("typewriter");
-
-    setInterval(() => {
-      phrases = currentDict().phrases.slice();
-      pi = (pi + 1) % phrases.length;
-      if(typeEl){
-        typeEl.style.animation = "none";
-        typeEl.offsetHeight;
-        typeEl.textContent = phrases[pi];
-        typeEl.style.animation = null;
-      }
-    }, 5600);
-
-    window.addEventListener("storage", (e) => {
-      if (e.key === SITE_LANG_KEY || e.key === LEGACY_SITE_LANG_KEY) {
-        const dict = applyLoginTranslations();
-        phrases = dict.phrases.slice();
-        pi = 0;
-      }
-    });
-
-    (async function boot(){
-      try{
-        applyLoginTranslations();
-
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          document.body.classList.add("login-ready");
-          return;
-        }
-        await routeAfterLogin();
-      }catch(e){
-        console.error("boot error:", e);
-        document.body.classList.add("login-ready");
-      }
-    })();
+    function clearBody(body){if(body)body.innerHTML=""}
+    function addBubble(side,text,latest=false){const body=side==="top"?topBody:botBody;if(!body)return null;if(latest)body.querySelectorAll(".bubble.latest").forEach((x)=>x.classList.remove("latest"));const div=document.createElement("div");div.className=`bubble${latest?" latest":""}`;div.textContent=String(text||"").trim();body.appendChild(div);const scroll=()=>{try{body.scrollTop=body.scrollHeight}catch{}};scroll();requestAnimationFrame(scroll);setTimeout(scroll,60);return div}
+    function setMicState(side,listening){const mic=side==="top"?topMic:botMic;mic.classList.toggle("listening",!!listening)}
+    function buildRecognizer(langCode){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;const rec=new SR();rec.lang=langObj(langCode).bcp;rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;return rec}
+    function stopRecognizer(){try{recognizer?.stop?.()}catch{}}
+    function cleanupTranscript(text){return String(text||"").replace(/\s+/g," ").replace(/\b(\S+)( \1\b)+/gi,"$1").trim()}
+    async function maybeShowAd(){const now=Date.now();if(now-sessionStart<5*60*1000)return true;if(lastAdAt&&now-lastAdAt<5*60*1000)return true;return new Promise((resolve)=>{if(!adModal){lastAdAt=Date.now();resolve(true);return}refreshTexts();adModal.classList.add("show");const clean=()=>{watchAdBtn.onclick=null;closeAdBtn.onclick=null;adModal.classList.remove("show")};watchAdBtn.onclick=()=>{try{if(window.AndroidAdBridge?.showRewardedAd)window.AndroidAdBridge.showRewardedAd("public_facetoface_5min");else if(window.NativeAds?.showRewardedAd)window.NativeAds.showRewardedAd("public_facetoface_5min");else if(window.AdMobBridge?.showRewardedAd)window.AdMobBridge.showRewardedAd("public_facetoface_5min")}catch{}lastAdAt=Date.now();clean();resolve(true)};closeAdBtn.onclick=()=>{clean();resolve(false)}})}
+    async function translateOnline(text,from,to){const endpoints=[`${API_BASE}/api/translate_ai`,`${API_BASE}/api/translate-ai`,`${API_BASE}/api/translate`];for(const endpoint of endpoints){try{const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(text||"").trim(),from_lang:canonical(from),to_lang:canonical(to),source:canonical(from),target:canonical(to),mode:"normal",use_ai:false,cultural:false,tone:"neutral",style:"warm"})});const j=await r.json().catch(()=>null);const value=String(j?.translated||j?.translation||j?.text||"").trim();if(r.ok&&value)return value}catch{}}return null}
+    function speak(text,langCode){const value=String(text||"").trim();if(!value)return;try{window.speechSynthesis?.cancel?.();if(window.NativeTTS?.speak){window.NativeTTS.speak(value,canonical(langCode));return}const u=new SpeechSynthesisUtterance(value);u.lang=langObj(langCode).bcp;u.rate=.95;speechSynthesis.speak(u)}catch{}}
+    async function finalizeSpeech(side,text){const clean=cleanupTranscript(text);if(!clean)return;const adOk=await maybeShowAd();if(!adOk)return;const src=side==="top"?topLang:botLang;const dst=side==="top"?botLang:topLang;const other=side==="top"?"bot":"top";addBubble(side,clean,false);const targetRow=addBubble(other,"",true);const translated=await translateOnline(clean,src,dst);if(!translated){if(targetRow)targetRow.textContent=tx("translateError");return}targetRow.textContent=translated;speak(translated,dst)}
+    function startRecording(side){if(recognizer){stopRecognizer();return}const sourceLang=side==="top"?topLang:botLang;const rec=buildRecognizer(sourceLang);if(!rec){showToast(tx("micUnsupported"));return}recognizer=rec;liveText="";rec.onstart=()=>setMicState(side,true);rec.onresult=(e)=>{let finalText="",interimText="";for(let i=0;i<e.results.length;i++){const txt=String(e.results[i]?.[0]?.transcript||"").trim();if(!txt)continue;if(e.results[i].isFinal)finalText+=` ${txt}`;else interimText+=` ${txt}`}liveText=cleanupTranscript(finalText||interimText||liveText)};rec.onerror=(e)=>{const err=String(e?.error||"");showToast(err.includes("not-allowed")?tx("micDenied"):tx("micError"));setMicState(side,false);recognizer=null;liveText=""};rec.onend=()=>{const finalText=cleanupTranscript(liveText);setMicState(side,false);recognizer=null;liveText="";if(finalText)finalizeSpeech(side,finalText)};try{rec.start()}catch{showToast(tx("micError"));setMicState(side,false);recognizer=null;liveText=""}}
+    topMic.addEventListener("click",()=>startRecording("top"));botMic.addEventListener("click",()=>startRecording("bot"));
+    function clearChat(){stopRecognizer();try{window.speechSynthesis?.cancel?.()}catch{}try{window.NativeTTS?.stop?.()}catch{}recognizer=null;liveText="";topMic.classList.remove("listening");botMic.classList.remove("listening");clearBody(topBody);clearBody(botBody)}
+    centerClearBtn.addEventListener("click",clearChat);
+    async function detectCountryLang(){try{const r=await fetch("https://ipapi.co/json/",{cache:"no-store"});const j=await r.json();const country=String(j?.country_code||"").toUpperCase();const code=COUNTRY_LANG[country];if(code&&langExists(code))return code}catch{}const nav=canonical(navigator.language||"");if(nav&&langExists(nav))return nav;return botLang}
+    async function boot(){const detected=await detectCountryLang();if(detected&&langExists(detected)){botLang=detected;if(topLang===botLang)topLang=differentLang(botLang)}refreshTexts();clearBody(topBody);clearBody(botBody)}
+    boot();
   </script>
 </body>
 </html>
