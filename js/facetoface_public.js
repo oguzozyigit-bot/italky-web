@@ -1,3 +1,5 @@
+// /js/facetoface_public.js
+
 import { getLangPoolForSite } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com";
@@ -7,64 +9,66 @@ const SITE_LANG_KEY = "site_lang";
 const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
 const NATIVE_LANG_KEY = "italky_native_lang_v7";
 const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
-const PUBLIC_F2F_AD_KEY = "italkyai_public_f2f_ad_v2";
+const PUBLIC_F2F_AD_KEY = "italkyai_public_f2f_ad_v3";
 
 const BCP = {
-  tr: "tr-TR", en: "en-US", de: "de-DE", fr: "fr-FR", it: "it-IT",
-  es: "es-ES", ar: "ar-SA", ru: "ru-RU", bg: "bg-BG", pt: "pt-PT",
-  zh: "zh-CN", ja: "ja-JP", ko: "ko-KR"
+  tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT",
+  es:"es-ES", ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT",
+  zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
 };
 
 const UI = {
-  tr: {
-    mic: "Mikrofona bas",
-    download: "DİL İNDİR",
-    clear: "TEMİZLE",
-    login: "GİRİŞ YAP",
-    topLang: "ÜST DİL",
-    botLang: "ALT DİL",
-    offlineNeed: "İnternetsiz ortamda çeviri yapabilmek için dil paketi indirmeniz gereklidir.",
-    online: "Online mod aktif.",
-    offline: "Offline mod aktif.",
-    noOffline: "Bu dil çifti için önce dil paketi indirmeniz gerekli.",
-    adTitle: "Ücretsiz Kullanım",
-    adText: "FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.",
-    watchAd: "Reklam İzle",
-    close: "Şimdilik Kapat",
-    adNeeded: "Reklam izlenmeden çeviri başlatılmadı.",
-    micError: "Mikrofon hatası.",
-    micDenied: "Mikrofon izni gerekli.",
-    micUnsupported: "Bu cihazda konuşma algılama desteklenmiyor.",
-    translateError: "Çeviri yapılamadı"
+  tr:{
+    download:"DİL İNDİR",
+    clear:"TEMİZLE",
+    login:"+ GİRİŞ YAP",
+    topLang:"ÜST DİL",
+    botLang:"ALT DİL",
+    offlineNeed:"İnternetsiz ortamda çeviri yapabilmek için dil paketi indirmeniz gereklidir.",
+    online:"Online mod aktif.",
+    offline:"Offline mod aktif.",
+    noOffline:"Bu dil çifti için önce dil paketi indirmeniz gerekli.",
+    adTitle:"Ücretsiz Kullanım",
+    adText:"FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.",
+    watchAd:"Reklam İzle",
+    close:"Şimdilik Kapat",
+    adNeeded:"Reklam izlenmeden çeviri başlatılmadı.",
+    micError:"Mikrofon hatası.",
+    micDenied:"Mikrofon izni gerekli.",
+    micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
+    translateError:"Çeviri yapılamadı",
+    adPreparing:"Reklam hazırlanıyor, bugünlük devam edebilirsiniz.",
+    adOpenError:"Reklam açılamadı, bugünlük devam edebilirsiniz."
   },
-  en: {
-    mic: "Tap microphone",
-    download: "DOWNLOAD",
-    clear: "CLEAR",
-    login: "LOGIN",
-    topLang: "TOP LANGUAGE",
-    botLang: "BOTTOM LANGUAGE",
-    offlineNeed: "To translate without internet, you need to download a language pack.",
-    online: "Online mode is active.",
-    offline: "Offline mode is active.",
-    noOffline: "Please download this language pack first.",
-    adTitle: "Free Use",
-    adText: "FaceToFace free use includes ads. Watch the ad to continue translating.",
-    watchAd: "Watch Ad",
-    close: "Close",
-    adNeeded: "Translation was not started without watching the ad.",
-    micError: "Microphone error.",
-    micDenied: "Microphone permission is required.",
-    micUnsupported: "Speech recognition is not supported on this device.",
-    translateError: "Translation failed"
+  en:{
+    download:"DOWNLOAD",
+    clear:"CLEAR",
+    login:"+ LOGIN",
+    topLang:"TOP LANGUAGE",
+    botLang:"BOTTOM LANGUAGE",
+    offlineNeed:"To translate without internet, you need to download a language pack.",
+    online:"Online mode is active.",
+    offline:"Offline mode is active.",
+    noOffline:"Please download this language pack first.",
+    adTitle:"Free Use",
+    adText:"FaceToFace free use includes ads. Watch the ad to continue translating.",
+    watchAd:"Watch Ad",
+    close:"Close",
+    adNeeded:"Translation was not started without watching the ad.",
+    micError:"Microphone error.",
+    micDenied:"Microphone permission is required.",
+    micUnsupported:"Speech recognition is not supported on this device.",
+    translateError:"Translation failed",
+    adPreparing:"Ad is preparing, you can continue for today.",
+    adOpenError:"Ad could not open, you can continue for today."
   }
 };
 
-function canonical(code) {
+function canonical(code){
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
-function getSiteLang() {
+function getSiteLang(){
   return canonical(
     localStorage.getItem(SITE_LANG_KEY) ||
     localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
@@ -74,64 +78,72 @@ function getSiteLang() {
   ) || "tr";
 }
 
-function getUiLang() {
+let botLang = "";
+let topLang = "";
+
+function getUiLang(){
   const c = canonical(botLang);
   return UI[c] ? c : "en";
 }
 
-function tx(key) {
+function tx(key){
   return UI[getUiLang()]?.[key] || UI.en[key] || key;
 }
 
 const SITE_LANG = getSiteLang();
-const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG)) ? getLangPoolForSite(SITE_LANG) : [];
+const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
+  ? getLangPoolForSite(SITE_LANG)
+  : [];
 
 const LANGS = RAW_LANG_POOL
-  .map((l) => {
+  .map((l)=>{
     const code = canonical(l.code);
-    if (!code) return null;
+    if(!code) return null;
+
     return {
       code,
-      flag: l.flag || "🌐",
-      name: l.name || l.tr_name || code.toUpperCase(),
-      bcp: BCP[code] || `${code}-${String(code).toUpperCase()}`
+      flag:l.flag || "🌐",
+      name:l.name || l.tr_name || code.toUpperCase(),
+      bcp:BCP[code] || `${code}-${String(code).toUpperCase()}`
     };
   })
   .filter(Boolean);
 
-function langExists(code) {
-  return !!LANGS.find((x) => x.code === canonical(code));
+function langExists(code){
+  return !!LANGS.find((x)=>x.code === canonical(code));
 }
 
-function langObj(code) {
+function langObj(code){
   const c = canonical(code);
-  return LANGS.find((x) => x.code === c) || {
-    code: c || "en",
-    flag: "🌐",
-    name: (c || "en").toUpperCase(),
-    bcp: BCP[c] || "en-US"
+
+  return LANGS.find((x)=>x.code === c) || {
+    code:c || "en",
+    flag:"🌐",
+    name:(c || "en").toUpperCase(),
+    bcp:BCP[c] || "en-US"
   };
 }
 
-function labelChip(code) {
+function labelChip(code){
   const o = langObj(code);
   return `${o.flag} ${o.name}`;
 }
 
-function differentLang(base) {
+function differentLang(base){
   const b = canonical(base);
-  const preferred = b === "tr"
-    ? ["en", "de", "fr", "es", "it", "ar", "ru"]
-    : ["tr", "en", "de", "fr", "es", "it", "ar", "ru"];
 
-  for (const c of preferred) {
-    if (c !== b && langExists(c)) return c;
+  const preferred = b === "tr"
+    ? ["en","de","fr","es","it","ar","ru"]
+    : ["tr","en","de","fr","es","it","ar","ru"];
+
+  for(const c of preferred){
+    if(c !== b && langExists(c)) return c;
   }
 
-  return LANGS.find((l) => l.code !== b)?.code || "en";
+  return LANGS.find((l)=>l.code !== b)?.code || "en";
 }
 
-function resolveInitialBotLang() {
+function resolveInitialBotLang(){
   const raw = canonical(
     localStorage.getItem(NATIVE_LANG_KEY) ||
     localStorage.getItem(SITE_LANG_KEY) ||
@@ -140,8 +152,9 @@ function resolveInitialBotLang() {
     "tr"
   );
 
-  if (langExists(raw)) return raw;
-  if (langExists("tr")) return "tr";
+  if(langExists(raw)) return raw;
+  if(langExists("tr")) return "tr";
+
   return LANGS[0]?.code || "tr";
 }
 
@@ -154,7 +167,6 @@ const topLangBtn = $("topLangBtn");
 const botLangBtn = $("botLangBtn");
 
 const topModeToggle = $("topModeToggle");
-const botModeToggle = $("botModeToggle");
 
 const popTop = $("pop-top");
 const popBot = $("pop-bot");
@@ -170,9 +182,6 @@ const clearBtn = $("clearBtn");
 const downloadBtn = $("downloadBtn");
 const loginBtnTop = $("loginBtnTop");
 
-const topHint = $("topHint");
-const botHint = $("botHint");
-
 const adModal = $("adModal");
 const adTitle = $("adTitle");
 const adText = $("adText");
@@ -180,43 +189,47 @@ const watchAdBtn = $("watchAdBtn");
 const closeAdBtn = $("closeAdBtn");
 const toast = $("toast");
 
-let botLang = resolveInitialBotLang();
-let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+botLang = resolveInitialBotLang();
+topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
 
-if (topLang === botLang) topLang = differentLang(botLang);
+if(topLang === botLang){
+  topLang = differentLang(botLang);
+}
 
 let runtimeMode = "online";
 let recognizer = null;
 let liveText = "";
 
-function showToast(msg = "") {
-  if (!toast) return;
+function showToast(msg = ""){
+  if(!toast) return;
+
   toast.textContent = String(msg || "");
   toast.classList.add("show");
+
   clearTimeout(window.__publicF2fToastTimer);
-  window.__publicF2fToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+  window.__publicF2fToastTimer = setTimeout(()=>{
+    toast.classList.remove("show");
+  },2200);
+  function todayKey(){
+  return new Date().toISOString().slice(0,10);
 }
 
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function adWatchedToday() {
+function adWatchedToday(){
   return localStorage.getItem(PUBLIC_F2F_AD_KEY) === todayKey();
 }
 
-function markAdWatchedToday() {
-  localStorage.setItem(PUBLIC_F2F_AD_KEY, todayKey());
+function markAdWatchedToday(){
+  localStorage.setItem(PUBLIC_F2F_AD_KEY,todayKey());
 }
 
-function showAdBeforeTranslate() {
-  return new Promise((resolve) => {
-    if (adWatchedToday()) {
+function showAdBeforeTranslate(){
+  return new Promise((resolve)=>{
+    if(adWatchedToday()){
       resolve(true);
       return;
     }
 
-    if (!adModal || !watchAdBtn || !closeAdBtn) {
+    if(!adModal || !watchAdBtn || !closeAdBtn){
       markAdWatchedToday();
       resolve(true);
       return;
@@ -229,108 +242,116 @@ function showAdBeforeTranslate() {
 
     adModal.classList.add("show");
 
-    const clean = () => {
+    const clean = ()=>{
       watchAdBtn.onclick = null;
       closeAdBtn.onclick = null;
       adModal.classList.remove("show");
     };
 
-    watchAdBtn.onclick = async () => {
-      try {
-        if (window.AndroidAdBridge?.showRewardedAd) {
+    watchAdBtn.onclick = async ()=>{
+      try{
+        if(window.AndroidAdBridge?.showRewardedAd){
           window.AndroidAdBridge.showRewardedAd("public_facetoface_daily");
-        } else if (window.NativeAds?.showRewardedAd) {
+        }else if(window.NativeAds?.showRewardedAd){
           window.NativeAds.showRewardedAd("public_facetoface_daily");
+        }else if(window.AdMobBridge?.showRewardedAd){
+          window.AdMobBridge.showRewardedAd("public_facetoface_daily");
+        }else{
+          showToast(tx("adPreparing"));
         }
-      } catch {}
+      }catch{
+        showToast(tx("adOpenError"));
+      }
 
       markAdWatchedToday();
       clean();
       resolve(true);
     };
 
-    closeAdBtn.onclick = () => {
+    closeAdBtn.onclick = ()=>{
       clean();
       resolve(false);
     };
   });
 }
 
-function getInstalledOfflinePairs() {
-  try {
+function getInstalledOfflinePairs(){
+  try{
     const parsed = JSON.parse(localStorage.getItem(OFFLINE_INSTALLED_KEY) || "{}");
     return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
+  }catch{
     return {};
   }
 }
 
-function hasInstalledOfflinePair(source, target) {
+function hasInstalledOfflinePair(source,target){
   const s = canonical(source);
   const t = canonical(target);
   const installed = getInstalledOfflinePairs();
+
   return !!installed[`${s}_${t}`] || !!installed[`${t}_${s}`];
 }
 
-function syncModeUi() {
+function syncModeUi(){
   const online = runtimeMode === "online";
 
-  [topModeToggle, botModeToggle].forEach((btn) => {
-    if (!btn) return;
-    btn.textContent = online ? "ONLINE" : "OFFLINE";
-    btn.classList.toggle("online", online);
-    btn.classList.toggle("offline", !online);
-  });
+  if(!topModeToggle) return;
+
+  topModeToggle.textContent = online ? "ONLINE" : "OFFLINE";
+  topModeToggle.classList.toggle("online",online);
+  topModeToggle.classList.toggle("offline",!online);
 }
 
-function setMode(next) {
+function setMode(next){
   runtimeMode = next === "offline" ? "offline" : "online";
   syncModeUi();
 
-  if (runtimeMode === "offline") {
-    if (!hasInstalledOfflinePair(topLang, botLang)) showToast(tx("noOffline"));
-    else showToast(tx("offline"));
-  } else {
+  if(runtimeMode === "offline"){
+    if(!hasInstalledOfflinePair(topLang,botLang)){
+      showToast(tx("noOffline"));
+    }else{
+      showToast(tx("offline"));
+    }
+  }else{
     showToast(tx("online"));
   }
 }
 
-function toggleMode() {
+function toggleMode(){
   setMode(runtimeMode === "online" ? "offline" : "online");
 }
 
-topModeToggle?.addEventListener("click", toggleMode);
-botModeToggle?.addEventListener("click", toggleMode);
+topModeToggle?.addEventListener("click",toggleMode);
 
-function refreshStaticTexts() {
-  if (downloadBtn) downloadBtn.textContent = tx("download");
-  if (clearBtn) clearBtn.textContent = tx("clear");
-  if (loginBtnTop) loginBtnTop.textContent = tx("login");
-  if (topPopTitle) topPopTitle.textContent = tx("topLang");
-  if (botPopTitle) botPopTitle.textContent = tx("botLang");
-
-  if (topHint) topHint.textContent = tx("mic");
-  if (botHint) botHint.textContent = tx("mic");
+function refreshStaticTexts(){
+  if(downloadBtn) downloadBtn.textContent = tx("download");
+  if(clearBtn) clearBtn.textContent = tx("clear");
+  if(loginBtnTop) loginBtnTop.textContent = tx("login");
+  if(topPopTitle) topPopTitle.textContent = tx("topLang");
+  if(botPopTitle) botPopTitle.textContent = tx("botLang");
 }
 
-function refreshLangLabels() {
-  if (topLangBtn) topLangBtn.textContent = labelChip(topLang);
-  if (botLangBtn) botLangBtn.textContent = labelChip(botLang);
+function refreshLangLabels(){
+  if(topLangBtn) topLangBtn.textContent = labelChip(topLang);
+  if(botLangBtn) botLangBtn.textContent = labelChip(botLang);
+
   refreshStaticTexts();
 }
 
-function closeAllPop() {
+function closeAllPop(){
   popTop?.classList.remove("show");
   popBot?.classList.remove("show");
 }
 
-function renderPop(side) {
+function renderPop(side){
   const list = side === "top" ? listTop : listBot;
   const selected = side === "top" ? topLang : botLang;
-  if (!list) return;
 
-  list.innerHTML = LANGS.map((l) => {
+  if(!list) return;
+
+  list.innerHTML = LANGS.map((l)=>{
     const active = l.code === selected ? "active" : "";
+
     return `
       <div class="pop-item ${active}" data-code="${l.code}">
         <div class="pop-left">
@@ -342,226 +363,255 @@ function renderPop(side) {
     `;
   }).join("");
 
-  list.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
+  list.querySelectorAll(".pop-item").forEach((el)=>{
+    el.addEventListener("click",()=>{
       const code = canonical(el.dataset.code);
 
-      if (side === "top") {
+      if(side === "top"){
         topLang = code;
-        if (topLang === botLang) botLang = differentLang(topLang);
-      } else {
+        if(topLang === botLang){
+          botLang = differentLang(topLang);
+        }
+      }else{
         botLang = code;
-        if (botLang === topLang) topLang = differentLang(botLang);
+        if(botLang === topLang){
+          topLang = differentLang(botLang);
+        }
       }
 
       refreshLangLabels();
       closeAllPop();
 
-      if (runtimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang)) {
+      if(runtimeMode === "offline" && !hasInstalledOfflinePair(topLang,botLang)){
         showToast(tx("noOffline"));
       }
     });
   });
 }
 
-topLangBtn?.addEventListener("click", (e) => {
+topLangBtn?.addEventListener("click",(e)=>{
   e.preventDefault();
   e.stopPropagation();
+
   closeAllPop();
   renderPop("top");
   popTop?.classList.add("show");
 });
 
-botLangBtn?.addEventListener("click", (e) => {
+botLangBtn?.addEventListener("click",(e)=>{
   e.preventDefault();
   e.stopPropagation();
+
   closeAllPop();
   renderPop("bot");
   popBot?.classList.add("show");
 });
 
-closeTop?.addEventListener("click", closeAllPop);
-closeBot?.addEventListener("click", closeAllPop);
+closeTop?.addEventListener("click",closeAllPop);
+closeBot?.addEventListener("click",closeAllPop);
 
-document.addEventListener("click", (e) => {
-  const inside =
-    popTop?.contains(e.target) ||
-    popBot?.contains(e.target) ||
-    e.target?.closest?.("#topLangBtn,#botLangBtn");
+document.addEventListener(
+  "click",
+  (e)=>{
+    const inside =
+      popTop?.contains(e.target) ||
+      popBot?.contains(e.target) ||
+      e.target?.closest?.("#topLangBtn,#botLangBtn");
 
-  if (!inside) closeAllPop();
-}, { capture: true });
+    if(!inside) closeAllPop();
+  },
+  {capture:true}
+);
 
-downloadBtn?.addEventListener("click", (e) => {
+downloadBtn?.addEventListener("click",(e)=>{
   e.preventDefault();
-  location.href = "/pages/offline_languages_public.html";
+  location.href = "/pages/offline_languages.html";
 });
 
-function clearBody(body) {
-  if (!body) return;
+function clearBody(body){
+  if(!body) return;
   body.innerHTML = "";
-  const div = document.createElement("div");
-  div.className = "bubble";
-  div.textContent = tx("mic");
-  body.appendChild(div);
 }
 
-function addBubble(side, text, latest = false) {
+function addBubble(side,text,latest=false){
   const body = side === "top" ? topBody : botBody;
-  if (!body) return null;
 
-  if (latest) body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
+  if(!body) return null;
+
+  if(latest){
+    body.querySelectorAll(".bubble.latest").forEach((x)=>{
+      x.classList.remove("latest");
+    });
+  }
 
   const div = document.createElement("div");
   div.className = `bubble${latest ? " latest" : ""}`;
   div.textContent = String(text || "").trim();
+
   body.appendChild(div);
 
-  const scroll = () => {
-    try { body.scrollTop = body.scrollHeight; } catch {}
+  const scroll = ()=>{
+    try{
+      body.scrollTop = body.scrollHeight;
+    }catch{}
   };
 
   scroll();
   requestAnimationFrame(scroll);
-  setTimeout(scroll, 60);
+  setTimeout(scroll,60);
 
   return div;
 }
 
-function setMicState(side, listening) {
+function setMicState(side,listening){
   const mic = side === "top" ? topMic : botMic;
-  mic?.classList.toggle("listening", !!listening);
+  mic?.classList.toggle("listening",!!listening);
 }
 
-function buildRecognizer(langCode) {
+function buildRecognizer(langCode){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
+
+  if(!SR) return null;
 
   const rec = new SR();
+
   rec.lang = langObj(langCode).bcp;
   rec.interimResults = true;
   rec.continuous = false;
   rec.maxAlternatives = 1;
+
   return rec;
 }
 
-function stopRecognizer() {
-  try { recognizer?.stop?.(); } catch {}
+function stopRecognizer(){
+  try{
+    recognizer?.stop?.();
+  }catch{}
 }
 
-async function translateOnline(text, from, to) {
+async function translateOnline(text,from,to){
   const endpoints = [
     `${API_BASE}/api/translate_ai`,
     `${API_BASE}/api/translate-ai`,
     `${API_BASE}/api/translate`
   ];
 
-  for (const endpoint of endpoints) {
-    try {
-      const r = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: String(text || "").trim(),
-          from_lang: canonical(from),
-          to_lang: canonical(to),
-          source: canonical(from),
-          target: canonical(to),
-          mode: "normal",
-          use_ai: false,
-          cultural: false,
-          tone: "neutral",
-          style: "warm"
+  for(const endpoint of endpoints){
+    try{
+      const r = await fetch(endpoint,{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          text:String(text || "").trim(),
+          from_lang:canonical(from),
+          to_lang:canonical(to),
+          source:canonical(from),
+          target:canonical(to),
+          mode:"normal",
+          use_ai:false,
+          cultural:false,
+          tone:"neutral",
+          style:"warm"
         })
       });
 
-      const j = await r.json().catch(() => null);
+      const j = await r.json().catch(()=>null);
       const value = String(j?.translated || j?.translation || j?.text || "").trim();
 
-      if (r.ok && value) return value;
-    } catch {}
+      if(r.ok && value) return value;
+    }catch{}
   }
 
   return null;
 }
 
-function translateOffline(text, from, to) {
-  return new Promise((resolve) => {
-    if (!window.OfflineTranslate?.translate) {
+function translateOffline(text,from,to){
+  return new Promise((resolve)=>{
+    if(!window.OfflineTranslate?.translate){
       resolve(null);
       return;
     }
 
-    const handler = (e) => {
-      window.removeEventListener("offlineTranslateResult", handler);
+    const handler = (e)=>{
+      window.removeEventListener("offlineTranslateResult",handler);
+
       const value = String(e.detail?.translatedText || "").trim();
       resolve(value || null);
     };
 
-    window.addEventListener("offlineTranslateResult", handler);
+    window.addEventListener("offlineTranslateResult",handler);
 
-    try {
-      window.OfflineTranslate.translate(JSON.stringify({
-        text: String(text || "").trim(),
-        from: canonical(from),
-        to: canonical(to)
-      }));
-    } catch {
-      window.removeEventListener("offlineTranslateResult", handler);
+    try{
+      window.OfflineTranslate.translate(
+        JSON.stringify({
+          text:String(text || "").trim(),
+          from:canonical(from),
+          to:canonical(to)
+        })
+      );
+    }catch{
+      window.removeEventListener("offlineTranslateResult",handler);
       resolve(null);
     }
   });
 }
 
-async function translateText(text, from, to) {
-  if (runtimeMode === "offline") {
-    if (!hasInstalledOfflinePair(from, to)) {
+async function translateText(text,from,to){
+  if(runtimeMode === "offline"){
+    if(!hasInstalledOfflinePair(from,to)){
       showToast(tx("noOffline"));
       return null;
     }
 
-    const offline = await translateOffline(text, from, to);
-    if (offline) return offline;
+    const offline = await translateOffline(text,from,to);
+
+    if(offline) return offline;
 
     showToast(tx("translateError"));
     return null;
   }
 
-  return await translateOnline(text, from, to);
+  return await translateOnline(text,from,to);
 }
 
-function speak(text, langCode) {
+function speak(text,langCode){
   const value = String(text || "").trim();
-  if (!value) return;
 
-  try {
+  if(!value) return;
+
+  try{
     window.speechSynthesis?.cancel?.();
 
-    if (window.NativeTTS?.speak) {
-      window.NativeTTS.speak(value, canonical(langCode));
+    if(window.NativeTTS?.speak){
+      window.NativeTTS.speak(value,canonical(langCode));
       return;
     }
 
     const u = new SpeechSynthesisUtterance(value);
     u.lang = langObj(langCode).bcp;
     u.rate = 0.95;
+
     speechSynthesis.speak(u);
-  } catch {}
+  }catch{}
 }
 
-function cleanupTranscript(text) {
+function cleanupTranscript(text){
   return String(text || "")
-    .replace(/\s+/g, " ")
-    .replace(/\b(\S+)( \1\b)+/gi, "$1")
+    .replace(/\s+/g," ")
+    .replace(/\b(\S+)( \1\b)+/gi,"$1")
     .trim();
 }
 
-async function finalizeSpeech(side, text) {
+async function finalizeSpeech(side,text){
   const clean = cleanupTranscript(text);
-  if (!clean) return;
+
+  if(!clean) return;
 
   const allowed = await showAdBeforeTranslate();
-  if (!allowed) {
+
+  if(!allowed){
     showToast(tx("adNeeded"));
     return;
   }
@@ -570,22 +620,23 @@ async function finalizeSpeech(side, text) {
   const dst = side === "top" ? botLang : topLang;
   const other = side === "top" ? "bot" : "top";
 
-  addBubble(side, clean, false);
+  addBubble(side,clean,false);
 
-  const targetRow = addBubble(other, "", true);
-  const translated = await translateText(clean, src, dst);
+  const targetRow = addBubble(other,"",true);
+  const translated = await translateText(clean,src,dst);
 
-  if (!translated) {
-    if (targetRow) targetRow.textContent = tx("translateError");
+  if(!translated){
+    if(targetRow) targetRow.textContent = tx("translateError");
     return;
   }
 
-  if (targetRow) targetRow.textContent = translated;
-  speak(translated, dst);
+  if(targetRow) targetRow.textContent = translated;
+
+  speak(translated,dst);
 }
 
-function startRecording(side) {
-  if (recognizer) {
+function startRecording(side){
+  if(recognizer){
     stopRecognizer();
     return;
   }
@@ -593,7 +644,7 @@ function startRecording(side) {
   const sourceLang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(sourceLang);
 
-  if (!rec) {
+  if(!rec){
     showToast(tx("micUnsupported"));
     return;
   }
@@ -601,63 +652,83 @@ function startRecording(side) {
   recognizer = rec;
   liveText = "";
 
-  rec.onstart = () => {
-    setMicState(side, true);
+  rec.onstart = ()=>{
+    setMicState(side,true);
   };
 
-  rec.onresult = (e) => {
+  rec.onresult = (e)=>{
     let finalText = "";
     let interimText = "";
 
-    for (let i = 0; i < e.results.length; i++) {
+    for(let i=0;i<e.results.length;i++){
       const txt = String(e.results[i]?.[0]?.transcript || "").trim();
-      if (!txt) continue;
 
-      if (e.results[i].isFinal) finalText += ` ${txt}`;
-      else interimText += ` ${txt}`;
+      if(!txt) continue;
+
+      if(e.results[i].isFinal){
+        finalText += ` ${txt}`;
+      }else{
+        interimText += ` ${txt}`;
+      }
     }
 
     liveText = cleanupTranscript(finalText || interimText || liveText);
   };
 
-  rec.onerror = (e) => {
+  rec.onerror = (e)=>{
     const err = String(e?.error || "");
-    if (err.includes("not-allowed")) showToast(tx("micDenied"));
-    else showToast(tx("micError"));
 
-    setMicState(side, false);
+    if(err.includes("not-allowed")){
+      showToast(tx("micDenied"));
+    }else{
+      showToast(tx("micError"));
+    }
+
+    setMicState(side,false);
     recognizer = null;
     liveText = "";
   };
 
-  rec.onend = () => {
+  rec.onend = ()=>{
     const finalText = cleanupTranscript(liveText);
 
-    setMicState(side, false);
+    setMicState(side,false);
     recognizer = null;
     liveText = "";
 
-    if (finalText) finalizeSpeech(side, finalText);
+    if(finalText){
+      finalizeSpeech(side,finalText);
+    }
   };
 
-  try {
+  try{
     rec.start();
-  } catch {
+  }catch{
     showToast(tx("micError"));
-    setMicState(side, false);
+    setMicState(side,false);
     recognizer = null;
     liveText = "";
   }
 }
 
-topMic?.addEventListener("click", () => startRecording("top"));
-botMic?.addEventListener("click", () => startRecording("bot"));
+topMic?.addEventListener("click",()=>{
+  startRecording("top");
+});
 
-clearBtn?.addEventListener("click", () => {
+botMic?.addEventListener("click",()=>{
+  startRecording("bot");
+});
+
+clearBtn?.addEventListener("click",()=>{
   stopRecognizer();
 
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  try { window.NativeTTS?.stop?.(); } catch {}
+  try{
+    window.speechSynthesis?.cancel?.();
+  }catch{}
+
+  try{
+    window.NativeTTS?.stop?.();
+  }catch{}
 
   recognizer = null;
   liveText = "";
@@ -669,15 +740,18 @@ clearBtn?.addEventListener("click", () => {
   clearBody(botBody);
 });
 
-function boot() {
+function boot(){
   refreshLangLabels();
   syncModeUi();
   clearBody(topBody);
   clearBody(botBody);
 
-  setTimeout(() => {
+  setTimeout(()=>{
     showToast(tx("offlineNeed"));
-  }, 800);
+  },800);
 }
 
 boot();
+  
+  
+    }
