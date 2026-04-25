@@ -20,27 +20,22 @@ const $ = (id) => document.getElementById(id);
 
 const el = {
   roomNameInput: $("roomNameInput"),
-  meetingAtInput: $("meetingAtInput"),
+  meetingDateInput: $("meetingDateInput"),
+  meetingTimeInput: $("meetingTimeInput"),
+  pickTodayBtn: $("pickTodayBtn"),
+  pickTomorrowBtn: $("pickTomorrowBtn"),
+  pickThreeDayBtn: $("pickThreeDayBtn"),
   createRoomBtn: $("createRoomBtn"),
   roomPreview: $("roomPreview"),
   roomPreviewCode: $("roomPreviewCode"),
-
   joinCodeInput: $("joinCodeInput"),
   joinRoomBtn: $("joinRoomBtn"),
   refreshMeetingsBtn: $("refreshMeetingsBtn"),
-
   meetingList: $("meetingList")
 };
 
 function safeText(v, fallback = "") {
   return String(v ?? fallback ?? "").trim();
-}
-
-function toIsoFromLocal(localValue) {
-  if (!localValue) return "";
-  const d = new Date(localValue);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString();
 }
 
 function formatDateTR(value) {
@@ -63,21 +58,42 @@ function isFutureMeeting(value) {
   return d.getTime() > Date.now();
 }
 
-function setDefaultMeetingTime() {
-  if (!el.meetingAtInput) return;
-  if (el.meetingAtInput.value) return;
+function dateToInputValue(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
+function timeToInputValue(date) {
+  const h = String(date.getHours()).padStart(2, "0");
+  const m = String(date.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+function buildMeetingAtIso() {
+  const datePart = safeText(el.meetingDateInput?.value);
+  const timePart = safeText(el.meetingTimeInput?.value);
+
+  if (!datePart || !timePart) return "";
+
+  const local = new Date(`${datePart}T${timePart}:00`);
+  if (Number.isNaN(local.getTime())) return "";
+
+  return local.toISOString();
+}
+
+function setMeetingInputs(date) {
+  if (!el.meetingDateInput || !el.meetingTimeInput) return;
+  el.meetingDateInput.value = dateToInputValue(date);
+  el.meetingTimeInput.value = timeToInputValue(date);
+}
+
+function setDefaultMeetingTime() {
   const now = new Date();
   now.setMinutes(now.getMinutes() + 15);
   now.setSeconds(0, 0);
-
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  const hh = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
-
-  el.meetingAtInput.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  setMeetingInputs(now);
 }
 
 async function getSession() {
@@ -89,7 +105,6 @@ async function getSession() {
 async function authHeaders() {
   const session = await getSession();
   const token = session?.access_token || "";
-
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -166,10 +181,7 @@ function goMeeting(roomId, roomCode) {
 
   const url = new URL("/pages/meeting.html", location.origin);
   url.searchParams.set("room_id", roomId);
-
-  if (roomCode) {
-    url.searchParams.set("room_code", roomCode);
-  }
+  if (roomCode) url.searchParams.set("room_code", roomCode);
 
   location.href = url.toString();
 }
@@ -212,8 +224,7 @@ async function resolveRoomByCode(roomCode) {
 
 async function createRoomFlow() {
   const roomName = safeText(el.roomNameInput?.value, "Yeni Meeting");
-  const meetingAtLocal = safeText(el.meetingAtInput?.value);
-  const meetingAt = toIsoFromLocal(meetingAtLocal);
+  const meetingAt = buildMeetingAtIso();
 
   if (!roomName) return;
   if (!meetingAt) return;
@@ -287,12 +298,6 @@ async function joinRoomFlow() {
     }
 
     renderSavedMeetings();
-
-    if (matched && !matched.started && matched.meeting_at && isFutureMeeting(matched.meeting_at)) {
-      goMeeting(room.roomId, room.roomCode);
-      return;
-    }
-
     goMeeting(room.roomId, room.roomCode);
   } catch (e) {
     console.error("joinRoomFlow error:", e);
@@ -346,6 +351,29 @@ function renderSavedMeetings() {
   }
 }
 
+function bindQuickButtons() {
+  el.pickTodayBtn?.addEventListener("click", () => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + 15);
+    d.setSeconds(0, 0);
+    setMeetingInputs(d);
+  });
+
+  el.pickTomorrowBtn?.addEventListener("click", () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(10, 0, 0, 0);
+    setMeetingInputs(d);
+  });
+
+  el.pickThreeDayBtn?.addEventListener("click", () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    d.setHours(10, 0, 0, 0);
+    setMeetingInputs(d);
+  });
+}
+
 function bindEvents() {
   el.createRoomBtn?.addEventListener("click", createRoomFlow);
   el.joinRoomBtn?.addEventListener("click", joinRoomFlow);
@@ -368,12 +396,21 @@ function bindEvents() {
     }
   });
 
-  el.meetingAtInput?.addEventListener("keydown", (e) => {
+  el.meetingDateInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       createRoomFlow();
     }
   });
+
+  el.meetingTimeInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      createRoomFlow();
+    }
+  });
+
+  bindQuickButtons();
 }
 
 function applyShellVars() {
@@ -402,23 +439,6 @@ async function init() {
   setDefaultMeetingTime();
   bindEvents();
   renderSavedMeetings();
-}
-
-function setDefaultMeetingTime() {
-  if (!el.meetingAtInput) return;
-  if (el.meetingAtInput.value) return;
-
-  const now = new Date();
-  now.setMinutes(now.getMinutes() + 15);
-  now.setSeconds(0, 0);
-
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  const hh = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
-
-  el.meetingAtInput.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
 }
 
 init();
