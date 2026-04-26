@@ -1,3 +1,5 @@
+// /js/offline_translate_bridge.js
+
 export function getOfflineStatus() {
   if (!window.OfflineTranslate) {
     return { ok: false, error: "OfflineTranslate bridge not available" };
@@ -14,6 +16,7 @@ export function setMockOfflineLicense(days = 30) {
   if (!window.OfflineTranslate) {
     throw new Error("OfflineTranslate bridge not available");
   }
+
   window.OfflineTranslate.setMockOfflineLicense(Number(days) || 30);
 }
 
@@ -21,33 +24,44 @@ export function clearOfflineLicense() {
   if (!window.OfflineTranslate) {
     throw new Error("OfflineTranslate bridge not available");
   }
+
   window.OfflineTranslate.clearOfflineLicense();
 }
 
+/**
+ * Public FaceToFace/offline download modeli:
+ * - Login yoksa bile indirme engellenmez.
+ * - Lisans hatası bu dosyada bloklanmaz.
+ * - Reklam gösterme işi sayfada yapılacak:
+ *   Her dil indirme butonuna basınca önce reklam, sonra bu fonksiyon çağrılacak.
+ */
 export function downloadOfflineModel(from, to, wifiOnly = false) {
   if (!window.OfflineTranslate) {
     throw new Error("OfflineTranslate bridge not available");
   }
 
+  const payload = {
+    source: from,
+    target: to,
+    from,
+    to,
+    wifiOnly: !!wifiOnly,
+
+    // Yeni public kullanım işaretleri
+    publicDownload: true,
+    loginRequired: false,
+    requireLicense: false,
+    skipLicenseCheck: true,
+    sourceModule: "offline_languages_public"
+  };
+
   if (typeof window.OfflineTranslate.downloadBiDirectionalPair === "function") {
-    window.OfflineTranslate.downloadBiDirectionalPair(
-      JSON.stringify({
-        source: from,
-        target: to,
-        wifiOnly: !!wifiOnly
-      })
-    );
+    window.OfflineTranslate.downloadBiDirectionalPair(JSON.stringify(payload));
     return;
   }
 
   if (typeof window.OfflineTranslate.downloadModel === "function") {
-    window.OfflineTranslate.downloadModel(
-      JSON.stringify({
-        from,
-        to,
-        wifiOnly: !!wifiOnly
-      })
-    );
+    window.OfflineTranslate.downloadModel(JSON.stringify(payload));
     return;
   }
 
