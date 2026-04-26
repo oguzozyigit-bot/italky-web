@@ -1,3 +1,5 @@
+// /js/offline_languages_page.js
+
 import { mountShell } from "/js/ui_shell.js";
 import { maybeShowOfflineDownloadAd } from "/js/ad_gate.js";
 
@@ -95,7 +97,6 @@ const ALL_OFFLINE_LANGS = [
 ];
 
 const PRIORITY_ORDER = ["tr", "en", "de", "fr", "ru", "ar", "es", "it"];
-const OFFLINE_PAGE_SESSION_KEY = "offline_languages_page";
 
 let LANGS = [];
 let busy = false;
@@ -112,22 +113,18 @@ function toast(message = "") {
   }, 2400);
 }
 
-function ensureMockOfflineLicenseOnce() {
+function ensurePublicOfflineLicenseOnce() {
   try {
+    localStorage.setItem(STORAGE.offlineLicenseDays, "365");
+
     if (
-      !window.OfflineTranslate ||
-      typeof window.OfflineTranslate.setMockOfflineLicense !== "function"
+      window.OfflineTranslate &&
+      typeof window.OfflineTranslate.setMockOfflineLicense === "function"
     ) {
-      return;
+      window.OfflineTranslate.setMockOfflineLicense(365);
     }
-
-    const key = "italky_offline_mock_license_offline_page_v2";
-    if (localStorage.getItem(key) === "1") return;
-
-    window.OfflineTranslate.setMockOfflineLicense(365);
-    localStorage.setItem(key, "1");
   } catch (e) {
-    console.error("Mock lisans yazılamadı:", e);
+    console.warn("Public offline lisans yazılamadı:", e);
   }
 }
 
@@ -194,9 +191,7 @@ function syncStorageFromNative() {
 
   try {
     const nativeLang = canonical(window.OfflineTranslate.getNativeOfflineLang() || "");
-    if (nativeLang) {
-      localStorage.setItem(STORAGE.nativeLang, nativeLang);
-    }
+    if (nativeLang) localStorage.setItem(STORAGE.nativeLang, nativeLang);
   } catch (e) {
     console.warn("Native dil okunamadı:", e);
   }
@@ -230,12 +225,7 @@ function syncStorageToNative() {
 function mergeInstalledPairsWithNative() {
   const localPairs = getInstalledPairs();
   const nativePairs = getNativeInstalledPairs();
-
-  const merged = {
-    ...localPairs,
-    ...nativePairs
-  };
-
+  const merged = { ...localPairs, ...nativePairs };
   saveInstalledPairs(merged);
   return merged;
 }
@@ -262,6 +252,7 @@ function buildSupportedLangList() {
   for (const item of ALL_OFFLINE_LANGS) {
     const code = canonical(item.code);
     if (!code || seen.has(code)) continue;
+
     seen.add(code);
     uniq.push({
       code,
@@ -325,11 +316,13 @@ function getLangProgress(langCode) {
 function setLangProgress(langCode, patch) {
   const code = canonical(langCode);
   const downloading = getDownloadingMap();
+
   downloading[code] = {
     ...(downloading[code] || {}),
     ...patch,
     updatedAt: Date.now()
   };
+
   saveDownloadingMap(downloading);
 }
 
@@ -349,14 +342,16 @@ function markInstalledBiDirectional(langCode) {
     from: nativeLang,
     to: canonical(langCode),
     installedAt: new Date().toISOString(),
-    expiresAt
+    expiresAt,
+    publicDownload: true
   };
 
   installed[pairKey(langCode, nativeLang)] = {
     from: canonical(langCode),
     to: nativeLang,
     installedAt: new Date().toISOString(),
-    expiresAt
+    expiresAt,
+    publicDownload: true
   };
 
   saveInstalledPairs(installed);
@@ -426,8 +421,10 @@ function showConfirm(title, text, okText = "İndir") {
 function closeConfirm(result) {
   confirmBackdrop?.classList.remove("show");
   if (confirmOk) confirmOk.textContent = "İndir";
+
   const resolver = confirmResolver;
   confirmResolver = null;
+
   if (typeof resolver === "function") resolver(result);
 }
 
@@ -538,7 +535,7 @@ function renderLicenseInfo() {
   if (!licenseInfo) return;
   const days = getOfflineLicenseDays();
   const nativeInfo = getLangInfo(getNativeLang());
-  licenseInfo.textContent = `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Offline lisans: ${days} gün`;
+  licenseInfo.textContent = `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Offline izin: ${days} gün`;
 }
 
 function renderInstalledList() {
@@ -547,6 +544,7 @@ function renderInstalledList() {
   const q = String(searchInput?.value || "").trim().toLowerCase();
   const nativeLang = getNativeLang();
   const downloadingMap = getDownloadingMap();
+
   globalDownloadLock = Object.keys(downloadingMap).length > 0;
 
   const filtered = LANGS
@@ -628,12 +626,14 @@ function renderInstalledList() {
   });
 }
 
-async function ensureOfflinePageAccess() {
+async function showAdForThisLanguageDownload(langCode) {
+  const info = getLangInfo(langCode);
+
   return await maybeShowOfflineDownloadAd({
-    sessionKey: OFFLINE_PAGE_SESSION_KEY,
+    sessionKey: `offline_download_lang_${canonical(langCode)}_${Date.now()}`,
     skipInfoModal: false,
-    title: "Bu modül için kısa bir reklam gösterilecek",
-    text: "Offline diller sayfasını kullanabilmeniz için 1 kısa reklam izlemeniz gerekmektedir.\nReklamı tamamladıktan sonra bu sayfayı 24 saat boyunca tekrar reklam görmeden kullanabilirsiniz."
+    title: `${info.name} için kısa bir reklam`,
+    text: `${info.name} offline dil paketini indirmek için 1 kısa reklam izleyin.\nReklam tamamlanınca indirme başlayacaktır.`
   });
 }
 
@@ -660,8 +660,8 @@ async function startLanguageInstallFlow(langCode) {
     `${info.name} indirilsin mi?`,
     `${nativeInfo.name} ve ${info.name} birlikte hazırlanacak.
 
-İnternet bağlantınıza göre indirme süresi değişebilir.
-Bu sayfaya erişiminiz açık olduğu için tekrar reklam gösterilmeyecektir.`,
+Her dil indirmede 1 kısa reklam gösterilir.
+Reklam tamamlandıktan sonra indirme başlar.`,
     "İndir"
   );
 
@@ -671,10 +671,20 @@ Bu sayfaya erişiminiz açık olduğu için tekrar reklam gösterilmeyecektir.`,
   }
 
   busy = true;
+
   try {
+    const adOk = await showAdForThisLanguageDownload(code);
+
+    if (!adOk) {
+      toast("Reklam tamamlanmadan indirme başlatılmadı.");
+      return;
+    }
+
+    ensurePublicOfflineLicenseOnce();
     await installBiDirectionalPair(code);
   } finally {
     busy = false;
+    renderInstalledList();
   }
 }
 
@@ -693,6 +703,8 @@ async function installBiDirectionalPair(langCode) {
   globalDownloadLock = true;
 
   try {
+    ensurePublicOfflineLicenseOnce();
+
     setLangProgress(code, {
       percent: 4,
       label: "Hazırlanıyor...",
@@ -710,7 +722,16 @@ async function installBiDirectionalPair(langCode) {
 
     const payload = JSON.stringify({
       source: nativeLang,
-      target: code
+      target: code,
+      from: nativeLang,
+      to: code,
+      wifiOnly: false,
+
+      publicDownload: true,
+      loginRequired: false,
+      requireLicense: false,
+      skipLicenseCheck: true,
+      sourceModule: "offline_languages_public"
     });
 
     window.OfflineTranslate.downloadBiDirectionalPair(payload);
@@ -778,9 +799,22 @@ window.addEventListener("offlinePairDownloadFailed", (e) => {
   const d = e.detail || {};
   const code = canonical(d.target || "");
   const info = getLangInfo(code);
-  const message = d.error || `${info.name} şu an indirilemedi. Daha sonra tekrar deneyebilirsiniz.`;
+
+  const rawError = String(d.error || "").toLowerCase();
+
+  let message = d.error || `${info.name} şu an indirilemedi. Daha sonra tekrar deneyebilirsiniz.`;
+
+  if (
+    rawError.includes("license") ||
+    rawError.includes("lisans") ||
+    rawError.includes("offline_license_required")
+  ) {
+    message = "Lisans engeli kaldırıldı. Lütfen tekrar indir butonuna basın.";
+    ensurePublicOfflineLicenseOnce();
+  }
 
   if (code) clearLangProgress(code);
+
   globalDownloadLock = false;
   busy = false;
   renderInstalledList();
@@ -812,10 +846,12 @@ async function init() {
   }
 
   const initialNative = getPreferredInitialNativeLang();
+
   if (!localStorage.getItem(STORAGE.nativeLang)) {
     localStorage.setItem(STORAGE.nativeLang, initialNative || "tr");
   }
 
+  ensurePublicOfflineLicenseOnce();
   syncStorageFromNative();
   clearStaleDownloadingState();
 
@@ -824,17 +860,6 @@ async function init() {
   }
 
   LANGS = buildSupportedLangList();
-  renderMyLanguageButton();
-  renderLicenseInfo();
-  renderInstalledList();
-
-  const pageAccessOk = await ensureOfflinePageAccess();
-  if (!pageAccessOk) {
-    location.href = "/pages/home.html";
-    return;
-  }
-
-  ensureMockOfflineLicenseOnce();
 
   mergeInstalledPairsWithNative();
   normalizeInstalledVsProgress();
@@ -845,10 +870,12 @@ async function init() {
 
   searchInput?.addEventListener("input", renderInstalledList);
 
-  console.log("OFFLINE_LANGUAGES_READY", {
+  console.log("OFFLINE_LANGUAGES_READY_PUBLIC", {
     langs: LANGS.length,
     native: getNativeLang(),
-    nativeMirror: canUseNativeMirror()
+    nativeMirror: canUseNativeMirror(),
+    adPerDownload: true,
+    loginRequired: false
   });
 }
 
