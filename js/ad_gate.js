@@ -42,17 +42,21 @@ function setModuleAdState(next) {
 
 function getOfflineAdState() {
   const state = readJson(OFFLINE_AD_STATE_KEY, { shown_pairs: {} });
+
   if (!state.shown_pairs || typeof state.shown_pairs !== "object") {
     state.shown_pairs = {};
   }
+
   return state;
 }
 
 function setOfflineAdState(next) {
   const safe = next && typeof next === "object" ? next : { shown_pairs: {} };
+
   if (!safe.shown_pairs || typeof safe.shown_pairs !== "object") {
     safe.shown_pairs = {};
   }
+
   writeJson(OFFLINE_AD_STATE_KEY, safe);
   return safe;
 }
@@ -73,18 +77,29 @@ function getOrCreateAdInfoModal() {
   style.id = "italkyAdInfoModalStyle";
   style.textContent = `
     .italky-ad-info-backdrop{
-      position:fixed; inset:0; z-index:999999; display:none;
-      align-items:center; justify-content:center; padding:20px;
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
       background:rgba(4,8,18,.58);
-      backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
     }
-    .italky-ad-info-backdrop.open{ display:flex; }
+    .italky-ad-info-backdrop.open{
+      display:flex;
+    }
     .italky-ad-info-card{
-      width:min(100%,430px); border-radius:26px; overflow:hidden;
+      width:min(100%,430px);
+      border-radius:26px;
+      overflow:hidden;
       border:1px solid rgba(255,255,255,.08);
       background:linear-gradient(180deg, rgba(10,16,30,.98), rgba(8,12,24,.98));
       box-shadow:0 24px 50px rgba(0,0,0,.34);
-      color:#fff; font-family:Outfit, system-ui, sans-serif;
+      color:#fff;
+      font-family:Outfit, system-ui, sans-serif;
     }
     .italky-ad-info-top{
       padding:18px 18px 14px;
@@ -94,34 +109,57 @@ function getOrCreateAdInfoModal() {
       border-bottom:1px solid rgba(255,255,255,.06);
     }
     .italky-ad-info-chip{
-      display:inline-flex; align-items:center; justify-content:center;
-      min-height:32px; padding:8px 14px; border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:32px;
+      padding:8px 14px;
+      border-radius:999px;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.10);
       color:rgba(255,255,255,.92);
-      font-size:12px; font-weight:1000;
+      font-size:12px;
+      font-weight:1000;
     }
     .italky-ad-info-title{
-      margin:12px 0 8px; font-size:24px; line-height:1.08;
-      font-weight:1000; letter-spacing:-.5px; color:#eef4ff;
+      margin:12px 0 8px;
+      font-size:24px;
+      line-height:1.08;
+      font-weight:1000;
+      letter-spacing:-.5px;
+      color:#eef4ff;
     }
     .italky-ad-info-text{
-      margin:0; font-size:13px; line-height:1.68; font-weight:800;
-      color:rgba(235,242,255,.82); white-space:pre-line;
+      margin:0;
+      font-size:13px;
+      line-height:1.68;
+      font-weight:800;
+      color:rgba(235,242,255,.82);
+      white-space:pre-line;
     }
     .italky-ad-info-body{
-      padding:16px; display:grid; gap:10px;
+      padding:16px;
+      display:grid;
+      gap:10px;
       background:linear-gradient(180deg, rgba(9,13,24,.98), rgba(7,10,20,.98));
     }
     .italky-ad-info-btn{
-      min-height:50px; border:none; border-radius:16px; cursor:pointer;
-      font-family:inherit; font-size:14px; font-weight:1000;
+      min-height:50px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:14px;
+      font-weight:1000;
       transition:transform .14s ease, opacity .14s ease;
     }
-    .italky-ad-info-btn:active{ transform:scale(.985); }
+    .italky-ad-info-btn:active{
+      transform:scale(.985);
+    }
     .italky-ad-info-btn.primary{
       background:linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 50%, #ddd6fe 100%);
-      color:#111827; box-shadow:0 12px 24px rgba(99,102,241,.16);
+      color:#111827;
+      box-shadow:0 12px 24px rgba(99,102,241,.16);
     }
   `;
   document.head.appendChild(style);
@@ -177,7 +215,7 @@ function showSoftAdModal({
   });
 }
 
-function waitForRewardedResult(timeoutMs = 3000) {
+function waitForRewardedResult(timeoutMs = 35000) {
   return new Promise((resolve) => {
     let done = false;
     let earned = false;
@@ -187,6 +225,7 @@ function waitForRewardedResult(timeoutMs = 3000) {
 
     const finish = (payload) => {
       if (done) return;
+
       done = true;
       clearTimeout(timer);
 
@@ -215,25 +254,25 @@ function waitForRewardedResult(timeoutMs = 3000) {
     };
 
     const timer = setTimeout(() => {
-      finish({ shown: false, reason: "timeout_allow_continue" });
+      finish({ shown: false, reason: "timeout" });
     }, timeoutMs);
   });
 }
 
 async function showNativeRewarded(referenceKey = "", placement = "module_access") {
-  if (!hasNativeRewarded()) return true;
+  if (!hasNativeRewarded()) return false;
 
   try {
-    const waitPromise = waitForRewardedResult(3000);
+    const waitPromise = waitForRewardedResult();
     window.Native.showRewardedAd(String(referenceKey || ""), String(placement || "module_access"));
     const result = await waitPromise;
 
     if (result?.earned) return true;
     if (result?.shown) return true;
 
-    return true;
+    return false;
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -286,7 +325,7 @@ function showFallbackAdInfo(message = "Bu modül için kısa bir reklam gösteri
       toast.style.transform = "translateX(-50%) translateY(120px)";
       toast.style.opacity = "0";
       setTimeout(() => toast.remove(), 260);
-    }, 1800);
+    }, 2400);
   } catch {}
 }
 
@@ -323,7 +362,7 @@ export async function ensureModuleAdAccess(options = {}) {
   const {
     moduleKey = "",
     title = "Bu modül için kısa bir reklam gösterilecek",
-    text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir.",
+    text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden giriş yapabilirsiniz.",
     placement = "module_access",
     hours = 24,
     onBeforeAd = null,
@@ -354,11 +393,13 @@ export async function ensureModuleAdAccess(options = {}) {
   if (hasNativeRewarded()) {
     rewarded = await showNativeRewarded(key, placement);
   } else {
-    showFallbackAdInfo("Reklam hazırlanıyor, devam edebilirsiniz.");
+    showFallbackAdInfo("Bu modülü kullanmak için kısa bir reklam gösterilebilir.");
     rewarded = true;
   }
 
-  if (rewarded) markModuleAdShown(key, hours);
+  if (rewarded) {
+    markModuleAdShown(key, hours);
+  }
 
   try {
     if (typeof onAfterAd === "function") await onAfterAd(rewarded);
@@ -389,7 +430,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   const {
     sessionKey = "offline_languages_page",
     title = "Bu modül için kısa bir reklam gösterilecek",
-    text = "Offline diller sayfasını kullanabilmeniz için 1 kısa reklam izlemeniz gerekmektedir.",
+    text = "Offline dil paketini indirebilmeniz için 1 kısa reklam izlemeniz gerekmektedir.\nReklam tamamlandıktan sonra indirme başlayacaktır.",
     onBeforeAd = null,
     onAfterAd = null,
     skipInfoModal = false,
@@ -433,7 +474,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
     if (typeof onAfterAd === "function") await onAfterAd(rewarded);
   } catch {}
 
-  return rewarded !== false;
+  return rewarded;
 }
 
 export function resetModuleAdStateForDebug() {
