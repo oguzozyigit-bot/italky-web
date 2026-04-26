@@ -8,7 +8,7 @@ const QUEUE_KEY = "italky_offline_download_queue_v1";
 const ACTIVE_KEY = "italky_offline_download_active_v1";
 
 const ACTIVE_STALE_MS = 8 * 60 * 1000;
-const PENDING_START_TIMEOUT_MS = 45 * 1000;
+const PENDING_START_TIMEOUT_MS = 6 * 60 * 1000;
 
 let pendingRewardResolve = null;
 let pendingRewardTimer = null;
@@ -74,17 +74,16 @@ function isPendingStartExpired(item) {
   if (!item) return false;
 
   const percent = Number(item.percent || 0);
-  const label = String(item.label || "");
 
-  if (percent > 10) return false;
-  if (!label.includes("Başlat") && !label.includes("Starting")) return false;
+  // Native started/progress event geldiyse artık web tarafı erken temizlemesin.
+  // ML Kit ilk model indirmesi birkaç dakika sürebilir.
+  if (percent >= 10) return false;
 
   const t = getItemTime(item);
   if (!t) return false;
 
   return Date.now() - t > PENDING_START_TIMEOUT_MS;
 }
-
 function dispatchState() {
   window.dispatchEvent(
     new CustomEvent("offlinePackBridgeStateChanged", {
