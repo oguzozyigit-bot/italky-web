@@ -2,6 +2,7 @@ import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
 
+const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
 const frameRoot = $("frameRoot");
@@ -37,6 +38,22 @@ const langList = $("langList");
 
 const toastEl = $("toast");
 
+const BCP = {
+  tr: "tr-TR",
+  en: "en-US",
+  de: "de-DE",
+  fr: "fr-FR",
+  it: "it-IT",
+  es: "es-ES",
+  ar: "ar-SA",
+  ru: "ru-RU",
+  bg: "bg-BG",
+  pt: "pt-PT",
+  zh: "zh-CN",
+  ja: "ja-JP",
+  ko: "ko-KR"
+};
+
 let fromLang = localStorage.getItem("text_single_from_lang") || "tr";
 let toLang = localStorage.getItem("text_single_to_lang") || "en";
 let ALL_LANGS = [];
@@ -49,11 +66,12 @@ let lastTranslateToken = 0;
 
 let recognizer = null;
 let listening = false;
+let booted = false;
 
 let soundEnabled = localStorage.getItem("text_single_sound_enabled") !== "0";
 
 function canonical(code) {
-  return String(code || "").trim().toLowerCase();
+  return String(code || "").trim().toLowerCase().split("-")[0];
 }
 
 function normalizeText(text) {
@@ -71,26 +89,50 @@ function escapeHtml(str) {
 
 function toast(msg) {
   if (!toastEl) return;
+
   toastEl.textContent = String(msg || "");
   toastEl.classList.add("show");
+
   clearTimeout(window.__textSingleToast);
   window.__textSingleToast = setTimeout(() => {
     toastEl.classList.remove("show");
   }, 2200);
 }
 
-function setOutput(main) {
-  resultBubble.textContent = String(main || "");
-  resultSub.textContent = "";
-  resultBubble.className = `bubble ${String(main || "").trim() && String(main || "").trim() !== "..." ? "latest" : "normal"}`;
-  resultArea.scrollTop = resultArea.scrollHeight + 300;
+function setState(state) {
+  if (!frameRoot) return;
+
+  frameRoot.classList.remove("is-ready", "is-error", "is-translating", "is-idle");
+
+  if (state === "translating") frameRoot.classList.add("is-translating");
+  else if (state === "error") frameRoot.classList.add("is-error");
+  else if (state === "idle") frameRoot.classList.add("is-idle");
+  else frameRoot.classList.add("is-ready");
+}
+
+function setOutput(main, sub = "") {
+  if (!resultBubble || !resultSub) return;
+
+  const value = String(main || "");
+  resultBubble.textContent = value || "...";
+  resultSub.textContent = sub || "";
+
+  resultBubble.className =
+    `bubble ${value.trim() && value.trim() !== "..." ? "latest" : "normal"}`;
+
+  try {
+    resultArea.scrollTop = resultArea.scrollHeight + 300;
+  } catch {}
 }
 
 function syncInputPreview() {
+  if (!inputPreviewBubble || !inputBox) return;
   inputPreviewBubble.textContent = normalizeText(inputBox.value);
 }
 
 function syncInputButtons() {
+  if (!inputBox || !micBtn || !translateBtn) return;
+
   const hasText = normalizeText(inputBox.value).length > 0;
 
   if (listening) {
@@ -111,10 +153,17 @@ function syncInputButtons() {
   }
 }
 
+function autoResizeInput() {
+  if (!inputBox) return;
+  inputBox.style.height = "auto";
+  inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+}
+
 function stopSpeak() {
   try {
-    if (speakCtl) speakCtl.abort();
+    speakCtl?.abort?.();
   } catch {}
+
   speakCtl = null;
 
   try {
@@ -123,6 +172,7 @@ function stopSpeak() {
       audio.currentTime = 0;
     }
   } catch {}
+
   audio = null;
 
   try { window.NativeTTS?.stop?.(); } catch {}
@@ -130,34 +180,47 @@ function stopSpeak() {
 }
 
 function chooseWebVoice(langCode) {
+  const lang = canonical(langCode);
   const voices = window.speechSynthesis?.getVoices?.() || [];
-  return voices.find(v => String(v.lang || "").toLowerCase().startsWith(canonical(langCode))) ||
-         voices.find(v => String(v.lang || "").toLowerCase().startsWith("en")) ||
-         voices[0] ||
-         null;
+
+  return (
+    voices.find((v) => String(v.lang || "").toLowerCase().startsWith(lang)) ||
+    voices.find((v) => String(v.lang || "").toLowerCase().startsWith("en")) ||
+    voices[0] ||
+    null
+  );
 }
 
 function speakNativeFallback(text, langCode) {
-  const t = String(text || "").trim();
-  if (!t) return false;
+  const value = normalizeText(text);
+  if (!value) return false;
 
   if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try { window.NativeTTS.stop?.(); } catch {}
+
     setTimeout(() => {
-      try { window.NativeTTS.speak(t, String(langCode || "en")); } catch {}
+      try {
+        window.NativeTTS.speak(value, canonical(langCode || "en"));
+      } catch {}
     }, 80);
+
     return true;
   }
 
   if (!window.speechSynthesis) return false;
 
   try { window.speechSynthesis.cancel(); } catch {}
-  const u = new SpeechSynthesisUtterance(t);
-  u.lang = String(langCode || "en");
+
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = BCP[canonical(langCode)] || String(langCode || "en-US");
+
   const voice = chooseWebVoice(langCode);
   if (voice) u.voice = voice;
+
   setTimeout(() => {
-    try { window.speechSynthesis.speak(u); } catch {}
+    try {
+      window.speechSynthesis.speak(u);
+    } catch {}
   }, 60);
 
   return true;
@@ -165,20 +228,22 @@ function speakNativeFallback(text, langCode) {
 
 async function speakText(text, langCode) {
   if (!soundEnabled) return;
-  const t = normalizeText(text);
-  if (!t || t === "...") return;
+
+  const value = normalizeText(text);
+  if (!value || value === "...") return;
 
   stopSpeak();
+
   const myToken = ++speakToken;
 
   try {
     speakCtl = new AbortController();
 
-    const r = await fetch("https://italky-api.onrender.com/api/tts", {
+    const r = await fetch(`${API_BASE}/api/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: t,
+        text: value,
         lang: canonical(langCode || "en")
       }),
       signal: speakCtl.signal
@@ -187,35 +252,78 @@ async function speakText(text, langCode) {
     if (myToken !== speakToken) return;
 
     const j = await r.json().catch(() => null);
+
     if (myToken !== speakToken) return;
 
     if (j?.audio_base64) {
       audio = new Audio("data:audio/mpeg;base64," + j.audio_base64);
       audio.playsInline = true;
-      audio.onended = () => { if (myToken === speakToken) audio = null; };
-      audio.onerror = () => { if (myToken === speakToken) audio = null; };
+      audio.onended = () => {
+        if (myToken === speakToken) audio = null;
+      };
+      audio.onerror = () => {
+        if (myToken === speakToken) audio = null;
+      };
+
       await audio.play();
       return;
     }
 
-    speakNativeFallback(t, canonical(langCode));
+    speakNativeFallback(value, canonical(langCode));
   } catch (e) {
     if (e?.name !== "AbortError") {
-      speakNativeFallback(t, canonical(langCode));
+      speakNativeFallback(value, canonical(langCode));
     }
   }
+}
+
+async function translateViaBackend(text, from, to) {
+  const endpoints = [
+    `${API_BASE}/api/translate_ai`,
+    `${API_BASE}/api/translate-ai`,
+    `${API_BASE}/api/translate`
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: normalizeText(text),
+          from_lang: canonical(from),
+          to_lang: canonical(to),
+          source: canonical(from),
+          target: canonical(to),
+          mode: "normal",
+          use_ai: false,
+          cultural: false,
+          tone: "neutral",
+          style: "warm"
+        })
+      });
+
+      const j = await r.json().catch(() => null);
+      const value = normalizeText(j?.translated || j?.translation || j?.text || "");
+
+      if (r.ok && value) return value;
+    } catch {}
+  }
+
+  return null;
 }
 
 async function translateGoogleFree(text, from, to) {
   const params = new URLSearchParams({
     client: "gtx",
-    sl: from,
-    tl: to,
+    sl: canonical(from),
+    tl: canonical(to),
     dt: "t",
     q: text
   });
 
   const r = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
+
   if (!r.ok) {
     throw new Error("google_free_failed");
   }
@@ -233,7 +341,15 @@ async function translateGoogleFree(text, from, to) {
 
   translated = normalizeText(translated);
   if (!translated) throw new Error("google_free_empty");
+
   return translated;
+}
+
+async function translateAny(text, from, to) {
+  const backend = await translateViaBackend(text, from, to);
+  if (backend) return backend;
+
+  return await translateGoogleFree(text, from, to);
 }
 
 const TURKISH_LANG_NAMES = {
@@ -260,7 +376,8 @@ const TURKISH_LANG_NAMES = {
 
 const FLAG_MAP = {
   tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", ru:"🇷🇺", ar:"🇸🇦", zh:"🇨🇳",
-  ja:"🇯🇵", ko:"🇰🇷", pt:"🇵🇹", nl:"🇳🇱", el:"🇬🇷", uk:"🇺🇦", pl:"🇵🇱", ro:"🇷🇴", bg:"🇧🇬"
+  ja:"🇯🇵", ko:"🇰🇷", pt:"🇵🇹", nl:"🇳🇱", el:"🇬🇷", uk:"🇺🇦", pl:"🇵🇱", ro:"🇷🇴", bg:"🇧🇬",
+  he:"🇮🇱", hi:"🇮🇳", id:"🇮🇩", fa:"🇮🇷", ur:"🇵🇰", th:"🇹🇭", vi:"🇻🇳"
 };
 
 function getFlag(code, item) {
@@ -269,9 +386,11 @@ function getFlag(code, item) {
 
 function getTurkishName(item) {
   const code = canonical(item?.code);
+
   return (
     TURKISH_LANG_NAMES[code] ||
     item?.tr ||
+    item?.tr_name ||
     item?.name_tr ||
     item?.nativeName ||
     item?.name ||
@@ -287,15 +406,18 @@ function sanitizeLangPool() {
     .map((item) => {
       const code = canonical(item?.code);
       if (!code || seen.has(code) || code === "auto" || code === "detect") return null;
+
       seen.add(code);
+
+      const trName = getTurkishName(item);
 
       return {
         code,
         flag: getFlag(code, item),
-        trName: getTurkishName(item),
+        trName,
         searchText: [
           code,
-          getTurkishName(item),
+          trName,
           item?.name || "",
           item?.nativeName || ""
         ].join(" ").toLowerCase()
@@ -329,10 +451,10 @@ function renderTopLanguageButtons() {
   const fromObj = getLangByCode(fromLang);
   const toObj = getLangByCode(toLang);
 
-  fromFlag.textContent = fromObj.flag;
-  toFlag.textContent = toObj.flag;
-  fromText.textContent = fromObj.trName;
-  toText.textContent = toObj.trName;
+  if (fromFlag) fromFlag.textContent = fromObj.flag;
+  if (toFlag) toFlag.textContent = toObj.flag;
+  if (fromText) fromText.textContent = fromObj.trName;
+  if (toText) toText.textContent = toObj.trName;
 
   localStorage.setItem("text_single_from_lang", canonical(fromLang));
   localStorage.setItem("text_single_to_lang", canonical(toLang));
@@ -348,6 +470,8 @@ function renderToggles() {
 }
 
 function renderLangList(query = "") {
+  if (!langList) return;
+
   const q = String(query || "").trim().toLowerCase();
   const currentCode = popoverMode === "from" ? canonical(fromLang) : canonical(toLang);
 
@@ -380,12 +504,14 @@ function renderLangList(query = "") {
 
       if (popoverMode === "from") {
         fromLang = code;
+
         if (canonical(fromLang) === canonical(toLang)) {
           const other = ALL_LANGS.find((x) => x.code !== canonical(fromLang));
           if (other) toLang = other.code;
         }
       } else {
         toLang = code;
+
         if (canonical(toLang) === canonical(fromLang)) {
           const other = ALL_LANGS.find((x) => x.code !== canonical(toLang));
           if (other) fromLang = other.code;
@@ -400,22 +526,35 @@ function renderLangList(query = "") {
 
 function openLangPopover(mode) {
   popoverMode = mode === "to" ? "to" : "from";
-  popoverTitle.textContent = popoverMode === "from" ? "Kaynak Dil Seç" : "Hedef Dil Seç";
-  langPopover.classList.add("show");
-  langSearch.value = "";
+
+  if (popoverTitle) {
+    popoverTitle.textContent = popoverMode === "from" ? "Kaynak Dil Seç" : "Hedef Dil Seç";
+  }
+
+  langPopover?.classList.add("show");
+
+  if (langSearch) {
+    langSearch.value = "";
+  }
+
   renderLangList("");
-  setTimeout(() => langSearch.focus(), 40);
+
+  setTimeout(() => {
+    try { langSearch?.focus?.(); } catch {}
+  }, 40);
 }
 
 function closeLangPopover() {
-  langPopover.classList.remove("show");
+  langPopover?.classList.remove("show");
 }
 
 async function translateText() {
-  const sourceText = normalizeText(inputBox.value);
+  const sourceText = normalizeText(inputBox?.value || "");
+
   if (!sourceText) {
     setOutput("...");
     toast("Önce çevrilecek bir metin yaz.");
+    syncInputButtons();
     return;
   }
 
@@ -423,24 +562,26 @@ async function translateText() {
   const from = canonical(fromLang);
   const to = canonical(toLang);
 
-  inputBox.value = "";
-  inputBox.style.height = "auto";
+  const originalText = sourceText;
+
+  if (inputBox) {
+    inputBox.value = "";
+    autoResizeInput();
+  }
+
   syncInputPreview();
   syncInputButtons();
 
-  frameRoot.classList.remove("is-ready", "is-error");
-  frameRoot.classList.add("is-translating");
+  setState("translating");
   setOutput("Çevriliyor...");
 
   try {
-    const out = await translateGoogleFree(sourceText, from, to);
+    const out = await translateAny(originalText, from, to);
 
     if (myToken !== lastTranslateToken) return;
 
     setOutput(out);
-
-    frameRoot.classList.remove("is-translating", "is-error");
-    frameRoot.classList.add("is-ready");
+    setState("ready");
 
     if (soundEnabled) {
       setTimeout(() => {
@@ -451,13 +592,11 @@ async function translateText() {
     if (myToken !== lastTranslateToken) return;
 
     setOutput("⚠️ Çeviri şu an yapılamadı.");
-    frameRoot.classList.remove("is-translating");
-    frameRoot.classList.add("is-error");
+    setState("error");
     toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
 
     setTimeout(() => {
-      frameRoot.classList.remove("is-error");
-      frameRoot.classList.add("is-ready");
+      setState("ready");
     }, 1200);
   }
 }
@@ -481,26 +620,66 @@ function extractStableRecognitionText(results) {
 }
 
 function stopRecognition() {
-  try { recognizer?.stop(); } catch {}
+  try { recognizer?.stop?.(); } catch {}
+  try { recognizer?.abort?.(); } catch {}
+
   recognizer = null;
   listening = false;
   syncInputButtons();
 }
 
-function startRecognition() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    toast("Bu cihazda sesli giriş desteklenmiyor");
-    return;
-  }
+window.onNativeSpeechResult = function(payload) {
+  try {
+    const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+    const value = normalizeText(data?.text || data?.result || "");
 
+    if (value && inputBox) {
+      inputBox.value = value;
+      autoResizeInput();
+      syncInputPreview();
+      syncInputButtons();
+    }
+  } catch {}
+
+  listening = false;
+  syncInputButtons();
+};
+
+window.onNativeSpeechError = function() {
+  listening = false;
+  syncInputButtons();
+  toast("Mikrofon hatası");
+};
+
+function startRecognition() {
   if (listening) {
     stopRecognition();
     return;
   }
 
+  const langCode = BCP[canonical(fromLang)] || `${canonical(fromLang)}-${canonical(fromLang).toUpperCase()}`;
+
+  if (window.Native && typeof window.Native.startSpeechRecognition === "function") {
+    try {
+      listening = true;
+      syncInputButtons();
+      window.Native.startSpeechRecognition(langCode, "text");
+      return;
+    } catch {
+      listening = false;
+      syncInputButtons();
+    }
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SR) {
+    toast("Bu cihazda sesli giriş desteklenmiyor");
+    return;
+  }
+
   recognizer = new SR();
-  recognizer.lang = "tr-TR";
+  recognizer.lang = langCode;
   recognizer.interimResults = true;
   recognizer.continuous = false;
   recognizer.maxAlternatives = 1;
@@ -512,9 +691,12 @@ function startRecognition() {
 
   recognizer.onresult = (e) => {
     const stableText = extractStableRecognitionText(e.results);
-    inputBox.value = stableText;
-    inputBox.style.height = "auto";
-    inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+
+    if (inputBox) {
+      inputBox.value = stableText;
+      autoResizeInput();
+    }
+
     syncInputPreview();
     syncInputButtons();
   };
@@ -538,100 +720,105 @@ function startRecognition() {
 
 async function requireLogin() {
   const { data: { session } = {} } = await supabase.auth.getSession();
+
   if (!session?.user) {
     location.replace("/pages/login.html");
     return false;
   }
+
   try {
     await ensureAuthAndCacheUser();
   } catch {}
+
   return true;
 }
 
 function bindEvents() {
-  fromBtn.addEventListener("click", () => openLangPopover("from"));
-  toBtn.addEventListener("click", () => openLangPopover("to"));
+  fromBtn?.addEventListener("click", () => openLangPopover("from"));
+  toBtn?.addEventListener("click", () => openLangPopover("to"));
 
-  swapBtn.addEventListener("click", () => {
+  swapBtn?.addEventListener("click", () => {
     const oldFrom = fromLang;
     fromLang = toLang;
     toLang = oldFrom;
+
     renderTopLanguageButtons();
     toast("Diller değiştirildi");
   });
 
-  popoverClose.addEventListener("click", closeLangPopover);
-  langPopover.addEventListener("click", (e) => {
+  popoverClose?.addEventListener("click", closeLangPopover);
+
+  langPopover?.addEventListener("click", (e) => {
     if (e.target === langPopover) closeLangPopover();
   });
 
-  langSearch.addEventListener("input", (e) => {
+  langSearch?.addEventListener("input", (e) => {
     renderLangList(e.target.value || "");
   });
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && langPopover.classList.contains("show")) {
+    if (e.key === "Escape" && langPopover?.classList.contains("show")) {
       closeLangPopover();
     }
   });
 
-  if (soundToggle) {
-    soundToggle.addEventListener("click", () => {
-      soundEnabled = !soundEnabled;
-      renderToggles();
-      if (!soundEnabled) stopSpeak();
-      toast(soundEnabled ? "Ses açıldı" : "Ses kapatıldı");
-    });
-  }
+  soundToggle?.addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    renderToggles();
 
-  translateBtn.addEventListener("click", translateText);
+    if (!soundEnabled) stopSpeak();
 
-  inputBox.addEventListener("keydown", (e) => {
+    toast(soundEnabled ? "Ses açıldı" : "Ses kapatıldı");
+  });
+
+  translateBtn?.addEventListener("click", translateText);
+
+  inputBox?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       translateText();
     }
   });
 
-  inputBox.addEventListener("input", () => {
-    inputBox.style.height = "auto";
-    inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+  inputBox?.addEventListener("input", () => {
+    autoResizeInput();
     syncInputPreview();
     syncInputButtons();
   });
 
-  micBtn.addEventListener("click", startRecognition);
+  micBtn?.addEventListener("click", startRecognition);
 
-  homeLink.addEventListener("click", (e) => {
+  homeLink?.addEventListener("click", (e) => {
     e.preventDefault();
     location.href = "/pages/home.html";
   });
 
-  homeBtn.addEventListener("click", () => {
+  homeBtn?.addEventListener("click", () => {
     location.href = "/pages/home.html";
   });
 
-  clearBtn.addEventListener("click", () => {
-    inputBox.value = "";
-    inputBox.style.height = "auto";
+  clearBtn?.addEventListener("click", () => {
+    if (inputBox) {
+      inputBox.value = "";
+      autoResizeInput();
+    }
+
     setOutput("...");
     syncInputPreview();
     stopSpeak();
     stopRecognition();
-    frameRoot.classList.remove("is-translating", "is-error");
-    frameRoot.classList.add("is-ready");
+    setState("ready");
   });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+async function boot() {
+  if (booted) return;
+  booted = true;
+
   if (!(await requireLogin())) return;
 
-  const offlineToggleEl = $("offlineToggle");
-  if (offlineToggleEl) {
-    offlineToggleEl.style.display = "none";
-  }
-
   ALL_LANGS = sanitizeLangPool();
+
   ensureValidLanguages();
   renderTopLanguageButtons();
   renderToggles();
@@ -639,13 +826,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setOutput("...");
 
-  inputBox.style.height = "auto";
-  inputBox.removeAttribute("readonly");
-  inputBox.disabled = false;
+  if (inputBox) {
+    inputBox.removeAttribute("readonly");
+    inputBox.disabled = false;
+    autoResizeInput();
+  }
+
   syncInputPreview();
   syncInputButtons();
-  frameRoot.classList.add("is-ready");
-});
+  setState("ready");
+
+  console.log("TEXT_TRANSLATE_READY_V7", {
+    fromLang,
+    toLang,
+    langs: ALL_LANGS.length
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot);
+} else {
+  boot();
+}
 
 window.addEventListener("beforeunload", () => {
   stopSpeak();
