@@ -342,6 +342,117 @@ body.home-ready #pageContent{
   font-weight:800;
 }
 
+.home-lang-pack-widget{
+  display:block;
+  text-decoration:none;
+  color:#fff;
+  margin:0;
+  padding:14px;
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(77,232,255,.16), transparent 36%),
+    radial-gradient(circle at 88% 20%, rgba(236,72,153,.12), transparent 36%),
+    rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 18px 42px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  cursor:pointer;
+}
+
+.home-lang-pack-widget.hidden{
+  display:none;
+}
+
+.home-lang-pack-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.home-lang-pack-kicker{
+  font-size:11px;
+  font-weight:900;
+  color:rgba(255,255,255,.58);
+  letter-spacing:.25px;
+  text-transform:uppercase;
+}
+
+.home-lang-pack-title{
+  margin-top:3px;
+  font-size:16px;
+  font-weight:1000;
+  color:#fff;
+}
+
+.home-lang-pack-status{
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(34,197,94,.14);
+  border:1px solid rgba(34,197,94,.28);
+  color:#bbf7d0;
+  font-size:11px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+
+.home-lang-pack-status.downloading{
+  background:rgba(59,130,246,.14);
+  border-color:rgba(59,130,246,.30);
+  color:#bfdbfe;
+}
+
+.home-lang-pack-route{
+  display:grid;
+  grid-template-columns:1fr 44px 1fr;
+  align-items:center;
+  gap:8px;
+}
+
+.home-lang-chip{
+  min-height:54px;
+  border-radius:18px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:8px;
+  min-width:0;
+}
+
+.home-lang-chip span{
+  font-size:22px;
+  flex:0 0 auto;
+}
+
+.home-lang-chip strong{
+  font-size:13px;
+  font-weight:1000;
+  color:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.home-lang-arrows{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  background:linear-gradient(135deg,rgba(165,180,252,.22),rgba(236,72,153,.18));
+  border:1px solid rgba(255,255,255,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 26px rgba(99,102,241,.20);
+  font-size:23px;
+  font-weight:1000;
+  color:#fff;
+}
+
 .home-grid{
   flex:0 0 auto;
   display:grid;
@@ -367,7 +478,8 @@ body.home-ready #pageContent{
 }
 
 .mod-card:active,
-.wide-card:active{
+.wide-card:active,
+.home-lang-pack-widget:active{
   transform:scale(.985);
   filter:brightness(1.05);
 }
@@ -1051,6 +1163,8 @@ body.home-ready #pageContent{
   .card-art{ height:68px; }
   .card-desc{ font-size:12.5px; }
   .wide-desc{ font-size:12.5px; }
+  .home-lang-pack-title{font-size:15px}
+  .home-lang-chip strong{font-size:12px}
 }
 </style>
 </head>
@@ -1087,6 +1201,30 @@ body.home-ready #pageContent{
 
         <h1 class="heroTitle">Dünya’yı Küçülttük, Cebinize Sığdırdık</h1>
         <p class="heroName" id="heroUserName">Hoş geldin</p>
+      </div>
+    </section>
+
+    <section id="homeLangPackWidget" class="home-lang-pack-widget hidden">
+      <div class="home-lang-pack-head">
+        <div>
+          <div class="home-lang-pack-kicker">Dil paketi</div>
+          <div id="homeLangPackTitle" class="home-lang-pack-title">Türkçe ⇄ Almanca</div>
+        </div>
+        <div id="homeLangPackStatus" class="home-lang-pack-status">Hazır</div>
+      </div>
+
+      <div class="home-lang-pack-route">
+        <div class="home-lang-chip">
+          <span id="homeLangPackSourceFlag">🇹🇷</span>
+          <strong id="homeLangPackSourceName">Türkçe</strong>
+        </div>
+
+        <div class="home-lang-arrows">⇄</div>
+
+        <div class="home-lang-chip">
+          <span id="homeLangPackTargetFlag">🇩🇪</span>
+          <strong id="homeLangPackTargetName">Almanca</strong>
+        </div>
       </div>
     </section>
 
@@ -1237,7 +1375,58 @@ body.home-ready #pageContent{
   import { initGlobalAccess } from "/js/global_access.js";
   import { supabase } from "/js/supabase_client.js";
 
+  const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
+
   mountShell({ scroll: "auto" });
+
+  function readHomeLangPackWidget() {
+    try {
+      const raw = localStorage.getItem(HOME_LANG_WIDGET_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function renderHomeLangPackWidget() {
+    const widget = document.getElementById("homeLangPackWidget");
+    if (!widget) return;
+
+    const item = readHomeLangPackWidget();
+
+    if (!item?.source || !item?.target) {
+      widget.classList.add("hidden");
+      return;
+    }
+
+    const statusEl = document.getElementById("homeLangPackStatus");
+
+    document.getElementById("homeLangPackTitle").textContent =
+      item.title || `${item.sourceName || item.source} ⇄ ${item.targetName || item.target}`;
+
+    document.getElementById("homeLangPackSourceFlag").textContent = item.sourceFlag || "🌐";
+    document.getElementById("homeLangPackSourceName").textContent = item.sourceName || String(item.source).toUpperCase();
+
+    document.getElementById("homeLangPackTargetFlag").textContent = item.targetFlag || "🌐";
+    document.getElementById("homeLangPackTargetName").textContent = item.targetName || String(item.target).toUpperCase();
+
+    const isReady = item.status === "ready";
+    statusEl.textContent = isReady ? "Hazır" : "İndiriliyor";
+    statusEl.classList.toggle("downloading", !isReady);
+
+    widget.classList.remove("hidden");
+
+    widget.onclick = () => {
+      const source = encodeURIComponent(item.source);
+      const target = encodeURIComponent(item.target);
+      const mode = isReady ? "offline" : "online";
+
+      location.href = `/pages/login.html?source=${source}&target=${target}&mode=${mode}`;
+    };
+  }
 
   async function fillUserName() {
     try {
@@ -1273,6 +1462,7 @@ body.home-ready #pageContent{
       if (!result?.ok) return;
 
       await fillUserName();
+      renderHomeLangPackWidget();
 
       const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
       if (skipWelcome) {
@@ -1282,12 +1472,19 @@ body.home-ready #pageContent{
       console.error("home boot error:", e);
     } finally {
       document.body.classList.add("home-ready");
+      renderHomeLangPackWidget();
     }
   }
+
+  window.addEventListener("storage", renderHomeLangPackWidget);
+  window.addEventListener("focus", renderHomeLangPackWidget);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) renderHomeLangPackWidget();
+  });
 
   bootHome();
 </script>
 
 <script type="module" src="/js/site_language_boot.js"></script>
 </body>
-</html>
+            </html>
