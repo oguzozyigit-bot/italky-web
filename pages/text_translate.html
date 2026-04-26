@@ -1,912 +1,860 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Yazıdan Çeviri</title>
+// /js/text_translate_page.js
+
+import { supabase } from "/js/supabase_client.js";
+import { ensureAuthAndCacheUser } from "/js/auth.js";
+import { LANG_POOL } from "/js/lang_pool_full.js";
+
+const API_BASE = "https://italky-api.onrender.com";
+const $ = (id) => document.getElementById(id);
+
+const frameRoot = $("frameRoot");
+
+const fromBtn = $("fromBtn");
+const toBtn = $("toBtn");
+const swapBtn = $("swapBtn");
+const fromFlag = $("fromFlag");
+const toFlag = $("toFlag");
+const fromText = $("fromText");
+const toText = $("toText");
+
+const soundToggle = $("soundToggle");
+
+const resultBubble = $("resultBubble");
+const resultSub = $("resultSub");
+const resultArea = $("resultArea");
+
+const inputBox = $("inputBox");
+const inputPreviewBubble = $("inputPreviewBubble");
+const micBtn = $("micBtn");
+const translateBtn = $("translateBtn");
+
+const homeBtn = $("homeBtn");
+const homeLink = $("homeLink");
+const clearBtn = $("clearBtn");
+
+const langPopover = $("langPopover");
+const popoverTitle = $("popoverTitle");
+const popoverClose = $("popoverClose");
+const langSearch = $("langSearch");
+const langList = $("langList");
+
+const toastEl = $("toast");
+
+const BCP = {
+  tr: "tr-TR",
+  en: "en-US",
+  de: "de-DE",
+  fr: "fr-FR",
+  it: "it-IT",
+  es: "es-ES",
+  ar: "ar-SA",
+  ru: "ru-RU",
+  bg: "bg-BG",
+  pt: "pt-PT",
+  zh: "zh-CN",
+  ja: "ja-JP",
+  ko: "ko-KR"
+};
+
+let fromLang = localStorage.getItem("text_single_from_lang") || "tr";
+let toLang = localStorage.getItem("text_single_to_lang") || "en";
+let ALL_LANGS = [];
+let popoverMode = "from";
+
+let audio = null;
+let speakCtl = null;
+let speakToken = 0;
+let lastTranslateToken = 0;
+
+let recognizer = null;
+let listening = false;
+let booted = false;
+
+let soundEnabled = localStorage.getItem("text_single_sound_enabled") !== "0";
+
+function canonical(code) {
+  return String(code || "").trim().toLowerCase().split("-")[0];
+}
+
+function normalizeText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function toast(msg) {
+  if (!toastEl) return;
+
+  toastEl.textContent = String(msg || "");
+  toastEl.classList.add("show");
+
+  clearTimeout(window.__textSingleToast);
+  window.__textSingleToast = setTimeout(() => {
+    toastEl.classList.remove("show");
+  }, 2200);
+}
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
+function setState(state) {
+  if (!frameRoot) return;
 
-  <style>
-    :root{
-      --ai-gradient: linear-gradient(135deg,#67e8f9,#3b82f6,#60a5fa);
-      --gold-gradient: linear-gradient(135deg,#dbeafe,#93c5fd,#fde68a);
-      --bg:#04101b;
-      --border:rgba(255,255,255,0.14);
-      --panel-bg:rgba(8,14,24,.96);
-      --panel-line:rgba(255,255,255,.08);
-      --safe-bottom:env(safe-area-inset-bottom, 0px);
-      --safe-top:env(safe-area-inset-top, 0px);
-      --text:#f8fafc;
-      --muted:rgba(255,255,255,.64);
-      --ok:#22c55e;
-      --danger:#ef4444;
-    }
+  frameRoot.classList.remove("is-ready", "is-error", "is-translating", "is-idle");
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
+  if (state === "translating") frameRoot.classList.add("is-translating");
+  else if (state === "error") frameRoot.classList.add("is-error");
+  else if (state === "idle") frameRoot.classList.add("is-idle");
+  else frameRoot.classList.add("is-ready");
+}
 
-    html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      background:var(--bg);
-      color:var(--text);
-      font-family:Outfit,sans-serif;
-      overflow:hidden;
-    }
+function setOutput(main, sub = "") {
+  if (!resultBubble || !resultSub) return;
 
-    body{
-      min-height:100dvh;
-      background:
-        radial-gradient(circle at top, rgba(103,232,249,.08), transparent 24%),
-        radial-gradient(circle at bottom, rgba(250,204,21,.05), transparent 20%),
-        #04101b;
-    }
+  const value = String(main || "");
+  resultBubble.textContent = value || "...";
+  resultSub.textContent = sub || "";
 
-    .container{
-      display:flex;
-      flex-direction:column;
-      width:100%;
-      height:100dvh;
-      overflow:hidden;
-    }
-
-    .topbar{
-      flex:0 0 auto;
-      padding:calc(8px + var(--safe-top)) 10px 8px;
-      background:linear-gradient(180deg, rgba(4,16,27,.98), rgba(4,16,27,.82));
-      border-bottom:1px solid rgba(255,255,255,.06);
-      backdrop-filter:blur(14px);
-      z-index:700;
-    }
-
-    .topbar-inner{
-      width:min(96vw,560px);
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:1fr auto 1fr;
-      gap:8px;
-      align-items:center;
-    }
-
-    .lang-pill{
-      min-height:44px;
-      border:none;
-      border-radius:999px;
-      padding:8px 14px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.2px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      cursor:pointer;
-      position:relative;
-      min-width:0;
-    }
-
-    .lang-left{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width:0;
-    }
-
-    .lang-flag{
-      font-size:18px;
-      width:22px;
-      text-align:center;
-      flex:0 0 22px;
-    }
-
-    .lang-text{
-      min-width:0;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .lang-caret{
-      opacity:.7;
-      font-size:13px;
-      flex:0 0 auto;
-    }
-
-    .swap-btn{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:50%;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      justify-self:center;
-      align-self:center;
-      flex:0 0 auto;
-    }
-
-    .swap-btn svg{
-      width:20px;
-      height:20px;
-      stroke:currentColor;
-      stroke-width:2.2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .tool-toggle{
-      min-height:38px;
-      padding:0 12px;
-      border:none;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:11px;
-      font-weight:900;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-
-    .tool-toggle .dot{
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      background:rgba(255,255,255,.26);
-      transition:.2s ease;
-      flex:0 0 10px;
-    }
-
-    .tool-toggle.active .dot{
-      background:var(--ok);
-      box-shadow:0 0 12px rgba(34,197,94,.65);
-    }
-
-    .tool-toggle.inactive .dot{
-      background:var(--danger);
-      box-shadow:0 0 12px rgba(239,68,68,.45);
-    }
-
-    .screen{
-      flex:1;
-      width:100%;
-      display:flex;
-      flex-direction:column;
-      min-height:0;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .half-screen{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-    }
-
-    .half-screen.top{
-      background:linear-gradient(180deg, rgba(14,116,144,.22), rgba(4,16,27,.98));
-      border-bottom:1px solid rgba(255,255,255,.05);
-    }
-
-    .half-screen.bottom{
-      background:linear-gradient(180deg, rgba(30,64,175,.16), rgba(4,16,27,.98));
-    }
-
-    .panel-head{
-      width:100%;
-      padding:10px 10px 4px;
-      min-height:46px;
-      flex:0 0 auto;
-    }
-
-    .panel-head-grid{
-      width:min(96vw,560px);
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:1fr auto;
-      align-items:center;
-      gap:8px;
-    }
-
-    .panel-head-grid.simple{
-      grid-template-columns:1fr;
-      justify-items:center;
-    }
-
-    .panel-label{
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.4px;
-      color:rgba(255,255,255,.72);
-      text-transform:uppercase;
-      text-align:center;
-      justify-self:center;
-    }
-
-    .panel-sound{
-      justify-self:end;
-    }
-
-    .content-scroll{
-      flex:1;
-      min-height:0;
-      overflow-y:auto;
-      padding:14px 16px 18px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-start;
-      gap:14px;
-      scrollbar-width:none;
-      mask-image:linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
-    }
-
-    .content-scroll::-webkit-scrollbar{ display:none; }
-
-    .bubble{
-      text-align:center;
-      max-width:92%;
-      line-height:1.28;
-      word-break:break-word;
-    }
-
-    .bubble.latest{
-      font-size:30px;
-      font-weight:900;
-      line-height:1.08;
-    }
-
-    .bubble.normal{
-      font-size:18px;
-      font-weight:700;
-      opacity:.88;
-    }
-
-    .bubble-sub{
-      margin-top:8px;
-      font-size:13px;
-      line-height:1.4;
-      font-weight:900;
-      color:rgba(255,255,255,.62);
-      text-align:center;
-    }
-
-    .center-hub{
-      height:82px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      background:rgba(0,0,0,.58);
-      backdrop-filter:blur(16px);
-      z-index:600;
-      flex:0 0 auto;
-      border-top:1px solid rgba(255,255,255,.05);
-      border-bottom:1px solid rgba(255,255,255,.05);
-    }
-
-    .nav-btn{
-      position:absolute;
-      padding:10px 18px;
-      border-radius:100px;
-      background:transparent;
-      border:1px solid var(--border);
-      color:#fff;
-      font-size:10px;
-      font-weight:900;
-      cursor:pointer;
-      z-index:650;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-    }
-
-    .btn-clear{ right:14px; }
-
-    .orb-container{
-      width:82px;
-      height:82px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-    }
-
-    .energy-orbit{
-      position:absolute;
-      width:82px;
-      height:82px;
-      border-radius:50%;
-      animation:rotateOrbit 5s linear infinite;
-    }
-
-    .ball-1,.ball-2{
-      position:absolute;
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      filter:blur(1.5px);
-      transition:background .25s ease, box-shadow .25s ease;
-    }
-
-    .ball-1{
-      top:-5px;
-      left:50%;
-      transform:translateX(-50%);
-      background:#3b82f6;
-      box-shadow:0 0 15px #3b82f6;
-    }
-
-    .ball-2{
-      bottom:-5px;
-      left:50%;
-      transform:translateX(-50%);
-      background:#facc15;
-      box-shadow:0 0 15px #facc15;
-    }
-
-    .ai-core{
-      width:66px;
-      height:66px;
-      border-radius:50%;
-      background:#000;
-      border:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:"Space Grotesk",sans-serif;
-      font-weight:700;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .logo-text{
-      color:#fff;
-      letter-spacing:.4px;
-      font-size:13px;
-    }
-
-    .logo-ai{
-      background:var(--gold-gradient);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .eq-wrap{
-      display:flex;
-      align-items:center;
-      gap:3px;
-      height:20px;
-      position:absolute;
-      opacity:0;
-      transition:.25s;
-      z-index:20;
-    }
-
-    #frameRoot.is-translating .eq-wrap{
-      opacity:1;
-    }
-
-    #frameRoot.is-translating .logo-text{
-      opacity:0;
-    }
-
-    .eq-bar{
-      width:3px;
-      background:var(--gold-gradient);
-      border-radius:10px;
-      animation:eqAnim .7s infinite ease-in-out;
-    }
-
-    #frameRoot.is-idle .ball-1,
-    #frameRoot.is-idle .ball-2,
-    #frameRoot.is-error .ball-1,
-    #frameRoot.is-error .ball-2{
-      background:#ef4444;
-      box-shadow:0 0 18px rgba(239,68,68,.9);
-    }
-
-    #frameRoot.is-translating .ball-1{
-      background:#3b82f6;
-      box-shadow:0 0 18px rgba(59,130,246,.95);
-    }
-
-    #frameRoot.is-translating .ball-2{
-      background:#facc15;
-      box-shadow:0 0 18px rgba(250,204,21,.95);
-    }
-
-    #frameRoot.is-ready .ball-1,
-    #frameRoot.is-ready .ball-2{
-      background:#22c55e;
-      box-shadow:0 0 18px rgba(34,197,94,.9);
-    }
-
-    .composer-wrap{
-      flex:0 0 auto;
-      padding:8px 8px calc(8px + var(--safe-bottom));
-    }
-
-    .composer{
-      width:100%;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-height:62px;
-      padding:9px 12px;
-      border-radius:22px;
-      background:var(--panel-bg);
-      border:1px solid var(--panel-line);
-      box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03);
-      position:relative;
-    }
-
-    .composer-center{
-      flex:1;
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .composer-input{
-      width:100%;
-      min-height:24px;
-      max-height:140px;
-      resize:none;
-      border:none;
-      outline:none;
-      background:transparent;
-      color:#fff;
-      font-size:17px;
-      font-weight:800;
-      line-height:1.4;
-      font-family:inherit;
-      overflow:auto;
-      padding:0;
-      margin:0;
-      scrollbar-width:none;
-      text-align:left;
-      pointer-events:auto;
-    }
-
-    .composer-input::-webkit-scrollbar{ display:none; }
-
-    .composer-input::placeholder{
-      color:rgba(255,255,255,.72);
-      font-weight:800;
-    }
-
-    .composer-btn{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:50%;
-      cursor:pointer;
-      flex:0 0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:transparent;
-      color:#fff;
-      pointer-events:auto;
-      position:relative;
-    }
-
-    .composer-btn.primary{
-      background:#fff;
-      color:#000;
-      box-shadow:0 0 24px rgba(255,255,255,.10);
-    }
-
-    .composer-btn.listening::after{
-      content:"";
-      position:absolute;
-      inset:-6px;
-      border-radius:50%;
-      border:2px solid rgba(34,197,94,.72);
-      box-shadow:0 0 0 8px rgba(34,197,94,.10), 0 0 24px rgba(34,197,94,.18);
-      animation:micPulse 1s ease-out infinite;
-    }
-
-    .composer-btn svg{
-      width:22px;
-      height:22px;
-      stroke:currentColor;
-      stroke-width:2.2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .hidden{ display:none !important; }
-
-    .popover{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.52);
-      backdrop-filter:blur(8px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:99999;
-      padding:20px;
-    }
-
-    .popover.show{
-      display:flex;
-    }
-
-    .popover-card{
-      width:min(100%, 420px);
-      max-height:min(80vh, 720px);
-      overflow:hidden;
-      border-radius:24px;
-      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 24px 50px rgba(0,0,0,.30);
-      display:flex;
-      flex-direction:column;
-    }
-
-    .popover-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:16px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-    }
-
-    .popover-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .popover-close{
-      width:40px;
-      height:40px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.06);
-      color:#fff;
-      cursor:pointer;
-      font-size:18px;
-    }
-
-    .popover-search{
-      padding:12px 16px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-    }
-
-    .popover-search input{
-      width:100%;
-      min-height:46px;
-      border:none;
-      outline:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      padding:12px 14px;
-      font-family:'Outfit',sans-serif;
-      font-size:14px;
-    }
-
-    .popover-search input::placeholder{
-      color:rgba(255,255,255,.36);
-    }
-
-    .lang-list{
-      padding:12px;
-      overflow:auto;
-      display:grid;
-      gap:10px;
-      scrollbar-width:none;
-    }
-
-    .lang-list::-webkit-scrollbar{ display:none; }
-
-    .lang-option{
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      border-radius:18px;
-      padding:12px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      cursor:pointer;
-      transition:all .18s ease;
-    }
-
-    .lang-option:active{
-      transform:scale(.986);
-    }
-
-    .lang-option.active{
-      border-color:rgba(103,232,249,.34);
-      background:linear-gradient(135deg, rgba(103,232,249,.10), rgba(59,130,246,.08));
-      box-shadow:0 0 0 1px rgba(103,232,249,.12);
-    }
-
-    .lang-option-left{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      min-width:0;
-    }
-
-    .lang-option-flag{
-      width:30px;
-      height:30px;
-      border-radius:10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.06);
-      font-size:18px;
-      flex:0 0 30px;
-    }
-
-    .lang-option-text{
-      min-width:0;
-    }
-
-    .lang-option-name{
-      font-size:14px;
-      font-weight:800;
-      color:#fff;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .lang-option-code{
-      font-size:11px;
-      font-weight:700;
-      color:rgba(255,255,255,.50);
-      margin-top:3px;
-      text-transform:uppercase;
-    }
-
-    .lang-option-check{
-      color:#c4b5fd;
-      font-size:18px;
-      font-weight:900;
-      opacity:0;
-    }
-
-    .lang-option.active .lang-option-check{
-      opacity:1;
-    }
-
-    .toast{
-      position:fixed;
-      left:50%;
-      top:18px;
-      transform:translateX(-50%) translateY(-120px);
-      background:rgba(10,10,18,.94);
-      border:1px solid rgba(196,181,253,.34);
-      color:#fff;
-      padding:10px 14px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-      z-index:10000;
-      transition:.25s;
-      pointer-events:none;
-      backdrop-filter:blur(14px);
-      max-width:min(92vw,520px);
-      text-align:center;
-    }
-
-    .toast.show{
-      transform:translateX(-50%) translateY(0);
-    }
-
-    @keyframes rotateOrbit{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
-    }
-
-    @keyframes eqAnim{
-      0%,100%{ height:5px; opacity:.6; }
-      50%{ height:25px; opacity:1; }
-    }
-
-    @keyframes micPulse{
-      0%{ transform:scale(.92); opacity:.95; }
-      70%{ transform:scale(1.14); opacity:.14; }
-      100%{ transform:scale(1.18); opacity:0; }
-    }
-
-    @media (max-width:390px){
-      .lang-text{ font-size:11px; }
-      .bubble.latest{ font-size:26px; }
-      .bubble.normal{ font-size:17px; }
-      .panel-head-grid{
-        width:min(96vw,560px);
-      }
-    }
-  </style>
-</head>
-
-<body id="frameRoot" class="is-ready">
-  <div class="container">
-
-    <div class="topbar">
-      <div class="topbar-inner">
-        <button class="lang-pill" id="fromBtn" type="button" aria-label="Kaynak dili seç">
-          <span class="lang-left">
-            <span class="lang-flag" id="fromFlag">🇹🇷</span>
-            <span class="lang-text" id="fromText">Türkçe</span>
-          </span>
-          <span class="lang-caret">▾</span>
-        </button>
-
-        <button class="swap-btn" id="swapBtn" type="button" aria-label="Dilleri değiştir">
-          <svg viewBox="0 0 24 24">
-            <path d="M8 7h11"></path>
-            <path d="M15 3l4 4-4 4"></path>
-            <path d="M16 17H5"></path>
-            <path d="M9 13l-4 4 4 4"></path>
-          </svg>
-        </button>
-
-        <button class="lang-pill" id="toBtn" type="button" aria-label="Hedef dili seç">
-          <span class="lang-left">
-            <span class="lang-flag" id="toFlag">🇬🇧</span>
-            <span class="lang-text" id="toText">İngilizce</span>
-          </span>
-          <span class="lang-caret">▾</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="screen">
-      <div class="half-screen top">
-        <div class="panel-head">
-          <div class="panel-head-grid">
-            <div class="panel-label">ÇEVİRİ ÇIKTISI</div>
-            <button class="tool-toggle panel-sound active" id="soundToggle" type="button" aria-label="Sesi aç kapat">
-              <span class="dot"></span>
-              <span>SES</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="content-scroll" id="resultArea">
-          <div class="bubble normal" id="resultBubble">...</div>
-          <div class="bubble-sub" id="resultSub"></div>
-        </div>
-      </div>
-
-      <div class="center-hub">
-        <a class="nav-btn" id="homeLink" href="/pages/home.html" style="left:14px;">ANA SAYFA</a>
-
-        <div class="orb-container" id="homeBtn" title="Ana sayfa">
-          <div class="energy-orbit">
-            <div class="ball-1"></div>
-            <div class="ball-2"></div>
-          </div>
-          <div class="ai-core">
-            <div class="eq-wrap" aria-hidden="true">
-              <div class="eq-bar" style="animation-delay:0s"></div>
-              <div class="eq-bar" style="animation-delay:.2s"></div>
-              <div class="eq-bar" style="animation-delay:.4s"></div>
-            </div>
-            <span class="logo-text">italky<span class="logo-ai">AI</span></span>
-          </div>
-        </div>
-
-        <div class="nav-btn btn-clear" id="clearBtn">TEMİZLE</div>
-      </div>
-
-      <div class="half-screen bottom">
-        <div class="panel-head">
-          <div class="panel-head-grid simple">
-            <div class="panel-label">METİN GİRİŞİ</div>
-          </div>
-        </div>
-
-        <div class="content-scroll" id="inputViewArea">
-          <div class="bubble normal" id="inputPreviewBubble"></div>
-        </div>
-
-        <div class="composer-wrap">
-          <div class="composer">
-            <div class="composer-center">
-              <textarea id="inputBox" class="composer-input" rows="1" placeholder="Metin yaz"></textarea>
-            </div>
-
-            <button id="micBtn" class="composer-btn" type="button" aria-label="Sesli giriş">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-                <path d="M19 10a7 7 0 0 1-14 0"></path>
-                <path d="M12 17v4"></path>
-                <path d="M8 21h8"></path>
-              </svg>
-            </button>
-
-            <button id="translateBtn" class="composer-btn primary hidden" type="button" aria-label="Çevir">
-              <svg viewBox="0 0 24 24">
-                <path d="M5 12h14"></path>
-                <path d="M13 6l6 6-6 6"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="popover" id="langPopover">
-    <div class="popover-card">
-      <div class="popover-head">
-        <h3 class="popover-title" id="popoverTitle">Dil Seç</h3>
-        <button class="popover-close" id="popoverClose" type="button">✕</button>
-      </div>
-
-      <div class="popover-search">
-        <input id="langSearch" type="text" placeholder="Dil ara..." />
-      </div>
-
-      <div class="lang-list" id="langList"></div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-  import { ensureModuleAdAccess } from "/js/ad_gate.js";
-
-  await initGlobalAccess({ allowPublicPageBypass: false });
-
-  let adOk = true;
+  resultBubble.className =
+    `bubble ${value.trim() && value.trim() !== "..." ? "latest" : "normal"}`;
 
   try {
-    adOk = await ensureModuleAdAccess({
-      moduleKey: "text_translate",
-      placement: "text_translate_access",
-      title: "Bu modül için kısa bir reklam gösterilecek",
-      text: "Yazıdan çeviri modülünü kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden giriş yapabilirsiniz."
-    });
-  } catch (e) {
-    console.warn("text_translate ad gate error:", e);
-    adOk = true;
+    resultArea.scrollTop = resultArea.scrollHeight + 300;
+  } catch {}
+}
+
+function syncInputPreview() {
+  if (!inputPreviewBubble || !inputBox) return;
+  inputPreviewBubble.textContent = normalizeText(inputBox.value);
+}
+
+function syncInputButtons() {
+  if (!inputBox || !micBtn || !translateBtn) return;
+
+  const hasText = normalizeText(inputBox.value).length > 0;
+
+  if (listening) {
+    micBtn.classList.remove("hidden");
+    micBtn.classList.add("listening");
+    translateBtn.classList.add("hidden");
+    return;
   }
 
-  if (adOk !== false) {
-    await import("/js/text_translate_page.js?v=TEXT_TRANSLATE_SINGLE_V8");
+  micBtn.classList.remove("listening");
+
+  if (hasText) {
+    micBtn.classList.add("hidden");
+    translateBtn.classList.remove("hidden");
+  } else {
+    micBtn.classList.remove("hidden");
+    translateBtn.classList.add("hidden");
   }
-</script>
-</body>
-</html>
+}
+
+function autoResizeInput() {
+  if (!inputBox) return;
+  inputBox.style.height = "auto";
+  inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
+}
+
+function stopSpeak() {
+  try {
+    speakCtl?.abort?.();
+  } catch {}
+
+  speakCtl = null;
+
+  try {
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  } catch {}
+
+  audio = null;
+
+  try { window.NativeTTS?.stop?.(); } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+}
+
+function chooseWebVoice(langCode) {
+  const lang = canonical(langCode);
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+
+  return (
+    voices.find((v) => String(v.lang || "").toLowerCase().startsWith(lang)) ||
+    voices.find((v) => String(v.lang || "").toLowerCase().startsWith("en")) ||
+    voices[0] ||
+    null
+  );
+}
+
+function speakNativeFallback(text, langCode) {
+  const value = normalizeText(text);
+  if (!value) return false;
+
+  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+    try { window.NativeTTS.stop?.(); } catch {}
+
+    setTimeout(() => {
+      try {
+        window.NativeTTS.speak(value, canonical(langCode || "en"));
+      } catch {}
+    }, 80);
+
+    return true;
+  }
+
+  if (!window.speechSynthesis) return false;
+
+  try { window.speechSynthesis.cancel(); } catch {}
+
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = BCP[canonical(langCode)] || String(langCode || "en-US");
+
+  const voice = chooseWebVoice(langCode);
+  if (voice) u.voice = voice;
+
+  setTimeout(() => {
+    try {
+      window.speechSynthesis.speak(u);
+    } catch {}
+  }, 60);
+
+  return true;
+}
+
+async function speakText(text, langCode) {
+  if (!soundEnabled) return;
+
+  const value = normalizeText(text);
+  if (!value || value === "...") return;
+
+  stopSpeak();
+
+  const myToken = ++speakToken;
+
+  try {
+    speakCtl = new AbortController();
+
+    const r = await fetch(`${API_BASE}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: value,
+        lang: canonical(langCode || "en")
+      }),
+      signal: speakCtl.signal
+    });
+
+    if (myToken !== speakToken) return;
+
+    const j = await r.json().catch(() => null);
+
+    if (myToken !== speakToken) return;
+
+    if (j?.audio_base64) {
+      audio = new Audio("data:audio/mpeg;base64," + j.audio_base64);
+      audio.playsInline = true;
+      audio.onended = () => {
+        if (myToken === speakToken) audio = null;
+      };
+      audio.onerror = () => {
+        if (myToken === speakToken) audio = null;
+      };
+
+      await audio.play();
+      return;
+    }
+
+    speakNativeFallback(value, canonical(langCode));
+  } catch (e) {
+    if (e?.name !== "AbortError") {
+      speakNativeFallback(value, canonical(langCode));
+    }
+  }
+}
+
+async function translateViaBackend(text, from, to) {
+  const endpoints = [
+    `${API_BASE}/api/translate_ai`,
+    `${API_BASE}/api/translate-ai`,
+    `${API_BASE}/api/translate`
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: normalizeText(text),
+          from_lang: canonical(from),
+          to_lang: canonical(to),
+          source: canonical(from),
+          target: canonical(to),
+          mode: "normal",
+          use_ai: false,
+          cultural: false,
+          tone: "neutral",
+          style: "warm"
+        })
+      });
+
+      const j = await r.json().catch(() => null);
+      const value = normalizeText(j?.translated || j?.translation || j?.text || "");
+
+      if (r.ok && value) return value;
+    } catch {}
+  }
+
+  return null;
+}
+
+async function translateGoogleFree(text, from, to) {
+  const params = new URLSearchParams({
+    client: "gtx",
+    sl: canonical(from),
+    tl: canonical(to),
+    dt: "t",
+    q: text
+  });
+
+  const r = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
+
+  if (!r.ok) {
+    throw new Error("google_free_failed");
+  }
+
+  const data = await r.json().catch(() => null);
+  let translated = "";
+
+  if (Array.isArray(data) && Array.isArray(data[0])) {
+    for (const item of data[0]) {
+      if (Array.isArray(item) && item[0]) {
+        translated += String(item[0]);
+      }
+    }
+  }
+
+  translated = normalizeText(translated);
+  if (!translated) throw new Error("google_free_empty");
+
+  return translated;
+}
+
+async function translateAny(text, from, to) {
+  const backend = await translateViaBackend(text, from, to);
+  if (backend) return backend;
+
+  return await translateGoogleFree(text, from, to);
+}
+
+const TURKISH_LANG_NAMES = {
+  af:"Afrikanca", sq:"Arnavutça", am:"Amharca", ar:"Arapça", hy:"Ermenice", az:"Azerbaycanca",
+  eu:"Baskça", be:"Belarusça", bn:"Bengalce", bs:"Boşnakça", bg:"Bulgarca", ca:"Katalanca",
+  ceb:"Cebuano", zh:"Çince", "zh-cn":"Basitleştirilmiş Çince", "zh-tw":"Geleneksel Çince",
+  co:"Korsikaca", hr:"Hırvatça", cs:"Çekçe", da:"Danca", nl:"Hollandaca", en:"İngilizce",
+  eo:"Esperanto", et:"Estonca", fi:"Fince", fr:"Fransızca", fy:"Frizce", gl:"Galiçyaca",
+  ka:"Gürcüce", de:"Almanca", el:"Yunanca", gu:"Guceratça", ht:"Haiti Kreyolu", ha:"Hausa",
+  haw:"Hawaii Dili", he:"İbranice", iw:"İbranice", hi:"Hintçe", hmn:"Hmongca", hu:"Macarca",
+  is:"İzlandaca", ig:"İgbo", id:"Endonezce", ga:"İrlandaca", it:"İtalyanca", ja:"Japonca",
+  jv:"Cava Dili", kn:"Kannada", kk:"Kazakça", km:"Kmerce", rw:"Kinyarwanda", ko:"Korece",
+  ku:"Kürtçe", ky:"Kırgızca", lo:"Laoca", la:"Latince", lv:"Letonca", lt:"Litvanca",
+  lb:"Lüksemburgca", mk:"Makedonca", mg:"Malgaşça", ms:"Malayca", ml:"Malayalamca", mt:"Maltaca",
+  mi:"Maorice", mr:"Marathi", mn:"Moğolca", my:"Burmaca", ne:"Nepalce", no:"Norveççe",
+  ny:"Nyanja", or:"Oriyaca", ps:"Peştuca", fa:"Farsça", pl:"Lehçe", pt:"Portekizce",
+  pa:"Pencapça", ro:"Romence", ru:"Rusça", sm:"Samoaca", gd:"İskoç Galcesi", sr:"Sırpça",
+  st:"Sotho", sn:"Shona", sd:"Sindhi", si:"Sinhalaca", sk:"Slovakça", sl:"Slovence",
+  so:"Somalice", es:"İspanyolca", su:"Sundaca", sw:"Svahili", sv:"İsveççe", tl:"Tagalog",
+  tg:"Tacikçe", ta:"Tamilce", tt:"Tatarca", te:"Teluguca", th:"Tayca", tr:"Türkçe",
+  tk:"Türkmence", uk:"Ukraynaca", ur:"Urduca", ug:"Uygurca", uz:"Özbekçe", vi:"Vietnamca",
+  cy:"Galce", xh:"Xhosa", yi:"Yidiş", yo:"Yorubaca", zu:"Zuluca"
+};
+
+const FLAG_MAP = {
+  tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", ru:"🇷🇺", ar:"🇸🇦", zh:"🇨🇳",
+  ja:"🇯🇵", ko:"🇰🇷", pt:"🇵🇹", nl:"🇳🇱", el:"🇬🇷", uk:"🇺🇦", pl:"🇵🇱", ro:"🇷🇴", bg:"🇧🇬",
+  he:"🇮🇱", hi:"🇮🇳", id:"🇮🇩", fa:"🇮🇷", ur:"🇵🇰", th:"🇹🇭", vi:"🇻🇳"
+};
+
+function getFlag(code, item) {
+  return item?.flag || FLAG_MAP[canonical(code)] || "🌐";
+}
+
+function getTurkishName(item) {
+  const code = canonical(item?.code);
+
+  return (
+    TURKISH_LANG_NAMES[code] ||
+    item?.tr ||
+    item?.tr_name ||
+    item?.name_tr ||
+    item?.nativeName ||
+    item?.name ||
+    code.toUpperCase()
+  );
+}
+
+function sanitizeLangPool() {
+  const raw = Array.isArray(LANG_POOL) ? LANG_POOL : [];
+  const seen = new Set();
+
+  return raw
+    .map((item) => {
+      const code = canonical(item?.code);
+      if (!code || seen.has(code) || code === "auto" || code === "detect") return null;
+
+      seen.add(code);
+
+      const trName = getTurkishName(item);
+
+      return {
+        code,
+        flag: getFlag(code, item),
+        trName,
+        searchText: [
+          code,
+          trName,
+          item?.name || "",
+          item?.nativeName || ""
+        ].join(" ").toLowerCase()
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.trName.localeCompare(b.trName, "tr"));
+}
+
+function getLangByCode(code) {
+  return ALL_LANGS.find((x) => x.code === canonical(code)) || {
+    code: canonical(code),
+    flag: "🌐",
+    trName: String(code || "").toUpperCase()
+  };
+}
+
+function ensureValidLanguages() {
+  if (!ALL_LANGS.find((x) => x.code === canonical(fromLang))) fromLang = "tr";
+  if (!ALL_LANGS.find((x) => x.code === canonical(toLang))) toLang = "en";
+
+  if (canonical(fromLang) === canonical(toLang)) {
+    const fallback = canonical(fromLang) === "en" ? "tr" : "en";
+    if (ALL_LANGS.find((x) => x.code === fallback)) {
+      toLang = fallback;
+    }
+  }
+}
+
+function renderTopLanguageButtons() {
+  const fromObj = getLangByCode(fromLang);
+  const toObj = getLangByCode(toLang);
+
+  if (fromFlag) fromFlag.textContent = fromObj.flag;
+  if (toFlag) toFlag.textContent = toObj.flag;
+  if (fromText) fromText.textContent = fromObj.trName;
+  if (toText) toText.textContent = toObj.trName;
+
+  localStorage.setItem("text_single_from_lang", canonical(fromLang));
+  localStorage.setItem("text_single_to_lang", canonical(toLang));
+}
+
+function renderToggles() {
+  if (soundToggle) {
+    soundToggle.classList.toggle("active", !!soundEnabled);
+    soundToggle.classList.toggle("inactive", !soundEnabled);
+  }
+
+  localStorage.setItem("text_single_sound_enabled", soundEnabled ? "1" : "0");
+}
+
+function renderLangList(query = "") {
+  if (!langList) return;
+
+  const q = String(query || "").trim().toLowerCase();
+  const currentCode = popoverMode === "from" ? canonical(fromLang) : canonical(toLang);
+
+  const filtered = !q
+    ? ALL_LANGS
+    : ALL_LANGS.filter((item) => item.searchText.includes(q));
+
+  if (!filtered.length) {
+    langList.innerHTML = `<div style="padding:22px 14px;text-align:center;color:rgba(255,255,255,.52);font-size:13px;">Aradığın dil bulunamadı.</div>`;
+    return;
+  }
+
+  langList.innerHTML = filtered.map((item) => `
+    <button class="lang-option ${item.code === currentCode ? "active" : ""}" type="button" data-code="${item.code}">
+      <div class="lang-option-left">
+        <div class="lang-option-flag">${item.flag}</div>
+        <div class="lang-option-text">
+          <div class="lang-option-name">${escapeHtml(item.trName)}</div>
+          <div class="lang-option-code">${escapeHtml(item.code)}</div>
+        </div>
+      </div>
+      <div class="lang-option-check">✓</div>
+    </button>
+  `).join("");
+
+  langList.querySelectorAll(".lang-option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const code = canonical(btn.dataset.code);
+      if (!code) return;
+
+      if (popoverMode === "from") {
+        fromLang = code;
+
+        if (canonical(fromLang) === canonical(toLang)) {
+          const other = ALL_LANGS.find((x) => x.code !== canonical(fromLang));
+          if (other) toLang = other.code;
+        }
+      } else {
+        toLang = code;
+
+        if (canonical(toLang) === canonical(fromLang)) {
+          const other = ALL_LANGS.find((x) => x.code !== canonical(toLang));
+          if (other) fromLang = other.code;
+        }
+      }
+
+      renderTopLanguageButtons();
+      closeLangPopover();
+    });
+  });
+}
+
+function openLangPopover(mode) {
+  popoverMode = mode === "to" ? "to" : "from";
+
+  if (popoverTitle) {
+    popoverTitle.textContent = popoverMode === "from" ? "Kaynak Dil Seç" : "Hedef Dil Seç";
+  }
+
+  langPopover?.classList.add("show");
+
+  if (langSearch) {
+    langSearch.value = "";
+  }
+
+  renderLangList("");
+
+  setTimeout(() => {
+    try { langSearch?.focus?.(); } catch {}
+  }, 40);
+}
+
+function closeLangPopover() {
+  langPopover?.classList.remove("show");
+}
+
+async function translateText() {
+  const sourceText = normalizeText(inputBox?.value || "");
+
+  if (!sourceText) {
+    setOutput("...");
+    toast("Önce çevrilecek bir metin yaz.");
+    syncInputButtons();
+    return;
+  }
+
+  const myToken = ++lastTranslateToken;
+  const from = canonical(fromLang);
+  const to = canonical(toLang);
+
+  const originalText = sourceText;
+
+  if (inputBox) {
+    inputBox.value = "";
+    autoResizeInput();
+  }
+
+  if (inputPreviewBubble) {
+    inputPreviewBubble.textContent = originalText;
+  }
+
+  syncInputButtons();
+
+  setState("translating");
+  setOutput("Çevriliyor...");
+
+  try {
+    const out = await translateAny(originalText, from, to);
+
+    if (myToken !== lastTranslateToken) return;
+
+    setOutput(out);
+    setState("ready");
+
+    if (soundEnabled) {
+      setTimeout(() => {
+        speakText(out, to);
+      }, 140);
+    }
+  } catch (e) {
+    if (myToken !== lastTranslateToken) return;
+
+    setOutput("⚠️ Çeviri şu an yapılamadı.");
+    setState("error");
+    toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
+
+    setTimeout(() => {
+      setState("ready");
+    }, 1200);
+  }
+}
+
+function extractStableRecognitionText(results) {
+  let latestFinal = "";
+  let latestInterim = "";
+
+  for (let i = 0; i < results.length; i++) {
+    const piece = normalizeText(results[i]?.[0]?.transcript || "");
+    if (!piece) continue;
+
+    if (results[i].isFinal) {
+      latestFinal = piece;
+    } else {
+      latestInterim = piece;
+    }
+  }
+
+  return normalizeText(latestFinal || latestInterim);
+}
+
+function stopRecognition() {
+  try { recognizer?.stop?.(); } catch {}
+  try { recognizer?.abort?.(); } catch {}
+
+  recognizer = null;
+  listening = false;
+  syncInputButtons();
+}
+
+window.onNativeSpeechResult = function(payload) {
+  try {
+    const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+    const value = normalizeText(data?.text || data?.result || "");
+
+    if (value && inputBox) {
+      inputBox.value = value;
+      autoResizeInput();
+      syncInputPreview();
+      syncInputButtons();
+    }
+  } catch {}
+
+  listening = false;
+  syncInputButtons();
+};
+
+window.onNativeSpeechError = function() {
+  listening = false;
+  syncInputButtons();
+  toast("Mikrofon hatası");
+};
+
+function startRecognition() {
+  if (listening) {
+    stopRecognition();
+    return;
+  }
+
+  const langCode = BCP[canonical(fromLang)] || `${canonical(fromLang)}-${canonical(fromLang).toUpperCase()}`;
+
+  if (window.Native && typeof window.Native.startSpeechRecognition === "function") {
+    try {
+      listening = true;
+      syncInputButtons();
+      window.Native.startSpeechRecognition(langCode, "text");
+      return;
+    } catch {
+      listening = false;
+      syncInputButtons();
+    }
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SR) {
+    toast("Bu cihazda sesli giriş desteklenmiyor");
+    return;
+  }
+
+  recognizer = new SR();
+  recognizer.lang = langCode;
+  recognizer.interimResults = true;
+  recognizer.continuous = false;
+  recognizer.maxAlternatives = 1;
+
+  recognizer.onstart = () => {
+    listening = true;
+    syncInputButtons();
+  };
+
+  recognizer.onresult = (e) => {
+    const stableText = extractStableRecognitionText(e.results);
+
+    if (inputBox) {
+      inputBox.value = stableText;
+      autoResizeInput();
+    }
+
+    syncInputPreview();
+    syncInputButtons();
+  };
+
+  recognizer.onerror = () => {
+    stopRecognition();
+    toast("Mikrofon hatası");
+  };
+
+  recognizer.onend = () => {
+    listening = false;
+    syncInputButtons();
+  };
+
+  try {
+    recognizer.start();
+  } catch {
+    stopRecognition();
+  }
+}
+
+async function requireLogin() {
+  const { data: { session } = {} } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    location.replace("/pages/login.html");
+    return false;
+  }
+
+  try {
+    await ensureAuthAndCacheUser();
+  } catch {}
+
+  return true;
+}
+
+function bindEvents() {
+  fromBtn?.addEventListener("click", () => openLangPopover("from"));
+  toBtn?.addEventListener("click", () => openLangPopover("to"));
+
+  swapBtn?.addEventListener("click", () => {
+    const oldFrom = fromLang;
+    fromLang = toLang;
+    toLang = oldFrom;
+
+    renderTopLanguageButtons();
+    toast("Diller değiştirildi");
+  });
+
+  popoverClose?.addEventListener("click", closeLangPopover);
+
+  langPopover?.addEventListener("click", (e) => {
+    if (e.target === langPopover) closeLangPopover();
+  });
+
+  langSearch?.addEventListener("input", (e) => {
+    renderLangList(e.target.value || "");
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && langPopover?.classList.contains("show")) {
+      closeLangPopover();
+    }
+  });
+
+  soundToggle?.addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    renderToggles();
+
+    if (!soundEnabled) stopSpeak();
+
+    toast(soundEnabled ? "Ses açıldı" : "Ses kapatıldı");
+  });
+
+  translateBtn?.addEventListener("click", translateText);
+
+  inputBox?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      translateText();
+    }
+  });
+
+  inputBox?.addEventListener("input", () => {
+    autoResizeInput();
+    syncInputPreview();
+    syncInputButtons();
+  });
+
+  micBtn?.addEventListener("click", startRecognition);
+
+  homeLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = "/pages/home.html";
+  });
+
+  homeBtn?.addEventListener("click", () => {
+    location.href = "/pages/home.html";
+  });
+
+  clearBtn?.addEventListener("click", () => {
+    if (inputBox) {
+      inputBox.value = "";
+      autoResizeInput();
+    }
+
+    setOutput("...");
+    syncInputPreview();
+    stopSpeak();
+    stopRecognition();
+    setState("ready");
+  });
+}
+
+async function boot() {
+  if (booted) return;
+  booted = true;
+
+  if (!(await requireLogin())) return;
+
+  ALL_LANGS = sanitizeLangPool();
+
+  ensureValidLanguages();
+  renderTopLanguageButtons();
+  renderToggles();
+  bindEvents();
+
+  setOutput("...");
+
+  if (inputBox) {
+    inputBox.removeAttribute("readonly");
+    inputBox.disabled = false;
+    autoResizeInput();
+  }
+
+  syncInputPreview();
+  syncInputButtons();
+  setState("ready");
+
+  console.log("TEXT_TRANSLATE_READY_V8", {
+    fromLang,
+    toLang,
+    langs: ALL_LANGS.length
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot);
+} else {
+  boot();
+}
+
+window.addEventListener("beforeunload", () => {
+  stopSpeak();
+  stopRecognition();
+});
