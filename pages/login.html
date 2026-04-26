@@ -597,19 +597,17 @@
   <script type="module">
     import { getLangPoolForSite } from "/js/lang_pool_full.js";
     import { supabase } from "/js/supabase_client.js";
+    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=1";
 
     const API_BASE = "https://italky-api.onrender.com";
     const $ = (id) => document.getElementById(id);
 
     const HOME_URL = "/pages/home.html";
-    const TEXT_TRANSLATION_URL = "/pages/text_to_text.html";
+    const TEXT_TRANSLATION_URL = "/pages/text_translate.html";
 
     const SITE_LANG_KEY = "site_lang";
     const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
     const NATIVE_LANG_KEY = "italky_native_lang_v7";
-    const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
-    const OFFLINE_LICENSE_DAYS_KEY = "italky_offline_license_days_v7";
-    const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
 
     const AD_INTERVAL_MS = 3 * 60 * 1000;
 
@@ -700,18 +698,7 @@
     };
 
     function canonical(code){
-      return String(code || "").toLowerCase().split("-")[0].trim();
-    }
-
-    function readJson(key, fallback){
-      try{
-        const raw = localStorage.getItem(key);
-        if(!raw) return fallback;
-        const parsed = JSON.parse(raw);
-        return parsed && typeof parsed === "object" ? parsed : fallback;
-      }catch{
-        return fallback;
-      }
+      return OfflinePackBridge.canonical(code);
     }
 
     function getInitialSiteLang(){
@@ -828,10 +815,6 @@
     let liveText = "";
     let lastAdAt = Date.now();
     let currentMode = "online";
-    let pendingDownloadSource = "";
-    let pendingDownloadTarget = "";
-    let pendingAdResolve = null;
-    let pendingAdTimer = null;
 
     function tx(key){
       const c = UI[botLang] ? botLang : "en";
@@ -915,85 +898,6 @@
       });
     }
 
-    function finishPendingAd(ok){
-      if(typeof pendingAdResolve === "function"){
-        const resolve = pendingAdResolve;
-        pendingAdResolve = null;
-        clearTimeout(pendingAdTimer);
-        pendingAdTimer = null;
-        resolve(!!ok);
-      }
-    }
-
-    window.onNativeRewardEarned = function(){
-      lastAdAt = Date.now();
-      finishPendingAd(true);
-    };
-
-    window.onNativeRewardClosed = function(payload){
-      if(payload && payload.shown === false){
-        finishPendingAd(false);
-        return;
-      }
-      if(!pendingAdResolve) return;
-      finishPendingAd(true);
-    };
-
-    function callNativeRewardedAd(adUnit, langCode = ""){
-      let called = false;
-
-      try{
-        if(window.AndroidAdBridge?.showRewardedAdForLang){
-          window.AndroidAdBridge.showRewardedAdForLang(langCode, adUnit);
-          called = true;
-        }
-      }catch{}
-
-      try{
-        if(!called && window.AndroidAdBridge?.showRewardedAd){
-          window.AndroidAdBridge.showRewardedAd(adUnit);
-          called = true;
-        }
-      }catch{}
-
-      try{
-        if(!called && window.NativeAds?.showRewardedAdForLang){
-          window.NativeAds.showRewardedAdForLang(langCode, adUnit);
-          called = true;
-        }
-      }catch{}
-
-      try{
-        if(!called && window.NativeAds?.showRewardedAd){
-          window.NativeAds.showRewardedAd(adUnit);
-          called = true;
-        }
-      }catch{}
-
-      try{
-        if(!called && window.AdMobBridge?.showRewardedAdForLang){
-          window.AdMobBridge.showRewardedAdForLang(langCode, adUnit);
-          called = true;
-        }
-      }catch{}
-
-      try{
-        if(!called && window.AdMobBridge?.showRewardedAd){
-          window.AdMobBridge.showRewardedAd(adUnit);
-          called = true;
-        }
-      }catch{}
-
-      try{
-        if(!called && window.Native?.showRewardedAd){
-          window.Native.showRewardedAd(langCode, adUnit);
-          called = true;
-        }
-      }catch{}
-
-      return called;
-    }
-
     function showAdModal({title,text,adUnit = "public_facetoface_3min", langCode = ""} = {}){
       return new Promise((resolve) => {
         if(adTitle) adTitle.textContent = title || tx("adTitle");
@@ -1009,25 +913,20 @@
           adModal.classList.remove("show");
         };
 
-        watchAdBtn.onclick = () => {
+        watchAdBtn.onclick = async () => {
           clean();
 
-          pendingAdResolve = resolve;
+          const ok = await OfflinePackBridge.showRewardedAd({
+            adUnit,
+            langCode,
+            timeoutMs:20000
+          });
 
-          const called = callNativeRewardedAd(adUnit, langCode);
-
-          if(!called){
-            showToast(tx("adOpenError"));
-            finishPendingAd(false);
-            return;
+          if(ok){
+            lastAdAt = Date.now();
           }
 
-          pendingAdTimer = setTimeout(() => {
-            if(pendingAdResolve){
-              showToast(tx("adPreparing"));
-              finishPendingAd(false);
-            }
-          }, 20000);
+          resolve(!!ok);
         };
 
         closeAdBtn.onclick = () => {
@@ -1052,64 +951,25 @@
       return ok;
     }
 
-    function pairKey(from, to){
-      return `${canonical(from)}_${canonical(to)}`;
-    }
-
-    function getInstalledPairs(){
-      return readJson(OFFLINE_INSTALLED_KEY, {});
-    }
-
-    function saveInstalledPairs(map){
-      try{ localStorage.setItem(OFFLINE_INSTALLED_KEY, JSON.stringify(map || {})); }catch{}
-      try{
-        if(window.OfflineTranslate?.setInstalledOfflinePairs){
-          window.OfflineTranslate.setInstalledOfflinePairs(JSON.stringify(map || {}));
-        }
-      }catch(e){
-        console.warn("Native installed pairs yazılamadı:", e);
-      }
-    }
-
-    function clearInstalledPairs(){
-      saveInstalledPairs({});
-      try{
-        if(window.OfflineTranslate?.clearInstalledOfflinePairs){
-          window.OfflineTranslate.clearInstalledOfflinePairs();
-        }
-      }catch(e){
-        console.warn("Native installed pairs temizlenemedi:", e);
-      }
-    }
-
-    function syncInstalledPairsFromNative(){
-      try{
-        if(window.OfflineTranslate?.getInstalledOfflinePairs){
-          const raw = window.OfflineTranslate.getInstalledOfflinePairs() || "{}";
-          const parsed = JSON.parse(raw);
-          if(parsed && typeof parsed === "object"){
-            localStorage.setItem(OFFLINE_INSTALLED_KEY, JSON.stringify(parsed));
-          }
-        }
-      }catch(e){
-        console.warn("Native installed pairs okunamadı:", e);
-      }
+    function hasInstalledPair(a, b){
+      return OfflinePackBridge.hasInstalledPair(a,b);
     }
 
     function hasAnyInstalledPair(){
-      return Object.keys(getInstalledPairs()).length > 0;
+      return OfflinePackBridge.hasAnyInstalledPair();
     }
 
-    function hasInstalledPair(a, b){
-      const from = canonical(a);
-      const to = canonical(b);
-      const installed = getInstalledPairs();
-      return !!installed[pairKey(from,to)] && !!installed[pairKey(to,from)];
+    function syncInstalledPairsFromNative(){
+      OfflinePackBridge.syncInstalledPairsFromNative();
+    }
+
+    function clearInstalledPairs(){
+      OfflinePackBridge.clearInstalledPairs();
     }
 
     function installedTargetsForNative(nativeLang){
       const native = canonical(nativeLang);
-      const installed = getInstalledPairs();
+      const installed = OfflinePackBridge.getInstalledPairs();
       const set = new Set();
 
       Object.keys(installed).forEach((key) => {
@@ -1125,93 +985,11 @@
     }
 
     function getOfflineNativeLang(){
-      return canonical(localStorage.getItem(NATIVE_LANG_KEY) || "") || "";
+      return OfflinePackBridge.getOfflineNativeLang(botLang || "tr");
     }
 
     function setOfflineNativeLang(code){
-      const value = canonical(code || "");
-      if(!value) return;
-      localStorage.setItem(NATIVE_LANG_KEY, value);
-      try{
-        if(window.OfflineTranslate?.setNativeOfflineLang){
-          window.OfflineTranslate.setNativeOfflineLang(value);
-        }
-      }catch(e){
-        console.warn("Native offline dili yazılamadı:", e);
-      }
-    }
-
-    function ensurePublicOfflineLicenseOnce(){
-      try{
-        localStorage.setItem(OFFLINE_LICENSE_DAYS_KEY, "365");
-        if(window.OfflineTranslate?.setMockOfflineLicense){
-          window.OfflineTranslate.setMockOfflineLicense(365);
-        }
-      }catch(e){
-        console.warn("Offline lisans yazılamadı:", e);
-      }
-    }
-
-    function canUseNativeOfflineInstaller(){
-      return !!(window.OfflineTranslate && typeof window.OfflineTranslate.downloadBiDirectionalPair === "function");
-    }
-
-    function canUseNativeOfflineTranslator(){
-      return !!(window.OfflineTranslate && typeof window.OfflineTranslate.translate === "function");
-    }
-
-    function saveHomeLangPackWidget(sourceCode, targetCode, status = "downloading"){
-      const source = canonical(sourceCode);
-      const target = canonical(targetCode);
-      if(!source || !target || source === target) return;
-
-      const sourceInfo = langObj(source);
-      const targetInfo = langObj(target);
-
-      const item = {
-        source,
-        target,
-        sourceName: sourceInfo.name,
-        targetName: targetInfo.name,
-        sourceFlag: sourceInfo.flag,
-        targetFlag: targetInfo.flag,
-        title: `${sourceInfo.name} ⇄ ${targetInfo.name}`,
-        status,
-        statusText: status === "ready" ? "Dil paketi hazır" : "Dil paketi indiriliyor",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      try{
-        localStorage.setItem(HOME_LANG_WIDGET_KEY, JSON.stringify(item));
-      }catch(e){
-        console.warn("Ana sayfa dil paketi widget kaydı yazılamadı:", e);
-      }
-    }
-
-    function markInstalledBiDirectional(sourceCode, targetCode){
-      const source = canonical(sourceCode);
-      const target = canonical(targetCode);
-      if(!source || !target || source === target) return;
-
-      const installed = getInstalledPairs();
-      const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-
-      installed[pairKey(source,target)] = {
-        from:source,
-        to:target,
-        installedAt:new Date().toISOString(),
-        expiresAt
-      };
-
-      installed[pairKey(target,source)] = {
-        from:target,
-        to:source,
-        installedAt:new Date().toISOString(),
-        expiresAt
-      };
-
-      saveInstalledPairs(installed);
+      return OfflinePackBridge.setOfflineNativeLang(code);
     }
 
     async function resolveOfflineNativeForDownload(){
@@ -1270,7 +1048,7 @@
       }
 
       if(hasInstalledPair(nativeLang,target)){
-        saveHomeLangPackWidget(nativeLang,target,"ready");
+        OfflinePackBridge.saveHomeWidget(nativeLang,target,langObj,"ready");
         showToast(tx("packReady"));
         return true;
       }
@@ -1303,35 +1081,20 @@
         return false;
       }
 
-      ensurePublicOfflineLicenseOnce();
+      const result = OfflinePackBridge.startNativeDownload(nativeLang,target,langObj);
 
-      if(!canUseNativeOfflineInstaller()){
-        showToast(tx("nativeNotReady"));
+      if(!result?.ok){
+        console.error("Offline download start failed:", result?.error);
+        showToast(
+          result?.error === "native_installer_missing"
+            ? tx("nativeNotReady")
+            : `${targetInfo.name} indirilemedi.`
+        );
         return false;
       }
 
-      const payload = JSON.stringify({
-        source:nativeLang,
-        target
-      });
-
-      try{
-        pendingDownloadSource = nativeLang;
-        pendingDownloadTarget = target;
-
-        window.OfflineTranslate.downloadBiDirectionalPair(payload);
-
-        saveHomeLangPackWidget(nativeLang,target,"downloading");
-        showToast(tx("packDownloading"));
-
-        return true;
-      }catch(e){
-        console.error("FaceToFace offline download error:", e);
-        pendingDownloadSource = "";
-        pendingDownloadTarget = "";
-        showToast(`${targetInfo.name} indirilemedi.`);
-        return false;
-      }
+      showToast(tx("packDownloading"));
+      return true;
     }
 
     async function maybeOfferOfflinePackAfterTranslate(){
@@ -1560,33 +1323,7 @@
     }
 
     function translateOffline(text,from,to){
-      return new Promise((resolve) => {
-        if(!canUseNativeOfflineTranslator()){
-          resolve(null);
-          return;
-        }
-
-        const handler = (e) => {
-          window.removeEventListener("offlineTranslateResult",handler);
-          const value = String(e.detail?.translatedText || e.detail?.translation || "").trim();
-          resolve(value || null);
-        };
-
-        window.addEventListener("offlineTranslateResult",handler);
-
-        try{
-          window.OfflineTranslate.translate(
-            JSON.stringify({
-              text:String(text || "").trim(),
-              from:canonical(from),
-              to:canonical(to)
-            })
-          );
-        }catch{
-          window.removeEventListener("offlineTranslateResult",handler);
-          resolve(null);
-        }
-      });
+      return OfflinePackBridge.translateOffline(text,from,to);
     }
 
     async function translateText(text,from,to){
@@ -1811,35 +1548,31 @@
 
     window.addEventListener("offlinePairDownloadStarted",(e) => {
       const d = e.detail || {};
-      const source = canonical(d.source || pendingDownloadSource || getOfflineNativeLang() || botLang);
-      const target = canonical(d.target || pendingDownloadTarget);
+      const source = canonical(d.source || getOfflineNativeLang() || botLang);
+      const target = canonical(d.target || topLang);
 
       if(!source || !target) return;
 
-      saveHomeLangPackWidget(source,target,"downloading");
+      OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
       showToast(tx("packDownloading"));
     });
 
     window.addEventListener("offlinePairDownloadCompleted",(e) => {
       const d = e.detail || {};
-      const source = canonical(d.source || pendingDownloadSource || getOfflineNativeLang() || botLang);
-      const target = canonical(d.target || pendingDownloadTarget);
+      const source = canonical(d.source || getOfflineNativeLang() || botLang);
+      const target = canonical(d.target || topLang);
 
       if(!source || !target) return;
 
-      markInstalledBiDirectional(source,target);
-      saveHomeLangPackWidget(source,target,"ready");
-
-      pendingDownloadSource = "";
-      pendingDownloadTarget = "";
+      OfflinePackBridge.markInstalledPair(source,target);
+      OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
+      syncInstalledPairsFromNative();
 
       showToast(tx("packDownloaded"));
     });
 
     window.addEventListener("offlinePairDownloadFailed",(e) => {
       const d = e.detail || {};
-      pendingDownloadSource = "";
-      pendingDownloadTarget = "";
       showToast(d.error || tx("translateError"));
     });
 
@@ -1883,12 +1616,11 @@
     }
 
     async function boot(){
+      OfflinePackBridge.installDownloadEventHandlers(langObj);
       syncInstalledPairsFromNative();
 
       try{
-        if(window.AndroidAdBridge?.preloadRewardedAd) window.AndroidAdBridge.preloadRewardedAd();
-        else if(window.NativeAds?.preloadRewardedAd) window.NativeAds.preloadRewardedAd();
-        else if(window.AdMobBridge?.preloadRewardedAd) window.AdMobBridge.preloadRewardedAd();
+        OfflinePackBridge.preloadRewardedAd();
       }catch{}
 
       const params = new URLSearchParams(location.search);
