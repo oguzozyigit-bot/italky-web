@@ -81,10 +81,37 @@
     }
 
     .pop-item.active{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.25)}
-    .pop-left{display:flex;align-items:center;gap:10px;min-width:0}
+    .pop-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
     .pop-flag{font-size:18px}
     .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pop-code{font-size:12px;font-weight:900;opacity:.7}
+
+    .pop-actions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-shrink:0;
+    }
+
+    .pop-download{
+      width:32px;
+      height:32px;
+      border:none;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-size:15px;
+      line-height:1;
+    }
+
+    .pop-download:active{
+      transform:scale(.94);
+    }
 
     .chat-body{
       flex:1;width:100%;min-height:0;overflow-y:auto;display:flex;flex-direction:column;
@@ -190,7 +217,7 @@
     }
 
     .modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}
-    .modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76)}
+    .modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76);white-space:pre-line}
     .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
 
     .modal-btn{
@@ -254,7 +281,7 @@
     </section>
 
     <section class="center-hub">
-      <button id="centerLoginBtn" class="center-action center-login" type="button">Giriş Yap</button>
+      <button id="centerLoginBtn" class="center-action center-login" type="button">Yazıdan Çeviri</button>
 
       <div class="orb">
         <span class="sat sat1"></span>
@@ -299,19 +326,6 @@
     </section>
   </main>
 
-  <div id="loginOfferModal" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title" id="loginOfferTitle">Daha Fazlası İçin Giriş Yap</h3>
-      <p class="modal-text" id="loginOfferText">
-        Daha fazla özellik ve offline diller için giriş yapmalısınız.
-      </p>
-      <div class="modal-actions">
-        <button id="loginOfferGo" class="modal-btn primary" type="button">Giriş Yap</button>
-        <button id="loginOfferSkip" class="modal-btn secondary" type="button">Giriş yapmadan devam et</button>
-      </div>
-    </div>
-  </div>
-
   <div id="adModal" class="modal">
     <div class="modal-card">
       <h3 class="modal-title" id="adTitle">Ücretsiz Kullanım</h3>
@@ -329,13 +343,18 @@
 
   <script type="module">
     import { getLangPoolForSite } from "/js/lang_pool_full.js";
-    import { supabase } from "/js/supabase_client.js";
-    import { ensureAuthAndCacheUser } from "/js/auth.js";
 
     const API_BASE = "https://italky-api.onrender.com";
     const $ = (id) => document.getElementById(id);
 
-    const HOME = "/pages/home.html";
+    const TEXT_TRANSLATION_URL = "/pages/text_to_text.html";
+    const OFFLINE_LANGUAGES_URL = "/pages/offline_languages.html";
+
+    const SITE_LANG_KEY = "site_lang";
+    const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+    const NATIVE_LANG_KEY = "italky_native_lang_v7";
+
+    const AD_INTERVAL_MS = 3 * 60 * 1000;
 
     const BCP = {
       tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
@@ -344,38 +363,44 @@
 
     const UI = {
       tr:{
-        login:"Giriş Yap", clear:"Temizle", privacy:"Gizlilik",
-        topLang:"ÜST DİL", botLang:"ALT DİL",
+        textTranslate:"Yazıdan Çeviri",
+        clear:"Temizle",
+        privacy:"Gizlilik",
+        topLang:"ÜST DİL",
+        botLang:"ALT DİL",
         adTitle:"Ücretsiz Kullanım",
-        adText:"FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.",
-        watchAd:"Reklam İzle", close:"Şimdilik Kapat",
-        loginOfferTitle:"Daha Fazlası İçin Giriş Yap",
-        loginOfferText:"Daha fazla özellik ve offline diller için giriş yapmalısınız.",
-        loginOfferGo:"Giriş Yap",
-        loginOfferSkip:"Giriş yapmadan devam et",
-        toastStarting:"Güvenli giriş başlatılıyor…",
-        toastLoginFailed:"Giriş başlatılamadı",
+        adText:"FaceToFace ücretsiz kullanımda reklam içerir. Devam etmek için kısa bir reklam izleyin.",
+        downloadAdTitle:"Dil Paketi İndirme",
+        downloadAdText:"Bu dili internetsiz kullanabilmek için offline dil paketi gerekir.\n\nİndirme sayfasına geçmeden önce kısa bir reklam izlememiz gereklidir.",
+        watchAd:"Reklam İzle",
+        close:"Şimdilik Kapat",
+        adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
         micError:"Mikrofon hatası.",
         micDenied:"Mikrofon izni gerekli.",
         micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
-        translateError:"Çeviri yapılamadı"
+        translateError:"Çeviri yapılamadı",
+        adPreparing:"Reklam hazırlanıyor, devam edebilirsiniz.",
+        adOpenError:"Reklam açılamadı, devam edebilirsiniz."
       },
       en:{
-        login:"Login", clear:"Clear", privacy:"Privacy",
-        topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE",
+        textTranslate:"Text Translation",
+        clear:"Clear",
+        privacy:"Privacy",
+        topLang:"TOP LANGUAGE",
+        botLang:"BOTTOM LANGUAGE",
         adTitle:"Free Use",
-        adText:"FaceToFace free use includes ads. Watch the ad to continue translating.",
-        watchAd:"Watch Ad", close:"Close",
-        loginOfferTitle:"Sign In For More",
-        loginOfferText:"Please sign in for more features and offline languages.",
-        loginOfferGo:"Login",
-        loginOfferSkip:"Continue without login",
-        toastStarting:"Secure sign-in is starting…",
-        toastLoginFailed:"Could not start sign-in",
+        adText:"FaceToFace free use includes ads. Watch a short ad to continue.",
+        downloadAdTitle:"Language Pack Download",
+        downloadAdText:"To use this language without internet, you need an offline language pack.\n\nPlease watch a short ad before opening the download page.",
+        watchAd:"Watch Ad",
+        close:"Close",
+        adNeeded:"The action was not started without watching the ad.",
         micError:"Microphone error.",
         micDenied:"Microphone permission is required.",
         micUnsupported:"Speech recognition is not supported on this device.",
-        translateError:"Translation failed"
+        translateError:"Translation failed",
+        adPreparing:"Ad is preparing, you can continue.",
+        adOpenError:"Ad could not open, you can continue."
       }
     };
 
@@ -385,21 +410,25 @@
 
     function getInitialSiteLang(){
       return canonical(
-        localStorage.getItem("site_lang") ||
-        localStorage.getItem("italky_site_lang_v1") ||
+        localStorage.getItem(SITE_LANG_KEY) ||
+        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+        localStorage.getItem(NATIVE_LANG_KEY) ||
         navigator.language ||
         "tr"
       ) || "tr";
     }
 
-    const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(getInitialSiteLang()))
-      ? getLangPoolForSite(getInitialSiteLang())
+    const SITE_LANG = getInitialSiteLang();
+
+    const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
+      ? getLangPoolForSite(SITE_LANG)
       : [];
 
     const LANGS = RAW_LANG_POOL
       .map((l) => {
         const code = canonical(l.code);
         if(!code) return null;
+
         return {
           code,
           flag:l.flag || "🌐",
@@ -407,7 +436,10 @@
           bcp:BCP[code] || `${code}-${String(code).toUpperCase()}`
         };
       })
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((item,index,arr) => {
+        return arr.findIndex((x) => x.code === item.code) === index;
+      });
 
     function langExists(code){
       return !!LANGS.find((x) => x.code === canonical(code));
@@ -415,6 +447,7 @@
 
     function langObj(code){
       const c = canonical(code);
+
       return LANGS.find((x) => x.code === c) || {
         code:c || "en",
         flag:"🌐",
@@ -430,6 +463,7 @@
 
     function differentLang(base){
       const b = canonical(base);
+
       const preferred = b === "tr"
         ? ["en","de","fr","es","it","ar","ru"]
         : ["tr","en","de","fr","es","it","ar","ru"];
@@ -441,8 +475,27 @@
       return LANGS.find((l) => l.code !== b)?.code || "en";
     }
 
-    let botLang = langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
+    function getInitialBotLang(){
+      const raw = canonical(
+        localStorage.getItem(NATIVE_LANG_KEY) ||
+        localStorage.getItem(SITE_LANG_KEY) ||
+        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+        navigator.language ||
+        "tr"
+      );
+
+      if(raw && langExists(raw)) return raw;
+      if(langExists("tr")) return "tr";
+
+      return LANGS[0]?.code || "tr";
+    }
+
+    let botLang = getInitialBotLang();
     let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+
+    if(topLang === botLang){
+      topLang = differentLang(botLang);
+    }
 
     const topBody = $("topBody");
     const botBody = $("botBody");
@@ -462,12 +515,6 @@
     const centerClearBtn = $("centerClearBtn");
     const privacyLink = $("privacyLink");
 
-    const loginOfferModal = $("loginOfferModal");
-    const loginOfferTitle = $("loginOfferTitle");
-    const loginOfferText = $("loginOfferText");
-    const loginOfferGo = $("loginOfferGo");
-    const loginOfferSkip = $("loginOfferSkip");
-
     const adModal = $("adModal");
     const adTitle = $("adTitle");
     const adText = $("adText");
@@ -477,8 +524,7 @@
 
     let recognizer = null;
     let liveText = "";
-    let sessionStart = Date.now();
-    let lastAdAt = 0;
+    let lastAdAt = Date.now();
 
     function tx(key){
       const c = UI[botLang] ? botLang : "en";
@@ -487,8 +533,10 @@
 
     function showToast(msg){
       if(!toast) return;
+
       toast.textContent = String(msg || "");
       toast.classList.add("show");
+
       clearTimeout(window.__toastTimer);
       window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
     }
@@ -496,10 +544,11 @@
     function refreshTexts(){
       topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
       botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
+
       topPopTitle.textContent = tx("topLang");
       botPopTitle.textContent = tx("botLang");
 
-      centerLoginBtn.textContent = tx("login");
+      centerLoginBtn.textContent = tx("textTranslate");
       centerClearBtn.textContent = tx("clear");
       privacyLink.textContent = tx("privacy");
 
@@ -507,16 +556,115 @@
       adText.textContent = tx("adText");
       watchAdBtn.textContent = tx("watchAd");
       closeAdBtn.textContent = tx("close");
-
-      loginOfferTitle.textContent = tx("loginOfferTitle");
-      loginOfferText.textContent = tx("loginOfferText");
-      loginOfferGo.textContent = tx("loginOfferGo");
-      loginOfferSkip.textContent = tx("loginOfferSkip");
     }
 
     function closeAllPop(){
       popTop.classList.remove("show");
       popBot.classList.remove("show");
+    }
+
+    function showAdModal({title,text,adUnit = "public_facetoface_3min"} = {}){
+      return new Promise((resolve) => {
+        if(adTitle) adTitle.textContent = title || tx("adTitle");
+        if(adText) adText.textContent = text || tx("adText");
+        if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
+        if(closeAdBtn) closeAdBtn.textContent = tx("close");
+
+        adModal.classList.add("show");
+
+        const clean = () => {
+          watchAdBtn.onclick = null;
+          closeAdBtn.onclick = null;
+          adModal.classList.remove("show");
+        };
+
+        watchAdBtn.onclick = () => {
+          try{
+            if(window.AndroidAdBridge?.showRewardedAd){
+              window.AndroidAdBridge.showRewardedAd(adUnit);
+            }else if(window.NativeAds?.showRewardedAd){
+              window.NativeAds.showRewardedAd(adUnit);
+            }else if(window.AdMobBridge?.showRewardedAd){
+              window.AdMobBridge.showRewardedAd(adUnit);
+            }else{
+              showToast(tx("adPreparing"));
+            }
+          }catch{
+            showToast(tx("adOpenError"));
+          }
+
+          lastAdAt = Date.now();
+          clean();
+          resolve(true);
+        };
+
+        closeAdBtn.onclick = () => {
+          clean();
+          resolve(false);
+        };
+      });
+    }
+
+    async function maybeShowAd(){
+      const now = Date.now();
+
+      if(now - lastAdAt < AD_INTERVAL_MS){
+        return true;
+      }
+
+      const ok = await showAdModal({
+        title:tx("adTitle"),
+        text:tx("adText"),
+        adUnit:"public_facetoface_3min"
+      });
+
+      if(!ok){
+        showToast(tx("adNeeded"));
+      }
+
+      return ok;
+    }
+
+    function getNativeLangForDownload(){
+      return canonical(
+        localStorage.getItem(NATIVE_LANG_KEY) ||
+        localStorage.getItem(SITE_LANG_KEY) ||
+        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+        botLang ||
+        "tr"
+      ) || "tr";
+    }
+
+    function buildOfflineDownloadUrl(targetCode){
+      const source = getNativeLangForDownload();
+      const target = canonical(targetCode);
+
+      const url = new URL(OFFLINE_LANGUAGES_URL, window.location.origin);
+      url.searchParams.set("source",source);
+      url.searchParams.set("target",target);
+      url.searchParams.set("from","facetoface");
+
+      return `${url.pathname}${url.search}`;
+    }
+
+    async function openOfflineDownloadWithAd(langCode){
+      const code = canonical(langCode);
+      if(!code) return;
+
+      const info = langObj(code);
+
+      const ok = await showAdModal({
+        title:tx("downloadAdTitle"),
+        text:`${info.flag} ${info.name}\n\n${tx("downloadAdText")}`,
+        adUnit:`offline_download_${code}`
+      });
+
+      if(!ok){
+        showToast(tx("adNeeded"));
+        return;
+      }
+
+      location.href = buildOfflineDownloadUrl(code);
     }
 
     function renderPop(side){
@@ -525,17 +673,21 @@
 
       list.innerHTML = LANGS.map((l) => `
         <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
-          <div class="pop-left">
+          <div class="pop-left" data-select-code="${l.code}">
             <div class="pop-flag">${l.flag}</div>
             <div class="pop-name">${l.name}</div>
           </div>
-          <div class="pop-code">${l.code.toUpperCase()}</div>
+
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            <button class="pop-download" type="button" data-download-code="${l.code}" aria-label="Dil indir">⬇️</button>
+          </div>
         </div>
       `).join("");
 
-      list.querySelectorAll(".pop-item").forEach((el) => {
+      list.querySelectorAll("[data-select-code]").forEach((el) => {
         el.addEventListener("click",() => {
-          const code = canonical(el.dataset.code);
+          const code = canonical(el.dataset.selectCode);
 
           if(side === "top"){
             topLang = code;
@@ -549,11 +701,22 @@
           refreshTexts();
         });
       });
+
+      list.querySelectorAll("[data-download-code]").forEach((btn) => {
+        btn.addEventListener("click",async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const code = canonical(btn.dataset.downloadCode);
+          await openOfflineDownloadWithAd(code);
+        });
+      });
     }
 
     topLangBtn.addEventListener("click",(e) => {
       e.preventDefault();
       e.stopPropagation();
+
       closeAllPop();
       renderPop("top");
       popTop.classList.add("show");
@@ -562,6 +725,7 @@
     botLangBtn.addEventListener("click",(e) => {
       e.preventDefault();
       e.stopPropagation();
+
       closeAllPop();
       renderPop("bot");
       popBot.classList.add("show");
@@ -622,6 +786,7 @@
       rec.interimResults = true;
       rec.continuous = false;
       rec.maxAlternatives = 1;
+
       return rec;
     }
 
@@ -634,45 +799,6 @@
         .replace(/\s+/g," ")
         .replace(/\b(\S+)( \1\b)+/gi,"$1")
         .trim();
-    }
-
-    async function maybeShowAd(){
-      const now = Date.now();
-
-      if(now - sessionStart < 5 * 60 * 1000) return true;
-      if(lastAdAt && now - lastAdAt < 5 * 60 * 1000) return true;
-
-      return new Promise((resolve) => {
-        refreshTexts();
-        adModal.classList.add("show");
-
-        const clean = () => {
-          watchAdBtn.onclick = null;
-          closeAdBtn.onclick = null;
-          adModal.classList.remove("show");
-        };
-
-        watchAdBtn.onclick = () => {
-          try{
-            if(window.AndroidAdBridge?.showRewardedAd){
-              window.AndroidAdBridge.showRewardedAd("public_facetoface_5min");
-            }else if(window.NativeAds?.showRewardedAd){
-              window.NativeAds.showRewardedAd("public_facetoface_5min");
-            }else if(window.AdMobBridge?.showRewardedAd){
-              window.AdMobBridge.showRewardedAd("public_facetoface_5min");
-            }
-          }catch{}
-
-          lastAdAt = Date.now();
-          clean();
-          resolve(true);
-        };
-
-        closeAdBtn.onclick = () => {
-          clean();
-          resolve(false);
-        };
-      });
     }
 
     async function translateOnline(text,from,to){
@@ -726,6 +852,7 @@
         const u = new SpeechSynthesisUtterance(value);
         u.lang = langObj(langCode).bcp;
         u.rate = .95;
+
         speechSynthesis.speak(u);
       }catch{}
     }
@@ -840,75 +967,10 @@
 
     centerClearBtn.addEventListener("click",clearChat);
 
-    function hasNativeGoogleLogin(){
-      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
-    }
-
-    async function routeAfterLogin(){
-      try{
-        await ensureAuthAndCacheUser();
-      }catch{}
-
-      location.replace(HOME);
-    }
-
-    async function startWebGoogleLogin(){
-      const redirectTo = `${location.origin}/pages/login.html?next=${encodeURIComponent(HOME)}`;
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider:"google",
-        options:{redirectTo}
-      });
-
-      if(error) throw error;
-    }
-
-    async function startGoogleLogin(){
-      try{
-        showToast(tx("toastStarting"));
-
-        if(hasNativeGoogleLogin()){
-          window.Native.startGoogleLogin();
-          return;
-        }
-
-        await startWebGoogleLogin();
-      }catch(e){
-        console.error("startGoogleLogin error:",e);
-        showToast(tx("toastLoginFailed"));
-      }
-    }
-
-    window.onNativeLoginSuccess = async function(payload){
-      try{
-        const data = typeof payload === "string" ? JSON.parse(payload) : payload;
-        const idToken = String(data?.id_token || data?.idToken || "").trim();
-
-        if(!idToken){
-          showToast(tx("toastLoginFailed"));
-          return;
-        }
-
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider:"google",
-          token:idToken
-        });
-
-        if(error){
-          showToast(tx("toastLoginFailed"));
-          return;
-        }
-
-        await routeAfterLogin();
-      }catch(e){
-        console.error("onNativeLoginSuccess error:",e);
-        showToast(tx("toastLoginFailed"));
-      }
-    };
-
-    centerLoginBtn.addEventListener("click",startGoogleLogin);
-    loginOfferGo.addEventListener("click",startGoogleLogin);
-    loginOfferSkip.addEventListener("click",() => loginOfferModal.classList.remove("show"));
+    centerLoginBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      location.href = TEXT_TRANSLATION_URL;
+    });
 
     async function detectCountryLang(){
       try{
@@ -939,13 +1001,6 @@
     }
 
     async function boot(){
-      const { data:{ session } = {} } = await supabase.auth.getSession().catch(() => ({data:{session:null}}));
-
-      if(session){
-        await routeAfterLogin();
-        return;
-      }
-
       const detected = await detectCountryLang();
 
       if(detected && langExists(detected)){
@@ -956,11 +1011,6 @@
       refreshTexts();
       clearBody(topBody);
       clearBody(botBody);
-
-      setInterval(() => {
-        refreshTexts();
-        loginOfferModal.classList.add("show");
-      },2 * 60 * 1000);
     }
 
     boot();
