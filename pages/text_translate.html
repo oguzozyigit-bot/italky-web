@@ -885,21 +885,28 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { initGlobalAccess } from "/js/global_access.js";
-    import { ensureModuleAdAccess } from "/js/ad_gate.js";
+  import { initGlobalAccess } from "/js/global_access.js";
+  import { ensureModuleAdAccess } from "/js/ad_gate.js";
 
-    await initGlobalAccess({ allowPublicPageBypass: false });
+  await initGlobalAccess({ allowPublicPageBypass: false });
 
-    const adOk = await ensureModuleAdAccess({
+  let adOk = true;
+
+  try {
+    adOk = await ensureModuleAdAccess({
       moduleKey: "text_translate",
       placement: "text_translate_access",
       title: "Bu modül için kısa bir reklam gösterilecek",
       text: "Yazıdan çeviri modülünü kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden giriş yapabilirsiniz."
     });
+  } catch (e) {
+    console.warn("text_translate ad gate error:", e);
+    adOk = true;
+  }
 
-    if (adOk) 
-      await import("/js/text_translate_page.js?v=TEXT_TRANSLATE_SINGLE_V7");
-    }
-  </script>
+  if (adOk !== false) {
+    await import("/js/text_translate_page.js?v=TEXT_TRANSLATE_SINGLE_V8");
+  }
+</script>
 </body>
 </html>
