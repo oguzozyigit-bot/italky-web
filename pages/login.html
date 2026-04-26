@@ -1,4 +1,4 @@
-<!doctype html>
+l<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
@@ -41,21 +41,48 @@
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:0;
+      gap:2px;
       cursor:pointer;
       padding:0;
       text-shadow:0 0 14px rgba(255,255,255,.22);
     }
 
-    .login-plus{
-      font-size:30px;
-      line-height:26px;
-      font-weight:300;
-      color:#fff;
+    .login-person-icon{
+      width:31px;
+      height:31px;
+      position:relative;
+      display:block;
+    }
+
+    .login-person-icon::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:2px;
+      width:12px;
+      height:12px;
+      border:3px solid #fff;
+      border-radius:50%;
+      transform:translateX(-50%);
+      box-shadow:0 0 12px rgba(255,255,255,.18);
+    }
+
+    .login-person-icon::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom:1px;
+      width:25px;
+      height:15px;
+      border:3px solid #fff;
+      border-bottom:none;
+      border-radius:22px 22px 0 0;
+      transform:translateX(-50%);
+      box-shadow:0 0 12px rgba(255,255,255,.15);
     }
 
     .login-text{
-      margin-top:1px;
+      margin-top:0;
       font-size:10px;
       line-height:1;
       font-weight:900;
@@ -132,24 +159,37 @@
       flex-shrink:0;
     }
 
-    .pop-download{
+    .pop-download,
+    .pop-installed{
       width:32px;
       height:32px;
       border:none;
       border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      color:#fff;
       display:flex;
       align-items:center;
       justify-content:center;
-      cursor:pointer;
       font-size:15px;
       line-height:1;
     }
 
+    .pop-download{
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+      cursor:pointer;
+    }
+
     .pop-download:active{
       transform:scale(.94);
+    }
+
+    .pop-installed{
+      background:rgba(34,197,94,.14);
+      border:1px solid rgba(34,197,94,.36);
+      color:#86efac;
+      cursor:default;
+      font-weight:1000;
+      box-shadow:0 0 18px rgba(34,197,94,.12);
     }
 
     .chat-body{
@@ -170,17 +210,30 @@
 
     .mic-line{
       width:100%;display:grid;grid-template-columns:1fr 70px 1fr;
-      align-items:end;gap:12px;padding:0 8px 4px;flex:0 0 auto;
+      align-items:center;gap:12px;padding:0 8px 4px;flex:0 0 auto;
     }
 
-    .mic-side{min-height:70px;display:flex;align-items:flex-end;justify-content:center}
+    .mic-side{
+      min-height:70px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
     .privacy-link{
+      min-height:38px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       color:rgba(255,255,255,.74);
       font-size:12px;
       font-weight:900;
       text-decoration:none;
-      padding-bottom:8px;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.08);
+      margin-bottom:0;
     }
 
     .mode-pill{
@@ -193,7 +246,7 @@
       border:1px solid rgba(255,255,255,.11);
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
-      margin-bottom:8px;
+      margin-bottom:0;
       max-width:100%;
     }
 
@@ -323,13 +376,14 @@
       .bubble.latest{font-size:30px}
       .center-action{font-size:13px;padding:10px 7px}
       .mode-pill button{font-size:10px;padding:0 9px}
+      .privacy-link{font-size:10px;padding:0 10px}
     }
   </style>
 </head>
 
 <body>
   <button id="topProfileLoginBtn" class="floating-login-btn" type="button" aria-label="Google ile giriş yap">
-    <span class="login-plus">+</span>
+    <span class="login-person-icon" aria-hidden="true"></span>
     <span class="login-text">Giriş</span>
   </button>
 
@@ -486,7 +540,7 @@
         nativeChangeOk:"Ana Dili Değiştir",
         nativeChangeCancel:"Vazgeç",
         offerTitle:"Offline Dil Paketi",
-        offerText:"{sourceLang} ⇄ {targetLang} paketini indirerek bu dili internet olmadan da kullanabilirsiniz.",
+        offerText:"Mevcut alt dil: {bottomLang}\nSeçilen dil: {targetLang}\n\n{sourceLang} ⇄ {targetLang} paketini indirerek bu dili internet olmadan da kullanabilirsiniz.",
         offerOk:"İndir",
         offerCancel:"Şimdilik Kapat",
         sameLang:"Aynı dil için paket indirilemez.",
@@ -524,7 +578,7 @@
         nativeChangeOk:"Change Native Language",
         nativeChangeCancel:"Cancel",
         offerTitle:"Offline Language Pack",
-        offerText:"Download the {sourceLang} ⇄ {targetLang} pack to use this language without internet.",
+        offerText:"Current bottom language: {bottomLang}\nSelected language: {targetLang}\n\nDownload the {sourceLang} ⇄ {targetLang} pack to use this language without internet.",
         offerOk:"Download",
         offerCancel:"Not Now",
         sameLang:"You cannot download a pack for the same language.",
@@ -545,12 +599,6 @@
       }catch{
         return fallback;
       }
-    }
-
-    function writeJson(key, value){
-      try{
-        localStorage.setItem(key, JSON.stringify(value || {}));
-      }catch{}
     }
 
     function getInitialSiteLang(){
@@ -771,6 +819,54 @@
       });
     }
 
+    function callNativeRewardedAd(adUnit){
+      let called = false;
+
+      try{
+        if(window.AndroidAdBridge?.showRewardedAd){
+          window.AndroidAdBridge.showRewardedAd(adUnit);
+          called = true;
+        }
+      }catch{}
+
+      try{
+        if(!called && window.NativeAds?.showRewardedAd){
+          window.NativeAds.showRewardedAd(adUnit);
+          called = true;
+        }
+      }catch{}
+
+      try{
+        if(!called && window.AdMobBridge?.showRewardedAd){
+          window.AdMobBridge.showRewardedAd(adUnit);
+          called = true;
+        }
+      }catch{}
+
+      try{
+        if(!called && window.NativeAdBridge?.showRewardedAd){
+          window.NativeAdBridge.showRewardedAd(adUnit);
+          called = true;
+        }
+      }catch{}
+
+      try{
+        if(!called && window.Android?.showRewardedAd){
+          window.Android.showRewardedAd(adUnit);
+          called = true;
+        }
+      }catch{}
+
+      try{
+        if(!called && window.Native?.showRewardedAd){
+          window.Native.showRewardedAd(adUnit);
+          called = true;
+        }
+      }catch{}
+
+      return called;
+    }
+
     function showAdModal({title,text,adUnit = "public_facetoface_3min"} = {}){
       return new Promise((resolve) => {
         if(adTitle) adTitle.textContent = title || tx("adTitle");
@@ -787,18 +883,10 @@
         };
 
         watchAdBtn.onclick = () => {
-          try{
-            if(window.AndroidAdBridge?.showRewardedAd){
-              window.AndroidAdBridge.showRewardedAd(adUnit);
-            }else if(window.NativeAds?.showRewardedAd){
-              window.NativeAds.showRewardedAd(adUnit);
-            }else if(window.AdMobBridge?.showRewardedAd){
-              window.AdMobBridge.showRewardedAd(adUnit);
-            }else{
-              showToast(tx("adPreparing"));
-            }
-          }catch{
-            showToast(tx("adOpenError"));
+          const called = callNativeRewardedAd(adUnit);
+
+          if(!called){
+            showToast(tx("adPreparing"));
           }
 
           lastAdAt = Date.now();
@@ -1037,10 +1125,12 @@
       }
 
       const nativeInfo = langObj(nativeLang);
+      const bottomInfo = langObj(botLang);
 
       const offerOk = await showModalChoice({
         title:tx("offerTitle"),
         text:tFormat("offerText", {
+          bottomLang:`${bottomInfo.flag} ${bottomInfo.name}`,
           sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`,
           targetLang:`${targetInfo.flag} ${targetInfo.name}`
         }),
@@ -1052,7 +1142,7 @@
 
       const adOk = await showAdModal({
         title:tx("downloadAdTitle"),
-        text:`${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
+        text:`${bottomInfo.flag} ${bottomInfo.name} → ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
         adUnit:`offline_download_${target}`
       });
 
@@ -1114,20 +1204,28 @@
     function renderPop(side){
       const list = side === "top" ? listTop : listBot;
       const selected = side === "top" ? topLang : botLang;
+      const nativeLang = getOfflineNativeLang() || botLang;
 
-      list.innerHTML = LANGS.map((l) => `
-        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
-          <div class="pop-left" data-select-code="${l.code}">
-            <div class="pop-flag">${l.flag}</div>
-            <div class="pop-name">${l.name}</div>
-          </div>
+      list.innerHTML = LANGS.map((l) => {
+        const isInstalled = nativeLang && l.code !== nativeLang && hasInstalledPair(nativeLang,l.code);
+        const actionHtml = isInstalled
+          ? `<span class="pop-installed" title="Kurulu">✓</span>`
+          : `<button class="pop-download" type="button" data-download-code="${l.code}" aria-label="Dil indir">⬇️</button>`;
 
-          <div class="pop-actions">
-            <div class="pop-code">${l.code.toUpperCase()}</div>
-            <button class="pop-download" type="button" data-download-code="${l.code}" aria-label="Dil indir">⬇️</button>
+        return `
+          <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+            <div class="pop-left" data-select-code="${l.code}">
+              <div class="pop-flag">${l.flag}</div>
+              <div class="pop-name">${l.name}</div>
+            </div>
+
+            <div class="pop-actions">
+              <div class="pop-code">${l.code.toUpperCase()}</div>
+              ${actionHtml}
+            </div>
           </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
 
       list.querySelectorAll("[data-select-code]").forEach((el) => {
         el.addEventListener("click",() => {
