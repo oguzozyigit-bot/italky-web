@@ -4,11 +4,13 @@ const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
 const NATIVE_LANG_KEY = "italky_native_lang_v7";
 const OFFLINE_LICENSE_DAYS_KEY = "italky_offline_license_days_v7";
 const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
+const QUEUE_KEY = "italky_offline_download_queue_v1";
+const ACTIVE_KEY = "italky_offline_download_active_v1";
 
 let pendingRewardResolve = null;
 let pendingRewardTimer = null;
-let pendingDownloadSource = "";
-let pendingDownloadTarget = "";
+let activeDownload = null;
+let langInfoResolverGlobal = null;
 
 function canonical(code = "") {
   return String(code || "").toLowerCase().split("-")[0].trim();
@@ -35,6 +37,160 @@ function pairKey(from, to) {
   return `${canonical(from)}_${canonical(to)}`;
 }
 
+function dispatchState() {
+  window.dispatchEvent(
+    new CustomEvent("offlinePackBridgeStateChanged", {
+      detail: getState()
+    })
+  );
+}
+
+function getState() {
+  return {
+    active: activeDownload || readJson(ACTIVE_KEY, null),
+    queue: getQueue()
+  };
+}
+
+function getQueue() {
+  const data = readJson(QUEUE_KEY, []);
+  return Array.isArray(data) ? data : [];
+}
+
+function saveQueue(queue) {
+  try {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(Array.isArray(queue) ? queue : []));
+  } catch {}
+  dispatchState();
+}
+
+function setActiveDownload(item) {
+  activeDownload = item || null;
+
+  try {
+    if (item) localStorage.setItem(ACTIVE_KEY, JSON.stringify(item));
+    else localStorage.removeItem(ACTIVE_KEY);
+  } catch {}
+
+  dispatchState();
+}
+
+function getActiveDownload() {
+  return activeDownload || readJson(ACTIVE_KEY, null);
+}
+
+function isPairActive(source, target) {
+  const active = getActiveDownload();
+  if (!active) return false;
+
+  const s = canonical(source);
+  const t = canonical(target);
+
+  return canonical(active.source) === s && canonical(active.target) === t;
+}
+
+function isPairQueued(source, target) {
+  const s = canonical(source);
+  const t = canonical(target);
+
+  return getQueue().some((item) => {
+    return canonical(item.source) === s && canonical(item.target) === t;
+  });
+}
+
+function enqueueDownload(source, target, langInfoResolver) {
+  const s = canonical(source);
+  const t = canonical(target);
+
+  if (!s || !t || s === t) {
+    return {
+      ok: false,
+      error: "invalid_pair"
+    };
+  }
+
+  if (hasInstalledPair(s, t)) {
+    saveHomeWidget(s, t, langInfoResolver, "ready");
+    return {
+      ok: true,
+      queued: false,
+      alreadyInstalled: true
+    };
+  }
+
+  if (isPairActive(s, t)) {
+    return {
+      ok: true,
+      queued: false,
+      active: true
+    };
+  }
+
+  if (isPairQueued(s, t)) {
+    return {
+      ok: true,
+      queued: true,
+      duplicate: true
+    };
+  }
+
+  const queue = getQueue();
+  const sourceInfo = typeof langInfoResolver === "function"
+    ? langInfoResolver(s)
+    : { name: s.toUpperCase(), flag: "🌐" };
+
+  const targetInfo = typeof langInfoResolver === "function"
+    ? langInfoResolver(t)
+    : { name: t.toUpperCase(), flag: "🌐" };
+
+  queue.push({
+    source: s,
+    target: t,
+    sourceName: sourceInfo?.name || s.toUpperCase(),
+    targetName: targetInfo?.name || t.toUpperCase(),
+    sourceFlag: sourceInfo?.flag || "🌐",
+    targetFlag: targetInfo?.flag || "🌐",
+    queuedAt: new Date().toISOString()
+  });
+
+  saveQueue(queue);
+
+  saveHomeWidget(s, t, langInfoResolver, "queued");
+
+  startNextQueuedDownload(langInfoResolver);
+
+  return {
+    ok: true,
+    queued: true
+  };
+}
+
+function startNextQueuedDownload(langInfoResolver) {
+  if (getActiveDownload()) {
+    return {
+      ok: true,
+      active: true
+    };
+  }
+
+  const queue = getQueue();
+  const next = queue.shift();
+
+  if (!next) {
+    saveQueue([]);
+    return {
+      ok: true,
+      idle: true
+    };
+  }
+
+  saveQueue(queue);
+
+  return startNativeDownload(next.source, next.target, langInfoResolver, {
+    fromQueue: true
+  });
+}
+
 function getInstalledPairs() {
   syncInstalledPairsFromNative();
   return readJson(OFFLINE_INSTALLED_KEY, {});
@@ -50,6 +206,8 @@ function saveInstalledPairs(map) {
   } catch (e) {
     console.warn("[offline_pack_bridge] native installed write failed:", e);
   }
+
+  dispatchState();
 }
 
 function syncInstalledPairsFromNative() {
@@ -77,6 +235,8 @@ function clearInstalledPairs() {
   } catch (e) {
     console.warn("[offline_pack_bridge] native installed clear failed:", e);
   }
+
+  dispatchState();
 }
 
 function hasAnyInstalledPair() {
@@ -116,6 +276,7 @@ function markInstalledPair(source, target) {
   };
 
   saveInstalledPairs(installed);
+  dispatchState();
 }
 
 function getOfflineNativeLang(fallback = "tr") {
@@ -135,6 +296,7 @@ function setOfflineNativeLang(code) {
     console.warn("[offline_pack_bridge] native lang write failed:", e);
   }
 
+  dispatchState();
   return clean;
 }
 
@@ -178,6 +340,12 @@ function saveHomeWidget(source, target, langInfoResolver, status = "downloading"
     ? langInfoResolver(t)
     : { code: t, name: t.toUpperCase(), flag: "🌐" };
 
+  let statusText = "Dil paketi indiriliyor";
+
+  if (status === "ready") statusText = "Dil paketi hazır";
+  if (status === "queued") statusText = "Sıraya alındı";
+  if (status === "failed") statusText = "İndirme başarısız";
+
   const item = {
     source: s,
     target: t,
@@ -187,7 +355,7 @@ function saveHomeWidget(source, target, langInfoResolver, status = "downloading"
     targetFlag: targetInfo?.flag || "🌐",
     title: `${sourceInfo?.name || s.toUpperCase()} ⇄ ${targetInfo?.name || t.toUpperCase()}`,
     status,
-    statusText: status === "ready" ? "Dil paketi hazır" : "Dil paketi indiriliyor",
+    statusText,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString()
   };
@@ -197,6 +365,8 @@ function saveHomeWidget(source, target, langInfoResolver, status = "downloading"
   } catch (e) {
     console.warn("[offline_pack_bridge] home widget write failed:", e);
   }
+
+  dispatchState();
 }
 
 function callRewardedAd(adUnit, langCode = "") {
@@ -316,15 +486,29 @@ function preloadRewardedAd() {
   } catch {}
 }
 
-function startNativeDownload(source, target, langInfoResolver) {
+function startNativeDownload(source, target, langInfoResolver, options = {}) {
   const s = canonical(source);
   const t = canonical(target);
+
+  langInfoResolverGlobal = langInfoResolver || langInfoResolverGlobal;
 
   if (!s || !t || s === t) {
     return {
       ok: false,
       error: "invalid_pair"
     };
+  }
+
+  if (hasInstalledPair(s, t)) {
+    saveHomeWidget(s, t, langInfoResolverGlobal, "ready");
+    return {
+      ok: true,
+      alreadyInstalled: true
+    };
+  }
+
+  if (getActiveDownload() && !options.fromQueue) {
+    return enqueueDownload(s, t, langInfoResolverGlobal);
   }
 
   if (!canUseNativeInstaller()) {
@@ -336,8 +520,17 @@ function startNativeDownload(source, target, langInfoResolver) {
 
   ensurePublicOfflineLicense(365);
 
-  pendingDownloadSource = s;
-  pendingDownloadTarget = t;
+  const activeItem = {
+    source: s,
+    target: t,
+    percent: 1,
+    label: "Başlatılıyor...",
+    message: "",
+    startedAt: new Date().toISOString()
+  };
+
+  setActiveDownload(activeItem);
+  saveHomeWidget(s, t, langInfoResolverGlobal, "downloading");
 
   try {
     window.OfflineTranslate.downloadBiDirectionalPair(
@@ -347,14 +540,13 @@ function startNativeDownload(source, target, langInfoResolver) {
       })
     );
 
-    saveHomeWidget(s, t, langInfoResolver, "downloading");
-
     return {
-      ok: true
+      ok: true,
+      active: true
     };
   } catch (e) {
-    pendingDownloadSource = "";
-    pendingDownloadTarget = "";
+    setActiveDownload(null);
+    saveHomeWidget(s, t, langInfoResolverGlobal, "failed");
 
     return {
       ok: false,
@@ -364,33 +556,76 @@ function startNativeDownload(source, target, langInfoResolver) {
 }
 
 function installDownloadEventHandlers(langInfoResolver) {
+  langInfoResolverGlobal = langInfoResolver || langInfoResolverGlobal;
+
   window.addEventListener("offlinePairDownloadStarted", (e) => {
     const d = e.detail || {};
-    const source = canonical(d.source || pendingDownloadSource);
-    const target = canonical(d.target || pendingDownloadTarget);
+    const source = canonical(d.source || getActiveDownload()?.source);
+    const target = canonical(d.target || getActiveDownload()?.target);
 
     if (!source || !target) return;
 
-    saveHomeWidget(source, target, langInfoResolver, "downloading");
+    setActiveDownload({
+      source,
+      target,
+      percent: 10,
+      label: "Başlatılıyor...",
+      message: d.message || "",
+      startedAt: new Date().toISOString()
+    });
+
+    saveHomeWidget(source, target, langInfoResolverGlobal, "downloading");
+  });
+
+  window.addEventListener("offlinePairDownloadProgress", (e) => {
+    const d = e.detail || {};
+    const source = canonical(d.source || getActiveDownload()?.source);
+    const target = canonical(d.target || getActiveDownload()?.target);
+
+    if (!source || !target) return;
+
+    setActiveDownload({
+      source,
+      target,
+      percent: Number(d.percent || 0),
+      label: d.label || "İndiriliyor...",
+      message: d.message || "",
+      updatedAt: new Date().toISOString()
+    });
+
+    saveHomeWidget(source, target, langInfoResolverGlobal, "downloading");
   });
 
   window.addEventListener("offlinePairDownloadCompleted", (e) => {
     const d = e.detail || {};
-    const source = canonical(d.source || pendingDownloadSource);
-    const target = canonical(d.target || pendingDownloadTarget);
+    const source = canonical(d.source || getActiveDownload()?.source);
+    const target = canonical(d.target || getActiveDownload()?.target);
 
     if (!source || !target) return;
 
     markInstalledPair(source, target);
-    saveHomeWidget(source, target, langInfoResolver, "ready");
+    saveHomeWidget(source, target, langInfoResolverGlobal, "ready");
+    setActiveDownload(null);
 
-    pendingDownloadSource = "";
-    pendingDownloadTarget = "";
+    setTimeout(() => {
+      startNextQueuedDownload(langInfoResolverGlobal);
+    }, 600);
   });
 
-  window.addEventListener("offlinePairDownloadFailed", () => {
-    pendingDownloadSource = "";
-    pendingDownloadTarget = "";
+  window.addEventListener("offlinePairDownloadFailed", (e) => {
+    const d = e.detail || {};
+    const source = canonical(d.source || getActiveDownload()?.source);
+    const target = canonical(d.target || getActiveDownload()?.target);
+
+    if (source && target) {
+      saveHomeWidget(source, target, langInfoResolverGlobal, "failed");
+    }
+
+    setActiveDownload(null);
+
+    setTimeout(() => {
+      startNextQueuedDownload(langInfoResolverGlobal);
+    }, 900);
   });
 }
 
@@ -433,6 +668,13 @@ function translateOffline(text, source, target) {
 export const OfflinePackBridge = {
   canonical,
   readJson,
+  getState,
+  getQueue,
+  getActiveDownload,
+  isPairActive,
+  isPairQueued,
+  enqueueDownload,
+  startNextQueuedDownload,
   getInstalledPairs,
   saveInstalledPairs,
   syncInstalledPairsFromNative,
