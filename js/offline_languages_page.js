@@ -34,6 +34,8 @@ const STORAGE = {
   legacySiteLang: "italky_site_lang_v1"
 };
 
+const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
+
 const ALL_OFFLINE_LANGS = [
   { code: "af", name: "Afrikanca", flag: "🇿🇦" },
   { code: "ar", name: "Arapça", flag: "🇸🇦" },
@@ -319,6 +321,36 @@ function getLangInfo(code) {
       flag: "🌐"
     }
   );
+}
+
+function saveHomeLangPackWidget(sourceCode, targetCode, status = "downloading") {
+  const source = canonical(sourceCode);
+  const target = canonical(targetCode);
+
+  if (!source || !target || source === target) return;
+
+  const sourceInfo = getLangInfo(source);
+  const targetInfo = getLangInfo(target);
+
+  const item = {
+    source,
+    target,
+    sourceName: sourceInfo.name,
+    targetName: targetInfo.name,
+    sourceFlag: sourceInfo.flag,
+    targetFlag: targetInfo.flag,
+    title: `${sourceInfo.name} ⇄ ${targetInfo.name}`,
+    status,
+    statusText: status === "ready" ? "Dil paketi hazır" : "Dil paketi indiriliyor",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    localStorage.setItem(HOME_LANG_WIDGET_KEY, JSON.stringify(item));
+  } catch (e) {
+    console.warn("Ana sayfa dil paketi widget kaydı yazılamadı:", e);
+  }
 }
 
 function isLangInstalledBiDirectional(langCode) {
@@ -767,7 +799,9 @@ async function installBiDirectionalPair(langCode) {
 
     window.OfflineTranslate.downloadBiDirectionalPair(payload);
 
-    toast(`${info.name} indirilmeye başladı`);
+    saveHomeLangPackWidget(nativeLang, code, "downloading");
+
+    toast(`${info.name} dil paketiniz indiriliyor.`);
   } catch (e) {
     console.error("[offline_languages_page] installBiDirectionalPair:", e);
 
@@ -791,6 +825,8 @@ window.addEventListener("offlinePairDownloadStarted", (e) => {
     label: "Başlatılıyor...",
     message: d.message || `Lütfen bekleyiniz. Şu anda ${info.name} için indirme başladı.`
   });
+
+  saveHomeLangPackWidget(getNativeLang(), code, "downloading");
 
   renderInstalledList();
 });
@@ -830,6 +866,8 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
     console.error("Native installed pair sync failed:", err);
   }
 
+  saveHomeLangPackWidget(getNativeLang(), code, "ready");
+
   clearLangProgress(code);
 
   globalDownloadLock = false;
@@ -837,7 +875,7 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
 
   renderInstalledList();
 
-  toast(`${getLangInfo(code).name} artık hazır`);
+  toast(`${getLangInfo(code).name} dil paketiniz indirildi.`);
 });
 
 window.addEventListener("offlinePairDownloadFailed", (e) => {
@@ -931,7 +969,8 @@ async function init() {
     native: getNativeLang(),
     nativeMirror: canUseNativeMirror(),
     adPerDownload: true,
-    loginRequired: false
+    loginRequired: false,
+    homeLangWidget: true
   });
 }
 
