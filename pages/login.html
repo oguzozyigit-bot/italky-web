@@ -32,14 +32,15 @@
     .edge-handle{
       position:fixed;
       right:0;
-      top:42%;
+      top:50%;
+      transform:translateY(-50%);
       z-index:998;
-      width:22px;
-      height:86px;
+      width:28px;
+      height:118px;
       border:none;
       border-radius:18px 0 0 18px;
-      background:linear-gradient(180deg,rgba(56,189,248,.22),rgba(99,102,241,.16),rgba(236,72,153,.16));
-      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14);
       border-right:none;
       box-shadow:-10px 0 32px rgba(0,0,0,.30);
       display:flex;
@@ -48,18 +49,26 @@
       cursor:pointer;
       backdrop-filter:blur(14px);
       -webkit-backdrop-filter:blur(14px);
+      color:#fff;
+      font-family:Outfit,Arial,sans-serif;
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:0;
+      line-height:1.15;
+      text-align:center;
+      white-space:pre;
     }
 
     .edge-handle::before{
-      content:"";
-      width:4px;
-      height:42px;
-      border-radius:999px;
-      background:rgba(255,255,255,.76);
-      box-shadow:0 0 14px rgba(255,255,255,.20);
+      content:"O\A P\A E\A N";
+      white-space:pre;
+      text-align:center;
+      text-shadow:0 0 12px rgba(255,255,255,.28);
     }
 
-    .edge-handle:active{transform:scale(.96)}
+    .edge-handle:active{
+      transform:translateY(-50%) scale(.96);
+    }
 
     .drawer-backdrop{
       position:fixed;
@@ -234,6 +243,12 @@
       cursor:pointer;
     }
 
+    .drawer-link-button{
+      width:100%;
+      font-family:inherit;
+      text-align:left;
+    }
+
     .drawer-link:active{transform:scale(.985)}
 
     .drawer-link small{
@@ -261,26 +276,30 @@
       box-shadow:0 16px 32px rgba(255,255,255,.08);
     }
 
-    .google-g{
+    .google-login-btn:active{transform:scale(.985)}
+
+    .google-icon{
       width:22px;
       height:22px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:Arial,sans-serif;
-      font-weight:900;
-      font-size:18px;
-      color:#4285f4;
+      flex:0 0 22px;
     }
 
-    .drawer-foot{
-      margin-top:12px;
+    .subscription-note{
+      margin-top:10px;
+      padding:12px 13px;
+      border-radius:18px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      color:rgba(255,255,255,.70);
       font-size:11px;
       line-height:1.45;
-      color:rgba(255,255,255,.48);
-      font-weight:800;
+      font-weight:850;
       text-align:center;
+    }
+
+    .subscription-note strong{
+      color:#fff;
+      font-weight:1000;
     }
 
     .my-lang-modal{
@@ -875,21 +894,32 @@
       </div>
 
       <nav class="drawer-links">
+        <button id="drawerWidgetBtn" class="drawer-link drawer-link-button" type="button">
+          <span>Widget’ı Ana Ekrana Ekle</span>
+          <small>+</small>
+        </button>
+
         <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/level_test_hub.html"><span>Seviye Tespit</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/game_menu.html"><span>Oyunlar</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Oyunlar</span><small>›</small></a>
         <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
         <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
         <a class="drawer-link" href="/pages/contact.html"><span>İletişim</span><small>›</small></a>
       </nav>
 
       <button id="drawerLoginBtn" class="google-login-btn" type="button">
-        <span class="google-g">G</span>
+        <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C36.9 39.3 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+        </svg>
         <span>Google ile Giriş Yap</span>
       </button>
 
-      <div class="drawer-foot">
-        Reklamsız italkyAI için giriş yapın.
+      <div class="subscription-note">
+        <strong>Reklamsız italkyAI</strong><br/>
+        349,90 TL / 12 ay. Giriş yaptıktan sonra yıllık abonelikle 12 ay boyunca hiçbir modülde reklam görmeden kullanabilirsiniz.
       </div>
     </aside>
   </div>
@@ -1217,6 +1247,8 @@
     const drawerEdgeBtn = $("drawerEdgeBtn");
     const drawerBackdrop = $("drawerBackdrop");
     const drawerLoginBtn = $("drawerLoginBtn");
+    const drawerWidgetBtn = $("drawerWidgetBtn");
+
     const myLangDrawerBtn = $("myLangDrawerBtn");
     const myLangDrawerFlag = $("myLangDrawerFlag");
     const myLangDrawerTitle = $("myLangDrawerTitle");
@@ -1282,6 +1314,20 @@
     drawerEdgeBtn?.addEventListener("click", openDrawer);
     drawerBackdrop?.addEventListener("click", (e) => {
       if(e.target === drawerBackdrop) closeDrawer();
+    });
+
+    drawerWidgetBtn?.addEventListener("click", () => {
+      try {
+        if (window.Native && typeof window.Native.addWidgetToHomeScreen === "function") {
+          window.Native.addWidgetToHomeScreen();
+          closeDrawer();
+          return;
+        }
+
+        showToast("Ana ekranda boş alana basılı tutup Widgetlar bölümünden italkyAI widget’ını ekleyebilirsiniz.");
+      } catch (e) {
+        showToast("Widget ekleme başlatılamadı.");
+      }
     });
 
     function renderMyLangDrawer(){
