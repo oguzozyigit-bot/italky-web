@@ -31,18 +31,12 @@
 
     .edge-handle{
       position:fixed;
-      right:0;
       top:50%;
       transform:translateY(-50%);
       z-index:998;
       width:28px;
       height:118px;
       border:none;
-      border-radius:18px 0 0 18px;
-      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
-      border:1px solid rgba(255,255,255,.14);
-      border-right:none;
-      box-shadow:-10px 0 32px rgba(0,0,0,.30);
       display:flex;
       align-items:center;
       justify-content:center;
@@ -57,16 +51,46 @@
       line-height:1.15;
       text-align:center;
       white-space:pre;
+      box-shadow:0 0 32px rgba(0,0,0,.30);
     }
 
-    .edge-handle::before{
+    .edge-handle.open{
+      right:0;
+      border-radius:18px 0 0 18px;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14);
+      border-right:none;
+      box-shadow:-10px 0 32px rgba(0,0,0,.30);
+    }
+
+    .edge-handle.open::before{
       content:"O\A P\A E\A N";
       white-space:pre;
       text-align:center;
       text-shadow:0 0 12px rgba(255,255,255,.28);
     }
 
-    .edge-handle:active{
+    .edge-handle.clear{
+      left:0;
+      border-radius:0 18px 18px 0;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14);
+      border-left:none;
+      box-shadow:10px 0 32px rgba(0,0,0,.30);
+    }
+
+    .edge-handle.clear::before{
+      content:"C\A L\A E\A A\A R";
+      white-space:pre;
+      text-align:center;
+      text-shadow:0 0 12px rgba(255,255,255,.28);
+    }
+
+    .edge-handle.open:active{
+      transform:translateY(-50%) scale(.96);
+    }
+
+    .edge-handle.clear:active{
       transform:translateY(-50%) scale(.96);
     }
 
@@ -104,9 +128,17 @@
     .drawer-backdrop.show .side-drawer{transform:translateX(0)}
     .side-drawer::-webkit-scrollbar{display:none}
 
-    .drawer-logo{
+    .drawer-logo-row{
       margin:4px 0 18px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .drawer-logo{
       text-align:left;
+      min-width:0;
     }
 
     .drawer-logo-main{
@@ -125,18 +157,46 @@
 
     .drawer-logo-sub{
       margin-top:7px;
-      display:inline-flex;
-      min-height:28px;
-      align-items:center;
-      justify-content:center;
-      padding:6px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.10);
+      display:block;
       color:rgba(255,255,255,.82);
       font-size:11px;
       font-weight:1000;
       letter-spacing:1.8px;
+    }
+
+    .drawer-mode-pill{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      gap:4px;
+      padding:4px;
+      border-radius:999px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.11);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      margin-top:1px;
+    }
+
+    .drawer-mode-pill button{
+      border:none;
+      border-radius:999px;
+      min-height:30px;
+      padding:0 10px;
+      background:transparent;
+      color:rgba(255,255,255,.62);
+      font-family:inherit;
+      font-size:10px;
+      font-weight:1000;
+      cursor:pointer;
+      letter-spacing:.1px;
+      white-space:nowrap;
+    }
+
+    .drawer-mode-pill button.active{
+      background:linear-gradient(135deg,rgba(165,180,252,.26),rgba(236,72,153,.18));
+      color:#fff;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
     }
 
     .drawer-card{
@@ -260,10 +320,10 @@
     .google-login-btn{
       margin-top:14px;
       width:100%;
-      min-height:54px;
+      min-height:56px;
       border:none;
       border-radius:18px;
-      background:#fff;
+      background:linear-gradient(135deg,#fff7ed 0%,#ffffff 30%,#fde68a 62%,#fb923c 100%);
       color:#202124;
       font-size:14px;
       font-weight:1000;
@@ -273,7 +333,7 @@
       align-items:center;
       justify-content:center;
       gap:10px;
-      box-shadow:0 16px 32px rgba(255,255,255,.08);
+      box-shadow:0 16px 32px rgba(251,146,60,.16);
     }
 
     .google-login-btn:active{transform:scale(.985)}
@@ -646,41 +706,6 @@
 
     .mic-side.empty{pointer-events:none}
 
-    .mode-pill{
-      display:flex;
-      align-items:center;
-      gap:4px;
-      padding:4px;
-      border-radius:999px;
-      background:rgba(255,255,255,.055);
-      border:1px solid rgba(255,255,255,.11);
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      margin-bottom:0;
-      max-width:100%;
-    }
-
-    .mode-pill button{
-      border:none;
-      border-radius:999px;
-      min-height:30px;
-      padding:0 12px;
-      background:transparent;
-      color:rgba(255,255,255,.62);
-      font-family:inherit;
-      font-size:11px;
-      font-weight:1000;
-      cursor:pointer;
-      letter-spacing:.1px;
-      white-space:nowrap;
-    }
-
-    .mode-pill button.active{
-      background:linear-gradient(135deg,rgba(165,180,252,.26),rgba(236,72,153,.18));
-      color:#fff;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
-    }
-
     .mic-btn{
       width:70px;
       height:70px;
@@ -731,26 +756,6 @@
       border-top:1px solid rgba(255,255,255,.05);
       border-bottom:1px solid rgba(255,255,255,.05);
     }
-
-    .center-action{
-      position:absolute;
-      border:none;
-      background:transparent;
-      color:#fff;
-      font-family:inherit;
-      font-size:15px;
-      font-weight:1000;
-      cursor:pointer;
-      padding:10px 12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-decoration:none;
-      text-shadow:0 0 16px rgba(255,255,255,.18);
-    }
-
-    .center-login{left:12px}
-    .center-clear{right:34px}
 
     .orb{
       width:66px;
@@ -862,21 +867,27 @@
       .mic-btn svg{width:28px;height:28px}
       .bubble{font-size:22px}
       .bubble.latest{font-size:30px}
-      .center-action{font-size:13px;padding:10px 7px}
-      .center-clear{right:28px}
-      .mode-pill button{font-size:10px;padding:0 9px}
+      .drawer-mode-pill button{font-size:9px;padding:0 8px}
     }
   </style>
 </head>
 
 <body>
-  <button id="drawerEdgeBtn" class="edge-handle" type="button" aria-label="Menüyü aç"></button>
+  <button id="sideClearBtn" class="edge-handle clear" type="button" aria-label="Ekranı temizle"></button>
+  <button id="drawerEdgeBtn" class="edge-handle open" type="button" aria-label="Menüyü aç"></button>
 
   <div id="drawerBackdrop" class="drawer-backdrop">
     <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
-      <div class="drawer-logo">
-        <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
-        <div class="drawer-logo-sub">BE FREE</div>
+      <div class="drawer-logo-row">
+        <div class="drawer-logo">
+          <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
+          <div class="drawer-logo-sub">BE FREE</div>
+        </div>
+
+        <div class="drawer-mode-pill" aria-label="Çeviri modu">
+          <button id="modeOnlineBtn" class="active" type="button">Online</button>
+          <button id="modeOfflineBtn" type="button">Offline</button>
+        </div>
       </div>
 
       <div class="drawer-card">
@@ -895,7 +906,7 @@
 
       <nav class="drawer-links">
         <button id="drawerWidgetBtn" class="drawer-link drawer-link-button" type="button">
-          <span>Widget’ı Ana Ekrana Ekle</span>
+          <span>Ana Ekrana Kısa Yol Ekle</span>
           <small>+</small>
         </button>
 
@@ -919,7 +930,7 @@
 
       <div class="subscription-note">
         <strong>Reklamsız italkyAI</strong><br/>
-        349,90 TL / 12 ay. Giriş yaptıktan sonra yıllık abonelikle 12 ay boyunca hiçbir modülde reklam görmeden kullanabilirsiniz.
+        349,90 TL / 12 ay. Yıllık abonelik ödemesi Google Play tarafından tahsil edilir. Abonelik sonrası 12 ay boyunca hiçbir modülde reklam görmeden kullanabilirsiniz.
       </div>
     </aside>
   </div>
@@ -968,15 +979,11 @@
     </section>
 
     <section class="center-hub">
-      <button id="centerLoginBtn" class="center-action center-login" type="button">Yazıdan Çeviri</button>
-
       <div class="orb">
         <span class="sat sat1"></span>
         <span class="sat sat2"></span>
         <span class="orb-main">italky<span class="ai">AI</span></span>
       </div>
-
-      <button id="centerClearBtn" class="center-action center-clear" type="button">Temizle</button>
     </section>
 
     <section class="half-screen bottom" id="botSection">
@@ -1006,12 +1013,7 @@
           </svg>
         </button>
 
-        <div class="mic-side">
-          <div class="mode-pill" aria-label="Çeviri modu">
-            <button id="modeOnlineBtn" class="active" type="button">Online</button>
-            <button id="modeOfflineBtn" type="button">Offline</button>
-          </div>
-        </div>
+        <div class="mic-side empty"></div>
       </div>
     </section>
   </main>
@@ -1040,7 +1042,6 @@
     const $ = (id) => document.getElementById(id);
 
     const HOME_URL = "/pages/home.html";
-    const TEXT_TRANSLATION_URL = "/pages/text_translate_public.html";
 
     const SITE_LANG_KEY = "site_lang";
     const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
@@ -1056,7 +1057,6 @@
 
     const UI = {
       tr:{
-        textTranslate:"Yazıdan Çeviri",
         clear:"Temizle",
         login:"Giriş",
         topLang:"ÜST DİL",
@@ -1096,7 +1096,6 @@
         myLangWarnCancel:"Vazgeç"
       },
       en:{
-        textTranslate:"Text Translation",
         clear:"Clear",
         login:"Login",
         topLang:"TOP LANGUAGE",
@@ -1244,6 +1243,7 @@
 
     if(topLang === botLang) topLang = differentLang(botLang);
 
+    const sideClearBtn = $("sideClearBtn");
     const drawerEdgeBtn = $("drawerEdgeBtn");
     const drawerBackdrop = $("drawerBackdrop");
     const drawerLoginBtn = $("drawerLoginBtn");
@@ -1270,8 +1270,6 @@
     const closeBot = $("close-bot");
     const topPopTitle = $("topPopTitle");
     const botPopTitle = $("botPopTitle");
-    const centerLoginBtn = $("centerLoginBtn");
-    const centerClearBtn = $("centerClearBtn");
     const modeOnlineBtn = $("modeOnlineBtn");
     const modeOfflineBtn = $("modeOfflineBtn");
     const adModal = $("adModal");
@@ -1324,9 +1322,9 @@
           return;
         }
 
-        showToast("Ana ekranda boş alana basılı tutup Widgetlar bölümünden italkyAI widget’ını ekleyebilirsiniz.");
+        showToast("Ana ekranda boş alana basılı tutup Widgetlar bölümünden italkyAI kısa yolunu ekleyebilirsiniz.");
       } catch (e) {
-        showToast("Widget ekleme başlatılamadı.");
+        showToast("Kısa yol ekleme başlatılamadı.");
       }
     });
 
@@ -1419,8 +1417,6 @@
       botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
       topPopTitle.textContent = tx("topLang");
       botPopTitle.textContent = tx("botLang");
-      centerLoginBtn.textContent = tx("textTranslate");
-      centerClearBtn.textContent = tx("clear");
       adTitle.textContent = tx("adTitle");
       adText.textContent = tx("adText");
       watchAdBtn.textContent = tx("watchAd");
@@ -1979,12 +1975,7 @@
       clearBody(botBody);
     }
 
-    centerClearBtn.addEventListener("click",clearChat);
-
-    centerLoginBtn.addEventListener("click",(e) => {
-      e.preventDefault();
-      location.href = TEXT_TRANSLATION_URL;
-    });
+    sideClearBtn?.addEventListener("click",clearChat);
 
     modeOnlineBtn?.addEventListener("click",() => setMode("online"));
     modeOfflineBtn?.addEventListener("click",() => setMode("offline"));
