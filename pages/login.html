@@ -43,6 +43,51 @@
       padding-bottom:calc(10px + var(--safe-bottom));
     }
 
+    .top-profile-login{
+      position:absolute;
+      top:12px;
+      right:12px;
+      z-index:70;
+      transform:rotate(180deg);
+      border:none;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.13);
+      color:#fff;
+      border-radius:999px;
+      padding:5px 8px 5px 5px;
+      display:flex;
+      align-items:center;
+      gap:7px;
+      cursor:pointer;
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      box-shadow:0 12px 28px rgba(0,0,0,.24);
+    }
+
+    .top-profile-avatar{
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 50% 36%,#f5f5f5 0 22%,transparent 23%),
+        radial-gradient(circle at 50% 84%,#f5f5f5 0 34%,transparent 35%),
+        #151515;
+      border:1px solid rgba(255,255,255,.22);
+      filter:grayscale(1);
+      flex:0 0 auto;
+    }
+
+    .top-profile-text{
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.1px;
+      color:rgba(255,255,255,.86);
+      white-space:nowrap;
+      padding-right:2px;
+    }
+
+    .top-profile-login:active{transform:rotate(180deg) scale(.97)}
+
     .lang-row{width:100%;display:flex;align-items:center;justify-content:center;z-index:20}
 
     .lang-trigger{
@@ -86,32 +131,16 @@
     .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pop-code{font-size:12px;font-weight:900;opacity:.7}
 
-    .pop-actions{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-shrink:0;
-    }
+    .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
     .pop-download{
-      width:32px;
-      height:32px;
-      border:none;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      font-size:15px;
-      line-height:1;
+      width:32px;height:32px;border:none;border-radius:999px;
+      background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+      color:#fff;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;font-size:15px;line-height:1;
     }
 
-    .pop-download:active{
-      transform:scale(.94);
-    }
+    .pop-download:active{transform:scale(.94)}
 
     .chat-body{
       flex:1;width:100%;min-height:0;overflow-y:auto;display:flex;flex-direction:column;
@@ -135,6 +164,60 @@
     }
 
     .mic-side{min-height:70px;display:flex;align-items:flex-end;justify-content:center}
+
+    .bottom-clear-btn{
+      min-height:38px;
+      border:none;
+      border-radius:999px;
+      padding:0 13px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.86);
+      font-family:inherit;
+      font-size:12px;
+      font-weight:1000;
+      cursor:pointer;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      margin-bottom:8px;
+    }
+
+    .bottom-clear-btn:active{transform:scale(.96)}
+
+    .mode-pill{
+      display:flex;
+      align-items:center;
+      gap:4px;
+      padding:4px;
+      border-radius:999px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.11);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      margin-bottom:8px;
+      max-width:100%;
+    }
+
+    .mode-pill button{
+      border:none;
+      border-radius:999px;
+      min-height:30px;
+      padding:0 8px;
+      background:transparent;
+      color:rgba(255,255,255,.62);
+      font-family:inherit;
+      font-size:10.5px;
+      font-weight:1000;
+      cursor:pointer;
+      letter-spacing:.1px;
+      white-space:nowrap;
+    }
+
+    .mode-pill button.active{
+      background:linear-gradient(135deg,rgba(165,180,252,.26),rgba(236,72,153,.18));
+      color:#fff;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    }
 
     .privacy-link{
       color:rgba(255,255,255,.74);font-size:12px;font-weight:900;
@@ -239,12 +322,15 @@
     .toast.show{transform:translateX(-50%) translateY(0)}
 
     @media(max-width:390px){
-      .mic-line{grid-template-columns:1fr 66px 1fr}
+      .mic-line{grid-template-columns:1fr 66px 1fr;gap:8px}
       .mic-btn{width:66px;height:66px}
       .mic-btn svg{width:28px;height:28px}
       .bubble{font-size:22px}
       .bubble.latest{font-size:30px}
-      .center-action{font-size:14px;padding:10px 8px}
+      .center-action{font-size:13px;padding:10px 7px}
+      .mode-pill button{font-size:9.5px;padding:0 6px}
+      .top-profile-text{display:none}
+      .top-profile-login{padding:5px}
     }
   </style>
 </head>
@@ -252,6 +338,11 @@
 <body>
   <main class="container">
     <section class="half-screen top" id="topSection">
+      <button id="topProfileLoginBtn" class="top-profile-login" type="button" aria-label="Google ile giriş yap">
+        <span class="top-profile-avatar"></span>
+        <span class="top-profile-text">Giriş</span>
+      </button>
+
       <div class="lang-row">
         <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
       </div>
@@ -309,7 +400,7 @@
 
       <div class="mic-line">
         <div class="mic-side">
-          <a id="privacyLink" class="privacy-link" href="/pages/privacy.html">Gizlilik</a>
+          <button id="bottomClearBtn" class="bottom-clear-btn" type="button">Temizle</button>
         </div>
 
         <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
@@ -321,7 +412,13 @@
           </svg>
         </button>
 
-        <div class="mic-side"></div>
+        <div class="mic-side">
+          <div class="mode-pill" aria-label="Çeviri modu">
+            <button id="modeOnlineBtn" class="active" type="button">Online</button>
+            <button id="modeOfflineBtn" type="button">Offline</button>
+            <button id="modeTalkBtn" type="button">Talk</button>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -343,10 +440,12 @@
 
   <script type="module">
     import { getLangPoolForSite } from "/js/lang_pool_full.js";
+    import { supabase } from "/js/supabase_client.js";
 
     const API_BASE = "https://italky-api.onrender.com";
     const $ = (id) => document.getElementById(id);
 
+    const HOME_URL = "/pages/home.html";
     const TEXT_TRANSLATION_URL = "/pages/text_to_text.html";
     const OFFLINE_LANGUAGES_URL = "/pages/offline_languages.html";
 
@@ -366,6 +465,7 @@
         textTranslate:"Yazıdan Çeviri",
         clear:"Temizle",
         privacy:"Gizlilik",
+        login:"Giriş",
         topLang:"ÜST DİL",
         botLang:"ALT DİL",
         adTitle:"Ücretsiz Kullanım",
@@ -380,12 +480,18 @@
         micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
         translateError:"Çeviri yapılamadı",
         adPreparing:"Reklam hazırlanıyor, devam edebilirsiniz.",
-        adOpenError:"Reklam açılamadı, devam edebilirsiniz."
+        adOpenError:"Reklam açılamadı, devam edebilirsiniz.",
+        loginStarting:"Google giriş başlatılıyor…",
+        loginFailed:"Giriş başlatılamadı.",
+        onlineMode:"Online mod aktif.",
+        offlineMode:"Offline mod seçildi. Dil paketi yoksa indirme ikonundan indirebilirsiniz.",
+        talkMode:"Talk modu aktif."
       },
       en:{
         textTranslate:"Text Translation",
         clear:"Clear",
         privacy:"Privacy",
+        login:"Login",
         topLang:"TOP LANGUAGE",
         botLang:"BOTTOM LANGUAGE",
         adTitle:"Free Use",
@@ -400,7 +506,12 @@
         micUnsupported:"Speech recognition is not supported on this device.",
         translateError:"Translation failed",
         adPreparing:"Ad is preparing, you can continue.",
-        adOpenError:"Ad could not open, you can continue."
+        adOpenError:"Ad could not open, you can continue.",
+        loginStarting:"Google sign-in is starting…",
+        loginFailed:"Could not start sign-in.",
+        onlineMode:"Online mode is active.",
+        offlineMode:"Offline mode selected. Download packs from the language icon if needed.",
+        talkMode:"Talk mode is active."
       }
     };
 
@@ -513,7 +624,12 @@
     const botPopTitle = $("botPopTitle");
     const centerLoginBtn = $("centerLoginBtn");
     const centerClearBtn = $("centerClearBtn");
-    const privacyLink = $("privacyLink");
+    const bottomClearBtn = $("bottomClearBtn");
+    const topProfileLoginBtn = $("topProfileLoginBtn");
+
+    const modeOnlineBtn = $("modeOnlineBtn");
+    const modeOfflineBtn = $("modeOfflineBtn");
+    const modeTalkBtn = $("modeTalkBtn");
 
     const adModal = $("adModal");
     const adTitle = $("adTitle");
@@ -525,6 +641,7 @@
     let recognizer = null;
     let liveText = "";
     let lastAdAt = Date.now();
+    let currentMode = "online";
 
     function tx(key){
       const c = UI[botLang] ? botLang : "en";
@@ -541,6 +658,21 @@
       window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
     }
 
+    function refreshModeButtons(){
+      modeOnlineBtn?.classList.toggle("active",currentMode === "online");
+      modeOfflineBtn?.classList.toggle("active",currentMode === "offline");
+      modeTalkBtn?.classList.toggle("active",currentMode === "talk");
+    }
+
+    function setMode(mode){
+      currentMode = mode === "offline" || mode === "talk" ? mode : "online";
+      refreshModeButtons();
+
+      if(currentMode === "online") showToast(tx("onlineMode"));
+      if(currentMode === "offline") showToast(tx("offlineMode"));
+      if(currentMode === "talk") showToast(tx("talkMode"));
+    }
+
     function refreshTexts(){
       topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
       botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
@@ -550,7 +682,10 @@
 
       centerLoginBtn.textContent = tx("textTranslate");
       centerClearBtn.textContent = tx("clear");
-      privacyLink.textContent = tx("privacy");
+      bottomClearBtn.textContent = tx("clear");
+
+      const profileText = topProfileLoginBtn?.querySelector(".top-profile-text");
+      if(profileText) profileText.textContent = tx("login");
 
       adTitle.textContent = tx("adTitle");
       adText.textContent = tx("adText");
@@ -879,7 +1014,10 @@
       }
 
       targetRow.textContent = translated;
-      speak(translated,dst);
+
+      if(currentMode === "online" || currentMode === "talk"){
+        speak(translated,dst);
+      }
     }
 
     function startRecording(side){
@@ -966,10 +1104,79 @@
     }
 
     centerClearBtn.addEventListener("click",clearChat);
+    bottomClearBtn.addEventListener("click",clearChat);
 
     centerLoginBtn.addEventListener("click",(e) => {
       e.preventDefault();
       location.href = TEXT_TRANSLATION_URL;
+    });
+
+    modeOnlineBtn?.addEventListener("click",() => setMode("online"));
+    modeOfflineBtn?.addEventListener("click",() => setMode("offline"));
+    modeTalkBtn?.addEventListener("click",() => setMode("talk"));
+
+    function hasNativeGoogleLogin(){
+      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+    }
+
+    async function startWebGoogleLogin(){
+      const redirectTo = `${location.origin}/pages/login.html?next=${encodeURIComponent(HOME_URL)}`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider:"google",
+        options:{redirectTo}
+      });
+
+      if(error) throw error;
+    }
+
+    async function startGoogleLogin(){
+      try{
+        showToast(tx("loginStarting"));
+
+        if(hasNativeGoogleLogin()){
+          window.Native.startGoogleLogin();
+          return;
+        }
+
+        await startWebGoogleLogin();
+      }catch(e){
+        console.error("startGoogleLogin error:",e);
+        showToast(tx("loginFailed"));
+      }
+    }
+
+    window.onNativeLoginSuccess = async function(payload){
+      try{
+        const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+        const idToken = String(data?.id_token || data?.idToken || "").trim();
+
+        if(!idToken){
+          showToast(tx("loginFailed"));
+          return;
+        }
+
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider:"google",
+          token:idToken
+        });
+
+        if(error){
+          console.error("signInWithIdToken error:",error);
+          showToast(tx("loginFailed"));
+          return;
+        }
+
+        location.replace(HOME_URL);
+      }catch(e){
+        console.error("onNativeLoginSuccess error:",e);
+        showToast(tx("loginFailed"));
+      }
+    };
+
+    topProfileLoginBtn?.addEventListener("click",(e) => {
+      e.preventDefault();
+      startGoogleLogin();
     });
 
     async function detectCountryLang(){
@@ -1009,6 +1216,7 @@
       }
 
       refreshTexts();
+      refreshModeButtons();
       clearBody(topBody);
       clearBody(botBody);
     }
