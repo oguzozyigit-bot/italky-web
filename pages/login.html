@@ -624,14 +624,14 @@
   <script type="module">
     import { getLangPoolForSite } from "/js/lang_pool_full.js";
     import { supabase } from "/js/supabase_client.js";
-    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=4";
+    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=6";
 
     const API_BASE = "https://italky-api.onrender.com";
     const $ = (id) => document.getElementById(id);
 
     const HOME_URL = "/pages/home.html";
-    const HOME_URL = "/pages/home.html";
     const TEXT_TRANSLATION_URL = "/pages/text_translate_public.html";
+
     const SITE_LANG_KEY = "site_lang";
     const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
     const NATIVE_LANG_KEY = "italky_native_lang_v7";
@@ -750,6 +750,7 @@
       .map((l) => {
         const code = canonical(l.code);
         if(!code) return null;
+
         return {
           code,
           flag:l.flag || "🌐",
@@ -766,6 +767,7 @@
 
     function langObj(code){
       const c = canonical(code);
+
       return LANGS.find((x) => x.code === c) || {
         code:c || "en",
         flag:"🌐",
@@ -781,6 +783,7 @@
 
     function differentLang(base){
       const b = canonical(base);
+
       const preferred = b === "tr"
         ? ["en","de","fr","es","it","ar","ru"]
         : ["tr","en","de","fr","es","it","ar","ru"];
@@ -803,6 +806,7 @@
 
       if(raw && langExists(raw)) return raw;
       if(langExists("tr")) return "tr";
+
       return LANGS[0]?.code || "tr";
     }
 
@@ -861,8 +865,10 @@
 
     function showToast(msg){
       if(!toast) return;
+
       toast.textContent = String(msg || "");
       toast.classList.add("show");
+
       clearTimeout(window.__toastTimer);
       window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
     }
@@ -875,21 +881,27 @@
     function setMode(mode){
       currentMode = mode === "offline" ? "offline" : "online";
       refreshModeButtons();
+
       if(currentMode === "online") showToast(tx("onlineMode"));
       if(currentMode === "offline") showToast(tx("offlineMode"));
+
       closeAllPop();
     }
 
     function refreshTexts(){
       topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
       botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
+
       topPopTitle.textContent = tx("topLang");
       botPopTitle.textContent = tx("botLang");
+
       centerLoginBtn.textContent = tx("textTranslate");
       centerClearBtn.textContent = tx("clear");
       privacyLink.textContent = tx("privacy");
+
       const profileText = topProfileLoginBtn?.querySelector(".login-text");
       if(profileText) profileText.textContent = tx("login");
+
       adTitle.textContent = tx("adTitle");
       adText.textContent = tx("adText");
       watchAdBtn.textContent = tx("watchAd");
@@ -976,7 +988,10 @@
 
     async function maybeShowAd(){
       const now = Date.now();
-      if(now - lastAdAt < AD_INTERVAL_MS) return true;
+
+      if(now - lastAdAt < AD_INTERVAL_MS){
+        return true;
+      }
 
       const ok = await showAdModal({
         title:tx("adTitle"),
@@ -985,7 +1000,10 @@
         langCode:""
       });
 
-      if(!ok) showToast(tx("adNeeded"));
+      if(!ok){
+        showToast(tx("adNeeded"));
+      }
+
       return ok;
     }
 
@@ -1014,6 +1032,7 @@
         const item = installed[key] || {};
         const from = canonical(item.from || "");
         const to = canonical(item.to || "");
+
         if(from === native && to && to !== native){
           set.add(to);
         }
@@ -1067,6 +1086,7 @@
 
       clearInstalledPairs();
       setOfflineNativeLang(currentBottom);
+
       return currentBottom;
     }
 
@@ -1078,6 +1098,7 @@
 
       const targetInfo = langObj(target);
       const nativeLang = await resolveOfflineNativeForDownload();
+
       if(!nativeLang) return false;
 
       if(nativeLang === target){
@@ -1134,6 +1155,7 @@
 
       showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
       refreshOpenPop();
+
       return true;
     }
 
@@ -1149,6 +1171,7 @@
       if(hasInstalledPair(nativeLang,target)) return;
 
       const key = `italky_offer_offline_pack_${canonical(nativeLang)}_${canonical(target)}_v1`;
+
       if(sessionStorage.getItem(key) === "1") return;
 
       sessionStorage.setItem(key,"1");
@@ -1171,6 +1194,7 @@
       if(!targets.length) return [];
 
       const allowed = new Set([nativeLang, ...targets]);
+
       return LANGS.filter((l) => allowed.has(l.code));
     }
 
@@ -1180,6 +1204,7 @@
 
       if(!nativeLang) return false;
       if(c === nativeLang && hasAnyInstalledPair()) return true;
+
       return c !== nativeLang && hasInstalledPair(nativeLang,c);
     }
 
@@ -1263,6 +1288,7 @@
     topLangBtn.addEventListener("click",(e) => {
       e.preventDefault();
       e.stopPropagation();
+
       closeAllPop();
       lastOpenPopSide = "top";
       renderPop("top");
@@ -1272,6 +1298,7 @@
     botLangBtn.addEventListener("click",(e) => {
       e.preventDefault();
       e.stopPropagation();
+
       closeAllPop();
       lastOpenPopSide = "bot";
       renderPop("bot");
@@ -1296,6 +1323,7 @@
 
     function addBubble(side,text,latest=false){
       const body = side === "top" ? topBody : botBody;
+
       if(!body) return null;
 
       if(latest){
@@ -1397,6 +1425,7 @@
         }
 
         const offline = await translateOffline(text,from,to);
+
         if(offline) return offline;
 
         showToast(tx("translateError"));
@@ -1408,6 +1437,7 @@
 
     function speak(text,langCode){
       const value = String(text || "").trim();
+
       if(!value) return;
 
       try{
@@ -1428,9 +1458,11 @@
 
     async function finalizeSpeech(side,text){
       const clean = cleanupTranscript(text);
+
       if(!clean) return;
 
       const adOk = await maybeShowAd();
+
       if(!adOk) return;
 
       const src = side === "top" ? topLang : botLang;
@@ -1480,6 +1512,7 @@
 
         for(let i=0;i<e.results.length;i++){
           const txt = String(e.results[i]?.[0]?.transcript || "").trim();
+
           if(!txt) continue;
 
           if(e.results[i].isFinal) finalText += ` ${txt}`;
@@ -1491,7 +1524,9 @@
 
       rec.onerror = (e) => {
         const err = String(e?.error || "");
+
         showToast(err.includes("not-allowed") ? tx("micDenied") : tx("micError"));
+
         setMicState(side,false);
         recognizer = null;
         liveText = "";
@@ -1499,9 +1534,11 @@
 
       rec.onend = () => {
         const finalText = cleanupTranscript(liveText);
+
         setMicState(side,false);
         recognizer = null;
         liveText = "";
+
         if(finalText) finalizeSpeech(side,finalText);
       };
 
@@ -1672,11 +1709,14 @@
         };
 
         const code = map[country];
+
         if(code && langExists(code)) return code;
       }catch{}
 
       const nav = canonical(navigator.language || "");
+
       if(nav && langExists(nav)) return nav;
+
       return botLang;
     }
 
