@@ -438,11 +438,13 @@
 
     const HOME_URL = "/pages/home.html";
     const TEXT_TRANSLATION_URL = "/pages/text_to_text.html";
-    const OFFLINE_LANGUAGES_URL = "/pages/offline_languages.html";
 
     const SITE_LANG_KEY = "site_lang";
     const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
     const NATIVE_LANG_KEY = "italky_native_lang_v7";
+    const OFFLINE_INSTALLED_KEY = "italky_offline_installed_pairs_v7";
+    const OFFLINE_LICENSE_DAYS_KEY = "italky_offline_license_days_v7";
+    const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
 
     const AD_INTERVAL_MS = 3 * 60 * 1000;
 
@@ -462,7 +464,7 @@
         adTitle:"Ücretsiz Kullanım",
         adText:"FaceToFace ücretsiz kullanımda reklam içerir. Devam etmek için kısa bir reklam izleyin.",
         downloadAdTitle:"Dil Paketi İndirme",
-        downloadAdText:"Bu dili internetsiz kullanabilmek için offline dil paketi gerekir.\n\nİndirme sayfasına geçmeden önce kısa bir reklam izlememiz gereklidir.",
+        downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
         watchAd:"Reklam İzle",
         close:"Şimdilik Kapat",
         adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
@@ -475,7 +477,20 @@
         loginStarting:"Google giriş başlatılıyor…",
         loginFailed:"Giriş başlatılamadı.",
         onlineMode:"Online mod aktif.",
-        offlineMode:"Offline mod seçildi. Dil paketi yoksa indirme ikonundan indirebilirsiniz."
+        offlineMode:"Offline mod seçildi. Dil paketi yoksa indirme ikonundan indirebilirsiniz.",
+        packReady:"Dil paketi zaten hazır.",
+        packDownloading:"Dil paketiniz indiriliyor.",
+        packDownloaded:"Dil paketiniz indirildi.",
+        nativeChangeTitle:"Offline Ana Dil Değişimi",
+        nativeChangeText:"Daha önce seçtiğiniz offline ana dil: {oldLang}\n\nŞu anda alt dili {newLang} seçtiniz.\n\nAna dilinizi {newLang} yapmak isterseniz daha önce indirdiğiniz offline dil paketleri silinir.\n\nDevam etmek istiyor musunuz?",
+        nativeChangeOk:"Ana Dili Değiştir",
+        nativeChangeCancel:"Vazgeç",
+        offerTitle:"Offline Dil Paketi",
+        offerText:"{sourceLang} ⇄ {targetLang} paketini indirerek bu dili internet olmadan da kullanabilirsiniz.",
+        offerOk:"İndir",
+        offerCancel:"Şimdilik Kapat",
+        sameLang:"Aynı dil için paket indirilemez.",
+        nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil."
       },
       en:{
         textTranslate:"Text Translation",
@@ -487,7 +502,7 @@
         adTitle:"Free Use",
         adText:"FaceToFace free use includes ads. Watch a short ad to continue.",
         downloadAdTitle:"Language Pack Download",
-        downloadAdText:"To use this language without internet, you need an offline language pack.\n\nPlease watch a short ad before opening the download page.",
+        downloadAdText:"You can download this language pack to use it without internet.",
         watchAd:"Watch Ad",
         close:"Close",
         adNeeded:"The action was not started without watching the ad.",
@@ -500,12 +515,42 @@
         loginStarting:"Google sign-in is starting…",
         loginFailed:"Could not start sign-in.",
         onlineMode:"Online mode is active.",
-        offlineMode:"Offline mode selected. Download packs from the language icon if needed."
+        offlineMode:"Offline mode selected. Download packs from the language icon if needed.",
+        packReady:"Language pack is already ready.",
+        packDownloading:"Your language pack is downloading.",
+        packDownloaded:"Your language pack has been downloaded.",
+        nativeChangeTitle:"Offline Native Language Change",
+        nativeChangeText:"Your previous offline native language: {oldLang}\n\nYou selected {newLang} as the bottom language now.\n\nIf you make {newLang} your native offline language, your previously downloaded offline packs will be deleted.\n\nDo you want to continue?",
+        nativeChangeOk:"Change Native Language",
+        nativeChangeCancel:"Cancel",
+        offerTitle:"Offline Language Pack",
+        offerText:"Download the {sourceLang} ⇄ {targetLang} pack to use this language without internet.",
+        offerOk:"Download",
+        offerCancel:"Not Now",
+        sameLang:"You cannot download a pack for the same language.",
+        nativeNotReady:"Native download is not ready on this device."
       }
     };
 
     function canonical(code){
       return String(code || "").toLowerCase().split("-")[0].trim();
+    }
+
+    function readJson(key, fallback){
+      try{
+        const raw = localStorage.getItem(key);
+        if(!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : fallback;
+      }catch{
+        return fallback;
+      }
+    }
+
+    function writeJson(key, value){
+      try{
+        localStorage.setItem(key, JSON.stringify(value || {}));
+      }catch{}
     }
 
     function getInitialSiteLang(){
@@ -630,10 +675,20 @@
     let liveText = "";
     let lastAdAt = Date.now();
     let currentMode = "online";
+    let pendingDownloadSource = "";
+    let pendingDownloadTarget = "";
 
     function tx(key){
       const c = UI[botLang] ? botLang : "en";
       return UI[c]?.[key] || UI.en[key] || key;
+    }
+
+    function tFormat(key, vars = {}){
+      let value = tx(key);
+      Object.keys(vars).forEach((k) => {
+        value = value.replaceAll(`{${k}}`, vars[k]);
+      });
+      return value;
     }
 
     function showToast(msg){
@@ -682,6 +737,38 @@
     function closeAllPop(){
       popTop.classList.remove("show");
       popBot.classList.remove("show");
+    }
+
+    function showModalChoice({
+      title = "",
+      text = "",
+      okText = "",
+      cancelText = ""
+    } = {}){
+      return new Promise((resolve) => {
+        if(adTitle) adTitle.textContent = title || tx("adTitle");
+        if(adText) adText.textContent = text || "";
+        if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
+        if(closeAdBtn) closeAdBtn.textContent = cancelText || tx("close");
+
+        adModal.classList.add("show");
+
+        const clean = () => {
+          watchAdBtn.onclick = null;
+          closeAdBtn.onclick = null;
+          adModal.classList.remove("show");
+        };
+
+        watchAdBtn.onclick = () => {
+          clean();
+          resolve(true);
+        };
+
+        closeAdBtn.onclick = () => {
+          clean();
+          resolve(false);
+        };
+      });
     }
 
     function showAdModal({title,text,adUnit = "public_facetoface_3min"} = {}){
@@ -746,46 +833,282 @@
       return ok;
     }
 
-    function getNativeLangForDownload(){
-      return canonical(
-        localStorage.getItem(NATIVE_LANG_KEY) ||
-        localStorage.getItem(SITE_LANG_KEY) ||
-        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
-        botLang ||
-        "tr"
-      ) || "tr";
+    function pairKey(from, to){
+      return `${canonical(from)}_${canonical(to)}`;
     }
 
-    function buildOfflineDownloadUrl(targetCode){
-      const source = getNativeLangForDownload();
+    function getInstalledPairs(){
+      return readJson(OFFLINE_INSTALLED_KEY, {});
+    }
+
+    function saveInstalledPairs(map){
+      try{
+        localStorage.setItem(OFFLINE_INSTALLED_KEY, JSON.stringify(map || {}));
+      }catch{}
+
+      try{
+        if(window.OfflineTranslate?.setInstalledOfflinePairs){
+          window.OfflineTranslate.setInstalledOfflinePairs(JSON.stringify(map || {}));
+        }
+      }catch(e){
+        console.warn("Native installed pairs yazılamadı:", e);
+      }
+    }
+
+    function clearInstalledPairs(){
+      saveInstalledPairs({});
+
+      try{
+        if(window.OfflineTranslate?.clearInstalledOfflinePairs){
+          window.OfflineTranslate.clearInstalledOfflinePairs();
+        }
+      }catch(e){
+        console.warn("Native installed pairs temizlenemedi:", e);
+      }
+    }
+
+    function hasAnyInstalledPair(){
+      return Object.keys(getInstalledPairs()).length > 0;
+    }
+
+    function hasInstalledPair(a, b){
+      const from = canonical(a);
+      const to = canonical(b);
+      const installed = getInstalledPairs();
+
+      return !!installed[pairKey(from,to)] && !!installed[pairKey(to,from)];
+    }
+
+    function getOfflineNativeLang(){
+      return canonical(localStorage.getItem(NATIVE_LANG_KEY) || "") || "";
+    }
+
+    function setOfflineNativeLang(code){
+      const value = canonical(code || "");
+      if(!value) return;
+
+      localStorage.setItem(NATIVE_LANG_KEY, value);
+
+      try{
+        if(window.OfflineTranslate?.setNativeOfflineLang){
+          window.OfflineTranslate.setNativeOfflineLang(value);
+        }
+      }catch(e){
+        console.warn("Native offline dili yazılamadı:", e);
+      }
+    }
+
+    function ensurePublicOfflineLicenseOnce(){
+      try{
+        localStorage.setItem(OFFLINE_LICENSE_DAYS_KEY, "365");
+
+        if(window.OfflineTranslate?.setMockOfflineLicense){
+          window.OfflineTranslate.setMockOfflineLicense(365);
+        }
+      }catch(e){
+        console.warn("Offline lisans yazılamadı:", e);
+      }
+    }
+
+    function canUseNativeOfflineInstaller(){
+      return !!(window.OfflineTranslate && typeof window.OfflineTranslate.downloadBiDirectionalPair === "function");
+    }
+
+    function canUseNativeOfflineTranslator(){
+      return !!(window.OfflineTranslate && typeof window.OfflineTranslate.translate === "function");
+    }
+
+    function saveHomeLangPackWidget(sourceCode, targetCode, status = "downloading"){
+      const source = canonical(sourceCode);
       const target = canonical(targetCode);
 
-      const url = new URL(OFFLINE_LANGUAGES_URL, window.location.origin);
-      url.searchParams.set("source",source);
-      url.searchParams.set("target",target);
-      url.searchParams.set("from","facetoface");
+      if(!source || !target || source === target) return;
 
-      return `${url.pathname}${url.search}`;
+      const sourceInfo = langObj(source);
+      const targetInfo = langObj(target);
+
+      const item = {
+        source,
+        target,
+        sourceName: sourceInfo.name,
+        targetName: targetInfo.name,
+        sourceFlag: sourceInfo.flag,
+        targetFlag: targetInfo.flag,
+        title: `${sourceInfo.name} ⇄ ${targetInfo.name}`,
+        status,
+        statusText: status === "ready" ? "Dil paketi hazır" : "Dil paketi indiriliyor",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      try{
+        localStorage.setItem(HOME_LANG_WIDGET_KEY, JSON.stringify(item));
+      }catch(e){
+        console.warn("Ana sayfa dil paketi widget kaydı yazılamadı:", e);
+      }
     }
 
-    async function openOfflineDownloadWithAd(langCode){
-      const code = canonical(langCode);
-      if(!code) return;
+    function markInstalledBiDirectional(sourceCode, targetCode){
+      const source = canonical(sourceCode);
+      const target = canonical(targetCode);
 
-      const info = langObj(code);
+      if(!source || !target || source === target) return;
 
-      const ok = await showAdModal({
-        title:tx("downloadAdTitle"),
-        text:`${info.flag} ${info.name}\n\n${tx("downloadAdText")}`,
-        adUnit:`offline_download_${code}`
+      const installed = getInstalledPairs();
+      const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+
+      installed[pairKey(source,target)] = {
+        from:source,
+        to:target,
+        installedAt:new Date().toISOString(),
+        expiresAt
+      };
+
+      installed[pairKey(target,source)] = {
+        from:target,
+        to:source,
+        installedAt:new Date().toISOString(),
+        expiresAt
+      };
+
+      saveInstalledPairs(installed);
+    }
+
+    async function resolveOfflineNativeForDownload(){
+      const currentBottom = canonical(botLang);
+      const savedNative = getOfflineNativeLang();
+
+      if(!currentBottom) return null;
+
+      if(!savedNative){
+        setOfflineNativeLang(currentBottom);
+        return currentBottom;
+      }
+
+      if(savedNative === currentBottom){
+        return savedNative;
+      }
+
+      if(!hasAnyInstalledPair()){
+        setOfflineNativeLang(currentBottom);
+        return currentBottom;
+      }
+
+      const oldInfo = langObj(savedNative);
+      const newInfo = langObj(currentBottom);
+
+      const ok = await showModalChoice({
+        title:tx("nativeChangeTitle"),
+        text:tFormat("nativeChangeText", {
+          oldLang:`${oldInfo.flag} ${oldInfo.name}`,
+          newLang:`${newInfo.flag} ${newInfo.name}`
+        }),
+        okText:tx("nativeChangeOk"),
+        cancelText:tx("nativeChangeCancel")
       });
 
       if(!ok){
-        showToast(tx("adNeeded"));
-        return;
+        return null;
       }
 
-      location.href = buildOfflineDownloadUrl(code);
+      clearInstalledPairs();
+      setOfflineNativeLang(currentBottom);
+      return currentBottom;
+    }
+
+    async function startOfflinePackDownload(targetCode, reason = "manual"){
+      const target = canonical(targetCode);
+      if(!target) return false;
+
+      const targetInfo = langObj(target);
+
+      const nativeLang = await resolveOfflineNativeForDownload();
+      if(!nativeLang) return false;
+
+      if(nativeLang === target){
+        showToast(tx("sameLang"));
+        return false;
+      }
+
+      if(hasInstalledPair(nativeLang,target)){
+        saveHomeLangPackWidget(nativeLang,target,"ready");
+        showToast(tx("packReady"));
+        return true;
+      }
+
+      const nativeInfo = langObj(nativeLang);
+
+      const offerOk = await showModalChoice({
+        title:tx("offerTitle"),
+        text:tFormat("offerText", {
+          sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`,
+          targetLang:`${targetInfo.flag} ${targetInfo.name}`
+        }),
+        okText:tx("offerOk"),
+        cancelText:tx("offerCancel")
+      });
+
+      if(!offerOk) return false;
+
+      const adOk = await showAdModal({
+        title:tx("downloadAdTitle"),
+        text:`${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
+        adUnit:`offline_download_${target}`
+      });
+
+      if(!adOk){
+        showToast(tx("adNeeded"));
+        return false;
+      }
+
+      ensurePublicOfflineLicenseOnce();
+
+      if(!canUseNativeOfflineInstaller()){
+        showToast(tx("nativeNotReady"));
+        return false;
+      }
+
+      const payload = JSON.stringify({
+        source:nativeLang,
+        target
+      });
+
+      try{
+        pendingDownloadSource = nativeLang;
+        pendingDownloadTarget = target;
+
+        window.OfflineTranslate.downloadBiDirectionalPair(payload);
+
+        saveHomeLangPackWidget(nativeLang,target,"downloading");
+        showToast(tx("packDownloading"));
+
+        return true;
+      }catch(e){
+        console.error("FaceToFace offline download error:", e);
+        pendingDownloadSource = "";
+        pendingDownloadTarget = "";
+        showToast(`${targetInfo.name} indirilemedi.`);
+        return false;
+      }
+    }
+
+    async function maybeOfferOfflinePackAfterTranslate(){
+      if(currentMode !== "online") return;
+
+      const nativeLang = getOfflineNativeLang() || botLang;
+      const target = topLang;
+
+      if(!nativeLang || !target || nativeLang === target) return;
+      if(hasInstalledPair(nativeLang,target)) return;
+
+      const key = `italky_offer_offline_pack_${canonical(nativeLang)}_${canonical(target)}_v1`;
+      if(sessionStorage.getItem(key) === "1") return;
+
+      sessionStorage.setItem(key,"1");
+
+      setTimeout(() => {
+        startOfflinePackDownload(target, "after_translate");
+      }, 650);
     }
 
     function renderPop(side){
@@ -829,7 +1152,7 @@
           e.stopPropagation();
 
           const code = canonical(btn.dataset.downloadCode);
-          await openOfflineDownloadWithAd(code);
+          await startOfflinePackDownload(code, "lang_popup");
         });
       });
     }
@@ -958,6 +1281,54 @@
       return null;
     }
 
+    function translateOffline(text,from,to){
+      return new Promise((resolve) => {
+        if(!canUseNativeOfflineTranslator()){
+          resolve(null);
+          return;
+        }
+
+        const handler = (e) => {
+          window.removeEventListener("offlineTranslateResult",handler);
+          const value = String(e.detail?.translatedText || e.detail?.translation || "").trim();
+          resolve(value || null);
+        };
+
+        window.addEventListener("offlineTranslateResult",handler);
+
+        try{
+          window.OfflineTranslate.translate(
+            JSON.stringify({
+              text:String(text || "").trim(),
+              from:canonical(from),
+              to:canonical(to)
+            })
+          );
+        }catch{
+          window.removeEventListener("offlineTranslateResult",handler);
+          resolve(null);
+        }
+      });
+    }
+
+    async function translateText(text,from,to){
+      if(currentMode === "offline"){
+        if(!hasInstalledPair(from,to)){
+          showToast(tx("offlineMode"));
+          await startOfflinePackDownload(topLang,"offline_mode");
+          return null;
+        }
+
+        const offline = await translateOffline(text,from,to);
+        if(offline) return offline;
+
+        showToast(tx("translateError"));
+        return null;
+      }
+
+      return await translateOnline(text,from,to);
+    }
+
     function speak(text,langCode){
       const value = String(text || "").trim();
       if(!value) return;
@@ -992,7 +1363,7 @@
       addBubble(side,clean,false);
 
       const targetRow = addBubble(other,"",true);
-      const translated = await translateOnline(clean,src,dst);
+      const translated = await translateText(clean,src,dst);
 
       if(!translated){
         if(targetRow) targetRow.textContent = tx("translateError");
@@ -1003,6 +1374,7 @@
 
       if(currentMode === "online"){
         speak(translated,dst);
+        maybeOfferOfflinePackAfterTranslate();
       }
     }
 
@@ -1163,6 +1535,65 @@
       startGoogleLogin();
     });
 
+    window.addEventListener("offlinePairDownloadStarted",(e) => {
+      const d = e.detail || {};
+      const source = canonical(d.source || pendingDownloadSource || getOfflineNativeLang() || botLang);
+      const target = canonical(d.target || pendingDownloadTarget);
+
+      if(!source || !target) return;
+
+      saveHomeLangPackWidget(source,target,"downloading");
+      showToast(tx("packDownloading"));
+    });
+
+    window.addEventListener("offlinePairDownloadCompleted",(e) => {
+      const d = e.detail || {};
+      const source = canonical(d.source || pendingDownloadSource || getOfflineNativeLang() || botLang);
+      const target = canonical(d.target || pendingDownloadTarget);
+
+      if(!source || !target) return;
+
+      markInstalledBiDirectional(source,target);
+      saveHomeLangPackWidget(source,target,"ready");
+
+      pendingDownloadSource = "";
+      pendingDownloadTarget = "";
+
+      showToast(tx("packDownloaded"));
+    });
+
+    window.addEventListener("offlinePairDownloadFailed",(e) => {
+      const d = e.detail || {};
+      pendingDownloadSource = "";
+      pendingDownloadTarget = "";
+
+      showToast(d.error || tx("translateError"));
+    });
+
+    function applyRouteParams(){
+      const params = new URLSearchParams(location.search);
+
+      const source = canonical(params.get("source") || "");
+      const target = canonical(params.get("target") || "");
+      const mode = canonical(params.get("mode") || "");
+
+      if(source && langExists(source)){
+        botLang = source;
+      }
+
+      if(target && langExists(target)){
+        topLang = target;
+      }
+
+      if(topLang === botLang){
+        topLang = differentLang(botLang);
+      }
+
+      if(mode === "offline"){
+        currentMode = "offline";
+      }
+    }
+
     async function detectCountryLang(){
       try{
         const r = await fetch("https://ipapi.co/json/",{cache:"no-store"});
@@ -1192,11 +1623,22 @@
     }
 
     async function boot(){
-      const detected = await detectCountryLang();
+      const params = new URLSearchParams(location.search);
+      const hasRouteLang = params.get("source") || params.get("target");
 
-      if(detected && langExists(detected)){
-        botLang = detected;
-        if(topLang === botLang) topLang = differentLang(botLang);
+      if(!hasRouteLang){
+        const detected = await detectCountryLang();
+
+        if(detected && langExists(detected)){
+          botLang = detected;
+          if(topLang === botLang) topLang = differentLang(botLang);
+        }
+      }
+
+      applyRouteParams();
+
+      if(!getOfflineNativeLang()){
+        setOfflineNativeLang(botLang);
       }
 
       refreshTexts();
