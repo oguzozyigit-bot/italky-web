@@ -1,3 +1,4 @@
+<!-- /pages/login.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -28,44 +29,37 @@
 
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-    .floating-menu-btn{
+    .edge-handle{
       position:fixed;
-      top:12px;
-      right:14px;
-      z-index:999;
-      width:42px;
-      height:42px;
+      right:0;
+      top:42%;
+      z-index:998;
+      width:22px;
+      height:86px;
       border:none;
-      border-radius:999px;
-      background:rgba(255,255,255,.045);
-      border:1px solid rgba(255,255,255,.09);
-      color:#fff;
+      border-radius:18px 0 0 18px;
+      background:linear-gradient(180deg,rgba(56,189,248,.22),rgba(99,102,241,.16),rgba(236,72,153,.16));
+      border:1px solid rgba(255,255,255,.12);
+      border-right:none;
+      box-shadow:-10px 0 32px rgba(0,0,0,.30);
       display:flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      box-shadow:0 14px 34px rgba(0,0,0,.24);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
     }
 
-    .floating-menu-btn:active{transform:scale(.94)}
-
-    .menu-lines{
-      width:18px;
-      height:13px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    }
-
-    .menu-lines span{
-      display:block;
-      height:2px;
+    .edge-handle::before{
+      content:"";
+      width:4px;
+      height:42px;
       border-radius:999px;
-      background:rgba(255,255,255,.92);
-      box-shadow:0 0 12px rgba(255,255,255,.18);
+      background:rgba(255,255,255,.76);
+      box-shadow:0 0 14px rgba(255,255,255,.20);
     }
+
+    .edge-handle:active{transform:scale(.96)}
 
     .drawer-backdrop{
       position:fixed;
@@ -77,9 +71,7 @@
       -webkit-backdrop-filter:blur(6px);
     }
 
-    .drawer-backdrop.show{
-      display:block;
-    }
+    .drawer-backdrop.show{display:block}
 
     .side-drawer{
       position:absolute;
@@ -87,9 +79,9 @@
       right:0;
       width:min(86vw,360px);
       height:100%;
-      padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
+      padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
       background:
-        radial-gradient(circle at top right,rgba(56,189,248,.14),transparent 34%),
+        radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%),
         radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%),
         linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98));
       border-left:1px solid rgba(255,255,255,.10);
@@ -100,52 +92,42 @@
       scrollbar-width:none;
     }
 
-    .drawer-backdrop.show .side-drawer{
-      transform:translateX(0);
-    }
-
+    .drawer-backdrop.show .side-drawer{transform:translateX(0)}
     .side-drawer::-webkit-scrollbar{display:none}
 
-    .drawer-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:18px;
+    .drawer-logo{
+      margin:4px 0 18px;
+      text-align:left;
     }
 
-    .drawer-brand{
-      min-width:0;
-    }
-
-    .drawer-kicker{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.6px;
-      color:rgba(255,255,255,.54);
-      text-transform:uppercase;
-    }
-
-    .drawer-title{
-      margin-top:4px;
+    .drawer-logo-main{
       font-family:"Space Grotesk",sans-serif;
-      font-size:22px;
-      font-weight:900;
+      font-size:30px;
       line-height:1;
-      letter-spacing:-.5px;
+      font-weight:900;
+      letter-spacing:-1px;
     }
 
-    .drawer-close{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.06);
+    .drawer-logo-main .ai{
+      background:var(--ai-gradient);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .drawer-logo-sub{
+      margin-top:7px;
+      display:inline-flex;
+      min-height:28px;
+      align-items:center;
+      justify-content:center;
+      padding:6px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
       border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:20px;
-      font-weight:900;
-      cursor:pointer;
+      color:rgba(255,255,255,.82);
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:1.8px;
     }
 
     .drawer-card{
@@ -205,6 +187,8 @@
     .my-lang-text{
       min-width:0;
       text-align:left;
+      display:flex;
+      flex-direction:column;
     }
 
     .my-lang-title{
@@ -224,79 +208,8 @@
 
     .my-lang-caret{
       opacity:.72;
-      font-size:16px;
-      flex:0 0 auto;
-    }
-
-    .drawer-lang-list{
-      display:none;
-      margin-top:10px;
-      max-height:260px;
-      overflow:auto;
-      padding-right:2px;
-      scrollbar-width:none;
-    }
-
-    .drawer-lang-list.show{
-      display:grid;
-      gap:8px;
-    }
-
-    .drawer-lang-list::-webkit-scrollbar{display:none}
-
-    .drawer-lang-option{
-      width:100%;
-      min-height:46px;
-      border:none;
-      border-radius:16px;
-      padding:9px 11px;
-      background:rgba(255,255,255,.045);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      cursor:pointer;
-      font-family:inherit;
-    }
-
-    .drawer-lang-option.active{
-      background:linear-gradient(135deg,rgba(56,189,248,.14),rgba(99,102,241,.12));
-      border-color:rgba(56,189,248,.24);
-    }
-
-    .drawer-lang-option-left{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-
-    .drawer-lang-option-flag{
       font-size:18px;
-      width:24px;
-      flex:0 0 24px;
-      text-align:center;
-    }
-
-    .drawer-lang-option-name{
-      font-size:13px;
-      font-weight:900;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .drawer-lang-option-check{
-      opacity:0;
-      color:#86efac;
-      font-weight:1000;
-      font-size:16px;
-    }
-
-    .drawer-lang-option.active .drawer-lang-option-check{
-      opacity:1;
+      flex:0 0 auto;
     }
 
     .drawer-links{
@@ -321,9 +234,7 @@
       cursor:pointer;
     }
 
-    .drawer-link:active{
-      transform:scale(.985);
-    }
+    .drawer-link:active{transform:scale(.985)}
 
     .drawer-link small{
       color:rgba(255,255,255,.46);
@@ -331,28 +242,173 @@
       font-weight:1000;
     }
 
-    .drawer-login{
-      margin-top:12px;
-      min-height:52px;
+    .google-login-btn{
+      margin-top:14px;
+      width:100%;
+      min-height:54px;
       border:none;
       border-radius:18px;
-      background:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
-      color:#050508;
+      background:#fff;
+      color:#202124;
       font-size:14px;
       font-weight:1000;
       font-family:inherit;
       cursor:pointer;
-      box-shadow:0 16px 32px rgba(99,102,241,.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      box-shadow:0 16px 32px rgba(255,255,255,.08);
+    }
+
+    .google-g{
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:Arial,sans-serif;
+      font-weight:900;
+      font-size:18px;
+      color:#4285f4;
     }
 
     .drawer-foot{
-      margin-top:14px;
+      margin-top:12px;
       font-size:11px;
       line-height:1.45;
-      color:rgba(255,255,255,.44);
+      color:rgba(255,255,255,.48);
       font-weight:800;
       text-align:center;
     }
+
+    .my-lang-modal{
+      position:fixed;
+      inset:0;
+      z-index:1200;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(0,0,0,.58);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+    }
+
+    .my-lang-modal.show{display:flex}
+
+    .my-lang-card{
+      width:min(92vw,420px);
+      max-height:78vh;
+      border-radius:26px;
+      background:linear-gradient(180deg,rgba(13,18,32,.98),rgba(7,10,20,.98));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 26px 60px rgba(0,0,0,.48);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .my-lang-head{
+      padding:16px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .my-lang-head-title{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:19px;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .my-lang-head-sub{
+      margin-top:5px;
+      font-size:12px;
+      font-weight:800;
+      color:rgba(255,255,255,.54);
+      line-height:1.35;
+    }
+
+    .my-lang-close{
+      width:40px;
+      height:40px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:20px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .my-lang-list{
+      padding:12px;
+      overflow:auto;
+      display:grid;
+      gap:9px;
+      scrollbar-width:none;
+    }
+
+    .my-lang-list::-webkit-scrollbar{display:none}
+
+    .my-lang-option{
+      width:100%;
+      min-height:50px;
+      border:none;
+      border-radius:17px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+      font-family:inherit;
+    }
+
+    .my-lang-option.active{
+      background:linear-gradient(135deg,rgba(56,189,248,.14),rgba(99,102,241,.12));
+      border-color:rgba(56,189,248,.24);
+    }
+
+    .my-lang-option-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .my-lang-option-flag{
+      font-size:20px;
+      width:28px;
+      flex:0 0 28px;
+      text-align:center;
+    }
+
+    .my-lang-option-name{
+      font-size:14px;
+      font-weight:900;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .my-lang-option-check{
+      opacity:0;
+      color:#86efac;
+      font-weight:1000;
+      font-size:17px;
+    }
+
+    .my-lang-option.active .my-lang-option-check{opacity:1}
 
     .half-screen{
       flex:1;
@@ -569,9 +625,7 @@
       justify-content:center;
     }
 
-    .mic-side.empty{
-      pointer-events:none;
-    }
+    .mic-side.empty{pointer-events:none}
 
     .mode-pill{
       display:flex;
@@ -797,22 +851,13 @@
 </head>
 
 <body>
-  <button id="drawerOpenBtn" class="floating-menu-btn" type="button" aria-label="Menüyü aç">
-    <span class="menu-lines">
-      <span></span>
-      <span></span>
-      <span></span>
-    </span>
-  </button>
+  <button id="drawerEdgeBtn" class="edge-handle" type="button" aria-label="Menüyü aç"></button>
 
   <div id="drawerBackdrop" class="drawer-backdrop">
     <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
-      <div class="drawer-head">
-        <div class="drawer-brand">
-          <div class="drawer-kicker">italkyAI</div>
-          <div class="drawer-title">Menü</div>
-        </div>
-        <button id="drawerCloseBtn" class="drawer-close" type="button" aria-label="Menüyü kapat">×</button>
+      <div class="drawer-logo">
+        <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
+        <div class="drawer-logo-sub">BE FREE</div>
       </div>
 
       <div class="drawer-card">
@@ -822,12 +867,11 @@
             <span id="myLangDrawerFlag" class="my-lang-flag">🇹🇷</span>
             <span class="my-lang-text">
               <span id="myLangDrawerTitle" class="my-lang-title">Türkçe</span>
-              <span class="my-lang-sub">Offline ve öneriler için ana dil</span>
+              <span class="my-lang-sub">Offline paketlerde ana dil</span>
             </span>
           </span>
-          <span class="my-lang-caret">▾</span>
+          <span class="my-lang-caret">›</span>
         </button>
-        <div id="drawerLangList" class="drawer-lang-list"></div>
       </div>
 
       <nav class="drawer-links">
@@ -839,12 +883,28 @@
         <a class="drawer-link" href="/pages/contact.html"><span>İletişim</span><small>›</small></a>
       </nav>
 
-      <button id="drawerLoginBtn" class="drawer-login" type="button">Google ile Giriş Yap</button>
+      <button id="drawerLoginBtn" class="google-login-btn" type="button">
+        <span class="google-g">G</span>
+        <span>Google ile Giriş Yap</span>
+      </button>
 
       <div class="drawer-foot">
-        Dil bariyerlerini kaldırmak için tek temas yeter.
+        Reklamsız italkyAI için giriş yapın.
       </div>
     </aside>
+  </div>
+
+  <div id="myLangModal" class="my-lang-modal">
+    <div class="my-lang-card">
+      <div class="my-lang-head">
+        <div>
+          <div class="my-lang-head-title">Kendi Dilim</div>
+          <div class="my-lang-head-sub">Offline paketlerde ve önerilerde kullanılacak ana dil.</div>
+        </div>
+        <button id="myLangModalClose" class="my-lang-close" type="button">×</button>
+      </div>
+      <div id="myLangModalList" class="my-lang-list"></div>
+    </div>
   </div>
 
   <main class="container">
@@ -944,7 +1004,7 @@
   <script type="module">
     import { getLangPoolForSite } from "/js/lang_pool_full.js";
     import { supabase } from "/js/supabase_client.js";
-    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=7";
+    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
 
     const API_BASE = "https://italky-api.onrender.com";
     const $ = (id) => document.getElementById(id);
@@ -999,7 +1059,11 @@
         sameLang:"Aynı dil için paket indirilemez.",
         nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.",
         noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
-        myLangChanged:"Kendi diliniz güncellendi."
+        myLangChanged:"Kendi diliniz güncellendi.",
+        myLangWarnTitle:"Kendi Dilim Değişsin mi?",
+        myLangWarnText:"Kendi dilinizi değiştirirseniz daha önce indirdiğiniz offline dil paketleri silinir.\n\nDevam etmek istiyor musunuz?",
+        myLangWarnOk:"Değiştir",
+        myLangWarnCancel:"Vazgeç"
       },
       en:{
         textTranslate:"Text Translation",
@@ -1035,13 +1099,15 @@
         sameLang:"You cannot download a pack for the same language.",
         nativeNotReady:"Native download is not ready on this device.",
         noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
-        myLangChanged:"Your language has been updated."
+        myLangChanged:"Your language has been updated.",
+        myLangWarnTitle:"Change My Language?",
+        myLangWarnText:"If you change your language, previously downloaded offline language packs will be deleted.\n\nDo you want to continue?",
+        myLangWarnOk:"Change",
+        myLangWarnCancel:"Cancel"
       }
     };
 
-    function canonical(code){
-      return OfflinePackBridge.canonical(code);
-    }
+    function canonical(code){ return OfflinePackBridge.canonical(code); }
 
     function getInitialSiteLang(){
       return canonical(
@@ -1074,9 +1140,7 @@
       .filter(Boolean)
       .filter((item,index,arr) => arr.findIndex((x) => x.code === item.code) === index);
 
-    function langExists(code){
-      return !!LANGS.find((x) => x.code === canonical(code));
-    }
+    function langExists(code){ return !!LANGS.find((x) => x.code === canonical(code)); }
 
     function langObj(code){
       const c = canonical(code);
@@ -1108,6 +1172,31 @@
       return LANGS.find((l) => l.code !== b)?.code || "en";
     }
 
+    async function detectCountryLang(){
+      try{
+        const r = await fetch("https://ipapi.co/json/",{cache:"no-store"});
+        const j = await r.json();
+        const country = String(j?.country_code || "").toUpperCase();
+
+        const map = {
+          TR:"tr", CY:"tr",
+          US:"en", GB:"en", IE:"en", AU:"en", CA:"en", NZ:"en",
+          DE:"de", AT:"de", CH:"de",
+          FR:"fr", BE:"fr",
+          ES:"es", MX:"es", AR:"es", CO:"es", CL:"es", PE:"es",
+          IT:"it", RU:"ru", BG:"bg", PT:"pt", BR:"pt",
+          CN:"zh", JP:"ja", KR:"ko", SA:"ar", AE:"ar", EG:"ar"
+        };
+
+        const code = map[country];
+        if(code && langExists(code)) return code;
+      }catch{}
+
+      const nav = canonical(navigator.language || "");
+      if(nav && langExists(nav)) return nav;
+      return "tr";
+    }
+
     function getSavedMyLang(){
       const saved = canonical(localStorage.getItem(MY_LANG_KEY) || "");
       if(saved && langExists(saved)) return saved;
@@ -1123,18 +1212,17 @@
     let botLang = myLang;
     let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
 
-    if(topLang === botLang){
-      topLang = differentLang(botLang);
-    }
+    if(topLang === botLang) topLang = differentLang(botLang);
 
-    const drawerOpenBtn = $("drawerOpenBtn");
+    const drawerEdgeBtn = $("drawerEdgeBtn");
     const drawerBackdrop = $("drawerBackdrop");
-    const drawerCloseBtn = $("drawerCloseBtn");
     const drawerLoginBtn = $("drawerLoginBtn");
     const myLangDrawerBtn = $("myLangDrawerBtn");
     const myLangDrawerFlag = $("myLangDrawerFlag");
     const myLangDrawerTitle = $("myLangDrawerTitle");
-    const drawerLangList = $("drawerLangList");
+    const myLangModal = $("myLangModal");
+    const myLangModalClose = $("myLangModalClose");
+    const myLangModalList = $("myLangModalList");
 
     const topBody = $("topBody");
     const botBody = $("botBody");
@@ -1182,23 +1270,19 @@
 
     function showToast(msg){
       if(!toast) return;
-
       toast.textContent = String(msg || "");
       toast.classList.add("show");
-
       clearTimeout(window.__toastTimer);
       window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
     }
 
-    function openDrawer(){
-      drawerBackdrop?.classList.add("show");
-      renderDrawerLangList();
-    }
+    function openDrawer(){ drawerBackdrop?.classList.add("show"); }
+    function closeDrawer(){ drawerBackdrop?.classList.remove("show"); }
 
-    function closeDrawer(){
-      drawerBackdrop?.classList.remove("show");
-      drawerLangList?.classList.remove("show");
-    }
+    drawerEdgeBtn?.addEventListener("click", openDrawer);
+    drawerBackdrop?.addEventListener("click", (e) => {
+      if(e.target === drawerBackdrop) closeDrawer();
+    });
 
     function renderMyLangDrawer(){
       const info = langObj(myLang);
@@ -1206,46 +1290,63 @@
       if(myLangDrawerTitle) myLangDrawerTitle.textContent = info.name;
     }
 
-    function renderDrawerLangList(){
-      if(!drawerLangList) return;
+    function renderMyLangModalList(){
+      if(!myLangModalList) return;
 
-      drawerLangList.innerHTML = LANGS.map((lang) => `
-        <button class="drawer-lang-option ${lang.code === myLang ? "active" : ""}" type="button" data-my-lang="${lang.code}">
-          <span class="drawer-lang-option-left">
-            <span class="drawer-lang-option-flag">${lang.flag}</span>
-            <span class="drawer-lang-option-name">${lang.name}</span>
+      myLangModalList.innerHTML = LANGS.map((lang) => `
+        <button class="my-lang-option ${lang.code === myLang ? "active" : ""}" type="button" data-my-lang="${lang.code}">
+          <span class="my-lang-option-left">
+            <span class="my-lang-option-flag">${lang.flag}</span>
+            <span class="my-lang-option-name">${lang.name}</span>
           </span>
-          <span class="drawer-lang-option-check">✓</span>
+          <span class="my-lang-option-check">✓</span>
         </button>
       `).join("");
 
-      drawerLangList.querySelectorAll("[data-my-lang]").forEach((btn) => {
-        btn.onclick = () => {
+      myLangModalList.querySelectorAll("[data-my-lang]").forEach((btn) => {
+        btn.onclick = async () => {
           const next = canonical(btn.getAttribute("data-my-lang") || "");
+          if(!next || !langExists(next) || next === myLang) return;
 
-          if(!next || !langExists(next)) return;
+          if(OfflinePackBridge.hasAnyInstalledPair()){
+            const ok = await showModalChoice({
+              title:tx("myLangWarnTitle"),
+              text:tx("myLangWarnText"),
+              okText:tx("myLangWarnOk"),
+              cancelText:tx("myLangWarnCancel")
+            });
+
+            if(!ok) return;
+
+            OfflinePackBridge.clearInstalledPairs();
+          }
 
           myLang = next;
-          localStorage.setItem(MY_LANG_KEY, myLang);
+          localStorage.setItem(MY_LANG_KEY,myLang);
           OfflinePackBridge.setOfflineNativeLang(myLang);
 
           renderMyLangDrawer();
-          renderDrawerLangList();
+          renderMyLangModalList();
           refreshTexts();
+          refreshOpenPop();
 
           showToast(tx("myLangChanged"));
+          myLangModal?.classList.remove("show");
         };
       });
     }
 
-    drawerOpenBtn?.addEventListener("click", openDrawer);
-    drawerCloseBtn?.addEventListener("click", closeDrawer);
-    drawerBackdrop?.addEventListener("click", (e) => {
-      if(e.target === drawerBackdrop) closeDrawer();
+    myLangDrawerBtn?.addEventListener("click", () => {
+      renderMyLangModalList();
+      myLangModal?.classList.add("show");
     });
 
-    myLangDrawerBtn?.addEventListener("click", () => {
-      drawerLangList?.classList.toggle("show");
+    myLangModalClose?.addEventListener("click", () => {
+      myLangModal?.classList.remove("show");
+    });
+
+    myLangModal?.addEventListener("click", (e) => {
+      if(e.target === myLangModal) myLangModal.classList.remove("show");
     });
 
     drawerLoginBtn?.addEventListener("click", () => {
@@ -1270,18 +1371,14 @@
     function refreshTexts(){
       topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
       botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
-
       topPopTitle.textContent = tx("topLang");
       botPopTitle.textContent = tx("botLang");
-
       centerLoginBtn.textContent = tx("textTranslate");
       centerClearBtn.textContent = tx("clear");
-
       adTitle.textContent = tx("adTitle");
       adText.textContent = tx("adText");
       watchAdBtn.textContent = tx("watchAd");
       closeAdBtn.textContent = tx("close");
-
       renderMyLangDrawer();
     }
 
@@ -1349,9 +1446,7 @@
             timeoutMs:20000
           });
 
-          if(ok){
-            lastAdAt = Date.now();
-          }
+          if(ok) lastAdAt = Date.now();
 
           resolve(!!ok);
         };
@@ -1365,10 +1460,7 @@
 
     async function maybeShowAd(){
       const now = Date.now();
-
-      if(now - lastAdAt < AD_INTERVAL_MS){
-        return true;
-      }
+      if(now - lastAdAt < AD_INTERVAL_MS) return true;
 
       const ok = await showAdModal({
         title:tx("adTitle"),
@@ -1377,24 +1469,12 @@
         langCode:""
       });
 
-      if(!ok){
-        showToast(tx("adNeeded"));
-      }
-
+      if(!ok) showToast(tx("adNeeded"));
       return ok;
     }
 
-    function hasInstalledPair(a, b){
-      return OfflinePackBridge.hasInstalledPair(a,b);
-    }
-
-    function hasAnyInstalledPair(){
-      return OfflinePackBridge.hasAnyInstalledPair();
-    }
-
-    function syncInstalledPairsFromNative(){
-      OfflinePackBridge.syncInstalledPairsFromNative();
-    }
+    function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
+    function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
 
     function installedTargetsForNative(nativeLang){
       const native = canonical(nativeLang);
@@ -1405,17 +1485,10 @@
         const item = installed[key] || {};
         const from = canonical(item.from || "");
         const to = canonical(item.to || "");
-
-        if(from === native && to && to !== native){
-          set.add(to);
-        }
+        if(from === native && to && to !== native) set.add(to);
       });
 
       return Array.from(set);
-    }
-
-    function getOfflineNativeLang(){
-      return myLang;
     }
 
     async function startOfflinePackDownload(targetCode, reason = "manual"){
@@ -1473,17 +1546,12 @@
 
       if(!result?.ok){
         console.error("Offline download start failed:", result?.error);
-        showToast(
-          result?.error === "native_installer_missing"
-            ? tx("nativeNotReady")
-            : `${targetInfo.name} indirilemedi.`
-        );
+        showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : `${targetInfo.name} indirilemedi.`);
         return false;
       }
 
       showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
       refreshOpenPop();
-
       return true;
     }
 
@@ -1499,7 +1567,6 @@
       if(hasInstalledPair(nativeLang,target)) return;
 
       const key = `italky_offer_offline_pack_${canonical(nativeLang)}_${canonical(target)}_v1`;
-
       if(sessionStorage.getItem(key) === "1") return;
 
       sessionStorage.setItem(key,"1");
@@ -1510,41 +1577,32 @@
     }
 
     function getFilteredLangsForPopover(){
-      if(currentMode !== "offline"){
-        return LANGS;
-      }
+      if(currentMode !== "offline") return LANGS;
 
       syncInstalledPairsFromNative();
 
-      const nativeLang = myLang;
-      const targets = installedTargetsForNative(nativeLang);
-
+      const targets = installedTargetsForNative(myLang);
       if(!targets.length) return [];
 
-      const allowed = new Set([nativeLang, ...targets]);
-
+      const allowed = new Set([myLang, ...targets]);
       return LANGS.filter((l) => allowed.has(l.code));
     }
 
     function isLangInstalledForUi(code){
       const c = canonical(code);
-      const nativeLang = myLang;
-
-      if(!nativeLang) return false;
-      if(c === nativeLang && hasAnyInstalledPair()) return true;
-
-      return c !== nativeLang && hasInstalledPair(nativeLang,c);
+      if(!myLang) return false;
+      if(c === myLang && OfflinePackBridge.hasAnyInstalledPair()) return true;
+      return c !== myLang && hasInstalledPair(myLang,c);
     }
 
     function renderActionForLang(code){
       const c = canonical(code);
-      const nativeLang = myLang;
 
-      if(OfflinePackBridge.isPairActive(nativeLang,c)){
+      if(OfflinePackBridge.isPairActive(myLang,c)){
         return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
       }
 
-      if(OfflinePackBridge.isPairQueued(nativeLang,c)){
+      if(OfflinePackBridge.isPairQueued(myLang,c)){
         return `<span class="pop-queued" title="Sırada">…</span>`;
       }
 
@@ -1552,7 +1610,7 @@
         return `<span class="pop-installed" title="Kurulu">✓</span>`;
       }
 
-      if(c === nativeLang){
+      if(c === myLang){
         return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
       }
 
@@ -1569,25 +1627,23 @@
         return;
       }
 
-      list.innerHTML = filteredLangs.map((l) => {
-        return `
-          <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
-            <div class="pop-left" data-select-code="${l.code}">
-              <div class="pop-flag">${l.flag}</div>
-              <div class="pop-name">${l.name}</div>
-            </div>
-
-            <div class="pop-actions">
-              <div class="pop-code">${l.code.toUpperCase()}</div>
-              ${renderActionForLang(l.code)}
-            </div>
+      list.innerHTML = filteredLangs.map((l) => `
+        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+          <div class="pop-left" data-select-code="${l.code}">
+            <div class="pop-flag">${l.flag}</div>
+            <div class="pop-name">${l.name}</div>
           </div>
-        `;
-      }).join("");
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            ${renderActionForLang(l.code)}
+          </div>
+        </div>
+      `).join("");
 
       list.querySelectorAll("[data-select-code]").forEach((el) => {
         el.addEventListener("click",() => {
           const code = canonical(el.dataset.selectCode);
+          if(!code) return;
 
           if(side === "top"){
             topLang = code;
@@ -1599,6 +1655,10 @@
 
           closeAllPop();
           refreshTexts();
+
+          if(code !== myLang && !hasInstalledPair(myLang,code)){
+            setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
+          }
         });
       });
 
@@ -1606,7 +1666,6 @@
         btn.addEventListener("click",async (e) => {
           e.preventDefault();
           e.stopPropagation();
-
           const code = canonical(btn.dataset.downloadCode);
           await startOfflinePackDownload(code, "lang_popup");
         });
@@ -1616,7 +1675,6 @@
     topLangBtn.addEventListener("click",(e) => {
       e.preventDefault();
       e.stopPropagation();
-
       closeAllPop();
       lastOpenPopSide = "top";
       renderPop("top");
@@ -1626,7 +1684,6 @@
     botLangBtn.addEventListener("click",(e) => {
       e.preventDefault();
       e.stopPropagation();
-
       closeAllPop();
       lastOpenPopSide = "bot";
       renderPop("bot");
@@ -1637,21 +1694,14 @@
     closeBot.addEventListener("click",closeAllPop);
 
     document.addEventListener("click",(e) => {
-      const inside =
-        popTop.contains(e.target) ||
-        popBot.contains(e.target) ||
-        e.target.closest("#topLangBtn,#botLangBtn");
-
+      const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
       if(!inside) closeAllPop();
     },{capture:true});
 
-    function clearBody(body){
-      if(body) body.innerHTML = "";
-    }
+    function clearBody(body){ if(body) body.innerHTML = ""; }
 
     function addBubble(side,text,latest=false){
       const body = side === "top" ? topBody : botBody;
-
       if(!body) return null;
 
       if(latest){
@@ -1671,7 +1721,6 @@
       scroll();
       requestAnimationFrame(scroll);
       setTimeout(scroll,60);
-
       return div;
     }
 
@@ -1689,7 +1738,6 @@
       rec.interimResults = true;
       rec.continuous = false;
       rec.maxAlternatives = 1;
-
       return rec;
     }
 
@@ -1732,7 +1780,6 @@
 
           const j = await r.json().catch(() => null);
           const value = String(j?.translated || j?.translation || j?.text || "").trim();
-
           if(r.ok && value) return value;
         }catch{}
       }
@@ -1748,12 +1795,11 @@
       if(currentMode === "offline"){
         if(!hasInstalledPair(from,to)){
           showToast(tx("offlineMode"));
-          await startOfflinePackDownload(topLang,"offline_mode");
+          await startOfflinePackDownload(to,"offline_mode");
           return null;
         }
 
         const offline = await translateOffline(text,from,to);
-
         if(offline) return offline;
 
         showToast(tx("translateError"));
@@ -1765,7 +1811,6 @@
 
     function speak(text,langCode){
       const value = String(text || "").trim();
-
       if(!value) return;
 
       try{
@@ -1779,18 +1824,15 @@
         const u = new SpeechSynthesisUtterance(value);
         u.lang = langObj(langCode).bcp;
         u.rate = .95;
-
         speechSynthesis.speak(u);
       }catch{}
     }
 
     async function finalizeSpeech(side,text){
       const clean = cleanupTranscript(text);
-
       if(!clean) return;
 
       const adOk = await maybeShowAd();
-
       if(!adOk) return;
 
       const src = side === "top" ? topLang : botLang;
@@ -1798,8 +1840,8 @@
       const other = side === "top" ? "bot" : "top";
 
       addBubble(side,clean,false);
-
       const targetRow = addBubble(other,"",true);
+
       const translated = await translateText(clean,src,dst);
 
       if(!translated){
@@ -1840,7 +1882,6 @@
 
         for(let i=0;i<e.results.length;i++){
           const txt = String(e.results[i]?.[0]?.transcript || "").trim();
-
           if(!txt) continue;
 
           if(e.results[i].isFinal) finalText += ` ${txt}`;
@@ -1852,9 +1893,7 @@
 
       rec.onerror = (e) => {
         const err = String(e?.error || "");
-
         showToast(err.includes("not-allowed") ? tx("micDenied") : tx("micError"));
-
         setMicState(side,false);
         recognizer = null;
         liveText = "";
@@ -1862,11 +1901,9 @@
 
       rec.onend = () => {
         const finalText = cleanupTranscript(liveText);
-
         setMicState(side,false);
         recognizer = null;
         liveText = "";
-
         if(finalText) finalizeSpeech(side,finalText);
       };
 
@@ -1885,16 +1922,13 @@
 
     function clearChat(){
       stopRecognizer();
-
       try{ window.speechSynthesis?.cancel?.(); }catch{}
       try{ window.NativeTTS?.stop?.(); }catch{}
 
       recognizer = null;
       liveText = "";
-
       topMic.classList.remove("listening");
       botMic.classList.remove("listening");
-
       clearBody(topBody);
       clearBody(botBody);
     }
@@ -1915,12 +1949,10 @@
 
     async function startWebGoogleLogin(){
       const redirectTo = `${location.origin}/pages/login.html?next=${encodeURIComponent(HOME_URL)}`;
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider:"google",
         options:{redirectTo}
       });
-
       if(error) throw error;
     }
 
@@ -1972,7 +2004,6 @@
       const d = e.detail || {};
       const source = canonical(d.source || myLang);
       const target = canonical(d.target || topLang);
-
       if(!source || !target) return;
 
       OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
@@ -1984,13 +2015,11 @@
       const d = e.detail || {};
       const source = canonical(d.source || myLang);
       const target = canonical(d.target || topLang);
-
       if(!source || !target) return;
 
       OfflinePackBridge.markInstalledPair(source,target);
       OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
       syncInstalledPairsFromNative();
-
       showToast(tx("packDownloaded"));
       refreshOpenPop();
     });
@@ -2003,53 +2032,21 @@
 
     function applyRouteParams(){
       const params = new URLSearchParams(location.search);
-
       const source = canonical(params.get("source") || "");
       const target = canonical(params.get("target") || "");
       const mode = canonical(params.get("mode") || "");
 
       if(source && langExists(source)) botLang = source;
       if(target && langExists(target)) topLang = target;
-
       if(topLang === botLang) topLang = differentLang(botLang);
       if(mode === "offline") currentMode = "offline";
-    }
-
-    async function detectCountryLang(){
-      try{
-        const r = await fetch("https://ipapi.co/json/",{cache:"no-store"});
-        const j = await r.json();
-        const country = String(j?.country_code || "").toUpperCase();
-
-        const map = {
-          TR:"tr", CY:"tr",
-          US:"en", GB:"en", IE:"en", AU:"en", CA:"en", NZ:"en",
-          DE:"de", AT:"de", CH:"de",
-          FR:"fr", BE:"fr",
-          ES:"es", MX:"es", AR:"es", CO:"es", CL:"es", PE:"es",
-          IT:"it", RU:"ru", BG:"bg", PT:"pt", BR:"pt",
-          CN:"zh", JP:"ja", KR:"ko", SA:"ar", AE:"ar", EG:"ar"
-        };
-
-        const code = map[country];
-
-        if(code && langExists(code)) return code;
-      }catch{}
-
-      const nav = canonical(navigator.language || "");
-
-      if(nav && langExists(nav)) return nav;
-
-      return myLang;
     }
 
     async function boot(){
       OfflinePackBridge.installDownloadEventHandlers(langObj);
       syncInstalledPairsFromNative();
 
-      try{
-        OfflinePackBridge.preloadRewardedAd();
-      }catch{}
+      try{ OfflinePackBridge.preloadRewardedAd(); }catch{}
 
       const params = new URLSearchParams(location.search);
       const hasRouteLang = params.get("source") || params.get("target");
@@ -2071,10 +2068,9 @@
       }
 
       applyRouteParams();
-
       refreshTexts();
       refreshModeButtons();
-      renderDrawerLangList();
+      renderMyLangModalList();
       clearBody(topBody);
       clearBody(botBody);
     }
