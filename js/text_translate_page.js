@@ -1,3 +1,5 @@
+// /js/text_translate_page.js
+
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
@@ -569,7 +571,10 @@ async function translateText() {
     autoResizeInput();
   }
 
-  syncInputPreview();
+  if (inputPreviewBubble) {
+    inputPreviewBubble.textContent = originalText;
+  }
+
   syncInputButtons();
 
   setState("translating");
@@ -836,7 +841,7 @@ async function boot() {
   syncInputButtons();
   setState("ready");
 
-  console.log("TEXT_TRANSLATE_READY_V7", {
+  console.log("TEXT_TRANSLATE_READY_V8", {
     fromLang,
     toLang,
     langs: ALL_LANGS.length
