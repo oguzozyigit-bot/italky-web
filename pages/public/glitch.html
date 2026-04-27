@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>italkyAI • Glitch Hunter Public</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#071018;
+  --bg2:#0c1622;
+  --cyan:#22d3ee;
+  --pink:#ff4d8d;
+  --green:#22c55e;
+  --red:#ef4444;
+  --gold:#f59e0b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:rgba(255,255,255,.10);
+  --panel:rgba(8,16,24,.82);
+  --safeB: env(safe-area-inset-bottom, 0px);
+  --safeT: env(safe-area-inset-top, 0px);
+  --grad: linear-gradient(135deg,#67e8f9 0%, #60a5fa 50%, #34d399 100%);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;outline:none}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:linear-gradient(180deg,var(--bg),var(--bg2));
+  font-family:'Outfit',sans-serif;color:var(--text);
+}
+body{
+  background:
+    radial-gradient(circle at 10% 10%, rgba(34,211,238,.10), transparent 20%),
+    radial-gradient(circle at 90% 0%, rgba(96,165,250,.10), transparent 22%),
+    radial-gradient(circle at 50% 100%, rgba(52,211,153,.08), transparent 18%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+}
+
+.soft-grid{
+  position:fixed; inset:0; pointer-events:none; opacity:.16;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:34px 34px;
+}
+
+#pageContent{
+  height:100dvh;
+  padding:calc(10px + var(--safeT)) 10px calc(10px + var(--safeB)) 10px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  opacity:0;
+  transform:scale(1.03);
+  transition:.45s ease;
+}
+#pageContent.ui-ready{
+  opacity:1;
+  transform:scale(1);
+}
+#pageContent::-webkit-scrollbar{display:none}
+
+.app{
+  width:100%;
+  max-width:480px;
+  min-height:100%;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  position:relative;
+  z-index:5;
+}
+
+.header{
+  min-height:64px;
+  display:grid;
+  grid-template-columns:auto 1fr auto auto;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background:rgba(8,16,24,.78);
+  backdrop-filter:blur(14px);
+}
+.back-btn{
+  width:38px;
+  height:38px;
+  border:none;
+  border-radius:12px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  color:#fff;
+  font-size:22px;
+  font-weight:900;
+  cursor:pointer;
+}
+.title{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:.4px;
+  color:var(--cyan);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pbBadge,.momChip{
+  min-width:62px;
+  height:34px;
+  padding:0 10px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:900;
+}
+.pbBadge{
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.05);
+  color:#fff;
+}
+.momChip{
+  background:var(--grad);
+  color:#062433;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+}
+.stat{
+  min-height:52px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  text-align:center;
+  padding:4px;
+}
+.statVal{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+}
+.statLab{
+  font-size:9px;
+  letter-spacing:1px;
+  font-weight:900;
+  opacity:.62;
+}
+
+.infoToast{
+  text-align:center;
+  min-height:18px;
+  font-size:12px;
+  font-weight:800;
+  opacity:0;
+  transition:.25s;
+  color:var(--cyan);
+}
+
+.terminalWrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.terminal{
+  flex:1;
+  min-height:320px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.45);
+  border-radius:24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px;
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:blur(10px);
+}
+
+.terminal.boss{
+  border-color:rgba(255,77,141,.45);
+  box-shadow:0 0 0 1px rgba(255,77,141,.18), 0 0 24px rgba(255,77,141,.10);
+}
+@keyframes pulseAlarm{
+  0%,100%{ box-shadow:0 0 0 rgba(239,68,68,0); }
+  50%{ box-shadow:0 0 30px rgba(239,68,68,.18); }
+}
+.terminal.danger{
+  animation:pulseAlarm .8s infinite;
+}
+
+.sentence{
+  font-size:24px;
+  color:#fff;
+  line-height:1.38;
+  font-weight:800;
+  max-width:95%;
+  word-break:break-word;
+}
+
+.metaTop{
+  position:absolute;
+  top:12px;
+  left:12px;
+  right:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  font-size:10px;
+  opacity:.7;
+  font-weight:900;
+}
+
+.correctionBox{
+  font-size:14px;
+  color:var(--green);
+  margin-top:16px;
+  font-weight:700;
+  opacity:0;
+  transition:.2s;
+  background:rgba(34,197,94,.08);
+  padding:12px;
+  border-radius:12px;
+  width:100%;
+  border-left:3px solid var(--green);
+  text-align:left;
+}
+.tr-text{
+  color:var(--cyan);
+  font-style:italic;
+  font-weight:500;
+  margin-top:6px;
+  display:block;
+}
+.tap-hint{
+  font-size:10px;
+  color:var(--cyan);
+  margin-top:10px;
+  opacity:0.65;
+  display:none;
+  font-weight:900;
+  text-align:center;
+}
+
+.controls{
+  display:flex;
+  gap:10px;
+  min-height:96px;
+}
+.action{
+  flex:1;
+  border:2px solid var(--border);
+  cursor:pointer;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.12s;
+  font-weight:900;
+  border-radius:16px;
+  color:#fff;
+  background:rgba(255,255,255,.04);
+  font-family:inherit;
+}
+.action:active{transform:scale(.96)}
+.bug{ border-color: rgba(255,77,141,.45); color: var(--pink); }
+.ok{ border-color: rgba(34,197,94,.45); color: var(--green); }
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.94);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:20px;
+}
+.card{
+  background:#081018;
+  border:1px solid rgba(34,211,238,.30);
+  padding:24px;
+  width:86%;
+  max-width:380px;
+  text-align:center;
+  border-radius:24px;
+  max-height:88vh;
+  overflow:auto;
+  scrollbar-width:none;
+}
+.card::-webkit-scrollbar{display:none}
+
+.mainbtn{
+  width:100%;
+  padding:16px;
+  margin-top:10px;
+  border:none;
+  background:var(--grad);
+  color:#052433;
+  font-weight:900;
+  cursor:pointer;
+  font-size:16px;
+  border-radius:14px;
+  font-family:inherit;
+}
+.mainbtn.sec{
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border:1px solid var(--border);
+}
+
+.lang-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin:16px 0;
+}
+.lang-btn{
+  min-height:84px;
+  border-radius:16px;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-weight:800;
+  cursor:pointer;
+  font-family:inherit;
+}
+.lang-btn .flag{ font-size:28px; }
+.lang-btn.active{
+  border-color:rgba(34,211,238,.35);
+  box-shadow:0 0 0 1px rgba(34,211,238,.18), 0 0 18px rgba(34,211,238,.10);
+  background:rgba(34,211,238,.08);
+}
+
+.rulesList{
+  text-align:left;
+  margin:16px 0 6px;
+  padding-left:18px;
+  line-height:1.8;
+  color:rgba(255,255,255,.85);
+  font-size:14px;
+}
+
+.hidden{display:none!important}
+.glitch-anim{animation:shake 0.3s}
+@keyframes shake{
+  0%,100%{transform: translateX(0)}
+  25%{transform: translateX(-8px)}
+  75%{transform: translateX(8px)}
+}
+</style>
+</head>
+
+<body>
+<div class="soft-grid"></div>
+
+<main id="pageContent">
+  <div class="app">
+    <div class="header">
+      <button id="backBtn" class="back-btn" type="button">‹</button>
+      <div class="title">GLITCH HUNTER</div>
+      <div id="pbBadge" class="pbBadge">PB: 0</div>
+      <div id="momChip" class="momChip">x1.00</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="statVal" id="life">100%</div>
+        <div class="statLab">INTEGRITY</div>
+      </div>
+      <div class="stat">
+        <div class="statVal" id="scoreDisp">0</div>
+        <div class="statLab">SKOR</div>
+      </div>
+      <div class="stat">
+        <div class="statVal" id="setCounter">1/12</div>
+        <div class="statLab">TUR</div>
+      </div>
+      <div class="stat">
+        <div class="statVal" id="langBadgeTop">EN</div>
+        <div class="statLab">DİL</div>
+      </div>
+    </div>
+
+    <div id="resInfo" class="infoToast">BAŞARI</div>
+
+    <div class="terminalWrap">
+      <div class="terminal" id="terminal">
+        <div class="metaTop">
+          <span id="metaMode">SCAN</span>
+          <span id="metaRule">NORMAL</span>
+        </div>
+
+        <div class="sentence" id="sentence">Başlatmak için oyunu aç</div>
+
+        <div class="correctionBox" id="correctionBox">
+          <span id="correctTxt"></span>
+          <span id="trTxt" class="tr-text"></span>
+          <div class="tap-hint" id="tapHint">DEVAM ET</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="action bug" id="btnGlitch">🐞 HATALI</button>
+        <button class="action ok" id="btnStable">🛡️ DOĞRU</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal" id="start">
+  <div class="card">
+    <h2 style="color:var(--cyan); font-size:24px; margin-bottom:6px;">GLITCH HUNTER</h2>
+    <p style="opacity:.72; font-size:12px; line-height:1.6; margin-bottom:12px;">
+      Bayrağa dokun, dili seç.
+    </p>
+
+    <div class="lang-grid" id="langGrid"></div>
+    <button class="mainbtn" id="startBtn">DEVAM ET</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="rulesModal">
+  <div class="card">
+    <h2 style="color:var(--gold); font-size:24px; margin-bottom:6px;">KURALLAR</h2>
+    <ul class="rulesList">
+      <li>Ekrana gelen cümle doğruysa <b>DOĞRU</b> seç.</li>
+      <li>Cümlede hata varsa <b>HATALI</b> seç.</li>
+      <li>Yanlış karar integrity düşürür.</li>
+      <li>Doğru seri yaptıkça momentum yükselir.</li>
+      <li>Doğrusunu sistem sana gösterir ve sesli okur.</li>
+    </ul>
+    <button class="mainbtn" id="rulesBtn">ANLADIM, BAŞLA</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="end">
+  <div class="card">
+    <h2 id="endTitle" style="color:var(--green)">SYNC COMPLETE</h2>
+    <div id="learningReport" style="color:var(--cyan); font-size:12px; margin-bottom:14px; font-weight:bold; line-height:1.6;"></div>
+    <p id="endStats" style="font-size:16px; margin-bottom: 18px; line-height:1.7"></p>
+
+    <button class="mainbtn" id="btnContinue">YENİDEN DENE</button>
+    <button class="mainbtn sec" id="btnExit">ANA MENÜ</button>
+  </div>
+</div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+
+const BACK_URL = "/pages/game_menu_public.html";
+
+let lang = localStorage.getItem("italky_glitch_hunter_lang_public") || "en";
+let totalScore = 0;
+let integrity = 100;
+let momentum = 1.0;
+let wordList = [];
+let currentIndex = 0;
+let busy = false;
+let currentItem = null;
+let autoProceedTimer = null;
+let statsCats = { missed:{}, hit:{} };
+let flowStreak = 0;
+
+const SET_SIZE = 12;
+
+const LANGS = {
+  en:{ name:"İngilizce", flag:"🇬🇧", bcp:"en-US" },
+  de:{ name:"Almanca", flag:"🇩🇪", bcp:"de-DE" },
+  fr:{ name:"Fransızca", flag:"🇫🇷", bcp:"fr-FR" },
+  es:{ name:"İspanyolca", flag:"🇪🇸", bcp:"es-ES" },
+  it:{ name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" }
+};
+
+const LANGMAP = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" };
+const CATEGORY_TR = {
+  "Syntax":"Sözdizimi",
+  "Subject-Verb":"Özne-Yüklem",
+  "Article":"Artikel",
+  "Preposition":"Edat",
+  "Pronoun":"Zamir",
+  "Tense":"Zaman",
+  "Logic":"Mantık",
+  "Verified":"Doğru",
+  "Normal":"Normal"
+};
+
+const LOCAL_FALLBACK = {
+  en:[
+    { sentence:"I drink water every day.", tr:"Her gün su içerim." },
+    { sentence:"She goes to school.", tr:"O okula gider." },
+    { sentence:"This house is big.", tr:"Bu ev büyüktür." },
+    { sentence:"My friend likes music.", tr:"Arkadaşım müziği sever." },
+    { sentence:"We travel in summer.", tr:"Yazın seyahat ederiz." }
+  ],
+  de:[
+    { sentence:"Ich trinke wasser.", tr:"Su içerim." },
+    { sentence:"Das haus ist groß.", tr:"Ev büyüktür." },
+    { sentence:"Mein freund ist hier.", tr:"Arkadaşım burada." }
+  ],
+  fr:[
+    { sentence:"Je bois de l'eau.", tr:"Su içerim." },
+    { sentence:"La maison est grande.", tr:"Ev büyüktür." },
+    { sentence:"Mon ami est ici.", tr:"Arkadaşım burada." }
+  ],
+  es:[
+    { sentence:"Bebo agua.", tr:"Su içerim." },
+    { sentence:"La casa es grande.", tr:"Ev büyüktür." },
+    { sentence:"Mi amigo está aquí.", tr:"Arkadaşım burada." }
+  ],
+  it:[
+    { sentence:"Bevo acqua.", tr:"Su içerim." },
+    { sentence:"La casa è grande.", tr:"Ev büyüktür." },
+    { sentence:"Il mio amico è qui.", tr:"Arkadaşım burada." }
+  ]
+};
+
+let audioCtx = null;
+
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended") ctx.resume().catch(() => {});
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + .02);
+}
+
+function playGood(){
+  beep({freq:620,duration:.08,type:"triangle",gain:.05});
+  beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08});
+}
+
+function playBad(){
+  beep({freq:180,duration:.12,type:"sawtooth",gain:.05});
+  beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06});
+}
+
+function playFinish(){
+  beep({freq:700,duration:.10,type:"triangle",gain:.05});
+  beep({freq:920,duration:.12,type:"triangle",gain:.05,when:.10});
+  beep({freq:1180,duration:.15,type:"triangle",gain:.05,when:.22});
+}
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
+
+function speak(text, targetLang) {
+  const value = String(text || "").trim();
+  if(!value) return;
+
+  try{
+    if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
+      window.NativeTTS.speak(value, LANGMAP[targetLang] || "en-US");
+      return;
+    }
+  }catch{}
+
+  try{
+    const u = new SpeechSynthesisUtterance(value);
+    u.lang = LANGMAP[targetLang] || "en-US";
+    u.rate = 0.92;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch{}
+}
+
+function normalize(s){
+  return String(s||"")
+    .toLowerCase()
+    .replace(/ß/g,"ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9 ]/g,"")
+    .trim();
+}
+
+function getPublicLangUrl(langCode){
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
+}
+
+function extractItems(payload){
+  if(Array.isArray(payload)) return payload;
+
+  if(payload && typeof payload === "object"){
+    const keys = ["items","words","data","list","entries","pool","vocabulary","kelimeler"];
+    for(const key of keys){
+      if(Array.isArray(payload[key])) return payload[key];
+    }
+
+    for(const value of Object.values(payload)){
+      if(Array.isArray(value)) return value;
+    }
+  }
+
+  return [];
+}
+
+function normalizePoolItems(items){
+  return items.map((item) => {
+    if(typeof item === "string"){
+      return { sentence:`I choose ${item}.`, tr:"—" };
+    }
+
+    const rawSentence =
+      item?.sentence ??
+      item?.s ??
+      item?.sample ??
+      item?.example ??
+      item?.text ??
+      item?.source ??
+      "";
+
+    const word =
+      item?.word ??
+      item?.w ??
+      item?.term ??
+      item?.answer ??
+      item?.value ??
+      "";
+
+    const rawMeaning =
+      item?.meaning ??
+      item?.tr ??
+      item?.translation ??
+      item?.target ??
+      item?.turkish ??
+      item?.turkce ??
+      item?.ceviri ??
+      "";
+
+    const sentence = String(rawSentence || "").trim() || (word ? `I choose ${word}.` : "");
+
+    return {
+      sentence,
+      tr: String(rawMeaning || "—").trim()
+    };
+  }).filter(x => x.sentence && x.tr);
+}
+
+async function loadLangPool(langCode){
+  try{
+    const url = getPublicLangUrl(langCode);
+    const res = await fetch(url, { cache:"no-store" });
+
+    if(!res.ok){
+      console.warn("[glitch_public] pool fetch failed:", url, res.status);
+      return LOCAL_FALLBACK[langCode] || LOCAL_FALLBACK.en;
+    }
+
+    const json = await res.json();
+    const items = normalizePoolItems(extractItems(json));
+
+    if(!items.length){
+      console.warn("[glitch_public] pool empty, fallback:", langCode);
+      return LOCAL_FALLBACK[langCode] || LOCAL_FALLBACK.en;
+    }
+
+    return items;
+  }catch(e){
+    console.warn("[glitch_public] pool error, fallback:", e);
+    return LOCAL_FALLBACK[langCode] || LOCAL_FALLBACK.en;
+  }
+}
+
+const usedGlitchItems = {};
+
+function pickFreshSet(items, count, langCode){
+  if(!usedGlitchItems[langCode]) usedGlitchItems[langCode] = new Set();
+  const used = usedGlitchItems[langCode];
+
+  if(used.size >= items.length) used.clear();
+
+  const fresh = [];
+  let guard = 0;
+
+  while(fresh.length < count && guard < items.length * 20){
+    const pick = items[Math.floor(Math.random() * items.length)];
+    const key = normalize(pick.sentence);
+    if(!used.has(key) && !fresh.some(x => normalize(x.sentence) === key)){
+      used.add(key);
+      fresh.push(pick);
+    }
+    guard++;
+  }
+
+  if(fresh.length < count){
+    const fallback = items.filter(x => !fresh.some(y => normalize(y.sentence) === normalize(x.sentence)));
+    while(fresh.length < count && fallback.length){
+      const item = fallback.shift();
+      used.add(normalize(item.sentence));
+      fresh.push(item);
+    }
+  }
+
+  return fresh.sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+function updateLeaderboardUI() {
+  const records = JSON.parse(localStorage.getItem('glitch_hunter_scores_public') || '[]');
+  const pb = records
+    .filter(r => r.lang === lang.toUpperCase())
+    .reduce((max, r) => Math.max(max, r.score), 0);
+
+  $("pbBadge").textContent = `PB: ${pb}`;
+}
+
+function renderLangs(){
+  $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+    <button class="lang-btn ${lang===code ? "active" : ""}" data-lang="${code}">
+      <div class="flag">${meta.flag}</div>
+      <div>${meta.name}</div>
+    </button>
+  `).join("");
+
+  $("langGrid").querySelectorAll(".lang-btn").forEach(btn => {
+    btn.onclick = () => {
+      lang = btn.dataset.lang;
+      localStorage.setItem("italky_glitch_hunter_lang_public", lang);
+      renderLangs();
+      updateLeaderboardUI();
+    };
+  });
+}
+
+function updateUI() {
+  $("life").textContent = integrity + "%";
+  $("scoreDisp").textContent = totalScore;
+  $("momChip").textContent = `x${momentum.toFixed(2)}`;
+  $("setCounter").textContent = `${Math.min(currentIndex + 1, SET_SIZE)}/${SET_SIZE}`;
+  $("langBadgeTop").textContent = lang.toUpperCase();
+  $("life").style.color = integrity <= 25 ? "var(--pink)" : "var(--cyan)";
+}
+
+function produceGlitch(original) {
+  const rules = [
+    { cat:"Subject-Verb", f:" am ", t:" is ", subtle:false },
+    { cat:"Subject-Verb", f:" are ", t:" is ", subtle:false },
+    { cat:"Subject-Verb", f:" do ", t:" does ", subtle:true },
+    { cat:"Article", f:" a ", t:" an ", subtle:true },
+    { cat:"Article", f:" an ", t:" a ", subtle:true },
+    { cat:"Preposition", f:" in ", t:" on ", subtle:true },
+    { cat:"Preposition", f:" at ", t:" in ", subtle:true },
+    { cat:"Pronoun", f:" me ", t:" I ", subtle:true },
+    { cat:"Tense", f:" did ", t:" do ", subtle:true },
+    { cat:"Logic", f:" good ", t:" well ", subtle:true },
+    { cat:"Logic", f:" well ", t:" good ", subtle:true }
+  ];
+
+  let text = String(original || "");
+  const applicable = rules.filter(r => text.toLowerCase().includes(r.f));
+
+  if(applicable.length > 0){
+    const rule = applicable[Math.floor(Math.random() * applicable.length)];
+    return { text:text.replace(new RegExp(rule.f, "i"), rule.t), category:rule.cat, subtle:rule.subtle };
+  }
+
+  return { text:text + "s", category:"Syntax", subtle:true };
+}
+
+async function initGame() {
+  currentIndex = 0;
+  totalScore = 0;
+  integrity = 100;
+  momentum = 1.0;
+  statsCats = { missed:{}, hit:{} };
+  flowStreak = 0;
+
+  const pool = await loadLangPool(lang);
+  const randomizedItems = [...(pool || [])].sort(() => Math.random() - 0.5);
+
+  wordList = pickFreshSet(randomizedItems, SET_SIZE, lang);
+
+  if(wordList.length < 1){
+    alert("Havuz yüklenemedi.");
+    return;
+  }
+
+  $("start").classList.add("hidden");
+  $("rulesModal").classList.add("hidden");
+  nextRound();
+}
+
+function nextRound() {
+  if(currentIndex >= wordList.length || integrity <= 0){
+    finish(integrity <= 0);
+    return;
+  }
+
+  const item = wordList[currentIndex];
+  const isBoss = currentIndex >= 10;
+
+  $("terminal").classList.remove("boss", "danger");
+  $("correctionBox").style.opacity = "0";
+  $("correctTxt").textContent = "";
+  $("trTxt").textContent = "";
+  $("tapHint").style.display = "none";
+  $("metaMode").textContent = "SCAN";
+  $("metaRule").textContent = isBoss ? "BOSS" : "NORMAL";
+
+  if(isBoss) $("terminal").classList.add("boss");
+  if(integrity <= 25) $("terminal").classList.add("danger");
+
+  const isOk = Math.random() > 0.5;
+  const glitch = isOk ? { text:item.sentence, category:"Verified", subtle:false } : produceGlitch(item.sentence);
+
+  currentItem = {
+    text: glitch.text,
+    original: item.sentence,
+    isOk,
+    category: glitch.category,
+    subtle: glitch.subtle,
+    tr: item.tr || "Anlam bulunamadı."
+  };
+
+  $("sentence").textContent = currentItem.text;
+  updateUI();
+  busy = false;
+}
+
+$("terminal").onclick = () => {
+  if(busy && autoProceedTimer){
+    clearTimeout(autoProceedTimer);
+    proceedNext();
+  }
+};
+
+function handleAnswer(userPick) {
+  if(busy) return;
+  busy = true;
+
+  const correct = (userPick === currentItem.isOk);
+  const isBoss = currentIndex >= 10;
+  const readingText = currentItem.original;
+
+  speak(readingText, lang);
+  $("terminal").classList.remove("danger");
+
+  if(correct){
+    playGood();
+    flowStreak++;
+    statsCats.hit[currentItem.category] = (statsCats.hit[currentItem.category] || 0) + 1;
+
+    const points = isBoss ? 150 : 100;
+    totalScore += Math.round(points * momentum);
+    momentum = Math.min(1.6, momentum + 0.05);
+
+    $("terminal").style.borderColor = "var(--green)";
+    $("correctTxt").textContent = "✓ Doğru karar";
+    $("trTxt").textContent = "Doğrusu: " + currentItem.original + "\nAnlamı: " + currentItem.tr;
+    $("correctionBox").style.opacity = "1";
+
+    autoProceedTimer = setTimeout(proceedNext, 2400);
+  }else{
+    playBad();
+    flowStreak = 0;
+    statsCats.missed[currentItem.category] = (statsCats.missed[currentItem.category] || 0) + 1;
+
+    const damage = (currentItem.subtle || isBoss) ? 15 : 25;
+    integrity -= damage;
+    momentum = Math.max(1.0, momentum - 0.15);
+
+    $("pageContent").classList.add("glitch-anim");
+    $("terminal").style.borderColor = "var(--pink)";
+
+    $("correctTxt").textContent = currentItem.original;
+    $("trTxt").textContent = "Anlamı: " + currentItem.tr;
+    $("correctionBox").style.opacity = "1";
+    $("tapHint").style.display = "block";
+
+    autoProceedTimer = setTimeout(proceedNext, 3200);
+  }
+
+  updateUI();
+}
+
+function proceedNext() {
+  autoProceedTimer = null;
+  $("pageContent").classList.remove("glitch-anim");
+  currentIndex++;
+  nextRound();
+}
+
+$("btnGlitch").onclick = () => handleAnswer(false);
+$("btnStable").onclick = () => handleAnswer(true);
+
+function finish(died) {
+  const records = JSON.parse(localStorage.getItem('glitch_hunter_scores_public') || '[]');
+  records.push({ score: totalScore, lang: lang.toUpperCase(), id: Date.now() });
+  records.sort((a,b) => b.score - a.score);
+  localStorage.setItem('glitch_hunter_scores_public', JSON.stringify(records.slice(0,10)));
+  updateLeaderboardUI();
+
+  const worst = Object.entries(statsCats.missed).sort((a,b)=>b[1]-a[1])[0];
+  const best = Object.entries(statsCats.hit)
+    .filter(x => x[0] !== "Verified")
+    .sort((a,b)=>b[1]-a[1])[0];
+
+  const worstLabel = worst ? (CATEGORY_TR[worst[0]] || worst[0]) : null;
+  const bestLabel = best ? (CATEGORY_TR[best[0]] || best[0]) : null;
+
+  let report = worstLabel ? `En çok zorlandığın alan: ${worstLabel}` : "Temiz tarama tamamlandı.";
+  if(bestLabel) report += `\nEn güçlü alanın: ${bestLabel}`;
+
+  $("learningReport").textContent = report;
+  $("end").classList.remove("hidden");
+  $("endTitle").textContent = died ? "SYSTEM CRASHED" : "SYNC COMPLETE";
+  $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
+  $("endStats").innerHTML = `SKOR: <b>${totalScore}</b><br>MOMENTUM: <b>x${momentum.toFixed(2)}</b>`;
+  playFinish();
+}
+
+$("startBtn").onclick = async () => {
+  $("start").classList.add("hidden");
+  $("rulesModal").classList.remove("hidden");
+};
+
+$("rulesBtn").onclick = () => {
+  $("rulesModal").classList.add("hidden");
+  initGame();
+};
+
+$("btnContinue").onclick = () => {
+  $("end").classList.add("hidden");
+  initGame();
+};
+
+$("btnExit").onclick = () => {
+  location.href = BACK_URL;
+};
+
+$("backBtn").onclick = () => {
+  location.href = BACK_URL;
+};
+
+window.onload = () => {
+  renderLangs();
+  updateLeaderboardUI();
+  updateUI();
+
+  setTimeout(() => {
+    $("pageContent")?.classList.add("ui-ready");
+  }, 120);
+};
+</script>
+</body>
+</html>
