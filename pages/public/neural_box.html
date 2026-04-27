@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>italkyAI • Neural Box Public</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#050508;
+  --panel:#0a0a0f;
+  --cyan:#00f3ff;
+  --gold:#ffb800;
+  --red:#ff0055;
+  --blue:#4f46e5;
+  --green:#00e676;
+  --border: rgba(255,255,255,0.10);
+  --safeB: env(safe-area-inset-bottom, 0px);
+  --safeT: env(safe-area-inset-top, 0px);
+  --grad: linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
+html,body{
+  margin:0;width:100%;height:100dvh;background:var(--bg);
+  font-family:'Outfit',sans-serif;color:#fff;overflow:hidden;
+}
+body{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(79,70,229,.18), transparent 28%),
+    radial-gradient(circle at 0% 100%, rgba(0,243,255,.08), transparent 24%),
+    radial-gradient(circle at 100% 0%, rgba(255,0,85,.08), transparent 22%),
+    var(--bg);
+}
+#pageContent{
+  height:100dvh;
+  padding:calc(10px + var(--safeT)) 12px calc(14px + var(--safeB)) 12px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  opacity:0;
+  transform:scale(1.03);
+  transition:.45s ease;
+}
+#pageContent.ui-ready{opacity:1;transform:scale(1)}
+#pageContent::-webkit-scrollbar{display:none}
+
+.app{
+  max-width:480px;
+  min-height:100%;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.hud{
+  display:grid;
+  grid-template-columns:auto 1fr 1fr 1fr;
+  gap:8px;
+  padding:10px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.04);
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 40px rgba(0,0,0,0.35);
+  align-items:center;
+}
+
+.back-btn{
+  width:38px;
+  height:54px;
+  border:none;
+  border-radius:16px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  color:#fff;
+  font-size:22px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.hudCard{
+  min-height:54px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  text-align:center;
+  padding:4px;
+}
+.hudBig{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+}
+.hudSmall{
+  font-size:9px;
+  font-weight:900;
+  opacity:.6;
+  letter-spacing:.8px;
+}
+
+.main{
+  flex:1;
+  border-radius:24px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  position:relative;
+  overflow:visible;
+  backdrop-filter: blur(14px);
+  box-shadow:0 28px 60px rgba(0,0,0,.45);
+}
+
+.statusTxt{
+  text-align:center;
+  color:var(--cyan);
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  min-height:18px;
+  font-size:13px;
+}
+
+.valueBoard{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:6px;
+}
+
+.valTag{
+  min-height:28px;
+  padding:6px 4px;
+  border-radius:10px;
+  font-size:10px;
+  font-weight:900;
+  text-align:center;
+  border:1.5px solid rgba(255,255,255,0.10);
+  transition:0.25s ease;
+  color:rgba(255,255,255,0.35);
+  background:rgba(255,255,255,.03);
+  line-height:1.1;
+}
+
+.valTag.active{
+  border-color:var(--gold);
+  color:var(--gold);
+  text-shadow:0 0 10px rgba(255,184,0,0.22);
+  background:rgba(255,184,0,0.05);
+}
+
+.valTag.removed{
+  text-decoration:line-through;
+  opacity:0.10;
+  transform:scale(0.94);
+  color:#555;
+}
+
+.box-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:8px;
+  width:100%;
+}
+
+.box{
+  height:58px;
+  background:linear-gradient(145deg, #1a1a25, #08080a);
+  border:2px solid var(--blue);
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:900;
+  color:var(--cyan);
+  cursor:pointer;
+  transition:0.22s ease;
+  box-shadow:0 8px 18px rgba(0,0,0,0.25);
+}
+
+.box:active{ transform:scale(0.94); }
+
+.box.selected{
+  border-color:var(--gold);
+  color:var(--gold);
+  box-shadow:0 0 22px rgba(255,184,0,0.35);
+  animation:pulseBox 2s infinite;
+}
+
+@keyframes pulseBox{
+  0%,100% { transform:scale(1); }
+  50% { transform:scale(1.04); }
+}
+
+.box.opened{
+  opacity:0;
+  pointer-events:none;
+  transform:scale(0.5) rotate(18deg);
+}
+
+.my-box-area{
+  margin-top:2px;
+  text-align:center;
+  padding:12px;
+  border:2px dashed rgba(255,255,255,0.10);
+  border-radius:22px;
+  width:100%;
+  background:rgba(255,255,255,0.02);
+}
+
+.myBoxSlot{
+  min-height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.boxHint{
+  font-size:10px;
+  font-weight:900;
+  opacity:0.42;
+  margin-top:8px;
+  letter-spacing:2px;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.92);
+  backdrop-filter:blur(12px);
+  z-index:1000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.modal.show{ display:flex; }
+
+.card{
+  width:100%;
+  max-width:400px;
+  background:#111;
+  padding:22px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.10);
+  text-align:center;
+  box-shadow:0 25px 70px rgba(0,0,0,.7);
+  max-height:88vh;
+  overflow:auto;
+  scrollbar-width:none;
+}
+.card::-webkit-scrollbar{ display:none; }
+
+.qWord{
+  font-size:34px;
+  font-weight:900;
+  color:var(--gold);
+  margin:18px 0 10px;
+  font-family:'Space Grotesk',sans-serif;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.qSub{
+  font-size:13px;
+  line-height:1.6;
+  opacity:.76;
+  margin-bottom:14px;
+}
+
+.optBtn{
+  width:100%;
+  padding:16px;
+  margin-bottom:10px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);
+  color:#fff;
+  font-weight:800;
+  font-size:15px;
+  cursor:pointer;
+  transition:0.2s;
+  font-family:inherit;
+}
+.optBtn:active{background:var(--blue);transform:scale(0.98)}
+
+.bankerCard{
+  border-color:var(--gold);
+  box-shadow:0 0 40px rgba(255,184,0,0.12);
+}
+
+.offerAmt{
+  font-size:42px;
+  font-weight:900;
+  color:#fff;
+  margin:20px 0;
+  text-shadow:0 0 20px rgba(255,255,255,0.2);
+  font-family:'Space Grotesk',sans-serif;
+}
+
+.btnMain{
+  width:100%;
+  padding:18px;
+  border-radius:18px;
+  border:none;
+  background:var(--cyan);
+  color:#000;
+  font-weight:1000;
+  font-size:16px;
+  cursor:pointer;
+  margin-top:10px;
+  font-family:inherit;
+}
+
+.btnNo{
+  background:rgba(255,255,255,0.08);
+  color:#fff;
+  border:1.5px solid rgba(255,255,255,0.18);
+}
+
+.langGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin:16px 0;
+}
+
+.langBtn{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  color:#fff;
+  border-radius:16px;
+  padding:14px 10px;
+  cursor:pointer;
+  transition:.16s ease;
+  min-height:84px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-weight:800;
+  font-family:inherit;
+}
+
+.langBtn .flag{ font-size:28px; }
+
+.langBtn.active{
+  border-color: rgba(0,255,157,.30);
+  box-shadow:0 0 0 1px rgba(0,255,157,.24), 0 0 18px rgba(0,255,157,.12);
+  background: rgba(0,255,157,.08);
+}
+
+.finalChoice{
+  display:flex;
+  gap:10px;
+  margin-top:12px;
+}
+.finalChoice .btnMain{
+  margin-top:0;
+  flex:1;
+}
+
+.rulesList{
+  text-align:left;
+  margin:16px 0 8px;
+  padding-left:18px;
+  line-height:1.8;
+  color:rgba(255,255,255,.86);
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+<main id="pageContent">
+  <div class="app">
+    <div class="hud">
+      <button id="backBtn" class="back-btn" type="button">‹</button>
+
+      <div class="hudCard">
+        <div class="hudBig" id="langDisp">🇬🇧 EN</div>
+        <div class="hudSmall">DİL</div>
+      </div>
+      <div class="hudCard">
+        <div class="hudBig" id="offerMini">—</div>
+        <div class="hudSmall">SON TEKLİF</div>
+      </div>
+      <div class="hudCard">
+        <div class="hudBig" id="roundDisp">0/30</div>
+        <div class="hudSmall">AÇILAN</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="statusTxt" id="statusTxt">KUTUNU SEÇ</div>
+      <div class="valueBoard" id="valueBoard"></div>
+      <div class="box-grid" id="boxGrid"></div>
+
+      <div class="my-box-area" id="myBoxArea">
+        <div class="myBoxSlot" id="myBoxSlot"></div>
+        <div class="boxHint">SENİN KUTUN</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal show" id="startModal">
+  <div class="card">
+    <h2 style="margin:0; color:var(--cyan); font-family:'Space Grotesk';">NEURAL BOX</h2>
+    <p style="font-size:14px; opacity:.8; line-height:1.6; margin:14px 0;">
+      Bayrağa dokun, oyun dilini seç.
+    </p>
+
+    <div class="langGrid" id="langGrid"></div>
+    <button class="btnMain" id="startBtn">DEVAM ET</button>
+  </div>
+</div>
+
+<div class="modal" id="rulesModal">
+  <div class="card">
+    <h2 style="margin:0; color:var(--gold); font-family:'Space Grotesk';">KURALLAR</h2>
+    <ul class="rulesList">
+      <li>Önce kendi kutunu seçersin.</li>
+      <li>Diğer kutuları açmak için soruları doğru cevaplaman gerekir.</li>
+      <li>Doğru bilirsen seçtiğin kutu açılır ve içindeki ödül masadan silinir.</li>
+      <li>Yanlış bilirsen sistem masadaki en büyük ödülü siler.</li>
+      <li>Belli aralıklarda banker teklif verir.</li>
+      <li>İstersen teklifi kabul eder, istersen devam edersin.</li>
+      <li>Finalde kendi kutunu tutabilir ya da son kutuyla değiştirebilirsin.</li>
+    </ul>
+    <button class="btnMain" id="rulesOkBtn">ANLADIM, BAŞLA</button>
+  </div>
+</div>
+
+<div class="modal" id="qModal">
+  <div class="card">
+    <p style="font-size:12px; font-weight:900; color:var(--cyan); letter-spacing:1px;">KUTUYU AÇMAK İÇİN BİL</p>
+    <div class="qWord" id="qWord">WORD</div>
+    <div class="qSub" id="qSub">Doğru Türkçe anlamı seç</div>
+    <div id="qOpts"></div>
+  </div>
+</div>
+
+<div class="modal" id="bankerModal">
+  <div class="card bankerCard">
+    <h2 style="color:var(--gold); margin:0; letter-spacing:2px;">BANKER TEKLİFİ</h2>
+    <p style="font-size:14px; opacity:0.7; margin:15px 0;">Banker masaya bunu koydu:</p>
+    <div class="offerAmt" id="offerAmt">500 P</div>
+    <button class="btnMain" id="btnDeal">VARIM</button>
+    <button class="btnMain btnNo" id="btnNoDeal">YOKUM</button>
+  </div>
+</div>
+
+<div class="modal" id="finalModal">
+  <div class="card bankerCard">
+    <h2 style="color:var(--gold); margin:0;">FİNAL</h2>
+    <p style="font-size:14px; opacity:.78; margin:14px 0;">Elindeki kutuyla son kutuyu değiştirmek ister misin?</p>
+    <div class="finalChoice">
+      <button class="btnMain" id="btnSwap">VARIM</button>
+      <button class="btnMain btnNo" id="btnKeep">YOKUM</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="resultModal">
+  <div class="card bankerCard">
+    <h2 style="margin:0; color:var(--gold);">SONUÇ</h2>
+    <div class="offerAmt" id="resultAmt">0 P</div>
+    <p id="resultText" style="opacity:.78; line-height:1.6;"></p>
+    <button class="btnMain" id="btnReplay">TEKRAR OYNA</button>
+    <button class="btnMain btnNo" id="btnBack">ANA MENÜ</button>
+  </div>
+</div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+
+const BACK_URL = "/pages/game_menu_public.html";
+const GAME_LANG_KEY = "italky_neural_box_lang_public";
+
+const LANGS = {
+  en:{ name:"İngilizce", flag:"🇬🇧" },
+  de:{ name:"Almanca", flag:"🇩🇪" },
+  fr:{ name:"Fransızca", flag:"🇫🇷" },
+  es:{ name:"İspanyolca", flag:"🇪🇸" },
+  it:{ name:"İtalyanca", flag:"🇮🇹" }
+};
+
+const LOCAL_FALLBACK = {
+  en:[
+    {w:"apple", tr:"Elma"}, {w:"house", tr:"Ev"}, {w:"water", tr:"Su"},
+    {w:"light", tr:"Işık"}, {w:"world", tr:"Dünya"}, {w:"friend", tr:"Arkadaş"},
+    {w:"school", tr:"Okul"}, {w:"family", tr:"Aile"}, {w:"music", tr:"Müzik"},
+    {w:"travel", tr:"Seyahat"}
+  ],
+  de:[
+    {w:"haus", tr:"Ev"}, {w:"wasser", tr:"Su"}, {w:"licht", tr:"Işık"},
+    {w:"freund", tr:"Arkadaş"}, {w:"schule", tr:"Okul"}, {w:"familie", tr:"Aile"}
+  ],
+  fr:[
+    {w:"maison", tr:"Ev"}, {w:"eau", tr:"Su"}, {w:"ami", tr:"Arkadaş"},
+    {w:"ecole", tr:"Okul"}, {w:"famille", tr:"Aile"}, {w:"musique", tr:"Müzik"}
+  ],
+  es:[
+    {w:"casa", tr:"Ev"}, {w:"agua", tr:"Su"}, {w:"amigo", tr:"Arkadaş"},
+    {w:"escuela", tr:"Okul"}, {w:"familia", tr:"Aile"}, {w:"musica", tr:"Müzik"}
+  ],
+  it:[
+    {w:"casa", tr:"Ev"}, {w:"acqua", tr:"Su"}, {w:"amico", tr:"Arkadaş"},
+    {w:"scuola", tr:"Okul"}, {w:"famiglia", tr:"Aile"}, {w:"musica", tr:"Müzik"}
+  ]
+};
+
+const VALUES = [
+  1,2,5,10,20,30,50,75,
+  100,150,200,300,500,750,1000,1500,
+  2000,3000,4000,5000,7500,10000,15000,20000,
+  30000,40000,50000,75000,100000,150000,250000,500000
+];
+
+const OFFER_PLAN = [6,5,4,4,3,3,2,2,1];
+
+const game = {
+  lang: localStorage.getItem(GAME_LANG_KEY) || "en",
+  selectedLang: localStorage.getItem(GAME_LANG_KEY) || "en",
+  poolItems: [],
+  usedWords: new Set(),
+  lastWordKey: "",
+  boardValues: [...VALUES],
+  boxes: [],
+  myBox: null,
+  stage: "PICK_MY_BOX",
+  roundStep: 0,
+  boxesToOpenThisRound: OFFER_PLAN[0],
+  boxesOpenedInRound: 0,
+  totalOpened: 0,
+  lastOffer: 0
+};
+
+let audioCtx = null;
+
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended"){
+    ctx.resume().catch(() => {});
+  }
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + .02);
+}
+
+function playTapFx() {
+  beep({ freq: 620, duration: .05, type: "triangle", gain: .035 });
+}
+
+function playBoxPickFx() {
+  beep({ freq: 420, duration: .08, type: "triangle", gain: .05 });
+  beep({ freq: 680, duration: .10, type: "triangle", gain: .04, when: .06 });
+}
+
+function playBoxOpenFx() {
+  beep({ freq: 860, duration: .09, type: "square", gain: .045 });
+  beep({ freq: 520, duration: .12, type: "triangle", gain: .04, when: .08 });
+}
+
+function playCorrectFx() {
+  beep({ freq: 520, duration: .08, type: "triangle", gain: .05 });
+  beep({ freq: 760, duration: .10, type: "triangle", gain: .05, when: .08 });
+}
+
+function playWrongFx() {
+  beep({ freq: 220, duration: .10, type: "sawtooth", gain: .05 });
+  beep({ freq: 170, duration: .12, type: "sawtooth", gain: .04, when: .06 });
+}
+
+function playBankerFx() {
+  beep({ freq: 330, duration: .10, type: "square", gain: .04 });
+  beep({ freq: 440, duration: .10, type: "square", gain: .04, when: .12 });
+  beep({ freq: 550, duration: .12, type: "triangle", gain: .04, when: .24 });
+}
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
+
+function normalize(s){
+  return String(s||"")
+    .toLowerCase()
+    .replace(/ß/g,"ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9 ]/g,"")
+    .trim();
+}
+
+function shuffle(arr){
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function renderLangs() {
+  $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+    <button class="langBtn ${game.selectedLang===code ? "active" : ""}" data-lang="${code}">
+      <div class="flag">${meta.flag}</div>
+      <div>${meta.name}</div>
+    </button>
+  `).join("");
+
+  $("langGrid").querySelectorAll(".langBtn").forEach(btn => {
+    btn.onclick = () => {
+      playTapFx();
+      game.selectedLang = btn.dataset.lang;
+      renderLangs();
+    };
+  });
+}
+
+function getPublicLangUrl(langCode) {
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
+}
+
+function extractItems(payload) {
+  if(Array.isArray(payload)) return payload;
+
+  if(payload && typeof payload === "object"){
+    const keys = ["items","words","data","list","entries","pool","vocabulary","kelimeler"];
+    for(const key of keys){
+      if(Array.isArray(payload[key])) return payload[key];
+    }
+
+    for(const value of Object.values(payload)){
+      if(Array.isArray(value)) return value;
+    }
+  }
+
+  return [];
+}
+
+function normalizePoolItems(items) {
+  return items.map((item) => {
+    if(typeof item === "string") return null;
+
+    const rawWord =
+      item?.word ??
+      item?.w ??
+      item?.text ??
+      item?.term ??
+      item?.answer ??
+      item?.source ??
+      item?.value ??
+      "";
+
+    const rawMeaning =
+      item?.meaning ??
+      item?.tr ??
+      item?.translation ??
+      item?.mean ??
+      item?.hint ??
+      item?.target ??
+      item?.turkish ??
+      item?.turkce ??
+      item?.ceviri ??
+      "";
+
+    return {
+      w: String(rawWord || "").trim(),
+      tr: String(rawMeaning || "").trim()
+    };
+  }).filter(x => x.w && x.tr && !x.w.includes(" "));
+}
+
+async function loadLangPool(lang) {
+  try{
+    const url = getPublicLangUrl(lang);
+    const res = await fetch(url, { cache:"no-store" });
+
+    if(!res.ok){
+      console.warn("[neural_public] pool fetch failed:", url, res.status);
+      return { items: LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en };
+    }
+
+    const json = await res.json();
+    const items = normalizePoolItems(extractItems(json));
+
+    if(!items.length){
+      console.warn("[neural_public] pool empty, fallback:", lang);
+      return { items: LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en };
+    }
+
+    return { items };
+  }catch(e){
+    console.warn("[neural_public] pool error, fallback:", e);
+    return { items: LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en };
+  }
+}
+
+function nextUniqueItem() {
+  if(!game.poolItems.length) return null;
+
+  if(game.usedWords.size >= game.poolItems.length){
+    game.usedWords.clear();
+  }
+
+  let candidate = null;
+  let guard = 0;
+
+  while(guard < 120){
+    const pick = game.poolItems[Math.floor(Math.random() * game.poolItems.length)];
+    const key = normalize(pick.w);
+
+    if(!game.usedWords.has(key) && key !== game.lastWordKey){
+      game.usedWords.add(key);
+      game.lastWordKey = key;
+      candidate = pick;
+      break;
+    }
+
+    guard++;
+  }
+
+  if(!candidate){
+    const fallback = game.poolItems.find(x => normalize(x.w) !== game.lastWordKey) || game.poolItems[0];
+    game.lastWordKey = normalize(fallback.w);
+    game.usedWords.add(game.lastWordKey);
+    candidate = fallback;
+  }
+
+  return candidate;
+}
+
+function renderBoard() {
+  $("valueBoard").innerHTML = VALUES.map(v =>
+    `<div class="valTag ${game.boardValues.includes(v) ? 'active' : 'removed'}" id="val-${v}">${v.toLocaleString()} P</div>`
+  ).join("");
+}
+
+function updateHud() {
+  $("langDisp").textContent = `${LANGS[game.lang]?.flag || "🌐"} ${game.lang.toUpperCase()}`;
+  $("offerMini").textContent = game.lastOffer ? `${game.lastOffer.toLocaleString()} P` : "—";
+  $("roundDisp").textContent = `${game.totalOpened}/30`;
+}
+
+function setStatus(text) {
+  $("statusTxt").textContent = text;
+}
+
+function createBoxes() {
+  const shuffledValues = shuffle([...VALUES]);
+  const grid = $("boxGrid");
+  grid.innerHTML = "";
+  game.boxes = [];
+
+  for(let i = 0; i < 32; i++) {
+    const b = { id: i+1, val: shuffledValues[i], opened: false };
+    game.boxes.push(b);
+
+    const el = document.createElement("div");
+    el.className = "box";
+    el.textContent = b.id;
+    el.onclick = () => handleBoxClick(b, el);
+    grid.appendChild(el);
+  }
+}
+
+function handleBoxClick(box, el) {
+  if(game.stage === "PICK_MY_BOX"){
+    playBoxPickFx();
+    game.myBox = box;
+    el.classList.add("selected");
+    $("myBoxSlot").innerHTML = "";
+    $("myBoxSlot").appendChild(el);
+    game.stage = "OPEN_BOXES";
+    setStatus("BİR KUTU SEÇ VE ELE");
+    return;
+  }
+
+  if(game.stage === "OPEN_BOXES" && !box.opened && box !== game.myBox){
+    playTapFx();
+    askQuestion(box, el);
+  }
+}
+
+function askQuestion(box, el) {
+  const item = nextUniqueItem();
+
+  if(!item){
+    alert("Soru havuzu bulunamadı.");
+    return;
+  }
+
+  $("qWord").textContent = item.w.toUpperCase();
+  $("qSub").textContent = "Doğru Türkçe anlamı seç";
+  $("qModal").classList.add("show");
+
+  let opts = [item.tr];
+
+  while(opts.length < 4){
+    const r = game.poolItems[Math.floor(Math.random() * game.poolItems.length)]?.tr;
+    if(r && !opts.includes(r)) opts.push(r);
+  }
+
+  opts = shuffle(opts);
+
+  $("qOpts").innerHTML = opts.map(o =>
+    `<button class="optBtn">${o}</button>`
+  ).join("");
+
+  $("qOpts").querySelectorAll(".optBtn").forEach(btn => {
+    btn.onclick = () => {
+      playTapFx();
+
+      if(btn.textContent === item.tr){
+        playCorrectFx();
+        box.opened = true;
+        el.classList.add("opened");
+        removeValue(box.val);
+        game.totalOpened++;
+        setTimeout(() => {
+          playBoxOpenFx();
+          checkRoundFlow();
+        }, 180);
+      }else{
+        playWrongFx();
+        box.opened = true;
+        el.classList.add("opened");
+
+        const sortedActive = [...game.boardValues].sort((a,b) => b-a);
+        const highVal = sortedActive[0];
+        removeValue(highVal);
+
+        game.totalOpened++;
+        setTimeout(() => {
+          playBoxOpenFx();
+          checkRoundFlow();
+        }, 180);
+      }
+
+      $("qModal").classList.remove("show");
+    };
+  });
+}
+
+function removeValue(val) {
+  game.boardValues = game.boardValues.filter(v => v !== val);
+  const el = $(`val-${val}`);
+  if(el) el.className = "valTag removed";
+}
+
+function checkRoundFlow() {
+  updateHud();
+
+  if(game.totalOpened === 30){
+    game.stage = "FINAL_CHOICE";
+    showFinalSwap();
+    return;
+  }
+
+  game.boxesOpenedInRound++;
+
+  if(game.boxesOpenedInRound >= game.boxesToOpenThisRound){
+    showBankerOffer();
+  }else{
+    setStatus("DEVAM ET VE BİR KUTU DAHA AÇ");
+  }
+}
+
+function showBankerOffer() {
+  const avg = game.boardValues.reduce((a,b) => a+b, 0) / game.boardValues.length;
+  const riskMultiplier =
+    game.boardValues.length <= 4 ? 0.92 :
+    game.boardValues.length <= 8 ? 0.84 :
+    game.boardValues.length <= 16 ? 0.78 : 0.70;
+
+  const offer = Math.floor(avg * riskMultiplier);
+
+  game.lastOffer = offer;
+  updateHud();
+  playBankerFx();
+
+  $("offerAmt").textContent = offer.toLocaleString() + " P";
+  $("bankerModal").classList.add("show");
+}
+
+function continueAfterBanker() {
+  $("bankerModal").classList.remove("show");
+  game.boxesOpenedInRound = 0;
+  game.roundStep = Math.min(game.roundStep + 1, OFFER_PLAN.length - 1);
+  game.boxesToOpenThisRound = OFFER_PLAN[game.roundStep];
+  setStatus("DEVAM ET VE KUTU AÇ");
+}
+
+function finishWithAmount(amount, text) {
+  $("resultAmt").textContent = `${amount.toLocaleString()} P`;
+  $("resultText").textContent = text;
+  $("resultModal").classList.add("show");
+}
+
+function showFinalSwap() {
+  $("finalModal").classList.add("show");
+}
+
+async function beginGame() {
+  game.lang = game.selectedLang;
+  localStorage.setItem(GAME_LANG_KEY, game.lang);
+
+  const pool = await loadLangPool(game.lang);
+
+  if(!pool || !Array.isArray(pool.items) || pool.items.length === 0){
+    alert("Bu dil için havuz yüklenemedi.");
+    return;
+  }
+
+  game.poolItems = shuffle(pool.items);
+  game.usedWords.clear();
+  game.lastWordKey = "";
+  game.boardValues = [...VALUES];
+  game.boxes = [];
+  game.myBox = null;
+  game.stage = "PICK_MY_BOX";
+  game.roundStep = 0;
+  game.boxesToOpenThisRound = OFFER_PLAN[0];
+  game.boxesOpenedInRound = 0;
+  game.totalOpened = 0;
+  game.lastOffer = 0;
+
+  $("myBoxSlot").innerHTML = "";
+  $("rulesModal").classList.remove("show");
+  $("bankerModal").classList.remove("show");
+  $("finalModal").classList.remove("show");
+  $("resultModal").classList.remove("show");
+
+  renderBoard();
+  createBoxes();
+  updateHud();
+  setStatus("KUTUNU SEÇ");
+}
+
+async function prepareStart() {
+  game.lang = game.selectedLang;
+  localStorage.setItem(GAME_LANG_KEY, game.lang);
+
+  $("startModal").classList.remove("show");
+  $("rulesModal").classList.add("show");
+}
+
+$("startBtn").onclick = prepareStart;
+$("rulesOkBtn").onclick = beginGame;
+
+$("btnNoDeal").onclick = continueAfterBanker;
+
+$("btnDeal").onclick = () => {
+  $("bankerModal").classList.remove("show");
+  finishWithAmount(game.lastOffer, "Banker teklifini kabul ettin. Oyun bu ödülle bitti.");
+};
+
+$("btnSwap").onclick = () => {
+  $("finalModal").classList.remove("show");
+  const otherBox = game.boxes.find(b => !b.opened && b !== game.myBox);
+  if(otherBox) game.myBox = otherBox;
+  finishWithAmount(game.myBox.val, "Kutunu değiştirdin. Açılan ödül bu.");
+};
+
+$("btnKeep").onclick = () => {
+  $("finalModal").classList.remove("show");
+  finishWithAmount(game.myBox.val, "Kendi kutunu tuttun. Açılan ödül bu.");
+};
+
+$("btnReplay").onclick = () => {
+  $("resultModal").classList.remove("show");
+  beginGame();
+};
+
+$("btnBack").onclick = () => {
+  location.href = BACK_URL;
+};
+
+$("backBtn").onclick = () => {
+  location.href = BACK_URL;
+};
+
+window.addEventListener("load", () => {
+  renderLangs();
+  renderBoard();
+  updateHud();
+
+  setTimeout(() => {
+    $("pageContent")?.classList.add("ui-ready");
+  }, 120);
+});
+</script>
+</body>
+</html>
