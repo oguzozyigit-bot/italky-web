@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Echo Rush Public</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#030305;
+      --border: rgba(255,255,255,0.12);
+      --cyan:#00f0ff;
+      --pink:#ff0055;
+      --green:#00e676;
+      --gold:#ffd700;
+      --red:#ff1744;
+      --font-main:'Outfit',sans-serif;
+      --font-display:'Space Grotesk',sans-serif;
+      --accent: var(--cyan);
+      --accentGlow: rgba(0,240,255,0.18);
+      --safeB: env(safe-area-inset-bottom, 0px);
+      --safeT: env(safe-area-inset-top, 0px);
+    }
+
+    *{box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; outline:none}
+    html,body{
+      margin:0; padding:0; width:100%; height:100%;
+      overflow:hidden; position:fixed;
+      font-family:var(--font-main); color:#fff; background:var(--bg);
+    }
+
+    .bg-fx{
+      position:absolute; inset:0; z-index:0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(15,15,35,0.85) 0%, rgba(0,0,0,1) 70%),
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%);
+    }
+
+    .nebula{
+      position:absolute; width:120vmax; height:120vmax; border-radius:50%;
+      filter: blur(90px); opacity:0.16;
+      animation: breathe 10s infinite alternate ease-in-out;
+      pointer-events:none; mix-blend-mode: screen;
+    }
+
+    .nebula.a{ left:-35vmax; top:-35vmax; background: var(--accent); }
+    .nebula.b{ right:-35vmax; bottom:-35vmax; background: rgba(255,255,255,0.14); animation-delay:-4s; }
+
+    @keyframes breathe{
+      0%{ transform:scale(1); opacity:.11 }
+      100%{ transform:scale(1.18); opacity:.22 }
+    }
+
+    #pageContent{
+      position:relative;
+      z-index:10;
+      width:100%;
+      height:100dvh;
+      padding:calc(18px + var(--safeT)) 14px calc(22px + var(--safeB)) 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      opacity:0;
+      transform:scale(1.03);
+      transition:.45s ease;
+    }
+
+    #pageContent.ui-ready{
+      opacity:1;
+      transform:scale(1);
+    }
+
+    .card{
+      width:min(92vw, 430px);
+      min-height:560px;
+      border-radius:32px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.035);
+      backdrop-filter:blur(14px);
+      box-shadow:0 28px 70px rgba(0,0,0,0.55), 0 0 40px var(--accentGlow);
+      position:relative;
+      padding:18px 18px 16px;
+      overflow:hidden;
+    }
+
+    .back-btn{
+      position:absolute;
+      left:14px;
+      top:14px;
+      width:40px;
+      height:40px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+      font-size:24px;
+      font-weight:900;
+      z-index:30;
+      cursor:pointer;
+    }
+
+    .toprow{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      position:relative;
+      z-index:2;
+      padding-left:48px;
+    }
+
+    .playerName{
+      font-family:var(--font-display);
+      font-weight:800;
+      font-size:18px;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      color:var(--accent);
+      text-shadow:0 0 18px rgba(255,255,255,0.06);
+    }
+
+    .meta{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:8px;
+    }
+
+    .chip{
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:1px;
+      padding:6px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(0,0,0,0.35);
+      backdrop-filter:blur(10px);
+      opacity:.92;
+    }
+
+    .score{text-align:right;}
+
+    .scoreLabel{
+      font-size:10px;
+      font-weight:900;
+      opacity:.5;
+      letter-spacing:1px;
+    }
+
+    .scoreVal{
+      font-size:30px;
+      font-weight:900;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      color:transparent;
+      line-height:1;
+    }
+
+    .hearts{
+      display:flex;
+      gap:6px;
+      margin-top:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      max-width:150px;
+    }
+
+    .heart{
+      font-size:20px;
+      filter:drop-shadow(0 0 10px var(--red));
+      transition:.3s;
+    }
+
+    .mid{
+      min-height:320px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      padding:10px 6px;
+      position:relative;
+      z-index:2;
+    }
+
+    .roundTag{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:2px;
+      opacity:.62;
+      margin-bottom:10px;
+    }
+
+    .mainWord{
+      font-family:var(--font-display);
+      font-weight:800;
+      font-size:44px;
+      letter-spacing:-1px;
+      line-height:1.05;
+      margin:0 0 10px;
+      text-shadow:0 18px 60px rgba(0,0,0,0.55);
+    }
+
+    .subMeaning{
+      font-size:18px;
+      font-weight:600;
+      color:rgba(255,255,255,0.68);
+      min-height:26px;
+    }
+
+    .helper{
+      margin-top:18px;
+      min-height:24px;
+      font-size:13px;
+      font-weight:800;
+      color:rgba(255,255,255,.60);
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      width:100%;
+      height:58px;
+      position:relative;
+      z-index:2;
+    }
+
+    .btn{
+      flex:1;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.06);
+      color:#fff;
+      font-family:var(--font-display);
+      font-weight:800;
+      font-size:13px;
+      letter-spacing:.4px;
+      cursor:pointer;
+      transition:.12s;
+      backdrop-filter:blur(10px);
+      box-shadow:0 10px 22px rgba(0,0,0,0.25);
+    }
+
+    .btn:active{
+      transform:scale(.95);
+      background:rgba(255,255,255,0.12);
+    }
+
+    .btn:disabled{
+      opacity:.25;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-mic{
+      flex:1;
+      background:rgba(255,255,255,0.14);
+      border-color:rgba(255,255,255,0.25);
+      font-size:15px;
+    }
+
+    .btn-mic.listening{
+      background:#fff !important;
+      color:#000 !important;
+      animation:pulse 1s infinite;
+    }
+
+    @keyframes pulse{
+      0%{ box-shadow: 0 0 0 0 rgba(255,255,255,0.38); }
+      100%{ box-shadow: 0 0 0 18px rgba(255,255,255,0); }
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      background:rgba(0,0,0,0.82);
+      backdrop-filter:blur(16px);
+      opacity:0;
+      pointer-events:none;
+      transition:.18s;
+      z-index:20;
+      padding:18px;
+      text-align:center;
+      overflow:hidden;
+    }
+
+    .overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .ovTitle{
+      font-family:var(--font-display);
+      font-weight:900;
+      font-size:42px;
+      margin:0;
+      letter-spacing:-1px;
+      position:relative;
+      z-index:2;
+    }
+
+    .ovSub{
+      margin-top:10px;
+      font-size:16px;
+      color:rgba(255,255,255,0.8);
+      min-height:20px;
+      position:relative;
+      z-index:2;
+      white-space:pre-line;
+    }
+
+    .ovBadge{
+      margin-top:14px;
+      padding:7px 14px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:13px;
+      border:1px solid rgba(255,255,255,0.16);
+      background:rgba(255,255,255,0.08);
+      display:none;
+      position:relative;
+      z-index:2;
+    }
+
+    .success-burst{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+      transition:.18s;
+    }
+
+    .overlay.show.good .success-burst{opacity:1;}
+
+    .burst-ring{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:90px;
+      height:90px;
+      border-radius:50%;
+      border:2px solid rgba(0,255,157,.35);
+      transform:translate(-50%, -50%);
+      animation: burstRing 1s ease-out infinite;
+    }
+
+    .burst-ring.r2{
+      width:150px;
+      height:150px;
+      animation-delay:.18s;
+    }
+
+    .burst-ring.r3{
+      width:210px;
+      height:210px;
+      animation-delay:.34s;
+    }
+
+    @keyframes burstRing{
+      0%{ transform:translate(-50%, -50%) scale(.75); opacity:.75; }
+      100%{ transform:translate(-50%, -50%) scale(1.25); opacity:0; }
+    }
+
+    .sparkles{position:absolute; inset:0;}
+
+    .spark{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:radial-gradient(circle, #fff 0%, var(--green) 45%, transparent 70%);
+      box-shadow:0 0 18px rgba(0,255,157,.45);
+      animation: sparkle 1.2s ease-in-out infinite;
+    }
+
+    .s1{ left:18%; top:28%; animation-delay:.05s; }
+    .s2{ left:72%; top:20%; animation-delay:.18s; }
+    .s3{ left:26%; top:72%; animation-delay:.30s; }
+    .s4{ left:78%; top:66%; animation-delay:.45s; }
+    .s5{ left:50%; top:18%; animation-delay:.12s; }
+    .s6{ left:50%; top:78%; animation-delay:.38s; }
+
+    @keyframes sparkle{
+      0%,100%{ transform:scale(.6); opacity:.18; }
+      50%{ transform:scale(1.3); opacity:1; }
+    }
+
+    .launchGate{
+      position:fixed;
+      inset:0;
+      z-index:50000;
+      background:rgba(0,0,0,.95);
+      backdrop-filter:blur(14px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+    }
+
+    .launchBox{
+      width:min(92vw, 420px);
+      border-radius:30px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(18,18,24,.96), rgba(6,6,10,.96));
+      padding:24px;
+      box-shadow:0 25px 70px rgba(0,0,0,0.7);
+      text-align:center;
+    }
+
+    .launchTitle{
+      font-family:var(--font-display);
+      font-weight:900;
+      font-size:28px;
+      margin:0 0 8px;
+    }
+
+    .launchSub{
+      font-size:14px;
+      color:rgba(255,255,255,.72);
+      line-height:1.6;
+      margin-bottom:16px;
+      font-weight:700;
+    }
+
+    .langGrid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-bottom:16px;
+    }
+
+    .langCard{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      padding:14px 10px;
+      min-height:92px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      transition:.18s ease;
+      font-family:inherit;
+      color:#fff;
+    }
+
+    .langCard:active{ transform:scale(.98); }
+
+    .langCard.active{
+      border-color:rgba(0,255,157,.45);
+      box-shadow:0 0 0 1px rgba(0,255,157,.30), 0 0 22px rgba(0,255,157,.12);
+      background:linear-gradient(180deg, rgba(0,255,157,.08), rgba(255,255,255,.04));
+    }
+
+    .langFlag{font-size:28px; line-height:1;}
+    .langName{font-size:16px; font-weight:900; line-height:1.1;}
+
+    .launchBtn{
+      width:100%;
+      height:56px;
+      border:none;
+      border-radius:18px;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      color:#fff;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      font-family:inherit;
+    }
+
+    @media (max-width:420px){
+      .mainWord{ font-size:38px; }
+      .langGrid{ grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="bg-fx"></div>
+<div class="nebula a"></div>
+<div class="nebula b"></div>
+
+<main id="pageContent">
+  <div class="card">
+    <button id="backBtn" class="back-btn" type="button">‹</button>
+
+    <div class="overlay" id="overlay">
+      <div class="success-burst">
+        <div class="burst-ring"></div>
+        <div class="burst-ring r2"></div>
+        <div class="burst-ring r3"></div>
+        <div class="sparkles">
+          <div class="spark s1"></div>
+          <div class="spark s2"></div>
+          <div class="spark s3"></div>
+          <div class="spark s4"></div>
+          <div class="spark s5"></div>
+          <div class="spark s6"></div>
+        </div>
+      </div>
+      <h2 class="ovTitle" id="ovTitle">HARİKA!</h2>
+      <div class="ovSub" id="ovSub">+5 PUAN</div>
+      <div class="ovBadge" id="ovBadge">%100 BENZERLİK</div>
+    </div>
+
+    <div class="toprow">
+      <div>
+        <div class="playerName">ECHO RUSH</div>
+      </div>
+
+      <div class="meta">
+        <div class="chip" id="chipRound">0</div>
+
+        <div class="score">
+          <div class="scoreLabel">SKOR</div>
+          <div class="scoreVal" id="scoreVal">0</div>
+          <div class="scoreLabel" style="margin-top:6px;">REKOR: <span id="bestVal">0</span></div>
+        </div>
+
+        <div class="hearts" id="hearts"></div>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="roundTag" id="langTag">DİL</div>
+      <div class="mainWord" id="wMain">...</div>
+      <div class="subMeaning" id="wSub">...</div>
+      <div class="helper" id="helperText">Kelimeyi dinle ve tekrar et</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-mic" id="btnMic">🎙️ TEKRAR ET</button>
+    </div>
+  </div>
+</main>
+
+<div class="launchGate" id="launchGate">
+  <div class="launchBox">
+    <div class="launchTitle">Echo Rush</div>
+    <div class="launchSub">Bayrağa dokun, oyun dilini seç. Login öncesi kullanımda reklam menüden gösterilir.</div>
+
+    <div class="langGrid" id="langGrid"></div>
+
+    <button class="launchBtn" id="launchBtn">BAŞLA</button>
+  </div>
+</div>
+
+<script type="module">
+const $ = (id)=>document.getElementById(id);
+
+const BACK_URL = "/pages/game_menu_public.html";
+const GAME_LANG_KEY = "italky_echo_rush_lang_public";
+
+const LANGS = {
+  en:{ name:"İngilizce", flag:"🇬🇧", bcp:"en-US" },
+  de:{ name:"Almanca",   flag:"🇩🇪", bcp:"de-DE" },
+  fr:{ name:"Fransızca", flag:"🇫🇷", bcp:"fr-FR" },
+  es:{ name:"İspanyolca",flag:"🇪🇸", bcp:"es-ES" },
+  it:{ name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" }
+};
+
+const LOCAL_FALLBACK = {
+  en:[
+    {word:"apple", meaning:"Elma"}, {word:"house", meaning:"Ev"}, {word:"water", meaning:"Su"},
+    {word:"light", meaning:"Işık"}, {word:"world", meaning:"Dünya"}, {word:"friend", meaning:"Arkadaş"}
+  ],
+  de:[
+    {word:"haus", meaning:"Ev"}, {word:"wasser", meaning:"Su"}, {word:"licht", meaning:"Işık"},
+    {word:"freund", meaning:"Arkadaş"}, {word:"schule", meaning:"Okul"}
+  ],
+  fr:[
+    {word:"maison", meaning:"Ev"}, {word:"eau", meaning:"Su"}, {word:"ami", meaning:"Arkadaş"},
+    {word:"ecole", meaning:"Okul"}
+  ],
+  es:[
+    {word:"casa", meaning:"Ev"}, {word:"agua", meaning:"Su"}, {word:"amigo", meaning:"Arkadaş"},
+    {word:"escuela", meaning:"Okul"}
+  ],
+  it:[
+    {word:"casa", meaning:"Ev"}, {word:"acqua", meaning:"Su"}, {word:"amico", meaning:"Arkadaş"},
+    {word:"scuola", meaning:"Okul"}
+  ]
+};
+
+const state = {
+  lang: localStorage.getItem(GAME_LANG_KEY) || "",
+  pool: [],
+  used: new Set(),
+  current: null,
+  lastWordKey: "",
+  score: 0,
+  best: 0,
+  lives: 3,
+  maxLives: 9,
+  roundsPlayed: 0,
+  listening: false,
+  recog: null,
+  selectedLang: localStorage.getItem(GAME_LANG_KEY) || "en"
+};
+
+let audioCtx = null;
+
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended"){
+    ctx.resume().catch(() => {});
+  }
+
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+
+  osc.connect(g);
+  g.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration + .02);
+}
+
+function playHitFx(){
+  beep({freq:720,duration:.07,type:"triangle",gain:.05});
+  beep({freq:920,duration:.08,type:"triangle",gain:.04,when:.05});
+}
+
+function playMissFx(){
+  beep({freq:220,duration:.10,type:"sawtooth",gain:.05});
+  beep({freq:170,duration:.12,type:"sawtooth",gain:.04,when:.04});
+}
+
+function playWinFx(){
+  beep({freq:523,duration:.09,type:"triangle",gain:.05});
+  beep({freq:659,duration:.09,type:"triangle",gain:.05,when:.08});
+  beep({freq:784,duration:.11,type:"triangle",gain:.05,when:.16});
+  beep({freq:1046,duration:.15,type:"triangle",gain:.05,when:.26});
+}
+
+function playLoseFx(){
+  beep({freq:250,duration:.12,type:"square",gain:.05});
+  beep({freq:180,duration:.15,type:"square",gain:.04,when:.10});
+}
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => {
+    unlockAudio();
+  }, { passive:true, once:true });
+});
+
+function nativeSpeak(text, lang){
+  try{
+    if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
+      window.NativeTTS.speak(String(text || "").trim(), String(lang || "en").trim());
+      return true;
+    }
+  }catch{}
+  return false;
+}
+
+async function speak(text, lang) {
+  const t = String(text || "").trim();
+  if(!t) return;
+
+  await unlockAudio();
+
+  if(nativeSpeak(t, lang)) return;
+
+  if(!("speechSynthesis" in window)) return;
+
+  try { window.speechSynthesis.cancel(); } catch {}
+
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = LANGS[lang]?.bcp || "en-US";
+  u.rate = 0.9;
+  u.pitch = 1;
+  u.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices?.() || [];
+  if(voices?.length){
+    const base = lang;
+    const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(base));
+    if(found) u.voice = found;
+  }
+
+  setTimeout(() => {
+    try { window.speechSynthesis.speak(u); } catch {}
+  }, 100);
+}
+
+function normalize(s){
+  return String(s||"")
+    .toLowerCase()
+    .replace(/ß/g,"ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9 ]/g,"")
+    .trim();
+}
+
+function editDistance(a,b){
+  const s1=String(a), s2=String(b);
+  const costs = new Array(s2.length+1);
+  for(let j=0;j<=s2.length;j++) costs[j]=j;
+  for(let i=1;i<=s1.length;i++){
+    let prev=i-1;
+    costs[0]=i;
+    for(let j=1;j<=s2.length;j++){
+      const tmp=costs[j];
+      const val=Math.min(costs[j]+1, costs[j-1]+1, prev+(s1[i-1]===s2[j-1]?0:1));
+      costs[j]=val; prev=tmp;
+    }
+  }
+  return costs[s2.length];
+}
+
+function similarityScore(a,b){
+  const s1=normalize(a), s2=normalize(b);
+  if(!s1 && !s2) return 100;
+  if(!s1 || !s2) return 0;
+  if(s2.includes(s1)) return 100;
+  const longer = s1.length >= s2.length ? s1 : s2;
+  const shorter = s1.length >= s2.length ? s2 : s1;
+  const dist = editDistance(longer, shorter);
+  return Math.max(0, Math.min(100, Math.floor(((longer.length - dist)/longer.length)*100)));
+}
+
+function showOverlay({ title, titleColor, sub, badgeText, good }) {
+  $("ovTitle").textContent = title;
+  $("ovTitle").style.color = titleColor || "#fff";
+  $("ovSub").textContent = sub || "";
+  $("ovBadge").style.display = badgeText ? "block" : "none";
+  $("ovBadge").textContent = badgeText || "";
+  $("overlay").classList.toggle("good", !!good);
+  $("overlay").classList.add("show");
+}
+
+function hideOverlay(){
+  $("overlay").classList.remove("show", "good");
+}
+
+function renderLangPicker() {
+  const grid = $("langGrid");
+  grid.innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+    <button class="langCard ${state.selectedLang===code ? "active" : ""}" data-lang="${code}" type="button">
+      <div class="langFlag">${meta.flag}</div>
+      <div class="langName">${meta.name}</div>
+    </button>
+  `).join("");
+
+  grid.querySelectorAll(".langCard").forEach(btn => {
+    btn.onclick = () => {
+      state.selectedLang = btn.dataset.lang;
+      renderLangPicker();
+    };
+  });
+}
+
+function getPublicLangUrl(langCode) {
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
+}
+
+function extractItems(payload) {
+  if(Array.isArray(payload)) return payload;
+
+  if(payload && typeof payload === "object"){
+    const keys = ["items", "words", "data", "list", "entries", "pool", "vocabulary", "kelimeler"];
+    for(const key of keys){
+      if(Array.isArray(payload[key])) return payload[key];
+    }
+
+    for(const value of Object.values(payload)){
+      if(Array.isArray(value)) return value;
+    }
+  }
+
+  return [];
+}
+
+function normalizePoolItems(items) {
+  return items.map((item) => {
+    if(typeof item === "string"){
+      return { word:item, meaning:"—" };
+    }
+
+    const rawWord =
+      item?.word ??
+      item?.w ??
+      item?.text ??
+      item?.term ??
+      item?.answer ??
+      item?.source ??
+      item?.value ??
+      "";
+
+    const rawMeaning =
+      item?.meaning ??
+      item?.tr ??
+      item?.translation ??
+      item?.mean ??
+      item?.hint ??
+      item?.target ??
+      item?.turkish ??
+      item?.turkce ??
+      item?.ceviri ??
+      "";
+
+    return {
+      word: String(rawWord || "").trim(),
+      meaning: String(rawMeaning || "").trim()
+    };
+  }).filter(x => x.word);
+}
+
+async function loadPool(lang) {
+  try{
+    const url = getPublicLangUrl(lang);
+    const res = await fetch(url, { cache:"no-store" });
+
+    if(!res.ok){
+      console.warn("[echo_public] pool fetch failed:", url, res.status);
+      return LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en;
+    }
+
+    const json = await res.json();
+    const items = normalizePoolItems(extractItems(json));
+
+    if(!items.length){
+      console.warn("[echo_public] pool empty, fallback:", lang);
+      return LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en;
+    }
+
+    return items;
+  }catch(e){
+    console.warn("[echo_public] pool error, fallback:", e);
+    return LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en;
+  }
+}
+
+function renderHearts() {
+  $("hearts").innerHTML = Array.from({length: state.lives}).map(() => `<span class="heart">❤️</span>`).join("");
+}
+
+function renderHud() {
+  $("langTag").textContent = `${LANGS[state.lang]?.flag || "🌐"} ${LANGS[state.lang]?.name || state.lang}`;
+  $("scoreVal").textContent = String(state.score);
+  $("bestVal").textContent = String(state.best);
+  $("chipRound").textContent = `${state.roundsPlayed}`;
+}
+
+function readCurrentWord() {
+  if(!state.current?.word) return;
+  speak(state.current.word, state.lang);
+}
+
+function loadBest() {
+  try {
+    const localBest = Number(localStorage.getItem(`echo_rush_best_public_${state.lang}`) || 0);
+    if(localBest > state.best) state.best = localBest;
+  } catch {}
+}
+
+function saveBest() {
+  if(state.score <= state.best) return;
+  state.best = state.score;
+
+  try {
+    localStorage.setItem(`echo_rush_best_public_${state.lang}`, String(state.best));
+  } catch {}
+}
+
+function nextItem() {
+  if(!state.pool.length) return null;
+
+  if(state.used.size >= state.pool.length){
+    state.used.clear();
+  }
+
+  let item = null;
+  let guard = 0;
+
+  while(guard < 100){
+    const pick = state.pool[Math.floor(Math.random() * state.pool.length)];
+    const key = normalize(pick.word);
+
+    if(key !== state.lastWordKey && !state.used.has(key)){
+      state.used.add(key);
+      state.lastWordKey = key;
+      item = pick;
+      break;
+    }
+    guard++;
+  }
+
+  if(!item){
+    const fallback = state.pool.find((x) => normalize(x.word) !== state.lastWordKey) || state.pool[0];
+    state.lastWordKey = normalize(fallback.word);
+    state.used.add(state.lastWordKey);
+    item = fallback;
+  }
+
+  return item;
+}
+
+function renderCurrent() {
+  if(!state.current) return;
+  $("wMain").textContent = state.current.word;
+  $("wSub").textContent = state.current.meaning || "—";
+  $("helperText").textContent = "Kelimeyi dinle ve tekrar et";
+  renderHud();
+  renderHearts();
+}
+
+function startRound() {
+  hideOverlay();
+
+  state.current = nextItem();
+  if(!state.current) return;
+
+  state.roundsPlayed += 1;
+  renderCurrent();
+
+  setTimeout(() => {
+    readCurrentWord();
+  }, 280);
+}
+
+function finishRound(success, similarity) {
+  if(success){
+    state.score += 5;
+    let bonusText = "+5 PUAN";
+
+    if(similarity === 100 && state.lives < state.maxLives){
+      state.lives += 1;
+      bonusText = "+5 PUAN • +1 CAN";
+    }
+
+    playWinFx();
+    saveBest();
+
+    showOverlay({
+      title: "OYUN BAŞARILI",
+      titleColor: "var(--green)",
+      sub: bonusText,
+      badgeText: `%${similarity} BENZERLİK`,
+      good: true
+    });
+  }else{
+    state.lives -= 1;
+    playLoseFx();
+
+    showOverlay({
+      title: "OYUN BAŞARISIZ",
+      titleColor: "var(--red)",
+      sub: `${state.current.word}\n${state.current.meaning}`,
+      badgeText: `%${similarity} BENZERLİK`,
+      good: false
+    });
+  }
+
+  renderHud();
+  renderHearts();
+
+  setTimeout(() => {
+    if(state.lives <= 0){
+      state.score = 0;
+      state.lives = 3;
+      state.used.clear();
+      state.lastWordKey = "";
+    }
+    startRound();
+  }, 3000);
+}
+
+function startListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if(!SR){
+    showOverlay({
+      title: "SES DESTEKLENMİYOR",
+      titleColor: "var(--red)",
+      sub: "Bu cihazda konuşma algılama yok",
+      badgeText: "",
+      good: false
+    });
+    setTimeout(() => hideOverlay(), 1800);
+    return;
+  }
+
+  state.listening = true;
+  $("btnMic").classList.add("listening");
+  $("btnMic").textContent = "👂 DİNLİYOR";
+
+  const rec = new SR();
+  state.recog = rec;
+  rec.lang = LANGS[state.lang]?.bcp || "en-US";
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  const watchdog = setTimeout(() => {
+    try { rec.stop(); } catch {}
+  }, 7000);
+
+  rec.onresult = async (e) => {
+    clearTimeout(watchdog);
+    const spoken = e.results?.[0]?.[0]?.transcript || "";
+    const similarity = similarityScore(state.current.word, spoken);
+
+    state.listening = false;
+    $("btnMic").classList.remove("listening");
+    $("btnMic").textContent = "🎙️ TEKRAR ET";
+
+    finishRound(similarity >= 95, similarity);
+  };
+
+  rec.onerror = () => {
+    clearTimeout(watchdog);
+    state.listening = false;
+    $("btnMic").classList.remove("listening");
+    $("btnMic").textContent = "🎙️ TEKRAR ET";
+    showOverlay({
+      title: "TEKRAR DENE",
+      titleColor: "var(--red)",
+      sub: "Dinleme başarısız oldu",
+      badgeText: "",
+      good: false
+    });
+    setTimeout(() => hideOverlay(), 1500);
+  };
+
+  rec.onend = () => {
+    clearTimeout(watchdog);
+    if(state.listening){
+      state.listening = false;
+      $("btnMic").classList.remove("listening");
+      $("btnMic").textContent = "🎙️ TEKRAR ET";
+    }
+  };
+
+  rec.start();
+}
+
+async function launchGame() {
+  state.lang = state.selectedLang;
+  localStorage.setItem(GAME_LANG_KEY, state.lang);
+
+  $("launchGate").style.display = "none";
+
+  state.pool = await loadPool(state.lang);
+  loadBest();
+
+  if(!state.pool.length){
+    $("launchGate").style.display = "flex";
+    showOverlay({
+      title: "HAVUZ YOK",
+      titleColor: "var(--red)",
+      sub: "Bu dil için oyun havuzu bulunamadı",
+      badgeText: "",
+      good: false
+    });
+    setTimeout(() => hideOverlay(), 1800);
+    return;
+  }
+
+  renderHud();
+  renderHearts();
+  startRound();
+}
+
+$("launchBtn").addEventListener("click", launchGame);
+$("btnMic").addEventListener("click", startListening);
+$("backBtn").addEventListener("click", () => {
+  location.href = BACK_URL;
+});
+
+(function init(){
+  renderLangPicker();
+  renderHud();
+  renderHearts();
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
+
+  setTimeout(() => {
+    $("pageContent")?.classList.add("ui-ready");
+  }, 120);
+})();
+</script>
+</body>
+</html>
