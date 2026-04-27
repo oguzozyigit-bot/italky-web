@@ -1006,7 +1006,7 @@
 
       <div class="subscription-note">
         <strong>Reklamsız italkyAI</strong><br/>
-        349,90 TL (Yıllık)  Yıllık abonelik ödemesi Google Play tarafından tahsil edilir. Abonelik sonrası 12 ay boyunca hiçbir modülde reklam görmeden kullanabilirsiniz.
+        349,90 TL / 12 ay. Yıllık abonelik ödemesi Google Play tarafından tahsil edilir. Abonelik sonrası 12 ay boyunca hiçbir modülde reklam görmeden kullanabilirsiniz.
       </div>
 
       <div class="drawer-footer-seal">
@@ -1112,9 +1112,81 @@
   <div id="toast" class="toast"></div>
 
   <script type="module">
-    import { getLangPoolForSite } from "/js/lang_pool_full.js";
-    import { supabase } from "/js/supabase_client.js";
-    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
+    let getLangPoolForSite = null;
+    let supabase = null;
+    let OfflinePackBridge = null;
+
+    try {
+      const mod = await import("/js/lang_pool_full.js");
+      getLangPoolForSite = mod.getLangPoolForSite;
+    } catch (e) {
+      console.error("lang_pool_full.js yüklenemedi:", e);
+    }
+
+    try {
+      const mod = await import("/js/supabase_client.js");
+      supabase = mod.supabase;
+    } catch (e) {
+      console.error("supabase_client.js yüklenemedi:", e);
+    }
+
+    try {
+      const mod = await import("/js/offline_pack_bridge.js?v=8");
+      OfflinePackBridge = mod.OfflinePackBridge;
+    } catch (e) {
+      console.error("offline_pack_bridge.js yüklenemedi:", e);
+    }
+
+    if (!OfflinePackBridge) {
+      OfflinePackBridge = {
+        canonical(code) {
+          return String(code || "").trim().toLowerCase().split("-")[0] || "";
+        },
+        installDownloadEventHandlers() {},
+        syncInstalledPairsFromNative() {},
+        preloadRewardedAd() {},
+        setOfflineNativeLang(code) {
+          try {
+            localStorage.setItem("italky_native_lang_v7", String(code || "tr"));
+          } catch {}
+        },
+        hasAnyInstalledPair() { return false; },
+        clearInstalledPairs() {},
+        getInstalledPairs() { return {}; },
+        hasInstalledPair() { return false; },
+        saveHomeWidget() {},
+        isPairActive() { return false; },
+        isPairQueued() { return false; },
+        startNativeDownload() {
+          return { ok:false, error:"native_installer_missing" };
+        },
+        async showRewardedAd() {
+          return true;
+        },
+        async translateOffline() {
+          return null;
+        }
+      };
+    }
+
+    if (!getLangPoolForSite) {
+      getLangPoolForSite = function () {
+        return [
+          { code:"tr", name:"Türkçe", flag:"🇹🇷" },
+          { code:"en", name:"İngilizce", flag:"🇬🇧" },
+          { code:"de", name:"Almanca", flag:"🇩🇪" },
+          { code:"fr", name:"Fransızca", flag:"🇫🇷" },
+          { code:"it", name:"İtalyanca", flag:"🇮🇹" },
+          { code:"es", name:"İspanyolca", flag:"🇪🇸" },
+          { code:"ar", name:"Arapça", flag:"🇸🇦" },
+          { code:"ru", name:"Rusça", flag:"🇷🇺" },
+          { code:"pt", name:"Portekizce", flag:"🇵🇹" },
+          { code:"zh", name:"Çince", flag:"🇨🇳" },
+          { code:"ja", name:"Japonca", flag:"🇯🇵" },
+          { code:"ko", name:"Korece", flag:"🇰🇷" }
+        ];
+      };
+    }
 
     const API_BASE = "https://italky-api.onrender.com";
     const $ = (id) => document.getElementById(id);
@@ -2169,6 +2241,11 @@
     }
 
     async function startWebGoogleLogin(){
+      if (!supabase) {
+        showToast(tx("loginFailed"));
+        return;
+      }
+
       const redirectTo = `${location.origin}/pages/login.html?next=${encodeURIComponent(HOME_URL)}`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider:"google",
@@ -2195,6 +2272,11 @@
 
     window.onNativeLoginSuccess = async function(payload){
       try{
+        if (!supabase) {
+          showToast(tx("loginFailed"));
+          return;
+        }
+
         const data = typeof payload === "string" ? JSON.parse(payload) : payload;
         const idToken = String(data?.id_token || data?.idToken || "").trim();
 
@@ -2264,10 +2346,17 @@
     }
 
     async function boot(){
-      OfflinePackBridge.installDownloadEventHandlers(langObj);
-      syncInstalledPairsFromNative();
+      try {
+        OfflinePackBridge.installDownloadEventHandlers(langObj);
+      } catch {}
 
-      try{ OfflinePackBridge.preloadRewardedAd(); }catch{}
+      try {
+        syncInstalledPairsFromNative();
+      } catch {}
+
+      try {
+        OfflinePackBridge.preloadRewardedAd();
+      } catch {}
 
       const params = new URLSearchParams(location.search);
       const hasRouteLang = params.get("source") || params.get("target");
