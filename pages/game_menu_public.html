@@ -28,7 +28,6 @@
     --glass-border: rgba(255,255,255,0.15);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
-    --shellLift: 0px;
   }
 
   #pageContent{
@@ -253,7 +252,7 @@
 
   <div class="game-hub">
 
-    <div class="game-card g-pink" data-game-id="word_cracker" data-url="/pages/word_cracker.html?public=1">
+    <div class="game-card g-pink" data-game-id="word_cracker" data-url="/pages/public/word_cracker.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">🔐</div>
@@ -267,7 +266,7 @@
       </div>
     </div>
 
-    <div class="game-card g-pink" data-game-id="echo_rush" data-url="/pages/echo_rush.html?public=1">
+    <div class="game-card g-pink" data-game-id="echo_rush" data-url="/pages/public/echo_rush.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">🤝</div>
@@ -281,7 +280,7 @@
       </div>
     </div>
 
-    <div class="game-card g-blue" data-game-id="gap_master" data-url="/pages/gap_master.html?public=1">
+    <div class="game-card g-blue" data-game-id="gap_master" data-url="/pages/public/gap_master.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">📝</div>
@@ -295,7 +294,7 @@
       </div>
     </div>
 
-    <div class="game-card g-pink" data-game-id="glitch" data-url="/pages/glitch.html?public=1">
+    <div class="game-card g-pink" data-game-id="glitch" data-url="/pages/public/glitch.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">👾</div>
@@ -309,7 +308,7 @@
       </div>
     </div>
 
-    <div class="game-card g-yellow" data-game-id="hangman" data-url="/pages/hangman.html?public=1">
+    <div class="game-card g-yellow" data-game-id="hangman" data-url="/pages/public/hangman.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">🪂</div>
@@ -323,7 +322,7 @@
       </div>
     </div>
 
-    <div class="game-card g-blue" data-game-id="memory_pulse" data-url="/pages/memory_pulse.html?public=1">
+    <div class="game-card g-blue" data-game-id="memory_pulse" data-url="/pages/public/memory_pulse.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">🧠</div>
@@ -337,7 +336,7 @@
       </div>
     </div>
 
-    <div class="game-card g-yellow" data-game-id="meteor" data-url="/pages/meteor.html?public=1">
+    <div class="game-card g-yellow" data-game-id="meteor" data-url="/pages/public/meteor.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">☄️</div>
@@ -351,7 +350,7 @@
       </div>
     </div>
 
-    <div class="game-card g-blue" data-game-id="morse_game" data-url="/pages/morse_game.html?public=1">
+    <div class="game-card g-blue" data-game-id="morse_game" data-url="/pages/public/morse_game.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">📡</div>
@@ -365,7 +364,7 @@
       </div>
     </div>
 
-    <div class="game-card g-pink" data-game-id="neural_box" data-url="/pages/neural_box.html?public=1">
+    <div class="game-card g-pink" data-game-id="neural_box" data-url="/pages/public/neural_box.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">📦</div>
@@ -379,7 +378,7 @@
       </div>
     </div>
 
-    <div class="game-card g-yellow" data-game-id="duo_friend" data-url="/pages/duo_friend.html?public=1">
+    <div class="game-card g-yellow" data-game-id="duo_friend" data-url="/pages/public/duo_friend.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">⚔️</div>
@@ -393,7 +392,7 @@
       </div>
     </div>
 
-    <div class="game-card g-yellow" data-game-id="sentence_master" data-url="/pages/sentence_master.html?public=1">
+    <div class="game-card g-yellow" data-game-id="sentence_master" data-url="/pages/public/sentence_master.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">🧩</div>
@@ -407,7 +406,7 @@
       </div>
     </div>
 
-    <div class="game-card g-blue" data-game-id="signal_hunt" data-url="/pages/signal_hunt.html?public=1">
+    <div class="game-card g-blue" data-game-id="signal_hunt" data-url="/pages/public/signal_hunt.html?public=1">
       <div class="game-icon-wrap">
         <div class="game-icon-bg"></div>
         <div class="game-emoji">🕵️</div>
@@ -436,11 +435,14 @@
   const toastEl = document.getElementById("toast");
 
   let isLoggedIn = false;
+  let busy = false;
 
   function toast(msg){
     if(!toastEl) return;
+
     toastEl.textContent = String(msg || "");
     toastEl.classList.add("show");
+
     clearTimeout(window.__gameToastTimer);
     window.__gameToastTimer = setTimeout(() => {
       toastEl.classList.remove("show");
@@ -461,6 +463,8 @@
   }
 
   async function openGame(card){
+    if(busy) return;
+
     const targetUrl = card.getAttribute("data-url") || "";
     const gameId = card.getAttribute("data-game-id") || "game";
     const gameTitle = card.querySelector("h2")?.textContent?.trim() || "Oyun";
@@ -472,11 +476,8 @@
       return;
     }
 
-    /*
-      Her oyuna girişte 1 reklam istiyoruz.
-      Oyundan çıkmadan tekrar reklam yok mantığı oyun sayfasının içinde devam eder.
-      Menüden tekrar girerse yine reklam gösterilir.
-    */
+    busy = true;
+
     try{
       resetModuleAdStateForDebug();
     }catch{}
@@ -490,6 +491,7 @@
     });
 
     if(!ok){
+      busy = false;
       toast("Reklam tamamlanmadan oyun başlatılmadı.");
       return;
     }
