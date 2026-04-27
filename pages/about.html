@@ -1,20 +1,33 @@
+<!-- /pages/about.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Hakkımızda</title>
+
   <link rel="icon" href="data:," />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
-    :root {
-      --neon: #00f2ff;
-      --pink: #ff007a;
-      --ai-grad: linear-gradient(135deg, #00f2ff 0%, #7000ff 50%, #ff007a 100%);
-      --bg: #060408;
-      --card-bg: rgba(255,255,255,.03);
-      --card-br: rgba(255,255,255,.08);
+    :root{
+      --bg:#07111f;
+      --bg2:#0b1d33;
+      --navy:#0f2742;
+      --blue:#2f80ed;
+      --blue2:#38bdf8;
+      --ice:#eaf6ff;
+      --text:#f8fbff;
+      --muted:rgba(248,251,255,.68);
+      --soft:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.12);
+      --line2:rgba(56,189,248,.20);
+      --card:rgba(10,28,48,.72);
+      --grad:linear-gradient(135deg,#dbeafe 0%,#60a5fa 34%,#2563eb 72%,#0f2742 100%);
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
     }
 
     *{
@@ -23,129 +36,276 @@
       outline:none;
     }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: 100%;
-      background: var(--bg);
-      color: #fff;
-      font-family: 'Outfit', sans-serif;
-    }
-
-    body{
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:'Outfit',sans-serif;
       overflow-x:hidden;
     }
 
-    .bg-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
+    body{
       background:
-        radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.15) 0%, transparent 40%),
-        linear-gradient(180deg, #0f0816 0%, #060408 100%);
+        radial-gradient(circle at 16% 0%, rgba(56,189,248,.18), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(37,99,235,.16), transparent 26%),
+        radial-gradient(circle at 50% 100%, rgba(14,165,233,.10), transparent 30%),
+        linear-gradient(180deg,var(--bg2),var(--bg));
     }
 
-    .crystal-wrap {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      perspective: 1200px;
-      pointer-events: none;
-      z-index: 2;
+    .bg-layer{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:1;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:42px 42px;
+      opacity:.28;
+      mask-image:linear-gradient(to bottom, black, transparent 80%);
+      -webkit-mask-image:linear-gradient(to bottom, black, transparent 80%);
     }
 
-    .crystal-cage {
-      width: 300px;
-      height: 300px;
-      transform-style: preserve-3d;
-      animation: rotateCrystal 22s linear infinite;
-      opacity: 0.15;
-    }
-
-    .side {
-      position: absolute;
-      inset: 0;
-      border: 1px solid var(--neon);
-      background: radial-gradient(circle, rgba(0, 242, 255, 0.05), transparent);
-    }
-
-    .s1{ transform:rotateY(0deg) translateZ(150px); }
-    .s2{ transform:rotateY(90deg) translateZ(150px); }
-    .s3{ transform:rotateX(90deg) translateZ(150px); }
-
-    @keyframes rotateCrystal {
-      from { transform: rotateX(0deg) rotateY(0deg); }
-      to { transform: rotateX(360deg) rotateY(720deg); }
+    .orb{
+      position:fixed;
+      width:300px;
+      height:300px;
+      border-radius:50%;
+      right:-130px;
+      top:70px;
+      background:radial-gradient(circle, rgba(56,189,248,.16), transparent 68%);
+      filter:blur(8px);
+      pointer-events:none;
+      z-index:1;
     }
 
     #pageContent{
-      position: relative;
-      z-index: 10;
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 20px 0 6px;
+      position:relative;
+      z-index:10;
+      width:100%;
+      max-width:520px;
+      min-height:100dvh;
+      margin:0 auto;
+      padding:calc(18px + var(--safe-top)) 16px calc(22px + var(--safe-bottom));
       display:flex;
       flex-direction:column;
-      gap:18px;
+      gap:16px;
     }
 
-    .content-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-br);
-      border-radius: 32px;
-      padding: 26px 22px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-      animation: cardIn 0.6s ease-out forwards;
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
     }
 
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .brand{
+      min-width:0;
     }
 
-    h1 {
-      margin: 0 0 20px;
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--neon);
-      text-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
-      letter-spacing: -0.5px;
+    .brand-main{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:30px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:-1px;
     }
 
-    p {
-      margin: 0 0 18px;
-      color: rgba(255, 255, 255, 0.85);
-      line-height: 1.65;
-      font-size: 15px;
-      font-weight: 300;
+    .brand-main .ai{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
 
-    p:last-child{
+    .brand-sub{
+      margin-top:7px;
+      display:inline-flex;
+      padding:6px 11px;
+      border-radius:999px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(248,251,255,.72);
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:1.7px;
+    }
+
+    .back-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+      font-size:24px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:0 14px 28px rgba(0,0,0,.18);
+    }
+
+    .hero{
+      border-radius:30px;
+      padding:18px;
+      background:
+        radial-gradient(circle at top right, rgba(56,189,248,.17), transparent 36%),
+        linear-gradient(145deg, rgba(15,39,66,.88), rgba(7,17,31,.82));
+      border:1px solid var(--line2);
+      box-shadow:0 22px 48px rgba(0,0,0,.26);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg, transparent, rgba(255,255,255,.05), transparent);
+      pointer-events:none;
+    }
+
+    .hero-badge{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.11);
+      color:#bfdbfe;
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.5px;
+      margin-bottom:12px;
+    }
+
+    h1{
+      position:relative;
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:30px;
+      line-height:1.08;
+      font-weight:900;
+      letter-spacing:-1px;
+    }
+
+    h1 span{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero p{
+      position:relative;
+      margin:11px 0 0;
+      font-size:14px;
+      line-height:1.6;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .content-card{
+      border-radius:30px;
+      padding:18px;
+      background:var(--card);
+      border:1px solid var(--line);
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+      box-shadow:0 24px 54px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04);
+      animation:cardIn .45s ease forwards;
+    }
+
+    @keyframes cardIn{
+      from{opacity:0; transform:translateY(14px)}
+      to{opacity:1; transform:translateY(0)}
+    }
+
+    .content-card p{
+      margin:0 0 16px;
+      color:rgba(248,251,255,.82);
+      line-height:1.7;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .content-card p:last-child{
       margin-bottom:0;
     }
 
-    @media (max-width: 520px){
+    .feature-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin:0;
+    }
+
+    .feature{
+      border-radius:22px;
+      padding:14px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.10);
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .feature-icon{
+      width:42px;
+      height:42px;
+      min-width:42px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(56,189,248,.10);
+      border:1px solid rgba(56,189,248,.20);
+      font-size:21px;
+    }
+
+    .feature-title{
+      font-size:14px;
+      font-weight:1000;
+      color:#fff;
+      margin-bottom:4px;
+    }
+
+    .feature-text{
+      font-size:12px;
+      line-height:1.5;
+      color:rgba(248,251,255,.64);
+      font-weight:700;
+    }
+
+    .notice{
+      border-radius:22px;
+      padding:14px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(248,251,255,.64);
+      font-size:12px;
+      line-height:1.5;
+      font-weight:700;
+    }
+
+    @media(max-width:520px){
       #pageContent{
-        padding: 18px 0 6px;
+        padding:calc(16px + var(--safe-top)) 14px calc(20px + var(--safe-bottom));
       }
 
-      .content-card{
-        border-radius:28px;
-        padding:22px 18px;
+      .brand-main{
+        font-size:28px;
       }
 
       h1{
-        font-size:24px;
+        font-size:27px;
       }
 
-      p{
-        font-size:14px;
+      .content-card{
+        padding:16px;
       }
     }
   </style>
@@ -153,70 +313,204 @@
 
 <body>
   <div class="bg-layer"></div>
+  <div class="orb"></div>
 
-  <div class="crystal-wrap">
-    <div class="crystal-cage">
-      <div class="side s1"></div>
-      <div class="side s2"></div>
-      <div class="side s3"></div>
+  <main id="pageContent">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-main">italky<span class="ai">AI</span></div>
+        <div class="brand-sub">BE FREE</div>
+      </div>
+
+      <button id="backBtn" class="back-btn" type="button">‹</button>
     </div>
-  </div>
 
-  <div id="pageContent">
-    <div id="content" class="content-card"></div>
-  </div>
+    <section class="hero" id="heroHost"></section>
+
+    <section class="content-card" id="contentHost"></section>
+
+    <section class="feature-grid" id="featureHost"></section>
+
+    <div class="notice" id="noticeHost"></div>
+  </main>
+
+  <template id="hero_tr">
+    <div class="hero-badge">Hakkımızda</div>
+    <h1>Dil Bariyerini <span>Yeni Nesil</span> Bir Deneyime Dönüştürüyoruz</h1>
+    <p>italkyAI; çeviri, konuşma, öğrenme, kültür ve oyunlaştırmayı tek bir yapıda buluşturan yapay zekâ destekli iletişim platformudur.</p>
+  </template>
+
+  <template id="hero_en">
+    <div class="hero-badge">About Us</div>
+    <h1>Turning Language Barriers Into a <span>Next-Generation</span> Experience</h1>
+    <p>italkyAI is an AI-powered communication platform that brings translation, speaking, learning, culture, and gamified practice together.</p>
+  </template>
 
   <template id="about_tr">
-    <h1>Hakkımızda</h1>
-    <p>italkyAI, dili sadece çevirmek için değil, gerçekten yaşatmak için geliştirilen yapay zekâ destekli bir iletişim platformudur. Amacımız insanları kalıplarla boğmak değil; konuşurken, yazarken ve öğrenirken dili doğal akışında kolaylaştırmaktır.</p>
-    <p>Bu yüzden sistemin içinde sadece klasik çeviri yok. Yüz yüze konuşmaları anlık akıtan modüller, yazıdan çeviri, çevrimdışı kullanım, Sohbet AI, oyunlar ve seviye tespit gibi günlük hayatta işe yarayan alanlar bir araya getirildi. Dil, burada menü menü ezberlenen bir konu değil; yaşayan bir deneyimdir.</p>
-    <p>italkyAI’nin en güçlü taraflarından biri de kültürel yaklaşımıdır. Turan Dilleri, Ataların Dili, Kafkasların Dili, Mezopotamya Dili ve Balkanların Dili gibi özel modüllerle yalnızca kelime çevirmeyi değil, kökleri, coğrafyayı ve aidiyet duygusunu da korumayı hedefliyoruz.</p>
-    <p>Biz bu yapıyı soğuk bir yazılım gibi değil, kendini sürekli geliştiren bir yapay zekâ modeli gibi düşünüyoruz. Dinleyen, öğrenen, sadeleşen ve zamanla daha doğru yardımcı olan bir sistem kuruyoruz. Hedefimiz büyük ama hissi basit: İnsan konuşsun, italkyAI aradaki duvarı sessizce kaldırsın.</p>
+    <p>italkyAI, yalnızca kelime çeviren klasik bir araç olarak değil, insanın gerçek hayatta iletişim kurma biçimine uyum sağlayan yeni nesil bir platform olarak tasarlandı. Amacımız, kullanıcının konuşurken, yazarken, öğrenirken veya farklı kültürlerle temas ederken dil engeline takılmadan ilerlemesini sağlamak.</p>
+
+    <p>Yeni mimarimizde uygulama herkes için erişilebilir olacak şekilde kurgulanır. Login öncesi bazı alanlar reklam destekli kullanılabilir; giriş yapan ve reklamsız kullanım hakkı bulunan kullanıcılar ise uygulama içinde daha temiz, kesintisiz bir deneyim yaşar. Böylece hem ücretsiz erişim korunur hem de reklamsız kullanım isteyenler için ayrı bir yol açılır.</p>
+
+    <p>Platformun merkezinde anlık çeviri, yüz yüze iletişim, yazıdan çeviri, offline dil paketleri, oyunlarla öğrenme, seviye tespit ve sohbet tabanlı yapay zekâ deneyimi yer alır. Kullanıcı yalnızca çeviri yapmaz; dilini geliştirir, seviyesini ölçer, pratik yapar ve öğrendiklerini günlük kullanımda pekiştirir.</p>
+
+    <p>italkyAI’nin en ayırt edici taraflarından biri kültürel dil yaklaşımıdır. Ataların Dili, Turan Dilleri, Kafkasların Dili, Mezopotamya Dili ve Balkan Dilleri gibi modüllerle sadece kelime karşılıklarını değil; kökleri, coğrafyayı, hafızayı ve aidiyet duygusunu da önemseyen bir yapı kurulmaktadır.</p>
+
+    <p>Bizim için teknoloji, kullanıcıyı yormayan bir yardımcı olmalıdır. italkyAI bu yüzden sade, hızlı ve anlaşılır bir akış üzerine inşa ediliyor. Hedefimiz büyük; hissi ise çok net: İnsan konuşsun, italkyAI aradaki duvarı sessizce kaldırsın.</p>
   </template>
 
   <template id="about_en">
-    <h1>About Us</h1>
-    <p>italkyAI is an AI-powered communication platform built not only to translate language, but to make it truly usable in real life. Our goal is not to trap people inside rigid patterns, but to make speaking, writing, and learning feel natural and easier.</p>
-    <p>That is why the system goes beyond ordinary translation. Live face-to-face flow, text translation, offline use, Chat AI, games, and level detection all come together in one place. Language here is not a dry subject to memorize; it is a living experience.</p>
-    <p>One of the strongest sides of italkyAI is its cultural approach. With dedicated modules such as Turan Languages, Ancestors’ Language, Language of the Caucasus, Language of Mesopotamia, and Language of the Balkans, we aim to preserve not only words, but also roots, geography, and identity.</p>
-    <p>We see italkyAI not as a cold piece of software, but as an AI model that keeps improving. A system that listens, learns, becomes simpler, and grows into a more useful guide over time. The goal is ambitious, but the feeling is simple: let people speak, and let italkyAI quietly remove the barrier in between.</p>
+    <p>italkyAI was designed not as a traditional word-by-word translation tool, but as a next-generation platform that adapts to how people communicate in real life. Our goal is to help users speak, write, learn, and connect with different cultures without being blocked by language barriers.</p>
+
+    <p>With the new architecture, the app is designed to remain accessible to everyone. Some pre-login areas can be used with ad-supported access, while signed-in users with an ad-free plan can enjoy a cleaner and uninterrupted experience inside the app. This keeps free access available while also offering a dedicated path for users who prefer an ad-free experience.</p>
+
+    <p>At the center of the platform are instant translation, face-to-face communication, text translation, offline language packs, learning through games, level detection, and chat-based AI experiences. Users do not only translate; they improve their language, measure their level, practice, and reinforce what they learn in daily use.</p>
+
+    <p>One of the most distinctive sides of italkyAI is its cultural language approach. With modules such as Ancestors’ Language, Turan Languages, Language of the Caucasus, Language of Mesopotamia, and Balkan Languages, the platform aims to value not only words, but also roots, geography, memory, and identity.</p>
+
+    <p>For us, technology should be a helpful companion that does not overwhelm the user. That is why italkyAI is being built around a simple, fast, and understandable flow. The ambition is big, but the feeling is clear: let people speak, and let italkyAI quietly remove the wall in between.</p>
   </template>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { supabase } from "/js/supabase_client.js";
-    import { getSiteLang } from "/js/i18n.js";
+  <script>
+    const heroHost = document.getElementById("heroHost");
+    const contentHost = document.getElementById("contentHost");
+    const featureHost = document.getElementById("featureHost");
+    const noticeHost = document.getElementById("noticeHost");
+    const backBtn = document.getElementById("backBtn");
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const FEATURES = {
+      tr:[
+        {
+          icon:"🌍",
+          title:"80+ dilde iletişim",
+          text:"Günlük konuşma, yazıdan çeviri ve canlı iletişim akışlarında geniş dil desteği hedeflenir."
+        },
+        {
+          icon:"📶",
+          title:"Offline kullanım mantığı",
+          text:"İndirilen dil paketleriyle internet olmayan anlarda da temel çeviri deneyimi sunulması amaçlanır."
+        },
+        {
+          icon:"🎮",
+          title:"Oyunlarla öğrenme",
+          text:"Kelime, cümle, dinleme, hafıza ve refleks temelli oyunlarla öğrenme daha eğlenceli hale gelir."
+        },
+        {
+          icon:"🧭",
+          title:"Seviye tespit",
+          text:"Kullanıcı seviyesini görerek öğrenmeye daha doğru noktadan başlayabilir."
+        },
+        {
+          icon:"🏛️",
+          title:"Kültürel dil modülleri",
+          text:"Turan, Kafkas, Mezopotamya, Balkan ve Ataların Dili gibi alanlarla dilin kültürel yönü de korunur."
+        },
+        {
+          icon:"🚫",
+          title:"Reklamsız seçenek",
+          text:"Reklam destekli erişimin yanında, reklamsız yıllık kullanım için ayrı bir model sunulur."
+        }
+      ],
+      en:[
+        {
+          icon:"🌍",
+          title:"Communication in 80+ languages",
+          text:"Broad language support is aimed across daily speech, text translation, and live communication flows."
+        },
+        {
+          icon:"📶",
+          title:"Offline usage logic",
+          text:"Downloaded language packs are designed to provide essential translation support even without internet."
+        },
+        {
+          icon:"🎮",
+          title:"Learning through games",
+          text:"Word, sentence, listening, memory, and reflex-based games make learning more engaging."
+        },
+        {
+          icon:"🧭",
+          title:"Level detection",
+          text:"Users can understand their level and start learning from a more accurate point."
+        },
+        {
+          icon:"🏛️",
+          title:"Cultural language modules",
+          text:"Turan, Caucasus, Mesopotamia, Balkan, and Ancestors’ Language modules preserve the cultural side of language."
+        },
+        {
+          icon:"🚫",
+          title:"Ad-free option",
+          text:"Alongside ad-supported access, a separate annual ad-free model is offered."
+        }
+      ]
+    };
 
-    mountShell({
-      scroll: "auto",
-      publicPage: !session?.user
-    });
+    function getLang(){
+      const raw =
+        localStorage.getItem("site_lang") ||
+        localStorage.getItem("italky_site_lang_v1") ||
+        navigator.language ||
+        "tr";
 
-    function render(){
-      const lang = (getSiteLang?.() || localStorage.getItem("site_lang") || "tr").toLowerCase();
-      const host = document.getElementById("content");
-
-      let template = document.getElementById(`about_${lang}`);
-      if(!template) template = document.getElementById("about_tr");
-
-      host.innerHTML = "";
-      if(template){
-        host.appendChild(template.content.cloneNode(true));
-      }
-
-      const h1 = host.querySelector("h1");
-      document.title = h1 ? `italkyAI • ${h1.textContent}` : "italkyAI";
+      const code = String(raw).toLowerCase().slice(0,2);
+      return ["tr","en"].includes(code) ? code : "tr";
     }
 
-    render();
+    function templateId(prefix){
+      const lang = getLang();
+      return `${prefix}_${lang}`;
+    }
+
+    function renderFeatures(lang){
+      const items = FEATURES[lang] || FEATURES.tr;
+
+      featureHost.innerHTML = items.map((item) => `
+        <article class="feature">
+          <div class="feature-icon">${item.icon}</div>
+          <div>
+            <div class="feature-title">${item.title}</div>
+            <div class="feature-text">${item.text}</div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function render(){
+      const lang = getLang();
+
+      heroHost.innerHTML = "";
+      contentHost.innerHTML = "";
+      noticeHost.innerHTML = "";
+
+      const heroTpl = document.getElementById(templateId("hero")) || document.getElementById("hero_tr");
+      const aboutTpl = document.getElementById(templateId("about")) || document.getElementById("about_tr");
+
+      heroHost.appendChild(heroTpl.content.cloneNode(true));
+      contentHost.appendChild(aboutTpl.content.cloneNode(true));
+      renderFeatures(lang);
+
+      noticeHost.textContent = lang === "en"
+        ? "italkyAI is being developed as a practical communication and learning platform. Features, access rules, and module availability may evolve over time."
+        : "italkyAI pratik bir iletişim ve öğrenme platformu olarak geliştirilmektedir. Özellikler, erişim kuralları ve modül kapsamları zamanla geliştirilebilir.";
+
+      document.title = lang === "en" ? "italkyAI • About Us" : "italkyAI • Hakkımızda";
+    }
+
+    backBtn?.addEventListener("click", () => {
+      if(history.length > 1){
+        history.back();
+        return;
+      }
+
+      location.href = "/pages/login.html";
+    });
 
     window.addEventListener("storage", (e) => {
       if(e.key === "italky_site_lang_v1" || e.key === "site_lang"){
         render();
       }
     });
+
+    render();
   </script>
 </body>
 </html>
