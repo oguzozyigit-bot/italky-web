@@ -1965,36 +1965,44 @@
     console.warn("speechSynthesis failed:", e);
   }
 }
-    async function finalizeSpeech(side,text){
-      const clean = cleanupTranscript(text);
-      if(!clean) return;
+   override fun onResults(results: Bundle?) {
+    nativeSpeechListening = false
+    nativeSpeechManualStop = false
 
-      const adOk = await maybeShowAd();
-      if(!adOk) return;
+    val list = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+    val text = list?.firstOrNull()?.trim().orEmpty()
 
-      const src = side === "top" ? topLang : botLang;
-      const dst = side === "top" ? botLang : topLang;
-      const other = side === "top" ? "bot" : "top";
+    if (text.isBlank()) {
+        val partial = nativeSpeechPartial.toString().trim()
 
-      addBubble(side,clean,false);
-      const targetRow = addBubble(other,"",true);
+        if (partial.isNotBlank()) {
+            val js = """
+                window.onNativeSpeechResult({
+                    side:"$speechSide",
+                    text:${jsonEscape(partial)}
+                })
+            """.trimIndent()
 
-      const translated = await translateText(clean,src,dst);
+            nativeSpeechPartial.clear()
+            sendToWeb(js)
+            return
+        }
 
-      if(!translated){
-        if(targetRow) targetRow.textContent = tx("translateError");
-        return;
-      }
+        nativeSpeechPartial.clear()
+        sendToWeb("window.onNativeSpeechError('no speech')")
+        return
+    }
 
-      targetRow.textContent = translated;
+    val js = """
+        window.onNativeSpeechResult({
+            side:"$speechSide",
+            text:${jsonEscape(text)}
+        })
+    """.trimIndent()
 
-      speak(translated,dst);
-
-if(currentMode === "online"){
-  maybeOfferOfflinePackAfterTranslate();
+    nativeSpeechPartial.clear()
+    sendToWeb(js)
 }
-
-    function startRecording(side){
       if(recognizer){
         stopRecognizer();
         return;
