@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Gap Master Public</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#08111b;
+      --bg2:#0d1724;
+      --blue:#22d3ee;
+      --pink:#ff4d8d;
+      --green:#22c55e;
+      --red:#ef4444;
+      --gold:#f59e0b;
+      --glass:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.12);
+      --text:#f8fafc;
+      --muted:#94a3b8;
+      --safeB:env(safe-area-inset-bottom,0px);
+      --safeT:env(safe-area-inset-top,0px);
+      --grad:linear-gradient(135deg,#67e8f9 0%, #60a5fa 50%, #34d399 100%);
+    }
+
+    *{box-sizing:border-box;outline:none;user-select:none;-webkit-tap-highlight-color:transparent}
+
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      font-family:'Outfit',sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(34,211,238,.10), transparent 20%),
+        radial-gradient(circle at 85% 0%, rgba(96,165,250,.10), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(52,211,153,.08), transparent 18%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+    }
+
+    .gridfx{
+      position:fixed; inset:0; pointer-events:none; opacity:.14;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+      background-size:34px 34px;
+    }
+
+    #pageContent{
+      height:100dvh;
+      padding:calc(10px + var(--safeT)) 10px calc(10px + var(--safeB)) 10px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:none;
+      opacity:0;
+      transform:scale(1.03);
+      transition:.45s ease;
+    }
+
+    #pageContent.ui-ready{
+      opacity:1;
+      transform:scale(1);
+    }
+
+    #pageContent::-webkit-scrollbar{display:none}
+
+    .wrap{
+      width:100%;
+      max-width:480px;
+      min-height:100%;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      position:relative;
+      z-index:5;
+    }
+
+    .topbar{
+      display:grid;
+      grid-template-columns:auto 1fr auto auto;
+      gap:8px;
+      align-items:center;
+      padding:10px 12px;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:rgba(8,16,24,.78);
+      backdrop-filter:blur(14px);
+    }
+
+    .back-btn{
+      width:38px;
+      height:38px;
+      border:none;
+      border-radius:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:22px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .title{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:18px;
+      font-weight:900;
+      color:var(--blue);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .pill, .scorePill{
+      min-width:62px;
+      height:34px;
+      padding:0 10px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:900;
+    }
+
+    .pill{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      color:#fff;
+    }
+
+    .scorePill{
+      background:var(--grad);
+      color:#052433;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+    }
+
+    .stat{
+      min-height:52px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      text-align:center;
+      padding:4px;
+    }
+
+    .statVal{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:16px;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .statLab{
+      font-size:9px;
+      letter-spacing:1px;
+      font-weight:900;
+      opacity:.62;
+    }
+
+    .progressBar{
+      width:100%;
+      height:6px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .progressFill{
+      height:100%;
+      width:0%;
+      background:var(--blue);
+      transition:width .35s ease;
+      box-shadow:0 0 14px rgba(34,211,238,.35);
+    }
+
+    .toast{
+      text-align:center;
+      min-height:18px;
+      color:var(--blue);
+      font-size:12px;
+      font-weight:800;
+      opacity:0;
+      transition:.25s;
+    }
+
+    .stage{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      border-radius:22px;
+      border:1px solid var(--border);
+      background:rgba(8,16,24,.78);
+      backdrop-filter:blur(14px);
+      padding:14px;
+      box-shadow:0 18px 40px rgba(0,0,0,.24);
+    }
+
+    .sentenceCard{
+      border-radius:24px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      padding:24px 16px;
+      text-align:center;
+      min-height:170px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+
+    .sentenceDisplay{
+      font-size:22px;
+      font-weight:800;
+      line-height:1.45;
+      text-transform:uppercase;
+    }
+
+    .gap-box{
+      color:var(--blue);
+      border-bottom:3px solid var(--blue);
+      padding:0 8px;
+      font-weight:900;
+      text-shadow:0 0 10px rgba(34,211,238,.18);
+    }
+
+    .translationDisplay{
+      font-size:15px;
+      color:var(--green);
+      font-style:italic;
+      margin-top:16px;
+      border-top:1px solid rgba(255,255,255,.08);
+      padding-top:14px;
+      min-height:30px;
+    }
+
+    .optionsGrid{
+      width:100%;
+      display:grid;
+      gap:10px;
+      grid-template-columns:1fr 1fr;
+    }
+
+    .opt-btn{
+      width:100%;
+      min-height:68px;
+      padding:14px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:18px;
+      color:#fff;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      transition:all .16s;
+      box-shadow:0 10px 26px rgba(0,0,0,.20);
+      font-family:inherit;
+    }
+
+    .opt-btn:active{transform:scale(.98)}
+
+    .opt-btn.correct{
+      background:linear-gradient(180deg,#22c55e,#16a34a)!important;
+      color:#04190c;
+      border:none;
+    }
+
+    .opt-btn.wrong{
+      background:linear-gradient(180deg,#ef4444,#dc2626)!important;
+      color:#fff;
+      border:none;
+    }
+
+    .modal-wrap{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.95);
+      z-index:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .modal-card{
+      width:100%;
+      max-width:380px;
+      background:#081018;
+      border:1px solid var(--border);
+      border-radius:28px;
+      padding:24px;
+      text-align:center;
+      max-height:90vh;
+      overflow:auto;
+      scrollbar-width:none;
+    }
+
+    .modal-card::-webkit-scrollbar{display:none}
+
+    .lang-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin:16px 0;
+    }
+
+    .lang-btn{
+      min-height:82px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight:800;
+      font-family:inherit;
+    }
+
+    .lang-btn .flag{font-size:28px}
+
+    .lang-btn.active{
+      border-color:rgba(34,211,238,.35);
+      box-shadow:0 0 0 1px rgba(34,211,238,.18), 0 0 18px rgba(34,211,238,.10);
+      background:rgba(34,211,238,.08);
+    }
+
+    .rulesList{
+      text-align:left;
+      margin:16px 0 6px;
+      padding-left:18px;
+      line-height:1.8;
+      color:rgba(255,255,255,.85);
+      font-size:14px;
+    }
+
+    .mainbtn{
+      width:100%;
+      padding:16px;
+      margin-top:10px;
+      border:none;
+      border-radius:16px;
+      background:var(--grad);
+      color:#052433;
+      font-weight:900;
+      cursor:pointer;
+      font-size:16px;
+      font-family:inherit;
+    }
+
+    .mainbtn.sec{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid var(--border);
+    }
+
+    .hidden{display:none!important}
+  </style>
+</head>
+
+<body>
+  <div class="gridfx"></div>
+
+  <main id="pageContent">
+    <div class="wrap">
+      <div class="topbar">
+        <button id="backBtn" class="back-btn" type="button">‹</button>
+        <div class="title">GAP MASTER</div>
+        <div id="pbDisplay" class="pill">PB: 0</div>
+        <div id="scorePill" class="scorePill">0</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div id="lifeBar" class="statVal">❤️❤️❤️</div>
+          <div class="statLab">CAN</div>
+        </div>
+        <div class="stat">
+          <div id="statusChip" class="statVal">EN</div>
+          <div class="statLab">DİL</div>
+        </div>
+        <div class="stat">
+          <div id="roundText" class="statVal">1/15</div>
+          <div class="statLab">TUR</div>
+        </div>
+        <div class="stat">
+          <div id="streakText" class="statVal">0</div>
+          <div class="statLab">SERİ</div>
+        </div>
+      </div>
+
+      <div class="progressBar"><div id="progFill" class="progressFill"></div></div>
+      <div id="resInfo" class="toast">Hazır</div>
+
+      <div class="stage">
+        <div class="sentenceCard">
+          <div id="sentenceDisplay" class="sentenceDisplay"></div>
+          <div id="translationDisplay" class="translationDisplay"></div>
+        </div>
+
+        <div id="optionsGrid" class="optionsGrid"></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal-wrap" id="startModal">
+    <div class="modal-card">
+      <h2 style="margin:0 0 10px;color:var(--blue);font-family:'Space Grotesk',sans-serif;">GAP MASTER</h2>
+      <p style="opacity:.78;line-height:1.6;font-size:14px;">Bayrağa dokun, dili seç.</p>
+
+      <div class="lang-grid" id="langGrid"></div>
+      <button class="mainbtn" id="toRulesBtn">DEVAM ET</button>
+    </div>
+  </div>
+
+  <div class="modal-wrap hidden" id="rulesModal">
+    <div class="modal-card">
+      <h2 style="margin:0 0 10px;color:var(--gold);font-family:'Space Grotesk',sans-serif;">KURALLAR</h2>
+      <ul class="rulesList">
+        <li>Cümlede boş bırakılan yeri doğru kelimeyle tamamla.</li>
+        <li>Doğru cevap puan kazandırır.</li>
+        <li>Yanlış cevap can düşürür.</li>
+        <li>Doğru kelimeyi ve cümlenin sesini sistem okur.</li>
+        <li>Havuz bitmeden aynı soru tekrar gelmez.</li>
+      </ul>
+      <button class="mainbtn" id="startBtn">ANLADIM, BAŞLA</button>
+    </div>
+  </div>
+
+  <div class="modal-wrap hidden" id="endModal">
+    <div class="modal-card">
+      <h2 id="endTitle" style="margin:0 0 10px;color:var(--green);font-family:'Space Grotesk',sans-serif;">SET TAMAMLANDI</h2>
+      <div id="endStats" style="text-align:left; margin:18px 0; font-size:15px; line-height:1.9;"></div>
+      <button class="mainbtn" id="btnReplay">YENİDEN DENE</button>
+      <button class="mainbtn sec" id="btnFinish">ANA MENÜ</button>
+    </div>
+  </div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+
+const BACK_URL = "/pages/game_menu_public.html";
+
+const LANGS = {
+  en:{ name:"İngilizce", flag:"🇬🇧", bcp:"en-US" },
+  de:{ name:"Almanca", flag:"🇩🇪", bcp:"de-DE" },
+  fr:{ name:"Fransızca", flag:"🇫🇷", bcp:"fr-FR" },
+  es:{ name:"İspanyolca", flag:"🇪🇸", bcp:"es-ES" },
+  it:{ name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" }
+};
+
+const GAME_LANG_KEY = "italky_gap_master_lang_public";
+const GAME_PB_PREFIX = "italky_gap_master_pb_public_";
+const SET_SIZE = 15;
+
+const LOCAL_FALLBACK = {
+  en:[
+    { w:"apple", sentence:"I eat an apple every day.", tr:"Her gün bir elma yerim." },
+    { w:"house", sentence:"This house is very big.", tr:"Bu ev çok büyük." },
+    { w:"water", sentence:"I drink water in the morning.", tr:"Sabahları su içerim." },
+    { w:"friend", sentence:"My friend is at school.", tr:"Arkadaşım okulda." },
+    { w:"music", sentence:"I like music.", tr:"Müziği severim." }
+  ],
+  de:[
+    { w:"haus", sentence:"Das haus ist groß.", tr:"Ev büyüktür." },
+    { w:"wasser", sentence:"Ich trinke wasser.", tr:"Su içerim." },
+    { w:"freund", sentence:"Mein freund ist hier.", tr:"Arkadaşım burada." },
+    { w:"schule", sentence:"Die schule ist neu.", tr:"Okul yenidir." }
+  ],
+  fr:[
+    { w:"maison", sentence:"La maison est grande.", tr:"Ev büyüktür." },
+    { w:"eau", sentence:"Je bois de l'eau.", tr:"Su içerim." },
+    { w:"ami", sentence:"Mon ami est ici.", tr:"Arkadaşım burada." }
+  ],
+  es:[
+    { w:"casa", sentence:"La casa es grande.", tr:"Ev büyüktür." },
+    { w:"agua", sentence:"Bebo agua.", tr:"Su içerim." },
+    { w:"amigo", sentence:"Mi amigo está aquí.", tr:"Arkadaşım burada." }
+  ],
+  it:[
+    { w:"casa", sentence:"La casa è grande.", tr:"Ev büyüktür." },
+    { w:"acqua", sentence:"Bevo acqua.", tr:"Su içerim." },
+    { w:"amico", sentence:"Il mio amico è qui.", tr:"Arkadaşım burada." }
+  ]
+};
+
+let currentLang = localStorage.getItem(GAME_LANG_KEY) || "en";
+let puzzles = [];
+let currentIdx = 0;
+let score = 0;
+let lives = 3;
+let streak = 0;
+let maxStreak = 0;
+let totalCorrect = 0;
+let totalAnswered = 0;
+let isBusy = false;
+let startTime = 0;
+let currentPuzzle = null;
+let lastSpoken = 0;
+
+let audioCtx = null;
+
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended") ctx.resume().catch(() => {});
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + .02);
+}
+
+function playGood(){
+  beep({freq:620,duration:.08,type:"triangle",gain:.05});
+  beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08});
+}
+
+function playBad(){
+  beep({freq:180,duration:.12,type:"sawtooth",gain:.05});
+  beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06});
+}
+
+function playFinish(){
+  beep({freq:700,duration:.10,type:"triangle",gain:.05});
+  beep({freq:920,duration:.12,type:"triangle",gain:.05,when:.10});
+  beep({freq:1180,duration:.15,type:"triangle",gain:.05,when:.22});
+}
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
+
+function normalize(s){
+  return String(s||"")
+    .toLowerCase()
+    .replace(/ß/g,"ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim();
+}
+
+function toast(msg, color = "var(--blue)"){
+  $("resInfo").textContent = msg;
+  $("resInfo").style.color = color;
+  $("resInfo").style.opacity = "1";
+  clearTimeout(window.__gapToast);
+  window.__gapToast = setTimeout(() => $("resInfo").style.opacity = "0", 1800);
+}
+
+function speak(t) {
+  const now = Date.now();
+  if(now - lastSpoken < 250) return;
+  lastSpoken = now;
+
+  const text = String(t || "").trim();
+  if(!text) return;
+
+  const bcp = LANGS[currentLang]?.bcp || "en-US";
+
+  try {
+    if(window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(text, bcp);
+      return;
+    }
+  } catch(e) {
+    console.warn("NativeTTS speak failed:", e);
+  }
+
+  try {
+    if(!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = bcp;
+    u.rate = 0.9;
+    u.pitch = 1;
+    u.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices?.() || [];
+    const found = voices.find(v =>
+      String(v.lang || "").toLowerCase().startsWith(bcp.split("-")[0].toLowerCase())
+    );
+    if(found) u.voice = found;
+
+    setTimeout(() => {
+      try { window.speechSynthesis.speak(u); } catch {}
+    }, 120);
+  } catch(e) {
+    console.warn("speechSynthesis fallback failed:", e);
+  }
+}
+
+function getPublicLangUrl(langCode){
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
+}
+
+function extractItems(payload){
+  if(Array.isArray(payload)) return payload;
+
+  if(payload && typeof payload === "object"){
+    const keys = ["items","words","data","list","entries","pool","vocabulary","kelimeler"];
+    for(const key of keys){
+      if(Array.isArray(payload[key])) return payload[key];
+    }
+
+    for(const value of Object.values(payload)){
+      if(Array.isArray(value)) return value;
+    }
+  }
+
+  return [];
+}
+
+function normalizePoolItems(items){
+  return items.map((item) => {
+    if(typeof item === "string") return null;
+
+    const rawWord =
+      item?.word ??
+      item?.w ??
+      item?.text ??
+      item?.term ??
+      item?.answer ??
+      item?.value ??
+      "";
+
+    const rawSentence =
+      item?.sentence ??
+      item?.s ??
+      item?.sample ??
+      item?.example ??
+      item?.example_sentence ??
+      "";
+
+    const rawMeaning =
+      item?.meaning ??
+      item?.tr ??
+      item?.translation ??
+      item?.turkish ??
+      item?.turkce ??
+      item?.ceviri ??
+      "";
+
+    return {
+      w: String(rawWord || "").trim(),
+      sentence: String(rawSentence || "").trim(),
+      tr: String(rawMeaning || "").trim()
+    };
+  }).filter(x => x && x.w && x.sentence && x.tr && !x.w.includes(" "));
+}
+
+function makeSentenceFromWord(item){
+  const w = String(item?.word || item?.w || item?.text || item?.term || item?.answer || item?.value || "").trim();
+  const tr = String(item?.meaning || item?.tr || item?.translation || item?.turkish || item?.turkce || item?.ceviri || "—").trim();
+
+  if(!w) return null;
+
+  const sentence = `I choose ${w}.`;
+  return { w, sentence, tr };
+}
+
+async function loadLangPool(langCode){
+  try{
+    const url = getPublicLangUrl(langCode);
+    const res = await fetch(url, { cache:"no-store" });
+
+    if(!res.ok){
+      console.warn("[gap_public] pool fetch failed:", url, res.status);
+      return LOCAL_FALLBACK[langCode] || LOCAL_FALLBACK.en;
+    }
+
+    const json = await res.json();
+    const raw = extractItems(json);
+    let items = normalizePoolItems(raw);
+
+    if(!items.length){
+      items = raw.map(makeSentenceFromWord).filter(Boolean);
+    }
+
+    if(!items.length){
+      console.warn("[gap_public] pool empty, fallback:", langCode);
+      return LOCAL_FALLBACK[langCode] || LOCAL_FALLBACK.en;
+    }
+
+    return items;
+  }catch(e){
+    console.warn("[gap_public] pool error, fallback:", e);
+    return LOCAL_FALLBACK[langCode] || LOCAL_FALLBACK.en;
+  }
+}
+
+const usedGapItems = {};
+
+function pickFreshSet(items, count, langCode){
+  if(!usedGapItems[langCode]) usedGapItems[langCode] = new Set();
+  const used = usedGapItems[langCode];
+
+  if(used.size >= items.length) used.clear();
+
+  const fresh = [];
+  let guard = 0;
+
+  while(fresh.length < count && guard < items.length * 20){
+    const pick = items[Math.floor(Math.random() * items.length)];
+    const key = normalize(pick.sentence);
+
+    if(!used.has(key) && !fresh.some(x => normalize(x.sentence) === key)){
+      used.add(key);
+      fresh.push(pick);
+    }
+
+    guard++;
+  }
+
+  if(fresh.length < count){
+    const fallback = items.filter(x => !fresh.some(y => normalize(y.sentence) === normalize(x.sentence)));
+    while(fresh.length < count && fallback.length){
+      const item = fallback.shift();
+      used.add(normalize(item.sentence));
+      fresh.push(item);
+    }
+  }
+
+  return fresh.sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+function updatePB(){
+  const pb = Number(localStorage.getItem(GAME_PB_PREFIX + currentLang) || 0);
+  $("pbDisplay").textContent = `PB: ${pb}`;
+}
+
+function renderLangs(){
+  $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+    <button class="lang-btn ${currentLang===code ? "active" : ""}" data-lang="${code}">
+      <div class="flag">${meta.flag}</div>
+      <div>${meta.name}</div>
+    </button>
+  `).join("");
+
+  $("langGrid").querySelectorAll(".lang-btn").forEach(btn => {
+    btn.onclick = () => {
+      currentLang = btn.dataset.lang;
+      localStorage.setItem(GAME_LANG_KEY, currentLang);
+      renderLangs();
+      updatePB();
+      $("statusChip").textContent = currentLang.toUpperCase();
+    };
+  });
+}
+
+function updateUI(){
+  $("statusChip").textContent = currentLang.toUpperCase();
+  $("roundText").textContent = `${Math.min(currentIdx + 1, SET_SIZE)}/${SET_SIZE}`;
+  $("scorePill").textContent = score;
+  $("lifeBar").textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3 - Math.max(0, lives)));
+  $("streakText").textContent = streak;
+  $("progFill").style.width = `${((Math.min(currentIdx + 1, SET_SIZE)) / SET_SIZE) * 100}%`;
+}
+
+function buildSentenceWithGap(sentence, word){
+  const escaped = String(word ?? "").replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, "\\s+");
+  const regex = new RegExp(`(^|[^\\p{L}'-])(${escaped})(?=[^\\p{L}'-]|$)`, "giu");
+
+  const replaced = String(sentence || "").replace(regex, `$1<span class="gap-box">____</span>`);
+  if(replaced === sentence){
+    return `${sentence} <span class="gap-box">____</span>`;
+  }
+
+  return replaced;
+}
+
+function loadPuzzle(){
+  if(lives <= 0) return showFinal(true);
+  if(currentIdx >= puzzles.length) return showFinal(false);
+
+  currentPuzzle = puzzles[currentIdx];
+
+  $("sentenceDisplay").innerHTML = buildSentenceWithGap(currentPuzzle.sentence, currentPuzzle.w).toUpperCase();
+  $("translationDisplay").textContent = currentPuzzle.tr || "";
+  $("optionsGrid").innerHTML = "";
+  $("resInfo").style.opacity = "0";
+
+  const correct = currentPuzzle.w.trim().toUpperCase();
+  const wrongPool = puzzles
+    .filter(x => x.w.trim().toUpperCase() !== correct)
+    .map(x => x.w.trim().toUpperCase());
+
+  const opts = [correct];
+
+  while(opts.length < 4 && wrongPool.length){
+    const cand = wrongPool[Math.floor(Math.random() * wrongPool.length)];
+    if(!opts.includes(cand)) opts.push(cand);
+  }
+
+  while(opts.length < 4) opts.push(correct);
+
+  opts.sort(() => Math.random() - 0.5).forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.textContent = opt;
+    btn.onclick = () => handleChoice(opt, btn);
+    $("optionsGrid").appendChild(btn);
+  });
+
+  startTime = Date.now();
+  updateUI();
+}
+
+function handleChoice(val, btn){
+  if(isBusy) return;
+  isBusy = true;
+
+  const correctVal = currentPuzzle.w.trim().toUpperCase();
+  totalAnswered++;
+
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+
+  if(val === correctVal){
+    playGood();
+    streak++;
+    totalCorrect++;
+    maxStreak = Math.max(maxStreak, streak);
+
+    const timeTaken = (Date.now() - startTime) / 1000;
+    const speedBonus = timeTaken < 4 ? 8 : (timeTaken < 7 ? 5 : (timeTaken < 10 ? 2 : 0));
+    const roundScore = 10 + (streak * 2) + speedBonus;
+    score += roundScore;
+
+    btn.classList.add("correct");
+    toast(`+${roundScore} PUAN`, "var(--green)");
+
+    speak(correctVal);
+    setTimeout(() => speak(currentPuzzle.sentence), 900);
+  }else{
+    playBad();
+    streak = 0;
+    lives--;
+    btn.classList.add("wrong");
+
+    document.querySelectorAll('.opt-btn').forEach(b => {
+      if(b.textContent === correctVal) b.classList.add("correct");
+    });
+
+    toast(`DOĞRU: ${correctVal}`, "var(--red)");
+    speak(correctVal);
+  }
+
+  updateUI();
+
+  setTimeout(() => {
+    currentIdx++;
+    isBusy = false;
+    loadPuzzle();
+  }, 2800);
+}
+
+function showFinal(gameEnded){
+  const pbKey = GAME_PB_PREFIX + currentLang;
+  const currentPB = Number(localStorage.getItem(pbKey) || 0);
+  if(score > currentPB) localStorage.setItem(pbKey, String(score));
+
+  const acc = totalAnswered ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+
+  $("endModal").classList.remove("hidden");
+  $("endTitle").textContent = gameEnded ? "OYUN BİTTİ" : "SET TAMAMLANDI";
+  $("endTitle").style.color = gameEnded ? "var(--red)" : "var(--green)";
+  $("endStats").innerHTML = `
+Skor: <b>${score}</b><br>
+En İyi Seri: <b>🔥 ${maxStreak}</b><br>
+Doğruluk: <b>%${acc}</b>
+  `;
+
+  updatePB();
+  playFinish();
+}
+
+async function startGame(){
+  score = 0;
+  lives = 3;
+  streak = 0;
+  maxStreak = 0;
+  totalCorrect = 0;
+  totalAnswered = 0;
+  currentIdx = 0;
+  isBusy = false;
+
+  const items = await loadLangPool(currentLang);
+  puzzles = pickFreshSet([...(items || [])], SET_SIZE, currentLang);
+
+  if(!puzzles.length){
+    alert("Havuz yüklenemedi.");
+    return;
+  }
+
+  $("startModal").classList.add("hidden");
+  $("rulesModal").classList.add("hidden");
+  $("endModal").classList.add("hidden");
+
+  loadPuzzle();
+}
+
+$("toRulesBtn").onclick = async () => {
+  $("startModal").classList.add("hidden");
+  $("rulesModal").classList.remove("hidden");
+};
+
+$("startBtn").onclick = startGame;
+$("btnReplay").onclick = startGame;
+$("btnFinish").onclick = () => location.href = BACK_URL;
+$("backBtn").onclick = () => location.href = BACK_URL;
+
+window.onload = () => {
+  renderLangs();
+  updatePB();
+  $("statusChip").textContent = currentLang.toUpperCase();
+  updateUI();
+
+  setTimeout(() => {
+    $("pageContent")?.classList.add("ui-ready");
+  }, 120);
+};
+
+window.addEventListener("click", () => {
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
+}, { once: true });
+
+window.addEventListener("touchstart", () => {
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
+}, { once: true });
+</script>
+</body>
+</html>
