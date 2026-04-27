@@ -1,0 +1,399 @@
+<!-- /pages/game_menu_public.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <title>italkyAI • Oyunlar</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg:#050508;
+      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      --card:rgba(255,255,255,.055);
+      --line:rgba(255,255,255,.10);
+      --muted:rgba(255,255,255,.62);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --safe-top:env(safe-area-inset-top,0px);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:#fff;
+      font-family:Outfit,Arial,sans-serif;
+      overflow:hidden;
+    }
+
+    body{
+      background:
+        radial-gradient(circle at 16% 8%,rgba(99,102,241,.15),transparent 25%),
+        radial-gradient(circle at 86% 12%,rgba(236,72,153,.13),transparent 25%),
+        radial-gradient(circle at bottom,rgba(56,189,248,.08),transparent 28%),
+        #050508;
+    }
+
+    .page{
+      height:100dvh;
+      overflow-y:auto;
+      padding:calc(18px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
+      scrollbar-width:none;
+    }
+
+    .page::-webkit-scrollbar{display:none}
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .brand{
+      min-width:0;
+    }
+
+    .brand-title{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:30px;
+      line-height:1;
+      font-weight:900;
+      letter-spacing:-1px;
+    }
+
+    .brand-title .ai{
+      background:var(--ai-gradient);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .brand-sub{
+      margin-top:7px;
+      display:inline-flex;
+      padding:6px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.78);
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:1.6px;
+    }
+
+    .back-btn{
+      min-width:44px;
+      height:44px;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:20px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .hero{
+      border-radius:28px;
+      padding:18px;
+      background:linear-gradient(135deg,rgba(99,102,241,.16),rgba(236,72,153,.10));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 20px 45px rgba(0,0,0,.28);
+      margin-bottom:16px;
+    }
+
+    .hero h1{
+      margin:0;
+      font-size:26px;
+      line-height:1.08;
+      font-weight:1000;
+      letter-spacing:-.5px;
+    }
+
+    .hero p{
+      margin:10px 0 0;
+      font-size:14px;
+      line-height:1.55;
+      color:rgba(255,255,255,.72);
+      font-weight:800;
+    }
+
+    .ad-note{
+      margin-top:12px;
+      padding:11px 12px;
+      border-radius:18px;
+      background:rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      line-height:1.45;
+      color:rgba(255,255,255,.70);
+      font-weight:800;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .game-card{
+      width:100%;
+      border:none;
+      border-radius:26px;
+      padding:16px;
+      background:var(--card);
+      border:1px solid var(--line);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      gap:14px;
+      cursor:pointer;
+      font-family:inherit;
+      text-align:left;
+      box-shadow:0 16px 32px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+
+    .game-card:active{
+      transform:scale(.99);
+    }
+
+    .game-icon{
+      width:54px;
+      height:54px;
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 54px;
+      font-size:28px;
+      background:linear-gradient(135deg,rgba(165,180,252,.22),rgba(236,72,153,.15));
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .game-info{
+      min-width:0;
+      flex:1;
+    }
+
+    .game-title{
+      font-size:17px;
+      font-weight:1000;
+      line-height:1.1;
+      margin-bottom:5px;
+    }
+
+    .game-desc{
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .game-arrow{
+      font-size:22px;
+      font-weight:1000;
+      color:rgba(255,255,255,.45);
+      flex:0 0 auto;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(24px + var(--safe-bottom));
+      transform:translateX(-50%) translateY(120px);
+      max-width:min(92vw,430px);
+      min-height:44px;
+      padding:11px 16px;
+      border-radius:16px;
+      background:rgba(12,16,28,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      z-index:9999;
+      box-shadow:0 18px 36px rgba(0,0,0,.35);
+      transition:.22s ease;
+      pointer-events:none;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    @media(min-width:560px){
+      .grid{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-title">italky<span class="ai">AI</span></div>
+        <div class="brand-sub">BE FREE</div>
+      </div>
+
+      <button id="backBtn" class="back-btn" type="button">‹</button>
+    </div>
+
+    <section class="hero">
+      <h1>Oyunlarla Dil Öğren</h1>
+      <p>Kelime, hafıza ve dikkat oyunlarıyla pratik yap. Login öncesi kullanım reklamlıdır.</p>
+      <div class="ad-note" id="adNote">
+        Oyuna her girişte 1 kısa reklam gösterilir. Oyundan çıkmadığın sürece tekrar reklam gösterilmez.
+      </div>
+    </section>
+
+    <section class="grid" id="gameGrid"></section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+    import { ensureModuleAdAccess } from "/js/ad_gate.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    const gameGrid = $("gameGrid");
+    const backBtn = $("backBtn");
+    const toastEl = $("toast");
+    const adNote = $("adNote");
+
+    let isLoggedIn = false;
+
+    /*
+      Dosya adları farklıysa sadece buradaki url alanlarını değiştirmen yeterli.
+      Login öncesi her oyuna buradan reklam kapısı koyuyoruz.
+    */
+    const GAMES = [
+      {
+        id: "hangman",
+        title: "Hangman Nitro",
+        desc: "Kelimeyi tahmin et, harfleri öğren.",
+        icon: "🎯",
+        url: "/pages/hangman.html?public=1"
+      },
+      {
+        id: "wordsearch",
+        title: "Kelime Avı",
+        desc: "Gizli kelimeleri bul, hafızanı güçlendir.",
+        icon: "🔎",
+        url: "/pages/wordsearch.html?public=1"
+      },
+      {
+        id: "code_decode",
+        title: "Kod Çöz",
+        desc: "Mors ve sembol oyunlarıyla dikkat pratiği yap.",
+        icon: "🧩",
+        url: "/pages/code_decode.html?public=1"
+      },
+      {
+        id: "memory",
+        title: "Hafıza Kartları",
+        desc: "Eşleştir, hatırla, kelime öğren.",
+        icon: "🧠",
+        url: "/pages/memory_game.html?public=1"
+      }
+    ];
+
+    function toast(msg){
+      if(!toastEl) return;
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      clearTimeout(window.__gameToastTimer);
+      window.__gameToastTimer = setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, 2400);
+    }
+
+    async function hydrateAuth(){
+      try{
+        const { data } = await supabase.auth.getSession();
+        isLoggedIn = !!data?.session;
+      }catch{
+        isLoggedIn = false;
+      }
+
+      if(isLoggedIn && adNote){
+        adNote.textContent = "Giriş yaptığınız için oyunlara reklamsız devam edebilirsiniz.";
+      }
+    }
+
+    function renderGames(){
+      gameGrid.innerHTML = GAMES.map((game) => `
+        <button class="game-card" type="button" data-game-id="${game.id}">
+          <div class="game-icon">${game.icon}</div>
+          <div class="game-info">
+            <div class="game-title">${game.title}</div>
+            <div class="game-desc">${game.desc}</div>
+          </div>
+          <div class="game-arrow">›</div>
+        </button>
+      `).join("");
+
+      gameGrid.querySelectorAll("[data-game-id]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const game = GAMES.find((x) => x.id === btn.dataset.gameId);
+          if(!game) return;
+
+          await openGame(game);
+        });
+      });
+    }
+
+    async function openGame(game){
+      if(isLoggedIn){
+        location.href = game.url;
+        return;
+      }
+
+      const ok = await ensureModuleAdAccess({
+        moduleKey: `public_game_${game.id}`,
+        placement: `public_game_${game.id}`,
+        hours: 0,
+        title: "Oyuna Giriş Reklamı",
+        text: `${game.title} oyununa giriş için 1 kısa reklam gösterilecektir.\\nOyundan çıkmadığınız sürece tekrar reklam gösterilmez.`
+      });
+
+      if(!ok){
+        toast("Reklam tamamlanmadan oyun başlatılmadı.");
+        return;
+      }
+
+      sessionStorage.setItem(`italky_public_game_unlocked_${game.id}`, "1");
+      location.href = game.url;
+    }
+
+    backBtn?.addEventListener("click", () => {
+      location.href = "/pages/login.html";
+    });
+
+    async function boot(){
+      await hydrateAuth();
+      renderGames();
+    }
+
+    boot();
+  </script>
+</body>
+</html>
