@@ -4,8 +4,22 @@ import { supabase } from "/js/supabase_client.js";
 
 const $ = (id) => document.getElementById(id);
 
+const PUBLIC_PARAMS = new URLSearchParams(location.search);
+const IS_PUBLIC_GAME =
+  PUBLIC_PARAMS.get("public") === "1" ||
+  PUBLIC_PARAMS.get("from_public_games") === "1" ||
+  document.referrer.includes("/pages/game_menu_public.html");
+
+const PUBLIC_BACK_URL = "/pages/game_menu_public.html";
+const PRIVATE_BACK_URL = "/pages/game_menu.html";
+
 // UI shell
-mountShell({ scroll: "none" });
+try {
+  mountShell({ scroll: "none" });
+} catch (e) {
+  console.warn("[hangman shell]", e);
+}
+
 try {
   const root = getComputedStyle(document.documentElement);
   const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
@@ -71,6 +85,10 @@ function toast(msg) {
   }, 1600);
 }
 
+function getBackUrl() {
+  return IS_PUBLIC_GAME ? PUBLIC_BACK_URL : PRIVATE_BACK_URL;
+}
+
 function speakText(text) {
   const t = String(text || "").trim();
   if (!t) return;
@@ -120,6 +138,64 @@ function speakText(text) {
   } catch (e) {
     console.warn("speechSynthesis failed:", e);
   }
+}
+
+/* -----------------------------
+   LOCAL FALLBACK WORD POOL
+----------------------------- */
+const LOCAL_FALLBACK_POOL = {
+  en: [
+    { w: "APPLE", tr: "Elma" },
+    { w: "HOUSE", tr: "Ev" },
+    { w: "WATER", tr: "Su" },
+    { w: "LIGHT", tr: "Işık" },
+    { w: "WORLD", tr: "Dünya" },
+    { w: "FRIEND", tr: "Arkadaş" },
+    { w: "SCHOOL", tr: "Okul" },
+    { w: "FAMILY", tr: "Aile" },
+    { w: "MUSIC", tr: "Müzik" },
+    { w: "TRAVEL", tr: "Seyahat" }
+  ],
+  de: [
+    { w: "HAUS", tr: "Ev" },
+    { w: "WASSER", tr: "Su" },
+    { w: "LICHT", tr: "Işık" },
+    { w: "FREUND", tr: "Arkadaş" },
+    { w: "SCHULE", tr: "Okul" },
+    { w: "FAMILIE", tr: "Aile" }
+  ],
+  fr: [
+    { w: "MAISON", tr: "Ev" },
+    { w: "EAU", tr: "Su" },
+    { w: "AMI", tr: "Arkadaş" },
+    { w: "ECOLE", tr: "Okul" },
+    { w: "FAMILLE", tr: "Aile" },
+    { w: "MUSIQUE", tr: "Müzik" }
+  ],
+  es: [
+    { w: "CASA", tr: "Ev" },
+    { w: "AGUA", tr: "Su" },
+    { w: "AMIGO", tr: "Arkadaş" },
+    { w: "ESCUELA", tr: "Okul" },
+    { w: "FAMILIA", tr: "Aile" },
+    { w: "MUSICA", tr: "Müzik" }
+  ],
+  it: [
+    { w: "CASA", tr: "Ev" },
+    { w: "ACQUA", tr: "Su" },
+    { w: "AMICO", tr: "Arkadaş" },
+    { w: "SCUOLA", tr: "Okul" },
+    { w: "FAMIGLIA", tr: "Aile" },
+    { w: "MUSICA", tr: "Müzik" }
+  ]
+};
+
+function getFallbackPool(lang) {
+  const list = LOCAL_FALLBACK_POOL[normalizeLang(lang)] || LOCAL_FALLBACK_POOL.en;
+  return list.map((x) => ({
+    w: String(x.w || "").toUpperCase(),
+    tr: String(x.tr || "—")
+  }));
 }
 
 /* -----------------------------
@@ -195,6 +271,39 @@ function closeRulesSheet() {
 /* -----------------------------
    AUTH / DATA LOAD
 ----------------------------- */
+async function fetchWordsFromSupabase(lang, level) {
+  const { data: words, error } = await supabase
+    .from("hangman_pool")
+    .select("w, tr")
+    .eq("lang", lang)
+    .eq("level", level);
+
+  if (error) {
+    console.warn("hangman_pool exact level error:", error);
+    return [];
+  }
+
+  return Array.isArray(words)
+    ? words.filter(x => x && x.w && String(x.w).trim())
+    : [];
+}
+
+async function fetchWordsAnyLevel(lang) {
+  const { data: words, error } = await supabase
+    .from("hangman_pool")
+    .select("w, tr, level")
+    .eq("lang", lang);
+
+  if (error) {
+    console.warn("hangman_pool any level error:", error);
+    return [];
+  }
+
+  return Array.isArray(words)
+    ? words.filter(x => x && x.w && String(x.w).trim())
+    : [];
+}
+
 async function loadGameData() {
   try {
     disableStartBtn(true, "YÜKLENİYOR...");
@@ -225,21 +334,24 @@ async function loadGameData() {
 
     setGate(`${state.lang.toUpperCase()} • ${state.level} YÜKLENİYOR...`);
 
-    const { data: words, error } = await supabase
-      .from("hangman_pool")
-      .select("w, tr")
-      .eq("lang", state.lang)
-      .eq("level", state.level);
+    let words = await fetchWordsFromSupabase(state.lang, state.level);
 
-    if (error) {
-      console.error("hangman_pool error:", error);
-      setGate("Kelime havuzu alınamadı.");
-      disableStartBtn(true, "HATA");
-      return;
+    if (!words.length) {
+      console.warn("Exact level pool empty, trying any level for lang:", state.lang);
+      words = await fetchWordsAnyLevel(state.lang);
+    }
+
+    if (!words.length) {
+      console.warn("Supabase pool empty, using local fallback:", state.lang);
+      words = getFallbackPool(state.lang);
+      setGate(`${state.lang.toUpperCase()} • YEDEK HAVUZ HAZIR`);
     }
 
     state.pool = Array.isArray(words)
-      ? words.filter(x => x && x.w && String(x.w).trim())
+      ? words.filter(x => x && x.w && String(x.w).trim()).map((x) => ({
+          w: String(x.w || "").toUpperCase(),
+          tr: String(x.tr || "—")
+        }))
       : [];
 
     let best = 0;
@@ -255,10 +367,12 @@ async function loadGameData() {
         best = prof.hangman_best?.[key] || 0;
       }
     }
-    $("bestVal").textContent = String(best);
+
+    const bestEl = $("bestVal");
+    if (bestEl) bestEl.textContent = String(best);
 
     if (!state.pool.length) {
-      setGate(`${state.lang.toUpperCase()} • ${state.level} için havuz boş.`);
+      setGate(`${state.lang.toUpperCase()} için oyun havuzu bulunamadı.`);
       disableStartBtn(true, "HAZIR DEĞİL");
       return;
     }
@@ -267,8 +381,16 @@ async function loadGameData() {
     disableStartBtn(false, "BAŞLA");
   } catch (err) {
     console.error("loadGameData failed:", err);
-    setGate("Beklenmeyen bir hata oluştu.");
-    disableStartBtn(true, "HATA");
+
+    state.pool = getFallbackPool(state.lang);
+
+    if (state.pool.length) {
+      setGate(`${state.lang.toUpperCase()} • YEDEK HAVUZ HAZIR`);
+      disableStartBtn(false, "BAŞLA");
+    } else {
+      setGate("Beklenmeyen bir hata oluştu.");
+      disableStartBtn(true, "HATA");
+    }
   }
 }
 
@@ -326,8 +448,8 @@ function startRound() {
   state.flawless = true;
   state.jokerUsed = false;
 
-  $("j0").classList.remove("spent");
-  $("j1").classList.remove("spent");
+  $("j0")?.classList.remove("spent");
+  $("j1")?.classList.remove("spent");
 
   state.target = pickWord();
 
@@ -487,7 +609,7 @@ $("mBtn").onclick = () => {
       renderHearts();
       startRound();
     } else {
-      location.href = "/pages/game_menu.html";
+      location.href = getBackUrl();
     }
   }
 };
