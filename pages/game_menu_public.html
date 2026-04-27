@@ -2,398 +2,524 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
-  <title>italkyAI • Oyunlar</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Game Grand Terminal</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap');
 
-  <style>
-    :root{
-      --bg:#050508;
-      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
-      --card:rgba(255,255,255,.055);
-      --line:rgba(255,255,255,.10);
-      --muted:rgba(255,255,255,.62);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
-      --safe-top:env(safe-area-inset-top,0px);
-    }
+  html { background: #000 !important; }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    overflow: hidden;
+  }
 
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      background:var(--bg);
-      color:#fff;
-      font-family:Outfit,Arial,sans-serif;
-      overflow:hidden;
-    }
+  :root {
+    --ai-grad: linear-gradient(135deg, #f97316 0%, #ed64a6 50%, #6366f1 100%);
+    --neon-yellow: #facc15;
+    --neon-pink: #ff007f;
+    --neon-blue: #00d2ff;
+    --glass-border: rgba(255,255,255,0.15);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --shellLift: 0px;
+  }
 
-    body{
-      background:
-        radial-gradient(circle at 16% 8%,rgba(99,102,241,.15),transparent 25%),
-        radial-gradient(circle at 86% 12%,rgba(236,72,153,.13),transparent 25%),
-        radial-gradient(circle at bottom,rgba(56,189,248,.08),transparent 28%),
-        #050508;
-    }
+  #pageContent{
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    background: radial-gradient(circle at 50% 50%, #1a0a30 0%, #000 100%);
+    opacity: 0;
+    transform: scale(1.05);
+    transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    padding-top: calc(10px + var(--safe-top));
+    padding-bottom: calc(var(--safe-bottom) + 10px);
+  }
 
-    .page{
-      height:100dvh;
-      overflow-y:auto;
-      padding:calc(18px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
-      scrollbar-width:none;
-    }
+  #pageContent.ui-ready{
+    opacity: 1;
+    transform: scale(1);
+  }
 
-    .page::-webkit-scrollbar{display:none}
+  .header-box{
+    padding:12px 18px 8px;
+    text-align:center;
+    flex:0 0 auto;
+    position:relative;
+  }
 
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:18px;
-    }
+  .header-box h1{
+    font-size:24px;
+    font-weight:900;
+    margin:0;
+    font-family:'Space Grotesk', sans-serif;
+  }
 
-    .brand{
-      min-width:0;
-    }
+  .header-box h1 span{
+    background:var(--ai-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
 
-    .brand-title{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:30px;
-      line-height:1;
-      font-weight:900;
-      letter-spacing:-1px;
-    }
+  .header-sub{
+    margin-top:8px;
+    font-size:11px;
+    font-weight:800;
+    color:rgba(255,255,255,.48);
+    letter-spacing:.4px;
+  }
 
-    .brand-title .ai{
-      background:var(--ai-gradient);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
+  .back-btn{
+    position:absolute;
+    left:12px;
+    top:8px;
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:15px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+    color:#fff;
+    font-size:24px;
+    font-weight:900;
+    cursor:pointer;
+  }
 
-    .brand-sub{
-      margin-top:7px;
-      display:inline-flex;
-      padding:6px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.10);
-      color:rgba(255,255,255,.78);
-      font-size:11px;
-      font-weight:1000;
-      letter-spacing:1.6px;
-    }
+  .game-hub{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    padding:14px 18px 20px;
+    gap:15px;
+    overflow-y:auto;
+    scrollbar-width:none;
+  }
 
-    .back-btn{
-      min-width:44px;
-      height:44px;
-      border:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:20px;
-      font-weight:900;
-      cursor:pointer;
-    }
+  .game-hub::-webkit-scrollbar{
+    display:none;
+  }
 
-    .hero{
-      border-radius:28px;
-      padding:18px;
-      background:linear-gradient(135deg,rgba(99,102,241,.16),rgba(236,72,153,.10));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 20px 45px rgba(0,0,0,.28);
-      margin-bottom:16px;
-    }
+  .game-card{
+    position:relative;
+    min-height:110px;
+    border-radius:30px;
+    border:1px solid var(--glass-border);
+    background:linear-gradient(145deg, rgba(255,255,255,0.03), rgba(0,0,0,0.8));
+    display:flex;
+    align-items:center;
+    padding:0 25px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow:0 15px 35px rgba(0,0,0,0.5);
+  }
 
-    .hero h1{
-      margin:0;
-      font-size:26px;
-      line-height:1.08;
-      font-weight:1000;
-      letter-spacing:-.5px;
-    }
+  .game-card:active{
+    transform:scale(0.95);
+  }
 
-    .hero p{
-      margin:10px 0 0;
-      font-size:14px;
-      line-height:1.55;
-      color:rgba(255,255,255,.72);
-      font-weight:800;
-    }
+  .game-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at 0% 50%, var(--game-color), transparent 50%);
+    opacity:0.15;
+    pointer-events:none;
+  }
 
-    .ad-note{
-      margin-top:12px;
-      padding:11px 12px;
-      border-radius:18px;
-      background:rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.08);
-      font-size:12px;
-      line-height:1.45;
-      color:rgba(255,255,255,.70);
-      font-weight:800;
-    }
+  .g-yellow { --game-color: var(--neon-yellow); }
+  .g-pink   { --game-color: var(--neon-pink); }
+  .g-blue   { --game-color: var(--neon-blue); }
 
-    .grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-    }
+  .game-icon-wrap{
+    width:65px;
+    height:65px;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-right:20px;
+    z-index:5;
+  }
 
-    .game-card{
-      width:100%;
-      border:none;
-      border-radius:26px;
-      padding:16px;
-      background:var(--card);
-      border:1px solid var(--line);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      gap:14px;
-      cursor:pointer;
-      font-family:inherit;
-      text-align:left;
-      box-shadow:0 16px 32px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.035);
-    }
+  .game-icon-bg{
+    position:absolute;
+    inset:0;
+    background:var(--game-color);
+    filter:blur(20px);
+    opacity:0.2;
+  }
 
-    .game-card:active{
-      transform:scale(.99);
-    }
+  .game-emoji{
+    font-size:38px;
+    filter:drop-shadow(0 0 10px var(--game-color));
+  }
 
-    .game-icon{
-      width:54px;
-      height:54px;
-      border-radius:20px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex:0 0 54px;
-      font-size:28px;
-      background:linear-gradient(135deg,rgba(165,180,252,.22),rgba(236,72,153,.15));
-      border:1px solid rgba(255,255,255,.10);
-    }
+  .game-info{
+    z-index:10;
+    min-width:0;
+    flex:1;
+  }
 
-    .game-info{
-      min-width:0;
-      flex:1;
-    }
+  .game-info h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:22px;
+    font-weight:900;
+    margin:0;
+    letter-spacing:-0.5px;
+  }
 
-    .game-title{
-      font-size:17px;
-      font-weight:1000;
-      line-height:1.1;
-      margin-bottom:5px;
-    }
+  .game-info p{
+    font-size:11px;
+    color:rgba(255,255,255,0.4);
+    margin:5px 0 0;
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    line-height:1.35;
+  }
 
-    .game-desc{
-      font-size:12px;
-      line-height:1.45;
-      color:var(--muted);
-      font-weight:800;
-    }
+  .game-arrow{
+    margin-left:auto;
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.05);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:10;
+  }
 
-    .game-arrow{
-      font-size:22px;
-      font-weight:1000;
-      color:rgba(255,255,255,.45);
-      flex:0 0 auto;
-    }
+  .game-arrow svg{
+    width:18px;
+    height:18px;
+    stroke:#fff;
+    stroke-width:2.4;
+    fill:none;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    opacity:.9;
+  }
 
-    .toast{
-      position:fixed;
-      left:50%;
-      bottom:calc(24px + var(--safe-bottom));
-      transform:translateX(-50%) translateY(120px);
-      max-width:min(92vw,430px);
-      min-height:44px;
-      padding:11px 16px;
-      border-radius:16px;
-      background:rgba(12,16,28,.96);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:12px;
-      font-weight:1000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      z-index:9999;
-      box-shadow:0 18px 36px rgba(0,0,0,.35);
-      transition:.22s ease;
-      pointer-events:none;
-    }
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:calc(24px + var(--safe-bottom));
+    transform:translateX(-50%) translateY(120px);
+    max-width:min(92vw,430px);
+    min-height:44px;
+    padding:11px 16px;
+    border-radius:16px;
+    background:rgba(12,16,28,.96);
+    border:1px solid rgba(255,255,255,.10);
+    color:#fff;
+    font-size:12px;
+    font-weight:1000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    z-index:9999;
+    box-shadow:0 18px 36px rgba(0,0,0,.35);
+    transition:.22s ease;
+    pointer-events:none;
+  }
 
-    .toast.show{
-      transform:translateX(-50%) translateY(0);
-    }
-
-    @media(min-width:560px){
-      .grid{
-        grid-template-columns:1fr 1fr;
-      }
-    }
-  </style>
+  .toast.show{
+    transform:translateX(-50%) translateY(0);
+  }
+</style>
 </head>
 
 <body>
-  <main class="page">
-    <div class="topbar">
-      <div class="brand">
-        <div class="brand-title">italky<span class="ai">AI</span></div>
-        <div class="brand-sub">BE FREE</div>
-      </div>
+<main id="pageContent">
+  <div class="header-box">
+    <button id="backBtn" class="back-btn" type="button">‹</button>
+    <h1>Game <span>Terminal</span></h1>
+    <div id="headerSub" class="header-sub">
+      Login öncesi her oyuna girişte 1 kısa reklam gösterilir.
+    </div>
+  </div>
 
-      <button id="backBtn" class="back-btn" type="button">‹</button>
+  <div class="game-hub">
+
+    <div class="game-card g-pink" data-game-id="word_cracker" data-url="/pages/word_cracker.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🔐</div>
+      </div>
+      <div class="game-info">
+        <h2>Code Cracker</h2>
+        <p>Şifreleri kır, dile hükmet</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
     </div>
 
-    <section class="hero">
-      <h1>Oyunlarla Dil Öğren</h1>
-      <p>Kelime, hafıza ve dikkat oyunlarıyla pratik yap. Login öncesi kullanım reklamlıdır.</p>
-      <div class="ad-note" id="adNote">
-        Oyuna her girişte 1 kısa reklam gösterilir. Oyundan çıkmadığın sürece tekrar reklam gösterilmez.
+    <div class="game-card g-pink" data-game-id="echo_rush" data-url="/pages/echo_rush.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🤝</div>
       </div>
-    </section>
+      <div class="game-info">
+        <h2>Echo Rush</h2>
+        <p>Hızlı söyle, sesle yakala!</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
 
-    <section class="grid" id="gameGrid"></section>
-  </main>
+    <div class="game-card g-blue" data-game-id="gap_master" data-url="/pages/gap_master.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">📝</div>
+      </div>
+      <div class="game-info">
+        <h2>Gap Master</h2>
+        <p>Boşlukları zekanla doldur</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
 
-  <div id="toast" class="toast"></div>
+    <div class="game-card g-pink" data-game-id="glitch" data-url="/pages/glitch.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">👾</div>
+      </div>
+      <div class="game-info">
+        <h2>Glitch Hunt</h2>
+        <p>Hatalı kodları temizle</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
 
-  <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-    import { ensureModuleAdAccess } from "/js/ad_gate.js";
+    <div class="game-card g-yellow" data-game-id="hangman" data-url="/pages/hangman.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🪂</div>
+      </div>
+      <div class="game-info">
+        <h2>Hangman</h2>
+        <p>Kelimeyi tahmin et, kurtar!</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
 
-    const $ = (id) => document.getElementById(id);
+    <div class="game-card g-blue" data-game-id="memory_pulse" data-url="/pages/memory_pulse.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🧠</div>
+      </div>
+      <div class="game-info">
+        <h2>Memory Pulse</h2>
+        <p>Kartları eşleştir!</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
 
-    const gameGrid = $("gameGrid");
-    const backBtn = $("backBtn");
-    const toastEl = $("toast");
-    const adNote = $("adNote");
+    <div class="game-card g-yellow" data-game-id="meteor" data-url="/pages/meteor.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">☄️</div>
+      </div>
+      <div class="game-info">
+        <h2>Meteor Strike</h2>
+        <p>Kelimeleri vur, dünyayı koru</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
 
-    let isLoggedIn = false;
+    <div class="game-card g-blue" data-game-id="morse_game" data-url="/pages/morse_game.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">📡</div>
+      </div>
+      <div class="game-info">
+        <h2>Kod Çöz</h2>
+        <p>Mors alfabesini dinle, çöz ve öğren</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
+
+    <div class="game-card g-pink" data-game-id="neural_box" data-url="/pages/neural_box.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">📦</div>
+      </div>
+      <div class="game-info">
+        <h2>Neural Box</h2>
+        <p>Var mısın? Yok musun?</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
+
+    <div class="game-card g-yellow" data-game-id="duo_friend" data-url="/pages/duo_friend.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">⚔️</div>
+      </div>
+      <div class="game-info">
+        <h2>Quantum Duo</h2>
+        <p>Karşılıklı dil düellosu</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
+
+    <div class="game-card g-yellow" data-game-id="sentence_master" data-url="/pages/sentence_master.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🧩</div>
+      </div>
+      <div class="game-info">
+        <h2>Sentence Builder</h2>
+        <p>Kelimeleri diz, cümleyi kur</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
+
+    <div class="game-card g-blue" data-game-id="signal_hunt" data-url="/pages/signal_hunt.html?public=1">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🕵️</div>
+      </div>
+      <div class="game-info">
+        <h2>Spy Master</h2>
+        <p>Casusu bul ve dilini çöz</p>
+      </div>
+      <div class="game-arrow">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+  import { ensureModuleAdAccess, resetModuleAdStateForDebug } from "/js/ad_gate.js";
+
+  const pageContent = document.getElementById("pageContent");
+  const headerSub = document.getElementById("headerSub");
+  const backBtn = document.getElementById("backBtn");
+  const toastEl = document.getElementById("toast");
+
+  let isLoggedIn = false;
+
+  function toast(msg){
+    if(!toastEl) return;
+    toastEl.textContent = String(msg || "");
+    toastEl.classList.add("show");
+    clearTimeout(window.__gameToastTimer);
+    window.__gameToastTimer = setTimeout(() => {
+      toastEl.classList.remove("show");
+    }, 2400);
+  }
+
+  async function hydrateAuth(){
+    try{
+      const { data } = await supabase.auth.getSession();
+      isLoggedIn = !!data?.session;
+    }catch{
+      isLoggedIn = false;
+    }
+
+    if(isLoggedIn && headerSub){
+      headerSub.textContent = "Giriş yaptığınız için oyunlara reklamsız devam edebilirsiniz.";
+    }
+  }
+
+  async function openGame(card){
+    const targetUrl = card.getAttribute("data-url") || "";
+    const gameId = card.getAttribute("data-game-id") || "game";
+    const gameTitle = card.querySelector("h2")?.textContent?.trim() || "Oyun";
+
+    if(!targetUrl) return;
+
+    if(isLoggedIn){
+      location.href = targetUrl;
+      return;
+    }
 
     /*
-      Dosya adları farklıysa sadece buradaki url alanlarını değiştirmen yeterli.
-      Login öncesi her oyuna buradan reklam kapısı koyuyoruz.
+      Her oyuna girişte 1 reklam istiyoruz.
+      Oyundan çıkmadan tekrar reklam yok mantığı oyun sayfasının içinde devam eder.
+      Menüden tekrar girerse yine reklam gösterilir.
     */
-    const GAMES = [
-      {
-        id: "hangman",
-        title: "Hangman Nitro",
-        desc: "Kelimeyi tahmin et, harfleri öğren.",
-        icon: "🎯",
-        url: "/pages/hangman.html?public=1"
-      },
-      {
-        id: "wordsearch",
-        title: "Kelime Avı",
-        desc: "Gizli kelimeleri bul, hafızanı güçlendir.",
-        icon: "🔎",
-        url: "/pages/wordsearch.html?public=1"
-      },
-      {
-        id: "code_decode",
-        title: "Kod Çöz",
-        desc: "Mors ve sembol oyunlarıyla dikkat pratiği yap.",
-        icon: "🧩",
-        url: "/pages/code_decode.html?public=1"
-      },
-      {
-        id: "memory",
-        title: "Hafıza Kartları",
-        desc: "Eşleştir, hatırla, kelime öğren.",
-        icon: "🧠",
-        url: "/pages/memory_game.html?public=1"
-      }
-    ];
+    try{
+      resetModuleAdStateForDebug();
+    }catch{}
 
-    function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = String(msg || "");
-      toastEl.classList.add("show");
-      clearTimeout(window.__gameToastTimer);
-      window.__gameToastTimer = setTimeout(() => {
-        toastEl.classList.remove("show");
-      }, 2400);
-    }
-
-    async function hydrateAuth(){
-      try{
-        const { data } = await supabase.auth.getSession();
-        isLoggedIn = !!data?.session;
-      }catch{
-        isLoggedIn = false;
-      }
-
-      if(isLoggedIn && adNote){
-        adNote.textContent = "Giriş yaptığınız için oyunlara reklamsız devam edebilirsiniz.";
-      }
-    }
-
-    function renderGames(){
-      gameGrid.innerHTML = GAMES.map((game) => `
-        <button class="game-card" type="button" data-game-id="${game.id}">
-          <div class="game-icon">${game.icon}</div>
-          <div class="game-info">
-            <div class="game-title">${game.title}</div>
-            <div class="game-desc">${game.desc}</div>
-          </div>
-          <div class="game-arrow">›</div>
-        </button>
-      `).join("");
-
-      gameGrid.querySelectorAll("[data-game-id]").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const game = GAMES.find((x) => x.id === btn.dataset.gameId);
-          if(!game) return;
-
-          await openGame(game);
-        });
-      });
-    }
-
-    async function openGame(game){
-      if(isLoggedIn){
-        location.href = game.url;
-        return;
-      }
-
-      const ok = await ensureModuleAdAccess({
-        moduleKey: `public_game_${game.id}`,
-        placement: `public_game_${game.id}`,
-        hours: 0,
-        title: "Oyuna Giriş Reklamı",
-        text: `${game.title} oyununa giriş için 1 kısa reklam gösterilecektir.\\nOyundan çıkmadığınız sürece tekrar reklam gösterilmez.`
-      });
-
-      if(!ok){
-        toast("Reklam tamamlanmadan oyun başlatılmadı.");
-        return;
-      }
-
-      sessionStorage.setItem(`italky_public_game_unlocked_${game.id}`, "1");
-      location.href = game.url;
-    }
-
-    backBtn?.addEventListener("click", () => {
-      location.href = "/pages/login.html";
+    const ok = await ensureModuleAdAccess({
+      moduleKey: `public_game_${gameId}_${Date.now()}`,
+      placement: `public_game_${gameId}`,
+      hours: 0,
+      title: "Oyuna Giriş Reklamı",
+      text: `${gameTitle} oyununa giriş için 1 kısa reklam gösterilecektir.\\nOyundan çıkmadığınız sürece tekrar reklam gösterilmez.`
     });
 
-    async function boot(){
-      await hydrateAuth();
-      renderGames();
+    if(!ok){
+      toast("Reklam tamamlanmadan oyun başlatılmadı.");
+      return;
     }
 
-    boot();
-  </script>
+    sessionStorage.setItem(`italky_public_game_unlocked_${gameId}`, "1");
+    location.href = targetUrl;
+  }
+
+  document.querySelectorAll(".game-card[data-url]").forEach((card) => {
+    card.addEventListener("click", async () => {
+      await openGame(card);
+    });
+  });
+
+  backBtn?.addEventListener("click", () => {
+    location.href = "/pages/login.html";
+  });
+
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      pageContent?.classList.add("ui-ready");
+    }, 120);
+  });
+
+  async function boot(){
+    await hydrateAuth();
+  }
+
+  boot();
+</script>
+
 </body>
 </html>
