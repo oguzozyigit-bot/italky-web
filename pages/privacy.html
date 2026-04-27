@@ -1,205 +1,580 @@
+<!-- /pages/privacy.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Gizlilik</title>
+  <title>italkyAI • Gizlilik Politikası</title>
+
   <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
-    :root {
-      --neon: #00f2ff;
-      --pink: #ff007a;
-      --ai-grad: linear-gradient(135deg, #00f2ff 0%, #7000ff 50%, #ff007a 100%);
-      --bg: #060408;
-      --glass: rgba(255, 255, 255, 0.04);
-      --border: rgba(255, 255, 255, 0.1);
+    :root{
+      --bg:#07111f;
+      --bg2:#0b1d33;
+      --navy:#0f2742;
+      --blue:#2f80ed;
+      --blue2:#38bdf8;
+      --ice:#eaf6ff;
+      --text:#f8fbff;
+      --muted:rgba(248,251,255,.68);
+      --soft:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.12);
+      --line2:rgba(56,189,248,.20);
+      --card:rgba(10,28,48,.72);
+      --grad:linear-gradient(135deg,#dbeafe 0%,#60a5fa 34%,#2563eb 72%,#0f2742 100%);
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; }
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
-    /* --- CANLI ARKA PLAN (italkyAI DNA) --- */
-    .bg-layer {
-      position: fixed; inset: 0; z-index: 1;
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:'Outfit',sans-serif;
+      overflow-x:hidden;
+    }
+
+    body{
       background:
-        radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.18) 0%, transparent 40%),
-        linear-gradient(180deg, #0f0816 0%, #060408 100%);
+        radial-gradient(circle at 16% 0%, rgba(56,189,248,.18), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(37,99,235,.16), transparent 26%),
+        radial-gradient(circle at 50% 100%, rgba(14,165,233,.10), transparent 30%),
+        linear-gradient(180deg,var(--bg2),var(--bg));
     }
 
-    .crystal-wrap {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      perspective: 1200px; pointer-events: none; z-index: 2;
+    .bg-layer{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:1;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:42px 42px;
+      opacity:.28;
+      mask-image:linear-gradient(to bottom, black, transparent 80%);
+      -webkit-mask-image:linear-gradient(to bottom, black, transparent 80%);
     }
 
-    .crystal-cage {
-      width: 320px; height: 320px; transform-style: preserve-3d;
-      animation: rotateCrystal 22s linear infinite; opacity: 0.18;
+    .orb{
+      position:fixed;
+      width:300px;
+      height:300px;
+      border-radius:50%;
+      right:-130px;
+      top:70px;
+      background:radial-gradient(circle, rgba(56,189,248,.16), transparent 68%);
+      filter:blur(8px);
+      pointer-events:none;
+      z-index:1;
     }
 
-    .side {
-      position: absolute; inset: 0; border: 1.5px solid var(--neon);
-      background: radial-gradient(circle, rgba(0, 242, 255, 0.08), transparent);
-    }
-    .s1{ transform:rotateY(0deg) translateZ(160px); }
-    .s2{ transform:rotateY(90deg) translateZ(160px); }
-    .s3{ transform:rotateX(90deg) translateZ(160px); }
-
-    @keyframes rotateCrystal {
-      from { transform: rotateX(0deg) rotateY(0deg); }
-      to { transform: rotateX(360deg) rotateY(720deg); }
-    }
-
-    /* --- MOBILE FRAME & CONTENT --- */
-    .mobile-frame {
-      width: 100%; max-width: 480px; height: 100dvh; margin: 0 auto;
-      position: relative; z-index: 10; display: flex; flex-direction: column;
+    #pageContent{
+      position:relative;
+      z-index:10;
+      width:100%;
+      max-width:540px;
+      min-height:100dvh;
+      margin:0 auto;
+      padding:calc(18px + var(--safe-top)) 16px calc(22px + var(--safe-bottom));
+      display:flex;
+      flex-direction:column;
+      gap:16px;
     }
 
-    .top-nav {
-      display: flex; align-items: center; gap: 15px; padding: 20px;
-      position: sticky; top: 0; z-index: 30; background: transparent;
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
     }
 
-    .btn-back {
-      background: transparent; border: none; color: #fff; font-size: 26px;
-      font-weight: 900; cursor: pointer; display: flex; align-items: center;
-    }
-    .btn-back:hover { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
-
-    .brand {
-      font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800;
-      background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      letter-spacing: -1px;
+    .brand{
+      min-width:0;
     }
 
-    .page-content {
-      flex: 1; overflow-y: auto; padding: 0 20px 140px;
-      scrollbar-width: none; -webkit-overflow-scrolling: touch;
-    }
-    .page-content::-webkit-scrollbar { display: none; }
-
-    /* --- PRIVACY COMPONENTS --- */
-    .privacy-card {
-      background: var(--glass); border: 1px solid var(--border);
-      border-radius: 32px; padding: 35px 25px; backdrop-filter: blur(25px);
-      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
-      animation: cardIn 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    .brand-main{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:30px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:-1px;
     }
 
-    @keyframes cardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .brand-main .ai{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
 
-    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; margin: 0 0 15px; letter-spacing: -1.5px; }
-    h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .brand-sub{
+      margin-top:7px;
+      display:inline-flex;
+      padding:6px 11px;
+      border-radius:999px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(248,251,255,.72);
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:1.7px;
+    }
 
-    .intro { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 30px; border-left: 2px solid var(--neon); padding-left: 15px; font-style: italic; }
+    .back-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+      font-size:24px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:0 14px 28px rgba(0,0,0,.18);
+    }
 
-    .section { margin-bottom: 30px; }
-    h3 { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 900; color: var(--neon); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-    h3::before { content: ""; width: 8px; height: 8px; background: var(--pink); border-radius: 50%; box-shadow: 0 0 10px var(--pink); }
+    .hero{
+      border-radius:30px;
+      padding:18px;
+      background:
+        radial-gradient(circle at top right, rgba(56,189,248,.17), transparent 36%),
+        linear-gradient(145deg, rgba(15,39,66,.88), rgba(7,17,31,.82));
+      border:1px solid var(--line2);
+      box-shadow:0 22px 48px rgba(0,0,0,.26);
+      overflow:hidden;
+      position:relative;
+    }
 
-    p { font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.7; margin-bottom: 12px; }
-    ul { padding: 0; list-style: none; margin-bottom: 15px; }
-    li { position: relative; padding-left: 20px; font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 10px; line-height: 1.5; }
-    li::before { content: "›"; position: absolute; left: 0; color: var(--neon); font-weight: 900; font-size: 18px; top: -2px; }
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg, transparent, rgba(255,255,255,.05), transparent);
+      pointer-events:none;
+    }
 
-    .highlight { color: #fff; font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+    .hero-badge{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.11);
+      color:#bfdbfe;
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.5px;
+      margin-bottom:12px;
+    }
 
-    /* --- FOOTER --- */
-    .footer-bar { position: absolute; bottom: 0; width: 100%; padding: 25px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 40; }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.3s; }
-    .footer-links a.active { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
-    .footer-copy { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 700; }
+    h1{
+      position:relative;
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:30px;
+      line-height:1.08;
+      font-weight:900;
+      letter-spacing:-1px;
+    }
+
+    h1 span{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero p{
+      position:relative;
+      margin:11px 0 0;
+      font-size:14px;
+      line-height:1.6;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .privacy-card{
+      border-radius:30px;
+      padding:18px;
+      background:var(--card);
+      border:1px solid var(--line);
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+      box-shadow:0 24px 54px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04);
+      animation:cardIn .45s ease forwards;
+    }
+
+    @keyframes cardIn{
+      from{opacity:0; transform:translateY(14px)}
+      to{opacity:1; transform:translateY(0)}
+    }
+
+    .intro{
+      margin:0 0 18px;
+      padding:14px;
+      border-radius:22px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(248,251,255,.72);
+      font-size:13px;
+      line-height:1.55;
+      font-weight:700;
+    }
+
+    .section{
+      margin:0 0 20px;
+    }
+
+    .section:last-child{
+      margin-bottom:0;
+    }
+
+    h3{
+      margin:0 0 10px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:14px;
+      font-weight:900;
+      color:#93c5fd;
+      letter-spacing:.6px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      text-transform:uppercase;
+    }
+
+    h3::before{
+      content:"";
+      width:9px;
+      height:9px;
+      border-radius:50%;
+      background:#38bdf8;
+      box-shadow:0 0 14px rgba(56,189,248,.55);
+      flex:0 0 auto;
+    }
+
+    p{
+      margin:0 0 12px;
+      color:rgba(248,251,255,.82);
+      line-height:1.68;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    ul{
+      padding:0;
+      margin:0;
+      list-style:none;
+      display:grid;
+      gap:9px;
+    }
+
+    li{
+      position:relative;
+      padding-left:20px;
+      color:rgba(248,251,255,.76);
+      font-size:13px;
+      line-height:1.55;
+      font-weight:600;
+    }
+
+    li::before{
+      content:"›";
+      position:absolute;
+      left:0;
+      top:-1px;
+      color:#7dd3fc;
+      font-weight:1000;
+      font-size:18px;
+    }
+
+    .highlight{
+      color:#fff;
+      font-weight:900;
+    }
+
+    .date-note{
+      border-radius:22px;
+      padding:14px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(248,251,255,.64);
+      font-size:12px;
+      line-height:1.5;
+      font-weight:700;
+    }
+
+    @media(max-width:520px){
+      #pageContent{
+        padding:calc(16px + var(--safe-top)) 14px calc(20px + var(--safe-bottom));
+      }
+
+      .brand-main{
+        font-size:28px;
+      }
+
+      h1{
+        font-size:27px;
+      }
+
+      .privacy-card{
+        padding:16px;
+      }
+    }
   </style>
 </head>
+
 <body>
-
   <div class="bg-layer"></div>
-  <div class="crystal-wrap">
-    <div class="crystal-cage">
-      <div class="side s1"></div>
-      <div class="side s2"></div>
-      <div class="side s3"></div>
-    </div>
-  </div>
+  <div class="orb"></div>
 
-  <div class="mobile-frame">
-    <div class="top-nav">
-      <button class="btn-back" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'">←</button>
-      <div class="brand">italkyAI</div>
-    </div>
-
-    <div class="page-content" id="contentHost"></div>
-
-    <div class="footer-bar">
-      <div class="footer-links">
+  <main id="pageContent">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-main">italky<span class="ai">AI</span></div>
+        <div class="brand-sub">BE FREE</div>
       </div>
-      <div class="footer-copy">italkyAI By <b>Ozyigit's</b> • 2026</div>
+
+      <button id="backBtn" class="back-btn" type="button">‹</button>
     </div>
-  </div>
+
+    <section class="hero" id="heroHost"></section>
+
+    <section class="privacy-card" id="contentHost"></section>
+
+    <div class="date-note" id="dateNote"></div>
+  </main>
+
+  <template id="hero_tr">
+    <div class="hero-badge">Gizlilik Politikası</div>
+    <h1>Verilerinizi <span>Şeffaf</span> ve Güvenli Yönetiyoruz</h1>
+    <p>Bu politika, italkyAI uygulamasında hangi verilerin işlendiğini, neden kullanıldığını ve kullanıcı haklarını açıklar.</p>
+  </template>
+
+  <template id="hero_en">
+    <div class="hero-badge">Privacy Policy</div>
+    <h1>We Handle Your Data With <span>Transparency</span> and Care</h1>
+    <p>This policy explains what data is processed in the italkyAI app, why it is used, and what rights users have.</p>
+  </template>
 
   <template id="privacy_tr">
-    <div class="privacy-card">
-      <h1>Gizlilik <span>Politikası</span></h1>
-      <div class="intro">italkyAI olarak kişisel verilerinize saygı duyar ve verilerinizi global güvenlik standartlarına uygun şekilde koruruz.</div>
+    <div class="intro">
+      italkyAI, çeviri, konuşma, öğrenme, offline kullanım, oyunlar ve seviye tespit gibi özellikler sunan bir iletişim ve dil öğrenme uygulamasıdır. Uygulamayı kullanırken bazı bilgiler yalnızca hizmeti çalıştırmak, güvenliği sağlamak, reklam/abonelik süreçlerini yönetmek ve kullanıcı deneyimini iyileştirmek için işlenir.
+    </div>
 
-      <div class="section">
-        <h3>0. VERİ SORUMLUSU</h3>
-        <p>Veri sorumlusu: <span class="highlight">Oğuz Özyiğit</span></p>
-        <p>Adres: Şerefiye Mah. Uzunzade Sk. B Blok No: 11/1 İç Kapı No: 10 Merkez / Düzce – Türkiye</p>
-        <p>İletişim: <span class="highlight">privacy@italky.ai</span></p>
-      </div>
+    <div class="section">
+      <h3>1. Toplanan Bilgiler</h3>
+      <p>Uygulama, kullanılan özelliğe göre aşağıdaki bilgi türlerini işleyebilir:</p>
+      <ul>
+        <li><span class="highlight">Hesap bilgileri:</span> Google ile giriş yapıldığında e-posta adresi, kullanıcı kimliği ve temel profil bilgileri.</li>
+        <li><span class="highlight">Uygulama kullanım bilgileri:</span> Dil tercihleri, uygulama içi ayarlar, modül kullanımı, seviye testi sonuçları, oyun skorları ve offline paket tercihleri.</li>
+        <li><span class="highlight">Cihaz ve teknik bilgiler:</span> Uygulama performansı, hata kayıtları, cihaz türü, işletim sistemi, uygulama sürümü ve bağlantı durumu gibi teknik veriler.</li>
+        <li><span class="highlight">Ses ve konuşma verileri:</span> Mikrofon kullanılan özelliklerde ses, konuşmayı metne çevirmek veya sesli çeviri sağlamak için anlık olarak işlenebilir.</li>
+        <li><span class="highlight">Kamera verileri:</span> Kamera yalnızca kullanıcı tarafından ilgili özellik açıldığında kullanılır.</li>
+      </ul>
+    </div>
 
-      <div class="section">
-        <h3>1. TOPLANAN VERİLER</h3>
-        <ul>
-          <li><strong>Hesap Bilgileri:</strong> Google ile giriş yapıldığında alınan e-posta ve temel profil.</li>
-          <li><strong>Kullanım Verileri:</strong> Uygulama içi tercihler ve kullanım akışı.</li>
-          <li><strong>Ses Verileri:</strong> Canlı pratik sırasında anlık işlenir; <span class="highlight">asla kalıcı depolanmaz</span>.</li>
-        </ul>
-      </div>
+    <div class="section">
+      <h3>2. Verilerin Kullanım Amaçları</h3>
+      <ul>
+        <li>Çeviri, konuşma, yapay zekâ destekli yanıt, seviye tespit ve oyun özelliklerini çalıştırmak.</li>
+        <li>Kullanıcının dil, ses, offline paket ve uygulama tercihlerini hatırlamak.</li>
+        <li>Hesap girişi, güvenlik, kötüye kullanım önleme ve oturum yönetimi sağlamak.</li>
+        <li>Reklam destekli kullanım ve reklamsız abonelik süreçlerini yönetmek.</li>
+        <li>Uygulama hatalarını tespit etmek, performansı geliştirmek ve hizmet kalitesini artırmak.</li>
+      </ul>
+    </div>
 
-      <div class="section">
-        <h3>2. KAMERA VE MİKROFON</h3>
-        <p>Kamera ve mikrofon, yalnızca siz ilgili özelliği açtığınızda kullanılır ve kapattığınız anda erişim kesilir. Görüntüleriniz <span class="highlight">asla kaydedilmez</span>.</p>
-      </div>
+    <div class="section">
+      <h3>3. Mikrofon, Kamera ve Ses Kullanımı</h3>
+      <p>Mikrofon ve kamera yalnızca kullanıcı ilgili özelliği başlattığında çalışır. Ses verileri konuşma tanıma, sesli çeviri veya sesli yanıt üretme amacıyla işlenebilir. Kamera görüntüsü yalnızca ilgili özellik kullanılırken işlenir. italkyAI, kamera görüntülerini kullanıcı izni olmadan arka planda kaydetmez.</p>
+    </div>
 
-      <div class="section">
-        <h3>3. ÜÇÜNCÜ TARAF SERVİSLER</h3>
-        <p>Hizmetin sunulması için Google Auth, OpenAI (dil işleme), Supabase (veri saklama) ve Render altyapıları kullanılmaktadır.</p>
-      </div>
+    <div class="section">
+      <h3>4. Reklamlar, Google Play ve Üçüncü Taraf Hizmetler</h3>
+      <p>italkyAI, ücretsiz erişimi desteklemek için reklam gösterebilir. Reklamlar Google AdMob veya benzeri reklam hizmetleri üzerinden sunulabilir. Reklamsız abonelik ve uygulama içi satın alma işlemleri Google Play ödeme altyapısı üzerinden yürütülür.</p>
+      <ul>
+        <li>Google ile giriş işlemleri Google kimlik doğrulama altyapısı üzerinden yapılır.</li>
+        <li>Ödeme ve abonelik bilgileri Google Play tarafından işlenir.</li>
+        <li>Bildirim, analiz, veritabanı, barındırma, hata takibi ve yapay zekâ işlemleri için güvenilir üçüncü taraf altyapılar kullanılabilir.</li>
+        <li>Üçüncü taraf hizmetler kendi gizlilik politikalarına göre veri işleyebilir.</li>
+      </ul>
+    </div>
 
-      <div class="section">
-        <h3>4. KULLANICI HAKLARI</h3>
-        <p>Verilerinize erişebilir ve hesabınızı <strong>Profil > Hesabı Sil</strong> adımıyla her an kalıcı olarak silebilirsiniz.</p>
-      </div>
+    <div class="section">
+      <h3>5. Verilerin Saklanması</h3>
+      <p>Hesap ve kullanım bilgileri, hizmetin sağlanması için gerekli olduğu sürece saklanabilir. Kullanıcı hesabını sildiğinde, hesapla ilişkili veriler makul süre içinde silinir veya anonimleştirilir. Yasal yükümlülükler, güvenlik kayıtları veya ödeme kayıtları için bazı veriler daha uzun süre saklanabilir.</p>
+    </div>
+
+    <div class="section">
+      <h3>6. Verilerin Paylaşımı</h3>
+      <p>Kişisel veriler satılmaz. Veriler yalnızca hizmeti sunmak, ödeme/abonelik işlemlerini yönetmek, güvenliği sağlamak, yasal yükümlülüklere uymak veya kullanıcının talep ettiği özelliği çalıştırmak için gerekli hizmet sağlayıcılarla paylaşılabilir.</p>
+    </div>
+
+    <div class="section">
+      <h3>7. Çocukların Gizliliği</h3>
+      <p>italkyAI çocuklara özel olarak tasarlanmış bir uygulama değildir. Yaş sınırı ve uygunluk kuralları, uygulamanın yayınlandığı mağaza politikalarına göre yönetilir. Çocuklardan bilerek kişisel veri toplanması amaçlanmaz.</p>
+    </div>
+
+    <div class="section">
+      <h3>8. Kullanıcı Hakları ve Hesap Silme</h3>
+      <p>Kullanıcılar hesaplarına bağlı veriler hakkında erişim, düzeltme veya silme talebinde bulunabilir. Uygulama içinde hesap silme seçeneği varsa kullanıcı bu alan üzerinden hesabını silebilir. Ayrıca gizlilik talepleri için aşağıdaki e-posta adresinden iletişime geçilebilir.</p>
+      <p><span class="highlight">Gizlilik iletişimi:</span> privacy@italky.ai</p>
+    </div>
+
+    <div class="section">
+      <h3>9. Güvenlik</h3>
+      <p>italkyAI, kullanıcı verilerini korumak için teknik ve idari güvenlik önlemleri uygular. Ancak internet üzerinden hiçbir veri aktarımının tamamen risksiz olmadığı unutulmamalıdır.</p>
+    </div>
+
+    <div class="section">
+      <h3>10. Politika Güncellemeleri</h3>
+      <p>Bu gizlilik politikası zaman zaman güncellenebilir. Güncel sürüm bu sayfada yayınlandığında geçerli olur.</p>
     </div>
   </template>
 
-  <script type="module">
-    import { getSiteLang } from "/js/i18n.js";
+  <template id="privacy_en">
+    <div class="intro">
+      italkyAI is a communication and language learning app that provides translation, speaking, learning, offline usage, games, and level detection features. When you use the app, certain information may be processed only to operate the service, protect security, manage ads/subscriptions, and improve the user experience.
+    </div>
 
-    function render(){
-      const lang = (getSiteLang?.() || "tr").toLowerCase();
-      const host = document.getElementById("contentHost");
-      let tpl = document.getElementById(`privacy_${lang}`);
-      if(!tpl) tpl = document.getElementById("privacy_tr");
+    <div class="section">
+      <h3>1. Information We Collect</h3>
+      <p>Depending on the feature used, the app may process the following types of information:</p>
+      <ul>
+        <li><span class="highlight">Account information:</span> Email address, user ID, and basic profile information when signing in with Google.</li>
+        <li><span class="highlight">App usage information:</span> Language preferences, in-app settings, module usage, level test results, game scores, and offline package preferences.</li>
+        <li><span class="highlight">Device and technical information:</span> App performance, error logs, device type, operating system, app version, and connection status.</li>
+        <li><span class="highlight">Voice and speech data:</span> When microphone-based features are used, voice may be processed temporarily for speech recognition or voice translation.</li>
+        <li><span class="highlight">Camera data:</span> The camera is used only when the user starts a camera-based feature.</li>
+      </ul>
+    </div>
 
-      host.innerHTML = "";
-      host.appendChild(tpl.content.cloneNode(true));
-      
-      const titles = { tr: "italkyAI • Gizlilik", en: "italkyAI • Privacy" };
-      document.title = titles[lang] || "italkyAI";
+    <div class="section">
+      <h3>2. How We Use Information</h3>
+      <ul>
+        <li>To provide translation, speaking, AI-assisted responses, level detection, and game features.</li>
+        <li>To remember language, voice, offline package, and app preferences.</li>
+        <li>To manage sign-in, security, abuse prevention, and sessions.</li>
+        <li>To manage ad-supported access and ad-free subscription flows.</li>
+        <li>To detect issues, improve performance, and maintain service quality.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>3. Microphone, Camera, and Voice Usage</h3>
+      <p>Microphone and camera access is used only when the user starts a related feature. Voice data may be processed for speech recognition, voice translation, or voice response generation. Camera input is processed only while the relevant feature is active. italkyAI does not record camera input in the background without user permission.</p>
+    </div>
+
+    <div class="section">
+      <h3>4. Ads, Google Play, and Third-Party Services</h3>
+      <p>italkyAI may show ads to support free access. Ads may be served through Google AdMob or similar advertising services. Ad-free subscriptions and in-app purchases are handled through Google Play billing.</p>
+      <ul>
+        <li>Google sign-in is handled through Google authentication services.</li>
+        <li>Payments and subscription processing are handled by Google Play.</li>
+        <li>Trusted third-party infrastructure may be used for notifications, analytics, database, hosting, error tracking, and AI processing.</li>
+        <li>Third-party services may process data according to their own privacy policies.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>5. Data Retention</h3>
+      <p>Account and usage information may be retained as long as necessary to provide the service. When a user deletes their account, account-related data will be deleted or anonymized within a reasonable period. Some information may be retained longer when required for legal, security, or payment record purposes.</p>
+    </div>
+
+    <div class="section">
+      <h3>6. Data Sharing</h3>
+      <p>Personal data is not sold. Data may only be shared with service providers when necessary to provide the service, manage payment/subscription flows, protect security, comply with legal obligations, or operate a feature requested by the user.</p>
+    </div>
+
+    <div class="section">
+      <h3>7. Children’s Privacy</h3>
+      <p>italkyAI is not specifically designed for children. Age rating and suitability are managed according to the policies of the app store where the app is distributed. We do not knowingly intend to collect personal data from children.</p>
+    </div>
+
+    <div class="section">
+      <h3>8. User Rights and Account Deletion</h3>
+      <p>Users may request access, correction, or deletion of account-related data. If an account deletion option is available inside the app, users may delete their account through that area. Privacy requests can also be sent to the email address below.</p>
+      <p><span class="highlight">Privacy contact:</span> privacy@italky.ai</p>
+    </div>
+
+    <div class="section">
+      <h3>9. Security</h3>
+      <p>italkyAI applies technical and administrative security measures to protect user data. However, no method of transmission over the internet is completely risk-free.</p>
+    </div>
+
+    <div class="section">
+      <h3>10. Policy Updates</h3>
+      <p>This privacy policy may be updated from time to time. The updated version becomes effective when published on this page.</p>
+    </div>
+  </template>
+
+  <script>
+    const heroHost = document.getElementById("heroHost");
+    const contentHost = document.getElementById("contentHost");
+    const dateNote = document.getElementById("dateNote");
+    const backBtn = document.getElementById("backBtn");
+
+    function getLang(){
+      const raw =
+        localStorage.getItem("site_lang") ||
+        localStorage.getItem("italky_site_lang_v1") ||
+        navigator.language ||
+        "tr";
+
+      const code = String(raw).toLowerCase().slice(0,2);
+      return ["tr","en"].includes(code) ? code : "tr";
     }
 
-    render();
-    window.addEventListener("storage", (e) => {
-      if(e.key === "italky_site_lang_v1") render();
+    function render(){
+      const lang = getLang();
+
+      heroHost.innerHTML = "";
+      contentHost.innerHTML = "";
+
+      const heroTpl = document.getElementById(`hero_${lang}`) || document.getElementById("hero_tr");
+      const privacyTpl = document.getElementById(`privacy_${lang}`) || document.getElementById("privacy_tr");
+
+      heroHost.appendChild(heroTpl.content.cloneNode(true));
+      contentHost.appendChild(privacyTpl.content.cloneNode(true));
+
+      dateNote.textContent = lang === "en"
+        ? "Last updated: April 2026 • Contact: privacy@italky.ai"
+        : "Son güncelleme: Nisan 2026 • İletişim: privacy@italky.ai";
+
+      document.title = lang === "en" ? "italkyAI • Privacy Policy" : "italkyAI • Gizlilik Politikası";
+    }
+
+    backBtn?.addEventListener("click", () => {
+      if(history.length > 1){
+        history.back();
+        return;
+      }
+
+      location.href = "/pages/login.html";
     });
+
+    window.addEventListener("storage", (e) => {
+      if(e.key === "italky_site_lang_v1" || e.key === "site_lang"){
+        render();
+      }
+    });
+
+    render();
   </script>
 </body>
 </html>
