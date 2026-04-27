@@ -1,0 +1,440 @@
+<!-- /pages/level_test_public.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <title>italkyAI • Seviye Tespit</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg:#050508;
+      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      --orange-gradient:linear-gradient(135deg,#fff7ed 0%,#ffffff 12%,#fde68a 35%,#f59e0b 68%,#ea580c 100%);
+      --card:rgba(255,255,255,.055);
+      --line:rgba(255,255,255,.10);
+      --muted:rgba(255,255,255,.66);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --safe-top:env(safe-area-inset-top,0px);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:#fff;
+      font-family:Outfit,Arial,sans-serif;
+      overflow:hidden;
+    }
+
+    body{
+      background:
+        radial-gradient(circle at 16% 8%,rgba(99,102,241,.15),transparent 25%),
+        radial-gradient(circle at 86% 12%,rgba(236,72,153,.13),transparent 25%),
+        radial-gradient(circle at bottom,rgba(56,189,248,.08),transparent 28%),
+        #050508;
+    }
+
+    .page{
+      height:100dvh;
+      overflow-y:auto;
+      padding:calc(18px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
+      scrollbar-width:none;
+    }
+
+    .page::-webkit-scrollbar{display:none}
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .brand-title{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:30px;
+      line-height:1;
+      font-weight:900;
+      letter-spacing:-1px;
+    }
+
+    .brand-title .ai{
+      background:var(--ai-gradient);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .brand-sub{
+      margin-top:7px;
+      display:inline-flex;
+      padding:6px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.78);
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:1.6px;
+    }
+
+    .back-btn{
+      min-width:44px;
+      height:44px;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:20px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .hero{
+      border-radius:30px;
+      padding:20px;
+      background:linear-gradient(135deg,rgba(99,102,241,.17),rgba(236,72,153,.10));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 20px 45px rgba(0,0,0,.28);
+      margin-bottom:16px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .hero:before{
+      content:"";
+      position:absolute;
+      width:160px;
+      height:160px;
+      right:-50px;
+      top:-50px;
+      border-radius:50%;
+      background:radial-gradient(circle,rgba(255,255,255,.13),transparent 70%);
+      pointer-events:none;
+    }
+
+    .hero-badge{
+      display:inline-flex;
+      min-height:30px;
+      align-items:center;
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:11px;
+      font-weight:1000;
+      color:rgba(255,255,255,.76);
+      margin-bottom:12px;
+    }
+
+    .hero h1{
+      margin:0;
+      font-size:28px;
+      line-height:1.08;
+      font-weight:1000;
+      letter-spacing:-.6px;
+      position:relative;
+    }
+
+    .hero p{
+      margin:11px 0 0;
+      font-size:14px;
+      line-height:1.55;
+      color:rgba(255,255,255,.72);
+      font-weight:800;
+      position:relative;
+    }
+
+    .info-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-bottom:16px;
+    }
+
+    .info-card{
+      border-radius:22px;
+      padding:14px;
+      background:var(--card);
+      border:1px solid var(--line);
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .info-icon{
+      width:42px;
+      height:42px;
+      flex:0 0 42px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,rgba(165,180,252,.20),rgba(236,72,153,.12));
+      font-size:22px;
+    }
+
+    .info-title{
+      font-size:14px;
+      font-weight:1000;
+      margin-bottom:4px;
+    }
+
+    .info-text{
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .start-card{
+      border-radius:28px;
+      padding:16px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 16px 32px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+
+    .ad-note{
+      padding:12px 13px;
+      border-radius:18px;
+      background:rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      line-height:1.45;
+      color:rgba(255,255,255,.70);
+      font-weight:800;
+      margin-bottom:12px;
+    }
+
+    .start-btn{
+      width:100%;
+      min-height:58px;
+      border:none;
+      border-radius:20px;
+      background:var(--orange-gradient);
+      color:#351204;
+      font-size:16px;
+      font-weight:1000;
+      font-family:inherit;
+      cursor:pointer;
+      box-shadow:0 18px 36px rgba(249,115,22,.18);
+    }
+
+    .start-btn:active{
+      transform:scale(.99);
+    }
+
+    .login-note{
+      margin-top:11px;
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.54);
+      font-weight:800;
+      text-align:center;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(24px + var(--safe-bottom));
+      transform:translateX(-50%) translateY(120px);
+      max-width:min(92vw,430px);
+      min-height:44px;
+      padding:11px 16px;
+      border-radius:16px;
+      background:rgba(12,16,28,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      z-index:9999;
+      box-shadow:0 18px 36px rgba(0,0,0,.35);
+      transition:.22s ease;
+      pointer-events:none;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    @media(min-width:560px){
+      .info-grid{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-title">italky<span class="ai">AI</span></div>
+        <div class="brand-sub">BE FREE</div>
+      </div>
+
+      <button id="backBtn" class="back-btn" type="button">‹</button>
+    </div>
+
+    <section class="hero">
+      <div class="hero-badge">Seviye Tespit</div>
+      <h1>Dil Seviyeni Hızlıca Ölç</h1>
+      <p>Kısa sorularla seviyeni gör, öğrenme yolunu daha doğru belirle. Login öncesi kullanım reklamlıdır.</p>
+    </section>
+
+    <section class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">🎯</div>
+        <div>
+          <div class="info-title">Hedef Seviye</div>
+          <div class="info-text">Cevaplarına göre başlangıç seviyen anlaşılır.</div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">⚡</div>
+        <div>
+          <div class="info-title">Hızlı Test</div>
+          <div class="info-text">Kısa ve anlaşılır sorularla pratik sonuç verir.</div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">🧠</div>
+        <div>
+          <div class="info-title">Akıllı Yönlendirme</div>
+          <div class="info-text">Sonuca göre pratik, oyun ve çeviri kullanımında daha iyi yönlenirsin.</div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">🚫</div>
+        <div>
+          <div class="info-title">Reklamsız Kullanım</div>
+          <div class="info-text">Giriş yapan ve aboneliği aktif kullanıcılar içeride reklamsız devam eder.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="start-card">
+      <div class="ad-note" id="adNote">
+        Login öncesi Seviye Tespit’e her girişte 1 kısa reklam gösterilir. Reklam tamamlanınca test başlar.
+      </div>
+
+      <button id="startBtn" class="start-btn" type="button">Teste Başla</button>
+
+      <div class="login-note">
+        12 aylık reklamsız kullanım Google Play üzerinden tahsil edilir.
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+    import { ensureModuleAdAccess, resetModuleAdStateForDebug } from "/js/ad_gate.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    const backBtn = $("backBtn");
+    const startBtn = $("startBtn");
+    const toastEl = $("toast");
+    const adNote = $("adNote");
+
+    let isLoggedIn = false;
+
+    /*
+      Asıl seviye tespit dosyan farklıysa sadece burayı değiştir.
+      Örnek mevcut dosya isimleri:
+      /pages/level_test.html
+      /pages/level_test_hub.html
+      /pages/level_test_start.html
+    */
+    const LEVEL_TEST_URL = "/pages/level_test_hub.html?public=1";
+
+    function toast(msg){
+      if(!toastEl) return;
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      clearTimeout(window.__levelToastTimer);
+      window.__levelToastTimer = setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, 2400);
+    }
+
+    async function hydrateAuth(){
+      try{
+        const { data } = await supabase.auth.getSession();
+        isLoggedIn = !!data?.session;
+      }catch{
+        isLoggedIn = false;
+      }
+
+      if(isLoggedIn && adNote){
+        adNote.textContent = "Giriş yaptığınız için Seviye Tespit’e reklamsız devam edebilirsiniz.";
+      }
+    }
+
+    async function startLevelTest(){
+      if(isLoggedIn){
+        location.href = LEVEL_TEST_URL;
+        return;
+      }
+
+      /*
+        Her girişte reklam istiyoruz.
+        Bu yüzden önce bu modülün reklam hafızasını siliyoruz.
+        Ardından hours:0 ile tekrar reklam kapısını açıyoruz.
+      */
+      try{
+        resetModuleAdStateForDebug();
+      }catch{}
+
+      const ok = await ensureModuleAdAccess({
+        moduleKey: "public_level_test",
+        placement: "public_level_test",
+        hours: 0,
+        title: "Seviye Tespit Reklamı",
+        text: "Seviye Tespit’e başlamak için 1 kısa reklam gösterilecektir.\\nReklam tamamlandıktan sonra test açılır."
+      });
+
+      if(!ok){
+        toast("Reklam tamamlanmadan test başlatılmadı.");
+        return;
+      }
+
+      location.href = LEVEL_TEST_URL;
+    }
+
+    backBtn?.addEventListener("click", () => {
+      location.href = "/pages/login.html";
+    });
+
+    startBtn?.addEventListener("click", startLevelTest);
+
+    async function boot(){
+      await hydrateAuth();
+    }
+
+    boot();
+  </script>
+</body>
+</html>
