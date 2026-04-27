@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>italkyAI • Seviye Sınavı</title>
+
+<meta name="theme-color" content="#02000f">
+<style>html,body{background:#02000f !important;}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ai: linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#a855f7 72%,#ec4899 100%);
+    --glass-border: rgba(255,255,255,0.10);
+    --bg-dark:#02000f;
+    --text:#ffffff;
+    --muted:rgba(255,255,255,0.46);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --safe-top:env(safe-area-inset-top,0px);
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    overflow:hidden;
+    background:var(--bg-dark);
+    font-family:'Plus Jakarta Sans',sans-serif;
+    color:var(--text);
+  }
+
+  #pageContent{
+    width:100%;
+    height:100%;
+    padding:calc(8px + var(--safe-top)) 12px calc(10px + var(--safe-bottom)) 12px;
+    opacity:0;
+    transition:opacity .25s ease;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(103,232,249,.10) 0%, transparent 26%),
+      radial-gradient(circle at 15% 20%, rgba(244,114,182,.08) 0%, transparent 18%),
+      radial-gradient(circle at 85% 18%, rgba(96,165,250,.09) 0%, transparent 18%),
+      linear-gradient(180deg,#08101d 0%, #02000f 100%);
+  }
+
+  #pageContent.ready{opacity:1}
+
+  .wrap{
+    width:100%;
+    max-width:520px;
+    height:100%;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .appTop{
+    flex:0 0 auto;
+    height:52px;
+    display:grid;
+    grid-template-columns:44px 1fr 44px;
+    align-items:center;
+    gap:8px;
+  }
+
+  .topIconBtn{
+    width:44px;
+    height:44px;
+    border:none;
+    border-radius:14px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.10);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 10px 22px rgba(0,0,0,.18);
+  }
+
+  .topIconBtn:active{transform:scale(.985)}
+
+  .topIconBtn svg{
+    width:19px;
+    height:19px;
+    display:block;
+  }
+
+  .topIconBtn.soundOn{
+    box-shadow:0 10px 22px rgba(91,124,255,.18);
+    border-color:rgba(143,181,255,.22);
+  }
+
+  .brandBtn{
+    height:44px;
+    border:none;
+    border-radius:16px;
+    background:transparent;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+
+  .brandLine{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:22px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:-.35px;
+    color:#fff;
+  }
+
+  .brandLine .ai{
+    background:var(--ai);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .topCard{
+    flex:0 0 auto;
+    border-radius:24px;
+    border:1px solid var(--glass-border);
+    background:rgba(255,255,255,.04);
+    box-shadow:0 14px 28px rgba(0,0,0,.24);
+    overflow:hidden;
+    padding:10px 12px 12px;
+    position:relative;
+  }
+
+  .topHead{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:6px;
+    gap:10px;
+  }
+
+  .heroPill{
+    min-height:32px;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.06);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    font-weight:1000;
+    white-space:nowrap;
+    color:#fff;
+  }
+
+  .miniTimer{
+    font-size:11px;
+    font-weight:1000;
+    color:rgba(255,255,255,.72);
+    padding-left:4px;
+  }
+
+  .progressWrap{
+    position:relative;
+    z-index:2;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .levelLabels{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:6px;
+    text-align:center;
+  }
+
+  .levelLabels span{
+    font-size:10px;
+    font-weight:1000;
+    color:rgba(255,255,255,.50);
+    transition:.18s ease;
+  }
+
+  .levelLabels span.active{
+    color:#a8c7ff;
+    text-shadow:0 0 14px rgba(110,168,255,.28);
+  }
+
+  .track{
+    position:relative;
+    height:14px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.05);
+    overflow:hidden;
+  }
+
+  .fill{
+    position:absolute;
+    left:2px;
+    top:2px;
+    bottom:2px;
+    width:20%;
+    border-radius:999px;
+    background:var(--ai);
+    box-shadow:0 0 16px rgba(91,124,255,.24);
+    transition:width .32s ease;
+  }
+
+  .knob{
+    position:absolute;
+    top:50%;
+    left:calc(20% - 12px);
+    width:24px;
+    height:24px;
+    transform:translateY(-50%);
+    border-radius:50%;
+    background:#10192c;
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 0 0 4px rgba(110,168,255,.08), 0 10px 20px rgba(0,0,0,.22);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:left .32s ease;
+    z-index:3;
+  }
+
+  .knob::before{
+    content:"▶";
+    font-size:10px;
+    color:#fff;
+    transform:translateX(1px);
+    opacity:.92;
+  }
+
+  .levelTitle{
+    text-align:center;
+    font-size:11px;
+    font-weight:1000;
+    color:#6ea8ff;
+    text-transform:uppercase;
+    letter-spacing:1.8px;
+    text-shadow:0 0 14px rgba(110,168,255,.18);
+  }
+
+  .planetCard{
+    flex:0 0 auto;
+    min-height:145px;
+    border-radius:24px;
+    border:1px solid var(--glass-border);
+    background:
+      radial-gradient(circle at 50% 10%, rgba(255,255,255,.05), transparent 26%),
+      linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 14px 28px rgba(0,0,0,.22);
+  }
+
+  .planetWrap{
+    width:96px;
+    height:96px;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .26s ease, filter .26s ease;
+  }
+
+  .planetWrap.okFlash{animation:planetSuccess .8s ease}
+  .planetWrap.badFlash{animation:planetFail .8s ease}
+
+  .planet-glow{
+    position:absolute;
+    inset:-18px;
+    border-radius:50%;
+    background:
+      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+      radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%);
+    filter:blur(12px);
+    animation:planetGlow 3.2s ease-in-out infinite;
+    z-index:1;
+  }
+
+  .planet-rays{
+    position:absolute;
+    inset:-18px;
+    border-radius:50%;
+    pointer-events:none;
+    z-index:1;
+  }
+
+  .planet-rays::before,
+  .planet-rays::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:
+      conic-gradient(
+        from 0deg,
+        transparent 0deg 18deg,
+        rgba(255,255,255,.28) 24deg,
+        transparent 36deg 62deg,
+        rgba(255,255,255,.16) 70deg,
+        transparent 84deg 116deg,
+        rgba(255,255,255,.22) 124deg,
+        transparent 136deg 180deg,
+        rgba(255,255,255,.18) 192deg,
+        transparent 206deg 250deg,
+        rgba(255,255,255,.24) 258deg,
+        transparent 270deg 310deg,
+        rgba(255,255,255,.15) 318deg,
+        transparent 330deg 360deg
+      );
+    mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+    -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+    filter:blur(1px);
+    opacity:.55;
+    animation:planetRaySpin 12s linear infinite;
+  }
+
+  .planet-rays::after{
+    opacity:.34;
+    transform:scale(1.14);
+    animation-duration:18s;
+    animation-direction:reverse;
+  }
+
+  .planet-core{
+    position:relative;
+    width:96px;
+    height:96px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    z-index:2;
+    background:
+      radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
+      radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
+      linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 34px rgba(103,232,249,.20),
+      0 0 64px rgba(129,140,248,.18);
+    animation:planetBreath 2.8s ease-in-out infinite;
+    transition:box-shadow .18s ease, transform .18s ease;
+  }
+
+  .planetBadge{
+    position:relative;
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow:0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20);
+    backdrop-filter:blur(10px);
+    z-index:3;
+  }
+
+  .planetBadge span{
+    position:relative;
+    z-index:2;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+    font-weight:900;
+    letter-spacing:.5px;
+    color:#fff;
+    text-shadow:0 0 12px rgba(255,255,255,.22);
+  }
+
+  .planetStatus{
+    position:absolute;
+    left:50%;
+    bottom:10px;
+    transform:translateX(-50%);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:5px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    font-size:10px;
+    font-weight:1000;
+    color:rgba(255,255,255,.78);
+    white-space:nowrap;
+    z-index:5;
+  }
+
+  .planetStatus.ok{
+    color:#d9ffe8;
+    border-color:rgba(34,197,94,.22);
+    background:rgba(34,197,94,.12);
+  }
+
+  .planetStatus.bad{
+    color:#ffe2e2;
+    border-color:rgba(239,68,68,.24);
+    background:rgba(239,68,68,.12);
+  }
+
+  .card{
+    flex:1;
+    min-height:0;
+    border-radius:22px;
+    border:1px solid rgba(110,168,255,.16);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)),
+      radial-gradient(circle at 8% 50%, rgba(59,130,246,.20), transparent 13%);
+    box-shadow:0 14px 28px rgba(0,0,0,.22);
+    padding:14px 14px 12px;
+    overflow:auto;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    position:relative;
+  }
+
+  .card::-webkit-scrollbar{display:none}
+
+  .card::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:5px;
+    border-radius:12px;
+    background:var(--ai);
+    box-shadow:0 0 18px rgba(110,168,255,.30);
+  }
+
+  .q-meta{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+
+  .meta{
+    font-size:10px;
+    font-weight:900;
+    color:rgba(255,255,255,.55);
+  }
+
+  .q-text{
+    text-align:center;
+    font-size:16px;
+    font-weight:1000;
+    line-height:1.28;
+    margin:4px 0 10px;
+    white-space:normal;
+    color:#fff;
+  }
+
+  .opt{
+    width:100%;
+    min-height:58px;
+    padding:10px 12px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(0,0,0,.22);
+    color:#fff;
+    font-weight:900;
+    text-align:left;
+    margin-bottom:8px;
+    cursor:pointer;
+    display:grid;
+    grid-template-columns:38px 1fr 24px;
+    align-items:center;
+    column-gap:10px;
+    transition:transform .16s ease, background .18s ease, border-color .18s ease, opacity .18s ease, box-shadow .18s ease;
+    font-family:inherit;
+  }
+
+  .opt:active{transform:scale(.99)}
+  .opt.dim{opacity:.42;transform:none!important}
+
+  .opt.sel{
+    background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(168,85,247,.10));
+    border-color:rgba(110,168,255,.38);
+    box-shadow:0 14px 30px rgba(59,130,246,.18);
+  }
+
+  .opt.correct{
+    border-color:rgba(34,197,94,.46);
+    background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(22,163,74,.11));
+    box-shadow:0 16px 34px rgba(34,197,94,.18);
+  }
+
+  .opt.wrong{
+    border-color:rgba(239,68,68,.44);
+    background:linear-gradient(135deg, rgba(239,68,68,.20), rgba(220,38,38,.10));
+    box-shadow:0 16px 34px rgba(239,68,68,.16);
+    animation:shakeX .32s ease;
+  }
+
+  .optKey{
+    width:38px;
+    height:38px;
+    min-width:38px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08);
+    color:#d7e4ff;
+    font-size:18px;
+    font-weight:1000;
+    align-self:start;
+  }
+
+  .optText{
+    min-width:0;
+    font-size:15px;
+    line-height:1.2;
+    word-break:break-word;
+    overflow-wrap:anywhere;
+  }
+
+  .optIcon{
+    width:24px;
+    height:24px;
+    min-width:24px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    color:rgba(255,255,255,.26);
+    font-size:12px;
+    font-weight:1000;
+    align-self:center;
+  }
+
+  .opt.correct .optIcon{
+    background:linear-gradient(135deg,#4ade80 0%,#16a34a 100%);
+    border-color:transparent;
+    color:#fff;
+  }
+
+  .opt.wrong .optIcon{
+    background:linear-gradient(135deg,#fb7185 0%,#dc2626 100%);
+    border-color:transparent;
+    color:#fff;
+  }
+
+  .nav{
+    flex:0 0 auto;
+    display:flex;
+    gap:8px;
+  }
+
+  .btn{
+    flex:1;
+    height:48px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06);
+    color:#fff;
+    font-weight:1000;
+    cursor:pointer;
+    transition:transform .16s ease, opacity .16s ease, filter .16s ease;
+    font-family:inherit;
+  }
+
+  .btn:active{transform:scale(.985)}
+  .btn-primary{background:#fff;color:#000;border:none}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+
+  .note{
+    flex:0 0 auto;
+    font-size:11px;
+    color:var(--muted);
+    font-weight:800;
+    line-height:1.35;
+  }
+
+  .footerLine{
+    flex:0 0 auto;
+    text-align:center;
+    font-size:11px;
+    font-weight:900;
+    color:rgba(255,255,255,.72);
+    padding:2px 0 0;
+  }
+
+  .footerLine .ai{
+    background:var(--ai);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .errBox,.infoBox{
+    border-radius:18px;
+    padding:12px 12px;
+    color:rgba(255,255,255,.92);
+    font-weight:900;
+    font-size:12px;
+    line-height:1.45;
+    white-space:pre-wrap;
+  }
+
+  .errBox{
+    border:1px solid rgba(255,90,140,.35);
+    background:rgba(255,0,90,.10);
+  }
+
+  .infoBox{
+    border:1px solid rgba(165,180,252,.35);
+    background:rgba(99,102,241,.10);
+  }
+
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.60);
+    backdrop-filter:blur(10px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:999999;
+  }
+
+  .overlay.show{display:flex}
+
+  .resultCard{
+    width:min(520px, 100%);
+    border-radius:28px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(10,10,18,.92);
+    padding:16px;
+  }
+
+  .rTitle{
+    font-size:16px;
+    font-weight:1000;
+    color:#fff;
+    margin:4px 0 10px;
+  }
+
+  .rLevel{
+    font-size:28px;
+    font-weight:1000;
+    color:#a5b4fc;
+    margin:0 0 10px;
+    letter-spacing:-.5px;
+  }
+
+  .rText{
+    font-size:13px;
+    font-weight:900;
+    color:rgba(255,255,255,.78);
+    line-height:1.55;
+    white-space:pre-wrap;
+  }
+
+  .rBtns{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  #fxBurst{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:99999;
+  }
+
+  .particle{
+    position:absolute;
+    width:12px;
+    height:12px;
+    border-radius:4px;
+    opacity:.98;
+    animation:burstFly .84s ease-out forwards;
+    box-shadow:0 0 16px rgba(255,255,255,.18);
+  }
+
+  @keyframes planetBreath{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.045)}
+  }
+
+  @keyframes planetGlow{
+    0%,100%{opacity:.55;transform:scale(1)}
+    50%{opacity:.92;transform:scale(1.16)}
+  }
+
+  @keyframes planetRaySpin{
+    from{transform:rotate(0deg)}
+    to{transform:rotate(360deg)}
+  }
+
+  @keyframes shakeX{
+    0%{transform:translateX(0)}
+    25%{transform:translateX(-7px)}
+    50%{transform:translateX(6px)}
+    75%{transform:translateX(-4px)}
+    100%{transform:translateX(0)}
+  }
+
+  @keyframes burstFly{
+    0%{transform:translate(0,0) scale(1);opacity:1}
+    100%{transform:translate(var(--x), var(--y)) scale(.2) rotate(180deg);opacity:0}
+  }
+
+  @keyframes planetSuccess{
+    0%{transform:scale(1)}
+    20%{transform:scale(1.06)}
+    50%{transform:scale(1.12)}
+    100%{transform:scale(1)}
+  }
+
+  @keyframes planetFail{
+    0%{transform:scale(1) rotate(0deg)}
+    20%{transform:scale(1.03) rotate(-3deg)}
+    40%{transform:scale(1.06) rotate(3deg)}
+    60%{transform:scale(1.03) rotate(-2deg)}
+    100%{transform:scale(1) rotate(0deg)}
+  }
+
+  @media (max-width:390px){
+    #pageContent{
+      padding:calc(8px + var(--safe-top)) 10px calc(10px + var(--safe-bottom)) 10px;
+    }
+
+    .wrap{gap:7px}
+    .appTop{height:48px;grid-template-columns:40px 1fr 40px}
+    .topIconBtn{width:40px;height:40px}
+    .brandLine{font-size:20px}
+    .topCard{padding:9px 10px 10px;border-radius:22px}
+    .planetCard{min-height:132px;border-radius:22px}
+    .planetWrap,.planet-core{width:84px;height:84px}
+    .planetBadge{width:40px;height:40px}
+    .planetBadge span{font-size:13px}
+    .card{padding:12px 12px 10px;border-radius:20px}
+    .q-text{font-size:15px;margin-bottom:8px}
+    .opt{min-height:54px;padding:9px 10px;margin-bottom:7px;border-radius:16px;grid-template-columns:34px 1fr 22px;column-gap:8px}
+    .optKey{width:34px;height:34px;min-width:34px;font-size:17px}
+    .optText{font-size:14px}
+    .btn{height:44px;border-radius:14px;font-size:14px}
+    .note{font-size:10.5px;line-height:1.3}
+  }
+</style>
+</head>
+
+<body>
+  <div id="fxBurst"></div>
+
+  <main id="pageContent">
+    <div class="wrap">
+      <div class="appTop">
+        <button class="topIconBtn" id="backBtn" aria-label="Geri">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M14.5 5L8 12L14.5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <button class="brandBtn" id="homeBtn" aria-label="Ana sayfa">
+          <div class="brandLine">italky<span class="ai">AI</span></div>
+        </button>
+
+        <button class="topIconBtn soundOn" id="soundToggleBtn" aria-label="Ses Aç Kapat" title="Ses Aç Kapat">
+          <svg id="soundOnIcon" viewBox="0 0 24 24" fill="none">
+            <path d="M5 14H8L13 18V6L8 10H5V14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M17 9C18.3 10.1 19 11.5 19 12.9C19 14.3 18.3 15.7 17 16.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M19.5 6.8C21.4 8.4 22.5 10.6 22.5 12.9C22.5 15.2 21.4 17.4 19.5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <svg id="soundOffIcon" viewBox="0 0 24 24" fill="none" style="display:none;">
+            <path d="M5 14H8L13 18V6L8 10H5V14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M17 9L22 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M22 9L17 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <section class="topCard">
+        <div class="topHead">
+          <div class="miniTimer" id="timerMini">40:00</div>
+          <div class="heroPill" id="heroPill">Soru 1 / 50</div>
+        </div>
+
+        <div class="progressWrap">
+          <div class="levelLabels" id="levelLabels">
+            <span class="active">A1</span>
+            <span>A2</span>
+            <span>B1</span>
+            <span>B2</span>
+            <span>C1</span>
+          </div>
+
+          <div class="track">
+            <div class="fill" id="levelFill"></div>
+            <div class="knob" id="levelKnob"></div>
+          </div>
+
+          <div class="levelTitle" id="levelTitle">Başlangıç Seviyesi</div>
+        </div>
+      </section>
+
+      <section class="planetCard">
+        <div class="planetWrap" id="planetWrap">
+          <div class="planet-glow" id="planetGlow"></div>
+          <div class="planet-rays"></div>
+          <div class="planet-core" id="planetCore">
+            <div class="planetBadge">
+              <span>AI</span>
+            </div>
+          </div>
+        </div>
+        <div class="planetStatus" id="planetStatus">Hazır</div>
+      </section>
+
+      <section class="card" id="qCard">
+        <div class="q-text">Yükleniyor…</div>
+      </section>
+
+      <div class="nav">
+        <button class="btn" id="btnPrev" disabled>GERİ</button>
+        <button class="btn" id="btnSkip" disabled>ATLA</button>
+        <button class="btn btn-primary" id="btnNext" disabled>İLERİ</button>
+      </div>
+
+      <div class="note">
+        Bilmediğin soruyu <b>Atla</b>. Süre varsa atladıkların tekrar gelir. Her soru en fazla <b>2 tur</b> gösterilir.
+      </div>
+
+      <div class="footerLine">
+        <span>italky<span class="ai">AI</span> By Ozyigit's • 2026</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="overlay" id="resultOverlay">
+    <div class="resultCard">
+      <div class="rTitle">italkyAI • Sonuç</div>
+      <div class="rLevel" id="rLevel">—</div>
+      <div class="rText" id="rText">—</div>
+      <div class="rBtns">
+        <button class="btn btn-primary" id="rGo">Tamam</button>
+        <button class="btn" id="rLater">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  const $ = (id)=>document.getElementById(id);
+
+  const qCard = $("qCard");
+  const btnPrev = $("btnPrev");
+  const btnSkip = $("btnSkip");
+  const btnNext = $("btnNext");
+  const heroPill = $("heroPill");
+  const levelLabels = $("levelLabels");
+  const levelFill = $("levelFill");
+  const levelKnob = $("levelKnob");
+  const levelTitle = $("levelTitle");
+  const planetWrap = $("planetWrap");
+  const planetCore = $("planetCore");
+  const planetGlow = $("planetGlow");
+  const planetStatus = $("planetStatus");
+  const fxBurst = $("fxBurst");
+  const backBtn = $("backBtn");
+  const homeBtn = $("homeBtn");
+  const soundToggleBtn = $("soundToggleBtn");
+  const soundOnIcon = $("soundOnIcon");
+  const soundOffIcon = $("soundOffIcon");
+  const timerMini = $("timerMini");
+
+  const params = new URLSearchParams(location.search);
+  const langParamRaw = String(params.get("lang") || localStorage.getItem("italky_public_level_lang") || "en").trim().toLowerCase();
+  const redirect = String(params.get("redirect") || "").trim();
+  const next = String(params.get("next") || "").trim();
+
+  const LANG_ALIASES = { cn:"zh", jp:"ja", kr:"ko", sa:"ar", gr:"el", cz:"cs", rs:"sr", se:"sv", ua:"uk", ir:"fa" };
+  const normLang = (l) => {
+    const x = String(l || "en").trim().toLowerCase();
+    return LANG_ALIASES[x] || x;
+  };
+
+  const langCode = normLang(langParamRaw || "en");
+  localStorage.setItem("italky_public_level_lang", langCode);
+
+  const LANG_NAMES_TR = {
+    en:"İngilizce",
+    de:"Almanca",
+    fr:"Fransızca",
+    it:"İtalyanca",
+    ru:"Rusça",
+    es:"İspanyolca",
+    zh:"Çince",
+    ja:"Japonca",
+    ko:"Korece",
+    ar:"Arapça",
+    el:"Yunanca",
+    cs:"Çekçe",
+    sr:"Sırpça",
+    sv:"İsveççe",
+    uk:"Ukraynaca",
+    fa:"Farsça",
+    pt:"Portekizce",
+    ro:"Romence",
+    hr:"Hırvatça",
+    th:"Tayca",
+    bg:"Bulgarca"
+  };
+
+  function buildReturnUrl(){
+    if(next) return `/pages/${next}.html`;
+    if(redirect === "practice_ai") return "/pages/practice_ai.html";
+    if(redirect === "hangman") return "/pages/public/hangman.html?public=1";
+    if(redirect) return `/pages/${redirect}.html`;
+    return "/pages/level_test_public.html";
+  }
+
+  function buildCloseUrl(){
+    if(redirect){
+      if(next) return `/pages/${next}.html`;
+      if(redirect === "practice_ai") return "/pages/practice_ai.html";
+      if(redirect === "hangman") return "/pages/public/hangman.html?public=1";
+      return `/pages/${redirect}.html`;
+    }
+    return "/pages/level_test_public.html";
+  }
+
+  backBtn.onclick = () => {
+    stopSpeech();
+    location.href = buildReturnUrl();
+  };
+
+  homeBtn.onclick = () => {
+    stopSpeech();
+    location.href = "/pages/level_test_public.html";
+  };
+
+  let soundEnabled = true;
+  let ttsEnabled = true;
+  let audioCtx = null;
+  let ttsTimer = null;
+
+  function updateSoundToggleUI(){
+    soundToggleBtn.classList.toggle("soundOn", soundEnabled);
+    soundOnIcon.style.display = soundEnabled ? "block" : "none";
+    soundOffIcon.style.display = soundEnabled ? "none" : "block";
+  }
+
+  soundToggleBtn.onclick = async () => {
+    soundEnabled = !soundEnabled;
+    ttsEnabled = soundEnabled;
+    updateSoundToggleUI();
+
+    if(soundEnabled){
+      await ensureAudioContext();
+      speakCurrentQuestion();
+    }else{
+      stopSpeech();
+    }
+  };
+
+  async function ensureAudioContext(){
+    if(!audioCtx){
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if(!AudioContextClass) return null;
+      audioCtx = new AudioContextClass();
+    }
+
+    if(audioCtx.state === "suspended"){
+      try{ await audioCtx.resume(); }catch{}
+    }
+
+    return audioCtx;
+  }
+
+  function stopSpeech(){
+    try{
+      clearTimeout(ttsTimer);
+      window.speechSynthesis?.cancel();
+    }catch{}
+  }
+
+  function getTTSLang(code){
+    const m = {
+      en:"en-US",
+      de:"de-DE",
+      fr:"fr-FR",
+      it:"it-IT",
+      ru:"ru-RU",
+      es:"es-ES",
+      zh:"zh-CN",
+      ja:"ja-JP",
+      ko:"ko-KR",
+      ar:"ar-SA",
+      el:"el-GR",
+      cs:"cs-CZ",
+      sr:"sr-RS",
+      sv:"sv-SE",
+      uk:"uk-UA",
+      fa:"fa-IR",
+      pt:"pt-PT",
+      ro:"ro-RO",
+      hr:"hr-HR",
+      th:"th-TH",
+      bg:"bg-BG",
+      tr:"tr-TR"
+    };
+    return m[code] || "en-US";
+  }
+
+  function speakText(text, lang){
+    if(!ttsEnabled || !soundEnabled || !("speechSynthesis" in window)) return;
+
+    stopSpeech();
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = getTTSLang(lang);
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    utter.volume = 1;
+
+    try{
+      window.speechSynthesis.speak(utter);
+    }catch{}
+  }
+
+  function speakCurrentQuestion(){
+    if(!QUESTIONS.length) return;
+
+    const q = QUESTIONS[idx];
+    if(!q || !soundEnabled || !ttsEnabled) return;
+
+    const opts = Array.isArray(q.options) ? q.options : [];
+    const spoken = [
+      q.question || "",
+      ...opts.map((opt, i) => `${["A","B","C","D"][i] || i+1}. ${opt}`)
+    ].join(". ");
+
+    stopSpeech();
+
+    ttsTimer = setTimeout(() => {
+      speakText(spoken, langCode);
+    }, 250);
+  }
+
+  function playSuccessSound(){
+    if(!soundEnabled) return;
+
+    ensureAudioContext().then((ctx) => {
+      if(!ctx) return;
+
+      const now = ctx.currentTime;
+
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(520, now);
+      osc1.frequency.exponentialRampToValueAtTime(760, now + 0.18);
+      gain1.gain.setValueAtTime(0.0001, now);
+      gain1.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+      osc1.connect(gain1).connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.3);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(860, now + 0.02);
+      osc2.frequency.exponentialRampToValueAtTime(1080, now + 0.20);
+      gain2.gain.setValueAtTime(0.0001, now + 0.02);
+      gain2.gain.exponentialRampToValueAtTime(0.05, now + 0.05);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+      osc2.connect(gain2).connect(ctx.destination);
+      osc2.start(now + 0.02);
+      osc2.stop(now + 0.28);
+    });
+  }
+
+  function playFailSound(){
+    if(!soundEnabled) return;
+
+    ensureAudioContext().then((ctx) => {
+      if(!ctx) return;
+
+      const now = ctx.currentTime;
+      const bufferSize = ctx.sampleRate * 0.45;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for(let i = 0; i < bufferSize; i++){
+        const decay = 1 - i / bufferSize;
+        data[i] = (Math.random() * 2 - 1) * decay * 0.8;
+      }
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1400, now);
+      filter.frequency.exponentialRampToValueAtTime(180, now + 0.34);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.22, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(48, now + 0.34);
+      oscGain.gain.setValueAtTime(0.0001, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+      oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+
+      noise.connect(filter).connect(gain).connect(ctx.destination);
+      osc.connect(oscGain).connect(ctx.destination);
+
+      noise.start(now);
+      noise.stop(now + 0.42);
+      osc.start(now);
+      osc.stop(now + 0.34);
+    });
+  }
+
+  function setProgressByQuestion(index, total){
+    const current = index + 1;
+    const ratio = Math.max(0, Math.min(1, current / total));
+    const fill = Math.max(8, Math.min(100, ratio * 100));
+
+    let levelCode = "A1";
+    let title = "Başlangıç Seviyesi";
+
+    if(ratio <= 0.20){ levelCode = "A1"; title = "Başlangıç Seviyesi"; }
+    else if(ratio <= 0.40){ levelCode = "A2"; title = "Temel Seviye"; }
+    else if(ratio <= 0.60){ levelCode = "B1"; title = "Orta Seviye"; }
+    else if(ratio <= 0.80){ levelCode = "B2"; title = "İyi Seviye"; }
+    else{ levelCode = "C1"; title = "İleri Seviye"; }
+
+    levelFill.style.width = `${fill}%`;
+    levelKnob.style.left = `calc(${fill}% - 12px)`;
+    levelTitle.textContent = title;
+
+    [...levelLabels.children].forEach(el => {
+      el.classList.toggle("active", el.textContent.trim() === levelCode);
+    });
+  }
+
+  function setPlanetNeutral(text="Hazır"){
+    planetWrap.classList.remove("okFlash","badFlash");
+    planetCore.style.boxShadow = `
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 34px rgba(103,232,249,.20),
+      0 0 64px rgba(129,140,248,.18)
+    `;
+    planetGlow.style.background = `
+      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+      radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%)
+    `;
+    planetStatus.className = "planetStatus";
+    planetStatus.textContent = text;
+  }
+
+  function setPlanetSuccess(){
+    planetWrap.classList.remove("badFlash");
+    void planetWrap.offsetWidth;
+    planetWrap.classList.add("okFlash");
+
+    planetCore.style.boxShadow = `
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.12),
+      0 0 36px rgba(34,197,94,.28),
+      0 0 78px rgba(34,197,94,.34)
+    `;
+
+    planetGlow.style.background = `
+      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+      radial-gradient(circle, rgba(34,197,94,.35) 0%, transparent 70%)
+    `;
+
+    planetStatus.className = "planetStatus ok";
+    planetStatus.textContent = "Doğru Cevap";
+    burstFromPlanet("ok");
+    playSuccessSound();
+  }
+
+  function setPlanetFail(){
+    planetWrap.classList.remove("okFlash");
+    void planetWrap.offsetWidth;
+    planetWrap.classList.add("badFlash");
+
+    planetCore.style.boxShadow = `
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 36px rgba(239,68,68,.30),
+      0 0 82px rgba(220,38,38,.32)
+    `;
+
+    planetGlow.style.background = `
+      radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,.03) 28%, transparent 62%),
+      radial-gradient(circle, rgba(239,68,68,.34) 0%, transparent 70%)
+    `;
+
+    planetStatus.className = "planetStatus bad";
+    planetStatus.textContent = "Yanlış Cevap";
+    burstFromPlanet("bad");
+    playFailSound();
+  }
+
+  function burstFromPlanet(type = "ok"){
+    const rect = planetWrap.getBoundingClientRect();
+    const x0 = rect.left + rect.width / 2;
+    const y0 = rect.top + rect.height / 2;
+    const count = type === "ok" ? 28 : 34;
+
+    for(let i=0; i<count; i++){
+      const p = document.createElement("span");
+      p.className = "particle";
+      p.style.left = `${x0}px`;
+      p.style.top = `${y0}px`;
+
+      const angle = (Math.PI * 2 * i) / count;
+      const distance = (type === "ok" ? 42 : 52) + Math.random() * 52;
+      const jitterX = Math.random() * 26 - 13;
+      const jitterY = Math.random() * 26 - 13;
+      const dx = Math.cos(angle) * distance + jitterX;
+      const dy = Math.sin(angle) * distance + jitterY;
+
+      p.style.setProperty("--x", `${dx}px`);
+      p.style.setProperty("--y", `${dy}px`);
+
+      if(type === "ok"){
+        p.style.background = Math.random() > .5
+          ? "linear-gradient(135deg,#dcfce7,#22c55e)"
+          : "linear-gradient(135deg,#86efac,#16a34a)";
+        p.style.borderRadius = Math.random() > .5 ? "50%" : "4px";
+      }else{
+        p.style.background = Math.random() > .5
+          ? "linear-gradient(135deg,#fecaca,#ef4444)"
+          : "linear-gradient(135deg,#fb7185,#dc2626)";
+        p.style.borderRadius = Math.random() > .5 ? "50%" : "3px";
+      }
+
+      fxBurst.appendChild(p);
+      setTimeout(() => p.remove(), 860);
+    }
+  }
+
+  function showError(title, detail){
+    qCard.innerHTML = `<div class="errBox">${title}\n\n${detail || ""}</div>`;
+    btnPrev.disabled = btnSkip.disabled = btnNext.disabled = true;
+  }
+
+  function showInfo(msg){
+    qCard.innerHTML = `<div class="infoBox">${msg}</div>`;
+  }
+
+  function stripChoiceLabel(s){
+    const t = String(s || "").trim();
+    return t.replace(/^\s*([A-D])\s*[\)\.\:\-]\s*/i, "").trim();
+  }
+
+  function normQ(q){
+    return String(q || "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+
+  function shuffleArray(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  async function loadStaticTest(lang, version){
+    const L = normLang(lang);
+    const v = Number(version || 1) || 1;
+    const url = `https://auth.italky.ai/storage/v1/object/public/tests/level_tests/${encodeURIComponent(L)}_v${v}.json`;
+
+    const r = await fetch(url, { cache:"no-store" });
+    if(!r.ok) return null;
+
+    const j = await r.json().catch(()=>null);
+    if(!j) return null;
+    if(Array.isArray(j)) return j;
+    if(j && Array.isArray(j.questions)) return j.questions;
+    return null;
+  }
+
+  const FALLBACK_QUESTIONS = [
+    {
+      level:"A1",
+      question:"Choose the correct translation: Hello",
+      options:["Merhaba","Teşekkürler","Güle güle","Lütfen"],
+      correct_index:0
+    },
+    {
+      level:"A1",
+      question:"Choose the correct answer: I ___ a student.",
+      options:["am","is","are","be"],
+      correct_index:0
+    },
+    {
+      level:"A2",
+      question:"Choose the correct translation: I am going to school.",
+      options:["Okula gidiyorum","Eve gidiyorum","Kitap okuyorum","Su içiyorum"],
+      correct_index:0
+    },
+    {
+      level:"A2",
+      question:"Choose the correct answer: She ___ coffee every morning.",
+      options:["drink","drinks","drinking","drank"],
+      correct_index:1
+    },
+    {
+      level:"B1",
+      question:"Choose the best option: If I had time, I ___ help you.",
+      options:["will","would","am","do"],
+      correct_index:1
+    },
+    {
+      level:"B1",
+      question:"Choose the closest meaning: improve",
+      options:["geliştirmek","unutmak","beklemek","satmak"],
+      correct_index:0
+    },
+    {
+      level:"B2",
+      question:"Choose the correct phrase: Despite the rain, we continued.",
+      options:["Yağmura rağmen devam ettik","Yağmur yüzünden durduk","Yağmur yoktu","Yağmuru bekledik"],
+      correct_index:0
+    },
+    {
+      level:"B2",
+      question:"Choose the best option: The report ___ by tomorrow.",
+      options:["will finish","will be finished","finishes","finished"],
+      correct_index:1
+    },
+    {
+      level:"C1",
+      question:"Choose the closest meaning: Nevertheless",
+      options:["Buna rağmen","Bu yüzden","Önceden","Hemen"],
+      correct_index:0
+    },
+    {
+      level:"C1",
+      question:"Choose the best option: Rarely ___ such a clear explanation.",
+      options:["I have heard","have I heard","I heard","did I heard"],
+      correct_index:1
+    }
+  ];
+
+  async function buildUniquePool(lang){
+    const MAX_V = 6;
+    const allQuestions = [];
+    const seen = new Set();
+
+    for(let v=1; v<=MAX_V; v++){
+      showInfo(`Test hazırlanıyor…\n\n${lang.toUpperCase()} • v${v} yükleniyor…`);
+      const arr = await loadStaticTest(lang, v);
+      if(!arr || !Array.isArray(arr) || !arr.length) continue;
+
+      for(const q of arr){
+        const qtxt = normQ(q?.question);
+        if(!qtxt) continue;
+        if(seen.has(qtxt)) continue;
+        seen.add(qtxt);
+
+        const optsRaw = Array.isArray(q?.options) ? q.options : [];
+        const opts = optsRaw.map(stripChoiceLabel).filter(Boolean);
+        const ci = (q?.correct_index != null) ? Number(q.correct_index) : Number(q?.correct ?? -1);
+
+        if(!opts.length) continue;
+
+        allQuestions.push({
+          id: q?.id ?? `${lang}_${v}_${allQuestions.length}`,
+          level: String(q?.level || "").trim() || "A1",
+          type: "mcq",
+          question: String(q?.question || "").trim(),
+          options: opts,
+          correct_index: Number.isFinite(ci) ? ci : 0
+        });
+      }
+    }
+
+    let shuffled = shuffleArray(allQuestions);
+
+    if(!shuffled.length){
+      shuffled = shuffleArray(FALLBACK_QUESTIONS);
+    }
+
+    return shuffled.slice(0, Math.min(50, shuffled.length));
+  }
+
+  function estimateLevel(correct, total){
+    const p = total ? correct / total : 0;
+
+    if(p < 0.25) return "A1";
+    if(p < 0.45) return "A2";
+    if(p < 0.65) return "B1";
+    if(p < 0.82) return "B2";
+    return "C1";
+  }
+
+  function savePublicResult(level, correct, total, percent){
+    const record = {
+      lang: langCode,
+      level,
+      correct,
+      total,
+      percent,
+      finished_at: new Date().toISOString()
+    };
+
+    try{
+      localStorage.setItem("italky_public_level_last_result", JSON.stringify(record));
+
+      const all = JSON.parse(localStorage.getItem("italky_public_level_results") || "[]");
+      all.unshift(record);
+      localStorage.setItem("italky_public_level_results", JSON.stringify(all.slice(0,20)));
+    }catch{}
+
+    return record;
+  }
+
+  showInfo("Test yükleniyor…");
+  setPlanetNeutral("Hazırlanıyor");
+  updateSoundToggleUI();
+
+  const langNameTR = LANG_NAMES_TR[langCode] || langCode.toUpperCase();
+  const QUESTIONS = await buildUniquePool(langCode);
+
+  if(!QUESTIONS.length){
+    showError("Test dosyaları bulunamadı.", `${langCode.toUpperCase()} için storage dosyaları yok.`);
+    throw new Error("no test files");
+  }
+
+  const TOTAL_TIME = 40 * 60;
+  let remaining = TOTAL_TIME;
+  const answers = Array(QUESTIONS.length).fill(null);
+  const seenCount = Array(QUESTIONS.length).fill(0);
+
+  let idx = 0;
+  let answeredLocked = false;
+
+  function nextIndex(from){
+    for(let i=from+1; i<QUESTIONS.length; i++){
+      if(answers[i] === null && seenCount[i] < 2) return i;
+    }
+
+    for(let i=0; i<QUESTIONS.length; i++){
+      if(answers[i] === null && seenCount[i] < 2) return i;
+    }
+
+    return -1;
+  }
+
+  function render(){
+    const q = QUESTIONS[idx];
+
+    if(!q){
+      showError("Soru yok.", `idx=${idx}`);
+      return;
+    }
+
+    answeredLocked = false;
+    seenCount[idx] = Math.min(2, seenCount[idx] + 1);
+
+    const picked = answers[idx];
+    const status = picked !== null ? "Cevaplandı" : (seenCount[idx] >= 2 ? "Son Tur" : "Bekliyor");
+    const passInfo = `Tur: ${seenCount[idx]}/2`;
+
+    heroPill.textContent = `Soru ${idx+1} / ${QUESTIONS.length}`;
+    setProgressByQuestion(idx, QUESTIONS.length);
+    setPlanetNeutral(picked !== null ? "Cevaplandı" : "Hazır");
+
+    const opts = Array.isArray(q.options) ? q.options : [];
+
+    qCard.innerHTML = `
+      <div class="q-meta">
+        <div class="meta">Soru ${idx+1}/${QUESTIONS.length} • ${q.level || "-"}</div>
+        <div class="meta">${status} • ${passInfo}</div>
+      </div>
+      <div class="q-text">${q.question || ""}</div>
+      ${opts.map((opt, i) => `
+        <button class="opt ${picked===i ? "sel" : ""}" data-i="${i}" type="button">
+          <div class="optKey">${["A","B","C","D"][i] || i+1}</div>
+          <div class="optText">${opt}</div>
+          <div class="optIcon">${picked===i ? "●" : "○"}</div>
+        </button>
+      `).join("")}
+    `;
+
+    qCard.querySelectorAll(".opt").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if(answeredLocked) return;
+
+        if(soundEnabled){
+          await ensureAudioContext();
+        }
+
+        const i = Number(btn.getAttribute("data-i"));
+        answers[idx] = i;
+        answeredLocked = true;
+        stopSpeech();
+
+        const buttons = [...qCard.querySelectorAll(".opt")];
+        const correctBtn = buttons[q.correct_index];
+        const isCorrect = i === q.correct_index;
+
+        buttons.forEach(b => {
+          b.classList.add("dim");
+          b.classList.remove("sel");
+        });
+
+        const selectedBtn = buttons[i];
+        selectedBtn.classList.remove("dim");
+        selectedBtn.classList.add("sel");
+
+        setTimeout(() => {
+          if(isCorrect){
+            selectedBtn.classList.remove("sel");
+            selectedBtn.classList.add("correct");
+            const icon = selectedBtn.querySelector(".optIcon");
+            if(icon) icon.textContent = "✓";
+            setPlanetSuccess();
+          }else{
+            selectedBtn.classList.remove("sel");
+            selectedBtn.classList.add("wrong");
+            const badIcon = selectedBtn.querySelector(".optIcon");
+            if(badIcon) badIcon.textContent = "✕";
+
+            if(correctBtn){
+              correctBtn.classList.remove("dim");
+              correctBtn.classList.add("correct");
+              const okIcon = correctBtn.querySelector(".optIcon");
+              if(okIcon) okIcon.textContent = "✓";
+            }
+
+            setPlanetFail();
+          }
+
+          btnPrev.disabled = (idx === 0);
+          btnNext.disabled = false;
+          btnSkip.disabled = false;
+          btnNext.textContent = (nextIndex(idx) === -1) ? "SINAVI TAMAMLA" : "İLERİ";
+        }, 120);
+      });
+    });
+
+    btnPrev.disabled = (idx === 0);
+    btnNext.disabled = (answers[idx] === null);
+    btnSkip.disabled = false;
+    btnNext.textContent = (nextIndex(idx) === -1) ? "SINAVI TAMAMLA" : "İLERİ";
+
+    speakCurrentQuestion();
+  }
+
+  function requireAnswerToast(){
+    const box = document.createElement("div");
+    box.className = "infoBox";
+    box.style.marginBottom = "10px";
+    box.textContent = "Lütfen bir seçenek işaretleyin.";
+    qCard.prepend(box);
+
+    setTimeout(() => {
+      try{ box.remove(); }catch{}
+    }, 1200);
+  }
+
+  function finishExam(){
+    stopSpeech();
+
+    let correct = 0;
+
+    QUESTIONS.forEach((q, i) => {
+      if(answers[i] === q.correct_index) correct++;
+    });
+
+    const total = QUESTIONS.length;
+    const percent = total ? correct / total : 0;
+    const level = estimateLevel(correct, total);
+
+    savePublicResult(level, correct, total, percent);
+
+    $("rLevel").textContent = `Seviye: ${level}`;
+    $("rText").textContent =
+`Dil: ${langNameTR}
+Doğru: ${correct} / ${total}
+Başarı: %${Math.round(percent * 100)}
+
+Login öncesi public sonuç cihazınıza kaydedildi.
+Giriş yaparsanız sonuçlar profil tarafında ayrıca yönetilebilir.`;
+
+    $("resultOverlay").classList.add("show");
+
+    $("rGo").onclick = () => {
+      location.href = buildReturnUrl();
+    };
+
+    $("rLater").onclick = () => {
+      location.href = buildCloseUrl();
+    };
+  }
+
+  btnPrev.onclick = () => {
+    stopSpeech();
+
+    if(idx > 0){
+      idx--;
+      render();
+    }
+  };
+
+  btnSkip.onclick = () => {
+    stopSpeech();
+
+    if(seenCount[idx] >= 2 && answers[idx] === null){
+      requireAnswerToast();
+      return;
+    }
+
+    const ni = nextIndex(idx);
+
+    if(ni === -1) finishExam();
+    else{
+      idx = ni;
+      render();
+    }
+  };
+
+  btnNext.onclick = () => {
+    stopSpeech();
+
+    if(answers[idx] === null){
+      requireAnswerToast();
+      return;
+    }
+
+    const ni = nextIndex(idx);
+
+    if(ni === -1) finishExam();
+    else{
+      idx = ni;
+      render();
+    }
+  };
+
+  function updateTimerUI(){
+    const mm = String(Math.floor(remaining / 60)).padStart(2,"0");
+    const ss = String(remaining % 60).padStart(2,"0");
+    timerMini.textContent = `${mm}:${ss}`;
+    document.title = `italkyAI • ${mm}:${ss}`;
+  }
+
+  const timer = setInterval(() => {
+    remaining--;
+
+    if(remaining < 0) remaining = 0;
+
+    updateTimerUI();
+
+    if(remaining === 0){
+      clearInterval(timer);
+      finishExam();
+    }
+  }, 1000);
+
+  updateTimerUI();
+  render();
+  $("pageContent").classList.add("ready");
+</script>
+</body>
+</html>
