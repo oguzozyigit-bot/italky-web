@@ -1,371 +1,551 @@
-// FILE: /js/global_access.js
+// FILE: /js/ad_gate.js
 
-import { supabase } from "/js/supabase_client.js";
+const MODULE_AD_STATE_KEY = "italky_module_ad_state_v2";
+const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v2";
+const AD_INFO_MODAL_ID = "italkyAdInfoModal";
 
-const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
-
-const PUBLIC_PAGES = new Set([
-  "/pages/login.html",
-  "/pages/auth_callback.html",
-  "/pages/membership.html",
-  "/pages/about.html",
-  "/pages/faq.html",
-  "/pages/privacy.html",
-  "/pages/contact.html",
-  "/pages/text_translate_public.html",
-  "/pages/game_menu_public.html",
-  "/pages/level_test_public.html"
-]);
-
-function normalizePath(pathname) {
-  return String(pathname || "").split("?")[0].split("#")[0];
-}
-
-function isPublicPage(pathname = location.pathname) {
-  return PUBLIC_PAGES.has(normalizePath(pathname));
-}
-
-function nowMs() {
+function nowTs() {
   return Date.now();
 }
 
-function toMs(value) {
-  if (!value) return 0;
-
+function readJson(key, fallback) {
   try {
-    const n = Date.parse(String(value));
-    return Number.isFinite(n) ? n : 0;
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : fallback;
   } catch {
-    return 0;
+    return fallback;
   }
 }
 
-function isFuture(value) {
-  const ms = toMs(value);
-  return ms > nowMs();
-}
-
-function str(value) {
-  return String(value || "").trim();
-}
-
-function lower(value) {
-  return str(value).toLowerCase();
-}
-
-async function getSessionOrNull() {
+function writeJson(key, value) {
   try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) return null;
-    return data?.session || null;
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+function normalizeModuleKey(moduleKey = "") {
+  return String(moduleKey || "").trim().toLowerCase();
+}
+
+function getModuleAdState() {
+  const state = readJson(MODULE_AD_STATE_KEY, {});
+  return state && typeof state === "object" ? state : {};
+}
+
+function setModuleAdState(next) {
+  const safe = next && typeof next === "object" ? next : {};
+  writeJson(MODULE_AD_STATE_KEY, safe);
+  return safe;
+}
+
+function getOfflineAdState() {
+  const state = readJson(OFFLINE_AD_STATE_KEY, { shown_pairs: {} });
+
+  if (!state.shown_pairs || typeof state.shown_pairs !== "object") {
+    state.shown_pairs = {};
+  }
+
+  return state;
+}
+
+function setOfflineAdState(next) {
+  const safe = next && typeof next === "object" ? next : { shown_pairs: {} };
+
+  if (!safe.shown_pairs || typeof safe.shown_pairs !== "object") {
+    safe.shown_pairs = {};
+  }
+
+  writeJson(OFFLINE_AD_STATE_KEY, safe);
+  return safe;
+}
+
+function hasNativeRewarded() {
+  try {
+    return !!(window.Native && typeof window.Native.showRewardedAd === "function");
+  } catch {
+    return false;
+  }
+}
+
+function truthy(value) {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
+function getCachedAccess() {
+  try {
+    return window.__ITALKY_ACCESS__ || null;
   } catch {
     return null;
   }
-}
-
-async function fetchAccessStateSafe(session) {
-  try {
-    if (!session?.access_token) return null;
-
-    const resp = await fetch(API_ACCESS, {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`
-      }
-    });
-
-    const json = await resp.json().catch(() => ({}));
-
-    if (!resp.ok) {
-      return null;
-    }
-
-    return json || null;
-  } catch {
-    return null;
-  }
-}
-
-function goLogin() {
-  const here = encodeURIComponent(location.pathname + location.search + location.hash);
-  location.replace(`/pages/login.html?next=${here}`);
 }
 
 /*
-  Reklamsız üyelik mantığı:
-  - Play aboneliği ürün id: reklamsiz
-  - package_code / selected_package_code / plan / product_id içinde reklamsiz varsa aktif üyelik sayılır.
-  - package_active / subscription_active / is_member true ise ve bitiş tarihi geçmemişse aktif sayılır.
-  - role admin/superadmin ise reklam kapısı kapalı sayılır.
+  Login sonrası reklamsız kontrolü:
+  global_access.js içinde şu alanlar set ediliyor:
+  - ads_disabled
+  - no_ads
+  - is_no_ads_member
+  - has_active_membership
+  - is_member
+  - subscription_active
+  - is_admin
+  - is_superadmin
+
+  Burada amaç:
+  12 aylık reklamsız üye / aktif üye / admin reklam görmesin.
 */
-function computeMembership(access = {}, session = null) {
-  const role = lower(access?.role || session?.user?.user_metadata?.role || "");
+function isAdsDisabledUser() {
+  const access = getCachedAccess();
+  if (!access || typeof access !== "object") return false;
 
-  const packageCode = lower(
-    access?.package_code ||
-    access?.selected_package_code ||
-    access?.plan ||
-    access?.product_id ||
-    access?.subscription_product_id ||
-    access?.subscription?.product_id ||
-    ""
+  return !!(
+    truthy(access.ads_disabled) ||
+    truthy(access.no_ads) ||
+    truthy(access.is_no_ads_member) ||
+    truthy(access.has_active_membership) ||
+    truthy(access.is_member) ||
+    truthy(access.subscription_active) ||
+    truthy(access.is_admin) ||
+    truthy(access.is_superadmin)
   );
+}
 
-  const membershipEndsAt =
-    access?.membership_ends_at ||
-    access?.subscription_ends_at ||
-    access?.package_ends_at ||
-    access?.expires_at ||
-    access?.entitlement_ends_at ||
-    access?.gift_ends_at ||
-    access?.trial_ends_at ||
-    null;
+function getOrCreateAdInfoModal() {
+  let modal = document.getElementById(AD_INFO_MODAL_ID);
+  if (modal) return modal;
 
-  const subscriptionEndsAt =
-    access?.subscription_ends_at ||
-    access?.membership_ends_at ||
-    access?.package_ends_at ||
-    access?.expires_at ||
-    null;
+  const style = document.createElement("style");
+  style.id = "italkyAdInfoModalStyle";
+  style.textContent = `
+    .italky-ad-info-backdrop{
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(4,8,18,.58);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+    }
+    .italky-ad-info-backdrop.open{
+      display:flex;
+    }
+    .italky-ad-info-card{
+      width:min(100%,430px);
+      border-radius:26px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(10,16,30,.98), rgba(8,12,24,.98));
+      box-shadow:0 24px 50px rgba(0,0,0,.34);
+      color:#fff;
+      font-family:Outfit, system-ui, sans-serif;
+    }
+    .italky-ad-info-top{
+      padding:18px 18px 14px;
+      background:
+        radial-gradient(circle at top left, rgba(191,219,254,.16), transparent 38%),
+        linear-gradient(135deg, #142033 0%, #1a2740 52%, #202b46 100%);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .italky-ad-info-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:32px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.92);
+      font-size:12px;
+      font-weight:1000;
+    }
+    .italky-ad-info-title{
+      margin:12px 0 8px;
+      font-size:24px;
+      line-height:1.08;
+      font-weight:1000;
+      letter-spacing:-.5px;
+      color:#eef4ff;
+    }
+    .italky-ad-info-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.68;
+      font-weight:800;
+      color:rgba(235,242,255,.82);
+      white-space:pre-line;
+    }
+    .italky-ad-info-body{
+      padding:16px;
+      display:grid;
+      gap:10px;
+      background:linear-gradient(180deg, rgba(9,13,24,.98), rgba(7,10,20,.98));
+    }
+    .italky-ad-info-btn{
+      min-height:50px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:14px;
+      font-weight:1000;
+      transition:transform .14s ease, opacity .14s ease;
+    }
+    .italky-ad-info-btn:active{
+      transform:scale(.985);
+    }
+    .italky-ad-info-btn.primary{
+      background:linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 50%, #ddd6fe 100%);
+      color:#111827;
+      box-shadow:0 12px 24px rgba(99,102,241,.16);
+    }
+  `;
+  document.head.appendChild(style);
 
-  const packageActive =
-    access?.package_active === true ||
-    access?.subscription_active === true ||
-    access?.is_member === true ||
-    access?.member === true ||
-    access?.access_open === true ||
-    access?.subscription?.active === true;
+  modal = document.createElement("div");
+  modal.id = AD_INFO_MODAL_ID;
+  modal.className = "italky-ad-info-backdrop";
+  modal.innerHTML = `
+    <div class="italky-ad-info-card">
+      <div class="italky-ad-info-top">
+        <div class="italky-ad-info-chip">italkyAI</div>
+        <div class="italky-ad-info-title" id="italkyAdInfoTitle">Küçük Bir Bilgilendirme</div>
+        <p class="italky-ad-info-text" id="italkyAdInfoText"></p>
+      </div>
+      <div class="italky-ad-info-body">
+        <button class="italky-ad-info-btn primary" id="italkyAdInfoOk" type="button">Tamam</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 
-  const hasNoAdsProduct =
-    packageCode === "reklamsiz" ||
-    packageCode.includes("reklamsiz") ||
-    packageCode.includes("no_ads") ||
-    packageCode.includes("ads_free");
+  return modal;
+}
 
-  const hasValidEndDate =
-    isFuture(membershipEndsAt) ||
-    isFuture(subscriptionEndsAt);
+function showSoftAdModal({
+  title = "Bu modül için kısa bir reklam gösterilecek",
+  text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir."
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = getOrCreateAdInfoModal();
+    const titleEl = modal.querySelector("#italkyAdInfoTitle");
+    const textEl = modal.querySelector("#italkyAdInfoText");
+    const okBtn = modal.querySelector("#italkyAdInfoOk");
 
-  const isAdmin =
-    role === "admin" ||
-    role === "superadmin";
+    if (titleEl) titleEl.textContent = title;
+    if (textEl) textEl.textContent = text;
 
-  /*
-    Burada kritik karar:
-    - Sadece giriş yaptı diye reklamsız saymıyoruz.
-    - 12 aylık reklamsız üyelik veya admin/superadmin reklamsız.
-    - Eğer backend package_active=true dönüyorsa ve bitiş tarihi varsa aktif kabul ediyoruz.
-  */
-  const hasActiveMembership =
-    isAdmin ||
-    (
-      packageActive &&
-      (
-        hasValidEndDate ||
-        hasNoAdsProduct
-      )
-    ) ||
-    (
-      hasNoAdsProduct &&
-      (
-        hasValidEndDate ||
-        packageActive
-      )
-    );
+    const cleanup = (value) => {
+      modal.classList.remove("open");
+      okBtn?.removeEventListener("click", onOk);
+      modal.removeEventListener("click", onBackdrop);
+      resolve(value);
+    };
 
-  const noAds =
-    isAdmin ||
-    hasActiveMembership ||
-    access?.no_ads === true ||
-    access?.ads_disabled === true ||
-    access?.is_no_ads_member === true;
+    const onOk = () => cleanup(true);
+    const onBackdrop = (e) => {
+      if (e.target === modal) cleanup(true);
+    };
+
+    okBtn?.addEventListener("click", onOk);
+    modal.addEventListener("click", onBackdrop);
+    modal.classList.add("open");
+  });
+}
+
+function waitForRewardedResult(timeoutMs = 35000) {
+  return new Promise((resolve) => {
+    let done = false;
+    let earned = false;
+
+    const prevEarned = window.onNativeRewardEarned;
+    const prevClosed = window.onNativeRewardClosed;
+
+    const finish = (payload) => {
+      if (done) return;
+
+      done = true;
+      clearTimeout(timer);
+
+      window.onNativeRewardEarned = prevEarned;
+      window.onNativeRewardClosed = prevClosed;
+
+      resolve({
+        shown: !!payload?.shown,
+        earned,
+        payload: payload || {}
+      });
+    };
+
+    window.onNativeRewardEarned = function (payload) {
+      try {
+        if (typeof prevEarned === "function") prevEarned(payload);
+      } catch {}
+      earned = true;
+    };
+
+    window.onNativeRewardClosed = function (payload) {
+      try {
+        if (typeof prevClosed === "function") prevClosed(payload);
+      } catch {}
+      finish(payload || { shown: true });
+    };
+
+    const timer = setTimeout(() => {
+      finish({ shown: false, reason: "timeout" });
+    }, timeoutMs);
+  });
+}
+
+async function showNativeRewarded(referenceKey = "", placement = "module_access") {
+  if (!hasNativeRewarded()) return false;
+
+  try {
+    const waitPromise = waitForRewardedResult();
+    window.Native.showRewardedAd(String(referenceKey || ""), String(placement || "module_access"));
+    const result = await waitPromise;
+
+    if (result?.earned) return true;
+    if (result?.shown) return true;
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function showFallbackAdInfo(message = "Bu modül için kısa bir reklam gösterilebilir.") {
+  try {
+    if (typeof window.showToast === "function") {
+      window.showToast(message);
+      return;
+    }
+  } catch {}
+
+  try {
+    const old = document.getElementById("italkyAdMiniToast");
+    if (old) old.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "italkyAdMiniToast";
+    toast.textContent = String(message || "");
+
+    toast.style.position = "fixed";
+    toast.style.left = "50%";
+    toast.style.bottom = "28px";
+    toast.style.transform = "translateX(-50%) translateY(120px)";
+    toast.style.maxWidth = "min(92vw, 520px)";
+    toast.style.padding = "14px 18px";
+    toast.style.borderRadius = "18px";
+    toast.style.background = "rgba(10,16,30,.96)";
+    toast.style.border = "1px solid rgba(255,255,255,.10)";
+    toast.style.boxShadow = "0 18px 36px rgba(0,0,0,.32)";
+    toast.style.backdropFilter = "blur(12px)";
+    toast.style.webkitBackdropFilter = "blur(12px)";
+    toast.style.color = "#eef4ff";
+    toast.style.fontFamily = "Outfit, system-ui, sans-serif";
+    toast.style.fontSize = "13px";
+    toast.style.fontWeight = "800";
+    toast.style.lineHeight = "1.55";
+    toast.style.textAlign = "center";
+    toast.style.zIndex = "1000000";
+    toast.style.transition = "transform .22s ease, opacity .22s ease";
+    toast.style.opacity = "0";
+
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.style.transform = "translateX(-50%) translateY(0)";
+      toast.style.opacity = "1";
+    });
+
+    setTimeout(() => {
+      toast.style.transform = "translateX(-50%) translateY(120px)";
+      toast.style.opacity = "0";
+      setTimeout(() => toast.remove(), 260);
+    }, 2400);
+  } catch {}
+}
+
+export function getModuleAccessState(moduleKey = "") {
+  const key = normalizeModuleKey(moduleKey);
+  const state = getModuleAdState();
+  const until = Number(state?.[key]?.until || 0);
 
   return {
-    role,
-    packageCode,
-    membershipEndsAt,
-    subscriptionEndsAt,
-    packageActive,
-    hasNoAdsProduct,
-    hasValidEndDate,
-    hasActiveMembership,
-    noAds,
-    isAdmin
+    moduleKey: key,
+    until,
+    active: until > nowTs()
   };
 }
 
-function buildSafeAccess(access = {}, session = null) {
-  const userId = session?.user?.id || "";
-  const membership = computeMembership(access, session);
+export function markModuleAdShown(moduleKey = "", hours = 24) {
+  const key = normalizeModuleKey(moduleKey);
+  if (!key) return null;
 
-  const membershipEndsAt =
-    membership.membershipEndsAt ||
-    access?.membership_ends_at ||
-    access?.package_ends_at ||
-    access?.gift_ends_at ||
-    access?.trial_ends_at ||
-    null;
+  const state = getModuleAdState();
+  const until = nowTs() + Number(hours || 24) * 60 * 60 * 1000;
 
-  const subscriptionProductId =
-    access?.subscription_product_id ||
-    access?.product_id ||
-    access?.subscription?.product_id ||
-    membership.packageCode ||
-    "";
+  state[key] = { until };
+  setModuleAdState(state);
 
   return {
-    ok: !!userId,
-    is_logged_in: !!userId,
-    user_id: userId,
-
-    // Eski alanlarla uyumluluk.
-    access_open: true,
-
-    gift_started_at: access?.gift_started_at || access?.trial_started_at || null,
-    gift_ends_at: access?.gift_ends_at || access?.trial_ends_at || null,
-
-    package_code: access?.package_code || access?.selected_package_code || membership.packageCode || "",
-    selected_package_code: access?.selected_package_code || access?.package_code || membership.packageCode || "",
-    package_started_at: access?.package_started_at || null,
-    package_ends_at: access?.package_ends_at || null,
-
-    membership_ends_at: membershipEndsAt,
-    subscription_ends_at: membership.subscriptionEndsAt || null,
-    subscription_product_id: subscriptionProductId,
-
-    membership_source:
-      access?.membership_source ||
-      access?.source_type ||
-      access?.subscription?.source ||
-      "",
-
-    tokens: Number(
-      access?.tokens ??
-      access?.wallet?.tokens ??
-      0
-    ),
-
-    role: membership.role,
-
-    // Yeni net alanlar
-    is_member: !!membership.hasActiveMembership,
-    has_active_membership: !!membership.hasActiveMembership,
-    package_active: !!membership.packageActive,
-    subscription_active: !!membership.hasActiveMembership,
-
-    no_ads: !!membership.noAds,
-    ads_disabled: !!membership.noAds,
-    is_no_ads_member: !!membership.noAds,
-
-    is_admin: !!membership.isAdmin,
-    is_superadmin: membership.role === "superadmin",
-
-    raw_access: access || {}
+    moduleKey: key,
+    until,
+    active: true
   };
 }
 
-export async function initGlobalAccess(options = {}) {
+export async function ensureModuleAdAccess(options = {}) {
   const {
-    allowPublicPageBypass = true,
-    lockMembershipBack = false
+    moduleKey = "",
+    title = "Bu modül için kısa bir reklam gösterilecek",
+    text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir.\nReklamı tamamladıktan sonra bu modüle 24 saat boyunca tekrar reklam görmeden giriş yapabilirsiniz.",
+    placement = "module_access",
+    hours = 24,
+    onBeforeAd = null,
+    onAfterAd = null
   } = options;
 
-  const currentPath = normalizePath(location.pathname);
+  const key = normalizeModuleKey(moduleKey);
+  if (!key) return false;
 
-  if (allowPublicPageBypass && isPublicPage(currentPath)) {
-    if (lockMembershipBack && currentPath === "/pages/membership.html") {
-      lockMembershipPageBack();
-    }
-
-    const session = await getSessionOrNull();
-    const access = session ? await fetchAccessStateSafe(session) : null;
-    const safe = buildSafeAccess(access || {}, session || null);
-
-    window.__ITALKY_ACCESS__ = safe;
-
-    return {
-      ok: true,
-      bypass: true,
-      public_page: true,
-      session,
-      access: safe
-    };
+  if (isAdsDisabledUser()) {
+    try {
+      if (typeof onAfterAd === "function") await onAfterAd(true);
+    } catch {}
+    return true;
   }
 
-  const session = await getSessionOrNull();
-
-  if (!session?.user?.id) {
-    goLogin();
-    return {
-      ok: false,
-      redirected: "login"
-    };
+  const current = getModuleAccessState(key);
+  if (current.active) {
+    if (typeof onAfterAd === "function") await onAfterAd(true);
+    return true;
   }
 
-  const access = await fetchAccessStateSafe(session);
-  const safe = buildSafeAccess(access || {}, session);
-
-  window.__ITALKY_ACCESS__ = safe;
-
-  return {
-    ok: true,
-    session,
-    access: safe
-  };
-}
-
-export function getCachedAccessState() {
-  return window.__ITALKY_ACCESS__ || {
-    ok: false,
-    is_logged_in: false,
-    access_open: false,
-    tokens: 0,
-    role: "",
-    is_member: false,
-    has_active_membership: false,
-    no_ads: false,
-    ads_disabled: false,
-    is_no_ads_member: false
-  };
-}
-
-export function isNoAdsUser() {
-  const access = getCachedAccessState();
-  return !!(
-    access?.ads_disabled ||
-    access?.no_ads ||
-    access?.is_no_ads_member ||
-    access?.is_admin ||
-    access?.is_superadmin
-  );
-}
-
-export function hasActiveMembership() {
-  const access = getCachedAccessState();
-  return !!(
-    access?.has_active_membership ||
-    access?.is_member ||
-    access?.subscription_active ||
-    access?.is_admin ||
-    access?.is_superadmin
-  );
-}
-
-// Geri uyumluluk için bırakıldı.
-// Eski sayfalarda çağrılsa bile sistemi bozmasın.
-export function lockMembershipPageBack() {
   try {
-    const currentPath = normalizePath(location.pathname);
-    if (currentPath !== "/pages/membership.html") return;
-
-    const here = location.pathname + location.search + location.hash;
-
-    history.replaceState({ membershipLock: true }, "", here);
-    history.pushState({ membershipLock: true }, "", here);
-
-    window.addEventListener("popstate", () => {
-      try {
-        history.pushState({ membershipLock: true }, "", here);
-      } catch {}
-    });
+    if (typeof onBeforeAd === "function") await onBeforeAd();
   } catch {}
+
+  const accepted = await showSoftAdModal({ title, text });
+  if (!accepted) {
+    if (typeof onAfterAd === "function") await onAfterAd(false);
+    return false;
+  }
+
+  let rewarded = false;
+
+  if (hasNativeRewarded()) {
+    rewarded = await showNativeRewarded(key, placement);
+  } else {
+    showFallbackAdInfo("Bu modülü kullanmak için kısa bir reklam gösterilebilir.");
+    rewarded = true;
+  }
+
+  if (rewarded) {
+    markModuleAdShown(key, hours);
+  }
+
+  try {
+    if (typeof onAfterAd === "function") await onAfterAd(rewarded);
+  } catch {}
+
+  return rewarded;
+}
+
+export function hasShownOfflineDownloadAd(sessionKey = "offline_languages_page") {
+  const key = normalizeModuleKey(sessionKey);
+  if (!key) return false;
+
+  const state = getOfflineAdState();
+  const until = Number(state.shown_pairs[key] || 0);
+  return until > nowTs();
+}
+
+export function markOfflineDownloadAdShown(sessionKey = "offline_languages_page", hours = 24) {
+  const key = normalizeModuleKey(sessionKey);
+  if (!key) return;
+
+  const state = getOfflineAdState();
+  state.shown_pairs[key] = nowTs() + Number(hours || 24) * 60 * 60 * 1000;
+  setOfflineAdState(state);
+}
+
+export async function maybeShowOfflineDownloadAd(options = {}) {
+  const {
+    sessionKey = "offline_languages_page",
+    title = "Bu modül için kısa bir reklam gösterilecek",
+    text = "Offline dil paketini indirebilmeniz için 1 kısa reklam izlemeniz gerekmektedir.\nReklam tamamlandıktan sonra indirme başlayacaktır.",
+    onBeforeAd = null,
+    onAfterAd = null,
+    skipInfoModal = false,
+    hours = 0
+  } = options;
+
+  const key = normalizeModuleKey(sessionKey);
+  if (!key) return true;
+
+  if (isAdsDisabledUser()) {
+    try {
+      if (typeof onAfterAd === "function") await onAfterAd(true);
+    } catch {}
+    return true;
+  }
+
+  if (hours > 0 && hasShownOfflineDownloadAd(key)) {
+    if (typeof onAfterAd === "function") await onAfterAd(true);
+    return true;
+  }
+
+  try {
+    if (typeof onBeforeAd === "function") await onBeforeAd();
+  } catch {}
+
+  if (!skipInfoModal) {
+    const accepted = await showSoftAdModal({ title, text });
+    if (!accepted) {
+      if (typeof onAfterAd === "function") await onAfterAd(false);
+      return false;
+    }
+  }
+
+  let rewarded = false;
+
+  if (hasNativeRewarded()) {
+    rewarded = await showNativeRewarded(key, "offline_languages_download");
+  } else {
+    showFallbackAdInfo("Reklam hazırlanıyor, indirme başlatılıyor.");
+    rewarded = true;
+  }
+
+  if (rewarded && hours > 0) {
+    markOfflineDownloadAdShown(key, hours);
+  }
+
+  try {
+    if (typeof onAfterAd === "function") await onAfterAd(rewarded);
+  } catch {}
+
+  return rewarded;
+}
+
+export function resetModuleAdStateForDebug() {
+  try {
+    localStorage.removeItem(MODULE_AD_STATE_KEY);
+  } catch {}
+}
+
+export function resetOfflineAdStateForDebug() {
+  try {
+    localStorage.removeItem(OFFLINE_AD_STATE_KEY);
+  } catch {}
+}
+
+export function isCurrentUserAdsDisabled() {
+  return isAdsDisabledUser();
 }
