@@ -1,0 +1,1298 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Kod Çöz Public</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#08111b;
+      --bg2:#0d1724;
+      --blue:#22d3ee;
+      --pink:#ff4d8d;
+      --green:#22c55e;
+      --red:#ef4444;
+      --gold:#f59e0b;
+      --glass:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.12);
+      --text:#f8fafc;
+      --muted:#94a3b8;
+      --safeB:env(safe-area-inset-bottom,0px);
+      --safeT:env(safe-area-inset-top,0px);
+      --grad:linear-gradient(135deg,#67e8f9 0%, #60a5fa 50%, #34d399 100%);
+    }
+
+    *{
+      box-sizing:border-box;
+      outline:none;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      font-family:'Outfit',sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(34,211,238,.10), transparent 20%),
+        radial-gradient(circle at 85% 0%, rgba(96,165,250,.10), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(52,211,153,.08), transparent 18%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+    }
+
+    .gridfx{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.14;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+      background-size:34px 34px;
+    }
+
+    #pageContent{
+      height:100dvh;
+      padding:calc(10px + var(--safeT)) 10px calc(10px + var(--safeB)) 10px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:none;
+      opacity:0;
+      transform:scale(1.03);
+      transition:.45s ease;
+    }
+
+    #pageContent.ui-ready{
+      opacity:1;
+      transform:scale(1);
+    }
+
+    #pageContent::-webkit-scrollbar{ display:none; }
+
+    .wrap{
+      width:100%;
+      max-width:480px;
+      min-height:100%;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      position:relative;
+      z-index:5;
+    }
+
+    .topbar{
+      display:grid;
+      grid-template-columns:auto 1fr auto auto;
+      gap:8px;
+      align-items:center;
+      padding:10px 12px;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:rgba(8,16,24,.78);
+      backdrop-filter:blur(14px);
+    }
+
+    .back-btn{
+      width:38px;
+      height:38px;
+      border:none;
+      border-radius:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:22px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .title{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:18px;
+      font-weight:900;
+      color:var(--blue);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .pill, .scorePill{
+      min-width:62px;
+      height:34px;
+      padding:0 10px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:900;
+    }
+
+    .pill{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      color:#fff;
+    }
+
+    .scorePill{
+      background:var(--grad);
+      color:#052433;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+    }
+
+    .stat{
+      min-height:52px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      text-align:center;
+      padding:4px;
+    }
+
+    .statVal{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:16px;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .statLab{
+      font-size:9px;
+      letter-spacing:1px;
+      font-weight:900;
+      opacity:.62;
+    }
+
+    .progressBar{
+      width:100%;
+      height:6px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .progressFill{
+      height:100%;
+      width:0%;
+      background:var(--blue);
+      transition:width .35s ease;
+      box-shadow:0 0 14px rgba(34,211,238,.35);
+    }
+
+    .toast{
+      text-align:center;
+      min-height:18px;
+      color:var(--blue);
+      font-size:12px;
+      font-weight:800;
+      opacity:0;
+      transition:.25s;
+    }
+
+    .stage{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      border-radius:22px;
+      border:1px solid var(--border);
+      background:rgba(8,16,24,.78);
+      backdrop-filter:blur(14px);
+      padding:14px;
+      box-shadow:0 18px 40px rgba(0,0,0,.24);
+    }
+
+    .morseCard{
+      border-radius:24px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      padding:20px 14px;
+      text-align:center;
+      min-height:150px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:10px;
+    }
+
+    .morseLabel{
+      font-size:11px;
+      letter-spacing:1.8px;
+      font-weight:900;
+      color:var(--muted);
+    }
+
+    .morseDisplay{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:30px;
+      font-weight:900;
+      line-height:1.4;
+      color:var(--gold);
+      word-break:break-word;
+      letter-spacing:2px;
+      min-height:48px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+
+    .hintBox{
+      border-top:1px solid rgba(255,255,255,.08);
+      padding-top:12px;
+      min-height:32px;
+      display:none;
+      color:var(--gold);
+      font-weight:800;
+      font-size:14px;
+      line-height:1.5;
+    }
+    .hintBox.show{ display:block; }
+
+    .meaningBox{
+      min-height:32px;
+      display:none;
+      color:var(--green);
+      font-style:italic;
+      font-weight:800;
+      font-size:14px;
+      line-height:1.5;
+    }
+    .meaningBox.show{ display:block; }
+
+    .answerWrap{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+
+    .answerInput{
+      width:100%;
+      min-height:58px;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      text-align:center;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:2px;
+      padding:0 12px;
+      text-transform:uppercase;
+      user-select:text;
+    }
+
+    .answerInput::placeholder{
+      color:rgba(255,255,255,.28);
+      letter-spacing:0;
+      text-transform:none;
+      font-size:18px;
+    }
+
+    .actionGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .miniGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .btn{
+      min-height:56px;
+      border:none;
+      border-radius:18px;
+      cursor:pointer;
+      font-size:16px;
+      font-weight:900;
+      transition:.16s ease;
+      box-shadow:0 10px 26px rgba(0,0,0,.20);
+      font-family:inherit;
+    }
+
+    .btn:active{ transform:scale(.98); }
+
+    .btnMain{
+      background:var(--grad);
+      color:#052433;
+    }
+
+    .btnGlass{
+      background:var(--glass);
+      border:1px solid var(--border);
+      color:#fff;
+    }
+
+    .btnGold{
+      background:linear-gradient(180deg,#fbbf24,#f59e0b);
+      color:#2b1602;
+    }
+
+    .legendWrap{
+      border-radius:22px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:180px;
+    }
+
+    .legendTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .legendTitle{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:1.6px;
+      color:var(--muted);
+    }
+
+    .legendTabs{
+      display:flex;
+      gap:8px;
+    }
+
+    .legendTab{
+      min-width:84px;
+      height:34px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+      font-family:inherit;
+    }
+
+    .legendTab.active{
+      background:rgba(34,211,238,.10);
+      border-color:rgba(34,211,238,.35);
+      box-shadow:0 0 0 1px rgba(34,211,238,.16), 0 0 16px rgba(34,211,238,.08);
+      color:var(--blue);
+    }
+
+    .legendGrid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      flex:1;
+    }
+
+    .legendBtn{
+      min-height:52px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 10px;
+      font-weight:900;
+      gap:10px;
+      font-family:inherit;
+    }
+
+    .legendBtn:active{ transform:scale(.98); }
+
+    .legendBtn.playing{
+      border-color:rgba(34,211,238,.35);
+      box-shadow:0 0 0 1px rgba(34,211,238,.18), 0 0 18px rgba(34,211,238,.10);
+      background:rgba(34,211,238,.08);
+    }
+
+    .legendChar{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:18px;
+    }
+
+    .legendCode{
+      font-size:12px;
+      color:var(--gold);
+      letter-spacing:1px;
+    }
+
+    .modal-wrap{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.95);
+      z-index:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .modal-card{
+      width:100%;
+      max-width:380px;
+      background:#081018;
+      border:1px solid var(--border);
+      border-radius:28px;
+      padding:24px;
+      text-align:center;
+      max-height:90vh;
+      overflow:auto;
+      scrollbar-width:none;
+    }
+    .modal-card::-webkit-scrollbar{display:none}
+
+    .lang-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin:16px 0;
+    }
+
+    .lang-btn{
+      min-height:82px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight:800;
+      font-family:inherit;
+    }
+    .lang-btn .flag{font-size:28px}
+    .lang-btn.active{
+      border-color:rgba(34,211,238,.35);
+      box-shadow:0 0 0 1px rgba(34,211,238,.18), 0 0 18px rgba(34,211,238,.10);
+      background:rgba(34,211,238,.08);
+    }
+
+    .rulesList{
+      text-align:left;
+      margin:16px 0 6px;
+      padding-left:18px;
+      line-height:1.8;
+      color:rgba(255,255,255,.85);
+      font-size:14px;
+    }
+
+    .mainbtn{
+      width:100%;
+      padding:16px;
+      margin-top:10px;
+      border:none;
+      border-radius:16px;
+      background:var(--grad);
+      color:#052433;
+      font-weight:900;
+      cursor:pointer;
+      font-size:16px;
+      font-family:inherit;
+    }
+
+    .mainbtn.sec{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid var(--border);
+    }
+
+    .resultActions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .hidden{display:none!important}
+
+    @media (max-width:420px){
+      .stats{ grid-template-columns:repeat(2,1fr); }
+      .legendGrid{ grid-template-columns:repeat(2,1fr); }
+      .actionGrid, .miniGrid, .resultActions{ grid-template-columns:1fr; }
+      .morseDisplay{ font-size:24px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="gridfx"></div>
+
+  <main id="pageContent">
+    <div class="wrap">
+      <div class="topbar">
+        <button id="backBtn" class="back-btn" type="button">‹</button>
+        <div class="title">KOD ÇÖZ</div>
+        <div id="pbDisplay" class="pill">PB: 0</div>
+        <div id="scorePill" class="scorePill">0</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div id="lifeBar" class="statVal">❤️❤️❤️</div>
+          <div class="statLab">CAN</div>
+        </div>
+        <div class="stat">
+          <div id="statusChip" class="statVal">EN</div>
+          <div class="statLab">DİL</div>
+        </div>
+        <div class="stat">
+          <div id="roundText" class="statVal">1/15</div>
+          <div class="statLab">TUR</div>
+        </div>
+        <div class="stat">
+          <div id="streakText" class="statVal">0</div>
+          <div class="statLab">SERİ</div>
+        </div>
+      </div>
+
+      <div class="progressBar"><div id="progFill" class="progressFill"></div></div>
+      <div id="resInfo" class="toast">Hazır</div>
+
+      <div class="stage">
+        <div class="morseCard">
+          <div class="morseLabel">MORS KODU</div>
+          <div id="morseDisplay" class="morseDisplay">.... . .-.. .-.. ---</div>
+          <div id="hintBox" class="hintBox"></div>
+          <div id="meaningBox" class="meaningBox"></div>
+        </div>
+
+        <div class="answerWrap">
+          <input id="answerInput" class="answerInput" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Cevabı yaz">
+          <div class="actionGrid">
+            <button id="answerBtn" class="btn btnMain" type="button">CEVAP VER</button>
+            <button id="listenBtn" class="btn btnGlass" type="button">TEKRAR DİNLE</button>
+          </div>
+          <div class="miniGrid">
+            <button id="hintBtn" class="btn btnGold" type="button">İPUCU AL</button>
+            <button id="meaningBtn" class="btn btnGlass" type="button">ANLAMI GÖR</button>
+          </div>
+        </div>
+
+        <div class="legendWrap">
+          <div class="legendTop">
+            <div class="legendTitle">MORS ALFABESİ</div>
+            <div class="legendTabs">
+              <button class="legendTab active" data-tab="letters" id="tabLetters" type="button">HARFLER</button>
+              <button class="legendTab" data-tab="numbers" id="tabNumbers" type="button">SAYILAR</button>
+            </div>
+          </div>
+          <div id="legendGrid" class="legendGrid"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal-wrap" id="startModal">
+    <div class="modal-card">
+      <h2 style="margin:0 0 10px;color:var(--blue);font-family:'Space Grotesk',sans-serif;">KOD ÇÖZ</h2>
+      <p style="opacity:.78;line-height:1.6;font-size:14px;">Bayrağa dokun, dili seç.</p>
+
+      <div class="lang-grid" id="langGrid"></div>
+      <button class="mainbtn" id="toRulesBtn">DEVAM ET</button>
+    </div>
+  </div>
+
+  <div class="modal-wrap hidden" id="rulesModal">
+    <div class="modal-card">
+      <h2 style="margin:0 0 10px;color:var(--gold);font-family:'Space Grotesk',sans-serif;">KURALLAR</h2>
+      <ul class="rulesList">
+        <li>Mors kodunu dinle ve oku.</li>
+        <li>Kontrol yerine doğrudan cevap ver.</li>
+        <li>Yanlış cevapta 1 can düşer.</li>
+        <li>3 canla başlarsın.</li>
+        <li>İpucu veya anlam almadan doğru cevap verirsen 1 can kazanırsın.</li>
+        <li>Maksimum can 5’tir.</li>
+        <li>Alttaki harf ve sayılara basınca o karakterin Mors sesi çalar.</li>
+        <li>Cevaptan sonra doğru kelime ve Türkçe anlam popup içinde gösterilir.</li>
+      </ul>
+      <button class="mainbtn" id="startBtn">ANLADIM, BAŞLA</button>
+    </div>
+  </div>
+
+  <div class="modal-wrap hidden" id="answerModal">
+    <div class="modal-card">
+      <h2 id="answerModalTitle" style="margin:0 0 10px;color:var(--green);font-family:'Space Grotesk',sans-serif;">DOĞRU CEVAP</h2>
+      <div id="answerModalWord" style="font-size:34px;font-weight:1000;letter-spacing:2px;margin-top:10px;"></div>
+      <div id="answerModalMeaning" style="margin-top:14px;font-size:16px;line-height:1.7;color:#9df0b9;"></div>
+
+      <div class="resultActions">
+        <button class="mainbtn sec" id="btnTopMenuFromAnswer">ÜST MENÜYE DÖN</button>
+        <button class="mainbtn" id="btnContinueFromAnswer">DEVAM</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrap hidden" id="endModal">
+    <div class="modal-card">
+      <h2 id="endTitle" style="margin:0 0 10px;color:var(--green);font-family:'Space Grotesk',sans-serif;">OYUN BİTTİ</h2>
+      <div id="endStats" style="text-align:left; margin:18px 0; font-size:15px; line-height:1.9;"></div>
+      <div class="resultActions">
+        <button class="mainbtn sec" id="btnTopMenu">ÜST MENÜYE DÖN</button>
+        <button class="mainbtn" id="btnNewGame">YENİ OYUN</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+
+const BACK_URL = "/pages/game_menu_public.html";
+
+const LANGS = {
+  en:{ name:"İngilizce", flag:"🇬🇧", bcp:"en-US" },
+  de:{ name:"Almanca", flag:"🇩🇪", bcp:"de-DE" },
+  fr:{ name:"Fransızca", flag:"🇫🇷", bcp:"fr-FR" },
+  es:{ name:"İspanyolca", flag:"🇪🇸", bcp:"es-ES" },
+  it:{ name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" }
+};
+
+const LOCAL_FALLBACK = {
+  en:[
+    {w:"APPLE", tr:"Elma"}, {w:"HOUSE", tr:"Ev"}, {w:"WATER", tr:"Su"},
+    {w:"LIGHT", tr:"Işık"}, {w:"WORLD", tr:"Dünya"}, {w:"FRIEND", tr:"Arkadaş"},
+    {w:"SCHOOL", tr:"Okul"}, {w:"FAMILY", tr:"Aile"}, {w:"MUSIC", tr:"Müzik"},
+    {w:"TRAVEL", tr:"Seyahat"}, {w:"BOOK", tr:"Kitap"}, {w:"CITY", tr:"Şehir"},
+    {w:"NIGHT", tr:"Gece"}, {w:"DAY", tr:"Gün"}, {w:"VOICE", tr:"Ses"}
+  ],
+  de:[
+    {w:"HAUS", tr:"Ev"}, {w:"WASSER", tr:"Su"}, {w:"LICHT", tr:"Işık"},
+    {w:"FREUND", tr:"Arkadaş"}, {w:"SCHULE", tr:"Okul"}, {w:"FAMILIE", tr:"Aile"},
+    {w:"BUCH", tr:"Kitap"}, {w:"STADT", tr:"Şehir"}, {w:"TAG", tr:"Gün"}, {w:"NACHT", tr:"Gece"}
+  ],
+  fr:[
+    {w:"MAISON", tr:"Ev"}, {w:"EAU", tr:"Su"}, {w:"AMI", tr:"Arkadaş"},
+    {w:"ECOLE", tr:"Okul"}, {w:"FAMILLE", tr:"Aile"}, {w:"MUSIQUE", tr:"Müzik"},
+    {w:"LIVRE", tr:"Kitap"}, {w:"VILLE", tr:"Şehir"}, {w:"JOUR", tr:"Gün"}, {w:"NUIT", tr:"Gece"}
+  ],
+  es:[
+    {w:"CASA", tr:"Ev"}, {w:"AGUA", tr:"Su"}, {w:"AMIGO", tr:"Arkadaş"},
+    {w:"ESCUELA", tr:"Okul"}, {w:"FAMILIA", tr:"Aile"}, {w:"MUSICA", tr:"Müzik"},
+    {w:"LIBRO", tr:"Kitap"}, {w:"CIUDAD", tr:"Şehir"}, {w:"DIA", tr:"Gün"}, {w:"NOCHE", tr:"Gece"}
+  ],
+  it:[
+    {w:"CASA", tr:"Ev"}, {w:"ACQUA", tr:"Su"}, {w:"AMICO", tr:"Arkadaş"},
+    {w:"SCUOLA", tr:"Okul"}, {w:"FAMIGLIA", tr:"Aile"}, {w:"MUSICA", tr:"Müzik"},
+    {w:"LIBRO", tr:"Kitap"}, {w:"CITTA", tr:"Şehir"}, {w:"GIORNO", tr:"Gün"}, {w:"NOTTE", tr:"Gece"}
+  ]
+};
+
+const MORSE = {
+  A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.", G: "--.", H: "....",
+  I: "..", J: ".---", K: "-.-", L: ".-..", M: "--", N: "-.", O: "---", P: ".--.",
+  Q: "--.-", R: ".-.", S: "...", T: "-", U: "..-", V: "...-", W: ".--", X: "-..-",
+  Y: "-.--", Z: "--..",
+  0: "-----", 1: ".----", 2: "..---", 3: "...--", 4: "....-", 5: ".....",
+  6: "-....", 7: "--...", 8: "---..", 9: "----."
+};
+
+const GAME_LANG_KEY = "italky_morse_lang_public";
+const GAME_PB_PREFIX = "italky_morse_pb_public_";
+const SET_SIZE = 15;
+
+const answerModal = $("answerModal");
+const answerModalTitle = $("answerModalTitle");
+const answerModalWord = $("answerModalWord");
+const answerModalMeaning = $("answerModalMeaning");
+const btnTopMenuFromAnswer = $("btnTopMenuFromAnswer");
+const btnContinueFromAnswer = $("btnContinueFromAnswer");
+
+let currentLang = localStorage.getItem(GAME_LANG_KEY) || "en";
+let puzzles = [];
+let currentIdx = 0;
+let score = 0;
+let lives = 3;
+let streak = 0;
+let maxStreak = 0;
+let totalCorrect = 0;
+let totalAnswered = 0;
+let isBusy = false;
+let currentPuzzle = null;
+let hintUsed = false;
+let meaningUsed = false;
+let currentLegendTab = "letters";
+
+let audioCtx = null;
+
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended") ctx.resume().catch(() => {});
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + .02);
+}
+
+function playGood(){
+  beep({freq:620,duration:.08,type:"triangle",gain:.05});
+  beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08});
+}
+
+function playBad(){
+  beep({freq:180,duration:.12,type:"sawtooth",gain:.05});
+  beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06});
+}
+
+function playLifeUp(){
+  beep({freq:560,duration:.08,type:"triangle",gain:.05});
+  beep({freq:760,duration:.10,type:"triangle",gain:.05,when:.08});
+  beep({freq:980,duration:.12,type:"triangle",gain:.05,when:.16});
+}
+
+function playFinish(){
+  beep({freq:700,duration:.10,type:"triangle",gain:.05});
+  beep({freq:920,duration:.12,type:"triangle",gain:.05,when:.10});
+  beep({freq:1180,duration:.15,type:"triangle",gain:.05,when:.22});
+}
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
+
+function normalize(s){
+  return String(s||"")
+    .toUpperCase()
+    .replace(/ß/g,"SS")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^A-Z0-9 ]/g,"")
+    .trim();
+}
+
+function toast(msg, color = "var(--blue)"){
+  $("resInfo").textContent = msg;
+  $("resInfo").style.color = color;
+  $("resInfo").style.opacity = "1";
+  clearTimeout(window.__morseToast);
+  window.__morseToast = setTimeout(() => $("resInfo").style.opacity = "0", 1800);
+}
+
+function speakWord(text) {
+  const t = String(text || "").trim();
+  if (!t) return;
+
+  const bcp = LANGS[currentLang]?.bcp || "en-US";
+
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(t, bcp);
+      return;
+    }
+  } catch (e) {
+    console.warn("NativeTTS speak failed:", e);
+  }
+
+  try {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = bcp;
+    u.rate = 0.88;
+    u.pitch = 1;
+    u.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices?.() || [];
+    const found = voices.find(v =>
+      String(v.lang || "").toLowerCase().startsWith(bcp.split("-")[0].toLowerCase())
+    );
+    if (found) u.voice = found;
+
+    setTimeout(() => {
+      try { window.speechSynthesis.speak(u); } catch {}
+    }, 120);
+  } catch (e) {
+    console.warn("speechSynthesis fallback failed:", e);
+  }
+}
+
+function openAnswerModal(isCorrect) {
+  answerModalTitle.textContent = isCorrect ? "DOĞRU CEVAP" : "YANLIŞ CEVAP";
+  answerModalTitle.style.color = isCorrect ? "var(--green)" : "var(--red)";
+  answerModalWord.textContent = currentPuzzle.w.trim().toUpperCase();
+  answerModalMeaning.textContent = currentPuzzle.tr || "";
+  answerModal.classList.remove("hidden");
+  speakWord(currentPuzzle.w);
+}
+
+function getPublicLangUrl(langCode){
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
+}
+
+function extractItems(payload){
+  if(Array.isArray(payload)) return payload;
+
+  if(payload && typeof payload === "object"){
+    const keys = ["items","words","data","list","entries","pool","vocabulary","kelimeler"];
+    for(const key of keys){
+      if(Array.isArray(payload[key])) return payload[key];
+    }
+
+    for(const value of Object.values(payload)){
+      if(Array.isArray(value)) return value;
+    }
+  }
+
+  return [];
+}
+
+function normalizePoolItems(items){
+  return items.map((item) => {
+    if(typeof item === "string"){
+      return { w:item, tr:"—" };
+    }
+
+    const rawWord =
+      item?.word ??
+      item?.w ??
+      item?.text ??
+      item?.term ??
+      item?.answer ??
+      item?.source ??
+      item?.value ??
+      "";
+
+    const rawMeaning =
+      item?.meaning ??
+      item?.tr ??
+      item?.translation ??
+      item?.mean ??
+      item?.hint ??
+      item?.target ??
+      item?.turkish ??
+      item?.turkce ??
+      item?.ceviri ??
+      "";
+
+    return {
+      w: String(rawWord || "").trim(),
+      tr: String(rawMeaning || "").trim()
+    };
+  }).filter(x => x.w && x.tr && !x.w.includes(" "));
+}
+
+async function loadLangPool(lang){
+  try{
+    const url = getPublicLangUrl(lang);
+    const res = await fetch(url, { cache:"no-store" });
+
+    if(!res.ok){
+      console.warn("[morse_public] pool fetch failed:", url, res.status);
+      return { items: LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en };
+    }
+
+    const json = await res.json();
+    const items = normalizePoolItems(extractItems(json));
+
+    if(!items.length){
+      console.warn("[morse_public] pool empty, fallback:", lang);
+      return { items: LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en };
+    }
+
+    return { items };
+  }catch(e){
+    console.warn("[morse_public] pool error, fallback:", e);
+    return { items: LOCAL_FALLBACK[lang] || LOCAL_FALLBACK.en };
+  }
+}
+
+const usedMorseItems = {};
+
+function pickFreshSet(items, count, langCode){
+  if(!usedMorseItems[langCode]) usedMorseItems[langCode] = new Set();
+  const used = usedMorseItems[langCode];
+
+  if(used.size >= items.length) used.clear();
+
+  const fresh = [];
+  let guard = 0;
+
+  while(fresh.length < count && guard < items.length * 20){
+    const pick = items[Math.floor(Math.random() * items.length)];
+    const key = normalize(pick.w);
+    if(!used.has(key) && !fresh.some(x => normalize(x.w) === key)){
+      used.add(key);
+      fresh.push(pick);
+    }
+    guard++;
+  }
+
+  if(fresh.length < count){
+    const fallback = items.filter(x => !fresh.some(y => normalize(y.w) === normalize(x.w)));
+    while(fresh.length < count && fallback.length){
+      const item = fallback.shift();
+      used.add(normalize(item.w));
+      fresh.push(item);
+    }
+  }
+
+  return fresh.sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+function wordToMorse(word){
+  return normalize(word).split("").map(ch => MORSE[ch] || "").filter(Boolean).join(" ");
+}
+
+function updatePB(){
+  const pb = Number(localStorage.getItem(GAME_PB_PREFIX + currentLang) || 0);
+  $("pbDisplay").textContent = `PB: ${pb}`;
+}
+
+function renderLangs(){
+  $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+    <button class="lang-btn ${currentLang===code ? "active" : ""}" data-lang="${code}">
+      <div class="flag">${meta.flag}</div>
+      <div>${meta.name}</div>
+    </button>
+  `).join("");
+
+  $("langGrid").querySelectorAll(".lang-btn").forEach(btn => {
+    btn.onclick = () => {
+      currentLang = btn.dataset.lang;
+      localStorage.setItem(GAME_LANG_KEY, currentLang);
+      renderLangs();
+      updatePB();
+      $("statusChip").textContent = currentLang.toUpperCase();
+    };
+  });
+}
+
+function renderLegend(){
+  const chars = currentLegendTab === "numbers"
+    ? ["0","1","2","3","4","5","6","7","8","9"]
+    : ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+
+  $("tabLetters").classList.toggle("active", currentLegendTab === "letters");
+  $("tabNumbers").classList.toggle("active", currentLegendTab === "numbers");
+
+  $("legendGrid").innerHTML = chars.map(ch => `
+    <button class="legendBtn" data-char="${ch}" type="button">
+      <span class="legendChar">${ch}</span>
+      <span class="legendCode">${MORSE[ch]}</span>
+    </button>
+  `).join("");
+
+  $("legendGrid").querySelectorAll(".legendBtn").forEach(btn => {
+    btn.onclick = async () => {
+      btn.classList.add("playing");
+      await playMorseAudio(MORSE[btn.dataset.char] || "");
+      setTimeout(() => btn.classList.remove("playing"), 120);
+    };
+  });
+}
+
+async function playMorseAudio(code){
+  const dot = 0.12;
+  const dash = 0.32;
+  const gap = 0.09;
+  const letterGap = 0.22;
+
+  const parts = String(code || "").split(" ");
+  let t = 0;
+
+  for (let i = 0; i < parts.length; i++) {
+    const group = parts[i];
+    for (let j = 0; j < group.length; j++) {
+      const s = group[j];
+      if (s === ".") {
+        beep({ freq: 880, duration: dot, type: "square", gain: 0.17, when: t });
+        t += dot;
+      } else if (s === "-") {
+        beep({ freq: 880, duration: dash, type: "square", gain: 0.18, when: t });
+        t += dash;
+      }
+      t += gap;
+    }
+    t += letterGap;
+  }
+
+  return new Promise(resolve => setTimeout(resolve, Math.max(100, (t + 0.08) * 1000)));
+}
+
+function updateUI(){
+  $("statusChip").textContent = currentLang.toUpperCase();
+  $("roundText").textContent = `${Math.min(currentIdx + 1, SET_SIZE)}/${SET_SIZE}`;
+  $("scorePill").textContent = score;
+  $("lifeBar").textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 5 - lives));
+  $("streakText").textContent = streak;
+  $("progFill").style.width = `${((Math.min(currentIdx + 1, SET_SIZE)) / SET_SIZE) * 100}%`;
+}
+
+function resetHelpers(){
+  hintUsed = false;
+  meaningUsed = false;
+  $("hintBox").classList.remove("show");
+  $("meaningBox").classList.remove("show");
+  $("hintBox").textContent = "";
+  $("meaningBox").textContent = "";
+}
+
+async function loadPuzzle(){
+  if (lives <= 0) return showFinal(true);
+  if (currentIdx >= puzzles.length) return showFinal(false);
+
+  currentPuzzle = puzzles[currentIdx];
+  $("morseDisplay").textContent = wordToMorse(currentPuzzle.w);
+  $("answerInput").value = "";
+  resetHelpers();
+
+  toast("Hazır", "var(--blue)");
+  updateUI();
+
+  setTimeout(() => {
+    playMorseAudio($("morseDisplay").textContent);
+  }, 180);
+}
+
+async function answerCurrent(){
+  if (isBusy || !currentPuzzle) return;
+
+  const answer = normalize($("answerInput").value);
+  const correct = normalize(currentPuzzle.w);
+
+  if (!answer) {
+    toast("Önce cevap yaz", "var(--red)");
+    return;
+  }
+
+  isBusy = true;
+  totalAnswered++;
+
+  let isCorrect = false;
+
+  if (answer === correct) {
+    isCorrect = true;
+    playGood();
+    streak++;
+    totalCorrect++;
+    maxStreak = Math.max(maxStreak, streak);
+
+    const roundScore = 10 + (streak * 2);
+    score += roundScore;
+
+    let extraText = "";
+    if (!hintUsed && !meaningUsed) {
+      if (lives < 5) {
+        lives++;
+        playLifeUp();
+        extraText = " • +1 CAN";
+      } else {
+        extraText = " • BONUS HAK TAVAN";
+      }
+    }
+
+    toast(`+${roundScore} PUAN${extraText}`, "var(--green)");
+  } else {
+    isCorrect = false;
+    playBad();
+    streak = 0;
+    lives--;
+    toast(`YANLIŞ • DOĞRU: ${correct}`, "var(--red)");
+  }
+
+  updateUI();
+  openAnswerModal(isCorrect);
+}
+
+function openHint(){
+  if (!currentPuzzle || hintUsed) return;
+  hintUsed = true;
+  $("hintBox").textContent = `İPUCU: ${currentPuzzle.tr}`;
+  $("hintBox").classList.add("show");
+  toast("İpucu açıldı", "var(--gold)");
+}
+
+function openMeaning(){
+  if (!currentPuzzle || meaningUsed) return;
+  meaningUsed = true;
+  hintUsed = true;
+  $("meaningBox").textContent = `ANLAM: ${currentPuzzle.tr}`;
+  $("meaningBox").classList.add("show");
+  toast("Anlam açıldı", "var(--gold)");
+}
+
+function showFinal(gameEnded){
+  answerModal.classList.add("hidden");
+
+  const pbKey = GAME_PB_PREFIX + currentLang;
+  const currentPB = Number(localStorage.getItem(pbKey) || 0);
+  if (score > currentPB) localStorage.setItem(pbKey, String(score));
+
+  const acc = totalAnswered ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+
+  $("endModal").classList.remove("hidden");
+  $("endTitle").textContent = gameEnded ? "OYUN BİTTİ" : "SET TAMAMLANDI";
+  $("endTitle").style.color = gameEnded ? "var(--red)" : "var(--green)";
+  $("endStats").innerHTML = `
+Skor: <b>${score}</b><br>
+En İyi Seri: <b>🔥 ${maxStreak}</b><br>
+Doğruluk: <b>%${acc}</b>
+  `;
+  updatePB();
+  playFinish();
+}
+
+async function startGame(){
+  score = 0;
+  lives = 3;
+  streak = 0;
+  maxStreak = 0;
+  totalCorrect = 0;
+  totalAnswered = 0;
+  currentIdx = 0;
+  isBusy = false;
+  currentPuzzle = null;
+  resetHelpers();
+
+  const pool = await loadLangPool(currentLang);
+  const items = [...(pool?.items || [])];
+
+  puzzles = pickFreshSet(items, SET_SIZE, currentLang);
+
+  if (!puzzles.length) {
+    alert("Havuz yüklenemedi.");
+    return;
+  }
+
+  $("startModal").classList.add("hidden");
+  $("rulesModal").classList.add("hidden");
+  $("endModal").classList.add("hidden");
+  answerModal.classList.add("hidden");
+
+  loadPuzzle();
+}
+
+$("toRulesBtn").onclick = async () => {
+  $("startModal").classList.add("hidden");
+  $("rulesModal").classList.remove("hidden");
+};
+
+$("startBtn").onclick = startGame;
+$("btnNewGame").onclick = startGame;
+
+$("btnTopMenu").onclick = () => {
+  location.href = BACK_URL;
+};
+
+$("answerBtn").onclick = answerCurrent;
+$("listenBtn").onclick = () => playMorseAudio($("morseDisplay").textContent);
+$("hintBtn").onclick = openHint;
+$("meaningBtn").onclick = openMeaning;
+
+$("tabLetters").onclick = () => {
+  currentLegendTab = "letters";
+  renderLegend();
+};
+
+$("tabNumbers").onclick = () => {
+  currentLegendTab = "numbers";
+  renderLegend();
+};
+
+btnContinueFromAnswer.onclick = () => {
+  answerModal.classList.add("hidden");
+
+  if (lives <= 0) {
+    isBusy = false;
+    showFinal(true);
+    return;
+  }
+
+  currentIdx++;
+  isBusy = false;
+  loadPuzzle();
+};
+
+btnTopMenuFromAnswer.onclick = () => {
+  answerModal.classList.add("hidden");
+  location.href = BACK_URL;
+};
+
+$("answerInput").addEventListener("input", () => {
+  $("answerInput").value = $("answerInput").value.toUpperCase().replace(/[^A-Z0-9 ]/g, "");
+});
+
+$("answerInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") answerCurrent();
+});
+
+$("backBtn").onclick = () => {
+  location.href = BACK_URL;
+};
+
+window.onload = () => {
+  renderLangs();
+  renderLegend();
+  updatePB();
+  $("statusChip").textContent = currentLang.toUpperCase();
+  updateUI();
+
+  setTimeout(() => {
+    $("pageContent")?.classList.add("ui-ready");
+  }, 120);
+};
+
+window.addEventListener("click", () => {
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
+}, { once: true });
+
+window.addEventListener("touchstart", () => {
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
+}, { once: true });
+</script>
+</body>
+</html>
