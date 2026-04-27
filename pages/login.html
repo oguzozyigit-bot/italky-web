@@ -1925,24 +1925,46 @@
     }
 
     function speak(text,langCode){
-      const value = String(text || "").trim();
-      if(!value) return;
+  const value = String(text || "").trim();
+  if(!value) return;
 
-      try{
-        window.speechSynthesis?.cancel?.();
+  const code = canonical(langCode);
+  const bcp = langObj(code).bcp || BCP[code] || "en-US";
 
-        if(window.NativeTTS?.speak){
-          window.NativeTTS.speak(value,canonical(langCode));
-          return;
-        }
-
-        const u = new SpeechSynthesisUtterance(value);
-        u.lang = langObj(langCode).bcp;
-        u.rate = .95;
-        speechSynthesis.speak(u);
-      }catch{}
+  try{
+    if(window.NativeTTS?.speak){
+      window.NativeTTS.speak(value, code);
+      return;
     }
+  }catch(e){
+    console.warn("NativeTTS failed:", e);
+  }
 
+  try{
+    if(window.speechSynthesis){
+      window.speechSynthesis.cancel();
+
+      const u = new SpeechSynthesisUtterance(value);
+      u.lang = bcp;
+      u.rate = .95;
+      u.pitch = 1;
+      u.volume = 1;
+
+      const voices = window.speechSynthesis.getVoices?.() || [];
+      const found = voices.find(v =>
+        String(v.lang || "").toLowerCase().startsWith(code)
+      );
+
+      if(found) u.voice = found;
+
+      setTimeout(() => {
+        try{ window.speechSynthesis.speak(u); }catch{}
+      }, 80);
+    }
+  }catch(e){
+    console.warn("speechSynthesis failed:", e);
+  }
+}
     async function finalizeSpeech(side,text){
       const clean = cleanupTranscript(text);
       if(!clean) return;
@@ -1966,11 +1988,11 @@
 
       targetRow.textContent = translated;
 
-      if(currentMode === "online"){
-        speak(translated,dst);
-        maybeOfferOfflinePackAfterTranslate();
-      }
-    }
+      speak(translated,dst);
+
+if(currentMode === "online"){
+  maybeOfferOfflinePackAfterTranslate();
+}
 
     function startRecording(side){
       if(recognizer){
