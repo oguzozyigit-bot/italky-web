@@ -13,6 +13,16 @@ const IS_PUBLIC_GAME =
 const PUBLIC_BACK_URL = "/pages/game_menu_public.html";
 const PRIVATE_BACK_URL = "/pages/game_menu.html";
 
+const WORD_BUCKET = "lang";
+
+const LANG_FILE_MAP = {
+  en: "en.json",
+  de: "de.json",
+  es: "es.json",
+  fr: "fr.json",
+  it: "it.json"
+};
+
 // UI shell
 try {
   mountShell({ scroll: "none" });
@@ -41,7 +51,7 @@ function qp(name) {
 }
 
 function normalizeLang(v) {
-  return String(v || "en").trim().toLowerCase();
+  return String(v || "en").trim().toLowerCase().split("-")[0];
 }
 
 function normalizeLevel(v) {
@@ -89,6 +99,37 @@ function getBackUrl() {
   return IS_PUBLIC_GAME ? PUBLIC_BACK_URL : PRIVATE_BACK_URL;
 }
 
+function cleanHangmanWord(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replaceAll("Ä", "A")
+    .replaceAll("Ö", "O")
+    .replaceAll("Ü", "U")
+    .replaceAll("É", "E")
+    .replaceAll("È", "E")
+    .replaceAll("Ê", "E")
+    .replaceAll("Á", "A")
+    .replaceAll("À", "A")
+    .replaceAll("Â", "A")
+    .replaceAll("Í", "I")
+    .replaceAll("Ì", "I")
+    .replaceAll("Î", "I")
+    .replaceAll("Ó", "O")
+    .replaceAll("Ò", "O")
+    .replaceAll("Ô", "O")
+    .replaceAll("Ú", "U")
+    .replaceAll("Ù", "U")
+    .replaceAll("Û", "U")
+    .replaceAll("Ñ", "N")
+    .replaceAll("Ç", "C")
+    .replaceAll("Ğ", "G")
+    .replaceAll("İ", "I")
+    .replaceAll("Ş", "S")
+    .replaceAll("ß", "SS")
+    .replace(/[^A-Z]/g, "");
+}
+
 function speakText(text) {
   const t = String(text || "").trim();
   if (!t) return;
@@ -121,6 +162,7 @@ function speakText(text) {
       es: "es-ES",
       it: "it-IT"
     };
+
     utter.lang = map[state.lang] || "en-US";
     utter.rate = 0.9;
     utter.pitch = 1;
@@ -130,6 +172,7 @@ function speakText(text) {
     const found = voices.find(v =>
       String(v.lang || "").toLowerCase().startsWith(String(utter.lang).split("-")[0].toLowerCase())
     );
+
     if (found) utter.voice = found;
 
     setTimeout(() => {
@@ -137,6 +180,222 @@ function speakText(text) {
     }, 120);
   } catch (e) {
     console.warn("speechSynthesis failed:", e);
+  }
+}
+
+/* -----------------------------
+   STATE
+----------------------------- */
+let state = {
+  lang: normalizeLang(qp("lang") || localStorage.getItem("italky_game_lang") || "en"),
+  level: normalizeLevel(qp("level") || localStorage.getItem("italky_game_level")) || "A1",
+  pool: [],
+  target: null,
+  lastWord: null,
+  lives: 3,
+  MAX_LIVES: 9,
+  totalScore: 0,
+  roundScore: 100,
+  guessed: new Set(),
+  mistakes: 0,
+  flawless: true,
+  jokerUsed: false,
+  lock: false,
+  userId: "anon"
+};
+
+const LANG_META = {
+  en: { name: "İngilizce", flag: "🇬🇧" },
+  de: { name: "Almanca", flag: "🇩🇪" },
+  fr: { name: "Fransızca", flag: "🇫🇷" },
+  es: { name: "İspanyolca", flag: "🇪🇸" },
+  it: { name: "İtalyanca", flag: "🇮🇹" }
+};
+
+/* -----------------------------
+   LANGUAGE JSON POOL
+----------------------------- */
+function normalizeWordItem(item, lang, level) {
+  if (!item) return null;
+
+  if (typeof item === "string") {
+    const w = cleanHangmanWord(item);
+    if (!w) return null;
+    return { w, tr: "—" };
+  }
+
+  if (typeof item !== "object") return null;
+
+  const itemLevel = String(
+    item.level ||
+    item.seviye ||
+    item.cefr ||
+    item.difficulty ||
+    ""
+  ).trim().toUpperCase();
+
+  const wantedLevel = String(level || "").trim().toUpperCase();
+
+  if (itemLevel && wantedLevel && itemLevel !== wantedLevel) {
+    return null;
+  }
+
+  const rawWord =
+    item.w ||
+    item.word ||
+    item.kelime ||
+    item.text ||
+    item.value ||
+    item.target ||
+    item.question ||
+    item.answer ||
+    item[lang] ||
+    item.en ||
+    item.de ||
+    item.fr ||
+    item.es ||
+    item.it ||
+    "";
+
+  const rawTr =
+    item.tr ||
+    item.tr_meaning ||
+    item.turkish ||
+    item.turkce ||
+    item.meaning_tr ||
+    item.meaning ||
+    item.translation ||
+    item.ceviri ||
+    item.answer_tr ||
+    item.answer ||
+    "—";
+
+  const w = cleanHangmanWord(rawWord);
+  if (!w) return null;
+
+  return {
+    w,
+    tr: String(rawTr || "—")
+  };
+}
+
+function extractWordsFromJson(json, lang, level) {
+  const out = [];
+  const wantedLevel = String(level || "A1").toUpperCase();
+
+  function pushArray(arr, strictLevel = true) {
+    if (!Array.isArray(arr)) return;
+
+    arr.forEach((item) => {
+      const normalized = normalizeWordItem(item, lang, strictLevel ? wantedLevel : "");
+      if (normalized) out.push(normalized);
+    });
+  }
+
+  if (Array.isArray(json)) {
+    pushArray(json, true);
+
+    if (!out.length) {
+      pushArray(json, false);
+    }
+
+    return out;
+  }
+
+  if (!json || typeof json !== "object") {
+    return out;
+  }
+
+  // Format: { "A1": [...], "A2": [...] }
+  if (Array.isArray(json[wantedLevel])) {
+    pushArray(json[wantedLevel], false);
+    return out;
+  }
+
+  // Format: { levels: { A1: [...] } }
+  if (json.levels && typeof json.levels === "object") {
+    if (Array.isArray(json.levels[wantedLevel])) {
+      pushArray(json.levels[wantedLevel], false);
+      return out;
+    }
+  }
+
+  // Common array keys
+  ["words", "data", "items", "list", "pool", "vocabulary", "kelimeler"].forEach((key) => {
+    if (Array.isArray(json[key])) {
+      pushArray(json[key], true);
+    }
+  });
+
+  if (out.length) return out;
+
+  // Try every array inside object
+  Object.values(json).forEach((value) => {
+    if (Array.isArray(value)) {
+      pushArray(value, true);
+    }
+  });
+
+  if (out.length) return out;
+
+  // Last try: ignore levels
+  ["words", "data", "items", "list", "pool", "vocabulary", "kelimeler"].forEach((key) => {
+    if (Array.isArray(json[key])) {
+      pushArray(json[key], false);
+    }
+  });
+
+  if (out.length) return out;
+
+  Object.values(json).forEach((value) => {
+    if (Array.isArray(value)) {
+      pushArray(value, false);
+    }
+  });
+
+  return out;
+}
+
+async function downloadJsonFromLangBucket(lang) {
+  const code = normalizeLang(lang);
+  const fileName = LANG_FILE_MAP[code] || `${code}.json`;
+
+  const { data, error } = await supabase
+    .storage
+    .from(WORD_BUCKET)
+    .download(fileName);
+
+  if (error || !data) {
+    console.error("[hangman] storage download failed:", WORD_BUCKET, fileName, error);
+    return null;
+  }
+
+  const text = await data.text();
+  return JSON.parse(text);
+}
+
+async function fetchWordsFromLangStorage(lang, level) {
+  try {
+    const json = await downloadJsonFromLangBucket(lang);
+    if (!json) return [];
+
+    const words = extractWordsFromJson(json, lang, level);
+
+    const seen = new Set();
+    return words
+      .map((x) => ({
+        w: cleanHangmanWord(x.w),
+        tr: String(x.tr || "—")
+      }))
+      .filter((x) => {
+        if (!x.w || x.w.length < 2) return false;
+        if (seen.has(x.w)) return false;
+        seen.add(x.w);
+        return true;
+      });
+  } catch (e) {
+    console.error("[hangman] fetchWordsFromLangStorage failed:", e);
+    return [];
   }
 }
 
@@ -193,39 +452,10 @@ const LOCAL_FALLBACK_POOL = {
 function getFallbackPool(lang) {
   const list = LOCAL_FALLBACK_POOL[normalizeLang(lang)] || LOCAL_FALLBACK_POOL.en;
   return list.map((x) => ({
-    w: String(x.w || "").toUpperCase(),
+    w: cleanHangmanWord(x.w),
     tr: String(x.tr || "—")
   }));
 }
-
-/* -----------------------------
-   STATE
------------------------------ */
-let state = {
-  lang: normalizeLang(qp("lang") || localStorage.getItem("italky_game_lang") || "en"),
-  level: normalizeLevel(qp("level") || localStorage.getItem("italky_game_level")) || "A1",
-  pool: [],
-  target: null,
-  lastWord: null,
-  lives: 3,
-  MAX_LIVES: 9,
-  totalScore: 0,
-  roundScore: 100,
-  guessed: new Set(),
-  mistakes: 0,
-  flawless: true,
-  jokerUsed: false,
-  lock: false,
-  userId: "anon"
-};
-
-const LANG_META = {
-  en: { name: "İngilizce", flag: "🇬🇧" },
-  de: { name: "Almanca", flag: "🇩🇪" },
-  fr: { name: "Fransızca", flag: "🇫🇷" },
-  es: { name: "İspanyolca", flag: "🇪🇸" },
-  it: { name: "İtalyanca", flag: "🇮🇹" }
-};
 
 /* -----------------------------
    LANGUAGE + RULES
@@ -271,39 +501,6 @@ function closeRulesSheet() {
 /* -----------------------------
    AUTH / DATA LOAD
 ----------------------------- */
-async function fetchWordsFromSupabase(lang, level) {
-  const { data: words, error } = await supabase
-    .from("hangman_pool")
-    .select("w, tr")
-    .eq("lang", lang)
-    .eq("level", level);
-
-  if (error) {
-    console.warn("hangman_pool exact level error:", error);
-    return [];
-  }
-
-  return Array.isArray(words)
-    ? words.filter(x => x && x.w && String(x.w).trim())
-    : [];
-}
-
-async function fetchWordsAnyLevel(lang) {
-  const { data: words, error } = await supabase
-    .from("hangman_pool")
-    .select("w, tr, level")
-    .eq("lang", lang);
-
-  if (error) {
-    console.warn("hangman_pool any level error:", error);
-    return [];
-  }
-
-  return Array.isArray(words)
-    ? words.filter(x => x && x.w && String(x.w).trim())
-    : [];
-}
-
 async function loadGameData() {
   try {
     disableStartBtn(true, "YÜKLENİYOR...");
@@ -334,27 +531,20 @@ async function loadGameData() {
 
     setGate(`${state.lang.toUpperCase()} • ${state.level} YÜKLENİYOR...`);
 
-    let words = await fetchWordsFromSupabase(state.lang, state.level);
+    let words = await fetchWordsFromLangStorage(state.lang, state.level);
 
     if (!words.length) {
-      console.warn("Exact level pool empty, trying any level for lang:", state.lang);
-      words = await fetchWordsAnyLevel(state.lang);
-    }
-
-    if (!words.length) {
-      console.warn("Supabase pool empty, using local fallback:", state.lang);
+      console.warn("[hangman] lang bucket pool empty, fallback used:", state.lang, state.level);
       words = getFallbackPool(state.lang);
       setGate(`${state.lang.toUpperCase()} • YEDEK HAVUZ HAZIR`);
     }
 
     state.pool = Array.isArray(words)
-      ? words.filter(x => x && x.w && String(x.w).trim()).map((x) => ({
-          w: String(x.w || "").toUpperCase(),
-          tr: String(x.tr || "—")
-        }))
+      ? words.filter(x => x && x.w && String(x.w).trim())
       : [];
 
     let best = 0;
+
     if (state.userId !== "anon") {
       const { data: prof } = await supabase
         .from("profiles")
@@ -406,8 +596,10 @@ async function updateBestScore(newScore) {
       .maybeSingle();
 
     let map = prof?.hangman_best || {};
+
     if (newScore > (map[key] || 0)) {
       map[key] = newScore;
+
       await supabase
         .from("profiles")
         .update({ hangman_best: map })
@@ -471,6 +663,7 @@ function startRound() {
 
 function renderWord() {
   const w = String(state.target?.w || "").toUpperCase();
+
   $("matrix").innerHTML = w.split("").map(ch => {
     const isLetter = /[A-Z]/.test(ch);
     const found = !isLetter || state.guessed.has(ch);
@@ -485,6 +678,7 @@ function renderWord() {
 
 function renderKeyboard() {
   const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
   $("kb").innerHTML = abc.map(l =>
     `<button class="key" id="key-${l}" data-l="${l}">${l}</button>`
   ).join("");
@@ -534,14 +728,17 @@ function resetMan() {
   ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"].forEach(id => {
     $(id)?.classList.remove("on");
   });
+
   $("man")?.classList.remove("swing");
 }
 
 function renderHearts() {
   let html = "";
+
   for (let i = 0; i < state.lives; i++) {
     html += `<span class="heart">❤️</span>`;
   }
+
   $("hearts").innerHTML = html;
 }
 
@@ -555,9 +752,11 @@ async function endRound(win) {
 
   if (win) {
     state.totalScore += state.roundScore;
+
     if (state.flawless && !state.jokerUsed && state.lives < state.MAX_LIVES) {
       state.lives++;
     }
+
     await updateBestScore(state.totalScore);
   } else {
     state.lives--;
@@ -602,6 +801,7 @@ $("mBtn").onclick = () => {
     startRound();
   } else {
     const again = confirm(`Oyun bitti! Skor: ${state.totalScore}. Yeniden başla?`);
+
     if (again) {
       state.totalScore = 0;
       state.lives = 3;
