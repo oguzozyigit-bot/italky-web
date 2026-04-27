@@ -86,10 +86,7 @@
       text-shadow:0 0 12px rgba(255,255,255,.28);
     }
 
-    .edge-handle.open:active{
-      transform:translateY(-50%) scale(.96);
-    }
-
+    .edge-handle.open:active,
     .edge-handle.clear:active{
       transform:translateY(-50%) scale(.96);
     }
@@ -287,12 +284,11 @@
     }
 
     .drawer-link{
-      min-height:48px;
+      min-height:50px;
       border-radius:18px;
       text-decoration:none;
       color:#fff;
-      background:rgba(255,255,255,.045);
-      border:1px solid rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -301,6 +297,35 @@
       font-size:14px;
       font-weight:1000;
       cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+    }
+
+    .drawer-link::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      opacity:.9;
+      pointer-events:none;
+    }
+
+    .drawer-link span,
+    .drawer-link small{
+      position:relative;
+      z-index:2;
+    }
+
+    .drawer-link:active{
+      transform:scale(.985);
+    }
+
+    .drawer-link small{
+      color:rgba(255,255,255,.56);
+      font-size:12px;
+      font-weight:1000;
     }
 
     .drawer-link-button{
@@ -309,12 +334,54 @@
       text-align:left;
     }
 
-    .drawer-link:active{transform:scale(.985)}
+    .drawer-link.orange{
+      background:rgba(249,115,22,.105);
+      border-color:rgba(251,146,60,.24);
+    }
 
-    .drawer-link small{
-      color:rgba(255,255,255,.46);
-      font-size:12px;
-      font-weight:1000;
+    .drawer-link.orange::before{
+      background:
+        radial-gradient(circle at left,rgba(251,146,60,.22),transparent 55%),
+        linear-gradient(135deg,rgba(255,255,255,.045),rgba(249,115,22,.055));
+    }
+
+    .drawer-link.green{
+      background:rgba(34,197,94,.095);
+      border-color:rgba(34,197,94,.23);
+    }
+
+    .drawer-link.green::before{
+      background:
+        radial-gradient(circle at left,rgba(34,197,94,.20),transparent 55%),
+        linear-gradient(135deg,rgba(255,255,255,.04),rgba(34,197,94,.052));
+    }
+
+    .drawer-link.navy{
+      background:rgba(15,39,66,.44);
+      border-color:rgba(96,165,250,.18);
+    }
+
+    .drawer-link.navy::before{
+      background:
+        radial-gradient(circle at left,rgba(56,189,248,.12),transparent 55%),
+        linear-gradient(135deg,rgba(255,255,255,.035),rgba(15,39,66,.20));
+    }
+
+    .drawer-link.shortcut{
+      color:#06111f;
+      background:linear-gradient(135deg,#ffffff 0%,#dff8ff 16%,#7dd3fc 45%,#2563eb 100%);
+      border-color:rgba(255,255,255,.38);
+      box-shadow:0 16px 30px rgba(37,99,235,.18), inset 0 1px 0 rgba(255,255,255,.45);
+    }
+
+    .drawer-link.shortcut::before{
+      background:
+        radial-gradient(circle at left,rgba(255,255,255,.45),transparent 50%),
+        linear-gradient(135deg,rgba(255,255,255,.22),transparent);
+    }
+
+    .drawer-link.shortcut small{
+      color:rgba(6,17,31,.72);
     }
 
     .google-login-btn{
@@ -360,6 +427,22 @@
     .subscription-note strong{
       color:#fff;
       font-weight:1000;
+    }
+
+    .drawer-footer-seal{
+      margin-top:14px;
+      padding:11px 10px 2px;
+      text-align:center;
+      color:rgba(255,255,255,.46);
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.4px;
+    }
+
+    .drawer-footer-seal .ai{
+      background:var(--ai-gradient);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
 
     .my-lang-modal{
@@ -905,17 +988,40 @@
       </div>
 
       <nav class="drawer-links">
-        <button id="drawerWidgetBtn" class="drawer-link drawer-link-button" type="button">
-          <span>Ana Ekrana Kısa Yol Ekle</span>
+        <a class="drawer-link orange" href="/pages/text_translate_public.html">
+          <span>Yazıdan Çeviri</span>
+          <small>›</small>
+        </a>
+
+        <a class="drawer-link green" href="/pages/game_menu_public.html">
+          <span>Eğlenerek Öğren</span>
+          <small>›</small>
+        </a>
+
+        <a class="drawer-link green" href="/pages/level_test_public.html">
+          <span>Seviye Tespit</span>
+          <small>›</small>
+        </a>
+
+        <a class="drawer-link navy" href="/pages/about.html">
+          <span>Hakkımızda</span>
+          <small>›</small>
+        </a>
+
+        <a class="drawer-link navy" href="/pages/privacy.html">
+          <span>Gizlilik</span>
+          <small>›</small>
+        </a>
+
+        <a class="drawer-link navy" href="/pages/contact.html">
+          <span>İletişim</span>
+          <small>›</small>
+        </a>
+
+        <button id="drawerWidgetBtn" class="drawer-link drawer-link-button shortcut" type="button">
+          <span>Kısa Yol Ekle</span>
           <small>+</small>
         </button>
-
-        <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Oyunlar</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/contact.html"><span>İletişim</span><small>›</small></a>
       </nav>
 
       <button id="drawerLoginBtn" class="google-login-btn" type="button">
@@ -931,6 +1037,10 @@
       <div class="subscription-note">
         <strong>Reklamsız italkyAI</strong><br/>
         349,90 TL / 12 ay. Yıllık abonelik ödemesi Google Play tarafından tahsil edilir. Abonelik sonrası 12 ay boyunca hiçbir modülde reklam görmeden kullanabilirsiniz.
+      </div>
+
+      <div class="drawer-footer-seal">
+        italky<span class="ai">AI</span> Ozigit's 2026
       </div>
     </aside>
   </div>
@@ -1366,7 +1476,13 @@
           }
 
           myLang = next;
-          localStorage.setItem(MY_LANG_KEY,myLang);
+
+          localStorage.setItem(MY_LANG_KEY, myLang);
+
+          localStorage.setItem(SITE_LANG_KEY, myLang);
+          localStorage.setItem(LEGACY_SITE_LANG_KEY, myLang);
+          localStorage.setItem(NATIVE_LANG_KEY, myLang);
+
           OfflinePackBridge.setOfflineNativeLang(myLang);
 
           renderMyLangDrawer();
@@ -1376,6 +1492,10 @@
 
           showToast(tx("myLangChanged"));
           myLangModal?.classList.remove("show");
+
+          setTimeout(() => {
+            location.reload();
+          }, 450);
         };
       });
     }
@@ -2092,7 +2212,12 @@
         const detected = await detectCountryLang();
         if(detected && langExists(detected)){
           myLang = detected;
+
           localStorage.setItem(MY_LANG_KEY,myLang);
+          localStorage.setItem(SITE_LANG_KEY,myLang);
+          localStorage.setItem(LEGACY_SITE_LANG_KEY,myLang);
+          localStorage.setItem(NATIVE_LANG_KEY,myLang);
+
           OfflinePackBridge.setOfflineNativeLang(myLang);
         }
       }else{
@@ -2115,4 +2240,4 @@
     boot();
   </script>
 </body>
-</html>
+  </html>
