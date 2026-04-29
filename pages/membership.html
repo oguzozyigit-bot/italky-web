@@ -18,14 +18,12 @@
       --bg:#07111f;
       --bg2:#0b1728;
       --card:rgba(255,255,255,.055);
-      --card2:rgba(255,255,255,.075);
       --line:rgba(255,255,255,.11);
       --text:#ffffff;
       --muted:rgba(255,255,255,.68);
       --soft:rgba(255,255,255,.50);
       --cyan:#22d3ee;
       --blue:#38bdf8;
-      --violet:#818cf8;
       --green:#bef264;
       --grad:linear-gradient(135deg,#22d3ee 0%,#818cf8 56%,#ec4899 100%);
       --safe-bottom:env(safe-area-inset-bottom,0px);
@@ -177,8 +175,9 @@
     }
 
     .action-btn[disabled]{
-      opacity:.6;
-      cursor:default;
+      opacity:.42;
+      cursor:not-allowed;
+      filter:grayscale(.25);
     }
 
     .play-btn{
@@ -351,7 +350,7 @@
     <section class="actions">
       <button id="buyBtn" class="action-btn play-btn" type="button">Google Play ile Abone Ol</button>
       <button id="codeBtn" class="action-btn code-btn" type="button">Kod ile Abone Ol</button>
-      <button id="homeBtn" class="action-btn home-btn" type="button">Uygulamaya Git</button>
+      <button id="homeBtn" class="action-btn home-btn" type="button" disabled>Üyelik Gereklidir</button>
     </section>
 
     <div id="statusBox" class="status-box">
@@ -414,11 +413,6 @@
     const LOGIN = "/pages/login.html";
     const CODE_PAGE = "/pages/code_login.html";
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
-
-    /*
-      Play Console ürün kimliği.
-      Play Console'da farklı kayıtlıysa sadece burayı değiştir.
-    */
     const PRODUCT_ID = "reklamsiz";
 
     const UI = {
@@ -435,8 +429,10 @@
 
     function toast(msg = "") {
       if (!UI.toast) return;
+
       UI.toast.textContent = String(msg || "");
       UI.toast.classList.add("show");
+
       clearTimeout(window.__membershipToast);
       window.__membershipToast = setTimeout(() => {
         UI.toast.classList.remove("show");
@@ -499,7 +495,10 @@
       });
 
       const json = await resp.json().catch(() => ({}));
-      if (!resp.ok) throw new Error(json?.detail || "Erişim bilgisi alınamadı");
+
+      if (!resp.ok) {
+        throw new Error(json?.detail || "Erişim bilgisi alınamadı");
+      }
 
       return json;
     }
@@ -520,6 +519,7 @@
 
         UI.buyBtn.disabled = true;
         UI.codeBtn.disabled = true;
+        UI.homeBtn.disabled = false;
         UI.homeBtn.textContent = "Uygulamaya Git";
 
         setTimeout(() => {
@@ -537,7 +537,8 @@
 
       UI.buyBtn.disabled = false;
       UI.codeBtn.disabled = false;
-      UI.homeBtn.disabled = false;
+      UI.homeBtn.disabled = true;
+      UI.homeBtn.textContent = "Üyelik Gereklidir";
     }
 
     function isNativeBillingReady() {
@@ -581,7 +582,9 @@
         toast(e?.message || "İşlem başlatılamadı");
       } finally {
         setTimeout(() => {
-          UI.buyBtn.disabled = false;
+          if (pendingSubscriptionMode !== "purchase") {
+            UI.buyBtn.disabled = false;
+          }
         }, 1500);
       }
     }
@@ -610,10 +613,9 @@
           return;
         }
 
-        toast("Üyelik olmadan bazı özellikler kilitli kalır.");
-        setTimeout(() => location.replace(HOME), 500);
-      } catch {
-        location.replace(HOME);
+        toast("Devam etmek için üyelik gereklidir.");
+      } catch (e) {
+        toast("Üyelik durumu kontrol edilemedi.");
       }
     }
 
@@ -623,12 +625,6 @@
 
       if (!hasAccess) {
         toast("Üyelik henüz aktif görünmüyor");
-        return;
-      }
-
-      if (mode === "restore") {
-        toast("Aktif Google Play üyeliğiniz geri yüklendi.");
-        setTimeout(() => location.replace(HOME), 800);
         return;
       }
 
@@ -660,6 +656,8 @@
         toast(e?.message || "Güncelleme başarısız");
       } finally {
         pendingSubscriptionMode = "unknown";
+        if (!UI.buyBtn.disabled) return;
+        UI.buyBtn.disabled = false;
       }
     }
 
@@ -702,25 +700,20 @@
         const access = await getAccessState();
         syncAccessUi(access);
 
-        if (
-          !access?.access_open &&
-          window.AndroidBilling &&
-          typeof window.AndroidBilling.restorePurchases === "function"
-        ) {
-          setTimeout(() => {
-            try {
-              pendingSubscriptionMode = "restore";
-              window.AndroidBilling.restorePurchases();
-            } catch (e) {
-              console.error("auto restore error:", e);
-              pendingSubscriptionMode = "unknown";
-            }
-          }, 600);
-        }
+        /*
+          ÖNEMLİ:
+          Otomatik restore kapalı.
+          Eski Google Play üyeliğini arka planda kendiliğinden geri yükleyip
+          kullanıcıyı üyeymiş gibi içeri almaması için burada restorePurchases çağırmıyoruz.
+        */
       } catch (e) {
         console.error("membership boot error:", e);
+
         if (String(e?.message || "").includes("giriş")) return;
+
         setStatus("err", e?.message || "Üyelik bilgisi alınamadı.");
+        UI.homeBtn.disabled = true;
+        UI.homeBtn.textContent = "Üyelik Gereklidir";
       }
     })();
   </script>
