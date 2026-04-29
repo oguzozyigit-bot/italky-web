@@ -4,29 +4,32 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
   <title>italkyAI • Üyelik</title>
-  <meta name="theme-color" content="#050608" />
+  <meta name="theme-color" content="#07111f" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap"
     rel="stylesheet"
   >
 
   <style>
-    :root {
+    :root{
+      --bg:#07111f;
+      --bg2:#0b1728;
+      --card:rgba(255,255,255,.055);
+      --card2:rgba(255,255,255,.075);
+      --line:rgba(255,255,255,.11);
+      --text:#ffffff;
+      --muted:rgba(255,255,255,.68);
+      --soft:rgba(255,255,255,.50);
       --cyan:#22d3ee;
-      --violet:#8b5cf6;
-      --pink:#ec4899;
-      --green:#bef264;
       --blue:#38bdf8;
-      --grad:linear-gradient(135deg,#22d3ee 0%,#8b5cf6 55%,#ec4899 100%);
-      --blue-grad:linear-gradient(135deg,#0f172a 0%,#0b2a44 42%,#22d3ee 100%);
-      --bg:#050608;
-      --card:rgba(255,255,255,0.045);
-      --line:rgba(255,255,255,0.10);
-      --muted:rgba(255,255,255,0.68);
+      --violet:#818cf8;
+      --green:#bef264;
+      --grad:linear-gradient(135deg,#22d3ee 0%,#818cf8 56%,#ec4899 100%);
       --safe-bottom:env(safe-area-inset-bottom,0px);
+      --safe-top:env(safe-area-inset-top,0px);
     }
 
     *{
@@ -38,286 +41,231 @@
       margin:0;
       width:100%;
       min-height:100%;
-      background:#050608;
-      color:#fff;
-      font-family:"Outfit",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Outfit,Arial,sans-serif;
       overflow-x:hidden;
     }
 
     body{
       background:
-        radial-gradient(circle at 50% 0%, rgba(34,211,238,0.15) 0%, transparent 45%),
-        radial-gradient(circle at 100% 20%, rgba(139,92,246,0.10) 0%, transparent 30%),
-        radial-gradient(circle at 0% 90%, rgba(236,72,153,0.08) 0%, transparent 36%),
-        #050608;
+        radial-gradient(circle at 50% 0%, rgba(34,211,238,.14), transparent 34%),
+        radial-gradient(circle at 100% 18%, rgba(129,140,248,.10), transparent 32%),
+        linear-gradient(180deg,#07111f 0%,#050914 100%);
     }
 
-    #pageContent{
+    .page{
       width:100%;
       max-width:560px;
       margin:0 auto;
-      padding:0 22px calc(60px + var(--safe-bottom));
+      padding:calc(26px + var(--safe-top)) 20px calc(42px + var(--safe-bottom));
     }
 
-    .stage{
-      height:250px;
+    .brand{
       display:flex;
       align-items:center;
-      justify-content:center;
-      position:relative;
-      perspective:1200px;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:26px;
     }
 
-    .planet-rotate{
-      position:relative;
-      width:142px;
-      height:142px;
-      border-radius:50%;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255,255,255,.10), transparent 18%),
-        radial-gradient(circle at 62% 55%, #1e293b, #0f172a, #020617);
-      box-shadow:
-        inset -15px -15px 40px rgba(0,0,0,0.9),
-        inset 10px 10px 25px rgba(255,255,255,0.05),
-        0 0 60px rgba(34,211,238,0.25);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border:1px solid rgba(255,255,255,0.1);
-      animation:globeSpin 15s linear infinite;
+    .logo{
+      min-width:0;
     }
 
-    .logo-fix{
-      animation:counterSpin 15s linear infinite;
+    .logo-main{
       font-family:"Space Grotesk",sans-serif;
-      font-size:22px;
-      font-weight:800;
-      letter-spacing:-0.5px;
-      color:#fff;
+      font-size:34px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:-1.2px;
     }
 
-    .logo-fix span{
+    .logo-main span{
       background:var(--grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
 
-    @keyframes globeSpin{
-      from{ transform:rotateY(0deg); }
-      to{ transform:rotateY(360deg); }
-    }
-
-    @keyframes counterSpin{
-      from{ transform:rotateY(0deg); }
-      to{ transform:rotateY(-360deg); }
-    }
-
-    .header{
-      text-align:center;
-      margin-bottom:28px;
-    }
-
-    .header h1{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:38px;
-      margin:0;
-      letter-spacing:-2px;
-      line-height:1;
-    }
-
-    .header p{
-      color:var(--cyan);
-      font-weight:900;
-      margin:12px 0 0;
-      letter-spacing:2px;
-      text-transform:uppercase;
-      font-size:12px;
-    }
-
-    .sub-card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:34px;
-      padding:26px 22px;
-      text-align:center;
-      backdrop-filter:blur(15px);
-      -webkit-backdrop-filter:blur(15px);
-      box-shadow:0 24px 50px rgba(0,0,0,0.35);
-      margin-bottom:18px;
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:8px 14px;
-      border-radius:999px;
-      background:var(--grad);
-      color:#050608;
-      font-size:12px;
+    .logo-sub{
+      margin-top:8px;
+      font-size:11px;
+      letter-spacing:2.2px;
       font-weight:1000;
-      margin-bottom:18px;
-      text-transform:uppercase;
-      letter-spacing:1px;
+      color:rgba(255,255,255,.78);
     }
 
-    .price-main{
+    .secure-pill{
+      flex:0 0 auto;
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid rgba(34,211,238,.18);
+      background:rgba(34,211,238,.08);
+      color:#dffbff;
+      font-size:11px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .hero{
+      padding:22px 20px;
+      border-radius:28px;
+      background:
+        radial-gradient(circle at top left, rgba(34,211,238,.13), transparent 36%),
+        linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+      border:1px solid var(--line);
+      box-shadow:0 20px 46px rgba(0,0,0,.30);
+      margin-bottom:16px;
+    }
+
+    .hero h1{
+      margin:0;
       font-family:"Space Grotesk",sans-serif;
-      font-size:62px;
-      font-weight:900;
-      color:var(--green);
-      line-height:1;
-      letter-spacing:-2px;
+      font-size:28px;
+      line-height:1.08;
+      letter-spacing:-1px;
     }
 
-    .price-desc{
-      font-size:18px;
-      font-weight:900;
-      color:#fff;
-      margin-top:10px;
-    }
-
-    .price-info{
+    .hero p{
+      margin:12px 0 0;
+      color:var(--muted);
       font-size:14px;
-      opacity:.76;
-      margin-top:15px;
-      font-weight:700;
       line-height:1.55;
+      font-weight:650;
     }
 
-    .status-box{
-      margin:20px 0 0;
-      padding:17px 18px;
-      border-radius:22px;
-      font-size:14px;
-      line-height:1.6;
-      font-weight:850;
-      border:1px solid rgba(255,255,255,0.12);
-      background:
-        radial-gradient(circle at 20% 20%, rgba(34,211,238,0.14) 0%, transparent 35%),
-        radial-gradient(circle at 80% 80%, rgba(139,92,246,0.12) 0%, transparent 38%),
-        linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
-      color:#fff;
-      text-align:center;
-      box-shadow:
-        0 14px 34px rgba(0,0,0,.26),
-        inset 0 1px 0 rgba(255,255,255,.06),
-        0 0 24px rgba(34,211,238,.08);
-      backdrop-filter:blur(14px);
-      -webkit-backdrop-filter:blur(14px);
-    }
-
-    .status-box.ok{
-      background:
-        radial-gradient(circle at 18% 18%, rgba(190,242,100,0.16) 0%, transparent 34%),
-        radial-gradient(circle at 82% 80%, rgba(34,211,238,0.12) 0%, transparent 36%),
-        linear-gradient(135deg, rgba(132,204,22,0.14), rgba(255,255,255,0.04));
-      border-color:rgba(190,242,100,0.24);
+    .price-line{
+      margin-top:16px;
+      padding:13px 14px;
+      border-radius:18px;
+      border:1px solid rgba(190,242,100,.16);
+      background:rgba(190,242,100,.07);
       color:#f3ffd6;
+      font-size:14px;
+      line-height:1.5;
+      font-weight:850;
     }
 
-    .status-box.warn{
-      border-color:rgba(34,211,238,0.22);
-      color:#e8fcff;
-    }
-
-    .status-box.err{
-      background:
-        radial-gradient(circle at 18% 18%, rgba(239,68,68,0.18) 0%, transparent 34%),
-        radial-gradient(circle at 82% 80%, rgba(139,92,246,0.10) 0%, transparent 36%),
-        linear-gradient(135deg, rgba(239,68,68,0.14), rgba(255,255,255,0.03));
-      border-color:rgba(239,68,68,0.22);
-      color:#ffe6e6;
+    .price-line b{
+      color:#fff;
+      font-weight:1000;
     }
 
     .actions{
       display:grid;
-      gap:14px;
-      margin-top:18px;
+      gap:12px;
+      margin:18px 0;
     }
 
-    .buy-btn,
-    .code-btn,
-    .home-btn{
+    .action-btn{
       width:100%;
-      min-height:66px;
-      border-radius:22px;
+      min-height:62px;
       border:none;
-      font-size:17px;
-      font-weight:1000;
+      border-radius:22px;
       cursor:pointer;
-      transition:transform .16s ease, opacity .16s ease;
       display:flex;
       align-items:center;
       justify-content:center;
       gap:10px;
-      text-align:center;
+      font-size:16px;
+      font-weight:1000;
+      transition:transform .15s ease, opacity .15s ease;
     }
 
-    .buy-btn{
-      background:#fff;
-      color:#000;
-      box-shadow:0 20px 40px rgba(0,0,0,0.5);
-    }
-
-    .code-btn{
-      background:linear-gradient(135deg,#071a2f 0%,#0ea5e9 55%,#e0f2fe 100%);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.14);
-      box-shadow:0 18px 38px rgba(14,165,233,.16);
-    }
-
-    .home-btn{
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.12);
-      color:#fff;
-    }
-
-    .buy-btn:active,
-    .code-btn:active,
-    .home-btn:active{
+    .action-btn:active{
       transform:scale(.992);
     }
 
-    .buy-btn[disabled],
-    .code-btn[disabled],
-    .home-btn[disabled]{
-      opacity:.62;
+    .action-btn[disabled]{
+      opacity:.6;
       cursor:default;
     }
 
-    .google-play-info{
-      margin-top:18px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      font-size:12px;
-      font-weight:700;
-      color:rgba(255,255,255,0.48);
-      text-align:center;
-      line-height:1.5;
+    .play-btn{
+      color:#07111f;
+      background:#fff;
+      box-shadow:0 16px 36px rgba(0,0,0,.34);
     }
 
-    .feature-list{
+    .code-btn{
+      color:#fff;
+      background:
+        radial-gradient(circle at left,rgba(45,212,191,.22),transparent 56%),
+        linear-gradient(135deg,#082f49 0%,#0e7490 55%,#38bdf8 100%);
+      border:1px solid rgba(125,211,252,.24);
+      box-shadow:0 16px 36px rgba(14,165,233,.14);
+    }
+
+    .home-btn{
+      color:#fff;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .status-box{
+      margin:16px 0;
+      padding:15px 16px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.11);
+      background:rgba(255,255,255,.045);
+      color:rgba(255,255,255,.80);
+      font-size:13px;
+      line-height:1.55;
+      font-weight:800;
+      text-align:center;
+    }
+
+    .status-box.ok{
+      border-color:rgba(190,242,100,.22);
+      background:rgba(190,242,100,.08);
+      color:#f3ffd6;
+    }
+
+    .status-box.err{
+      border-color:rgba(248,113,113,.22);
+      background:rgba(248,113,113,.08);
+      color:#ffe0e0;
+    }
+
+    .section-title{
+      margin:24px 2px 12px;
+      color:rgba(255,255,255,.82);
+      font-size:13px;
+      font-weight:1000;
+      letter-spacing:.8px;
+      text-transform:uppercase;
+    }
+
+    .features{
       display:grid;
-      gap:12px;
-      margin-top:18px;
-      text-align:left;
+      gap:10px;
     }
 
     .feature{
       display:flex;
-      gap:10px;
+      gap:11px;
       align-items:flex-start;
-      padding:13px 14px;
+      padding:14px;
       border-radius:20px;
       background:rgba(255,255,255,.045);
       border:1px solid rgba(255,255,255,.08);
-      color:rgba(255,255,255,.78);
+      color:var(--muted);
       font-size:13px;
-      line-height:1.45;
-      font-weight:760;
+      line-height:1.48;
+      font-weight:650;
+    }
+
+    .feature-icon{
+      flex:0 0 26px;
+      width:26px;
+      height:26px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(34,211,238,.10);
+      border:1px solid rgba(34,211,238,.14);
+      font-size:14px;
     }
 
     .feature b{
@@ -325,24 +273,34 @@
       font-weight:1000;
     }
 
-    .feature span:first-child{
-      flex:0 0 auto;
+    .note{
+      margin-top:18px;
+      padding:13px 14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.07);
+      color:var(--soft);
+      font-size:12px;
+      line-height:1.5;
+      font-weight:700;
+      text-align:center;
     }
 
     .footer{
-      margin-top:44px;
+      margin-top:34px;
       text-align:center;
-      font-size:12px;
-      font-weight:800;
-      color:rgba(255,255,255,0.22);
-      letter-spacing:3px;
+      color:rgba(255,255,255,.28);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:2.4px;
     }
 
     .toast{
       position:fixed;
-      left:50%;
       top:20px;
+      left:50%;
       transform:translateX(-50%) translateY(-120px);
+      max-width:min(92vw,420px);
       min-height:44px;
       padding:10px 16px;
       border-radius:16px;
@@ -355,12 +313,11 @@
       align-items:center;
       justify-content:center;
       text-align:center;
-      max-width:min(92vw,420px);
-      z-index:99999;
+      z-index:9999;
       box-shadow:0 18px 36px rgba(0,0,0,.35);
       transition:.22s ease;
-      backdrop-filter:blur(14px);
       pointer-events:none;
+      backdrop-filter:blur(14px);
     }
 
     .toast.show{
@@ -370,52 +327,81 @@
 </head>
 
 <body>
-  <div id="pageContent">
-    <div class="stage">
-      <div class="planet-rotate">
-        <div class="logo-fix">italky<span>AI</span></div>
+  <main class="page">
+    <header class="brand">
+      <div class="logo">
+        <div class="logo-main">italky<span>AI</span></div>
+        <div class="logo-sub">BE FREE</div>
       </div>
+      <div class="secure-pill">Google Hesabı Bağlı</div>
+    </header>
+
+    <section class="hero">
+      <h1>Üyelik Seçimi</h1>
+      <p>
+        Google Play ile abone olabilir veya satın aldığınız üyelik kodunu hesabınıza tanımlayabilirsiniz.
+      </p>
+
+      <div class="price-line">
+        <b>Google Play yıllık üyelik ücreti 699 TL’dir.</b><br/>
+        Üyelikte reklam gösterilmez.
+      </div>
+    </section>
+
+    <section class="actions">
+      <button id="buyBtn" class="action-btn play-btn" type="button">Google Play ile Abone Ol</button>
+      <button id="codeBtn" class="action-btn code-btn" type="button">Kod ile Abone Ol</button>
+      <button id="homeBtn" class="action-btn home-btn" type="button">Uygulamaya Git</button>
+    </section>
+
+    <div id="statusBox" class="status-box">
+      Üyelik durumunuz kontrol ediliyor...
     </div>
 
-    <div class="header">
-      <h1>Dünyayı küçülttük.</h1>
-      <p>Cebinize sığdırdık.</p>
-    </div>
+    <div class="section-title">Üyelikle Açılan Özellikler</div>
 
-    <div class="sub-card">
-      <div class="badge">YILLIK ÜYELİK</div>
-      <div class="price-main">699 TL</div>
-      <div class="price-desc">12 AY REKLAMSIZ KULLANIM</div>
-      <div class="price-info">
-        Tüm online/offline diller, kilitli modüller, gelişmiş AI özellikleri ve oyunlar tek üyelikle açılır.
+    <section class="features">
+      <div class="feature">
+        <div class="feature-icon">🌍</div>
+        <div>
+          <b>Online ve offline diller</b><br/>
+          58 offline dili 1 yıl boyunca kullanabilir, desteklenen online dillerle çeviri yapabilirsiniz.
+        </div>
       </div>
 
-      <div class="feature-list">
-        <div class="feature"><span>🌍</span><div><b>Tüm diller</b><br>Online ve offline dil paketleri üyelikle açılır.</div></div>
-        <div class="feature"><span>🤖</span><div><b>AI modülleri</b><br>SohbetAI, kültürel diller ve gelişmiş özelliklere erişim.</div></div>
-        <div class="feature"><span>🚫</span><div><b>Reklamsız deneyim</b><br>Üyelikte reklam gösterilmez.</div></div>
+      <div class="feature">
+        <div class="feature-icon">🎙️</div>
+        <div>
+          <b>Sesli çeviri ve AI sohbet</b><br/>
+          Kendi sesinizle çeviri, sesli iletişim ve SohbetAI özelliklerinden yararlanabilirsiniz.
+        </div>
       </div>
 
-      <div class="status-box warn" id="statusBox">
-        Sayın kullanıcımız,<br>
-        Devam etmek için bir üyelik yöntemi seçin.
+      <div class="feature">
+        <div class="feature-icon">🏛️</div>
+        <div>
+          <b>Kültürel dil modülleri</b><br/>
+          Mezopotamya, Balkan, Kafkas, Turan Dilleri ve Ataların Dili gibi kilitli modüller açılır.
+        </div>
       </div>
 
-      <div class="actions">
-        <button class="buy-btn" id="buyBtn" type="button">Google Play ile Abone Ol</button>
-        <button class="code-btn" id="codeBtn" type="button">Kod ile Abone Ol</button>
-        <button class="home-btn" id="homeBtn" type="button">Uygulamaya Git</button>
+      <div class="feature">
+        <div class="feature-icon">🎮</div>
+        <div>
+          <b>Eğlenerek öğrenme</b><br/>
+          Hangman dışındaki gelişmiş oyunlar ve seviye tespit özellikleri üyelikle kullanılabilir.
+        </div>
       </div>
+    </section>
 
-      <div class="google-play-info">
-        <span>🛡️ Google Play ödemeleri Google tarafından yönetilir. Kod ile abonelik satın aldığınız üyelik kodunu Google hesabınıza tanımlar.</span>
-      </div>
+    <div class="note">
+      Google Play ödemeleri Google tarafından yönetilir. Kod ile abonelik, satın aldığınız üyelik kodunu Google hesabınıza tanımlar.
     </div>
 
     <div class="footer">italkyAI BY Ozyigit's 2026</div>
-  </div>
+  </main>
 
-  <div class="toast" id="toast"></div>
+  <div id="toast" class="toast"></div>
 
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
@@ -423,6 +409,17 @@
     import { lockMembershipPageBack } from "/js/global_access.js";
 
     const $ = (id) => document.getElementById(id);
+
+    const HOME = "/pages/home.html";
+    const LOGIN = "/pages/login.html";
+    const CODE_PAGE = "/pages/code_login.html";
+    const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
+
+    /*
+      Play Console ürün kimliği.
+      Play Console'da farklı kayıtlıysa sadece burayı değiştir.
+    */
+    const PRODUCT_ID = "reklamsiz";
 
     const UI = {
       buyBtn: $("buyBtn"),
@@ -432,20 +429,9 @@
       statusBox: $("statusBox")
     };
 
-    const HOME = "/pages/home.html";
-    const LOGIN = "/pages/login_entry.html?next=/pages/membership.html";
-    const CODE_PAGE = "/pages/code_login.html";
-    const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
-
-    /*
-      Play Console ürün kimliği.
-      Eğer Play Console'da farklı kayıtlıysa sadece burayı değiştir.
-    */
-    const PRODUCT_ID = "reklamsiz";
-
-    let currentUserId = "";
     let currentSession = null;
-    let pendingSubscriptionMode = "unknown"; // purchase | restore | unknown
+    let currentUserId = "";
+    let pendingSubscriptionMode = "unknown";
 
     function toast(msg = "") {
       if (!UI.toast) return;
@@ -489,15 +475,6 @@
       else UI.statusBox.textContent = text;
     }
 
-    function renderWelcomeBox(name) {
-      const safeName = escapeHtml(name || "kullanıcımız");
-      setStatus(
-        "warn",
-        `Sayın ${safeName}<br>Devam etmek için bir üyelik yöntemi seçin.`,
-        true
-      );
-    }
-
     async function getSessionOrLogin() {
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -508,7 +485,6 @@
 
       currentSession = session;
       currentUserId = session.user?.id || "";
-      renderWelcomeBox(getDisplayNameFromSession(session));
 
       return session;
     }
@@ -524,40 +500,44 @@
 
       const json = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(json?.detail || "Erişim bilgisi alınamadı");
+
       return json;
     }
 
     function syncAccessUi(data) {
       const accessOpen = !!data?.access_open;
       const tokenCount = Number(data?.tokens ?? 0);
+      const displayName = getDisplayNameFromSession(currentSession);
 
       try { setHeaderTokens(tokenCount); } catch {}
-
-      const displayName = getDisplayNameFromSession(currentSession);
 
       if (accessOpen) {
         setStatus(
           "ok",
-          `Sayın ${escapeHtml(displayName)}<br>Aktif üyeliğiniz hazır görünüyor.`,
+          `Sayın ${escapeHtml(displayName)}<br/>Aktif üyeliğiniz hazır. Uygulamaya yönlendiriliyorsunuz...`,
           true
         );
-        UI.buyBtn.textContent = "Google Play Üyeliği Aktif";
+
         UI.buyBtn.disabled = true;
-        UI.codeBtn.textContent = "Kod ile Üyelik Aktif";
         UI.codeBtn.disabled = true;
         UI.homeBtn.textContent = "Uygulamaya Git";
-      } else {
-        setStatus(
-          "warn",
-          `Sayın ${escapeHtml(displayName)}<br>Google Play ile abone olabilir veya satın aldığınız kodu hesabınıza tanımlayabilirsiniz.`,
-          true
-        );
-        UI.buyBtn.textContent = "Google Play ile Abone Ol";
-        UI.buyBtn.disabled = false;
-        UI.codeBtn.textContent = "Kod ile Abone Ol";
-        UI.codeBtn.disabled = false;
-        UI.homeBtn.textContent = "Şimdilik Geri Dön";
+
+        setTimeout(() => {
+          location.replace(HOME);
+        }, 900);
+
+        return;
       }
+
+      setStatus(
+        "",
+        `Sayın ${escapeHtml(displayName)}<br/>Devam etmek için Google Play aboneliği başlatabilir veya üyelik kodunuzu kullanabilirsiniz.`,
+        true
+      );
+
+      UI.buyBtn.disabled = false;
+      UI.codeBtn.disabled = false;
+      UI.homeBtn.disabled = false;
     }
 
     function isNativeBillingReady() {
@@ -594,6 +574,7 @@
 
         pendingSubscriptionMode = "purchase";
         UI.buyBtn.disabled = true;
+
         toast("Google Play ödeme ekranı açılıyor...");
         window.AndroidBilling.buy(PRODUCT_ID);
       } catch (e) {
@@ -623,12 +604,14 @@
     async function handleHomeClick() {
       try {
         const access = await getAccessState();
+
         if (access?.access_open) {
           location.replace(HOME);
           return;
         }
 
-        location.replace(HOME);
+        toast("Üyelik olmadan bazı özellikler kilitli kalır.");
+        setTimeout(() => location.replace(HOME), 500);
       } catch {
         location.replace(HOME);
       }
@@ -737,6 +720,7 @@
       } catch (e) {
         console.error("membership boot error:", e);
         if (String(e?.message || "").includes("giriş")) return;
+        setStatus("err", e?.message || "Üyelik bilgisi alınamadı.");
       }
     })();
   </script>
