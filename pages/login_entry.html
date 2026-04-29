@@ -14,7 +14,7 @@
         if(navigator.onLine === false){
           location.replace("/facetoface.html?mode=offline-forced");
         }
-      }catch{}
+      }catch(e){}
     })();
   </script>
 
@@ -61,19 +61,6 @@
       justify-content:center;
     }
 
-    body:not(.login-ready) .main,
-    body:not(.login-ready) footer{
-      visibility:hidden;
-      opacity:0;
-    }
-
-    body.login-ready .main,
-    body.login-ready footer{
-      visibility:visible;
-      opacity:1;
-      transition:opacity .18s ease;
-    }
-
     .nebula{
       position:fixed;
       inset:0;
@@ -94,6 +81,8 @@
       padding:0 26px;
       z-index:10;
       margin-top:-10px;
+      visibility:visible;
+      opacity:1;
     }
 
     .brand-section{
@@ -302,6 +291,8 @@
       text-align:center;
       z-index:20;
       padding-bottom:calc(20px + var(--safeB));
+      visibility:visible;
+      opacity:1;
     }
 
     .footer-nav{
@@ -443,7 +434,6 @@
     const typeEl = document.getElementById("typewriter");
 
     const HOME = "/pages/home.html";
-    const MEMBERSHIP = "/pages/membership.html";
     const CALLBACK = "/pages/auth_callback.html";
 
     const DEFAULT_AFTER_LOGIN = HOME;
@@ -624,14 +614,12 @@
         const { data:{ session } } = await supabase.auth.getSession();
 
         if(!session){
-          document.body.classList.add("login-ready");
           return;
         }
 
         await routeAfterLogin();
       }catch(e){
         console.error("boot error:", e);
-        document.body.classList.add("login-ready");
       }
     })();
   </script>
