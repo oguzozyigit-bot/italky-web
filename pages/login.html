@@ -1124,11 +1124,6 @@
   const NATIVE_LANG_KEY = "italky_native_lang_v7";
   const MY_LANG_KEY = "italky_public_my_lang_v1";
 
-  /*
-   * Reklam kuralı:
-   * Reklam bittikten sonra 60 saniye boyunca tekrar reklam gösterilmez.
-   * 60 saniye dolduktan sonra yeni çeviri aksiyonunda tekrar reklam çıkabilir.
-   */
   const AD_INTERVAL_MS = 60 * 1000;
 
   const MEMBERSHIP_PRICE_TEXT = "349,99 TL / yıl";
@@ -1172,30 +1167,41 @@
     }
 
     .drawer-section-title{
-      margin:10px 2px 6px;
-      color:rgba(255,255,255,.48);
-      font-size:10px;
-      font-weight:1000;
-      letter-spacing:.8px;
-      text-transform:uppercase;
+      display:none !important;
+    }
+
+    .drawer-link{
+      min-height:50px;
+      padding:0 12px;
+      background:rgba(15,39,66,.44) !important;
+      border-color:rgba(96,165,250,.18) !important;
     }
 
     .drawer-link.locked{
-      border-color:rgba(245,158,11,.24);
-      background:rgba(54,38,12,.42);
+      background:rgba(15,39,66,.44) !important;
+      border-color:rgba(96,165,250,.18) !important;
     }
 
+    .drawer-link span{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      font-size:14px;
+      line-height:1;
+    }
+
+    .drawer-link small{
+      flex:0 0 auto;
+      min-width:24px;
+      text-align:right;
+      font-size:14px;
+      color:rgba(255,255,255,.72) !important;
+    }
+
+    .drawer-link.free small,
+    .drawer-link.info small,
     .drawer-link.locked small{
-      color:#fde68a;
-      font-size:11px;
-    }
-
-    .drawer-link.free small{
-      color:#86efac;
-    }
-
-    .drawer-link.info small{
-      color:rgba(255,255,255,.56);
+      color:rgba(255,255,255,.72) !important;
     }
 
     .pop-download.disabled,
@@ -1384,10 +1390,8 @@
 
   function differentLang(base){
     const b = canonical(base);
-
     if(b === "tr") return "en";
     if(b === "en") return "tr";
-
     return "en";
   }
 
@@ -1421,12 +1425,7 @@
   const sideClearBtn = $("sideClearBtn");
   const drawerEdgeBtn = $("drawerEdgeBtn");
   const drawerBackdrop = $("drawerBackdrop");
-  const drawerLoginBtn = $("drawerLoginBtn");
-  const drawerWidgetBtn = $("drawerWidgetBtn");
 
-  const myLangDrawerBtn = $("myLangDrawerBtn");
-  const myLangDrawerFlag = $("myLangDrawerFlag");
-  const myLangDrawerTitle = $("myLangDrawerTitle");
   const myLangModal = $("myLangModal");
   const myLangModalClose = $("myLangModalClose");
   const myLangModalList = $("myLangModalList");
@@ -1445,8 +1444,6 @@
   const closeBot = $("close-bot");
   const topPopTitle = $("topPopTitle");
   const botPopTitle = $("botPopTitle");
-  const modeOnlineBtn = $("modeOnlineBtn");
-  const modeOfflineBtn = $("modeOfflineBtn");
   const adModal = $("adModal");
   const adTitle = $("adTitle");
   const adText = $("adText");
@@ -1484,7 +1481,7 @@
     toast.textContent = String(msg || "");
     toast.classList.add("show");
     clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
+    window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2200);
   }
 
   function openDrawer(){ drawerBackdrop?.classList.add("show"); }
@@ -1525,56 +1522,50 @@
 
       <div class="drawer-scroll">
         <nav class="drawer-links">
-          <div class="drawer-section-title">Ücretsiz</div>
-
           <a class="drawer-link free" href="/pages/text_translate_public.html">
             <span>1. Yazıdan Çeviri</span>
-            <small>TR ⇄ EN</small>
+            <small>›</small>
           </a>
 
           <a class="drawer-link free" href="/pages/game_menu_public.html">
             <span>2. Eğlenerek Öğren</span>
-            <small>Hangman açık</small>
+            <small>›</small>
           </a>
-
-          <div class="drawer-section-title">Üyelikle Açılır</div>
 
           <button class="drawer-link drawer-link-button locked locked-feature" data-feature="SohbetAI" type="button">
             <span>3. SohbetAI</span>
-            <small>🔒 Üyelik gerekli</small>
+            <small>🔒</small>
           </button>
 
           <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Turan Dilleri" type="button">
             <span>4. Turan Dilleri</span>
-            <small>🔒 Üyelik gerekli</small>
+            <small>🔒</small>
           </button>
 
           <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Kafkas Dilleri" type="button">
             <span>5. Kafkas Dilleri</span>
-            <small>🔒 Üyelik gerekli</small>
+            <small>🔒</small>
           </button>
 
           <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Mezopotamya Dilleri" type="button">
             <span>6. Mezopotamya Dilleri</span>
-            <small>🔒 Üyelik gerekli</small>
+            <small>🔒</small>
           </button>
 
           <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Balkan Dilleri" type="button">
             <span>7. Balkan Dilleri</span>
-            <small>🔒 Üyelik gerekli</small>
+            <small>🔒</small>
           </button>
 
           <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Ataların Dili" type="button">
             <span>8. Ataların Dili</span>
-            <small>🔒 Üyelik gerekli</small>
+            <small>🔒</small>
           </button>
 
           <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Seviye Tespit" type="button">
             <span>9. Seviye Tespit</span>
-            <small>🔒 Üyelik gerekli</small>
+            <small>🔒</small>
           </button>
-
-          <div class="drawer-section-title">Bilgi</div>
 
           <a class="drawer-link info" href="/pages/about.html">
             <span>10. Hakkımızda</span>
@@ -1610,8 +1601,8 @@
         </button>
 
         <div class="subscription-note">
-          <strong>Ücretsiz deneme açık</strong><br/>
-          Giriş yapmadan Türkçe ⇄ İngilizce çeviri ve Hangman kullanılabilir. Tüm diller, AI özellikleri ve gelişmiş modüller yıllık üyelikle açılır.
+          <strong>Yıllık üyelik: 349,99 TL</strong><br/>
+          Üyelikte reklam gösterilmez. Kilitli modüller ve gelişmiş özellikler açılır.
         </div>
 
         <div class="drawer-footer-seal">
@@ -1710,7 +1701,7 @@
 
     document.querySelectorAll(".locked-feature").forEach((btn) => {
       btn.addEventListener("click", async () => {
-        const feature = btn.dataset.feature || "Bu özellik";
+        const feature = btn.dataset.feature || "Bu modül";
         await showMembershipRequired(feature);
       });
     });
@@ -1744,7 +1735,7 @@
         if(!next || !langExists(next) || next === myLang) return;
 
         if(!isPublicFreeLang(next)){
-          await showMembershipRequired(`${langObj(next).flag} ${langObj(next).name}`);
+          await showMembershipRequired(`${langObj(next).name}`);
           return;
         }
 
@@ -1793,9 +1784,12 @@
     if(e.target === myLangModal) myLangModal.classList.remove("show");
   });
 
+  function getOnlineBtn(){ return document.getElementById("modeOnlineBtn"); }
+  function getOfflineBtn(){ return document.getElementById("modeOfflineBtn"); }
+
   function refreshModeButtons(){
-    modeOnlineBtn?.classList.toggle("active",currentMode === "online");
-    modeOfflineBtn?.classList.toggle("active",currentMode === "offline");
+    getOnlineBtn()?.classList.toggle("active",currentMode === "online");
+    getOfflineBtn()?.classList.toggle("active",currentMode === "offline");
   }
 
   function setMode(mode){
@@ -1806,6 +1800,11 @@
     if(currentMode === "offline") showToast(tx("offlineMode"));
 
     closeAllPop();
+  }
+
+  function bindModeButtons(){
+    getOnlineBtn()?.addEventListener("click",() => setMode("online"));
+    getOfflineBtn()?.addEventListener("click",() => setMode("offline"));
   }
 
   function refreshTexts(){
@@ -1860,15 +1859,14 @@
     });
   }
 
-  async function showMembershipRequired(featureName = "Bu özellik"){
+  async function showMembershipRequired(featureName = "Bu modül"){
     const goLogin = await showModalChoice({
       title: "Üyelik Gerekli",
       text:
-        `${featureName} için üyelik gereklidir.\n\n` +
-        `Ücretsiz kullanımda Türkçe ⇄ İngilizce çeviri ve Hangman açıktır.\n\n` +
-        `Tüm online/offline diller, reklamsız kullanım, AI sohbet, kültürel diller, oyunlar ve seviye tespit özellikleri yıllık üyelikle açılır.\n\n` +
+        `${featureName} modülünü kullanmak için üyelik gerekmektedir.\n\n` +
+        `Üyelik ile kilitli modüller ve gelişmiş özellikler açılır.\n\n` +
         `Yıllık üyelik: ${MEMBERSHIP_PRICE_TEXT}\n\n` +
-        `Üye olmak ister misiniz?`,
+        `Üyelikte reklam gösterilmez.`,
       okText: "Üye Ol / Giriş Yap",
       cancelText: "Şimdilik Kapat"
     });
@@ -1961,7 +1959,7 @@
     if(!nativeLang) return false;
 
     if(!isPublicFreePair(nativeLang,target)){
-      await showMembershipRequired(`${targetInfo.flag} ${targetInfo.name} offline paketi`);
+      await showMembershipRequired(`${targetInfo.name} offline paketi`);
       return false;
     }
 
@@ -2054,9 +2052,10 @@
     syncInstalledPairsFromNative();
 
     const targets = installedTargetsForNative(myLang);
-    if(!targets.length) return [];
 
-    const allowed = new Set([myLang, ...targets]);
+    if(!targets.length) return LANGS;
+
+    const allowed = new Set([myLang, ...targets, ...PUBLIC_FREE_LANGS]);
     return LANGS.filter((l) => allowed.has(l.code));
   }
 
@@ -2126,7 +2125,7 @@
         if(!code) return;
 
         if(!isPublicFreeLang(code)){
-          await showMembershipRequired(`${langObj(code).flag} ${langObj(code).name}`);
+          await showMembershipRequired(`${langObj(code).name}`);
           return;
         }
 
@@ -2172,7 +2171,7 @@
         const code = canonical(btn.dataset.loginRequiredCode);
         const info = langObj(code);
 
-        await showMembershipRequired(`${info.flag} ${info.name} offline paketi`);
+        await showMembershipRequired(`${info.name} offline paketi`);
       });
     });
   }
@@ -2309,7 +2308,7 @@
 
   async function translateText(text,from,to){
     if(!isPublicFreePair(from,to)){
-      await showMembershipRequired(`${langObj(to).flag} ${langObj(to).name} çeviri`);
+      await showMembershipRequired(`${langObj(to).name} çeviri`);
       return null;
     }
 
@@ -2529,14 +2528,6 @@
   }
 
   sideClearBtn?.addEventListener("click",clearChat);
-
-  function bindModeButtons(){
-    const online = document.getElementById("modeOnlineBtn");
-    const offline = document.getElementById("modeOfflineBtn");
-
-    online?.addEventListener("click",() => setMode("online"));
-    offline?.addEventListener("click",() => setMode("offline"));
-  }
 
   window.addEventListener("offlinePairDownloadStarted",(e) => {
     const d = e.detail || {};
