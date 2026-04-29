@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
+  <title>italkyAI • Google Hesabı</title>
+
+  <script>
+    (function(){
+      try{
+        if(navigator.onLine === false){
+          location.replace("/facetoface.html?mode=offline-forced");
+        }
+      }catch{}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    :root{
+      --bg-void:#060408;
+      --neon:#00f2ff;
+      --pink:#ff007a;
+      --brand-grad:linear-gradient(135deg,#00f2ff 0%,#6366f1 55%,#ff007a 100%);
+      --signature-grad:linear-gradient(to right,#fff,#00f2ff,#fff);
+      --accent:#00f2ff;
+      --muted:rgba(255,255,255,.65);
+      --safeB:env(safe-area-inset-bottom, 0px);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      margin:0;
+      padding:0;
+    }
+
+    html,body{
+      height:100%;
+      width:100%;
+    }
+
+    body{
+      background:var(--bg-void);
+      color:#fff;
+      font-family:'Outfit',sans-serif;
+      height:100dvh;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+
+    body:not(.login-ready) .main,
+    body:not(.login-ready) footer{
+      visibility:hidden;
+      opacity:0;
+    }
+
+    body.login-ready .main,
+    body.login-ready footer{
+      visibility:visible;
+      opacity:1;
+      transition:opacity .18s ease;
+    }
+
+    .nebula{
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 25% 20%, rgba(0,242,255,.12), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(255,0,122,.10), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(15,8,22,1) 0%, #060408 100%);
+      z-index:0;
+    }
+
+    .main{
+      flex:1;
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:0 26px;
+      z-index:10;
+      margin-top:-10px;
+    }
+
+    .brand-section{
+      text-align:center;
+      margin-bottom:5px;
+    }
+
+    .brand-section h1{
+      font-family:'Space Grotesk', sans-serif;
+      font-size:64px;
+      font-weight:1000;
+      letter-spacing:-4px;
+      line-height:1;
+      filter:drop-shadow(0 0 15px rgba(0,242,255,.2));
+    }
+
+    .brand-section h1 span.ai{
+      background:var(--brand-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .brand-sub{
+      margin-top:8px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:8px;
+      text-transform:uppercase;
+      color:#fff;
+      opacity:.9;
+      text-shadow:0 0 10px rgba(255,255,255,.3);
+    }
+
+    .world-container{
+      position:relative;
+      width:280px;
+      height:280px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-top:10px;
+      margin-bottom:10px;
+      perspective:1000px;
+    }
+
+    .earth-glow{
+      position:absolute;
+      inset:10px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,242,255,.22) 0%, transparent 70%);
+      filter:blur(25px);
+      opacity:.95;
+      z-index:0;
+      animation:glowBreath 4.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowBreath{
+      from{ transform:scale(.95); opacity:.6; }
+      to{ transform:scale(1.1); opacity:.9; }
+    }
+
+    .earth{
+      position:relative;
+      width:210px;
+      height:210px;
+      border-radius:50%;
+      background-image:url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
+      background-size:cover;
+      background-position:center;
+      box-shadow:
+        inset -30px -30px 60px rgba(0,0,0,.9),
+        inset 10px 10px 30px rgba(255,255,255,.1),
+        0 0 80px rgba(0,242,255,.25);
+      transform-style:preserve-3d;
+      animation:rotateSphere 34s linear infinite;
+      z-index:2;
+      overflow:hidden;
+    }
+
+    @keyframes rotateSphere{
+      from{ transform:rotateY(0deg); }
+      to{ transform:rotateY(360deg); }
+    }
+
+    .ai-stamp{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:1000;
+      letter-spacing:2px;
+      color:rgba(255,255,255,.95);
+      text-shadow:0 0 20px rgba(0,242,255,.4);
+      mix-blend-mode:screen;
+      opacity:.95;
+      pointer-events:none;
+      user-select:none;
+      backface-visibility:hidden;
+    }
+
+    .ai-front{
+      font-size:44px;
+      transform:translateZ(1px);
+      z-index:4;
+    }
+
+    .ai-back{
+      font-size:50px;
+      letter-spacing:1px;
+      transform:rotateY(180deg) translateZ(1px);
+      z-index:3;
+    }
+
+    .typewriter-container{
+      height:40px;
+      margin-top:5px;
+      margin-bottom:15px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      width:100%;
+    }
+
+    .typewriter{
+      font-family:'JetBrains Mono', monospace;
+      font-size:14px;
+      color:var(--muted);
+      border-right:2px solid var(--accent);
+      white-space:nowrap;
+      overflow:hidden;
+      width:0;
+      animation:typing 5.6s steps(46, end) infinite, blink .85s step-end infinite;
+      text-shadow:0 0 10px rgba(0,242,255,.2);
+    }
+
+    @keyframes typing{
+      0%,10%{ width:0 }
+      62%,86%{ width:100% }
+      100%{ width:0 }
+    }
+
+    @keyframes blink{
+      from,to{ border-color:transparent }
+      50%{ border-color:var(--accent) }
+    }
+
+    .login-box{
+      width:100%;
+      max-width:314px;
+      z-index:20;
+      display:grid;
+      gap:12px;
+    }
+
+    .google-btn{
+      width:100%;
+      height:56px;
+      border:none;
+      border-radius:28px;
+      background:#ffffff;
+      color:#1f1f1f;
+      font-size:16px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      cursor:pointer;
+      box-shadow:0 10px 25px rgba(0,0,0,.3);
+      transition:all .2s ease;
+      user-select:none;
+    }
+
+    .google-btn:active{
+      transform:scale(.97);
+    }
+
+    .google-btn:disabled{
+      opacity:.7;
+      cursor:default;
+    }
+
+    .g-icon{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    .login-note{
+      color:rgba(255,255,255,.58);
+      font-size:12px;
+      line-height:1.45;
+      font-weight:800;
+      text-align:center;
+      padding:0 4px;
+    }
+
+    .login-note b{
+      color:#fff;
+      font-weight:1000;
+    }
+
+    footer{
+      width:100%;
+      text-align:center;
+      z-index:20;
+      padding-bottom:calc(20px + var(--safeB));
+    }
+
+    .footer-nav{
+      display:flex;
+      justify-content:center;
+      gap:18px;
+      margin-bottom:12px;
+    }
+
+    .footer-nav a{
+      text-decoration:none;
+      color:rgba(255,255,255,.4);
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      transition:.3s;
+    }
+
+    .footer-nav a:hover{
+      color:var(--neon);
+      text-shadow:0 0 8px var(--neon);
+    }
+
+    .technology-title{
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:6px;
+      margin-bottom:6px;
+      line-height:1;
+    }
+
+    .technology-title b{
+      font-weight:1000;
+      text-transform:lowercase;
+      color:#fff;
+    }
+
+    .technology-title span{
+      background:var(--brand-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      text-transform:uppercase;
+    }
+
+    .prestige-signature{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:1.2px;
+      background:var(--signature-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    #toast{
+      position:fixed;
+      top:24px;
+      left:50%;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(6,6,12,.95);
+      border:1px solid var(--accent);
+      padding:12px 24px;
+      border-radius:999px;
+      color:#fff;
+      z-index:9999;
+      font-weight:900;
+      font-size:13px;
+      transition:.3s ease;
+      backdrop-filter:blur(15px);
+      pointer-events:none;
+      max-width:90vw;
+      text-align:center;
+      box-shadow:0 10px 30px rgba(0,242,255,.2);
+    }
+
+    #toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="nebula"></div>
+
+  <div class="main">
+    <div class="brand-section">
+      <h1>italky<span class="ai">AI</span></h1>
+      <div class="brand-sub">BE FREE</div>
+    </div>
+
+    <div class="world-container" aria-hidden="true">
+      <div class="earth-glow"></div>
+      <div class="earth">
+        <div class="ai-stamp ai-front">ITALKY</div>
+        <div class="ai-stamp ai-back">AI</div>
+      </div>
+    </div>
+
+    <div class="typewriter-container">
+      <div class="typewriter" id="typewriter">Google hesabınızla güvenli giriş yapın...</div>
+    </div>
+
+    <div class="login-box">
+      <button class="google-btn" id="googleBtn" type="button">
+        <svg class="g-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        <span>Google Hesabıyla Giriş Yap</span>
+      </button>
+
+      <div class="login-note">
+        <b>İlk kayıt hediyesi:</b> Hesabınıza bir kereye mahsus 5 jeton tanımlanır.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-nav">
+      <a href="/pages/about.html">Hakkımızda</a>
+      <a href="/pages/faq.html">SSS</a>
+      <a href="/pages/privacy.html">Gizlilik</a>
+      <a href="/pages/contact.html">İletişim</a>
+    </div>
+    <div class="technology-title"><b>italky</b><span>TECHNOLOGY</span></div>
+    <div class="prestige-signature">italkyAI By Ozyigit's 2026</div>
+  </footer>
+
+  <div id="toast"></div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+    import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
+
+    const toastEl = document.getElementById("toast");
+    const googleBtn = document.getElementById("googleBtn");
+    const typeEl = document.getElementById("typewriter");
+
+    const HOME = "/pages/home.html";
+    const MEMBERSHIP = "/pages/membership.html";
+    const CALLBACK = "/pages/auth_callback.html";
+
+    const DEFAULT_AFTER_LOGIN = HOME;
+
+    function toast(msg){
+      if(!toastEl) return;
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function isNative(){
+      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+    }
+
+    function safePath(value){
+      const raw = String(value || "").trim();
+
+      if(!raw) return "";
+      if(raw.startsWith("http://")) return "";
+      if(raw.startsWith("https://")) return "";
+      if(raw.startsWith("//")) return "";
+      if(!raw.startsWith("/")) return "";
+
+      return raw;
+    }
+
+    function getNextTarget(){
+      try{
+        const u = new URL(location.href);
+        return safePath(u.searchParams.get("next") || "");
+      }catch{
+        return "";
+      }
+    }
+
+    async function grantSignupBonusOnce(){
+      try{
+        const { data, error } = await supabase.rpc("grant_signup_bonus_once", {
+          p_bonus: 5
+        });
+
+        if(error){
+          console.warn("grant_signup_bonus_once error:", error);
+          return { ok:false, bonus_granted:false };
+        }
+
+        if(Array.isArray(data) && data.length){
+          return data[0] || { ok:true, bonus_granted:false };
+        }
+
+        return data || { ok:true, bonus_granted:false };
+      }catch(e){
+        console.warn("grantSignupBonusOnce failed:", e);
+        return { ok:false, bonus_granted:false };
+      }
+    }
+
+    async function routeAfterLogin(){
+      try{
+        await ensureAuthAndCacheUser();
+
+        const bonus = await grantSignupBonusOnce();
+
+        const next = getNextTarget();
+        const target = next || DEFAULT_AFTER_LOGIN;
+
+        if(bonus?.bonus_granted){
+          toast("5 jeton hediyeniz tanımlandı.");
+          setTimeout(() => location.replace(target), 700);
+          return;
+        }
+
+        toast("Giriş başarılı.");
+        setTimeout(() => location.replace(target), 350);
+      }catch(e){
+        console.error("routeAfterLogin error:", e);
+
+        const next = getNextTarget();
+        location.replace(next || DEFAULT_AFTER_LOGIN);
+      }
+    }
+
+    (function bounceToCallbackIfNeeded(){
+      const hasCode = new URLSearchParams(location.search).has("code");
+      const hasToken = location.hash.includes("access_token=");
+
+      if((hasCode || hasToken) && !location.pathname.endsWith("/pages/auth_callback.html")){
+        location.replace(CALLBACK + location.search + location.hash);
+      }
+    })();
+
+    window.onNativeLoginSuccess = async function(payload){
+      try{
+        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+        const idToken = String(data?.id_token || data?.idToken || "").trim();
+
+        if(!idToken){
+          googleBtn.disabled = false;
+          toast("Token alınamadı, giriş tamamlanamadı.");
+          return;
+        }
+
+        googleBtn.disabled = true;
+        toast("Oturum açılıyor...");
+
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: idToken
+        });
+
+        if(error){
+          console.error("signInWithIdToken error:", error);
+          googleBtn.disabled = false;
+          toast("Oturum açılamadı.");
+          return;
+        }
+
+        const { data:{ session } } = await supabase.auth.getSession();
+
+        if(!session){
+          googleBtn.disabled = false;
+          toast("Oturum bulunamadı.");
+          return;
+        }
+
+        await routeAfterLogin();
+      }catch(e){
+        console.error("onNativeLoginSuccess error:", e);
+        googleBtn.disabled = false;
+        toast("Giriş hatası.");
+      }
+    };
+
+    googleBtn?.addEventListener("click", async () => {
+      try{
+        const next = getNextTarget();
+
+        if(isNative()){
+          googleBtn.disabled = true;
+          toast("Google girişi başlatılıyor...");
+          window.Native.startGoogleLogin();
+          return;
+        }
+
+        googleBtn.disabled = true;
+        toast("Google yönlendiriliyor...");
+        await loginWithGoogle(next);
+      }catch(e){
+        console.error("googleBtn click error:", e);
+        googleBtn.disabled = false;
+        toast(e?.message || "Giriş başlatılamadı.");
+      }
+    });
+
+    const phrases = [
+      "Google hesabınızla güvenli giriş yapın...",
+      "Üyeliğiniz hesabınıza tanımlanır...",
+      "Kod ile abonelik de aynı hesaba bağlanır...",
+      "İlk kayıt hediyesi: 5 jeton...",
+      "Dünyayı küçülttük, cebinize sığdırdık..."
+    ];
+
+    let pi = 0;
+    setInterval(() => {
+      pi = (pi + 1) % phrases.length;
+      if(typeEl){
+        typeEl.style.animation = "none";
+        typeEl.offsetHeight;
+        typeEl.textContent = phrases[pi];
+        typeEl.style.animation = null;
+      }
+    }, 5600);
+
+    (async function boot(){
+      try{
+        const { data:{ session } } = await supabase.auth.getSession();
+
+        if(!session){
+          document.body.classList.add("login-ready");
+          return;
+        }
+
+        await routeAfterLogin();
+      }catch(e){
+        console.error("boot error:", e);
+        document.body.classList.add("login-ready");
+      }
+    })();
+  </script>
+</body>
+</html>
