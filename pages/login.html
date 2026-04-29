@@ -1124,10 +1124,80 @@
   const NATIVE_LANG_KEY = "italky_native_lang_v7";
   const MY_LANG_KEY = "italky_public_my_lang_v1";
 
-  const AD_INTERVAL_MS = 3 * 60 * 1000;
+  /*
+   * Reklam kuralı:
+   * Reklam bittikten sonra 60 saniye boyunca tekrar reklam gösterilmez.
+   * 60 saniye dolduktan sonra yeni çeviri aksiyonunda tekrar reklam çıkabilir.
+   */
+  const AD_INTERVAL_MS = 60 * 1000;
+
+  const MEMBERSHIP_PRICE_TEXT = "349,99 TL / yıl";
+  const MEMBERSHIP_LOGIN_URL = "/pages/login_entry.html?next=/pages/membership.html";
+  const PUBLIC_FREE_LANGS = ["tr", "en"];
 
   const extraStyle = document.createElement("style");
   extraStyle.textContent = `
+    .edge-handle.open::before{
+      content:"M\\A E\\A N\\A U" !important;
+      white-space:pre;
+      text-shadow:0 0 12px rgba(255,255,255,.28);
+    }
+
+    .side-drawer{
+      overflow:hidden !important;
+      display:flex !important;
+      flex-direction:column !important;
+    }
+
+    .drawer-fixed-top{
+      flex:0 0 auto;
+    }
+
+    .drawer-scroll{
+      flex:1 1 auto;
+      min-height:0;
+      overflow-y:auto;
+      overflow-x:hidden;
+      padding:2px 0 8px;
+      scrollbar-width:none;
+    }
+
+    .drawer-scroll::-webkit-scrollbar{
+      display:none;
+    }
+
+    .drawer-fixed-bottom{
+      flex:0 0 auto;
+      padding-top:8px;
+    }
+
+    .drawer-section-title{
+      margin:10px 2px 6px;
+      color:rgba(255,255,255,.48);
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.8px;
+      text-transform:uppercase;
+    }
+
+    .drawer-link.locked{
+      border-color:rgba(245,158,11,.24);
+      background:rgba(54,38,12,.42);
+    }
+
+    .drawer-link.locked small{
+      color:#fde68a;
+      font-size:11px;
+    }
+
+    .drawer-link.free small{
+      color:#86efac;
+    }
+
+    .drawer-link.info small{
+      color:rgba(255,255,255,.56);
+    }
+
     .pop-download.disabled,
     .pop-download:disabled{
       opacity:.38;
@@ -1174,7 +1244,7 @@
       micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
       listeningDone:"Dinleme tamamlanıyor...",
       translateError:"Çeviri yapılamadı",
-      loginSoon:"Üyelik sistemi çok yakında aktif olacak. Şimdilik giriş yapmadan özellikleri kullanabilirsiniz.",
+      loginSoon:"Google ile giriş yaparak üyelik seçeneklerine geçebilirsiniz.",
       onlineMode:"Online mod aktif.",
       offlineMode:"Offline mod aktif.",
       packReady:"Dil paketi zaten hazır.",
@@ -1212,7 +1282,7 @@
       micUnsupported:"Speech recognition is not supported on this device.",
       listeningDone:"Finishing listening...",
       translateError:"Translation failed",
-      loginSoon:"Membership system will be active very soon. You can use pre-login features for now.",
+      loginSoon:"Sign in with Google to continue to membership options.",
       onlineMode:"Online mode is active.",
       offlineMode:"Offline mode is active.",
       packReady:"Language pack is already ready.",
@@ -1238,6 +1308,14 @@
   };
 
   function canonical(code){ return OfflinePackBridge.canonical(code); }
+
+  function isPublicFreeLang(code){
+    return PUBLIC_FREE_LANGS.includes(canonical(code));
+  }
+
+  function isPublicFreePair(a,b){
+    return isPublicFreeLang(a) && isPublicFreeLang(b);
+  }
 
   function getInitialSiteLang(){
     return canonical(
@@ -1307,15 +1385,10 @@
   function differentLang(base){
     const b = canonical(base);
 
-    const preferred = b === "tr"
-      ? ["en","de","fr","es","it","ar","ru","pt"]
-      : ["tr","en","de","fr","es","it","ar","ru","pt"];
+    if(b === "tr") return "en";
+    if(b === "en") return "tr";
 
-    for(const c of preferred){
-      if(c !== b && langExists(c)) return c;
-    }
-
-    return LANGS.find((l) => l.code !== b)?.code || "en";
+    return "en";
   }
 
   async function detectCountryLang(){
@@ -1414,6 +1487,140 @@
     window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
   }
 
+  function openDrawer(){ drawerBackdrop?.classList.add("show"); }
+  function closeDrawer(){ drawerBackdrop?.classList.remove("show"); }
+
+  function buildDrawerMenu(){
+    const drawer = document.querySelector(".side-drawer");
+    if(!drawer) return;
+
+    drawer.innerHTML = `
+      <div class="drawer-fixed-top">
+        <div class="drawer-logo-row">
+          <div class="drawer-logo">
+            <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
+            <div class="drawer-logo-sub">BE FREE</div>
+          </div>
+
+          <div class="drawer-mode-pill" aria-label="Çeviri modu">
+            <button id="modeOnlineBtn" class="active" type="button">Online</button>
+            <button id="modeOfflineBtn" type="button">Offline</button>
+          </div>
+        </div>
+
+        <div class="drawer-card">
+          <div class="drawer-label">Kendi Dilim</div>
+          <button id="myLangDrawerBtn" class="my-lang-btn" type="button">
+            <span class="my-lang-left">
+              <span id="myLangDrawerFlag" class="my-lang-flag">🇹🇷</span>
+              <span class="my-lang-text">
+                <span id="myLangDrawerTitle" class="my-lang-title">Türkçe</span>
+                <span class="my-lang-sub">Offline paketlerde ana dil</span>
+              </span>
+            </span>
+            <span class="my-lang-caret">›</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-scroll">
+        <nav class="drawer-links">
+          <div class="drawer-section-title">Ücretsiz</div>
+
+          <a class="drawer-link free" href="/pages/text_translate_public.html">
+            <span>1. Yazıdan Çeviri</span>
+            <small>TR ⇄ EN</small>
+          </a>
+
+          <a class="drawer-link free" href="/pages/game_menu_public.html">
+            <span>2. Eğlenerek Öğren</span>
+            <small>Hangman açık</small>
+          </a>
+
+          <div class="drawer-section-title">Üyelikle Açılır</div>
+
+          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="SohbetAI" type="button">
+            <span>3. SohbetAI</span>
+            <small>🔒 Üyelik gerekli</small>
+          </button>
+
+          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Turan Dilleri" type="button">
+            <span>4. Turan Dilleri</span>
+            <small>🔒 Üyelik gerekli</small>
+          </button>
+
+          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Kafkas Dilleri" type="button">
+            <span>5. Kafkas Dilleri</span>
+            <small>🔒 Üyelik gerekli</small>
+          </button>
+
+          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Mezopotamya Dilleri" type="button">
+            <span>6. Mezopotamya Dilleri</span>
+            <small>🔒 Üyelik gerekli</small>
+          </button>
+
+          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Balkan Dilleri" type="button">
+            <span>7. Balkan Dilleri</span>
+            <small>🔒 Üyelik gerekli</small>
+          </button>
+
+          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Ataların Dili" type="button">
+            <span>8. Ataların Dili</span>
+            <small>🔒 Üyelik gerekli</small>
+          </button>
+
+          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Seviye Tespit" type="button">
+            <span>9. Seviye Tespit</span>
+            <small>🔒 Üyelik gerekli</small>
+          </button>
+
+          <div class="drawer-section-title">Bilgi</div>
+
+          <a class="drawer-link info" href="/pages/about.html">
+            <span>10. Hakkımızda</span>
+            <small>›</small>
+          </a>
+
+          <a class="drawer-link info" href="/pages/privacy.html">
+            <span>11. Gizlilik</span>
+            <small>›</small>
+          </a>
+
+          <a class="drawer-link info" href="/pages/contact.html">
+            <span>12. İletişim</span>
+            <small>›</small>
+          </a>
+        </nav>
+      </div>
+
+      <div class="drawer-fixed-bottom">
+        <button id="drawerWidgetBtn" class="drawer-link drawer-link-button free" type="button">
+          <span>Kısa Yol Ekle</span>
+          <small>+</small>
+        </button>
+
+        <button id="drawerLoginBtn" class="google-login-btn" type="button">
+          <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C36.9 39.3 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+          </svg>
+          <span>Google ile Giriş Yap</span>
+        </button>
+
+        <div class="subscription-note">
+          <strong>Ücretsiz deneme açık</strong><br/>
+          Giriş yapmadan Türkçe ⇄ İngilizce çeviri ve Hangman kullanılabilir. Tüm diller, AI özellikleri ve gelişmiş modüller yıllık üyelikle açılır.
+        </div>
+
+        <div class="drawer-footer-seal">
+          italky<span class="ai">AI</span> Ozigit's 2026
+        </div>
+      </div>
+    `;
+  }
+
   function readOfflineBaseStatus(){
     try{
       if(window.OfflineTranslate && typeof window.OfflineTranslate.getOfflineBaseStatus === "function"){
@@ -1468,36 +1675,54 @@
     }
   }
 
-  function openDrawer(){ drawerBackdrop?.classList.add("show"); }
-  function closeDrawer(){ drawerBackdrop?.classList.remove("show"); }
-
   drawerEdgeBtn?.addEventListener("click", openDrawer);
   drawerBackdrop?.addEventListener("click", (e) => {
     if(e.target === drawerBackdrop) closeDrawer();
   });
 
-  drawerWidgetBtn?.addEventListener("click", () => {
-    try {
-      if (window.Native && typeof window.Native.addWidgetToHomeScreen === "function") {
-        window.Native.addWidgetToHomeScreen();
-        closeDrawer();
-        return;
+  function bindDrawerActions(){
+    const widgetBtn = document.getElementById("drawerWidgetBtn");
+    const loginBtn = document.getElementById("drawerLoginBtn");
+    const myLangBtn = document.getElementById("myLangDrawerBtn");
+
+    widgetBtn?.addEventListener("click", () => {
+      try {
+        if (window.Native && typeof window.Native.addWidgetToHomeScreen === "function") {
+          window.Native.addWidgetToHomeScreen();
+          closeDrawer();
+          return;
+        }
+
+        showToast("Ana ekranda boş alana basılı tutup Widgetlar bölümünden italkyAI kısa yolunu ekleyebilirsiniz.");
+      } catch (e) {
+        showToast("Kısa yol ekleme başlatılamadı.");
       }
+    });
 
-      showToast("Ana ekranda boş alana basılı tutup Widgetlar bölümünden italkyAI kısa yolunu ekleyebilirsiniz.");
-    } catch (e) {
-      showToast("Kısa yol ekleme başlatılamadı.");
-    }
-  });
+    loginBtn?.addEventListener("click", () => {
+      location.href = MEMBERSHIP_LOGIN_URL;
+    });
 
-  drawerLoginBtn?.addEventListener("click", () => {
-    showToast(tx("loginSoon"));
-  });
+    myLangBtn?.addEventListener("click", () => {
+      renderMyLangModalList();
+      myLangModal?.classList.add("show");
+    });
+
+    document.querySelectorAll(".locked-feature").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const feature = btn.dataset.feature || "Bu özellik";
+        await showMembershipRequired(feature);
+      });
+    });
+  }
 
   function renderMyLangDrawer(){
     const info = langObj(myLang);
-    if(myLangDrawerFlag) myLangDrawerFlag.textContent = info.flag;
-    if(myLangDrawerTitle) myLangDrawerTitle.textContent = info.name;
+    const flag = document.getElementById("myLangDrawerFlag");
+    const title = document.getElementById("myLangDrawerTitle");
+
+    if(flag) flag.textContent = info.flag;
+    if(title) title.textContent = info.name;
   }
 
   function renderMyLangModalList(){
@@ -1517,6 +1742,11 @@
       btn.onclick = async () => {
         const next = canonical(btn.getAttribute("data-my-lang") || "");
         if(!next || !langExists(next) || next === myLang) return;
+
+        if(!isPublicFreeLang(next)){
+          await showMembershipRequired(`${langObj(next).flag} ${langObj(next).name}`);
+          return;
+        }
 
         if(OfflinePackBridge.hasAnyInstalledPair()){
           const ok = await showModalChoice({
@@ -1554,11 +1784,6 @@
       };
     });
   }
-
-  myLangDrawerBtn?.addEventListener("click", () => {
-    renderMyLangModalList();
-    myLangModal?.classList.add("show");
-  });
 
   myLangModalClose?.addEventListener("click", () => {
     myLangModal?.classList.remove("show");
@@ -1633,6 +1858,26 @@
         resolve(false);
       };
     });
+  }
+
+  async function showMembershipRequired(featureName = "Bu özellik"){
+    const goLogin = await showModalChoice({
+      title: "Üyelik Gerekli",
+      text:
+        `${featureName} için üyelik gereklidir.\n\n` +
+        `Ücretsiz kullanımda Türkçe ⇄ İngilizce çeviri ve Hangman açıktır.\n\n` +
+        `Tüm online/offline diller, reklamsız kullanım, AI sohbet, kültürel diller, oyunlar ve seviye tespit özellikleri yıllık üyelikle açılır.\n\n` +
+        `Yıllık üyelik: ${MEMBERSHIP_PRICE_TEXT}\n\n` +
+        `Üye olmak ister misiniz?`,
+      okText: "Üye Ol / Giriş Yap",
+      cancelText: "Şimdilik Kapat"
+    });
+
+    if(goLogin){
+      location.href = MEMBERSHIP_LOGIN_URL;
+    }
+
+    return false;
   }
 
   function showAdModal({title,text,adUnit = "public_facetoface_3min", langCode = ""} = {}){
@@ -1715,6 +1960,11 @@
 
     if(!nativeLang) return false;
 
+    if(!isPublicFreePair(nativeLang,target)){
+      await showMembershipRequired(`${targetInfo.flag} ${targetInfo.name} offline paketi`);
+      return false;
+    }
+
     refreshOfflineBaseStatus();
 
     if(!offlineBaseReady){
@@ -1785,6 +2035,7 @@
     const target = topLang;
 
     if(!nativeLang || !target || nativeLang === target) return;
+    if(!isPublicFreePair(nativeLang,target)) return;
     if(hasInstalledPair(nativeLang,target)) return;
 
     const key = `italky_offer_offline_pack_${canonical(nativeLang)}_${canonical(target)}_v1`;
@@ -1839,6 +2090,10 @@
       return `<button class="pop-download disabled" type="button" disabled data-base-wait-code="${c}" aria-label="Hazırlanıyor">⏳</button>`;
     }
 
+    if(!isPublicFreeLang(c)){
+      return `<button class="pop-download" type="button" data-login-required-code="${c}" aria-label="Üyelik gerekli">🔒</button>`;
+    }
+
     return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
   }
 
@@ -1866,16 +2121,21 @@
     `).join("");
 
     list.querySelectorAll("[data-select-code]").forEach((el) => {
-      el.addEventListener("click",() => {
+      el.addEventListener("click",async () => {
         const code = canonical(el.dataset.selectCode);
         if(!code) return;
 
+        if(!isPublicFreeLang(code)){
+          await showMembershipRequired(`${langObj(code).flag} ${langObj(code).name}`);
+          return;
+        }
+
         if(side === "top"){
           topLang = code;
-          if(topLang === botLang) botLang = differentLang(topLang);
+          if(topLang === botLang) botLang = topLang === "tr" ? "en" : "tr";
         }else{
           botLang = code;
-          if(botLang === topLang) topLang = differentLang(botLang);
+          if(botLang === topLang) topLang = botLang === "tr" ? "en" : "tr";
         }
 
         closeAllPop();
@@ -1901,6 +2161,18 @@
         e.preventDefault();
         e.stopPropagation();
         showToast(tx("offlineBasePreparing"));
+      });
+    });
+
+    list.querySelectorAll("[data-login-required-code]").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const code = canonical(btn.dataset.loginRequiredCode);
+        const info = langObj(code);
+
+        await showMembershipRequired(`${info.flag} ${info.name} offline paketi`);
       });
     });
   }
@@ -2036,6 +2308,11 @@
   }
 
   async function translateText(text,from,to){
+    if(!isPublicFreePair(from,to)){
+      await showMembershipRequired(`${langObj(to).flag} ${langObj(to).name} çeviri`);
+      return null;
+    }
+
     if(currentMode === "offline"){
       if(!hasInstalledPair(from,to)){
         showToast(tx("offlineMode"));
@@ -2253,8 +2530,13 @@
 
   sideClearBtn?.addEventListener("click",clearChat);
 
-  modeOnlineBtn?.addEventListener("click",() => setMode("online"));
-  modeOfflineBtn?.addEventListener("click",() => setMode("offline"));
+  function bindModeButtons(){
+    const online = document.getElementById("modeOnlineBtn");
+    const offline = document.getElementById("modeOfflineBtn");
+
+    online?.addEventListener("click",() => setMode("online"));
+    offline?.addEventListener("click",() => setMode("offline"));
+  }
 
   window.addEventListener("offlinePairDownloadStarted",(e) => {
     const d = e.detail || {};
@@ -2306,6 +2588,10 @@
   }
 
   async function boot(){
+    buildDrawerMenu();
+    bindDrawerActions();
+    bindModeButtons();
+
     OfflinePackBridge.installDownloadEventHandlers(langObj);
     syncInstalledPairsFromNative();
 
@@ -2317,7 +2603,7 @@
     if(!localStorage.getItem(MY_LANG_KEY)){
       const detected = await detectCountryLang();
       if(detected && langExists(detected)){
-        myLang = detected;
+        myLang = isPublicFreeLang(detected) ? detected : "tr";
 
         localStorage.setItem(MY_LANG_KEY,myLang);
         localStorage.setItem(SITE_LANG_KEY,myLang);
@@ -2327,6 +2613,10 @@
         OfflinePackBridge.setOfflineNativeLang(myLang);
       }
     }else{
+      if(!isPublicFreeLang(myLang)){
+        myLang = "tr";
+      }
+
       OfflinePackBridge.setOfflineNativeLang(myLang);
     }
 
@@ -2336,6 +2626,12 @@
     }
 
     applyRouteParams();
+
+    if(!isPublicFreePair(topLang,botLang)){
+      botLang = "tr";
+      topLang = "en";
+    }
+
     refreshTexts();
     refreshModeButtons();
     renderMyLangModalList();
