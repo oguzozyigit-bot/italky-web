@@ -1,4 +1,3 @@
-<!-- FILE: /pages/login.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -7,14 +6,18 @@
   <title>italkyAI • FaceToFace</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
 
   <style>
     :root{
-      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
       --bg:#050508;
-      --border:rgba(255,255,255,.15);
+      --panel:rgba(255,255,255,.055);
+      --line:rgba(255,255,255,.11);
+      --muted:rgba(255,255,255,.66);
+      --grad:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
       --safe-bottom:env(safe-area-inset-bottom,0px);
+      --safe-top:env(safe-area-inset-top,0px);
     }
 
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
@@ -27,7 +30,15 @@
         #050508;
     }
 
-    .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+    button{font-family:inherit}
+
+    .container{
+      width:100%;
+      height:100dvh;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
 
     .edge-handle{
       position:fixed;
@@ -44,42 +55,36 @@
       backdrop-filter:blur(14px);
       -webkit-backdrop-filter:blur(14px);
       color:#fff;
-      font-family:Outfit,Arial,sans-serif;
       font-size:11px;
       font-weight:1000;
       line-height:1.15;
-      text-align:center;
       white-space:pre;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14);
       box-shadow:0 0 32px rgba(0,0,0,.30);
     }
 
     .edge-handle.open{
       right:0;
-      border-radius:18px 0 0 18px;
-      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
-      border:1px solid rgba(255,255,255,.14);
       border-right:none;
+      border-radius:18px 0 0 18px;
       box-shadow:-10px 0 32px rgba(0,0,0,.30);
-    }
-
-    .edge-handle.open::before{
-      content:"O\A P\A E\A N";
-      white-space:pre;
-      text-shadow:0 0 12px rgba(255,255,255,.28);
     }
 
     .edge-handle.clear{
       left:0;
-      border-radius:0 18px 18px 0;
-      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
-      border:1px solid rgba(255,255,255,.14);
       border-left:none;
+      border-radius:0 18px 18px 0;
       box-shadow:10px 0 32px rgba(0,0,0,.30);
+    }
+
+    .edge-handle.open::before{
+      content:"M\A E\A N\A U";
+      text-shadow:0 0 12px rgba(255,255,255,.28);
     }
 
     .edge-handle.clear::before{
       content:"C\A L\A E\A A\A R";
-      white-space:pre;
       text-shadow:0 0 12px rgba(255,255,255,.28);
     }
 
@@ -101,9 +106,8 @@
       position:absolute;
       top:0;
       right:0;
-      width:min(86vw,360px);
+      width:min(86vw,380px);
       height:100%;
-      padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
       background:
         radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%),
         radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%),
@@ -112,33 +116,39 @@
       box-shadow:-24px 0 70px rgba(0,0,0,.52);
       transform:translateX(102%);
       transition:transform .24s ease;
-      overflow:auto;
-      scrollbar-width:none;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      padding-top:calc(16px + var(--safe-top));
+      padding-bottom:calc(12px + var(--safe-bottom));
     }
 
     .drawer-backdrop.show .side-drawer{transform:translateX(0)}
-    .side-drawer::-webkit-scrollbar{display:none}
+
+    .drawer-top{
+      flex:0 0 auto;
+      padding:0 14px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
 
     .drawer-logo-row{
-      margin:4px 0 18px;
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
-      gap:14px;
+      gap:12px;
+      margin-bottom:14px;
     }
-
-    .drawer-logo{min-width:0;text-align:left}
 
     .drawer-logo-main{
       font-family:"Space Grotesk",sans-serif;
-      font-size:30px;
+      font-size:34px;
       line-height:1;
       font-weight:900;
-      letter-spacing:-1px;
+      letter-spacing:-1.2px;
     }
 
     .drawer-logo-main .ai{
-      background:var(--ai-gradient);
+      background:var(--grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
@@ -146,10 +156,10 @@
     .drawer-logo-sub{
       margin-top:7px;
       display:block;
-      color:rgba(255,255,255,.82);
-      font-size:11px;
+      color:rgba(255,255,255,.9);
+      font-size:12px;
       font-weight:1000;
-      letter-spacing:1.8px;
+      letter-spacing:2px;
     }
 
     .drawer-mode-pill{
@@ -161,20 +171,18 @@
       border-radius:999px;
       background:rgba(255,255,255,.055);
       border:1px solid rgba(255,255,255,.11);
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      margin-top:1px;
+      margin-top:2px;
     }
 
     .drawer-mode-pill button{
+      min-height:32px;
+      min-width:82px;
       border:none;
       border-radius:999px;
-      min-height:30px;
       padding:0 10px;
       background:transparent;
       color:rgba(255,255,255,.62);
-      font-family:inherit;
-      font-size:10px;
+      font-size:11px;
       font-weight:1000;
       cursor:pointer;
       white-space:nowrap;
@@ -192,13 +200,12 @@
       background:rgba(255,255,255,.055);
       border:1px solid rgba(255,255,255,.10);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
-      margin-bottom:14px;
     }
 
     .drawer-label{
       font-size:11px;
       font-weight:1000;
-      letter-spacing:.45px;
+      letter-spacing:.5px;
       color:rgba(255,255,255,.58);
       text-transform:uppercase;
       margin-bottom:10px;
@@ -206,9 +213,9 @@
 
     .my-lang-btn{
       width:100%;
-      min-height:54px;
+      min-height:56px;
       border:none;
-      border-radius:18px;
+      border-radius:20px;
       padding:10px 12px;
       background:rgba(255,255,255,.065);
       border:1px solid rgba(255,255,255,.10);
@@ -218,55 +225,28 @@
       justify-content:space-between;
       gap:12px;
       cursor:pointer;
-      font-family:inherit;
     }
 
-    .my-lang-left{
-      display:flex;
-      align-items:center;
-      gap:11px;
-      min-width:0;
-    }
-
+    .my-lang-left{display:flex;align-items:center;gap:11px;min-width:0}
     .my-lang-flag{
-      width:32px;
-      height:32px;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.07);
-      font-size:20px;
-      flex:0 0 32px;
+      width:34px;height:34px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.08);
+      font-size:20px;flex:0 0 34px;
     }
+    .my-lang-text{min-width:0;text-align:left;display:flex;flex-direction:column}
+    .my-lang-title{font-size:14px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .my-lang-sub{margin-top:2px;font-size:11px;font-weight:800;color:rgba(255,255,255,.56)}
+    .my-lang-caret{opacity:.72;font-size:18px;flex:0 0 auto}
 
-    .my-lang-text{
-      min-width:0;
-      text-align:left;
-      display:flex;
-      flex-direction:column;
+    .drawer-scroll{
+      flex:1 1 auto;
+      min-height:0;
+      overflow:auto;
+      padding:14px;
+      scrollbar-width:none;
     }
-
-    .my-lang-title{
-      font-size:14px;
-      font-weight:1000;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .my-lang-sub{
-      margin-top:2px;
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.56);
-    }
-
-    .my-lang-caret{
-      opacity:.72;
-      font-size:18px;
-      flex:0 0 auto;
-    }
+    .drawer-scroll::-webkit-scrollbar{display:none}
 
     .drawer-links{
       display:grid;
@@ -274,7 +254,8 @@
     }
 
     .drawer-link{
-      min-height:50px;
+      width:100%;
+      min-height:52px;
       border-radius:18px;
       text-decoration:none;
       color:#fff;
@@ -282,18 +263,16 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
+      gap:10px;
       padding:0 13px;
       font-size:14px;
       font-weight:1000;
       cursor:pointer;
       position:relative;
       overflow:hidden;
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
       background:rgba(15,39,66,.44);
-      font-family:inherit;
+      appearance:none;
     }
 
     .drawer-link::before{
@@ -308,86 +287,111 @@
     }
 
     .drawer-link span,
+    .drawer-link small{position:relative;z-index:2}
+
+    .drawer-link span{
+      flex:1 1 auto;
+      min-width:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      text-align:left;
+      line-height:1;
+      font-size:14px;
+    }
+
     .drawer-link small{
-      position:relative;
-      z-index:2;
+      flex:0 0 auto;
+      color:rgba(255,255,255,.72);
+      font-size:14px;
+      font-weight:1000;
+      min-width:24px;
+      text-align:right;
     }
 
     .drawer-link:active{transform:scale(.985)}
 
-    .drawer-link small{
-      color:rgba(255,255,255,.56);
-      font-size:12px;
-      font-weight:1000;
+    .drawer-bottom{
+      flex:0 0 auto;
+      padding:12px 14px 0;
+      border-top:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg,rgba(5,8,18,.12),rgba(5,8,18,.72));
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
     }
 
-    .drawer-link-button{
+    .shortcut-btn{
       width:100%;
-      text-align:left;
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      background:rgba(13,45,77,.62);
+      border:1px solid rgba(96,165,250,.20);
+      color:#fff;
+      font-size:14px;
+      font-weight:1000;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:0 16px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+      margin-bottom:12px;
     }
 
     .google-login-btn{
-      margin-top:14px;
       width:100%;
-      min-height:56px;
+      min-height:58px;
       border:none;
-      border-radius:18px;
+      border-radius:20px;
       background:linear-gradient(135deg,#fff7ed 0%,#ffffff 30%,#fde68a 62%,#fb923c 100%);
       color:#202124;
-      font-size:14px;
+      font-size:15px;
       font-weight:1000;
-      font-family:inherit;
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:10px;
+      gap:12px;
       box-shadow:0 16px 32px rgba(251,146,60,.16);
+      margin-bottom:12px;
     }
 
-    .google-login-btn:active{transform:scale(.985)}
-
-    .google-icon{
-      width:22px;
-      height:22px;
-      flex:0 0 22px;
-    }
+    .google-icon{width:22px;height:22px;flex:0 0 22px}
 
     .subscription-note{
-      margin-top:10px;
-      padding:12px 13px;
-      border-radius:18px;
+      padding:13px 14px;
+      border-radius:20px;
       background:rgba(255,255,255,.045);
       border:1px solid rgba(255,255,255,.08);
-      color:rgba(255,255,255,.70);
+      color:rgba(255,255,255,.74);
       font-size:11px;
-      line-height:1.45;
+      line-height:1.5;
       font-weight:850;
       text-align:center;
     }
 
-    .subscription-note strong{
-      color:#fff;
-      font-weight:1000;
-    }
+    .subscription-note strong{color:#fff;font-weight:1000}
 
     .drawer-footer-seal{
-      margin-top:14px;
-      padding:11px 10px 2px;
+      margin-top:10px;
+      padding:6px 6px 2px;
       text-align:center;
-      color:rgba(255,255,255,.46);
+      color:rgba(255,255,255,.50);
       font-size:11px;
       font-weight:1000;
       letter-spacing:.4px;
     }
 
     .drawer-footer-seal .ai{
-      background:var(--ai-gradient);
+      background:var(--grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
 
-    .my-lang-modal{
+    .my-lang-modal,
+    .app-modal{
       position:fixed;
       inset:0;
       z-index:1200;
@@ -399,10 +403,9 @@
       backdrop-filter:blur(8px);
       -webkit-backdrop-filter:blur(8px);
     }
+    .my-lang-modal.show,.app-modal.show{display:flex}
 
-    .my-lang-modal.show{display:flex}
-
-    .my-lang-card{
+    .my-lang-card,.app-modal-card{
       width:min(92vw,420px);
       max-height:78vh;
       border-radius:26px;
@@ -423,32 +426,13 @@
       gap:12px;
     }
 
-    .my-lang-head-title{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:19px;
-      font-weight:900;
-      line-height:1;
-    }
-
-    .my-lang-head-sub{
-      margin-top:5px;
-      font-size:12px;
-      font-weight:800;
-      color:rgba(255,255,255,.54);
-      line-height:1.35;
-    }
-
+    .my-lang-head-title{font-family:"Space Grotesk",sans-serif;font-size:19px;font-weight:900;line-height:1}
+    .my-lang-head-sub{margin-top:5px;font-size:12px;font-weight:800;color:rgba(255,255,255,.54);line-height:1.35}
     .my-lang-close{
-      width:40px;
-      height:40px;
-      border:none;
-      border-radius:14px;
+      width:40px;height:40px;border:none;border-radius:14px;
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:20px;
-      font-weight:900;
-      cursor:pointer;
+      color:#fff;font-size:20px;font-weight:900;cursor:pointer;
     }
 
     .my-lang-list{
@@ -458,7 +442,6 @@
       gap:9px;
       scrollbar-width:none;
     }
-
     .my-lang-list::-webkit-scrollbar{display:none}
 
     .my-lang-option{
@@ -475,44 +458,21 @@
       justify-content:space-between;
       gap:12px;
       cursor:pointer;
-      font-family:inherit;
     }
-
-    .my-lang-option.active{
-      background:linear-gradient(135deg,rgba(56,189,248,.14),rgba(99,102,241,.12));
-      border-color:rgba(56,189,248,.24);
-    }
-
-    .my-lang-option-left{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-
-    .my-lang-option-flag{
-      font-size:20px;
-      width:28px;
-      flex:0 0 28px;
-      text-align:center;
-    }
-
-    .my-lang-option-name{
-      font-size:14px;
-      font-weight:900;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .my-lang-option-check{
-      opacity:0;
-      color:#86efac;
-      font-weight:1000;
-      font-size:17px;
-    }
-
+    .my-lang-option.active{background:linear-gradient(135deg,rgba(56,189,248,.14),rgba(99,102,241,.12));border-color:rgba(56,189,248,.24)}
+    .my-lang-option-left{display:flex;align-items:center;gap:10px;min-width:0}
+    .my-lang-option-flag{font-size:20px;width:28px;flex:0 0 28px;text-align:center}
+    .my-lang-option-name{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .my-lang-option-check{opacity:0;color:#86efac;font-weight:1000;font-size:17px}
     .my-lang-option.active .my-lang-option-check{opacity:1}
+
+    .app-modal-body{padding:18px}
+    .app-modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}
+    .app-modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76);white-space:pre-line}
+    .app-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+    .app-modal-btn{min-height:46px;border:none;border-radius:16px;cursor:pointer;font-size:13px;font-weight:900}
+    .app-modal-btn.primary{background:var(--grad);color:#05060d}
+    .app-modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
 
     .half-screen{
       flex:1;
@@ -536,14 +496,7 @@
       padding-bottom:calc(4px + var(--safe-bottom));
     }
 
-    .lang-row{
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:20;
-    }
-
+    .lang-row{width:100%;display:flex;align-items:center;justify-content:center;z-index:20}
     .lang-trigger{
       min-height:38px;
       border:none;
@@ -569,9 +522,9 @@
       left:50%;
       transform:translateX(-50%);
       width:min(92vw,360px);
-      height:360px;
+      max-height:360px;
       background:#0a0a0f;
-      border:1px solid var(--border);
+      border:1px solid var(--line);
       border-radius:24px;
       display:none;
       flex-direction:column;
@@ -579,7 +532,6 @@
       overflow:hidden;
       box-shadow:0 22px 60px rgba(0,0,0,.92);
     }
-
     .popover.show{display:flex}
     .half-screen.top .popover{top:58px}
     .half-screen.bottom .popover{bottom:58px}
@@ -601,13 +553,7 @@
       border:1px solid rgba(255,255,255,.12);
     }
 
-    .pop-list{
-      flex:1;
-      overflow-y:auto;
-      padding:10px;
-      scrollbar-width:none;
-    }
-
+    .pop-list{flex:1;overflow:auto;padding:10px;scrollbar-width:none}
     .pop-list::-webkit-scrollbar{display:none}
 
     .pop-item{
@@ -620,89 +566,23 @@
       cursor:pointer;
       border:1px solid transparent;
     }
-
-    .pop-item.active{
-      background:rgba(99,102,241,.14);
-      border-color:rgba(99,102,241,.25);
-    }
-
-    .pop-left{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-      flex:1;
-    }
-
+    .pop-item.active{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.25)}
+    .pop-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
     .pop-flag{font-size:18px}
     .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pop-code{font-size:12px;font-weight:900;opacity:.7}
     .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
-    .pop-download,
-    .pop-installed,
-    .pop-active,
-    .pop-queued,
-    .pop-native{
-      width:32px;
-      height:32px;
-      border-radius:999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:15px;
-      line-height:1;
-      font-weight:1000;
+    .pop-installed,.pop-native,.pop-download,.pop-queued{
+      width:32px;height:32px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:15px;line-height:1;font-weight:1000;
     }
-
-    .pop-download{
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      cursor:pointer;
-    }
-
-    .pop-download:active{transform:scale(.94)}
-
-    .pop-installed{
-      border:1px solid rgba(34,197,94,.36);
-      background:rgba(34,197,94,.14);
-      color:#86efac;
-      box-shadow:0 0 18px rgba(34,197,94,.12);
-    }
-
-    .pop-active{
-      border:1px solid rgba(59,130,246,.34);
-      background:rgba(59,130,246,.14);
-      color:#bfdbfe;
-      animation:softPulse 1.1s ease-in-out infinite;
-    }
-
-    .pop-queued{
-      border:1px solid rgba(245,158,11,.34);
-      background:rgba(245,158,11,.14);
-      color:#fde68a;
-    }
-
-    .pop-native{
-      border:1px solid rgba(34,197,94,.22);
-      background:rgba(34,197,94,.08);
-      color:#bbf7d0;
-    }
-
-    @keyframes softPulse{
-      0%,100%{opacity:.65;transform:scale(.98)}
-      50%{opacity:1;transform:scale(1.04)}
-    }
-
-    .pop-empty{
-      padding:20px 14px;
-      text-align:center;
-      color:rgba(255,255,255,.68);
-      font-size:13px;
-      line-height:1.5;
-      font-weight:800;
-    }
+    .pop-installed{border:1px solid rgba(34,197,94,.36);background:rgba(34,197,94,.14);color:#86efac;box-shadow:0 0 18px rgba(34,197,94,.12)}
+    .pop-native{border:1px solid rgba(34,197,94,.22);background:rgba(34,197,94,.08);color:#bbf7d0}
+    .pop-download{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+    .pop-download.disabled{opacity:.38;cursor:not-allowed;filter:grayscale(1);background:rgba(255,255,255,.035)}
+    .pop-queued{border:1px solid rgba(245,158,11,.34);background:rgba(245,158,11,.14);color:#fde68a}
 
     .chat-body{
       flex:1;
@@ -724,18 +604,8 @@
       touch-action:pan-y;
       mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
     }
-
-    .chat-body::before{
-      content:"";
-      flex:1 0 auto;
-      min-height:12px;
-    }
-
-    .chat-body::-webkit-scrollbar{
-      display:none;
-      width:0;
-      height:0;
-    }
+    .chat-body::before{content:"";flex:1 0 auto;min-height:12px}
+    .chat-body::-webkit-scrollbar{display:none;width:0;height:0}
 
     .bubble{
       max-width:86%;
@@ -746,12 +616,7 @@
       opacity:.9;
       text-align:center;
     }
-
-    .bubble.latest{
-      font-size:32px;
-      font-weight:1000;
-      opacity:1;
-    }
+    .bubble.latest{font-size:32px;font-weight:1000;opacity:1}
 
     .mic-line{
       width:100%;
@@ -763,21 +628,11 @@
       flex:0 0 auto;
       transform:translateY(-8px);
     }
-
-    .mic-side{
-      min-height:60px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
+    .mic-side{min-height:60px;display:flex;align-items:center;justify-content:center}
     .mic-side.empty{pointer-events:none}
 
     .mic-btn{
-      width:70px;
-      height:70px;
-      border:none;
-      border-radius:999px;
+      width:70px;height:70px;border:none;border-radius:999px;
       background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
       border:1px solid rgba(255,255,255,.18);
       color:#fff;
@@ -788,23 +643,13 @@
       box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
       position:relative;
     }
-
-    .mic-btn svg{
-      width:30px;
-      height:30px;
-      stroke:currentColor;
-      stroke-width:2.2;
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
+    .mic-btn svg{width:30px;height:30px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
     .mic-btn.listening{
       background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
       box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
       animation:micBreath 1.05s ease-in-out infinite;
     }
-
     .mic-btn.listening::after{
       content:"";
       position:absolute;
@@ -833,11 +678,9 @@
     }
 
     .orb{
-      width:66px;
-      height:66px;
-      border-radius:50%;
+      width:66px;height:66px;border-radius:50%;
       background:#000;
-      border:1px solid var(--border);
+      border:1px solid var(--line);
       display:flex;
       align-items:center;
       justify-content:center;
@@ -847,68 +690,14 @@
       position:relative;
       overflow:visible;
     }
-
     .orb-main{position:relative;z-index:3}
-    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-    .sat{
-      position:absolute;
-      left:50%;
-      top:50%;
-      width:10px;
-      height:10px;
-      margin-left:-5px;
-      margin-top:-5px;
-      border-radius:50%;
-      z-index:1;
-      filter:blur(1.5px);
-    }
-
+    .orb .ai{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sat{position:absolute;left:50%;top:50%;width:10px;height:10px;margin-left:-5px;margin-top:-5px;border-radius:50%;z-index:1;filter:blur(1.5px)}
     .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
     .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
 
     @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
     @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
-
-    .modal{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.55);
-      backdrop-filter:blur(6px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:9998;
-      padding:20px;
-    }
-
-    .modal.show{display:flex}
-
-    .modal-card{
-      width:min(100%,420px);
-      border-radius:24px;
-      padding:18px;
-      background:linear-gradient(145deg,rgba(16,16,24,.97),rgba(10,10,18,.97));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 24px 50px rgba(0,0,0,.30);
-    }
-
-    .modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}
-    .modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76);white-space:pre-line}
-    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-
-    .modal-btn{
-      min-height:46px;
-      border:none;
-      border-radius:16px;
-      cursor:pointer;
-      font-family:inherit;
-      font-size:13px;
-      font-weight:900;
-    }
-
-    .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
-    .modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
 
     .toast{
       position:fixed;
@@ -933,7 +722,6 @@
       transition:.22s ease;
       pointer-events:none;
     }
-
     .toast.show{transform:translateX(-50%) translateY(0)}
 
     @media(max-width:390px){
@@ -942,74 +730,87 @@
       .mic-btn svg{width:28px;height:28px}
       .bubble{font-size:22px}
       .bubble.latest{font-size:30px}
-      .drawer-mode-pill button{font-size:9px;padding:0 8px}
+      .drawer-mode-pill button{font-size:9px;padding:0 8px;min-width:76px}
+      .drawer-link span{font-size:13px}
     }
   </style>
 </head>
 
 <body>
   <button id="sideClearBtn" class="edge-handle clear" type="button" aria-label="Ekranı temizle"></button>
-  <button id="drawerEdgeBtn" class="edge-handle open" type="button" aria-label="Menüyü aç"></button>
+  <button id="drawerEdgeBtn" class="edge-handle open" type="button" aria-label="Menu aç"></button>
 
   <div id="drawerBackdrop" class="drawer-backdrop">
-    <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
-      <div class="drawer-logo-row">
-        <div class="drawer-logo">
-          <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
-          <div class="drawer-logo-sub">BE FREE</div>
+    <aside class="side-drawer" role="dialog" aria-label="italkyAI menu">
+      <div class="drawer-top">
+        <div class="drawer-logo-row">
+          <div class="drawer-logo">
+            <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
+            <div class="drawer-logo-sub">BE FREE</div>
+          </div>
+
+          <div class="drawer-mode-pill" aria-label="Çeviri modu">
+            <button id="modeOnlineBtn" class="active" type="button">Online</button>
+            <button id="modeOfflineBtn" type="button">Offline</button>
+          </div>
         </div>
 
-        <div class="drawer-mode-pill" aria-label="Çeviri modu">
-          <button id="modeOnlineBtn" class="active" type="button">Online</button>
-          <button id="modeOfflineBtn" type="button">Offline</button>
-        </div>
-      </div>
-
-      <div class="drawer-card">
-        <div class="drawer-label">Kendi Dilim</div>
-        <button id="myLangDrawerBtn" class="my-lang-btn" type="button">
-          <span class="my-lang-left">
-            <span id="myLangDrawerFlag" class="my-lang-flag">🇹🇷</span>
-            <span class="my-lang-text">
-              <span id="myLangDrawerTitle" class="my-lang-title">Türkçe</span>
-              <span class="my-lang-sub">Offline paketlerde ana dil</span>
+        <div class="drawer-card">
+          <div class="drawer-label">Kendi Dilim</div>
+          <button id="myLangDrawerBtn" class="my-lang-btn" type="button">
+            <span class="my-lang-left">
+              <span id="myLangDrawerFlag" class="my-lang-flag">🇹🇷</span>
+              <span class="my-lang-text">
+                <span id="myLangDrawerTitle" class="my-lang-title">Türkçe</span>
+                <span class="my-lang-sub">Public kullanımda Türkçe ve İngilizce</span>
+              </span>
             </span>
-          </span>
-          <span class="my-lang-caret">›</span>
-        </button>
+            <span class="my-lang-caret">›</span>
+          </button>
+        </div>
       </div>
 
-      <nav class="drawer-links">
-        <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/contact.html"><span>İletişim</span><small>›</small></a>
+      <div class="drawer-scroll">
+        <nav class="drawer-links">
+          <a class="drawer-link" href="/pages/text_translate_public.html"><span>1. Yazıdan Çeviri</span><small>›</small></a>
+          <a class="drawer-link" href="/pages/game_menu_public.html"><span>2. Eğlenerek Öğren</span><small>›</small></a>
+          <button class="drawer-link locked-feature" type="button" data-feature="SohbetAI"><span>3. SohbetAI</span><small>🔒</small></button>
+          <button class="drawer-link locked-feature" type="button" data-feature="Turan Dilleri"><span>4. Turan Dilleri</span><small>🔒</small></button>
+          <button class="drawer-link locked-feature" type="button" data-feature="Kafkas Dilleri"><span>5. Kafkas Dilleri</span><small>🔒</small></button>
+          <button class="drawer-link locked-feature" type="button" data-feature="Mezopotamya Dilleri"><span>6. Mezopotamya Dilleri</span><small>🔒</small></button>
+          <button class="drawer-link locked-feature" type="button" data-feature="Balkan Dilleri"><span>7. Balkan Dilleri</span><small>🔒</small></button>
+          <button class="drawer-link locked-feature" type="button" data-feature="Ataların Dili"><span>8. Ataların Dili</span><small>🔒</small></button>
+          <button class="drawer-link locked-feature" type="button" data-feature="Seviye Tespit"><span>9. Seviye Tespit</span><small>🔒</small></button>
+          <a class="drawer-link" href="/pages/about.html"><span>10. Hakkımızda</span><small>›</small></a>
+          <a class="drawer-link" href="/pages/privacy.html"><span>11. Gizlilik</span><small>›</small></a>
+          <a class="drawer-link" href="/pages/contact.html"><span>12. İletişim</span><small>›</small></a>
+        </nav>
+      </div>
 
-        <button id="drawerWidgetBtn" class="drawer-link drawer-link-button" type="button">
+      <div class="drawer-bottom">
+        <button id="drawerWidgetBtn" class="shortcut-btn" type="button">
           <span>Kısa Yol Ekle</span>
-          <small>+</small>
+          <strong>+</strong>
         </button>
-      </nav>
 
-      <button id="drawerLoginBtn" class="google-login-btn" type="button">
-        <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
-          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
-          <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
-          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C36.9 39.3 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
-        </svg>
-        <span>Üyelik Sistemi Çok Yakında</span>
-      </button>
+        <button id="drawerLoginBtn" class="google-login-btn" type="button">
+          <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C36.9 39.3 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+          </svg>
+          <span>Google Hesabıyla Giriş Yap</span>
+        </button>
 
-      <div class="subscription-note">
-        <strong>Üyelik sistemi çok yakında</strong><br/>
-        Şimdilik giriş yapmadan FaceToFace, yazıdan çeviri, oyunlar ve seviye tespit özelliklerini kullanabilirsiniz.
-      </div>
+        <div class="subscription-note">
+          <strong>Yıllık üyelik: 699 TL</strong><br/>
+          Üyelikte reklam gösterilmez. Kilitli modüller ve gelişmiş özellikler açılır.
+        </div>
 
-      <div class="drawer-footer-seal">
-        italky<span class="ai">AI</span> Ozigit's 2026
+        <div class="drawer-footer-seal">
+          italky<span class="ai">AI</span> Ozyigit's 2026
+        </div>
       </div>
     </aside>
   </div>
@@ -1019,7 +820,7 @@
       <div class="my-lang-head">
         <div>
           <div class="my-lang-head-title">Kendi Dilim</div>
-          <div class="my-lang-head-sub">Offline paketlerde ve önerilerde kullanılacak ana dil.</div>
+          <div class="my-lang-head-sub">Public kullanımda sadece Türkçe ve İngilizce açıktır.</div>
         </div>
         <button id="myLangModalClose" class="my-lang-close" type="button">×</button>
       </div>
@@ -1027,18 +828,31 @@
     </div>
   </div>
 
+  <div id="appModal" class="app-modal">
+    <div class="app-modal-card">
+      <div class="app-modal-body">
+        <h3 id="appModalTitle" class="app-modal-title">Bilgi</h3>
+        <p id="appModalText" class="app-modal-text"></p>
+        <div class="app-modal-actions">
+          <button id="appModalPrimary" class="app-modal-btn primary" type="button">Tamam</button>
+          <button id="appModalSecondary" class="app-modal-btn secondary" type="button">Kapat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
-    <section class="half-screen top" id="topSection">
+    <section class="half-screen top">
       <div class="lang-row">
         <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
       </div>
 
-      <div class="popover" id="pop-top">
+      <div class="popover" id="popTop">
         <div class="pop-head">
-          <div id="topPopTitle">ÜST DİL</div>
-          <div class="pop-close" id="close-top">✕</div>
+          <div>ÜST DİL</div>
+          <div id="closeTop" class="pop-close">✕</div>
         </div>
-        <div class="pop-list" id="list-top"></div>
+        <div class="pop-list" id="listTop"></div>
       </div>
 
       <div class="chat-body" id="topBody"></div>
@@ -1065,24 +879,23 @@
       </div>
     </section>
 
-    <section class="half-screen bottom" id="botSection">
+    <section class="half-screen bottom">
       <div class="lang-row">
         <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
       </div>
 
-      <div class="popover" id="pop-bot">
+      <div class="popover" id="popBot">
         <div class="pop-head">
-          <div id="botPopTitle">ALT DİL</div>
-          <div class="pop-close" id="close-bot">✕</div>
+          <div>ALT DİL</div>
+          <div id="closeBot" class="pop-close">✕</div>
         </div>
-        <div class="pop-list" id="list-bot"></div>
+        <div class="pop-list" id="listBot"></div>
       </div>
 
       <div class="chat-body" id="botBody"></div>
 
       <div class="mic-line">
         <div class="mic-side empty"></div>
-
         <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
           <svg viewBox="0 0 24 24">
             <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
@@ -1091,1556 +904,876 @@
             <path d="M8 21h8"></path>
           </svg>
         </button>
-
         <div class="mic-side empty"></div>
       </div>
     </section>
   </main>
 
-  <div id="adModal" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title" id="adTitle">Ücretsiz Kullanım</h3>
-      <p class="modal-text" id="adText">
-        FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.
-      </p>
-      <div class="modal-actions">
-        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklam İzle</button>
-        <button id="closeAdBtn" class="modal-btn secondary" type="button">Şimdilik Kapat</button>
-      </div>
-    </div>
-  </div>
-
   <div id="toast" class="toast"></div>
 
   <script type="module">
-  import { getLangPoolForSite } from "/js/lang_pool_full.js";
-  import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
+    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
 
-  const API_BASE = "https://italky-api.onrender.com";
-  const $ = (id) => document.getElementById(id);
+    const API_BASE = "https://italky-api.onrender.com";
+    const LOGIN_ENTRY = "/pages/login_entry.html?next=/pages/membership.html";
+    const MEMBERSHIP_PRICE = "699 TL";
+    const AD_INTERVAL_MS = 60 * 1000;
 
-  const SITE_LANG_KEY = "site_lang";
-  const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
-  const NATIVE_LANG_KEY = "italky_native_lang_v7";
-  const MY_LANG_KEY = "italky_public_my_lang_v1";
+    const $ = (id) => document.getElementById(id);
 
-  const AD_INTERVAL_MS = 60 * 1000;
+    const PUBLIC_LANGS = [
+      { code:"tr", flag:"🇹🇷", name:"Türkçe", bcp:"tr-TR" },
+      { code:"en", flag:"🇬🇧", name:"İngilizce", bcp:"en-US" }
+    ];
 
-  const MEMBERSHIP_PRICE_TEXT = "349,99 TL / yıl";
-  const MEMBERSHIP_LOGIN_URL = "/pages/login_entry.html?next=/pages/membership.html";
-  const PUBLIC_FREE_LANGS = ["tr", "en"];
+    const SITE_LANG_KEY = "site_lang";
+    const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+    const NATIVE_LANG_KEY = "italky_native_lang_v7";
+    const MY_LANG_KEY = "italky_public_my_lang_v2";
 
-  const extraStyle = document.createElement("style");
-  extraStyle.textContent = `
-    .edge-handle.open::before{
-      content:"M\\A E\\A N\\A U" !important;
-      white-space:pre;
-      text-shadow:0 0 12px rgba(255,255,255,.28);
+    const sideClearBtn = $("sideClearBtn");
+    const drawerEdgeBtn = $("drawerEdgeBtn");
+    const drawerBackdrop = $("drawerBackdrop");
+    const drawerWidgetBtn = $("drawerWidgetBtn");
+    const drawerLoginBtn = $("drawerLoginBtn");
+    const modeOnlineBtn = $("modeOnlineBtn");
+    const modeOfflineBtn = $("modeOfflineBtn");
+
+    const myLangDrawerBtn = $("myLangDrawerBtn");
+    const myLangDrawerFlag = $("myLangDrawerFlag");
+    const myLangDrawerTitle = $("myLangDrawerTitle");
+    const myLangModal = $("myLangModal");
+    const myLangModalClose = $("myLangModalClose");
+    const myLangModalList = $("myLangModalList");
+
+    const appModal = $("appModal");
+    const appModalTitle = $("appModalTitle");
+    const appModalText = $("appModalText");
+    const appModalPrimary = $("appModalPrimary");
+    const appModalSecondary = $("appModalSecondary");
+
+    const topBody = $("topBody");
+    const botBody = $("botBody");
+    const topMic = $("topMic");
+    const botMic = $("botMic");
+    const topLangBtn = $("topLangBtn");
+    const botLangBtn = $("botLangBtn");
+    const popTop = $("popTop");
+    const popBot = $("popBot");
+    const listTop = $("listTop");
+    const listBot = $("listBot");
+    const closeTop = $("closeTop");
+    const closeBot = $("closeBot");
+    const toast = $("toast");
+
+    let currentMode = "online";
+    let recognizer = null;
+    let recognizerSide = null;
+    let liveText = "";
+    let manualStopPending = false;
+    let lastAdAt = Date.now();
+    let lastOpenPopSide = null;
+
+    function canonical(code){
+      const value = String(code || "").trim().toLowerCase();
+      if(value.startsWith("tr")) return "tr";
+      if(value.startsWith("en")) return "en";
+      return value || "tr";
     }
 
-    .side-drawer{
-      overflow:hidden !important;
-      display:flex !important;
-      flex-direction:column !important;
+    function langObj(code){
+      const c = canonical(code);
+      return PUBLIC_LANGS.find((x) => x.code === c) || PUBLIC_LANGS[0];
     }
 
-    .drawer-fixed-top{
-      flex:0 0 auto;
+    function differentLang(code){
+      return canonical(code) === "tr" ? "en" : "tr";
     }
 
-    .drawer-scroll{
-      flex:1 1 auto;
-      min-height:0;
-      overflow-y:auto;
-      overflow-x:hidden;
-      padding:2px 0 8px;
-      scrollbar-width:none;
+    function labelChip(code){
+      const o = langObj(code);
+      return `${o.flag} ${o.name}`;
     }
 
-    .drawer-scroll::-webkit-scrollbar{
-      display:none;
+    function getSavedMyLang(){
+      const saved = canonical(localStorage.getItem(MY_LANG_KEY) || "");
+      if(saved === "tr" || saved === "en") return saved;
+
+      const site = canonical(
+        localStorage.getItem(SITE_LANG_KEY) ||
+        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+        localStorage.getItem(NATIVE_LANG_KEY) ||
+        navigator.language ||
+        "tr"
+      );
+
+      return site === "en" ? "en" : "tr";
     }
 
-    .drawer-fixed-bottom{
-      flex:0 0 auto;
-      padding-top:8px;
+    let myLang = getSavedMyLang();
+    let botLang = myLang;
+    let topLang = differentLang(botLang);
+
+    function showToast(msg){
+      if(!toast) return;
+      const text = String(msg || "").trim();
+      if(!text) return;
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
     }
 
-    .drawer-section-title{
-      display:none !important;
+    function openDrawer(){
+      drawerBackdrop?.classList.add("show");
     }
 
-    .drawer-link{
-      min-height:50px;
-      padding:0 12px;
-      background:rgba(15,39,66,.44) !important;
-      border-color:rgba(96,165,250,.18) !important;
+    function closeDrawer(){
+      drawerBackdrop?.classList.remove("show");
     }
 
-    .drawer-link.locked{
-      background:rgba(15,39,66,.44) !important;
-      border-color:rgba(96,165,250,.18) !important;
+    function refreshModeButtons(){
+      modeOnlineBtn?.classList.toggle("active", currentMode === "online");
+      modeOfflineBtn?.classList.toggle("active", currentMode === "offline");
     }
 
-    .drawer-link span{
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      font-size:14px;
-      line-height:1;
+    function renderMyLangDrawer(){
+      const info = langObj(myLang);
+      if(myLangDrawerFlag) myLangDrawerFlag.textContent = info.flag;
+      if(myLangDrawerTitle) myLangDrawerTitle.textContent = info.name;
     }
 
-    .drawer-link small{
-      flex:0 0 auto;
-      min-width:24px;
-      text-align:right;
-      font-size:14px;
-      color:rgba(255,255,255,.72) !important;
-    }
+    function renderMyLangModalList(){
+      if(!myLangModalList) return;
 
-    .drawer-link.free small,
-    .drawer-link.info small,
-    .drawer-link.locked small{
-      color:rgba(255,255,255,.72) !important;
-    }
-
-    .pop-download.disabled,
-    .pop-download:disabled{
-      opacity:.38;
-      cursor:not-allowed;
-      filter:grayscale(1);
-      background:rgba(255,255,255,.035);
-    }
-
-    .pop-base-wait{
-      width:32px;
-      height:32px;
-      border-radius:999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:14px;
-      line-height:1;
-      font-weight:1000;
-      border:1px solid rgba(245,158,11,.34);
-      background:rgba(245,158,11,.12);
-      color:#fde68a;
-    }
-  `;
-  document.head.appendChild(extraStyle);
-
-  const BCP = {
-    tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
-    ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
-  };
-
-  const UI = {
-    tr:{
-      topLang:"ÜST DİL",
-      botLang:"ALT DİL",
-      adTitle:"Ücretsiz Kullanım",
-      adText:"FaceToFace ücretsiz kullanımda reklam içerir. Devam etmek için kısa bir reklam izleyin.",
-      downloadAdTitle:"Dil Paketi İndirme",
-      downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
-      watchAd:"Reklam İzle",
-      close:"Şimdilik Kapat",
-      adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
-      micError:"Mikrofon hatası.",
-      micDenied:"Mikrofon izni gerekli.",
-      micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
-      listeningDone:"Dinleme tamamlanıyor...",
-      translateError:"Çeviri yapılamadı",
-      loginSoon:"Google ile giriş yaparak üyelik seçeneklerine geçebilirsiniz.",
-      onlineMode:"Online mod aktif.",
-      offlineMode:"Offline mod aktif.",
-      packReady:"Dil paketi zaten hazır.",
-      packDownloading:"Dil paketiniz indiriliyor.",
-      packQueued:"Dil paketi sıraya alındı.",
-      packDownloaded:"Dil paketiniz indirildi.",
-      offerTitle:"Offline Dil Paketi",
-      offerText:"Kendi diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\n{sourceLang} ⇄ {targetLang} paketini indirerek bu dili internet olmadan da kullanabilirsiniz.",
-      offerOk:"İndir",
-      offerCancel:"Şimdilik Kapat",
-      sameLang:"Aynı dil için paket indirilemez.",
-      nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.",
-      noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
-      myLangChanged:"Kendi diliniz güncellendi.",
-      myLangWarnTitle:"Kendi Dilim Değişsin mi?",
-      myLangWarnText:"Kendi dilinizi değiştirirseniz daha önce indirdiğiniz offline dil paketleri silinir.\n\nDevam etmek istiyor musunuz?",
-      myLangWarnOk:"Değiştir",
-      myLangWarnCancel:"Vazgeç",
-      offlineBasePreparing:"Offline dil servisi hazırlanıyor. Ana dil hazır olunca indirme açılacak.",
-      offlineBaseWait:"Ana dil modeli hazırlanıyor",
-      offlineBaseReady:"Offline dil servisi hazır."
-    },
-    en:{
-      topLang:"TOP LANGUAGE",
-      botLang:"BOTTOM LANGUAGE",
-      adTitle:"Free Use",
-      adText:"FaceToFace free use includes ads. Watch a short ad to continue.",
-      downloadAdTitle:"Language Pack Download",
-      downloadAdText:"You can download this language pack to use it without internet.",
-      watchAd:"Watch Ad",
-      close:"Close",
-      adNeeded:"The action was not started without watching the ad.",
-      micError:"Microphone error.",
-      micDenied:"Microphone permission is required.",
-      micUnsupported:"Speech recognition is not supported on this device.",
-      listeningDone:"Finishing listening...",
-      translateError:"Translation failed",
-      loginSoon:"Sign in with Google to continue to membership options.",
-      onlineMode:"Online mode is active.",
-      offlineMode:"Offline mode is active.",
-      packReady:"Language pack is already ready.",
-      packDownloading:"Your language pack is downloading.",
-      packQueued:"Language pack added to queue.",
-      packDownloaded:"Your language pack has been downloaded.",
-      offerTitle:"Offline Language Pack",
-      offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nDownload the {sourceLang} ⇄ {targetLang} pack to use this language without internet.",
-      offerOk:"Download",
-      offerCancel:"Not Now",
-      sameLang:"You cannot download a pack for the same language.",
-      nativeNotReady:"Native download is not ready on this device.",
-      noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
-      myLangChanged:"Your language has been updated.",
-      myLangWarnTitle:"Change My Language?",
-      myLangWarnText:"If you change your language, previously downloaded offline language packs will be deleted.\n\nDo you want to continue?",
-      myLangWarnOk:"Change",
-      myLangWarnCancel:"Cancel",
-      offlineBasePreparing:"Offline language service is preparing. Downloads will open when your base language is ready.",
-      offlineBaseWait:"Base language is preparing",
-      offlineBaseReady:"Offline language service is ready."
-    }
-  };
-
-  function canonical(code){ return OfflinePackBridge.canonical(code); }
-
-  function isPublicFreeLang(code){
-    return PUBLIC_FREE_LANGS.includes(canonical(code));
-  }
-
-  function isPublicFreePair(a,b){
-    return isPublicFreeLang(a) && isPublicFreeLang(b);
-  }
-
-  function getInitialSiteLang(){
-    return canonical(
-      localStorage.getItem(SITE_LANG_KEY) ||
-      localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
-      localStorage.getItem(NATIVE_LANG_KEY) ||
-      navigator.language ||
-      "tr"
-    ) || "tr";
-  }
-
-  const SITE_LANG = getInitialSiteLang();
-
-  const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
-    ? getLangPoolForSite(SITE_LANG)
-    : [];
-
-  const FALLBACK_LANGS = [
-    { code:"tr", flag:"🇹🇷", name:"Türkçe", bcp:"tr-TR" },
-    { code:"en", flag:"🇬🇧", name:"İngilizce", bcp:"en-US" },
-    { code:"de", flag:"🇩🇪", name:"Almanca", bcp:"de-DE" },
-    { code:"fr", flag:"🇫🇷", name:"Fransızca", bcp:"fr-FR" },
-    { code:"it", flag:"🇮🇹", name:"İtalyanca", bcp:"it-IT" },
-    { code:"es", flag:"🇪🇸", name:"İspanyolca", bcp:"es-ES" },
-    { code:"ar", flag:"🇸🇦", name:"Arapça", bcp:"ar-SA" },
-    { code:"ru", flag:"🇷🇺", name:"Rusça", bcp:"ru-RU" },
-    { code:"bg", flag:"🇧🇬", name:"Bulgarca", bcp:"bg-BG" },
-    { code:"pt", flag:"🇵🇹", name:"Portekizce", bcp:"pt-PT" },
-    { code:"zh", flag:"🇨🇳", name:"Çince", bcp:"zh-CN" },
-    { code:"ja", flag:"🇯🇵", name:"Japonca", bcp:"ja-JP" },
-    { code:"ko", flag:"🇰🇷", name:"Korece", bcp:"ko-KR" }
-  ];
-
-  const LANGS = (RAW_LANG_POOL.length ? RAW_LANG_POOL : FALLBACK_LANGS)
-    .map((l) => {
-      const code = canonical(l.code);
-      if(!code) return null;
-
-      return {
-        code,
-        flag:l.flag || "🌐",
-        name:l.name || l.tr_name || code.toUpperCase(),
-        bcp:l.bcp || BCP[code] || `${code}-${String(code).toUpperCase()}`
-      };
-    })
-    .filter(Boolean)
-    .filter((item,index,arr) => arr.findIndex((x) => x.code === item.code) === index);
-
-  function langExists(code){ return !!LANGS.find((x) => x.code === canonical(code)); }
-
-  function langObj(code){
-    const c = canonical(code);
-
-    return LANGS.find((x) => x.code === c) || {
-      code:c || "en",
-      flag:"🌐",
-      name:(c || "en").toUpperCase(),
-      bcp:BCP[c] || "en-US"
-    };
-  }
-
-  function labelChip(code){
-    const o = langObj(code);
-    return `${o.flag} ${o.name}`;
-  }
-
-  function differentLang(base){
-    const b = canonical(base);
-    if(b === "tr") return "en";
-    if(b === "en") return "tr";
-    return "en";
-  }
-
-  async function detectCountryLang(){
-    try{
-      const nav = canonical(navigator.language || "");
-      if(nav && langExists(nav)) return nav;
-    }catch{}
-
-    if(langExists("tr")) return "tr";
-    return LANGS[0]?.code || "tr";
-  }
-
-  function getSavedMyLang(){
-    const saved = canonical(localStorage.getItem(MY_LANG_KEY) || "");
-    if(saved && langExists(saved)) return saved;
-
-    const initial = getInitialSiteLang();
-    if(initial && langExists(initial)) return initial;
-
-    if(langExists("tr")) return "tr";
-    return LANGS[0]?.code || "tr";
-  }
-
-  let myLang = getSavedMyLang();
-  let botLang = myLang;
-  let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
-
-  if(topLang === botLang) topLang = differentLang(botLang);
-
-  const sideClearBtn = $("sideClearBtn");
-  const drawerEdgeBtn = $("drawerEdgeBtn");
-  const drawerBackdrop = $("drawerBackdrop");
-
-  const myLangModal = $("myLangModal");
-  const myLangModalClose = $("myLangModalClose");
-  const myLangModalList = $("myLangModalList");
-
-  const topBody = $("topBody");
-  const botBody = $("botBody");
-  const topMic = $("topMic");
-  const botMic = $("botMic");
-  const topLangBtn = $("topLangBtn");
-  const botLangBtn = $("botLangBtn");
-  const popTop = $("pop-top");
-  const popBot = $("pop-bot");
-  const listTop = $("list-top");
-  const listBot = $("list-bot");
-  const closeTop = $("close-top");
-  const closeBot = $("close-bot");
-  const topPopTitle = $("topPopTitle");
-  const botPopTitle = $("botPopTitle");
-  const adModal = $("adModal");
-  const adTitle = $("adTitle");
-  const adText = $("adText");
-  const watchAdBtn = $("watchAdBtn");
-  const closeAdBtn = $("closeAdBtn");
-  const toast = $("toast");
-
-  let recognizer = null;
-  let liveText = "";
-  let lastAdAt = Date.now();
-  let currentMode = "online";
-  let lastOpenPopSide = null;
-  let manualStopPending = false;
-
-  let offlineBaseReady = false;
-  let offlineBaseStatus = null;
-  let offlineBasePollTimer = null;
-  let offlineBaseReadyToastShown = false;
-
-  function tx(key){
-    const c = UI[myLang] ? myLang : "en";
-    return UI[c]?.[key] || UI.en[key] || key;
-  }
-
-  function tFormat(key, vars = {}){
-    let value = tx(key);
-    Object.keys(vars).forEach((k) => {
-      value = value.replaceAll(`{${k}}`, vars[k]);
-    });
-    return value;
-  }
-
-  function showToast(msg){
-    if(!toast) return;
-    toast.textContent = String(msg || "");
-    toast.classList.add("show");
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2200);
-  }
-
-  function openDrawer(){ drawerBackdrop?.classList.add("show"); }
-  function closeDrawer(){ drawerBackdrop?.classList.remove("show"); }
-
-  function buildDrawerMenu(){
-    const drawer = document.querySelector(".side-drawer");
-    if(!drawer) return;
-
-    drawer.innerHTML = `
-      <div class="drawer-fixed-top">
-        <div class="drawer-logo-row">
-          <div class="drawer-logo">
-            <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
-            <div class="drawer-logo-sub">BE FREE</div>
-          </div>
-
-          <div class="drawer-mode-pill" aria-label="Çeviri modu">
-            <button id="modeOnlineBtn" class="active" type="button">Online</button>
-            <button id="modeOfflineBtn" type="button">Offline</button>
-          </div>
-        </div>
-
-        <div class="drawer-card">
-          <div class="drawer-label">Kendi Dilim</div>
-          <button id="myLangDrawerBtn" class="my-lang-btn" type="button">
-            <span class="my-lang-left">
-              <span id="myLangDrawerFlag" class="my-lang-flag">🇹🇷</span>
-              <span class="my-lang-text">
-                <span id="myLangDrawerTitle" class="my-lang-title">Türkçe</span>
-                <span class="my-lang-sub">Offline paketlerde ana dil</span>
-              </span>
-            </span>
-            <span class="my-lang-caret">›</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="drawer-scroll">
-        <nav class="drawer-links">
-          <a class="drawer-link free" href="/pages/text_translate_public.html">
-            <span>1. Yazıdan Çeviri</span>
-            <small>›</small>
-          </a>
-
-          <a class="drawer-link free" href="/pages/game_menu_public.html">
-            <span>2. Eğlenerek Öğren</span>
-            <small>›</small>
-          </a>
-
-          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="SohbetAI" type="button">
-            <span>3. SohbetAI</span>
-            <small>🔒</small>
-          </button>
-
-          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Turan Dilleri" type="button">
-            <span>4. Turan Dilleri</span>
-            <small>🔒</small>
-          </button>
-
-          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Kafkas Dilleri" type="button">
-            <span>5. Kafkas Dilleri</span>
-            <small>🔒</small>
-          </button>
-
-          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Mezopotamya Dilleri" type="button">
-            <span>6. Mezopotamya Dilleri</span>
-            <small>🔒</small>
-          </button>
-
-          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Balkan Dilleri" type="button">
-            <span>7. Balkan Dilleri</span>
-            <small>🔒</small>
-          </button>
-
-          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Ataların Dili" type="button">
-            <span>8. Ataların Dili</span>
-            <small>🔒</small>
-          </button>
-
-          <button class="drawer-link drawer-link-button locked locked-feature" data-feature="Seviye Tespit" type="button">
-            <span>9. Seviye Tespit</span>
-            <small>🔒</small>
-          </button>
-
-          <a class="drawer-link info" href="/pages/about.html">
-            <span>10. Hakkımızda</span>
-            <small>›</small>
-          </a>
-
-          <a class="drawer-link info" href="/pages/privacy.html">
-            <span>11. Gizlilik</span>
-            <small>›</small>
-          </a>
-
-          <a class="drawer-link info" href="/pages/contact.html">
-            <span>12. İletişim</span>
-            <small>›</small>
-          </a>
-        </nav>
-      </div>
-
-      <div class="drawer-fixed-bottom">
-        <button id="drawerWidgetBtn" class="drawer-link drawer-link-button free" type="button">
-          <span>Kısa Yol Ekle</span>
-          <small>+</small>
+      myLangModalList.innerHTML = PUBLIC_LANGS.map((lang) => `
+        <button class="my-lang-option ${lang.code === myLang ? "active" : ""}" type="button" data-code="${lang.code}">
+          <span class="my-lang-option-left">
+            <span class="my-lang-option-flag">${lang.flag}</span>
+            <span class="my-lang-option-name">${lang.name}</span>
+          </span>
+          <span class="my-lang-option-check">✓</span>
         </button>
+      `).join("");
 
-        <button id="drawerLoginBtn" class="google-login-btn" type="button">
-          <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
-            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
-            <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
-            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C36.9 39.3 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
-          </svg>
-          <span>Google ile Giriş Yap</span>
-        </button>
+      myLangModalList.querySelectorAll("[data-code]").forEach((btn) => {
+        btn.onclick = () => {
+          const next = canonical(btn.dataset.code);
+          if(!next || next === myLang) return;
 
-        <div class="subscription-note">
-          <strong>Yıllık üyelik: 349,99 TL</strong><br/>
-          Üyelikte reklam gösterilmez. Kilitli modüller ve gelişmiş özellikler açılır.
-        </div>
+          myLang = next;
+          botLang = myLang;
+          topLang = differentLang(botLang);
 
-        <div class="drawer-footer-seal">
-          italky<span class="ai">AI</span> Ozigit's 2026
-        </div>
-      </div>
-    `;
-  }
+          localStorage.setItem(MY_LANG_KEY, myLang);
+          localStorage.setItem(SITE_LANG_KEY, myLang);
+          localStorage.setItem(LEGACY_SITE_LANG_KEY, myLang);
+          localStorage.setItem(NATIVE_LANG_KEY, myLang);
 
-  function readOfflineBaseStatus(){
-    try{
-      if(window.OfflineTranslate && typeof window.OfflineTranslate.getOfflineBaseStatus === "function"){
-        const raw = window.OfflineTranslate.getOfflineBaseStatus();
-        const parsed = JSON.parse(raw || "{}");
-        return parsed && typeof parsed === "object" ? parsed : null;
+          try{
+            OfflinePackBridge.setOfflineNativeLang(myLang);
+          }catch{}
+
+          renderMyLangDrawer();
+          renderMyLangModalList();
+          refreshTexts();
+          refreshOpenPop();
+          myLangModal.classList.remove("show");
+          showToast("Kendi diliniz güncellendi.");
+        };
+      });
+    }
+
+    function refreshTexts(){
+      topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
+      botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
+      renderMyLangDrawer();
+    }
+
+    function closeAllPop(){
+      popTop.classList.remove("show");
+      popBot.classList.remove("show");
+      lastOpenPopSide = null;
+    }
+
+    function refreshOpenPop(){
+      if(lastOpenPopSide === "top" && popTop.classList.contains("show")) renderPop("top");
+      if(lastOpenPopSide === "bot" && popBot.classList.contains("show")) renderPop("bot");
+    }
+
+    function hasInstalledPair(from, to){
+      try{
+        return !!OfflinePackBridge.hasInstalledPair(canonical(from), canonical(to));
+      }catch{
+        return false;
       }
-    }catch(e){
-      console.warn("getOfflineBaseStatus failed", e);
     }
 
-    return null;
-  }
-
-  function applyOfflineBaseStatus(status){
-    offlineBaseStatus = status || null;
-
-    const native = canonical(status?.native || status?.lang || myLang || "");
-    const ready = !!(status && status.ready && native === canonical(myLang));
-
-    const wasReady = offlineBaseReady;
-    offlineBaseReady = ready;
-
-    if(ready && !wasReady && !offlineBaseReadyToastShown){
-      offlineBaseReadyToastShown = true;
-      showToast(tx("offlineBaseReady"));
+    function isPairQueued(from, to){
+      try{
+        return !!OfflinePackBridge.isPairQueued(canonical(from), canonical(to));
+      }catch{
+        return false;
+      }
     }
 
-    refreshOpenPop();
-  }
-
-  function refreshOfflineBaseStatus(){
-    const status = readOfflineBaseStatus();
-    applyOfflineBaseStatus(status);
-    return offlineBaseReady;
-  }
-
-  function startOfflineBasePolling(){
-    stopOfflineBasePolling();
-
-    refreshOfflineBaseStatus();
-
-    offlineBasePollTimer = setInterval(() => {
-      refreshOfflineBaseStatus();
-    }, 10000);
-  }
-
-  function stopOfflineBasePolling(){
-    if(offlineBasePollTimer){
-      clearInterval(offlineBasePollTimer);
-      offlineBasePollTimer = null;
+    function syncInstalledPairsFromNative(){
+      try{
+        OfflinePackBridge.syncInstalledPairsFromNative();
+      }catch{}
     }
-  }
 
-  drawerEdgeBtn?.addEventListener("click", openDrawer);
-  drawerBackdrop?.addEventListener("click", (e) => {
-    if(e.target === drawerBackdrop) closeDrawer();
-  });
+    function canDownloadPublicPair(targetCode){
+      const target = canonical(targetCode);
+      return (canonical(myLang) === "tr" && target === "en") || (canonical(myLang) === "en" && target === "tr");
+    }
 
-  function bindDrawerActions(){
-    const widgetBtn = document.getElementById("drawerWidgetBtn");
-    const loginBtn = document.getElementById("drawerLoginBtn");
-    const myLangBtn = document.getElementById("myLangDrawerBtn");
+    async function showModal({ title="", text="", primaryText="Tamam", secondaryText="Kapat" } = {}){
+      return new Promise((resolve) => {
+        appModalTitle.textContent = title;
+        appModalText.textContent = text;
+        appModalPrimary.textContent = primaryText;
+        appModalSecondary.textContent = secondaryText;
+        appModal.classList.add("show");
 
-    widgetBtn?.addEventListener("click", () => {
-      try {
-        if (window.Native && typeof window.Native.addWidgetToHomeScreen === "function") {
+        const clean = () => {
+          appModal.classList.remove("show");
+          appModalPrimary.onclick = null;
+          appModalSecondary.onclick = null;
+        };
+
+        appModalPrimary.onclick = () => {
+          clean();
+          resolve(true);
+        };
+
+        appModalSecondary.onclick = () => {
+          clean();
+          resolve(false);
+        };
+      });
+    }
+
+    async function showMembershipRequired(featureName = "Bu modül"){
+      const ok = await showModal({
+        title:"Üyelik Gerekli",
+        text:
+          `${featureName} modülünü kullanmak için üyelik gereklidir.\n\n` +
+          `Kilitli modülleri ve gelişmiş özellikleri açmak için üye olmanız gerekmektedir.\n\n` +
+          `Yıllık üyelik: ${MEMBERSHIP_PRICE}\n` +
+          `Üyelikte reklam gösterilmez.`,
+        primaryText:"Üye Ol / Giriş Yap",
+        secondaryText:"Şimdilik Kapat"
+      });
+
+      if(ok){
+        location.href = LOGIN_ENTRY;
+      }
+    }
+
+    async function ensureOfflinePair(targetCode){
+      const target = canonical(targetCode);
+
+      if(target === myLang) return true;
+      if(hasInstalledPair(myLang, target)) return true;
+
+      if(!canDownloadPublicPair(target)){
+        showToast("Public kullanımda sadece Türkçe ve İngilizce açıktır.");
+        return false;
+      }
+
+      const ok = await showModal({
+        title:"Offline Paket",
+        text:
+          `${langObj(myLang).name} ⇄ ${langObj(target).name} paketini indirerek internet olmadan kullanabilirsiniz.\n\n` +
+          `Public kullanımda sadece bu dil çifti açıktır.`,
+        primaryText:"İndir",
+        secondaryText:"Şimdilik Kapat"
+      });
+
+      if(!ok) return false;
+
+      try{
+        OfflinePackBridge.setOfflineNativeLang(myLang);
+        const result = OfflinePackBridge.startNativeDownload(myLang, target, (code) => langObj(code));
+
+        if(!result?.ok){
+          showToast("İndirme başlatılamadı.");
+          return false;
+        }
+
+        showToast(result.queued ? "Dil paketi sıraya alındı." : "Dil paketi indiriliyor.");
+        refreshOpenPop();
+        return false;
+      }catch{
+        showToast("Offline indirme bu cihazda hazır değil.");
+        return false;
+      }
+    }
+
+    function renderActionForLang(code){
+      const c = canonical(code);
+
+      if(c === myLang){
+        return `<span class="pop-native" title="Kendi dilim">✓</span>`;
+      }
+
+      if(hasInstalledPair(myLang, c)){
+        return `<span class="pop-installed" title="Kurulu">✓</span>`;
+      }
+
+      if(isPairQueued(myLang, c)){
+        return `<span class="pop-queued" title="Sırada">…</span>`;
+      }
+
+      if(canDownloadPublicPair(c)){
+        return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
+      }
+
+      return `<button class="pop-download disabled" type="button" disabled aria-label="Kapalı">🔒</button>`;
+    }
+
+    function getLangsForMode(){
+      syncInstalledPairsFromNative();
+
+      if(currentMode === "online") return PUBLIC_LANGS;
+
+      return PUBLIC_LANGS.filter((l) => {
+        if(l.code === myLang) return true;
+        return hasInstalledPair(myLang, l.code) || canDownloadPublicPair(l.code);
+      });
+    }
+
+    function renderPop(side){
+      const list = side === "top" ? listTop : listBot;
+      const selected = side === "top" ? topLang : botLang;
+      const langs = getLangsForMode();
+
+      list.innerHTML = langs.map((l) => `
+        <div class="pop-item ${l.code === selected ? "active" : ""}">
+          <div class="pop-left" data-select-code="${l.code}" data-side="${side}">
+            <div class="pop-flag">${l.flag}</div>
+            <div class="pop-name">${l.name}</div>
+          </div>
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            ${renderActionForLang(l.code)}
+          </div>
+        </div>
+      `).join("");
+
+      list.querySelectorAll("[data-select-code]").forEach((el) => {
+        el.onclick = async () => {
+          const code = canonical(el.dataset.selectCode);
+          const s = el.dataset.side;
+          if(!code) return;
+
+          if(currentMode === "offline" && code !== myLang && !hasInstalledPair(myLang, code)){
+            const ready = await ensureOfflinePair(code);
+            if(!ready) return;
+          }
+
+          if(s === "top"){
+            topLang = code;
+            if(topLang === botLang) botLang = differentLang(topLang);
+          }else{
+            botLang = code;
+            if(botLang === topLang) topLang = differentLang(botLang);
+          }
+
+          closeAllPop();
+          refreshTexts();
+        };
+      });
+
+      list.querySelectorAll("[data-download-code]").forEach((btn) => {
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const code = canonical(btn.dataset.downloadCode);
+          await ensureOfflinePair(code);
+        };
+      });
+    }
+
+    function setMode(mode){
+      currentMode = mode === "offline" ? "offline" : "online";
+      refreshModeButtons();
+      closeAllPop();
+      showToast(currentMode === "offline" ? "Offline mod aktif." : "Online mod aktif.");
+    }
+
+    function clearBody(body){
+      if(body) body.innerHTML = "";
+    }
+
+    function addBubble(side, text, latest = false){
+      const body = side === "top" ? topBody : botBody;
+      if(!body) return null;
+
+      if(latest){
+        body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
+      }
+
+      const div = document.createElement("div");
+      div.className = `bubble${latest ? " latest" : ""}`;
+      div.textContent = String(text || "").trim();
+      body.appendChild(div);
+
+      const scroll = () => {
+        try{
+          body.scrollTop = body.scrollHeight;
+        }catch{}
+      };
+
+      scroll();
+      requestAnimationFrame(scroll);
+      setTimeout(scroll, 60);
+      return div;
+    }
+
+    function setMicState(side, listening){
+      const mic = side === "top" ? topMic : botMic;
+      mic.classList.toggle("listening", !!listening);
+    }
+
+    function buildRecognizer(langCode){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR) return null;
+      const rec = new SR();
+      rec.lang = langObj(langCode).bcp;
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.maxAlternatives = 1;
+      return rec;
+    }
+
+    function stopRecognizer(){
+      manualStopPending = true;
+      try{ recognizer?.stop?.(); }catch{}
+      setMicState("top", false);
+      setMicState("bot", false);
+
+      setTimeout(() => {
+        if(manualStopPending){
+          manualStopPending = false;
+          recognizer = null;
+          recognizerSide = null;
+          liveText = "";
+        }
+      }, 1800);
+    }
+
+    function cleanupTranscript(text){
+      return String(text || "")
+        .replace(/\s+/g, " ")
+        .replace(/\b(\S+)( \1\b)+/gi, "$1")
+        .trim();
+    }
+
+    async function translateOnline(text, from, to){
+      const endpoints = [
+        `${API_BASE}/api/translate_ai`,
+        `${API_BASE}/api/translate-ai`,
+        `${API_BASE}/api/translate`
+      ];
+
+      for(const endpoint of endpoints){
+        try{
+          const r = await fetch(endpoint, {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify({
+              text:String(text || "").trim(),
+              from_lang:canonical(from),
+              to_lang:canonical(to),
+              source:canonical(from),
+              target:canonical(to),
+              mode:"normal",
+              use_ai:false,
+              cultural:false,
+              tone:"neutral",
+              style:"warm"
+            })
+          });
+
+          const j = await r.json().catch(() => null);
+          const value = String(j?.translated || j?.translation || j?.text || "").trim();
+          if(r.ok && value) return value;
+        }catch{}
+      }
+
+      return null;
+    }
+
+    async function translateOffline(text, from, to){
+      try{
+        return await OfflinePackBridge.translateOffline(text, canonical(from), canonical(to));
+      }catch{
+        return null;
+      }
+    }
+
+    async function translateText(text, from, to){
+      if(currentMode === "offline"){
+        if(!hasInstalledPair(from, to)){
+          const ok = await ensureOfflinePair(to);
+          if(!ok) return null;
+        }
+
+        const offline = await translateOffline(text, from, to);
+        if(offline) return offline;
+
+        showToast("Offline çeviri yapılamadı.");
+        return null;
+      }
+
+      return await translateOnline(text, from, to);
+    }
+
+    function speak(text, langCode){
+      const value = String(text || "").trim();
+      if(!value) return;
+
+      const code = canonical(langCode);
+      const bcp = langObj(code).bcp || "tr-TR";
+
+      try{
+        if(window.NativeTTS?.speak){
+          window.NativeTTS.speak(value, code);
+          return;
+        }
+      }catch{}
+
+      try{
+        if(window.speechSynthesis){
+          window.speechSynthesis.cancel();
+
+          const u = new SpeechSynthesisUtterance(value);
+          u.lang = bcp;
+          u.rate = .95;
+          u.pitch = 1;
+          u.volume = 1;
+
+          const voices = window.speechSynthesis.getVoices?.() || [];
+          const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(code));
+          if(found) u.voice = found;
+
+          setTimeout(() => {
+            try{ window.speechSynthesis.speak(u); }catch{}
+          }, 60);
+        }
+      }catch{}
+    }
+
+    async function showAdGate(){
+      const ok = await showModal({
+        title:"Ücretsiz Kullanım",
+        text:"Ücretsiz kullanıma devam etmek için kısa bir reklam izleyin.",
+        primaryText:"Reklam İzle",
+        secondaryText:"Şimdilik Kapat"
+      });
+
+      if(!ok) return false;
+
+      try{
+        if(typeof OfflinePackBridge.showRewardedAd === "function"){
+          const watched = await OfflinePackBridge.showRewardedAd({
+            adUnit:"public_facetoface_interval_60s",
+            langCode:"",
+            timeoutMs:20000
+          });
+
+          if(watched){
+            lastAdAt = Date.now();
+            return true;
+          }
+
+          showToast("Reklam tamamlanmadı.");
+          return false;
+        }
+      }catch{}
+
+      lastAdAt = Date.now();
+      return true;
+    }
+
+    async function maybeShowAd(){
+      const now = Date.now();
+      if(now - lastAdAt < AD_INTERVAL_MS) return true;
+      return await showAdGate();
+    }
+
+    async function finalizeSpeech(side, text){
+      manualStopPending = false;
+
+      const clean = cleanupTranscript(text);
+      if(!clean){
+        recognizer = null;
+        recognizerSide = null;
+        liveText = "";
+        setMicState(side, false);
+        return;
+      }
+
+      const adOk = await maybeShowAd();
+      if(!adOk){
+        recognizer = null;
+        recognizerSide = null;
+        liveText = "";
+        setMicState(side, false);
+        return;
+      }
+
+      const src = side === "top" ? topLang : botLang;
+      const dst = side === "top" ? botLang : topLang;
+      const other = side === "top" ? "bot" : "top";
+
+      addBubble(side, clean, false);
+      const targetRow = addBubble(other, "", true);
+
+      const translated = await translateText(clean, src, dst);
+
+      if(!translated){
+        if(targetRow) targetRow.textContent = "Çeviri yapılamadı.";
+        recognizer = null;
+        recognizerSide = null;
+        liveText = "";
+        setMicState(side, false);
+        return;
+      }
+
+      targetRow.textContent = translated;
+      speak(translated, dst);
+
+      recognizer = null;
+      recognizerSide = null;
+      liveText = "";
+      setMicState(side, false);
+    }
+
+    function startRecording(side){
+      if(recognizer){
+        stopRecognizer();
+        return;
+      }
+
+      const sourceLang = side === "top" ? topLang : botLang;
+      const rec = buildRecognizer(sourceLang);
+
+      if(!rec){
+        showToast("Bu cihazda konuşma algılama desteklenmiyor.");
+        return;
+      }
+
+      recognizer = rec;
+      recognizerSide = side;
+      liveText = "";
+      manualStopPending = false;
+
+      rec.onstart = () => setMicState(side, true);
+
+      rec.onresult = (e) => {
+        let finalText = "";
+        let interimText = "";
+
+        for(let i = 0; i < e.results.length; i++){
+          const txt = String(e.results[i]?.[0]?.transcript || "").trim();
+          if(!txt) continue;
+          if(e.results[i].isFinal) finalText += ` ${txt}`;
+          else interimText += ` ${txt}`;
+        }
+
+        liveText = cleanupTranscript(finalText || interimText || liveText);
+      };
+
+      rec.onerror = (e) => {
+        const err = String(e?.error || "");
+
+        if(manualStopPending){
+          manualStopPending = false;
+          const finalText = cleanupTranscript(liveText);
+          recognizer = null;
+          recognizerSide = null;
+          setMicState(side, false);
+          liveText = "";
+          if(finalText) finalizeSpeech(side, finalText);
+          return;
+        }
+
+        showToast(err.includes("not-allowed") ? "Mikrofon izni gerekli." : "Mikrofon hatası.");
+        setMicState(side, false);
+        recognizer = null;
+        recognizerSide = null;
+        liveText = "";
+      };
+
+      rec.onend = () => {
+        const finalText = cleanupTranscript(liveText);
+        setMicState(side, false);
+        recognizer = null;
+        recognizerSide = null;
+        liveText = "";
+
+        if(finalText){
+          finalizeSpeech(side, finalText);
+        }else{
+          manualStopPending = false;
+        }
+      };
+
+      try{
+        rec.start();
+      }catch{
+        showToast("Mikrofon başlatılamadı.");
+        setMicState(side, false);
+        recognizer = null;
+        recognizerSide = null;
+        liveText = "";
+        manualStopPending = false;
+      }
+    }
+
+    function clearChat(){
+      try{
+        if(recognizer) stopRecognizer();
+      }catch{}
+
+      try{ window.speechSynthesis?.cancel?.(); }catch{}
+      try{ window.NativeTTS?.stop?.(); }catch{}
+
+      recognizer = null;
+      recognizerSide = null;
+      liveText = "";
+      manualStopPending = false;
+      topMic.classList.remove("listening");
+      botMic.classList.remove("listening");
+      clearBody(topBody);
+      clearBody(botBody);
+    }
+
+    drawerLoginBtn?.addEventListener("click", () => {
+      location.href = LOGIN_ENTRY;
+    });
+
+    drawerWidgetBtn?.addEventListener("click", () => {
+      try{
+        if(window.Native && typeof window.Native.addWidgetToHomeScreen === "function"){
           window.Native.addWidgetToHomeScreen();
           closeDrawer();
           return;
         }
 
         showToast("Ana ekranda boş alana basılı tutup Widgetlar bölümünden italkyAI kısa yolunu ekleyebilirsiniz.");
-      } catch (e) {
+      }catch{
         showToast("Kısa yol ekleme başlatılamadı.");
       }
     });
 
-    loginBtn?.addEventListener("click", () => {
-      location.href = MEMBERSHIP_LOGIN_URL;
+    document.querySelectorAll(".locked-feature").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const feature = String(btn.dataset.feature || "Bu modül").trim();
+        showMembershipRequired(feature);
+      });
     });
 
-    myLangBtn?.addEventListener("click", () => {
+    drawerEdgeBtn?.addEventListener("click", openDrawer);
+    drawerBackdrop?.addEventListener("click", (e) => {
+      if(e.target === drawerBackdrop) closeDrawer();
+    });
+
+    myLangDrawerBtn?.addEventListener("click", () => {
       renderMyLangModalList();
       myLangModal?.classList.add("show");
     });
 
-    document.querySelectorAll(".locked-feature").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const feature = btn.dataset.feature || "Bu modül";
-        await showMembershipRequired(feature);
-      });
-    });
-  }
-
-  function renderMyLangDrawer(){
-    const info = langObj(myLang);
-    const flag = document.getElementById("myLangDrawerFlag");
-    const title = document.getElementById("myLangDrawerTitle");
-
-    if(flag) flag.textContent = info.flag;
-    if(title) title.textContent = info.name;
-  }
-
-  function renderMyLangModalList(){
-    if(!myLangModalList) return;
-
-    myLangModalList.innerHTML = LANGS.map((lang) => `
-      <button class="my-lang-option ${lang.code === myLang ? "active" : ""}" type="button" data-my-lang="${lang.code}">
-        <span class="my-lang-option-left">
-          <span class="my-lang-option-flag">${lang.flag}</span>
-          <span class="my-lang-option-name">${lang.name}</span>
-        </span>
-        <span class="my-lang-option-check">✓</span>
-      </button>
-    `).join("");
-
-    myLangModalList.querySelectorAll("[data-my-lang]").forEach((btn) => {
-      btn.onclick = async () => {
-        const next = canonical(btn.getAttribute("data-my-lang") || "");
-        if(!next || !langExists(next) || next === myLang) return;
-
-        if(!isPublicFreeLang(next)){
-          await showMembershipRequired(`${langObj(next).name}`);
-          return;
-        }
-
-        if(OfflinePackBridge.hasAnyInstalledPair()){
-          const ok = await showModalChoice({
-            title:tx("myLangWarnTitle"),
-            text:tx("myLangWarnText"),
-            okText:tx("myLangWarnOk"),
-            cancelText:tx("myLangWarnCancel")
-          });
-
-          if(!ok) return;
-
-          OfflinePackBridge.clearInstalledPairs();
-        }
-
-        myLang = next;
-        offlineBaseReady = false;
-        offlineBaseStatus = null;
-        offlineBaseReadyToastShown = false;
-
-        localStorage.setItem(MY_LANG_KEY, myLang);
-        localStorage.setItem(SITE_LANG_KEY, myLang);
-        localStorage.setItem(LEGACY_SITE_LANG_KEY, myLang);
-        localStorage.setItem(NATIVE_LANG_KEY, myLang);
-
-        OfflinePackBridge.setOfflineNativeLang(myLang);
-        refreshOfflineBaseStatus();
-
-        renderMyLangDrawer();
-        renderMyLangModalList();
-        refreshTexts();
-        refreshOpenPop();
-
-        showToast(tx("myLangChanged"));
-        myLangModal?.classList.remove("show");
-      };
-    });
-  }
-
-  myLangModalClose?.addEventListener("click", () => {
-    myLangModal?.classList.remove("show");
-  });
-
-  myLangModal?.addEventListener("click", (e) => {
-    if(e.target === myLangModal) myLangModal.classList.remove("show");
-  });
-
-  function getOnlineBtn(){ return document.getElementById("modeOnlineBtn"); }
-  function getOfflineBtn(){ return document.getElementById("modeOfflineBtn"); }
-
-  function refreshModeButtons(){
-    getOnlineBtn()?.classList.toggle("active",currentMode === "online");
-    getOfflineBtn()?.classList.toggle("active",currentMode === "offline");
-  }
-
-  function setMode(mode){
-    currentMode = mode === "offline" ? "offline" : "online";
-    refreshModeButtons();
-
-    if(currentMode === "online") showToast(tx("onlineMode"));
-    if(currentMode === "offline") showToast(tx("offlineMode"));
-
-    closeAllPop();
-  }
-
-  function bindModeButtons(){
-    getOnlineBtn()?.addEventListener("click",() => setMode("online"));
-    getOfflineBtn()?.addEventListener("click",() => setMode("offline"));
-  }
-
-  function refreshTexts(){
-    topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
-    botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
-    topPopTitle.textContent = tx("topLang");
-    botPopTitle.textContent = tx("botLang");
-    adTitle.textContent = tx("adTitle");
-    adText.textContent = tx("adText");
-    watchAdBtn.textContent = tx("watchAd");
-    closeAdBtn.textContent = tx("close");
-    renderMyLangDrawer();
-  }
-
-  function closeAllPop(){
-    popTop.classList.remove("show");
-    popBot.classList.remove("show");
-    lastOpenPopSide = null;
-  }
-
-  function refreshOpenPop(){
-    if(lastOpenPopSide === "top" && popTop.classList.contains("show")) renderPop("top");
-    if(lastOpenPopSide === "bot" && popBot.classList.contains("show")) renderPop("bot");
-  }
-
-  window.addEventListener("offlinePackBridgeStateChanged", refreshOpenPop);
-
-  function showModalChoice({ title = "", text = "", okText = "", cancelText = "" } = {}){
-    return new Promise((resolve) => {
-      if(adTitle) adTitle.textContent = title || tx("adTitle");
-      if(adText) adText.textContent = text || "";
-      if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
-      if(closeAdBtn) closeAdBtn.textContent = cancelText || tx("close");
-
-      adModal.classList.add("show");
-
-      const clean = () => {
-        watchAdBtn.onclick = null;
-        closeAdBtn.onclick = null;
-        adModal.classList.remove("show");
-      };
-
-      watchAdBtn.onclick = () => {
-        clean();
-        resolve(true);
-      };
-
-      closeAdBtn.onclick = () => {
-        clean();
-        resolve(false);
-      };
-    });
-  }
-
-  async function showMembershipRequired(featureName = "Bu modül"){
-    const goLogin = await showModalChoice({
-      title: "Üyelik Gerekli",
-      text:
-        `${featureName} modülünü kullanmak için üyelik gerekmektedir.\n\n` +
-        `Üyelik ile kilitli modüller ve gelişmiş özellikler açılır.\n\n` +
-        `Yıllık üyelik: ${MEMBERSHIP_PRICE_TEXT}\n\n` +
-        `Üyelikte reklam gösterilmez.`,
-      okText: "Üye Ol / Giriş Yap",
-      cancelText: "Şimdilik Kapat"
+    myLangModalClose?.addEventListener("click", () => {
+      myLangModal?.classList.remove("show");
     });
 
-    if(goLogin){
-      location.href = MEMBERSHIP_LOGIN_URL;
-    }
-
-    return false;
-  }
-
-  function showAdModal({title,text,adUnit = "public_facetoface_3min", langCode = ""} = {}){
-    return new Promise((resolve) => {
-      if(adTitle) adTitle.textContent = title || tx("adTitle");
-      if(adText) adText.textContent = text || tx("adText");
-      if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
-      if(closeAdBtn) closeAdBtn.textContent = tx("close");
-
-      adModal.classList.add("show");
-
-      const clean = () => {
-        watchAdBtn.onclick = null;
-        closeAdBtn.onclick = null;
-        adModal.classList.remove("show");
-      };
-
-      watchAdBtn.onclick = async () => {
-        clean();
-
-        const ok = await OfflinePackBridge.showRewardedAd({
-          adUnit,
-          langCode,
-          timeoutMs:20000
-        });
-
-        if(ok) lastAdAt = Date.now();
-
-        resolve(!!ok);
-      };
-
-      closeAdBtn.onclick = () => {
-        clean();
-        resolve(false);
-      };
-    });
-  }
-
-  async function maybeShowAd(){
-    const now = Date.now();
-    if(now - lastAdAt < AD_INTERVAL_MS) return true;
-
-    const ok = await showAdModal({
-      title:tx("adTitle"),
-      text:tx("adText"),
-      adUnit:"public_facetoface_3min",
-      langCode:""
+    myLangModal?.addEventListener("click", (e) => {
+      if(e.target === myLangModal) myLangModal.classList.remove("show");
     });
 
-    if(!ok) showToast(tx("adNeeded"));
-    return ok;
-  }
-
-  function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
-  function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
-
-  function installedTargetsForNative(nativeLang){
-    const native = canonical(nativeLang);
-    const installed = OfflinePackBridge.getInstalledPairs();
-    const set = new Set();
-
-    Object.keys(installed).forEach((key) => {
-      const item = installed[key] || {};
-      const from = canonical(item.from || "");
-      const to = canonical(item.to || "");
-      if(from === native && to && to !== native) set.add(to);
-    });
-
-    return Array.from(set);
-  }
-
-  async function startOfflinePackDownload(targetCode, reason = "manual"){
-    syncInstalledPairsFromNative();
-
-    const target = canonical(targetCode);
-    if(!target) return false;
-
-    const targetInfo = langObj(target);
-    const nativeLang = myLang;
-
-    if(!nativeLang) return false;
-
-    if(!isPublicFreePair(nativeLang,target)){
-      await showMembershipRequired(`${targetInfo.name} offline paketi`);
-      return false;
-    }
-
-    refreshOfflineBaseStatus();
-
-    if(!offlineBaseReady){
-      showToast(tx("offlineBasePreparing"));
-      refreshOpenPop();
-      return false;
-    }
-
-    if(nativeLang === target){
-      showToast(tx("sameLang"));
-      return false;
-    }
-
-    if(hasInstalledPair(nativeLang,target)){
-      OfflinePackBridge.saveHomeWidget(nativeLang,target,langObj,"ready");
-      showToast(tx("packReady"));
-      refreshOpenPop();
-      return true;
-    }
-
-    const nativeInfo = langObj(nativeLang);
-
-    const offerOk = await showModalChoice({
-      title:tx("offerTitle"),
-      text:tFormat("offerText", {
-        sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`,
-        targetLang:`${targetInfo.flag} ${targetInfo.name}`
-      }),
-      okText:tx("offerOk"),
-      cancelText:tx("offerCancel")
-    });
-
-    if(!offerOk) return false;
-
-    const adOk = await showAdModal({
-      title:tx("downloadAdTitle"),
-      text:`${nativeInfo.flag} ${nativeInfo.name} → ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
-      adUnit:`offline_download_${target}`,
-      langCode:target
-    });
-
-    if(!adOk){
-      showToast(tx("adNeeded"));
-      return false;
-    }
-
-    OfflinePackBridge.setOfflineNativeLang(myLang);
-
-    const result = OfflinePackBridge.startNativeDownload(nativeLang,target,langObj);
-
-    if(!result?.ok){
-      console.error("Offline download start failed:", result?.error);
-      showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : `${targetInfo.name} indirilemedi.`);
-      return false;
-    }
-
-    showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
-    refreshOpenPop();
-    return true;
-  }
-
-  async function maybeOfferOfflinePackAfterTranslate(){
-    if(currentMode !== "online") return;
-
-    syncInstalledPairsFromNative();
-
-    const nativeLang = myLang;
-    const target = topLang;
-
-    if(!nativeLang || !target || nativeLang === target) return;
-    if(!isPublicFreePair(nativeLang,target)) return;
-    if(hasInstalledPair(nativeLang,target)) return;
-
-    const key = `italky_offer_offline_pack_${canonical(nativeLang)}_${canonical(target)}_v1`;
-    if(sessionStorage.getItem(key) === "1") return;
-
-    sessionStorage.setItem(key,"1");
-
-    setTimeout(() => {
-      startOfflinePackDownload(target, "after_translate");
-    }, 650);
-  }
-
-  function getFilteredLangsForPopover(){
-    if(currentMode !== "offline") return LANGS;
-
-    syncInstalledPairsFromNative();
-
-    const targets = installedTargetsForNative(myLang);
-
-    if(!targets.length) return LANGS;
-
-    const allowed = new Set([myLang, ...targets, ...PUBLIC_FREE_LANGS]);
-    return LANGS.filter((l) => allowed.has(l.code));
-  }
-
-  function isLangInstalledForUi(code){
-    const c = canonical(code);
-    if(!myLang) return false;
-    if(c === myLang && OfflinePackBridge.hasAnyInstalledPair()) return true;
-    return c !== myLang && hasInstalledPair(myLang,c);
-  }
-
-  function renderActionForLang(code){
-    const c = canonical(code);
-
-    if(OfflinePackBridge.isPairActive(myLang,c)){
-      return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
-    }
-
-    if(OfflinePackBridge.isPairQueued(myLang,c)){
-      return `<span class="pop-queued" title="Sırada">…</span>`;
-    }
-
-    if(isLangInstalledForUi(c)){
-      return `<span class="pop-installed" title="Kurulu">✓</span>`;
-    }
-
-    if(c === myLang){
-      return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
-    }
-
-    if(!offlineBaseReady){
-      return `<button class="pop-download disabled" type="button" disabled data-base-wait-code="${c}" aria-label="Hazırlanıyor">⏳</button>`;
-    }
-
-    if(!isPublicFreeLang(c)){
-      return `<button class="pop-download" type="button" data-login-required-code="${c}" aria-label="Üyelik gerekli">🔒</button>`;
-    }
-
-    return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
-  }
-
-  function renderPop(side){
-    const list = side === "top" ? listTop : listBot;
-    const selected = side === "top" ? topLang : botLang;
-    const filteredLangs = getFilteredLangsForPopover();
-
-    if(currentMode === "offline" && !filteredLangs.length){
-      list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`;
-      return;
-    }
-
-    list.innerHTML = filteredLangs.map((l) => `
-      <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
-        <div class="pop-left" data-select-code="${l.code}">
-          <div class="pop-flag">${l.flag}</div>
-          <div class="pop-name">${l.name}</div>
-        </div>
-        <div class="pop-actions">
-          <div class="pop-code">${l.code.toUpperCase()}</div>
-          ${renderActionForLang(l.code)}
-        </div>
-      </div>
-    `).join("");
-
-    list.querySelectorAll("[data-select-code]").forEach((el) => {
-      el.addEventListener("click",async () => {
-        const code = canonical(el.dataset.selectCode);
-        if(!code) return;
-
-        if(!isPublicFreeLang(code)){
-          await showMembershipRequired(`${langObj(code).name}`);
-          return;
-        }
-
-        if(side === "top"){
-          topLang = code;
-          if(topLang === botLang) botLang = topLang === "tr" ? "en" : "tr";
-        }else{
-          botLang = code;
-          if(botLang === topLang) topLang = botLang === "tr" ? "en" : "tr";
-        }
-
-        closeAllPop();
-        refreshTexts();
-
-        if(code !== myLang && !hasInstalledPair(myLang,code)){
-          setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
-        }
-      });
-    });
-
-    list.querySelectorAll("[data-download-code]").forEach((btn) => {
-      btn.addEventListener("click",async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const code = canonical(btn.dataset.downloadCode);
-        await startOfflinePackDownload(code, "lang_popup");
-      });
-    });
-
-    list.querySelectorAll("[data-base-wait-code]").forEach((btn) => {
-      btn.addEventListener("click",(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        showToast(tx("offlineBasePreparing"));
-      });
-    });
-
-    list.querySelectorAll("[data-login-required-code]").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const code = canonical(btn.dataset.loginRequiredCode);
-        const info = langObj(code);
-
-        await showMembershipRequired(`${info.name} offline paketi`);
-      });
-    });
-  }
-
-  topLangBtn.addEventListener("click",(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeAllPop();
-    lastOpenPopSide = "top";
-    renderPop("top");
-    popTop.classList.add("show");
-  });
-
-  botLangBtn.addEventListener("click",(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeAllPop();
-    lastOpenPopSide = "bot";
-    renderPop("bot");
-    popBot.classList.add("show");
-  });
-
-  closeTop.addEventListener("click",closeAllPop);
-  closeBot.addEventListener("click",closeAllPop);
-
-  document.addEventListener("click",(e) => {
-    const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
-    if(!inside) closeAllPop();
-  },{capture:true});
-
-  function clearBody(body){ if(body) body.innerHTML = ""; }
-
-  function addBubble(side,text,latest=false){
-    const body = side === "top" ? topBody : botBody;
-    if(!body) return null;
-
-    if(latest){
-      body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
-    }
-
-    const div = document.createElement("div");
-    div.className = `bubble${latest ? " latest" : ""}`;
-    div.textContent = String(text || "").trim();
-
-    body.appendChild(div);
-
-    const scroll = () => {
-      try{ body.scrollTop = body.scrollHeight; }catch{}
-    };
-
-    scroll();
-    requestAnimationFrame(scroll);
-    setTimeout(scroll,60);
-    return div;
-  }
-
-  function setMicState(side,listening){
-    const mic = side === "top" ? topMic : botMic;
-    mic.classList.toggle("listening",!!listening);
-  }
-
-  function buildRecognizer(langCode){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR) return null;
-
-    const rec = new SR();
-    rec.lang = langObj(langCode).bcp;
-    rec.interimResults = true;
-    rec.continuous = false;
-    rec.maxAlternatives = 1;
-    return rec;
-  }
-
-  function stopRecognizer(){
-    manualStopPending = true;
-    try{ recognizer?.stop?.(); }catch{}
-    setMicState("top",false);
-    setMicState("bot",false);
-
-    setTimeout(() => {
-      if(manualStopPending){
-        manualStopPending = false;
-        recognizer = null;
-        liveText = "";
+    appModal?.addEventListener("click", (e) => {
+      if(e.target === appModal){
+        appModal.classList.remove("show");
       }
-    }, 2500);
-  }
+    });
 
-  function cleanupTranscript(text){
-    return String(text || "")
-      .replace(/\s+/g," ")
-      .replace(/\b(\S+)( \1\b)+/gi,"$1")
-      .trim();
-  }
+    modeOnlineBtn?.addEventListener("click", () => setMode("online"));
+    modeOfflineBtn?.addEventListener("click", () => setMode("offline"));
 
-  async function translateOnline(text,from,to){
-    const endpoints = [
-      `${API_BASE}/api/translate_ai`,
-      `${API_BASE}/api/translate-ai`,
-      `${API_BASE}/api/translate`
-    ];
+    topLangBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      lastOpenPopSide = "top";
+      renderPop("top");
+      popTop.classList.add("show");
+    });
 
-    for(const endpoint of endpoints){
+    botLangBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      lastOpenPopSide = "bot";
+      renderPop("bot");
+      popBot.classList.add("show");
+    });
+
+    closeTop?.addEventListener("click", closeAllPop);
+    closeBot?.addEventListener("click", closeAllPop);
+
+    document.addEventListener("click", (e) => {
+      const inside =
+        popTop.contains(e.target) ||
+        popBot.contains(e.target) ||
+        e.target.closest("#topLangBtn,#botLangBtn");
+      if(!inside) closeAllPop();
+    }, { capture:true });
+
+    topMic?.addEventListener("click", () => startRecording("top"));
+    botMic?.addEventListener("click", () => startRecording("bot"));
+    sideClearBtn?.addEventListener("click", clearChat);
+
+    window.addEventListener("offlinePairDownloadStarted", () => {
+      showToast("Dil paketi indiriliyor.");
+      refreshOpenPop();
+    });
+
+    window.addEventListener("offlinePairDownloadCompleted", (e) => {
+      const d = e.detail || {};
       try{
-        const r = await fetch(endpoint,{
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({
-            text:String(text || "").trim(),
-            from_lang:canonical(from),
-            to_lang:canonical(to),
-            source:canonical(from),
-            target:canonical(to),
-            mode:"normal",
-            use_ai:false,
-            cultural:false,
-            tone:"neutral",
-            style:"warm"
-          })
-        });
-
-        const j = await r.json().catch(() => null);
-        const value = String(j?.translated || j?.translation || j?.text || "").trim();
-        if(r.ok && value) return value;
+        OfflinePackBridge.markInstalledPair(canonical(d.source || myLang), canonical(d.target || differentLang(myLang)));
       }catch{}
-    }
-
-    return null;
-  }
-
-  function translateOffline(text,from,to){
-    return OfflinePackBridge.translateOffline(text,from,to);
-  }
-
-  async function translateText(text,from,to){
-    if(!isPublicFreePair(from,to)){
-      await showMembershipRequired(`${langObj(to).name} çeviri`);
-      return null;
-    }
-
-    if(currentMode === "offline"){
-      if(!hasInstalledPair(from,to)){
-        showToast(tx("offlineMode"));
-        await startOfflinePackDownload(to,"offline_mode");
-        return null;
-      }
-
-      const offline = await translateOffline(text,from,to);
-      if(offline) return offline;
-
-      showToast(tx("translateError"));
-      return null;
-    }
-
-    return await translateOnline(text,from,to);
-  }
-
-  function speak(text,langCode){
-    const value = String(text || "").trim();
-    if(!value) return;
-
-    const code = canonical(langCode);
-    const bcp = langObj(code).bcp || BCP[code] || "en-US";
-
-    try{
-      if(window.NativeTTS?.speak){
-        window.NativeTTS.speak(value, code);
-        return;
-      }
-    }catch(e){
-      console.warn("NativeTTS failed:", e);
-    }
-
-    try{
-      if(window.speechSynthesis){
-        window.speechSynthesis.cancel();
-
-        const u = new SpeechSynthesisUtterance(value);
-        u.lang = bcp;
-        u.rate = .95;
-        u.pitch = 1;
-        u.volume = 1;
-
-        const voices = window.speechSynthesis.getVoices?.() || [];
-        const found = voices.find(v =>
-          String(v.lang || "").toLowerCase().startsWith(code)
-        );
-
-        if(found) u.voice = found;
-
-        setTimeout(() => {
-          try{ window.speechSynthesis.speak(u); }catch{}
-        }, 80);
-      }
-    }catch(e){
-      console.warn("speechSynthesis failed:", e);
-    }
-  }
-
-  async function finalizeSpeech(side,text){
-    manualStopPending = false;
-
-    const clean = cleanupTranscript(text);
-    if(!clean){
-      recognizer = null;
-      liveText = "";
-      setMicState(side,false);
-      return;
-    }
-
-    const adOk = await maybeShowAd();
-    if(!adOk){
-      recognizer = null;
-      liveText = "";
-      setMicState(side,false);
-      return;
-    }
-
-    const src = side === "top" ? topLang : botLang;
-    const dst = side === "top" ? botLang : topLang;
-    const other = side === "top" ? "bot" : "top";
-
-    addBubble(side,clean,false);
-    const targetRow = addBubble(other,"",true);
-
-    const translated = await translateText(clean,src,dst);
-
-    if(!translated){
-      if(targetRow) targetRow.textContent = tx("translateError");
-      recognizer = null;
-      liveText = "";
-      setMicState(side,false);
-      return;
-    }
-
-    targetRow.textContent = translated;
-
-    speak(translated,dst);
-
-    if(currentMode === "online"){
-      maybeOfferOfflinePackAfterTranslate();
-    }
-
-    recognizer = null;
-    liveText = "";
-    setMicState(side,false);
-  }
-
-  function startRecording(side){
-    if(recognizer){
-      stopRecognizer();
-      showToast(tx("listeningDone"));
-      return;
-    }
-
-    const sourceLang = side === "top" ? topLang : botLang;
-    const rec = buildRecognizer(sourceLang);
-
-    if(!rec){
-      showToast(tx("micUnsupported"));
-      return;
-    }
-
-    recognizer = rec;
-    liveText = "";
-    manualStopPending = false;
-
-    rec.onstart = () => setMicState(side,true);
-
-    rec.onresult = (e) => {
-      let finalText = "";
-      let interimText = "";
-
-      for(let i=0;i<e.results.length;i++){
-        const txt = String(e.results[i]?.[0]?.transcript || "").trim();
-        if(!txt) continue;
-
-        if(e.results[i].isFinal) finalText += ` ${txt}`;
-        else interimText += ` ${txt}`;
-      }
-
-      liveText = cleanupTranscript(finalText || interimText || liveText);
-    };
-
-    rec.onerror = (e) => {
-      const err = String(e?.error || "");
-
-      if(manualStopPending){
-        manualStopPending = false;
-
-        const finalText = cleanupTranscript(liveText);
-        recognizer = null;
-        setMicState(side,false);
-        liveText = "";
-
-        if(finalText){
-          finalizeSpeech(side,finalText);
-        }
-
-        return;
-      }
-
-      showToast(err.includes("not-allowed") ? tx("micDenied") : tx("micError"));
-      setMicState(side,false);
-      recognizer = null;
-      liveText = "";
-    };
-
-    rec.onend = () => {
-      const finalText = cleanupTranscript(liveText);
-
-      setMicState(side,false);
-      recognizer = null;
-      liveText = "";
-
-      if(finalText){
-        finalizeSpeech(side,finalText);
-      }else{
-        manualStopPending = false;
-      }
-    };
-
-    try{
-      rec.start();
-    }catch{
-      showToast(tx("micError"));
-      setMicState(side,false);
-      recognizer = null;
-      liveText = "";
-      manualStopPending = false;
-    }
-  }
-
-  topMic.addEventListener("click",() => startRecording("top"));
-  botMic.addEventListener("click",() => startRecording("bot"));
-
-  function clearChat(){
-    try{
-      if(recognizer){
-        stopRecognizer();
-      }
-    }catch{}
-
-    try{ window.speechSynthesis?.cancel?.(); }catch{}
-    try{ window.NativeTTS?.stop?.(); }catch{}
-
-    recognizer = null;
-    liveText = "";
-    manualStopPending = false;
-    topMic.classList.remove("listening");
-    botMic.classList.remove("listening");
-    clearBody(topBody);
-    clearBody(botBody);
-  }
-
-  sideClearBtn?.addEventListener("click",clearChat);
-
-  window.addEventListener("offlinePairDownloadStarted",(e) => {
-    const d = e.detail || {};
-    const source = canonical(d.source || myLang);
-    const target = canonical(d.target || topLang);
-    if(!source || !target) return;
-
-    OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
-    showToast(tx("packDownloading"));
-    refreshOpenPop();
-  });
-
-  window.addEventListener("offlinePairDownloadCompleted",(e) => {
-    const d = e.detail || {};
-    const source = canonical(d.source || myLang);
-    const target = canonical(d.target || topLang);
-    if(!source || !target) return;
-
-    OfflinePackBridge.markInstalledPair(source,target);
-    OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
-    syncInstalledPairsFromNative();
-    showToast(tx("packDownloaded"));
-    refreshOpenPop();
-  });
-
-  window.addEventListener("offlinePairDownloadFailed",(e) => {
-    const d = e.detail || {};
-    showToast(d.error || tx("translateError"));
-    refreshOpenPop();
-  });
-
-  window.addEventListener("offlineNativeLangChanged", () => {
-    offlineBaseReady = false;
-    offlineBaseStatus = null;
-    offlineBaseReadyToastShown = false;
-    setTimeout(refreshOfflineBaseStatus, 400);
-  });
-
-  function applyRouteParams(){
-    const params = new URLSearchParams(location.search);
-    const source = canonical(params.get("source") || "");
-    const target = canonical(params.get("target") || "");
-    const mode = canonical(params.get("mode") || "");
-
-    if(source && langExists(source)) botLang = source;
-    if(target && langExists(target)) topLang = target;
-    if(topLang === botLang) topLang = differentLang(botLang);
-    if(mode === "offline") currentMode = "offline";
-  }
-
-  async function boot(){
-    buildDrawerMenu();
-    bindDrawerActions();
-    bindModeButtons();
-
-    OfflinePackBridge.installDownloadEventHandlers(langObj);
-    syncInstalledPairsFromNative();
-
-    try{ OfflinePackBridge.preloadRewardedAd(); }catch{}
-
-    const params = new URLSearchParams(location.search);
-    const hasRouteLang = params.get("source") || params.get("target");
-
-    if(!localStorage.getItem(MY_LANG_KEY)){
-      const detected = await detectCountryLang();
-      if(detected && langExists(detected)){
-        myLang = isPublicFreeLang(detected) ? detected : "tr";
-
-        localStorage.setItem(MY_LANG_KEY,myLang);
-        localStorage.setItem(SITE_LANG_KEY,myLang);
-        localStorage.setItem(LEGACY_SITE_LANG_KEY,myLang);
-        localStorage.setItem(NATIVE_LANG_KEY,myLang);
-
+      syncInstalledPairsFromNative();
+      showToast("Dil paketi indirildi.");
+      refreshOpenPop();
+    });
+
+    window.addEventListener("offlinePairDownloadFailed", () => {
+      showToast("Dil paketi indirilemedi.");
+      refreshOpenPop();
+    });
+
+    async function boot(){
+      try{
+        OfflinePackBridge.installDownloadEventHandlers((code) => langObj(code));
         OfflinePackBridge.setOfflineNativeLang(myLang);
-      }
-    }else{
-      if(!isPublicFreeLang(myLang)){
-        myLang = "tr";
-      }
+        syncInstalledPairsFromNative();
+        try{ OfflinePackBridge.preloadRewardedAd(); }catch{}
+      }catch{}
 
-      OfflinePackBridge.setOfflineNativeLang(myLang);
+      renderMyLangDrawer();
+      renderMyLangModalList();
+      refreshTexts();
+      refreshModeButtons();
+      clearBody(topBody);
+      clearBody(botBody);
     }
 
-    if(!hasRouteLang){
-      botLang = myLang;
-      if(topLang === botLang) topLang = differentLang(botLang);
-    }
-
-    applyRouteParams();
-
-    if(!isPublicFreePair(topLang,botLang)){
-      botLang = "tr";
-      topLang = "en";
-    }
-
-    refreshTexts();
-    refreshModeButtons();
-    renderMyLangModalList();
-    clearBody(topBody);
-    clearBody(botBody);
-
-    startOfflineBasePolling();
-  }
-
-  boot();
-
-  document.addEventListener("visibilitychange", () => {
-    if(document.hidden){
-      stopOfflineBasePolling();
-    }else{
-      startOfflineBasePolling();
-    }
-  });
-</script>
+    boot();
+  </script>
 </body>
 </html>
