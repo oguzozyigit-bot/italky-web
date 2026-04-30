@@ -243,10 +243,25 @@ function resolveInitialTopLang(botCode) {
 
 function persistFaceToFaceLangs() {
   try {
-    localStorage.setItem(F2F_TOP_LANG_KEY, canonical(topLang));
-    localStorage.setItem(F2F_BOT_LANG_KEY, canonical(botLang));
-  } catch {}
+    const top = canonical(topLang);
+    const bot = canonical(botLang);
+    
+    // 1. Tarayıcı Yerel Hafızasına Kayıt
+    localStorage.setItem(F2F_TOP_LANG_KEY, top);
+    localStorage.setItem(F2F_BOT_LANG_KEY, bot);
+    
+    // 2. ANDROID KÖPRÜSÜ ENTEGRASYONU
+    // Android tarafında tanımladığımız "AndroidBridge" üzerinden veriyi gönderiyoruz
+    if (window.AndroidBridge && typeof window.AndroidBridge.syncLanguages === "function") {
+      window.AndroidBridge.syncLanguages(top, bot);
+      console.log("italkyAI: Diller Android sistemine senkronize edildi.", { top, bot });
+    }
+  } catch (e) {
+    console.error("italkyAI: Dil senkronizasyonu sırasında hata oluştu:", e);
+  }
 }
+
+// --- DOM Elementleri ve Başlangıç Değişkenleri ---
 
 const frameRoot = $("frameRoot");
 const centerHub = $("centerHub");
@@ -284,7 +299,6 @@ const botModeToggle = $("botModeToggle");
 const topModeToggleLabel = $("topModeToggleLabel");
 const botModeToggleLabel = $("botModeToggleLabel");
 
-
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
@@ -301,11 +315,13 @@ const offlineRequiredTitle = $("offlineRequiredTitle");
 const offlineRequiredText = $("offlineRequiredText");
 const offlineRequiredCloseBtn = $("offlineRequiredCloseBtn");
 
+// Başlangıç dilleri ve global erişim için window atamaları
 let topLang = "en";
 let botLang = "en";
 window.topLang = topLang;
 window.botLang = botLang;
 
+// Çalışma zamanı durum değişkenleri
 let activeSide = null;
 let activeKeyboardSide = null;
 let shiftState = { top: false, bot: false };
@@ -332,7 +348,6 @@ let keyboardAudioCtx = null;
 let keyboardMasterGain = null;
 let currentRuntimeMode = "online";
 let offlinePickerPool = [];
-
 function showToast(msg = "") {
   if (!miniToast) return;
   miniToast.textContent = String(msg || "");
