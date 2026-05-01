@@ -1,0 +1,143 @@
+<!-- FILE: /pages/login.html (FaceToFace Ana Ekran) -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <title>italkyAI • FaceToFace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
+  
+  <style>
+    /* UI Shell ile uyumlu olması için arka planı ve temel CSS'i koruyoruz */
+    :root{
+      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      --bg:#050508;
+      --border:rgba(255,255,255,.15);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;color:#fff;font-family:Outfit,sans-serif}
+    
+    /* Global Shell içinde görüneceği için konteyner ayarları */
+    .container{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:10;}
+
+    /* Ekran Temizleme Butonu (Solda kalmaya devam ediyor) */
+    .edge-handle.clear{
+      position:fixed; left:0; top:50%; transform:translateY(-50%); z-index:998; width:28px; height:118px;
+      border:none; border-radius:0 18px 18px 0; display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18));
+      backdrop-filter:blur(14px); color:#fff; font-size:11px; font-weight:1000; text-align:center;
+    }
+    .edge-handle.clear::before{ content:"C\A L\A E\A A\A R"; white-space:pre; }
+
+    /* Çeviri Baloncukları ve Mikrofon Tasarımı (Değişmedi) */
+    .half-screen{ flex:1; display:flex; flex-direction:column; justify-content:space-between; align-items:center; padding:10px 8px; }
+    .half-screen.top{ transform:rotate(180deg); }
+    .chat-body{ flex:1; width:100%; overflow-y:auto; display:flex; flex-direction:column; align-items:center; gap:14px; padding:18px 0; text-align:center; scrollbar-width:none; }
+    .bubble{ max-width:86%; font-size:24px; font-weight:900; opacity:.9; }
+    .bubble.latest{ font-size:32px; font-weight:1000; opacity:1; }
+    
+    .mic-btn{
+      width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.18);
+      color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    }
+    .mic-btn.listening{ background:var(--ai-gradient); animation:micPulse 1s infinite; }
+    @keyframes micPulse{0%{box-shadow:0 0 0 0 rgba(99,102,241,0.4)} 70%{box-shadow:0 0 0 20px rgba(99,102,241,0)} 100%{box-shadow:0 0 0 0 rgba(99,102,241,0)}}
+
+    .center-hub{ height:82px; display:flex; align-items:center; justify-content:center; position:relative; z-index:50; }
+    .orb{ width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:"Space Grotesk",sans-serif; font-weight:900; }
+    .sat{ position:absolute; width:10px; height:10px; border-radius:50%; filter:blur(1.5px); }
+    .sat1{ background:#6366f1; animation:orbit1 4.8s linear infinite; }
+    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px)}to{transform:rotate(360deg) translateX(48px)}}
+    
+    /* Popover (Dil Seçimi) */
+    .popover{ position:absolute; left:50%; transform:translateX(-50%); width:min(92vw,360px); height:360px; background:#0a0a0f; border:1px solid var(--border); border-radius:24px; display:none; flex-direction:column; z-index:100; overflow:hidden; }
+    .popover.show{ display:flex; }
+    .lang-trigger{ background:rgba(255,255,255,0.05); border:none; padding:8px 16px; border-radius:20px; color:#fff; font-weight:900; }
+  </style>
+</head>
+
+<body>
+  <!-- pageContent id'si ui_shell.js tarafından yakalanıp viewport içine yerleştirilecek -->
+  <div id="pageContent">
+    <button id="sideClearBtn" class="edge-handle clear" type="button"></button>
+
+    <main class="container">
+      <section class="half-screen top" id="topSection">
+        <div class="lang-row">
+          <button id="topLangBtn" class="lang-trigger">🌐 Yükleniyor...</button>
+        </div>
+        <div class="popover" id="pop-top">
+          <div class="pop-list" id="list-top"></div>
+        </div>
+        <div class="chat-body" id="topBody"></div>
+        <div class="mic-line"><button id="topMic" class="mic-btn"><svg viewBox="0 0 24 24" width="30" stroke="currentColor" fill="none"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3zM19 10a7 7 0 0 1-14 0M12 17v4M8 21h8"/></svg></button></div>
+      </section>
+
+      <section class="center-hub">
+        <div class="orb">
+          <span class="sat sat1"></span>
+          <span class="orb-main">italky<span style="color:#6366f1">AI</span></span>
+        </div>
+      </section>
+
+      <section class="half-screen bottom" id="botSection">
+        <div class="lang-row">
+          <button id="botLangBtn" class="lang-trigger">🌐 Yükleniyor...</button>
+        </div>
+        <div class="popover" id="pop-bot">
+          <div class="pop-list" id="list-bot"></div>
+        </div>
+        <div class="chat-body" id="botBody"></div>
+        <div class="mic-line"><button id="botMic" class="mic-btn"><svg viewBox="0 0 24 24" width="30" stroke="currentColor" fill="none"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3zM19 10a7 7 0 0 1-14 0M12 17v4M8 21h8"/></svg></button></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    import { getLangPoolForSite } from "/js/lang_pool_full.js";
+
+    // 1. Shell'i Başlat (Hamburger menü otomatik gelir)
+    mountShell({
+      publicPage: false, // Üyelik kilitlerini shell seviyesinde aşmak için false
+      scroll: "none"
+    });
+
+    const $ = (id) => document.getElementById(id);
+    let topLang = "en", botLang = "tr";
+
+    // 2. REKLAM VE KİLİT SİSTEMİNİ DEVRE DIŞI BIRAK
+    async function maybeShowAd() { return true; } // Reklamı pas geç
+    async function showMembershipRequired() { return true; } // Kilitleri aç
+
+    // 3. Dil Seçimi ve Çeviri Mantığı (Basitleştirilmiş)
+    const LANGS = getLangPoolForSite("tr");
+
+    function refreshTexts() {
+      const t = LANGS.find(l => l.code === topLang);
+      const b = LANGS.find(l => l.code === botLang);
+      $("topLangBtn").textContent = `${t?.flag} ${t?.name}`;
+      $("botLangBtn").textContent = `${b?.flag} ${b?.name}`;
+    }
+
+    // Mikrofon ve Çeviri İşlemleri (Buraya senin mevcut API çağrıların gelecek)
+    $("topMic").onclick = () => startListening("top");
+    $("botMic").onclick = () => startListening("bot");
+    
+    function startListening(side) {
+      console.log(side + " dinleniyor... Reklamsız ve sınırsız.");
+      // Mevcut recognizer mantığın burada çalışmaya devam eder
+    }
+
+    $("sideClearBtn").onclick = () => {
+      $("topBody").innerHTML = "";
+      $("botBody").innerHTML = "";
+    };
+
+    // İlk yükleme
+    refreshTexts();
+  </script>
+</body>
+</html>
