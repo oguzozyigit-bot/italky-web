@@ -101,44 +101,45 @@
     import { supabase } from "/js/supabase_client.js";
 
     const googleBtn = document.getElementById("googleBtn");
-    const FACETOFACE = "/facetoface.html";
-
-    function toast(msg){
-      const t = document.getElementById("toast");
-      t.textContent = msg; t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2200);
-    }
+    // Hedef sayfamız artık net: facetoface.html
+    const TARGET_PAGE = window.location.origin + "/facetoface.html";
 
     async function handleLogin() {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.origin + FACETOFACE }
-      });
-      if (error) toast("Giriş başlatılamadı.");
+      try {
+        googleBtn.disabled = true;
+        // Google politikalarına tam uyum için sadeleştirilmiş giriş
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            // Önemli: Bu adres Google Console'da kayıtlı olmalıdır
+            redirectTo: TARGET_PAGE 
+          }
+        });
+        
+        if (error) throw error;
+      } catch (err) {
+        console.error("Login Error:", err);
+        googleBtn.disabled = false;
+        alert("Giriş başlatılamadı, lütfen internet bağlantınızı kontrol edin.");
+      }
     }
 
     googleBtn.addEventListener("click", handleLogin);
 
-    // Oturum kontrolü
+    // Oturum durumunu dinle (Giriş yapıldığı an tetiklenir)
     supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        // Kullanıcı verilerini mühürle
+        // Kullanıcı verilerini asistanın (Can) tanıması için mühürle
         const user = session.user.user_metadata;
-        localStorage.setItem("user_full_name", user.full_name);
-        localStorage.setItem("user_avatar", user.avatar_url);
-        location.replace(FACETOFACE);
+        localStorage.setItem("user_full_name", user.full_name || user.name || "italky Kullanıcısı");
+        localStorage.setItem("user_avatar", user.avatar_url || user.picture || "");
+        
+        // Doğrudan FaceToFace'e yönlendir
+        window.location.replace(TARGET_PAGE);
       } else {
         document.body.classList.add("login-ready");
       }
     });
-
-    // Typewriter animasyonu
-    const phrases = ["Dünya artık senin dilinde...", "Can seni bekliyor...", "Sınırları kaldırıyoruz..."];
-    let pi = 0;
-    setInterval(() => {
-      pi = (pi + 1) % phrases.length;
-      document.getElementById("typewriter").textContent = phrases[pi];
-    }, 5000);
-  </script>
+</script>
 </body>
 </html>
