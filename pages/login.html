@@ -1,1946 +1,625 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
-  <title>italkyAI • FaceToFace</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
-
-  <style>
-    :root{
-      --bg:#050508;
-      --line:rgba(255,255,255,.11);
-      --grad:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
-      --safe-top:env(safe-area-inset-top,0px);
-    }
-
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:Outfit,Arial,sans-serif}
-
-    body{
-      background:
-        radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),
-        radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),
-        #050508;
-    }
-
-    button{font-family:inherit}
-
-    .container{
-      width:100%;
-      height:100dvh;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-    }
-
-    .edge-handle{
-      position:fixed;
-      top:50%;
-      transform:translateY(-50%);
-      z-index:998;
-      width:28px;
-      height:118px;
-      border:none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      backdrop-filter:blur(14px);
-      -webkit-backdrop-filter:blur(14px);
-      color:#fff;
-      font-size:11px;
-      font-weight:1000;
-      line-height:1.15;
-      white-space:pre;
-      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
-      border:1px solid rgba(255,255,255,.14);
-      box-shadow:0 0 32px rgba(0,0,0,.30);
-    }
-
-    .edge-handle.open{
-      right:0;
-      border-right:none;
-      border-radius:18px 0 0 18px;
-      box-shadow:-10px 0 32px rgba(0,0,0,.30);
-    }
-
-    .edge-handle.clear{
-      left:0;
-      border-left:none;
-      border-radius:0 18px 18px 0;
-      box-shadow:10px 0 32px rgba(0,0,0,.30);
-    }
-
-    .edge-handle.open::before{
-      content:"M\A E\A N\A U";
-      text-shadow:0 0 12px rgba(255,255,255,.28);
-    }
-
-    .edge-handle.clear::before{
-      content:"C\A L\A E\A A\A R";
-      text-shadow:0 0 12px rgba(255,255,255,.28);
-    }
-
-    .edge-handle:active{transform:translateY(-50%) scale(.96)}
-
-    .drawer-backdrop{
-      position:fixed;
-      inset:0;
-      z-index:1000;
-      display:none;
-      background:rgba(0,0,0,.48);
-      backdrop-filter:blur(6px);
-      -webkit-backdrop-filter:blur(6px);
-    }
-
-    .drawer-backdrop.show{display:block}
-
-    .side-drawer{
-      position:absolute;
-      top:0;
-      right:0;
-      width:min(86vw,380px);
-      height:100%;
-      background:
-        radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%),
-        radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%),
-        linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98));
-      border-left:1px solid rgba(255,255,255,.10);
-      box-shadow:-24px 0 70px rgba(0,0,0,.52);
-      transform:translateX(102%);
-      transition:transform .24s ease;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-      padding-top:calc(16px + var(--safe-top));
-      padding-bottom:calc(12px + var(--safe-bottom));
-    }
-
-    .drawer-backdrop.show .side-drawer{transform:translateX(0)}
-
-    .drawer-top{
-      flex:0 0 auto;
-      padding:0 14px 12px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-
-    .drawer-logo-row{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
-    }
-
-    .drawer-logo-main{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:34px;
-      line-height:1;
-      font-weight:900;
-      letter-spacing:-1.2px;
-    }
-
-    .drawer-logo-main .ai{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .drawer-logo-sub{
-      margin-top:7px;
-      display:block;
-      color:rgba(255,255,255,.9);
-      font-size:12px;
-      font-weight:1000;
-      letter-spacing:2px;
-    }
-
-    .drawer-mode-pill{
-      flex:0 0 auto;
-      display:flex;
-      align-items:center;
-      gap:4px;
-      padding:4px;
-      border-radius:999px;
-      background:rgba(255,255,255,.055);
-      border:1px solid rgba(255,255,255,.11);
-      margin-top:2px;
-    }
-
-    .drawer-mode-pill button{
-      min-height:32px;
-      min-width:82px;
-      border:none;
-      border-radius:999px;
-      padding:0 10px;
-      background:transparent;
-      color:rgba(255,255,255,.62);
-      font-size:11px;
-      font-weight:1000;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-
-    .drawer-mode-pill button.active{
-      background:linear-gradient(135deg,rgba(165,180,252,.26),rgba(236,72,153,.18));
-      color:#fff;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
-    }
-
-    .drawer-card{
-      border-radius:24px;
-      padding:14px;
-      background:rgba(255,255,255,.055);
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
-    }
-
-    .drawer-label{
-      font-size:11px;
-      font-weight:1000;
-      letter-spacing:.5px;
-      color:rgba(255,255,255,.58);
-      text-transform:uppercase;
-      margin-bottom:10px;
-    }
-
-    .my-lang-btn{
-      width:100%;
-      min-height:56px;
-      border:none;
-      border-radius:20px;
-      padding:10px 12px;
-      background:rgba(255,255,255,.065);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      cursor:pointer;
-    }
-
-    .my-lang-left{display:flex;align-items:center;gap:11px;min-width:0}
-
-    .my-lang-flag{
-      width:34px;
-      height:34px;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.08);
-      font-size:20px;
-      flex:0 0 34px;
-    }
-
-    .my-lang-text{min-width:0;text-align:left;display:flex;flex-direction:column}
-    .my-lang-title{font-size:14px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .my-lang-sub{margin-top:2px;font-size:11px;font-weight:800;color:rgba(255,255,255,.56)}
-    .my-lang-caret{opacity:.72;font-size:18px;flex:0 0 auto}
-
-    .drawer-scroll{
-      flex:1 1 auto;
-      min-height:0;
-      overflow:auto;
-      padding:14px;
-      scrollbar-width:none;
-    }
-
-    .drawer-scroll::-webkit-scrollbar{display:none}
-
-    .drawer-links{
-      display:grid;
-      gap:9px;
-    }
-
-    .drawer-link{
-      width:100%;
-      min-height:52px;
-      border-radius:18px;
-      text-decoration:none;
-      color:#fff;
-      border:1px solid rgba(96,165,250,.18);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:0 13px;
-      font-size:14px;
-      font-weight:1000;
-      cursor:pointer;
-      position:relative;
-      overflow:hidden;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
-      background:rgba(15,39,66,.44);
-      appearance:none;
-    }
-
-    .drawer-link::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      opacity:.9;
-      pointer-events:none;
-      background:
-        radial-gradient(circle at left,rgba(56,189,248,.12),transparent 55%),
-        linear-gradient(135deg,rgba(255,255,255,.035),rgba(15,39,66,.20));
-    }
-
-    .drawer-link span,
-    .drawer-link small{position:relative;z-index:2}
-
-    .drawer-link span{
-      flex:1 1 auto;
-      min-width:0;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      text-align:left;
-      line-height:1;
-      font-size:14px;
-    }
-
-    .drawer-link small{
-      flex:0 0 auto;
-      color:rgba(255,255,255,.72);
-      font-size:14px;
-      font-weight:1000;
-      min-width:24px;
-      text-align:right;
-    }
-
-    .drawer-link:active{transform:scale(.985)}
-
-    .drawer-bottom{
-      flex:0 0 auto;
-      padding:12px 14px 0;
-      border-top:1px solid rgba(255,255,255,.06);
-      background:linear-gradient(180deg,rgba(5,8,18,.12),rgba(5,8,18,.72));
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
-    }
-
-    .shortcut-btn{
-      width:100%;
-      min-height:54px;
-      border:none;
-      border-radius:18px;
-      background:
-        radial-gradient(circle at left,rgba(45,212,191,.22),transparent 58%),
-        linear-gradient(135deg,rgba(7,46,78,.98),rgba(12,74,110,.90),rgba(14,116,144,.70));
-      border:1px solid rgba(125,211,252,.30);
-      color:#fff;
-      font-size:14px;
-      font-weight:1000;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:0 16px;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.07),
-        0 16px 30px rgba(14,165,233,.16);
-      margin-bottom:12px;
-    }
-
-    .shortcut-btn strong{
-      color:#bae6fd;
-      font-size:18px;
-    }
-
-    .google-login-btn{
-      width:100%;
-      min-height:58px;
-      border:none;
-      border-radius:20px;
-      background:linear-gradient(135deg,#fff7ed 0%,#ffffff 30%,#fde68a 62%,#fb923c 100%);
-      color:#202124;
-      font-size:15px;
-      font-weight:1000;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:12px;
-      box-shadow:0 16px 32px rgba(251,146,60,.16);
-      margin-bottom:12px;
-    }
-
-    .google-icon{width:22px;height:22px;flex:0 0 22px}
-
-    .subscription-note{
-      padding:13px 14px;
-      border-radius:20px;
-      background:rgba(255,255,255,.045);
-      border:1px solid rgba(255,255,255,.08);
-      color:rgba(255,255,255,.74);
-      font-size:11px;
-      line-height:1.5;
-      font-weight:850;
-      text-align:center;
-    }
-
-    .subscription-note strong{color:#fff;font-weight:1000}
-
-    .drawer-footer-seal{
-      margin-top:10px;
-      padding:6px 6px 2px;
-      text-align:center;
-      color:rgba(255,255,255,.50);
-      font-size:11px;
-      font-weight:1000;
-      letter-spacing:.4px;
-    }
-
-    .drawer-footer-seal .ai{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .my-lang-modal,
-    .app-modal{
-      position:fixed;
-      inset:0;
-      z-index:1200;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      background:rgba(0,0,0,.58);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-    }
-
-    .my-lang-modal.show,.app-modal.show{display:flex}
-
-    .my-lang-card,.app-modal-card{
-      width:min(92vw,420px);
-      max-height:78vh;
-      border-radius:26px;
-      background:linear-gradient(180deg,rgba(13,18,32,.98),rgba(7,10,20,.98));
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:0 26px 60px rgba(0,0,0,.48);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .my-lang-head{
-      padding:16px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-
-    .my-lang-head-title{font-family:"Space Grotesk",sans-serif;font-size:19px;font-weight:900;line-height:1}
-    .my-lang-head-sub{margin-top:5px;font-size:12px;font-weight:800;color:rgba(255,255,255,.54);line-height:1.35}
-
-    .my-lang-close{
-      width:40px;
-      height:40px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:20px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .my-lang-list{
-      padding:12px;
-      overflow:auto;
-      display:grid;
-      gap:9px;
-      scrollbar-width:none;
-    }
-
-    .my-lang-list::-webkit-scrollbar{display:none}
-
-    .my-lang-option{
-      width:100%;
-      min-height:50px;
-      border:none;
-      border-radius:17px;
-      padding:10px 12px;
-      background:rgba(255,255,255,.045);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      cursor:pointer;
-    }
-
-    .my-lang-option.active{background:linear-gradient(135deg,rgba(56,189,248,.14),rgba(99,102,241,.12));border-color:rgba(56,189,248,.24)}
-    .my-lang-option-left{display:flex;align-items:center;gap:10px;min-width:0}
-    .my-lang-option-flag{font-size:20px;width:28px;flex:0 0 28px;text-align:center}
-    .my-lang-option-name{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .my-lang-option-check{opacity:1;color:#86efac;font-weight:1000;font-size:17px}
-
-    .app-modal-body{padding:18px}
-    .app-modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}
-    .app-modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76);white-space:pre-line}
-    .app-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-    .app-modal-btn{min-height:46px;border:none;border-radius:16px;cursor:pointer;font-size:13px;font-weight:900}
-    .app-modal-btn.primary{background:var(--grad);color:#05060d}
-    .app-modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
-
-    .half-screen{
-      flex:1;
-      min-height:0;
-      position:relative;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      align-items:center;
-      overflow:hidden;
-      padding:10px 8px;
-    }
-
-    .half-screen.top{
-      transform:rotate(180deg);
-      background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg));
-    }
-
-    .half-screen.bottom{
-      background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg));
-      padding-bottom:calc(4px + var(--safe-bottom));
-    }
-
-    .lang-row{width:100%;display:flex;align-items:center;justify-content:center;z-index:20}
-
-    .lang-trigger{
-      min-height:38px;
-      border:none;
-      border-radius:999px;
-      background:transparent;
-      color:#fff;
-      font-size:13px;
-      font-weight:900;
-      cursor:pointer;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width:82vw;
-      padding:8px 14px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-    }
-
-    .popover{
-      position:absolute;
-      left:50%;
-      transform:translateX(-50%);
-      width:min(92vw,360px);
-      max-height:360px;
-      background:#0a0a0f;
-      border:1px solid var(--line);
-      border-radius:24px;
-      display:none;
-      flex-direction:column;
-      z-index:100;
-      overflow:hidden;
-      box-shadow:0 22px 60px rgba(0,0,0,.92);
-    }
-
-    .popover.show{display:flex}
-    .half-screen.top .popover{top:58px}
-    .half-screen.bottom .popover{bottom:58px}
-
-    .pop-head{
-      padding:14px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-weight:900;
-    }
-
-    .pop-close{
-      cursor:pointer;
-      padding:8px 12px;
-      border-radius:12px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-    }
-
-    .pop-list{flex:1;overflow:auto;padding:10px;scrollbar-width:none}
-    .pop-list::-webkit-scrollbar{display:none}
-
-    .pop-item{
-      padding:12px;
-      border-radius:16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      cursor:pointer;
-      border:1px solid transparent;
-    }
-
-    .pop-item.active{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.25)}
-    .pop-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
-    .pop-flag{font-size:18px}
-    .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pop-code{font-size:12px;font-weight:900;opacity:.7}
-    .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
-
-    .pop-installed,.pop-native,.pop-download,.pop-queued,.pop-locked{
-      width:32px;
-      height:32px;
-      border-radius:999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:15px;
-      line-height:1;
-      font-weight:1000;
-    }
-
-    .pop-installed{border:1px solid rgba(34,197,94,.36);background:rgba(34,197,94,.14);color:#86efac;box-shadow:0 0 18px rgba(34,197,94,.12)}
-    .pop-native{border:1px solid rgba(34,197,94,.22);background:rgba(34,197,94,.08);color:#bbf7d0}
-    .pop-download{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
-    .pop-queued{border:1px solid rgba(245,158,11,.34);background:rgba(245,158,11,.14);color:#fde68a}
-    .pop-locked{border:1px solid rgba(245,158,11,.34);background:rgba(245,158,11,.12);color:#fde68a;cursor:pointer}
-
-    .chat-body{
-      flex:1;
-      width:100%;
-      min-height:0;
-      overflow-y:auto;
-      overflow-x:hidden;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-start;
-      gap:14px;
-      padding:18px 0 18px;
-      text-align:center;
-      scrollbar-width:none;
-      -ms-overflow-style:none;
-      -webkit-overflow-scrolling:touch;
-      overscroll-behavior:contain;
-      touch-action:pan-y;
-      mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
-    }
-
-    .chat-body::before{content:"";flex:1 0 auto;min-height:12px}
-    .chat-body::-webkit-scrollbar{display:none;width:0;height:0}
-
-    .bubble{
-      max-width:86%;
-      line-height:1.18;
-      word-break:break-word;
-      font-size:24px;
-      font-weight:900;
-      opacity:.9;
-      text-align:center;
-    }
-
-    .bubble.latest{font-size:32px;font-weight:1000;opacity:1}
-
-    .mic-line{
-      width:100%;
-      display:grid;
-      grid-template-columns:1fr 70px 1fr;
-      align-items:center;
-      gap:12px;
-      padding:0 8px 0;
-      flex:0 0 auto;
-      transform:translateY(-8px);
-    }
-
-    .mic-side{min-height:60px;display:flex;align-items:center;justify-content:center}
-    .mic-side.empty{pointer-events:none}
-
-    .mic-btn{
-      width:70px;
-      height:70px;
-      border:none;
-      border-radius:999px;
-      background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.18);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
-      position:relative;
-    }
-
-    .mic-btn svg{width:30px;height:30px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-
-    .mic-btn.listening{
-      background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
-      box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
-      animation:micBreath 1.05s ease-in-out infinite;
-    }
-
-    .mic-btn.listening::after{
-      content:"";
-      position:absolute;
-      inset:-13px;
-      border-radius:50%;
-      border:2px solid rgba(165,180,252,.78);
-      box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35);
-      animation:micPulse 1s ease-out infinite;
-    }
-
-    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
-    @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
-
-    .center-hub{
-      height:82px;
-      flex:0 0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      background:rgba(0,0,0,.58);
-      backdrop-filter:blur(16px);
-      z-index:50;
-      border-top:1px solid rgba(255,255,255,.05);
-      border-bottom:1px solid rgba(255,255,255,.05);
-    }
-
-    .orb{
-      width:66px;
-      height:66px;
-      border-radius:50%;
-      background:#000;
-      border:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:13px;
-      font-weight:900;
-      position:relative;
-      overflow:visible;
-    }
-
-    .orb-main{position:relative;z-index:3}
-    .orb .ai{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .sat{position:absolute;left:50%;top:50%;width:10px;height:10px;margin-left:-5px;margin-top:-5px;border-radius:50%;z-index:1;filter:blur(1.5px)}
-    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
-    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
-
-    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
-    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
-
-    .toast{
-      position:fixed;
-      left:50%;
-      bottom:24px;
-      transform:translateX(-50%) translateY(120px);
-      max-width:min(92vw,430px);
-      min-height:44px;
-      padding:11px 16px;
-      border-radius:16px;
-      background:rgba(12,16,28,.96);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:12px;
-      font-weight:1000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      z-index:9999;
-      box-shadow:0 18px 36px rgba(0,0,0,.35);
-      transition:.22s ease;
-      pointer-events:none;
-    }
-
-    .toast.show{transform:translateX(-50%) translateY(0)}
-
-    @media(max-width:390px){
-      .mic-line{grid-template-columns:1fr 66px 1fr;gap:8px;transform:translateY(-7px)}
-      .mic-btn{width:66px;height:66px}
-      .mic-btn svg{width:28px;height:28px}
-      .bubble{font-size:22px}
-      .bubble.latest{font-size:30px}
-      .drawer-mode-pill button{font-size:9px;padding:0 8px;min-width:76px}
-      .drawer-link span{font-size:13px}
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Giriş</title>
+
+  <script>
+  (function(){
+    try{
+      if(navigator.onLine === false){
+        location.replace("/facetoface.html?mode=offline-forced");
+      }
+    }catch{}
+  })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg-void:#060408;
+      --neon:#00f2ff;
+      --pink:#ff007a;
+      --brand-grad:linear-gradient(135deg,#00f2ff 0%,#6366f1 55%,#ff007a 100%);
+      --signature-grad:linear-gradient(to right,#fff,#00f2ff,#fff);
+      --accent:#00f2ff;
+      --muted:rgba(255,255,255,.65);
+      --safeB:env(safe-area-inset-bottom, 0px);
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
+    html,body{ height:100%; width:100%; }
+
+    body{
+      background:var(--bg-void);
+      color:#fff;
+      font-family:'Outfit',sans-serif;
+      height:100dvh;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+
+    body:not(.login-ready) .main,
+    body:not(.login-ready) footer{
+      visibility:hidden;
+      opacity:0;
+    }
+
+    body.login-ready .main,
+    body.login-ready footer{
+      visibility:visible;
+      opacity:1;
+      transition:opacity .18s ease;
+    }
+
+    .nebula{
+      position:fixed; inset:0;
+      background:
+        radial-gradient(circle at 25% 20%, rgba(0,242,255,.12), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(255,0,122,.10), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(15, 8, 22, 1) 0%, #060408 100%);
+      z-index:0;
+    }
+
+    .main{
+      flex:1; width:100%;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:0 26px; z-index:10;
+      margin-top:-10px;
+    }
+
+    .brand-section{ text-align:center; margin-bottom:5px; }
+    .brand-section h1{
+      font-family:'Space Grotesk', sans-serif;
+      font-size:64px; font-weight:1000;
+      letter-spacing:-4px; line-height:1;
+      filter:drop-shadow(0 0 15px rgba(0, 242, 255, 0.2));
+    }
+    .brand-section h1 span.ai{
+      background:var(--brand-grad);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .brand-sub{
+      margin-top:8px; font-size:12px; font-weight:900;
+      letter-spacing:8px; text-transform:uppercase; color:#fff;
+      opacity:.9; text-shadow:0 0 10px rgba(255,255,255,0.3);
+    }
+
+    .world-container{
+      position:relative; width:280px; height:280px;
+      display:flex; align-items:center; justify-content:center;
+      margin-top:10px; margin-bottom:10px; perspective:1000px;
+    }
+    .earth-glow{
+      position:absolute; inset:10px; border-radius:50%;
+      background:radial-gradient(circle, rgba(0, 242, 255, 0.22) 0%, transparent 70%);
+      filter:blur(25px); opacity:.95; z-index:0;
+      animation:glowBreath 4.8s ease-in-out infinite alternate;
+    }
+    @keyframes glowBreath{ from{ transform:scale(.95); opacity:.6; } to{ transform:scale(1.1); opacity:.9; } }
+
+    .earth{
+      position:relative; width:210px; height:210px; border-radius:50%;
+      background-image:url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
+      background-size:cover; background-position:center;
+      box-shadow:inset -30px -30px 60px rgba(0,0,0,0.9), inset 10px 10px 30px rgba(255,255,255,0.1), 0 0 80px rgba(0,242,255,0.25);
+      transform-style:preserve-3d; animation:rotateSphere 34s linear infinite; z-index:2; overflow:hidden;
+    }
+    @keyframes rotateSphere{ from{ transform:rotateY(0deg); } to{ transform:rotateY(360deg); } }
+
+    .ai-stamp{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      font-weight:1000; letter-spacing:2px; color:rgba(255,255,255,0.95);
+      text-shadow:0 0 20px rgba(0,242,255,0.4); mix-blend-mode:screen; opacity:.95;
+      pointer-events:none; user-select:none; backface-visibility:hidden;
+    }
+    .ai-front{ font-size:44px; transform:translateZ(1px); z-index:4; }
+    .ai-back{ font-size:50px; letter-spacing:1px; transform:rotateY(180deg) translateZ(1px); z-index:3; }
+
+    .typewriter-container{ height:40px; margin-top:5px; margin-bottom:15px; display:flex; justify-content:center; align-items:center; width:100%; }
+    .typewriter{
+      font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--muted);
+      border-right:2px solid var(--accent); white-space:nowrap; overflow:hidden; width:0;
+      animation:typing 5.6s steps(46, end) infinite, blink .85s step-end infinite;
+      text-shadow:0 0 10px rgba(0, 242, 255, 0.2);
+    }
+    @keyframes typing { 0%,10%{ width:0 } 62%,86%{ width:100% } 100%{ width:0 } }
+    @keyframes blink { from,to{ border-color:transparent } 50%{ border-color:var(--accent) } }
+
+    .login-box{ width:100%; max-width:300px; z-index:20; }
+    .google-btn{
+      width:100%; height:54px; border:none; border-radius:27px;
+      background:#ffffff; color:#1f1f1f; font-family:'Outfit', sans-serif;
+      font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center;
+      gap:12px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,0.3);
+      transition:all .2s ease; user-select:none;
+    }
+    .google-btn:active{ transform:scale(.97); }
+    .google-btn:hover { box-shadow:0 12px 30px rgba(0,0,0,0.4); background:#fcfcfc; }
+    .google-btn:disabled{ opacity:.7; cursor:default; }
+    .g-icon{ width:20px; height:20px; display:block; }
+
+    footer{
+      width:100%; text-align:center; z-index:20;
+      padding-bottom:calc(20px + var(--safeB));
+    }
+    .footer-nav{ display:flex; justify-content:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
+    .footer-nav a{
+      text-decoration:none; color:rgba(255,255,255,0.4); font-size:11px;
+      font-weight:800; text-transform:uppercase; letter-spacing:1px; transition:0.3s;
+    }
+    .footer-nav a:hover { color:var(--neon); text-shadow:0 0 8px var(--neon); }
+    .technology-title{ font-size:20px; font-weight:1000; letter-spacing:6px; margin-bottom:6px; line-height:1; }
+    .technology-title b{ font-weight:1000; text-transform:lowercase; color:#fff; }
+    .technology-title span{ background:var(--brand-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase; }
+    .prestige-signature{ font-size:11px; font-weight:900; letter-spacing:1.2px; background:var(--signature-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    #toast{
+      position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-120px);
+      background:rgba(6,6,12,0.95); border:1px solid var(--accent); padding:12px 24px;
+      border-radius:999px; color:#fff; z-index:9999; font-weight:900; font-size:13px;
+      transition:.3s ease; backdrop-filter:blur(15px); pointer-events:none;
+      max-width:90vw; text-align:center; box-shadow:0 10px 30px rgba(0, 242, 255, 0.2);
+    }
+    #toast.show{ transform:translateX(-50%) translateY(0); }
+  </style>
 </head>
 
 <body>
-  <button id="sideClearBtn" class="edge-handle clear" type="button" aria-label="Ekranı temizle"></button>
-  <button id="drawerEdgeBtn" class="edge-handle open" type="button" aria-label="Menu aç"></button>
-
-  <div id="drawerBackdrop" class="drawer-backdrop">
-    <aside class="side-drawer" role="dialog" aria-label="italkyAI menu">
-      <div class="drawer-top">
-        <div class="drawer-logo-row">
-          <div class="drawer-logo">
-            <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
-            <div class="drawer-logo-sub">BE FREE</div>
-          </div>
-
-          <div class="drawer-mode-pill" aria-label="Çeviri modu">
-            <button id="modeOnlineBtn" class="active" type="button">Online</button>
-            <button id="modeOfflineBtn" type="button">Offline</button>
-          </div>
-        </div>
-
-        <div class="drawer-card">
-          <div class="drawer-label">Kendi Dilim</div>
-          <button id="myLangDrawerBtn" class="my-lang-btn" type="button">
-            <span class="my-lang-left">
-              <span id="myLangDrawerFlag" class="my-lang-flag">🇹🇷</span>
-              <span class="my-lang-text">
-                <span id="myLangDrawerTitle" class="my-lang-title">Türkçe</span>
-                <span class="my-lang-sub">İleri seviye yapay zeka deneyimi</span>
-              </span>
-            </span>
-            <span class="my-lang-caret">›</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="drawer-scroll">
-        <nav class="drawer-links">
-          <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
-          <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
-          <button class="drawer-link locked-feature" type="button" data-feature="SohbetAI"><span>SohbetAI</span><small>🔒</small></button>
-          <button class="drawer-link locked-feature" type="button" data-feature="Turan Dilleri"><span>Turan Dilleri</span><small>🔒</small></button>
-          <button class="drawer-link locked-feature" type="button" data-feature="Kafkas Dilleri"><span>Kafkas Dilleri</span><small>🔒</small></button>
-          <button class="drawer-link locked-feature" type="button" data-feature="Mezopotamya Dilleri"><span>Mezopotamya Dilleri</span><small>🔒</small></button>
-          <button class="drawer-link locked-feature" type="button" data-feature="Balkan Dilleri"><span>Balkan Dilleri</span><small>🔒</small></button>
-          <button class="drawer-link locked-feature" type="button" data-feature="Ataların Dili"><span>Ataların Dili</span><small>🔒</small></button>
-          <button class="drawer-link locked-feature" type="button" data-feature="Seviye Tespit"><span>Seviye Tespit</span><small>🔒</small></button>
-          <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
-          <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
-          <a class="drawer-link" href="/pages/contact.html"><span>İletişim</span><small>›</small></a>
-        </nav>
-      </div>
-
-      <div class="drawer-bottom">
-        <button id="drawerWidgetBtn" class="shortcut-btn" type="button">
-          <span>Kısa Yol Ekle</span>
-          <strong>+</strong>
-        </button>
-
-        <button id="drawerLoginBtn" class="google-login-btn" type="button">
-          <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
-            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
-            <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
-            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C36.9 39.3 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
-          </svg>
-          <span>Google Hesabıyla Giriş Yap</span>
-        </button>
-
-        <div class="subscription-note">
-          <strong>Üyelik Süresi: 12 AY</strong><br/>
-          Gelişmiş AI çeviri ve tüm diller aktif.
-        </div>
-
-        <div class="drawer-footer-seal">
-          italky<span class="ai">AI</span> Ozyigit's 2026
-        </div>
-      </div>
-    </aside>
-  </div>
-
-  <div id="myLangModal" class="my-lang-modal">
-    <div class="my-lang-card">
-      <div class="my-lang-head">
-        <div>
-          <div class="my-lang-head-title">Kendi Dilim</div>
-          <div class="my-lang-head-sub">Uygulamanın ana dilini seçin.</div>
-        </div>
-        <button id="myLangModalClose" class="my-lang-close" type="button">×</button>
-      </div>
-      <div id="myLangModalList" class="my-lang-list"></div>
-    </div>
-  </div>
-
-  <div id="appModal" class="app-modal">
-    <div class="app-modal-card">
-      <div class="app-modal-body">
-        <h3 id="appModalTitle" class="app-modal-title">Bilgi</h3>
-        <p id="appModalText" class="app-modal-text"></p>
-        <div class="app-modal-actions">
-          <button id="appModalPrimary" class="app-modal-btn primary" type="button">Tamam</button>
-          <button id="appModalSecondary" class="app-modal-btn secondary" type="button">Kapat</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <main class="container">
-    <section class="half-screen top">
-      <div class="lang-row">
-        <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-      </div>
-
-      <div class="popover" id="popTop">
-        <div class="pop-head">
-          <div>ÜST DİL</div>
-          <div id="closeTop" class="pop-close">✕</div>
-        </div>
-        <div class="pop-list" id="listTop"></div>
-      </div>
-
-      <div class="chat-body" id="topBody"></div>
-
-      <div class="mic-line">
-        <div class="mic-side empty"></div>
-        <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-            <path d="M19 10a7 7 0 0 1-14 0"></path>
-            <path d="M12 17v4"></path>
-            <path d="M8 21h8"></path>
-          </svg>
-        </button>
-        <div class="mic-side empty"></div>
-      </div>
-    </section>
-
-    <section class="center-hub">
-      <div class="orb">
-        <span class="sat sat1"></span>
-        <span class="sat sat2"></span>
-        <span class="orb-main">italky<span class="ai">AI</span></span>
-      </div>
-    </section>
-
-    <section class="half-screen bottom">
-      <div class="lang-row">
-        <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-      </div>
-
-      <div class="popover" id="popBot">
-        <div class="pop-head">
-          <div>ALT DİL</div>
-          <div id="closeBot" class="pop-close">✕</div>
-        </div>
-        <div class="pop-list" id="listBot"></div>
-      </div>
-
-      <div class="chat-body" id="botBody"></div>
-
-      <div class="mic-line">
-        <div class="mic-side empty"></div>
-        <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-            <path d="M19 10a7 7 0 0 1-14 0"></path>
-            <path d="M12 17v4"></path>
-            <path d="M8 21h8"></path>
-          </svg>
-        </button>
-        <div class="mic-side empty"></div>
-      </div>
-    </section>
-  </main>
-
-  <div id="toast" class="toast"></div>
-
-  <script>
-    const API_BASE = "https://italky-api.onrender.com";
-    const MEMBERSHIP_PAGE = "/pages/membership.html";
-    const MEMBERSHIP_PRICE = "699 TL";
-    
-    // --- 1. REKLAMI ŞİMDİLİK PASİFE AL (MAYBE SHOW AD ARTIK HEP TRUE) ---
-    const AD_INTERVAL_MS = 999999999; 
-
-    const $ = (id) => document.getElementById(id);
-
-    const SITE_LANG_KEY = "site_lang";
-    const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
-    const NATIVE_LANG_KEY = "italky_native_lang_v7";
-    const MY_LANG_KEY = "italky_public_my_lang_v3";
-
-    const LANGS = [
-      { code:"tr", flag:"🇹🇷", name:"Türkçe", bcp:"tr-TR" },
-      { code:"en", flag:"🇬🇧", name:"İngilizce", bcp:"en-US" },
-      { code:"de", flag:"🇩🇪", name:"Almanca", bcp:"de-DE" },
-      { code:"fr", flag:"🇫🇷", name:"Fransızca", bcp:"fr-FR" },
-      { code:"it", flag:"🇮🇹", name:"İtalyanca", bcp:"it-IT" },
-      { code:"es", flag:"🇪🇸", name:"İspanyolca", bcp:"es-ES" },
-      { code:"ar", flag:"🇸🇦", name:"Arapça", bcp:"ar-SA" },
-      { code:"ru", flag:"🇷🇺", name:"Rusça", bcp:"ru-RU" },
-      { code:"pt", flag:"🇵🇹", name:"Portekizce", bcp:"pt-PT" },
-      { code:"nl", flag:"🇳🇱", name:"Hollandaca", bcp:"nl-NL" },
-      { code:"pl", flag:"🇵🇱", name:"Lehçe", bcp:"pl-PL" },
-      { code:"ro", flag:"🇷🇴", name:"Romence", bcp:"ro-RO" },
-      { code:"bg", flag:"🇧🇬", name:"Bulgarca", bcp:"bg-BG" },
-      { code:"el", flag:"🇬🇷", name:"Yunanca", bcp:"el-GR" },
-      { code:"zh", flag:"🇨🇳", name:"Çince", bcp:"zh-CN" },
-      { code:"ja", flag:"🇯🇵", name:"Japonca", bcp:"ja-JP" },
-      { code:"ko", flag:"🇰🇷", name:"Korece", bcp:"ko-KR" },
-      { code:"hi", flag:"🇮🇳", name:"Hintçe", bcp:"hi-IN" },
-      { code:"ur", flag:"🇵🇰", name:"Urduca", bcp:"ur-PK" }
-    ];
-
-    const sideClearBtn = $("sideClearBtn");
-    const drawerEdgeBtn = $("drawerEdgeBtn");
-    const drawerBackdrop = $("drawerBackdrop");
-    const drawerWidgetBtn = $("drawerWidgetBtn");
-    const drawerLoginBtn = $("drawerLoginBtn");
-    const modeOnlineBtn = $("modeOnlineBtn");
-    const modeOfflineBtn = $("modeOfflineBtn");
-
-    const myLangDrawerBtn = $("myLangDrawerBtn");
-    const myLangDrawerFlag = $("myLangDrawerFlag");
-    const myLangDrawerTitle = $("myLangDrawerTitle");
-    const myLangModal = $("myLangModal");
-    const myLangModalClose = $("myLangModalClose");
-    const myLangModalList = $("myLangModalList");
-
-    const appModal = $("appModal");
-    const appModalTitle = $("appModalTitle");
-    const appModalText = $("appModalText");
-    const appModalPrimary = $("appModalPrimary");
-    const appModalSecondary = $("appModalSecondary");
-
-    const topBody = $("topBody");
-    const botBody = $("botBody");
-    const topMic = $("topMic");
-    const botMic = $("botMic");
-    const topLangBtn = $("topLangBtn");
-    const botLangBtn = $("botLangBtn");
-    const popTop = $("popTop");
-    const popBot = $("popBot");
-    const listTop = $("listTop");
-    const listBot = $("listBot");
-    const closeTop = $("closeTop");
-    const closeBot = $("closeBot");
-    const toast = $("toast");
-
-    let currentMode = "online";
-    let recognizer = null;
-    let recognizerSide = null;
-    let liveText = "";
-    let manualStopPending = false;
-    let lastAdAt = Date.now();
-    let lastOpenPopSide = null;
-
-    function canonical(code){
-      const value = String(code || "").trim().toLowerCase().replace("_","-");
-      if(!value) return "";
-      return value.split("-")[0];
-    }
-
-    // --- 2. DİLLERDEKİ KİLİTLERİ KALDIR (HEPSİ FREE GİBİ DAVRANACAK) ---
-    function isPublicFreeLang(code){
-      return true; 
-    }
-
-    function langObj(code){
-      const c = canonical(code);
-      return LANGS.find((x) => x.code === c) || { code:c || "tr", flag:"🌐", name:(c || "tr").toUpperCase(), bcp:"tr-TR" };
-    }
-
-    function differentLang(code){
-      return canonical(code) === "tr" ? "en" : "tr";
-    }
-
-    function labelChip(code){
-      const o = langObj(code);
-      return `${o.flag} ${o.name}`;
-    }
-
-    function getInitialSiteLang(){
-      return canonical(localStorage.getItem(SITE_LANG_KEY) || localStorage.getItem(NATIVE_LANG_KEY) || "tr");
-    }
-
-    function getSavedMyLang(){
-      return getInitialSiteLang();
-    }
-
-    let myLang = getSavedMyLang();
-    let botLang = myLang;
-    let topLang = differentLang(botLang);
-
-    // --- 5. CAN (MAVİ NOKTA) KÖPRÜSÜ ---
-    window.setExternalLang = function(side, code) {
-        const next = canonical(code);
-        if (side === "top") {
-            topLang = next;
-            if (topLang === botLang) botLang = (next === "tr" ? "en" : "tr");
-        } else {
-            botLang = next;
-            if (botLang === topLang) topLang = (next === "tr" ? "en" : "tr");
-        }
-        refreshTexts();
-        showToast("Dil güncellendi: " + next.toUpperCase());
-    };
-
-    function showToast(msg){
-      if(!toast) return;
-      toast.textContent = msg;
-      toast.classList.add("show");
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => { toast.classList.remove("show"); }, 1800);
-    }
-
-    function openDrawer(){ drawerBackdrop?.classList.add("show"); }
-    function closeDrawer(){ drawerBackdrop?.classList.remove("show"); }
-
-    function refreshModeButtons(){
-      modeOnlineBtn?.classList.toggle("active", currentMode === "online");
-      modeOfflineBtn?.classList.toggle("active", currentMode === "offline");
-    }
-
-    function renderMyLangDrawer(){
-      const info = langObj(myLang);
-      if(myLangDrawerFlag) myLangDrawerFlag.textContent = info.flag;
-      if(myLangDrawerTitle) myLangDrawerTitle.textContent = info.name;
-    }
-
-    function renderMyLangModalList(){
-      if(!myLangModalList) return;
-      myLangModalList.innerHTML = LANGS.map((lang) => {
-        const active = lang.code === myLang ? "active" : "";
-        return `
-          <button class="my-lang-option ${active}" type="button" data-code="${lang.code}" data-locked="0">
-            <span class="my-lang-option-left">
-              <span class="my-lang-option-flag">${lang.flag}</span>
-              <span class="my-lang-option-name">${lang.name}</span>
-            </span>
-            <span class="my-lang-option-check">✓</span>
-          </button>
-        `;
-      }).join("");
-
-      myLangModalList.querySelectorAll("[data-code]").forEach((btn) => {
-        btn.onclick = () => {
-          const next = canonical(btn.dataset.code);
-          myLang = next; botLang = myLang; topLang = differentLang(botLang);
-          localStorage.setItem(MY_LANG_KEY, myLang);
-          renderMyLangDrawer(); refreshTexts();
-          myLangModal.classList.remove("show");
-        };
-      });
-    }
-
-    function refreshTexts(){
-      if(topLangBtn) topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
-      if(botLangBtn) botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
-      renderMyLangDrawer();
-    }
-
-    function closeAllPop(){ popTop?.classList.remove("show"); popBot?.classList.remove("show"); lastOpenPopSide = null; }
-
-    function hasInstalledPair(from, to){ return true; } // Bypass for public simplicity
-    function isPairQueued(from, to){ return false; }
-
-    function renderActionForLang(code){
-      const c = canonical(code);
-      if(c === myLang) return `<span class="pop-native">✓</span>`;
-      return `<button class="pop-download" type="button" data-download-code="${c}">⬇️</button>`;
-    }
-
-    function renderPop(side){
-      const list = side === "top" ? listTop : listBot;
-      const selected = side === "top" ? topLang : botLang;
-      if(!list) return;
-      list.innerHTML = LANGS.map((l) => `
-        <div class="pop-item ${l.code === selected ? "active" : ""}">
-          <div class="pop-left" data-select-code="${l.code}" data-side="${side}" data-locked="0">
-            <div class="pop-flag">${l.flag}</div>
-            <div class="pop-name">${l.name}</div>
-          </div>
-          <div class="pop-actions">
-            <div class="pop-code">${l.code.toUpperCase()}</div>
-            ${renderActionForLang(l.code)}
-          </div>
-        </div>
-      `).join("");
-
-      list.querySelectorAll("[data-select-code]").forEach((el) => {
-        el.onclick = () => {
-          const code = canonical(el.dataset.selectCode);
-          if (el.dataset.side === "top") {
-            topLang = code; if(topLang === botLang) botLang = differentLang(topLang);
-          } else {
-            botLang = code; if(botLang === topLang) topLang = differentLang(botLang);
-          }
-          closeAllPop(); refreshTexts();
-        };
-      });
-    }
-
-    function setMode(mode){
-      currentMode = mode === "offline" ? "offline" : "online";
-      refreshModeButtons(); showToast(currentMode === "offline" ? "Offline mod aktif." : "Online mod aktif.");
-    }
-
-    function clearBody(body){ if(body) body.innerHTML = ""; }
-
-    function addBubble(side, text, latest = false){
-      const body = side === "top" ? topBody : botBody;
-      if(!body) return null;
-      if(latest) body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
-      const div = document.createElement("div");
-      div.className = `bubble${latest ? " latest" : ""}`;
-      div.textContent = text;
-      body.appendChild(div);
-      body.scrollTop = body.scrollHeight;
-      return div;
-    }
-
-    function setMicState(side, listening){
-      const mic = side === "top" ? topMic : botMic;
-      if(mic) mic.classList.toggle("listening", !!listening);
-    }
-
-    function buildRecognizer(langCode){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) return null;
-      const rec = new SR();
-      rec.lang = langObj(langCode).bcp;
-      rec.interimResults = true;
-      rec.continuous = false;
-      return rec;
-    }
-
-    function stopRecognizer(){
-      manualStopPending = true;
-      try{ recognizer?.stop(); }catch(e){}
-      setMicState("top", false); setMicState("bot", false);
-    }
-
-    function cleanupTranscript(text){
-      return String(text || "").replace(/\s+/g, " ").replace(/\b(\S+)( \1\b)+/gi, "$1").trim();
-    }
-
-    async function translateOnline(text, from, to){
-      const endpoints = [`${API_BASE}/api/translate`];
-      for(const endpoint of endpoints){
-        try{
-          const r = await fetch(endpoint, {
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
-            body:JSON.stringify({ text, from_lang:canonical(from), to_lang:canonical(to) })
-          });
-          const j = await r.json();
-          if(r.ok) return j?.translated || j?.text;
-        }catch(e){}
-      }
-      return null;
-    }
-
-    async function maybeShowAd(){ return true; } // REKLAM BYPASS
-
-    async function finalizeSpeech(side, text){
-      const clean = cleanupTranscript(text);
-      if(!clean) return;
-      const src = side === "top" ? topLang : botLang;
-      const dst = side === "top" ? botLang : topLang;
-      addBubble(side, clean, false);
-      const targetRow = addBubble(side === "top" ? "bot" : "top", "...", true);
-      const translated = await translateOnline(clean, src, dst);
-      if(targetRow) targetRow.textContent = translated || "Çeviri hatası.";
-      if(translated) speak(translated, dst);
-    }
-
-    function startRecording(side){
-      if(recognizer){ stopRecognizer(); return; }
-      const rec = buildRecognizer(side === "top" ? topLang : botLang);
-      if(!rec) { showToast("Desteklenmiyor."); return; }
-      recognizer = rec;
-      rec.onstart = () => setMicState(side, true);
-      rec.onresult = (e) => {
-          let t = ""; for(let i=0; i<e.results.length; i++) t += e.results[i][0].transcript;
-          liveText = cleanupTranscript(t);
-      };
-      rec.onend = () => {
-          const final = cleanupTranscript(liveText);
-          setMicState(side, false); recognizer = null;
-          if(final) finalizeSpeech(side, final);
-      };
-      rec.start();
-    }
-
-    function speak(text, langCode){
-      try{
-        if(window.NativeTTS?.speak) { window.NativeTTS.speak(text, canonical(langCode)); return; }
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = langObj(langCode).bcp;
-        window.speechSynthesis.speak(u);
-      }catch(e){}
-    }
-
-    function clearChat(){
-      clearBody(topBody); clearBody(botBody); stopRecognizer();
-      showToast("Ekran temizlendi.");
-    }
-
-    // --- 3 & 4. GİZLENECEKLERİ GİZLE ---
-    function boot(){
-      if($("drawerLoginBtn")) $("drawerLoginBtn").style.display = "none";
-      document.querySelectorAll(".locked-feature").forEach(b => b.style.display = "none");
-      
-      renderMyLangDrawer(); renderMyLangModalList();
-      refreshTexts(); refreshModeButtons();
-      console.log("italkyAI Ready: Kilitler ve reklamlar bypass edildi.");
-    }
-
-    drawerLoginBtn?.addEventListener("click", () => {});
-    drawerWidgetBtn?.addEventListener("click", () => { if(window.Native?.addWidgetToHomeScreen) window.Native.addWidgetToHomeScreen(); });
-    drawerEdgeBtn?.addEventListener("click", openDrawer);
-    drawerBackdrop?.addEventListener("click", closeDrawer);
-    myLangDrawerBtn?.addEventListener("click", () => { renderMyLangModalList(); myLangModal.classList.add("show"); });
-    myLangModalClose?.addEventListener("click", () => myLangModal.classList.remove("show"));
-    modeOnlineBtn?.addEventListener("click", () => setMode("online"));
-    modeOfflineBtn?.addEventListener("click", () => setMode("offline"));
-    topLangBtn?.addEventListener("click", () => { renderPop("top"); popTop.classList.add("show"); });
-    botLangBtn?.addEventListener("click", () => { renderPop("bot"); popBot.classList.add("show"); });
-    closeTop?.addEventListener("click", closeAllPop);
-    closeBot?.addEventListener("click", closeAllPop);
-    topMic?.addEventListener("click", () => startRecording("top"));
-    botMic?.addEventListener("click", () => startRecording("bot"));
-    sideClearBtn?.addEventListener("click", clearChat);
-
-    boot();
-  </script>
-</body>
-</html>   yapacağın şu buraya google ile gişişi aktif et. sol menüye adamın googleden gelen adını soyadını ve googlede kullandığı avatarı koy. üyelik ücretsiz. şimdilik. gizli olanlar gizli kalmaya devam etsin. llogin oluncada bu sayfada dursun. yada bu sayfayı göster, tıkjladığında önce gişi yapmalısınız diye popo aç. yada bu sayfayı facetoface.html ye yönlendirip girişe <!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Giriş</title>
-
-  <script>
-  (function(){
-    try{
-      if(navigator.onLine === false){
-        location.replace("/facetoface.html?mode=offline-forced");
-      }
-    }catch{}
-  })();
-  </script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      --bg-void:#060408;
-      --neon:#00f2ff;
-      --pink:#ff007a;
-      --brand-grad:linear-gradient(135deg,#00f2ff 0%,#6366f1 55%,#ff007a 100%);
-      --signature-grad:linear-gradient(to right,#fff,#00f2ff,#fff);
-      --accent:#00f2ff;
-      --muted:rgba(255,255,255,.65);
-      --safeB:env(safe-area-inset-bottom, 0px);
-    }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
-    html,body{ height:100%; width:100%; }
-
-    body{
-      background:var(--bg-void);
-      color:#fff;
-      font-family:'Outfit',sans-serif;
-      height:100dvh;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-    }
-
-    body:not(.login-ready) .main,
-    body:not(.login-ready) footer{
-      visibility:hidden;
-      opacity:0;
-    }
-
-    body.login-ready .main,
-    body.login-ready footer{
-      visibility:visible;
-      opacity:1;
-      transition:opacity .18s ease;
-    }
-
-    .nebula{
-      position:fixed; inset:0;
-      background:
-        radial-gradient(circle at 25% 20%, rgba(0,242,255,.12), transparent 45%),
-        radial-gradient(circle at 80% 80%, rgba(255,0,122,.10), transparent 55%),
-        radial-gradient(circle at 50% 50%, rgba(15, 8, 22, 1) 0%, #060408 100%);
-      z-index:0;
-    }
-
-    .main{
-      flex:1; width:100%;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      padding:0 26px; z-index:10;
-      margin-top:-10px;
-    }
-
-    .brand-section{ text-align:center; margin-bottom:5px; }
-    .brand-section h1{
-      font-family:'Space Grotesk', sans-serif;
-      font-size:64px; font-weight:1000;
-      letter-spacing:-4px; line-height:1;
-      filter:drop-shadow(0 0 15px rgba(0, 242, 255, 0.2));
-    }
-    .brand-section h1 span.ai{
-      background:var(--brand-grad);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    }
-    .brand-sub{
-      margin-top:8px; font-size:12px; font-weight:900;
-      letter-spacing:8px; text-transform:uppercase; color:#fff;
-      opacity:.9; text-shadow:0 0 10px rgba(255,255,255,0.3);
-    }
-
-    .world-container{
-      position:relative; width:280px; height:280px;
-      display:flex; align-items:center; justify-content:center;
-      margin-top:10px; margin-bottom:10px; perspective:1000px;
-    }
-    .earth-glow{
-      position:absolute; inset:10px; border-radius:50%;
-      background:radial-gradient(circle, rgba(0, 242, 255, 0.22) 0%, transparent 70%);
-      filter:blur(25px); opacity:.95; z-index:0;
-      animation:glowBreath 4.8s ease-in-out infinite alternate;
-    }
-    @keyframes glowBreath{ from{ transform:scale(.95); opacity:.6; } to{ transform:scale(1.1); opacity:.9; } }
-
-    .earth{
-      position:relative; width:210px; height:210px; border-radius:50%;
-      background-image:url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
-      background-size:cover; background-position:center;
-      box-shadow:inset -30px -30px 60px rgba(0,0,0,0.9), inset 10px 10px 30px rgba(255,255,255,0.1), 0 0 80px rgba(0,242,255,0.25);
-      transform-style:preserve-3d; animation:rotateSphere 34s linear infinite; z-index:2; overflow:hidden;
-    }
-    @keyframes rotateSphere{ from{ transform:rotateY(0deg); } to{ transform:rotateY(360deg); } }
-
-    .ai-stamp{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      font-weight:1000; letter-spacing:2px; color:rgba(255,255,255,0.95);
-      text-shadow:0 0 20px rgba(0,242,255,0.4); mix-blend-mode:screen; opacity:.95;
-      pointer-events:none; user-select:none; backface-visibility:hidden;
-    }
-    .ai-front{ font-size:44px; transform:translateZ(1px); z-index:4; }
-    .ai-back{ font-size:50px; letter-spacing:1px; transform:rotateY(180deg) translateZ(1px); z-index:3; }
-
-    .typewriter-container{ height:40px; margin-top:5px; margin-bottom:15px; display:flex; justify-content:center; align-items:center; width:100%; }
-    .typewriter{
-      font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--muted);
-      border-right:2px solid var(--accent); white-space:nowrap; overflow:hidden; width:0;
-      animation:typing 5.6s steps(46, end) infinite, blink .85s step-end infinite;
-      text-shadow:0 0 10px rgba(0, 242, 255, 0.2);
-    }
-    @keyframes typing { 0%,10%{ width:0 } 62%,86%{ width:100% } 100%{ width:0 } }
-    @keyframes blink { from,to{ border-color:transparent } 50%{ border-color:var(--accent) } }
-
-    .login-box{ width:100%; max-width:300px; z-index:20; }
-    .google-btn{
-      width:100%; height:54px; border:none; border-radius:27px;
-      background:#ffffff; color:#1f1f1f; font-family:'Outfit', sans-serif;
-      font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center;
-      gap:12px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,0.3);
-      transition:all .2s ease; user-select:none;
-    }
-    .google-btn:active{ transform:scale(.97); }
-    .google-btn:hover { box-shadow:0 12px 30px rgba(0,0,0,0.4); background:#fcfcfc; }
-    .google-btn:disabled{ opacity:.7; cursor:default; }
-    .g-icon{ width:20px; height:20px; display:block; }
-
-    footer{
-      width:100%; text-align:center; z-index:20;
-      padding-bottom:calc(20px + var(--safeB));
-    }
-    .footer-nav{ display:flex; justify-content:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
-    .footer-nav a{
-      text-decoration:none; color:rgba(255,255,255,0.4); font-size:11px;
-      font-weight:800; text-transform:uppercase; letter-spacing:1px; transition:0.3s;
-    }
-    .footer-nav a:hover { color:var(--neon); text-shadow:0 0 8px var(--neon); }
-    .technology-title{ font-size:20px; font-weight:1000; letter-spacing:6px; margin-bottom:6px; line-height:1; }
-    .technology-title b{ font-weight:1000; text-transform:lowercase; color:#fff; }
-    .technology-title span{ background:var(--brand-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase; }
-    .prestige-signature{ font-size:11px; font-weight:900; letter-spacing:1.2px; background:var(--signature-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-
-    #toast{
-      position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-120px);
-      background:rgba(6,6,12,0.95); border:1px solid var(--accent); padding:12px 24px;
-      border-radius:999px; color:#fff; z-index:9999; font-weight:900; font-size:13px;
-      transition:.3s ease; backdrop-filter:blur(15px); pointer-events:none;
-      max-width:90vw; text-align:center; box-shadow:0 10px 30px rgba(0, 242, 255, 0.2);
-    }
-    #toast.show{ transform:translateX(-50%) translateY(0); }
-  </style>
-</head>
-
-<body>
-  <div class="nebula"></div>
-
-  <div class="main">
-    <div class="brand-section" data-no-translate="1">
-      <h1 data-no-translate="1">italky<span class="ai" data-no-translate="1">AI</span></h1>
-      <div class="brand-sub" id="brandSub" data-no-translate="1">BE FREE</div>
-    </div>
-
-    <div class="world-container" aria-hidden="true">
-      <div class="earth-glow"></div>
-      <div class="earth">
-        <div class="ai-stamp ai-front" data-no-translate="1">ITALKY</div>
-        <div class="ai-stamp ai-back" data-no-translate="1">AI</div>
-      </div>
-    </div>
-
-    <div class="typewriter-container">
-      <div class="typewriter" id="typewriter">Bağlanılıyor...</div>
-    </div>
-
-    <div class="login-box">
-      <button class="google-btn" id="googleBtn" type="button">
-        <svg class="g-icon" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        <span id="googleBtnText">Google ile devam et</span>
-      </button>
-    </div>
-  </div>
-
-  <footer>
-    <div class="footer-nav">
-      <a href="/pages/about.html" id="footerAbout">Hakkımızda</a>
-      <a href="/pages/privacy.html" id="footerPrivacy">Gizlilik</a>
-      <a href="/pages/contact.html" id="footerContact">İletişim</a>
-    </div>
-    <div class="technology-title" data-no-translate="1"><b data-no-translate="1">italky</b><span data-no-translate="1">TECHNOLOGY</span></div>
-    <div class="prestige-signature" data-no-translate="1">italkyAI By Ozyigit's 2026</div>
-  </footer>
-
-  <div id="toast"></div>
-
-  <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-    import { ensureAuthAndCacheUser } from "/js/auth.js";
-
-    const toastEl = document.getElementById("toast");
-    const HOME = "/pages/home.html";
-    const googleBtn = document.getElementById("googleBtn");
-
-    const SITE_LANG_KEY = "site_lang";
-    const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
-
-    const I18N = {
-      tr: {
-        pageTitle: "italkyAI • Giriş",
-        googleBtn: "Google ile devam et",
-        footerAbout: "Hakkımızda",
-        footerFaq: "SSS",
-        footerPrivacy: "Gizlilik",
-        footerContact: "İletişim",
-        toastStarting: "Güvenli giriş başlatılıyor…",
-        toastSigningIn: "Oturum açılıyor...",
-        toastNoToken: "Token alınamadı",
-        toastLoginFailed: "Oturum açılamadı",
-        toastNoSession: "Oturum bulunamadı",
-        toastLoginError: "Giriş hatası",
-        toastStartFailed: "Giriş başlatılamadı",
-        phrases: [
-          "Dünyayı küçülttük, Cebinize sığdırdık...",
-          "Dünyada ilk ve tek…",
-          "Kültürel çeviri ile…",
-          "Kelimeyi değil, anlamı çeviriyoruz…",
-          "Offline çeviri ile kasıntısız yaşa…",
-          "Dünya artık senin dilinde…",
-          "Başlamak için sadece giriş yap…"
-        ]
-      },
-      en: {
-        pageTitle: "italkyAI • Login",
-        googleBtn: "Continue with Google",
-        footerAbout: "About",
-        footerFaq: "FAQ",
-        footerPrivacy: "Privacy",
-        footerContact: "Contact",
-        toastStarting: "Secure sign-in is starting…",
-        toastSigningIn: "Signing in...",
-        toastNoToken: "Token could not be received",
-        toastLoginFailed: "Sign-in failed",
-        toastNoSession: "Session not found",
-        toastLoginError: "Login error",
-        toastStartFailed: "Could not start sign-in",
-        phrases: [
-          "We made the world smaller, and fit it in your pocket...",
-          "The first and only in the world…",
-          "With cultural translation…",
-          "We translate meaning, not just words…",
-          "Use offline translation without stress…",
-          "The world now speaks your language…",
-          "Just sign in to begin…"
-        ]
-      },
-      de: {
-        pageTitle: "italkyAI • Anmeldung",
-        googleBtn: "Mit Google fortfahren",
-        footerAbout: "Über uns",
-        footerFaq: "FAQ",
-        footerPrivacy: "Datenschutz",
-        footerContact: "Kontakt",
-        toastStarting: "Sichere Anmeldung wird gestartet…",
-        toastSigningIn: "Anmeldung läuft...",
-        toastNoToken: "Token konnte nicht abgerufen werden",
-        toastLoginFailed: "Anmeldung fehlgeschlagen",
-        toastNoSession: "Keine Sitzung gefunden",
-        toastLoginError: "Anmeldefehler",
-        toastStartFailed: "Anmeldung konnte nicht gestartet werden",
-        phrases: [
-          "Wir haben die Welt kleiner gemacht und in deine Tasche gesteckt...",
-          "Die erste und einzige ihrer Art…",
-          "Mit kultureller Übersetzung…",
-          "Wir übersetzen Bedeutung, nicht nur Wörter…",
-          "Offline-Übersetzung ganz entspannt…",
-          "Die Welt spricht jetzt deine Sprache…",
-          "Melde dich einfach an, um zu starten…"
-        ]
-      },
-      fr: {
-        pageTitle: "italkyAI • Connexion",
-        googleBtn: "Continuer avec Google",
-        footerAbout: "À propos",
-        footerFaq: "FAQ",
-        footerPrivacy: "Confidentialité",
-        footerContact: "Contact",
-        toastStarting: "Connexion sécurisée en cours…",
-        toastSigningIn: "Connexion en cours...",
-        toastNoToken: "Le jeton n’a pas pu être obtenu",
-        toastLoginFailed: "Échec de la connexion",
-        toastNoSession: "Session introuvable",
-        toastLoginError: "Erreur de connexion",
-        toastStartFailed: "Impossible de démarrer la connexion",
-        phrases: [
-          "Nous avons réduit le monde et l’avons mis dans votre poche...",
-          "Le premier et le seul au monde…",
-          "Avec la traduction culturelle…",
-          "Nous traduisons le sens, pas seulement les mots…",
-          "La traduction hors ligne, sans stress…",
-          "Le monde parle désormais votre langue…",
-          "Connectez-vous simplement pour commencer…"
-        ]
-      },
-      it: {
-        pageTitle: "italkyAI • Accesso",
-        googleBtn: "Continua con Google",
-        footerAbout: "Chi siamo",
-        footerFaq: "FAQ",
-        footerPrivacy: "Privacy",
-        footerContact: "Contatto",
-        toastStarting: "Avvio accesso sicuro…",
-        toastSigningIn: "Accesso in corso...",
-        toastNoToken: "Impossibile ottenere il token",
-        toastLoginFailed: "Accesso non riuscito",
-        toastNoSession: "Sessione non trovata",
-        toastLoginError: "Errore di accesso",
-        toastStartFailed: "Impossibile avviare l’accesso",
-        phrases: [
-          "Abbiamo reso il mondo più piccolo e l’abbiamo messo in tasca...",
-          "Il primo e unico al mondo…",
-          "Con la traduzione culturale…",
-          "Traduciamo il significato, non solo le parole…",
-          "Traduzione offline senza stress…",
-          "Il mondo ora parla la tua lingua…",
-          "Accedi per iniziare…"
-        ]
-      },
-      es: {
-        pageTitle: "italkyAI • Iniciar sesión",
-        googleBtn: "Continuar con Google",
-        footerAbout: "Acerca de",
-        footerFaq: "Preguntas frecuentes",
-        footerPrivacy: "Privacidad",
-        footerContact: "Contacto",
-        toastStarting: "Inicio de sesión seguro en curso…",
-        toastSigningIn: "Iniciando sesión...",
-        toastNoToken: "No se pudo obtener el token",
-        toastLoginFailed: "No se pudo iniciar sesión",
-        toastNoSession: "No se encontró sesión",
-        toastLoginError: "Error de inicio de sesión",
-        toastStartFailed: "No se pudo iniciar el acceso",
-        phrases: [
-          "Hicimos el mundo más pequeño y lo pusimos en tu bolsillo...",
-          "El primero y único en el mundo…",
-          "Con traducción cultural…",
-          "Traducimos el significado, no solo las palabras…",
-          "Traducción sin conexión sin complicaciones…",
-          "El mundo ahora habla tu idioma…",
-          "Solo inicia sesión para comenzar…"
-        ]
-      },
-      ar: {
-        pageTitle: "italkyAI • تسجيل الدخول",
-        googleBtn: "المتابعة باستخدام Google",
-        footerAbout: "من نحن",
-        footerFaq: "الأسئلة الشائعة",
-        footerPrivacy: "الخصوصية",
-        footerContact: "اتصل بنا",
-        toastStarting: "جارٍ بدء تسجيل دخول آمن…",
-        toastSigningIn: "جارٍ تسجيل الدخول...",
-        toastNoToken: "تعذر الحصول على الرمز",
-        toastLoginFailed: "فشل تسجيل الدخول",
-        toastNoSession: "لم يتم العثور على جلسة",
-        toastLoginError: "خطأ في تسجيل الدخول",
-        toastStartFailed: "تعذر بدء تسجيل الدخول",
-        phrases: [
-          "لقد صغّرنا العالم ووضعناه في جيبك...",
-          "الأول والوحيد في العالم…",
-          "مع الترجمة الثقافية…",
-          "نترجم المعنى لا الكلمات فقط…",
-          "ترجمة دون اتصال بلا تعقيد…",
-          "العالم الآن يتحدث لغتك…",
-          "فقط سجّل الدخول للبدء…"
-        ]
-      }
-    };
-
-    function getSiteLangCode() {
-      const raw = String(
-        localStorage.getItem(SITE_LANG_KEY) ||
-        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
-        "tr"
-      ).trim().toLowerCase();
-
-      return I18N[raw] ? raw : "tr";
-    }
-
-    function currentDict() {
-      return I18N[getSiteLangCode()] || I18N.tr;
-    }
-
-    function applyLoginTranslations() {
-      const dict = currentDict();
-
-      document.documentElement.lang = getSiteLangCode();
-      document.title = dict.pageTitle;
-
-      const googleBtnText = document.getElementById("googleBtnText");
-      const footerAbout = document.getElementById("footerAbout");
-      const footerFaq = document.getElementById("footerFaq");
-      const footerPrivacy = document.getElementById("footerPrivacy");
-      const footerContact = document.getElementById("footerContact");
-      const typeEl = document.getElementById("typewriter");
-
-      if (googleBtnText) googleBtnText.textContent = dict.googleBtn;
-      if (footerAbout) footerAbout.textContent = dict.footerAbout;
-      if (footerFaq) footerFaq.textContent = dict.footerFaq;
-      if (footerPrivacy) footerPrivacy.textContent = dict.footerPrivacy;
-      if (footerContact) footerContact.textContent = dict.footerContact;
-      if (typeEl) typeEl.textContent = dict.phrases[0] || "";
-
-      return dict;
-    }
-
-    function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = String(msg || "");
-      toastEl.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(() => toastEl.classList.remove("show"), 2200);
-    }
-
-    function getNextTarget(){
-      try{
-        const u = new URL(location.href);
-        return String(u.searchParams.get("next") || "").trim();
-      }catch{
-        return "";
-      }
-    }
-
-    async function resolveTarget(access){
-  const next = getNextTarget();
-  return next || HOME;
+  <div class="nebula"></div>
+
+  <div class="main">
+    <div class="brand-section" data-no-translate="1">
+      <h1 data-no-translate="1">italky<span class="ai" data-no-translate="1">AI</span></h1>
+      <div class="brand-sub" id="brandSub" data-no-translate="1">BE FREE</div>
+    </div>
+
+    <div class="world-container" aria-hidden="true">
+      <div class="earth-glow"></div>
+      <div class="earth">
+        <div class="ai-stamp ai-front" data-no-translate="1">ITALKY</div>
+        <div class="ai-stamp ai-back" data-no-translate="1">AI</div>
+      </div>
+    </div>
+
+    <div class="typewriter-container">
+      <div class="typewriter" id="typewriter">Bağlanılıyor...</div>
+    </div>
+
+    <div class="login-box">
+      <button class="google-btn" id="googleBtn" type="button">
+        <svg class="g-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        <span id="googleBtnText">Google ile devam et</span>
+      </button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-nav">
+      <a href="/pages/about.html" id="footerAbout">Hakkımızda</a>
+      <a href="/pages/privacy.html" id="footerPrivacy">Gizlilik</a>
+      <a href="/pages/contact.html" id="footerContact">İletişim</a>
+    </div>
+    <div class="technology-title" data-no-translate="1"><b data-no-translate="1">italky</b><span data-no-translate="1">TECHNOLOGY</span></div>
+    <div class="prestige-signature" data-no-translate="1">italkyAI By Ozyigit's 2026</div>
+  </footer>
+
+  <div id="toast"></div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+    import { ensureAuthAndCacheUser } from "/js/auth.js";
+
+    const toastEl = document.getElementById("toast");
+    const HOME = "/pages/home.html";
+    const googleBtn = document.getElementById("googleBtn");
+
+    const SITE_LANG_KEY = "site_lang";
+    const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+
+    const I18N = {
+      tr: {
+        pageTitle: "italkyAI • Giriş",
+        googleBtn: "Google ile devam et",
+        footerAbout: "Hakkımızda",
+        footerFaq: "SSS",
+        footerPrivacy: "Gizlilik",
+        footerContact: "İletişim",
+        toastStarting: "Güvenli giriş başlatılıyor…",
+        toastSigningIn: "Oturum açılıyor...",
+        toastNoToken: "Token alınamadı",
+        toastLoginFailed: "Oturum açılamadı",
+        toastNoSession: "Oturum bulunamadı",
+        toastLoginError: "Giriş hatası",
+        toastStartFailed: "Giriş başlatılamadı",
+        phrases: [
+          "Dünyayı küçülttük, Cebinize sığdırdık...",
+          "Dünyada ilk ve tek…",
+          "Kültürel çeviri ile…",
+          "Kelimeyi değil, anlamı çeviriyoruz…",
+          "Offline çeviri ile kasıntısız yaşa…",
+          "Dünya artık senin dilinde…",
+          "Başlamak için sadece giriş yap…"
+        ]
+      },
+      en: {
+        pageTitle: "italkyAI • Login",
+        googleBtn: "Continue with Google",
+        footerAbout: "About",
+        footerFaq: "FAQ",
+        footerPrivacy: "Privacy",
+        footerContact: "Contact",
+        toastStarting: "Secure sign-in is starting…",
+        toastSigningIn: "Signing in...",
+        toastNoToken: "Token could not be received",
+        toastLoginFailed: "Sign-in failed",
+        toastNoSession: "Session not found",
+        toastLoginError: "Login error",
+        toastStartFailed: "Could not start sign-in",
+        phrases: [
+          "We made the world smaller, and fit it in your pocket...",
+          "The first and only in the world…",
+          "With cultural translation…",
+          "We translate meaning, not just words…",
+          "Use offline translation without stress…",
+          "The world now speaks your language…",
+          "Just sign in to begin…"
+        ]
+      },
+      de: {
+        pageTitle: "italkyAI • Anmeldung",
+        googleBtn: "Mit Google fortfahren",
+        footerAbout: "Über uns",
+        footerFaq: "FAQ",
+        footerPrivacy: "Datenschutz",
+        footerContact: "Kontakt",
+        toastStarting: "Sichere Anmeldung wird gestartet…",
+        toastSigningIn: "Anmeldung läuft...",
+        toastNoToken: "Token konnte nicht abgerufen werden",
+        toastLoginFailed: "Anmeldung fehlgeschlagen",
+        toastNoSession: "Keine Sitzung gefunden",
+        toastLoginError: "Anmeldefehler",
+        toastStartFailed: "Anmeldung konnte nicht gestartet werden",
+        phrases: [
+          "Wir haben die Welt kleiner gemacht und in deine Tasche gesteckt...",
+          "Die erste und einzige ihrer Art…",
+          "Mit kultureller Übersetzung…",
+          "Wir übersetzen Bedeutung, nicht nur Wörter…",
+          "Offline-Übersetzung ganz entspannt…",
+          "Die Welt spricht jetzt deine Sprache…",
+          "Melde dich einfach an, um zu starten…"
+        ]
+      },
+      fr: {
+        pageTitle: "italkyAI • Connexion",
+        googleBtn: "Continuer avec Google",
+        footerAbout: "À propos",
+        footerFaq: "FAQ",
+        footerPrivacy: "Confidentialité",
+        footerContact: "Contact",
+        toastStarting: "Connexion sécurisée en cours…",
+        toastSigningIn: "Connexion en cours...",
+        toastNoToken: "Le jeton n’a pas pu être obtenu",
+        toastLoginFailed: "Échec de la connexion",
+        toastNoSession: "Session introuvable",
+        toastLoginError: "Erreur de connexion",
+        toastStartFailed: "Impossible de démarrer la connexion",
+        phrases: [
+          "Nous avons réduit le monde et l’avons mis dans votre poche...",
+          "Le premier et le seul au monde…",
+          "Avec la traduction culturelle…",
+          "Nous traduisons le sens, pas seulement les mots…",
+          "La traduction hors ligne, sans stress…",
+          "Le monde parle désormais votre langue…",
+          "Connectez-vous simplement pour commencer…"
+        ]
+      },
+      it: {
+        pageTitle: "italkyAI • Accesso",
+        googleBtn: "Continua con Google",
+        footerAbout: "Chi siamo",
+        footerFaq: "FAQ",
+        footerPrivacy: "Privacy",
+        footerContact: "Contatto",
+        toastStarting: "Avvio accesso sicuro…",
+        toastSigningIn: "Accesso in corso...",
+        toastNoToken: "Impossibile ottenere il token",
+        toastLoginFailed: "Accesso non riuscito",
+        toastNoSession: "Sessione non trovata",
+        toastLoginError: "Errore di accesso",
+        toastStartFailed: "Impossibile avviare l’accesso",
+        phrases: [
+          "Abbiamo reso il mondo più piccolo e l’abbiamo messo in tasca...",
+          "Il primo e unico al mondo…",
+          "Con la traduzione culturale…",
+          "Traduciamo il significato, non solo le parole…",
+          "Traduzione offline senza stress…",
+          "Il mondo ora parla la tua lingua…",
+          "Accedi per iniziare…"
+        ]
+      },
+      es: {
+        pageTitle: "italkyAI • Iniciar sesión",
+        googleBtn: "Continuar con Google",
+        footerAbout: "Acerca de",
+        footerFaq: "Preguntas frecuentes",
+        footerPrivacy: "Privacidad",
+        footerContact: "Contacto",
+        toastStarting: "Inicio de sesión seguro en curso…",
+        toastSigningIn: "Iniciando sesión...",
+        toastNoToken: "No se pudo obtener el token",
+        toastLoginFailed: "No se pudo iniciar sesión",
+        toastNoSession: "No se encontró sesión",
+        toastLoginError: "Error de inicio de sesión",
+        toastStartFailed: "No se pudo iniciar el acceso",
+        phrases: [
+          "Hicimos el mundo más pequeño y lo pusimos en tu bolsillo...",
+          "El primero y único en el mundo…",
+          "Con traducción cultural…",
+          "Traducimos el significado, no solo las palabras…",
+          "Traducción sin conexión sin complicaciones…",
+          "El mundo ahora habla tu idioma…",
+          "Solo inicia sesión para comenzar…"
+        ]
+      },
+      ar: {
+        pageTitle: "italkyAI • تسجيل الدخول",
+        googleBtn: "المتابعة باستخدام Google",
+        footerAbout: "من نحن",
+        footerFaq: "الأسئلة الشائعة",
+        footerPrivacy: "الخصوصية",
+        footerContact: "اتصل بنا",
+        toastStarting: "جارٍ بدء تسجيل دخول آمن…",
+        toastSigningIn: "جارٍ تسجيل الدخول...",
+        toastNoToken: "تعذر الحصول على الرمز",
+        toastLoginFailed: "فشل تسجيل الدخول",
+        toastNoSession: "لم يتم العثور على جلسة",
+        toastLoginError: "خطأ في تسجيل الدخول",
+        toastStartFailed: "تعذر بدء تسجيل الدخول",
+        phrases: [
+          "لقد صغّرنا العالم ووضعناه في جيبك...",
+          "الأول والوحيد في العالم…",
+          "مع الترجمة الثقافية…",
+          "نترجم المعنى لا الكلمات فقط…",
+          "ترجمة دون اتصال بلا تعقيد…",
+          "العالم الآن يتحدث لغتك…",
+          "فقط سجّل الدخول للبدء…"
+        ]
+      }
+    };
+
+    function getSiteLangCode() {
+      const raw = String(
+        localStorage.getItem(SITE_LANG_KEY) ||
+        localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+        "tr"
+      ).trim().toLowerCase();
+
+      return I18N[raw] ? raw : "tr";
+    }
+
+    function currentDict() {
+      return I18N[getSiteLangCode()] || I18N.tr;
+    }
+
+    function applyLoginTranslations() {
+      const dict = currentDict();
+
+      document.documentElement.lang = getSiteLangCode();
+      document.title = dict.pageTitle;
+
+      const googleBtnText = document.getElementById("googleBtnText");
+      const footerAbout = document.getElementById("footerAbout");
+      const footerFaq = document.getElementById("footerFaq");
+      const footerPrivacy = document.getElementById("footerPrivacy");
+      const footerContact = document.getElementById("footerContact");
+      const typeEl = document.getElementById("typewriter");
+
+      if (googleBtnText) googleBtnText.textContent = dict.googleBtn;
+      if (footerAbout) footerAbout.textContent = dict.footerAbout;
+      if (footerFaq) footerFaq.textContent = dict.footerFaq;
+      if (footerPrivacy) footerPrivacy.textContent = dict.footerPrivacy;
+      if (footerContact) footerContact.textContent = dict.footerContact;
+      if (typeEl) typeEl.textContent = dict.phrases[0] || "";
+
+      return dict;
+    }
+
+    function toast(msg){
+      if(!toastEl) return;
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function getNextTarget(){
+      try{
+        const u = new URL(location.href);
+        return String(u.searchParams.get("next") || "").trim();
+      }catch{
+        return "";
+      }
+    }
+
+    async function resolveTarget(access){
+  const next = getNextTarget();
+  return next || HOME;
 }
 
-    async function getAccessState() {
-      const { data:{ session } } = await supabase.auth.getSession();
+    async function getAccessState() {
+      const { data:{ session } } = await supabase.auth.getSession();
 
-      if (!session?.access_token) {
-        throw new Error("Oturum bulunamadı");
-      }
+      if (!session?.access_token) {
+        throw new Error("Oturum bulunamadı");
+      }
 
-      const resp = await fetch("https://italky-api.onrender.com/api/session/access-state", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`
-        }
-      });
+      const resp = await fetch("https://italky-api.onrender.com/api/session/access-state", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`
+        }
+      });
 
-      const json = await resp.json().catch(() => ({}));
+      const json = await resp.json().catch(() => ({}));
 
-      if (!resp.ok) {
-        throw new Error(json?.detail || "Erişim kontrolü yapılamadı");
-      }
+      if (!resp.ok) {
+        throw new Error(json?.detail || "Erişim kontrolü yapılamadı");
+      }
 
-      return json;
-    }
+      return json;
+    }
 
-    async function routeAfterLogin(){
-  try{
-    await ensureAuthAndCacheUser();
-    const access = await getAccessState();
-    const target = await resolveTarget(access);
-    location.replace(target);
-  }catch(e){
-    console.error("routeAfterLogin error:", e);
-    location.replace(HOME);
-  }
+    async function routeAfterLogin(){
+  try{
+    await ensureAuthAndCacheUser();
+    const access = await getAccessState();
+    const target = await resolveTarget(access);
+    location.replace(target);
+  }catch(e){
+    console.error("routeAfterLogin error:", e);
+    location.replace(HOME);
+  }
 }
 
-    function hasNativeGoogleLogin() {
-      return !!(
-        window.Native &&
-        typeof window.Native.startGoogleLogin === "function"
-      );
-    }
+    function hasNativeGoogleLogin() {
+      return !!(
+        window.Native &&
+        typeof window.Native.startGoogleLogin === "function"
+      );
+    }
 
-    async function startWebGoogleLogin() {
-      const next = getNextTarget();
-      const redirectTo = next
-        ? `${location.origin}/pages/login.html?next=${encodeURIComponent(next)}`
-        : `${location.origin}/pages/login.html`;
+    async function startWebGoogleLogin() {
+      const next = getNextTarget();
+      const redirectTo = next
+        ? `${location.origin}/pages/login.html?next=${encodeURIComponent(next)}`
+        : `${location.origin}/pages/login.html`;
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo
-        }
-      });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo
+        }
+      });
 
-      if (error) {
-        throw error;
-      }
-    }
+      if (error) {
+        throw error;
+      }
+    }
 
-    window.onNativeLoginSuccess = async function(payload){
-      const dict = currentDict();
+    window.onNativeLoginSuccess = async function(payload){
+      const dict = currentDict();
 
-      try{
-        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
-        const idToken = String(data?.id_token || data?.idToken || "").trim();
+      try{
+        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+        const idToken = String(data?.id_token || data?.idToken || "").trim();
 
-        if(!idToken){
-          googleBtn.disabled = false;
-          toast(dict.toastNoToken);
-          return;
-        }
+        if(!idToken){
+          googleBtn.disabled = false;
+          toast(dict.toastNoToken);
+          return;
+        }
 
-        googleBtn.disabled = true;
-        toast(dict.toastSigningIn);
+        googleBtn.disabled = true;
+        toast(dict.toastSigningIn);
 
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider: "google",
-          token: idToken
-        });
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: idToken
+        });
 
-        if (error) {
-          googleBtn.disabled = false;
-          toast(dict.toastLoginFailed);
-          console.error("signInWithIdToken error:", error);
-          return;
-        }
+        if (error) {
+          googleBtn.disabled = false;
+          toast(dict.toastLoginFailed);
+          console.error("signInWithIdToken error:", error);
+          return;
+        }
 
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          googleBtn.disabled = false;
-          toast(dict.toastNoSession);
-          return;
-        }
+        const { data:{ session } } = await supabase.auth.getSession();
+        if(!session){
+          googleBtn.disabled = false;
+          toast(dict.toastNoSession);
+          return;
+        }
 
-        setTimeout(() => routeAfterLogin(), 300);
-      }catch(e){
-        console.error("onNativeLoginSuccess error:", e);
-        googleBtn.disabled = false;
-        toast(dict.toastLoginError);
-      }
-    };
+        setTimeout(() => routeAfterLogin(), 300);
+      }catch(e){
+        console.error("onNativeLoginSuccess error:", e);
+        googleBtn.disabled = false;
+        toast(dict.toastLoginError);
+      }
+    };
 
-    googleBtn?.addEventListener("click", async () => {
-      const dict = currentDict();
+    googleBtn?.addEventListener("click", async () => {
+      const dict = currentDict();
 
-      try{
-        googleBtn.disabled = true;
-        toast(dict.toastStarting);
+      try{
+        googleBtn.disabled = true;
+        toast(dict.toastStarting);
 
-        if (hasNativeGoogleLogin()) {
-          window.Native.startGoogleLogin();
-          return;
-        }
+        if (hasNativeGoogleLogin()) {
+          window.Native.startGoogleLogin();
+          return;
+        }
 
-        await startWebGoogleLogin();
-      }catch(e){
-        console.error("googleBtn click error:", e);
-        googleBtn.disabled = false;
-        toast(dict.toastStartFailed);
-      }
-    });
+        await startWebGoogleLogin();
+      }catch(e){
+        console.error("googleBtn click error:", e);
+        googleBtn.disabled = false;
+        toast(dict.toastStartFailed);
+      }
+    });
 
-    let phrases = applyLoginTranslations().phrases.slice();
-    let pi = 0;
-    const typeEl = document.getElementById("typewriter");
+    let phrases = applyLoginTranslations().phrases.slice();
+    let pi = 0;
+    const typeEl = document.getElementById("typewriter");
 
-    setInterval(() => {
-      phrases = currentDict().phrases.slice();
-      pi = (pi + 1) % phrases.length;
-      if(typeEl){
-        typeEl.style.animation = "none";
-        typeEl.offsetHeight;
-        typeEl.textContent = phrases[pi];
-        typeEl.style.animation = null;
-      }
-    }, 5600);
+    setInterval(() => {
+      phrases = currentDict().phrases.slice();
+      pi = (pi + 1) % phrases.length;
+      if(typeEl){
+        typeEl.style.animation = "none";
+        typeEl.offsetHeight;
+        typeEl.textContent = phrases[pi];
+        typeEl.style.animation = null;
+      }
+    }, 5600);
 
-    window.addEventListener("storage", (e) => {
-      if (e.key === SITE_LANG_KEY || e.key === LEGACY_SITE_LANG_KEY) {
-        const dict = applyLoginTranslations();
-        phrases = dict.phrases.slice();
-        pi = 0;
-      }
-    });
+    window.addEventListener("storage", (e) => {
+      if (e.key === SITE_LANG_KEY || e.key === LEGACY_SITE_LANG_KEY) {
+        const dict = applyLoginTranslations();
+        phrases = dict.phrases.slice();
+        pi = 0;
+      }
+    });
 
-    (async function boot(){
-      try{
-        applyLoginTranslations();
+    (async function boot(){
+      try{
+        applyLoginTranslations();
 
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          document.body.classList.add("login-ready");
-          return;
-        }
-        await routeAfterLogin();
-      }catch(e){
-        console.error("boot error:", e);
-        document.body.classList.add("login-ready");
-      }
-    })();
-  </script>
+        const { data:{ session } } = await supabase.auth.getSession();
+        if(!session){
+          document.body.classList.add("login-ready");
+          return;
+        }
+        await routeAfterLogin();
+      }catch(e){
+        console.error("boot error:", e);
+        document.body.classList.add("login-ready");
+      }
+    })();
+  </script>
 </body>
-</html>             bu kodu login.html yapabilirizx.
+</html>
