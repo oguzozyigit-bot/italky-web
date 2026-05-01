@@ -473,64 +473,73 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <!-- Can Uyandırma ve Kişisel Selamlama Modülü -->
-  <script type="module">
-    async function initCanWakeUp() {
-        // Fonetik uyum: "Can" veya global "Ken" seslerini yakalar
-        const WAKE_WORDS = ["hey can", "can uyan", "hey ken", "ken uyan"];
-        const $ = (id) => document.getElementById(id);
+ <!-- italkyAI: Can Uyandırma ve Kişisel Selamlama Modülü -->
+<script type="module">
+  async function initCanWakeUp() {
+    // Fonetik Uyumluluk: Hem Türkçe "Can" hem İngilizce "Ken" seslerini yakalar
+    const WAKE_WORDS = ["hey can", "can uyan", "hey ken", "ken uyan"];
 
-        // 1. Profil verisinden ismi çek (Mühürlü kullanıcı verisi)
-        const fullName = localStorage.getItem("user_full_name") || "italky Kullanıcısı";
-        const firstName = fullName.split(' ')[0]; // Örn: "Oğuz"
+    // Profil verisinden ismi çekiyoruz (Oğuz, Selden vb.)
+    // italkyAI Profil kurgusuna göre 'user_full_name' anahtarını kullanır
+    const fullName = localStorage.getItem("user_full_name") || "italky Kullanıcısı";
+    const firstName = fullName.split(' ')[0];
 
-        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!Recognition) return;
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) return;
 
-        const wakeRecognizer = new Recognition();
-        wakeRecognizer.lang = "tr-TR";
-        wakeRecognizer.continuous = true;
-        wakeRecognizer.interimResults = true;
+    const wakeRecognizer = new Recognition();
+    wakeRecognizer.lang = "tr-TR";
+    wakeRecognizer.continuous = true;
+    wakeRecognizer.interimResults = true;
 
-        wakeRecognizer.onresult = (event) => {
-            const transcript = Array.from(event.results)
-                .map(result => result[0].transcript.toLowerCase())
-                .join('');
+    wakeRecognizer.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript.toLowerCase();
+      }
 
-            // "Hey Can" yakalandı mı?
-            if (WAKE_WORDS.some(word => transcript.includes(word))) {
-                wakeRecognizer.stop(); // Çakışma önlemek için geçici durdur
-                
-                // Can'ın sesli yanıtı: Solid, Simple, Sincere
-                const greeting = `Uyandım ${firstName}, seni dinliyorum.`;
-                if (window.NativeTTS) {
-                    window.NativeTTS.speak(greeting, "tr");
-                }
-
-                // 2. FaceToFace Akışını Tetikle (Alt Mikrofonu Patlat)
-                setTimeout(() => {
-                    const botMic = $("botMic");
-                    if (botMic) {
-                        botMic.click();
-                        // Orb animasyonunu dinleme moduna sokar
-                        document.getElementById("frameRoot").className = "to-bot is-listening";
-                    }
-                }, 1500);
-            }
-        };
-
-        // Bağlantı koparsa veya işlem biterse Can tekrar pusuya yatar
-        wakeRecognizer.onend = () => wakeRecognizer.start();
+      if (WAKE_WORDS.some(word => transcript.includes(word))) {
+        wakeRecognizer.stop(); // Çakışma önlemek için geçici durdur
         
-        try {
-            wakeRecognizer.start();
-        } catch (e) {
-            console.warn("Can pusuya yatamadı, mikrofon izni gerekebilir.");
+        // Can'ın tepkisi: "Uyandım Oğuz, seni dinliyorum."
+        const greeting = `Uyandım ${firstName}, seni dinliyorum.`;
+        
+        // Seslendirme (italkyAI Native TTS Köprüsü)
+        if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+          window.NativeTTS.speak(greeting, "tr");
         }
-    }
 
-    // Sayfa hazır olduğunda Can'ı hayata döndür
-    document.addEventListener("DOMContentLoaded", initCanWakeUp);
+        // 2. FaceToFace Sistemini Ateşle (Senin yazdığın botMic butonunu tetikler)
+        setTimeout(() => {
+          const botMic = document.getElementById("botMic");
+          if (botMic) {
+            botMic.click();
+            // Ortadaki Orb'u (AI Core) hareketli hale getir
+            const root = document.getElementById("frameRoot");
+            if(root) root.className = "to-bot is-listening";
+          }
+        }, 1500);
+      }
+    };
+
+    // Bağlantı koparsa Can pusuya geri yatar
+    wakeRecognizer.onend = () => {
+      try { wakeRecognizer.start(); } catch(e) {}
+    };
+    
+    try {
+      wakeRecognizer.start();
+    } catch (e) {
+      console.warn("italkyAI: Mikrofon meşgul, Can beklemede.");
+    }
+  }
+
+  // Sayfa ve Global Access hazır olduğunda Can'ı başlat
+  // Senin kodundaki bootReady durumunu beklemek için küçük bir delay ekliyoruz
+  setTimeout(() => {
+    initCanWakeUp();
+  }, 2000);
+</script>
   </script>
 </body>
 </html>
