@@ -1,625 +1,2226 @@
-<!DOCTYPE html>
+<!-- FILE: /pages/login.html -->
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Giriş</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <title>italkyAI • FaceToFace</title>
 
-  <script>
-  (function(){
-    try{
-      if(navigator.onLine === false){
-        location.replace("/facetoface.html?mode=offline-forced");
-      }
-    }catch{}
-  })();
-  </script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
 
   <style>
     :root{
-      --bg-void:#060408;
-      --neon:#00f2ff;
-      --pink:#ff007a;
-      --brand-grad:linear-gradient(135deg,#00f2ff 0%,#6366f1 55%,#ff007a 100%);
-      --signature-grad:linear-gradient(to right,#fff,#00f2ff,#fff);
-      --accent:#00f2ff;
-      --muted:rgba(255,255,255,.65);
-      --safeB:env(safe-area-inset-bottom, 0px);
+      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      --bg:#050508;
+      --border:rgba(255,255,255,.15);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
     }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
-    html,body{ height:100%; width:100%; }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:Outfit,Arial,sans-serif}
 
     body{
-      background:var(--bg-void);
+      background:
+        radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),
+        radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),
+        #050508;
+    }
+
+    .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+    .edge-handle{
+      position:fixed;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:998;
+      width:28px;
+      height:118px;
+      border:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
       color:#fff;
-      font-family:'Outfit',sans-serif;
-      height:100dvh;
+      font-family:Outfit,Arial,sans-serif;
+      font-size:11px;
+      font-weight:1000;
+      line-height:1.15;
+      text-align:center;
+      white-space:pre;
+      box-shadow:0 0 32px rgba(0,0,0,.30);
+    }
+
+    .edge-handle.open{
+      right:0;
+      border-radius:18px 0 0 18px;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14);
+      border-right:none;
+      box-shadow:-10px 0 32px rgba(0,0,0,.30);
+    }
+
+    .edge-handle.open::before{
+      content:"O\A P\A E\A N";
+      white-space:pre;
+      text-shadow:0 0 12px rgba(255,255,255,.28);
+    }
+
+    .edge-handle.clear{
+      left:0;
+      border-radius:0 18px 18px 0;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14);
+      border-left:none;
+      box-shadow:10px 0 32px rgba(0,0,0,.30);
+    }
+
+    .edge-handle.clear::before{
+      content:"C\A L\A E\A A\A R";
+      white-space:pre;
+      text-shadow:0 0 12px rgba(255,255,255,.28);
+    }
+
+    .edge-handle:active{transform:translateY(-50%) scale(.96)}
+
+    .drawer-backdrop{
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      display:none;
+      background:rgba(0,0,0,.48);
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
+    }
+
+    .drawer-backdrop.show{display:block}
+
+    .side-drawer{
+      position:absolute;
+      top:0;
+      right:0;
+      width:min(86vw,360px);
+      height:100%;
+      padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
+      background:
+        radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%),
+        radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%),
+        linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98));
+      border-left:1px solid rgba(255,255,255,.10);
+      box-shadow:-24px 0 70px rgba(0,0,0,.52);
+      transform:translateX(102%);
+      transition:transform .24s ease;
+      overflow:auto;
+      scrollbar-width:none;
+    }
+
+    .drawer-backdrop.show .side-drawer{transform:translateX(0)}
+    .side-drawer::-webkit-scrollbar{display:none}
+
+    .drawer-logo-row{
+      margin:4px 0 18px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .drawer-logo{min-width:0;text-align:left}
+
+    .drawer-logo-main{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:30px;
+      line-height:1;
+      font-weight:900;
+      letter-spacing:-1px;
+    }
+
+    .drawer-logo-main .ai{
+      background:var(--ai-gradient);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .drawer-logo-sub{
+      margin-top:7px;
+      display:block;
+      color:rgba(255,255,255,.82);
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:1.8px;
+    }
+
+    .drawer-mode-pill{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      gap:4px;
+      padding:4px;
+      border-radius:999px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.11);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      margin-top:1px;
+    }
+
+    .drawer-mode-pill button{
+      border:none;
+      border-radius:999px;
+      min-height:30px;
+      padding:0 10px;
+      background:transparent;
+      color:rgba(255,255,255,.62);
+      font-family:inherit;
+      font-size:10px;
+      font-weight:1000;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .drawer-mode-pill button.active{
+      background:linear-gradient(135deg,rgba(165,180,252,.26),rgba(236,72,153,.18));
+      color:#fff;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .drawer-card{
+      border-radius:24px;
+      padding:14px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+      margin-bottom:14px;
+    }
+
+    .drawer-label{
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.45px;
+      color:rgba(255,255,255,.58);
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    .my-lang-btn{
+      width:100%;
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.065);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+      font-family:inherit;
+    }
+
+    .my-lang-left{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      min-width:0;
+    }
+
+    .my-lang-flag{
+      width:32px;
+      height:32px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,.07);
+      font-size:20px;
+      flex:0 0 32px;
+    }
+
+    .my-lang-text{
+      min-width:0;
+      text-align:left;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .my-lang-title{
+      font-size:14px;
+      font-weight:1000;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .my-lang-sub{
+      margin-top:2px;
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,.56);
+    }
+
+    .my-lang-caret{
+      opacity:.72;
+      font-size:18px;
+      flex:0 0 auto;
+    }
+
+    .drawer-links{
+      display:grid;
+      gap:9px;
+    }
+
+    .drawer-link{
+      min-height:50px;
+      border-radius:18px;
+      text-decoration:none;
+      color:#fff;
+      border:1px solid rgba(96,165,250,.18);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:0 13px;
+      font-size:14px;
+      font-weight:1000;
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+      background:rgba(15,39,66,.44);
+      font-family:inherit;
+    }
+
+    .drawer-link::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      opacity:.9;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at left,rgba(56,189,248,.12),transparent 55%),
+        linear-gradient(135deg,rgba(255,255,255,.035),rgba(15,39,66,.20));
+    }
+
+    .drawer-link span,
+    .drawer-link small{
+      position:relative;
+      z-index:2;
+    }
+
+    .drawer-link:active{transform:scale(.985)}
+
+    .drawer-link small{
+      color:rgba(255,255,255,.56);
+      font-size:12px;
+      font-weight:1000;
+    }
+
+    .drawer-link-button{
+      width:100%;
+      text-align:left;
+    }
+
+    .google-login-btn{
+      margin-top:14px;
+      width:100%;
+      min-height:56px;
+      border:none;
+      border-radius:18px;
+      background:linear-gradient(135deg,#fff7ed 0%,#ffffff 30%,#fde68a 62%,#fb923c 100%);
+      color:#202124;
+      font-size:14px;
+      font-weight:1000;
+      font-family:inherit;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      box-shadow:0 16px 32px rgba(251,146,60,.16);
+    }
+
+    .google-login-btn:active{transform:scale(.985)}
+
+    .google-icon{
+      width:22px;
+      height:22px;
+      flex:0 0 22px;
+    }
+
+    .subscription-note{
+      margin-top:10px;
+      padding:12px 13px;
+      border-radius:18px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      color:rgba(255,255,255,.70);
+      font-size:11px;
+      line-height:1.45;
+      font-weight:850;
+      text-align:center;
+    }
+
+    .subscription-note strong{
+      color:#fff;
+      font-weight:1000;
+    }
+
+    .drawer-footer-seal{
+      margin-top:14px;
+      padding:11px 10px 2px;
+      text-align:center;
+      color:rgba(255,255,255,.46);
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.4px;
+    }
+
+    .drawer-footer-seal .ai{
+      background:var(--ai-gradient);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .my-lang-modal{
+      position:fixed;
+      inset:0;
+      z-index:1200;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(0,0,0,.58);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+    }
+
+    .my-lang-modal.show{display:flex}
+
+    .my-lang-card{
+      width:min(92vw,420px);
+      max-height:78vh;
+      border-radius:26px;
+      background:linear-gradient(180deg,rgba(13,18,32,.98),rgba(7,10,20,.98));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 26px 60px rgba(0,0,0,.48);
       overflow:hidden;
       display:flex;
       flex-direction:column;
+    }
+
+    .my-lang-head{
+      padding:16px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .my-lang-head-title{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:19px;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .my-lang-head-sub{
+      margin-top:5px;
+      font-size:12px;
+      font-weight:800;
+      color:rgba(255,255,255,.54);
+      line-height:1.35;
+    }
+
+    .my-lang-close{
+      width:40px;
+      height:40px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:20px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .my-lang-list{
+      padding:12px;
+      overflow:auto;
+      display:grid;
+      gap:9px;
+      scrollbar-width:none;
+    }
+
+    .my-lang-list::-webkit-scrollbar{display:none}
+
+    .my-lang-option{
+      width:100%;
+      min-height:50px;
+      border:none;
+      border-radius:17px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+      font-family:inherit;
+    }
+
+    .my-lang-option.active{
+      background:linear-gradient(135deg,rgba(56,189,248,.14),rgba(99,102,241,.12));
+      border-color:rgba(56,189,248,.24);
+    }
+
+    .my-lang-option-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .my-lang-option-flag{
+      font-size:20px;
+      width:28px;
+      flex:0 0 28px;
+      text-align:center;
+    }
+
+    .my-lang-option-name{
+      font-size:14px;
+      font-weight:900;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .my-lang-option-check{
+      opacity:0;
+      color:#86efac;
+      font-weight:1000;
+      font-size:17px;
+    }
+
+    .my-lang-option.active .my-lang-option-check{opacity:1}
+
+    .half-screen{
+      flex:1;
+      min-height:0;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      align-items:center;
+      overflow:hidden;
+      padding:10px 8px;
+    }
+
+    .half-screen.top{
+      transform:rotate(180deg);
+      background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg));
+    }
+
+    .half-screen.bottom{
+      background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg));
+      padding-bottom:calc(4px + var(--safe-bottom));
+    }
+
+    .lang-row{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:20;
+    }
+
+    .lang-trigger{
+      min-height:38px;
+      border:none;
+      border-radius:999px;
+      background:transparent;
+      color:#fff;
+      font-size:13px;
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:82vw;
+      padding:8px 14px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+
+    .popover{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(92vw,360px);
+      height:360px;
+      background:#0a0a0f;
+      border:1px solid var(--border);
+      border-radius:24px;
+      display:none;
+      flex-direction:column;
+      z-index:100;
+      overflow:hidden;
+      box-shadow:0 22px 60px rgba(0,0,0,.92);
+    }
+
+    .popover.show{display:flex}
+    .half-screen.top .popover{top:58px}
+    .half-screen.bottom .popover{bottom:58px}
+
+    .pop-head{
+      padding:14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-weight:900;
+    }
+
+    .pop-close{
+      cursor:pointer;
+      padding:8px 12px;
+      border-radius:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .pop-list{
+      flex:1;
+      overflow-y:auto;
+      padding:10px;
+      scrollbar-width:none;
+    }
+
+    .pop-list::-webkit-scrollbar{display:none}
+
+    .pop-item{
+      padding:12px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+      border:1px solid transparent;
+    }
+
+    .pop-item.active{
+      background:rgba(99,102,241,.14);
+      border-color:rgba(99,102,241,.25);
+    }
+
+    .pop-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+      flex:1;
+    }
+
+    .pop-flag{font-size:18px}
+    .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pop-code{font-size:12px;font-weight:900;opacity:.7}
+    .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+    .pop-download,
+    .pop-installed,
+    .pop-active,
+    .pop-queued,
+    .pop-native{
+      width:32px;
+      height:32px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:15px;
+      line-height:1;
+      font-weight:1000;
+    }
+
+    .pop-download{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      cursor:pointer;
+    }
+
+    .pop-download:active{transform:scale(.94)}
+
+    .pop-installed{
+      border:1px solid rgba(34,197,94,.36);
+      background:rgba(34,197,94,.14);
+      color:#86efac;
+      box-shadow:0 0 18px rgba(34,197,94,.12);
+    }
+
+    .pop-active{
+      border:1px solid rgba(59,130,246,.34);
+      background:rgba(59,130,246,.14);
+      color:#bfdbfe;
+      animation:softPulse 1.1s ease-in-out infinite;
+    }
+
+    .pop-queued{
+      border:1px solid rgba(245,158,11,.34);
+      background:rgba(245,158,11,.14);
+      color:#fde68a;
+    }
+
+    .pop-native{
+      border:1px solid rgba(34,197,94,.22);
+      background:rgba(34,197,94,.08);
+      color:#bbf7d0;
+    }
+
+    @keyframes softPulse{
+      0%,100%{opacity:.65;transform:scale(.98)}
+      50%{opacity:1;transform:scale(1.04)}
+    }
+
+    .pop-empty{
+      padding:20px 14px;
+      text-align:center;
+      color:rgba(255,255,255,.68);
+      font-size:13px;
+      line-height:1.5;
+      font-weight:800;
+    }
+
+    .chat-body{
+      flex:1;
+      width:100%;
+      min-height:0;
+      overflow-y:auto;
+      overflow-x:hidden;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      gap:14px;
+      padding:18px 0 18px;
+      text-align:center;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+      touch-action:pan-y;
+      mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
+    }
+
+    .chat-body::before{
+      content:"";
+      flex:1 0 auto;
+      min-height:12px;
+    }
+
+    .chat-body::-webkit-scrollbar{
+      display:none;
+      width:0;
+      height:0;
+    }
+
+    .bubble{
+      max-width:86%;
+      line-height:1.18;
+      word-break:break-word;
+      font-size:24px;
+      font-weight:900;
+      opacity:.9;
+      text-align:center;
+    }
+
+    .bubble.latest{
+      font-size:32px;
+      font-weight:1000;
+      opacity:1;
+    }
+
+    .mic-line{
+      width:100%;
+      display:grid;
+      grid-template-columns:1fr 70px 1fr;
+      align-items:center;
+      gap:12px;
+      padding:0 8px 0;
+      flex:0 0 auto;
+      transform:translateY(-8px);
+    }
+
+    .mic-side{
+      min-height:60px;
+      display:flex;
       align-items:center;
       justify-content:center;
     }
 
-    body:not(.login-ready) .main,
-    body:not(.login-ready) footer{
-      visibility:hidden;
-      opacity:0;
+    .mic-side.empty{pointer-events:none}
+
+    .mic-btn{
+      width:70px;
+      height:70px;
+      border:none;
+      border-radius:999px;
+      background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.18);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
+      position:relative;
     }
 
-    body.login-ready .main,
-    body.login-ready footer{
-      visibility:visible;
-      opacity:1;
-      transition:opacity .18s ease;
+    .mic-btn svg{
+      width:30px;
+      height:30px;
+      stroke:currentColor;
+      stroke-width:2.2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
     }
 
-    .nebula{
-      position:fixed; inset:0;
-      background:
-        radial-gradient(circle at 25% 20%, rgba(0,242,255,.12), transparent 45%),
-        radial-gradient(circle at 80% 80%, rgba(255,0,122,.10), transparent 55%),
-        radial-gradient(circle at 50% 50%, rgba(15, 8, 22, 1) 0%, #060408 100%);
-      z-index:0;
+    .mic-btn.listening{
+      background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
+      box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
+      animation:micBreath 1.05s ease-in-out infinite;
     }
 
-    .main{
-      flex:1; width:100%;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      padding:0 26px; z-index:10;
-      margin-top:-10px;
+    .mic-btn.listening::after{
+      content:"";
+      position:absolute;
+      inset:-13px;
+      border-radius:50%;
+      border:2px solid rgba(165,180,252,.78);
+      box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35);
+      animation:micPulse 1s ease-out infinite;
     }
 
-    .brand-section{ text-align:center; margin-bottom:5px; }
-    .brand-section h1{
-      font-family:'Space Grotesk', sans-serif;
-      font-size:64px; font-weight:1000;
-      letter-spacing:-4px; line-height:1;
-      filter:drop-shadow(0 0 15px rgba(0, 242, 255, 0.2));
-    }
-    .brand-section h1 span.ai{
-      background:var(--brand-grad);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    }
-    .brand-sub{
-      margin-top:8px; font-size:12px; font-weight:900;
-      letter-spacing:8px; text-transform:uppercase; color:#fff;
-      opacity:.9; text-shadow:0 0 10px rgba(255,255,255,0.3);
+    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+    @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
+
+    .center-hub{
+      height:82px;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      background:rgba(0,0,0,.58);
+      backdrop-filter:blur(16px);
+      z-index:50;
+      border-top:1px solid rgba(255,255,255,.05);
+      border-bottom:1px solid rgba(255,255,255,.05);
     }
 
-    .world-container{
-      position:relative; width:280px; height:280px;
-      display:flex; align-items:center; justify-content:center;
-      margin-top:10px; margin-bottom:10px; perspective:1000px;
+    .orb{
+      width:66px;
+      height:66px;
+      border-radius:50%;
+      background:#000;
+      border:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:13px;
+      font-weight:900;
+      position:relative;
+      overflow:visible;
     }
-    .earth-glow{
-      position:absolute; inset:10px; border-radius:50%;
-      background:radial-gradient(circle, rgba(0, 242, 255, 0.22) 0%, transparent 70%);
-      filter:blur(25px); opacity:.95; z-index:0;
-      animation:glowBreath 4.8s ease-in-out infinite alternate;
-    }
-    @keyframes glowBreath{ from{ transform:scale(.95); opacity:.6; } to{ transform:scale(1.1); opacity:.9; } }
 
-    .earth{
-      position:relative; width:210px; height:210px; border-radius:50%;
-      background-image:url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
-      background-size:cover; background-position:center;
-      box-shadow:inset -30px -30px 60px rgba(0,0,0,0.9), inset 10px 10px 30px rgba(255,255,255,0.1), 0 0 80px rgba(0,242,255,0.25);
-      transform-style:preserve-3d; animation:rotateSphere 34s linear infinite; z-index:2; overflow:hidden;
-    }
-    @keyframes rotateSphere{ from{ transform:rotateY(0deg); } to{ transform:rotateY(360deg); } }
+    .orb-main{position:relative;z-index:3}
+    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-    .ai-stamp{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      font-weight:1000; letter-spacing:2px; color:rgba(255,255,255,0.95);
-      text-shadow:0 0 20px rgba(0,242,255,0.4); mix-blend-mode:screen; opacity:.95;
-      pointer-events:none; user-select:none; backface-visibility:hidden;
+    .sat{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:10px;
+      height:10px;
+      margin-left:-5px;
+      margin-top:-5px;
+      border-radius:50%;
+      z-index:1;
+      filter:blur(1.5px);
     }
-    .ai-front{ font-size:44px; transform:translateZ(1px); z-index:4; }
-    .ai-back{ font-size:50px; letter-spacing:1px; transform:rotateY(180deg) translateZ(1px); z-index:3; }
 
-    .typewriter-container{ height:40px; margin-top:5px; margin-bottom:15px; display:flex; justify-content:center; align-items:center; width:100%; }
-    .typewriter{
-      font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--muted);
-      border-right:2px solid var(--accent); white-space:nowrap; overflow:hidden; width:0;
-      animation:typing 5.6s steps(46, end) infinite, blink .85s step-end infinite;
-      text-shadow:0 0 10px rgba(0, 242, 255, 0.2);
-    }
-    @keyframes typing { 0%,10%{ width:0 } 62%,86%{ width:100% } 100%{ width:0 } }
-    @keyframes blink { from,to{ border-color:transparent } 50%{ border-color:var(--accent) } }
+    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
+    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
 
-    .login-box{ width:100%; max-width:300px; z-index:20; }
-    .google-btn{
-      width:100%; height:54px; border:none; border-radius:27px;
-      background:#ffffff; color:#1f1f1f; font-family:'Outfit', sans-serif;
-      font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center;
-      gap:12px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,0.3);
-      transition:all .2s ease; user-select:none;
-    }
-    .google-btn:active{ transform:scale(.97); }
-    .google-btn:hover { box-shadow:0 12px 30px rgba(0,0,0,0.4); background:#fcfcfc; }
-    .google-btn:disabled{ opacity:.7; cursor:default; }
-    .g-icon{ width:20px; height:20px; display:block; }
+    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
+    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
 
-    footer{
-      width:100%; text-align:center; z-index:20;
-      padding-bottom:calc(20px + var(--safeB));
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9998;
+      padding:20px;
     }
-    .footer-nav{ display:flex; justify-content:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
-    .footer-nav a{
-      text-decoration:none; color:rgba(255,255,255,0.4); font-size:11px;
-      font-weight:800; text-transform:uppercase; letter-spacing:1px; transition:0.3s;
-    }
-    .footer-nav a:hover { color:var(--neon); text-shadow:0 0 8px var(--neon); }
-    .technology-title{ font-size:20px; font-weight:1000; letter-spacing:6px; margin-bottom:6px; line-height:1; }
-    .technology-title b{ font-weight:1000; text-transform:lowercase; color:#fff; }
-    .technology-title span{ background:var(--brand-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase; }
-    .prestige-signature{ font-size:11px; font-weight:900; letter-spacing:1.2px; background:var(--signature-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-    #toast{
-      position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-120px);
-      background:rgba(6,6,12,0.95); border:1px solid var(--accent); padding:12px 24px;
-      border-radius:999px; color:#fff; z-index:9999; font-weight:900; font-size:13px;
-      transition:.3s ease; backdrop-filter:blur(15px); pointer-events:none;
-      max-width:90vw; text-align:center; box-shadow:0 10px 30px rgba(0, 242, 255, 0.2);
+    .modal.show{display:flex}
+
+    .modal-card{
+      width:min(100%,420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg,rgba(16,16,24,.97),rgba(10,10,18,.97));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
     }
-    #toast.show{ transform:translateX(-50%) translateY(0); }
+
+    .modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}
+    .modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76);white-space:pre-line}
+    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+
+    .modal-btn{
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
+    .modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%) translateY(120px);
+      max-width:min(92vw,430px);
+      min-height:44px;
+      padding:11px 16px;
+      border-radius:16px;
+      background:rgba(12,16,28,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      z-index:9999;
+      box-shadow:0 18px 36px rgba(0,0,0,.35);
+      transition:.22s ease;
+      pointer-events:none;
+    }
+
+    .toast.show{transform:translateX(-50%) translateY(0)}
+
+    @media(max-width:390px){
+      .mic-line{grid-template-columns:1fr 66px 1fr;gap:8px;transform:translateY(-7px)}
+      .mic-btn{width:66px;height:66px}
+      .mic-btn svg{width:28px;height:28px}
+      .bubble{font-size:22px}
+      .bubble.latest{font-size:30px}
+      .drawer-mode-pill button{font-size:9px;padding:0 8px}
+    }
   </style>
 </head>
 
 <body>
-  <div class="nebula"></div>
+  <button id="sideClearBtn" class="edge-handle clear" type="button" aria-label="Ekranı temizle"></button>
+  <button id="drawerEdgeBtn" class="edge-handle open" type="button" aria-label="Menüyü aç"></button>
 
-  <div class="main">
-    <div class="brand-section" data-no-translate="1">
-      <h1 data-no-translate="1">italky<span class="ai" data-no-translate="1">AI</span></h1>
-      <div class="brand-sub" id="brandSub" data-no-translate="1">BE FREE</div>
-    </div>
+  <div id="drawerBackdrop" class="drawer-backdrop">
+    <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
+      <div class="drawer-logo-row">
+        <div class="drawer-logo">
+          <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
+          <div class="drawer-logo-sub">BE FREE</div>
+        </div>
 
-    <div class="world-container" aria-hidden="true">
-      <div class="earth-glow"></div>
-      <div class="earth">
-        <div class="ai-stamp ai-front" data-no-translate="1">ITALKY</div>
-        <div class="ai-stamp ai-back" data-no-translate="1">AI</div>
+        <div class="drawer-mode-pill" aria-label="Çeviri modu">
+          <button id="modeOnlineBtn" class="active" type="button">Online</button>
+          <button id="modeOfflineBtn" type="button">Offline</button>
+        </div>
       </div>
-    </div>
 
-    <div class="typewriter-container">
-      <div class="typewriter" id="typewriter">Bağlanılıyor...</div>
-    </div>
+      <div class="drawer-card">
+        <div class="drawer-label">Kendi Dilim</div>
+        <button id="myLangDrawerBtn" class="my-lang-btn" type="button">
+          <span class="my-lang-left">
+            <span id="myLangDrawerFlag" class="my-lang-flag">🇹🇷</span>
+            <span class="my-lang-text">
+              <span id="myLangDrawerTitle" class="my-lang-title">Türkçe</span>
+              <span class="my-lang-sub">Offline paketlerde ana dil</span>
+            </span>
+          </span>
+          <span class="my-lang-caret">›</span>
+        </button>
+      </div>
 
-    <div class="login-box">
-      <button class="google-btn" id="googleBtn" type="button">
-        <svg class="g-icon" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      <nav class="drawer-links">
+        <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/contact.html"><span>İletişim</span><small>›</small></a>
+
+        <button id="drawerWidgetBtn" class="drawer-link drawer-link-button" type="button">
+          <span>Kısa Yol Ekle</span>
+          <small>+</small>
+        </button>
+      </nav>
+
+      <button id="drawerLoginBtn" class="google-login-btn" type="button">
+        <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C36.9 39.3 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
         </svg>
-        <span id="googleBtnText">Google ile devam et</span>
+        <span>Üyelik Sistemi Çok Yakında</span>
       </button>
+
+      <div class="subscription-note">
+        <strong>Üyelik sistemi çok yakında</strong><br/>
+        Şimdilik giriş yapmadan FaceToFace, yazıdan çeviri, oyunlar ve seviye tespit özelliklerini kullanabilirsiniz.
+      </div>
+
+      <div class="drawer-footer-seal">
+        italky<span class="ai">AI</span> Ozigit's 2026
+      </div>
+    </aside>
+  </div>
+
+  <div id="myLangModal" class="my-lang-modal">
+    <div class="my-lang-card">
+      <div class="my-lang-head">
+        <div>
+          <div class="my-lang-head-title">Kendi Dilim</div>
+          <div class="my-lang-head-sub">Offline paketlerde ve önerilerde kullanılacak ana dil.</div>
+        </div>
+        <button id="myLangModalClose" class="my-lang-close" type="button">×</button>
+      </div>
+      <div id="myLangModalList" class="my-lang-list"></div>
     </div>
   </div>
 
-  <footer>
-    <div class="footer-nav">
-      <a href="/pages/about.html" id="footerAbout">Hakkımızda</a>
-      <a href="/pages/privacy.html" id="footerPrivacy">Gizlilik</a>
-      <a href="/pages/contact.html" id="footerContact">İletişim</a>
-    </div>
-    <div class="technology-title" data-no-translate="1"><b data-no-translate="1">italky</b><span data-no-translate="1">TECHNOLOGY</span></div>
-    <div class="prestige-signature" data-no-translate="1">italkyAI By Ozyigit's 2026</div>
-  </footer>
+  <main class="container">
+    <section class="half-screen top" id="topSection">
+      <div class="lang-row">
+        <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
+      </div>
 
-  <div id="toast"></div>
+      <div class="popover" id="pop-top">
+        <div class="pop-head">
+          <div id="topPopTitle">ÜST DİL</div>
+          <div class="pop-close" id="close-top">✕</div>
+        </div>
+        <div class="pop-list" id="list-top"></div>
+      </div>
+
+      <div class="chat-body" id="topBody"></div>
+
+      <div class="mic-line">
+        <div class="mic-side empty"></div>
+        <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+            <path d="M19 10a7 7 0 0 1-14 0"></path>
+            <path d="M12 17v4"></path>
+            <path d="M8 21h8"></path>
+          </svg>
+        </button>
+        <div class="mic-side empty"></div>
+      </div>
+    </section>
+
+    <section class="center-hub">
+      <div class="orb">
+        <span class="sat sat1"></span>
+        <span class="sat sat2"></span>
+        <span class="orb-main">italky<span class="ai">AI</span></span>
+      </div>
+    </section>
+
+    <section class="half-screen bottom" id="botSection">
+      <div class="lang-row">
+        <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
+      </div>
+
+      <div class="popover" id="pop-bot">
+        <div class="pop-head">
+          <div id="botPopTitle">ALT DİL</div>
+          <div class="pop-close" id="close-bot">✕</div>
+        </div>
+        <div class="pop-list" id="list-bot"></div>
+      </div>
+
+      <div class="chat-body" id="botBody"></div>
+
+      <div class="mic-line">
+        <div class="mic-side empty"></div>
+
+        <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+            <path d="M19 10a7 7 0 0 1-14 0"></path>
+            <path d="M12 17v4"></path>
+            <path d="M8 21h8"></path>
+          </svg>
+        </button>
+
+        <div class="mic-side empty"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="adModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="adTitle">Ücretsiz Kullanım</h3>
+      <p class="modal-text" id="adText">
+        FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.
+      </p>
+      <div class="modal-actions">
+        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklam İzle</button>
+        <button id="closeAdBtn" class="modal-btn secondary" type="button">Şimdilik Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
 
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-    import { ensureAuthAndCacheUser } from "/js/auth.js";
+    import { getLangPoolForSite } from "/js/lang_pool_full.js";
+    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
 
-    const toastEl = document.getElementById("toast");
-    const HOME = "/facetoface.html";
-    const googleBtn = document.getElementById("googleBtn");
+    const API_BASE = "https://italky-api.onrender.com";
+    const $ = (id) => document.getElementById(id);
 
     const SITE_LANG_KEY = "site_lang";
     const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+    const NATIVE_LANG_KEY = "italky_native_lang_v7";
+    const MY_LANG_KEY = "italky_public_my_lang_v1";
 
-    const I18N = {
-      tr: {
-        pageTitle: "italkyAI • Giriş",
-        googleBtn: "Google ile devam et",
-        footerAbout: "Hakkımızda",
-        footerFaq: "SSS",
-        footerPrivacy: "Gizlilik",
-        footerContact: "İletişim",
-        toastStarting: "Güvenli giriş başlatılıyor…",
-        toastSigningIn: "Oturum açılıyor...",
-        toastNoToken: "Token alınamadı",
-        toastLoginFailed: "Oturum açılamadı",
-        toastNoSession: "Oturum bulunamadı",
-        toastLoginError: "Giriş hatası",
-        toastStartFailed: "Giriş başlatılamadı",
-        phrases: [
-          "Dünyayı küçülttük, Cebinize sığdırdık...",
-          "Dünyada ilk ve tek…",
-          "Kültürel çeviri ile…",
-          "Kelimeyi değil, anlamı çeviriyoruz…",
-          "Offline çeviri ile kasıntısız yaşa…",
-          "Dünya artık senin dilinde…",
-          "Başlamak için sadece giriş yap…"
-        ]
+    const AD_INTERVAL_MS = 3 * 60 * 1000;
+
+    const BCP = {
+      tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
+      ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
+    };
+
+    const UI = {
+      tr:{
+        topLang:"ÜST DİL",
+        botLang:"ALT DİL",
+        adTitle:"Ücretsiz Kullanım",
+        adText:"FaceToFace ücretsiz kullanımda reklam içerir. Devam etmek için kısa bir reklam izleyin.",
+        downloadAdTitle:"Dil Paketi İndirme",
+        downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
+        watchAd:"Reklam İzle",
+        close:"Şimdilik Kapat",
+        adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
+        micError:"Mikrofon hatası.",
+        micDenied:"Mikrofon izni gerekli.",
+        micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
+        listeningDone:"Dinleme tamamlanıyor...",
+        translateError:"Çeviri yapılamadı",
+        loginSoon:"Üyelik sistemi çok yakında aktif olacak. Şimdilik giriş yapmadan özellikleri kullanabilirsiniz.",
+        onlineMode:"Online mod aktif.",
+        offlineMode:"Offline mod aktif.",
+        packReady:"Dil paketi zaten hazır.",
+        packDownloading:"Dil paketiniz indiriliyor.",
+        packQueued:"Dil paketi sıraya alındı.",
+        packDownloaded:"Dil paketiniz indirildi.",
+        offerTitle:"Offline Dil Paketi",
+        offerText:"Kendi diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\n{sourceLang} ⇄ {targetLang} paketini indirerek bu dili internet olmadan da kullanabilirsiniz.",
+        offerOk:"İndir",
+        offerCancel:"Şimdilik Kapat",
+        sameLang:"Aynı dil için paket indirilemez.",
+        nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.",
+        noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
+        myLangChanged:"Kendi diliniz güncellendi.",
+        myLangWarnTitle:"Kendi Dilim Değişsin mi?",
+        myLangWarnText:"Kendi dilinizi değiştirirseniz daha önce indirdiğiniz offline dil paketleri silinir.\n\nDevam etmek istiyor musunuz?",
+        myLangWarnOk:"Değiştir",
+        myLangWarnCancel:"Vazgeç"
       },
-      en: {
-        pageTitle: "italkyAI • Login",
-        googleBtn: "Continue with Google",
-        footerAbout: "About",
-        footerFaq: "FAQ",
-        footerPrivacy: "Privacy",
-        footerContact: "Contact",
-        toastStarting: "Secure sign-in is starting…",
-        toastSigningIn: "Signing in...",
-        toastNoToken: "Token could not be received",
-        toastLoginFailed: "Sign-in failed",
-        toastNoSession: "Session not found",
-        toastLoginError: "Login error",
-        toastStartFailed: "Could not start sign-in",
-        phrases: [
-          "We made the world smaller, and fit it in your pocket...",
-          "The first and only in the world…",
-          "With cultural translation…",
-          "We translate meaning, not just words…",
-          "Use offline translation without stress…",
-          "The world now speaks your language…",
-          "Just sign in to begin…"
-        ]
-      },
-      de: {
-        pageTitle: "italkyAI • Anmeldung",
-        googleBtn: "Mit Google fortfahren",
-        footerAbout: "Über uns",
-        footerFaq: "FAQ",
-        footerPrivacy: "Datenschutz",
-        footerContact: "Kontakt",
-        toastStarting: "Sichere Anmeldung wird gestartet…",
-        toastSigningIn: "Anmeldung läuft...",
-        toastNoToken: "Token konnte nicht abgerufen werden",
-        toastLoginFailed: "Anmeldung fehlgeschlagen",
-        toastNoSession: "Keine Sitzung gefunden",
-        toastLoginError: "Anmeldefehler",
-        toastStartFailed: "Anmeldung konnte nicht gestartet werden",
-        phrases: [
-          "Wir haben die Welt kleiner gemacht und in deine Tasche gesteckt...",
-          "Die erste und einzige ihrer Art…",
-          "Mit kultureller Übersetzung…",
-          "Wir übersetzen Bedeutung, nicht nur Wörter…",
-          "Offline-Übersetzung ganz entspannt…",
-          "Die Welt spricht jetzt deine Sprache…",
-          "Melde dich einfach an, um zu starten…"
-        ]
-      },
-      fr: {
-        pageTitle: "italkyAI • Connexion",
-        googleBtn: "Continuer avec Google",
-        footerAbout: "À propos",
-        footerFaq: "FAQ",
-        footerPrivacy: "Confidentialité",
-        footerContact: "Contact",
-        toastStarting: "Connexion sécurisée en cours…",
-        toastSigningIn: "Connexion en cours...",
-        toastNoToken: "Le jeton n’a pas pu être obtenu",
-        toastLoginFailed: "Échec de la connexion",
-        toastNoSession: "Session introuvable",
-        toastLoginError: "Erreur de connexion",
-        toastStartFailed: "Impossible de démarrer la connexion",
-        phrases: [
-          "Nous avons réduit le monde et l’avons mis dans votre poche...",
-          "Le premier et le seul au monde…",
-          "Avec la traduction culturelle…",
-          "Nous traduisons le sens, pas seulement les mots…",
-          "La traduction hors ligne, sans stress…",
-          "Le monde parle désormais votre langue…",
-          "Connectez-vous simplement pour commencer…"
-        ]
-      },
-      it: {
-        pageTitle: "italkyAI • Accesso",
-        googleBtn: "Continua con Google",
-        footerAbout: "Chi siamo",
-        footerFaq: "FAQ",
-        footerPrivacy: "Privacy",
-        footerContact: "Contatto",
-        toastStarting: "Avvio accesso sicuro…",
-        toastSigningIn: "Accesso in corso...",
-        toastNoToken: "Impossibile ottenere il token",
-        toastLoginFailed: "Accesso non riuscito",
-        toastNoSession: "Sessione non trovata",
-        toastLoginError: "Errore di accesso",
-        toastStartFailed: "Impossibile avviare l’accesso",
-        phrases: [
-          "Abbiamo reso il mondo più piccolo e l’abbiamo messo in tasca...",
-          "Il primo e unico al mondo…",
-          "Con la traduzione culturale…",
-          "Traduciamo il significato, non solo le parole…",
-          "Traduzione offline senza stress…",
-          "Il mondo ora parla la tua lingua…",
-          "Accedi per iniziare…"
-        ]
-      },
-      es: {
-        pageTitle: "italkyAI • Iniciar sesión",
-        googleBtn: "Continuar con Google",
-        footerAbout: "Acerca de",
-        footerFaq: "Preguntas frecuentes",
-        footerPrivacy: "Privacidad",
-        footerContact: "Contacto",
-        toastStarting: "Inicio de sesión seguro en curso…",
-        toastSigningIn: "Iniciando sesión...",
-        toastNoToken: "No se pudo obtener el token",
-        toastLoginFailed: "No se pudo iniciar sesión",
-        toastNoSession: "No se encontró sesión",
-        toastLoginError: "Error de inicio de sesión",
-        toastStartFailed: "No se pudo iniciar el acceso",
-        phrases: [
-          "Hicimos el mundo más pequeño y lo pusimos en tu bolsillo...",
-          "El primero y único en el mundo…",
-          "Con traducción cultural…",
-          "Traducimos el significado, no solo las palabras…",
-          "Traducción sin conexión sin complicaciones…",
-          "El mundo ahora habla tu idioma…",
-          "Solo inicia sesión para comenzar…"
-        ]
-      },
-      ar: {
-        pageTitle: "italkyAI • تسجيل الدخول",
-        googleBtn: "المتابعة باستخدام Google",
-        footerAbout: "من نحن",
-        footerFaq: "الأسئلة الشائعة",
-        footerPrivacy: "الخصوصية",
-        footerContact: "اتصل بنا",
-        toastStarting: "جارٍ بدء تسجيل دخول آمن…",
-        toastSigningIn: "جارٍ تسجيل الدخول...",
-        toastNoToken: "تعذر الحصول على الرمز",
-        toastLoginFailed: "فشل تسجيل الدخول",
-        toastNoSession: "لم يتم العثور على جلسة",
-        toastLoginError: "خطأ في تسجيل الدخول",
-        toastStartFailed: "تعذر بدء تسجيل الدخول",
-        phrases: [
-          "لقد صغّرنا العالم ووضعناه في جيبك...",
-          "الأول والوحيد في العالم…",
-          "مع الترجمة الثقافية…",
-          "نترجم المعنى لا الكلمات فقط…",
-          "ترجمة دون اتصال بلا تعقيد…",
-          "العالم الآن يتحدث لغتك…",
-          "فقط سجّل الدخول للبدء…"
-        ]
+      en:{
+        topLang:"TOP LANGUAGE",
+        botLang:"BOTTOM LANGUAGE",
+        adTitle:"Free Use",
+        adText:"FaceToFace free use includes ads. Watch a short ad to continue.",
+        downloadAdTitle:"Language Pack Download",
+        downloadAdText:"You can download this language pack to use it without internet.",
+        watchAd:"Watch Ad",
+        close:"Close",
+        adNeeded:"The action was not started without watching the ad.",
+        micError:"Microphone error.",
+        micDenied:"Microphone permission is required.",
+        micUnsupported:"Speech recognition is not supported on this device.",
+        listeningDone:"Finishing listening...",
+        translateError:"Translation failed",
+        loginSoon:"Membership system will be active very soon. You can use pre-login features for now.",
+        onlineMode:"Online mode is active.",
+        offlineMode:"Offline mode is active.",
+        packReady:"Language pack is already ready.",
+        packDownloading:"Your language pack is downloading.",
+        packQueued:"Language pack added to queue.",
+        packDownloaded:"Your language pack has been downloaded.",
+        offerTitle:"Offline Language Pack",
+        offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nDownload the {sourceLang} ⇄ {targetLang} pack to use this language without internet.",
+        offerOk:"Download",
+        offerCancel:"Not Now",
+        sameLang:"You cannot download a pack for the same language.",
+        nativeNotReady:"Native download is not ready on this device.",
+        noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
+        myLangChanged:"Your language has been updated.",
+        myLangWarnTitle:"Change My Language?",
+        myLangWarnText:"If you change your language, previously downloaded offline language packs will be deleted.\n\nDo you want to continue?",
+        myLangWarnOk:"Change",
+        myLangWarnCancel:"Cancel"
       }
     };
 
-    function getSiteLangCode() {
-      const raw = String(
+    function canonical(code){ return OfflinePackBridge.canonical(code); }
+
+    function getInitialSiteLang(){
+      return canonical(
         localStorage.getItem(SITE_LANG_KEY) ||
         localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+        localStorage.getItem(NATIVE_LANG_KEY) ||
+        navigator.language ||
         "tr"
-      ).trim().toLowerCase();
-
-      return I18N[raw] ? raw : "tr";
+      ) || "tr";
     }
 
-    function currentDict() {
-      return I18N[getSiteLangCode()] || I18N.tr;
+    const SITE_LANG = getInitialSiteLang();
+
+    const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
+      ? getLangPoolForSite(SITE_LANG)
+      : [];
+
+    const FALLBACK_LANGS = [
+      { code:"tr", flag:"🇹🇷", name:"Türkçe", bcp:"tr-TR" },
+      { code:"en", flag:"🇬🇧", name:"İngilizce", bcp:"en-US" },
+      { code:"de", flag:"🇩🇪", name:"Almanca", bcp:"de-DE" },
+      { code:"fr", flag:"🇫🇷", name:"Fransızca", bcp:"fr-FR" },
+      { code:"it", flag:"🇮🇹", name:"İtalyanca", bcp:"it-IT" },
+      { code:"es", flag:"🇪🇸", name:"İspanyolca", bcp:"es-ES" },
+      { code:"ar", flag:"🇸🇦", name:"Arapça", bcp:"ar-SA" },
+      { code:"ru", flag:"🇷🇺", name:"Rusça", bcp:"ru-RU" },
+      { code:"bg", flag:"🇧🇬", name:"Bulgarca", bcp:"bg-BG" },
+      { code:"pt", flag:"🇵🇹", name:"Portekizce", bcp:"pt-PT" },
+      { code:"zh", flag:"🇨🇳", name:"Çince", bcp:"zh-CN" },
+      { code:"ja", flag:"🇯🇵", name:"Japonca", bcp:"ja-JP" },
+      { code:"ko", flag:"🇰🇷", name:"Korece", bcp:"ko-KR" }
+    ];
+
+    const LANGS = (RAW_LANG_POOL.length ? RAW_LANG_POOL : FALLBACK_LANGS)
+      .map((l) => {
+        const code = canonical(l.code);
+        if(!code) return null;
+
+        return {
+          code,
+          flag:l.flag || "🌐",
+          name:l.name || l.tr_name || code.toUpperCase(),
+          bcp:l.bcp || BCP[code] || `${code}-${String(code).toUpperCase()}`
+        };
+      })
+      .filter(Boolean)
+      .filter((item,index,arr) => arr.findIndex((x) => x.code === item.code) === index);
+
+    function langExists(code){ return !!LANGS.find((x) => x.code === canonical(code)); }
+
+    function langObj(code){
+      const c = canonical(code);
+
+      return LANGS.find((x) => x.code === c) || {
+        code:c || "en",
+        flag:"🌐",
+        name:(c || "en").toUpperCase(),
+        bcp:BCP[c] || "en-US"
+      };
     }
 
-    function applyLoginTranslations() {
-      const dict = currentDict();
-
-      document.documentElement.lang = getSiteLangCode();
-      document.title = dict.pageTitle;
-
-      const googleBtnText = document.getElementById("googleBtnText");
-      const footerAbout = document.getElementById("footerAbout");
-      const footerFaq = document.getElementById("footerFaq");
-      const footerPrivacy = document.getElementById("footerPrivacy");
-      const footerContact = document.getElementById("footerContact");
-      const typeEl = document.getElementById("typewriter");
-
-      if (googleBtnText) googleBtnText.textContent = dict.googleBtn;
-      if (footerAbout) footerAbout.textContent = dict.footerAbout;
-      if (footerFaq) footerFaq.textContent = dict.footerFaq;
-      if (footerPrivacy) footerPrivacy.textContent = dict.footerPrivacy;
-      if (footerContact) footerContact.textContent = dict.footerContact;
-      if (typeEl) typeEl.textContent = dict.phrases[0] || "";
-
-      return dict;
+    function labelChip(code){
+      const o = langObj(code);
+      return `${o.flag} ${o.name}`;
     }
 
-    function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = String(msg || "");
-      toastEl.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(() => toastEl.classList.remove("show"), 2200);
+    function differentLang(base){
+      const b = canonical(base);
+
+      const preferred = b === "tr"
+        ? ["en","de","fr","es","it","ar","ru","pt"]
+        : ["tr","en","de","fr","es","it","ar","ru","pt"];
+
+      for(const c of preferred){
+        if(c !== b && langExists(c)) return c;
+      }
+
+      return LANGS.find((l) => l.code !== b)?.code || "en";
     }
 
-    function getNextTarget(){
+    async function detectCountryLang(){
       try{
-        const u = new URL(location.href);
-        return String(u.searchParams.get("next") || "").trim();
-      }catch{
-        return "";
-      }
+        const nav = canonical(navigator.language || "");
+        if(nav && langExists(nav)) return nav;
+      }catch{}
+
+      if(langExists("tr")) return "tr";
+      return LANGS[0]?.code || "tr";
     }
 
-    async function resolveTarget(access){
-  const next = getNextTarget();
-  return next || HOME;
-}
+    function getSavedMyLang(){
+      const saved = canonical(localStorage.getItem(MY_LANG_KEY) || "");
+      if(saved && langExists(saved)) return saved;
 
-    async function getAccessState() {
-      const { data:{ session } } = await supabase.auth.getSession();
+      const initial = getInitialSiteLang();
+      if(initial && langExists(initial)) return initial;
 
-      if (!session?.access_token) {
-        throw new Error("Oturum bulunamadı");
-      }
+      if(langExists("tr")) return "tr";
+      return LANGS[0]?.code || "tr";
+    }
 
-      const resp = await fetch("https://italky-api.onrender.com/api/session/access-state", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`
-        }
+    let myLang = getSavedMyLang();
+    let botLang = myLang;
+    let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+
+    if(topLang === botLang) topLang = differentLang(botLang);
+
+    const sideClearBtn = $("sideClearBtn");
+    const drawerEdgeBtn = $("drawerEdgeBtn");
+    const drawerBackdrop = $("drawerBackdrop");
+    const drawerLoginBtn = $("drawerLoginBtn");
+    const drawerWidgetBtn = $("drawerWidgetBtn");
+
+    const myLangDrawerBtn = $("myLangDrawerBtn");
+    const myLangDrawerFlag = $("myLangDrawerFlag");
+    const myLangDrawerTitle = $("myLangDrawerTitle");
+    const myLangModal = $("myLangModal");
+    const myLangModalClose = $("myLangModalClose");
+    const myLangModalList = $("myLangModalList");
+
+    const topBody = $("topBody");
+    const botBody = $("botBody");
+    const topMic = $("topMic");
+    const botMic = $("botMic");
+    const topLangBtn = $("topLangBtn");
+    const botLangBtn = $("botLangBtn");
+    const popTop = $("pop-top");
+    const popBot = $("pop-bot");
+    const listTop = $("list-top");
+    const listBot = $("list-bot");
+    const closeTop = $("close-top");
+    const closeBot = $("close-bot");
+    const topPopTitle = $("topPopTitle");
+    const botPopTitle = $("botPopTitle");
+    const modeOnlineBtn = $("modeOnlineBtn");
+    const modeOfflineBtn = $("modeOfflineBtn");
+    const adModal = $("adModal");
+    const adTitle = $("adTitle");
+    const adText = $("adText");
+    const watchAdBtn = $("watchAdBtn");
+    const closeAdBtn = $("closeAdBtn");
+    const toast = $("toast");
+
+    let recognizer = null;
+    let liveText = "";
+    let lastAdAt = Date.now();
+    let currentMode = "online";
+    let lastOpenPopSide = null;
+    let manualStopPending = false;
+
+    function tx(key){
+      const c = UI[myLang] ? myLang : "en";
+      return UI[c]?.[key] || UI.en[key] || key;
+    }
+
+    function tFormat(key, vars = {}){
+      let value = tx(key);
+      Object.keys(vars).forEach((k) => {
+        value = value.replaceAll(`{${k}}`, vars[k]);
       });
-
-      const json = await resp.json().catch(() => ({}));
-
-      if (!resp.ok) {
-        throw new Error(json?.detail || "Erişim kontrolü yapılamadı");
-      }
-
-      return json;
+      return value;
     }
 
-    async function routeAfterLogin(){
-  try{
-    await ensureAuthAndCacheUser();
-    const access = await getAccessState();
-    const target = await resolveTarget(access);
-    location.replace(target);
-  }catch(e){
-    console.error("routeAfterLogin error:", e);
-    location.replace(HOME);
-  }
-}
-
-    function hasNativeGoogleLogin() {
-      return !!(
-        window.Native &&
-        typeof window.Native.startGoogleLogin === "function"
-      );
+    function showToast(msg){
+      if(!toast) return;
+      toast.textContent = String(msg || "");
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
     }
 
-    async function startWebGoogleLogin() {
-      const next = getNextTarget();
-      const redirectTo = next
-        ? `${location.origin}/pages/login.html?next=${encodeURIComponent(next)}`
-        : `${location.origin}/pages/login.html`;
+    function openDrawer(){ drawerBackdrop?.classList.add("show"); }
+    function closeDrawer(){ drawerBackdrop?.classList.remove("show"); }
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo
-        }
-      });
+    drawerEdgeBtn?.addEventListener("click", openDrawer);
+    drawerBackdrop?.addEventListener("click", (e) => {
+      if(e.target === drawerBackdrop) closeDrawer();
+    });
 
-      if (error) {
-        throw error;
-      }
-    }
-
-    window.onNativeLoginSuccess = async function(payload){
-      const dict = currentDict();
-
-      try{
-        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
-        const idToken = String(data?.id_token || data?.idToken || "").trim();
-
-        if(!idToken){
-          googleBtn.disabled = false;
-          toast(dict.toastNoToken);
+    drawerWidgetBtn?.addEventListener("click", () => {
+      try {
+        if (window.Native && typeof window.Native.addWidgetToHomeScreen === "function") {
+          window.Native.addWidgetToHomeScreen();
+          closeDrawer();
           return;
         }
 
-        googleBtn.disabled = true;
-        toast(dict.toastSigningIn);
+        showToast("Ana ekranda boş alana basılı tutup Widgetlar bölümünden italkyAI kısa yolunu ekleyebilirsiniz.");
+      } catch (e) {
+        showToast("Kısa yol ekleme başlatılamadı.");
+      }
+    });
 
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider: "google",
-          token: idToken
+    drawerLoginBtn?.addEventListener("click", () => {
+      showToast(tx("loginSoon"));
+    });
+
+    function renderMyLangDrawer(){
+      const info = langObj(myLang);
+      if(myLangDrawerFlag) myLangDrawerFlag.textContent = info.flag;
+      if(myLangDrawerTitle) myLangDrawerTitle.textContent = info.name;
+    }
+
+    function renderMyLangModalList(){
+      if(!myLangModalList) return;
+
+      myLangModalList.innerHTML = LANGS.map((lang) => `
+        <button class="my-lang-option ${lang.code === myLang ? "active" : ""}" type="button" data-my-lang="${lang.code}">
+          <span class="my-lang-option-left">
+            <span class="my-lang-option-flag">${lang.flag}</span>
+            <span class="my-lang-option-name">${lang.name}</span>
+          </span>
+          <span class="my-lang-option-check">✓</span>
+        </button>
+      `).join("");
+
+      myLangModalList.querySelectorAll("[data-my-lang]").forEach((btn) => {
+        btn.onclick = async () => {
+          const next = canonical(btn.getAttribute("data-my-lang") || "");
+          if(!next || !langExists(next) || next === myLang) return;
+
+          if(OfflinePackBridge.hasAnyInstalledPair()){
+            const ok = await showModalChoice({
+              title:tx("myLangWarnTitle"),
+              text:tx("myLangWarnText"),
+              okText:tx("myLangWarnOk"),
+              cancelText:tx("myLangWarnCancel")
+            });
+
+            if(!ok) return;
+
+            OfflinePackBridge.clearInstalledPairs();
+          }
+
+          myLang = next;
+
+          localStorage.setItem(MY_LANG_KEY, myLang);
+          localStorage.setItem(SITE_LANG_KEY, myLang);
+          localStorage.setItem(LEGACY_SITE_LANG_KEY, myLang);
+          localStorage.setItem(NATIVE_LANG_KEY, myLang);
+
+          OfflinePackBridge.setOfflineNativeLang(myLang);
+
+          renderMyLangDrawer();
+          renderMyLangModalList();
+          refreshTexts();
+          refreshOpenPop();
+
+          showToast(tx("myLangChanged"));
+          myLangModal?.classList.remove("show");
+        };
+      });
+    }
+
+    myLangDrawerBtn?.addEventListener("click", () => {
+      renderMyLangModalList();
+      myLangModal?.classList.add("show");
+    });
+
+    myLangModalClose?.addEventListener("click", () => {
+      myLangModal?.classList.remove("show");
+    });
+
+    myLangModal?.addEventListener("click", (e) => {
+      if(e.target === myLangModal) myLangModal.classList.remove("show");
+    });
+
+    function refreshModeButtons(){
+      modeOnlineBtn?.classList.toggle("active",currentMode === "online");
+      modeOfflineBtn?.classList.toggle("active",currentMode === "offline");
+    }
+
+    function setMode(mode){
+      currentMode = mode === "offline" ? "offline" : "online";
+      refreshModeButtons();
+
+      if(currentMode === "online") showToast(tx("onlineMode"));
+      if(currentMode === "offline") showToast(tx("offlineMode"));
+
+      closeAllPop();
+    }
+
+    function refreshTexts(){
+      topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
+      botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
+      topPopTitle.textContent = tx("topLang");
+      botPopTitle.textContent = tx("botLang");
+      adTitle.textContent = tx("adTitle");
+      adText.textContent = tx("adText");
+      watchAdBtn.textContent = tx("watchAd");
+      closeAdBtn.textContent = tx("close");
+      renderMyLangDrawer();
+    }
+
+    function closeAllPop(){
+      popTop.classList.remove("show");
+      popBot.classList.remove("show");
+      lastOpenPopSide = null;
+    }
+
+    function refreshOpenPop(){
+      if(lastOpenPopSide === "top" && popTop.classList.contains("show")) renderPop("top");
+      if(lastOpenPopSide === "bot" && popBot.classList.contains("show")) renderPop("bot");
+    }
+
+    window.addEventListener("offlinePackBridgeStateChanged", refreshOpenPop);
+
+    function showModalChoice({ title = "", text = "", okText = "", cancelText = "" } = {}){
+      return new Promise((resolve) => {
+        if(adTitle) adTitle.textContent = title || tx("adTitle");
+        if(adText) adText.textContent = text || "";
+        if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
+        if(closeAdBtn) closeAdBtn.textContent = cancelText || tx("close");
+
+        adModal.classList.add("show");
+
+        const clean = () => {
+          watchAdBtn.onclick = null;
+          closeAdBtn.onclick = null;
+          adModal.classList.remove("show");
+        };
+
+        watchAdBtn.onclick = () => {
+          clean();
+          resolve(true);
+        };
+
+        closeAdBtn.onclick = () => {
+          clean();
+          resolve(false);
+        };
+      });
+    }
+
+    function showAdModal({title,text,adUnit = "public_facetoface_3min", langCode = ""} = {}){
+      return new Promise((resolve) => {
+        if(adTitle) adTitle.textContent = title || tx("adTitle");
+        if(adText) adText.textContent = text || tx("adText");
+        if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
+        if(closeAdBtn) closeAdBtn.textContent = tx("close");
+
+        adModal.classList.add("show");
+
+        const clean = () => {
+          watchAdBtn.onclick = null;
+          closeAdBtn.onclick = null;
+          adModal.classList.remove("show");
+        };
+
+        watchAdBtn.onclick = async () => {
+          clean();
+
+          const ok = await OfflinePackBridge.showRewardedAd({
+            adUnit,
+            langCode,
+            timeoutMs:20000
+          });
+
+          if(ok) lastAdAt = Date.now();
+
+          resolve(!!ok);
+        };
+
+        closeAdBtn.onclick = () => {
+          clean();
+          resolve(false);
+        };
+      });
+    }
+
+    async function maybeShowAd(){
+      const now = Date.now();
+      if(now - lastAdAt < AD_INTERVAL_MS) return true;
+
+      const ok = await showAdModal({
+        title:tx("adTitle"),
+        text:tx("adText"),
+        adUnit:"public_facetoface_3min",
+        langCode:""
+      });
+
+      if(!ok) showToast(tx("adNeeded"));
+      return ok;
+    }
+
+    function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
+    function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
+
+    function installedTargetsForNative(nativeLang){
+      const native = canonical(nativeLang);
+      const installed = OfflinePackBridge.getInstalledPairs();
+      const set = new Set();
+
+      Object.keys(installed).forEach((key) => {
+        const item = installed[key] || {};
+        const from = canonical(item.from || "");
+        const to = canonical(item.to || "");
+        if(from === native && to && to !== native) set.add(to);
+      });
+
+      return Array.from(set);
+    }
+
+    async function startOfflinePackDownload(targetCode, reason = "manual"){
+      syncInstalledPairsFromNative();
+
+      const target = canonical(targetCode);
+      if(!target) return false;
+
+      const targetInfo = langObj(target);
+      const nativeLang = myLang;
+
+      if(!nativeLang) return false;
+
+      if(nativeLang === target){
+        showToast(tx("sameLang"));
+        return false;
+      }
+
+      if(hasInstalledPair(nativeLang,target)){
+        OfflinePackBridge.saveHomeWidget(nativeLang,target,langObj,"ready");
+        showToast(tx("packReady"));
+        refreshOpenPop();
+        return true;
+      }
+
+      const nativeInfo = langObj(nativeLang);
+
+      const offerOk = await showModalChoice({
+        title:tx("offerTitle"),
+        text:tFormat("offerText", {
+          sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`,
+          targetLang:`${targetInfo.flag} ${targetInfo.name}`
+        }),
+        okText:tx("offerOk"),
+        cancelText:tx("offerCancel")
+      });
+
+      if(!offerOk) return false;
+
+      const adOk = await showAdModal({
+        title:tx("downloadAdTitle"),
+        text:`${nativeInfo.flag} ${nativeInfo.name} → ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
+        adUnit:`offline_download_${target}`,
+        langCode:target
+      });
+
+      if(!adOk){
+        showToast(tx("adNeeded"));
+        return false;
+      }
+
+      OfflinePackBridge.setOfflineNativeLang(myLang);
+
+      const result = OfflinePackBridge.startNativeDownload(nativeLang,target,langObj);
+
+      if(!result?.ok){
+        console.error("Offline download start failed:", result?.error);
+        showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : `${targetInfo.name} indirilemedi.`);
+        return false;
+      }
+
+      showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
+      refreshOpenPop();
+      return true;
+    }
+
+    async function maybeOfferOfflinePackAfterTranslate(){
+      if(currentMode !== "online") return;
+
+      syncInstalledPairsFromNative();
+
+      const nativeLang = myLang;
+      const target = topLang;
+
+      if(!nativeLang || !target || nativeLang === target) return;
+      if(hasInstalledPair(nativeLang,target)) return;
+
+      const key = `italky_offer_offline_pack_${canonical(nativeLang)}_${canonical(target)}_v1`;
+      if(sessionStorage.getItem(key) === "1") return;
+
+      sessionStorage.setItem(key,"1");
+
+      setTimeout(() => {
+        startOfflinePackDownload(target, "after_translate");
+      }, 650);
+    }
+
+    function getFilteredLangsForPopover(){
+      if(currentMode !== "offline") return LANGS;
+
+      syncInstalledPairsFromNative();
+
+      const targets = installedTargetsForNative(myLang);
+      if(!targets.length) return [];
+
+      const allowed = new Set([myLang, ...targets]);
+      return LANGS.filter((l) => allowed.has(l.code));
+    }
+
+    function isLangInstalledForUi(code){
+      const c = canonical(code);
+      if(!myLang) return false;
+      if(c === myLang && OfflinePackBridge.hasAnyInstalledPair()) return true;
+      return c !== myLang && hasInstalledPair(myLang,c);
+    }
+
+    function renderActionForLang(code){
+      const c = canonical(code);
+
+      if(OfflinePackBridge.isPairActive(myLang,c)){
+        return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+      }
+
+      if(OfflinePackBridge.isPairQueued(myLang,c)){
+        return `<span class="pop-queued" title="Sırada">…</span>`;
+      }
+
+      if(isLangInstalledForUi(c)){
+        return `<span class="pop-installed" title="Kurulu">✓</span>`;
+      }
+
+      if(c === myLang){
+        return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
+      }
+
+      return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
+    }
+
+    function renderPop(side){
+      const list = side === "top" ? listTop : listBot;
+      const selected = side === "top" ? topLang : botLang;
+      const filteredLangs = getFilteredLangsForPopover();
+
+      if(currentMode === "offline" && !filteredLangs.length){
+        list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`;
+        return;
+      }
+
+      list.innerHTML = filteredLangs.map((l) => `
+        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+          <div class="pop-left" data-select-code="${l.code}">
+            <div class="pop-flag">${l.flag}</div>
+            <div class="pop-name">${l.name}</div>
+          </div>
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            ${renderActionForLang(l.code)}
+          </div>
+        </div>
+      `).join("");
+
+      list.querySelectorAll("[data-select-code]").forEach((el) => {
+        el.addEventListener("click",() => {
+          const code = canonical(el.dataset.selectCode);
+          if(!code) return;
+
+          if(side === "top"){
+            topLang = code;
+            if(topLang === botLang) botLang = differentLang(topLang);
+          }else{
+            botLang = code;
+            if(botLang === topLang) topLang = differentLang(botLang);
+          }
+
+          closeAllPop();
+          refreshTexts();
+
+          if(code !== myLang && !hasInstalledPair(myLang,code)){
+            setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
+          }
         });
+      });
 
-        if (error) {
-          googleBtn.disabled = false;
-          toast(dict.toastLoginFailed);
-          console.error("signInWithIdToken error:", error);
-          return;
-        }
+      list.querySelectorAll("[data-download-code]").forEach((btn) => {
+        btn.addEventListener("click",async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const code = canonical(btn.dataset.downloadCode);
+          await startOfflinePackDownload(code, "lang_popup");
+        });
+      });
+    }
 
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          googleBtn.disabled = false;
-          toast(dict.toastNoSession);
-          return;
-        }
-
-        setTimeout(() => routeAfterLogin(), 300);
-      }catch(e){
-        console.error("onNativeLoginSuccess error:", e);
-        googleBtn.disabled = false;
-        toast(dict.toastLoginError);
-      }
-    };
-
-    googleBtn?.addEventListener("click", async () => {
-      const dict = currentDict();
-
-      try{
-        googleBtn.disabled = true;
-        toast(dict.toastStarting);
-
-        if (hasNativeGoogleLogin()) {
-          window.Native.startGoogleLogin();
-          return;
-        }
-
-        await startWebGoogleLogin();
-      }catch(e){
-        console.error("googleBtn click error:", e);
-        googleBtn.disabled = false;
-        toast(dict.toastStartFailed);
-      }
+    topLangBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      lastOpenPopSide = "top";
+      renderPop("top");
+      popTop.classList.add("show");
     });
 
-    let phrases = applyLoginTranslations().phrases.slice();
-    let pi = 0;
-    const typeEl = document.getElementById("typewriter");
-
-    setInterval(() => {
-      phrases = currentDict().phrases.slice();
-      pi = (pi + 1) % phrases.length;
-      if(typeEl){
-        typeEl.style.animation = "none";
-        typeEl.offsetHeight;
-        typeEl.textContent = phrases[pi];
-        typeEl.style.animation = null;
-      }
-    }, 5600);
-
-    window.addEventListener("storage", (e) => {
-      if (e.key === SITE_LANG_KEY || e.key === LEGACY_SITE_LANG_KEY) {
-        const dict = applyLoginTranslations();
-        phrases = dict.phrases.slice();
-        pi = 0;
-      }
+    botLangBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      lastOpenPopSide = "bot";
+      renderPop("bot");
+      popBot.classList.add("show");
     });
 
-    (async function boot(){
-      try{
-        applyLoginTranslations();
+    closeTop.addEventListener("click",closeAllPop);
+    closeBot.addEventListener("click",closeAllPop);
 
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          document.body.classList.add("login-ready");
+    document.addEventListener("click",(e) => {
+      const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
+      if(!inside) closeAllPop();
+    },{capture:true});
+
+    function clearBody(body){ if(body) body.innerHTML = ""; }
+
+    function addBubble(side,text,latest=false){
+      const body = side === "top" ? topBody : botBody;
+      if(!body) return null;
+
+      if(latest){
+        body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
+      }
+
+      const div = document.createElement("div");
+      div.className = `bubble${latest ? " latest" : ""}`;
+      div.textContent = String(text || "").trim();
+
+      body.appendChild(div);
+
+      const scroll = () => {
+        try{ body.scrollTop = body.scrollHeight; }catch{}
+      };
+
+      scroll();
+      requestAnimationFrame(scroll);
+      setTimeout(scroll,60);
+      return div;
+    }
+
+    function setMicState(side,listening){
+      const mic = side === "top" ? topMic : botMic;
+      mic.classList.toggle("listening",!!listening);
+    }
+
+    function buildRecognizer(langCode){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR) return null;
+
+      const rec = new SR();
+      rec.lang = langObj(langCode).bcp;
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.maxAlternatives = 1;
+      return rec;
+    }
+
+    function stopRecognizer(){
+      manualStopPending = true;
+      try{ recognizer?.stop?.(); }catch{}
+      setMicState("top",false);
+      setMicState("bot",false);
+
+      setTimeout(() => {
+        if(manualStopPending){
+          manualStopPending = false;
+          recognizer = null;
+          liveText = "";
+        }
+      }, 2500);
+    }
+
+    function cleanupTranscript(text){
+      return String(text || "")
+        .replace(/\s+/g," ")
+        .replace(/\b(\S+)( \1\b)+/gi,"$1")
+        .trim();
+    }
+
+    async function translateOnline(text,from,to){
+      const endpoints = [
+        `${API_BASE}/api/translate_ai`,
+        `${API_BASE}/api/translate-ai`,
+        `${API_BASE}/api/translate`
+      ];
+
+      for(const endpoint of endpoints){
+        try{
+          const r = await fetch(endpoint,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              text:String(text || "").trim(),
+              from_lang:canonical(from),
+              to_lang:canonical(to),
+              source:canonical(from),
+              target:canonical(to),
+              mode:"normal",
+              use_ai:false,
+              cultural:false,
+              tone:"neutral",
+              style:"warm"
+            })
+          });
+
+          const j = await r.json().catch(() => null);
+          const value = String(j?.translated || j?.translation || j?.text || "").trim();
+          if(r.ok && value) return value;
+        }catch{}
+      }
+
+      return null;
+    }
+
+    function translateOffline(text,from,to){
+      return OfflinePackBridge.translateOffline(text,from,to);
+    }
+
+    async function translateText(text,from,to){
+      if(currentMode === "offline"){
+        if(!hasInstalledPair(from,to)){
+          showToast(tx("offlineMode"));
+          await startOfflinePackDownload(to,"offline_mode");
+          return null;
+        }
+
+        const offline = await translateOffline(text,from,to);
+        if(offline) return offline;
+
+        showToast(tx("translateError"));
+        return null;
+      }
+
+      return await translateOnline(text,from,to);
+    }
+
+    function speak(text,langCode){
+      const value = String(text || "").trim();
+      if(!value) return;
+
+      const code = canonical(langCode);
+      const bcp = langObj(code).bcp || BCP[code] || "en-US";
+
+      try{
+        if(window.NativeTTS?.speak){
+          window.NativeTTS.speak(value, code);
           return;
         }
-        await routeAfterLogin();
       }catch(e){
-        console.error("boot error:", e);
-        document.body.classList.add("login-ready");
+        console.warn("NativeTTS failed:", e);
       }
-    })();
+
+      try{
+        if(window.speechSynthesis){
+          window.speechSynthesis.cancel();
+
+          const u = new SpeechSynthesisUtterance(value);
+          u.lang = bcp;
+          u.rate = .95;
+          u.pitch = 1;
+          u.volume = 1;
+
+          const voices = window.speechSynthesis.getVoices?.() || [];
+          const found = voices.find(v =>
+            String(v.lang || "").toLowerCase().startsWith(code)
+          );
+
+          if(found) u.voice = found;
+
+          setTimeout(() => {
+            try{ window.speechSynthesis.speak(u); }catch{}
+          }, 80);
+        }
+      }catch(e){
+        console.warn("speechSynthesis failed:", e);
+      }
+    }
+
+    async function finalizeSpeech(side,text){
+      manualStopPending = false;
+
+      const clean = cleanupTranscript(text);
+      if(!clean){
+        recognizer = null;
+        liveText = "";
+        setMicState(side,false);
+        return;
+      }
+
+      const adOk = await maybeShowAd();
+      if(!adOk){
+        recognizer = null;
+        liveText = "";
+        setMicState(side,false);
+        return;
+      }
+
+      const src = side === "top" ? topLang : botLang;
+      const dst = side === "top" ? botLang : topLang;
+      const other = side === "top" ? "bot" : "top";
+
+      addBubble(side,clean,false);
+      const targetRow = addBubble(other,"",true);
+
+      const translated = await translateText(clean,src,dst);
+
+      if(!translated){
+        if(targetRow) targetRow.textContent = tx("translateError");
+        recognizer = null;
+        liveText = "";
+        setMicState(side,false);
+        return;
+      }
+
+      targetRow.textContent = translated;
+
+      speak(translated,dst);
+
+      if(currentMode === "online"){
+        maybeOfferOfflinePackAfterTranslate();
+      }
+
+      recognizer = null;
+      liveText = "";
+      setMicState(side,false);
+    }
+
+    function startRecording(side){
+      if(recognizer){
+        stopRecognizer();
+        showToast(tx("listeningDone"));
+        return;
+      }
+
+      const sourceLang = side === "top" ? topLang : botLang;
+      const rec = buildRecognizer(sourceLang);
+
+      if(!rec){
+        showToast(tx("micUnsupported"));
+        return;
+      }
+
+      recognizer = rec;
+      liveText = "";
+      manualStopPending = false;
+
+      rec.onstart = () => setMicState(side,true);
+
+      rec.onresult = (e) => {
+        let finalText = "";
+        let interimText = "";
+
+        for(let i=0;i<e.results.length;i++){
+          const txt = String(e.results[i]?.[0]?.transcript || "").trim();
+          if(!txt) continue;
+
+          if(e.results[i].isFinal) finalText += ` ${txt}`;
+          else interimText += ` ${txt}`;
+        }
+
+        liveText = cleanupTranscript(finalText || interimText || liveText);
+      };
+
+      rec.onerror = (e) => {
+        const err = String(e?.error || "");
+
+        if(manualStopPending){
+          manualStopPending = false;
+
+          const finalText = cleanupTranscript(liveText);
+          recognizer = null;
+          setMicState(side,false);
+          liveText = "";
+
+          if(finalText){
+            finalizeSpeech(side,finalText);
+          }
+
+          return;
+        }
+
+        showToast(err.includes("not-allowed") ? tx("micDenied") : tx("micError"));
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+      };
+
+      rec.onend = () => {
+        const finalText = cleanupTranscript(liveText);
+
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+
+        if(finalText){
+          finalizeSpeech(side,finalText);
+        }else{
+          manualStopPending = false;
+        }
+      };
+
+      try{
+        rec.start();
+      }catch{
+        showToast(tx("micError"));
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+        manualStopPending = false;
+      }
+    }
+
+    topMic.addEventListener("click",() => startRecording("top"));
+    botMic.addEventListener("click",() => startRecording("bot"));
+
+    function clearChat(){
+      try{
+        if(recognizer){
+          stopRecognizer();
+        }
+      }catch{}
+
+      try{ window.speechSynthesis?.cancel?.(); }catch{}
+      try{ window.NativeTTS?.stop?.(); }catch{}
+
+      recognizer = null;
+      liveText = "";
+      manualStopPending = false;
+      topMic.classList.remove("listening");
+      botMic.classList.remove("listening");
+      clearBody(topBody);
+      clearBody(botBody);
+    }
+
+    sideClearBtn?.addEventListener("click",clearChat);
+
+    modeOnlineBtn?.addEventListener("click",() => setMode("online"));
+    modeOfflineBtn?.addEventListener("click",() => setMode("offline"));
+
+    window.addEventListener("offlinePairDownloadStarted",(e) => {
+      const d = e.detail || {};
+      const source = canonical(d.source || myLang);
+      const target = canonical(d.target || topLang);
+      if(!source || !target) return;
+
+      OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
+      showToast(tx("packDownloading"));
+      refreshOpenPop();
+    });
+
+    window.addEventListener("offlinePairDownloadCompleted",(e) => {
+      const d = e.detail || {};
+      const source = canonical(d.source || myLang);
+      const target = canonical(d.target || topLang);
+      if(!source || !target) return;
+
+      OfflinePackBridge.markInstalledPair(source,target);
+      OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
+      syncInstalledPairsFromNative();
+      showToast(tx("packDownloaded"));
+      refreshOpenPop();
+    });
+
+    window.addEventListener("offlinePairDownloadFailed",(e) => {
+      const d = e.detail || {};
+      showToast(d.error || tx("translateError"));
+      refreshOpenPop();
+    });
+
+    function applyRouteParams(){
+      const params = new URLSearchParams(location.search);
+      const source = canonical(params.get("source") || "");
+      const target = canonical(params.get("target") || "");
+      const mode = canonical(params.get("mode") || "");
+
+      if(source && langExists(source)) botLang = source;
+      if(target && langExists(target)) topLang = target;
+      if(topLang === botLang) topLang = differentLang(botLang);
+      if(mode === "offline") currentMode = "offline";
+    }
+
+    async function boot(){
+      OfflinePackBridge.installDownloadEventHandlers(langObj);
+      syncInstalledPairsFromNative();
+
+      try{ OfflinePackBridge.preloadRewardedAd(); }catch{}
+
+      const params = new URLSearchParams(location.search);
+      const hasRouteLang = params.get("source") || params.get("target");
+
+      if(!localStorage.getItem(MY_LANG_KEY)){
+        const detected = await detectCountryLang();
+        if(detected && langExists(detected)){
+          myLang = detected;
+
+          localStorage.setItem(MY_LANG_KEY,myLang);
+          localStorage.setItem(SITE_LANG_KEY,myLang);
+          localStorage.setItem(LEGACY_SITE_LANG_KEY,myLang);
+          localStorage.setItem(NATIVE_LANG_KEY,myLang);
+
+          OfflinePackBridge.setOfflineNativeLang(myLang);
+        }
+      }else{
+        OfflinePackBridge.setOfflineNativeLang(myLang);
+      }
+
+      if(!hasRouteLang){
+        botLang = myLang;
+        if(topLang === botLang) topLang = differentLang(botLang);
+      }
+
+      applyRouteParams();
+      refreshTexts();
+      refreshModeButtons();
+      renderMyLangModalList();
+      clearBody(topBody);
+      clearBody(botBody);
+    }
+
+    boot();
   </script>
 </body>
 </html>
