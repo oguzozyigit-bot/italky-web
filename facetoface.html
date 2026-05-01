@@ -479,10 +479,16 @@
     // Fonetik Uyumluluk: Hem Türkçe "Can" hem İngilizce "Ken" seslerini yakalar
     const WAKE_WORDS = ["hey can", "can uyan", "hey ken", "ken uyan"];
 
-    // Profil verisinden ismi çekiyoruz (Oğuz, Selden vb.)
-    // italkyAI Profil kurgusuna göre 'user_full_name' anahtarını kullanır
-    const fullName = localStorage.getItem("user_full_name") || "italky Kullanıcısı";
-    const firstName = fullName.split(' ')[0];
+    // italkyAI mühürlü profil verisinden ismi çekiyoruz
+    // Önce STORAGE_KEY'den (italky_auth_v7) çekmeyi dener, yoksa genel key'e bakar
+    let firstName = "Başkanım";
+    try {
+      const authData = JSON.parse(localStorage.getItem("italky_auth_v7") || "{}");
+      const fullName = authData.user_metadata?.full_name || localStorage.getItem("user_full_name") || "";
+      if (fullName) firstName = fullName.split(' ')[0];
+    } catch (e) {
+      console.warn("Profil ismi okunamadı, varsayılan hitap kullanılacak.");
+    }
 
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) return;
@@ -499,7 +505,7 @@
       }
 
       if (WAKE_WORDS.some(word => transcript.includes(word))) {
-        wakeRecognizer.stop(); // Çakışma önlemek için geçici durdur
+        wakeRecognizer.stop(); 
         
         // Can'ın tepkisi: "Uyandım Oğuz, seni dinliyorum."
         const greeting = `Uyandım ${firstName}, seni dinliyorum.`;
@@ -509,20 +515,18 @@
           window.NativeTTS.speak(greeting, "tr");
         }
 
-        // 2. FaceToFace Sistemini Ateşle (Senin yazdığın botMic butonunu tetikler)
+        // 2. FaceToFace Sistemini Ateşle (Alt mikrofonu tetikler)
         setTimeout(() => {
           const botMic = document.getElementById("botMic");
           if (botMic) {
             botMic.click();
-            // Ortadaki Orb'u (AI Core) hareketli hale getir
             const root = document.getElementById("frameRoot");
             if(root) root.className = "to-bot is-listening";
           }
-        }, 1500);
+        }, 1200);
       }
     };
 
-    // Bağlantı koparsa Can pusuya geri yatar
     wakeRecognizer.onend = () => {
       try { wakeRecognizer.start(); } catch(e) {}
     };
@@ -534,12 +538,8 @@
     }
   }
 
-  // Sayfa ve Global Access hazır olduğunda Can'ı başlat
-  // Senin kodundaki bootReady durumunu beklemek için küçük bir delay ekliyoruz
-  setTimeout(() => {
-    initCanWakeUp();
-  }, 2000);
+  // Sistem açılışından sonra Can'ı pusuya yatır
+  setTimeout(initCanWakeUp, 2500);
 </script>
-  </script>
 </body>
 </html>
