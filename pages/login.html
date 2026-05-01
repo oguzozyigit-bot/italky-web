@@ -1,3 +1,4 @@
+<!-- FILE: /pages/login.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -1158,7 +1159,7 @@
         offerOk:"İndir",
         offerCancel:"Şimdilik Kapat",
         sameLang:"Aynı dil için paket indirilemez.",
-        nativeNotReady:"Lütfen önce kendi dilinizin ({lang}) inmesini bekleyin.",
+        nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.",
         noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
         myLangChanged:"Kendi diliniz güncellendi.",
         myLangWarnTitle:"Kendi Dilim Değişsin mi?",
@@ -1193,7 +1194,7 @@
         offerOk:"Download",
         offerCancel:"Not Now",
         sameLang:"You cannot download a pack for the same language.",
-        nativeNotReady:"Please wait for your own language ({lang}) to download first.",
+        nativeNotReady:"Native download is not ready on this device.",
         noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
         myLangChanged:"Your language has been updated.",
         myLangWarnTitle:"Change My Language?",
@@ -1241,6 +1242,7 @@
       .map((l) => {
         const code = canonical(l.code);
         if(!code) return null;
+
         return {
           code,
           flag:l.flag || "🌐",
@@ -1255,6 +1257,7 @@
 
     function langObj(code){
       const c = canonical(code);
+
       return LANGS.find((x) => x.code === c) || {
         code:c || "en",
         flag:"🌐",
@@ -1270,12 +1273,15 @@
 
     function differentLang(base){
       const b = canonical(base);
+
       const preferred = b === "tr"
         ? ["en","de","fr","es","it","ar","ru","pt"]
         : ["tr","en","de","fr","es","it","ar","ru","pt"];
+
       for(const c of preferred){
         if(c !== b && langExists(c)) return c;
       }
+
       return LANGS.find((l) => l.code !== b)?.code || "en";
     }
 
@@ -1284,6 +1290,7 @@
         const nav = canonical(navigator.language || "");
         if(nav && langExists(nav)) return nav;
       }catch{}
+
       if(langExists("tr")) return "tr";
       return LANGS[0]?.code || "tr";
     }
@@ -1291,8 +1298,10 @@
     function getSavedMyLang(){
       const saved = canonical(localStorage.getItem(MY_LANG_KEY) || "");
       if(saved && langExists(saved)) return saved;
+
       const initial = getInitialSiteLang();
       if(initial && langExists(initial)) return initial;
+
       if(langExists("tr")) return "tr";
       return LANGS[0]?.code || "tr";
     }
@@ -1300,6 +1309,7 @@
     let myLang = getSavedMyLang();
     let botLang = myLang;
     let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+
     if(topLang === botLang) topLang = differentLang(botLang);
 
     const sideClearBtn = $("sideClearBtn");
@@ -1307,12 +1317,14 @@
     const drawerBackdrop = $("drawerBackdrop");
     const drawerLoginBtn = $("drawerLoginBtn");
     const drawerWidgetBtn = $("drawerWidgetBtn");
+
     const myLangDrawerBtn = $("myLangDrawerBtn");
     const myLangDrawerFlag = $("myLangDrawerFlag");
     const myLangDrawerTitle = $("myLangDrawerTitle");
     const myLangModal = $("myLangModal");
     const myLangModalClose = $("myLangModalClose");
     const myLangModalList = $("myLangModalList");
+
     const topBody = $("topBody");
     const botBody = $("botBody");
     const topMic = $("topMic");
@@ -1368,7 +1380,10 @@
     function closeDrawer(){ drawerBackdrop?.classList.remove("show"); }
 
     drawerEdgeBtn?.addEventListener("click", openDrawer);
-    drawerBackdrop?.addEventListener("click", (e) => { if(e.target === drawerBackdrop) closeDrawer(); });
+    drawerBackdrop?.addEventListener("click", (e) => {
+      if(e.target === drawerBackdrop) closeDrawer();
+    });
+
     drawerWidgetBtn?.addEventListener("click", () => {
       try {
         if (window.Native && typeof window.Native.addWidgetToHomeScreen === "function") {
@@ -1376,10 +1391,16 @@
           closeDrawer();
           return;
         }
-        showToast("Widgetlar bölümünden italkyAI kısa yolunu ekleyebilirsiniz.");
-      } catch (e) { showToast("Kısa yol ekleme hatası."); }
+
+        showToast("Ana ekranda boş alana basılı tutup Widgetlar bölümünden italkyAI kısa yolunu ekleyebilirsiniz.");
+      } catch (e) {
+        showToast("Kısa yol ekleme başlatılamadı.");
+      }
     });
-    drawerLoginBtn?.addEventListener("click", () => { showToast(tx("loginSoon")); });
+
+    drawerLoginBtn?.addEventListener("click", () => {
+      showToast(tx("loginSoon"));
+    });
 
     function renderMyLangDrawer(){
       const info = langObj(myLang);
@@ -1389,35 +1410,67 @@
 
     function renderMyLangModalList(){
       if(!myLangModalList) return;
+
       myLangModalList.innerHTML = LANGS.map((lang) => `
         <button class="my-lang-option ${lang.code === myLang ? "active" : ""}" type="button" data-my-lang="${lang.code}">
-          <span class="my-lang-option-left"><span class="my-lang-option-flag">${lang.flag}</span><span class="my-lang-option-name">${lang.name}</span></span>
+          <span class="my-lang-option-left">
+            <span class="my-lang-option-flag">${lang.flag}</span>
+            <span class="my-lang-option-name">${lang.name}</span>
+          </span>
           <span class="my-lang-option-check">✓</span>
         </button>
       `).join("");
+
       myLangModalList.querySelectorAll("[data-my-lang]").forEach((btn) => {
         btn.onclick = async () => {
           const next = canonical(btn.getAttribute("data-my-lang") || "");
           if(!next || !langExists(next) || next === myLang) return;
+
           if(OfflinePackBridge.hasAnyInstalledPair()){
-            const ok = await showModalChoice({ title:tx("myLangWarnTitle"), text:tx("myLangWarnText"), okText:tx("myLangWarnOk"), cancelText:tx("myLangWarnCancel") });
+            const ok = await showModalChoice({
+              title:tx("myLangWarnTitle"),
+              text:tx("myLangWarnText"),
+              okText:tx("myLangWarnOk"),
+              cancelText:tx("myLangWarnCancel")
+            });
+
             if(!ok) return;
+
             OfflinePackBridge.clearInstalledPairs();
           }
+
           myLang = next;
+
           localStorage.setItem(MY_LANG_KEY, myLang);
           localStorage.setItem(SITE_LANG_KEY, myLang);
+          localStorage.setItem(LEGACY_SITE_LANG_KEY, myLang);
           localStorage.setItem(NATIVE_LANG_KEY, myLang);
+
           OfflinePackBridge.setOfflineNativeLang(myLang);
-          renderMyLangDrawer(); renderMyLangModalList(); refreshTexts(); refreshOpenPop();
-          showToast(tx("myLangChanged")); myLangModal?.classList.remove("show");
+
+          renderMyLangDrawer();
+          renderMyLangModalList();
+          refreshTexts();
+          refreshOpenPop();
+
+          showToast(tx("myLangChanged"));
+          myLangModal?.classList.remove("show");
         };
       });
     }
 
-    myLangDrawerBtn?.addEventListener("click", () => { renderMyLangModalList(); myLangModal?.classList.add("show"); });
-    myLangModalClose?.addEventListener("click", () => { myLangModal?.classList.remove("show"); });
-    myLangModal?.addEventListener("click", (e) => { if(e.target === myLangModal) myLangModal.classList.remove("show"); });
+    myLangDrawerBtn?.addEventListener("click", () => {
+      renderMyLangModalList();
+      myLangModal?.classList.add("show");
+    });
+
+    myLangModalClose?.addEventListener("click", () => {
+      myLangModal?.classList.remove("show");
+    });
+
+    myLangModal?.addEventListener("click", (e) => {
+      if(e.target === myLangModal) myLangModal.classList.remove("show");
+    });
 
     function refreshModeButtons(){
       modeOnlineBtn?.classList.toggle("active",currentMode === "online");
@@ -1427,8 +1480,10 @@
     function setMode(mode){
       currentMode = mode === "offline" ? "offline" : "online";
       refreshModeButtons();
+
       if(currentMode === "online") showToast(tx("onlineMode"));
-      else showToast(tx("offlineMode"));
+      if(currentMode === "offline") showToast(tx("offlineMode"));
+
       closeAllPop();
     }
 
@@ -1444,11 +1499,17 @@
       renderMyLangDrawer();
     }
 
-    function closeAllPop(){ popTop.classList.remove("show"); popBot.classList.remove("show"); lastOpenPopSide = null; }
+    function closeAllPop(){
+      popTop.classList.remove("show");
+      popBot.classList.remove("show");
+      lastOpenPopSide = null;
+    }
+
     function refreshOpenPop(){
       if(lastOpenPopSide === "top" && popTop.classList.contains("show")) renderPop("top");
       if(lastOpenPopSide === "bot" && popBot.classList.contains("show")) renderPop("bot");
     }
+
     window.addEventListener("offlinePackBridgeStateChanged", refreshOpenPop);
 
     function showModalChoice({ title = "", text = "", okText = "", cancelText = "" } = {}){
@@ -1457,10 +1518,24 @@
         if(adText) adText.textContent = text || "";
         if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
         if(closeAdBtn) closeAdBtn.textContent = cancelText || tx("close");
+
         adModal.classList.add("show");
-        const clean = () => { watchAdBtn.onclick = null; closeAdBtn.onclick = null; adModal.classList.remove("show"); };
-        watchAdBtn.onclick = () => { clean(); resolve(true); };
-        closeAdBtn.onclick = () => { clean(); resolve(false); };
+
+        const clean = () => {
+          watchAdBtn.onclick = null;
+          closeAdBtn.onclick = null;
+          adModal.classList.remove("show");
+        };
+
+        watchAdBtn.onclick = () => {
+          clean();
+          resolve(true);
+        };
+
+        closeAdBtn.onclick = () => {
+          clean();
+          resolve(false);
+        };
       });
     }
 
@@ -1470,22 +1545,47 @@
         if(adText) adText.textContent = text || tx("adText");
         if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
         if(closeAdBtn) closeAdBtn.textContent = tx("close");
+
         adModal.classList.add("show");
-        const clean = () => { watchAdBtn.onclick = null; closeAdBtn.onclick = null; adModal.classList.remove("show"); };
+
+        const clean = () => {
+          watchAdBtn.onclick = null;
+          closeAdBtn.onclick = null;
+          adModal.classList.remove("show");
+        };
+
         watchAdBtn.onclick = async () => {
           clean();
-          const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:20000 });
+
+          const ok = await OfflinePackBridge.showRewardedAd({
+            adUnit,
+            langCode,
+            timeoutMs:20000
+          });
+
           if(ok) lastAdAt = Date.now();
+
           resolve(!!ok);
         };
-        closeAdBtn.onclick = () => { clean(); resolve(false); };
+
+        closeAdBtn.onclick = () => {
+          clean();
+          resolve(false);
+        };
       });
     }
 
     async function maybeShowAd(){
       const now = Date.now();
       if(now - lastAdAt < AD_INTERVAL_MS) return true;
-      const ok = await showAdModal({ title:tx("adTitle"), text:tx("adText") });
+
+      const ok = await showAdModal({
+        title:tx("adTitle"),
+        text:tx("adText"),
+        adUnit:"public_facetoface_3min",
+        langCode:""
+      });
+
       if(!ok) showToast(tx("adNeeded"));
       return ok;
     }
@@ -1497,60 +1597,110 @@
       const native = canonical(nativeLang);
       const installed = OfflinePackBridge.getInstalledPairs();
       const set = new Set();
+
       Object.keys(installed).forEach((key) => {
         const item = installed[key] || {};
-        if(canonical(item.from || "") === native){
-          const to = canonical(item.to || "");
-          if(to && to !== native) set.add(to);
-        }
+        const from = canonical(item.from || "");
+        const to = canonical(item.to || "");
+        if(from === native && to && to !== native) set.add(to);
       });
+
       return Array.from(set);
     }
 
     async function startOfflinePackDownload(targetCode, reason = "manual"){
       syncInstalledPairsFromNative();
-      const target = canonical(targetCode);
-      const nativeLang = myLang;
-      if(!target || !nativeLang || nativeLang === target) return false;
 
-      // KİLİT MÜHRÜ: Ana dil inmeden indirme başlatılamaz
-      const baseStatus = JSON.parse(OfflinePackBridge.getOfflineBaseStatus());
-      if(!baseStatus.ready){
-        showToast(tFormat("nativeNotReady", { lang: langObj(nativeLang).name }));
+      const target = canonical(targetCode);
+      if(!target) return false;
+
+      const targetInfo = langObj(target);
+      const nativeLang = myLang;
+
+      if(!nativeLang) return false;
+
+      if(nativeLang === target){
+        showToast(tx("sameLang"));
         return false;
       }
 
       if(hasInstalledPair(nativeLang,target)){
         OfflinePackBridge.saveHomeWidget(nativeLang,target,langObj,"ready");
-        showToast(tx("packReady")); refreshOpenPop(); return true;
+        showToast(tx("packReady"));
+        refreshOpenPop();
+        return true;
       }
+
       const nativeInfo = langObj(nativeLang);
-      const targetInfo = langObj(target);
-      const offerOk = await showModalChoice({ title:tx("offerTitle"), text:tFormat("offerText", { sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`, targetLang:`${targetInfo.flag} ${targetInfo.name}` }), okText:tx("offerOk"), cancelText:tx("offerCancel") });
+
+      const offerOk = await showModalChoice({
+        title:tx("offerTitle"),
+        text:tFormat("offerText", {
+          sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`,
+          targetLang:`${targetInfo.flag} ${targetInfo.name}`
+        }),
+        okText:tx("offerOk"),
+        cancelText:tx("offerCancel")
+      });
+
       if(!offerOk) return false;
-      const adOk = await showAdModal({ title:tx("downloadAdTitle"), text:`${nativeInfo.flag} ${nativeInfo.name} → ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`, adUnit:`offline_download_${target}`, langCode:target });
-      if(!adOk){ showToast(tx("adNeeded")); return false; }
+
+      const adOk = await showAdModal({
+        title:tx("downloadAdTitle"),
+        text:`${nativeInfo.flag} ${nativeInfo.name} → ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
+        adUnit:`offline_download_${target}`,
+        langCode:target
+      });
+
+      if(!adOk){
+        showToast(tx("adNeeded"));
+        return false;
+      }
+
       OfflinePackBridge.setOfflineNativeLang(myLang);
+
       const result = OfflinePackBridge.startNativeDownload(nativeLang,target,langObj);
-      if(!result?.ok){ showToast(tFormat("nativeNotReady", { lang: nativeInfo.name })); return false; }
-      showToast(result.queued ? tx("packQueued") : tx("packDownloading")); refreshOpenPop(); return true;
+
+      if(!result?.ok){
+        console.error("Offline download start failed:", result?.error);
+        showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : `${targetInfo.name} indirilemedi.`);
+        return false;
+      }
+
+      showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
+      refreshOpenPop();
+      return true;
     }
 
     async function maybeOfferOfflinePackAfterTranslate(){
       if(currentMode !== "online") return;
+
       syncInstalledPairsFromNative();
-      const nativeLang = myLang; const target = topLang;
-      if(!nativeLang || !target || nativeLang === target || hasInstalledPair(nativeLang,target)) return;
+
+      const nativeLang = myLang;
+      const target = topLang;
+
+      if(!nativeLang || !target || nativeLang === target) return;
+      if(hasInstalledPair(nativeLang,target)) return;
+
       const key = `italky_offer_offline_pack_${canonical(nativeLang)}_${canonical(target)}_v1`;
       if(sessionStorage.getItem(key) === "1") return;
+
       sessionStorage.setItem(key,"1");
-      setTimeout(() => { startOfflinePackDownload(target, "after_translate"); }, 650);
+
+      setTimeout(() => {
+        startOfflinePackDownload(target, "after_translate");
+      }, 650);
     }
 
     function getFilteredLangsForPopover(){
       if(currentMode !== "offline") return LANGS;
+
       syncInstalledPairsFromNative();
+
       const targets = installedTargetsForNative(myLang);
+      if(!targets.length) return [];
+
       const allowed = new Set([myLang, ...targets]);
       return LANGS.filter((l) => allowed.has(l.code));
     }
@@ -1559,160 +1709,517 @@
       const c = canonical(code);
       if(!myLang) return false;
       if(c === myLang && OfflinePackBridge.hasAnyInstalledPair()) return true;
-      return hasInstalledPair(myLang,c);
+      return c !== myLang && hasInstalledPair(myLang,c);
     }
 
     function renderActionForLang(code){
       const c = canonical(code);
-      if(OfflinePackBridge.isPairActive(myLang,c)) return `<span class="pop-active">⏳</span>`;
-      if(OfflinePackBridge.isPairQueued(myLang,c)) return `<span class="pop-queued">…</span>`;
-      if(isLangInstalledForUi(c)) return `<span class="pop-installed">✓</span>`;
-      if(c === myLang) return `<span class="pop-native">✓</span>`;
-      return `<button class="pop-download" type="button" data-download-code="${c}">⬇️</button>`;
+
+      if(OfflinePackBridge.isPairActive(myLang,c)){
+        return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+      }
+
+      if(OfflinePackBridge.isPairQueued(myLang,c)){
+        return `<span class="pop-queued" title="Sırada">…</span>`;
+      }
+
+      if(isLangInstalledForUi(c)){
+        return `<span class="pop-installed" title="Kurulu">✓</span>`;
+      }
+
+      if(c === myLang){
+        return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
+      }
+
+      return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
     }
 
     function renderPop(side){
       const list = side === "top" ? listTop : listBot;
       const selected = side === "top" ? topLang : botLang;
       const filteredLangs = getFilteredLangsForPopover();
-      const baseStatus = JSON.parse(OfflinePackBridge.getOfflineBaseStatus());
-      const isBaseReady = baseStatus.ready;
 
       if(currentMode === "offline" && !filteredLangs.length){
-        list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`; return;
+        list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`;
+        return;
       }
 
-      list.innerHTML = filteredLangs.map((l) => {
-          const isNative = l.code === myLang;
-          const isLocked = !isNative && !isBaseReady;
-          return `
-            <div class="pop-item ${l.code === selected ? "active" : ""} ${isLocked ? "locked-ui" : ""}" 
-                 data-code="${l.code}" style="${isLocked ? 'opacity:0.4; pointer-events:none;' : ''}">
-              <div class="pop-left" data-select-code="${isLocked ? '' : l.code}">
-                <div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div>
-              </div>
-              <div class="pop-actions">
-                <div class="pop-code">${l.code.toUpperCase()}</div>
-                ${isLocked ? '<span>🔒</span>' : renderActionForLang(l.code)}
-              </div>
-            </div>
-          `;
-      }).join("");
+      list.innerHTML = filteredLangs.map((l) => `
+        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+          <div class="pop-left" data-select-code="${l.code}">
+            <div class="pop-flag">${l.flag}</div>
+            <div class="pop-name">${l.name}</div>
+          </div>
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            ${renderActionForLang(l.code)}
+          </div>
+        </div>
+      `).join("");
 
       list.querySelectorAll("[data-select-code]").forEach((el) => {
         el.addEventListener("click",() => {
-          const code = canonical(el.dataset.selectCode); if(!code) return;
-          if(side === "top"){ topLang = code; if(topLang === botLang) botLang = differentLang(topLang); }
-          else{ botLang = code; if(botLang === topLang) topLang = differentLang(botLang); }
-          closeAllPop(); refreshTexts();
-          if(code !== myLang && !hasInstalledPair(myLang,code)) setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
+          const code = canonical(el.dataset.selectCode);
+          if(!code) return;
+
+          if(side === "top"){
+            topLang = code;
+            if(topLang === botLang) botLang = differentLang(topLang);
+          }else{
+            botLang = code;
+            if(botLang === topLang) topLang = differentLang(botLang);
+          }
+
+          closeAllPop();
+          refreshTexts();
+
+          if(code !== myLang && !hasInstalledPair(myLang,code)){
+            setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
+          }
         });
       });
+
       list.querySelectorAll("[data-download-code]").forEach((btn) => {
-        btn.addEventListener("click",async (e) => { e.preventDefault(); e.stopPropagation(); startOfflinePackDownload(btn.dataset.downloadCode); });
+        btn.addEventListener("click",async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const code = canonical(btn.dataset.downloadCode);
+          await startOfflinePackDownload(code, "lang_popup");
+        });
       });
     }
 
-    topLangBtn.addEventListener("click",(e) => { e.preventDefault(); e.stopPropagation(); closeAllPop(); lastOpenPopSide = "top"; renderPop("top"); popTop.classList.add("show"); });
-    botLangBtn.addEventListener("click",(e) => { e.preventDefault(); e.stopPropagation(); closeAllPop(); lastOpenPopSide = "bot"; renderPop("bot"); popBot.classList.add("show"); });
-    closeTop.addEventListener("click",closeAllPop); closeBot.addEventListener("click",closeAllPop);
-    document.addEventListener("click",(e) => { if(!(popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest(".lang-trigger"))) closeAllPop(); },{capture:true});
+    topLangBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      lastOpenPopSide = "top";
+      renderPop("top");
+      popTop.classList.add("show");
+    });
+
+    botLangBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      lastOpenPopSide = "bot";
+      renderPop("bot");
+      popBot.classList.add("show");
+    });
+
+    closeTop.addEventListener("click",closeAllPop);
+    closeBot.addEventListener("click",closeAllPop);
+
+    document.addEventListener("click",(e) => {
+      const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
+      if(!inside) closeAllPop();
+    },{capture:true});
 
     function clearBody(body){ if(body) body.innerHTML = ""; }
+
     function addBubble(side,text,latest=false){
-      const body = side === "top" ? topBody : botBody; if(!body) return null;
-      if(latest){ body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest")); }
-      const div = document.createElement("div"); div.className = `bubble${latest ? " latest" : ""}`; div.textContent = String(text || "").trim();
+      const body = side === "top" ? topBody : botBody;
+      if(!body) return null;
+
+      if(latest){
+        body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
+      }
+
+      const div = document.createElement("div");
+      div.className = `bubble${latest ? " latest" : ""}`;
+      div.textContent = String(text || "").trim();
+
       body.appendChild(div);
-      const scroll = () => { try{ body.scrollTop = body.scrollHeight; }catch{} };
-      scroll(); requestAnimationFrame(scroll); setTimeout(scroll,60); return div;
+
+      const scroll = () => {
+        try{ body.scrollTop = body.scrollHeight; }catch{}
+      };
+
+      scroll();
+      requestAnimationFrame(scroll);
+      setTimeout(scroll,60);
+      return div;
     }
 
-    function setMicState(side,listening){ (side === "top" ? topMic : botMic).classList.toggle("listening",!!listening); }
+    function setMicState(side,listening){
+      const mic = side === "top" ? topMic : botMic;
+      mic.classList.toggle("listening",!!listening);
+    }
+
     function buildRecognizer(langCode){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if(!SR) return null;
-      const rec = new SR(); rec.lang = langObj(langCode).bcp; rec.interimResults = true; rec.continuous = false; return rec;
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR) return null;
+
+      const rec = new SR();
+      rec.lang = langObj(langCode).bcp;
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.maxAlternatives = 1;
+      return rec;
     }
+
     function stopRecognizer(){
-      manualStopPending = true; try{ recognizer?.stop?.(); }catch{}
-      setMicState("top",false); setMicState("bot",false);
-      setTimeout(() => { if(manualStopPending){ manualStopPending = false; recognizer = null; liveText = ""; } }, 2500);
+      manualStopPending = true;
+      try{ recognizer?.stop?.(); }catch{}
+      setMicState("top",false);
+      setMicState("bot",false);
+
+      setTimeout(() => {
+        if(manualStopPending){
+          manualStopPending = false;
+          recognizer = null;
+          liveText = "";
+        }
+      }, 2500);
     }
-    function cleanupTranscript(text){ return String(text || "").replace(/\s+/g," ").replace(/\b(\S+)( \1\b)+/gi,"$1").trim(); }
+
+    function cleanupTranscript(text){
+      return String(text || "")
+        .replace(/\s+/g," ")
+        .replace(/\b(\S+)( \1\b)+/gi,"$1")
+        .trim();
+    }
 
     async function translateOnline(text,from,to){
-      const endpoints = [`${API_BASE}/api/translate_ai`,`${API_BASE}/api/translate-ai` ];
+      const endpoints = [
+        `${API_BASE}/api/translate_ai`,
+        `${API_BASE}/api/translate-ai`,
+        `${API_BASE}/api/translate`
+      ];
+
       for(const endpoint of endpoints){
         try{
-          const r = await fetch(endpoint,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ text:String(text || "").trim(), from_lang:canonical(from), to_lang:canonical(to), mode:"normal" }) });
-          const j = await r.json().catch(() => null); const v = String(j?.translated || j?.text || "").trim();
-          if(r.ok && v) return v;
+          const r = await fetch(endpoint,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              text:String(text || "").trim(),
+              from_lang:canonical(from),
+              to_lang:canonical(to),
+              source:canonical(from),
+              target:canonical(to),
+              mode:"normal",
+              use_ai:false,
+              cultural:false,
+              tone:"neutral",
+              style:"warm"
+            })
+          });
+
+          const j = await r.json().catch(() => null);
+          const value = String(j?.translated || j?.translation || j?.text || "").trim();
+          if(r.ok && value) return value;
         }catch{}
       }
+
       return null;
     }
-    function translateOffline(text,from,to){ return OfflinePackBridge.translateOffline(text,from,to); }
+
+    function translateOffline(text,from,to){
+      return OfflinePackBridge.translateOffline(text,from,to);
+    }
+
     async function translateText(text,from,to){
       if(currentMode === "offline"){
-        if(!hasInstalledPair(from,to)){ showToast(tx("offlineMode")); startOfflinePackDownload(to); return null; }
-        const v = await translateOffline(text,from,to); if(v) return v;
-        showToast(tx("translateError")); return null;
+        if(!hasInstalledPair(from,to)){
+          showToast(tx("offlineMode"));
+          await startOfflinePackDownload(to,"offline_mode");
+          return null;
+        }
+
+        const offline = await translateOffline(text,from,to);
+        if(offline) return offline;
+
+        showToast(tx("translateError"));
+        return null;
       }
+
       return await translateOnline(text,from,to);
     }
 
     function speak(text,langCode){
-      const v = String(text || "").trim(); if(!v) return;
-      const c = canonical(langCode); const b = langObj(c).bcp;
-      try{ if(window.NativeTTS?.speak){ window.NativeTTS.speak(v, c); return; } }catch(e){}
-      try{ if(window.speechSynthesis){ window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(v); u.lang = b; u.rate = .95; window.speechSynthesis.speak(u); } }catch(e){}
+      const value = String(text || "").trim();
+      if(!value) return;
+
+      const code = canonical(langCode);
+      const bcp = langObj(code).bcp || BCP[code] || "en-US";
+
+      try{
+        if(window.NativeTTS?.speak){
+          window.NativeTTS.speak(value, code);
+          return;
+        }
+      }catch(e){
+        console.warn("NativeTTS failed:", e);
+      }
+
+      try{
+        if(window.speechSynthesis){
+          window.speechSynthesis.cancel();
+
+          const u = new SpeechSynthesisUtterance(value);
+          u.lang = bcp;
+          u.rate = .95;
+          u.pitch = 1;
+          u.volume = 1;
+
+          const voices = window.speechSynthesis.getVoices?.() || [];
+          const found = voices.find(v =>
+            String(v.lang || "").toLowerCase().startsWith(code)
+          );
+
+          if(found) u.voice = found;
+
+          setTimeout(() => {
+            try{ window.speechSynthesis.speak(u); }catch{}
+          }, 80);
+        }
+      }catch(e){
+        console.warn("speechSynthesis failed:", e);
+      }
     }
 
     async function finalizeSpeech(side,text){
-      manualStopPending = false; const clean = cleanupTranscript(text);
-      if(!clean){ recognizer = null; liveText = ""; setMicState(side,false); return; }
-      if(!(await maybeShowAd())){ recognizer = null; liveText = ""; setMicState(side,false); return; }
-      const src = side === "top" ? topLang : botLang; const dst = side === "top" ? botLang : topLang;
-      addBubble(side,clean,false); const targetRow = addBubble(side === "top" ? "bot" : "top","",true);
+      manualStopPending = false;
+
+      const clean = cleanupTranscript(text);
+      if(!clean){
+        recognizer = null;
+        liveText = "";
+        setMicState(side,false);
+        return;
+      }
+
+      const adOk = await maybeShowAd();
+      if(!adOk){
+        recognizer = null;
+        liveText = "";
+        setMicState(side,false);
+        return;
+      }
+
+      const src = side === "top" ? topLang : botLang;
+      const dst = side === "top" ? botLang : topLang;
+      const other = side === "top" ? "bot" : "top";
+
+      addBubble(side,clean,false);
+      const targetRow = addBubble(other,"",true);
+
       const translated = await translateText(clean,src,dst);
-      if(!translated){ if(targetRow) targetRow.textContent = tx("translateError"); recognizer = null; setMicState(side,false); return; }
-      targetRow.textContent = translated; speak(translated,dst);
-      if(currentMode === "online") maybeOfferOfflinePackAfterTranslate();
-      recognizer = null; liveText = ""; setMicState(side,false);
+
+      if(!translated){
+        if(targetRow) targetRow.textContent = tx("translateError");
+        recognizer = null;
+        liveText = "";
+        setMicState(side,false);
+        return;
+      }
+
+      targetRow.textContent = translated;
+
+      speak(translated,dst);
+
+      if(currentMode === "online"){
+        maybeOfferOfflinePackAfterTranslate();
+      }
+
+      recognizer = null;
+      liveText = "";
+      setMicState(side,false);
     }
 
     function startRecording(side){
-      if(recognizer){ stopRecognizer(); return; }
-      const rec = buildRecognizer(side === "top" ? topLang : botLang); if(!rec){ showToast(tx("micUnsupported")); return; }
-      recognizer = rec; liveText = ""; manualStopPending = false;
+      if(recognizer){
+        stopRecognizer();
+        showToast(tx("listeningDone"));
+        return;
+      }
+
+      const sourceLang = side === "top" ? topLang : botLang;
+      const rec = buildRecognizer(sourceLang);
+
+      if(!rec){
+        showToast(tx("micUnsupported"));
+        return;
+      }
+
+      recognizer = rec;
+      liveText = "";
+      manualStopPending = false;
+
       rec.onstart = () => setMicState(side,true);
+
       rec.onresult = (e) => {
-        let f = ""; let i = "";
-        for(let j=0;j<e.results.length;j++){ if(e.results[j].isFinal) f += e.results[j][0].transcript; else i += e.results[j][0].transcript; }
-        liveText = cleanupTranscript(f || i || liveText);
+        let finalText = "";
+        let interimText = "";
+
+        for(let i=0;i<e.results.length;i++){
+          const txt = String(e.results[i]?.[0]?.transcript || "").trim();
+          if(!txt) continue;
+
+          if(e.results[i].isFinal) finalText += ` ${txt}`;
+          else interimText += ` ${txt}`;
+        }
+
+        liveText = cleanupTranscript(finalText || interimText || liveText);
       };
-      rec.onend = () => { const f = cleanupTranscript(liveText); setMicState(side,false); recognizer = null; if(f) finalizeSpeech(side,f); };
-      try{ rec.start(); }catch{ setMicState(side,false); recognizer = null; }
+
+      rec.onerror = (e) => {
+        const err = String(e?.error || "");
+
+        if(manualStopPending){
+          manualStopPending = false;
+
+          const finalText = cleanupTranscript(liveText);
+          recognizer = null;
+          setMicState(side,false);
+          liveText = "";
+
+          if(finalText){
+            finalizeSpeech(side,finalText);
+          }
+
+          return;
+        }
+
+        showToast(err.includes("not-allowed") ? tx("micDenied") : tx("micError"));
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+      };
+
+      rec.onend = () => {
+        const finalText = cleanupTranscript(liveText);
+
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+
+        if(finalText){
+          finalizeSpeech(side,finalText);
+        }else{
+          manualStopPending = false;
+        }
+      };
+
+      try{
+        rec.start();
+      }catch{
+        showToast(tx("micError"));
+        setMicState(side,false);
+        recognizer = null;
+        liveText = "";
+        manualStopPending = false;
+      }
     }
 
     topMic.addEventListener("click",() => startRecording("top"));
     botMic.addEventListener("click",() => startRecording("bot"));
+
+    function clearChat(){
+      try{
+        if(recognizer){
+          stopRecognizer();
+        }
+      }catch{}
+
+      try{ window.speechSynthesis?.cancel?.(); }catch{}
+      try{ window.NativeTTS?.stop?.(); }catch{}
+
+      recognizer = null;
+      liveText = "";
+      manualStopPending = false;
+      topMic.classList.remove("listening");
+      botMic.classList.remove("listening");
+      clearBody(topBody);
+      clearBody(botBody);
+    }
+
     sideClearBtn?.addEventListener("click",clearChat);
+
     modeOnlineBtn?.addEventListener("click",() => setMode("online"));
     modeOfflineBtn?.addEventListener("click",() => setMode("offline"));
 
-    window.addEventListener("offlinePairDownloadStarted",(e) => { refreshOpenPop(); });
-    window.addEventListener("offlinePairDownloadCompleted",(e) => { syncInstalledPairsFromNative(); showToast(tx("packDownloaded")); refreshOpenPop(); });
-    window.addEventListener("offlinePairDownloadFailed",(e) => { showToast(e.detail?.error || tx("translateError")); refreshOpenPop(); });
+    window.addEventListener("offlinePairDownloadStarted",(e) => {
+      const d = e.detail || {};
+      const source = canonical(d.source || myLang);
+      const target = canonical(d.target || topLang);
+      if(!source || !target) return;
+
+      OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
+      showToast(tx("packDownloading"));
+      refreshOpenPop();
+    });
+
+    window.addEventListener("offlinePairDownloadCompleted",(e) => {
+      const d = e.detail || {};
+      const source = canonical(d.source || myLang);
+      const target = canonical(d.target || topLang);
+      if(!source || !target) return;
+
+      OfflinePackBridge.markInstalledPair(source,target);
+      OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
+      syncInstalledPairsFromNative();
+      showToast(tx("packDownloaded"));
+      refreshOpenPop();
+    });
+
+    window.addEventListener("offlinePairDownloadFailed",(e) => {
+      const d = e.detail || {};
+      showToast(d.error || tx("translateError"));
+      refreshOpenPop();
+    });
+
+    function applyRouteParams(){
+      const params = new URLSearchParams(location.search);
+      const source = canonical(params.get("source") || "");
+      const target = canonical(params.get("target") || "");
+      const mode = canonical(params.get("mode") || "");
+
+      if(source && langExists(source)) botLang = source;
+      if(target && langExists(target)) topLang = target;
+      if(topLang === botLang) topLang = differentLang(botLang);
+      if(mode === "offline") currentMode = "offline";
+    }
 
     async function boot(){
-      OfflinePackBridge.installDownloadEventHandlers(langObj); syncInstalledPairsFromNative();
+      OfflinePackBridge.installDownloadEventHandlers(langObj);
+      syncInstalledPairsFromNative();
+
+      try{ OfflinePackBridge.preloadRewardedAd(); }catch{}
+
+      const params = new URLSearchParams(location.search);
+      const hasRouteLang = params.get("source") || params.get("target");
+
       if(!localStorage.getItem(MY_LANG_KEY)){
-        const d = await detectCountryLang(); if(d){ myLang = d; localStorage.setItem(MY_LANG_KEY,d); OfflinePackBridge.setOfflineNativeLang(d); }
-      }else{ OfflinePackBridge.setOfflineNativeLang(myLang); }
-      botLang = myLang; topLang = differentLang(botLang);
-      applyRouteParams(); refreshTexts(); refreshModeButtons(); renderMyLangModalList(); clearBody(topBody); clearBody(botBody);
+        const detected = await detectCountryLang();
+        if(detected && langExists(detected)){
+          myLang = detected;
+
+          localStorage.setItem(MY_LANG_KEY,myLang);
+          localStorage.setItem(SITE_LANG_KEY,myLang);
+          localStorage.setItem(LEGACY_SITE_LANG_KEY,myLang);
+          localStorage.setItem(NATIVE_LANG_KEY,myLang);
+
+          OfflinePackBridge.setOfflineNativeLang(myLang);
+        }
+      }else{
+        OfflinePackBridge.setOfflineNativeLang(myLang);
+      }
+
+      if(!hasRouteLang){
+        botLang = myLang;
+        if(topLang === botLang) topLang = differentLang(botLang);
+      }
+
+      applyRouteParams();
+      refreshTexts();
+      refreshModeButtons();
+      renderMyLangModalList();
+      clearBody(topBody);
+      clearBody(botBody);
     }
+
     boot();
   </script>
 </body>
