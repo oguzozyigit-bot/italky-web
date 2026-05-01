@@ -479,10 +479,10 @@
     // Fonetik Uyumluluk: Hem Türkçe "Can" hem İngilizce "Ken" seslerini yakalar
     const WAKE_WORDS = ["hey can", "can uyan", "hey ken", "ken uyan"];
 
-    // italkyAI mühürlü profil verisinden ismi çekiyoruz
-    // Önce STORAGE_KEY'den (italky_auth_v7) çekmeyi dener, yoksa genel key'e bakar
+    // Profil verisinden ismi çekiyoruz (Oğuz, Selden vb.)
     let firstName = "Başkanım";
     try {
+      // italkyAI mühürlü auth verisinden çekmeyi dene
       const authData = JSON.parse(localStorage.getItem("italky_auth_v7") || "{}");
       const fullName = authData.user_metadata?.full_name || localStorage.getItem("user_full_name") || "";
       if (fullName) firstName = fullName.split(' ')[0];
@@ -505,7 +505,7 @@
       }
 
       if (WAKE_WORDS.some(word => transcript.includes(word))) {
-        wakeRecognizer.stop(); 
+        wakeRecognizer.stop(); // Çakışma önlemek için geçici durdur
         
         // Can'ın tepkisi: "Uyandım Oğuz, seni dinliyorum."
         const greeting = `Uyandım ${firstName}, seni dinliyorum.`;
@@ -520,6 +520,7 @@
           const botMic = document.getElementById("botMic");
           if (botMic) {
             botMic.click();
+            // Ortadaki Orb'u (AI Core) hareketli hale getir
             const root = document.getElementById("frameRoot");
             if(root) root.className = "to-bot is-listening";
           }
@@ -527,6 +528,7 @@
       }
     };
 
+    // Bağlantı koparsa Can pusuya geri yatar
     wakeRecognizer.onend = () => {
       try { wakeRecognizer.start(); } catch(e) {}
     };
@@ -538,7 +540,7 @@
     }
   }
 
-  // Sistem açılışından sonra Can'ı pusuya yatır
+  // Sayfa ve Global Access hazır olduğunda Can'ı başlat
   setTimeout(initCanWakeUp, 2500);
 </script>
 </body>
