@@ -473,10 +473,64 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/facetoface_page.js?v=F2F_PAGE_V122"></script>
+  <!-- Can Uyandırma ve Kişisel Selamlama Modülü -->
   <script type="module">
-    import { initGlobalAccess } from "/js/global_access.js";
-    await initGlobalAccess({ allowPublicPageBypass: false });
+    async function initCanWakeUp() {
+        // Fonetik uyum: "Can" veya global "Ken" seslerini yakalar
+        const WAKE_WORDS = ["hey can", "can uyan", "hey ken", "ken uyan"];
+        const $ = (id) => document.getElementById(id);
+
+        // 1. Profil verisinden ismi çek (Mühürlü kullanıcı verisi)
+        const fullName = localStorage.getItem("user_full_name") || "italky Kullanıcısı";
+        const firstName = fullName.split(' ')[0]; // Örn: "Oğuz"
+
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Recognition) return;
+
+        const wakeRecognizer = new Recognition();
+        wakeRecognizer.lang = "tr-TR";
+        wakeRecognizer.continuous = true;
+        wakeRecognizer.interimResults = true;
+
+        wakeRecognizer.onresult = (event) => {
+            const transcript = Array.from(event.results)
+                .map(result => result[0].transcript.toLowerCase())
+                .join('');
+
+            // "Hey Can" yakalandı mı?
+            if (WAKE_WORDS.some(word => transcript.includes(word))) {
+                wakeRecognizer.stop(); // Çakışma önlemek için geçici durdur
+                
+                // Can'ın sesli yanıtı: Solid, Simple, Sincere
+                const greeting = `Uyandım ${firstName}, seni dinliyorum.`;
+                if (window.NativeTTS) {
+                    window.NativeTTS.speak(greeting, "tr");
+                }
+
+                // 2. FaceToFace Akışını Tetikle (Alt Mikrofonu Patlat)
+                setTimeout(() => {
+                    const botMic = $("botMic");
+                    if (botMic) {
+                        botMic.click();
+                        // Orb animasyonunu dinleme moduna sokar
+                        document.getElementById("frameRoot").className = "to-bot is-listening";
+                    }
+                }, 1500);
+            }
+        };
+
+        // Bağlantı koparsa veya işlem biterse Can tekrar pusuya yatar
+        wakeRecognizer.onend = () => wakeRecognizer.start();
+        
+        try {
+            wakeRecognizer.start();
+        } catch (e) {
+            console.warn("Can pusuya yatamadı, mikrofon izni gerekebilir.");
+        }
+    }
+
+    // Sayfa hazır olduğunda Can'ı hayata döndür
+    document.addEventListener("DOMContentLoaded", initCanWakeUp);
   </script>
 </body>
 </html>
