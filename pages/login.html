@@ -2239,42 +2239,41 @@
       clearBody(topBody);
       clearBody(botBody);
 
-      // Reklam motorunu başlat
-      startCommercialEngine(); 
-    }
+      function startCommercialEngine() {
+    const orb = document.querySelector('.orb');
+    const adBox = document.getElementById('adViewContainer');
+    const container = document.querySelector('.center-hub'); // Orta bant
+    
+    if (!adBox || !orb) return;
 
-    function startCommercialEngine() {
-        const orb = document.querySelector('.orb');
-        const adBox = document.getElementById('adViewContainer');
-        
-        if (!adBox || !orb) return;
-
-        // Başlangıç durumunu garanti et (Inline style JS için kritiktir)
-        orb.style.display = 'flex';
-        adBox.style.display = 'none';
-
-        setInterval(() => {
-            // JS'de style.display kontrolü
-            if (orb.style.display !== 'none') {
-                // LOGO GİTSİN REKLAM GELSİN
-                orb.style.setProperty('display', 'none', 'important');
-                adBox.style.setProperty('display', 'flex', 'important');
-                
-                // Android Banner Yükleme Emri
-                if (window.Android && typeof window.Android.loadBannerAd === "function") {
-                    window.Android.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
-                }
-                console.log("Reklam Modu Aktif");
-            } else {
-                // REKLAM GİTSİN LOGO GELSİN
-                adBox.style.setProperty('display', 'none', 'important');
-                orb.style.setProperty('display', 'flex', 'important');
-                console.log("Logo Modu Aktif");
+    setInterval(() => {
+        if (window.getComputedStyle(orb).display !== 'none') {
+            // 1. Logoyu gizle
+            orb.style.setProperty('display', 'none', 'important');
+            
+            // 2. Reklam kutusunu aç ve içini Android'e hazırla (Şeffaf yap)
+            adBox.style.setProperty('display', 'flex', 'important');
+            adBox.style.backgroundColor = "transparent";
+            
+            // 3. Arka planları şeffaf yaparak alttaki Android Banner'ın görünmesini sağla
+            container.style.backgroundColor = "transparent";
+            document.body.style.backgroundColor = "transparent"; 
+            
+            // 4. Android'e emri gönder
+            const bridge = window.Android || window.italky || window.Native;
+            if (bridge && typeof bridge.loadBannerAd === "function") {
+                bridge.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
             }
-        }, 30000); 
-    }
+        } else {
+            // Geri dönüş: Her şeyi eski haline mühürle
+            adBox.style.setProperty('display', 'none', 'important');
+            orb.style.setProperty('display', 'flex', 'important');
+            container.style.backgroundColor = "rgba(0,0,0,.58)";
+            document.body.style.backgroundColor = "#050508"; 
+        }
+    }, 30000);
+}
 
-    // Uygulamayı ateşle
     boot();
   </script>
 </body>
