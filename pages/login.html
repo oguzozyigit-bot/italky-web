@@ -2247,30 +2247,30 @@
     const orb = document.querySelector('.orb');
     const adBox = document.getElementById('adViewContainer');
     
-    if (!adBox || !orb) return;
-
     setInterval(() => {
         const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
+        const bridge = window.AndroidAdBridge || window.NativeAds;
 
         if (isOrbVisible) {
-            // LOGO GİTSİN REKLAM GELSİN
+            // REKLAM MODUNA GEÇ
             orb.style.setProperty('display', 'none', 'important');
             adBox.style.setProperty('display', 'flex', 'important');
-            
-            // WebView'ı şeffaf yap ki alttaki reklam katmanı görünsün
             document.body.style.backgroundColor = "transparent";
             
-            const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
-            if (bridge && typeof bridge.loadBannerAd === "function") {
-                bridge.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
+            if (bridge && typeof bridge.toggleBannerAd === "function") {
+                bridge.toggleBannerAd(true); // Android'e: "Reklamı Aç"
             }
         } else {
-            // REKLAM GİTSİN LOGO GELSİN
+            // LOGO MODUNA GERİ DÖN
             adBox.style.setProperty('display', 'none', 'important');
             orb.style.setProperty('display', 'flex', 'important');
             document.body.style.backgroundColor = "#050508";
+            
+            if (bridge && typeof bridge.toggleBannerAd === "function") {
+                bridge.toggleBannerAd(false); // Android'e: "Reklamı Kapat ve Arkaya At"
+            }
         }
-    }, 30000); 
+    }, 30000);
 }
 
     // Uygulamayı ateşle
