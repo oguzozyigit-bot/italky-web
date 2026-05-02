@@ -2182,14 +2182,39 @@
       if(mode === "offline") currentMode = "offline";
     }
 
-   async function boot(){
-      // ... (üstteki kodlar olduğu gibi kalsın) ...
+  // --- BAŞKANIMIN TİCARİ MÜHÜRÜ VE DİL MOTORU ---
+    async function boot() {
+      // 1. ÇEKİRDEK AYARLAR
+      OfflinePackBridge.installDownloadEventHandlers(langObj);
+      syncInstalledPairsFromNative();
+      try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
+
+      // 2. KULLANICI DİLİNİ BELİRLE
+      if(!localStorage.getItem(MY_LANG_KEY)){
+        const detected = await detectCountryLang();
+        if(detected && langExists(detected)){
+          myLang = detected;
+          localStorage.setItem(MY_LANG_KEY, myLang);
+          localStorage.setItem(SITE_LANG_KEY, myLang);
+          localStorage.setItem(LEGACY_SITE_LANG_KEY, myLang);
+          localStorage.setItem(NATIVE_LANG_KEY, myLang);
+          OfflinePackBridge.setOfflineNativeLang(myLang);
+        }
+      } else {
+        OfflinePackBridge.setOfflineNativeLang(myLang);
+      }
+
+      // 3. EKRAN DİLLERİNİ VE URL PARAMETRELERİNİ YÜKLE
+      const params = new URLSearchParams(location.search);
+      const hasRouteLang = params.get("source") || params.get("target");
+      
       if(!hasRouteLang){
         botLang = myLang;
+        topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
         if(topLang === botLang) topLang = differentLang(botLang);
       }
 
-      // 1. ÖNCE DİLLERİ VE UI'I YÜKLE (Burası dillerin ekrana gelmesini sağlar)
+      // 4. KRİTİK UI TETİKLEYİCİLERİ (Dilleri Ekrana Getirir)
       applyRouteParams();
       refreshTexts();
       refreshModeButtons();
@@ -2197,11 +2222,11 @@
       clearBody(topBody);
       clearBody(botBody);
 
-      // 2. SONRA REKLAM DÖNGÜSÜNÜ BAŞLAT
+      // 5. TİCARİ REKLAM MOTORUNU BAŞLAT
       startCommercialEngine(); 
     }
 
-    // Reklam Döngüsü Fonksiyonu (Tam 30 saniye kuralıyla)
+    // Reklam Döngüsü Fonksiyonu (30 Saniye Kuralı)
     function startCommercialEngine() {
         const orb = document.querySelector('.orb');
         const adBox = document.getElementById('adViewContainer');
@@ -2209,21 +2234,19 @@
 
         setInterval(() => {
             if (orb.style.display !== 'none') {
-                // Logoyu kapat, reklamı aç
                 orb.style.display = 'none';
                 adBox.style.display = 'flex';
-                // Android tarafına reklam yükle emri gönder
                 if (window.Android && typeof window.Android.loadBannerAd === "function") {
                     window.Android.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
                 }
             } else {
-                // Reklamı kapat, logoyu geri getir
                 adBox.style.display = 'none';
                 orb.style.display = 'flex';
             }
-        }, 30000); // 30.000 ms = 30 Saniye
+        }, 30000);
     }
 
+    // SİSTEMİ ATEŞLE
     boot();
   </script>
 </body>
