@@ -1400,24 +1400,19 @@
     }
 
     function openDrawer() { 
-    drawerBackdrop?.classList.add("show"); 
-    
-    // Menü açılınca reklamı gizle (Çakışmayı önle)
-    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-    if (bridge && typeof bridge.toggleBannerAd === "function") {
-        bridge.toggleBannerAd(false, ""); // İki parametre kuralı
+        drawerBackdrop?.classList.add("show"); 
+        
+        // Menü açılınca reklamı gizle (Çakışmayı ve üstte kalma sorununu önle)
+        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+        if (bridge && typeof bridge.toggleBannerAd === "function") {
+            bridge.toggleBannerAd(false, ""); // İki parametre kuralı
+        }
     }
-}
 
-function closeDrawer() { 
-    drawerBackdrop?.classList.remove("show"); 
-    // Menü kapanınca reklam döngüsü (30sn) bir sonraki turda reklamı getirecektir.
-}
-
-function closeDrawer() { 
-    drawerBackdrop?.classList.remove("show"); 
-    // Menü kapandığında reklam döngüsü (30sn) kaldığı yerden devam edecektir.
-}
+    function closeDrawer() { 
+        drawerBackdrop?.classList.remove("show"); 
+        // Menü kapandı, 30 saniyelik döngü bir sonraki adımda reklamı ana ekrana basacaktır.
+    }
 
     drawerEdgeBtn?.addEventListener("click", openDrawer);
     drawerBackdrop?.addEventListener("click", (e) => {
@@ -2261,36 +2256,40 @@ function closeDrawer() {
     }
 
     function startCommercialEngine() {
-    const orb = document.querySelector('.orb');
-    const adBox = document.getElementById('adViewContainer');
-    
-    if (!orb || !adBox) return;
+        const orb = document.querySelector('.orb');
+        const adBox = document.getElementById('adViewContainer');
+        
+        if (!orb || !adBox) return;
 
-    setInterval(() => {
-        const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
-        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+        setInterval(() => {
+            // Eğer menü (drawer) açıksa reklam döngüsünü pas geç (görünmesin)
+            const isDrawerOpen = document.getElementById('drawerBackdrop').classList.contains('show');
+            if (isDrawerOpen) return;
 
-        if (isOrbVisible) {
-            // --- REKLAM MODUNA GEÇİŞ ---
-            orb.style.setProperty('display', 'none', 'important');
-            adBox.style.setProperty('display', 'flex', 'important');
-            document.body.style.backgroundColor = "transparent";
-            
-            if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(true, ""); // İKİ PARAMETRE!
+            const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
+            const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+
+            if (isOrbVisible) {
+                // --- REKLAM MODUNA GEÇİŞ ---
+                orb.style.setProperty('display', 'none', 'important');
+                adBox.style.setProperty('display', 'flex', 'important');
+                document.body.style.backgroundColor = "transparent";
+                
+                if (bridge && typeof bridge.toggleBannerAd === "function") {
+                    bridge.toggleBannerAd(true, ""); 
+                }
+            } else {
+                // --- LOGO MODUNA GEÇİŞ ---
+                adBox.style.setProperty('display', 'none', 'important');
+                orb.style.setProperty('display', 'flex', 'important');
+                document.body.style.backgroundColor = "#050508";
+                
+                if (bridge && typeof bridge.toggleBannerAd === "function") {
+                    bridge.toggleBannerAd(false, ""); 
+                }
             }
-        } else {
-            // --- LOGO MODUNA GEÇİŞ ---
-            adBox.style.setProperty('display', 'none', 'important');
-            orb.style.setProperty('display', 'flex', 'important');
-            document.body.style.backgroundColor = "#050508";
-            
-            if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(false, ""); // İKİ PARAMETRE!
-            }
-        }
-    }, 30000); 
-}
+        }, 30000); 
+    }
     // Uygulamayı ateşle
     boot();
   </script>
