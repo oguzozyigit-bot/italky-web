@@ -2184,12 +2184,11 @@
 
   // --- BAŞKANIMIN TİCARİ MÜHÜRÜ VE DİL MOTORU ---
     async function boot() {
-      // 1. ÇEKİRDEK AYARLAR
+      // 1. ÇEKİRDEK AYARLAR VE DİL ALGINALAMA
       OfflinePackBridge.installDownloadEventHandlers(langObj);
       syncInstalledPairsFromNative();
       try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
-      // 2. KULLANICI DİLİNİ BELİRLE
       if(!localStorage.getItem(MY_LANG_KEY)){
         const detected = await detectCountryLang();
         if(detected && langExists(detected)){
@@ -2204,7 +2203,6 @@
         OfflinePackBridge.setOfflineNativeLang(myLang);
       }
 
-      // 3. EKRAN DİLLERİNİ VE URL PARAMETRELERİNİ YÜKLE
       const params = new URLSearchParams(location.search);
       const hasRouteLang = params.get("source") || params.get("target");
       
@@ -2214,7 +2212,7 @@
         if(topLang === botLang) topLang = differentLang(botLang);
       }
 
-      // 4. KRİTİK UI TETİKLEYİCİLERİ (Dilleri Ekrana Getirir)
+      // 2. ÖNCE DİLLERİ EKRANA GETİR (KRİTİK)
       applyRouteParams();
       refreshTexts();
       refreshModeButtons();
@@ -2222,11 +2220,11 @@
       clearBody(topBody);
       clearBody(botBody);
 
-      // 5. TİCARİ REKLAM MOTORUNU BAŞLAT
+      // 3. REKLAM DÖNGÜSÜNÜ BAŞLAT (30 saniye logo, 30 saniye reklam)
       startCommercialEngine(); 
     }
 
-    // Reklam Döngüsü Fonksiyonu (30 Saniye Kuralı)
+    // Reklam Döngüsü Fonksiyonu (Tam 30 Saniye)
     function startCommercialEngine() {
         const orb = document.querySelector('.orb');
         const adBox = document.getElementById('adViewContainer');
@@ -2234,19 +2232,22 @@
 
         setInterval(() => {
             if (orb.style.display !== 'none') {
+                // Logoyu sakla, reklamı göster
                 orb.style.display = 'none';
                 adBox.style.display = 'flex';
+                // Android tarafına reklam yükle emri
                 if (window.Android && typeof window.Android.loadBannerAd === "function") {
                     window.Android.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
                 }
             } else {
+                // Reklamı sakla, logoyu geri getir
                 adBox.style.display = 'none';
                 orb.style.display = 'flex';
             }
-        }, 30000);
+        }, 30000); // 30 Saniye Kuralı
     }
 
-    // SİSTEMİ ATEŞLE
+    // MOTORU ATEŞLE
     boot();
   </script>
 </body>
