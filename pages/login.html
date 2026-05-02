@@ -2195,12 +2195,10 @@
         const detected = await detectCountryLang();
         if(detected && langExists(detected)){
           myLang = detected;
-
           localStorage.setItem(MY_LANG_KEY,myLang);
           localStorage.setItem(SITE_LANG_KEY,myLang);
           localStorage.setItem(LEGACY_SITE_LANG_KEY,myLang);
           localStorage.setItem(NATIVE_LANG_KEY,myLang);
-
           OfflinePackBridge.setOfflineNativeLang(myLang);
         }
       }else{
@@ -2212,12 +2210,36 @@
         if(topLang === botLang) topLang = differentLang(botLang);
       }
 
+      // ÖNCE DİLLERİ VE EKRANI YÜKLE (Kritik Sıralama)
       applyRouteParams();
       refreshTexts();
       refreshModeButtons();
       renderMyLangModalList();
       clearBody(topBody);
       clearBody(botBody);
+
+      // SONRA TİCARİ MÜHÜRÜ ATEŞLE
+      startCommercialEngine(); 
+    }
+
+    // Reklam Döngüsü Fonksiyonu (boot dışında, bağımsız tanım)
+    function startCommercialEngine() {
+        const orb = document.querySelector('.orb');
+        const adBox = document.getElementById('adViewContainer');
+        if (!adBox || !orb) return;
+
+        setInterval(() => {
+            if (orb.style.display !== 'none') {
+                orb.style.display = 'none';
+                adBox.style.display = 'flex';
+                if (window.Android && typeof window.Android.loadBannerAd === "function") {
+                    window.Android.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
+                }
+            } else {
+                adBox.style.display = 'none';
+                orb.style.display = 'flex';
+            }
+        }, 30000);
     }
 
     boot();
