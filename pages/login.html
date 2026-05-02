@@ -2244,35 +2244,34 @@
     }
 
     function startCommercialEngine() {
-        const orb = document.querySelector('.orb');
-        const adBox = document.getElementById('adViewContainer');
-        
-        if (!adBox || !orb) return;
+    const orb = document.querySelector('.orb');
+    const adBox = document.getElementById('adViewContainer');
+    
+    if (!adBox || !orb) return;
 
-        // Başlangıç durumunu garanti et (Inline style JS için kritiktir)
-        orb.style.display = 'flex';
-        adBox.style.display = 'none';
+    setInterval(() => {
+        const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
 
-        setInterval(() => {
-            // JS'de style.display kontrolü
-            if (orb.style.display !== 'none') {
-                // LOGO GİTSİN REKLAM GELSİN
-                orb.style.setProperty('display', 'none', 'important');
-                adBox.style.setProperty('display', 'flex', 'important');
-                
-                // Android Banner Yükleme Emri
-                if (window.Android && typeof window.Android.loadBannerAd === "function") {
-                    window.Android.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
-                }
-                console.log("Reklam Modu Aktif");
-            } else {
-                // REKLAM GİTSİN LOGO GELSİN
-                adBox.style.setProperty('display', 'none', 'important');
-                orb.style.setProperty('display', 'flex', 'important');
-                console.log("Logo Modu Aktif");
+        if (isOrbVisible) {
+            // LOGO GİTSİN REKLAM GELSİN
+            orb.style.setProperty('display', 'none', 'important');
+            adBox.style.setProperty('display', 'flex', 'important');
+            
+            // WebView'ı şeffaf yap ki alttaki reklam katmanı görünsün
+            document.body.style.backgroundColor = "transparent";
+            
+            const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
+            if (bridge && typeof bridge.loadBannerAd === "function") {
+                bridge.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
             }
-        }, 30000); 
-    }
+        } else {
+            // REKLAM GİTSİN LOGO GELSİN
+            adBox.style.setProperty('display', 'none', 'important');
+            orb.style.setProperty('display', 'flex', 'important');
+            document.body.style.backgroundColor = "#050508";
+        }
+    }, 30000); 
+}
 
     // Uygulamayı ateşle
     boot();
