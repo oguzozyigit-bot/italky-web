@@ -2201,20 +2201,18 @@
       if(mode === "offline") currentMode = "offline";
     }
 
-  // --- BAŞKANIMIN TİCARİ MÜHÜRÜ VE DİL MOTORU ---
-    async function boot() {
-      // 1. ÇEKİRDEK AYARLAR VE DİL ALGINALAMA
+  async function boot() {
       OfflinePackBridge.installDownloadEventHandlers(langObj);
       syncInstalledPairsFromNative();
       try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
+      // Kullanıcı dil ayarları
       if(!localStorage.getItem(MY_LANG_KEY)){
         const detected = await detectCountryLang();
         if(detected && langExists(detected)){
           myLang = detected;
           localStorage.setItem(MY_LANG_KEY, myLang);
           localStorage.setItem(SITE_LANG_KEY, myLang);
-          localStorage.setItem(LEGACY_SITE_LANG_KEY, myLang);
           localStorage.setItem(NATIVE_LANG_KEY, myLang);
           OfflinePackBridge.setOfflineNativeLang(myLang);
         }
@@ -2231,7 +2229,7 @@
         if(topLang === botLang) topLang = differentLang(botLang);
       }
 
-      // 2. ÖNCE DİLLERİ EKRANA GETİR (KRİTİK)
+      // --- DİLLERİ GETİREN KRİTİK BÖLÜM ---
       applyRouteParams();
       refreshTexts();
       refreshModeButtons();
@@ -2239,34 +2237,34 @@
       clearBody(topBody);
       clearBody(botBody);
 
-      // 3. REKLAM DÖNGÜSÜNÜ BAŞLAT (30 saniye logo, 30 saniye reklam)
+      // --- TİCARİ REKLAM DÖNGÜSÜNÜ BAŞLAT ---
       startCommercialEngine(); 
     }
 
-    // Reklam Döngüsü Fonksiyonu (Tam 30 Saniye)
     function startCommercialEngine() {
         const orb = document.querySelector('.orb');
         const adBox = document.getElementById('adViewContainer');
+        
         if (!adBox || !orb) return;
 
         setInterval(() => {
             if (orb.style.display !== 'none') {
-                // Logoyu sakla, reklamı göster
-                orb.style.display = 'none';
-                adBox.style.display = 'flex';
-                // Android tarafına reklam yükle emri
+                // LOGO GİTSİN REKLAM GELSİN
+                orb.style.setProperty('display', 'none', 'important');
+                adBox.style.setProperty('display', 'flex', 'important');
+                
+                // Android'e Banner reklamı yükle emri gönder
                 if (window.Android && typeof window.Android.loadBannerAd === "function") {
                     window.Android.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
                 }
             } else {
-                // Reklamı sakla, logoyu geri getir
-                adBox.style.display = 'none';
-                orb.style.display = 'flex';
+                // REKLAM GİTSİN LOGO GELSİN
+                adBox.style.setProperty('display', 'none', 'important');
+                orb.style.setProperty('display', 'flex', 'important');
             }
-        }, 30000); // 30 Saniye Kuralı
+        }, 30000); // 30 saniye kuralı
     }
 
-    // MOTORU ATEŞLE
     boot();
   </script>
 </body>
