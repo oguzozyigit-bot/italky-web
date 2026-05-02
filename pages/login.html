@@ -75,11 +75,14 @@
       box-shadow:-10px 0 32px rgba(0,0,0,.30);
     }
 
-    .edge-handle.open::before{
-      content:"M\A E\A N\A U";
-      white-space:pre;
-      text-shadow:0 0 12px rgba(255,255,255,.28);
-    }
+    /* --- EDGE HANDLE DİKEY MÜHÜRÜ --- */
+.edge-handle.open::before {
+  content: "M\A E\A N\A U";
+  white-space: pre;
+  display: block;
+  line-height: 1.2; /* Harf aralarını dikeyde açar */
+  text-shadow: 0 0 12px rgba(255,255,255,.28);
+}
 
     .edge-handle.clear{
       left:0;
@@ -90,11 +93,13 @@
       box-shadow:10px 0 32px rgba(0,0,0,.30);
     }
 
-    .edge-handle.clear::before{
-      content:"C\A L\A E\A A\A R";
-      white-space:pre;
-      text-shadow:0 0 12px rgba(255,255,255,.28);
-    }
+    .edge-handle.clear::before {
+  content: "C\A L\A E\A A\A R";
+  white-space: pre;
+  display: block;
+  line-height: 1.2;
+  text-shadow: 0 0 12px rgba(255,255,255,.28);
+}
 
     .edge-handle:active{transform:translateY(-50%) scale(.96)}
 
@@ -1134,6 +1139,20 @@
   </div>
 
   <div id="toast" class="toast"></div>
+  <!-- İndirme Hata Modalı: Yoğunluk Mesajı İçerir -->
+<div id="downloadErrorModal" class="modal">
+  <div class="modal-card" style="border-top: 4px solid #ef4444;">
+    <h3 class="modal-title" style="color: #ef4444;">İndirme Tamamlanamadı</h3>
+    <p class="modal-text">
+      Şu an dünya genelinde yaşanan **yoğun indirme talebi** nedeniyle sunucularımızda kısa süreli bir gecikme yaşanıyor. 
+      
+      Lütfen internet bağlantınızı kontrol edip biraz sonra tekrar deneyiniz. Sabrınız için teşekkürler.
+    </p>
+    <div class="modal-actions" style="grid-template-columns: 1fr;">
+      <button onclick="document.getElementById('downloadErrorModal').classList.remove('show')" class="modal-btn secondary" type="button">Anladım</button>
+    </div>
+  </div>
+</div>
 
   <script type="module">
     import { getLangPoolForSite } from "/js/lang_pool_full.js";
@@ -1793,27 +1812,29 @@ function closeDrawer() {
       `).join("");
 
       list.querySelectorAll("[data-select-code]").forEach((el) => {
-        el.addEventListener("click",() => {
-          const code = canonical(el.dataset.selectCode);
-          if(!code) return;
+  el.addEventListener("click", async () => { // Buraya async ekle
+    const code = canonical(el.dataset.selectCode);
+    if(!code) return;
 
-          if(side === "top"){
-            topLang = code;
-            await autoCheckOfflineMode();
-            if(topLang === botLang) botLang = differentLang(topLang);
-          }else{
-            botLang = code;
-            if(botLang === topLang) topLang = differentLang(botLang);
-          }
+    if(side === "top"){
+      topLang = code;
+    } else {
+      botLang = code;
+    }
 
-          closeAllPop();
-          refreshTexts();
+    // MÜHÜR: Dil değiştiği an paketi kontrol et ve modu otomatik ayarla
+    await autoCheckOfflineMode(); 
 
-          if(code !== myLang && !hasInstalledPair(myLang,code)){
-            setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
-          }
-        });
-      });
+    if(topLang === botLang) topLang = differentLang(botLang);
+
+    closeAllPop();
+    refreshTexts();
+
+    if(code !== myLang && !hasInstalledPair(myLang,code)){
+      setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
+    }
+  });
+});
 
       list.querySelectorAll("[data-download-code]").forEach((btn) => {
         btn.addEventListener("click",async (e) => {
@@ -2205,11 +2226,22 @@ function closeDrawer() {
       refreshOpenPop();
     });
 
-    window.addEventListener("offlinePairDownloadFailed",(e) => {
-      const d = e.detail || {};
-      showToast(d.error || tx("translateError"));
-      refreshOpenPop();
-    });
+    window.addEventListener("offlinePairDownloadFailed", (e) => {
+    const d = e.detail || {};
+    console.error("İndirme Hatası Logu:", d.error); // Geliştirici için log kalsın
+
+    // Toast yerine artık o şık modalı gösteriyoruz
+    const errorModal = document.getElementById('downloadErrorModal');
+    if (errorModal) {
+        errorModal.classList.add("show");
+    } else {
+        // Fallback: Modal bulunamazsa toast göster
+        showToast("Yoğunluk nedeniyle şu an indirilemiyor, lütfen sonra deneyin.");
+    }
+    
+    // Dil seçim listesini (popover) tazele ki "yükleniyor" ikonu kalksın
+    if (typeof refreshOpenPop === "function") refreshOpenPop();
+});
     
     async function autoCheckOfflineMode() {
     const from = canonical(botLang); 
@@ -2238,80 +2270,100 @@ function closeDrawer() {
     }
 
   async function boot() {
-      OfflinePackBridge.installDownloadEventHandlers(langObj);
-      syncInstalledPairsFromNative();
-      try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
+    // 1. Temel Köprü Kurulumları
+    OfflinePackBridge.installDownloadEventHandlers(langObj);
+    syncInstalledPairsFromNative();
+    try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
-      if(!localStorage.getItem(MY_LANG_KEY)){
-        const detected = await detectCountryLang();
-        if(detected && langExists(detected)){
-          myLang = detected;
-          localStorage.setItem(MY_LANG_KEY, myLang);
-          localStorage.setItem(SITE_LANG_KEY, myLang);
-          localStorage.setItem(NATIVE_LANG_KEY, myLang);
-          OfflinePackBridge.setOfflineNativeLang(myLang);
-        }
-      } else {
+    // 2. Ana Dil Ayarları (Sadece ilk girişte veya null ise)
+    if(!localStorage.getItem(MY_LANG_KEY)){
+      const detected = await detectCountryLang();
+      if(detected && langExists(detected)){
+        myLang = detected;
+        localStorage.setItem(MY_LANG_KEY, myLang);
+        localStorage.setItem(SITE_LANG_KEY, myLang);
+        localStorage.setItem(NATIVE_LANG_KEY, myLang);
         OfflinePackBridge.setOfflineNativeLang(myLang);
       }
+    } else {
+      OfflinePackBridge.setOfflineNativeLang(myLang);
+    }
 
-      const params = new URLSearchParams(location.search);
-      const hasRouteLang = params.get("source") || params.get("target");
+    // 3. Dil Seçim Başlangıcı (URL Parametresi Kontrolü)
+    const params = new URLSearchParams(location.search);
+    const hasRouteLang = params.get("source") || params.get("target");
+    
+    if(!hasRouteLang){
+      botLang = myLang;
+      topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+      if(topLang === botLang) topLang = differentLang(botLang);
+    }
+
+    // 4. Parametreleri Uygula
+    applyRouteParams();
+
+    // 5. KRİTİK MÜHÜR: Offline Paket Kontrolü
+    // Uygulama açıldığında seçili dillerin paketi varsa direkt Offline başlasın
+    await autoCheckOfflineMode(); 
+
+    // 6. UI Tazeleme
+    refreshTexts();
+    refreshModeButtons();
+    renderMyLangModalList();
+    clearBody(topBody);
+    clearBody(botBody);
+
+    // 7. Reklam Motorunu Ateşle
+    startCommercialEngine(); 
+  }
+
+  /**
+   * Ticari Reklam ve Logo Döngüsü (30 Saniye)
+   * italkyAI Logosu ile Banner Reklam arasında geçiş yapar.
+   */
+  function startCommercialEngine() {
+    const orb = document.querySelector('.orb');
+    const adBox = document.getElementById('adViewContainer');
+    
+    if (!orb || !adBox) return;
+
+    setInterval(() => {
+      // MÜHÜR: Menü açıksa veya Modal varsa döngüyü işletme (reklam çıkmasın)
+      const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
+      const isModalOpen = document.querySelector('.modal.show');
       
-      if(!hasRouteLang){
-        botLang = myLang;
-        topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
-        if(topLang === botLang) topLang = differentLang(botLang);
+      if (isDrawerOpen || isModalOpen) {
+        console.log("italkyAI: Menü/Modal açık, reklam döngüsü askıya alındı.");
+        return;
       }
 
-      applyRouteParams();
-      refreshTexts();
-      refreshModeButtons();
-      renderMyLangModalList();
-      clearBody(topBody);
-      clearBody(botBody);
+      const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
+      const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
 
-      // Reklam motorunu başlat
-      startCommercialEngine(); 
-    }
-
-    function startCommercialEngine() {
-        const orb = document.querySelector('.orb');
-        const adBox = document.getElementById('adViewContainer');
+      if (isOrbVisible) {
+        // --- REKLAM MODUNA GEÇİŞ ---
+        orb.style.setProperty('display', 'none', 'important');
+        adBox.style.setProperty('display', 'flex', 'important');
+        document.body.style.backgroundColor = "transparent";
         
-        if (!orb || !adBox) return;
+        if (bridge && typeof bridge.toggleBannerAd === "function") {
+          bridge.toggleBannerAd(true, ""); 
+        }
+      } else {
+        // --- LOGO MODUNA GEÇİŞ ---
+        adBox.style.setProperty('display', 'none', 'important');
+        orb.style.setProperty('display', 'flex', 'important');
+        document.body.style.backgroundColor = "#050508";
+        
+        if (bridge && typeof bridge.toggleBannerAd === "function") {
+          bridge.toggleBannerAd(false, ""); 
+        }
+      }
+    }, 30000); 
+  }
 
-        setInterval(() => {
-            // Eğer menü (drawer) açıksa reklam döngüsünü pas geç (görünmesin)
-            const isDrawerOpen = document.getElementById('drawerBackdrop').classList.contains('show');
-            if (isDrawerOpen) return;
-
-            const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
-            const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-
-            if (isOrbVisible) {
-                // --- REKLAM MODUNA GEÇİŞ ---
-                orb.style.setProperty('display', 'none', 'important');
-                adBox.style.setProperty('display', 'flex', 'important');
-                document.body.style.backgroundColor = "transparent";
-                
-                if (bridge && typeof bridge.toggleBannerAd === "function") {
-                    bridge.toggleBannerAd(true, ""); 
-                }
-            } else {
-                // --- LOGO MODUNA GEÇİŞ ---
-                adBox.style.setProperty('display', 'none', 'important');
-                orb.style.setProperty('display', 'flex', 'important');
-                document.body.style.backgroundColor = "#050508";
-                
-                if (bridge && typeof bridge.toggleBannerAd === "function") {
-                    bridge.toggleBannerAd(false, ""); 
-                }
-            }
-        }, 30000); 
-    }
-    // Uygulamayı ateşle
-    boot();
+  // Uygulamayı ateşle
+  boot();
   </script>
 </body>
 </html>
