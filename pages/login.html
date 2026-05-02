@@ -1400,14 +1400,14 @@
     }
 
     function openDrawer() { 
-        drawerBackdrop?.classList.add("show"); 
-        
-        // Menü açılınca reklamı gizle (Çakışmayı ve üstte kalma sorununu önle)
-        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-        if (bridge && typeof bridge.toggleBannerAd === "function") {
-            bridge.toggleBannerAd(false, ""); // İki parametre kuralı
-        }
+    drawerBackdrop?.classList.add("show"); 
+    
+    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
+    if (bridge && typeof bridge.toggleBannerAd === "function") {
+        // "MENU" parametresi sayesinde Android reklamı aşağıya, Google butonunun altına kaydıracak
+        bridge.toggleBannerAd(true, "MENU"); 
     }
+}
 
     function closeDrawer() { 
         drawerBackdrop?.classList.remove("show"); 
