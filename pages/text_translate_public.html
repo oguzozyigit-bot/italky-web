@@ -894,14 +894,12 @@
       </div>
     </div>
 
-    <main class="container">
     <div class="screen">
-      <!-- Üst Yarım: Çeviri Çıktısı -->
       <div class="half-screen top">
         <div class="panel-head">
           <div class="panel-head-grid">
             <div class="panel-label">ÇEVİRİ ÇIKTISI</div>
-            <button class="tool-toggle panel-sound active" id="soundToggle" type="button">
+            <button class="tool-toggle panel-sound active" id="soundToggle" type="button" aria-label="Sesi aç kapat">
               <span class="dot"></span>
               <span>SES</span>
             </button>
@@ -914,39 +912,28 @@
         </div>
       </div>
 
-      <!-- ORTA HUB: Reklam ve Dikey Butonlar -->
       <div class="center-hub">
-        <!-- Dikey HOME Butonu -->
-        <a href="/pages/login.html" class="nav-btn-vertical v-left" id="homeLink">H O M E</a>
+        <a class="nav-btn" id="homeLink" href="/pages/login.html" style="left:14px;">ANA SAYFA</a>
 
-        <!-- Reklam & Logo Alanı -->
-        <div class="orb-container" id="homeBtn">
-          <!-- Android Banner Reklam Alanı -->
-          <div id="adViewContainer" style="display:none !important; width:300px; height:50px; align-items:center; justify-content:center;">
-             <!-- Reklam buraya yerleşecek -->
+        <div class="orb-container" id="homeBtn" title="Ana sayfa">
+          <div class="energy-orbit">
+            <div class="ball-1"></div>
+            <div class="ball-2"></div>
           </div>
 
-          <div class="orb">
-            <div class="energy-orbit">
-              <div class="ball-1"></div>
-              <div class="ball-2"></div>
+          <div class="ai-core">
+            <div class="eq-wrap" aria-hidden="true">
+              <div class="eq-bar" style="animation-delay:0s"></div>
+              <div class="eq-bar" style="animation-delay:.2s"></div>
+              <div class="eq-bar" style="animation-delay:.4s"></div>
             </div>
-            <div class="ai-core">
-              <div class="eq-wrap" aria-hidden="true">
-                <div class="eq-bar" style="animation-delay:0s"></div>
-                <div class="eq-bar" style="animation-delay:.2s"></div>
-                <div class="eq-bar" style="animation-delay:.4s"></div>
-              </div>
-              <span class="logo-text">italky<span class="logo-ai">AI</span></span>
-            </div>
+            <span class="logo-text">italky<span class="logo-ai">AI</span></span>
           </div>
         </div>
 
-        <!-- Dikey CLEAR Butonu -->
-        <div class="nav-btn-vertical v-right" id="clearBtn">C L E A R</div>
+        <div class="nav-btn btn-clear" id="clearBtn">TEMİZLE</div>
       </div>
 
-      <!-- Alt Yarım: Metin Girişi -->
       <div class="half-screen bottom">
         <div class="panel-head">
           <div class="panel-head-grid simple">
@@ -960,7 +947,7 @@
 
         <div class="composer-wrap">
           <div class="mode-row">
-            <div class="mode-pill">
+            <div class="mode-pill" aria-label="Çeviri modu">
               <button id="modeOnlineBtn" class="active" type="button">Online</button>
               <button id="modeOfflineBtn" type="button">Offline</button>
             </div>
@@ -970,72 +957,51 @@
             <div class="composer-center">
               <textarea id="inputBox" class="composer-input" rows="1" placeholder="Metin yaz"></textarea>
             </div>
-            <button id="micBtn" class="composer-btn" type="button">
-              <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+
+            <button id="micBtn" class="composer-btn" type="button" aria-label="Sesli giriş">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+                <path d="M19 10a7 7 0 0 1-14 0"></path>
+                <path d="M12 17v4"></path>
+                <path d="M8 21h8"></path>
+              </svg>
             </button>
-            <button id="translateBtn" class="composer-btn primary hidden" type="button">
-              <svg viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+
+            <button id="translateBtn" class="composer-btn primary hidden" type="button" aria-label="Çevir">
+              <svg viewBox="0 0 24 24">
+                <path d="M5 12h14"></path>
+                <path d="M13 6l6 6-6 6"></path>
+              </svg>
             </button>
           </div>
         </div>
       </div>
     </div>
-  </main>
 
-  <!-- Dikey Yazı ve Reklam Stilleri -->
-  <style>
-    .nav-btn-vertical {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.45);
-      letter-spacing: 4px;
-      writing-mode: vertical-rl; /* Yukarıdan aşağı akış */
-      text-orientation: upright;
-      cursor: pointer;
-      text-decoration: none;
-      z-index: 650;
-    }
-    .v-left { left: 12px; }
-    .v-right { right: 12px; }
-    .orb { display: flex; transition: opacity 0.4s ease; }
-  </style>
+  </div>
 
-  <!-- Reklam Döngüsü Scripti -->
-  <script>
-    function startCommercialEngine() {
-      const orb = document.querySelector('.orb');
-      const adBox = document.getElementById('adViewContainer');
-      if (!orb || !adBox) return;
+  <div class="popover" id="langPopover">
+    <div class="popover-card">
+      <div class="popover-head">
+        <h3 class="popover-title" id="popoverTitle">Dil Seç</h3>
+        <button class="popover-close" id="popoverClose" type="button">✕</button>
+      </div>
 
-      setInterval(() => {
-          // Eğer dil seçimi popover'ı açıksa reklamı tetikleme
-          if (document.getElementById('langPopover')?.classList.contains('show')) return;
+      <div class="popover-search">
+        <input id="langSearch" type="text" placeholder="Dil ara..." />
+      </div>
 
-          const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
-          const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
+      <div class="lang-list" id="langList"></div>
+    </div>
+  </div>
 
-          if (isOrbVisible) {
-              // Reklam Moduna Geçiş
-              orb.style.setProperty('display', 'none', 'important');
-              adBox.style.setProperty('display', 'flex', 'important');
-              if (bridge) bridge.toggleBannerAd(true, ""); 
-          } else {
-              // Logo Moduna Dönüş
-              adBox.style.setProperty('display', 'none', 'important');
-              orb.style.setProperty('display', 'flex', 'important');
-              if (bridge) bridge.toggleBannerAd(false, ""); 
-          }
-      }, 30000); // 30 Saniye
-    }
-    document.addEventListener('DOMContentLoaded', startCommercialEngine);
-  </script>
+  <div class="toast" id="toast"></div>
 
   <script type="module">
     import { ensureModuleAdAccess } from "/js/ad_gate.js";
+
     let adOk = true;
+
     try {
       adOk = await ensureModuleAdAccess({
         moduleKey: "text_translate_public",
@@ -1048,6 +1014,7 @@
       console.warn("text_translate_public ad gate error:", e);
       adOk = true;
     }
+
     if (adOk !== false) {
       await import("/js/text_translate_public.js?v=PUBLIC_TEXT_TRANSLATE_V1");
     }
