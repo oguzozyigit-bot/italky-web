@@ -2252,25 +2252,27 @@
         const bridge = window.AndroidAdBridge || window.NativeAds;
 
         if (isOrbVisible) {
-            // REKLAM MODUNA GEÇ
+            // --- REKLAM GÖSTERME VAKTİ ---
             orb.style.setProperty('display', 'none', 'important');
             adBox.style.setProperty('display', 'flex', 'important');
             document.body.style.backgroundColor = "transparent";
             
+            // Android'e: "Reklamı aç ve öne getir"
             if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(true); // Android'e: "Reklamı Aç"
+                bridge.toggleBannerAd(true); 
             }
         } else {
-            // LOGO MODUNA GERİ DÖN
+            // --- LOGO GÖSTERME VAKTİ (REKLAMI KALDIR) ---
             adBox.style.setProperty('display', 'none', 'important');
             orb.style.setProperty('display', 'flex', 'important');
             document.body.style.backgroundColor = "#050508";
             
+            // KRİTİK KOMUT: Android'e "Reklamı gizle ve aradan çekil" emri
             if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(false); // Android'e: "Reklamı Kapat ve Arkaya At"
+                bridge.toggleBannerAd(false); // Bu satır reklamı ekrandan KALDIRIR
             }
         }
-    }, 30000);
+    }, 30000); 
 }
 
     // Uygulamayı ateşle
