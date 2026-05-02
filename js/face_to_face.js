@@ -121,36 +121,23 @@ let manualStopPending = false;
 // --- TİCARİ MÜHÜR: 30/30 DÖNGÜSÜ ---
 function startCommercialEngine() {
     const orb = document.querySelector('.orb');
-    let adBox = $("adViewContainer");
-    if (!adBox) {
-        adBox = document.createElement('div');
-        adBox.id = "adViewContainer";
-        adBox.style.cssText = "width:100%;height:60px;display:none;justify-content:center;align-items:center;position:absolute;z-index:10;";
-        orb.parentNode.appendChild(adBox);
-    }
+    const adBox = $("adViewContainer");
+
     setInterval(() => {
         if (orb.style.display !== 'none') {
-            orb.style.display = 'none'; adBox.style.display = 'flex';
-            if (window.Android && window.Android.loadBannerAd) window.Android.loadBannerAd(ADS.BANNER);
+            // Logoyu gizle, reklam alanını aç
+            orb.style.display = 'none'; 
+            adBox.style.display = 'flex';
+            // Android tarafına reklam yükleme emri (Başkanım, senin SDK ID'n ile)
+            if (window.Android && window.Android.loadBannerAd) {
+                window.Android.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
+            }
         } else {
-            adBox.style.display = 'none'; orb.style.display = 'flex';
+            // Reklamı kapat, logoyu geri getir
+            adBox.style.display = 'none'; 
+            orb.style.display = 'flex';
         }
-    }, 30000);
-}
-
-// --- TİCARİ MÜHÜR: 3 DAKİKA KİLİDİ ---
-async function checkAdAccess() {
-    const now = Date.now();
-    if (now - lastAdAt < AD_INTERVAL_MS) return true;
-
-    const ok = await showAdModal({
-        title: tx("adTitle"),
-        text: tx("adText"),
-        adUnit: ADS.REWARDED
-    });
-
-    if (!ok) showToast(tx("adNeeded"));
-    return ok;
+    }, 30000); // 30 saniye kuralı
 }
 
 // --- TÜM ORİJİNAL FONKSİYONLARIN DEVAMI (EKSİKSİZ) ---
