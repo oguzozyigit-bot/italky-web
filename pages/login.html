@@ -2244,58 +2244,42 @@
     }
 
     function startCommercialEngine() {
-    const orb = document.querySelector('.orb');
-    const adBox = document.getElementById('adViewContainer');
-    
-    if (!orb || !adBox) return;
-
-    setInterval(() => {
-        const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
+        const orb = document.querySelector('.orb');
+        const adBox = document.getElementById('adViewContainer');
         
-        // Android köprüsünü tüm ihtimallere karşı tarayalım
-        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+        if (!orb || !adBox) return;
 
-       if (isOrbVisible) {
-    // --- REKLAM MODU ---
-    orb.style.setProperty('display', 'none', 'important');
-    adBox.style.setProperty('display', 'flex', 'important');
-    document.body.style.backgroundColor = "transparent";
-    
-    // Köprüyü tekrar kontrol et
-    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
-    
-    if (bridge) {
-        // HATA ÇÖZÜMÜ: Android 2 parametre beklediği için boş bir string ekliyoruz
-        if (typeof bridge.toggleBannerAd === "function") {
-            bridge.toggleBannerAd(true, ""); 
-        } else if (typeof bridge.loadBannerAd === "function") {
-            bridge.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
-        }
-    }
-} else {
-    // --- LOGO MODU ---
-    adBox.style.setProperty('display', 'none', 'important');
-    orb.style.setProperty('display', 'flex', 'important');
-    document.body.style.backgroundColor = "#050508";
-    
-    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
-    if (bridge && typeof bridge.toggleBannerAd === "function") {
-        // Kapatırken de 2 parametre gönderiyoruz
-        bridge.toggleBannerAd(false, "");
-    }
-}
-            // --- LOGO MODU ---
-            adBox.style.setProperty('display', 'none', 'important');
-            orb.style.setProperty('display', 'flex', 'important');
-            document.body.style.backgroundColor = "#050508";
-            
-            // Android'e reklamı kaldır ve WebView'ı öne getir emri
-            if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(false);
+        setInterval(() => {
+            const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
+            const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+
+            if (isOrbVisible) {
+                // --- REKLAM MODUNA GEÇİŞ ---
+                orb.style.setProperty('display', 'none', 'important');
+                adBox.style.setProperty('display', 'flex', 'important');
+                document.body.style.backgroundColor = "transparent";
+                
+                if (bridge) {
+                    // Android 2 parametre beklediği için ikincisini boş gönderiyoruz
+                    if (typeof bridge.toggleBannerAd === "function") {
+                        bridge.toggleBannerAd(true, ""); 
+                    } else if (typeof bridge.loadBannerAd === "function") {
+                        bridge.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
+                    }
+                }
+            } else {
+                // --- LOGO MODUNA GEÇİŞ ---
+                adBox.style.setProperty('display', 'none', 'important');
+                orb.style.setProperty('display', 'flex', 'important');
+                document.body.style.backgroundColor = "#050508";
+                
+                if (bridge && typeof bridge.toggleBannerAd === "function") {
+                    // Kapatırken de 2 parametre kuralına uyuyoruz
+                    bridge.toggleBannerAd(false, "");
+                }
             }
-        }
-    }, 30000); 
-}
+        }, 30000); 
+    }
     // Uygulamayı ateşle
     boot();
   </script>
