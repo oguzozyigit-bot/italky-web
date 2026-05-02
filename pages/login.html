@@ -1023,8 +1023,8 @@
       </button>
 
       <!-- Google Butonu Altı Banner Alanı -->
-<div id="menuAdContainer" style="width: 100%; height: 50px; margin-top: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); overflow: hidden;">
-    <!-- Android banner buraya basılacak -->
+<div id="menuAdBox" style="width: 100%; height: 50px; margin-top: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); overflow: hidden;">
+    <!-- Burası Android tarafından doldurulacak -->
 </div>
 
       <div class="drawer-footer-seal">
@@ -1402,10 +1402,10 @@
     function openDrawer() { 
     drawerBackdrop?.classList.add("show"); 
     
-    // Menü açıldığında ana ekrandaki reklamı gizle ki menünün üstünde kalmasın
     const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
     if (bridge && typeof bridge.toggleBannerAd === "function") {
-        bridge.toggleBannerAd(false, ""); 
+        // Parametre: true (göster), "MENU" (menü modunda olduğunu bildir)
+        bridge.toggleBannerAd(true, "MENU"); 
     }
 }
 
