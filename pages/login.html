@@ -1402,11 +1402,16 @@
     function openDrawer() { 
     drawerBackdrop?.classList.add("show"); 
     
+    // Menü açılınca reklamı gizle (Çakışmayı önle)
     const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
     if (bridge && typeof bridge.toggleBannerAd === "function") {
-        // Parametre: true (göster), "MENU" (menü modunda olduğunu bildir)
-        bridge.toggleBannerAd(true, "MENU"); 
+        bridge.toggleBannerAd(false, ""); // İki parametre kuralı
     }
+}
+
+function closeDrawer() { 
+    drawerBackdrop?.classList.remove("show"); 
+    // Menü kapanınca reklam döngüsü (30sn) bir sonraki turda reklamı getirecektir.
 }
 
 function closeDrawer() { 
@@ -2256,42 +2261,36 @@ function closeDrawer() {
     }
 
     function startCommercialEngine() {
-        const orb = document.querySelector('.orb');
-        const adBox = document.getElementById('adViewContainer');
-        
-        if (!orb || !adBox) return;
+    const orb = document.querySelector('.orb');
+    const adBox = document.getElementById('adViewContainer');
+    
+    if (!orb || !adBox) return;
 
-        setInterval(() => {
-            const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
-            const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+    setInterval(() => {
+        const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
+        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
 
-            if (isOrbVisible) {
-                // --- REKLAM MODUNA GEÇİŞ ---
-                orb.style.setProperty('display', 'none', 'important');
-                adBox.style.setProperty('display', 'flex', 'important');
-                document.body.style.backgroundColor = "transparent";
-                
-                if (bridge) {
-                    // Android 2 parametre beklediği için ikincisini boş gönderiyoruz
-                    if (typeof bridge.toggleBannerAd === "function") {
-                        bridge.toggleBannerAd(true, ""); 
-                    } else if (typeof bridge.loadBannerAd === "function") {
-                        bridge.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
-                    }
-                }
-            } else {
-                // --- LOGO MODUNA GEÇİŞ ---
-                adBox.style.setProperty('display', 'none', 'important');
-                orb.style.setProperty('display', 'flex', 'important');
-                document.body.style.backgroundColor = "#050508";
-                
-                if (bridge && typeof bridge.toggleBannerAd === "function") {
-                    // Kapatırken de 2 parametre kuralına uyuyoruz
-                    bridge.toggleBannerAd(false, "");
-                }
+        if (isOrbVisible) {
+            // --- REKLAM MODUNA GEÇİŞ ---
+            orb.style.setProperty('display', 'none', 'important');
+            adBox.style.setProperty('display', 'flex', 'important');
+            document.body.style.backgroundColor = "transparent";
+            
+            if (bridge && typeof bridge.toggleBannerAd === "function") {
+                bridge.toggleBannerAd(true, ""); // İKİ PARAMETRE!
             }
-        }, 30000); 
-    }
+        } else {
+            // --- LOGO MODUNA GEÇİŞ ---
+            adBox.style.setProperty('display', 'none', 'important');
+            orb.style.setProperty('display', 'flex', 'important');
+            document.body.style.backgroundColor = "#050508";
+            
+            if (bridge && typeof bridge.toggleBannerAd === "function") {
+                bridge.toggleBannerAd(false, ""); // İKİ PARAMETRE!
+            }
+        }
+    }, 30000); 
+}
     // Uygulamayı ateşle
     boot();
   </script>
