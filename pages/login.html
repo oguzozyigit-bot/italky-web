@@ -2247,34 +2247,40 @@
     const orb = document.querySelector('.orb');
     const adBox = document.getElementById('adViewContainer');
     
+    if (!orb || !adBox) return;
+
     setInterval(() => {
         const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
         
-        // Önce bridge'i güvenli bir değişkene alalım
-        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
+        // Android köprüsünü tüm ihtimallere karşı tarayalım
+        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
 
         if (isOrbVisible) {
-            // REKLAMI AÇ
+            // --- REKLAM MODU ---
             orb.style.setProperty('display', 'none', 'important');
             adBox.style.setProperty('display', 'flex', 'important');
             document.body.style.backgroundColor = "transparent";
             
+            // Android'e reklamı yükle ve göster emri
             if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(true); // Burası Android'i tetikler
+                bridge.toggleBannerAd(true); 
+            } else if (bridge && typeof bridge.loadBannerAd === "function") {
+                // Eğer metod adı eskide kaldıysa yedek olarak çalıştır
+                bridge.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
             }
         } else {
-            // REKLAMI KAPAT (LOGO GELSİN)
+            // --- LOGO MODU ---
             adBox.style.setProperty('display', 'none', 'important');
             orb.style.setProperty('display', 'flex', 'important');
             document.body.style.backgroundColor = "#050508";
             
+            // Android'e reklamı kaldır ve WebView'ı öne getir emri
             if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(false); // Burası Android'de reklamı GONE yapar
+                bridge.toggleBannerAd(false);
             }
         }
     }, 30000); 
 }
-
     // Uygulamayı ateşle
     boot();
   </script>
