@@ -1077,7 +1077,11 @@
     </section>
 
     <section class="center-hub">
-      <div class="orb">
+      <!-- Reklam kabı burada, varsayılan olarak gizli -->
+      <div id="adViewContainer" style="display: none !important;"></div>
+      
+      <!-- Logo burada, varsayılan olarak açık -->
+      <div class="orb" style="display: flex !important;">
         <span class="sat sat1"></span>
         <span class="sat sat2"></span>
         <span class="orb-main">italky<span class="ai">AI</span></span>
@@ -2206,7 +2210,6 @@
       syncInstalledPairsFromNative();
       try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
-      // Kullanıcı dil ayarları
       if(!localStorage.getItem(MY_LANG_KEY)){
         const detected = await detectCountryLang();
         if(detected && langExists(detected)){
@@ -2229,7 +2232,6 @@
         if(topLang === botLang) topLang = differentLang(botLang);
       }
 
-      // --- DİLLERİ GETİREN KRİTİK BÖLÜM ---
       applyRouteParams();
       refreshTexts();
       refreshModeButtons();
@@ -2237,7 +2239,7 @@
       clearBody(topBody);
       clearBody(botBody);
 
-      // --- TİCARİ REKLAM DÖNGÜSÜNÜ BAŞLAT ---
+      // Reklam motorunu başlat
       startCommercialEngine(); 
     }
 
@@ -2247,24 +2249,32 @@
         
         if (!adBox || !orb) return;
 
+        // Başlangıç durumunu garanti et (Inline style JS için kritiktir)
+        orb.style.display = 'flex';
+        adBox.style.display = 'none';
+
         setInterval(() => {
+            // JS'de style.display kontrolü
             if (orb.style.display !== 'none') {
                 // LOGO GİTSİN REKLAM GELSİN
                 orb.style.setProperty('display', 'none', 'important');
                 adBox.style.setProperty('display', 'flex', 'important');
                 
-                // Android'e Banner reklamı yükle emri gönder
+                // Android Banner Yükleme Emri
                 if (window.Android && typeof window.Android.loadBannerAd === "function") {
                     window.Android.loadBannerAd("ca-app-pub-9490095589233929/5740014081");
                 }
+                console.log("Reklam Modu Aktif");
             } else {
                 // REKLAM GİTSİN LOGO GELSİN
                 adBox.style.setProperty('display', 'none', 'important');
                 orb.style.setProperty('display', 'flex', 'important');
+                console.log("Logo Modu Aktif");
             }
-        }, 30000); // 30 saniye kuralı
+        }, 30000); 
     }
 
+    // Uygulamayı ateşle
     boot();
   </script>
 </body>
