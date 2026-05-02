@@ -1402,17 +1402,17 @@
     function openDrawer() { 
     drawerBackdrop?.classList.add("show"); 
     
-    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
+    // Menü açılınca reklamı tamamen kapat, sistem karışmasın
+    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
     if (bridge && typeof bridge.toggleBannerAd === "function") {
-        // "MENU" parametresi sayesinde Android reklamı aşağıya, Google butonunun altına kaydıracak
-        bridge.toggleBannerAd(true, "MENU"); 
+        bridge.toggleBannerAd(false, ""); 
     }
 }
 
-    function closeDrawer() { 
-        drawerBackdrop?.classList.remove("show"); 
-        // Menü kapandı, 30 saniyelik döngü bir sonraki adımda reklamı ana ekrana basacaktır.
-    }
+function closeDrawer() { 
+    drawerBackdrop?.classList.remove("show"); 
+    // Burada reklamı zorla açmıyoruz, 30sn döngüsü gelince kendisi ana ekranda çıkacak
+}
 
     drawerEdgeBtn?.addEventListener("click", openDrawer);
     drawerBackdrop?.addEventListener("click", (e) => {
