@@ -2249,27 +2249,27 @@
     
     setInterval(() => {
         const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
-        const bridge = window.AndroidAdBridge || window.NativeAds;
+        
+        // Önce bridge'i güvenli bir değişkene alalım
+        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge;
 
         if (isOrbVisible) {
-            // --- REKLAM GÖSTERME VAKTİ ---
+            // REKLAMI AÇ
             orb.style.setProperty('display', 'none', 'important');
             adBox.style.setProperty('display', 'flex', 'important');
             document.body.style.backgroundColor = "transparent";
             
-            // Android'e: "Reklamı aç ve öne getir"
             if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(true); 
+                bridge.toggleBannerAd(true); // Burası Android'i tetikler
             }
         } else {
-            // --- LOGO GÖSTERME VAKTİ (REKLAMI KALDIR) ---
+            // REKLAMI KAPAT (LOGO GELSİN)
             adBox.style.setProperty('display', 'none', 'important');
             orb.style.setProperty('display', 'flex', 'important');
             document.body.style.backgroundColor = "#050508";
             
-            // KRİTİK KOMUT: Android'e "Reklamı gizle ve aradan çekil" emri
             if (bridge && typeof bridge.toggleBannerAd === "function") {
-                bridge.toggleBannerAd(false); // Bu satır reklamı ekrandan KALDIRIR
+                bridge.toggleBannerAd(false); // Burası Android'de reklamı GONE yapar
             }
         }
     }, 30000); 
