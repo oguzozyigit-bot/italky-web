@@ -1,6 +1,6 @@
 /**
- * italkyAI Özgür Sınav Motoru
- * Dosya Yolu: /js/level_test_engine.js
+ * italkyAI Sınav Motoru - Final Sürüm
+ * Hem Public hem Hub üzerinden gelen istekleri karşılar.
  */
 
 class LevelTestEngine {
@@ -14,22 +14,24 @@ class LevelTestEngine {
     }
 
     async init() {
-        // Yerel JSON dosyasını çek (it_test.json, en_test.json vb.)
         try {
-            // HTML /pages içindeyse yol: ../assets/tests/
-            const response = await fetch(`../assets/tests/${this.lang}_test.json`);
+            // Android/Vercel yerel dosya yolundan soruları çek
+            const response = await fetch(`../../assets/tests/${this.lang}_test.json`);
+            if (!response.ok) throw new Error("JSON bulunamadı");
+            
             const json = await response.json();
             this.pool = json.data;
             
             this.setupTest();
             this.renderQuestion();
         } catch (error) {
-            console.error("Hata: Soru bankası yüklenemedi!", error);
+            console.error("Soru havuzu hatası:", error);
+            document.getElementById('questionText').innerText = "Hata: Soru havuzu yüklenemedi.";
         }
     }
 
     setupTest() {
-        // Havuzdan 15(A), 20(B), 15(C) soruyu rastgele seçerek 50'ye tamamla
+        // Seviye bazlı dengeli dağılım: 15(A) + 20(B) + 15(C) = 50 Soru
         const a = this.getRandom(this.pool.filter(q => q.lvl.startsWith('A')), 15);
         const b = this.getRandom(this.pool.filter(q => q.lvl.startsWith('B')), 20);
         const c = this.getRandom(this.pool.filter(q => q.lvl.startsWith('C')), 15);
@@ -43,19 +45,19 @@ class LevelTestEngine {
     renderQuestion() {
         const q = this.questions[this.currentIndex];
         
-        // Tasarımdaki ID'lerle eşleşme
+        // Tasarımdaki ID'lerle haberleşme
         const qText = document.getElementById('questionText');
         const optWrap = document.getElementById('optionsWrap');
         const counter = document.getElementById('qCounter');
         const progress = document.getElementById('progressFill');
 
         if (qText) qText.innerText = q.q;
-        if (counter) counter.innerText = `Soru ${this.currentIndex + 1} / 50`;
+        if (counter) counter.innerText = `SORU ${this.currentIndex + 1} / 50`;
         if (progress) progress.style.width = `${((this.currentIndex + 1) / 50) * 100}%`;
 
         if (optWrap) {
             optWrap.innerHTML = '';
-            // Şıkları her seferinde karıştır
+            // Şıkları karıştırarak butonları oluştur
             const choices = [
                 { t: q.a, correct: true }, { t: q.b, correct: false },
                 { t: q.c, correct: false }, { t: q.d, correct: false }
@@ -63,7 +65,7 @@ class LevelTestEngine {
 
             choices.forEach(choice => {
                 const btn = document.createElement('button');
-                btn.className = 'opt-btn'; // Senin CSS'indeki class adı
+                btn.className = 'opt-btn'; // Senin CSS'indeki class
                 btn.innerText = choice.t;
                 btn.onclick = () => this.handleAnswer(choice.correct);
                 optWrap.appendChild(btn);
@@ -83,22 +85,22 @@ class LevelTestEngine {
     }
 
     finishTest() {
-        // Puanlamaya göre seviye belirle
         let level = "A1";
         if (this.score > 43) level = "C1";
         else if (this.score > 35) level = "B2";
         else if (this.score > 25) level = "B1";
         else if (this.score > 15) level = "A2";
 
-        // Sonucu tarayıcıya/telefona kaydet
+        // Hem LocalStorage'a hem varsa Supabase'e yazma ihtimali için sakla
         localStorage.setItem(`italky_level_${this.lang}`, level);
-        
-        // Sonuç sayfasına puan ve seviye ile git
-        window.location.href = `level_result.html?lang=${this.lang}&lvl=${level}&score=${this.score}`;
+        localStorage.setItem(`italky_score_${this.lang}`, this.score);
+
+        // Sonuç sayfasına git (Parametreleri URL ile taşıyoruz)
+        window.location.href = `/pages/public/level_result.html?lang=${this.lang}&lvl=${level}&score=${this.score}`;
     }
 }
 
-// URL'den dili çek (örn: ?lang=it) ve başlat
+// URL'den dili al ve motoru ateşle
 const params = new URLSearchParams(window.location.search);
 const lang = params.get('lang') || 'en';
 new LevelTestEngine(lang);
