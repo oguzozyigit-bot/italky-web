@@ -1,5 +1,16 @@
 /* FILE: /js/lang_pool_full.js */
 
+/**
+ * ML Kit On-Device (İnternetsiz) Çeviri Desteklenen Diller Listesi
+ * Bu listede olmayan diller sadece Cloud (Online) üzerinden çevrilebilir.
+ */
+const ML_KIT_SUPPORTED = [
+  "af", "ar", "be", "bg", "bn", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", 
+  "fa", "fi", "fr", "ga", "gl", "gu", "he", "hi", "hr", "ht", "hu", "id", "is", "it", "ja", 
+  "ka", "kn", "ko", "lt", "lv", "mk", "mr", "ms", "mt", "nl", "no", "pl", "pt", "ro", "ru", 
+  "sk", "sl", "sq", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh"
+];
+
 export const LANG_POOL = [
   // Avrupa Dilleri
   { code: "tr", flag: "🇹🇷", region: "europe", featured: true },
@@ -47,7 +58,7 @@ export const LANG_POOL = [
   { code: "gu", flag: "🇮🇳", region: "asia", featured: false },
   { code: "kn", flag: "🇮🇳", region: "asia", featured: false },
 
-  // Türk Dünyası Dilleri
+  // Türk Dünyası Dilleri (Cloud Only)
   { code: "az", flag: "🇦🇿", region: "turkic", featured: true },
   { code: "kk", flag: "🇰🇿", region: "turkic", featured: true },
   { code: "ky", flag: "🇰🇬", region: "turkic", featured: true },
@@ -74,7 +85,11 @@ export const LANG_POOL = [
   // Afrika
   { code: "af", flag: "🇿🇦", region: "africa", featured: true },
   { code: "sw", flag: "🇰🇪", region: "africa", featured: true }
-];
+].map(lang => ({
+  ...lang,
+  // Otomatik mühür: ML Kit listesinde varsa true döner
+  canOffline: ML_KIT_SUPPORTED.includes(lang.code)
+}));
 
 const REGION_NAMES = {
   europe: "Avrupa Dilleri",
@@ -87,87 +102,29 @@ const REGION_NAMES = {
 };
 
 const TR_NAMES = {
-  tr: "Türkçe",
-  en: "İngilizce",
-  de: "Almanca",
-  fr: "Fransızca",
-  it: "İtalyanca",
-  es: "İspanyolca",
-  pt: "Portekizce",
-  nl: "Hollandaca",
-  sv: "İsveççe",
-  no: "Norveççe",
-  da: "Danca",
-  fi: "Fince",
-  pl: "Lehçe",
-  cs: "Çekçe",
-  sk: "Slovakça",
-  hu: "Macarca",
-  ro: "Rumence",
-  bg: "Bulgarca",
-  el: "Yunanca",
-  uk: "Ukraynaca",
-  ru: "Rusça",
-  ar: "Arapça",
-  he: "İbranice",
-  fa: "Farsça",
-  ur: "Urduca",
-  hi: "Hintçe",
-  bn: "Bengalce",
-  id: "Endonezce",
-  ms: "Malayca",
-  vi: "Vietnamca",
-  th: "Tayca",
-  zh: "Çince",
-  ja: "Japonca",
-  ko: "Korece",
-  fil: "Filipince",
-  mr: "Marathi",
-  ta: "Tamilce",
-  te: "Teluguca",
-  gu: "Guceratça",
-  kn: "Kannada",
-  az: "Azerbaycanca",
-  kk: "Kazakça",
-  ky: "Kırgızca",
-  uz: "Özbekçe",
-  tk: "Türkmence",
-  ka: "Gürcüce",
-  hy: "Ermenice",
-  sr: "Sırpça",
-  hr: "Hırvatça",
-  bs: "Boşnakça",
-  sl: "Slovence",
-  mk: "Makedonca",
-  sq: "Arnavutça",
-  et: "Estonca",
-  lv: "Letonca",
-  lt: "Litvanca",
-  af: "Afrikanca",
-  sw: "Svahili"
+  tr: "Türkçe", en: "İngilizce", de: "Almanca", fr: "Fransızca", it: "İtalyanca",
+  es: "İspanyolca", pt: "Portekizce", nl: "Hollandaca", sv: "İsveççe", no: "Norveççe",
+  da: "Danca", fi: "Fince", pl: "Lehçe", cs: "Çekçe", sk: "Slovakça", hu: "Macarca",
+  ro: "Rumence", bg: "Bulgarca", el: "Yunanca", uk: "Ukraynaca", ru: "Rusça",
+  ar: "Arapça", he: "İbranice", fa: "Farsça", ur: "Urduca", hi: "Hintçe",
+  bn: "Bengalce", id: "Endonezce", ms: "Malayca", vi: "Vietnamca", th: "Tayca",
+  zh: "Çince", ja: "Japonca", ko: "Korece", fil: "Filipince", mr: "Marathi",
+  ta: "Tamilce", te: "Teluguca", gu: "Guceratça", kn: "Kannada", az: "Azerbaycanca",
+  kk: "Kazakça", ky: "Kırgızca", uz: "Özbekçe", tk: "Türkmence", ka: "Gürcüce",
+  hy: "Ermenice", sr: "Sırpça", hr: "Hırvatça", bs: "Boşnakça", sl: "Slovence",
+  mk: "Makedonca", sq: "Arnavutça", et: "Estonca", lv: "Letonca", lt: "Litvanca",
+  af: "Afrikanca", sw: "Svahili"
 };
 
 const BASE_NAMES = {
-  tr: TR_NAMES,
-  en: TR_NAMES,
-  de: TR_NAMES,
-  fr: TR_NAMES,
-  it: TR_NAMES,
-  es: TR_NAMES
+  tr: TR_NAMES, en: TR_NAMES, de: TR_NAMES, fr: TR_NAMES, it: TR_NAMES, es: TR_NAMES
 };
-
-// --- YARDIMCI FONKSİYONLAR ---
 
 export function getSiteLang() {
   try {
-    const value = String(
-      localStorage.getItem("site_lang") ||
-      localStorage.getItem("system_lang") ||
-      "tr"
-    ).trim().toLowerCase();
-    if (["tr", "en", "de", "fr", "it", "es"].includes(value)) return value;
-  } catch {}
-  return "tr";
+    const value = String(localStorage.getItem("site_lang") || "tr").trim().toLowerCase();
+    return ["tr", "en", "de", "fr", "it", "es"].includes(value) ? value : "tr";
+  } catch { return "tr"; }
 }
 
 export function getLangName(code, siteLang = getSiteLang()) {
@@ -185,28 +142,4 @@ export function getLangPoolForSite(siteLang = getSiteLang(), options = {}) {
       regionName: REGION_NAMES[item.region] || "Diller",
       name: getLangName(item.code, siteLang)
     }));
-}
-
-export function getCategorizedLangPoolForSite(siteLang = getSiteLang(), options = {}) {
-  const pool = getLangPoolForSite(siteLang, options);
-  const groups = {};
-
-  pool.forEach((item) => {
-    const key = item.region || "other";
-    if (!groups[key]) {
-      groups[key] = {
-        key,
-                title: REGION_NAMES[key] || "Diller",
-        items: []
-      };
-    }
-    groups[key].items.push(item);
-  });
-
-  const order = ["europe", "asia", "middle_east", "africa", "balkans", "caucasus", "turkic"];
-  return order.filter((key) => groups[key]).map((key) => groups[key]);
-}
-
-export function getFeaturedLangsForSite(siteLang = getSiteLang(), options = {}) {
-  return getLangPoolForSite(siteLang, options).filter((item) => item.featured);
 }
