@@ -1801,7 +1801,88 @@ function closeDrawer() {
   // 5. Durum: Destekleniyor ve yüklü değilse indir butonu göster
   return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
 }
+function renderPop(side){
+      const list = side === "top" ? listTop : listBot;
+      const selected = side === "top" ? topLang : botLang;
+      const filteredLangs = getFilteredLangsForPopover();
 
+      if(currentMode === "offline" && !filteredLangs.length){
+        list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`;
+        return;
+      }
+
+      list.innerHTML = filteredLangs.map((l) => `
+        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+          <div class="pop-left" data-select-code="${l.code}">
+            <div class="pop-flag">${l.flag}</div>
+            <div class="pop-name">${l.name}</div>
+          </div>
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            ${renderActionForLang(l.code)}
+          </div>
+        </div>
+      `).join("");
+
+      list.querySelectorAll("[data-select-code]").forEach((el) => {
+        el.addEventListener("click", async () => {
+          const code = canonical(el.dataset.selectCode);
+          if(!code) return;
+
+          if(side === "top") topLang = code;
+          else botLang = code;
+
+          await autoCheckOfflineMode(); 
+
+          if(topLang === botLang) topLang = differentLang(botLang);
+
+          closeAllPop();
+          refreshTexts();
+
+          // Eğer seçilen dil offline destekliyorsa ama inmemişse teklif et
+          const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === code);
+          if(code !== myLang && !hasInstalledPair(myLang,code) && langInfo?.canOffline){
+            setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
+          }
+        });
+      });
+
+      list.querySelectorAll("[data-download-code]").forEach((btn) => {
+        btn.addEventListener("click",async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const code = canonical(btn.dataset.downloadCode);
+          await startOfflinePackDownload(code, "lang_popup");
+        });
+      });
+    }
+
+    // --- Popover Açma/Kapama Tetikleyicileri ---
+    topLangBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      lastOpenPopSide = "top";
+      renderPop("top");
+      popTop.classList.add("show");
+    });
+
+    botLangBtn.addEventListener("click",(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPop();
+      lastOpenPopSide = "bot";
+      renderPop("bot");
+      popBot.classList.add("show");
+    });
+
+    closeTop.addEventListener("click",closeAllPop);
+    closeBot.addEventListener("click",closeAllPop);
+
+    document.addEventListener("click",(e) => {
+      const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
+      if(!inside) closeAllPop();
+    },{capture:true});
     function clearBody(body){ if(body) body.innerHTML = ""; }
 
     function addBubble(side,text,latest=false){
