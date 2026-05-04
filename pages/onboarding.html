@@ -1,171 +1,135 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
-  <title>Welcome • italkyAI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
-  
+  <title>italkyAI • Be Free</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
   <style>
-    /* ... (login.html ile aynı glassmorphism stili, Quantum OS teması) ... */
-    :root { --ai-gradient: linear-gradient(135deg, #a5b4fc, #6366f1, #ec4899); --bg: #050508; }
-    body, html { margin:0; padding:0; width:100%; height:100%; background:var(--bg); color:#fff; font-family: 'Outfit', sans-serif; overflow:hidden; }
+    :root { --ai: linear-gradient(135deg, #a5b4fc, #6366f1, #ec4899); --bg: #050508; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body, html { margin:0; padding:0; width:100%; height:100%; background:var(--bg); color:#fff; font-family:'Outfit',sans-serif; overflow:hidden; }
 
-    .bg-glow { position: fixed; inset:0; background: radial-gradient(circle at 50% -20%, rgba(99,102,241,0.15), transparent 50%), radial-gradient(circle at 50% 120%, rgba(236,72,153,0.12), transparent 50%); z-index: -1; }
-    .slider { display: flex; width: 600%; height: 100%; transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1); }
-    .slide { width: 16.66%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+    /* Arka Plan Efektleri */
+    .glow { position:fixed; inset:0; background: radial-gradient(circle at 50% -10%, rgba(99,102,241,0.18), transparent 40%), radial-gradient(circle at 50% 110%, rgba(236,72,153,0.12), transparent 40%); z-index:-1; }
 
-    /* Yaratıcı Mockup Alanı (Glassmorphism) */
-    .mockup-container {
-      width: min(80vw, 320px); height: min(60vh, 560px);
-      border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.01); backdrop-filter: blur(10px);
-      margin-bottom: 30px; overflow: hidden; position: relative;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    /* Slider Yapısı */
+    .slider { display:flex; width:600%; height:100%; transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1); }
+    .slide { width:16.66%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
+
+    /* Cihaz Mockup Efekti */
+    .mockup {
+      width: min(75vw, 280px); height: min(55vh, 520px);
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 36px; padding: 10px; margin-bottom: 30px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1);
+      position: relative; overflow: hidden;
     }
-    .mockup-img { width: 100%; height: 100%; object-fit: cover; }
+    .mockup img { width: 100%; height: 100%; object-fit: cover; border-radius: 28px; }
 
-    h2 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; margin: 0 0 12px; letter-spacing: -1px; }
-    p { font-size: 16px; line-height: 1.5; color: rgba(255,255,255,0.7); margin: 0; max-width: 300px; }
-    h2 span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    /* Yazılar */
+    h2 { font-family:'Space Grotesk',sans-serif; font-size: 28px; font-weight: 800; margin: 0 0 14px; line-height: 1.1; }
+    h2 span { background: var(--ai); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    p { font-size: 16px; color: rgba(255,255,255,0.65); line-height: 1.5; margin: 0; max-width: 280px; }
 
-    /* Çoklu Özellik Sayfası Stilleri (Slide 4) */
-    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: min(90vw, 360px); margin-bottom: 30px; }
-    .feature-item {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px; padding: 15px; text-align: left;
+    /* Navigasyon */
+    .footer { position: fixed; bottom: calc(40px + env(safe-area-inset-bottom)); left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .dots { display: flex; gap: 8px; }
+    .dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.15); transition: 0.4s; }
+    .dot.active { width: 22px; background: #6366f1; box-shadow: 0 0 10px rgba(99,102,241,0.5); }
+    .btn { 
+      width: 280px; height: 56px; border: none; border-radius: 20px; 
+      background: var(--ai); color: #fff; font-size: 16px; font-weight: 900; 
+      cursor: pointer; box-shadow: 0 15px 30px rgba(99,102,241,0.2); transition: 0.3s;
     }
-    .feature-item i { font-size: 20px; color: #6366f1; margin-bottom: 10px; }
-    .feature-item h3 { font-size: 15px; margin: 0 0 5px; color: #fff; }
-    .feature-item p { font-size: 12px; color: rgba(255,255,255,0.6); }
-
-    /* Footer ve Buton */
-    .footer { position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-    .dots { display: flex; gap: 6px; }
-    .dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.2); transition: 0.3s; }
-    .dot.active { width: 18px; background: #6366f1; }
-    .btn { width: min(80vw, 320px); height: 54px; border-radius: 18px; border: none; background: var(--ai-gradient); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: inherit; }
     .btn:active { transform: scale(0.96); }
   </style>
 </head>
 <body>
-
-  <div class="bg-glow"></div>
-
+  <div class="glow"></div>
   <div class="slider" id="slider">
     <section class="slide">
-      <div class="mockup-container"><img src="mockup1.webp" class="mockup-img"/></div>
-      <h2 id="s1_title"></h2>
-      <p id="s1_text"></p>
+      <div class="mockup"><img src="23254.jpg" /></div>
+      <h2 id="s1_t"></h2><p id="s1_p"></p>
     </section>
-
     <section class="slide">
-      <div class="mockup-container"><img src="mockup2.webp" class="mockup-img"/></div>
-      <h2 id="s2_title"></h2>
-      <p id="s2_text"></p>
+      <div class="mockup"><img src="23262.jpg" /></div>
+      <h2 id="s2_t"></h2><p id="s2_p"></p>
     </section>
-
     <section class="slide">
-      <div class="mockup-container"><img src="mockup3.webp" class="mockup-img"/></div>
-      <h2 id="s3_title"></h2>
-      <p id="s3_text"></p>
+      <div class="mockup"><img src="23260.jpg" /></div>
+      <h2 id="s3_t"></h2><p id="s3_p"></p>
     </section>
-
     <section class="slide">
-      <h2 id="s4_title" style="margin-bottom:30px;"></h2>
-      <div class="feature-grid">
-        <div class="feature-item">
-          <i>Placement Test</i>
-          <h3 id="s4_t1"></h3>
-          <p id="s4_d1"></p>
-        </div>
-        <div class="feature-item">
-          <i>Hangman</i>
-          <h3 id="s4_t2"></h3>
-          <p id="s4_d2"></p>
-        </div>
-        </div>
+      <div class="mockup"><img src="23256.jpg" /></div>
+      <h2 id="s4_t"></h2><p id="s4_p"></p>
     </section>
-
     <section class="slide">
-      <div class="mockup-container"><img src="mockup5.webp" class="mockup-img"/></div>
-      <h2 id="s5_title"></h2>
-      <p id="s5_text"></p>
+      <div class="mockup"><img src="23258.jpg" /></div>
+      <h2 id="s5_t"></h2><p id="s5_p"></p>
     </section>
-
     <section class="slide">
-      <div class="mockup-container"><img src="mockup6.webp" class="mockup-img"/></div>
-      <h2 id="s6_title"></h2>
-      <p id="s6_text"></p>
+      <div class="mockup" style="border-color: #6366f1;"><img src="23254.jpg" /></div>
+      <h2 id="s6_t"></h2><p id="s6_p"></p>
     </section>
   </div>
 
   <div class="footer">
-    <div class="dots"> <div class="dot active"></div> <div class="dot"></div> <div class="dot"></div> <div class="dot"></div> <div class="dot"></div> <div class="dot"></div> </div>
+    <div class="dots" id="dots">
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
     <button class="btn" id="nextBtn"></button>
   </div>
 
   <script type="module">
-    import { ONBOARDING_TEXTS } from '/js/onboarding_lang.js';
+    import { ONBOARDING_TEXTS } from './js/onboarding_lang.js';
 
-    let currentSlide = 0;
-    const totalSlides = 6;
+    let current = 0;
+    const total = 6;
     const slider = document.getElementById('slider');
     const dots = document.querySelectorAll('.dot');
-    const nextBtn = document.getElementById('nextBtn');
+    const btn = document.getElementById('nextBtn');
 
-    // 1. Kullanıcının dilini tespit et (IP veya Sistem Dili)
-    function detectLanguage() {
-        // En basit yöntem: Tarayıcı sistem dili
-        const sysLang = canonical(navigator.language || navigator.userLanguage || "en");
-        return ONBOARDING_TEXTS[sysLang] ? sysLang : "en"; // Sözlükte yoksa İngilizce'ye dön
+    // Dil Algılama
+    const lang = (navigator.language || 'en').split('-')[0];
+    const dict = ONBOARDING_TEXTS[lang] || ONBOARDING_TEXTS.en;
+
+    // Metinleri Doldur
+    function init() {
+      Object.keys(dict).forEach(key => {
+        const el = document.getElementById(key);
+        if(el) el.innerHTML = dict[key];
+      });
+      btn.textContent = dict.btn_n;
     }
 
-    // Dil kodunu temizle (Örn: tr-TR -> tr)
-    function canonical(code){ return String(code || "").split("-")[0].toLowerCase().trim(); }
-
-    const userLang = detectLanguage();
-    const texts = ONBOARDING_TEXTS[userLang];
-
-    // 2. Metinleri Canlı Olarak Yükle
-    function initTexts() {
-        document.documentElement.lang = userLang; // HTML lang attributunu güncelle
-        
-        // Tüm ID'li metinleri sözlükten doldur
-        Object.keys(texts).forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = texts[id];
-        });
-        nextBtn.textContent = texts.btn_next; // Buton metni
-    }
-
-    nextBtn.addEventListener('click', () => {
-      if (currentSlide < totalSlides - 1) {
-        currentSlide++;
-        updateSlider();
+    btn.addEventListener('click', () => {
+      if(current < total - 1) {
+        current++;
+        update();
       } else {
         localStorage.setItem('italky_onboarding_done', 'true');
         window.location.href = 'login.html';
       }
     });
 
-    function updateSlider() {
-      slider.style.transform = `translateX(-${currentSlide * (100/totalSlides)}%)`;
-      dots.forEach((dot, index) => dot.classList.toggle('active', index === currentSlide));
+    function update() {
+      slider.style.transform = `translateX(-${current * (100/total)}%)`;
+      dots.forEach((d, i) => d.classList.toggle('active', i === current));
       
-      // Son sayfada buton değişimi
-      if (currentSlide === totalSlides - 1) {
-        nextBtn.textContent = texts.btn_start;
-        nextBtn.style.background = "#fff";
-        nextBtn.style.color = "#000";
+      if(current === total - 1) {
+        btn.textContent = dict.btn_s;
+        btn.style.background = "#fff";
+        btn.style.color = "#000";
       } else {
-        nextBtn.textContent = texts.btn_next;
-        nextBtn.style.background = "var(--ai-gradient)";
-        nextBtn.style.color = "#fff";
+        btn.textContent = dict.btn_n;
+        btn.style.background = "var(--ai)";
+        btn.style.color = "#fff";
       }
     }
 
-    initTexts();
+    init();
   </script>
 </body>
 </html>
