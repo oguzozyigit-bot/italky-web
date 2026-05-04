@@ -1766,37 +1766,7 @@ function closeDrawer() {
       return c !== myLang && hasInstalledPair(myLang,c);
     }
 
-    function renderActionForLang(code){
-      const c = canonical(code);
-
-      if(OfflinePackBridge.isPairActive(myLang,c)){
-        return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
-      }
-
-      if(OfflinePackBridge.isPairQueued(myLang,c)){
-        return `<span class="pop-queued" title="Sırada">…</span>`;
-      }
-
-      if(isLangInstalledForUi(c)){
-        return `<span class="pop-installed" title="Kurulu">✓</span>`;
-      }
-
-      if(c === myLang){
-        return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
-      }
-
-      return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
-    }
-
-    function renderPop(side){
-      const list = side === "top" ? listTop : listBot;
-      const selected = side === "top" ? topLang : botLang;
-      const filteredLangs = getFilteredLangsForPopover();
-
-      if(currentMode === "offline" && !filteredLangs.length){
-        list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`;
-        return;
-      }
+    function renderActionForLang
 
       list.innerHTML = filteredLangs.map((l) => `
         <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
