@@ -1762,41 +1762,53 @@
       return c !== myLang && hasInstalledPair(myLang,c);
     }
 
-    function renderActionForLang(code) {
+    // YENİ: Ana dilin cihaza inip inmediğini kontrol eden fonksiyon
+    function isNativeBaseReady() {
+      // Eğer sistemde Kendi Dilim ile ilgili en az bir paket varsa, ana dil inmiş demektir.
+      return OfflinePackBridge.hasAnyInstalledPair(); 
+    }
+
+    // GÜNCELLENDİ: isLocked parametresi ile kilit durumu eklendi
+    function renderActionForLang(code, isLocked) {
       const c = canonical(code);
       
-      // 1. Durum: İndirme işlemi devam ediyorsa
+      // 1. İndiriliyor durumu
       if (OfflinePackBridge.isPairActive(myLang, c)) {
         return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
       }
 
-      // 2. Durum: İndirme sırasındaysa
+      // 2. Sırada durumu
       if (OfflinePackBridge.isPairQueued(myLang, c)) {
         return `<span class="pop-queued" title="Sırada">…</span>`;
       }
 
-      // 3. Durum: Zaten cihazda yüklüyse
+      // 3. Kurulu durumu
       if (isLangInstalledForUi(c)) {
         return `<span class="pop-installed" title="Kurulu">✓</span>`;
       }
 
-      // 4. Durum: Kullanıcının kendi diliyse
+      // 4. Kendi Dilim durumu
       if (c === myLang) {
         return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
       }
 
-      // --- KRİTİK FİLTRE: canOffline kontrolü ---
+      // Sadece Cloud destekleyen diller
       const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
-
       if (langInfo && !langInfo.canOffline) {
         return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
       }
 
-      // 5. Durum: Destekleniyor ve yüklü değilse indir butonu göster
+      // YENİ: EĞER KİLİTLİYSE (Ana dil inmemişse) kilit ikonu göster
+      if (isLocked) {
+        return `<span class="pop-code" style="font-size:16px; opacity:0.4;" title="Önce ana dili indirin">🔒</span>`;
+      }
+
+      // Kilitli değilse normal indirme butonu
       return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
     }
 
-    function renderPop(side){
+    // GÜNCELLENDİ: Ana dili indirme butonu ve pasiflik durumu eklendi
+    function renderPop(side) {
       const list = side === "top" ? listTop : listBot;
       const selected = side === "top" ? topLang : botLang;
       const filteredLangs = getFilteredLangsForPopover();
@@ -1806,19 +1818,60 @@
         return;
       }
 
-      list.innerHTML = filteredLangs.map((l) => `
-        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
-          <div class="pop-left" data-select-code="${l.code}">
-            <div class="pop-flag">${l.flag}</div>
-            <div class="pop-name">${l.name}</div>
-          </div>
-          <div class="pop-actions">
-            <div class="pop-code">${l.code.toUpperCase()}</div>
-            ${renderActionForLang(l.code)}
-          </div>
-        </div>
-      `).join("");
+      // ANA DİL KONTROLÜ
+      const nativeReady = isNativeBaseReady();
+      let htmlString = "";
 
+      // Eğer ana dil inmemişse, listenin en üstüne bir uyarı ve indirme butonu ekle
+      if (!nativeReady && currentMode === "online") {
+        const nativeInfo = langObj(myLang);
+        htmlString += `
+          <div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;">
+            <div style="font-size: 11px; color: #a5b4fc; margin-bottom: 10px; font-weight: 800; line-height: 1.4;">
+              Diğer dilleri çevrimdışı indirmeden önce ana dilinizi hazırlamanız gereklidir.
+            </div>
+            <button id="prepareNativeBtn" type="button" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--ai-gradient); color: #05060d; font-size: 13px; font-weight: 900; font-family: inherit; cursor: pointer; box-shadow: 0 4px 16px rgba(99,102,241,0.25);">
+              ⬇️ Önce ${nativeInfo.flag} ${nativeInfo.name} Dilini İndir
+            </button>
+          </div>
+        `;
+      }
+
+      // Dilleri Listele
+      htmlString += filteredLangs.map((l) => {
+        // YENİ: Ana dil hazır değilse, "Kendi Dilim" dışındaki tüm dilleri kilitli ve soluk yapıyoruz
+        const isLocked = !nativeReady && l.code !== myLang;
+        // Soluk ve tıklanamaz CSS ayarı
+        const opacityStyle = isLocked ? "opacity: 0.45; pointer-events: none; filter: grayscale(80%);" : "";
+
+        return `
+          <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}" style="${opacityStyle}">
+            <div class="pop-left" data-select-code="${l.code}">
+              <div class="pop-flag">${l.flag}</div>
+              <div class="pop-name">${l.name}</div>
+            </div>
+            <div class="pop-actions">
+              <div class="pop-code">${l.code.toUpperCase()}</div>
+              ${renderActionForLang(l.code, isLocked)}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      list.innerHTML = htmlString;
+
+      // Event Listener: Ana Dili Hazırla Butonu (YENİ)
+      const prepareNativeBtn = list.querySelector("#prepareNativeBtn");
+      if (prepareNativeBtn) {
+        prepareNativeBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // İngilizce ("en") köprüsünü indirerek ana dilin ilk kurulumunu başlatıyoruz
+          await startOfflinePackDownload("en", "prepare_native");
+        });
+      }
+
+      // Event Listener: Normal Seçimler (Listeden dil seçme)
       list.querySelectorAll("[data-select-code]").forEach((el) => {
         el.addEventListener("click", async () => {
           const code = canonical(el.dataset.selectCode);
@@ -1841,8 +1894,9 @@
         });
       });
 
+      // Event Listener: Normal İndirmeler (⬇️ butonuna basma)
       list.querySelectorAll("[data-download-code]").forEach((btn) => {
-        btn.addEventListener("click",async (e) => {
+        btn.addEventListener("click", async (e) => {
           e.preventDefault();
           e.stopPropagation();
           const code = canonical(btn.dataset.downloadCode);
@@ -1850,32 +1904,6 @@
         });
       });
     }
-
-    topLangBtn.addEventListener("click",(e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeAllPop();
-      lastOpenPopSide = "top";
-      renderPop("top");
-      popTop.classList.add("show");
-    });
-
-    botLangBtn.addEventListener("click",(e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeAllPop();
-      lastOpenPopSide = "bot";
-      renderPop("bot");
-      popBot.classList.add("show");
-    });
-
-    closeTop.addEventListener("click",closeAllPop);
-    closeBot.addEventListener("click",closeAllPop);
-
-    document.addEventListener("click",(e) => {
-      const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
-      if(!inside) closeAllPop();
-    },{capture:true});
 
     function clearBody(body){ if(body) body.innerHTML = ""; }
 
