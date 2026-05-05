@@ -1915,13 +1915,18 @@
       if (manualStopPending) return;
 
       const sourceLang = side === "top" ? topLang : botLang;
+      
+      // HATA ÇÖZÜMÜ: Android 'tr' yerine 'tr-TR' (BCP formatı) istiyor.
+      // BCP sözlüğünden doğru formatı alıyoruz.
+      const bcpCode = BCP[sourceLang] || sourceLang;
+
       setMicState(side, true); // Animasyonu başlat
       liveText = "";
       manualStopPending = false;
 
       // Android MainActivity içindeki NativeBridge'i tetikliyoruz
       if (window.Native && window.Native.startSpeechRecognition) {
-        window.Native.startSpeechRecognition(sourceLang, side);
+        window.Native.startSpeechRecognition(bcpCode, side); // bcpCode gönderiyoruz!
       } else {
         showToast(tx("micUnsupported")); // Native köprü yoksa hata ver
         setMicState(side, false);
@@ -2240,6 +2245,15 @@
     }
 
     async function boot() {
+      // ÇÖZÜM: Android tarafında mikrofon izni penceresini tetikle
+      try {
+        if (window.Native && typeof window.Native.requestF2FPermissions === "function") {
+          window.Native.requestF2FPermissions();
+        }
+      } catch (e) {
+        console.warn("requestF2FPermissions error", e);
+      }
+
       OfflinePackBridge.installDownloadEventHandlers(langObj);
       syncInstalledPairsFromNative();
       try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
@@ -2277,7 +2291,6 @@
 
       startCommercialEngine(); 
     }
-
     function startCommercialEngine() {
       const orb = document.querySelector('.orb');
       const adBox = document.getElementById('adViewContainer');
