@@ -76,13 +76,13 @@
     }
 
     /* --- EDGE HANDLE DİKEY MÜHÜRÜ --- */
-.edge-handle.open::before {
-  content: "M\A E\A N\A U";
-  white-space: pre;
-  display: block;
-  line-height: 1.2; /* Harf aralarını dikeyde açar */
-  text-shadow: 0 0 12px rgba(255,255,255,.28);
-}
+    .edge-handle.open::before {
+      content: "M\A E\A N\A U";
+      white-space: pre;
+      display: block;
+      line-height: 1.2; 
+      text-shadow: 0 0 12px rgba(255,255,255,.28);
+    }
 
     .edge-handle.clear{
       left:0;
@@ -94,12 +94,12 @@
     }
 
     .edge-handle.clear::before {
-  content: "C\A L\A E\A A\A R";
-  white-space: pre;
-  display: block;
-  line-height: 1.2;
-  text-shadow: 0 0 12px rgba(255,255,255,.28);
-}
+      content: "C\A L\A E\A A\A R";
+      white-space: pre;
+      display: block;
+      line-height: 1.2;
+      text-shadow: 0 0 12px rgba(255,255,255,.28);
+    }
 
     .edge-handle:active{transform:translateY(-50%) scale(.96)}
 
@@ -968,7 +968,7 @@
       .bubble.latest{font-size:30px}
       .drawer-mode-pill button{font-size:9px;padding:0 8px}
     }
-</style>
+  </style>
 </head>
 
 <body>
@@ -1028,9 +1028,9 @@
       </button>
 
       <!-- Google Butonu Altı Banner Alanı -->
-<div id="menuAdBox" style="width: 100%; height: 50px; margin-top: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); overflow: hidden;">
-    <!-- Burası Android tarafından doldurulacak -->
-</div>
+      <div id="menuAdBox" style="width: 100%; height: 50px; margin-top: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); overflow: hidden;">
+          <!-- Burası Android tarafından doldurulacak -->
+      </div>
 
       <div class="drawer-footer-seal">
         italky<span class="ai">AI</span> Ozigit's 2026
@@ -1082,10 +1082,8 @@
     </section>
 
     <section class="center-hub">
-      <!-- Reklam kabı burada, varsayılan olarak gizli -->
       <div id="adViewContainer" style="display: none !important;"></div>
       
-      <!-- Logo burada, varsayılan olarak açık -->
       <div class="orb" style="display: flex !important;">
         <span class="sat sat1"></span>
         <span class="sat sat2"></span>
@@ -1139,20 +1137,21 @@
   </div>
 
   <div id="toast" class="toast"></div>
+
   <!-- İndirme Hata Modalı: Yoğunluk Mesajı İçerir -->
-<div id="downloadErrorModal" class="modal">
-  <div class="modal-card" style="border-top: 4px solid #ef4444;">
-    <h3 class="modal-title" style="color: #ef4444;">İndirme Tamamlanamadı</h3>
-    <p class="modal-text">
-      Şu an dünya genelinde yaşanan **yoğun indirme talebi** nedeniyle sunucularımızda kısa süreli bir gecikme yaşanıyor. 
-      
-      Lütfen internet bağlantınızı kontrol edip biraz sonra tekrar deneyiniz. Sabrınız için teşekkürler.
-    </p>
-    <div class="modal-actions" style="grid-template-columns: 1fr;">
-      <button onclick="document.getElementById('downloadErrorModal').classList.remove('show')" class="modal-btn secondary" type="button">Anladım</button>
+  <div id="downloadErrorModal" class="modal">
+    <div class="modal-card" style="border-top: 4px solid #ef4444;">
+      <h3 class="modal-title" style="color: #ef4444;">İndirme Tamamlanamadı</h3>
+      <p class="modal-text">
+        Şu an dünya genelinde yaşanan **yoğun indirme talebi** nedeniyle sunucularımızda kısa süreli bir gecikme yaşanıyor. 
+        
+        Lütfen internet bağlantınızı kontrol edip biraz sonra tekrar deneyiniz. Sabrınız için teşekkürler.
+      </p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="document.getElementById('downloadErrorModal').classList.remove('show')" class="modal-btn secondary" type="button">Anladım</button>
+      </div>
     </div>
   </div>
-</div>
 
   <script type="module">
     import { getLangPoolForSite } from "/js/lang_pool_full.js";
@@ -1390,7 +1389,6 @@
     const closeAdBtn = $("closeAdBtn");
     const toast = $("toast");
 
-    let recognizer = null;
     let liveText = "";
     let lastAdAt = Date.now();
     let currentMode = "online";
@@ -1419,19 +1417,17 @@
     }
 
     function openDrawer() { 
-    drawerBackdrop?.classList.add("show"); 
-    
-    // Menü açılınca reklamı tamamen kapat, sistem karışmasın
-    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-    if (bridge && typeof bridge.toggleBannerAd === "function") {
-        bridge.toggleBannerAd(false, ""); 
+      drawerBackdrop?.classList.add("show"); 
+      
+      const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+      if (bridge && typeof bridge.toggleBannerAd === "function") {
+          bridge.toggleBannerAd(false, ""); 
+      }
     }
-}
 
-function closeDrawer() { 
-    drawerBackdrop?.classList.remove("show"); 
-    // Burada reklamı zorla açmıyoruz, 30sn döngüsü gelince kendisi ana ekranda çıkacak
-}
+    function closeDrawer() { 
+      drawerBackdrop?.classList.remove("show"); 
+    }
 
     drawerEdgeBtn?.addEventListener("click", openDrawer);
     drawerBackdrop?.addEventListener("click", (e) => {
@@ -1767,41 +1763,40 @@ function closeDrawer() {
     }
 
     function renderActionForLang(code) {
-  const c = canonical(code);
-  
-  // 1. Durum: İndirme işlemi devam ediyorsa
-  if (OfflinePackBridge.isPairActive(myLang, c)) {
-    return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
-  }
+      const c = canonical(code);
+      
+      // 1. Durum: İndirme işlemi devam ediyorsa
+      if (OfflinePackBridge.isPairActive(myLang, c)) {
+        return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+      }
 
-  // 2. Durum: İndirme sırasındaysa
-  if (OfflinePackBridge.isPairQueued(myLang, c)) {
-    return `<span class="pop-queued" title="Sırada">…</span>`;
-  }
+      // 2. Durum: İndirme sırasındaysa
+      if (OfflinePackBridge.isPairQueued(myLang, c)) {
+        return `<span class="pop-queued" title="Sırada">…</span>`;
+      }
 
-  // 3. Durum: Zaten cihazda yüklüyse
-  if (isLangInstalledForUi(c)) {
-    return `<span class="pop-installed" title="Kurulu">✓</span>`;
-  }
+      // 3. Durum: Zaten cihazda yüklüyse
+      if (isLangInstalledForUi(c)) {
+        return `<span class="pop-installed" title="Kurulu">✓</span>`;
+      }
 
-  // 4. Durum: Kullanıcının kendi diliyse
-  if (c === myLang) {
-    return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
-  }
+      // 4. Durum: Kullanıcının kendi diliyse
+      if (c === myLang) {
+        return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
+      }
 
-  // --- KRİTİK FİLTRE: canOffline kontrolü ---
-  // RAW_LANG_POOL içindeki dil bilgisini buluyoruz
-  const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
+      // --- KRİTİK FİLTRE: canOffline kontrolü ---
+      const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
 
-  if (langInfo && !langInfo.canOffline) {
-    // ML Kit desteği yoksa buton yerine silik bir yazı göster
-    return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
-  }
+      if (langInfo && !langInfo.canOffline) {
+        return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
+      }
 
-  // 5. Durum: Destekleniyor ve yüklü değilse indir butonu göster
-  return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
-}
-function renderPop(side){
+      // 5. Durum: Destekleniyor ve yüklü değilse indir butonu göster
+      return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
+    }
+
+    function renderPop(side){
       const list = side === "top" ? listTop : listBot;
       const selected = side === "top" ? topLang : botLang;
       const filteredLangs = getFilteredLangsForPopover();
@@ -1839,7 +1834,6 @@ function renderPop(side){
           closeAllPop();
           refreshTexts();
 
-          // Eğer seçilen dil offline destekliyorsa ama inmemişse teklif et
           const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === code);
           if(code !== myLang && !hasInstalledPair(myLang,code) && langInfo?.canOffline){
             setTimeout(() => startOfflinePackDownload(code,"lang_selected"),350);
@@ -1857,7 +1851,6 @@ function renderPop(side){
       });
     }
 
-    // --- Popover Açma/Kapama Tetikleyicileri ---
     topLangBtn.addEventListener("click",(e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -1883,6 +1876,7 @@ function renderPop(side){
       const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
       if(!inside) closeAllPop();
     },{capture:true});
+
     function clearBody(body){ if(body) body.innerHTML = ""; }
 
     function addBubble(side,text,latest=false){
@@ -1914,32 +1908,93 @@ function renderPop(side){
       mic.classList.toggle("listening",!!listening);
     }
 
-    function buildRecognizer(langCode){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) return null;
+    // --- NATIVE ANDROID SES TANIMA KÖPRÜSÜ BAŞLANGICI ---
 
-      const rec = new SR();
-      rec.lang = langObj(langCode).bcp;
-      rec.interimResults = true;
-      rec.continuous = false;
-      rec.maxAlternatives = 1;
-      return rec;
+    // 1. Android Native mikrofonunu başlatır
+    function startRecording(side) {
+      if (manualStopPending) return;
+
+      const sourceLang = side === "top" ? topLang : botLang;
+      setMicState(side, true); // Animasyonu başlat
+      liveText = "";
+      manualStopPending = false;
+
+      // Android MainActivity içindeki NativeBridge'i tetikliyoruz
+      if (window.Native && window.Native.startSpeechRecognition) {
+        window.Native.startSpeechRecognition(sourceLang, side);
+      } else {
+        showToast(tx("micUnsupported")); // Native köprü yoksa hata ver
+        setMicState(side, false);
+      }
     }
 
-    function stopRecognizer(){
+    // Kullanıcı temizle/durdur butonuna bastığında Android'e dur komutu gönderir
+    function stopRecognizer() {
       manualStopPending = true;
-      try{ recognizer?.stop?.(); }catch{}
-      setMicState("top",false);
-      setMicState("bot",false);
+      setMicState("top", false);
+      setMicState("bot", false);
+      
+      if (window.Native && window.Native.stopSpeechRecognition) {
+        window.Native.stopSpeechRecognition();
+      }
 
       setTimeout(() => {
-        if(manualStopPending){
+        if (manualStopPending) {
           manualStopPending = false;
-          recognizer = null;
           liveText = "";
         }
       }, 2500);
     }
+
+    // 2. Android'den gelen ses sonuçlarını yakalayıp ekrana çizen fonksiyon
+    window.onNativeSpeechResult = function(side, text, isFinal) {
+      liveText = cleanupTranscript(text);
+      
+      if (isFinal) {
+        // Konuşma bitti (Cümle tamamlandı), çeviri işlemini başlat
+        setMicState(side, false);
+        if (liveText) {
+          finalizeSpeech(side, liveText); 
+        }
+      } else {
+        // Kullanıcı konuşmaya devam ediyor, ekranda canlı olarak (Partial) göster
+        const body = side === "top" ? topBody : botBody;
+        if (!body) return;
+
+        // Ekranda halihazırda 'latest' (son) sınıfına sahip bir baloncuk var mı bak
+        let activeBubble = body.querySelector(".bubble.latest");
+        if (!activeBubble) {
+          activeBubble = document.createElement("div");
+          activeBubble.className = "bubble latest";
+          body.appendChild(activeBubble);
+        }
+        
+        // Canlı yazıyı hafif silik hissi vererek (...) ekrana yansıt
+        activeBubble.textContent = liveText + "...";
+        
+        // Scroll'u en aşağıda tut
+        try { body.scrollTop = body.scrollHeight; } catch {}
+      }
+    };
+
+    // 3. Android tarafında bir mikrofon veya dinleme hatası olursa
+    window.onNativeSpeechError = function(errorMsg) {
+      setMicState("top", false);
+      setMicState("bot", false);
+      manualStopPending = false;
+      
+      if(errorMsg === "manual_stop_empty") return; // Kullanıcı kendisi durdurduysa sessiz kal
+      
+      if(errorMsg !== "no speech") {
+        if(errorMsg.includes("permission_error")) {
+            showToast(tx("micDenied"));
+        } else {
+            showToast(tx("micError") + " (" + errorMsg + ")");
+        }
+      }
+    };
+
+    // --- NATIVE ANDROID SES TANIMA KÖPRÜSÜ SONU ---
 
     function cleanupTranscript(text){
       return String(text || "")
@@ -1988,27 +2043,27 @@ function renderPop(side){
     }
 
     async function translateText(text, from, to) {
-    const src = canonical(from);
-    const dst = canonical(to);
+      const src = canonical(from);
+      const dst = canonical(to);
 
-    // ADIM A: Paket var mı? (İnternet açık olsa bile önce telefona bak)
-    if (hasInstalledPair(src, dst)) {
-        console.log("Offline paket üzerinden çeviri yapılıyor...");
-        const offlineResult = await translateOffline(text, src, dst);
-        if (offlineResult) return offlineResult;
+      // ADIM A: Paket var mı? (İnternet açık olsa bile önce telefona bak)
+      if (hasInstalledPair(src, dst)) {
+          console.log("Offline paket üzerinden çeviri yapılıyor...");
+          const offlineResult = await translateOffline(text, src, dst);
+          if (offlineResult) return offlineResult;
+      }
+
+      // ADIM B: Paket yoksa ve mod Online ise API'ye git
+      if (currentMode === "online") {
+          console.log("Paket yok, Online API kullanılıyor...");
+          return await translateOnline(text, src, dst);
+      }
+
+      // ADIM C: Paket yok ve mod Offline ise indirmeyi teklif et
+      showToast(tx("offlineMode"));
+      await startOfflinePackDownload(dst, "offline_mode_missing_pack");
+      return null;
     }
-
-    // ADIM B: Paket yoksa ve mod Online ise API'ye git
-    if (currentMode === "online") {
-        console.log("Paket yok, Online API kullanılıyor...");
-        return await translateOnline(text, src, dst);
-    }
-
-    // ADIM C: Paket yok ve mod Offline ise indirmeyi teklif et
-    showToast(tx("offlineMode"));
-    await startOfflinePackDownload(dst, "offline_mode_missing_pack");
-    return null;
-}
 
     function speak(text,langCode){
       const value = String(text || "").trim();
@@ -2057,7 +2112,6 @@ function renderPop(side){
 
       const clean = cleanupTranscript(text);
       if(!clean){
-        recognizer = null;
         liveText = "";
         setMicState(side,false);
         return;
@@ -2065,7 +2119,6 @@ function renderPop(side){
 
       const adOk = await maybeShowAd();
       if(!adOk){
-        recognizer = null;
         liveText = "";
         setMicState(side,false);
         return;
@@ -2082,7 +2135,6 @@ function renderPop(side){
 
       if(!translated){
         if(targetRow) targetRow.textContent = tx("translateError");
-        recognizer = null;
         liveText = "";
         setMicState(side,false);
         return;
@@ -2096,94 +2148,8 @@ function renderPop(side){
         maybeOfferOfflinePackAfterTranslate();
       }
 
-      recognizer = null;
       liveText = "";
       setMicState(side,false);
-    }
-
-    function startRecording(side){
-      if(recognizer){
-        stopRecognizer();
-        showToast(tx("listeningDone"));
-        return;
-      }
-
-      const sourceLang = side === "top" ? topLang : botLang;
-      const rec = buildRecognizer(sourceLang);
-
-      if(!rec){
-        showToast(tx("micUnsupported"));
-        return;
-      }
-
-      recognizer = rec;
-      liveText = "";
-      manualStopPending = false;
-
-      rec.onstart = () => setMicState(side,true);
-
-      rec.onresult = (e) => {
-        let finalText = "";
-        let interimText = "";
-
-        for(let i=0;i<e.results.length;i++){
-          const txt = String(e.results[i]?.[0]?.transcript || "").trim();
-          if(!txt) continue;
-
-          if(e.results[i].isFinal) finalText += ` ${txt}`;
-          else interimText += ` ${txt}`;
-        }
-
-        liveText = cleanupTranscript(finalText || interimText || liveText);
-      };
-
-      rec.onerror = (e) => {
-        const err = String(e?.error || "");
-
-        if(manualStopPending){
-          manualStopPending = false;
-
-          const finalText = cleanupTranscript(liveText);
-          recognizer = null;
-          setMicState(side,false);
-          liveText = "";
-
-          if(finalText){
-            finalizeSpeech(side,finalText);
-          }
-
-          return;
-        }
-
-        showToast(err.includes("not-allowed") ? tx("micDenied") : tx("micError"));
-        setMicState(side,false);
-        recognizer = null;
-        liveText = "";
-      };
-
-      rec.onend = () => {
-        const finalText = cleanupTranscript(liveText);
-
-        setMicState(side,false);
-        recognizer = null;
-        liveText = "";
-
-        if(finalText){
-          finalizeSpeech(side,finalText);
-        }else{
-          manualStopPending = false;
-        }
-      };
-
-      try{
-        rec.start();
-      }catch{
-        showToast(tx("micError"));
-        setMicState(side,false);
-        recognizer = null;
-        liveText = "";
-        manualStopPending = false;
-      }
     }
 
     topMic.addEventListener("click",() => startRecording("top"));
@@ -2191,15 +2157,12 @@ function renderPop(side){
 
     function clearChat(){
       try{
-        if(recognizer){
-          stopRecognizer();
-        }
+        stopRecognizer();
       }catch{}
 
       try{ window.speechSynthesis?.cancel?.(); }catch{}
       try{ window.NativeTTS?.stop?.(); }catch{}
 
-      recognizer = null;
       liveText = "";
       manualStopPending = false;
       topMic.classList.remove("listening");
@@ -2238,36 +2201,32 @@ function renderPop(side){
     });
 
     window.addEventListener("offlinePairDownloadFailed", (e) => {
-    const d = e.detail || {};
-    console.error("İndirme Hatası Logu:", d.error); // Geliştirici için log kalsın
+      const d = e.detail || {};
+      console.error("İndirme Hatası Logu:", d.error);
 
-    // Toast yerine artık o şık modalı gösteriyoruz
-    const errorModal = document.getElementById('downloadErrorModal');
-    if (errorModal) {
-        errorModal.classList.add("show");
-    } else {
-        // Fallback: Modal bulunamazsa toast göster
-        showToast("Yoğunluk nedeniyle şu an indirilemiyor, lütfen sonra deneyin.");
-    }
-    
-    // Dil seçim listesini (popover) tazele ki "yükleniyor" ikonu kalksın
-    if (typeof refreshOpenPop === "function") refreshOpenPop();
-});
+      const errorModal = document.getElementById('downloadErrorModal');
+      if (errorModal) {
+          errorModal.classList.add("show");
+      } else {
+          showToast("Yoğunluk nedeniyle şu an indirilemiyor, lütfen sonra deneyin.");
+      }
+      
+      if (typeof refreshOpenPop === "function") refreshOpenPop();
+    });
     
     async function autoCheckOfflineMode() {
-    const from = canonical(botLang); 
-    const to = canonical(topLang);
+      const from = canonical(botLang); 
+      const to = canonical(topLang);
 
-    // Eğer Android tarafında bu paket yüklü ise sistemi otomatik Offline'a çek
-    if (window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to)) {
-        console.log("Mühürlü Paket Bulundu: Otomatik Offline Mod Aktif.");
-        currentMode = "offline";
-    } else {
-        // Paket yoksa mecburen online kalır
-        currentMode = "online";
+      if (window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to)) {
+          console.log("Mühürlü Paket Bulundu: Otomatik Offline Mod Aktif.");
+          currentMode = "offline";
+      } else {
+          currentMode = "online";
+      }
+      refreshModeButtons();
     }
-    refreshModeButtons(); // Ekrandaki Online/Offline butonlarını güncelle
-}
+
     function applyRouteParams(){
       const params = new URLSearchParams(location.search);
       const source = canonical(params.get("source") || "");
@@ -2280,101 +2239,84 @@ function renderPop(side){
       if(mode === "offline") currentMode = "offline";
     }
 
-  async function boot() {
-    // 1. Temel Köprü Kurulumları
-    OfflinePackBridge.installDownloadEventHandlers(langObj);
-    syncInstalledPairsFromNative();
-    try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
+    async function boot() {
+      OfflinePackBridge.installDownloadEventHandlers(langObj);
+      syncInstalledPairsFromNative();
+      try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
-    // 2. Ana Dil Ayarları (Sadece ilk girişte veya null ise)
-    if(!localStorage.getItem(MY_LANG_KEY)){
-      const detected = await detectCountryLang();
-      if(detected && langExists(detected)){
-        myLang = detected;
-        localStorage.setItem(MY_LANG_KEY, myLang);
-        localStorage.setItem(SITE_LANG_KEY, myLang);
-        localStorage.setItem(NATIVE_LANG_KEY, myLang);
-        OfflinePackBridge.setOfflineNativeLang(myLang);
-      }
-    } else {
-      OfflinePackBridge.setOfflineNativeLang(myLang);
-    }
-
-    // 3. Dil Seçim Başlangıcı (URL Parametresi Kontrolü)
-    const params = new URLSearchParams(location.search);
-    const hasRouteLang = params.get("source") || params.get("target");
-    
-    if(!hasRouteLang){
-      botLang = myLang;
-      topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
-      if(topLang === botLang) topLang = differentLang(botLang);
-    }
-
-    // 4. Parametreleri Uygula
-    applyRouteParams();
-
-    // 5. KRİTİK MÜHÜR: Offline Paket Kontrolü
-    // Uygulama açıldığında seçili dillerin paketi varsa direkt Offline başlasın
-    await autoCheckOfflineMode(); 
-
-    // 6. UI Tazeleme
-    refreshTexts();
-    refreshModeButtons();
-    renderMyLangModalList();
-    clearBody(topBody);
-    clearBody(botBody);
-
-    // 7. Reklam Motorunu Ateşle
-    startCommercialEngine(); 
-  }
-
-  /**
-   * Ticari Reklam ve Logo Döngüsü (30 Saniye)
-   * italkyAI Logosu ile Banner Reklam arasında geçiş yapar.
-   */
-  function startCommercialEngine() {
-    const orb = document.querySelector('.orb');
-    const adBox = document.getElementById('adViewContainer');
-    
-    if (!orb || !adBox) return;
-
-    setInterval(() => {
-      // MÜHÜR: Menü açıksa veya Modal varsa döngüyü işletme (reklam çıkmasın)
-      const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
-      const isModalOpen = document.querySelector('.modal.show');
-      
-      if (isDrawerOpen || isModalOpen) {
-        console.log("italkyAI: Menü/Modal açık, reklam döngüsü askıya alındı.");
-        return;
-      }
-
-      const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
-      const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-
-      if (isOrbVisible) {
-        // --- REKLAM MODUNA GEÇİŞ ---
-        orb.style.setProperty('display', 'none', 'important');
-        adBox.style.setProperty('display', 'flex', 'important');
-        document.body.style.backgroundColor = "transparent";
-        
-        if (bridge && typeof bridge.toggleBannerAd === "function") {
-          bridge.toggleBannerAd(true, ""); 
+      if(!localStorage.getItem(MY_LANG_KEY)){
+        const detected = await detectCountryLang();
+        if(detected && langExists(detected)){
+          myLang = detected;
+          localStorage.setItem(MY_LANG_KEY, myLang);
+          localStorage.setItem(SITE_LANG_KEY, myLang);
+          localStorage.setItem(NATIVE_LANG_KEY, myLang);
+          OfflinePackBridge.setOfflineNativeLang(myLang);
         }
       } else {
-        // --- LOGO MODUNA GEÇİŞ ---
-        adBox.style.setProperty('display', 'none', 'important');
-        orb.style.setProperty('display', 'flex', 'important');
-        document.body.style.backgroundColor = "#050508";
-        
-        if (bridge && typeof bridge.toggleBannerAd === "function") {
-          bridge.toggleBannerAd(false, ""); 
-        }
+        OfflinePackBridge.setOfflineNativeLang(myLang);
       }
-    }, 30000); 
-  }
 
-  // Uygulamayı ateşle
-  boot();
+      const params = new URLSearchParams(location.search);
+      const hasRouteLang = params.get("source") || params.get("target");
+      
+      if(!hasRouteLang){
+        botLang = myLang;
+        topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+        if(topLang === botLang) topLang = differentLang(botLang);
+      }
+
+      applyRouteParams();
+      await autoCheckOfflineMode(); 
+
+      refreshTexts();
+      refreshModeButtons();
+      renderMyLangModalList();
+      clearBody(topBody);
+      clearBody(botBody);
+
+      startCommercialEngine(); 
+    }
+
+    function startCommercialEngine() {
+      const orb = document.querySelector('.orb');
+      const adBox = document.getElementById('adViewContainer');
+      
+      if (!orb || !adBox) return;
+
+      setInterval(() => {
+        const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
+        const isModalOpen = document.querySelector('.modal.show');
+        
+        if (isDrawerOpen || isModalOpen) {
+          console.log("italkyAI: Menü/Modal açık, reklam döngüsü askıya alındı.");
+          return;
+        }
+
+        const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
+        const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+
+        if (isOrbVisible) {
+          orb.style.setProperty('display', 'none', 'important');
+          adBox.style.setProperty('display', 'flex', 'important');
+          document.body.style.backgroundColor = "transparent";
+          
+          if (bridge && typeof bridge.toggleBannerAd === "function") {
+            bridge.toggleBannerAd(true, ""); 
+          }
+        } else {
+          adBox.style.setProperty('display', 'none', 'important');
+          orb.style.setProperty('display', 'flex', 'important');
+          document.body.style.backgroundColor = "#050508";
+          
+          if (bridge && typeof bridge.toggleBannerAd === "function") {
+            bridge.toggleBannerAd(false, ""); 
+          }
+        }
+      }, 30000); 
+    }
+
+    boot();
   </script>
 </body>
 </html>
