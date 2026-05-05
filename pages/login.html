@@ -400,28 +400,28 @@
       tr:{
         topLang:"ÜST DİL", botLang:"ALT DİL", adTitle:"Ücretsiz Kullanım",
         adText:"FaceToFace ücretsiz kullanımda reklam içerir. Devam etmek için kısa bir reklam izleyin.",
-        downloadAdTitle:"Çevrimdışı Altyapı İndirme", downloadAdText:"Uygulamanın internet olmadan çalışabilmesi için Google ML Kit köprü dil paketinin indirilmesi gereklidir.",
+        downloadAdTitle:"Çevrimdışı Dil İndirme", downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
         watchAd:"Reklam İzle", close:"Şimdilik Kapat", adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
         micError:"Mikrofon hatası.", micDenied:"Mikrofon izni gerekli.", micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
         listeningDone:"Dinleme tamamlanıyor...", translateError:"Çeviri yapılamadı",
         loginSoon:"Üyelik sistemi çok yakında aktif olacak. Şimdilik giriş yapmadan özellikleri kullanabilirsiniz.",
         onlineMode:"Online mod aktif.", offlineMode:"Offline mod aktif.", packReady:"Dil paketi zaten hazır.",
         packDownloading:"Dil paketiniz indiriliyor. Bu işlem bağlantı hızınıza göre biraz sürebilir.", packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz başarıyla indirildi.",
-        offerTitle:"Offline Dil Paketi", offerText:"Ana diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için altyapı paketinin indirilmesi gerekiyor.",
+        offerTitle:"Offline Dil Paketi", offerText:"Ana diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için paketi indirebilirsiniz.",
         offerOk:"İndir", offerCancel:"Şimdilik Kapat", sameLang:"Aynı dil için paket indirilemez.",
         nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.", noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
       },
       en:{
         topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE", adTitle:"Free Use",
         adText:"FaceToFace free use includes ads. Watch a short ad to continue.",
-        downloadAdTitle:"Offline Core Download", downloadAdText:"The Google ML Kit bridge language pack needs to be downloaded for the app to work without internet.",
+        downloadAdTitle:"Offline Language Download", downloadAdText:"You can download this language pack to use it without internet.",
         watchAd:"Watch Ad", close:"Close", adNeeded:"The action was not started without watching the ad.",
         micError:"Microphone error.", micDenied:"Microphone permission is required.", micUnsupported:"Speech recognition is not supported on this device.",
         listeningDone:"Finishing listening...", translateError:"Translation failed",
         loginSoon:"Membership system will be active very soon.",
         onlineMode:"Online mode is active.", offlineMode:"Offline mode is active.", packReady:"Language pack is already ready.",
         packDownloading:"Your language pack is downloading. This may take a while depending on your connection.", packQueued:"Language pack added to queue.", packDownloaded:"Your language pack has been downloaded.",
-        offerTitle:"Offline Language Pack", offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nThe infrastructure pack needs to be downloaded to use this offline.",
+        offerTitle:"Offline Language Pack", offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nYou can download the pack to use this language offline.",
         offerOk:"Download", offerCancel:"Not Now", sameLang:"You cannot download a pack for the same language.",
         nativeNotReady:"Native download is not ready on this device.", noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
       }
@@ -475,7 +475,7 @@
       return langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
     }
 
-    // Sessiz sistem dili tanımlaması (Pop-up YOK)
+    // Sistemin kullanacağı dil sessizce burada tutulur
     let myLang = "tr"; 
     let botLang = myLang;
     let topLang = "en";
@@ -604,11 +604,20 @@
     function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
     function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
     
-    // GÜNCELLENMİŞ ZORUNLU KÖPRÜ (İNGİLİZCE) KONTROLÜ
+    // YENİ: Altyapı kontrolü. İngilizce paketi sistemde var mı?
     function isNativeBaseReady() {
       if (!OfflinePackBridge) return false;
       if (myLang === "en") return true; 
       return OfflinePackBridge.hasInstalledPair(myLang, "en");
+    }
+
+    // YENİ: Sessiz Arka Plan Kurulum Fonksiyonu
+    async function autoStartNativeBaseSetup() {
+      if (isNativeBaseReady()) return;
+      console.log("italkyAI: Sessiz altyapı kurulumu başlatılıyor (en)...");
+      OfflinePackBridge.setOfflineNativeLang(myLang);
+      // Reklam sormadan doğrudan Native API'ye indirme komutu gönderiyoruz:
+      OfflinePackBridge.startNativeDownload(myLang, "en", langObj);
     }
 
     function installedTargetsForNative(nativeLang){
@@ -678,8 +687,8 @@
       const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
       if (langInfo && !langInfo.canOffline) return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
       
-      // İngilizce inmemişse, "en" hariç tüm dillerde kilit ikonu çıkar.
-      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Önce zorunlu İngilizce altyapısını indirin">🔒</span>`;
+      // İngilizce altyapı kurulana kadar diller kilitli (🔒) gösterilir.
+      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Sistem kurulumu tamamlandığında kilit açılacaktır">🔒</span>`;
 
       return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
     }
@@ -696,22 +705,19 @@
       const nativeReady = isNativeBaseReady();
       let htmlString = "";
 
-      // ZORUNLU İNGİLİZCE İNDİRME UYARISI
+      // ZORUNLU İNGİLİZCE İNDİRME UYARISI YERİNE BİLGİLENDİRME KUTUSU
       if (!nativeReady && currentMode === "online") {
         htmlString += `
           <div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;">
-            <div style="font-size: 11px; color: #a5b4fc; margin-bottom: 10px; font-weight: 800; line-height: 1.4;">
-              Çevrimdışı kullanım için tüm dillerin ortak köprüsü olan <strong>İngilizce (en)</strong> altyapısının inmesi zorunludur.
+            <div style="font-size: 11px; color: #a5b4fc; font-weight: 800; line-height: 1.4;">
+              Offline dil indirmek için arka planda <strong>sistem kurulumu yapılıyor (⏳)</strong>. Sistem kurulumu tamamlanınca diller üzerindeki kilit kalkacaktır.
             </div>
-            <button id="prepareNativeBtn" type="button" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--ai-gradient); color: #05060d; font-size: 13px; font-weight: 900; font-family: inherit; cursor: pointer; box-shadow: 0 4px 16px rgba(99,102,241,0.25);">
-              ⬇️ Zorunlu İngilizce Paketini Kur
-            </button>
           </div>
         `;
       }
 
       htmlString += filteredLangs.map((l) => {
-        // ZORUNLU KİLİT MEKANİZMASI: Altyapı (EN) inmemişse ve bu dil EN veya kullanıcının kendi dili değilse kilitlenir.
+        // ZORUNLU KİLİT MEKANİZMASI: Altyapı inmemişse "en" ve ana dil hariç tüm indirmeler kilitlenir.
         const isLocked = !nativeReady && l.code !== "en" && l.code !== myLang;
         
         return `
@@ -729,14 +735,6 @@
       }).join("");
 
       list.innerHTML = htmlString;
-
-      const prepareNativeBtn = list.querySelector("#prepareNativeBtn");
-      if (prepareNativeBtn) {
-        prepareNativeBtn.addEventListener("click", async (e) => {
-          e.preventDefault(); e.stopPropagation();
-          await startOfflinePackDownload("en", "prepare_native");
-        });
-      }
 
       list.querySelectorAll("[data-select-code]").forEach((el) => {
         el.addEventListener("click", async () => {
@@ -905,19 +903,41 @@
       const d = e.detail || {}; const source = canonical(d.source || myLang); const target = canonical(d.target || topLang);
       if(!source || !target) return;
       OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
-      showToast(tx("packDownloading")); refreshOpenPop();
+      
+      // Eğer başlayan İngilizce altyapısı değilse normal Toast çıkar
+      if (target !== "en" || isNativeBaseReady()) {
+         showToast(tx("packDownloading")); 
+      }
+      refreshOpenPop();
     });
 
     window.addEventListener("offlinePairDownloadCompleted",(e) => {
       const d = e.detail || {}; const source = canonical(d.source || myLang); const target = canonical(d.target || topLang);
       if(!source || !target) return;
       OfflinePackBridge.markInstalledPair(source,target); OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
-      syncInstalledPairsFromNative(); showToast(tx("packDownloaded")); refreshOpenPop();
+      syncInstalledPairsFromNative(); 
+
+      // Eğer İngilizce altyapısı başarıyla edildiyse, kilitlerin açıldığını haber ver!
+      if (target === "en") {
+          showToast("Sistem kurulumu tamamlandı. Dillerin kilidi açıldı!");
+      } else {
+          showToast(tx("packDownloaded")); 
+      }
+      refreshOpenPop();
     });
 
     window.addEventListener("offlinePairDownloadFailed", (e) => {
-      const errorModal = document.getElementById('downloadErrorModal');
-      if (errorModal) { setNativeBanner(false); errorModal.classList.add("show"); } else { showToast("Yoğunluk nedeniyle şu an indirilemiyor."); }
+      const d = e.detail || {}; const target = canonical(d.target || topLang);
+      
+      // YENİ: Arka plandaki sessiz kurulum zaman aşımına uğradıysa
+      if (target === "en" && !isNativeBaseReady()) {
+          console.warn("italkyAI: Altyapı kurulumu başarısız oldu. 10 saniye sonra tekrar denenecek...");
+          setTimeout(autoStartNativeBaseSetup, 10000); // 10 saniye sonra sessizce tekrar dene
+      } else {
+          // Normal bir dil indirilirken hata olduysa pencereyi göster
+          const errorModal = document.getElementById('downloadErrorModal');
+          if (errorModal) { setNativeBanner(false); errorModal.classList.add("show"); } else { showToast("Yoğunluk nedeniyle şu an indirilemiyor."); }
+      }
       if (typeof refreshOpenPop === "function") refreshOpenPop();
     });
     
@@ -933,13 +953,12 @@
       if(topLang === botLang) topLang = differentLang(botLang); if(mode === "offline") currentMode = "offline";
     }
 
-    // AÇILIŞ MANTIĞI: SESSİZCE CİHAZ DİLİNİ YAKALA VE İNGİLİZCE ZORUNLULUĞUNU DEVREYE SOK
     async function boot() {
       try { if (window.Native && typeof window.Native.requestF2FPermissions === "function") { window.Native.requestF2FPermissions(); } } catch (e) {}
       OfflinePackBridge.installDownloadEventHandlers(langObj); syncInstalledPairsFromNative();
       try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
-      // SİSTEM DİLİNİ SESSİZCE ALGILA VE KAYDET
+      // SİSTEM DİLİNİ SESSİZCE ALGILA VE KAYDET (ARTIK POP-UP YOK)
       const detected = await detectCountryLang();
       myLang = detected && langExists(detected) ? detected : "tr";
       localStorage.setItem(MY_LANG_KEY, myLang);
@@ -954,6 +973,9 @@
       refreshTexts(); refreshModeButtons(); clearBody(topBody); clearBody(botBody);
 
       startCommercialEngine(); scheduleAutoAd(3 * 60 * 1000); 
+
+      // SESSİZ ALTYAPI KURULUMUNU BAŞLAT (Uygulama açıldıktan 2 saniye sonra)
+      setTimeout(autoStartNativeBaseSetup, 2000);
     }
 
     function startCommercialEngine() {
