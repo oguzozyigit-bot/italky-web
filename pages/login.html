@@ -1952,7 +1952,40 @@
     }
 
     // 2. Android'den gelen ses sonuçlarını yakalayıp ekrana çizen fonksiyon
-    window.onNativeSpeechResult = function(side, text, isFinal) {
+    // 2. Android'den gelen ses sonuçlarını yakalayıp ekrana çizen esnek fonksiyon
+    window.onNativeSpeechResult = function(payload, fallbackText, fallbackIsFinal) {
+      let side = "top";
+      let text = "";
+      let isFinal = true;
+
+      // Android'in veriyi JSON String (tek parça) gönderme ihtimaline karşı kontrol ediyoruz
+      if (typeof payload === "string") {
+        try {
+          // Eğer JSON ise içindeki değerleri ayıkla
+          const data = JSON.parse(payload);
+          side = data.side || "top";
+          text = data.text || "";
+          isFinal = data.isFinal !== undefined ? data.isFinal : true;
+        } catch (e) {
+          // JSON değilse, düz metin olarak gelmiştir
+          side = "top"; 
+          text = payload;
+          isFinal = fallbackIsFinal !== undefined ? fallbackIsFinal : true;
+        }
+      } 
+      // Veri bir JavaScript Objesi olarak geldiyse
+      else if (typeof payload === "object" && payload !== null) {
+        side = payload.side || "top";
+        text = payload.text || "";
+        isFinal = payload.isFinal !== undefined ? payload.isFinal : true;
+      } 
+      // Eski 3 ayrı parametreli sistemle geldiyse
+      else {
+        side = payload || "top";
+        text = fallbackText || "";
+        isFinal = fallbackIsFinal !== undefined ? fallbackIsFinal : true;
+      }
+
       liveText = cleanupTranscript(text);
       
       if (isFinal) {
@@ -1962,11 +1995,10 @@
           finalizeSpeech(side, liveText); 
         }
       } else {
-        // Kullanıcı konuşmaya devam ediyor, ekranda canlı olarak (Partial) göster
+        // Kullanıcı konuşmaya devam ediyor, ekranda canlı olarak göster
         const body = side === "top" ? topBody : botBody;
         if (!body) return;
 
-        // Ekranda halihazırda 'latest' (son) sınıfına sahip bir baloncuk var mı bak
         let activeBubble = body.querySelector(".bubble.latest");
         if (!activeBubble) {
           activeBubble = document.createElement("div");
@@ -1974,14 +2006,10 @@
           body.appendChild(activeBubble);
         }
         
-        // Canlı yazıyı hafif silik hissi vererek (...) ekrana yansıt
         activeBubble.textContent = liveText + "...";
-        
-        // Scroll'u en aşağıda tut
         try { body.scrollTop = body.scrollHeight; } catch {}
       }
     };
-
     // 3. Android tarafında bir mikrofon veya dinleme hatası olursa
     window.onNativeSpeechError = function(errorMsg) {
       setMicState("top", false);
