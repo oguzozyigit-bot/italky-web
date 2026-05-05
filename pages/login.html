@@ -173,9 +173,10 @@
     }
     .drawer-footer-seal .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
+    /* POP-UP Z-INDEX VE ARKA PLAN GÜNCELLEMESİ */
     .my-lang-modal{
       position:fixed; inset:0; z-index:2147483647; display:none; align-items:center; justify-content:center;
-      padding:18px; background:rgba(0,0,0,.78); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      padding:18px; background:rgba(0,0,0,.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
     }
 
     .my-lang-modal.show{display:flex}
@@ -188,14 +189,12 @@
     }
 
     .my-lang-head{ padding:16px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .my-lang-head-title{ font-family:"Space Grotesk",sans-serif; font-size:19px; font-weight:900; line-height:1; }
+    .my-lang-head-title{ font-family:"Space Grotesk",sans-serif; font-size:19px; font-weight:900; line-height:1; color: #fff;}
     .my-lang-head-title .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .my-lang-head-sub{ margin-top:5px; font-size:12px; font-weight:800; color:rgba(255,255,255,.54); line-height:1.35; }
 
-    .my-lang-close{
-      width:40px; height:40px; border:none; border-radius:14px; background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10); color:#fff; font-size:20px; font-weight:900; cursor:pointer;
-    }
+    /* Çarpı butonunu kaldırdık, çünkü dil seçimi ZORUNLU */
+    .my-lang-close{ display: none; }
 
     .my-lang-list{ padding:12px; overflow:auto; display:grid; gap:9px; scrollbar-width:none; }
     .my-lang-list::-webkit-scrollbar{display:none}
@@ -332,7 +331,6 @@
     .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
     .modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
 
-    /* ÇÖZÜM: TOAST MESAJI ARTIK EKRANIN EN ÜSTÜNDE */
     .toast{
       position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px);
       max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px;
@@ -390,18 +388,18 @@
         <span>Üyelik Sistemi Çok Yakında</span>
       </button>
 
-      <div class="drawer-footer-seal">italky<span class="ai">AI</span> Ozigit's 2026</div>
+      <div class="drawer-footer-seal">italky<span class="ai">AI</span> Italky Teknoloji 2026</div>
     </aside>
   </div>
 
+  <!-- KULLANICIDAN ZORUNLU DİL SEÇİMİ İSTEYEN POP-UP -->
   <div id="myLangModal" class="my-lang-modal">
     <div class="my-lang-card">
       <div class="my-lang-head">
         <div>
           <div class="my-lang-head-title">Ana Dilinizi Seçin</div>
-          <div class="my-lang-head-sub">Offline paketlerde ve sistemde kullanılacak ana dili belirleyin.</div>
+          <div class="my-lang-head-sub">Offline paketlerde ve sistemde kullanılacak ana dili belirleyin. Bu işlem zorunludur.</div>
         </div>
-        <button id="myLangModalClose" class="my-lang-close" type="button">×</button>
       </div>
       <div id="myLangModalList" class="my-lang-list"></div>
     </div>
@@ -468,7 +466,7 @@
   <div id="downloadErrorModal" class="modal">
     <div class="modal-card" style="border-top: 4px solid #ef4444;">
       <h3 class="modal-title" style="color: #ef4444;">İndirme Tamamlanamadı</h3>
-      <p class="modal-text">Şu an dünya genelinde yaşanan **yoğun indirme talebi** nedeniyle sunucularımızda kısa süreli bir gecikme yaşanıyor. Lütfen internet bağlantınızı kontrol edip biraz sonra tekrar deneyiniz. Sabrınız için teşekkürler.</p>
+      <p class="modal-text">Şu an dünya genelinde yaşanan yoğun indirme talebi nedeniyle sunucularımızda kısa süreli bir zaman aşımı gecikmesi yaşandı. Lütfen internet bağlantınızı kontrol edip biraz sonra tekrar deneyiniz.</p>
       <div class="modal-actions" style="grid-template-columns: 1fr;">
         <button onclick="document.getElementById('downloadErrorModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button">Anladım</button>
       </div>
@@ -497,31 +495,31 @@
       tr:{
         topLang:"ÜST DİL", botLang:"ALT DİL", adTitle:"Ücretsiz Kullanım",
         adText:"FaceToFace ücretsiz kullanımda reklam içerir. Devam etmek için kısa bir reklam izleyin.",
-        downloadAdTitle:"Dil Paketi İndirme", downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
+        downloadAdTitle:"Çevrimdışı Altyapı İndirme", downloadAdText:"Uygulamanın internet olmadan çalışabilmesi için Google ML Kit köprü dil paketinin indirilmesi gereklidir.",
         watchAd:"Reklam İzle", close:"Şimdilik Kapat", adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
         micError:"Mikrofon hatası.", micDenied:"Mikrofon izni gerekli.", micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
         listeningDone:"Dinleme tamamlanıyor...", translateError:"Çeviri yapılamadı",
         loginSoon:"Üyelik sistemi çok yakında aktif olacak. Şimdilik giriş yapmadan özellikleri kullanabilirsiniz.",
         onlineMode:"Online mod aktif.", offlineMode:"Offline mod aktif.", packReady:"Dil paketi zaten hazır.",
-        packDownloading:"Dil paketiniz indiriliyor.", packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz indirildi.",
-        offerTitle:"Offline Dil Paketi", offerText:"Kendi diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\n{sourceLang} ⇄ {targetLang} paketini indirerek bu dili internet olmadan da kullanabilirsiniz.",
+        packDownloading:"Dil paketiniz indiriliyor. Bu işlem bağlantı hızınıza göre biraz sürebilir.", packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz başarıyla indirildi.",
+        offerTitle:"Offline Dil Paketi", offerText:"Ana diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için altyapı paketinin indirilmesi gerekiyor.",
         offerOk:"İndir", offerCancel:"Şimdilik Kapat", sameLang:"Aynı dil için paket indirilemez.",
         nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.", noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
-        myLangChanged:"Kendi diliniz güncellendi.", myLangWarnTitle:"Kendi Dilim Değişsin mi?",
+        myLangChanged:"Ana diliniz güncellendi.", myLangWarnTitle:"Kendi Dilim Değişsin mi?",
         myLangWarnText:"Kendi dilinizi değiştirirseniz daha önce indirdiğiniz offline dil paketleri silinir.\n\nDevam etmek istiyor musunuz?",
         myLangWarnOk:"Değiştir", myLangWarnCancel:"Vazgeç"
       },
       en:{
         topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE", adTitle:"Free Use",
         adText:"FaceToFace free use includes ads. Watch a short ad to continue.",
-        downloadAdTitle:"Language Pack Download", downloadAdText:"You can download this language pack to use it without internet.",
+        downloadAdTitle:"Offline Core Download", downloadAdText:"The Google ML Kit bridge language pack needs to be downloaded for the app to work without internet.",
         watchAd:"Watch Ad", close:"Close", adNeeded:"The action was not started without watching the ad.",
         micError:"Microphone error.", micDenied:"Microphone permission is required.", micUnsupported:"Speech recognition is not supported on this device.",
         listeningDone:"Finishing listening...", translateError:"Translation failed",
         loginSoon:"Membership system will be active very soon.",
         onlineMode:"Online mode is active.", offlineMode:"Offline mode is active.", packReady:"Language pack is already ready.",
-        packDownloading:"Your language pack is downloading.", packQueued:"Language pack added to queue.", packDownloaded:"Your language pack has been downloaded.",
-        offerTitle:"Offline Language Pack", offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nDownload the {sourceLang} ⇄ {targetLang} pack to use this language without internet.",
+        packDownloading:"Your language pack is downloading. This may take a while depending on your connection.", packQueued:"Language pack added to queue.", packDownloaded:"Your language pack has been downloaded.",
+        offerTitle:"Offline Language Pack", offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nThe infrastructure pack needs to be downloaded to use this offline.",
         offerOk:"Download", offerCancel:"Not Now", sameLang:"You cannot download a pack for the same language.",
         nativeNotReady:"Native download is not ready on this device.", noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
         myLangChanged:"Your language has been updated.", myLangWarnTitle:"Change My Language?",
@@ -578,15 +576,7 @@
       return langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
     }
 
-    function getSavedMyLang(){
-      const saved = canonical(localStorage.getItem(MY_LANG_KEY) || "");
-      if(saved && langExists(saved)) return saved;
-      const initial = getInitialSiteLang();
-      if(initial && langExists(initial)) return initial;
-      return langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
-    }
-
-    let myLang = getSavedMyLang();
+    let myLang = getInitialSiteLang(); // Başlangıçta tespit edileni al
     let botLang = myLang;
     let topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
     if(topLang === botLang) topLang = differentLang(botLang);
@@ -594,7 +584,7 @@
     const sideClearBtn = $("sideClearBtn"); const drawerEdgeBtn = $("drawerEdgeBtn");
     const drawerBackdrop = $("drawerBackdrop"); const drawerLoginBtn = $("drawerLoginBtn");
     const drawerWidgetBtn = $("drawerWidgetBtn"); 
-    const myLangModal = $("myLangModal"); const myLangModalClose = $("myLangModalClose");
+    const myLangModal = $("myLangModal");
     const myLangModalList = $("myLangModalList"); const topBody = $("topBody");
     const botBody = $("botBody"); const topMic = $("topMic"); const botMic = $("botMic");
     const topLangBtn = $("topLangBtn"); const botLangBtn = $("botLangBtn");
@@ -608,11 +598,9 @@
 
     let liveText = ""; let currentMode = "online"; let lastOpenPopSide = null;
     let manualStopPending = false; let recordingSide = null;
-
-    // --- REKLAM CALLBACK KÖPRÜSÜ (GÜVENLİK İÇİN) ---
     let globalAdEarned = false;
+
     window.onRewardedAdCompleted = function(adUnit) {
-      console.log("italkyAI: Reklam başarıyla izlendi (Global Callback). AdUnit: " + adUnit);
       globalAdEarned = true;
     };
 
@@ -621,9 +609,7 @@
 
     function setNativeBanner(visible) {
       const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-      if (bridge && typeof bridge.toggleBannerAd === "function") {
-          bridge.toggleBannerAd(visible, ""); 
-      }
+      if (bridge && typeof bridge.toggleBannerAd === "function") { bridge.toggleBannerAd(visible, ""); }
     }
 
     function showToast(msg){
@@ -634,15 +620,8 @@
       window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
     }
 
-    function openDrawer() { 
-      setNativeBanner(false); 
-      drawerBackdrop?.classList.add("show"); 
-    }
-
-    function closeDrawer() { 
-      drawerBackdrop?.classList.remove("show"); 
-      setNativeBanner(true); 
-    }
+    function openDrawer() { setNativeBanner(false); drawerBackdrop?.classList.add("show"); }
+    function closeDrawer() { drawerBackdrop?.classList.remove("show"); setNativeBanner(true); }
 
     drawerEdgeBtn?.addEventListener("click", openDrawer);
     drawerBackdrop?.addEventListener("click", (e) => { if(e.target === drawerBackdrop) closeDrawer(); });
@@ -658,13 +637,21 @@
 
     drawerLoginBtn?.addEventListener("click", () => { showToast(tx("loginSoon")); });
 
-    function renderMyLangModalList(){
+    // AKILLI SIRALAMA: Tespit edilen myLang her zaman en üstte gösterilecek.
+    function renderMyLangModalList(detectedLang){
       if(!myLangModalList) return;
-      myLangModalList.innerHTML = LANGS.map((lang) => `
-        <button class="my-lang-option ${lang.code === myLang ? "active" : ""}" type="button" data-my-lang="${lang.code}">
+      
+      const sortedLangs = [...LANGS].sort((a, b) => {
+        if (a.code === detectedLang) return -1;
+        if (b.code === detectedLang) return 1;
+        return 0;
+      });
+
+      myLangModalList.innerHTML = sortedLangs.map((lang) => `
+        <button class="my-lang-option ${lang.code === detectedLang ? "active" : ""}" type="button" data-my-lang="${lang.code}">
           <span class="my-lang-option-left">
             <span class="my-lang-option-flag">${lang.flag}</span>
-            <span class="my-lang-option-name">${lang.name}</span>
+            <span class="my-lang-option-name">${lang.name} ${lang.code === detectedLang ? '(Önerilen)' : ''}</span>
           </span>
           <span class="my-lang-option-check">✓</span>
         </button>
@@ -675,36 +662,23 @@
           const next = canonical(btn.getAttribute("data-my-lang") || "");
           if(!next || !langExists(next)) return;
 
-          if(next !== myLang && OfflinePackBridge.hasAnyInstalledPair()){
-            const ok = await showModalChoice({
-              title:tx("myLangWarnTitle"), text:tx("myLangWarnText"), okText:tx("myLangWarnOk"), cancelText:tx("myLangWarnCancel")
-            });
-            if(!ok) return;
-            OfflinePackBridge.clearInstalledPairs();
-          }
-
           myLang = next;
+          botLang = myLang;
+          topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+          if(topLang === botLang) topLang = differentLang(botLang);
+
           localStorage.setItem(MY_LANG_KEY, myLang); localStorage.setItem(SITE_LANG_KEY, myLang);
           localStorage.setItem(LEGACY_SITE_LANG_KEY, myLang); localStorage.setItem(NATIVE_LANG_KEY, myLang);
-          localStorage.setItem(NATIVE_SELECTED_KEY, "true"); // Kendi dilim seçildi onayı!
+          localStorage.setItem(NATIVE_SELECTED_KEY, "true"); // SEÇİM ONAYLANDI!
           OfflinePackBridge.setOfflineNativeLang(myLang);
 
-          renderMyLangModalList(); refreshTexts(); refreshOpenPop();
+          refreshTexts(); refreshOpenPop();
           showToast(tx("myLangChanged"));
           myLangModal?.classList.remove("show");
           setNativeBanner(true); 
         };
       });
     }
-
-    myLangModalClose?.addEventListener("click", () => { 
-      if(!localStorage.getItem(NATIVE_SELECTED_KEY)) {
-        showToast("Lütfen uygulamayı kullanmak için ana dilinizi seçin.");
-        return;
-      }
-      myLangModal?.classList.remove("show"); 
-      setNativeBanner(true); 
-    });
 
     function refreshModeButtons(){
       modeOnlineBtn?.classList.toggle("active",currentMode === "online");
@@ -768,8 +742,7 @@
 
         watchAdBtn.onclick = async () => {
           clean();
-          globalAdEarned = false; // Temizle
-          // ÇÖZÜM: Timeout 90 saniyeye çıkarıldı, eğer köprüden false gelse bile onRewardedAdCompleted çalışmışsa TRUE dönecek!
+          globalAdEarned = false; 
           const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
           resolve(ok !== false || globalAdEarned === true);
         };
@@ -829,7 +802,7 @@
       if(!offerOk) return false;
 
       const adOk = await showAdModal({
-        title:tx("downloadAdTitle"), text:`${nativeInfo.flag} ${nativeInfo.name} → ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
+        title:tx("downloadAdTitle"), text:`${nativeInfo.flag} ${nativeInfo.name} ⇄ ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
         adUnit:`offline_download_${target}`, langCode:target
       });
       if(!adOk){ showToast(tx("adNeeded")); return false; }
@@ -884,8 +857,7 @@
       const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
       if (langInfo && !langInfo.canOffline) return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
       
-      // ÇÖZÜM: SADECE İNDİRME BUTONU YERİNE KİLİT ÇIKAR (Satır tıklanmaya devam eder)
-      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Önce ana dili indirin">🔒</span>`;
+      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Önce çevrimdışı altyapıyı indirin">🔒</span>`;
 
       return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
     }
@@ -905,13 +877,14 @@
 
       if (!nativeReady && currentMode === "online") {
         const nativeInfo = langObj(myLang);
+        // BUTON METNİ GÜNCELLENDİ: Kullanıcının köprü dil mantığını anlaması sağlandı.
         htmlString += `
           <div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;">
             <div style="font-size: 11px; color: #a5b4fc; margin-bottom: 10px; font-weight: 800; line-height: 1.4;">
-              Sistemin çevrimdışı çalışabilmesi için ana diliniz bir "Köprü Dil" ile birlikte kurulmalıdır.
+              Çevrimdışı çevirilerin çalışabilmesi için Google ML Kit köprü dil paketinin kurulması zorunludur.
             </div>
             <button id="prepareNativeBtn" type="button" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--ai-gradient); color: #05060d; font-size: 13px; font-weight: 900; font-family: inherit; cursor: pointer; box-shadow: 0 4px 16px rgba(99,102,241,0.25);">
-              ⬇️ Önce ${nativeInfo.flag} ${nativeInfo.name} Dilini Hazırla
+              ⬇️ Çevrimdışı Altyapıyı Kur (${nativeInfo.flag} ⇄ 🇬🇧)
             </button>
           </div>
         `;
@@ -919,7 +892,6 @@
 
       htmlString += filteredLangs.map((l) => {
         const isLocked = !nativeReady && l.code !== myLang;
-        // ÇÖZÜM: Tüm satırlar Online Çeviri İçin Özgür Bırakıldı! opacity vs tamamen kaldırıldı.
         return `
           <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
             <div class="pop-left" data-select-code="${l.code}">
@@ -940,7 +912,6 @@
       if (prepareNativeBtn) {
         prepareNativeBtn.addEventListener("click", async (e) => {
           e.preventDefault(); e.stopPropagation();
-          // ML Kit köprü zorunluluğu!
           await startOfflinePackDownload("en", "prepare_native");
         });
       }
@@ -1172,16 +1143,15 @@
       OfflinePackBridge.installDownloadEventHandlers(langObj); syncInstalledPairsFromNative();
       try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
-      // ÇÖZÜM: İlk Açılışta Kendi Dilim Seçme Pop-Up'ını Zorunlu Olarak Aç!
+      // İLK AÇILIŞ - ZORUNLU DİL SEÇİM POPUP'I
       if(!localStorage.getItem(NATIVE_SELECTED_KEY)){
         const detected = await detectCountryLang();
-        if(detected && langExists(detected)){
-          myLang = detected; localStorage.setItem(MY_LANG_KEY, myLang); localStorage.setItem(SITE_LANG_KEY, myLang); localStorage.setItem(NATIVE_LANG_KEY, myLang); OfflinePackBridge.setOfflineNativeLang(myLang);
-        }
-        renderMyLangModalList();
+        renderMyLangModalList(detected); // Tespit edileni en üste yerleştirip render et
         myLangModal.classList.add("show");
         setNativeBanner(false);
-      } else { OfflinePackBridge.setOfflineNativeLang(myLang); }
+      } else { 
+        OfflinePackBridge.setOfflineNativeLang(myLang); 
+      }
 
       const params = new URLSearchParams(location.search); const hasRouteLang = params.get("source") || params.get("target");
       if(!hasRouteLang){ botLang = myLang; topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang); if(topLang === botLang) topLang = differentLang(botLang); }
