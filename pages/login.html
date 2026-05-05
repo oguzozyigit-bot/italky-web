@@ -623,6 +623,7 @@
       gap:12px;
       cursor:pointer;
       border:1px solid transparent;
+      /* DÜZELTME: Opaklık ve kilit durumu artık burada deaktif edilmeyecek */
     }
 
     .pop-item.active{
@@ -882,7 +883,7 @@
       display:none;
       align-items:center;
       justify-content:center;
-      z-index:2147483647; /* Modallar daima en üstte */
+      z-index:2147483647; 
       padding:20px;
     }
 
@@ -914,11 +915,10 @@
     .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
     .modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
 
-    /* Z-Index ve Bottom ayarları ile uyarı mesajının örtülmesi engellendi */
     .toast{
       position:fixed;
       left:50%;
-      bottom:110px; /* Reklam vb panellerin üstüne çıkması için yükseltildi */
+      bottom:110px; 
       transform:translateX(-50%) translateY(120px);
       max-width:min(92vw,430px);
       min-height:44px;
@@ -933,7 +933,7 @@
       align-items:center;
       justify-content:center;
       text-align:center;
-      z-index:2147483647; /* Toast daima en üstte kalacak */
+      z-index:2147483647; 
       box-shadow:0 18px 36px rgba(0,0,0,.45);
       transition:.22s ease;
       pointer-events:none;
@@ -1262,10 +1262,15 @@
     let liveText = ""; let currentMode = "online"; let lastOpenPopSide = null;
     let manualStopPending = false; let recordingSide = null;
 
+    // --- REKLAM CALLBACK KÖPRÜSÜ (GÜVENLİK İÇİN) ---
+    // Android doğrudan çağırırsa indirmeyi güvenceye almak için bir fonksiyon.
+    window.onRewardedAdCompleted = function(adUnit) {
+      console.log("italkyAI: Reklam başarıyla izlendi (Global Callback). AdUnit: " + adUnit);
+    };
+
     function tx(key){ const c = UI[myLang] ? myLang : "en"; return UI[c]?.[key] || UI.en[key] || key; }
     function tFormat(key, vars = {}){ let value = tx(key); Object.keys(vars).forEach((k) => { value = value.replaceAll(`{${k}}`, vars[k]); }); return value; }
 
-    // ANDROID YEREL REKLAMI GİZLE/GÖSTER (Overlap Engelleme Sistemi)
     function setNativeBanner(visible) {
       const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
       if (bridge && typeof bridge.toggleBannerAd === "function") {
@@ -1282,13 +1287,13 @@
     }
 
     function openDrawer() { 
-      setNativeBanner(false); // Reklamı gizle
+      setNativeBanner(false); 
       drawerBackdrop?.classList.add("show"); 
     }
 
     function closeDrawer() { 
       drawerBackdrop?.classList.remove("show"); 
-      setNativeBanner(true); // Geri getir
+      setNativeBanner(true); 
     }
 
     drawerEdgeBtn?.addEventListener("click", openDrawer);
@@ -1346,7 +1351,7 @@
           renderMyLangDrawer(); renderMyLangModalList(); refreshTexts(); refreshOpenPop();
           showToast(tx("myLangChanged"));
           myLangModal?.classList.remove("show");
-          setNativeBanner(true); // Modaldan çıkınca reklamı aç
+          setNativeBanner(true); 
         };
       });
     }
@@ -1401,7 +1406,7 @@
 
     function showModalChoice({ title = "", text = "", okText = "", cancelText = "" } = {}){
       return new Promise((resolve) => {
-        setNativeBanner(false); // Modal çıkarken alt bannerı kapat
+        setNativeBanner(false); 
         if(adTitle) adTitle.textContent = title || tx("adTitle");
         if(adText) adText.textContent = text || "";
         if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
@@ -1417,7 +1422,7 @@
 
     function showAdModal({title,text,adUnit = "public_facetoface_auto", langCode = ""} = {}){
       return new Promise((resolve) => {
-        setNativeBanner(false); // Reklam izleme modalı çıkarken bannerı kapat
+        setNativeBanner(false); 
         if(adTitle) adTitle.textContent = title || tx("adTitle");
         if(adText) adText.textContent = text || tx("adText");
         if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
@@ -1429,7 +1434,8 @@
 
         watchAdBtn.onclick = async () => {
           clean();
-          const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:20000 });
+          // ÇÖZÜM: timeoutMs 20 saniyeden 90 saniyeye çıkarıldı! JS tarafı reklam bitmeden erken pes etmeyecek.
+          const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
           resolve(!!ok);
         };
 
@@ -1437,7 +1443,6 @@
       });
     }
 
-    // YENİ OTO-ZAMANLI REKLAM MOTORU (İlk 3 dakika sonra her 2 dakikada bir)
     let autoAdTimer = null;
     function scheduleAutoAd(intervalMs) {
       clearTimeout(autoAdTimer);
@@ -1446,7 +1451,6 @@
         const isModalOpen = document.querySelector('.modal.show');
         const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
         
-        // Kullanıcıyı rahatsız etmemek için müsait mi bak
         if (!isDrawerOpen && !isModalOpen && !isRecording) {
           await showAdModal({
             title: tx("adTitle"),
@@ -1455,7 +1459,6 @@
             langCode: ""
           });
         }
-        // Reklam bittikten (veya gösterilmediyse) sonraki periyot her zaman 2 dakikadır
         scheduleAutoAd(2 * 60 * 1000); 
       }, intervalMs);
     }
@@ -1545,7 +1548,9 @@
 
       const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
       if (langInfo && !langInfo.canOffline) return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
-      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4;" title="Önce ana dili indirin">🔒</span>`;
+      
+      // ÇÖZÜM: İndirme butonu yerine kilit işareti çıkıyor
+      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Önce ana dili indirin">🔒</span>`;
 
       return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
     }
@@ -1579,9 +1584,9 @@
 
       htmlString += filteredLangs.map((l) => {
         const isLocked = !nativeReady && l.code !== myLang;
-        const opacityStyle = isLocked ? "opacity: 0.45; pointer-events: none; filter: grayscale(80%);" : "";
+        // ÇÖZÜM: Eski CSS engeli kaldırıldı! Tüm satırlar online seçim için her zaman aktif.
         return `
-          <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}" style="${opacityStyle}">
+          <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
             <div class="pop-left" data-select-code="${l.code}">
               <div class="pop-flag">${l.flag}</div>
               <div class="pop-name">${l.name}</div>
@@ -1628,7 +1633,6 @@
       });
     }
 
-    // SİLİNEN TIKLAMA LİSTENER'LARI GERİ EKLENDİ
     topLangBtn.addEventListener("click",(e) => {
       e.preventDefault(); e.stopPropagation();
       closeAllPop(); lastOpenPopSide = "top"; renderPop("top"); popTop.classList.add("show");
@@ -1662,12 +1666,11 @@
       mic.classList.toggle("listening",!!listening);
     }
 
-    // --- MİKROFON HATASI ÇÖZÜMLÜ (BCP-47) BAŞLATICI ---
     function startRecording(side) {
       if (manualStopPending) return;
 
       const sourceLang = side === "top" ? topLang : botLang;
-      const bcpCode = BCP[sourceLang] || sourceLang; // Android için doğru kodlama
+      const bcpCode = BCP[sourceLang] || sourceLang; 
 
       recordingSide = side; 
       setMicState(side, true); 
@@ -1689,7 +1692,6 @@
       setTimeout(() => { if (manualStopPending) { manualStopPending = false; liveText = ""; recordingSide = null; } }, 2500);
     }
 
-    // --- VERİ ESNEKLİĞİ İLE GÜNCELLENMİŞ NATIVE SONUÇ YAKALAYICI ---
     window.onNativeSpeechResult = function(payload, fallbackText, fallbackIsFinal) {
       let side = "top"; let text = ""; let isFinal = true;
 
@@ -1782,8 +1784,6 @@
       const clean = cleanupTranscript(text);
       if(!clean){ liveText = ""; setMicState(side,false); return; }
 
-      // Burada konuşma sonrası araya reklam istersen açabilirsin ancak Oto-Zamanlı reklam eklediğimiz için kaldırdım.
-
       const src = side === "top" ? topLang : botLang; const dst = side === "top" ? botLang : topLang; const other = side === "top" ? "bot" : "top";
       addBubble(side,clean,false); const targetRow = addBubble(other,"",true);
 
@@ -1863,7 +1863,7 @@
       refreshTexts(); refreshModeButtons(); renderMyLangModalList(); clearBody(topBody); clearBody(botBody);
 
       startCommercialEngine(); 
-      scheduleAutoAd(3 * 60 * 1000); // OTOMATİK ZAMANLAYICI (3. Dakikada başlat)
+      scheduleAutoAd(3 * 60 * 1000); 
     }
 
     function startCommercialEngine() {
@@ -1875,7 +1875,6 @@
         const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
         const isModalOpen = document.querySelector('.modal.show');
         
-        // Modallar açıksa Döngüyü kır, Native reklamı kapalı tut
         if (isDrawerOpen || isModalOpen) {
           setNativeBanner(false);
           return;
