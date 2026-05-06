@@ -554,6 +554,18 @@
     </div>
   </div>
 
+  <!-- YENİ EKLENEN: GÜNCELLEME MODALI -->
+  <div id="updateModal" class="modal">
+    <div class="modal-card" style="border-top: 4px solid #3b82f6;">
+      <h3 class="modal-title" style="color: #60a5fa;">Güncelleme Gerekli</h3>
+      <p class="modal-text">italkyAI'nin yeni nesil akıllı ses motorunu ve özelliklerini kullanabilmek için uygulamanızı güncellemeniz gerekiyor. Eski sürümde bazı bağlantı hataları yaşayabilirsiniz.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="window.location.href='market://details?id=com.ozyigits.italkyai'" class="modal-btn primary" type="button">Play Store'dan Güncelle</button>
+        <button onclick="document.getElementById('updateModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button" style="margin-top: 8px;">Daha Sonra Hatırlat</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <div id="downloadErrorModal" class="modal">
@@ -682,6 +694,7 @@
     let liveText = ""; let currentMode = "online"; let lastOpenPopSide = null;
     let recordingSide = null;
     let globalAdEarned = false;
+    let micErrorCounter = 0; // HATA SAYACINI EKLİYORUZ
 
     window.onRewardedAdCompleted = function(adUnit) { globalAdEarned = true; };
 
@@ -1024,6 +1037,7 @@
       if (isFinal) {
         setMicState(side, false); recordingSide = null;
         if (liveText) { finalizeSpeech(side, liveText); }
+        micErrorCounter = 0; // BAŞARILI İŞLEMDE HATAYI SIFIRLA
         
         const body = side === "top" ? topBody : botBody;
         if (body) {
@@ -1054,15 +1068,24 @@
       });
 
       if(errorMsg === "manual_stop_empty") return; 
+
+      // GÜNCELLEME MODALI TETİKLEYİCİSİ
       if(errorMsg !== "no speech") {
-        if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { 
-          showToast(tx("micDenied")); 
-        } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
-          showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
-        } else if (errorMsg === "network_error" || errorMsg === "server_error") {
-          showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
-        } else { 
-          showToast(tx("micError") + " (" + errorMsg + ")"); 
+        micErrorCounter++;
+        if(micErrorCounter >= 2) {
+          setNativeBanner(false);
+          document.getElementById('updateModal').classList.add('show');
+          micErrorCounter = 0; // Sayacı sıfırla
+        } else {
+          if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { 
+            showToast(tx("micDenied")); 
+          } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
+            showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
+          } else if (errorMsg === "network_error" || errorMsg === "server_error") {
+            showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
+          } else { 
+            showToast(tx("micError") + " (" + errorMsg + ")"); 
+          }
         }
       }
     };
