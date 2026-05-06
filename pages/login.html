@@ -1001,7 +1001,6 @@
       setTimeout(() => { if (manualStopPending) { manualStopPending = false; liveText = ""; recordingSide = null; } }, 2500);
     }
 
-    // İŞTE BÜTÜN HATAYI ÇÖZEN O SİHİRLİ YAPI
     window.onNativeSpeechResult = function(arg1, arg2, arg3) {
       let side = "top"; let text = ""; let isFinal = true;
 
@@ -1024,7 +1023,6 @@
         setMicState(side, false); recordingSide = null;
         if (liveText) { finalizeSpeech(side, liveText); }
         
-        // Hata durumlarında takılı kalan "..." baloncuklarını temizler
         const body = side === "top" ? topBody : botBody;
         if (body) {
            const activeBubble = body.querySelector(".bubble.latest");
@@ -1041,10 +1039,10 @@
       }
     };
 
+    // HATA MESAJLARI AKILLANDIRILDI
     window.onNativeSpeechError = function(errorMsg) {
       setMicState("top", false); setMicState("bot", false); manualStopPending = false; recordingSide = null;
       
-      // Hata anında yarım kalan tüm "..." konuşma balonlarını ekrandan atar
       [topBody, botBody].forEach(body => {
         if(body) {
           const activeBubble = body.querySelector(".bubble.latest");
@@ -1056,7 +1054,15 @@
 
       if(errorMsg === "manual_stop_empty") return; 
       if(errorMsg !== "no speech") {
-        if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { showToast(tx("micDenied")); } else { showToast(tx("micError") + " (" + errorMsg + ")"); }
+        if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { 
+          showToast(tx("micDenied")); 
+        } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
+          showToast("Motor meşgul, lütfen 1 saniye bekleyip tekrar bas.");
+        } else if (errorMsg === "network_error" || errorMsg === "server_error") {
+          showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
+        } else { 
+          showToast(tx("micError") + " (" + errorMsg + ")"); 
+        }
       }
     };
 
@@ -1115,8 +1121,32 @@
       liveText = ""; setMicState(side,false);
     }
 
-    topMic.addEventListener("click",() => startRecording("top"));
-    botMic.addEventListener("click",() => startRecording("bot"));
+    // TRAFİK POLİSİ: MİKROFON ÇAKIŞMALARINI ÖNLEYEN YENİ MANTIK
+    function handleMicClick(side) {
+      const mic = side === "top" ? topMic : botMic;
+      const otherMic = side === "top" ? botMic : topMic;
+      
+      // 1. Eğer basılan mikrofon zaten açıksa, kullanıcı durdurmak istiyordur.
+      if (mic.classList.contains("listening")) {
+        stopRecognizer();
+        return;
+      }
+      
+      // 2. Eğer diğer mikrofon açıksa, önce onu kapatıp motorun rahatlaması için biraz bekle, sonra başlat.
+      if (otherMic.classList.contains("listening") || recordingSide !== null) {
+        stopRecognizer();
+        setTimeout(() => {
+          startRecording(side);
+        }, 600); // 600ms Android motoruna nefes alma payı
+        return;
+      }
+      
+      // 3. Hiçbiri açık değilse normal başlat.
+      startRecording(side);
+    }
+
+    topMic.addEventListener("click", () => handleMicClick("top"));
+    botMic.addEventListener("click", () => handleMicClick("bot"));
 
     function clearChat(){
       try{ stopRecognizer(); }catch{} try{ window.speechSynthesis?.cancel?.(); }catch{} try{ window.NativeTTS?.stop?.(); }catch{}
