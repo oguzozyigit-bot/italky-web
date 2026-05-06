@@ -585,704 +585,1055 @@
   </div>
 
   <script type="module">
-    import { getLangPoolForSite } from "/js/lang_pool_full.js";
-    import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
+  import { getLangPoolForSite } from "/js/lang_pool_full.js";
+  import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
 
-    const API_BASE = "https://italky-api.onrender.com";
-    const $ = (id) => document.getElementById(id);
+  const API_BASE = "https://italky-api.onrender.com";
+  const $ = (id) => document.getElementById(id);
 
-    const SITE_LANG_KEY = "site_lang";
-    const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
-    const NATIVE_LANG_KEY = "italky_native_lang_v7";
-    const MY_LANG_KEY = "italky_public_my_lang_v1";
+  const SITE_LANG_KEY = "site_lang";
+  const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+  const NATIVE_LANG_KEY = "italky_native_lang_v7";
+  const MY_LANG_KEY = "italky_public_my_lang_v1";
 
-    // BURADAN GÜNCELLEMEYİ PROGRAMLAYABİLİRSİN
-    // Ne zaman yeni bir Android sürümü çıkarsan, bu sayıyı bir artırman yeterli.
-    const CURRENT_APP_VERSION = 1; 
+  // WEB TARAFINDAN ZORUNLU TUTULAN MİNİMUM UYGULAMA SÜRÜMÜ
+  // Android versionCode bundan küçükse update popup açılır
+  const MIN_REQUIRED_VERSION = 2;
 
-    const BCP = {
-      tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
-      ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
-    };
+  const BCP = {
+    tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
+    ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
+  };
 
-    const UI = {
-      tr:{
-        topLang:"ÜST DİL", botLang:"ALT DİL", adTitle:"Zorunlu Reklam",
-        adText:"Ücretsiz çeviriye devam edebilmek için ödül reklamını izlemeniz gereklidir. Bu reklam her 5 dakikada bir gösterilir. Anlayışınız için teşekkür ederiz.",
-        downloadAdTitle:"Çevrimdışı Dil İndirme", downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
-        watchAd:"Reklamı İzle ve Devam Et", close:"Şimdilik Kapat", adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
-        micError:"Mikrofon hatası.", micDenied:"Mikrofon izni gerekli.", micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
-        listeningDone:"Dinleme tamamlanıyor...", translateError:"Çeviri yapılamadı",
-        loginSoon:"Üyelik sistemi çok yakında aktif olacak. Şimdilik giriş yapmadan özellikleri kullanabilirsiniz.",
-        onlineMode:"Online mod aktif.", offlineMode:"Offline mod aktif.", packReady:"Dil paketi zaten hazır.",
-        packDownloading:"Dil paketiniz indiriliyor. Bu işlem bağlantı hızınıza göre biraz sürebilir.", packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz başarıyla indirildi.",
-        offerTitle:"Offline Dil Paketi", offerText:"Ana diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için paketi indirebilirsiniz.",
-        offerOk:"İndir", offerCancel:"Şimdilik Kapat", sameLang:"Aynı dil için paket indirilemez.",
-        nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.", noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
-      },
-      en:{
-        topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE", adTitle:"Mandatory Ad",
-        adText:"To continue free translation, you need to watch a rewarded ad. This ad is shown every 5 minutes. Thank you for your understanding.",
-        downloadAdTitle:"Offline Language Download", downloadAdText:"You can download this language pack to use it without internet.",
-        watchAd:"Watch Ad to Continue", close:"Close", adNeeded:"The action was not started without watching the ad.",
-        micError:"Microphone error.", micDenied:"Microphone permission is required.", micUnsupported:"Speech recognition is not supported on this device.",
-        listeningDone:"Finishing listening...", translateError:"Translation failed",
-        loginSoon:"Membership system will be active very soon.",
-        onlineMode:"Online mode is active.", offlineMode:"Offline mode is active.", packReady:"Language pack is already ready.",
-        packDownloading:"Your language pack is downloading. This may take a while depending on your connection.", packQueued:"Language pack added to queue.", packDownloaded:"Your language pack has been downloaded.",
-        offerTitle:"Offline Language Pack", offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nYou can download the pack to use this language offline.",
-        offerOk:"Download", offerCancel:"Not Now", sameLang:"You cannot download a pack for the same language.",
-        nativeNotReady:"Native download is not ready on this device.", noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
-      }
-    };
-
-    function canonical(code){ return OfflinePackBridge.canonical(code); }
-
-    function getInitialSiteLang(){
-      return canonical(
-        localStorage.getItem(SITE_LANG_KEY) || localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
-        localStorage.getItem(NATIVE_LANG_KEY) || navigator.language || "tr"
-      ) || "tr";
+  const UI = {
+    tr:{
+      topLang:"ÜST DİL", botLang:"ALT DİL", adTitle:"Zorunlu Reklam",
+      adText:"Ücretsiz çeviriye devam edebilmek için ödül reklamını izlemeniz gereklidir. Bu reklam her 5 dakikada bir gösterilir. Anlayışınız için teşekkür ederiz.",
+      downloadAdTitle:"Çevrimdışı Dil İndirme", downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
+      watchAd:"Reklamı İzle ve Devam Et", close:"Şimdilik Kapat", adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
+      micError:"Mikrofon hatası.", micDenied:"Mikrofon izni gerekli.", micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
+      listeningDone:"Dinleme tamamlanıyor...", translateError:"Çeviri yapılamadı",
+      loginSoon:"Üyelik sistemi çok yakında aktif olacak. Şimdilik giriş yapmadan özellikleri kullanabilirsiniz.",
+      onlineMode:"Online mod aktif.", offlineMode:"Offline mod aktif.", packReady:"Dil paketi zaten hazır.",
+      packDownloading:"Dil paketiniz indiriliyor. Bu işlem bağlantı hızınıza göre biraz sürebilir.", packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz başarıyla indirildi.",
+      offerTitle:"Offline Dil Paketi", offerText:"Ana diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için paketi indirebilirsiniz.",
+      offerOk:"İndir", offerCancel:"Şimdilik Kapat", sameLang:"Aynı dil için paket indirilemez.",
+      nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.", noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
+    },
+    en:{
+      topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE", adTitle:"Mandatory Ad",
+      adText:"To continue free translation, you need to watch a rewarded ad. This ad is shown every 5 minutes. Thank you for your understanding.",
+      downloadAdTitle:"Offline Language Download", downloadAdText:"You can download this language pack to use it without internet.",
+      watchAd:"Watch Ad to Continue", close:"Close", adNeeded:"The action was not started without watching the ad.",
+      micError:"Microphone error.", micDenied:"Microphone permission is required.", micUnsupported:"Speech recognition is not supported on this device.",
+      listeningDone:"Finishing listening...", translateError:"Translation failed",
+      loginSoon:"Membership system will be active very soon.",
+      onlineMode:"Online mode is active.", offlineMode:"Offline mode is active.", packReady:"Language pack is already ready.",
+      packDownloading:"Your language pack is downloading. This may take a while depending on your connection.", packQueued:"Language pack added to queue.", packDownloaded:"Your language pack has been downloaded.",
+      offerTitle:"Offline Language Pack", offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nYou can download the pack to use this language offline.",
+      offerOk:"Download", offerCancel:"Not Now", sameLang:"You cannot download a pack for the same language.",
+      nativeNotReady:"Native download is not ready on this device.", noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
     }
+  };
 
-    const SITE_LANG = getInitialSiteLang();
-    const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG)) ? getLangPoolForSite(SITE_LANG) : [];
+  function canonical(code){ return OfflinePackBridge.canonical(code); }
 
-    const FALLBACK_LANGS = [
-      { code:"tr", flag:"🇹🇷", name:"Türkçe", bcp:"tr-TR" }, { code:"en", flag:"🇬🇧", name:"İngilizce", bcp:"en-US" },
-      { code:"de", flag:"🇩🇪", name:"Almanca", bcp:"de-DE" }, { code:"fr", flag:"🇫🇷", name:"Fransızca", bcp:"fr-FR" },
-      { code:"it", flag:"🇮🇹", name:"İtalyanca", bcp:"it-IT" }, { code:"es", flag:"🇪🇸", name:"İspanyolca", bcp:"es-ES" },
-      { code:"ar", flag:"🇸🇦", name:"Arapça", bcp:"ar-SA" }, { code:"ru", flag:"🇷🇺", name:"Rusça", bcp:"ru-RU" },
-      { code:"bg", flag:"🇧🇬", name:"Bulgarca", bcp:"bg-BG" }, { code:"pt", flag:"🇵🇹", name:"Portekizce", bcp:"pt-PT" },
-      { code:"zh", flag:"🇨🇳", name:"Çince", bcp:"zh-CN" }, { code:"ja", flag:"🇯🇵", name:"Japonca", bcp:"ja-JP" },
-      { code:"ko", flag:"🇰🇷", name:"Korece", bcp:"ko-KR" }
-    ];
+  function getInitialSiteLang(){
+    return canonical(
+      localStorage.getItem(SITE_LANG_KEY) || localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+      localStorage.getItem(NATIVE_LANG_KEY) || navigator.language || "tr"
+    ) || "tr";
+  }
 
-    const LANGS = (RAW_LANG_POOL.length ? RAW_LANG_POOL : FALLBACK_LANGS)
-      .map((l) => {
-        const code = canonical(l.code);
-        if(!code) return null;
-        return { code, flag:l.flag || "🌐", name:l.name || l.tr_name || code.toUpperCase(), bcp:l.bcp || BCP[code] || `${code}-${String(code).toUpperCase()}` };
-      }).filter(Boolean).filter((item,index,arr) => arr.findIndex((x) => x.code === item.code) === index);
+  const SITE_LANG = getInitialSiteLang();
+  const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG)) ? getLangPoolForSite(SITE_LANG) : [];
 
-    function langExists(code){ return !!LANGS.find((x) => x.code === canonical(code)); }
-    function langObj(code){
-      const c = canonical(code);
-      return LANGS.find((x) => x.code === c) || { code:c || "en", flag:"🌐", name:(c || "en").toUpperCase(), bcp:BCP[c] || "en-US" };
+  const FALLBACK_LANGS = [
+    { code:"tr", flag:"🇹🇷", name:"Türkçe", bcp:"tr-TR" }, { code:"en", flag:"🇬🇧", name:"İngilizce", bcp:"en-US" },
+    { code:"de", flag:"🇩🇪", name:"Almanca", bcp:"de-DE" }, { code:"fr", flag:"🇫🇷", name:"Fransızca", bcp:"fr-FR" },
+    { code:"it", flag:"🇮🇹", name:"İtalyanca", bcp:"it-IT" }, { code:"es", flag:"🇪🇸", name:"İspanyolca", bcp:"es-ES" },
+    { code:"ar", flag:"🇸🇦", name:"Arapça", bcp:"ar-SA" }, { code:"ru", flag:"🇷🇺", name:"Rusça", bcp:"ru-RU" },
+    { code:"bg", flag:"🇧🇬", name:"Bulgarca", bcp:"bg-BG" }, { code:"pt", flag:"🇵🇹", name:"Portekizce", bcp:"pt-PT" },
+    { code:"zh", flag:"🇨🇳", name:"Çince", bcp:"zh-CN" }, { code:"ja", flag:"🇯🇵", name:"Japonca", bcp:"ja-JP" },
+    { code:"ko", flag:"🇰🇷", name:"Korece", bcp:"ko-KR" }
+  ];
+
+  const LANGS = (RAW_LANG_POOL.length ? RAW_LANG_POOL : FALLBACK_LANGS)
+    .map((l) => {
+      const code = canonical(l.code);
+      if(!code) return null;
+      return { code, flag:l.flag || "🌐", name:l.name || l.tr_name || code.toUpperCase(), bcp:l.bcp || BCP[code] || `${code}-${String(code).toUpperCase()}` };
+    }).filter(Boolean).filter((item,index,arr) => arr.findIndex((x) => x.code === item.code) === index);
+
+  function langExists(code){ return !!LANGS.find((x) => x.code === canonical(code)); }
+  function langObj(code){
+    const c = canonical(code);
+    return LANGS.find((x) => x.code === c) || { code:c || "en", flag:"🌐", name:(c || "en").toUpperCase(), bcp:BCP[c] || "en-US" };
+  }
+  function labelChip(code){ const o = langObj(code); return `${o.flag} ${o.name}`; }
+
+  function differentLang(base){
+    const b = canonical(base);
+    const preferred = b === "tr" ? ["en","de","fr","es","it","ar","ru","pt"] : ["tr","en","de","fr","es","it","ar","ru","pt"];
+    for(const c of preferred){ if(c !== b && langExists(c)) return c; }
+    return LANGS.find((l) => l.code !== b)?.code || "en";
+  }
+
+  async function detectCountryLang(){
+    try{ const nav = canonical(navigator.language || ""); if(nav && langExists(nav)) return nav; }catch{}
+    return langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
+  }
+
+  let myLang = "tr";
+  let botLang = myLang;
+  let topLang = "en";
+
+  const sideClearBtn = $("sideClearBtn");
+  const drawerEdgeBtn = $("drawerEdgeBtn");
+  const drawerBackdrop = $("drawerBackdrop");
+  const topBody = $("topBody");
+  const botBody = $("botBody");
+  const topMic = $("topMic");
+  const botMic = $("botMic");
+  const topLangBtn = $("topLangBtn");
+  const botLangBtn = $("botLangBtn");
+  const popTop = $("pop-top");
+  const popBot = $("pop-bot");
+  const listTop = $("list-top");
+  const listBot = $("list-bot");
+  const closeTop = $("close-top");
+  const closeBot = $("close-bot");
+  const topPopTitle = $("topPopTitle");
+  const botPopTitle = $("botPopTitle");
+  const modeOnlineBtn = $("modeOnlineBtn");
+  const modeOfflineBtn = $("modeOfflineBtn");
+  const adModal = $("adModal");
+  const adTitle = $("adTitle");
+  const adText = $("adText");
+  const watchAdBtn = $("watchAdBtn");
+  const toast = $("toast");
+  const updateModal = $("updateModal");
+
+  let liveText = "";
+  let currentMode = "online";
+  let lastOpenPopSide = null;
+  let recordingSide = null;
+  let globalAdEarned = false;
+
+  window.onRewardedAdCompleted = function(adUnit) {
+    globalAdEarned = true;
+  };
+
+  function tx(key){
+    const c = UI[myLang] ? myLang : "en";
+    return UI[c]?.[key] || UI.en[key] || key;
+  }
+
+  function tFormat(key, vars = {}){
+    let value = tx(key);
+    Object.keys(vars).forEach((k) => {
+      value = value.replaceAll(`{${k}}`, vars[k]);
+    });
+    return value;
+  }
+
+  function setNativeBanner(visible) {
+    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+    if (bridge && typeof bridge.toggleBannerAd === "function") {
+      bridge.toggleBannerAd(visible, "");
     }
-    function labelChip(code){ const o = langObj(code); return `${o.flag} ${o.name}`; }
+  }
 
-    function differentLang(base){
-      const b = canonical(base);
-      const preferred = b === "tr" ? ["en","de","fr","es","it","ar","ru","pt"] : ["tr","en","de","fr","es","it","ar","ru","pt"];
-      for(const c of preferred){ if(c !== b && langExists(c)) return c; }
-      return LANGS.find((l) => l.code !== b)?.code || "en";
-    }
+  function showToast(msg){
+    if(!toast) return;
+    toast.textContent = String(msg || "");
+    toast.classList.add("show");
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+  }
 
-    async function detectCountryLang(){
-      try{ const nav = canonical(navigator.language || ""); if(nav && langExists(nav)) return nav; }catch{}
-      return langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
-    }
+  function openDrawer() {
+    setNativeBanner(false);
+    drawerBackdrop?.classList.add("show");
+  }
 
-    let myLang = "tr"; 
-    let botLang = myLang;
-    let topLang = "en";
+  function closeDrawer() {
+    drawerBackdrop?.classList.remove("show");
+    setNativeBanner(true);
+  }
 
-    const sideClearBtn = $("sideClearBtn"); const drawerEdgeBtn = $("drawerEdgeBtn");
-    const drawerBackdrop = $("drawerBackdrop"); 
-    const topBody = $("topBody"); const botBody = $("botBody"); 
-    const topMic = $("topMic"); const botMic = $("botMic");
-    const topLangBtn = $("topLangBtn"); const botLangBtn = $("botLangBtn");
-    const popTop = $("pop-top"); const popBot = $("pop-bot");
-    const listTop = $("list-top"); const listBot = $("list-bot");
-    const closeTop = $("close-top"); const closeBot = $("close-bot");
-    const topPopTitle = $("topPopTitle"); const botPopTitle = $("botPopTitle");
-    const modeOnlineBtn = $("modeOnlineBtn"); const modeOfflineBtn = $("modeOfflineBtn");
-    const adModal = $("adModal"); const adTitle = $("adTitle"); const adText = $("adText");
-    const watchAdBtn = $("watchAdBtn"); const closeAdBtn = $("closeAdBtn"); const toast = $("toast");
+  drawerEdgeBtn?.addEventListener("click", openDrawer);
+  drawerBackdrop?.addEventListener("click", (e) => {
+    if(e.target === drawerBackdrop) closeDrawer();
+  });
 
-    let liveText = ""; let currentMode = "online"; let lastOpenPopSide = null;
-    let recordingSide = null;
-    let globalAdEarned = false;
+  function refreshModeButtons(){
+    modeOnlineBtn?.classList.toggle("active", currentMode === "online");
+    modeOfflineBtn?.classList.toggle("active", currentMode === "offline");
+  }
 
-    window.onRewardedAdCompleted = function(adUnit) { globalAdEarned = true; };
+  function setMode(mode){
+    currentMode = mode === "offline" ? "offline" : "online";
+    refreshModeButtons();
+    showToast(currentMode === "online" ? tx("onlineMode") : tx("offlineMode"));
+    closeAllPop();
+  }
 
-    function tx(key){ const c = UI[myLang] ? myLang : "en"; return UI[c]?.[key] || UI.en[key] || key; }
-    function tFormat(key, vars = {}){ let value = tx(key); Object.keys(vars).forEach((k) => { value = value.replaceAll(`{${k}}`, vars[k]); }); return value; }
+  function refreshTexts(){
+    topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
+    botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
+    topPopTitle.textContent = tx("topLang");
+    botPopTitle.textContent = tx("botLang");
+    if(adTitle) adTitle.textContent = tx("adTitle");
+    if(adText) adText.textContent = tx("adText");
+    if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
+  }
 
-    function setNativeBanner(visible) {
-      const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-      if (bridge && typeof bridge.toggleBannerAd === "function") { bridge.toggleBannerAd(visible, ""); }
-    }
+  function closeAllPop(){
+    popTop.classList.remove("show");
+    popBot.classList.remove("show");
+    lastOpenPopSide = null;
+  }
 
-    function showToast(msg){
-      if(!toast) return;
-      toast.textContent = String(msg || ""); toast.classList.add("show");
-      clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(() => toast.classList.remove("show"),2600);
-    }
+  function refreshOpenPop(){
+    if(lastOpenPopSide === "top" && popTop.classList.contains("show")) renderPop("top");
+    if(lastOpenPopSide === "bot" && popBot.classList.contains("show")) renderPop("bot");
+  }
 
-    function openDrawer() { setNativeBanner(false); drawerBackdrop?.classList.add("show"); }
-    function closeDrawer() { drawerBackdrop?.classList.remove("show"); setNativeBanner(true); }
+  window.addEventListener("offlinePackBridgeStateChanged", refreshOpenPop);
 
-    drawerEdgeBtn?.addEventListener("click", openDrawer);
-    drawerBackdrop?.addEventListener("click", (e) => { if(e.target === drawerBackdrop) closeDrawer(); });
+  function showModalChoice({ title = "", text = "", okText = "", cancelText = "" } = {}){
+    return new Promise((resolve) => {
+      setNativeBanner(false);
+      if(adTitle) adTitle.textContent = title || tx("adTitle");
+      if(adText) adText.textContent = text || "";
+      if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
 
-   function refreshModeButtons(){
-      modeOnlineBtn?.classList.toggle("active",currentMode === "online");
-      modeOfflineBtn?.classList.toggle("active",currentMode === "offline");
-    }
+      adModal.classList.add("show");
 
-    function setMode(mode){
-      currentMode = mode === "offline" ? "offline" : "online";
-      refreshModeButtons(); showToast(currentMode === "online" ? tx("onlineMode") : tx("offlineMode")); closeAllPop();
-    }
+      const clean = () => {
+        watchAdBtn.onclick = null;
+        adModal.classList.remove("show");
+        setNativeBanner(true);
+      };
 
-    function refreshTexts(){
-      topLangBtn.textContent = `${labelChip(topLang)} ⌵`; botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
-      topPopTitle.textContent = tx("topLang"); botPopTitle.textContent = tx("botLang");
-      if(adTitle) adTitle.textContent = tx("adTitle"); 
-      if(adText) adText.textContent = tx("adText");
-      if(watchAdBtn) watchAdBtn.textContent = tx("watchAd"); 
-    }
+      watchAdBtn.onclick = () => {
+        clean();
+        resolve(true);
+      };
+    });
+  }
 
-    function closeAllPop(){ popTop.classList.remove("show"); popBot.classList.remove("show"); lastOpenPopSide = null; }
+  function showAdModal({title,text,adUnit = "public_facetoface_auto", langCode = ""} = {}){
+    return new Promise((resolve) => {
+      setNativeBanner(false);
+      if(adTitle) adTitle.textContent = title || tx("adTitle");
+      if(adText) adText.textContent = text || tx("adText");
+      if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
 
-    function refreshOpenPop(){
-      if(lastOpenPopSide === "top" && popTop.classList.contains("show")) renderPop("top");
-      if(lastOpenPopSide === "bot" && popBot.classList.contains("show")) renderPop("bot");
-    }
+      adModal.classList.add("show");
 
-    window.addEventListener("offlinePackBridgeStateChanged", refreshOpenPop);
+      const clean = () => {
+        watchAdBtn.onclick = null;
+        adModal.classList.remove("show");
+        setNativeBanner(true);
+      };
 
-    function showModalChoice({ title = "", text = "", okText = "", cancelText = "" } = {}){
-      return new Promise((resolve) => {
-        setNativeBanner(false); 
-        if(adTitle) adTitle.textContent = title || tx("adTitle");
-        if(adText) adText.textContent = text || "";
-        if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
+      watchAdBtn.onclick = async () => {
+        clean();
+        globalAdEarned = false;
+        const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
+        resolve(ok !== false || globalAdEarned === true);
+      };
+    });
+  }
 
-        adModal.classList.add("show");
-        const clean = () => { watchAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true); };
-        watchAdBtn.onclick = () => { clean(); resolve(true); }; 
-      });
-    }
+  let autoAdTimer = null;
 
-    // Seçeneksiz (kapatılamayan) reklam modalı
-    function showAdModal({title,text,adUnit = "public_facetoface_auto", langCode = ""} = {}){
-      return new Promise((resolve) => {
-        setNativeBanner(false); 
-        if(adTitle) adTitle.textContent = title || tx("adTitle");
-        if(adText) adText.textContent = text || tx("adText");
-        if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
+  function scheduleAutoAd(intervalMs) {
+    clearTimeout(autoAdTimer);
+    autoAdTimer = setTimeout(async () => {
+      const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
+      const isUpdateModalOpen = document.getElementById('updateModal')?.classList.contains('show');
+      const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
 
-        adModal.classList.add("show");
-        const clean = () => { watchAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true); };
+      if (!isDrawerOpen && !isUpdateModalOpen && !isRecording) {
+        const success = await showAdModal({
+          title: tx("adTitle"),
+          text: tx("adText"),
+          adUnit: "public_facetoface_auto",
+          langCode: ""
+        });
 
-        watchAdBtn.onclick = async () => {
-          clean(); globalAdEarned = false; 
-          const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
-          // Kullanıcı reklamı izlemeden kapatırsa resolve false dönecek ve işlemi bölecek
-          resolve(ok !== false || globalAdEarned === true);
-        };
-      });
-    }
-
-    let autoAdTimer = null;
-    // HER 5 DAKİKADA BİR ZORUNLU REKLAM TETİKLEYİCİ
-    function scheduleAutoAd(intervalMs) {
-      clearTimeout(autoAdTimer);
-      autoAdTimer = setTimeout(async () => {
-        const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
-        const isUpdateModalOpen = document.getElementById('updateModal')?.classList.contains('show');
-        const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
-        
-        // Eğer güncelleme ekranındaysa reklamla bölmeyelim
-        if (!isDrawerOpen && !isUpdateModalOpen && !isRecording) {
-          const success = await showAdModal({ 
-            title: tx("adTitle"), 
-            text: tx("adText"), 
-            adUnit: "public_facetoface_auto", 
-            langCode: "" 
-          });
-          
-          if(!success) {
-            // Eğer reklam izlenmeden kapatılmaya çalışılırsa kullanıcıyı tekrar zorla
-            scheduleAutoAd(2000); 
-            return;
-          }
+        if(!success) {
+          scheduleAutoAd(2000);
+          return;
         }
-        scheduleAutoAd(5 * 60 * 1000); // 5 dakika sonra tekrar
-      }, intervalMs);
-    }
+      }
 
-    // PROGRAMLANABİLİR GÜNCELLEME KONTROLÜ (NATIVE KÖPRÜLÜ)
-    async function checkAppUpdate() {
-      // ZORUNLU VERSİYON: Bu sayıyı web sunucunda güncellediğinde, 
-      // versionCode'u bundan küçük olan tüm eski Android uygulamaları kilitlenir.
-      const REQUIRED_VERSION = 2; 
+      scheduleAutoAd(5 * 60 * 1000);
+    }, intervalMs);
+  }
 
-      let currentAppVersion = 999; // Masaüstünde veya köprü yokken hata vermesin diye varsayılan yüksek değer
+  function showUpdateModal() {
+    if (!updateModal) return;
+    updateModal.classList.add("show");
+    setNativeBanner(false);
+  }
 
-      // Android'deki köprümüz (AndroidBridge) başarılı bir şekilde kurulmuş mu diye kontrol ediyoruz
+  function hideUpdateModal() {
+    if (!updateModal) return;
+    updateModal.classList.remove("show");
+    setNativeBanner(true);
+  }
+
+  function getAndroidVersionCode() {
+    try {
       if (window.AndroidBridge && typeof window.AndroidBridge.getVersionCode === "function") {
-        // Kotlin tarafındaki BuildConfig.VERSION_CODE değerini çektik!
-        currentAppVersion = window.AndroidBridge.getVersionCode(); 
-        console.log("italkyAI Cihaz Versiyonu:", currentAppVersion);
-      } else {
-        // Köprü yoksa muhtemelen masaüstü tarayıcıdan giriliyordur, işlemi atla.
-        return; 
+        const raw = window.AndroidBridge.getVersionCode();
+        const version = Number(raw);
+        if (Number.isFinite(version)) return version;
       }
+    } catch (e) {
+      console.warn("AndroidBridge.getVersionCode hata:", e);
+    }
 
-      // Cihazdaki sürüm (build.gradle.kts), bizim istediğimiz sürümden eskiyse:
-      if (currentAppVersion < REQUIRED_VERSION) {
-        document.getElementById('updateModal').classList.add('show');
-        setNativeBanner(false);
+    try {
+      if (window.Native && typeof window.Native.getVersionCode === "function") {
+        const raw = window.Native.getVersionCode();
+        const version = Number(raw);
+        if (Number.isFinite(version)) return version;
       }
+    } catch (e) {
+      console.warn("Native.getVersionCode hata:", e);
     }
 
-    function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
-    function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
-    
-    // ARTIK TEMEL DİL "EN" OLARAK KONTROL EDİLİYOR
-    function isNativeBaseReady() {
-      if (!OfflinePackBridge) return false;
-      // Sistemde "en" anahtarının kurulu olması veya myLang -> "en" in kurulu olması şart
-      return OfflinePackBridge.hasInstalledPair("en", "en") || OfflinePackBridge.hasInstalledPair(myLang, "en");
-    }
+    return null;
+  }
 
-    async function autoStartNativeBaseSetup() {
-      if (isNativeBaseReady()) return;
-      console.log("italkyAI: Ana köprü dil (EN) zorunlu kurulumu başlatılıyor...");
-      OfflinePackBridge.setOfflineNativeLang(myLang);
-      OfflinePackBridge.startNativeDownload(myLang, "en", langObj);
-    }
+  async function checkAppUpdate(retryCount = 8) {
+    const currentAppVersion = getAndroidVersionCode();
 
-    function installedTargetsForNative(nativeLang){
-      const native = canonical(nativeLang); const installed = OfflinePackBridge.getInstalledPairs();
-      const set = new Set();
-      Object.keys(installed).forEach((key) => {
-        const item = installed[key] || {}; const from = canonical(item.from || ""); const to = canonical(item.to || "");
-        if(from === native && to && to !== native) set.add(to);
-      });
-      return Array.from(set);
-    }
-
-    async function startOfflinePackDownload(targetCode, reason = "manual"){
-      syncInstalledPairsFromNative();
-      const target = canonical(targetCode); if(!target) return false;
-      const targetInfo = langObj(target); const nativeLang = myLang; if(!nativeLang) return false;
-
-      if(nativeLang === target){ showToast(tx("sameLang")); return false; }
-      if(hasInstalledPair(nativeLang,target)){
-        OfflinePackBridge.saveHomeWidget(nativeLang,target,langObj,"ready");
-        showToast(tx("packReady")); refreshOpenPop(); return true;
+    if (currentAppVersion === null) {
+      if (retryCount > 0) {
+        console.warn("Version bilgisi henüz alınamadı, tekrar denenecek...");
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return await checkAppUpdate(retryCount - 1);
       }
-
-      const nativeInfo = langObj(nativeLang);
-      const offerOk = await showModalChoice({
-        title:tx("offerTitle"), text:tFormat("offerText", { sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`, targetLang:`${targetInfo.flag} ${targetInfo.name}` }),
-        okText:tx("offerOk"), cancelText:tx("offerCancel")
-      });
-      if(!offerOk) return false;
-
-      const adOk = await showAdModal({
-        title:tx("downloadAdTitle"), text:`${nativeInfo.flag} ${nativeInfo.name} ⇄ ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
-        adUnit:`offline_download_${target}`, langCode:target
-      });
-      if(!adOk){ showToast(tx("adNeeded")); return false; }
-
-      OfflinePackBridge.setOfflineNativeLang(myLang);
-      const result = OfflinePackBridge.startNativeDownload(nativeLang,target,langObj);
-      if(!result?.ok){ showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : `${targetInfo.name} indirilemedi.`); return false; }
-
-      showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
-      refreshOpenPop(); return true;
+      console.warn("Version kontrolü atlandı: Android bridge bulunamadı.");
+      return false;
     }
 
-    function getFilteredLangsForPopover(){
-      if(currentMode !== "offline") return LANGS;
-      syncInstalledPairsFromNative();
-      const targets = installedTargetsForNative(myLang);
-      if(!targets.length) return [];
-      const allowed = new Set([myLang, ...targets]);
-      return LANGS.filter((l) => allowed.has(l.code));
+    console.log("italkyAI cihaz versionCode:", currentAppVersion);
+    console.log("italkyAI minimum gerekli versionCode:", MIN_REQUIRED_VERSION);
+
+    if (currentAppVersion < MIN_REQUIRED_VERSION) {
+      showUpdateModal();
+      return true;
     }
 
-    function isLangInstalledForUi(code){
-      const c = canonical(code); if(!myLang) return false;
-      if(c === myLang && OfflinePackBridge.hasAnyInstalledPair()) return true;
-      return c !== myLang && hasInstalledPair(myLang,c);
-    }
+    hideUpdateModal();
+    return false;
+  }
 
-    function renderActionForLang(code, isLocked) {
-      const c = canonical(code);
-      if (OfflinePackBridge.isPairActive(myLang, c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
-      if (OfflinePackBridge.isPairQueued(myLang, c)) return `<span class="pop-queued" title="Sırada">…</span>`;
-      if (isLangInstalledForUi(c)) return `<span class="pop-installed" title="Kurulu">✓</span>`;
-      if (c === myLang && isNativeBaseReady()) return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
+  function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
+  function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
 
-      const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
-      if (langInfo && !langInfo.canOffline) return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
-      
-      // "en" kurulana kadar her dil kilitli görünecek
-      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Sistem kurulumu (EN) tamamlandığında kilit açılacaktır">🔒</span>`;
+  function isNativeBaseReady() {
+    if (!OfflinePackBridge) return false;
+    return OfflinePackBridge.hasInstalledPair("en", "en") || OfflinePackBridge.hasInstalledPair(myLang, "en");
+  }
 
-      return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
-    }
+  async function autoStartNativeBaseSetup() {
+    if (isNativeBaseReady()) return;
+    console.log("italkyAI: Ana köprü dil (EN) zorunlu kurulumu başlatılıyor...");
+    OfflinePackBridge.setOfflineNativeLang(myLang);
+    OfflinePackBridge.startNativeDownload(myLang, "en", langObj);
+  }
 
-    function renderPop(side) {
-      const list = side === "top" ? listTop : listBot;
-      const selected = side === "top" ? topLang : botLang;
-      const filteredLangs = getFilteredLangsForPopover();
+  function installedTargetsForNative(nativeLang){
+    const native = canonical(nativeLang);
+    const installed = OfflinePackBridge.getInstalledPairs();
+    const set = new Set();
 
-      if(currentMode === "offline" && !filteredLangs.length){
-        list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`; return;
-      }
-
-      const nativeReady = isNativeBaseReady();
-      let htmlString = "";
-
-      if (!nativeReady && currentMode === "online") {
-        htmlString += `
-          <div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;">
-            <div style="font-size: 11px; color: #a5b4fc; font-weight: 800; line-height: 1.4;">
-              Offline dil indirmek için arka planda <strong>ana köprü dil (EN) kurulumu yapılıyor (⏳)</strong>. Bu işlem tamamlanınca diller üzerindeki kilit kalkacaktır.
-            </div>
-          </div>
-        `;
-      }
-
-      htmlString += filteredLangs.map((l) => {
-        // ARTIK SADECE "EN" AÇIK, GERİ KALAN TÜM DİLLER (KENDİ DİLİMİZ DAHİL) KİLİTLİ
-        const isLocked = !nativeReady && l.code !== "en";
-        
-        return `
-          <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
-            <div class="pop-left" data-select-code="${l.code}">
-              <div class="pop-flag">${l.flag}</div>
-              <div class="pop-name">${l.name}</div>
-            </div>
-            <div class="pop-actions">
-              <div class="pop-code">${l.code.toUpperCase()}</div>
-              ${renderActionForLang(l.code, isLocked)}
-            </div>
-          </div>
-        `;
-      }).join("");
-
-      list.innerHTML = htmlString;
-
-      list.querySelectorAll("[data-select-code]").forEach((el) => {
-        el.addEventListener("click", async () => {
-          const code = canonical(el.dataset.selectCode);
-          if(!code) return;
-          if(side === "top") topLang = code; else botLang = code;
-          await autoCheckOfflineMode(); 
-          if(topLang === botLang) topLang = differentLang(botLang);
-          closeAllPop(); refreshTexts();
-        });
-      });
-
-      list.querySelectorAll("[data-download-code]").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-          e.preventDefault(); e.stopPropagation();
-          const code = canonical(btn.dataset.downloadCode);
-          await startOfflinePackDownload(code, "lang_popup");
-        });
-      });
-    }
-
-    topLangBtn.addEventListener("click",(e) => {
-      e.preventDefault(); e.stopPropagation();
-      closeAllPop(); lastOpenPopSide = "top"; renderPop("top"); popTop.classList.add("show");
+    Object.keys(installed).forEach((key) => {
+      const item = installed[key] || {};
+      const from = canonical(item.from || "");
+      const to = canonical(item.to || "");
+      if(from === native && to && to !== native) set.add(to);
     });
-    botLangBtn.addEventListener("click",(e) => {
-      e.preventDefault(); e.stopPropagation();
-      closeAllPop(); lastOpenPopSide = "bot"; renderPop("bot"); popBot.classList.add("show");
+
+    return Array.from(set);
+  }
+
+  async function startOfflinePackDownload(targetCode, reason = "manual"){
+    syncInstalledPairsFromNative();
+
+    const target = canonical(targetCode);
+    if(!target) return false;
+
+    const targetInfo = langObj(target);
+    const nativeLang = myLang;
+    if(!nativeLang) return false;
+
+    if(nativeLang === target){
+      showToast(tx("sameLang"));
+      return false;
+    }
+
+    if(hasInstalledPair(nativeLang,target)){
+      OfflinePackBridge.saveHomeWidget(nativeLang,target,langObj,"ready");
+      showToast(tx("packReady"));
+      refreshOpenPop();
+      return true;
+    }
+
+    const nativeInfo = langObj(nativeLang);
+
+    const offerOk = await showModalChoice({
+      title:tx("offerTitle"),
+      text:tFormat("offerText", {
+        sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`,
+        targetLang:`${targetInfo.flag} ${targetInfo.name}`
+      }),
+      okText:tx("offerOk"),
+      cancelText:tx("offerCancel")
     });
-    closeTop.addEventListener("click",closeAllPop);
-    closeBot.addEventListener("click",closeAllPop);
-    document.addEventListener("click",(e) => {
-      const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
-      if(!inside) closeAllPop();
-    },{capture:true});
 
-    function clearBody(body){ if(body) body.innerHTML = ""; }
+    if(!offerOk) return false;
 
-    function addBubble(side,text,latest=false){
-      const body = side === "top" ? topBody : botBody;
-      if(!body) return null;
-      if(latest){ body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest")); }
-      const div = document.createElement("div"); div.className = `bubble${latest ? " latest" : ""}`; div.textContent = String(text || "").trim();
-      body.appendChild(div);
-      const scroll = () => { try{ body.scrollTop = body.scrollHeight; }catch{} }; scroll(); requestAnimationFrame(scroll); setTimeout(scroll,60);
-      return div;
+    const adOk = await showAdModal({
+      title:tx("downloadAdTitle"),
+      text:`${nativeInfo.flag} ${nativeInfo.name} ⇄ ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
+      adUnit:`offline_download_${target}`,
+      langCode:target
+    });
+
+    if(!adOk){
+      showToast(tx("adNeeded"));
+      return false;
     }
 
-    function setMicState(side,listening){ const mic = side === "top" ? topMic : botMic; mic.classList.toggle("listening",!!listening); }
+    OfflinePackBridge.setOfflineNativeLang(myLang);
+    const result = OfflinePackBridge.startNativeDownload(nativeLang,target,langObj);
 
-    function startRecording(side) {
-      const sourceLang = side === "top" ? topLang : botLang; 
-      const bcpCode = BCP[sourceLang] || sourceLang; 
-      recordingSide = side; 
-      setMicState("top", side === "top"); 
-      setMicState("bot", side === "bot"); 
-      liveText = "";
-      
-      if (window.Native && window.Native.startSpeechRecognition) { 
-        window.Native.startSpeechRecognition(bcpCode, side); 
-      } 
-      else if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        window.webRecognizer = new SpeechRecognition();
-        window.webRecognizer.lang = bcpCode;
-        window.webRecognizer.continuous = false;
-        window.webRecognizer.interimResults = true;
-
-        window.webRecognizer.onresult = (event) => {
-          let finalTranscript = ''; let interimTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-            else interimTranscript += event.results[i][0].transcript;
-          }
-          if (finalTranscript) window.onNativeSpeechResult(JSON.stringify({side: side, text: finalTranscript, isFinal: true}));
-          else if (interimTranscript) window.onNativeSpeechResult(JSON.stringify({side: side, text: interimTranscript, isFinal: false}));
-        };
-
-        window.webRecognizer.onerror = (e) => { window.onNativeSpeechError(e.error); };
-        window.webRecognizer.onend = () => { 
-          if(recordingSide === side) { setMicState(side, false); recordingSide = null; } 
-        };
-
-        try { window.webRecognizer.start(); } catch(e) { window.onNativeSpeechError("start_error"); }
-      }
-      else { 
-        showToast(tx("micUnsupported")); setMicState(side, false); recordingSide = null; 
-      }
+    if(!result?.ok){
+      showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : `${targetInfo.name} indirilemedi.`);
+      return false;
     }
 
-    function stopRecognizer() {
-      setMicState("top", false); setMicState("bot", false); recordingSide = null;
-      if (window.Native && window.Native.stopSpeechRecognition) { window.Native.stopSpeechRecognition(); }
-      else if (window.webRecognizer) { window.webRecognizer.stop(); window.webRecognizer = null; }
+    showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
+    refreshOpenPop();
+    return true;
+  }
+
+  function getFilteredLangsForPopover(){
+    if(currentMode !== "offline") return LANGS;
+    syncInstalledPairsFromNative();
+    const targets = installedTargetsForNative(myLang);
+    if(!targets.length) return [];
+    const allowed = new Set([myLang, ...targets]);
+    return LANGS.filter((l) => allowed.has(l.code));
+  }
+
+  function isLangInstalledForUi(code){
+    const c = canonical(code);
+    if(!myLang) return false;
+    if(c === myLang && OfflinePackBridge.hasAnyInstalledPair()) return true;
+    return c !== myLang && hasInstalledPair(myLang,c);
+  }
+
+  function renderActionForLang(code, isLocked) {
+    const c = canonical(code);
+
+    if (OfflinePackBridge.isPairActive(myLang, c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+    if (OfflinePackBridge.isPairQueued(myLang, c)) return `<span class="pop-queued" title="Sırada">…</span>`;
+    if (isLangInstalledForUi(c)) return `<span class="pop-installed" title="Kurulu">✓</span>`;
+    if (c === myLang && isNativeBaseReady()) return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
+
+    const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
+    if (langInfo && !langInfo.canOffline) {
+      return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
     }
 
-    window.onNativeSpeechResult = function(arg1, arg2, arg3) {
-      let side = "top"; let text = ""; let isFinal = true;
+    if (isLocked) {
+      return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Sistem kurulumu (EN) tamamlandığında kilit açılacaktır">🔒</span>`;
+    }
 
-      if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
-        side = arg1; text = typeof arg2 === "string" ? arg2 : ""; isFinal = typeof arg3 !== "undefined" ? arg3 : true;
-      } else if (typeof arg1 === "string") {
-        try {
-          const data = JSON.parse(arg1);
-          side = data.side || "top"; text = data.text || ""; isFinal = data.isFinal !== undefined ? data.isFinal : true;
-        } catch (e) {
-          side = "top"; text = arg1; isFinal = true;
-        }
-      } else if (typeof arg1 === "object" && arg1 !== null) {
-        side = arg1.side || "top"; text = arg1.text || ""; isFinal = arg1.isFinal !== undefined ? arg1.isFinal : true;
-      }
+    return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
+  }
 
-      liveText = cleanupTranscript(text);
-      
-      if (isFinal) {
-        setMicState(side, false); recordingSide = null;
-        if (liveText) { finalizeSpeech(side, liveText); }
-        
-        const body = side === "top" ? topBody : botBody;
-        if (body) {
-           const activeBubble = body.querySelector(".bubble.latest");
-           if (activeBubble && activeBubble.textContent.endsWith("...")) {
-               activeBubble.remove();
-           }
-        }
-      } else {
-        const body = side === "top" ? topBody : botBody; if (!body) return;
-        let activeBubble = body.querySelector(".bubble.latest");
-        if (!activeBubble) { activeBubble = document.createElement("div"); activeBubble.className = "bubble latest"; body.appendChild(activeBubble); }
-        activeBubble.textContent = liveText + "...";
-        try { body.scrollTop = body.scrollHeight; } catch {}
-      }
+  function renderPop(side) {
+    const list = side === "top" ? listTop : listBot;
+    const selected = side === "top" ? topLang : botLang;
+    const filteredLangs = getFilteredLangsForPopover();
+
+    if(currentMode === "offline" && !filteredLangs.length){
+      list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`;
+      return;
+    }
+
+    const nativeReady = isNativeBaseReady();
+    let htmlString = "";
+
+    if (!nativeReady && currentMode === "online") {
+      htmlString += `
+        <div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;">
+          <div style="font-size: 11px; color: #a5b4fc; font-weight: 800; line-height: 1.4;">
+            Offline dil indirmek için arka planda <strong>ana köprü dil (EN) kurulumu yapılıyor (⏳)</strong>. Bu işlem tamamlanınca diller üzerindeki kilit kalkacaktır.
+          </div>
+        </div>
+      `;
+    }
+
+    htmlString += filteredLangs.map((l) => {
+      const isLocked = !nativeReady && l.code !== "en";
+
+      return `
+        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+          <div class="pop-left" data-select-code="${l.code}">
+            <div class="pop-flag">${l.flag}</div>
+            <div class="pop-name">${l.name}</div>
+          </div>
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            ${renderActionForLang(l.code, isLocked)}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    list.innerHTML = htmlString;
+
+    list.querySelectorAll("[data-select-code]").forEach((el) => {
+      el.addEventListener("click", async () => {
+        const code = canonical(el.dataset.selectCode);
+        if(!code) return;
+
+        if(side === "top") topLang = code;
+        else botLang = code;
+
+        await autoCheckOfflineMode();
+
+        if(topLang === botLang) topLang = differentLang(botLang);
+
+        closeAllPop();
+        refreshTexts();
+      });
+    });
+
+    list.querySelectorAll("[data-download-code]").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const code = canonical(btn.dataset.downloadCode);
+        await startOfflinePackDownload(code, "lang_popup");
+      });
+    });
+  }
+
+  topLangBtn.addEventListener("click",(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    lastOpenPopSide = "top";
+    renderPop("top");
+    popTop.classList.add("show");
+  });
+
+  botLangBtn.addEventListener("click",(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    lastOpenPopSide = "bot";
+    renderPop("bot");
+    popBot.classList.add("show");
+  });
+
+  closeTop.addEventListener("click", closeAllPop);
+  closeBot.addEventListener("click", closeAllPop);
+
+  document.addEventListener("click",(e) => {
+    const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
+    if(!inside) closeAllPop();
+  }, {capture:true});
+
+  function clearBody(body){
+    if(body) body.innerHTML = "";
+  }
+
+  function addBubble(side,text,latest=false){
+    const body = side === "top" ? topBody : botBody;
+    if(!body) return null;
+
+    if(latest){
+      body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
+    }
+
+    const div = document.createElement("div");
+    div.className = `bubble${latest ? " latest" : ""}`;
+    div.textContent = String(text || "").trim();
+    body.appendChild(div);
+
+    const scroll = () => {
+      try{ body.scrollTop = body.scrollHeight; }catch{}
     };
 
-    window.onNativeSpeechError = function(errorMsg) {
-      setMicState("top", false); setMicState("bot", false); recordingSide = null;
-      
-      [topBody, botBody].forEach(body => {
-        if(body) {
-          const activeBubble = body.querySelector(".bubble.latest");
-          if(activeBubble && activeBubble.textContent.endsWith("...")) {
-            activeBubble.remove();
-          }
-        }
-      });
+    scroll();
+    requestAnimationFrame(scroll);
+    setTimeout(scroll,60);
 
-      if(errorMsg === "manual_stop_empty") return; 
+    return div;
+  }
 
-      if(errorMsg !== "no speech") {
-        if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { 
-          showToast(tx("micDenied")); 
-        } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
-          showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
-        } else if (errorMsg === "network_error" || errorMsg === "server_error") {
-          showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
-        } else { 
-          showToast(tx("micError") + " (" + errorMsg + ")"); 
+  function setMicState(side,listening){
+    const mic = side === "top" ? topMic : botMic;
+    mic.classList.toggle("listening", !!listening);
+  }
+
+  function startRecording(side) {
+    const sourceLang = side === "top" ? topLang : botLang;
+    const bcpCode = BCP[sourceLang] || sourceLang;
+
+    recordingSide = side;
+    setMicState("top", side === "top");
+    setMicState("bot", side === "bot");
+    liveText = "";
+
+    if (window.Native && window.Native.startSpeechRecognition) {
+      window.Native.startSpeechRecognition(bcpCode, side);
+    }
+    else if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      window.webRecognizer = new SpeechRecognition();
+      window.webRecognizer.lang = bcpCode;
+      window.webRecognizer.continuous = false;
+      window.webRecognizer.interimResults = true;
+
+      window.webRecognizer.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+          else interimTranscript += event.results[i][0].transcript;
         }
+
+        if (finalTranscript) {
+          window.onNativeSpeechResult(JSON.stringify({side: side, text: finalTranscript, isFinal: true}));
+        } else if (interimTranscript) {
+          window.onNativeSpeechResult(JSON.stringify({side: side, text: interimTranscript, isFinal: false}));
+        }
+      };
+
+      window.webRecognizer.onerror = (e) => {
+        window.onNativeSpeechError(e.error);
+      };
+
+      window.webRecognizer.onend = () => {
+        if(recordingSide === side) {
+          setMicState(side, false);
+          recordingSide = null;
+        }
+      };
+
+      try {
+        window.webRecognizer.start();
+      } catch(e) {
+        window.onNativeSpeechError("start_error");
       }
-    };
-
-    function cleanupTranscript(text){ return String(text || "").replace(/\s+/g," ").replace(/\b(\S+)( \1\b)+/gi,"$1").trim(); }
-
-    async function translateOnline(text,from,to){
-      const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
-      for(const endpoint of endpoints){
-        try{
-          const r = await fetch(endpoint,{
-            method:"POST", headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({ text:String(text || "").trim(), from_lang:canonical(from), to_lang:canonical(to), source:canonical(from), target:canonical(to), mode:"normal", use_ai:false, cultural:false, tone:"neutral", style:"warm" })
-          });
-          const j = await r.json().catch(() => null); const value = String(j?.translated || j?.translation || j?.text || "").trim();
-          if(r.ok && value) return value;
-        }catch{}
-      } return null;
     }
-
-    function translateOffline(text,from,to){ return OfflinePackBridge.translateOffline(text,from,to); }
-
-    async function translateText(text, from, to) {
-      const src = canonical(from); const dst = canonical(to);
-      if (hasInstalledPair(src, dst)) { const offlineResult = await translateOffline(text, src, dst); if (offlineResult) return offlineResult; }
-      if (currentMode === "online") { return await translateOnline(text, src, dst); }
-      showToast(tx("offlineMode")); return null;
-    }
-
-    function speak(text,langCode){
-      const value = String(text || "").trim(); if(!value) return;
-      const code = canonical(langCode); const bcp = langObj(code).bcp || BCP[code] || "en-US";
-      try{ if(window.NativeTTS?.speak){ window.NativeTTS.speak(value, code); return; } }catch(e){}
-      try{
-        if(window.speechSynthesis){
-          window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(value); u.lang = bcp; u.rate = .95; u.pitch = 1; u.volume = 1;
-          const voices = window.speechSynthesis.getVoices?.() || [];
-          const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(code));
-          if(found) u.voice = found;
-          setTimeout(() => { try{ window.speechSynthesis.speak(u); }catch{} }, 80);
-        }
-      }catch(e){}
-    }
-
-    async function finalizeSpeech(side,text){
+    else {
+      showToast(tx("micUnsupported"));
+      setMicState(side, false);
       recordingSide = null;
-      const clean = cleanupTranscript(text); if(!clean){ liveText = ""; setMicState(side,false); return; }
+    }
+  }
 
-      const src = side === "top" ? topLang : botLang; const dst = side === "top" ? botLang : topLang; const other = side === "top" ? "bot" : "top";
-      addBubble(side,clean,false); const targetRow = addBubble(other,"",true);
+  function stopRecognizer() {
+    setMicState("top", false);
+    setMicState("bot", false);
+    recordingSide = null;
 
-      const translated = await translateText(clean,src,dst);
-      if(!translated){ if(targetRow) targetRow.textContent = tx("translateError"); liveText = ""; setMicState(side,false); return; }
+    if (window.Native && window.Native.stopSpeechRecognition) {
+      window.Native.stopSpeechRecognition();
+    }
+    else if (window.webRecognizer) {
+      window.webRecognizer.stop();
+      window.webRecognizer = null;
+    }
+  }
 
-      targetRow.textContent = translated; speak(translated,dst);
-      liveText = ""; setMicState(side,false);
+  window.onNativeSpeechResult = function(arg1, arg2, arg3) {
+    let side = "top";
+    let text = "";
+    let isFinal = true;
+
+    if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
+      side = arg1;
+      text = typeof arg2 === "string" ? arg2 : "";
+      isFinal = typeof arg3 !== "undefined" ? arg3 : true;
+    } else if (typeof arg1 === "string") {
+      try {
+        const data = JSON.parse(arg1);
+        side = data.side || "top";
+        text = data.text || "";
+        isFinal = data.isFinal !== undefined ? data.isFinal : true;
+      } catch (e) {
+        side = "top";
+        text = arg1;
+        isFinal = true;
+      }
+    } else if (typeof arg1 === "object" && arg1 !== null) {
+      side = arg1.side || "top";
+      text = arg1.text || "";
+      isFinal = arg1.isFinal !== undefined ? arg1.isFinal : true;
     }
 
-    function handleMicClick(side) {
-      const mic = side === "top" ? topMic : botMic;
-      if (mic.classList.contains("listening")) {
-        stopRecognizer();
+    liveText = cleanupTranscript(text);
+
+    if (isFinal) {
+      setMicState(side, false);
+      recordingSide = null;
+
+      if (liveText) {
+        finalizeSpeech(side, liveText);
+      }
+
+      const body = side === "top" ? topBody : botBody;
+      if (body) {
+        const activeBubble = body.querySelector(".bubble.latest");
+        if (activeBubble && activeBubble.textContent.endsWith("...")) {
+          activeBubble.remove();
+        }
+      }
+    } else {
+      const body = side === "top" ? topBody : botBody;
+      if (!body) return;
+
+      let activeBubble = body.querySelector(".bubble.latest");
+      if (!activeBubble) {
+        activeBubble = document.createElement("div");
+        activeBubble.className = "bubble latest";
+        body.appendChild(activeBubble);
+      }
+
+      activeBubble.textContent = liveText + "...";
+
+      try { body.scrollTop = body.scrollHeight; } catch {}
+    }
+  };
+
+  window.onNativeSpeechError = function(errorMsg) {
+    setMicState("top", false);
+    setMicState("bot", false);
+    recordingSide = null;
+
+    [topBody, botBody].forEach(body => {
+      if(body) {
+        const activeBubble = body.querySelector(".bubble.latest");
+        if(activeBubble && activeBubble.textContent.endsWith("...")) {
+          activeBubble.remove();
+        }
+      }
+    });
+
+    if(errorMsg === "manual_stop_empty") return;
+
+    if(errorMsg !== "no speech") {
+      if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") {
+        showToast(tx("micDenied"));
+      } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
+        showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
+      } else if (errorMsg === "network_error" || errorMsg === "server_error") {
+        showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
       } else {
-        startRecording(side);
+        showToast(tx("micError") + " (" + errorMsg + ")");
+      }
+    }
+  };
+
+  function cleanupTranscript(text){
+    return String(text || "").replace(/\s+/g," ").replace(/\b(\S+)( \1\b)+/gi,"$1").trim();
+  }
+
+  async function translateOnline(text,from,to){
+    const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
+
+    for(const endpoint of endpoints){
+      try{
+        const r = await fetch(endpoint,{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            text:String(text || "").trim(),
+            from_lang:canonical(from),
+            to_lang:canonical(to),
+            source:canonical(from),
+            target:canonical(to),
+            mode:"normal",
+            use_ai:false,
+            cultural:false,
+            tone:"neutral",
+            style:"warm"
+          })
+        });
+
+        const j = await r.json().catch(() => null);
+        const value = String(j?.translated || j?.translation || j?.text || "").trim();
+
+        if(r.ok && value) return value;
+      }catch{}
+    }
+
+    return null;
+  }
+
+  function translateOffline(text,from,to){
+    return OfflinePackBridge.translateOffline(text,from,to);
+  }
+
+  async function translateText(text, from, to) {
+    const src = canonical(from);
+    const dst = canonical(to);
+
+    if (hasInstalledPair(src, dst)) {
+      const offlineResult = await translateOffline(text, src, dst);
+      if (offlineResult) return offlineResult;
+    }
+
+    if (currentMode === "online") {
+      return await translateOnline(text, src, dst);
+    }
+
+    showToast(tx("offlineMode"));
+    return null;
+  }
+
+  function speak(text,langCode){
+    const value = String(text || "").trim();
+    if(!value) return;
+
+    const code = canonical(langCode);
+    const bcp = langObj(code).bcp || BCP[code] || "en-US";
+
+    try{
+      if(window.NativeTTS?.speak){
+        window.NativeTTS.speak(value, code);
+        return;
+      }
+    }catch(e){}
+
+    try{
+      if(window.speechSynthesis){
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(value);
+        u.lang = bcp;
+        u.rate = .95;
+        u.pitch = 1;
+        u.volume = 1;
+
+        const voices = window.speechSynthesis.getVoices?.() || [];
+        const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(code));
+        if(found) u.voice = found;
+
+        setTimeout(() => {
+          try{ window.speechSynthesis.speak(u); }catch{}
+        }, 80);
+      }
+    }catch(e){}
+  }
+
+  async function finalizeSpeech(side,text){
+    recordingSide = null;
+
+    const clean = cleanupTranscript(text);
+    if(!clean){
+      liveText = "";
+      setMicState(side,false);
+      return;
+    }
+
+    const src = side === "top" ? topLang : botLang;
+    const dst = side === "top" ? botLang : topLang;
+    const other = side === "top" ? "bot" : "top";
+
+    addBubble(side,clean,false);
+    const targetRow = addBubble(other,"",true);
+
+    const translated = await translateText(clean,src,dst);
+    if(!translated){
+      if(targetRow) targetRow.textContent = tx("translateError");
+      liveText = "";
+      setMicState(side,false);
+      return;
+    }
+
+    targetRow.textContent = translated;
+    speak(translated,dst);
+
+    liveText = "";
+    setMicState(side,false);
+  }
+
+  function handleMicClick(side) {
+    const mic = side === "top" ? topMic : botMic;
+
+    if (mic.classList.contains("listening")) {
+      stopRecognizer();
+    } else {
+      startRecording(side);
+    }
+  }
+
+  topMic.addEventListener("click", () => handleMicClick("top"));
+  botMic.addEventListener("click", () => handleMicClick("bot"));
+
+  function clearChat(){
+    try{ stopRecognizer(); }catch{}
+    try{ window.speechSynthesis?.cancel?.(); }catch{}
+    try{ window.NativeTTS?.stop?.(); }catch{}
+
+    liveText = "";
+    recordingSide = null;
+    topMic.classList.remove("listening");
+    botMic.classList.remove("listening");
+    clearBody(topBody);
+    clearBody(botBody);
+  }
+
+  sideClearBtn?.addEventListener("click", clearChat);
+  modeOnlineBtn?.addEventListener("click", () => setMode("online"));
+  modeOfflineBtn?.addEventListener("click", () => setMode("offline"));
+
+  window.addEventListener("offlinePairDownloadStarted",(e) => {
+    const d = e.detail || {};
+    const source = canonical(d.source || myLang);
+    const target = canonical(d.target || topLang);
+    if(!source || !target) return;
+
+    OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
+
+    if (target !== "en" || isNativeBaseReady()) {
+      showToast(tx("packDownloading"));
+    }
+
+    refreshOpenPop();
+  });
+
+  window.addEventListener("offlinePairDownloadCompleted",(e) => {
+    const d = e.detail || {};
+    const source = canonical(d.source || myLang);
+    const target = canonical(d.target || topLang);
+    if(!source || !target) return;
+
+    OfflinePackBridge.markInstalledPair(source,target);
+    OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
+    syncInstalledPairsFromNative();
+
+    if (target === "en") {
+      showToast("Sistem (EN) kurulumu tamamlandı. Tüm dillerin kilidi açıldı!");
+    } else {
+      showToast(tx("packDownloaded"));
+    }
+
+    refreshOpenPop();
+  });
+
+  window.addEventListener("offlinePairDownloadFailed", (e) => {
+    const d = e.detail || {};
+    const target = canonical(d.target || topLang);
+
+    if (target === "en" && !isNativeBaseReady()) {
+      console.warn("italkyAI: Altyapı kurulumu başarısız oldu. 10 saniye sonra tekrar denenecek...");
+      setTimeout(autoStartNativeBaseSetup, 10000);
+    } else {
+      const errorModal = document.getElementById('downloadErrorModal');
+      if (errorModal) {
+        setNativeBanner(false);
+        errorModal.classList.add("show");
+      } else {
+        showToast("Yoğunluk nedeniyle şu an indirilemiyor.");
       }
     }
 
-    topMic.addEventListener("click", () => handleMicClick("top"));
-    botMic.addEventListener("click", () => handleMicClick("bot"));
+    if (typeof refreshOpenPop === "function") refreshOpenPop();
+  });
 
-    function clearChat(){
-      try{ stopRecognizer(); }catch{} try{ window.speechSynthesis?.cancel?.(); }catch{} try{ window.NativeTTS?.stop?.(); }catch{}
-      liveText = ""; recordingSide = null;
-      topMic.classList.remove("listening"); botMic.classList.remove("listening");
-      clearBody(topBody); clearBody(botBody);
+  async function autoCheckOfflineMode() {
+    const from = canonical(botLang);
+    const to = canonical(topLang);
+
+    if (window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to)) {
+      currentMode = "offline";
+    } else {
+      currentMode = "online";
     }
 
-    sideClearBtn?.addEventListener("click",clearChat);
-    modeOnlineBtn?.addEventListener("click",() => setMode("online"));
-    modeOfflineBtn?.addEventListener("click",() => setMode("offline"));
+    refreshModeButtons();
+  }
 
-    window.addEventListener("offlinePairDownloadStarted",(e) => {
-      const d = e.detail || {}; const source = canonical(d.source || myLang); const target = canonical(d.target || topLang);
-      if(!source || !target) return;
-      OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
-      
-      if (target !== "en" || isNativeBaseReady()) { showToast(tx("packDownloading")); }
-      refreshOpenPop();
-    });
+  function applyRouteParams(){
+    const params = new URLSearchParams(location.search);
+    const source = canonical(params.get("source") || "");
+    const target = canonical(params.get("target") || "");
+    const mode = canonical(params.get("mode") || "");
 
-    window.addEventListener("offlinePairDownloadCompleted",(e) => {
-      const d = e.detail || {}; const source = canonical(d.source || myLang); const target = canonical(d.target || topLang);
-      if(!source || !target) return;
-      OfflinePackBridge.markInstalledPair(source,target); OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
-      syncInstalledPairsFromNative(); 
+    if(source && langExists(source)) botLang = source;
+    if(target && langExists(target)) topLang = target;
+    if(topLang === botLang) topLang = differentLang(botLang);
+    if(mode === "offline") currentMode = "offline";
+  }
 
-      if (target === "en") { showToast("Sistem (EN) kurulumu tamamlandı. Tüm dillerin kilidi açıldı!"); } 
-      else { showToast(tx("packDownloaded")); }
-      refreshOpenPop();
-    });
-
-    window.addEventListener("offlinePairDownloadFailed", (e) => {
-      const d = e.detail || {}; const target = canonical(d.target || topLang);
-      
-      if (target === "en" && !isNativeBaseReady()) {
-          console.warn("italkyAI: Altyapı kurulumu başarısız oldu. 10 saniye sonra tekrar denenecek...");
-          setTimeout(autoStartNativeBaseSetup, 10000); 
-      } else {
-          const errorModal = document.getElementById('downloadErrorModal');
-          if (errorModal) { setNativeBanner(false); errorModal.classList.add("show"); } else { showToast("Yoğunluk nedeniyle şu an indirilemiyor."); }
+  async function boot() {
+    try {
+      if (window.Native && typeof window.Native.requestF2FPermissions === "function") {
+        window.Native.requestF2FPermissions();
       }
-      if (typeof refreshOpenPop === "function") refreshOpenPop();
-    });
-    
-    async function autoCheckOfflineMode() {
-      const from = canonical(botLang); const to = canonical(topLang);
-      if (window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to)) { currentMode = "offline"; } else { currentMode = "online"; }
-      refreshModeButtons();
+    } catch (e) {}
+
+    OfflinePackBridge.installDownloadEventHandlers(langObj);
+    syncInstalledPairsFromNative();
+
+    try {
+      OfflinePackBridge.preloadRewardedAd();
+    } catch(e) {}
+
+    const mustUpdate = await checkAppUpdate();
+    if (mustUpdate) {
+      return;
     }
 
-    function applyRouteParams(){
-      const params = new URLSearchParams(location.search); const source = canonical(params.get("source") || ""); const target = canonical(params.get("target") || ""); const mode = canonical(params.get("mode") || "");
-      if(source && langExists(source)) botLang = source; if(target && langExists(target)) topLang = target;
-      if(topLang === botLang) topLang = differentLang(botLang); if(mode === "offline") currentMode = "offline";
+    const detected = await detectCountryLang();
+    myLang = detected && langExists(detected) ? detected : "tr";
+
+    localStorage.setItem(MY_LANG_KEY, myLang);
+    localStorage.setItem(SITE_LANG_KEY, myLang);
+    localStorage.setItem(NATIVE_LANG_KEY, myLang);
+
+    OfflinePackBridge.setOfflineNativeLang(myLang);
+
+    const params = new URLSearchParams(location.search);
+    const hasRouteLang = params.get("source") || params.get("target");
+
+    if(!hasRouteLang){
+      botLang = myLang;
+      topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+      if(topLang === botLang) topLang = differentLang(botLang);
     }
 
-    async function boot() {
-      try { if (window.Native && typeof window.Native.requestF2FPermissions === "function") { window.Native.requestF2FPermissions(); } } catch (e) {}
-      OfflinePackBridge.installDownloadEventHandlers(langObj); syncInstalledPairsFromNative();
-      try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
+    applyRouteParams();
+    await autoCheckOfflineMode();
+    refreshTexts();
+    refreshModeButtons();
+    clearBody(topBody);
+    clearBody(botBody);
 
-      // AÇILIŞTA GÜNCELLEME KONTROLÜ
-      await checkAppUpdate();
+    scheduleAutoAd(5 * 60 * 1000);
+    setTimeout(autoStartNativeBaseSetup, 2000);
+  }
 
-      const detected = await detectCountryLang();
-      myLang = detected && langExists(detected) ? detected : "tr";
-      localStorage.setItem(MY_LANG_KEY, myLang);
-      localStorage.setItem(SITE_LANG_KEY, myLang);
-      localStorage.setItem(NATIVE_LANG_KEY, myLang);
-      OfflinePackBridge.setOfflineNativeLang(myLang);
-
-      const params = new URLSearchParams(location.search); const hasRouteLang = params.get("source") || params.get("target");
-      if(!hasRouteLang){ botLang = myLang; topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang); if(topLang === botLang) topLang = differentLang(botLang); }
-
-      applyRouteParams(); await autoCheckOfflineMode(); 
-      refreshTexts(); refreshModeButtons(); clearBody(topBody); clearBody(botBody);
-
-      // 5 DAKİKADA BİR ZORUNLU REKLAM PROGRAMLAYICISI
-      scheduleAutoAd(5 * 60 * 1000); 
-
-      setTimeout(autoStartNativeBaseSetup, 2000);
-    }
-
-    boot();
-  </script>
+  boot();
+</script>
 </body>
 </html>
