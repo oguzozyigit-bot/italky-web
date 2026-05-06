@@ -463,7 +463,12 @@
           <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
           <div class="drawer-logo-sub">BE FREE</div>
         </div>
-        
+        <div class="drawer-mode-pill" aria-label="Çeviri modu">
+          <button id="modeOnlineBtn" class="active" type="button">Online</button>
+          <button id="modeOfflineBtn" type="button">Offline</button>
+        </div>
+      </div>
+
       <div class="holo-container">
         <div class="crystal-cage">
           <div class="crystal-side side1"></div>
@@ -1023,10 +1028,13 @@
     return true;
   }
 
-  / 3. DİL LİSTESİNİ HER ZAMAN FULL GÖSTER
   function getFilteredLangsForPopover(){
-    // Artık filtreleme yok, her zaman tüm dilleri gösteriyoruz
-    return LANGS;
+    if(currentMode !== "offline") return LANGS;
+    syncInstalledPairsFromNative();
+    const targets = installedTargetsForNative(myLang);
+    if(!targets.length) return [];
+    const allowed = new Set([myLang, ...targets]);
+    return LANGS.filter((l) => allowed.has(l.code));
   }
 
   function isLangInstalledForUi(code){
@@ -1391,22 +1399,29 @@
     const src = canonical(from);
     const dst = canonical(to);
 
-    // ADIM 1: Paket yüklü mü kontrol et
-    if (hasInstalledPair(src, dst)) {
+    // Eğer kullanıcı manuel olarak OFFLINE modu seçmişse VEYA paket zaten inmişse
+    // Önce MUTLAKA offline motoru dene
+    if (currentMode === "offline" || hasInstalledPair(src, dst)) {
       try {
-        console.log(`italkyAI: Paket bulundu, Offline çevriliyor...`);
+        console.log(`italkyAI: Offline çeviri deneniyor... (${src} -> ${dst})`);
         const offlineResult = await translateOffline(text, src, dst);
+        
         if (offlineResult && offlineResult.trim() !== "") {
           return offlineResult;
         }
       } catch (e) {
-        console.error("italkyAI: Offline motor hatası, Online'a yönleniyor...", e);
+        console.error("italkyAI: Offline çeviri başarısız, online kontrol ediliyor.", e);
       }
     }
 
-    // ADIM 2: Paket yoksa veya hata verdiyse otomatik Online çeviri yap
-    console.log(`italkyAI: Paket yok veya internet mevcut, Online çevriliyor...`);
-    return await translateOnline(text, src, dst);
+    // Eğer mod ONLINE ise ve yukarıdaki offline denemesi başarısız olduysa (veya paket yoksa)
+    if (currentMode === "online") {
+      return await translateOnline(text, src, dst);
+    }
+
+    // Eğer buraya kadar geldiyse ve hala mod offline ise kullanıcıya uyarı ver
+    showToast(tx("offlineMode"));
+    return null;
   }
 
   function speak(text,langCode){
@@ -1627,39 +1642,6 @@
   }
 
   // 3. DÜZELTME: Boot Akışını Garantiye Alalım
-  // 1. MOD DEĞİŞKENİNİ VE DÜĞMELERİ SİLDİK
-  // let currentMode = "online"; -> Bu artık yok.
-
-  // 2. AKILLI ÇEVİRİ MOTORU (Sistemin Kalbi)
-  async function translateText(text, from, to) {
-    const src = canonical(from);
-    const dst = canonical(to);
-
-    // ADIM 1: Paket yüklü mü kontrol et
-    if (hasInstalledPair(src, dst)) {
-      try {
-        console.log(`italkyAI: Paket bulundu, Offline çevriliyor...`);
-        const offlineResult = await translateOffline(text, src, dst);
-        if (offlineResult && offlineResult.trim() !== "") {
-          return offlineResult;
-        }
-      } catch (e) {
-        console.error("italkyAI: Offline motor hatası, Online'a yönleniyor...", e);
-      }
-    }
-
-    // ADIM 2: Paket yoksa veya hata verdiyse otomatik Online çeviri yap
-    console.log(`italkyAI: Paket yok veya internet mevcut, Online çevriliyor...`);
-    return await translateOnline(text, src, dst);
-  }
-
-  // 3. DİL LİSTESİNİ HER ZAMAN FULL GÖSTER
-  function getFilteredLangsForPopover(){
-    // Artık filtreleme yok, her zaman tüm dilleri gösteriyoruz
-    return LANGS;
-  }
-
-  // 4. BOOT (BAŞLANGIÇ) AYARI
   async function boot() {
     try {
       if (window.Native && typeof window.Native.requestF2FPermissions === "function") {
@@ -1674,7 +1656,7 @@
       OfflinePackBridge.preloadRewardedAd();
     } catch(e) {}
 
-    // Güncelleme kontrolü
+    // Versiyon kontrolünü yap ama sistemi bloklamasın
     checkAppUpdate().catch(console.error);
 
     const detected = await detectCountryLang();
@@ -1683,6 +1665,7 @@
     localStorage.setItem(MY_LANG_KEY, myLang);
     localStorage.setItem(SITE_LANG_KEY, myLang);
     localStorage.setItem(NATIVE_LANG_KEY, myLang);
+
     OfflinePackBridge.setOfflineNativeLang(myLang);
 
     const params = new URLSearchParams(location.search);
@@ -1690,19 +1673,29 @@
 
     if(!hasRouteLang){
       botLang = myLang;
-      topLang = (langExists("en") && botLang !== "en") ? "en" : differentLang(botLang);
+      topLang = langExists("en") && botLang !== "en" ? "en" : differentLang(botLang);
+      if(topLang === botLang) topLang = differentLang(botLang);
     }
 
     applyRouteParams();
+    // Başlangıçta paket varsa offline başlat, yoksa online kal
+    const from = canonical(botLang);
+    const to = canonical(topLang);
+    if(hasInstalledPair(from, to)) {
+        currentMode = "offline";
+    }
+
     refreshTexts();
-    // refreshModeButtons(); -> Silindi
+    refreshModeButtons();
     clearBody(topBody);
     clearBody(botBody);
 
     scheduleAutoAd(5 * 60 * 1000);
+    
+    // EN paketini arka planda kontrol et
     setTimeout(autoStartNativeBaseSetup, 2000);
   }
-    boot();
+  boot();
 </script>
 </body>
 </html>
