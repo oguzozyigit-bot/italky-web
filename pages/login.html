@@ -1394,19 +1394,32 @@
     return OfflinePackBridge.translateOffline(text,from,to);
   }
 
+  // 1. DÜZELTME: Çeviri Mantığını Offline Öncelikli Yapıyoruz
   async function translateText(text, from, to) {
     const src = canonical(from);
     const dst = canonical(to);
 
-    if (hasInstalledPair(src, dst)) {
-      const offlineResult = await translateOffline(text, src, dst);
-      if (offlineResult) return offlineResult;
+    // Eğer kullanıcı manuel olarak OFFLINE modu seçmişse VEYA paket zaten inmişse
+    // Önce MUTLAKA offline motoru dene
+    if (currentMode === "offline" || hasInstalledPair(src, dst)) {
+      try {
+        console.log(`italkyAI: Offline çeviri deneniyor... (${src} -> ${dst})`);
+        const offlineResult = await translateOffline(text, src, dst);
+        
+        if (offlineResult && offlineResult.trim() !== "") {
+          return offlineResult;
+        }
+      } catch (e) {
+        console.error("italkyAI: Offline çeviri başarısız, online kontrol ediliyor.", e);
+      }
     }
 
+    // Eğer mod ONLINE ise ve yukarıdaki offline denemesi başarısız olduysa (veya paket yoksa)
     if (currentMode === "online") {
       return await translateOnline(text, src, dst);
     }
 
+    // Eğer buraya kadar geldiyse ve hala mod offline ise kullanıcıya uyarı ver
     showToast(tx("offlineMode"));
     return null;
   }
@@ -1564,13 +1577,12 @@
   async function autoCheckOfflineMode() {
     const from = canonical(botLang);
     const to = canonical(topLang);
-
-    if (window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to)) {
-      currentMode = "offline";
-    } else {
-      currentMode = "online";
-    }
-
+    
+    // Sadece başlangıçta veya dil değiştiğinde öneri yapar, 
+    // ama kullanıcı elini sürmüşse (currentMode) ona sadık kalır.
+    const isPairInstalled = window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to);
+    
+    // Eğer paket varsa butonu aktif göster ama mod zorla değişmesin
     refreshModeButtons();
   }
 
@@ -1586,6 +1598,50 @@
     if(mode === "offline") currentMode = "offline";
   }
 
+  // 1. DÜZELTME: Çeviri Mantığını Offline Öncelikli Yapıyoruz
+  async function translateText(text, from, to) {
+    const src = canonical(from);
+    const dst = canonical(to);
+
+    // Eğer kullanıcı manuel olarak OFFLINE modu seçmişse VEYA paket zaten inmişse
+    // Önce MUTLAKA offline motoru dene
+    if (currentMode === "offline" || hasInstalledPair(src, dst)) {
+      try {
+        console.log(`italkyAI: Offline çeviri deneniyor... (${src} -> ${dst})`);
+        const offlineResult = await translateOffline(text, src, dst);
+        
+        if (offlineResult && offlineResult.trim() !== "") {
+          return offlineResult;
+        }
+      } catch (e) {
+        console.error("italkyAI: Offline çeviri başarısız, online kontrol ediliyor.", e);
+      }
+    }
+
+    // Eğer mod ONLINE ise ve yukarıdaki offline denemesi başarısız olduysa (veya paket yoksa)
+    if (currentMode === "online") {
+      return await translateOnline(text, src, dst);
+    }
+
+    // Eğer buraya kadar geldiyse ve hala mod offline ise kullanıcıya uyarı ver
+    showToast(tx("offlineMode"));
+    return null;
+  }
+
+  // 2. DÜZELTME: Mod Kontrolü Kullanıcı Seçimini Ezmesin
+  async function autoCheckOfflineMode() {
+    const from = canonical(botLang);
+    const to = canonical(topLang);
+    
+    // Sadece başlangıçta veya dil değiştiğinde öneri yapar, 
+    // ama kullanıcı elini sürmüşse (currentMode) ona sadık kalır.
+    const isPairInstalled = window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to);
+    
+    // Eğer paket varsa butonu aktif göster ama mod zorla değişmesin
+    refreshModeButtons();
+  }
+
+  // 3. DÜZELTME: Boot Akışını Garantiye Alalım
   async function boot() {
     try {
       if (window.Native && typeof window.Native.requestF2FPermissions === "function") {
@@ -1600,10 +1656,8 @@
       OfflinePackBridge.preloadRewardedAd();
     } catch(e) {}
 
-    const mustUpdate = await checkAppUpdate();
-    if (mustUpdate) {
-      return;
-    }
+    // Versiyon kontrolünü yap ama sistemi bloklamasın
+    checkAppUpdate().catch(console.error);
 
     const detected = await detectCountryLang();
     myLang = detected && langExists(detected) ? detected : "tr";
@@ -1624,16 +1678,23 @@
     }
 
     applyRouteParams();
-    await autoCheckOfflineMode();
+    // Başlangıçta paket varsa offline başlat, yoksa online kal
+    const from = canonical(botLang);
+    const to = canonical(topLang);
+    if(hasInstalledPair(from, to)) {
+        currentMode = "offline";
+    }
+
     refreshTexts();
     refreshModeButtons();
     clearBody(topBody);
     clearBody(botBody);
 
     scheduleAutoAd(5 * 60 * 1000);
+    
+    // EN paketini arka planda kontrol et
     setTimeout(autoStartNativeBaseSetup, 2000);
   }
-
   boot();
 </script>
 </body>
