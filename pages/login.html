@@ -815,12 +815,26 @@
       }, intervalMs);
     }
 
-    // PROGRAMLANABİLİR GÜNCELLEME KONTROLÜ
+    // PROGRAMLANABİLİR GÜNCELLEME KONTROLÜ (NATIVE KÖPRÜLÜ)
     async function checkAppUpdate() {
-      // Örnek: İleride bunu fetch() ile API'nden de kontrol edebilirsin.
-      const REQUIRED_VERSION = 1; // Bu değer güncellendiğinde tüm eski uygulamalara kilit vurulur
-      
-      if (CURRENT_APP_VERSION < REQUIRED_VERSION) {
+      // ZORUNLU VERSİYON: Bu sayıyı web sunucunda güncellediğinde, 
+      // versionCode'u bundan küçük olan tüm eski Android uygulamaları kilitlenir.
+      const REQUIRED_VERSION = 2; 
+
+      let currentAppVersion = 999; // Masaüstünde veya köprü yokken hata vermesin diye varsayılan yüksek değer
+
+      // Android'deki köprümüz (AndroidBridge) başarılı bir şekilde kurulmuş mu diye kontrol ediyoruz
+      if (window.AndroidBridge && typeof window.AndroidBridge.getVersionCode === "function") {
+        // Kotlin tarafındaki BuildConfig.VERSION_CODE değerini çektik!
+        currentAppVersion = window.AndroidBridge.getVersionCode(); 
+        console.log("italkyAI Cihaz Versiyonu:", currentAppVersion);
+      } else {
+        // Köprü yoksa muhtemelen masaüstü tarayıcıdan giriliyordur, işlemi atla.
+        return; 
+      }
+
+      // Cihazdaki sürüm (build.gradle.kts), bizim istediğimiz sürümden eskiyse:
+      if (currentAppVersion < REQUIRED_VERSION) {
         document.getElementById('updateModal').classList.add('show');
         setNativeBanner(false);
       }
