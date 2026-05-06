@@ -100,7 +100,7 @@
     }
     .drawer-mode-pill button.active{ background:linear-gradient(135deg,rgba(165,180,252,.26),rgba(236,72,153,.18)); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.08); }
 
-    /* HOLOGRAFİK ANİMASYON CSS (Menüye uyumlu boyutlandırıldı) */
+    /* HOLOGRAFİK ANİMASYON CSS */
     .holo-container{
       width: 140px;
       height: 140px;
@@ -462,7 +462,6 @@
         </div>
       </div>
 
-      <!-- YENİ EKLENEN HOLOGRAFİK DÜNYA ANİMASYONU -->
       <div class="holo-container">
         <div class="crystal-cage">
           <div class="crystal-side side1"></div>
@@ -663,7 +662,6 @@
       return langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
     }
 
-    // Sistemin kullanacağı dil sessizce burada tutulur
     let myLang = "tr"; 
     let botLang = myLang;
     let topLang = "en";
@@ -959,22 +957,19 @@
 
     function setMicState(side,listening){ const mic = side === "top" ? topMic : botMic; mic.classList.toggle("listening",!!listening); }
 
-    // ONLİNE MIC HATASINI ÇÖZEN YENİ MİMARİ (WEB SPEECH API FALLBACK)
     function startRecording(side) {
       if (manualStopPending) return;
       const sourceLang = side === "top" ? topLang : botLang; const bcpCode = BCP[sourceLang] || sourceLang; 
       recordingSide = side; setMicState(side, true); liveText = ""; manualStopPending = false;
       
-      // 1. Android Uygulama Ortamı (Native)
       if (window.Native && window.Native.startSpeechRecognition) { 
         window.Native.startSpeechRecognition(bcpCode, side); 
       } 
-      // 2. Tarayıcı Ortamı (Web API) - Online Mikrofon Hatasını Çözer
       else if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         window.webRecognizer = new SpeechRecognition();
         window.webRecognizer.lang = bcpCode;
-        window.webRecognizer.continuous = false; // Kısa cümle bazlı dinleme
+        window.webRecognizer.continuous = false;
         window.webRecognizer.interimResults = true;
 
         window.webRecognizer.onresult = (event) => {
@@ -983,7 +978,6 @@
             if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
             else interimTranscript += event.results[i][0].transcript;
           }
-          // Yazılımımızın anladığı aynı JSON formatıyla veriyi yolluyoruz
           if (finalTranscript) window.onNativeSpeechResult(JSON.stringify({side: side, text: finalTranscript, isFinal: true}));
           else if (interimTranscript) window.onNativeSpeechResult(JSON.stringify({side: side, text: interimTranscript, isFinal: false}));
         };
@@ -1003,24 +997,41 @@
     function stopRecognizer() {
       manualStopPending = true; setMicState("top", false); setMicState("bot", false);
       if (window.Native && window.Native.stopSpeechRecognition) { window.Native.stopSpeechRecognition(); }
-      else if (window.webRecognizer) { window.webRecognizer.stop(); window.webRecognizer = null; } // Web API İptali
+      else if (window.webRecognizer) { window.webRecognizer.stop(); window.webRecognizer = null; }
       setTimeout(() => { if (manualStopPending) { manualStopPending = false; liveText = ""; recordingSide = null; } }, 2500);
     }
 
-    window.onNativeSpeechResult = function(payload, fallbackText, fallbackIsFinal) {
+    // İŞTE BÜTÜN HATAYI ÇÖZEN O SİHİRLİ YAPI
+    window.onNativeSpeechResult = function(arg1, arg2, arg3) {
       let side = "top"; let text = ""; let isFinal = true;
-      if (typeof payload === "string") {
-        try { const data = JSON.parse(payload); side = data.side || "top"; text = data.text || ""; isFinal = data.isFinal !== undefined ? data.isFinal : true; } 
-        catch (e) { side = "top"; text = payload; isFinal = fallbackIsFinal !== undefined ? fallbackIsFinal : true; }
-      } else if (typeof payload === "object" && payload !== null) {
-        side = payload.side || "top"; text = payload.text || ""; isFinal = payload.isFinal !== undefined ? payload.isFinal : true;
-      } else { side = payload || "top"; text = fallbackText || ""; isFinal = fallbackIsFinal !== undefined ? fallbackIsFinal : true; }
+
+      if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
+        side = arg1; text = typeof arg2 === "string" ? arg2 : ""; isFinal = typeof arg3 !== "undefined" ? arg3 : true;
+      } else if (typeof arg1 === "string") {
+        try {
+          const data = JSON.parse(arg1);
+          side = data.side || "top"; text = data.text || ""; isFinal = data.isFinal !== undefined ? data.isFinal : true;
+        } catch (e) {
+          side = "top"; text = arg1; isFinal = true;
+        }
+      } else if (typeof arg1 === "object" && arg1 !== null) {
+        side = arg1.side || "top"; text = arg1.text || ""; isFinal = arg1.isFinal !== undefined ? arg1.isFinal : true;
+      }
 
       liveText = cleanupTranscript(text);
       
       if (isFinal) {
         setMicState(side, false); recordingSide = null;
         if (liveText) { finalizeSpeech(side, liveText); }
+        
+        // Hata durumlarında takılı kalan "..." baloncuklarını temizler
+        const body = side === "top" ? topBody : botBody;
+        if (body) {
+           const activeBubble = body.querySelector(".bubble.latest");
+           if (activeBubble && activeBubble.textContent.endsWith("...")) {
+               activeBubble.remove();
+           }
+        }
       } else {
         const body = side === "top" ? topBody : botBody; if (!body) return;
         let activeBubble = body.querySelector(".bubble.latest");
@@ -1032,6 +1043,17 @@
 
     window.onNativeSpeechError = function(errorMsg) {
       setMicState("top", false); setMicState("bot", false); manualStopPending = false; recordingSide = null;
+      
+      // Hata anında yarım kalan tüm "..." konuşma balonlarını ekrandan atar
+      [topBody, botBody].forEach(body => {
+        if(body) {
+          const activeBubble = body.querySelector(".bubble.latest");
+          if(activeBubble && activeBubble.textContent.endsWith("...")) {
+            activeBubble.remove();
+          }
+        }
+      });
+
       if(errorMsg === "manual_stop_empty") return; 
       if(errorMsg !== "no speech") {
         if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { showToast(tx("micDenied")); } else { showToast(tx("micError") + " (" + errorMsg + ")"); }
