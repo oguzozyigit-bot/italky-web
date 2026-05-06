@@ -680,7 +680,7 @@
     const watchAdBtn = $("watchAdBtn"); const closeAdBtn = $("closeAdBtn"); const toast = $("toast");
 
     let liveText = ""; let currentMode = "online"; let lastOpenPopSide = null;
-    let manualStopPending = false; let recordingSide = null;
+    let recordingSide = null;
     let globalAdEarned = false;
 
     window.onRewardedAdCompleted = function(adUnit) { globalAdEarned = true; };
@@ -958,9 +958,12 @@
     function setMicState(side,listening){ const mic = side === "top" ? topMic : botMic; mic.classList.toggle("listening",!!listening); }
 
     function startRecording(side) {
-      if (manualStopPending) return;
-      const sourceLang = side === "top" ? topLang : botLang; const bcpCode = BCP[sourceLang] || sourceLang; 
-      recordingSide = side; setMicState(side, true); liveText = ""; manualStopPending = false;
+      const sourceLang = side === "top" ? topLang : botLang; 
+      const bcpCode = BCP[sourceLang] || sourceLang; 
+      recordingSide = side; 
+      setMicState("top", side === "top"); 
+      setMicState("bot", side === "bot"); 
+      liveText = "";
       
       if (window.Native && window.Native.startSpeechRecognition) { 
         window.Native.startSpeechRecognition(bcpCode, side); 
@@ -984,7 +987,7 @@
 
         window.webRecognizer.onerror = (e) => { window.onNativeSpeechError(e.error); };
         window.webRecognizer.onend = () => { 
-          if(!manualStopPending && recordingSide === side) { setMicState(side, false); recordingSide = null; } 
+          if(recordingSide === side) { setMicState(side, false); recordingSide = null; } 
         };
 
         try { window.webRecognizer.start(); } catch(e) { window.onNativeSpeechError("start_error"); }
@@ -995,10 +998,9 @@
     }
 
     function stopRecognizer() {
-      manualStopPending = true; setMicState("top", false); setMicState("bot", false);
+      setMicState("top", false); setMicState("bot", false); recordingSide = null;
       if (window.Native && window.Native.stopSpeechRecognition) { window.Native.stopSpeechRecognition(); }
       else if (window.webRecognizer) { window.webRecognizer.stop(); window.webRecognizer = null; }
-      setTimeout(() => { if (manualStopPending) { manualStopPending = false; liveText = ""; recordingSide = null; } }, 2500);
     }
 
     window.onNativeSpeechResult = function(arg1, arg2, arg3) {
@@ -1039,9 +1041,8 @@
       }
     };
 
-    // HATA MESAJLARI AKILLANDIRILDI
     window.onNativeSpeechError = function(errorMsg) {
-      setMicState("top", false); setMicState("bot", false); manualStopPending = false; recordingSide = null;
+      setMicState("top", false); setMicState("bot", false); recordingSide = null;
       
       [topBody, botBody].forEach(body => {
         if(body) {
@@ -1057,7 +1058,7 @@
         if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { 
           showToast(tx("micDenied")); 
         } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
-          showToast("Motor meşgul, lütfen 1 saniye bekleyip tekrar bas.");
+          showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
         } else if (errorMsg === "network_error" || errorMsg === "server_error") {
           showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
         } else { 
@@ -1108,7 +1109,7 @@
     }
 
     async function finalizeSpeech(side,text){
-      manualStopPending = false; recordingSide = null;
+      recordingSide = null;
       const clean = cleanupTranscript(text); if(!clean){ liveText = ""; setMicState(side,false); return; }
 
       const src = side === "top" ? topLang : botLang; const dst = side === "top" ? botLang : topLang; const other = side === "top" ? "bot" : "top";
@@ -1121,28 +1122,17 @@
       liveText = ""; setMicState(side,false);
     }
 
-    // TRAFİK POLİSİ: MİKROFON ÇAKIŞMALARINI ÖNLEYEN YENİ MANTIK
+    // ESKİ VE SAF MANTIK: Android zaten mikrofon yönetimini kendi içinde yapıyor!
     function handleMicClick(side) {
       const mic = side === "top" ? topMic : botMic;
-      const otherMic = side === "top" ? botMic : topMic;
       
-      // 1. Eğer basılan mikrofon zaten açıksa, kullanıcı durdurmak istiyordur.
+      // Eğer basılan mikrofon zaten açıksa kapat
       if (mic.classList.contains("listening")) {
         stopRecognizer();
-        return;
+      } else {
+        // Değilse direkt başlat (Android önceki açıksa onu kendisi iptal edecek)
+        startRecording(side);
       }
-      
-      // 2. Eğer diğer mikrofon açıksa, önce onu kapatıp motorun rahatlaması için biraz bekle, sonra başlat.
-      if (otherMic.classList.contains("listening") || recordingSide !== null) {
-        stopRecognizer();
-        setTimeout(() => {
-          startRecording(side);
-        }, 600); // 600ms Android motoruna nefes alma payı
-        return;
-      }
-      
-      // 3. Hiçbiri açık değilse normal başlat.
-      startRecording(side);
     }
 
     topMic.addEventListener("click", () => handleMicClick("top"));
@@ -1150,7 +1140,7 @@
 
     function clearChat(){
       try{ stopRecognizer(); }catch{} try{ window.speechSynthesis?.cancel?.(); }catch{} try{ window.NativeTTS?.stop?.(); }catch{}
-      liveText = ""; manualStopPending = false; recordingSide = null;
+      liveText = ""; recordingSide = null;
       topMic.classList.remove("listening"); botMic.classList.remove("listening");
       clearBody(topBody); clearBody(botBody);
     }
