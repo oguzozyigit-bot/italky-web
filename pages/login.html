@@ -582,7 +582,7 @@
       listeningDone:"Dinleme tamamlanıyor...", translateError:"Çeviri yapılamadı",
       packReady:"Dil paketi zaten hazır.",
       packDownloading:"Dil paketiniz indiriliyor. Bu işlem bağlantı hızınıza göre biraz sürebilir.", packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz başarıyla indirildi.",
-      offerTitle:"Offline Dil Paketi", offerText:"Ana diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için paketi indirebilirsiniz.",
+      offerTitle:"Offline Dil Paketi", offerText:"Seçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için paketi indirebilirsiniz.",
       offerOk:"İndir", offerCancel:"Şimdilik Kapat", sameLang:"Aynı dil için paket indirilemez.",
       nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil."
     },
@@ -595,7 +595,7 @@
       listeningDone:"Finishing listening...", translateError:"Translation failed",
       packReady:"Language pack is already ready.",
       packDownloading:"Your language pack is downloading. This may take a while depending on your connection.", packQueued:"Language pack added to queue.", packDownloaded:"Your language pack has been downloaded.",
-      offerTitle:"Offline Language Pack", offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nYou can download the pack to use this language offline.",
+      offerTitle:"Offline Language Pack", offerText:"Selected language: {targetLang}\n\nYou can download the pack to use this language offline.",
       offerOk:"Download", offerCancel:"Not Now", sameLang:"You cannot download a pack for the same language.",
       nativeNotReady:"Native download is not ready on this device."
     }
@@ -844,44 +844,30 @@
         const version = Number(raw);
         if (Number.isFinite(version)) return version;
       }
-    } catch (e) {
-      console.warn("AndroidBridge.getVersionCode hata:", e);
-    }
-
+    } catch (e) { console.warn("AndroidBridge hata:", e); }
     try {
       if (window.Native && typeof window.Native.getVersionCode === "function") {
         const raw = window.Native.getVersionCode();
         const version = Number(raw);
         if (Number.isFinite(version)) return version;
       }
-    } catch (e) {
-      console.warn("Native.getVersionCode hata:", e);
-    }
-
+    } catch (e) { console.warn("Native hata:", e); }
     return null;
   }
 
   async function checkAppUpdate(retryCount = 8) {
     const currentAppVersion = getAndroidVersionCode();
-
     if (currentAppVersion === null) {
       if (retryCount > 0) {
-        console.warn("Version bilgisi henüz alınamadı, tekrar denenecek...");
         await new Promise(resolve => setTimeout(resolve, 500));
         return await checkAppUpdate(retryCount - 1);
       }
-      console.warn("Version kontrolü atlandı: Android bridge bulunamadı.");
       return false;
     }
-
-    console.log("italkyAI cihaz versionCode:", currentAppVersion);
-    console.log("italkyAI minimum gerekli versionCode:", MIN_REQUIRED_VERSION);
-
     if (currentAppVersion < MIN_REQUIRED_VERSION) {
       showUpdateModal();
       return true;
     }
-
     hideUpdateModal();
     return false;
   }
@@ -889,46 +875,39 @@
   function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
   function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
 
+  // 1. SADECE EN KONTROLÜ
   function isNativeBaseReady() {
     if (!OfflinePackBridge) return false;
-    return OfflinePackBridge.hasInstalledPair("en", "en") || OfflinePackBridge.hasInstalledPair(myLang, "en");
+    return OfflinePackBridge.hasInstalledPair("en", "en") || OfflinePackBridge.hasInstalledPair("en", myLang);
   }
 
+  // 2. İLK KURULUMDA SADECE EN İNDİRME EMRİ
   async function autoStartNativeBaseSetup() {
     if (isNativeBaseReady()) return;
     console.log("italkyAI: Ana köprü dil (EN) zorunlu kurulumu başlatılıyor...");
-    OfflinePackBridge.setOfflineNativeLang(myLang);
-    OfflinePackBridge.startNativeDownload(myLang, "en", langObj);
+    OfflinePackBridge.setOfflineNativeLang("en"); // Merkezi dili EN yapıyoruz
+    OfflinePackBridge.startNativeDownload("en", "en", langObj);
   }
 
-  async function startOfflinePackDownload(targetCode, reason = "manual"){
+  // 3. KULLANICININ İSTEDİĞİ TEKİL DİLİ İNDİRME EMRİ
+  async function startOfflinePackDownload(targetCode){
     syncInstalledPairsFromNative();
 
     const target = canonical(targetCode);
-    if(!target) return false;
+    if(!target || target === "en") return false;
 
     const targetInfo = langObj(target);
-    const nativeLang = myLang;
-    if(!nativeLang) return false;
 
-    if(nativeLang === target){
-      showToast(tx("sameLang"));
-      return false;
-    }
-
-    if(hasInstalledPair(nativeLang,target)){
-      OfflinePackBridge.saveHomeWidget(nativeLang,target,langObj,"ready");
+    // Ana HUB her zaman İngilizce (EN)
+    if(hasInstalledPair("en", target)){
       showToast(tx("packReady"));
       refreshOpenPop();
       return true;
     }
 
-    const nativeInfo = langObj(nativeLang);
-
     const offerOk = await showModalChoice({
       title:tx("offerTitle"),
       text:tFormat("offerText", {
-        sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`,
         targetLang:`${targetInfo.flag} ${targetInfo.name}`
       }),
       okText:tx("offerOk"),
@@ -939,7 +918,7 @@
 
     const adOk = await showAdModal({
       title:tx("downloadAdTitle"),
-      text:`${nativeInfo.flag} ${nativeInfo.name} ⇄ ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
+      text:`${targetInfo.flag} ${targetInfo.name} \n\n${tx("downloadAdText")}`,
       adUnit:`offline_download_${target}`,
       langCode:target
     });
@@ -949,8 +928,9 @@
       return false;
     }
 
-    OfflinePackBridge.setOfflineNativeLang(myLang);
-    const result = OfflinePackBridge.startNativeDownload(nativeLang,target,langObj);
+    // ÇOK KRİTİK: Native tarafa "Sadece hedef dili indir" diyebilmek için 
+    // source parametresini sabit olarak zaten inmiş olan "en" yapıyoruz.
+    const result = OfflinePackBridge.startNativeDownload("en", target, langObj);
 
     if(!result?.ok){
       showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : `${targetInfo.name} indirilemedi.`);
@@ -962,36 +942,33 @@
     return true;
   }
 
-  function getFilteredLangsForPopover(){
-    // Hibrit sistem kullanıldığı için her zaman tüm havuz dillerini gösteriyoruz
-    return LANGS;
-  }
-
-  function isLangInstalledForUi(code){
-    const c = canonical(code);
-    if(!myLang) return false;
-    if(c === myLang && OfflinePackBridge.hasAnyInstalledPair()) return true;
-    return c !== myLang && hasInstalledPair(myLang,c);
-  }
+  function getFilteredLangsForPopover(){ return LANGS; }
 
   function renderActionForLang(code, isLocked) {
     const c = canonical(code);
 
-    if (OfflinePackBridge.isPairActive(myLang, c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
-    if (OfflinePackBridge.isPairQueued(myLang, c)) return `<span class="pop-queued" title="Sırada">…</span>`;
-    if (isLangInstalledForUi(c)) return `<span class="pop-installed" title="Kurulu">✓</span>`;
-    if (c === myLang && isNativeBaseReady()) return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
+    // EN İçin Özel Durum: Asla indirme butonu gösterme, otomatik iner.
+    if (c === "en") {
+      if (isNativeBaseReady()) return `<span class="pop-native" title="Ana Altyapı">✓</span>`;
+      else return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+    }
+
+    // Diğer Diller İçin Durum Kontrolü (Source her zaman "en" baz alınarak kontrol edilir)
+    if (OfflinePackBridge.isPairActive("en", c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+    if (OfflinePackBridge.isPairQueued("en", c)) return `<span class="pop-queued" title="Sırada">…</span>`;
+    if (hasInstalledPair("en", c)) return `<span class="pop-installed" title="Kurulu">✓</span>`;
 
     const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
     if (langInfo && !langInfo.canOffline) {
       return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
     }
 
-    // Kilit ikonu yerine soluk ve pasif bir buton gösteriyoruz
+    // 4. KİLİT MANTIĞI: EN inmemişse diğer dillerin butonunu silik/pasif yap
     if (isLocked) {
       return `<button class="pop-download" style="opacity:0.3; cursor:wait;" type="button" data-locked="true" aria-label="Bekleniyor">⬇️</button>`;
     }
 
+    // EN inmişse, normal indirme butonu göster
     return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
   }
 
@@ -1014,6 +991,7 @@
     }
 
     htmlString += filteredLangs.map((l) => {
+      // EN inmemişse ve listelenen dil EN değilse, bu dili kilitle!
       const isLocked = !nativeReady && l.code !== "en";
 
       return `
@@ -1052,7 +1030,7 @@
         e.preventDefault();
         e.stopPropagation();
         const code = canonical(btn.dataset.downloadCode);
-        await startOfflinePackDownload(code, "lang_popup");
+        await startOfflinePackDownload(code);
       });
     });
 
@@ -1331,12 +1309,13 @@
     const src = canonical(from);
     const dst = canonical(to);
 
-    // HİBRİT SİSTEM: Önce paketin indirilip indirilmediğine bakar
-    if (hasInstalledPair(src, dst)) {
+    // HİBRİT ÇEVİRİ: Sadece Source (EN) ile hedefin inmiş olmasına bakar
+    // Çevrimdışı çeviride eğer iki dil de EN ile eşleşmişse çeviriyi doğrudan native tarafa atarız.
+    if ((src === "en" || hasInstalledPair("en", src)) && (dst === "en" || hasInstalledPair("en", dst))) {
       try {
         const offlineResult = await translateOffline(text, src, dst);
         if (offlineResult && offlineResult.trim() !== "") {
-          return offlineResult; // Başarılıysa doğrudan offline sonucu döndür
+          return offlineResult;
         }
       } catch (e) {
         console.warn("Offline translate failed, falling back to online", e);
@@ -1443,11 +1422,11 @@
 
   window.addEventListener("offlinePairDownloadStarted",(e) => {
     const d = e.detail || {};
-    const source = canonical(d.source || myLang);
     const target = canonical(d.target || topLang);
-    if(!source || !target) return;
+    if(!target) return;
 
-    OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
+    // Arayüzde sadece target bilgisini baz alıyoruz
+    OfflinePackBridge.saveHomeWidget("en",target,langObj,"downloading");
 
     if (target !== "en" || isNativeBaseReady()) {
       showToast(tx("packDownloading"));
@@ -1458,12 +1437,11 @@
 
   window.addEventListener("offlinePairDownloadCompleted",(e) => {
     const d = e.detail || {};
-    const source = canonical(d.source || myLang);
     const target = canonical(d.target || topLang);
-    if(!source || !target) return;
+    if(!target) return;
 
-    OfflinePackBridge.markInstalledPair(source,target);
-    OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
+    OfflinePackBridge.markInstalledPair("en",target);
+    OfflinePackBridge.saveHomeWidget("en",target,langObj,"ready");
     syncInstalledPairsFromNative();
 
     if (target === "en") {
@@ -1519,10 +1497,9 @@
       OfflinePackBridge.preloadRewardedAd();
     } catch(e) {}
 
-    // Güncelleme kontrolü 
     const mustUpdate = await checkAppUpdate();
     if (mustUpdate) {
-      return; // Güncelleme zorunluysa işlemi durdur.
+      return;
     }
 
     const detected = await detectCountryLang();
@@ -1532,7 +1509,8 @@
     localStorage.setItem(SITE_LANG_KEY, myLang);
     localStorage.setItem(NATIVE_LANG_KEY, myLang);
 
-    OfflinePackBridge.setOfflineNativeLang(myLang);
+    // Kilit Nokta: Tüm sistem EN üzerinden döneceği için OfflineNativeLang'i sabit EN yapıyoruz.
+    OfflinePackBridge.setOfflineNativeLang("en");
 
     const params = new URLSearchParams(location.search);
     const hasRouteLang = params.get("source") || params.get("target");
@@ -1549,6 +1527,8 @@
     clearBody(botBody);
 
     scheduleAutoAd(5 * 60 * 1000);
+    
+    // Uygulama açıldığında sessizce SADECE EN indirme emrini ver
     setTimeout(autoStartNativeBaseSetup, 2000);
   }
 
