@@ -414,17 +414,24 @@
     @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
 
     .modal{
-      position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); display:none; align-items:center;
+      position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center;
       justify-content:center; z-index:2147483647; padding:20px;
     }
     .modal.show{display:flex}
-    .modal-card{ width:min(100%,420px); border-radius:24px; padding:18px; background:linear-gradient(145deg,rgba(16,16,24,.97),rgba(10,10,18,.97)); border:1px solid rgba(255,255,255,.10); box-shadow:0 24px 50px rgba(0,0,0,.30); }
-    .modal-title{margin:0 0 8px;font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:900}
-    .modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76);white-space:pre-line}
-    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-    .modal-btn{ min-height:46px; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:900; }
+    
+    /* KURUMSAL LACİVERT TASARIM UYGULANDI */
+    .modal-card{ 
+      width:min(100%,420px); border-radius:24px; padding:22px; 
+      background:linear-gradient(145deg,#0f172a,#1e293b); 
+      border:1px solid rgba(59,130,246,.4); box-shadow:0 24px 50px rgba(0,0,0,.50); 
+    }
+    
+    .modal-title{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:900; color:#93c5fd;}
+    .modal-text{margin:0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85);white-space:pre-line}
+    .modal-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px}
+    .modal-btn{ min-height:48px; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:900; }
     .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
-    .modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
+    .modal-btn.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff}
 
     .toast{
       position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px);
@@ -543,26 +550,24 @@
     </section>
   </main>
 
+  <!-- YENİ EKLENEN: 5 DAKİKADA BİR ZORUNLU REKLAM MODALI (Kapatma Seçeneği Yok) -->
   <div id="adModal" class="modal">
     <div class="modal-card">
-      <h3 class="modal-title" id="adTitle">Ücretsiz Kullanım</h3>
-      <p class="modal-text" id="adText">FaceToFace ücretsiz kullanımda reklam içerir. Reklamı izledikten sonra çeviriye devam edebilirsiniz.</p>
-      <div class="modal-actions">
-        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklam İzle</button>
-        <button id="closeAdBtn" class="modal-btn secondary" type="button">Şimdilik Kapat</button>
+      <h3 class="modal-title" id="adTitle">Zorunlu Reklam</h3>
+      <p class="modal-text" id="adText">Ücretsiz çeviriye devam edebilmek için ödül reklamını izlemeniz gereklidir. Bu reklam her 5 dakikada bir gösterilir. Anlayışınız için teşekkür ederiz.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklamı İzle ve Devam Et</button>
       </div>
     </div>
   </div>
 
-  <!-- YENİ EKLENEN: GÜNCELLEME MODALI -->
+  <!-- YENİ EKLENEN: GÜNCELLEME MODALI (Kapatma Seçeneği Yok) -->
   <div id="updateModal" class="modal">
-    <div class="modal-card" style="border-top: 4px solid #3b82f6;">
-      <h3 class="modal-title" style="color: #60a5fa;">Güncelleme Gerekli</h3>
-      <p class="modal-text">italkyAI'nin yeni nesil akıllı ses motorunu ve özelliklerini kullanabilmek için uygulamanızı güncellemeniz gerekiyor. Eski sürümde bazı bağlantı hataları yaşayabilirsiniz.</p>
+    <div class="modal-card">
+      <h3 class="modal-title">Güncelleme Gerekli</h3>
+      <p class="modal-text">Uygulamanın yeni fonksiyonlarını eksiksiz kullanabilmek için lütfen güncelleme yapınız.</p>
       <div class="modal-actions" style="grid-template-columns: 1fr;">
-        <!-- DİKKAT: Cihazın içindeki Play Store uygulamasını tetikleyecek Android Intent şeması -->
         <button onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'" class="modal-btn primary" type="button">Play Store'dan Güncelle</button>
-        <button onclick="document.getElementById('updateModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button" style="margin-top: 8px;">Daha Sonra Hatırlat</button>
       </div>
     </div>
   </div>
@@ -570,7 +575,7 @@
   <div id="toast" class="toast"></div>
 
   <div id="downloadErrorModal" class="modal">
-    <div class="modal-card" style="border-top: 4px solid #ef4444;">
+    <div class="modal-card">
       <h3 class="modal-title" style="color: #ef4444;">İndirme Tamamlanamadı</h3>
       <p class="modal-text">Şu an dünya genelinde yaşanan yoğun indirme talebi nedeniyle sunucularımızda kısa süreli bir zaman aşımı gecikmesi yaşandı. Lütfen internet bağlantınızı kontrol edip biraz sonra tekrar deneyiniz.</p>
       <div class="modal-actions" style="grid-template-columns: 1fr;">
@@ -591,6 +596,10 @@
     const NATIVE_LANG_KEY = "italky_native_lang_v7";
     const MY_LANG_KEY = "italky_public_my_lang_v1";
 
+    // BURADAN GÜNCELLEMEYİ PROGRAMLAYABİLİRSİN
+    // Ne zaman yeni bir Android sürümü çıkarsan, bu sayıyı bir artırman yeterli.
+    const CURRENT_APP_VERSION = 1; 
+
     const BCP = {
       tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
       ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
@@ -598,10 +607,10 @@
 
     const UI = {
       tr:{
-        topLang:"ÜST DİL", botLang:"ALT DİL", adTitle:"Ücretsiz Kullanım",
-        adText:"FaceToFace ücretsiz kullanımda reklam içerir. Devam etmek için kısa bir reklam izleyin.",
+        topLang:"ÜST DİL", botLang:"ALT DİL", adTitle:"Zorunlu Reklam",
+        adText:"Ücretsiz çeviriye devam edebilmek için ödül reklamını izlemeniz gereklidir. Bu reklam her 5 dakikada bir gösterilir. Anlayışınız için teşekkür ederiz.",
         downloadAdTitle:"Çevrimdışı Dil İndirme", downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
-        watchAd:"Reklam İzle", close:"Şimdilik Kapat", adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
+        watchAd:"Reklamı İzle ve Devam Et", close:"Şimdilik Kapat", adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
         micError:"Mikrofon hatası.", micDenied:"Mikrofon izni gerekli.", micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
         listeningDone:"Dinleme tamamlanıyor...", translateError:"Çeviri yapılamadı",
         loginSoon:"Üyelik sistemi çok yakında aktif olacak. Şimdilik giriş yapmadan özellikleri kullanabilirsiniz.",
@@ -612,10 +621,10 @@
         nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.", noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
       },
       en:{
-        topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE", adTitle:"Free Use",
-        adText:"FaceToFace free use includes ads. Watch a short ad to continue.",
+        topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE", adTitle:"Mandatory Ad",
+        adText:"To continue free translation, you need to watch a rewarded ad. This ad is shown every 5 minutes. Thank you for your understanding.",
         downloadAdTitle:"Offline Language Download", downloadAdText:"You can download this language pack to use it without internet.",
-        watchAd:"Watch Ad", close:"Close", adNeeded:"The action was not started without watching the ad.",
+        watchAd:"Watch Ad to Continue", close:"Close", adNeeded:"The action was not started without watching the ad.",
         micError:"Microphone error.", micDenied:"Microphone permission is required.", micUnsupported:"Speech recognition is not supported on this device.",
         listeningDone:"Finishing listening...", translateError:"Translation failed",
         loginSoon:"Membership system will be active very soon.",
@@ -695,7 +704,6 @@
     let liveText = ""; let currentMode = "online"; let lastOpenPopSide = null;
     let recordingSide = null;
     let globalAdEarned = false;
-    let micErrorCounter = 0; // HATA SAYACINI EKLİYORUZ
 
     window.onRewardedAdCompleted = function(adUnit) { globalAdEarned = true; };
 
@@ -732,8 +740,9 @@
     function refreshTexts(){
       topLangBtn.textContent = `${labelChip(topLang)} ⌵`; botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
       topPopTitle.textContent = tx("topLang"); botPopTitle.textContent = tx("botLang");
-      adTitle.textContent = tx("adTitle"); adText.textContent = tx("adText");
-      watchAdBtn.textContent = tx("watchAd"); closeAdBtn.textContent = tx("close");
+      if(adTitle) adTitle.textContent = tx("adTitle"); 
+      if(adText) adText.textContent = tx("adText");
+      if(watchAdBtn) watchAdBtn.textContent = tx("watchAd"); 
     }
 
     function closeAllPop(){ popTop.classList.remove("show"); popBot.classList.remove("show"); lastOpenPopSide = null; }
@@ -751,60 +760,85 @@
         if(adTitle) adTitle.textContent = title || tx("adTitle");
         if(adText) adText.textContent = text || "";
         if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
-        if(closeAdBtn) closeAdBtn.textContent = cancelText || tx("close");
 
         adModal.classList.add("show");
-        const clean = () => { watchAdBtn.onclick = null; closeAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true); };
-        watchAdBtn.onclick = () => { clean(); resolve(true); }; closeAdBtn.onclick = () => { clean(); resolve(false); };
+        const clean = () => { watchAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true); };
+        watchAdBtn.onclick = () => { clean(); resolve(true); }; 
       });
     }
 
+    // Seçeneksiz (kapatılamayan) reklam modalı
     function showAdModal({title,text,adUnit = "public_facetoface_auto", langCode = ""} = {}){
       return new Promise((resolve) => {
         setNativeBanner(false); 
         if(adTitle) adTitle.textContent = title || tx("adTitle");
         if(adText) adText.textContent = text || tx("adText");
         if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
-        if(closeAdBtn) closeAdBtn.textContent = tx("close");
 
         adModal.classList.add("show");
-        const clean = () => { watchAdBtn.onclick = null; closeAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true); };
+        const clean = () => { watchAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true); };
 
         watchAdBtn.onclick = async () => {
           clean(); globalAdEarned = false; 
           const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
+          // Kullanıcı reklamı izlemeden kapatırsa resolve false dönecek ve işlemi bölecek
           resolve(ok !== false || globalAdEarned === true);
         };
-        closeAdBtn.onclick = () => { clean(); resolve(false); };
       });
     }
 
     let autoAdTimer = null;
+    // HER 5 DAKİKADA BİR ZORUNLU REKLAM TETİKLEYİCİ
     function scheduleAutoAd(intervalMs) {
       clearTimeout(autoAdTimer);
       autoAdTimer = setTimeout(async () => {
         const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
-        const isModalOpen = document.querySelector('.modal.show');
+        const isUpdateModalOpen = document.getElementById('updateModal')?.classList.contains('show');
         const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
-        if (!isDrawerOpen && !isModalOpen && !isRecording) {
-          await showAdModal({ title: tx("adTitle"), text: "FaceToFace'i kullanmaya devam etmek için lütfen kısa bir reklam izleyin.", adUnit: "public_facetoface_auto", langCode: "" });
+        
+        // Eğer güncelleme ekranındaysa reklamla bölmeyelim
+        if (!isDrawerOpen && !isUpdateModalOpen && !isRecording) {
+          const success = await showAdModal({ 
+            title: tx("adTitle"), 
+            text: tx("adText"), 
+            adUnit: "public_facetoface_auto", 
+            langCode: "" 
+          });
+          
+          if(!success) {
+            // Eğer reklam izlenmeden kapatılmaya çalışılırsa kullanıcıyı tekrar zorla
+            scheduleAutoAd(2000); 
+            return;
+          }
         }
-        scheduleAutoAd(2 * 60 * 1000); 
+        scheduleAutoAd(5 * 60 * 1000); // 5 dakika sonra tekrar
       }, intervalMs);
+    }
+
+    // PROGRAMLANABİLİR GÜNCELLEME KONTROLÜ
+    async function checkAppUpdate() {
+      // Örnek: İleride bunu fetch() ile API'nden de kontrol edebilirsin.
+      const REQUIRED_VERSION = 1; // Bu değer güncellendiğinde tüm eski uygulamalara kilit vurulur
+      
+      if (CURRENT_APP_VERSION < REQUIRED_VERSION) {
+        document.getElementById('updateModal').classList.add('show');
+        setNativeBanner(false);
+      }
     }
 
     function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
     function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
     
+    // ARTIK TEMEL DİL "EN" OLARAK KONTROL EDİLİYOR
     function isNativeBaseReady() {
       if (!OfflinePackBridge) return false;
-      if (myLang === "en") return true; 
-      return OfflinePackBridge.hasInstalledPair(myLang, "en");
+      // Sistemde "en" anahtarının kurulu olması veya myLang -> "en" in kurulu olması şart
+      return OfflinePackBridge.hasInstalledPair("en", "en") || OfflinePackBridge.hasInstalledPair(myLang, "en");
     }
 
     async function autoStartNativeBaseSetup() {
       if (isNativeBaseReady()) return;
-      console.log("italkyAI: Sessiz altyapı kurulumu başlatılıyor (en)...");
+      console.log("italkyAI: Ana köprü dil (EN) zorunlu kurulumu başlatılıyor...");
       OfflinePackBridge.setOfflineNativeLang(myLang);
       OfflinePackBridge.startNativeDownload(myLang, "en", langObj);
     }
@@ -871,12 +905,13 @@
       if (OfflinePackBridge.isPairActive(myLang, c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
       if (OfflinePackBridge.isPairQueued(myLang, c)) return `<span class="pop-queued" title="Sırada">…</span>`;
       if (isLangInstalledForUi(c)) return `<span class="pop-installed" title="Kurulu">✓</span>`;
-      if (c === myLang) return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
+      if (c === myLang && isNativeBaseReady()) return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
 
       const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
       if (langInfo && !langInfo.canOffline) return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
       
-      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Sistem kurulumu tamamlandığında kilit açılacaktır">🔒</span>`;
+      // "en" kurulana kadar her dil kilitli görünecek
+      if (isLocked) return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Sistem kurulumu (EN) tamamlandığında kilit açılacaktır">🔒</span>`;
 
       return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
     }
@@ -897,14 +932,15 @@
         htmlString += `
           <div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;">
             <div style="font-size: 11px; color: #a5b4fc; font-weight: 800; line-height: 1.4;">
-              Offline dil indirmek için arka planda <strong>sistem kurulumu yapılıyor (⏳)</strong>. Sistem kurulumu tamamlanınca diller üzerindeki kilit kalkacaktır.
+              Offline dil indirmek için arka planda <strong>ana köprü dil (EN) kurulumu yapılıyor (⏳)</strong>. Bu işlem tamamlanınca diller üzerindeki kilit kalkacaktır.
             </div>
           </div>
         `;
       }
 
       htmlString += filteredLangs.map((l) => {
-        const isLocked = !nativeReady && l.code !== "en" && l.code !== myLang;
+        // ARTIK SADECE "EN" AÇIK, GERİ KALAN TÜM DİLLER (KENDİ DİLİMİZ DAHİL) KİLİTLİ
+        const isLocked = !nativeReady && l.code !== "en";
         
         return `
           <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
@@ -1038,7 +1074,6 @@
       if (isFinal) {
         setMicState(side, false); recordingSide = null;
         if (liveText) { finalizeSpeech(side, liveText); }
-        micErrorCounter = 0; // BAŞARILI İŞLEMDE HATAYI SIFIRLA
         
         const body = side === "top" ? topBody : botBody;
         if (body) {
@@ -1070,23 +1105,15 @@
 
       if(errorMsg === "manual_stop_empty") return; 
 
-      // GÜNCELLEME MODALI TETİKLEYİCİSİ
       if(errorMsg !== "no speech") {
-        micErrorCounter++;
-        if(micErrorCounter >= 2) {
-          setNativeBanner(false);
-          document.getElementById('updateModal').classList.add('show');
-          micErrorCounter = 0; // Sayacı sıfırla
-        } else {
-          if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { 
-            showToast(tx("micDenied")); 
-          } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
-            showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
-          } else if (errorMsg === "network_error" || errorMsg === "server_error") {
-            showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
-          } else { 
-            showToast(tx("micError") + " (" + errorMsg + ")"); 
-          }
+        if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") { 
+          showToast(tx("micDenied")); 
+        } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
+          showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
+        } else if (errorMsg === "network_error" || errorMsg === "server_error") {
+          showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
+        } else { 
+          showToast(tx("micError") + " (" + errorMsg + ")"); 
         }
       }
     };
@@ -1146,15 +1173,11 @@
       liveText = ""; setMicState(side,false);
     }
 
-    // ESKİ VE SAF MANTIK: Android zaten mikrofon yönetimini kendi içinde yapıyor!
     function handleMicClick(side) {
       const mic = side === "top" ? topMic : botMic;
-      
-      // Eğer basılan mikrofon zaten açıksa kapat
       if (mic.classList.contains("listening")) {
         stopRecognizer();
       } else {
-        // Değilse direkt başlat (Android önceki açıksa onu kendisi iptal edecek)
         startRecording(side);
       }
     }
@@ -1188,7 +1211,7 @@
       OfflinePackBridge.markInstalledPair(source,target); OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
       syncInstalledPairsFromNative(); 
 
-      if (target === "en") { showToast("Sistem kurulumu tamamlandı. Dillerin kilidi açıldı!"); } 
+      if (target === "en") { showToast("Sistem (EN) kurulumu tamamlandı. Tüm dillerin kilidi açıldı!"); } 
       else { showToast(tx("packDownloaded")); }
       refreshOpenPop();
     });
@@ -1223,6 +1246,9 @@
       OfflinePackBridge.installDownloadEventHandlers(langObj); syncInstalledPairsFromNative();
       try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
+      // AÇILIŞTA GÜNCELLEME KONTROLÜ
+      await checkAppUpdate();
+
       const detected = await detectCountryLang();
       myLang = detected && langExists(detected) ? detected : "tr";
       localStorage.setItem(MY_LANG_KEY, myLang);
@@ -1236,29 +1262,10 @@
       applyRouteParams(); await autoCheckOfflineMode(); 
       refreshTexts(); refreshModeButtons(); clearBody(topBody); clearBody(botBody);
 
-      startCommercialEngine(); scheduleAutoAd(3 * 60 * 1000); 
+      // 5 DAKİKADA BİR ZORUNLU REKLAM PROGRAMLAYICISI
+      scheduleAutoAd(5 * 60 * 1000); 
 
       setTimeout(autoStartNativeBaseSetup, 2000);
-    }
-
-    function startCommercialEngine() {
-      const orb = document.querySelector('.orb'); const adBox = document.getElementById('adViewContainer');
-      if (!orb || !adBox) return;
-
-      setInterval(() => {
-        const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
-        const isModalOpen = document.querySelector('.modal.show');
-        if (isDrawerOpen || isModalOpen) { setNativeBanner(false); return; }
-
-        const isOrbVisible = window.getComputedStyle(orb).display !== 'none';
-        if (isOrbVisible) {
-          orb.style.setProperty('display', 'none', 'important'); adBox.style.setProperty('display', 'flex', 'important');
-          document.body.style.backgroundColor = "transparent"; setNativeBanner(true); 
-        } else {
-          adBox.style.setProperty('display', 'none', 'important'); orb.style.setProperty('display', 'flex', 'important');
-          document.body.style.backgroundColor = "#050508"; setNativeBanner(false); 
-        }
-      }, 30000); 
     }
 
     boot();
