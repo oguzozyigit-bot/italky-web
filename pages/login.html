@@ -587,6 +587,1714 @@
   const $ = (id) => document.getElementById(id);
 
   const SITE_LANG_KEY = "site_lang";
+  const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+  const NATIVE_LANG_KEY = "italky_native_lang_v7";
+  const MY_LANG_KEY = "italky_public_my_lang_v1";
+
+  // WEB TARAFINDAN ZORUNLU TUTULAN MİNİMUM UYGULAMA SÜRÜMÜ
+  // Android versionCode bundan küçükse update popup açılır
+  const MIN_REQUIRED_VERSION = 81;
+
+  const BCP = {
+    tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
+    ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
+  };
+
+  const UI = {
+    tr:{
+      topLang:"ÜST DİL", botLang:"ALT DİL", adTitle:"Zorunlu Reklam",
+      adText:"Ücretsiz çeviriye devam edebilmek için ödül reklamını izlemeniz gereklidir. Bu reklam her 5 dakikada bir gösterilir. Anlayışınız için teşekkür ederiz.",
+      downloadAdTitle:"Çevrimdışı Dil İndirme", downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
+      watchAd:"Reklamı İzle ve Devam Et", close:"Şimdilik Kapat", adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
+      micError:"Mikrofon hatası.", micDenied:"Mikrofon izni gerekli.", micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.",
+      listeningDone:"Dinleme tamamlanıyor...", translateError:"Çeviri yapılamadı",
+      loginSoon:"Üyelik sistemi çok yakında aktif olacak. Şimdilik giriş yapmadan özellikleri kullanabilirsiniz.",
+      onlineMode:"Online mod aktif.", offlineMode:"Offline mod aktif.", packReady:"Dil paketi zaten hazır.",
+      packDownloading:"Dil paketiniz indiriliyor. Bu işlem bağlantı hızınıza göre biraz sürebilir.", packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz başarıyla indirildi.",
+      offerTitle:"Offline Dil Paketi", offerText:"Ana diliniz: {sourceLang}\nSeçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için paketi indirebilirsiniz.",
+      offerOk:"İndir", offerCancel:"Şimdilik Kapat", sameLang:"Aynı dil için paket indirilemez.",
+      nativeNotReady:"Gerçek indirme için uygulama tarafı hazır değil.", noInstalledOffline:"Offline modda yalnızca indirdiğiniz diller görünür. Henüz paket yok.",
+    },
+    en:{
+      topLang:"TOP LANGUAGE", botLang:"BOTTOM LANGUAGE", adTitle:"Mandatory Ad",
+      adText:"To continue free translation, you need to watch a rewarded ad. This ad is shown every 5 minutes. Thank you for your understanding.",
+      downloadAdTitle:"Offline Language Download", downloadAdText:"You can download this language pack to use it without internet.",
+      watchAd:"Watch Ad to Continue", close:"Close", adNeeded:"The action was not started without watching the ad.",
+      micError:"Microphone error.", micDenied:"Microphone permission is required.", micUnsupported:"Speech recognition is not supported on this device.",
+      listeningDone:"Finishing listening...", translateError:"Translation failed",
+      loginSoon:"Membership system will be active very soon.",
+      onlineMode:"Online mode is active.", offlineMode:"Offline mode is active.", packReady:"Language pack is already ready.",
+      packDownloading:"Your language pack is downloading. This may take a while depending on your connection.", packQueued:"Language pack added to queue.", packDownloaded:"Your language pack has been downloaded.",
+      offerTitle:"Offline Language Pack", offerText:"Your language: {sourceLang}\nSelected language: {targetLang}\n\nYou can download the pack to use this language offline.",
+      offerOk:"Download", offerCancel:"Not Now", sameLang:"You cannot download a pack for the same language.",
+      nativeNotReady:"Native download is not ready on this device.", noInstalledOffline:"Offline mode shows only downloaded languages. No pack yet.",
+    }
+  };
+
+  function canonical(code){ return OfflinePackBridge.canonical(code); }
+
+  function getInitialSiteLang(){
+    return canonical(
+      localStorage.getItem(SITE_LANG_KEY) || localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+      localStorage.getItem(NATIVE_LANG_KEY) || navigator.language || "tr"
+    ) || "tr";
+  }
+
+  const SITE_LANG = getInitialSiteLang();
+  const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG)) ? getLangPoolForSite(SITE_LANG) : [];
+
+  const FALLBACK_LANGS = [
+    { code:"tr", flag:"🇹🇷", name:"Türkçe", bcp:"tr-TR" }, { code:"en", flag:"🇬🇧", name:"İngilizce", bcp:"en-US" },
+    { code:"de", flag:"🇩🇪", name:"Almanca", bcp:"de-DE" }, { code:"fr", flag:"🇫🇷", name:"Fransızca", bcp:"fr-FR" },
+    { code:"it", flag:"🇮🇹", name:"İtalyanca", bcp:"it-IT" }, { code:"es", flag:"🇪🇸", name:"İspanyolca", bcp:"es-ES" },
+    { code:"ar", flag:"🇸🇦", name:"Arapça", bcp:"ar-SA" }, { code:"ru", flag:"🇷🇺", name:"Rusça", bcp:"ru-RU" },
+    { code:"bg", flag:"🇧🇬", name:"Bulgarca", bcp:"bg-BG" }, { code:"pt", flag:"🇵🇹", name:"Portekizce", bcp:"pt-PT" },
+    { code:"zh", flag:"🇨🇳", name:"Çince", bcp:"zh-CN" }, { code:"ja", flag:"🇯🇵", name:"Japonca", bcp:"ja-JP" },
+    { code:"ko", flag:"🇰🇷", name:"Korece", bcp:"ko-KR" }
+  ];
+
+  const LANGS = (RAW_LANG_POOL.length ? RAW_LANG_POOL : FALLBACK_LANGS)
+    .map((l) => {
+      const code = canonical(l.code);
+      if(!code) return null;
+      return { code, flag:l.flag || "🌐", name:l.name || l.tr_name || code.toUpperCase(), bcp:l.bcp || BCP[code] || `${code}-${String(code).toUpperCase()}` };
+    }).filter(Boolean).filter((item,index,arr) => arr.findIndex((x) => x.code === item.code) === index);
+
+  function langExists(code){ return !!LANGS.find((x) => x.code === canonical(code)); }
+  function langObj(code){
+    const c = canonical(code);
+    return LANGS.find((x) => x.code === c) || { code:c || "en", flag:"🌐", name:(c || "en").toUpperCase(), bcp:BCP[c] || "en-US" };
+  }
+  function labelChip(code){ const o = langObj(code); return `${o.flag} ${o.name}`; }
+
+  function differentLang(base){
+    const b = canonical(base);
+    const preferred = b === "tr" ? ["en","de","fr","es","it","ar","ru","pt"] : ["tr","en","de","fr","es","it","ar","ru","pt"];
+    for(const c of preferred){ if(c !== b && langExists(c)) return c; }
+    return LANGS.find((l) => l.code !== b)?.code || "en";
+  }
+
+  async function detectCountryLang(){
+    try{ const nav = canonical(navigator.language || ""); if(nav && langExists(nav)) return nav; }catch{}
+    return langExists("tr") ? "tr" : (LANGS[0]?.code || "tr");
+  }
+
+  let myLang = "tr";
+  let botLang = myLang;
+  let topLang = "en";
+
+  const sideClearBtn = $("sideClearBtn");
+  const drawerEdgeBtn = $("drawerEdgeBtn");
+  const drawerBackdrop = $("drawerBackdrop");
+  const topBody = $("topBody");
+  const botBody = $("botBody");
+  const topMic = $("topMic");
+  const botMic = $("botMic");
+  const topLangBtn = $("topLangBtn");
+  const botLangBtn = $("botLangBtn");
+  const popTop = $("pop-top");
+  const popBot = $("pop-bot");
+  const listTop = $("list-top");
+  const listBot = $("list-bot");
+  const closeTop = $("close-top");
+  const closeBot = $("close-bot");
+  const topPopTitle = $("topPopTitle");
+  const botPopTitle = $("botPopTitle");
+  const modeOnlineBtn = $("modeOnlineBtn");
+  const modeOfflineBtn = $("modeOfflineBtn");
+  const adModal = $("adModal");
+  const adTitle = $("adTitle");
+  const adText = $("adText");
+  const watchAdBtn = $("watchAdBtn");
+  const toast = $("toast");
+  const updateModal = $("updateModal");
+
+  let liveText = "";
+  let currentMode = "online";
+  let lastOpenPopSide = null;
+  let recordingSide = null;
+  let globalAdEarned = false;
+
+  window.onRewardedAdCompleted = function(adUnit) {
+    globalAdEarned = true;
+  };
+
+  function tx(key){
+    const c = UI[myLang] ? myLang : "en";
+    return UI[c]?.[key] || UI.en[key] || key;
+  }
+
+  function tFormat(key, vars = {}){
+    let value = tx(key);
+    Object.keys(vars).forEach((k) => {
+      value = value.replaceAll(`{${k}}`, vars[k]);
+    });
+    return value;
+  }
+
+  function setNativeBanner(visible) {
+    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+    if (bridge && typeof bridge.toggleBannerAd === "function") {
+      // Geçici olarak kapatmak için 'visible' değişkeni yerine doğrudan 'false' gönderiyoruz
+      bridge.toggleBannerAd(false, ""); 
+    }
+  }
+
+  function showToast(msg){
+    if(!toast) return;
+    toast.textContent = String(msg || "");
+    toast.classList.add("show");
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+  }
+
+  function openDrawer() {
+    setNativeBanner(false);
+    drawerBackdrop?.classList.add("show");
+  }
+
+  function closeDrawer() {
+    drawerBackdrop?.classList.remove("show");
+    setNativeBanner(true);
+  }
+
+  drawerEdgeBtn?.addEventListener("click", openDrawer);
+  drawerBackdrop?.addEventListener("click", (e) => {
+    if(e.target === drawerBackdrop) closeDrawer();
+  });
+
+  function refreshModeButtons(){
+    modeOnlineBtn?.classList.toggle("active", currentMode === "online");
+    modeOfflineBtn?.classList.toggle("active", currentMode === "offline");
+  }
+
+  function setMode(mode){
+    currentMode = mode === "offline" ? "offline" : "online";
+    refreshModeButtons();
+    showToast(currentMode === "online" ? tx("onlineMode") : tx("offlineMode"));
+    closeAllPop();
+  }
+
+  function refreshTexts(){
+    topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
+    botLangBtn.textContent = `${labelChip(botLang)} ⌵`;
+    topPopTitle.textContent = tx("topLang");
+    botPopTitle.textContent = tx("botLang");
+    if(adTitle) adTitle.textContent = tx("adTitle");
+    if(adText) adText.textContent = tx("adText");
+    if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
+  }
+
+  function closeAllPop(){
+    popTop.classList.remove("show");
+    popBot.classList.remove("show");
+    lastOpenPopSide = null;
+  }
+
+  function refreshOpenPop(){
+    if(lastOpenPopSide === "top" && popTop.classList.contains("show")) renderPop("top");
+    if(lastOpenPopSide === "bot" && popBot.classList.contains("show")) renderPop("bot");
+  }
+
+  window.addEventListener("offlinePackBridgeStateChanged", refreshOpenPop);
+
+  function showModalChoice({ title = "", text = "", okText = "", cancelText = "" } = {}){
+    return new Promise((resolve) => {
+      setNativeBanner(false);
+      if(adTitle) adTitle.textContent = title || tx("adTitle");
+      if(adText) adText.textContent = text || "";
+      if(watchAdBtn) watchAdBtn.textContent = okText || tx("watchAd");
+
+      adModal.classList.add("show");
+
+      const clean = () => {
+        watchAdBtn.onclick = null;
+        adModal.classList.remove("show");
+        setNativeBanner(true);
+      };
+
+      watchAdBtn.onclick = () => {
+        clean();
+        resolve(true);
+      };
+    });
+  }
+
+  function showAdModal({title,text,adUnit = "public_facetoface_auto", langCode = ""} = {}){
+    return new Promise((resolve) => {
+      setNativeBanner(false);
+      if(adTitle) adTitle.textContent = title || tx("adTitle");
+      if(adText) adText.textContent = text || tx("adText");
+      if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
+
+      adModal.classList.add("show");
+
+      const clean = () => {
+        watchAdBtn.onclick = null;
+        adModal.classList.remove("show");
+        setNativeBanner(true);
+      };
+
+      watchAdBtn.onclick = async () => {
+        clean();
+        globalAdEarned = false;
+        const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
+        resolve(ok !== false || globalAdEarned === true);
+      };
+    });
+  }
+
+  let autoAdTimer = null;
+
+  function scheduleAutoAd(intervalMs) {
+    clearTimeout(autoAdTimer);
+    autoAdTimer = setTimeout(async () => {
+      const isDrawerOpen = document.getElementById('drawerBackdrop')?.classList.contains('show');
+      const isUpdateModalOpen = document.getElementById('updateModal')?.classList.contains('show');
+      const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
+
+      if (!isDrawerOpen && !isUpdateModalOpen && !isRecording) {
+        const success = await showAdModal({
+          title: tx("adTitle"),
+          text: tx("adText"),
+          adUnit: "public_facetoface_auto",
+          langCode: ""
+        });
+
+        if(!success) {
+          scheduleAutoAd(2000);
+          return;
+        }
+      }
+
+      scheduleAutoAd(5 * 60 * 1000);
+    }, intervalMs);
+  }
+
+  function showUpdateModal() {
+    if (!updateModal) return;
+    updateModal.classList.add("show");
+    setNativeBanner(false);
+  }
+
+  function hideUpdateModal() {
+    if (!updateModal) return;
+    updateModal.classList.remove("show");
+    setNativeBanner(true);
+  }
+
+  function getAndroidVersionCode() {
+    try {
+      if (window.AndroidBridge && typeof window.AndroidBridge.getVersionCode === "function") {
+        const raw = window.AndroidBridge.getVersionCode();
+        const version = Number(raw);
+        if (Number.isFinite(version)) return version;
+      }
+    } catch (e) {
+      console.warn("AndroidBridge.getVersionCode hata:", e);
+    }
+
+    try {
+      if (window.Native && typeof window.Native.getVersionCode === "function") {
+        const raw = window.Native.getVersionCode();
+        const version = Number(raw);
+        if (Number.isFinite(version)) return version;
+      }
+    } catch (e) {
+      console.warn("Native.getVersionCode hata:", e);
+    }
+
+    return null;
+  }
+
+  async function checkAppUpdate(retryCount = 8) {
+    const currentAppVersion = getAndroidVersionCode();
+
+    if (currentAppVersion === null) {
+      if (retryCount > 0) {
+        console.warn("Version bilgisi henüz alınamadı, tekrar denenecek...");
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return await checkAppUpdate(retryCount - 1);
+      }
+      console.warn("Version kontrolü atlandı: Android bridge bulunamadı.");
+      return false;
+    }
+
+    console.log("italkyAI cihaz versionCode:", currentAppVersion);
+    console.log("italkyAI minimum gerekli versionCode:", MIN_REQUIRED_VERSION);
+
+    if (currentAppVersion < MIN_REQUIRED_VERSION) {
+      showUpdateModal();
+      return true;
+    }
+
+    hideUpdateModal();
+    return false;
+  }
+
+  function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
+  function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
+
+  function isNativeBaseReady() {
+    if (!OfflinePackBridge) return false;
+    return OfflinePackBridge.hasInstalledPair("en", "en") || OfflinePackBridge.hasInstalledPair(myLang, "en");
+  }
+
+  async function autoStartNativeBaseSetup() {
+    if (isNativeBaseReady()) return;
+    console.log("italkyAI: Ana köprü dil (EN) zorunlu kurulumu başlatılıyor...");
+    OfflinePackBridge.setOfflineNativeLang(myLang);
+    OfflinePackBridge.startNativeDownload(myLang, "en", langObj);
+  }
+
+  function installedTargetsForNative(nativeLang){
+    const native = canonical(nativeLang);
+    const installed = OfflinePackBridge.getInstalledPairs();
+    const set = new Set();
+
+    Object.keys(installed).forEach((key) => {
+      const item = installed[key] || {};
+      const from = canonical(item.from || "");
+      const to = canonical(item.to || "");
+      if(from === native && to && to !== native) set.add(to);
+    });
+
+    return Array.from(set);
+  }
+
+  async function startOfflinePackDownload(targetCode, reason = "manual"){
+    syncInstalledPairsFromNative();
+
+    const target = canonical(targetCode);
+    if(!target) return false;
+
+    const targetInfo = langObj(target);
+    const nativeLang = myLang;
+    if(!nativeLang) return false;
+
+    if(nativeLang === target){
+      showToast(tx("sameLang"));
+      return false;
+    }
+
+    if(hasInstalledPair(nativeLang,target)){
+      OfflinePackBridge.saveHomeWidget(nativeLang,target,langObj,"ready");
+      showToast(tx("packReady"));
+      refreshOpenPop();
+      return true;
+    }
+
+    const nativeInfo = langObj(nativeLang);
+
+    const offerOk = await showModalChoice({
+      title:tx("offerTitle"),
+      text:tFormat("offerText", {
+        sourceLang:`${nativeInfo.flag} ${nativeInfo.name}`,
+        targetLang:`${targetInfo.flag} ${targetInfo.name}`
+      }),
+      okText:tx("offerOk"),
+      cancelText:tx("offerCancel")
+    });
+
+    if(!offerOk) return false;
+
+    const adOk = await showAdModal({
+      title:tx("downloadAdTitle"),
+      text:`${nativeInfo.flag} ${nativeInfo.name} ⇄ ${targetInfo.flag} ${targetInfo.name}\n\n${tx("downloadAdText")}`,
+      adUnit:`offline_download_${target}`,
+      langCode:target
+    });
+
+    if(!adOk){
+      showToast(tx("adNeeded"));
+      return false;
+    }
+
+    OfflinePackBridge.setOfflineNativeLang(myLang);
+    const result = OfflinePackBridge.startNativeDownload(nativeLang,target,langObj);
+
+    if(!result?.ok){
+      showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : `${targetInfo.name} indirilemedi.`);
+      return false;
+    }
+
+    showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
+    refreshOpenPop();
+    return true;
+  }
+
+  / 3. DİL LİSTESİNİ HER ZAMAN FULL GÖSTER
+  function getFilteredLangsForPopover(){
+    // Artık filtreleme yok, her zaman tüm dilleri gösteriyoruz
+    return LANGS;
+  }
+
+  function isLangInstalledForUi(code){
+    const c = canonical(code);
+    if(!myLang) return false;
+    if(c === myLang && OfflinePackBridge.hasAnyInstalledPair()) return true;
+    return c !== myLang && hasInstalledPair(myLang,c);
+  }
+
+  function renderActionForLang(code, isLocked) {
+    const c = canonical(code);
+
+    if (OfflinePackBridge.isPairActive(myLang, c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+    if (OfflinePackBridge.isPairQueued(myLang, c)) return `<span class="pop-queued" title="Sırada">…</span>`;
+    if (isLangInstalledForUi(c)) return `<span class="pop-installed" title="Kurulu">✓</span>`;
+    if (c === myLang && isNativeBaseReady()) return `<span class="pop-native" title="Kendi Dilim">✓</span>`;
+
+    const langInfo = RAW_LANG_POOL.find(l => canonical(l.code) === c);
+    if (langInfo && !langInfo.canOffline) {
+      return `<div class="pop-code" style="opacity: 0.4; font-size: 10px; font-weight:1000;">CLOUD</div>`;
+    }
+
+    if (isLocked) {
+      return `<span class="pop-code" style="font-size:16px; opacity:0.4; cursor:not-allowed;" title="Sistem kurulumu (EN) tamamlandığında kilit açılacaktır">🔒</span>`;
+    }
+
+    return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
+  }
+
+  function renderPop(side) {
+    const list = side === "top" ? listTop : listBot;
+    const selected = side === "top" ? topLang : botLang;
+    const filteredLangs = getFilteredLangsForPopover();
+
+    if(currentMode === "offline" && !filteredLangs.length){
+      list.innerHTML = `<div class="pop-empty">${tx("noInstalledOffline")}</div>`;
+      return;
+    }
+
+    const nativeReady = isNativeBaseReady();
+    let htmlString = "";
+
+    if (!nativeReady && currentMode === "online") {
+      htmlString += `
+        <div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;">
+          <div style="font-size: 11px; color: #a5b4fc; font-weight: 800; line-height: 1.4;">
+            Offline dil indirmek için arka planda <strong>ana köprü dil (EN) kurulumu yapılıyor (⏳)</strong>. Bu işlem tamamlanınca diller üzerindeki kilit kalkacaktır.
+          </div>
+        </div>
+      `;
+    }
+
+    htmlString += filteredLangs.map((l) => {
+      const isLocked = !nativeReady && l.code !== "en";
+
+      return `
+        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+          <div class="pop-left" data-select-code="${l.code}">
+            <div class="pop-flag">${l.flag}</div>
+            <div class="pop-name">${l.name}</div>
+          </div>
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            ${renderActionForLang(l.code, isLocked)}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    list.innerHTML = htmlString;
+
+    list.querySelectorAll("[data-select-code]").forEach((el) => {
+      el.addEventListener("click", async () => {
+        const code = canonical(el.dataset.selectCode);
+        if(!code) return;
+
+        if(side === "top") topLang = code;
+        else botLang = code;
+
+        await autoCheckOfflineMode();
+
+        if(topLang === botLang) topLang = differentLang(botLang);
+
+        closeAllPop();
+        refreshTexts();
+      });
+    });
+
+    list.querySelectorAll("[data-download-code]").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const code = canonical(btn.dataset.downloadCode);
+        await startOfflinePackDownload(code, "lang_popup");
+      });
+    });
+  }
+
+  topLangBtn.addEventListener("click",(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    lastOpenPopSide = "top";
+    renderPop("top");
+    popTop.classList.add("show");
+  });
+
+  botLangBtn.addEventListener("click",(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    lastOpenPopSide = "bot";
+    renderPop("bot");
+    popBot.classList.add("show");
+  });
+
+  closeTop.addEventListener("click", closeAllPop);
+  closeBot.addEventListener("click", closeAllPop);
+
+  document.addEventListener("click",(e) => {
+    const inside = popTop.contains(e.target) || popBot.contains(e.target) || e.target.closest("#topLangBtn,#botLangBtn");
+    if(!inside) closeAllPop();
+  }, {capture:true});
+
+  function clearBody(body){
+    if(body) body.innerHTML = "";
+  }
+
+  function addBubble(side,text,latest=false){
+    const body = side === "top" ? topBody : botBody;
+    if(!body) return null;
+
+    if(latest){
+      body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
+    }
+
+    const div = document.createElement("div");
+    div.className = `bubble${latest ? " latest" : ""}`;
+    div.textContent = String(text || "").trim();
+    body.appendChild(div);
+
+    const scroll = () => {
+      try{ body.scrollTop = body.scrollHeight; }catch{}
+    };
+
+    scroll();
+    requestAnimationFrame(scroll);
+    setTimeout(scroll,60);
+
+    return div;
+  }
+
+  function setMicState(side,listening){
+    const mic = side === "top" ? topMic : botMic;
+    mic.classList.toggle("listening", !!listening);
+  }
+
+  function startRecording(side) {
+    const sourceLang = side === "top" ? topLang : botLang;
+    const bcpCode = BCP[sourceLang] || sourceLang;
+
+    recordingSide = side;
+    setMicState("top", side === "top");
+    setMicState("bot", side === "bot");
+    liveText = "";
+
+    if (window.Native && window.Native.startSpeechRecognition) {
+      window.Native.startSpeechRecognition(bcpCode, side);
+    }
+    else if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      window.webRecognizer = new SpeechRecognition();
+      window.webRecognizer.lang = bcpCode;
+      window.webRecognizer.continuous = false;
+      window.webRecognizer.interimResults = true;
+
+      window.webRecognizer.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+          else interimTranscript += event.results[i][0].transcript;
+        }
+
+        if (finalTranscript) {
+          window.onNativeSpeechResult(JSON.stringify({side: side, text: finalTranscript, isFinal: true}));
+        } else if (interimTranscript) {
+          window.onNativeSpeechResult(JSON.stringify({side: side, text: interimTranscript, isFinal: false}));
+        }
+      };
+
+      window.webRecognizer.onerror = (e) => {
+        window.onNativeSpeechError(e.error);
+      };
+
+      window.webRecognizer.onend = () => {
+        if(recordingSide === side) {
+          setMicState(side, false);
+          recordingSide = null;
+        }
+      };
+
+      try {
+        window.webRecognizer.start();
+      } catch(e) {
+        window.onNativeSpeechError("start_error");
+      }
+    }
+    else {
+      showToast(tx("micUnsupported"));
+      setMicState(side, false);
+      recordingSide = null;
+    }
+  }
+
+  function stopRecognizer() {
+    setMicState("top", false);
+    setMicState("bot", false);
+    recordingSide = null;
+
+    if (window.Native && window.Native.stopSpeechRecognition) {
+      window.Native.stopSpeechRecognition();
+    }
+    else if (window.webRecognizer) {
+      window.webRecognizer.stop();
+      window.webRecognizer = null;
+    }
+  }
+
+  window.onNativeSpeechResult = function(arg1, arg2, arg3) {
+    let side = "top";
+    let text = "";
+    let isFinal = true;
+
+    if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
+      side = arg1;
+      text = typeof arg2 === "string" ? arg2 : "";
+      isFinal = typeof arg3 !== "undefined" ? arg3 : true;
+    } else if (typeof arg1 === "string") {
+      try {
+        const data = JSON.parse(arg1);
+        side = data.side || "top";
+        text = data.text || "";
+        isFinal = data.isFinal !== undefined ? data.isFinal : true;
+      } catch (e) {
+        side = "top";
+        text = arg1;
+        isFinal = true;
+      }
+    } else if (typeof arg1 === "object" && arg1 !== null) {
+      side = arg1.side || "top";
+      text = arg1.text || "";
+      isFinal = arg1.isFinal !== undefined ? arg1.isFinal : true;
+    }
+
+    liveText = cleanupTranscript(text);
+
+    if (isFinal) {
+      setMicState(side, false);
+      recordingSide = null;
+
+      if (liveText) {
+        finalizeSpeech(side, liveText);
+      }
+
+      const body = side === "top" ? topBody : botBody;
+      if (body) {
+        const activeBubble = body.querySelector(".bubble.latest");
+        if (activeBubble && activeBubble.textContent.endsWith("...")) {
+          activeBubble.remove();
+        }
+      }
+    } else {
+      const body = side === "top" ? topBody : botBody;
+      if (!body) return;
+
+      let activeBubble = body.querySelector(".bubble.latest");
+      if (!activeBubble) {
+        activeBubble = document.createElement("div");
+        activeBubble.className = "bubble latest";
+        body.appendChild(activeBubble);
+      }
+
+      activeBubble.textContent = liveText + "...";
+
+      try { body.scrollTop = body.scrollHeight; } catch {}
+    }
+  };
+
+  window.onNativeSpeechError = function(errorMsg) {
+    setMicState("top", false);
+    setMicState("bot", false);
+    recordingSide = null;
+
+    [topBody, botBody].forEach(body => {
+      if(body) {
+        const activeBubble = body.querySelector(".bubble.latest");
+        if(activeBubble && activeBubble.textContent.endsWith("...")) {
+          activeBubble.remove();
+        }
+      }
+    });
+
+    if(errorMsg === "manual_stop_empty") return;
+
+    if(errorMsg !== "no speech") {
+      if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") {
+        showToast(tx("micDenied"));
+      } else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") {
+        showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
+      } else if (errorMsg === "network_error" || errorMsg === "server_error") {
+        showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
+      } else {
+        showToast(tx("micError") + " (" + errorMsg + ")");
+      }
+    }
+  };
+
+  function cleanupTranscript(text){
+    return String(text || "").replace(/\s+/g," ").replace(/\b(\S+)( \1\b)+/gi,"$1").trim();
+  }
+
+  async function translateOnline(text,from,to){
+    const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
+
+    for(const endpoint of endpoints){
+      try{
+        const r = await fetch(endpoint,{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            text:String(text || "").trim(),
+            from_lang:canonical(from),
+            to_lang:canonical(to),
+            source:canonical(from),
+            target:canonical(to),
+            mode:"normal",
+            use_ai:false,
+            cultural:false,
+            tone:"neutral",
+            style:"warm"
+          })
+        });
+
+        const j = await r.json().catch(() => null);
+        const value = String(j?.translated || j?.translation || j?.text || "").trim();
+
+        if(r.ok && value) return value;
+      }catch{}
+    }
+
+    return null;
+  }
+
+  function translateOffline(text,from,to){
+    return OfflinePackBridge.translateOffline(text,from,to);
+  }
+
+  // 1. DÜZELTME: Çeviri Mantığını Offline Öncelikli Yapıyoruz
+  async function translateText(text, from, to) {
+    const src = canonical(from);
+    const dst = canonical(to);
+
+    // ADIM 1: Paket yüklü mü kontrol et
+    if (hasInstalledPair(src, dst)) {
+      try {
+        console.log(`italkyAI: Paket bulundu, Offline çevriliyor...`);
+        const offlineResult = await translateOffline(text, src, dst);
+        if (offlineResult && offlineResult.trim() !== "") {
+          return offlineResult;
+        }
+      } catch (e) {
+        console.error("italkyAI: Offline motor hatası, Online'a yönleniyor...", e);
+      }
+    }
+
+    // ADIM 2: Paket yoksa veya hata verdiyse otomatik Online çeviri yap
+    console.log(`italkyAI: Paket yok veya internet mevcut, Online çevriliyor...`);
+    return await translateOnline(text, src, dst);
+  }
+
+  function speak(text,langCode){
+    const value = String(text || "").trim();
+    if(!value) return;
+
+    const code = canonical(langCode);
+    const bcp = langObj(code).bcp || BCP[code] || "en-US";
+
+    try{
+      if(window.NativeTTS?.speak){
+        window.NativeTTS.speak(value, code);
+        return;
+      }
+    }catch(e){}
+
+    try{
+      if(window.speechSynthesis){
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(value);
+        u.lang = bcp;
+        u.rate = .95;
+        u.pitch = 1;
+        u.volume = 1;
+
+        const voices = window.speechSynthesis.getVoices?.() || [];
+        const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(code));
+        if(found) u.voice = found;
+
+        setTimeout(() => {
+          try{ window.speechSynthesis.speak(u); }catch{}
+        }, 80);
+      }
+    }catch(e){}
+  }
+
+  async function finalizeSpeech(side,text){
+    recordingSide = null;
+
+    const clean = cleanupTranscript(text);
+    if(!clean){
+      liveText = "";
+      setMicState(side,false);
+      return;
+    }
+
+    const src = side === "top" ? topLang : botLang;
+    const dst = side === "top" ? botLang : topLang;
+    const other = side === "top" ? "bot" : "top";
+
+    addBubble(side,clean,false);
+    const targetRow = addBubble(other,"",true);
+
+    const translated = await translateText(clean,src,dst);
+    if(!translated){
+      if(targetRow) targetRow.textContent = tx("translateError");
+      liveText = "";
+      setMicState(side,false);
+      return;
+    }
+
+    targetRow.textContent = translated;
+    speak(translated,dst);
+
+    liveText = "";
+    setMicState(side,false);
+  }
+
+  function handleMicClick(side) {
+    const mic = side === "top" ? topMic : botMic;
+
+    if (mic.classList.contains("listening")) {
+      stopRecognizer();
+    } else {
+      startRecording(side);
+    }
+  }
+
+  topMic.addEventListener("click", () => handleMicClick("top"));
+  botMic.addEventListener("click", () => handleMicClick("bot"));
+
+  function clearChat(){
+    try{ stopRecognizer(); }catch{}
+    try{ window.speechSynthesis?.cancel?.(); }catch{}
+    try{ window.NativeTTS?.stop?.(); }catch{}
+
+    liveText = "";
+    recordingSide = null;
+    topMic.classList.remove("listening");
+    botMic.classList.remove("listening");
+    clearBody(topBody);
+    clearBody(botBody);
+  }
+
+  sideClearBtn?.addEventListener("click", clearChat);
+  modeOnlineBtn?.addEventListener("click", () => setMode("online"));
+  modeOfflineBtn?.addEventListener("click", () => setMode("offline"));
+
+  window.addEventListener("offlinePairDownloadStarted",(e) => {
+    const d = e.detail || {};
+    const source = canonical(d.source || myLang);
+    const target = canonical(d.target || topLang);
+    if(!source || !target) return;
+
+    OfflinePackBridge.saveHomeWidget(source,target,langObj,"downloading");
+
+    if (target !== "en" || isNativeBaseReady()) {
+      showToast(tx("packDownloading"));
+    }
+
+    refreshOpenPop();
+  });
+
+  window.addEventListener("offlinePairDownloadCompleted",(e) => {
+    const d = e.detail || {};
+    const source = canonical(d.source || myLang);
+    const target = canonical(d.target || topLang);
+    if(!source || !target) return;
+
+    OfflinePackBridge.markInstalledPair(source,target);
+    OfflinePackBridge.saveHomeWidget(source,target,langObj,"ready");
+    syncInstalledPairsFromNative();
+
+    if (target === "en") {
+      showToast("Sistem (EN) kurulumu tamamlandı. Tüm dillerin kilidi açıldı!");
+    } else {
+      showToast(tx("packDownloaded"));
+    }
+
+    refreshOpenPop();
+  });
+
+  window.addEventListener("offlinePairDownloadFailed", (e) => {
+    const d = e.detail || {};
+    const target = canonical(d.target || topLang);
+
+    if (target === "en" && !isNativeBaseReady()) {
+      console.warn("italkyAI: Altyapı kurulumu başarısız oldu. 10 saniye sonra tekrar denenecek...");
+      setTimeout(autoStartNativeBaseSetup, 10000);
+    } else {
+      const errorModal = document.getElementById('downloadErrorModal');
+      if (errorModal) {
+        setNativeBanner(false);
+        errorModal.classList.add("show");
+      } else {
+        showToast("Yoğunluk nedeniyle şu an indirilemiyor.");
+      }
+    }
+
+    if (typeof refreshOpenPop === "function") refreshOpenPop();
+  });
+
+  async function autoCheckOfflineMode() {
+    const from = canonical(botLang);
+    const to = canonical(topLang);
+    
+    // Sadece başlangıçta veya dil değiştiğinde öneri yapar, 
+    // ama kullanıcı elini sürmüşse (currentMode) ona sadık kalır.
+    const isPairInstalled = window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to);
+    
+    // Eğer paket varsa butonu aktif göster ama mod zorla değişmesin
+    refreshModeButtons();
+  }
+
+  function applyRouteParams(){
+    const params = new URLSearchParams(location.search);
+    const source = canonical(params.get("source") || "");
+    const target = canonical(params.get("target") || "");
+    const mode = canonical(params.get("mode") || "");
+
+    if(source && langExists(source)) botLang = source;
+    if(target && langExists(target)) topLang = target;
+    if(topLang === botLang) topLang = differentLang(botLang);
+    if(mode === "offline") currentMode = "offline";
+  }
+
+  // 1. DÜZELTME: Çeviri Mantığını Offline Öncelikli Yapıyoruz
+  async function translateText(text, from, to) {
+    const src = canonical(from);
+    const dst = canonical(to);
+
+    // Eğer kullanıcı manuel olarak OFFLINE modu seçmişse VEYA paket zaten inmişse
+    // Önce MUTLAKA offline motoru dene
+    if (currentMode === "offline" || hasInstalledPair(src, dst)) {
+      try {
+        console.log(`italkyAI: Offline çeviri deneniyor... (${src} -> ${dst})`);
+        const offlineResult = await translateOffline(text, src, dst);
+        
+        if (offlineResult && offlineResult.trim() !== "") {
+          return offlineResult;
+        }
+      } catch (e) {
+        console.error("italkyAI: Offline çeviri başarısız, online kontrol ediliyor.", e);
+      }
+    }
+
+    // Eğer mod ONLINE ise ve yukarıdaki offline denemesi başarısız olduysa (veya paket yoksa)
+    if (currentMode === "online") {
+      return await translateOnline(text, src, dst);
+    }
+
+    // Eğer buraya kadar geldiyse ve hala mod offline ise kullanıcıya uyarı ver
+    showToast(tx("offlineMode"));
+    return null;
+  }
+
+  // 2. DÜZELTME: Mod Kontrolü Kullanıcı Seçimini Ezmesin
+  async function autoCheckOfflineMode() {
+    const from = canonical(botLang);
+    const to = canonical(topLang);
+    
+    // Sadece başlangıçta veya dil değiştiğinde öneri yapar, 
+    // ama kullanıcı elini sürmüşse (currentMode) ona sadık kalır.
+    const isPairInstalled = window.OfflinePackBridge && window.OfflinePackBridge.hasInstalledPair(from, to);
+    
+    // Eğer paket varsa butonu aktif göster ama mod zorla değişmesin
+    refreshModeButtons();
+  }
+
+  // 3. DÜZELTME: Boot Akışını Garantiye Alalım
+  // 1. MOD DEĞİŞKENİNİ VE DÜĞMELERİ SİLDİK
+  // let currentMode = "online"; -> Bu artık yok.
+
+  // 2. AKILLI ÇEVİRİ MOTORU (Sistemin Kalbi)
+  async function translateText(text, from, to) {
+    const src = canonical(from);
+    const dst = canonical(to);
+
+    // ADIM 1: Paket yüklü mü kontrol et
+    if (hasInstalledPair(src, dst)) {
+      try {
+        console.log(`italkyAI: Paket bulundu, Offline çevriliyor...`);
+        const offlineResult = await translateOffline(text, src, dst);
+        if (offlineResult && offlineResult.trim() !== "") {
+          return offlineResult;
+        }
+      } catch (e) {
+        console.error("italkyAI: Offline motor hatası, Online'a yönleniyor...", e);
+      }
+    }
+
+    // ADIM 2: Paket yoksa veya hata verdiyse otomatik Online çeviri yap
+    console.log(`italkyAI: Paket yok veya internet mevcut, Online çevriliyor...`);
+    return await translateOnline(text, src, dst);
+  }
+
+  // 3. DİL LİSTESİNİ HER ZAMAN FULL GÖSTER
+  function getFilteredLangsForPopover(){
+    // Artık filtreleme yok, her zaman tüm dilleri gösteriyoruz
+    return LANGS;
+  }
+
+  // 4. BOOT (BAŞLANGIÇ) AYARI
+  async function boot() {
+    try {
+      if (window.Native && typeof window.Native.requestF2FPermissions === "function") {
+        window.Native.requestF2FPermissions();
+      }
+    } catch (e) {}
+
+    OfflinePackBridge.installDownloadEventHandlers(langObj);
+    syncInstalledPairsFromNative();
+
+    try {
+      OfflinePackBridge.preloadRewardedAd();
+    } catch(e) {}
+
+    // Güncelleme kontrolü
+    checkAppUpdate().catch(console.error);
+
+    const detected = await detectCountryLang();
+    myLang = detected && langExists(detected) ? detected : "tr";
+
+    localStorage.setItem(MY_LANG_KEY, myLang);
+    localStorage.setItem(SITE_LANG_KEY, myLang);
+    localStorage.setItem(NATIVE_LANG_KEY, myLang);
+    OfflinePackBridge.setOfflineNativeLang(myLang);
+
+    const params = new URLSearchParams(location.search);
+    const hasRouteLang = params.get("source") || params.get("target");
+
+    if(!hasRouteLang){
+      botLang = myLang;
+      topLang = (langExists("en") && botLang !== "en") ? "en" : differentLang(botLang);
+    }
+
+    applyRouteParams();
+    refreshTexts();
+    // refreshModeButtons(); -> Silindi
+    clearBody(topBody);
+    clearBody(botBody);
+
+    scheduleAutoAd(5 * 60 * 1000);
+    setTimeout(autoStartNativeBaseSetup, 2000);
+  }
+    boot();
+</script>
+</body>
+</html>
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <title>italkyAI • FaceToFace</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      --bg:#050508;
+      --border:rgba(255,255,255,.15);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:Outfit,Arial,sans-serif}
+
+    body{
+      background:
+        radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),
+        radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),
+        #050508;
+    }
+
+    #adViewContainer {
+      display: none; 
+      width: 100%;
+      height: 82px;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+
+    .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+    .edge-handle{
+      position:fixed; top:50%; transform:translateY(-50%); z-index:998; width:28px; height:118px;
+      border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
+      backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:#fff;
+      font-family:Outfit,Arial,sans-serif; font-size:11px; font-weight:1000; line-height:1.15;
+      text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30);
+    }
+
+    .edge-handle.open{
+      right:0; border-radius:18px 0 0 18px;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14); border-right:none; box-shadow:-10px 0 32px rgba(0,0,0,.30);
+    }
+    .edge-handle.open::before { content: "M\A E\A N\A U"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+
+    .edge-handle.clear{
+      left:0; border-radius:0 18px 18px 0;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14); border-left:none; box-shadow:10px 0 32px rgba(0,0,0,.30);
+    }
+    .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+
+    .edge-handle:active{transform:translateY(-50%) scale(.96)}
+
+    .drawer-backdrop{
+      position:fixed; inset:0; z-index:2147483646; display:none; background:rgba(0,0,0,.48);
+      backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    }
+    .drawer-backdrop.show{display:block}
+
+    .side-drawer{
+      position:absolute; top:0; right:0; width:min(86vw,360px); height:100%;
+      padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
+      background: radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%),
+                  radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%),
+                  linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98));
+      border-left:1px solid rgba(255,255,255,.10); box-shadow:-24px 0 70px rgba(0,0,0,.52);
+      transform:translateX(102%); transition:transform .24s ease; overflow:auto; scrollbar-width:none;
+    }
+
+    .drawer-backdrop.show .side-drawer{transform:translateX(0)}
+    .side-drawer::-webkit-scrollbar{display:none}
+
+    .drawer-logo-row{ margin:4px 0 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+    .drawer-logo{min-width:0;text-align:left}
+    .drawer-logo-main{ font-family:"Space Grotesk",sans-serif; font-size:30px; line-height:1; font-weight:900; letter-spacing:-1px; }
+    .drawer-logo-main .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .drawer-logo-sub{ margin-top:7px; display:block; color:rgba(255,255,255,.82); font-size:11px; font-weight:1000; letter-spacing:1.8px; }
+
+    .drawer-mode-pill{
+      flex:0 0 auto; display:flex; align-items:center; gap:4px; padding:4px; border-radius:999px;
+      background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.11);
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); margin-top:1px;
+    }
+    .drawer-mode-pill button{
+      border:none; border-radius:999px; min-height:30px; padding:0 10px; background:transparent;
+      color:rgba(255,255,255,.62); font-family:inherit; font-size:10px; font-weight:1000; cursor:pointer; white-space:nowrap;
+    }
+    .drawer-mode-pill button.active{ background:linear-gradient(135deg,rgba(165,180,252,.26),rgba(236,72,153,.18)); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.08); }
+
+    /* HOLOGRAFİK ANİMASYON CSS */
+    .holo-container{
+      width: 140px;
+      height: 140px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      margin: 24px auto 30px;
+    }
+    .crystal-cage{
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      transform-style: preserve-3d;
+      animation: rotateCrystal 18s linear infinite;
+    }
+    .crystal-side{
+      position: absolute;
+      inset: 0;
+      border: 2px solid rgba(103,232,249,.42);
+      background: radial-gradient(circle, rgba(129,140,248,.12), transparent);
+      box-shadow: 0 0 18px rgba(103,232,249,.22);
+    }
+    .side1{ transform: rotateY(0deg) translateZ(50px); }
+    .side2{ transform: rotateY(90deg) translateZ(50px); }
+    .side3{ transform: rotateY(180deg) translateZ(50px); }
+    .side4{ transform: rotateY(270deg) translateZ(50px); }
+    .side5{ transform: rotateX(90deg) translateZ(50px); }
+    .side6{ transform: rotateX(-90deg) translateZ(50px); }
+    .holo-qr{
+      position: absolute;
+      width: 72px;
+      height: 72px;
+      z-index: 2;
+      overflow: visible;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: floatQR 4s ease-in-out infinite;
+    }
+    .ai-planet{ background: transparent; box-shadow: none; }
+    .planet-glow{
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+        radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
+      filter: blur(12px);
+      animation: planetGlow 3.2s ease-in-out infinite;
+      z-index: 1;
+    }
+    .planet-core{
+      position: relative;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      z-index: 2;
+      background:
+        radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
+        radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
+        linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
+      box-shadow:
+        inset -10px -12px 20px rgba(0,0,0,.72),
+        inset 10px 12px 22px rgba(255,255,255,.04),
+        inset 0 0 26px rgba(255,255,255,.04),
+        0 0 18px rgba(255,255,255,.10),
+        0 0 34px rgba(103,232,249,.20),
+        0 0 64px rgba(129,140,248,.18);
+      animation: planetBreath 2.8s ease-in-out infinite;
+    }
+    .planet-core::before{
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 0 12px rgba(255,255,255,.05);
+    }
+    .planet-core::after{
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 10px;
+      width: 22px;
+      height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
+      filter: blur(2px);
+      transform: rotate(-18deg);
+      opacity: .9;
+    }
+    .planet-rays{
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .planet-rays::before,
+    .planet-rays::after{
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+        conic-gradient(
+          from 0deg,
+          transparent 0deg 18deg, rgba(255,255,255,.28) 24deg, transparent 36deg 62deg,
+          rgba(255,255,255,.16) 70deg, transparent 84deg 116deg, rgba(255,255,255,.22) 124deg,
+          transparent 136deg 180deg, rgba(255,255,255,.18) 192deg, transparent 206deg 250deg,
+          rgba(255,255,255,.24) 258deg, transparent 270deg 310deg, rgba(255,255,255,.15) 318deg,
+          transparent 330deg 360deg
+        );
+      mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+      -webkit-mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+      filter: blur(1px);
+      opacity: .55;
+      animation: planetRaySpin 12s linear infinite;
+    }
+    .planet-rays::after{
+      opacity: .35;
+      transform: scale(1.14);
+      animation-duration: 18s;
+      animation-direction: reverse;
+    }
+    .planet-center{
+      position: relative;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .planet-ai-badge{
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20);
+      backdrop-filter: blur(10px);
+    }
+    .planet-ai-badge::before{
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .planet-ai-badge::after{
+      content: "";
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.10);
+      animation: aiSpin 8s linear infinite;
+    }
+    .planet-ai-badge span{
+      position: relative;
+      z-index: 2;
+      font-family: 'Space Grotesk',sans-serif;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      color: #fff;
+      text-shadow: 0 0 12px rgba(255,255,255,.22);
+    }
+    @keyframes rotateCrystal{ from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
+    @keyframes floatQR{ 0%,100%{ transform:translateY(0) rotateX(0deg); } 50%{ transform:translateY(-8px) rotateX(5deg); } }
+    @keyframes planetBreath{ 0%,100%{ transform:scale(1); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 22px rgba(255,255,255,.04),inset 0 0 26px rgba(255,255,255,.04),0 0 18px rgba(255,255,255,.10),0 0 34px rgba(103,232,249,.20),0 0 64px rgba(129,140,248,.18); } 50%{ transform:scale(1.045); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 24px rgba(255,255,255,.05),inset 0 0 28px rgba(255,255,255,.06),0 0 22px rgba(255,255,255,.12),0 0 42px rgba(103,232,249,.28),0 0 78px rgba(129,140,248,.24); } }
+    @keyframes planetGlow{ 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.92; transform:scale(1.16); } }
+    @keyframes planetRaySpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+    @keyframes aiSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+
+    .drawer-links{ display:grid; gap:9px; margin-top: 14px;}
+    .drawer-link{
+      min-height:50px; border-radius:18px; text-decoration:none; color:#fff; border:1px solid rgba(96,165,250,.18);
+      display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 13px; font-size:14px;
+      font-weight:1000; cursor:pointer; position:relative; overflow:hidden; backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px); box-shadow:inset 0 1px 0 rgba(255,255,255,.045); background:rgba(15,39,66,.44); font-family:inherit;
+    }
+    .drawer-link::before{
+      content:""; position:absolute; inset:0; opacity:.9; pointer-events:none;
+      background: radial-gradient(circle at left,rgba(56,189,248,.12),transparent 55%), linear-gradient(135deg,rgba(255,255,255,.035),rgba(15,39,66,.20));
+    }
+    .drawer-link span, .drawer-link small{ position:relative; z-index:2; }
+    .drawer-link:active{transform:scale(.985)}
+    .drawer-link small{ color:rgba(255,255,255,.56); font-size:12px; font-weight:1000; }
+
+    .drawer-footer-seal{
+      margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46);
+      font-size:11px; font-weight:1000; letter-spacing:.4px;
+    }
+    .drawer-footer-seal .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    .half-screen{
+      flex:1; min-height:0; position:relative; display:flex; flex-direction:column;
+      justify-content:space-between; align-items:center; overflow:hidden; padding:10px 8px;
+    }
+    .half-screen.top{ transform:rotate(180deg); background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg)); }
+    .half-screen.bottom{ background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg)); padding-bottom:calc(4px + var(--safe-bottom)); }
+
+    .lang-row{ width:100%; display:flex; align-items:center; justify-content:center; z-index:20; }
+    .lang-trigger{
+      min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px;
+      font-weight:900; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width:82vw; padding:8px 14px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    }
+
+    .popover{
+      position:absolute; left:50%; transform:translateX(-50%); width:min(92vw,360px); height:360px;
+      background:#0a0a0f; border:1px solid var(--border); border-radius:24px; display:none; flex-direction:column;
+      z-index:100; overflow:hidden; box-shadow:0 22px 60px rgba(0,0,0,.92);
+    }
+    .popover.show{display:flex}
+    .half-screen.top .popover{top:58px}
+    .half-screen.bottom .popover{bottom:58px}
+
+    .pop-head{ padding:14px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; justify-content:space-between; align-items:center; font-weight:900; }
+    .pop-close{ cursor:pointer; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
+    .pop-list{ flex:1; overflow-y:auto; padding:10px; scrollbar-width:none; }
+    .pop-list::-webkit-scrollbar{display:none}
+
+    .pop-item{
+      padding:12px; border-radius:16px; display:flex; align-items:center; justify-content:space-between;
+      gap:12px; cursor:pointer; border:1px solid transparent;
+    }
+    .pop-item.active{ background:rgba(99,102,241,.14); border-color:rgba(99,102,241,.25); }
+    .pop-left{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
+    .pop-flag{font-size:18px}
+    .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pop-code{font-size:12px;font-weight:900;opacity:.7}
+    .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+    .pop-download, .pop-installed, .pop-active, .pop-queued, .pop-native{
+      width:32px; height:32px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:15px; line-height:1; font-weight:1000;
+    }
+    .pop-download{ border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); color:#fff; cursor:pointer; }
+    .pop-download:active{transform:scale(.94)}
+    .pop-installed{ border:1px solid rgba(34,197,94,.36); background:rgba(34,197,94,.14); color:#86efac; box-shadow:0 0 18px rgba(34,197,94,.12); }
+    .pop-active{ border:1px solid rgba(59,130,246,.34); background:rgba(59,130,246,.14); color:#bfdbfe; animation:softPulse 1.1s ease-in-out infinite; }
+    .pop-queued{ border:1px solid rgba(245,158,11,.34); background:rgba(245,158,11,.14); color:#fde68a; }
+    .pop-native{ border:1px solid rgba(34,197,94,.22); background:rgba(34,197,94,.08); color:#bbf7d0; }
+
+    @keyframes softPulse{ 0%,100%{opacity:.65;transform:scale(.98)} 50%{opacity:1;transform:scale(1.04)} }
+    .pop-empty{ padding:20px 14px; text-align:center; color:rgba(255,255,255,.68); font-size:13px; line-height:1.5; font-weight:800; }
+
+    .chat-body{
+      flex:1; width:100%; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column;
+      align-items:center; justify-content:flex-start; gap:14px; padding:18px 0 18px; text-align:center;
+      scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y;
+      mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
+    }
+    .chat-body::before{ content:""; flex:1 0 auto; min-height:12px; }
+    .chat-body::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+    .bubble{ max-width:86%; line-height:1.18; word-break:break-word; font-size:24px; font-weight:900; opacity:.9; text-align:center; }
+    .bubble.latest{ font-size:32px; font-weight:1000; opacity:1; }
+
+    .mic-line{ width:100%; display:grid; grid-template-columns:1fr 70px 1fr; align-items:center; gap:12px; padding:0 8px 0; flex:0 0 auto; transform:translateY(-8px); }
+    .mic-side{ min-height:60px; display:flex; align-items:center; justify-content:center; }
+    .mic-side.empty{pointer-events:none}
+
+    .mic-btn{
+      width:70px; height:70px; border:none; border-radius:999px; background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.18); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
+      box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08); position:relative;
+    }
+    .mic-btn svg{ width:30px; height:30px; stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .mic-btn.listening{
+      background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
+      box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
+      animation:micBreath 1.05s ease-in-out infinite;
+    }
+    .mic-btn.listening::after{
+      content:""; position:absolute; inset:-13px; border-radius:50%; border:2px solid rgba(165,180,252,.78);
+      box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35); animation:micPulse 1s ease-out infinite;
+    }
+
+    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+    @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
+
+    .center-hub{
+      height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; position:relative;
+      background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05);
+    }
+
+    .orb{
+      width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center;
+      justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative; overflow:visible;
+    }
+    .orb-main{position:relative;z-index:3}
+    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+    .sat{ position:absolute; left:50%; top:50%; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; z-index:1; filter:blur(1.5px); }
+    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
+    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
+
+    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
+    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
+
+    .modal{
+      position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center;
+      justify-content:center; z-index:2147483647; padding:20px;
+    }
+    .modal.show{display:flex}
+    
+    /* KURUMSAL LACİVERT TASARIM UYGULANDI */
+    .modal-card{ 
+      width:min(100%,420px); border-radius:24px; padding:22px; 
+      background:linear-gradient(145deg,#0f172a,#1e293b); 
+      border:1px solid rgba(59,130,246,.4); box-shadow:0 24px 50px rgba(0,0,0,.50); 
+    }
+    
+    .modal-title{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:900; color:#93c5fd;}
+    .modal-text{margin:0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85);white-space:pre-line}
+    .modal-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px}
+    .modal-btn{ min-height:48px; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:900; }
+    .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
+    .modal-btn.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff}
+
+    .toast{
+      position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px);
+      max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px;
+      background:rgba(12,16,28,.98); border:1px solid rgba(255,255,255,.15); color:#fff; font-size:12px;
+      font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center;
+      z-index:2147483647; box-shadow:0 18px 36px rgba(0,0,0,.45); transition:.22s ease; pointer-events:none;
+    }
+    .toast.show{transform:translateX(-50%) translateY(0)}
+
+    @media(max-width:390px){
+      .mic-line{grid-template-columns:1fr 66px 1fr;gap:8px;transform:translateY(-7px)}
+      .mic-btn{width:66px;height:66px} .mic-btn svg{width:28px;height:28px}
+      .bubble{font-size:22px} .bubble.latest{font-size:30px}
+      .drawer-mode-pill button{font-size:9px;padding:0 8px}
+    }
+  </style>
+</head>
+
+<body>
+  <button id="sideClearBtn" class="edge-handle clear" type="button" aria-label="Ekranı temizle"></button>
+  <button id="drawerEdgeBtn" class="edge-handle open" type="button" aria-label="Menüyü aç"></button>
+
+  <div id="drawerBackdrop" class="drawer-backdrop">
+    <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
+      
+      <div class="drawer-logo-row">
+        <div class="drawer-logo">
+          <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
+          <div class="drawer-logo-sub">BE FREE</div>
+        </div>
+        
+      <div class="holo-container">
+        <div class="crystal-cage">
+          <div class="crystal-side side1"></div>
+          <div class="crystal-side side2"></div>
+          <div class="crystal-side side3"></div>
+          <div class="crystal-side side4"></div>
+          <div class="crystal-side side5"></div>
+          <div class="crystal-side side6"></div>
+        </div>
+
+        <div class="holo-qr ai-planet" aria-hidden="true">
+          <div class="planet-glow"></div>
+          <div class="planet-rays"></div>
+          <div class="planet-core">
+            <div class="planet-center">
+              <div class="planet-ai-badge">
+                <span>AI</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="drawer-links">
+        <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
+        <a class="drawer-link" href="/pages/contact.html"><span>İletişim</span><small>›</small></a>
+      </nav>
+
+      <div class="drawer-footer-seal">italky<span class="ai">AI</span> By Ozyigit's 2026</div>
+    </aside>
+  </div>
+
+  <main class="container">
+    <section class="half-screen top" id="topSection">
+      <div class="lang-row">
+        <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
+      </div>
+      <div class="popover" id="pop-top">
+        <div class="pop-head"><div id="topPopTitle">ÜST DİL</div><div class="pop-close" id="close-top">✕</div></div>
+        <div class="pop-list" id="list-top"></div>
+      </div>
+      <div class="chat-body" id="topBody"></div>
+      <div class="mic-line">
+        <div class="mic-side empty"></div>
+        <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
+          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+        </button>
+        <div class="mic-side empty"></div>
+      </div>
+    </section>
+
+    <section class="center-hub">
+      <div id="adViewContainer" style="display: none !important;"></div>
+      <div class="orb" style="display: flex !important;">
+        <span class="sat sat1"></span><span class="sat sat2"></span><span class="orb-main">italky<span class="ai">AI</span></span>
+      </div>
+    </section>
+
+    <section class="half-screen bottom" id="botSection">
+      <div class="lang-row">
+        <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
+      </div>
+      <div class="popover" id="pop-bot">
+        <div class="pop-head"><div id="botPopTitle">ALT DİL</div><div class="pop-close" id="close-bot">✕</div></div>
+        <div class="pop-list" id="list-bot"></div>
+      </div>
+      <div class="chat-body" id="botBody"></div>
+      <div class="mic-line">
+        <div class="mic-side empty"></div>
+        <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
+          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+        </button>
+        <div class="mic-side empty"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- YENİ EKLENEN: 5 DAKİKADA BİR ZORUNLU REKLAM MODALI (Kapatma Seçeneği Yok) -->
+  <div id="adModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="adTitle">Destek Reklamı</h3>
+      <p class="modal-text" id="adText">Bu uygulamayı sizlere ücretsiz olarak sunmaya devam edebilmemiz için ödüllü reklamları izlemeniz gereklidir. İzlerken reklama tıklayarak bize verdiğiniz desteği artırabilirsiniz. Çevirilerinizin kesintiye uğramaması için bu reklam her 5 dakikada bir gösterilir. Anlayışınız ve desteğiniz için teşekkür ederiz.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklamı İzle ve Devam Et</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- YENİ EKLENEN: GÜNCELLEME MODALI (Kapatma Seçeneği Yok) -->
+  <div id="updateModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title">Güncelleme Gerekli</h3>
+      <p class="modal-text">Uygulamanın yeni fonksiyonlarını eksiksiz kullanabilmek için lütfen güncelleme yapınız.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'" class="modal-btn primary" type="button">Play Store'dan Güncelle</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="downloadErrorModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" style="color: #ef4444;">İndirme Tamamlanamadı</h3>
+      <p class="modal-text">Şu an dünya genelinde yaşanan yoğun indirme talebi nedeniyle sunucularımızda kısa süreli bir zaman aşımı gecikmesi yaşandı. Lütfen internet bağlantınızı kontrol edip biraz sonra tekrar deneyiniz.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="document.getElementById('downloadErrorModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button">Anladım</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+  import { getLangPoolForSite } from "/js/lang_pool_full.js";
+  import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
+
+  const API_BASE = "https://italky-api.onrender.com";
+  const $ = (id) => document.getElementById(id);
+
+  const SITE_LANG_KEY = "site_lang";
   const NATIVE_LANG_KEY = "italky_native_lang_v7";
   const MY_LANG_KEY = "italky_public_my_lang_v1";
 
