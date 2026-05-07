@@ -560,15 +560,9 @@
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id) => document.getElementById(id);
 
-  const SITE_LANG_KEY = "site_lang";
-  const NATIVE_LANG_KEY = "italky_native_lang_v7";
-  const MY_LANG_KEY = "italky_public_my_lang_v1";
-
-  // Temel dil ayarları
+  // --- AYARLAR ---
   function canonical(code){ return OfflinePackBridge.canonical(code); }
-  function getInitialSiteLang(){ return canonical(localStorage.getItem(SITE_LANG_KEY) || navigator.language || "tr") || "tr"; }
-
-  const SITE_LANG = getInitialSiteLang();
+  const SITE_LANG = canonical(localStorage.getItem("site_lang") || navigator.language || "tr") || "tr";
   const LANGS = getLangPoolForSite(SITE_LANG).map(l => ({
       code: canonical(l.code),
       flag: l.flag || "🌐",
@@ -578,8 +572,11 @@
   let myLang = SITE_LANG;
   let topLang = "en";
   let botLang = myLang;
+  let recordingSide = null;
 
-  // DOM Elemanları (Menü ve Diğerleri)
+  // --- MİKROFON VE BUTON TANIMLAMALARI ---
+  const topMic = $("topMic");
+  const botMic = $("botMic");
   const topLangBtn = $("topLangBtn");
   const botLangBtn = $("botLangBtn");
   const popTop = $("pop-top");
@@ -588,25 +585,21 @@
   const listBot = $("list-bot");
   const drawerEdgeBtn = $("drawerEdgeBtn");
   const drawerBackdrop = $("drawerBackdrop");
+  const sideClearBtn = $("sideClearBtn");
 
-  // [KAPATILAN KISIM] İndirme fonksiyonlarını boşalttık
-  async function autoStartNativeBaseSetup() { return; }
-  async function startOfflinePackDownload() { return false; }
-
-  // [DÜZELTİLEN KISIM] Popover ve Menü Tetikleyicileri
-  function openDrawer() { 
+  // --- MENÜ VE DRAWER MANTIĞI ---
+  drawerEdgeBtn.onclick = () => {
       setNativeBanner(false);
-      drawerBackdrop.classList.add("show"); 
-  }
-  function closeDrawer() { 
-      drawerBackdrop.classList.remove("show"); 
-      setNativeBanner(true);
-  }
+      drawerBackdrop.classList.add("show");
+  };
+  drawerBackdrop.onclick = (e) => {
+      if(e.target === drawerBackdrop) {
+          drawerBackdrop.classList.remove("show");
+          setNativeBanner(true);
+      }
+  };
 
-  drawerEdgeBtn.onclick = openDrawer;
-  drawerBackdrop.onclick = (e) => { if(e.target === drawerBackdrop) closeDrawer(); };
-
-  // Dilleri listeleyen ama indirme butonu göstermeyen fonksiyon
+  // --- DİL SEÇİMİ (POPOVER) ---
   function renderPop(side) {
       const list = side === "top" ? listTop : listBot;
       const selected = side === "top" ? topLang : botLang;
@@ -617,13 +610,10 @@
             <div class="pop-flag">${l.flag}</div>
             <div class="pop-name">${l.name}</div>
           </div>
-          <div class="pop-actions">
-            <div class="pop-code">${l.code.toUpperCase()}</div>
-          </div>
+          <div class="pop-actions"><div class="pop-code">${l.code.toUpperCase()}</div></div>
         </div>
       `).join("");
 
-      // Dil seçme işlemini bağladık
       list.querySelectorAll(".pop-item").forEach(item => {
           item.onclick = () => {
               const code = item.dataset.selectCode;
@@ -639,15 +629,55 @@
   topLangBtn.onclick = () => { renderPop("top"); popTop.classList.add("show"); };
   botLangBtn.onclick = () => { renderPop("bot"); popBot.classList.add("show"); };
 
-  // Çeviriyi online'a zorladık
+  // --- MİKROFON TETİKLEYİCİLERİ (GERİ GELDİ) ---
+  function handleMicClick(side) {
+      if (recordingSide === side) {
+          stopRecognizer();
+      } else {
+          startRecording(side);
+      }
+  }
+
+  topMic.onclick = () => handleMicClick("top");
+  botMic.onclick = () => handleMicClick("bot");
+  sideClearBtn.onclick = () => {
+      stopRecognizer();
+      $("topBody").innerHTML = "";
+      $("botBody").innerHTML = "";
+  };
+
+  // --- SES VE ÇEVİRİ MOTORU ---
+  function startRecording(side) {
+      recordingSide = side;
+      const mic = side === "top" ? topMic : botMic;
+      const otherMic = side === "top" ? botMic : topMic;
+      mic.classList.add("listening");
+      otherMic.classList.remove("listening");
+      
+      const bcp = (side === "top" ? topLang : botLang);
+      if (window.Native && window.Native.startSpeechRecognition) {
+          window.Native.startSpeechRecognition(bcp, side);
+      }
+  }
+
+  function stopRecognizer() {
+      recordingSide = null;
+      topMic.classList.remove("listening");
+      botMic.classList.remove("listening");
+      if (window.Native && window.Native.stopSpeechRecognition) {
+          window.Native.stopSpeechRecognition();
+      }
+  }
+
   async function translateText(text, from, to) {
+      // Fatura düzelene kadar sadece online çeviri
       return await translateOnline(text, from, to);
   }
 
-  // UI Güncelleme
+  // --- UI YARDIMCILARI ---
   function refreshTexts() {
-      const tO = LANGS.find(x => x.code === topLang);
-      const bO = LANGS.find(x => x.code === botLang);
+      const tO = LANGS.find(x => x.code === topLang) || {flag:"🌐", name:"EN"};
+      const bO = LANGS.find(x => x.code === botLang) || {flag:"🇹🇷", name:"TR"};
       topLangBtn.textContent = `${tO.flag} ${tO.name} ⌵`;
       botLangBtn.textContent = `${bO.flag} ${bO.name} ⌵`;
   }
@@ -657,7 +687,7 @@
       if (bridge && bridge.toggleBannerAd) bridge.toggleBannerAd(visible, "");
   }
 
-  // Sayfa açılış ayarları
+  // Başlangıç
   refreshTexts();
   scheduleAutoAd(5 * 60 * 1000);
  </script>
