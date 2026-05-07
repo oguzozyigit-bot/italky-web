@@ -27,15 +27,23 @@
       transition: background 0.5s ease;
     }
 
-    /* --- MASA MODU TAM EKRAN DİNAMİĞİ --- */
+    /* --- MASA MODU DÜZ EKRAN DİNAMİĞİ --- */
     body.bt-active { background: #020617; }
     
-    /* BT aktifken üst ekranı ve ortadaki hub'ı gizle (Kollar kalıyor) */
-    body.bt-active .half-screen.top,
+    /* BT aktifken ortadaki topu gizle, kollar (MENU/CLEAR) kalır */
     body.bt-active .center-hub { display: none !important; }
     
-    /* Alt ekranı tam sayfa yap */
-    body.bt-active .half-screen.bottom { height: 100dvh; flex: 1; padding-top: 90px; }
+    /* Üst ekran ters dönmeyi bırakır, düz bakar. Mic ve Dil barı gizlenir. */
+    body.bt-active .half-screen.top { 
+      transform: none; 
+      padding-top: 85px; /* Üst barın altında kalmaması için */
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    body.bt-active .half-screen.top .lang-row,
+    body.bt-active .half-screen.top .mic-line { display: none; }
+    
+    /* Alt ekran */
+    body.bt-active .half-screen.bottom { padding-top: 20px; }
     
     /* GÖSTERİŞLİ ÜST BAR */
     .bt-header {
@@ -66,18 +74,13 @@
     }
     .btn-ayril:active { transform: scale(0.92); }
 
-    /* Tam Ekran Chat Baloncukları Stili (WhatsApp Tarzı) */
-    body.bt-active .chat-body { align-items: stretch; padding: 10px 20px 30px; }
-    body.bt-active .bubble { font-size: 22px; padding: 14px 20px; text-align: left; max-width: 80%; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    body.bt-active .bubble.local { align-self: flex-end; background: var(--ai-gradient); color: #000; border-radius: 20px 20px 0 20px; }
-    body.bt-active .bubble.remote { align-self: flex-start; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 20px 20px 20px 0; }
-
-    /* Dil Seçim Popover'ının Tam Ekrandaki Yeri */
-    body.bt-active .half-screen.bottom .popover { top: 50%; bottom: auto; transform: translate(-50%, -50%); height: 400px; box-shadow: 0 30px 80px rgba(0,0,0,0.9); }
+    /* Dil Seçim Popover'ının Tam Ekrandaki Yeri (Üst barı ezmemesi için ortalandı) */
+    body.bt-active .popover { top: 50%; bottom: auto; transform: translate(-50%, -50%); height: 400px; box-shadow: 0 30px 80px rgba(0,0,0,0.9); }
     /* -------------------------------- */
 
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
+    /* KENAR TUTAMAKLARI */
     .edge-handle{
       position:fixed; top:50%; transform:translateY(-50%); z-index:2500; width:28px; height:118px;
       border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
@@ -191,8 +194,8 @@
     @keyframes aiSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
 
     /* MODAL İÇİ BÜYÜTÜLMÜŞ QR TASARIMI */
-    #qrModal .holo-container { width: 200px; height: 200px; margin: 40px auto; }
-    #qrModal .crystal-cage { width: 140px; height: 140px; }
+    #qrModal .holo-container { width: 220px; height: 220px; margin: 40px auto; }
+    #qrModal .crystal-cage { width: 160px; height: 160px; }
     #qrModal .holo-qr { width: 120px; height: 120px; }
     #qrModal .planet-core { width: 120px; height: 120px; background: #fff; }
     #qrModal .planet-glow { inset: -20px; }
@@ -265,8 +268,9 @@
     .chat-body::before{ content:""; flex:1 0 auto; min-height:12px; }
     .chat-body::-webkit-scrollbar{ display:none; width:0; height:0; }
 
-    .bubble{ max-width:86%; line-height:1.18; word-break:break-word; font-size:24px; font-weight:900; opacity:.9; text-align:center; transition: all 0.3s; }
-    .bubble.latest{ font-size:32px; font-weight:1000; opacity:1; }
+    /* DEV METİN BALONLARI (CHAT YERİNE MERKEZİ VE BÜYÜK) */
+    .bubble{ max-width:90%; line-height:1.2; word-break:break-word; font-size:26px; font-weight:900; opacity:.9; text-align:center; transition: all 0.3s; }
+    .bubble.latest{ font-size:36px; font-weight:1000; opacity:1; }
 
     .mic-line{ width:100%; display:grid; grid-template-columns:1fr 70px 1fr; align-items:center; gap:12px; padding:0 8px 0; flex:0 0 auto; transform:translateY(-8px); }
     .mic-side{ min-height:60px; display:flex; align-items:center; justify-content:center; }
@@ -411,7 +415,9 @@
         <div class="pop-head"><div id="topPopTitle">ÜST DİL</div><div class="pop-close" id="close-top">✕</div></div>
         <div class="pop-list" id="list-top"></div>
       </div>
+      
       <div class="chat-body" id="topBody"></div>
+      
       <div class="mic-line">
         <div class="mic-side empty"></div>
         <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
@@ -444,10 +450,12 @@
         <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
       </div>
       <div class="popover" id="pop-bot">
-        <div class="pop-head"><div id="botPopTitle">ALT DİL</div><div class="pop-close" id="close-bot">✕</div></div>
+        <div class="pop-head"><div id="botPopTitle">BENİM DİLİM</div><div class="pop-close" id="close-bot">✕</div></div>
         <div class="pop-list" id="list-bot"></div>
       </div>
+      
       <div class="chat-body" id="botBody"></div>
+      
       <div class="mic-line">
         <div class="mic-side empty"></div>
         <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
@@ -471,7 +479,7 @@
         <div class="holo-qr ai-planet">
           <div class="planet-glow"></div><div class="planet-rays"></div>
           <div class="planet-core">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://play.google.com/store/apps/details?id=com.ozyigits.italkyai&bgcolor=ffffff&color=000000" style="border-radius:4px; width:100px; height:100px; z-index:10; position:relative; mix-blend-mode: screen;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://play.google.com/store/apps/details?id=com.ozyigits.italkyai&bgcolor=ffffff&color=000000" style="border-radius:6px; width:120px; height:120px; z-index:10; position:relative; mix-blend-mode: screen;">
           </div>
         </div>
       </div>
@@ -518,11 +526,11 @@
   // Ortadaki Bluetooth Bağlantı Butonu
   $("btToggleBtn").onclick = () => {
       if (document.body.classList.contains("bt-active")) {
-          // Bağlıysa Ayrıl (Tıklanma ihtimaline karşı)
           $("disconnectBtn").click();
       } else {
+          // Android tarafındaki eşleşme penceresini doğrudan tetikler
           if (window.Native && window.Native.startBluetoothConnect) {
-              showToast("Cihazlar taranıyor... Lütfen listeden eşleşmek istediğiniz cihazı seçin.");
+              showToast("Cihazlar taranıyor... Lütfen eşleşmek istediğiniz telefonu seçin.");
               window.Native.startBluetoothConnect();
           } else {
               showToast("Bağlantı isteği gönderildi... (Test Modu)");
@@ -546,27 +554,31 @@
   // Android'den gelen Bağlantı Kuruldu sinyali
   window.onBtConnected = function() {
       document.body.classList.add("bt-active");
-      // Ekranı temizle ki eski mesajlar kalmasın
+      // Ekranı temizle
+      topBody.innerHTML = "";
       botBody.innerHTML = "";
-      showToast("Bağlantı kuruldu! Yüz Yüze sohbete hazırsınız.");
+      showToast("Bağlantı kuruldu! Alt mikrofona basarak konuşabilirsiniz.");
   };
 
   window.onBtDisconnected = function() {
       window.location.href = "login.html";
   };
 
-  // Karşı taraftan saf metin alımı ve çeviri işlemi
+  // Karşı taraftan saf metin alımı (Çevirip üst ekrana yazma ve okuma)
   window.onBtMessageReceived = async function(text) {
-      const targetBody = $("botBody");
+      const targetBody = $("topBody"); // Karşıdan gelenler artık DÜZ ve ÜSTTE
       
-      // Karşı tarafın gönderdiği balon (Sola yaslı, Chat stili)
       const resBubble = document.createElement("div");
-      resBubble.className = "bubble remote";
+      resBubble.className = "bubble latest";
       resBubble.textContent = "•••";
+      
+      // Eski latest class'larını temizle
+      targetBody.querySelectorAll('.bubble').forEach(b => b.classList.remove('latest'));
       targetBody.appendChild(resBubble);
       targetBody.scrollTop = targetBody.scrollHeight;
 
       try {
+          // Karşıdan gelen ham metni "auto" dil algılayarak kendi seçtiğimiz dile (botLang) çeviriyoruz
           const r = await fetch(`${API_BASE}/api/translate`, {
               method: "POST",
               headers: {"Content-Type": "application/json"},
@@ -648,8 +660,8 @@
       
       if (!bubble) {
           bubble = document.createElement("div");
-          // BT modundaysak kendi gönderdiğimiz balon sağa yaslı (local) görünür
-          bubble.className = document.body.classList.contains("bt-active") ? "bubble local latest" : "bubble latest";
+          bubble.className = "bubble latest";
+          body.querySelectorAll('.bubble').forEach(b => b.classList.remove('latest'));
           body.appendChild(bubble);
       }
       
@@ -665,9 +677,10 @@
   async function finalizeSpeech(side, text) {
       stopRecognizer();
 
-      // MASA MODU AKTİF İSE
+      // MASA MODU AKTİF İSE (SADECE KENDİ YAZIMIZI GÖNDERİRİZ)
       if (document.body.classList.contains("bt-active")) {
-          // Sadece ham metni karşıya gönderiyoruz, kendi tarafımızda çevirmemize gerek yok
+          // Alt ekranda bizim kendi söylediğimiz yazı zaten belirdi.
+          // Şimdi bu saf metni (text) Android Native ile Bluetooth'tan karşıya yolluyoruz.
           if (window.Native && window.Native.sendBtText) {
               window.Native.sendBtText(text);
           }
@@ -680,8 +693,9 @@
       const targetBody = (side === "top" ? botBody : topBody);
 
       const resBubble = document.createElement("div");
-      resBubble.className = "bubble";
+      resBubble.className = "bubble latest";
       resBubble.textContent = "•••";
+      targetBody.querySelectorAll('.bubble').forEach(b => b.classList.remove('latest'));
       targetBody.appendChild(resBubble);
       targetBody.scrollTop = targetBody.scrollHeight;
 
