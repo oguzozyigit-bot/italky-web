@@ -30,28 +30,31 @@
     /* --- MASA MODU (BLUETOOTH BAĞLIYKEN) --- */
     body.bt-active { background: #020617; }
     
-    /* Bağlanınca üst ekran ters dönmeyi bırakır, düzleşir */
+    /* Bağlanınca üst ekran düzleşir, 180 derece iptal olur */
     body.bt-active .half-screen.top { transform: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
     
     /* Üst mikrofon gizlenir */
     body.bt-active .half-screen.top .mic-line { display: none !important; }
     
-    /* Yan kolların ikonları renklenir */
-    body.bt-active .edge-handle.clear svg { color: #60a5fa; filter: drop-shadow(0 0 8px #60a5fa); }
-    body.bt-active .edge-handle.open svg { color: #f87171; filter: drop-shadow(0 0 8px #f87171); }
+    /* Üst dil menüsü TIKLANAMAZ hale gelir */
+    body.bt-active #topLangBtn { pointer-events: none; opacity: 0.8; }
+    
+    /* Bağlanınca Toggle butonları renklenir */
+    body.bt-active #btToggleBtn { color: #60a5fa; border-color: rgba(96,165,250,0.5); background: rgba(59,130,246,0.15); box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+    body.bt-active #qrToggleBtn { color: #f87171; border-color: rgba(248,113,113,0.5); background: rgba(239,68,68,0.15); box-shadow: 0 0 15px rgba(239,68,68,0.3); }
 
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-    /* --- YAN KOLLAR (C L E A R / M E N U) --- */
+    /* --- YAN KOLLAR (C L E A R / M E N U - Sadece Yazı) --- */
     .edge-handle{
-      position:fixed; top:50%; transform:translateY(-50%); z-index:2500; width:34px; height:150px;
+      position:fixed; top:50%; transform:translateY(-50%); z-index:2500; width:30px; height:130px;
       border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;
       backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:#fff;
-      font-family:Outfit,Arial,sans-serif; font-size:11px; font-weight:1000; line-height:1.2;
+      font-family:Outfit,Arial,sans-serif; font-size:12px; font-weight:1000; line-height:1.2;
       text-align:center; box-shadow:0 0 32px rgba(0,0,0,.30);
     }
-    .edge-handle svg { width: 18px; height: 18px; margin-bottom: 6px; stroke-width: 2.5; transition: all 0.3s ease; }
-    
+    .edge-handle span { white-space: pre; display: block; text-shadow: 0 0 12px rgba(255,255,255,.28); letter-spacing: 2px;}
+
     .edge-handle.open{
       right:0; border-radius:18px 0 0 18px;
       background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
@@ -65,11 +68,8 @@
     .edge-handle:active{transform:translateY(-50%) scale(.96)}
 
     /* --- DRAWER (YAN MENÜ) --- */
-    .drawer-backdrop{
-      position:fixed; inset:0; z-index:2147483646; display:none; background:rgba(0,0,0,.48); backdrop-filter:blur(6px);
-    }
+    .drawer-backdrop{ position:fixed; inset:0; z-index:2147483646; display:none; background:rgba(0,0,0,.48); backdrop-filter:blur(6px); }
     .drawer-backdrop.show{display:block}
-
     .side-drawer{
       position:absolute; top:0; right:0; width:min(86vw,360px); height:100%;
       padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
@@ -139,14 +139,12 @@
     .chat-body::before{ content:""; flex:1 0 auto; min-height:12px; }
     .chat-body::-webkit-scrollbar{ display:none; }
 
-    /* Balon yok, sadece şık dev yazılar */
     .chat-text {
       font-size: 28px; font-weight: 900; line-height: 1.2; word-break: break-word;
       opacity: 0.6; transition: all 0.3s ease; text-align: center; width: 100%; color: #fff;
     }
     .chat-text.latest { font-size: 38px; font-weight: 1000; opacity: 1; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
     
-    /* Renklendirmeler */
     body.bt-active #botBody .chat-text { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     body.bt-active #topBody .chat-text { color: #bfdbfe; text-shadow: 0 0 15px rgba(59,130,246,0.3); }
 
@@ -172,11 +170,22 @@
     @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
     @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
 
-    /* --- ORTA HUB (DÖNEN TOP) --- */
+    /* --- ORTA HUB (DÖNEN TOP VE TOGGLE BUTONLARI) --- */
     .center-hub{
-      height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; position:relative;
+      height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; position:relative;
       background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05);
+      padding: 0 45px; /* Kenarlardan içe boşluk */
     }
+    
+    /* İÇ TOGGLE BUTONLARI */
+    .hub-btn {
+        width: 50px; height: 50px; border-radius: 50%;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.3s ease; outline: none; z-index: 10;
+    }
+    .hub-btn:active { transform: scale(0.9); }
+
     .orb{
       width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center;
       justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative; overflow:visible;
@@ -198,24 +207,11 @@
     .modal-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px}
     .modal-btn{ min-height:48px; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:900; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:#fff; }
     
-    /* KARE QR CSS */
-    .square-qr-container {
-        position: relative; width: 200px; height: 200px; margin: 30px auto; display: flex; align-items: center; justify-content: center;
-    }
-    .square-spinner {
-        position: absolute; inset: 0; border: 4px dashed rgba(103,232,249,0.7); border-radius: 16px;
-        animation: spinSquare 10s linear infinite; box-shadow: 0 0 15px rgba(103,232,249,0.2), inset 0 0 15px rgba(103,232,249,0.2);
-    }
-    .square-spinner-inner {
-        position: absolute; inset: -14px; border: 2px solid rgba(236,72,153,0.4); border-radius: 22px;
-        animation: spinSquare 15s linear infinite reverse;
-    }
-    .qr-wrapper {
-        position: relative; z-index: 5; background: #fff; padding: 10px; border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    }
+    .square-qr-container { position: relative; width: 200px; height: 200px; margin: 30px auto; display: flex; align-items: center; justify-content: center; }
+    .square-spinner { position: absolute; inset: 0; border: 4px dashed rgba(103,232,249,0.7); border-radius: 16px; animation: spinSquare 10s linear infinite; box-shadow: 0 0 15px rgba(103,232,249,0.2), inset 0 0 15px rgba(103,232,249,0.2); }
+    .square-spinner-inner { position: absolute; inset: -14px; border: 2px solid rgba(236,72,153,0.4); border-radius: 22px; animation: spinSquare 15s linear infinite reverse; }
+    .qr-wrapper { position: relative; z-index: 5; background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
     .qr-wrapper img { width: 140px; height: 140px; display: block; }
-    
     @keyframes spinSquare { 100% { transform: rotate(360deg); } }
 
     .toast{
@@ -231,17 +227,11 @@
 
 <body>
 
-  <button id="btHandleBtn" class="edge-handle clear" type="button" aria-label="Bağlan / Temizle">
-    <svg id="btIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
-    </svg>
+  <button id="sideClearBtn" class="edge-handle clear" type="button">
     <span>C<br>L<br>E<br>A<br>R</span>
   </button>
   
-  <button id="qrHandleBtn" class="edge-handle open" type="button" aria-label="Menü / Ayrıl">
-    <svg id="qrIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
-    </svg>
+  <button id="drawerEdgeBtn" class="edge-handle open" type="button">
     <span>M<br>E<br>N<br>U</span>
   </button>
 
@@ -255,7 +245,6 @@
       </div>
       
       <nav class="drawer-links">
-        <a class="drawer-link" id="menuQrBtn" style="border-color: rgba(103,232,249,0.4);"><span>QR Kod ile Paylaş</span><small>›</small></a>
         <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
         <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
         <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
@@ -286,9 +275,21 @@
     </section>
 
     <section class="center-hub" id="centerHub">
+      <button id="btToggleBtn" class="hub-btn" aria-label="Bağlan">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
+        </svg>
+      </button>
+
       <div class="orb">
         <span class="sat sat1"></span><span class="sat sat2"></span><span class="orb-main">italky<span class="ai">AI</span></span>
       </div>
+
+      <button id="qrToggleBtn" class="hub-btn" aria-label="Paylaş / Ayrıl">
+        <svg id="qrToggleIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </button>
     </section>
 
     <section class="half-screen bottom" id="botSection">
@@ -361,33 +362,41 @@
   const popTop = $("pop-top"); const popBot = $("pop-bot");
   const listTop = $("list-top"); const listBot = $("list-bot");
   
-  const btHandleBtn = $("btHandleBtn"); 
-  const qrHandleBtn = $("qrHandleBtn");
-  const qrIcon = $("qrIcon");
+  // İç Toggle Butonları
+  const btToggleBtn = $("btToggleBtn"); 
+  const qrToggleBtn = $("qrToggleBtn");
+  const qrToggleIcon = $("qrToggleIcon");
 
-  // --- SOL BUTON (C L E A R / BAĞLAN) ---
-  btHandleBtn.onclick = () => {
+  // Dış Kenar Butonları
+  $("sideClearBtn").onclick = () => {
+      topBody.innerHTML = "";
+      botBody.innerHTML = "";
+      showToast("Ekran temizlendi.");
+  };
+
+  $("drawerEdgeBtn").onclick = () => {
+      $("drawerBackdrop").classList.add("show");
+  };
+
+  // --- SOL İÇ TOGGLE (BLUETOOTH BAĞLANMA) ---
+  btToggleBtn.onclick = () => {
       if (!isBtConnected) {
-          // BAĞLI DEĞİLSE: Arama Başlat (KÖPRÜ İSMİ DÜZELTİLDİ: AndroidBridge)
           if (window.AndroidBridge && window.AndroidBridge.startBluetoothConnect) {
               showToast("Eşleşilen cihazlar taranıyor...");
               window.AndroidBridge.startBluetoothConnect();
           } else {
               showToast("Bağlantı isteği gönderildi... (Test Modu)");
-              setTimeout(() => window.onBtConnected(), 1500); // PC'de denerken çalışması için
+              setTimeout(() => window.onBtConnected(), 1500); 
           }
       } else {
-          // BAĞLIYSA: Sadece Ekranı Temizle
-          topBody.innerHTML = "";
-          botBody.innerHTML = "";
-          showToast("Ekran temizlendi.");
+          showToast("Zaten bağlısınız.");
       }
   };
 
-  // --- SAĞ BUTON (M E N U / AYRIL) ---
-  qrHandleBtn.onclick = () => {
+  // --- SAĞ İÇ TOGGLE (QR GÖSTER VEYA AYRIL) ---
+  qrToggleBtn.onclick = () => {
       if (!isBtConnected) {
-          $("drawerBackdrop").classList.add("show");
+          $("qrModal").classList.add("show"); 
       } else {
           if (window.AndroidBridge && window.AndroidBridge.disconnectBluetooth) {
               window.AndroidBridge.disconnectBluetooth();
@@ -396,18 +405,13 @@
       }
   };
 
-  $("menuQrBtn").onclick = () => { 
-      $("drawerBackdrop").classList.remove("show"); 
-      $("qrModal").classList.add("show"); 
-  };
-
   // Android'den gelen Bağlantı Kuruldu sinyali
   window.onBtConnected = function() {
       isBtConnected = true;
-      document.body.classList.add("bt-active"); // CSS ile 180 derece iptal edilir
+      document.body.classList.add("bt-active"); // CSS ile 180 derece iptal edilir, topLang kilitlenir
       
       // Sağ ikonu Çıkış (Ayrıl) ikonuna çevir
-      qrIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>`;
+      qrToggleIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>`;
       
       topBody.innerHTML = ""; botBody.innerHTML = "";
       showToast("Bağlantı kuruldu! Yüz yüze sohbet edebilirsiniz.");
@@ -416,11 +420,11 @@
   window.onBtDisconnected = function() {
       isBtConnected = false;
       document.body.classList.remove("bt-active");
-      qrIcon.innerHTML = `<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>`;
+      qrToggleIcon.innerHTML = `<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>`;
       window.location.href = "login.html"; 
   };
 
-  // --- KARŞIDAN GELEN METNİ ALMA, ÇEVİRME VE YAZMA ---
+  // --- KARŞIDAN GELEN METNİ ALMA VE ÇEVİRME ---
   window.onBtMessageReceived = async function(text) {
       const targetBody = $("topBody");
       
@@ -531,7 +535,7 @@
       // MASA MODU AKTİF İSE (Kendi metnimizi köprü üzerinden karşıya yolla)
       if (isBtConnected) {
           if (window.AndroidBridge && window.AndroidBridge.sendBtText) {
-              window.AndroidBridge.sendBtText(text); // İLETİŞİM KÖPRÜSÜ DÜZELTİLDİ
+              window.AndroidBridge.sendBtText(text); // İletişim Köprüsü AndroidBridge!
           } else {
               showToast("Bağlantı hatası: Android köprüsü yanıt vermiyor.");
           }
