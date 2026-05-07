@@ -27,84 +27,69 @@
       transition: background 0.5s ease;
     }
 
-    /* --- MASA MODU DÜZ EKRAN DİNAMİĞİ --- */
+    /* --- MASA MODU (DÜZ BAKAN EKRANLAR) --- */
     body.bt-active { background: #020617; }
     
-    /* BT aktifken ortadaki topu gizle, kollar (MENU/CLEAR) kalır */
-    body.bt-active .center-hub { display: none !important; }
-    
-    /* Üst ekran ters dönmeyi bırakır, düz bakar. Mic ve Dil barı gizlenir. */
+    /* BT aktifken üst ekran ters dönmeyi bırakır, düz bakar. Mic ve Dil barı gizlenir. */
     body.bt-active .half-screen.top { 
       transform: none; 
-      padding-top: 85px; /* Üst barın altında kalmaması için */
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-top: calc(30px + env(safe-area-inset-top,0px)); 
     }
     body.bt-active .half-screen.top .lang-row,
     body.bt-active .half-screen.top .mic-line { display: none; }
     
-    /* Alt ekran */
+    /* Alt ekran padding ayarı */
     body.bt-active .half-screen.bottom { padding-top: 20px; }
-    
-    /* GÖSTERİŞLİ ÜST BAR */
-    .bt-header {
-        position: fixed; top: 0; left: 0; right: 0; height: calc(75px + env(safe-area-inset-top, 0px));
-        background: linear-gradient(180deg, rgba(5,5,8,0.98), rgba(10,10,15,0.8));
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255,255,255,0.08); z-index: 2000;
-        display: none; align-items: center; padding: env(safe-area-inset-top, 0px) 20px 0;
-        justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    body.bt-active .bt-header { display: flex; }
-    
-    .bt-header-logo-container { display: flex; flex-direction: column; align-items: flex-start; }
-    .bt-header-logo { font-family: "Space Grotesk", sans-serif; font-size: 26px; font-weight: 900; line-height: 1; }
-    .bt-header-logo span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .bt-header-sub { font-family: "Space Grotesk", sans-serif; font-size: 11px; font-weight: 1000; letter-spacing: 2px; color: rgba(255,255,255,0.7); margin-top: 4px; }
-    
-    .bt-header-center { 
-        color: #3b82f6; filter: drop-shadow(0 0 12px rgba(59,130,246,0.8)); 
-        display: flex; align-items: center; gap: 6px; animation: pulseBT 2s infinite; font-weight: 900; font-size: 13px;
-    }
-    @keyframes pulseBT { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.95); } }
-    
-    .btn-ayril {
-        background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);
-        padding: 8px 18px; border-radius: 12px; font-weight: 900; font-family: inherit; cursor: pointer; font-size: 14px;
-        box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); transition: all 0.2s;
-    }
-    .btn-ayril:active { transform: scale(0.92); }
 
-    /* Dil Seçim Popover'ının Tam Ekrandaki Yeri (Üst barı ezmemesi için ortalandı) */
-    body.bt-active .popover { top: 50%; bottom: auto; transform: translate(-50%, -50%); height: 400px; box-shadow: 0 30px 80px rgba(0,0,0,0.9); }
+    /* Tam Ekran Chat Baloncukları */
+    body.bt-active .chat-body { align-items: stretch; padding: 10px 20px 20px; }
+    body.bt-active .bubble { font-size: 24px; padding: 14px 20px; text-align: left; max-width: 85%; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    /* Alt ekran balonu (Senin konuştuğun) */
+    body.bt-active #botBody .bubble { align-self: flex-end; background: var(--ai-gradient); color: #000; border-radius: 20px 20px 0 20px; }
+    /* Üst ekran balonu (Karşıdan gelen, sana çevrilen) */
+    body.bt-active #topBody .bubble { align-self: flex-start; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 20px 20px 20px 0; }
+
+    /* Dil Seçim Popover'ı (Ortalandı) */
+    body.bt-active .popover { top: 50%; bottom: auto; transform: translate(-50%, -50%); height: 400px; box-shadow: 0 30px 80px rgba(0,0,0,0.9); z-index: 3000; }
     /* -------------------------------- */
 
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
     /* KENAR TUTAMAKLARI */
     .edge-handle{
-      position:fixed; top:50%; transform:translateY(-50%); z-index:2500; width:28px; height:118px;
+      position:fixed; top:50%; transform:translateY(-50%); z-index:2500; width:34px; height:90px;
       border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
       backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:#fff;
-      font-family:Outfit,Arial,sans-serif; font-size:11px; font-weight:1000; line-height:1.15;
-      text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30);
+      box-shadow:0 0 32px rgba(0,0,0,.30); transition: all 0.3s ease;
     }
 
+    /* SAĞ KOL (QR / AYRIL) */
     .edge-handle.open{
-      right:0; border-radius:18px 0 0 18px;
+      right:0; border-radius:20px 0 0 20px;
       background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
       border:1px solid rgba(255,255,255,.14); border-right:none; box-shadow:-10px 0 32px rgba(0,0,0,.30);
     }
-    .edge-handle.open::before { content: "M\A E\A N\A U"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+    /* Aktif (Bağlı) iken Ayrıl butonuna dönüşür ve kızarır */
+    body.bt-active .edge-handle.open {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.2));
+      border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;
+    }
 
+    /* SOL KOL (BLUETOOTH) */
     .edge-handle.clear{
-      left:0; border-radius:0 18px 18px 0;
+      left:0; border-radius:0 20px 20px 0;
       background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
       border:1px solid rgba(255,255,255,.14); border-left:none; box-shadow:10px 0 32px rgba(0,0,0,.30);
     }
-    .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+    /* Aktif (Bağlı) iken Bluetooth butonu mavi parlar */
+    body.bt-active .edge-handle.clear {
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.4), rgba(37, 99, 235, 0.2));
+      border-color: rgba(96, 165, 250, 0.5); color: #93c5fd; box-shadow: 10px 0 40px rgba(59, 130, 246, 0.5);
+    }
 
-    .edge-handle:active{transform:translateY(-50%) scale(.96)}
+    .edge-handle:active{transform:translateY(-50%) scale(.92)}
 
+    /* DİĞER ORTAK ELEMANLAR */
     .drawer-backdrop{
       position:fixed; inset:0; z-index:2147483646; display:none; background:rgba(0,0,0,.48);
       backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
@@ -120,7 +105,6 @@
       border-left:1px solid rgba(255,255,255,.10); box-shadow:-24px 0 70px rgba(0,0,0,.52);
       transform:translateX(102%); transition:transform .24s ease; overflow:auto; scrollbar-width:none;
     }
-
     .drawer-backdrop.show .side-drawer{transform:translateX(0)}
     .side-drawer::-webkit-scrollbar{display:none}
 
@@ -129,76 +113,6 @@
     .drawer-logo-main{ font-family:"Space Grotesk",sans-serif; font-size:30px; line-height:1; font-weight:900; letter-spacing:-1px; }
     .drawer-logo-main .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .drawer-logo-sub{ margin-top:7px; display:block; color:rgba(255,255,255,.82); font-size:11px; font-weight:1000; letter-spacing:1.8px; }
-
-    /* HOLOGRAFİK ANİMASYON CSS */
-    .holo-container{
-      width: 140px; height: 140px; position: relative; display: flex; align-items: center; justify-content: center;
-      transform-style: preserve-3d; margin: 24px auto 30px;
-    }
-    .crystal-cage{
-      position: absolute; width: 100px; height: 100px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite;
-    }
-    .crystal-side{
-      position: absolute; inset: 0; border: 2px solid rgba(103,232,249,.42);
-      background: radial-gradient(circle, rgba(129,140,248,.12), transparent);
-      box-shadow: 0 0 18px rgba(103,232,249,.22);
-    }
-    .side1{ transform: rotateY(0deg) translateZ(50px); }
-    .side2{ transform: rotateY(90deg) translateZ(50px); }
-    .side3{ transform: rotateY(180deg) translateZ(50px); }
-    .side4{ transform: rotateY(270deg) translateZ(50px); }
-    .side5{ transform: rotateX(90deg) translateZ(50px); }
-    .side6{ transform: rotateX(-90deg) translateZ(50px); }
-    .holo-qr{
-      position: absolute; width: 72px; height: 72px; z-index: 2; overflow: visible; display: flex; align-items: center; justify-content: center;
-      animation: floatQR 4s ease-in-out infinite;
-    }
-    .ai-planet{ background: transparent; box-shadow: none; }
-    .planet-glow{
-      position: absolute; inset: -12px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%), radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
-      filter: blur(12px); animation: planetGlow 3.2s ease-in-out infinite; z-index: 1;
-    }
-    .planet-core{
-      position: relative; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      overflow: hidden; z-index: 2;
-      background: radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%), radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%), radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%), linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
-      box-shadow: inset -10px -12px 20px rgba(0,0,0,.72), inset 10px 12px 22px rgba(255,255,255,.04), inset 0 0 26px rgba(255,255,255,.04), 0 0 18px rgba(255,255,255,.10), 0 0 34px rgba(103,232,249,.20), 0 0 64px rgba(129,140,248,.18);
-      animation: planetBreath 2.8s ease-in-out infinite;
-    }
-    .planet-core::before{ content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 0 12px rgba(255,255,255,.05); }
-    .planet-core::after{ content: ""; position: absolute; left: 12px; top: 10px; width: 22px; height: 10px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%); filter: blur(2px); transform: rotate(-18deg); opacity: .9; }
-    .planet-rays{ position: absolute; inset: -12px; border-radius: 50%; pointer-events: none; z-index: 1; }
-    .planet-rays::before, .planet-rays::after{
-      content: ""; position: absolute; inset: 0; border-radius: 50%;
-      background: conic-gradient(from 0deg, transparent 0deg 18deg, rgba(255,255,255,.28) 24deg, transparent 36deg 62deg, rgba(255,255,255,.16) 70deg, transparent 84deg 116deg, rgba(255,255,255,.22) 124deg, transparent 136deg 180deg, rgba(255,255,255,.18) 192deg, transparent 206deg 250deg, rgba(255,255,255,.24) 258deg, transparent 270deg 310deg, rgba(255,255,255,.15) 318deg, transparent 330deg 360deg);
-      mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%); -webkit-mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-      filter: blur(1px); opacity: .55; animation: planetRaySpin 12s linear infinite;
-    }
-    .planet-rays::after{ opacity: .35; transform: scale(1.14); animation-duration: 18s; animation-direction: reverse; }
-    .planet-center{ position: relative; z-index: 3; display: flex; align-items: center; justify-content: center; }
-    .planet-ai-badge{
-      position: relative; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
-      border: 1px solid rgba(255,255,255,.18); box-shadow: 0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20); backdrop-filter: blur(10px);
-    }
-    .planet-ai-badge::before{ content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(255,255,255,.10); }
-    .planet-ai-badge::after{ content: ""; position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.10); animation: aiSpin 8s linear infinite; }
-    .planet-ai-badge span{ position: relative; z-index: 2; font-family: 'Space Grotesk',sans-serif; font-size: 11px; font-weight: 900; letter-spacing: .5px; color: #fff; text-shadow: 0 0 12px rgba(255,255,255,.22); }
-    
-    @keyframes rotateCrystal{ from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
-    @keyframes floatQR{ 0%,100%{ transform:translateY(0) rotateX(0deg); } 50%{ transform:translateY(-8px) rotateX(5deg); } }
-    @keyframes planetBreath{ 0%,100%{ transform:scale(1); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 22px rgba(255,255,255,.04),inset 0 0 26px rgba(255,255,255,.04),0 0 18px rgba(255,255,255,.10),0 0 34px rgba(103,232,249,.20),0 0 64px rgba(129,140,248,.18); } 50%{ transform:scale(1.045); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 24px rgba(255,255,255,.05),inset 0 0 28px rgba(255,255,255,.06),0 0 22px rgba(255,255,255,.12),0 0 42px rgba(103,232,249,.28),0 0 78px rgba(129,140,248,.24); } }
-    @keyframes planetGlow{ 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.92; transform:scale(1.16); } }
-    @keyframes planetRaySpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
-    @keyframes aiSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
-
-    /* MODAL İÇİ BÜYÜTÜLMÜŞ QR TASARIMI */
-    #qrModal .holo-container { width: 220px; height: 220px; margin: 40px auto; }
-    #qrModal .crystal-cage { width: 160px; height: 160px; }
-    #qrModal .holo-qr { width: 120px; height: 120px; }
-    #qrModal .planet-core { width: 120px; height: 120px; background: #fff; }
-    #qrModal .planet-glow { inset: -20px; }
 
     .drawer-links{ display:grid; gap:9px; margin-top: 14px;}
     .drawer-link{
@@ -215,12 +129,10 @@
     .drawer-link:active{transform:scale(.985)}
     .drawer-link small{ color:rgba(255,255,255,.56); font-size:12px; font-weight:1000; }
 
-    .drawer-footer-seal{
-      margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46);
-      font-size:11px; font-weight:1000; letter-spacing:.4px;
-    }
+    .drawer-footer-seal{ margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46); font-size:11px; font-weight:1000; letter-spacing:.4px; }
     .drawer-footer-seal .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
+    /* EKRAN YARILARI */
     .half-screen{
       flex:1; min-height:0; position:relative; display:flex; flex-direction:column;
       justify-content:space-between; align-items:center; overflow:hidden; padding:10px 8px;
@@ -228,6 +140,24 @@
     .half-screen.top{ transform:rotate(180deg); background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg)); }
     .half-screen.bottom{ background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg)); padding-bottom:calc(4px + var(--safe-bottom)); }
 
+    /* ORTA HUB (ORB) */
+    .center-hub{
+      height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; position:relative;
+      background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05);
+    }
+    .orb{
+      width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center;
+      justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative; overflow:visible;
+    }
+    .orb-main{position:relative;z-index:3}
+    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sat{ position:absolute; left:50%; top:50%; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; z-index:1; filter:blur(1.5px); }
+    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
+    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
+    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
+    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
+
+    /* DİL VE ARAYÜZ PARÇALARI */
     .lang-row{ width:100%; display:flex; align-items:center; justify-content:center; z-index:20; }
     .lang-trigger{
       min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px;
@@ -248,17 +178,14 @@
     .pop-close{ cursor:pointer; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
     .pop-list{ flex:1; overflow-y:auto; padding:10px; scrollbar-width:none; }
     .pop-list::-webkit-scrollbar{display:none}
-
-    .pop-item{
-      padding:12px; border-radius:16px; display:flex; align-items:center; justify-content:space-between;
-      gap:12px; cursor:pointer; border:1px solid transparent;
-    }
+    .pop-item{ padding:12px; border-radius:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; border:1px solid transparent; }
     .pop-item.active{ background:rgba(99,102,241,.14); border-color:rgba(99,102,241,.25); }
     .pop-left{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
     .pop-flag{font-size:18px}
     .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pop-code{font-size:12px;font-weight:900;opacity:.7}
 
+    /* CHAT GÖVDESİ VE MİKROFON */
     .chat-body{
       flex:1; width:100%; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column;
       align-items:center; justify-content:flex-start; gap:14px; padding:18px 0 18px; text-align:center;
@@ -268,8 +195,7 @@
     .chat-body::before{ content:""; flex:1 0 auto; min-height:12px; }
     .chat-body::-webkit-scrollbar{ display:none; width:0; height:0; }
 
-    /* DEV METİN BALONLARI (CHAT YERİNE MERKEZİ VE BÜYÜK) */
-    .bubble{ max-width:90%; line-height:1.2; word-break:break-word; font-size:26px; font-weight:900; opacity:.9; text-align:center; transition: all 0.3s; }
+    .bubble{ max-width:86%; line-height:1.2; word-break:break-word; font-size:26px; font-weight:900; opacity:.9; text-align:center; transition: all 0.3s; }
     .bubble.latest{ font-size:36px; font-weight:1000; opacity:1; }
 
     .mic-line{ width:100%; display:grid; grid-template-columns:1fr 70px 1fr; align-items:center; gap:12px; padding:0 8px 0; flex:0 0 auto; transform:translateY(-8px); }
@@ -291,47 +217,13 @@
       content:""; position:absolute; inset:-13px; border-radius:50%; border:2px solid rgba(165,180,252,.78);
       box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35); animation:micPulse 1s ease-out infinite;
     }
-
     @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
     @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
 
-    .center-hub{
-      height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding: 0 30px; position:relative;
-      background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05);
-    }
-
-    .bt-toggle-btn {
-        width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2);
-        background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: all 0.3s ease;
-    }
-
-    .orb{
-      width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center;
-      justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative; overflow:visible;
-    }
-    .orb-main{position:relative;z-index:3}
-    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-    .sat{ position:absolute; left:50%; top:50%; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; z-index:1; filter:blur(1.5px); }
-    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
-    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
-
-    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
-    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
-
-    .modal{
-      position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center;
-      justify-content:center; z-index:2147483647; padding:20px;
-    }
+    /* MODAL VE HOLOGRAFİK QR */
+    .modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2147483647; padding:20px; }
     .modal.show{display:flex}
-    
-    .modal-card{ 
-      width:min(100%,420px); border-radius:24px; padding:22px; 
-      background:linear-gradient(145deg,#0f172a,#1e293b); 
-      border:1px solid rgba(59,130,246,.4); box-shadow:0 24px 50px rgba(0,0,0,.50); text-align: center;
-    }
-    
+    .modal-card{ width:min(100%,420px); border-radius:24px; padding:22px; background:linear-gradient(145deg,#0f172a,#1e293b); border:1px solid rgba(59,130,246,.4); box-shadow:0 24px 50px rgba(0,0,0,.50); text-align: center; }
     .modal-title{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:900; color:#93c5fd;}
     .modal-text{margin:0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85);white-space:pre-line}
     .modal-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px}
@@ -348,63 +240,60 @@
     }
     .toast.show{transform:translateX(-50%) translateY(0)}
 
+    /* HOLOGRAFİK ANİMASYON CSS */
+    .holo-container{ width: 140px; height: 140px; position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 24px auto 30px; }
+    .crystal-cage{ position: absolute; width: 100px; height: 100px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
+    .crystal-side{ position: absolute; inset: 0; border: 2px solid rgba(103,232,249,.42); background: radial-gradient(circle, rgba(129,140,248,.12), transparent); box-shadow: 0 0 18px rgba(103,232,249,.22); }
+    .side1{ transform: rotateY(0deg) translateZ(50px); } .side2{ transform: rotateY(90deg) translateZ(50px); } .side3{ transform: rotateY(180deg) translateZ(50px); }
+    .side4{ transform: rotateY(270deg) translateZ(50px); } .side5{ transform: rotateX(90deg) translateZ(50px); } .side6{ transform: rotateX(-90deg) translateZ(50px); }
+    .holo-qr{ position: absolute; width: 72px; height: 72px; z-index: 2; overflow: visible; display: flex; align-items: center; justify-content: center; animation: floatQR 4s ease-in-out infinite; }
+    .ai-planet{ background: transparent; box-shadow: none; }
+    .planet-glow{ position: absolute; inset: -12px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%), radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%); filter: blur(12px); animation: planetGlow 3.2s ease-in-out infinite; z-index: 1; }
+    .planet-core{ position: relative; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 2; background: radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%), radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%), radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%), linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%); box-shadow: inset -10px -12px 20px rgba(0,0,0,.72), inset 10px 12px 22px rgba(255,255,255,.04), inset 0 0 26px rgba(255,255,255,.04), 0 0 18px rgba(255,255,255,.10), 0 0 34px rgba(103,232,249,.20), 0 0 64px rgba(129,140,248,.18); animation: planetBreath 2.8s ease-in-out infinite; }
+    .planet-core::before{ content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 0 12px rgba(255,255,255,.05); }
+    .planet-core::after{ content: ""; position: absolute; left: 12px; top: 10px; width: 22px; height: 10px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%); filter: blur(2px); transform: rotate(-18deg); opacity: .9; }
+    .planet-rays{ position: absolute; inset: -12px; border-radius: 50%; pointer-events: none; z-index: 1; }
+    .planet-rays::before, .planet-rays::after{ content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0deg 18deg, rgba(255,255,255,.28) 24deg, transparent 36deg 62deg, rgba(255,255,255,.16) 70deg, transparent 84deg 116deg, rgba(255,255,255,.22) 124deg, transparent 136deg 180deg, rgba(255,255,255,.18) 192deg, transparent 206deg 250deg, rgba(255,255,255,.24) 258deg, transparent 270deg 310deg, rgba(255,255,255,.15) 318deg, transparent 330deg 360deg); mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%); -webkit-mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%); filter: blur(1px); opacity: .55; animation: planetRaySpin 12s linear infinite; }
+    .planet-rays::after{ opacity: .35; transform: scale(1.14); animation-duration: 18s; animation-direction: reverse; }
+    .planet-center{ position: relative; z-index: 3; display: flex; align-items: center; justify-content: center; }
+    .planet-ai-badge{ position: relative; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20); backdrop-filter: blur(10px); }
+    .planet-ai-badge::before{ content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(255,255,255,.10); }
+    .planet-ai-badge::after{ content: ""; position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.10); animation: aiSpin 8s linear infinite; }
+    .planet-ai-badge span{ position: relative; z-index: 2; font-family: 'Space Grotesk',sans-serif; font-size: 11px; font-weight: 900; letter-spacing: .5px; color: #fff; text-shadow: 0 0 12px rgba(255,255,255,.22); }
+    
+    @keyframes rotateCrystal{ from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
+    @keyframes floatQR{ 0%,100%{ transform:translateY(0) rotateX(0deg); } 50%{ transform:translateY(-8px) rotateX(5deg); } }
+    @keyframes planetBreath{ 0%,100%{ transform:scale(1); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 22px rgba(255,255,255,.04),inset 0 0 26px rgba(255,255,255,.04),0 0 18px rgba(255,255,255,.10),0 0 34px rgba(103,232,249,.20),0 0 64px rgba(129,140,248,.18); } 50%{ transform:scale(1.045); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 24px rgba(255,255,255,.05),inset 0 0 28px rgba(255,255,255,.06),0 0 22px rgba(255,255,255,.12),0 0 42px rgba(103,232,249,.28),0 0 78px rgba(129,140,248,.24); } }
+    @keyframes planetGlow{ 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.92; transform:scale(1.16); } }
+    @keyframes planetRaySpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+    @keyframes aiSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+
+    /* MODAL İÇİ BÜYÜTÜLMÜŞ QR TASARIMI */
+    #qrModal .holo-container { width: 220px; height: 220px; margin: 40px auto; }
+    #qrModal .crystal-cage { width: 160px; height: 160px; }
+    #qrModal .holo-qr { width: 120px; height: 120px; }
+    #qrModal .planet-core { width: 120px; height: 120px; background: #fff; }
+    #qrModal .planet-glow { inset: -20px; }
+
   </style>
 </head>
 
 <body>
 
-  <header id="btHeader" class="bt-header">
-    <div class="bt-header-logo-container">
-      <div class="bt-header-logo">italky<span>AI</span></div>
-      <div class="bt-header-sub">BE FREE</div>
-    </div>
-    <div class="bt-header-center">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
-      </svg>
-      <span>Bağlı</span>
-    </div>
-    <button id="disconnectBtn" class="btn-ayril">Ayrıl</button>
-  </header>
-
-  <button id="sideClearBtn" class="edge-handle clear" type="button" aria-label="Ekranı temizle"></button>
+  <button id="btHandleBtn" class="edge-handle clear" type="button" title="Masa Moduna Bağlan">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
+    </svg>
+  </button>
   
-  <button id="drawerEdgeBtn" class="edge-handle open" type="button" aria-label="Menüyü aç"></button>
+  <button id="qrHandleBtn" class="edge-handle open" type="button" title="Uygulamayı Paylaş">
+    <svg id="qrIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+    </svg>
+  </button>
 
   <div id="drawerBackdrop" class="drawer-backdrop">
-    <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
-      
-      <div class="drawer-logo-row">
-        <div class="drawer-logo">
-          <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
-          <div class="drawer-logo-sub">BE FREE</div>
-        </div>
-      </div>
-
-      <div class="holo-container">
-        <div class="crystal-cage">
-          <div class="crystal-side side1"></div><div class="crystal-side side2"></div><div class="crystal-side side3"></div>
-          <div class="crystal-side side4"></div><div class="crystal-side side5"></div><div class="crystal-side side6"></div>
-        </div>
-        <div class="holo-qr ai-planet" aria-hidden="true">
-          <div class="planet-glow"></div><div class="planet-rays"></div>
-          <div class="planet-core"><div class="planet-center"><div class="planet-ai-badge"><span>AI</span></div></div></div>
-        </div>
-      </div>
-
-      <nav class="drawer-links">
-        <a class="drawer-link" id="menuQrBtn" style="border-color: rgba(236,72,153,0.4);"><span>Uygulamayı Paylaş (QR)</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/contact.html"><span>İletişim</span><small>›</small></a>
-      </nav>
-
-      <div class="drawer-footer-seal">italky<span class="ai">AI</span> By Ozyigit's 2026</div>
-    </aside>
-  </div>
+    </div>
 
   <main class="container">
     <section class="half-screen top" id="topSection">
@@ -427,22 +316,10 @@
       </div>
     </section>
 
-    <section class="center-hub">
-      <button id="btToggleBtn" class="bt-toggle-btn" title="Masa Modu Doğrudan Eşleşme">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
-          </svg>
-      </button>
-
+    <section class="center-hub" id="centerHub">
       <div class="orb">
         <span class="sat sat1"></span><span class="sat sat2"></span><span class="orb-main">italky<span class="ai">AI</span></span>
       </div>
-      
-      <button id="centerQrBtn" class="bt-toggle-btn" title="QR ile Paylaş">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-      </button>
     </section>
 
     <section class="half-screen bottom" id="botSection">
@@ -513,6 +390,7 @@
   let topLang = "en";
   let botLang = SITE_LANG;
   let recordingSide = null;
+  let isBtConnected = false;
 
   // --- 2. ELEMENTLER ---
   const topMic = $("topMic"); const botMic = $("botMic");
@@ -520,65 +398,77 @@
   const topLangBtn = $("topLangBtn"); const botLangBtn = $("botLangBtn");
   const popTop = $("pop-top"); const popBot = $("pop-bot");
   const listTop = $("list-top"); const listBot = $("list-bot");
+  const btHandleBtn = $("btHandleBtn"); const qrHandleBtn = $("qrHandleBtn");
+  const qrIcon = $("qrIcon");
 
-  // --- 3. DİREKT BLUETOOTH VE QR MANTIĞI ---
+  // --- 3. DİREKT BLUETOOTH VE QR/AYRIL MANTIĞI ---
   
-  // Ortadaki Bluetooth Bağlantı Butonu
-  $("btToggleBtn").onclick = () => {
-      if (document.body.classList.contains("bt-active")) {
-          $("disconnectBtn").click();
-      } else {
-          // Android tarafındaki eşleşme penceresini doğrudan tetikler
+  // SOL BUTON: Eşleşme (Bağlıysa bir şey yapma)
+  btHandleBtn.onclick = () => {
+      if (!isBtConnected) {
           if (window.Native && window.Native.startBluetoothConnect) {
-              showToast("Cihazlar taranıyor... Lütfen eşleşmek istediğiniz telefonu seçin.");
+              showToast("Eşleşilen cihazlar taranıyor...");
               window.Native.startBluetoothConnect();
           } else {
               showToast("Bağlantı isteği gönderildi... (Test Modu)");
               setTimeout(() => window.onBtConnected(), 1500);
           }
+      } else {
+          showToast("Zaten bağlısınız.");
       }
   };
 
-  // QR Modal Açıcılar
-  $("menuQrBtn").onclick = () => { $("drawerBackdrop").classList.remove("show"); $("qrModal").classList.add("show"); };
-  $("centerQrBtn").onclick = () => $("qrModal").classList.add("show");
-
-  // Üst Bar "Ayrıl" Butonu
-  $("disconnectBtn").onclick = () => {
-      if (window.Native && window.Native.disconnectBluetooth) {
-          window.Native.disconnectBluetooth();
+  // SAĞ BUTON: Bağlı değilse QR göster, Bağlıysa Ayrıl işlemi yap
+  qrHandleBtn.onclick = () => {
+      if (!isBtConnected) {
+          $("qrModal").classList.add("show");
+      } else {
+          if (window.Native && window.Native.disconnectBluetooth) {
+              window.Native.disconnectBluetooth();
+          }
+          window.onBtDisconnected();
       }
-      window.location.href = "login.html"; // İstenen sayfaya dönüş
   };
 
   // Android'den gelen Bağlantı Kuruldu sinyali
   window.onBtConnected = function() {
+      isBtConnected = true;
       document.body.classList.add("bt-active");
+      
+      // Sağ ikonu Çıkış (Ayrıl) ikonuna çevir
+      qrIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>`;
+      
       // Ekranı temizle
       topBody.innerHTML = "";
       botBody.innerHTML = "";
-      showToast("Bağlantı kuruldu! Alt mikrofona basarak konuşabilirsiniz.");
+      showToast("Bağlantı kuruldu! Yüz Yüze sohbete hazırsınız.");
   };
 
+  // Android'den gelen Bağlantı Koptu sinyali
   window.onBtDisconnected = function() {
-      window.location.href = "login.html";
+      isBtConnected = false;
+      document.body.classList.remove("bt-active");
+      
+      // Sağ ikonu tekrar QR ikonuna çevir
+      qrIcon.innerHTML = `<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>`;
+      
+      window.location.href = "login.html"; 
   };
 
-  // Karşı taraftan saf metin alımı (Çevirip üst ekrana yazma ve okuma)
+  // Karşı taraftan saf metin alımı (Senin diline çevirip üst ekrana yazar ve okur)
   window.onBtMessageReceived = async function(text) {
-      const targetBody = $("topBody"); // Karşıdan gelenler artık DÜZ ve ÜSTTE
+      const targetBody = $("topBody"); // Karşıdan gelenler ÜST EKRANDA ve DÜZ
       
       const resBubble = document.createElement("div");
       resBubble.className = "bubble latest";
       resBubble.textContent = "•••";
       
-      // Eski latest class'larını temizle
       targetBody.querySelectorAll('.bubble').forEach(b => b.classList.remove('latest'));
       targetBody.appendChild(resBubble);
       targetBody.scrollTop = targetBody.scrollHeight;
 
       try {
-          // Karşıdan gelen ham metni "auto" dil algılayarak kendi seçtiğimiz dile (botLang) çeviriyoruz
+          // Karşıdan gelen ham metni otomatik dilden kendi seçtiğimiz dile (botLang) çeviriyoruz
           const r = await fetch(`${API_BASE}/api/translate`, {
               method: "POST",
               headers: {"Content-Type": "application/json"},
@@ -678,9 +568,9 @@
       stopRecognizer();
 
       // MASA MODU AKTİF İSE (SADECE KENDİ YAZIMIZI GÖNDERİRİZ)
-      if (document.body.classList.contains("bt-active")) {
-          // Alt ekranda bizim kendi söylediğimiz yazı zaten belirdi.
-          // Şimdi bu saf metni (text) Android Native ile Bluetooth'tan karşıya yolluyoruz.
+      if (isBtConnected) {
+          // Alt ekranda bizim kendi söylediğimiz yazı belirdi.
+          // Bu saf metni Bluetooth üzerinden Native kod ile karşıya yolluyoruz.
           if (window.Native && window.Native.sendBtText) {
               window.Native.sendBtText(text);
           }
@@ -730,11 +620,6 @@
       t.textContent = msg; t.classList.add("show");
       setTimeout(() => t.classList.remove("show"), 3000);
   }
-
-  // Çekmece Kurguları
-  $("drawerEdgeBtn").onclick = () => $("drawerBackdrop").classList.add("show");
-  $("drawerBackdrop").onclick = (e) => { if(e.target === $("drawerBackdrop")) $("drawerBackdrop").classList.remove("show"); };
-  $("sideClearBtn").onclick = () => { stopRecognizer(); topBody.innerHTML = ""; botBody.innerHTML = ""; };
 
   refreshTexts();
   </script>
