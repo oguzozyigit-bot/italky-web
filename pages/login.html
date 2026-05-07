@@ -156,679 +156,6 @@
     
     @keyframes rotateCrystal{ from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
     @keyframes floatQR{ 0%,100%{ transform:translateY(0) rotateX(0deg); } 50%{ transform:translateY(-8px) rotateX(5deg); } }
-    @keyframes planetBreath{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
-    @keyframes planetGlow{ 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.92; transform:scale(1.16); } }
-    @keyframes planetRaySpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
-    @keyframes aiSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
-
-    .drawer-links{ display:grid; gap:9px; margin-top: 14px;}
-    .drawer-link{
-      min-height:50px; border-radius:18px; text-decoration:none; color:#fff; border:1px solid rgba(96,165,250,.18);
-      display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 13px; font-size:14px;
-      font-weight:1000; cursor:pointer; position:relative; overflow:hidden; backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px); box-shadow:inset 0 1px 0 rgba(255,255,255,.045); background:rgba(15,39,66,.44); font-family:inherit;
-    }
-    .drawer-link::before{
-      content:""; position:absolute; inset:0; opacity:.9; pointer-events:none;
-      background: radial-gradient(circle at left,rgba(56,189,248,.12),transparent 55%), linear-gradient(135deg,rgba(255,255,255,.035),rgba(15,39,66,.20));
-    }
-    .drawer-link span, .drawer-link small{ position:relative; z-index:2; }
-    .drawer-link:active{transform:scale(.985)}
-    .drawer-link small{ color:rgba(255,255,255,.56); font-size:12px; font-weight:1000; }
-
-    .drawer-footer-seal{
-      margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46);
-      font-size:11px; font-weight:1000; letter-spacing:.4px;
-    }
-    .drawer-footer-seal .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-
-    .half-screen{
-      flex:1; min-height:0; position:relative; display:flex; flex-direction:column;
-      justify-content:space-between; align-items:center; overflow:hidden; padding:10px 8px;
-    }
-    .half-screen.top{ transform:rotate(180deg); background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg)); }
-    .half-screen.bottom{ background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg)); padding-bottom:calc(4px + var(--safe-bottom)); }
-
-    .lang-row{ width:100%; display:flex; align-items:center; justify-content:center; z-index:20; }
-    .lang-trigger{
-      min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px;
-      font-weight:900; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      max-width:82vw; padding:8px 14px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-    }
-
-    .popover{
-      position:absolute; left:50%; transform:translateX(-50%); width:min(92vw,360px); height:360px;
-      background:#0a0a0f; border:1px solid var(--border); border-radius:24px; display:none; flex-direction:column;
-      z-index:100; overflow:hidden; box-shadow:0 22px 60px rgba(0,0,0,.92);
-    }
-    .popover.show{display:flex}
-    .half-screen.top .popover{top:58px}
-    .half-screen.bottom .popover{bottom:58px}
-
-    .pop-head{ padding:14px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; justify-content:space-between; align-items:center; font-weight:900; }
-    .pop-close{ cursor:pointer; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
-    .pop-list{ flex:1; overflow-y:auto; padding:10px; scrollbar-width:none; }
-    .pop-list::-webkit-scrollbar{display:none}
-
-    .pop-item{ padding:12px; border-radius:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; border:1px solid transparent; }
-    .pop-item.active{ background:rgba(99,102,241,.14); border-color:rgba(99,102,241,.25); }
-    .pop-left{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
-    .pop-flag{font-size:18px}
-    .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pop-code{font-size:12px;font-weight:900;opacity:.7}
-
-    .chat-body{
-      flex:1; width:100%; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column;
-      align-items:center; justify-content:flex-start; gap:14px; padding:18px 0 18px; text-align:center;
-      scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y;
-      mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
-    }
-    .chat-body::before{ content:""; flex:1 0 auto; min-height:12px; }
-    .chat-body::-webkit-scrollbar{ display:none; }
-
-    .bubble{ max-width:86%; line-height:1.18; word-break:break-word; font-size:24px; font-weight:900; opacity:.9; text-align:center; }
-    .bubble.latest{ font-size:32px; font-weight:1000; opacity:1; }
-
-    .mic-line{ width:100%; display:grid; grid-template-columns:1fr 70px 1fr; align-items:center; gap:12px; padding:0 8px 0; flex:0 0 auto; transform:translateY(-8px); }
-    .mic-side{ min-height:60px; display:flex; align-items:center; justify-content:center; }
-
-    .mic-btn{
-      width:70px; height:70px; border:none; border-radius:999px; background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.18); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
-      box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08); position:relative;
-    }
-    .mic-btn svg{ width:30px; height:30px; stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-    .mic-btn.listening{
-      background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
-      box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
-      animation:micBreath 1.05s ease-in-out infinite;
-    }
-
-    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
-
-    .center-hub{
-      height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; position:relative;
-      background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05);
-      gap: 20px;
-    }
-
-    .bt-toggle-btn {
-        width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2);
-        background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: all 0.3s ease;
-    }
-    .bt-toggle-btn.active { background: #3b82f6; border-color: #60a5fa; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
-
-    .orb{
-      width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center;
-      justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative;
-    }
-    .orb-main{position:relative;z-index:3}
-    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-    .modal{
-      position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center;
-      justify-content:center; z-index:2147483647; padding:20px;
-    }
-    .modal.show{display:flex}
-    .modal-card{ width:min(100%,420px); border-radius:24px; padding:22px; background:linear-gradient(145deg,#0f172a,#1e293b); border:1px solid rgba(59,130,246,.4); }
-    .modal-title{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:900; color:#93c5fd;}
-    .modal-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px}
-    .modal-btn{ min-height:48px; border:none; border-radius:16px; cursor:pointer; font-weight:900; }
-    .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
-    .modal-btn.secondary{background:rgba(255,255,255,.08);color:#fff}
-
-    .toast{
-      position:fixed; left:50%; top:30px; transform:translateX(-50%) translateY(-120px);
-      max-width:min(92vw,430px); padding:11px 16px; border-radius:16px; background:rgba(12,16,28,.98); color:#fff;
-      z-index:2147483647; transition:.22s ease;
-    }
-    .toast.show{transform:translateX(-50%) translateY(0)}
-  </style>
-</head>
-
-<body>
-  <div class="bt-status-bar"></div>
-
-  <button id="sideClearBtn" class="edge-handle clear" type="button"></button>
-  <button id="drawerEdgeBtn" class="edge-handle open" type="button"></button>
-
-  <div id="drawerBackdrop" class="drawer-backdrop">
-    <aside class="side-drawer">
-      <div class="drawer-logo-row">
-        <div class="drawer-logo">
-          <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
-          <div class="drawer-logo-sub">BE FREE</div>
-        </div>
-      </div>
-
-      <div class="holo-container">
-        <div class="crystal-cage">
-          <div class="crystal-side side1"></div><div class="crystal-side side2"></div><div class="crystal-side side3"></div>
-          <div class="crystal-side side4"></div><div class="crystal-side side5"></div><div class="crystal-side side6"></div>
-        </div>
-        <div class="holo-qr ai-planet">
-          <div class="planet-glow"></div><div class="planet-rays"></div>
-          <div class="planet-core"><div class="planet-center"><div class="planet-ai-badge"><span>AI</span></div></div></div>
-        </div>
-      </div>
-
-      <nav class="drawer-links">
-        <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
-      </nav>
-      <div class="drawer-footer-seal">italky<span class="ai">AI</span> By Ozyigit's 2026</div>
-    </aside>
-  </div>
-
-  <main class="container">
-    <section class="half-screen top" id="topSection">
-      <div class="lang-row">
-        <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-      </div>
-      <div class="popover" id="pop-top">
-        <div class="pop-head"><div>ÜST DİL</div><div class="pop-close" id="close-top">✕</div></div>
-        <div class="pop-list" id="list-top"></div>
-      </div>
-      <div class="chat-body" id="topBody"></div>
-      <div class="mic-line">
-        <div class="mic-side empty"></div>
-        <button id="topMic" class="mic-btn" type="button">
-          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
-        </button>
-        <div class="mic-side empty"></div>
-      </div>
-    </section>
-
-    <section class="center-hub">
-      <button id="btToggleBtn" class="bt-toggle-btn" title="Masa Modu (Bluetooth)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10-5 5V2l5 5L7 17"></path></svg>
-      </button>
-
-      <div class="orb">
-        <span class="sat sat1"></span><span class="sat sat2"></span><span class="orb-main">italky<span class="ai">AI</span></span>
-      </div>
-    </section>
-
-    <section class="half-screen bottom" id="botSection">
-      <div class="lang-row">
-        <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-      </div>
-      <div class="popover" id="pop-bot">
-        <div class="pop-head"><div>ALT DİL</div><div class="pop-close" id="close-bot">✕</div></div>
-        <div class="pop-list" id="list-bot"></div>
-      </div>
-      <div class="chat-body" id="botBody"></div>
-      <div class="mic-line">
-        <div class="mic-side empty"></div>
-        <button id="botMic" class="mic-btn" type="button">
-          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
-        </button>
-        <div class="mic-side empty"></div>
-      </div>
-    </section>
-  </main>
-
-  <div id="btModal" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title">italkyAI Masa Modu</h3>
-      <p style="color:#cbd5e1; font-size:14px; margin-bottom:20px;">İnternetsiz ortamda iki telefonla konuşmak için bir rol seçin.</p>
-      <div class="modal-actions">
-        <button id="btStartHostBtn" class="modal-btn primary">MASAYI BEN KURUYORUM (Host)</button>
-        <button id="btStartGuestBtn" class="modal-btn secondary">MEVCUT MASAYA KATIL (Guest)</button>
-        <button onclick="$('btModal').classList.remove('show')" class="modal-btn secondary" style="opacity:0.6">İptal</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="toast" class="toast"></div>
-
-  <script type="module">
-  import { getLangPoolForSite } from "/js/lang_pool_full.js";
-  import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
-
-  const API_BASE = "https://italky-api.onrender.com";
-  const $ = (id) => document.getElementById(id);
-
-  // --- 1. AYARLAR ---
-  function canonical(code){ return OfflinePackBridge.canonical(code); }
-  const SITE_LANG = canonical(localStorage.getItem("site_lang") || navigator.language || "tr") || "tr";
-  const RAW_POOL = getLangPoolForSite(SITE_LANG);
-  const LANGS = (Array.isArray(RAW_POOL) ? RAW_POOL : []).map(l => ({
-      code: canonical(l.code),
-      flag: l.flag || "🌐",
-      name: l.name || l.tr_name || l.code.toUpperCase()
-  }));
-
-  let topLang = "en";
-  let botLang = SITE_LANG;
-  let recordingSide = null;
-  let btRole = null; // 'host' or 'guest'
-
-  // --- 2. BLUETOOTH (MASA MODU) MANTIĞI ---
-  $("btToggleBtn").onclick = () => {
-      if (document.body.classList.contains("bt-active")) {
-          location.reload(); // Modu kapatmak için sayfayı yenilemek en temizi
-      } else {
-          $("btModal").classList.add("show");
-      }
-  };
-
-  $("btStartHostBtn").onclick = () => {
-      btRole = 'host';
-      document.body.classList.add("bt-active", "bt-host");
-      $("btModal").classList.remove("show");
-      $("btToggleBtn").classList.add("active");
-      if (window.Native && window.Native.startBtServer) {
-          window.Native.startBtServer();
-      }
-  };
-
-  $("btStartGuestBtn").onclick = () => {
-      btRole = 'guest';
-      document.body.classList.add("bt-active", "bt-guest");
-      $("btModal").classList.remove("show");
-      $("btToggleBtn").classList.add("active");
-      // Basitlik için eşleşmiş ilk cihaza bağlanabilir veya cihaz seçtirilebilir
-      if (window.Native && window.Native.connectToBtDevice) {
-          // Burada cihaz listesi çekilip seçtirilmeli, şimdilik placeholder:
-          showToast("Lütfen bağlanmak için cihaz seçin...");
-          window.Native.connectToBtDevice("italkyAI_Host"); 
-      }
-  };
-
-  // Android'den gelen Bluetooth mesajlarını yakala
-  window.onBtMessageReceived = function(text) {
-      // Host ise üst tarafa (misafir), Guest ise alt tarafa (host) yaz
-      const side = (btRole === 'host' ? 'top' : 'bot');
-      const body = (side === 'top' ? $("topBody") : $("botBody"));
-      
-      const bubble = document.createElement("div");
-      bubble.className = "bubble latest";
-      bubble.textContent = text;
-      body.appendChild(bubble);
-      body.scrollTop = body.scrollHeight;
-      
-      // Gelen metni sesli oku (Dili otomatik algıla veya seçili dille oku)
-      const lang = (side === 'top' ? topLang : botLang);
-      if (window.NativeTTS) window.NativeTTS.speak(text, lang);
-  };
-
-  // --- 3. DİL VE MİKROFON SİSTEMİ ---
-  function renderPop(side) {
-      const list = (side === "top" ? $("list-top") : $("list-bot"));
-      const selected = (side === "top" ? topLang : botLang);
-      list.innerHTML = LANGS.map(l => `
-        <div class="pop-item ${l.code === selected ? "active" : ""}" data-select-code="${l.code}">
-          <div class="pop-left">
-            <div class="pop-flag">${l.flag}</div>
-            <div class="pop-name">${l.name}</div>
-          </div>
-          <div class="pop-code">${l.code.toUpperCase()}</div>
-        </div>
-      `).join("");
-
-      list.querySelectorAll(".pop-item").forEach(item => {
-          item.onclick = (e) => {
-              const code = item.getAttribute("data-select-code");
-              if(side === "top") topLang = code; else botLang = code;
-              $("pop-top").classList.remove("show");
-              $("pop-bot").classList.remove("show");
-              refreshTexts();
-          };
-      });
-  }
-
-  $("topLangBtn").onclick = (e) => { e.stopPropagation(); renderPop("top"); $("pop-top").classList.add("show"); };
-  $("botLangBtn").onclick = (e) => { e.stopPropagation(); renderPop("bot"); $("pop-bot").classList.add("show"); };
-  document.onclick = () => { $("pop-top").classList.remove("show"); $("pop-bot").classList.remove("show"); };
-
-  $("topMic").onclick = () => handleMicClick("top");
-  $("botMic").onclick = () => handleMicClick("bot");
-
-  function handleMicClick(side) {
-      if (recordingSide === side) { stopRecognizer(); } 
-      else { startRecording(side); }
-  }
-
-  function startRecording(side) {
-      recordingSide = side;
-      $(side + "Mic").classList.add("listening");
-      const lang = (side === "top" ? topLang : botLang);
-      if (window.Native) window.Native.startSpeechRecognition(lang, side);
-  }
-
-  function stopRecognizer() {
-      if (recordingSide) $(recordingSide + "Mic").classList.remove("listening");
-      recordingSide = null;
-      if (window.Native) window.Native.stopSpeechRecognition();
-  }
-
-  window.onNativeSpeechResult = function(side, text, isFinal) {
-      const body = (side === "top" ? $("topBody") : $("botBody"));
-      let bubble = body.querySelector(".bubble.latest");
-      if (!bubble) {
-          bubble = document.createElement("div");
-          bubble.className = "bubble latest";
-          body.appendChild(bubble);
-      }
-      bubble.textContent = text + (isFinal ? "" : "...");
-      body.scrollTop = body.scrollHeight;
-      if (isFinal) { finalizeSpeech(side, text); }
-  };
-
-  async function finalizeSpeech(side, text) {
-      stopRecognizer();
-      const from = (side === "top" ? topLang : botLang);
-      const to = (side === "top" ? botLang : topLang);
-      const targetBody = (side === "top" ? $("botBody") : $("topBody"));
-
-      const resBubble = document.createElement("div");
-      resBubble.className = "bubble latest";
-      resBubble.textContent = "•••";
-      targetBody.appendChild(resBubble);
-      targetBody.scrollTop = targetBody.scrollHeight;
-
-      try {
-          const r = await fetch(`${API_BASE}/api/translate`, {
-              method: "POST",
-              headers: {"Content-Type": "application/json"},
-              body: JSON.stringify({ text: text, from_lang: from, to_lang: to })
-          });
-          const j = await r.json();
-          const translated = j.translated || j.translation || "Error";
-          resBubble.textContent = translated;
-          
-          // --- MASA MODU AKTİFSE METNİ KARŞIYA GÖNDER ---
-          if (document.body.classList.contains("bt-active") && window.Native.sendBtText) {
-              window.Native.sendBtText(translated);
-          }
-          
-          if (window.NativeTTS) window.NativeTTS.speak(translated, to);
-      } catch (e) { resBubble.textContent = "!!!"; }
-  }
-
-  function refreshTexts() {
-      const tO = LANGS.find(x => x.code === topLang) || {flag:"🌐", name:topLang.toUpperCase()};
-      const bO = LANGS.find(x => x.code === botLang) || {flag:"🌐", name:botLang.toUpperCase()};
-      $("topLangBtn").textContent = `${tO.flag} ${tO.name} ⌵`;
-      $("botLangBtn").textContent = `${bO.flag} ${bO.name} ⌵`;
-  }
-
-  function showToast(msg) {
-      const t = $("toast");
-      t.textContent = msg; t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 3000);
-  }
-
-  $("drawerEdgeBtn").onclick = () => $("drawerBackdrop").classList.add("show");
-  $("drawerBackdrop").onclick = (e) => { if(e.target === $("drawerBackdrop")) $("drawerBackdrop").classList.remove("show"); };
-  $("sideClearBtn").onclick = () => { $("topBody").innerHTML = ""; $("botBody").innerHTML = ""; };
-
-  refreshTexts();
-  </script>
-</body>
-</html><!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
-  <title>italkyAI • FaceToFace</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
-
-  <style>
-    :root{
-      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
-      --bg:#050508;
-      --border:rgba(255,255,255,.15);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
-    }
-
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:Outfit,Arial,sans-serif}
-
-    body{
-      background:
-        radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),
-        radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),
-        #050508;
-    }
-
-    .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-
-    .edge-handle{
-      position:fixed; top:50%; transform:translateY(-50%); z-index:998; width:28px; height:118px;
-      border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
-      backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:#fff;
-      font-family:Outfit,Arial,sans-serif; font-size:11px; font-weight:1000; line-height:1.15;
-      text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30);
-    }
-
-    .edge-handle.open{
-      right:0; border-radius:18px 0 0 18px;
-      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
-      border:1px solid rgba(255,255,255,.14); border-right:none; box-shadow:-10px 0 32px rgba(0,0,0,.30);
-    }
-    .edge-handle.open::before { content: "M\A E\A N\A U"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
-
-    .edge-handle.clear{
-      left:0; border-radius:0 18px 18px 0;
-      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
-      border:1px solid rgba(255,255,255,.14); border-left:none; box-shadow:10px 0 32px rgba(0,0,0,.30);
-    }
-    .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
-
-    .edge-handle:active{transform:translateY(-50%) scale(.96)}
-
-    .drawer-backdrop{
-      position:fixed; inset:0; z-index:2147483646; display:none; background:rgba(0,0,0,.48);
-      backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-    }
-    .drawer-backdrop.show{display:block}
-
-    .side-drawer{
-      position:absolute; top:0; right:0; width:min(86vw,360px); height:100%;
-      padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
-      background: radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%),
-                  radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%),
-                  linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98));
-      border-left:1px solid rgba(255,255,255,.10); box-shadow:-24px 0 70px rgba(0,0,0,.52);
-      transform:translateX(102%); transition:transform .24s ease; overflow:auto; scrollbar-width:none;
-    }
-
-    .drawer-backdrop.show .side-drawer{transform:translateX(0)}
-    .side-drawer::-webkit-scrollbar{display:none}
-
-    .drawer-logo-row{ margin:4px 0 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
-    .drawer-logo{min-width:0;text-align:left}
-    .drawer-logo-main{ font-family:"Space Grotesk",sans-serif; font-size:30px; line-height:1; font-weight:900; letter-spacing:-1px; }
-    .drawer-logo-main .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .drawer-logo-sub{ margin-top:7px; display:block; color:rgba(255,255,255,.82); font-size:11px; font-weight:1000; letter-spacing:1.8px; }
-
-    /* HOLOGRAFİK ANİMASYON CSS */
-    .holo-container{
-      width: 140px;
-      height: 140px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transform-style: preserve-3d;
-      margin: 24px auto 30px;
-    }
-    .crystal-cage{
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      transform-style: preserve-3d;
-      animation: rotateCrystal 18s linear infinite;
-    }
-    .crystal-side{
-      position: absolute;
-      inset: 0;
-      border: 2px solid rgba(103,232,249,.42);
-      background: radial-gradient(circle, rgba(129,140,248,.12), transparent);
-      box-shadow: 0 0 18px rgba(103,232,249,.22);
-    }
-    .side1{ transform: rotateY(0deg) translateZ(50px); }
-    .side2{ transform: rotateY(90deg) translateZ(50px); }
-    .side3{ transform: rotateY(180deg) translateZ(50px); }
-    .side4{ transform: rotateY(270deg) translateZ(50px); }
-    .side5{ transform: rotateX(90deg) translateZ(50px); }
-    .side6{ transform: rotateX(-90deg) translateZ(50px); }
-    .holo-qr{
-      position: absolute;
-      width: 72px;
-      height: 72px;
-      z-index: 2;
-      overflow: visible;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: floatQR 4s ease-in-out infinite;
-    }
-    .ai-planet{ background: transparent; box-shadow: none; }
-    .planet-glow{
-      position: absolute;
-      inset: -12px;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-        radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
-      filter: blur(12px);
-      animation: planetGlow 3.2s ease-in-out infinite;
-      z-index: 1;
-    }
-    .planet-core{
-      position: relative;
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      z-index: 2;
-      background:
-        radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
-        radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
-        radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
-        linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
-      box-shadow:
-        inset -10px -12px 20px rgba(0,0,0,.72),
-        inset 10px 12px 22px rgba(255,255,255,.04),
-        inset 0 0 26px rgba(255,255,255,.04),
-        0 0 18px rgba(255,255,255,.10),
-        0 0 34px rgba(103,232,249,.20),
-        0 0 64px rgba(129,140,248,.18);
-      animation: planetBreath 2.8s ease-in-out infinite;
-    }
-    .planet-core::before{
-      content: "";
-      position: absolute;
-      inset: 4px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.08);
-      box-shadow: inset 0 0 12px rgba(255,255,255,.05);
-    }
-    .planet-core::after{
-      content: "";
-      position: absolute;
-      left: 12px;
-      top: 10px;
-      width: 22px;
-      height: 10px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
-      filter: blur(2px);
-      transform: rotate(-18deg);
-      opacity: .9;
-    }
-    .planet-rays{
-      position: absolute;
-      inset: -12px;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 1;
-    }
-    .planet-rays::before,
-    .planet-rays::after{
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background:
-        conic-gradient(
-          from 0deg,
-          transparent 0deg 18deg, rgba(255,255,255,.28) 24deg, transparent 36deg 62deg,
-          rgba(255,255,255,.16) 70deg, transparent 84deg 116deg, rgba(255,255,255,.22) 124deg,
-          transparent 136deg 180deg, rgba(255,255,255,.18) 192deg, transparent 206deg 250deg,
-          rgba(255,255,255,.24) 258deg, transparent 270deg 310deg, rgba(255,255,255,.15) 318deg,
-          transparent 330deg 360deg
-        );
-      mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-      -webkit-mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-      filter: blur(1px);
-      opacity: .55;
-      animation: planetRaySpin 12s linear infinite;
-    }
-    .planet-rays::after{
-      opacity: .35;
-      transform: scale(1.14);
-      animation-duration: 18s;
-      animation-direction: reverse;
-    }
-    .planet-center{
-      position: relative;
-      z-index: 3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .planet-ai-badge{
-      position: relative;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
-      border: 1px solid rgba(255,255,255,.18);
-      box-shadow: 0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20);
-      backdrop-filter: blur(10px);
-    }
-    .planet-ai-badge::before{
-      content: "";
-      position: absolute;
-      inset: 4px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .planet-ai-badge::after{
-      content: "";
-      position: absolute;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.10);
-      animation: aiSpin 8s linear infinite;
-    }
-    .planet-ai-badge span{
-      position: relative;
-      z-index: 2;
-      font-family: 'Space Grotesk',sans-serif;
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: .5px;
-      color: #fff;
-      text-shadow: 0 0 12px rgba(255,255,255,.22);
-    }
-    @keyframes rotateCrystal{ from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
-    @keyframes floatQR{ 0%,100%{ transform:translateY(0) rotateX(0deg); } 50%{ transform:translateY(-8px) rotateX(5deg); } }
     @keyframes planetBreath{ 0%,100%{ transform:scale(1); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 22px rgba(255,255,255,.04),inset 0 0 26px rgba(255,255,255,.04),0 0 18px rgba(255,255,255,.10),0 0 34px rgba(103,232,249,.20),0 0 64px rgba(129,140,248,.18); } 50%{ transform:scale(1.045); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 24px rgba(255,255,255,.05),inset 0 0 28px rgba(255,255,255,.06),0 0 22px rgba(255,255,255,.12),0 0 42px rgba(103,232,249,.28),0 0 78px rgba(129,140,248,.24); } }
     @keyframes planetGlow{ 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.92; transform:scale(1.16); } }
     @keyframes planetRaySpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
@@ -1068,6 +395,13 @@
     </section>
 
     <section class="center-hub">
+      <button id="btToggleBtn" class="bt-toggle-btn" title="Masa Modu (Togg Bağlantısı)" style="position:absolute; left:20px; z-index:100;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 4L15 12L8 20"></path>
+            <path d="M16 4L9 12L16 20"></path>
+          </svg>
+      </button>
+
       <div class="orb" style="display: flex !important;">
         <span class="sat sat1"></span><span class="sat sat2"></span><span class="orb-main">italky<span class="ai">AI</span></span>
       </div>
@@ -1112,6 +446,18 @@
     </div>
   </div>
 
+  <div id="btModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title">italkyAI Masa Modu</h3>
+      <p style="color:#cbd5e1; font-size:14px; margin-bottom:20px;">İnternetsiz ortamda iki telefonla konuşmak için bir rol seçin.</p>
+      <div class="modal-actions">
+        <button id="btStartHostBtn" class="modal-btn primary">MASAYI BEN KURUYORUM (Host)</button>
+        <button id="btStartGuestBtn" class="modal-btn secondary">MEVCUT MASAYA KATIL (Guest)</button>
+        <button onclick="document.getElementById('btModal').classList.remove('show')" class="modal-btn secondary" style="opacity:0.6">İptal</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <div id="downloadErrorModal" class="modal">
@@ -1147,6 +493,7 @@
   let botLang = SITE_LANG;
   let recordingSide = null;
   let liveText = "";
+  let btRole = null; 
 
   // --- 2. ELEMENTLER ---
   const topMic = $("topMic"); const botMic = $("botMic");
@@ -1155,7 +502,51 @@
   const popTop = $("pop-top"); const popBot = $("pop-bot");
   const listTop = $("list-top"); const listBot = $("list-bot");
 
-  // --- 3. DİL SEÇİM MANTIĞI (DÜZELTİLDİ) ---
+  // --- 3. BLUETOOTH (MASA MODU) MANTIĞI ---
+  $("btToggleBtn").onclick = () => {
+      if (document.body.classList.contains("bt-active")) {
+          location.reload(); 
+      } else {
+          $("btModal").classList.add("show");
+      }
+  };
+
+  $("btStartHostBtn").onclick = () => {
+      btRole = 'host';
+      document.body.classList.add("bt-active", "bt-host");
+      $("btModal").classList.remove("show");
+      $("btToggleBtn").classList.add("active");
+      if (window.Native && window.Native.startBtServer) {
+          window.Native.startBtServer();
+      }
+  };
+
+  $("btStartGuestBtn").onclick = () => {
+      btRole = 'guest';
+      document.body.classList.add("bt-active", "bt-guest");
+      $("btModal").classList.remove("show");
+      $("btToggleBtn").classList.add("active");
+      if (window.Native && window.Native.connectToBtDevice) {
+          showToast("Lütfen bağlanmak için cihaz seçin...");
+          window.Native.connectToBtDevice("italkyAI_Host"); 
+      }
+  };
+
+  window.onBtMessageReceived = function(text) {
+      const side = (btRole === 'host' ? 'top' : 'bot');
+      const body = (side === 'top' ? $("topBody") : $("botBody"));
+      
+      const bubble = document.createElement("div");
+      bubble.className = "bubble latest";
+      bubble.textContent = text;
+      body.appendChild(bubble);
+      body.scrollTop = body.scrollHeight;
+      
+      const lang = (side === 'top' ? topLang : botLang);
+      if (window.NativeTTS) window.NativeTTS.speak(text, lang);
+  };
+
+  // --- 4. DİL SEÇİM MANTIĞI ---
   function closeAllPops() {
       popTop.classList.remove("show");
       popBot.classList.remove("show");
@@ -1175,14 +566,12 @@
         </div>
       `).join("");
 
-      // Her bir dil öğesine tıklama olayı ekle
       list.querySelectorAll(".pop-item").forEach(item => {
           item.onclick = (e) => {
               e.stopPropagation();
               const code = item.getAttribute("data-select-code");
               if(side === "top") topLang = code; else botLang = code;
               
-              // Aynı dillerin seçilmesini engelle
               if(topLang === botLang) topLang = (code === "tr" ? "en" : "tr");
               
               closeAllPops();
@@ -1191,14 +580,12 @@
       });
   }
 
-  // Dil butonlarını açma
   topLangBtn.onclick = (e) => { e.stopPropagation(); renderPop("top"); popTop.classList.add("show"); popBot.classList.remove("show"); };
   botLangBtn.onclick = (e) => { e.stopPropagation(); renderPop("bot"); popBot.classList.add("show"); popTop.classList.remove("show"); };
 
-  // Dışarı tıklandığında popover'ları kapat
   document.onclick = () => closeAllPops();
 
-  // --- 4. MİKROFON VE SES SİSTEMİ ---
+  // --- 5. MİKROFON VE SES SİSTEMİ ---
   topMic.onclick = () => handleMicClick("top");
   botMic.onclick = () => handleMicClick("bot");
 
@@ -1208,7 +595,7 @@
   }
 
   function startRecording(side) {
-      stopRecognizer(); // Önce varsa temizle
+      stopRecognizer(); 
       recordingSide = side;
       liveText = "";
       $(side + "Mic").classList.add("listening");
@@ -1225,7 +612,6 @@
       if (window.Native && window.Native.stopSpeechRecognition) { window.Native.stopSpeechRecognition(); }
   }
 
-  // Android'den gelen metin sinyali
   window.onNativeSpeechResult = function(side, text, isFinal) {
       const body = (side === "top" ? topBody : botBody);
       let bubble = body.querySelector(".bubble.latest");
@@ -1242,7 +628,7 @@
       if (isFinal) { finalizeSpeech(side, text); }
   };
 
-  // --- 5. ÇEVİRİ VE TTS ---
+  // --- 6. ÇEVİRİ VE TTS ---
   async function finalizeSpeech(side, text) {
       stopRecognizer();
       const from = (side === "top" ? topLang : botLang);
@@ -1265,13 +651,19 @@
           const translated = j.translated || j.translation || "Error";
           
           resBubble.textContent = translated;
+
+          // MASA MODU AKTİFSE METNİ KARŞIYA GÖNDER
+          if (document.body.classList.contains("bt-active") && window.Native && window.Native.sendBtText) {
+              window.Native.sendBtText(translated);
+          }
+          
           if (window.NativeTTS && window.NativeTTS.speak) {
               window.NativeTTS.speak(translated, to);
           }
       } catch (e) { resBubble.textContent = "!!!"; }
   }
 
-  // --- 6. UI YARDIMCILARI ---
+  // --- 7. UI YARDIMCILARI ---
   function refreshTexts() {
       const tO = LANGS.find(x => x.code === topLang) || {flag:"🌐", name:topLang.toUpperCase()};
       const bO = LANGS.find(x => x.code === botLang) || {flag:"🌐", name:botLang.toUpperCase()};
@@ -1279,13 +671,17 @@
       botLangBtn.textContent = `${bO.flag} ${bO.name} ⌵`;
   }
 
-  // Menü (Drawer)
+  function showToast(msg) {
+      const t = $("toast");
+      t.textContent = msg; t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 3000);
+  }
+
   $("drawerEdgeBtn").onclick = () => $("drawerBackdrop").classList.add("show");
   $("drawerBackdrop").onclick = (e) => { if(e.target === $("drawerBackdrop")) $("drawerBackdrop").classList.remove("show"); };
   $("sideClearBtn").onclick = () => { stopRecognizer(); topBody.innerHTML = ""; botBody.innerHTML = ""; };
 
-  // Başlat
   refreshTexts();
- </script>
+  </script>
 </body>
 </html>
