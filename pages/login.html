@@ -37,25 +37,21 @@
     }
     body.bt-active .half-screen.top .mic-line { display: none !important; }
     
-    /* Bağlantı aktifken buton renkleri değişir */
-    body.bt-active .edge-handle.clear { background: linear-gradient(180deg, rgba(59,130,246,0.3), rgba(37,99,235,0.1)); border-color: rgba(96,165,250,0.5); }
-    body.bt-active .edge-handle.clear svg { color: #60a5fa; filter: drop-shadow(0 0 5px #60a5fa); }
-    body.bt-active .edge-handle.open { background: linear-gradient(180deg, rgba(239,68,68,0.3), rgba(220,38,38,0.1)); border-color: rgba(248,113,113,0.5); }
-    body.bt-active .edge-handle.open svg { color: #f87171; filter: drop-shadow(0 0 5px #f87171); }
-
-    /* -------------------------------- */
+    /* Bağlantı aktifken yan kollardaki ikonların renkleri değişir */
+    body.bt-active .edge-handle.clear svg { color: #60a5fa; filter: drop-shadow(0 0 8px #60a5fa); }
+    body.bt-active .edge-handle.open svg { color: #f87171; filter: drop-shadow(0 0 8px #f87171); }
 
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-    /* KENAR TUTAMAKLARI (CLEAR VE MENU DİKEY YAZILARIYLA BERABER) */
+    /* --- YAN KOLLAR (C L E A R / M E N U ve İKONLAR) --- */
     .edge-handle{
-      position:fixed; top:50%; transform:translateY(-50%); z-index:2500; width:36px; height:140px;
-      border:none; display:flex; flex-direction: column; align-items:center; justify-content:center; cursor:pointer;
+      position:fixed; top:50%; transform:translateY(-50%); z-index:2500; width:34px; height:150px;
+      border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;
       backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:#fff;
       font-family:Outfit,Arial,sans-serif; font-size:11px; font-weight:1000; line-height:1.2;
-      text-align:center; box-shadow:0 0 32px rgba(0,0,0,.30); transition: all 0.3s ease;
+      text-align:center; box-shadow:0 0 32px rgba(0,0,0,.30);
     }
-    .edge-handle svg { width: 18px; height: 18px; margin-bottom: 8px; stroke-width: 2.5; }
+    .edge-handle svg { width: 18px; height: 18px; margin-bottom: 8px; stroke-width: 2.5; transition: all 0.3s ease; }
     .edge-handle span { white-space: pre; display: block; text-shadow: 0 0 12px rgba(255,255,255,.28); }
 
     .edge-handle.open{
@@ -63,15 +59,14 @@
       background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
       border:1px solid rgba(255,255,255,.14); border-right:none; box-shadow:-10px 0 32px rgba(0,0,0,.30);
     }
-    
     .edge-handle.clear{
       left:0; border-radius:0 18px 18px 0;
       background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
       border:1px solid rgba(255,255,255,.14); border-left:none; box-shadow:10px 0 32px rgba(0,0,0,.30);
     }
+    .edge-handle:active{transform:translateY(-50%) scale(.96)}
 
-    .edge-handle:active{transform:translateY(-50%) scale(.92)}
-
+    /* --- DRAWER (YAN MENÜ) --- */
     .drawer-backdrop{
       position:fixed; inset:0; z-index:2147483646; display:none; background:rgba(0,0,0,.48);
       backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
@@ -96,12 +91,11 @@
     .drawer-logo-main .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .drawer-logo-sub{ margin-top:7px; display:block; color:rgba(255,255,255,.82); font-size:11px; font-weight:1000; letter-spacing:1.8px; }
 
-    .drawer-links{ display:grid; gap:9px; margin-top: 24px;}
+    .drawer-links{ display:grid; gap:9px; margin-top: 14px;}
     .drawer-link{
       min-height:50px; border-radius:18px; text-decoration:none; color:#fff; border:1px solid rgba(96,165,250,.18);
       display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 13px; font-size:14px;
-      font-weight:1000; cursor:pointer; position:relative; overflow:hidden; backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px); box-shadow:inset 0 1px 0 rgba(255,255,255,.045); background:rgba(15,39,66,.44); font-family:inherit;
+      font-weight:1000; cursor:pointer; position:relative; overflow:hidden; backdrop-filter:blur(12px); background:rgba(15,39,66,.44);
     }
     .drawer-link::before{
       content:""; position:absolute; inset:0; opacity:.9; pointer-events:none;
@@ -110,11 +104,10 @@
     .drawer-link span, .drawer-link small{ position:relative; z-index:2; }
     .drawer-link:active{transform:scale(.985)}
     .drawer-link small{ color:rgba(255,255,255,.56); font-size:12px; font-weight:1000; }
-
     .drawer-footer-seal{ margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46); font-size:11px; font-weight:1000; letter-spacing:.4px; }
     .drawer-footer-seal .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-    /* EKRAN YARILARI */
+    /* --- EKRAN YARILARI --- */
     .half-screen{
       flex:1; min-height:0; position:relative; display:flex; flex-direction:column;
       justify-content:space-between; align-items:center; overflow:hidden; padding:10px 8px;
@@ -122,24 +115,7 @@
     .half-screen.top{ transform:rotate(180deg); background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg)); }
     .half-screen.bottom{ background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg)); padding-bottom:calc(4px + var(--safe-bottom)); }
 
-    /* ORTA HUB (ORB) */
-    .center-hub{
-      height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; position:relative;
-      background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05);
-    }
-    .orb{
-      width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center;
-      justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative; overflow:visible;
-    }
-    .orb-main{position:relative;z-index:3}
-    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .sat{ position:absolute; left:50%; top:50%; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; z-index:1; filter:blur(1.5px); }
-    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
-    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
-    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
-    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
-
-    /* DİL VE ARAYÜZ PARÇALARI */
+    /* --- DİL BUTONLARI VE POPOVER --- */
     .lang-row{ width:100%; display:flex; align-items:center; justify-content:center; z-index:20; }
     .lang-trigger{
       min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px;
@@ -155,9 +131,7 @@
     .popover.show{display:flex}
     .half-screen.top .popover{top:58px}
     .half-screen.bottom .popover{bottom:58px}
-    
-    /* Masa Modunda Popover'ı Tam Ortala */
-    body.bt-active .popover { top: 50%; bottom: auto; transform: translate(-50%, -50%); }
+    body.bt-active .popover { top: 50%; bottom: auto; transform: translate(-50%, -50%); } /* Masa modunda ortalar */
 
     .pop-head{ padding:14px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; justify-content:space-between; align-items:center; font-weight:900; }
     .pop-close{ cursor:pointer; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
@@ -170,28 +144,31 @@
     .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pop-code{font-size:12px;font-weight:900;opacity:.7}
 
-    /* CHAT GÖVDESİ VE MİKROFON */
+    /* --- CHAT GÖVDESİ VE BALONSUZ METİNLER --- */
     .chat-body{
       flex:1; width:100%; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column;
-      align-items:center; justify-content:flex-start; gap:14px; padding:18px 20px; text-align:center;
-      scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y;
-      mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
+      align-items:center; justify-content:flex-start; gap:14px; padding:20px; text-align:center;
+      scrollbar-width:none; -ms-overflow-style:none; mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
     }
     .chat-body::before{ content:""; flex:1 0 auto; min-height:12px; }
     .chat-body::-webkit-scrollbar{ display:none; width:0; height:0; }
 
-    /* BALONSUZ, DEV METİNLER (ORİJİNAL FACETOFACE GİBİ) */
-    .bubble { max-width:100%; line-height:1.18; word-break:break-word; font-size:26px; font-weight:900; opacity:.7; text-align:center; transition: all 0.3s; color:#fff; }
-    .bubble.latest { font-size:36px; font-weight:1000; opacity:1; }
+    /* İŞTE BURASI: Arka plansız, sadece dev metin (Balon değil) */
+    .chat-text {
+      font-size: 28px; font-weight: 900; line-height: 1.2; word-break: break-word;
+      opacity: 0.7; transition: all 0.3s ease; text-align: center; width: 100%;
+    }
+    .chat-text.latest { font-size: 38px; font-weight: 1000; opacity: 1; }
     
-    /* Üst ekran karşıdan gelen çevrilmiş metinler (Hafif Mavi Tema) */
-    body.bt-active #topBody .bubble { color: #bfdbfe; text-shadow: 0 0 10px rgba(59,130,246,0.3); }
-    body.bt-active #topBody .bubble.latest { color: #60a5fa; text-shadow: 0 0 15px rgba(59,130,246,0.5); }
-    
-    /* Alt ekran senin konuştukların (Hafif Pembe/AI Tema) */
-    body.bt-active #botBody .bubble { color: #fbcfe8; text-shadow: 0 0 10px rgba(236,72,153,0.3); }
-    body.bt-active #botBody .bubble.latest { color: #f472b6; text-shadow: 0 0 15px rgba(236,72,153,0.5); }
+    /* Masa Modunda Alt Ekran (Senin konuştukların - Degrade Renkli) */
+    body.bt-active #botBody .chat-text { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    /* Masa Modunda Üst Ekran (Karşıdan Gelen Çeviri - Beyaz Parlak) */
+    body.bt-active #topBody .chat-text { color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
 
+    /* Normal Mod Renklendirmeleri */
+    body:not(.bt-active) .chat-text { color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+
+    /* --- MİKROFONLAR --- */
     .mic-line{ width:100%; display:grid; grid-template-columns:1fr 70px 1fr; align-items:center; gap:12px; padding:0 8px 0; flex:0 0 auto; transform:translateY(-8px); }
     .mic-side{ min-height:60px; display:flex; align-items:center; justify-content:center; }
     .mic-side.empty{pointer-events:none}
@@ -214,7 +191,24 @@
     @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
     @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
 
-    /* MODAL VE KARE QR KOD ANİMASYONU */
+    /* --- ORTA HUB (DÖNEN TOP) --- */
+    .center-hub{
+      height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; position:relative;
+      background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05);
+    }
+    .orb{
+      width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center;
+      justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative; overflow:visible;
+    }
+    .orb-main{position:relative;z-index:3}
+    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sat{ position:absolute; left:50%; top:50%; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; z-index:1; filter:blur(1.5px); }
+    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
+    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
+    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
+    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
+
+    /* --- KARE QR ANİMASYONU VE MODAL --- */
     .modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2147483647; padding:20px; }
     .modal.show{display:flex}
     .modal-card{ width:min(100%,420px); border-radius:24px; padding:22px; background:linear-gradient(145deg,#0f172a,#1e293b); border:1px solid rgba(59,130,246,.4); box-shadow:0 24px 50px rgba(0,0,0,.50); text-align: center; }
@@ -225,6 +219,25 @@
     .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
     .modal-btn.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff}
 
+    .square-qr-container {
+        position: relative; width: 220px; height: 220px; margin: 30px auto; display: flex; align-items: center; justify-content: center;
+    }
+    .square-spinner {
+        position: absolute; inset: 0; border: 4px dashed rgba(103,232,249,0.8); border-radius: 16px;
+        animation: spinSquare 10s linear infinite; box-shadow: 0 0 20px rgba(103,232,249,0.2), inset 0 0 20px rgba(103,232,249,0.2);
+    }
+    .square-spinner-inner {
+        position: absolute; inset: -15px; border: 2px solid rgba(236,72,153,0.4); border-radius: 24px;
+        animation: spinSquare 15s linear infinite reverse;
+    }
+    .qr-wrapper {
+        position: relative; z-index: 5; background: #fff; padding: 12px; border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .qr-wrapper img { width: 140px; height: 140px; display: block; }
+    
+    @keyframes spinSquare { 100% { transform: rotate(360deg); } }
+
     .toast{
       position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px);
       max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px;
@@ -234,43 +247,23 @@
     }
     .toast.show{transform:translateX(-50%) translateY(0)}
 
-    /* YENİ KARE QR TASARIMI */
-    .square-qr-container {
-        position: relative; width: 220px; height: 220px; margin: 30px auto; display: flex; align-items: center; justify-content: center;
-    }
-    .square-spinner {
-        position: absolute; inset: 0; border: 3px dashed rgba(103,232,249,0.8); border-radius: 16px;
-        animation: spinSquare 8s linear infinite; box-shadow: 0 0 20px rgba(103,232,249,0.3), inset 0 0 20px rgba(103,232,249,0.3);
-    }
-    .square-spinner-inner {
-        position: absolute; inset: -15px; border: 2px solid rgba(236,72,153,0.4); border-radius: 20px;
-        animation: spinSquare 12s linear infinite reverse;
-    }
-    .qr-wrapper {
-        position: relative; z-index: 5; background: #fff; padding: 12px; border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    }
-    .qr-wrapper img { width: 150px; height: 150px; display: block; }
-    
-    @keyframes spinSquare { 100% { transform: rotate(360deg); } }
-
   </style>
 </head>
 
 <body>
 
-  <button id="btHandleBtn" class="edge-handle clear" type="button" title="Masa Moduna Bağlan / Temizle">
+  <button id="btHandleBtn" class="edge-handle clear" type="button" aria-label="Bağlan / Temizle">
     <svg id="btIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
       <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
     </svg>
-    <span>C\nA\nL\nE\nA\nR</span>
+    <span>C<br>L<br>E<br>A<br>R</span>
   </button>
   
-  <button id="qrHandleBtn" class="edge-handle open" type="button" title="Menü / Paylaş / Ayrıl">
+  <button id="qrHandleBtn" class="edge-handle open" type="button" aria-label="Menü / Ayrıl">
     <svg id="qrIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
     </svg>
-    <span>M\nE\nN\nU</span>
+    <span>M<br>E<br>N<br>U</span>
   </button>
 
   <div id="drawerBackdrop" class="drawer-backdrop">
@@ -281,7 +274,9 @@
           <div class="drawer-logo-sub">BE FREE</div>
         </div>
       </div>
+      
       <nav class="drawer-links">
+        <a class="drawer-link" id="menuQrBtn" style="border-color: rgba(103,232,249,0.4);"><span>QR Kod ile Paylaş</span><small>›</small></a>
         <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
         <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
         <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
@@ -296,7 +291,7 @@
         <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
       </div>
       <div class="popover" id="pop-top">
-        <div class="pop-head"><div id="topPopTitle">ÜST DİL</div><div class="pop-close" id="close-top">✕</div></div>
+        <div class="pop-head"><div id="topPopTitle">KARŞI DİL</div><div class="pop-close" id="close-top">✕</div></div>
         <div class="pop-list" id="list-top"></div>
       </div>
       
@@ -340,7 +335,7 @@
 
   <div id="qrModal" class="modal">
     <div class="modal-card">
-      <h3 class="modal-title">italkyAI'ı İndir</h3>
+      <h3 class="modal-title">italkyAI'ı Paylaş</h3>
       <p class="modal-text">Arkadaşının kamerasına bu kodu okutarak uygulamayı anında indirmesini sağla.</p>
       
       <div class="square-qr-container">
@@ -366,7 +361,6 @@
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id) => document.getElementById(id);
 
-  // --- 1. AYARLAR VE DATA ---
   function canonical(code){ return OfflinePackBridge.canonical(code); }
   const SITE_LANG = canonical(localStorage.getItem("site_lang") || navigator.language || "tr") || "tr";
   
@@ -382,18 +376,17 @@
   let recordingSide = null;
   let isBtConnected = false;
 
-  // --- 2. ELEMENTLER ---
   const topMic = $("topMic"); const botMic = $("botMic");
   const topBody = $("topBody"); const botBody = $("botBody");
   const topLangBtn = $("topLangBtn"); const botLangBtn = $("botLangBtn");
   const popTop = $("pop-top"); const popBot = $("pop-bot");
   const listTop = $("list-top"); const listBot = $("list-bot");
-  const btHandleBtn = $("btHandleBtn"); const qrHandleBtn = $("qrHandleBtn");
+  
+  const btHandleBtn = $("btHandleBtn"); 
+  const qrHandleBtn = $("qrHandleBtn");
   const qrIcon = $("qrIcon");
 
-  // --- 3. BLUETOOTH VE QR MANTIĞI ---
-  
-  // SOL BUTON: Eşleşme veya Clear İşlemi
+  // --- SOL BUTON: Eşleşme veya Clear İşlemi ---
   btHandleBtn.onclick = () => {
       if (!isBtConnected) {
           // BAĞLI DEĞİLSE: Bluetooth Eşleşmesi Başlat
@@ -404,23 +397,22 @@
               showToast("Eşleşilen cihazlar taranıyor...");
               window.Android.startBluetoothConnect();
           } else {
-              showToast("Bağlantı isteği gönderildi... (Test Modu)");
+              showToast("Bağlantı isteği gönderildi... (Test)");
               setTimeout(() => window.onBtConnected(), 1500);
           }
       } else {
-          // BAĞLIYSA: Clear işlemi yapsın
+          // BAĞLIYSA: Sadece ekranı temizle (Orijinal CLEAR mantığı)
           topBody.innerHTML = "";
           botBody.innerHTML = "";
-          showToast("Ekran temizlendi.");
+          showToast("Sohbet temizlendi.");
       }
   };
 
-  // SAĞ BUTON: Menü, QR veya Ayrıl İşlemi
+  // --- SAĞ BUTON: Menü veya Ayrıl İşlemi ---
   qrHandleBtn.onclick = () => {
       if (!isBtConnected) {
-          // BAĞLI DEĞİLSE: Ya menüyü aç ya da direkt QR'ı aç (Sana kalmış, orijinali menüydü)
-          // Menüyü de açabilirsin, şimdilik direkt QR'ı açtırıyoruz veya sen Menü istersen drawerBackdrop.add("show") yap.
-          $("qrModal").classList.add("show");
+          // BAĞLI DEĞİLSE: Menüyü aç
+          $("drawerBackdrop").classList.add("show");
       } else {
           // BAĞLIYSA: Ayrıl
           if (window.Native && window.Native.disconnectBluetooth) {
@@ -432,6 +424,12 @@
       }
   };
 
+  // Menü İçindeki QR Açma Butonu
+  $("menuQrBtn").onclick = () => { 
+      $("drawerBackdrop").classList.remove("show"); 
+      $("qrModal").classList.add("show"); 
+  };
+
   // Android'den gelen Bağlantı Kuruldu sinyali
   window.onBtConnected = function() {
       isBtConnected = true;
@@ -441,7 +439,7 @@
       qrIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>`;
       
       topBody.innerHTML = ""; botBody.innerHTML = "";
-      showToast("Bağlantı kuruldu! Yüz Yüze sohbete hazırsınız.");
+      showToast("Bağlantı kuruldu! Yüz yüze sohbet edebilirsiniz.");
   };
 
   window.onBtDisconnected = function() {
@@ -453,16 +451,16 @@
       window.location.href = "login.html"; 
   };
 
-  // Karşı taraftan saf metin alımı (Üst ekrana yazar ve okur)
+  // --- KARŞIDAN GELEN METNİ ALMA, ÇEVİRME VE OKUMA ---
   window.onBtMessageReceived = async function(text) {
       const targetBody = $("topBody");
       
-      const resBubble = document.createElement("div");
-      resBubble.className = "bubble latest";
-      resBubble.textContent = "•••";
+      const resText = document.createElement("div");
+      resText.className = "chat-text latest";
+      resText.textContent = "•••";
       
-      targetBody.querySelectorAll('.bubble').forEach(b => b.classList.remove('latest'));
-      targetBody.appendChild(resBubble);
+      targetBody.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest'));
+      targetBody.appendChild(resText);
       targetBody.scrollTop = targetBody.scrollHeight;
 
       try {
@@ -474,28 +472,24 @@
           const j = await r.json();
           const translated = j.translated || j.translation || "Error";
           
-          resBubble.textContent = translated;
+          resText.textContent = translated;
           targetBody.scrollTop = targetBody.scrollHeight;
           
           if (window.NativeTTS && window.NativeTTS.speak) {
               window.NativeTTS.speak(translated, botLang);
           }
-      } catch (e) { resBubble.textContent = "Bağlantı Hatası!"; }
+      } catch (e) { resText.textContent = "Bağlantı Hatası!"; }
   };
 
-  // --- 4. DİL SEÇİM MANTIĞI ---
+  // DİL SEÇİMİ
   function closeAllPops() { popTop.classList.remove("show"); popBot.classList.remove("show"); }
-
   function renderPop(side) {
       const list = (side === "top" ? listTop : listBot);
       const selected = (side === "top" ? topLang : botLang);
       
       list.innerHTML = LANGS.map(l => `
         <div class="pop-item ${l.code === selected ? "active" : ""}" data-select-code="${l.code}">
-          <div class="pop-left">
-            <div class="pop-flag">${l.flag}</div>
-            <div class="pop-name">${l.name}</div>
-          </div>
+          <div class="pop-left"><div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div></div>
           <div class="pop-actions"><div class="pop-code">${l.code.toUpperCase()}</div></div>
         </div>
       `).join("");
@@ -514,14 +508,14 @@
   topLangBtn.onclick = (e) => { e.stopPropagation(); renderPop("top"); popTop.classList.add("show"); popBot.classList.remove("show"); };
   botLangBtn.onclick = (e) => { e.stopPropagation(); renderPop("bot"); popBot.classList.add("show"); popTop.classList.remove("show"); };
   document.onclick = () => closeAllPops();
+  $("drawerBackdrop").onclick = (e) => { if(e.target === $("drawerBackdrop")) $("drawerBackdrop").classList.remove("show"); };
 
-  // --- 5. MİKROFON VE SES SİSTEMİ ---
+  // --- MİKROFON VE SES ---
   topMic.onclick = () => handleMicClick("top");
   botMic.onclick = () => handleMicClick("bot");
 
   function handleMicClick(side) {
-      if (recordingSide === side) { stopRecognizer(); } 
-      else { startRecording(side); }
+      if (recordingSide === side) { stopRecognizer(); } else { startRecording(side); }
   }
 
   function startRecording(side) {
@@ -546,20 +540,20 @@
 
   window.onNativeSpeechResult = function(side, text, isFinal) {
       const body = (side === "top" ? topBody : botBody);
-      let bubble = body.querySelector(".bubble.latest");
+      let resText = body.querySelector(".chat-text.latest");
       
-      if (!bubble) {
-          bubble = document.createElement("div");
-          bubble.className = "bubble latest";
-          body.querySelectorAll('.bubble').forEach(b => b.classList.remove('latest'));
-          body.appendChild(bubble);
+      if (!resText) {
+          resText = document.createElement("div");
+          resText.className = "chat-text latest";
+          body.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest'));
+          body.appendChild(resText);
       }
       
-      bubble.textContent = text + (isFinal ? "" : "...");
+      resText.textContent = text + (isFinal ? "" : "...");
       body.scrollTop = body.scrollHeight;
 
       if (isFinal) {
-          bubble.classList.remove("latest");
+          resText.classList.remove("latest");
           finalizeSpeech(side, text); 
       }
   };
@@ -569,13 +563,12 @@
 
       // MASA MODU AKTİF İSE (SADECE KENDİ YAZIMIZI BT İLE GÖNDERİRİZ)
       if (isBtConnected) {
-          // Android tarafında WebView'e eklenen objenin adı Native mi Android mi diye bakıyoruz:
           if (window.Native && window.Native.sendBtText) {
               window.Native.sendBtText(text);
           } else if (window.Android && window.Android.sendBtText) {
               window.Android.sendBtText(text);
           } else {
-              showToast("Bluetooth iletim hatası: Android köprüsü bulunamadı.");
+              showToast("Hata: Android iletişim köprüsü bulunamadı.");
           }
           return;
       }
@@ -585,11 +578,11 @@
       const to = (side === "top" ? botLang : topLang);
       const targetBody = (side === "top" ? botBody : topBody);
 
-      const resBubble = document.createElement("div");
-      resBubble.className = "bubble latest";
-      resBubble.textContent = "•••";
-      targetBody.querySelectorAll('.bubble').forEach(b => b.classList.remove('latest'));
-      targetBody.appendChild(resBubble);
+      const resText = document.createElement("div");
+      resText.className = "chat-text latest";
+      resText.textContent = "•••";
+      targetBody.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest'));
+      targetBody.appendChild(resText);
       targetBody.scrollTop = targetBody.scrollHeight;
 
       try {
@@ -601,16 +594,15 @@
           const j = await r.json();
           const translated = j.translated || j.translation || "Error";
           
-          resBubble.textContent = translated;
+          resText.textContent = translated;
           targetBody.scrollTop = targetBody.scrollHeight;
           
           if (window.NativeTTS && window.NativeTTS.speak) {
               window.NativeTTS.speak(translated, to);
           }
-      } catch (e) { resBubble.textContent = "!!!"; }
+      } catch (e) { resText.textContent = "!!!"; }
   }
 
-  // --- 6. UI YARDIMCILARI ---
   function refreshTexts() {
       const tO = LANGS.find(x => x.code === topLang) || {flag:"🌐", name:topLang.toUpperCase()};
       const bO = LANGS.find(x => x.code === botLang) || {flag:"🌐", name:botLang.toUpperCase()};
