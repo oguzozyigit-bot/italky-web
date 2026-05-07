@@ -622,22 +622,7 @@
       if (recordingSide === side) { stopRecognizer(); } else { startRecording(side); }
   }
 
-  function startRecording(side) {
-      stopRecognizer(); 
-      recordingSide = side;
-      $(side + "Mic").classList.add("listening");
-      const bcp = (side === "top" ? topLang : botLang);
-      
-      if (window.AndroidBridge && window.AndroidBridge.startSpeechRecognition) {
-          window.AndroidBridge.startSpeechRecognition(bcp, side);
-      }
-  }
-
-  function stopRecognizer() {
-      if (recordingSide) { $(recordingSide + "Mic").classList.remove("listening"); }
-      recordingSide = null;
-      if (window.AndroidBridge && window.AndroidBridge.stopSpeechRecognition) { window.AndroidBridge.stopSpeechRecognition(); }
-  }
+  function startRecording
 
   window.onNativeSpeechResult = function(side, text, isFinal) {
       const body = (side === "top" ? topBody : botBody);
