@@ -614,7 +614,7 @@
       if(!popTop.contains(e.target) && !popBot.contains(e.target) && !e.target.closest(".lang-trigger")) closeAllPops();
   };
 
-  // --- MİKROFON ---
+  // --- MİKROFON KONTROLLERİ ---
   topMic.onclick = () => handleMicClick("top");
   botMic.onclick = () => handleMicClick("bot");
 
@@ -622,7 +622,38 @@
       if (recordingSide === side) { stopRecognizer(); } else { startRecording(side); }
   }
 
-  function startRecording
+  function startRecording(side) {
+      stopRecognizer(); 
+      recordingSide = side;
+      $(side + "Mic").classList.add("listening");
+      const bcp = (side === "top" ? topLang : botLang);
+      
+      // Native köprüsü eklendi
+      if (window.Native && window.Native.startSpeechRecognition) {
+          window.Native.startSpeechRecognition(bcp, side);
+      } else if (window.AndroidBridge && window.AndroidBridge.startSpeechRecognition) {
+          window.AndroidBridge.startSpeechRecognition(bcp, side);
+      }
+  }
+
+  function stopRecognizer() {
+      if (recordingSide) { $(recordingSide + "Mic").classList.remove("listening"); }
+      recordingSide = null;
+      
+      // Native köprüsü eklendi
+      if (window.Native && window.Native.stopSpeechRecognition) { 
+          window.Native.stopSpeechRecognition(); 
+      } else if (window.AndroidBridge && window.AndroidBridge.stopSpeechRecognition) {
+          window.AndroidBridge.stopSpeechRecognition();
+      }
+  }
+
+  window.onNativeSpeechError = function(errorCode) {
+      stopRecognizer();
+      if (errorCode !== "manual_stop_empty") {
+          showToast("Ses anlaşılamadı (" + errorCode + ")");
+      }
+  };
 
   window.onNativeSpeechResult = function(side, text, isFinal) {
       const body = (side === "top" ? topBody : botBody);
