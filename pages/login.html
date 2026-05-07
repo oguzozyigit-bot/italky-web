@@ -80,7 +80,7 @@
     .drawer-logo-main .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .drawer-logo-sub{ margin-top:7px; display:block; color:rgba(255,255,255,.82); font-size:11px; font-weight:1000; letter-spacing:1.8px; }
 
-    /* HOLOGRAFİK ANİMASYON CSS (ESKİ KODDAN BİREBİR) */
+    /* HOLOGRAFİK ANİMASYON CSS */
     .holo-container{ width: 140px; height: 140px; position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 24px auto 30px; }
     .crystal-cage{ position: absolute; width: 100px; height: 100px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
     .crystal-side{ position: absolute; inset: 0; border: 2px solid rgba(103,232,249,.42); background: radial-gradient(circle, rgba(129,140,248,.12), transparent); box-shadow: 0 0 18px rgba(103,232,249,.22); }
@@ -126,7 +126,7 @@
     .half-screen.top{ transform:rotate(180deg); background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg)); transition: transform 0.4s ease; }
     .half-screen.bottom{ background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg)); padding-bottom:calc(4px + var(--safe-bottom)); }
 
-    /* --- DİL BUTONLARI VE POPOVER (OFLLINE MODÜL KAPALI) --- */
+    /* --- DİL BUTONLARI VE POPOVER --- */
     .lang-row{ width:100%; display:flex; align-items:center; justify-content:center; z-index:20; }
     .lang-trigger{
       min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px;
@@ -430,13 +430,12 @@
   const listTop = $("list-top"); const listBot = $("list-bot");
   const adModal = $("adModal"); const watchAdBtn = $("watchAdBtn");
   
-  // Toggle ve Kenar Butonları
   const btToggleBtn = $("btToggleBtn"); 
   const qrToggleBtn = $("qrToggleBtn");
   const qrToggleIcon = $("qrToggleIcon");
   const drawerBackdrop = $("drawerBackdrop");
 
-  // --- REKLAM MEKANİZMASI (ESKİ KODDAN BİREBİR) ---
+  // --- REKLAM MEKANİZMASI ---
   let autoAdTimer = null;
   let globalAdEarned = false;
 
@@ -444,22 +443,13 @@
       globalAdEarned = true;
   };
 
-  function setNativeBanner(visible) {
-      const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native || window.AndroidBridge;
-      if (bridge && typeof bridge.toggleBannerAd === "function") {
-          bridge.toggleBannerAd(visible, "");
-      }
-  }
-
   function showAdModal({adUnit = "public_facetoface_auto", langCode = ""} = {}){
       return new Promise((resolve) => {
-          setNativeBanner(false);
           adModal.classList.add("show");
 
           const clean = () => {
               watchAdBtn.onclick = null;
               adModal.classList.remove("show");
-              setNativeBanner(true);
           };
 
           watchAdBtn.onclick = async () => {
@@ -485,16 +475,15 @@
               });
 
               if(!success) {
-                  scheduleAutoAd(2000); // Reklam izlenmezse 2 saniye sonra tekrar zorla
+                  scheduleAutoAd(2000);
                   return;
               }
           }
 
-          scheduleAutoAd(5 * 60 * 1000); // İzlenirse 5 dakika sonra
+          scheduleAutoAd(5 * 60 * 1000); 
       }, intervalMs);
   }
 
-  // Reklamı Başlat
   scheduleAutoAd(5 * 60 * 1000); 
 
   // --- DIŞ KENAR BUTONLARI ---
@@ -503,14 +492,12 @@
   };
 
   $("drawerEdgeBtn").onclick = () => {
-      setNativeBanner(false);
       drawerBackdrop.classList.add("show");
   };
 
   drawerBackdrop.addEventListener("click", (e) => {
       if(e.target === drawerBackdrop) {
           drawerBackdrop.classList.remove("show");
-          setNativeBanner(true);
       }
   });
 
@@ -549,7 +536,7 @@
   // Android'den gelen Bağlantı Kuruldu sinyali
   window.onBtConnected = function() {
       isBtConnected = true;
-      document.body.classList.add("bt-active"); // CSS ile 180 derece iptal edilir, topLang kilitlenir
+      document.body.classList.add("bt-active");
       
       qrToggleIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>`;
       
@@ -596,7 +583,7 @@
       } catch (e) { resText.textContent = "Bağlantı Hatası!"; }
   };
 
-  // --- SADELEŞTİRİLMİŞ DİL SEÇİMİ (OFFLINE İNDİRME KAPALI) ---
+  // --- SADELEŞTİRİLMİŞ DİL SEÇİMİ ---
   function closeAllPops() { popTop.classList.remove("show"); popBot.classList.remove("show"); }
   
   function renderPop(side) {
@@ -675,7 +662,6 @@
   async function finalizeSpeech(side, text) {
       stopRecognizer();
 
-      // MASA MODU AKTİF İSE (Sadece çevrilmeden karşıya yolla)
       if (isBtConnected) {
           if (window.AndroidBridge && window.AndroidBridge.sendBtText) {
               window.AndroidBridge.sendBtText(text);
@@ -685,7 +671,6 @@
           return;
       }
 
-      // NORMAL MOD (Kendi tarafında çevir)
       const from = (side === "top" ? topLang : botLang);
       const to = (side === "top" ? botLang : topLang);
       const targetBody = (side === "top" ? botBody : topBody);
