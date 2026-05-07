@@ -557,87 +557,109 @@
   import { getLangPoolForSite } from "/js/lang_pool_full.js";
   import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
 
-  // ... (API_BASE ve diğer sabitler aynı kalıyor) ...
+  const API_BASE = "https://italky-api.onrender.com";
+  const $ = (id) => document.getElementById(id);
 
-  // [MÜDAHALE 1] OTOMATİK İNDİRMEYİ TAMAMEN KAPATTIK
-  async function autoStartNativeBaseSetup() {
-    console.log("italkyAI: Fatura hesabı nedeniyle otomatik indirme askıya alındı.");
-    return; 
+  const SITE_LANG_KEY = "site_lang";
+  const NATIVE_LANG_KEY = "italky_native_lang_v7";
+  const MY_LANG_KEY = "italky_public_my_lang_v1";
+
+  // Temel dil ayarları
+  function canonical(code){ return OfflinePackBridge.canonical(code); }
+  function getInitialSiteLang(){ return canonical(localStorage.getItem(SITE_LANG_KEY) || navigator.language || "tr") || "tr"; }
+
+  const SITE_LANG = getInitialSiteLang();
+  const LANGS = getLangPoolForSite(SITE_LANG).map(l => ({
+      code: canonical(l.code),
+      flag: l.flag || "🌐",
+      name: l.name || l.tr_name || l.code.toUpperCase()
+  }));
+
+  let myLang = SITE_LANG;
+  let topLang = "en";
+  let botLang = myLang;
+
+  // DOM Elemanları (Menü ve Diğerleri)
+  const topLangBtn = $("topLangBtn");
+  const botLangBtn = $("botLangBtn");
+  const popTop = $("pop-top");
+  const popBot = $("pop-bot");
+  const listTop = $("list-top");
+  const listBot = $("list-bot");
+  const drawerEdgeBtn = $("drawerEdgeBtn");
+  const drawerBackdrop = $("drawerBackdrop");
+
+  // [KAPATILAN KISIM] İndirme fonksiyonlarını boşalttık
+  async function autoStartNativeBaseSetup() { return; }
+  async function startOfflinePackDownload() { return false; }
+
+  // [DÜZELTİLEN KISIM] Popover ve Menü Tetikleyicileri
+  function openDrawer() { 
+      setNativeBanner(false);
+      drawerBackdrop.classList.add("show"); 
+  }
+  function closeDrawer() { 
+      drawerBackdrop.classList.remove("show"); 
+      setNativeBanner(true);
   }
 
-  // [MÜDAHALE 2] MANUEL İNDİRME İSTEĞİNİ DEVRE DIŞI BIRAKTIK
-  async function startOfflinePackDownload(targetCode){
-    showToast("Dil paketleri şu an bakımda, lütfen daha sonra deneyiniz.");
-    return false;
-  }
+  drawerEdgeBtn.onclick = openDrawer;
+  drawerBackdrop.onclick = (e) => { if(e.target === drawerBackdrop) closeDrawer(); };
 
-  // [MÜDAHALE 3] LİSTEDEKİ İNDİRME BUTONLARINI VE KUM SAATİNİ SİLDİK
-  function renderActionForLang(code, isLocked) {
-    const c = canonical(code);
-    // Artık indirme butonu veya saat ikonu dönmeyecek, sadece dil kodu görünecek
-    return `<div class="pop-code">${c.toUpperCase()}</div>`;
-  }
-
+  // Dilleri listeleyen ama indirme butonu göstermeyen fonksiyon
   function renderPop(side) {
-    const list = side === "top" ? listTop : listBot;
-    const selected = side === "top" ? topLang : botLang;
-    const filteredLangs = LANGS;
-
-    // "İndiriliyor..." uyarı kutusunu (Kum saati uyarısını) tamamen sildik
-    let htmlString = "";
-
-    htmlString += filteredLangs.map((l) => {
-      return `
-        <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
-          <div class="pop-left" data-select-code="${l.code}">
+      const list = side === "top" ? listTop : listBot;
+      const selected = side === "top" ? topLang : botLang;
+      
+      list.innerHTML = LANGS.map(l => `
+        <div class="pop-item ${l.code === selected ? "active" : ""}" data-select-code="${l.code}">
+          <div class="pop-left">
             <div class="pop-flag">${l.flag}</div>
             <div class="pop-name">${l.name}</div>
           </div>
           <div class="pop-actions">
-            ${renderActionForLang(l.code, false)}
+            <div class="pop-code">${l.code.toUpperCase()}</div>
           </div>
         </div>
-      `;
-    }).join("");
+      `).join("");
 
-    list.innerHTML = htmlString;
-
-    // Tıklama olayları (Sadece dil seçimi çalışır)
-    list.querySelectorAll("[data-select-code]").forEach((el) => {
-      el.addEventListener("click", () => {
-        const code = canonical(el.dataset.selectCode);
-        if(side === "top") topLang = code;
-        else botLang = code;
-        if(topLang === botLang) topLang = differentLang(botLang);
-        closeAllPop();
-        refreshTexts();
+      // Dil seçme işlemini bağladık
+      list.querySelectorAll(".pop-item").forEach(item => {
+          item.onclick = () => {
+              const code = item.dataset.selectCode;
+              if(side === "top") topLang = code; else botLang = code;
+              if(topLang === botLang) topLang = (code === "tr" ? "en" : "tr");
+              popTop.classList.remove("show");
+              popBot.classList.remove("show");
+              refreshTexts();
+          };
       });
-    });
   }
 
-  // [MÜDAHALE 4] ÇEVİRİYİ SADECE ONLINE MODA ZORLADIK
+  topLangBtn.onclick = () => { renderPop("top"); popTop.classList.add("show"); };
+  botLangBtn.onclick = () => { renderPop("bot"); popBot.classList.add("show"); };
+
+  // Çeviriyi online'a zorladık
   async function translateText(text, from, to) {
-    const src = canonical(from);
-    const dst = canonical(to);
-    // Offline kontrolünü fatura açılana kadar pas geçip direkt Online'a yolluyoruz
-    return await translateOnline(text, src, dst);
+      return await translateOnline(text, from, to);
   }
 
-  // ... (Geri kalan boot ve fonksiyonlar aynı kalabilir, indirme emri artık çalışmayacaktır) ...
-  
-  async function boot() {
-    // ... (İzinler ve başlangıç ayarları) ...
-    
-    // Altyapı kurulum emri kaldırıldı veya etkisiz hale getirildi.
-    // setTimeout(autoStartNativeBaseSetup, 2000); -> Bu satırı silebilirsin.
-    
-    refreshTexts();
-    clearBody(topBody);
-    clearBody(botBody);
-    scheduleAutoAd(5 * 60 * 1000);
+  // UI Güncelleme
+  function refreshTexts() {
+      const tO = LANGS.find(x => x.code === topLang);
+      const bO = LANGS.find(x => x.code === botLang);
+      topLangBtn.textContent = `${tO.flag} ${tO.name} ⌵`;
+      botLangBtn.textContent = `${bO.flag} ${bO.name} ⌵`;
   }
 
-  boot();
+  function setNativeBanner(visible) {
+      const bridge = window.AndroidAdBridge || window.NativeAds || window.Native;
+      if (bridge && bridge.toggleBannerAd) bridge.toggleBannerAd(visible, "");
+  }
+
+  // Sayfa açılış ayarları
+  refreshTexts();
+  scheduleAutoAd(5 * 60 * 1000);
  </script>
 </body>
 </html>
