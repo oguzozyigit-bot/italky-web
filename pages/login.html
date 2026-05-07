@@ -560,7 +560,7 @@
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id) => document.getElementById(id);
 
-  // --- AYARLAR ---
+  // --- TEMEL AYARLAR ---
   function canonical(code){ return OfflinePackBridge.canonical(code); }
   const SITE_LANG = canonical(localStorage.getItem("site_lang") || navigator.language || "tr") || "tr";
   const LANGS = getLangPoolForSite(SITE_LANG).map(l => ({
@@ -573,123 +573,104 @@
   let topLang = "en";
   let botLang = myLang;
   let recordingSide = null;
+  let liveText = "";
 
-  // --- MİKROFON VE BUTON TANIMLAMALARI ---
-  const topMic = $("topMic");
-  const botMic = $("botMic");
-  const topLangBtn = $("topLangBtn");
-  const botLangBtn = $("botLangBtn");
-  const popTop = $("pop-top");
-  const popBot = $("pop-bot");
-  const listTop = $("list-top");
-  const listBot = $("list-bot");
-  const drawerEdgeBtn = $("drawerEdgeBtn");
-  const drawerBackdrop = $("drawerBackdrop");
-  const sideClearBtn = $("sideClearBtn");
+  // --- ELEMENTLER ---
+  const topMic = $("topMic"); const botMic = $("botMic");
+  const topBody = $("topBody"); const botBody = $("botBody");
+  const topLangBtn = $("topLangBtn"); const botLangBtn = $("botLangBtn");
 
-  // --- MENÜ VE DRAWER MANTIĞI ---
-  drawerEdgeBtn.onclick = () => {
-      setNativeBanner(false);
-      drawerBackdrop.classList.add("show");
-  };
-  drawerBackdrop.onclick = (e) => {
-      if(e.target === drawerBackdrop) {
-          drawerBackdrop.classList.remove("show");
-          setNativeBanner(true);
-      }
-  };
-
-  // --- DİL SEÇİMİ (POPOVER) ---
-  function renderPop(side) {
-      const list = side === "top" ? listTop : listBot;
-      const selected = side === "top" ? topLang : botLang;
-      
-      list.innerHTML = LANGS.map(l => `
-        <div class="pop-item ${l.code === selected ? "active" : ""}" data-select-code="${l.code}">
-          <div class="pop-left">
-            <div class="pop-flag">${l.flag}</div>
-            <div class="pop-name">${l.name}</div>
-          </div>
-          <div class="pop-actions"><div class="pop-code">${l.code.toUpperCase()}</div></div>
-        </div>
-      `).join("");
-
-      list.querySelectorAll(".pop-item").forEach(item => {
-          item.onclick = () => {
-              const code = item.dataset.selectCode;
-              if(side === "top") topLang = code; else botLang = code;
-              if(topLang === botLang) topLang = (code === "tr" ? "en" : "tr");
-              popTop.classList.remove("show");
-              popBot.classList.remove("show");
-              refreshTexts();
-          };
-      });
-  }
-
-  topLangBtn.onclick = () => { renderPop("top"); popTop.classList.add("show"); };
-  botLangBtn.onclick = () => { renderPop("bot"); popBot.classList.add("show"); };
-
-  // --- MİKROFON TETİKLEYİCİLERİ (GERİ GELDİ) ---
+  // --- MİKROFON VE SES ALGILAMA (CRITICAL) ---
   function handleMicClick(side) {
-      if (recordingSide === side) {
-          stopRecognizer();
-      } else {
-          startRecording(side);
-      }
+      if (recordingSide === side) { stopRecognizer(); } 
+      else { startRecording(side); }
   }
 
   topMic.onclick = () => handleMicClick("top");
   botMic.onclick = () => handleMicClick("bot");
-  sideClearBtn.onclick = () => {
-      stopRecognizer();
-      $("topBody").innerHTML = "";
-      $("botBody").innerHTML = "";
-  };
 
-  // --- SES VE ÇEVİRİ MOTORU ---
   function startRecording(side) {
       recordingSide = side;
-      const mic = side === "top" ? topMic : botMic;
-      const otherMic = side === "top" ? botMic : topMic;
-      mic.classList.add("listening");
-      otherMic.classList.remove("listening");
-      
+      liveText = "";
+      $(side + "Mic").classList.add("listening");
       const bcp = (side === "top" ? topLang : botLang);
+      
       if (window.Native && window.Native.startSpeechRecognition) {
           window.Native.startSpeechRecognition(bcp, side);
       }
   }
 
   function stopRecognizer() {
+      if (recordingSide) { $(recordingSide + "Mic").classList.remove("listening"); }
       recordingSide = null;
-      topMic.classList.remove("listening");
-      botMic.classList.remove("listening");
-      if (window.Native && window.Native.stopSpeechRecognition) {
-          window.Native.stopSpeechRecognition();
+      if (window.Native && window.Native.stopSpeechRecognition) { window.Native.stopSpeechRecognition(); }
+  }
+
+  // Android'den gelen sesi yakalayan fonksiyon
+  window.onNativeSpeechResult = function(side, text, isFinal) {
+      liveText = text;
+      const body = (side === "top" ? topBody : botBody);
+      
+      let bubble = body.querySelector(".bubble.latest");
+      if (!bubble) {
+          bubble = document.createElement("div");
+          bubble.className = "bubble latest";
+          body.appendChild(bubble);
+      }
+      bubble.textContent = text + (isFinal ? "" : "...");
+      body.scrollTop = body.scrollHeight;
+
+      if (isFinal) {
+          finalizeSpeech(side, text);
+      }
+  };
+
+  // --- ÇEVİRİ VE SONUÇLANDIRMA ---
+  async function finalizeSpeech(side, text) {
+      stopRecognizer();
+      const from = (side === "top" ? topLang : botLang);
+      const to = (side === "top" ? botLang : topLang);
+      const targetBody = (side === "top" ? botBody : topBody);
+
+      // Yeni balon aç
+      const resBubble = document.createElement("div");
+      resBubble.className = "bubble latest";
+      resBubble.textContent = "...";
+      targetBody.appendChild(resBubble);
+      targetBody.scrollTop = targetBody.scrollHeight;
+
+      // Online Çeviri Çağrısı
+      try {
+          const r = await fetch(`${API_BASE}/api/translate`, {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({ text: text, from_lang: from, to_lang: to })
+          });
+          const j = await r.json();
+          const translated = j.translated || j.translation || "Çeviri hatası";
+          
+          resBubble.textContent = translated;
+          // Seslendir
+          if (window.NativeTTS && window.NativeTTS.speak) {
+              window.NativeTTS.speak(translated, to);
+          }
+      } catch (e) {
+          resBubble.textContent = "Bağlantı hatası.";
       }
   }
 
-  async function translateText(text, from, to) {
-      // Fatura düzelene kadar sadece online çeviri
-      return await translateOnline(text, from, to);
-  }
-
-  // --- UI YARDIMCILARI ---
+  // --- DİL VE MENÜ (DÜZELTİLDİ) ---
   function refreshTexts() {
-      const tO = LANGS.find(x => x.code === topLang) || {flag:"🌐", name:"EN"};
-      const bO = LANGS.find(x => x.code === botLang) || {flag:"🇹🇷", name:"TR"};
+      const tO = LANGS.find(x => x.code === topLang) || LANGS[0];
+      const bO = LANGS.find(x => x.code === botLang) || LANGS[1];
       topLangBtn.textContent = `${tO.flag} ${tO.name} ⌵`;
       botLangBtn.textContent = `${bO.flag} ${bO.name} ⌵`;
   }
 
-  function setNativeBanner(visible) {
-      const bridge = window.AndroidAdBridge || window.NativeAds || window.Native;
-      if (bridge && bridge.toggleBannerAd) bridge.toggleBannerAd(visible, "");
-  }
+  $("drawerEdgeBtn").onclick = () => $("drawerBackdrop").classList.add("show");
+  $("drawerBackdrop").onclick = (e) => { if(e.target === $("drawerBackdrop")) $("drawerBackdrop").classList.remove("show"); };
 
-  // Başlangıç
   refreshTexts();
-  scheduleAutoAd(5 * 60 * 1000);
  </script>
 </body>
 </html>
