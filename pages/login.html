@@ -374,8 +374,9 @@
   };
 
   function canonical(code){ return OfflinePackBridge.canonical(code); }
-  
-  let SITE_LANG = canonical(localStorage.getItem(SITE_LANG_KEY)) || "tr";
+  function getInitialSiteLang(){ return canonical(localStorage.getItem(SITE_LANG_KEY) || navigator.language || "tr") || "tr"; }
+
+  const SITE_LANG = getInitialSiteLang();
   
   const FALLBACK_LANGS = [
     { code:"tr", flag:"🇹🇷", name:"Türkçe" }, { code:"en", flag:"🇬🇧", name:"İngilizce" },
@@ -405,6 +406,7 @@
   let topLang = "en";
   if(topLang === botLang) topLang = botLang === "tr" ? "en" : "tr";
 
+  let forceBaseReady = false; // YENİ: Zaman aşımı kalkanı
   let isPremium = false; 
   let liveText = "";
   let lastOpenPopSide = null;
@@ -467,7 +469,6 @@
     if(updateModal) { updateModal.classList.remove("show"); setNativeBanner(true); } return false;
   }
 
-  // --- IP'DEN DİL TESPİT ETME ---
   async function getLangFromIP() {
       try {
           const res = await fetch("https://freeipapi.com/api/json");
@@ -489,13 +490,24 @@
   function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
   function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
 
-  function isNativeBaseReady() { return OfflinePackBridge && hasInstalledPair("en", SITE_LANG); }
+  // YENİ: Zaman aşımı kalkanlı isNativeBaseReady
+  function isNativeBaseReady() { return forceBaseReady || (OfflinePackBridge && hasInstalledPair("en", SITE_LANG)); }
 
   async function autoStartNativeBaseSetup() {
     if (isNativeBaseReady()) return;
     console.log(`italkyAI: Ana köprü dil (EN) ve Yerel Dil (${SITE_LANG}) kuruluyor...`);
     OfflinePackBridge.setOfflineNativeLang("en");
     OfflinePackBridge.startNativeDownload("en", SITE_LANG, langObj);
+
+    // ZAMAN AŞIMI KALKANI (45 Saniye)
+    setTimeout(() => {
+        if (!isNativeBaseReady()) {
+            console.warn("italkyAI: Android ML Kit yanıt vermedi! Kilit zorla açılıyor.");
+            forceBaseReady = true; // Kilidi kır
+            showToast("Çevrimdışı altyapı şu an indirilemiyor. Çevrimiçi (Online) devam edebilirsiniz.");
+            refreshOpenPop(); // Ekranı güncelle
+        }
+    }, 45000);
   }
 
   async function startOfflinePackDownload(targetCode){
@@ -533,8 +545,11 @@
     refreshOpenPop();
   });
   window.addEventListener("offlinePairDownloadFailed", (e) => {
-    if (canonical(e.detail?.target) === SITE_LANG && !isNativeBaseReady()) setTimeout(autoStartNativeBaseSetup, 10000);
-    else if(downloadErrorModal) { setNativeBanner(false); downloadErrorModal.classList.add("show"); }
+    if (canonical(e.detail?.target) === SITE_LANG && !isNativeBaseReady()) {
+        setTimeout(autoStartNativeBaseSetup, 10000);
+    } else if(downloadErrorModal) { 
+        setNativeBanner(false); downloadErrorModal.classList.add("show"); 
+    }
   });
 
   let autoAdTimer = null; let globalAdEarned = false;
@@ -814,7 +829,6 @@
     const mustUpdate = await checkAppUpdate();
     if (mustUpdate) return;
 
-    // YENİ IP TESPİTİ
     let savedLang = localStorage.getItem(SITE_LANG_KEY);
     if (!savedLang) {
         savedLang = await getLangFromIP();
