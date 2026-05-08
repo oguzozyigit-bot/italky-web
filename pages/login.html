@@ -340,10 +340,8 @@
   const $ = (id) => document.getElementById(id);
 
   const SITE_LANG_KEY = "site_lang";
-  const NATIVE_LANG_KEY = "italky_native_lang_v7";
   const MIN_REQUIRED_VERSION = 81;
 
-  // JSON'dan Çekilen 19 Offline Dil Entegrasyonu
   const BCP = {
     tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
     ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR",
@@ -376,11 +374,9 @@
   };
 
   function canonical(code){ return OfflinePackBridge.canonical(code); }
-  function getInitialSiteLang(){ return canonical(localStorage.getItem(SITE_LANG_KEY) || navigator.language || "tr") || "tr"; }
-
-  const SITE_LANG = getInitialSiteLang();
   
-  // Eğer js dosyasında yoksa fallback listesi (Manifeste uyumlu 19 dil)
+  let SITE_LANG = canonical(localStorage.getItem(SITE_LANG_KEY)) || "tr";
+  
   const FALLBACK_LANGS = [
     { code:"tr", flag:"🇹🇷", name:"Türkçe" }, { code:"en", flag:"🇬🇧", name:"İngilizce" },
     { code:"de", flag:"🇩🇪", name:"Almanca" }, { code:"fr", flag:"🇫🇷", name:"Fransızca" },
@@ -409,7 +405,7 @@
   let topLang = "en";
   if(topLang === botLang) topLang = botLang === "tr" ? "en" : "tr";
 
-  let isPremium = false; // ABONELİK KALKANI
+  let isPremium = false; 
   let liveText = "";
   let lastOpenPopSide = null;
   let recordingSide = null;
@@ -423,6 +419,7 @@
   const popTop = $("pop-top"); const popBot = $("pop-bot");
   const listTop = $("list-top"); const listBot = $("list-bot");
   const adModal = $("adModal"); const watchAdBtn = $("watchAdBtn");
+  const adTitle = $("adTitle"); const adText = $("adText");
   const updateModal = $("updateModal"); const downloadErrorModal = $("downloadErrorModal");
   const drawerBackdrop = $("drawerBackdrop");
   const handsFreeToggle = $("handsFreeToggle");
@@ -444,18 +441,16 @@
     window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
   }
 
-  // --- PREMIUM SİSTEMİ ---
   premiumBtn.onclick = () => {
     if (window.AndroidBridge && typeof window.AndroidBridge.purchasePremium === "function") {
         window.AndroidBridge.purchasePremium();
     } else {
         showToast("Premium özellikleri test ediliyor.");
-        isPremium = true; // Sadece test için, gerçekte AndroidBridge'den callback gelir.
+        isPremium = true; 
         setNativeBanner(false);
     }
   };
 
-  // --- GÜNCELLEME KONTROLÜ ---
   function getAndroidVersionCode() {
     try { if (window.AndroidBridge?.getVersionCode) return Number(window.AndroidBridge.getVersionCode()); } catch(e){}
     try { if (window.Native?.getVersionCode) return Number(window.Native.getVersionCode()); } catch(e){}
@@ -472,22 +467,37 @@
     if(updateModal) { updateModal.classList.remove("show"); setNativeBanner(true); } return false;
   }
 
-  // --- OFFLINE ÇEKİRDEK VE KİLİT SİSTEMİ ---
+  // --- IP'DEN DİL TESPİT ETME ---
+  async function getLangFromIP() {
+      try {
+          const res = await fetch("https://freeipapi.com/api/json");
+          const data = await res.json();
+          const country = data.countryCode;
+          
+          const map = {
+              "TR":"tr", "US":"en", "GB":"en", "DE":"de", "FR":"fr", "IT":"it", "ES":"es",
+              "SA":"ar", "AE":"ar", "RU":"ru", "CN":"zh", "JP":"ja", "KR":"ko", "IR":"fa",
+              "UZ":"uz", "KZ":"kz", "UA":"uk", "VN":"vi", "NL":"nl", "PL":"pl", "IN":"hi"
+          };
+          if (country && map[country]) return map[country];
+      } catch (e) {
+          console.warn("IP tespiti başarısız, TR'ye dönülüyor...");
+      }
+      return "tr"; 
+  }
+
   function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
   function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
 
-  // 1. KİLİT MEKANİZMASI: EN indi mi?
-  function isNativeBaseReady() { return OfflinePackBridge && (hasInstalledPair("en", "en") || hasInstalledPair("en", SITE_LANG)); }
+  function isNativeBaseReady() { return OfflinePackBridge && hasInstalledPair("en", SITE_LANG); }
 
-  // 2. OTOMATİK KURULUM: Sadece İngilizce (Ana Köprü)
   async function autoStartNativeBaseSetup() {
     if (isNativeBaseReady()) return;
-    console.log("italkyAI: Ana köprü dil (EN) kuruluyor...");
+    console.log(`italkyAI: Ana köprü dil (EN) ve Yerel Dil (${SITE_LANG}) kuruluyor...`);
     OfflinePackBridge.setOfflineNativeLang("en");
-    OfflinePackBridge.startNativeDownload("en", "en", langObj);
+    OfflinePackBridge.startNativeDownload("en", SITE_LANG, langObj);
   }
 
-  // 3. SEÇİLİ DİLİ İNDİRME EMRİ (EN KÖPRÜSÜ ÜZERİNDEN)
   async function startOfflinePackDownload(targetCode){
     syncInstalledPairsFromNative();
     const target = canonical(targetCode);
@@ -519,15 +529,14 @@
   window.addEventListener("offlinePairDownloadCompleted",(e) => {
     const target = canonical(e.detail?.target);
     OfflinePackBridge.markInstalledPair("en",target); syncInstalledPairsFromNative();
-    showToast(target === "en" ? "Ana dil (EN) altyapısı hazır. Artık diğer dilleri indirebilirsiniz." : tx("packDownloaded"));
+    showToast(target === SITE_LANG ? "Ana altyapı hazır. Artık dilleri indirebilirsiniz." : tx("packDownloaded"));
     refreshOpenPop();
   });
   window.addEventListener("offlinePairDownloadFailed", (e) => {
-    if (canonical(e.detail?.target) === "en" && !isNativeBaseReady()) setTimeout(autoStartNativeBaseSetup, 10000);
+    if (canonical(e.detail?.target) === SITE_LANG && !isNativeBaseReady()) setTimeout(autoStartNativeBaseSetup, 10000);
     else if(downloadErrorModal) { setNativeBanner(false); downloadErrorModal.classList.add("show"); }
   });
 
-  // --- REKLAM MEKANİZMASI ---
   let autoAdTimer = null; let globalAdEarned = false;
   window.onRewardedAdCompleted = function() { globalAdEarned = true; };
 
@@ -543,7 +552,7 @@
 
   function showAdModal({title, text, adUnit = "public_facetoface_auto", langCode = ""} = {}){
       return new Promise((resolve) => {
-          if(isPremium) { resolve(true); return; } // PREMIUM KALKANI
+          if(isPremium) { resolve(true); return; }
           setNativeBanner(false);
           if(adTitle) adTitle.textContent = title || tx("adTitle");
           if(adText) adText.textContent = text || tx("adText");
@@ -567,7 +576,6 @@
           const isUpdateModalOpen = updateModal?.classList.contains('show');
           const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
 
-          // Reklamın pat diye çıkmaması için kullanıcı müsait mi kontrolü + Altyapı inmiş mi kontrolü
           if (!isDrawerOpen && !isUpdateModalOpen && !isRecording && isNativeBaseReady()) {
               const success = await showAdModal({ adUnit: "public_facetoface_auto", langCode: "" });
               if(!success) { scheduleAutoAd(2000); return; }
@@ -576,7 +584,6 @@
       }, intervalMs);
   }
 
-  // --- ARAYÜZ VE DİL SEÇİMİ ---
   function refreshTexts(){
     const tO = langObj(topLang); const bO = langObj(botLang);
     $("topLangBtn").textContent = `${tO.flag} ${tO.name} ⌵`;
@@ -604,10 +611,10 @@
       const nativeReady = isNativeBaseReady();
       
       let html = "";
-      if (!nativeReady) html += `<div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;"><div style="font-size: 11px; color: #a5b4fc; font-weight: 800;">Çevrimdışı yetenek için <strong>ana köprü dil (EN) kuruluyor (⏳)</strong>. Bittiğinde diğer dilleri indirebilirsiniz.</div></div>`;
+      if (!nativeReady) html += `<div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;"><div style="font-size: 11px; color: #a5b4fc; font-weight: 800;">Çevrimdışı yetenek için <strong>ana köprü dil kuruluyor (⏳)</strong>. Bittiğinde diğer dilleri indirebilirsiniz.</div></div>`;
 
       html += LANGS.map(l => {
-        const isLocked = !nativeReady && l.code !== "en"; // EN inmeden diğerleri kilitli
+        const isLocked = !nativeReady && l.code !== "en"; 
         return `
         <div class="pop-item ${l.code === selected ? "active" : ""}" data-select-code="${l.code}">
           <div class="pop-left"><div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div></div>
@@ -647,7 +654,6 @@
   $("drawerEdgeBtn").onclick = () => { setNativeBanner(false); drawerBackdrop.classList.add("show"); };
   drawerBackdrop.onclick = (e) => { if(e.target === drawerBackdrop) { drawerBackdrop.classList.remove("show"); setNativeBanner(true); }};
   
-  // --- BLUETOOTH İLETİŞİMİ ---
   $("btToggleBtn").onclick = () => window.AndroidBridge?.startBluetoothConnect();
   $("qrToggleBtn").onclick = () => { if (!isBtConnected) { setNativeBanner(false); $("qrModal").classList.add("show"); } else { window.AndroidBridge?.disconnectBluetooth(); window.onBtDisconnected(); } };
   $("menuQrBtn").onclick = () => { drawerBackdrop.classList.remove("show"); $("qrModal").classList.add("show"); };
@@ -682,7 +688,6 @@
       } catch (e) { resText.textContent = "Bağlantı Hatası!"; }
   };
 
-  // --- MİKROFON, KULAKLIK VE YANKI ENGELLEME ---
   handsFreeToggle.onclick = () => {
       isHandsFree = !isHandsFree;
       if (isHandsFree) {
@@ -708,7 +713,6 @@
       const code = (side === "top" ? topLang : botLang);
       const bcp = langObj(code).bcp;
       
-      // Önce Native STT tetiklenir, Android tarafı kendi içinde yoksa Vosk'a geçer
       if (window.Native?.startSpeechRecognition) window.Native.startSpeechRecognition(bcp, side);
       else if (window.AndroidBridge?.startSpeechRecognition) window.AndroidBridge.startSpeechRecognition(bcp, side);
   }
@@ -741,11 +745,9 @@
       if (isFinal) { resText.classList.remove("latest"); finalizeSpeech(side, text); }
   };
 
-  // --- HİBRİT ÇEVİRİ MOTORU ---
   async function translateText(text, from, to) {
     const src = canonical(from); const dst = canonical(to);
     
-    // Eğer Source ve Target cihazda yüklü ML Kit dilleriyse çevrimdışı çevir!
     if ((src === "en" || hasInstalledPair("en", src)) && (dst === "en" || hasInstalledPair("en", dst))) {
       try {
         const offlineResult = OfflinePackBridge.translateOffline(text, src, dst);
@@ -753,7 +755,6 @@
       } catch (e) {}
     }
     
-    // İnternet varsa ve Offline başarısız olduysa / paket yoksa Online API'ye pasla
     try {
       const r = await fetch(`${API_BASE}/api/translate`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ text: text, from_lang: src, to_lang: dst }) });
       const j = await r.json();
@@ -762,7 +763,6 @@
     return null;
   }
 
-  // --- TTS MOTORU (Native -> Vosk Fallback) ---
   function speak(text, langCode) {
       const value = String(text || "").trim();
       if(!value) return;
@@ -772,7 +772,6 @@
       if (isHandsFree) stopRecognizer();
       isSpeaking = true;
 
-      // Echo engelleyici dinamik süre hesaplama (uzunluğa göre min 3 saniye)
       const delay = Math.max(3000, value.length * 80);
       
       try {
@@ -815,8 +814,20 @@
     const mustUpdate = await checkAppUpdate();
     if (mustUpdate) return;
 
+    // YENİ IP TESPİTİ
+    let savedLang = localStorage.getItem(SITE_LANG_KEY);
+    if (!savedLang) {
+        savedLang = await getLangFromIP();
+        localStorage.setItem(SITE_LANG_KEY, savedLang);
+    }
+    
+    SITE_LANG = savedLang;
+    botLang = SITE_LANG;
+    if (topLang === botLang) topLang = botLang === "tr" ? "en" : "tr";
+    
+    refreshTexts(); 
+
     OfflinePackBridge.setOfflineNativeLang("en");
-    refreshTexts();
     scheduleAutoAd(5 * 60 * 1000);
     setTimeout(autoStartNativeBaseSetup, 2000);
   }
