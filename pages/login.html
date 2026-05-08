@@ -618,17 +618,26 @@
   topMic.onclick = () => handleMicClick("top");
   botMic.onclick = () => handleMicClick("bot");
 
+  // --- MİKROFON KONTROLLERİ ---
+  topMic.onclick = () => handleMicClick("top");
+  botMic.onclick = () => handleMicClick("bot");
+
   function handleMicClick(side) {
-      if (recordingSide === side) { stopRecognizer(); } else { startRecording(side); }
+      if (recordingSide === side) { 
+          stopRecognizer(); 
+      } else { 
+          startRecording(side); 
+      }
   }
 
   function startRecording(side) {
-      stopRecognizer(); 
+      // Sadece başka bir mikrofon dinliyorsa onu durdur
+      if (recordingSide) stopRecognizer(); 
+      
       recordingSide = side;
       $(side + "Mic").classList.add("listening");
       const bcp = (side === "top" ? topLang : botLang);
       
-      // Native köprüsü eklendi
       if (window.Native && window.Native.startSpeechRecognition) {
           window.Native.startSpeechRecognition(bcp, side);
       } else if (window.AndroidBridge && window.AndroidBridge.startSpeechRecognition) {
@@ -637,10 +646,13 @@
   }
 
   function stopRecognizer() {
-      if (recordingSide) { $(recordingSide + "Mic").classList.remove("listening"); }
+      // KRİTİK DÜZELTME: Eğer zaten dinleyen bir mikrofon yoksa, işlemi direkt kes! 
+      // Android'e gereksiz yere durdurma sinyali gönderip motoru çökertme.
+      if (!recordingSide) return; 
+
+      $(recordingSide + "Mic").classList.remove("listening");
       recordingSide = null;
       
-      // Native köprüsü eklendi
       if (window.Native && window.Native.stopSpeechRecognition) { 
           window.Native.stopSpeechRecognition(); 
       } else if (window.AndroidBridge && window.AndroidBridge.stopSpeechRecognition) {
