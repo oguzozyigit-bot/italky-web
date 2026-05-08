@@ -35,13 +35,13 @@
     body.bt-active #btToggleBtn { color: #f87171; border-color: rgba(248,113,113,0.5); background: rgba(239,68,68,0.15); box-shadow: 0 0 15px rgba(239,68,68,0.3); }
 
     /* REHBER MODU EFEKTLERİ (TAM EKRAN ODAKLI) */
-    body.guide-active .half-screen.top { display: none !important; } /* Üst tarafı komple gizle */
-    body.guide-active .half-screen.bottom { height: 100%; flex: 1; padding-top: 15px; } /* Alt tarafı tam ekran yap */
+    body.guide-active .half-screen.top { display: none !important; }
+    body.guide-active .half-screen.bottom { height: 100%; flex: 1; padding-top: 15px; } 
     body.guide-active .center-hub { background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     
-    body.guide-listener #botMic { display: none !important; } /* Dinleyicide mikrofon gizli */
-    body.guide-listener #handsFreeToggle { display: none !important; } /* Dinleyicide kulaklık butonu gizli */
-    body.guide-listener .mic-line { display: flex; justify-content: center; } /* QR'ı merkeze al */
+    body.guide-listener #botMic { display: none !important; } 
+    body.guide-listener #handsFreeToggle { display: none !important; } 
+    body.guide-listener .mic-line { display: flex; justify-content: center; } 
     body.guide-listener .mic-side { min-height: auto; }
 
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
@@ -112,6 +112,7 @@
     .premium-link { border: 1px solid rgba(236,72,153,.4); background: rgba(236,72,153,.15); }
     .premium-link::before { background: radial-gradient(circle at left,rgba(236,72,153,.2),transparent 55%), linear-gradient(135deg,rgba(255,255,255,.035),rgba(236,72,153,.20)); }
     .offline-menu-btn { border-color: rgba(34,197,94,0.4); }
+    .shortcut-btn { border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.1); }
 
     .drawer-footer-seal{ margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46); font-size:11px; font-weight:1000; letter-spacing:.4px; }
     .drawer-footer-seal .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
@@ -245,6 +246,7 @@
       <nav class="drawer-links">
         <a class="drawer-link premium-link" id="premiumBtn" style="display: none !important;"><span>🌟 Premium (Reklamsız)</span><small>›</small></a>
         <a class="drawer-link offline-menu-btn" id="menuOfflineBtn" style="display: none !important;"><span>📥 Offline Dil Paketleri</span><small>›</small></a>
+        <a class="drawer-link shortcut-btn" id="addShortcutBtn"><span>📲 Ana Ekrana Kısayol Ekle</span><small>›</small></a>
         
         <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
         <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
@@ -426,6 +428,8 @@
 
   function langObj(code){ const c = canonical(code); return LANGS.find(x => x.code === c) || { code:c||"en", flag:"🌐", name:(c||"en").toUpperCase(), bcp:"en-US" }; }
 
+  function getBridge() { return window.AndroidApp || window.AndroidBridge; }
+
   let isPremium = false; 
   let liveText = "";
   let recordingSide = null;
@@ -447,7 +451,7 @@
 
   function setNativeBanner(visible) {
     if (isPremium) visible = false;
-    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+    const bridge = window.NativeAds || window.AdMobBridge || getBridge() || window.Native;
     if (bridge && typeof bridge.toggleBannerAd === "function") bridge.toggleBannerAd(visible, "");
   }
 
@@ -459,7 +463,8 @@
 
   async function checkAppUpdate() {
     try {
-      const v = window.AndroidBridge?.getVersionCode ? window.AndroidBridge.getVersionCode() : (window.Native?.getVersionCode ? window.Native.getVersionCode() : null);
+      const bridge = getBridge();
+      const v = bridge?.getVersionCode ? bridge.getVersionCode() : (window.Native?.getVersionCode ? window.Native.getVersionCode() : null);
       if (v !== null && Number(v) < MIN_REQUIRED_VERSION) { if(updateModal) { updateModal.classList.add("show"); setNativeBanner(false); } return true; }
     } catch(e){}
     if(updateModal) { updateModal.classList.remove("show"); setNativeBanner(true); } return false;
@@ -551,7 +556,8 @@
               const code = item.getAttribute("data-select-code");
               if(side === "top") topLang = code; else {
                   botLang = code;
-                  if (isBtConnected && window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText("SYS_CMD:LANG:" + code);
+                  const bridge = getBridge();
+                  if (isBtConnected && bridge?.sendBtText) bridge.sendBtText("SYS_CMD:LANG:" + code);
               }
               if(topLang === botLang) topLang = code === "tr" ? "en" : "tr";
               closeAllPops(); refreshTexts();
@@ -590,11 +596,21 @@
   
   $("shareQrBtn").onclick = () => { setNativeBanner(false); $("qrModal").classList.add("show"); };
 
+  $("addShortcutBtn").onclick = () => {
+      const bridge = getBridge();
+      if(bridge && bridge.pinAppShortcut) {
+          bridge.pinAppShortcut();
+      } else {
+          showToast("Kısayol özelliği desteklenmiyor.");
+      }
+  };
+
   // --- REHBER MODU YÖNETİMİ ---
   $("guideBtn").onclick = () => {
       if (isGuideMode) {
           isGuideMode = false; isGuideHost = false;
-          window.AndroidBridge?.stopGuideMode();
+          const bridge = getBridge();
+          if (bridge) bridge.stopGuideMode();
           
           document.body.classList.remove("guide-active", "guide-host", "guide-listener");
           $("guideBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`;
@@ -613,7 +629,8 @@
   $("guideHostBtn").onclick = () => {
       isGuideMode = true; isGuideHost = true;
       $("guideModal").classList.remove("show"); setNativeBanner(true);
-      window.AndroidBridge?.startGuideBroadcast();
+      const bridge = getBridge();
+      if (bridge) bridge.startGuideBroadcast();
       
       document.body.classList.add("guide-active", "guide-host");
       
@@ -630,7 +647,8 @@
   $("guideListenBtn").onclick = () => {
       isGuideMode = true; isGuideHost = false;
       $("guideModal").classList.remove("show"); setNativeBanner(true);
-      window.AndroidBridge?.joinGuideBroadcast();
+      const bridge = getBridge();
+      if (bridge) bridge.joinGuideBroadcast();
       
       document.body.classList.add("guide-active", "guide-listener");
       
@@ -658,8 +676,9 @@
   
   // --- BLUETOOTH YÖNETİMİ ---
   $("btToggleBtn").onclick = () => {
-      if (!isBtConnected) { window.AndroidBridge?.startBluetoothConnect(); } 
-      else { window.AndroidBridge?.disconnectBluetooth(); window.onBtDisconnected(); }
+      const bridge = getBridge();
+      if (!isBtConnected) { if(bridge) bridge.startBluetoothConnect(); } 
+      else { if(bridge) bridge.disconnectBluetooth(); window.onBtDisconnected(); }
   };
 
   window.onBtConnected = function() {
@@ -676,6 +695,10 @@
       clearBody(topBody); clearBody(botBody);
       showToast("Bağlantı kuruldu!");
       $("qrModal").classList.remove("show"); drawerBackdrop.classList.remove("show"); setNativeBanner(true);
+      
+      // Native popupları kapatmak için (eğer eklenmişse)
+      const bridge = getBridge();
+      if (bridge && bridge.closeNativeDialogs) bridge.closeNativeDialogs();
   };
 
   window.onBtDisconnected = function() {
@@ -729,11 +752,12 @@
       recordingSide = side; setMicState(side, true); liveText = "";
       const code = (side === "top" ? topLang : botLang);
       const bcp = langObj(code).bcp;
+      const bridge = getBridge();
       
       if (window.Native && window.Native.startSpeechRecognition) {
         window.Native.startSpeechRecognition(bcp, side);
-      } else if (window.AndroidBridge && window.AndroidBridge.startSpeechRecognition) {
-        window.AndroidBridge.startSpeechRecognition(bcp, side);
+      } else if (bridge && bridge.startSpeechRecognition) {
+        bridge.startSpeechRecognition(bcp, side);
       } else if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         window.webRecognizer = new SpeechRecognition();
@@ -763,8 +787,9 @@
   function stopRecognizer() {
       if (!recordingSide) return; 
       setMicState(recordingSide, false); recordingSide = null;
+      const bridge = getBridge();
       if (window.Native && window.Native.stopSpeechRecognition) window.Native.stopSpeechRecognition(); 
-      else if (window.AndroidBridge && window.AndroidBridge.stopSpeechRecognition) window.AndroidBridge.stopSpeechRecognition();
+      else if (bridge && bridge.stopSpeechRecognition) bridge.stopSpeechRecognition();
       else if (window.webRecognizer) { window.webRecognizer.stop(); window.webRecognizer = null; }
   }
 
@@ -782,11 +807,17 @@
         if(body) { const activeBubble = body.querySelector(".bubble.latest"); if(activeBubble && activeBubble.textContent.endsWith("...")) activeBubble.remove(); }
       });
       if(errorMsg === "manual_stop_empty") return;
-      if(errorMsg !== "no speech") {
+
+      // ELLER SERBEST MODUNDA "HİÇBİR ŞEY SÖYLENMEDİ" HATALARINI GİZLE
+      const isNoSpeechError = errorMsg === "no speech" || errorMsg.includes("7") || errorMsg.includes("6") || errorMsg.toLowerCase().includes("konuşma") || errorMsg.toLowerCase().includes("bulunamadı");
+
+      if (!isNoSpeechError) {
         if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") showToast(tx("micDenied"));
         else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
         else if (errorMsg === "network_error" || errorMsg === "server_error") showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
-        else showToast(tx("micError") + " (" + errorMsg + ")");
+        else {
+           if (!isHandsFree) showToast(tx("micError") + " (" + errorMsg + ")");
+        }
       }
       checkHandsFreeRestart("bot");
   };
@@ -848,8 +879,9 @@
       const delay = Math.max(3000, value.length * 80);
       
       let spokenViaNative = false;
+      const bridge = getBridge();
       try {
-        if(window.AndroidBridge && window.AndroidBridge.speak) { window.AndroidBridge.speak(value, code); spokenViaNative = true; }
+        if(bridge && bridge.speak) { bridge.speak(value, code); spokenViaNative = true; }
         else if(window.NativeTTS && window.NativeTTS.speak) { window.NativeTTS.speak(value, code); spokenViaNative = true; }
       } catch(e){}
 
@@ -875,9 +907,11 @@
       const clean = cleanupTranscript(text);
       if(!clean){ liveText = ""; setMicState(side,false); return; }
 
+      const bridge = getBridge();
+
       // REHBER İSE MESAJI AĞA FIRLAT (KENDİ EKRANINA DA YAZDIR)
       if (isGuideMode && isGuideHost && side === "bot") {
-          if (window.AndroidBridge?.sendBroadcastText) window.AndroidBridge.sendBroadcastText(clean);
+          if (bridge && bridge.sendBroadcastText) bridge.sendBroadcastText(clean);
           addBubble("bot", clean, false); 
           checkHandsFreeRestart("bot");
           liveText = ""; setMicState(side,false);
@@ -885,7 +919,7 @@
       }
 
       if (isBtConnected && side === "bot") {
-          if (window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText(clean);
+          if (bridge && bridge.sendBtText) bridge.sendBtText(clean);
           addBubble("bot", clean, false);
           checkHandsFreeRestart("bot"); 
           return;
