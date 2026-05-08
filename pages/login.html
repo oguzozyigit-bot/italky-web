@@ -171,25 +171,10 @@
     body.bt-active #botBody .chat-text { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     body.bt-active #topBody .chat-text { color: #bfdbfe; text-shadow: 0 0 15px rgba(59,130,246,0.3); }
 
-    /* --- MİKROFONLAR VE ELLER SERBEST BUTONU --- */
+    /* --- MİKROFONLAR --- */
     .mic-line{ width:100%; display:grid; grid-template-columns:1fr 70px 1fr; align-items:center; gap:12px; padding:0 8px 0; flex:0 0 auto; transform:translateY(-8px); }
     .mic-side{ min-height:60px; display:flex; align-items:center; justify-content:center; }
     
-    /* Eller Serbest (Kulaklık) Butonu Tasarımı */
-    .hf-btn{
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 12px; color: rgba(255,255,255,0.7);
-      padding: 8px 12px; display: none; align-items: center; gap: 6px; /* GÜNCELLEME: Başlangıçta display: none */
-      font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.3s ease;
-      outline: none;
-    }
-    .hf-btn:active{ transform: scale(0.95); }
-    .hf-btn.active{
-      background: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.5);
-      color: #d8b4fe; box-shadow: 0 0 15px rgba(168,85,247,0.25);
-    }
-    .hf-btn svg{ width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-
     .mic-btn{
       width:70px; height:70px; border:none; border-radius:999px; background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
       border:1px solid rgba(255,255,255,.18); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
@@ -372,15 +357,47 @@
         <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
           <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
         </button>
-        <div class="mic-side">
-          <button id="handsFreeToggle" class="hf-btn" type="button" aria-label="Kulaklık Modu">
-            <svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
-            <span>Kulaklık</span>
-          </button>
-        </div>
+        <div class="mic-side empty"></div>
       </div>
     </section>
   </main>
+
+  <div id="qrModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title">italkyAI'ı Paylaş</h3>
+      <p class="modal-text">Arkadaşının kamerasına bu kodu okutarak uygulamayı anında indirmesini sağla.</p>
+      <div class="square-qr-container">
+        <div class="square-spinner"></div>
+        <div class="square-spinner-inner"></div>
+        <div class="qr-wrapper">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://play.google.com/store/apps/details?id=com.ozyigits.italkyai&margin=0" alt="italkyAI QR">
+        </div>
+      </div>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="document.getElementById('qrModal').classList.remove('show')" class="modal-btn secondary" type="button">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="adTitle">Zorunlu Reklam</h3>
+      <p class="modal-text" id="adText">Bu uygulamayı sizlere ücretsiz olarak sunmaya devam edebilmemiz için ödüllü reklamları izlemeniz gereklidir. İzlerken reklama tıklayarak bize verdiğiniz desteği artırabilirsiniz. Çevirilerinizin kesintiye uğramaması için bu reklam her 5 dakikada bir gösterilir. Anlayışınız ve desteğiniz için teşekkür ederiz.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklamı İzle ve Devam Et</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="updateModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title">Güncelleme Gerekli</h3>
+      <p class="modal-text">Uygulamanın yeni fonksiyonlarını eksiksiz kullanabilmek için lütfen güncelleme yapınız.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'" class="modal-btn primary" type="button">Play Store'dan Güncelle</button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast"></div>
 
@@ -405,7 +422,6 @@
   let botLang = SITE_LANG;
   let recordingSide = null;
   let isBtConnected = false;
-  let isHandsFree = false;
 
   const topMic = $("topMic"); const botMic = $("botMic");
   const topBody = $("topBody"); const botBody = $("botBody");
@@ -418,7 +434,6 @@
   const qrToggleBtn = $("qrToggleBtn");
   const qrToggleIcon = $("qrToggleIcon");
   const drawerBackdrop = $("drawerBackdrop");
-  const handsFreeToggle = $("handsFreeToggle");
 
   // --- REKLAM MEKANİZMASI ---
   let autoAdTimer = null;
@@ -518,15 +533,12 @@
       $("qrModal").classList.add("show"); 
   };
 
-  // Android'den gelen Bağlantı Kuruldu sinyali (GÜNCELLENDİ)
+  // Android'den gelen Bağlantı Kuruldu sinyali
   window.onBtConnected = function() {
       isBtConnected = true;
       document.body.classList.add("bt-active");
       
       qrToggleIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>`;
-      
-      // Kulaklık Modu butonunu göster
-      handsFreeToggle.style.display = "flex";
       
       topBody.innerHTML = ""; botBody.innerHTML = "";
       showToast("Bağlantı kuruldu! Yüz yüze sohbet edebilirsiniz.");
@@ -536,27 +548,11 @@
       isBtConnected = false;
       document.body.classList.remove("bt-active");
       qrToggleIcon.innerHTML = `<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>`;
-      
-      // Kulaklık Modu butonunu gizle ve modu kapat
-      handsFreeToggle.style.display = "none";
-      if(isHandsFree) {
-          isHandsFree = false;
-          handsFreeToggle.classList.remove("active");
-      }
-      
       window.location.href = "login.html"; 
   };
 
   // --- KARŞIDAN GELEN METNİ ALMA VE ÇEVİRME ---
   window.onBtMessageReceived = async function(text) {
-      if (text.startsWith("SYS_CMD:LANG:")) {
-          const newLang = text.replace("SYS_CMD:LANG:", "").trim();
-          topLang = newLang; 
-          refreshTexts(); 
-          showToast("Karşı taraf dilini değiştirdi.");
-          return; 
-      }
-
       const targetBody = $("topBody");
       
       const resText = document.createElement("div");
@@ -605,16 +601,7 @@
           item.onclick = (e) => {
               e.stopPropagation();
               const code = item.getAttribute("data-select-code");
-              
-              if(side === "top") {
-                  topLang = code; 
-              } else {
-                  botLang = code;
-                  if (isBtConnected && window.AndroidBridge && window.AndroidBridge.sendBtText) {
-                      window.AndroidBridge.sendBtText("SYS_CMD:LANG:" + code);
-                  }
-              }
-
+              if(side === "top") topLang = code; else botLang = code;
               if(topLang === botLang) topLang = (code === "tr" ? "en" : "tr");
               closeAllPops(); refreshTexts();
           };
@@ -627,42 +614,24 @@
       if(!popTop.contains(e.target) && !popBot.contains(e.target) && !e.target.closest(".lang-trigger")) closeAllPops();
   };
 
-  // --- MİKROFON VE ELLER SERBEST KONTROLLERİ ---
-  
-  handsFreeToggle.onclick = () => {
-      isHandsFree = !isHandsFree;
-      if (isHandsFree) {
-          handsFreeToggle.classList.add("active");
-          showToast("Kulaklık Modu Aktif. En iyi deneyim için kulaklık kullanın.");
-          if (!recordingSide) {
-              startRecording("bot");
-          }
-      } else {
-          handsFreeToggle.classList.remove("active");
-          showToast("Oto Mod Kapalı.");
-          if (recordingSide === "bot") {
-              stopRecognizer();
-          }
-      }
-  };
+  // --- MİKROFON KONTROLLERİ ---
+  topMic.onclick = () => handleMicClick("top");
+  botMic.onclick = () => handleMicClick("bot");
 
+  // --- MİKROFON KONTROLLERİ ---
   topMic.onclick = () => handleMicClick("top");
   botMic.onclick = () => handleMicClick("bot");
 
   function handleMicClick(side) {
       if (recordingSide === side) { 
           stopRecognizer(); 
-          if (side === "bot" && isHandsFree) {
-              isHandsFree = false;
-              handsFreeToggle.classList.remove("active");
-              showToast("Oto Mod kapatıldı.");
-          }
       } else { 
           startRecording(side); 
       }
   }
 
   function startRecording(side) {
+      // Sadece başka bir mikrofon dinliyorsa onu durdur
       if (recordingSide) stopRecognizer(); 
       
       recordingSide = side;
@@ -677,6 +646,8 @@
   }
 
   function stopRecognizer() {
+      // KRİTİK DÜZELTME: Eğer zaten dinleyen bir mikrofon yoksa, işlemi direkt kes! 
+      // Android'e gereksiz yere durdurma sinyali gönderip motoru çökertme.
       if (!recordingSide) return; 
 
       $(recordingSide + "Mic").classList.remove("listening");
@@ -689,24 +660,11 @@
       }
   }
 
-  function checkHandsFreeRestart(side) {
-      if (isHandsFree && side === "bot") {
-          const delay = 2500; 
-          
-          setTimeout(() => {
-              if (isHandsFree && !recordingSide) {
-                  startRecording("bot");
-              }
-          }, delay); 
-      }
-  }
-
   window.onNativeSpeechError = function(errorCode) {
       stopRecognizer();
       if (errorCode !== "manual_stop_empty") {
           showToast("Ses anlaşılamadı (" + errorCode + ")");
       }
-      checkHandsFreeRestart("bot");
   };
 
   window.onNativeSpeechResult = function(side, text, isFinal) {
@@ -738,7 +696,6 @@
           } else {
               showToast("Bağlantı hatası: Android köprüsü yanıt vermiyor.");
           }
-          checkHandsFreeRestart(side);
           return;
       }
 
@@ -771,8 +728,6 @@
               window.NativeTTS.speak(translated, to);
           }
       } catch (e) { resText.textContent = "!!!"; }
-      
-      checkHandsFreeRestart(side);
   }
 
   function refreshTexts() {
