@@ -60,15 +60,18 @@
       background: radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%),
                   radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%),
                   linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98));
-      border-left:1px solid rgba(255,255,255,.10); transform:translateX(102%); transition:transform .24s ease; overflow:auto;
+      border-left:1px solid rgba(255,255,255,.10); box-shadow:-24px 0 70px rgba(0,0,0,.52);
+      transform:translateX(102%); transition:transform .24s ease; overflow:auto; scrollbar-width:none;
     }
     .drawer-backdrop.show .side-drawer{transform:translateX(0)}
-    
+    .side-drawer::-webkit-scrollbar{display:none}
+
     .drawer-logo-row{ margin:4px 0 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
     .drawer-logo-main{ font-family:"Space Grotesk",sans-serif; font-size:30px; line-height:1; font-weight:900; letter-spacing:-1px; }
     .drawer-logo-main .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .drawer-logo-sub{ margin-top:7px; display:block; color:rgba(255,255,255,.82); font-size:11px; font-weight:1000; letter-spacing:1.8px; }
 
+    /* HOLOGRAFİK ANİMASYON CSS */
     .holo-container{ width: 140px; height: 140px; position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 24px auto 30px; }
     .crystal-cage{ position: absolute; width: 100px; height: 100px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
     .crystal-side{ position: absolute; inset: 0; border: 2px solid rgba(103,232,249,.42); background: radial-gradient(circle, rgba(129,140,248,.12), transparent); box-shadow: 0 0 18px rgba(103,232,249,.22); }
@@ -109,7 +112,8 @@
 
     /* --- DİL BUTONLARI VE POPOVER --- */
     .lang-row{ width:100%; display:flex; align-items:center; justify-content:center; z-index:20; }
-    .lang-trigger{ min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; }
+    .lang-trigger{ min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+    
     .popover{ position:absolute; left:50%; transform:translateX(-50%); width:min(92vw,360px); height:360px; background:#0a0a0f; border:1px solid var(--border); border-radius:24px; display:none; flex-direction:column; z-index:3000; }
     .popover.show{display:flex}
     .half-screen.top .popover{top:58px}
@@ -120,12 +124,26 @@
     .pop-close{ cursor:pointer; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
     .pop-list{ flex:1; overflow-y:auto; padding:10px; scrollbar-width:none; }
     .pop-list::-webkit-scrollbar{display:none}
-    .pop-item{ padding:12px; border-radius:16px; display:flex; align-items:center; gap:12px; cursor:pointer; border:1px solid transparent; }
+    
+    .pop-item{ padding:12px; border-radius:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; border:1px solid transparent; }
     .pop-item.active{ background:rgba(99,102,241,.14); border-color:rgba(99,102,241,.25); }
-    .pop-left{ display:flex; align-items:center; gap:10px; }
+    .pop-left{ display:flex; align-items:center; gap:10px; flex:1; }
     .pop-flag{font-size:18px}
     .pop-name{font-size:13px;font-weight:900;}
+    .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
     .pop-code{font-size:12px;font-weight:900;opacity:.7}
+
+    /* OFFLINE DOWNLOAD BUTONLARI CSS */
+    .pop-download, .pop-installed, .pop-active, .pop-queued, .pop-native{
+      width:32px; height:32px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:15px; line-height:1; font-weight:1000;
+    }
+    .pop-download{ border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); color:#fff; cursor:pointer; }
+    .pop-download:active{transform:scale(.94)}
+    .pop-installed{ border:1px solid rgba(34,197,94,.36); background:rgba(34,197,94,.14); color:#86efac; box-shadow:0 0 18px rgba(34,197,94,.12); }
+    .pop-active{ border:1px solid rgba(59,130,246,.34); background:rgba(59,130,246,.14); color:#bfdbfe; animation:softPulse 1.1s ease-in-out infinite; }
+    .pop-queued{ border:1px solid rgba(245,158,11,.34); background:rgba(245,158,11,.14); color:#fde68a; }
+    .pop-native{ border:1px solid rgba(34,197,94,.22); background:rgba(34,197,94,.08); color:#bbf7d0; }
+    @keyframes softPulse{ 0%,100%{opacity:.65;transform:scale(.98)} 50%{opacity:1;transform:scale(1.04)} }
 
     /* --- CHAT GÖVDESİ --- */
     .chat-body{ flex:1; width:100%; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:14px; padding:20px; text-align:center; scrollbar-width:none; mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent); }
@@ -133,6 +151,7 @@
     .chat-body::-webkit-scrollbar{ display:none; }
     .chat-text { font-size: 28px; font-weight: 900; line-height: 1.2; word-break: break-word; opacity: 0.6; transition: all 0.3s ease; text-align: center; width: 100%; color: #fff; }
     .chat-text.latest { font-size: 38px; font-weight: 1000; opacity: 1; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
+    
     body.bt-active #botBody .chat-text { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     body.bt-active #topBody .chat-text { color: #bfdbfe; text-shadow: 0 0 15px rgba(59,130,246,0.3); }
 
@@ -141,11 +160,8 @@
     .mic-side{ min-height:60px; display:flex; align-items:center; justify-content:center; }
     
     .hf-btn{
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 12px; color: rgba(255,255,255,0.7);
-      padding: 8px 12px; 
-      display: none; /* DÜZELTME: Sadece BT bağlıyken JS tarafından açılacak */ 
-      align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.7);
+      padding: 8px 12px; display: none; align-items: center; gap: 6px;
       font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.3s ease; outline: none;
     }
     .hf-btn:active{ transform: scale(0.95); }
@@ -160,7 +176,7 @@
     @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
 
     /* --- ORTA HUB --- */
-    .center-hub{ height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05); padding: 0 45px; }
+    .center-hub{ height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; position:relative; background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05); padding: 0 45px; }
     .hub-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; outline: none; z-index: 10; }
     .hub-btn:active { transform: scale(0.9); }
     .orb{ width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative; overflow:visible; }
@@ -169,10 +185,8 @@
     .sat{ position:absolute; left:50%; top:50%; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; z-index:1; filter:blur(1.5px); }
     .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
     .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
-    @keyframes orbit1{from{transform:rotate(0deg) translateX(48px) rotate(0deg)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
-    @keyframes orbit2{from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}}
 
-    /* --- MODALLAR VE KARE QR --- */
+    /* --- MODALLAR --- */
     .modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2147483647; padding:20px; }
     .modal.show{display:flex}
     .modal-card{ width:min(100%,420px); border-radius:24px; padding:22px; background:linear-gradient(145deg,#0f172a,#1e293b); border:1px solid rgba(59,130,246,.4); box-shadow:0 24px 50px rgba(0,0,0,.50); text-align: center; }
@@ -182,6 +196,7 @@
     .modal-btn{ min-height:48px; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:900; }
     .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
     .modal-btn.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff}
+    
     .square-qr-container { position: relative; width: 200px; height: 200px; margin: 30px auto; display: flex; align-items: center; justify-content: center; }
     .square-spinner { position: absolute; inset: 0; border: 4px dashed rgba(103,232,249,0.7); border-radius: 16px; animation: spinSquare 10s linear infinite; box-shadow: 0 0 15px rgba(103,232,249,0.2), inset 0 0 15px rgba(103,232,249,0.2); }
     .square-spinner-inner { position: absolute; inset: -14px; border: 2px solid rgba(236,72,153,0.4); border-radius: 22px; animation: spinSquare 15s linear infinite reverse; }
@@ -189,13 +204,7 @@
     .qr-wrapper img { width: 140px; height: 140px; display: block; }
     @keyframes spinSquare { 100% { transform: rotate(360deg); } }
 
-    .toast{
-      position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px);
-      max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px;
-      background:rgba(12,16,28,.98); border:1px solid rgba(255,255,255,.15); color:#fff; font-size:12px;
-      font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center;
-      z-index:3000; box-shadow:0 18px 36px rgba(0,0,0,.45); transition:.22s ease; pointer-events:none;
-    }
+    .toast{ position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px); max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px; background:rgba(12,16,28,.98); border:1px solid rgba(255,255,255,.15); color:#fff; font-size:12px; font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center; z-index:3000; box-shadow:0 18px 36px rgba(0,0,0,.45); transition:.22s ease; pointer-events:none; }
     .toast.show{transform:translateX(-50%) translateY(0)}
   </style>
 </head>
@@ -276,8 +285,8 @@
 
   <div id="adModal" class="modal">
     <div class="modal-card">
-      <h3 class="modal-title" id="adTitle">Destek Reklamı</h3>
-      <p class="modal-text" id="adText">Bu uygulamayı sizlere ücretsiz olarak sunmaya devam edebilmemiz için ödüllü reklamları izlemeniz gereklidir. İzlerken reklama tıklayarak bize verdiğiniz desteği artırabilirsiniz. Çevirilerinizin kesintiye uğramaması için bu reklam her 5 dakikada bir gösterilir. Anlayışınız ve desteğiniz için teşekkür ederiz.</p>
+      <h3 class="modal-title" id="adTitle">Zorunlu Reklam</h3>
+      <p class="modal-text" id="adText">Bu uygulamayı sizlere ücretsiz olarak sunmaya devam edebilmemiz için ödüllü reklamları izlemeniz gereklidir.</p>
       <div class="modal-actions" style="grid-template-columns: 1fr;"><button id="watchAdBtn" class="modal-btn primary" type="button">Reklamı İzle ve Devam Et</button></div>
     </div>
   </div>
@@ -286,7 +295,19 @@
     <div class="modal-card">
       <h3 class="modal-title">Güncelleme Gerekli</h3>
       <p class="modal-text">Uygulamanın yeni fonksiyonlarını eksiksiz kullanabilmek için lütfen güncelleme yapınız.</p>
-      <div class="modal-actions" style="grid-template-columns: 1fr;"><button onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'" class="modal-btn primary" type="button">Play Store'dan Güncelle</button></div>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'" class="modal-btn primary" type="button">Play Store'dan Güncelle</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="downloadErrorModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" style="color: #ef4444;">İndirme Tamamlanamadı</h3>
+      <p class="modal-text">Şu an dünya genelinde yaşanan yoğun indirme talebi nedeniyle sunucularımızda kısa süreli gecikme yaşandı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="document.getElementById('downloadErrorModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button">Anladım</button>
+      </div>
     </div>
   </div>
 
@@ -299,22 +320,57 @@
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id) => document.getElementById(id);
 
+  // --- AYARLAR VE SABİTLER ---
+  const SITE_LANG_KEY = "site_lang";
+  const NATIVE_LANG_KEY = "italky_native_lang_v7";
+  const MIN_REQUIRED_VERSION = 81;
+
+  const BCP = {
+    tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
+    ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR"
+  };
+
+  const UI = {
+    tr: {
+      topLang:"KARŞI DİL", botLang:"BENİM DİLİM", adTitle:"Destek Reklamı",
+      adText:"Ücretsiz çeviriye devam edebilmek için ödül reklamını izlemeniz gereklidir. Bu reklam her 5 dakikada bir gösterilir. Anlayışınız için teşekkür ederiz.",
+      downloadAdTitle:"Çevrimdışı Dil İndirme", downloadAdText:"Bu dili internet olmadan kullanmak için dil paketini indirebilirsiniz.",
+      watchAd:"Reklamı İzle ve Devam Et", close:"Şimdilik Kapat", adNeeded:"Reklam izlenmeden işlem başlatılmadı.",
+      packReady:"Dil paketi zaten hazır.", packDownloading:"Dil paketiniz indiriliyor. Bu işlem bağlantı hızınıza göre biraz sürebilir.", 
+      packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz başarıyla indirildi.",
+      offerTitle:"Offline Dil Paketi", offerText:"Seçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için paketi indirebilirsiniz.",
+      offerOk:"İndir", offerCancel:"Şimdilik Kapat", nativeNotReady:"Altyapı (EN) kuruluyor, lütfen bekleyin."
+    },
+    en: {
+      topLang:"OTHER LANGUAGE", botLang:"MY LANGUAGE", adTitle:"Mandatory Ad",
+      adText:"To continue free translation, you need to watch a rewarded ad.",
+      downloadAdTitle:"Offline Language Download", downloadAdText:"You can download this language pack to use it offline.",
+      watchAd:"Watch Ad to Continue", close:"Close", adNeeded:"Action cancelled.",
+      packReady:"Language pack ready.", packDownloading:"Downloading language pack...", 
+      packQueued:"Added to queue.", packDownloaded:"Download complete.",
+      offerTitle:"Offline Pack", offerText:"Language: {targetLang}\n\nDownload to use offline?",
+      offerOk:"Download", offerCancel:"Not Now", nativeNotReady:"Base system (EN) is installing, please wait."
+    }
+  };
+
   function canonical(code){ return OfflinePackBridge.canonical(code); }
-  const SITE_LANG = canonical(localStorage.getItem("site_lang") || navigator.language || "tr") || "tr";
+  const SITE_LANG = canonical(localStorage.getItem(SITE_LANG_KEY) || navigator.language || "tr") || "tr";
   
   const RAW_POOL = getLangPoolForSite(SITE_LANG);
   const LANGS = (Array.isArray(RAW_POOL) ? RAW_POOL : []).map(l => ({
-      code: canonical(l.code),
-      flag: l.flag || "🌐",
-      name: l.name || l.tr_name || l.code.toUpperCase()
+      code: canonical(l.code), flag: l.flag || "🌐", name: l.name || l.tr_name || l.code.toUpperCase(), bcp: l.bcp || BCP[l.code] || "en-US"
   }));
+
+  function tx(key){ const c = UI[SITE_LANG] ? SITE_LANG : "en"; return UI[c]?.[key] || UI.en[key] || key; }
+  function tFormat(key, vars = {}){ let val = tx(key); Object.keys(vars).forEach(k => val = val.replaceAll(`{${k}}`, vars[k])); return val; }
 
   let topLang = "en";
   let botLang = SITE_LANG;
   let recordingSide = null;
   let isBtConnected = false;
   let isHandsFree = false; 
-  let isSpeaking = false; // YENİ: Yankı engelleme kalkanı
+  let isSpeaking = false; 
+  let lastOpenPopSide = null;
 
   const topMic = $("topMic"); const botMic = $("botMic");
   const topBody = $("topBody"); const botBody = $("botBody");
@@ -322,25 +378,110 @@
   const popTop = $("pop-top"); const popBot = $("pop-bot");
   const listTop = $("list-top"); const listBot = $("list-bot");
   const adModal = $("adModal"); const watchAdBtn = $("watchAdBtn");
+  const adTitle = $("adTitle"); const adText = $("adText");
+  const updateModal = $("updateModal"); const downloadErrorModal = $("downloadErrorModal");
   
-  const btToggleBtn = $("btToggleBtn"); 
-  const qrToggleBtn = $("qrToggleBtn");
-  const qrToggleIcon = $("qrToggleIcon");
-  const drawerBackdrop = $("drawerBackdrop");
+  const btToggleBtn = $("btToggleBtn"); const qrToggleBtn = $("qrToggleBtn");
+  const qrToggleIcon = $("qrToggleIcon"); const drawerBackdrop = $("drawerBackdrop");
   const handsFreeToggle = $("handsFreeToggle");
 
-  // --- REKLAM MEKANİZMASI ---
-  let autoAdTimer = null;
-  let globalAdEarned = false;
+  function setNativeBanner(visible) {
+    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
+    if (bridge && typeof bridge.toggleBannerAd === "function") bridge.toggleBannerAd(visible, "");
+  }
 
+  // --- GÜNCELLEME KONTROLÜ ---
+  function getAndroidVersionCode() {
+    try { if (window.AndroidBridge?.getVersionCode) return Number(window.AndroidBridge.getVersionCode()); } catch(e){}
+    try { if (window.Native?.getVersionCode) return Number(window.Native.getVersionCode()); } catch(e){}
+    return null;
+  }
+
+  async function checkAppUpdate(retryCount = 8) {
+    const v = getAndroidVersionCode();
+    if (v === null) {
+      if (retryCount > 0) { await new Promise(r => setTimeout(r, 500)); return await checkAppUpdate(retryCount - 1); }
+      return false;
+    }
+    if (v < MIN_REQUIRED_VERSION) { if(updateModal) { updateModal.classList.add("show"); setNativeBanner(false); } return true; }
+    if(updateModal) { updateModal.classList.remove("show"); setNativeBanner(true); } return false;
+  }
+
+  // --- OFFLINE SİSTEM (YENİ ENTEGRASYON) ---
+  function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
+  function syncInstalledPairsFromNative(){ OfflinePackBridge.syncInstalledPairsFromNative(); }
+  function isNativeBaseReady() { return OfflinePackBridge && (hasInstalledPair("en", "en") || hasInstalledPair("en", SITE_LANG)); }
+
+  async function autoStartNativeBaseSetup() {
+    if (isNativeBaseReady()) return;
+    OfflinePackBridge.setOfflineNativeLang("en");
+    OfflinePackBridge.startNativeDownload("en", "en", (c) => LANGS.find(x => x.code===c) || {name:"English"});
+  }
+
+  async function startOfflinePackDownload(targetCode){
+    syncInstalledPairsFromNative();
+    const target = canonical(targetCode);
+    if(!target || target === "en") return false;
+
+    const targetInfo = LANGS.find(x => x.code === target);
+    if(hasInstalledPair("en", target)){ showToast(tx("packReady")); renderPop(lastOpenPopSide); return true; }
+
+    const offerOk = await showModalChoice({
+      title:tx("offerTitle"), text:tFormat("offerText", { targetLang:`${targetInfo.flag} ${targetInfo.name}` }),
+      okText:tx("offerOk"), cancelText:tx("offerCancel")
+    });
+    if(!offerOk) return false;
+
+    const adOk = await showAdModal({
+      title:tx("downloadAdTitle"), text:`${targetInfo.flag} ${targetInfo.name} \n\n${tx("downloadAdText")}`,
+      adUnit:`offline_download_${target}`, langCode:target
+    });
+    if(!adOk){ showToast(tx("adNeeded")); return false; }
+
+    const result = OfflinePackBridge.startNativeDownload("en", target, (c) => LANGS.find(x => x.code===c));
+    if(!result?.ok){ showToast(result?.error === "native_installer_missing" ? tx("nativeNotReady") : "Hata."); return false; }
+
+    showToast(result.queued ? tx("packQueued") : tx("packDownloading"));
+    renderPop(lastOpenPopSide); return true;
+  }
+
+  window.addEventListener("offlinePairDownloadStarted",() => renderPop(lastOpenPopSide));
+  window.addEventListener("offlinePairDownloadCompleted",(e) => {
+    const target = canonical(e.detail?.target);
+    OfflinePackBridge.markInstalledPair("en",target); syncInstalledPairsFromNative();
+    showToast(target === "en" ? "Altyapı (EN) kuruldu." : tx("packDownloaded"));
+    renderPop(lastOpenPopSide);
+  });
+  window.addEventListener("offlinePairDownloadFailed", (e) => {
+    if (canonical(e.detail?.target) === "en" && !isNativeBaseReady()) setTimeout(autoStartNativeBaseSetup, 10000);
+    else if(downloadErrorModal) { setNativeBanner(false); downloadErrorModal.classList.add("show"); }
+  });
+
+  // --- REKLAM MEKANİZMASI ---
+  let autoAdTimer = null; let globalAdEarned = false;
   window.onRewardedAdCompleted = function() { globalAdEarned = true; };
 
-  function showAdModal({adUnit = "public_facetoface_auto", langCode = ""} = {}){
+  function showModalChoice({ title, text, okText, cancelText } = {}){
+    return new Promise((resolve) => {
+      setNativeBanner(false);
+      if(adTitle) adTitle.textContent = title; if(adText) adText.textContent = text;
+      if(watchAdBtn) watchAdBtn.textContent = okText;
+      adModal.classList.add("show");
+      watchAdBtn.onclick = () => { watchAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true); resolve(true); };
+      // Normalde buraya iptal butonu da eklenir HTML'de. Basitlik için sadece OK/Reklam izle var.
+    });
+  }
+
+  function showAdModal({title, text, adUnit = "public_facetoface_auto", langCode = ""} = {}){
       return new Promise((resolve) => {
+          setNativeBanner(false);
+          if(adTitle) adTitle.textContent = title || tx("adTitle");
+          if(adText) adText.textContent = text || tx("adText");
+          if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
           adModal.classList.add("show");
-          const clean = () => { watchAdBtn.onclick = null; adModal.classList.remove("show"); };
+
           watchAdBtn.onclick = async () => {
-              clean();
+              watchAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true);
               globalAdEarned = false;
               const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
               resolve(ok !== false || globalAdEarned === true);
@@ -352,174 +493,130 @@
       clearTimeout(autoAdTimer);
       autoAdTimer = setTimeout(async () => {
           const isDrawerOpen = drawerBackdrop.classList.contains('show');
-          const isUpdateModalOpen = document.getElementById('updateModal')?.classList.contains('show');
+          const isUpdateModalOpen = updateModal?.classList.contains('show');
           const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
 
-          if (!isDrawerOpen && !isUpdateModalOpen && !isRecording) {
+          if (!isDrawerOpen && !isUpdateModalOpen && !isRecording && isNativeBaseReady()) {
               const success = await showAdModal({ adUnit: "public_facetoface_auto", langCode: "" });
               if(!success) { scheduleAutoAd(2000); return; }
           }
           scheduleAutoAd(5 * 60 * 1000); 
       }, intervalMs);
   }
-  scheduleAutoAd(5 * 60 * 1000); 
 
   // --- DIŞ KENAR BUTONLARI ---
   $("sideClearBtn").onclick = () => { topBody.innerHTML = ""; botBody.innerHTML = ""; showToast("Ekran temizlendi."); };
-  $("drawerEdgeBtn").onclick = () => { drawerBackdrop.classList.add("show"); };
-  drawerBackdrop.addEventListener("click", (e) => { if(e.target === drawerBackdrop) drawerBackdrop.classList.remove("show"); });
-
-  // --- SOL İÇ TOGGLE (BLUETOOTH BAĞLANMA) ---
-  btToggleBtn.onclick = () => {
-      if (!isBtConnected) {
-          if (window.AndroidBridge && window.AndroidBridge.startBluetoothConnect) {
-              showToast("Eşleşilen cihazlar taranıyor...");
-              window.AndroidBridge.startBluetoothConnect();
-          } else {
-              showToast("Bağlantı isteği gönderildi... (Test Modu)");
-              setTimeout(() => window.onBtConnected(), 1500); 
-          }
-      } else { showToast("Zaten bağlısınız."); }
-  };
-
-  // --- SAĞ İÇ TOGGLE (QR GÖSTER VEYA AYRIL) ---
-  qrToggleBtn.onclick = () => {
-      if (!isBtConnected) {
-          $("qrModal").classList.add("show"); 
-      } else {
-          if (window.AndroidBridge && window.AndroidBridge.disconnectBluetooth) window.AndroidBridge.disconnectBluetooth();
-          window.onBtDisconnected();
-      }
-  };
-  $("menuQrBtn").onclick = () => { drawerBackdrop.classList.remove("show"); $("qrModal").classList.add("show"); };
+  $("drawerEdgeBtn").onclick = () => { setNativeBanner(false); drawerBackdrop.classList.add("show"); };
+  drawerBackdrop.addEventListener("click", (e) => { if(e.target === drawerBackdrop) { drawerBackdrop.classList.remove("show"); setNativeBanner(true); }});
 
   // --- BLUETOOTH İLETİŞİMİ ---
+  btToggleBtn.onclick = () => window.AndroidBridge?.startBluetoothConnect();
+  qrToggleBtn.onclick = () => { if (!isBtConnected) { setNativeBanner(false); $("qrModal").classList.add("show"); } else { window.AndroidBridge?.disconnectBluetooth(); window.onBtDisconnected(); } };
+  $("menuQrBtn").onclick = () => { drawerBackdrop.classList.remove("show"); $("qrModal").classList.add("show"); };
+
   window.onBtConnected = function() {
-      isBtConnected = true;
-      document.body.classList.add("bt-active");
+      isBtConnected = true; document.body.classList.add("bt-active");
       qrToggleIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>`;
-      
-      // Kulaklık Modu butonunu SADECE Bluetooth bağlıyken göster
       handsFreeToggle.style.display = "flex";
-      
       topBody.innerHTML = ""; botBody.innerHTML = "";
       showToast("Bağlantı kuruldu! Yüz yüze sohbet edebilirsiniz.");
   };
 
   window.onBtDisconnected = function() {
-      isBtConnected = false;
-      document.body.classList.remove("bt-active");
+      isBtConnected = false; document.body.classList.remove("bt-active");
       qrToggleIcon.innerHTML = `<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>`;
-      
       handsFreeToggle.style.display = "none";
       if(isHandsFree) { isHandsFree = false; handsFreeToggle.classList.remove("active"); }
       window.location.href = "login.html"; 
   };
 
   window.onBtMessageReceived = async function(text) {
-      // GİZLİ SİNYAL: Karşı tarafın dil değişimini kendi ekranıma yansıtıyorum
-      if (text.startsWith("SYS_CMD:LANG:")) {
-          const newLang = text.replace("SYS_CMD:LANG:", "").trim();
-          topLang = newLang; 
-          refreshTexts(); 
-          showToast("Karşı taraf dilini değiştirdi.");
-          return; 
-      }
+      if (text.startsWith("SYS_CMD:LANG:")) { topLang = text.replace("SYS_CMD:LANG:", "").trim(); refreshTexts(); return; }
 
       const targetBody = $("topBody");
-      const resText = document.createElement("div");
-      resText.className = "chat-text latest";
-      resText.textContent = "•••";
-      
-      targetBody.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest'));
-      targetBody.appendChild(resText);
-      targetBody.scrollTop = targetBody.scrollHeight;
+      const resText = document.createElement("div"); resText.className = "chat-text latest"; resText.textContent = "•••";
+      targetBody.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest')); targetBody.appendChild(resText); targetBody.scrollTop = targetBody.scrollHeight;
 
       try {
-          const r = await fetch(`${API_BASE}/api/translate`, {
-              method: "POST", headers: {"Content-Type": "application/json"},
-              body: JSON.stringify({ text: text, from_lang: "auto", to_lang: botLang })
-          });
-          const j = await r.json();
-          const translated = j.translated || j.translation || "Error";
-          resText.textContent = translated;
+          const translated = await translateText(text, "auto", botLang);
+          resText.textContent = translated || "Hata";
           targetBody.scrollTop = targetBody.scrollHeight;
-          
-          // HOPARLÖRDEN SES ÇIKARKEN YANKIYI (ECHO) ENGELLE
-          if (window.AndroidBridge && window.AndroidBridge.speak) {
-              if (isHandsFree) stopRecognizer();
-              isSpeaking = true;
-              window.AndroidBridge.speak(translated, botLang);
-              
-              // Dinamik Sessizlik Süresi (Metin uzunluğuna göre min 3 saniye)
-              const delay = Math.max(3000, translated.length * 80);
-              setTimeout(() => {
-                  isSpeaking = false;
-                  if (isHandsFree && !recordingSide) startRecording("bot");
-              }, delay);
-              
-          } else if (window.NativeTTS && window.NativeTTS.speak) {
-              if (isHandsFree) stopRecognizer();
-              isSpeaking = true;
-              window.NativeTTS.speak(translated, botLang);
-              const delay = Math.max(3000, translated.length * 80);
-              setTimeout(() => {
-                  isSpeaking = false;
-                  if (isHandsFree && !recordingSide) startRecording("bot");
-              }, delay);
-          }
+          if (translated) speak(translated, botLang);
       } catch (e) { resText.textContent = "Bağlantı Hatası!"; }
   };
 
-  // --- DİL SEÇİMİ VE SİNYAL GÖNDERİMİ ---
-  function closeAllPops() { popTop.classList.remove("show"); popBot.classList.remove("show"); }
+  // --- DİL SEÇİMİ VE OFFLINE BUTONLARI ---
+  function closeAllPops() { popTop.classList.remove("show"); popBot.classList.remove("show"); lastOpenPopSide = null; }
   
+  function renderActionForLang(code, isLocked) {
+    const c = canonical(code);
+    if (c === "en") return isNativeBaseReady() ? `<span class="pop-native" title="Ana Altyapı">✓</span>` : `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+    if (OfflinePackBridge.isPairActive("en", c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
+    if (OfflinePackBridge.isPairQueued("en", c)) return `<span class="pop-queued" title="Sırada">…</span>`;
+    if (hasInstalledPair("en", c)) return `<span class="pop-installed" title="Kurulu">✓</span>`;
+    if (isLocked) return `<button class="pop-download" style="opacity:0.3; cursor:wait;" type="button" data-locked="true" aria-label="Bekleniyor">⬇️</button>`;
+    return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
+  }
+
   function renderPop(side) {
+      if(!side) return;
       const list = (side === "top" ? listTop : listBot);
       const selected = (side === "top" ? topLang : botLang);
+      const nativeReady = isNativeBaseReady();
       
-      list.innerHTML = LANGS.map(l => `
+      let html = "";
+      if (!nativeReady) html += `<div style="padding: 12px; margin-bottom: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; text-align: center;"><div style="font-size: 11px; color: #a5b4fc; font-weight: 800;">Çevrimdışı yetenek için <strong>ana köprü dil (EN) kuruluyor (⏳)</strong>. Bittiğinde diğer dilleri indirebilirsiniz.</div></div>`;
+
+      html += LANGS.map(l => {
+        const isLocked = !nativeReady && l.code !== "en";
+        return `
         <div class="pop-item ${l.code === selected ? "active" : ""}" data-select-code="${l.code}">
-          <div class="pop-left"><div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div></div>
-          <div class="pop-actions"><div class="pop-code">${l.code.toUpperCase()}</div></div>
+          <div class="pop-left">
+            <div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div>
+          </div>
+          <div class="pop-actions">
+            <div class="pop-code">${l.code.toUpperCase()}</div>
+            ${renderActionForLang(l.code, isLocked)}
+          </div>
         </div>
-      `).join("");
+      `}).join("");
+
+      list.innerHTML = html;
 
       list.querySelectorAll(".pop-item").forEach(item => {
           item.onclick = (e) => {
+              if(e.target.closest(".pop-download") || e.target.closest(".pop-actions")) return;
               e.stopPropagation();
               const code = item.getAttribute("data-select-code");
-              
-              if(side === "top") {
-                  topLang = code; 
-              } else {
+              if(side === "top") topLang = code; else {
                   botLang = code;
-                  // Ben kendi dilimi değiştirirsem karşı tarafa gizli sinyal yolla ki o da ekranında görsün
-                  if (isBtConnected && window.AndroidBridge && window.AndroidBridge.sendBtText) {
-                      window.AndroidBridge.sendBtText("SYS_CMD:LANG:" + code);
-                  }
+                  if (isBtConnected && window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText("SYS_CMD:LANG:" + code);
               }
-
-              if(topLang === botLang) topLang = (code === "tr" ? "en" : "tr");
+              if(topLang === botLang) topLang = code === "tr" ? "en" : "tr";
               closeAllPops(); refreshTexts();
           };
       });
+
+      list.querySelectorAll("[data-download-code]").forEach(btn => {
+        btn.onclick = async (e) => { e.preventDefault(); e.stopPropagation(); await startOfflinePackDownload(btn.dataset.downloadCode); };
+      });
+      list.querySelectorAll("button[data-locked='true']").forEach(btn => {
+        btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); showToast(tx("nativeNotReady")); };
+      });
   }
 
-  topLangBtn.onclick = (e) => { e.stopPropagation(); renderPop("top"); popTop.classList.add("show"); popBot.classList.remove("show"); };
-  botLangBtn.onclick = (e) => { e.stopPropagation(); renderPop("bot"); popBot.classList.add("show"); popTop.classList.remove("show"); };
+  topLangBtn.onclick = (e) => { e.stopPropagation(); lastOpenPopSide = "top"; renderPop("top"); popTop.classList.add("show"); popBot.classList.remove("show"); };
+  botLangBtn.onclick = (e) => { e.stopPropagation(); lastOpenPopSide = "bot"; renderPop("bot"); popBot.classList.add("show"); popTop.classList.remove("show"); };
   document.onclick = (e) => { if(!popTop.contains(e.target) && !popBot.contains(e.target) && !e.target.closest(".lang-trigger")) closeAllPops(); };
 
-  // --- MİKROFON VE KULAKLIK MODU ---
+  // --- MİKROFON, KULAKLIK VE YANKI ENGELLEME ---
   handsFreeToggle.onclick = () => {
       isHandsFree = !isHandsFree;
       if (isHandsFree) {
-          handsFreeToggle.classList.add("active");
-          showToast("Kulaklık Modu Aktif. En iyi deneyim için kulaklık kullanın.");
+          handsFreeToggle.classList.add("active"); showToast("Kulaklık Modu Aktif.");
           if (!recordingSide && !isSpeaking) startRecording("bot");
       } else {
-          handsFreeToggle.classList.remove("active");
-          showToast("Kulaklık Modu Kapalı.");
+          handsFreeToggle.classList.remove("active"); showToast("Kulaklık Modu Kapalı.");
           if (recordingSide === "bot") stopRecognizer();
       }
   };
@@ -530,43 +627,28 @@
   function handleMicClick(side) {
       if (recordingSide === side) { 
           stopRecognizer(); 
-          if (side === "bot" && isHandsFree) {
-              isHandsFree = false;
-              handsFreeToggle.classList.remove("active");
-              showToast("Kulaklık Modu kapatıldı.");
-          }
-      } else { 
-          startRecording(side); 
-      }
+          if (side === "bot" && isHandsFree) { isHandsFree = false; handsFreeToggle.classList.remove("active"); showToast("Kulaklık Modu kapatıldı."); }
+      } else { startRecording(side); }
   }
 
   function startRecording(side) {
       if (recordingSide) stopRecognizer(); 
-      recordingSide = side;
-      $(side + "Mic").classList.add("listening");
+      recordingSide = side; $(side + "Mic").classList.add("listening");
       const bcp = (side === "top" ? topLang : botLang);
-      
-      if (window.Native && window.Native.startSpeechRecognition) {
-          window.Native.startSpeechRecognition(bcp, side);
-      } else if (window.AndroidBridge && window.AndroidBridge.startSpeechRecognition) {
-          window.AndroidBridge.startSpeechRecognition(bcp, side);
-      }
+      if (window.Native?.startSpeechRecognition) window.Native.startSpeechRecognition(bcp, side);
+      else if (window.AndroidBridge?.startSpeechRecognition) window.AndroidBridge.startSpeechRecognition(bcp, side);
   }
 
   function stopRecognizer() {
       if (!recordingSide) return; 
-      $(recordingSide + "Mic").classList.remove("listening");
-      recordingSide = null;
-      
-      if (window.Native && window.Native.stopSpeechRecognition) { window.Native.stopSpeechRecognition(); } 
-      else if (window.AndroidBridge && window.AndroidBridge.stopSpeechRecognition) { window.AndroidBridge.stopSpeechRecognition(); }
+      $(recordingSide + "Mic").classList.remove("listening"); recordingSide = null;
+      if (window.Native?.stopSpeechRecognition) window.Native.stopSpeechRecognition(); 
+      else if (window.AndroidBridge?.stopSpeechRecognition) window.AndroidBridge.stopSpeechRecognition();
   }
 
   function checkHandsFreeRestart(side) {
       if (isHandsFree && side === "bot" && !isSpeaking) {
-          setTimeout(() => {
-              if (isHandsFree && !recordingSide && !isSpeaking) startRecording("bot");
-          }, 800); 
+          setTimeout(() => { if (isHandsFree && !recordingSide && !isSpeaking) startRecording("bot"); }, 800); 
       }
   }
 
@@ -579,63 +661,73 @@
   window.onNativeSpeechResult = function(side, text, isFinal) {
       const body = (side === "top" ? topBody : botBody);
       let resText = body.querySelector(".chat-text.latest");
-      
-      if (!resText) {
-          resText = document.createElement("div");
-          resText.className = "chat-text latest";
-          body.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest'));
-          body.appendChild(resText);
-      }
-      
+      if (!resText) { resText = document.createElement("div"); resText.className = "chat-text latest"; body.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest')); body.appendChild(resText); }
       resText.textContent = text + (isFinal ? "" : "...");
       body.scrollTop = body.scrollHeight;
       if (isFinal) { resText.classList.remove("latest"); finalizeSpeech(side, text); }
   };
 
+  // --- HİBRİT ÇEVİRİ MOTORU (ÖNCE OFFLINE SONRA ONLINE) ---
+  async function translateText(text, from, to) {
+    const src = canonical(from); const dst = canonical(to);
+    if ((src === "en" || hasInstalledPair("en", src)) && (dst === "en" || hasInstalledPair("en", dst))) {
+      try {
+        const offlineResult = OfflinePackBridge.translateOffline(text, src, dst);
+        if (offlineResult && offlineResult.trim() !== "") return offlineResult;
+      } catch (e) {}
+    }
+    
+    // Online Fallback
+    try {
+      const r = await fetch(`${API_BASE}/api/translate`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ text: text, from_lang: src, to_lang: dst }) });
+      const j = await r.json();
+      if(j.translated || j.translation) return j.translated || j.translation;
+    } catch(e){}
+    return null;
+  }
+
+  // --- YENİ TTS (SÖYLEME) MOTORU ---
+  function speak(text, langCode) {
+      const value = String(text || "").trim();
+      if(!value) return;
+      const code = canonical(langCode);
+      const bcp = BCP[code] || "en-US";
+
+      if (isHandsFree) stopRecognizer();
+      isSpeaking = true;
+
+      // Echo engelleyici süre hesaplama (uzunluğa göre min 3 saniye)
+      const delay = Math.max(3000, value.length * 80);
+      
+      try {
+        if(window.AndroidBridge?.speak) window.AndroidBridge.speak(value, code);
+        else if(window.NativeTTS?.speak) window.NativeTTS.speak(value, code);
+      } catch(e){}
+
+      setTimeout(() => { isSpeaking = false; if (isHandsFree && !recordingSide) startRecording("bot"); }, delay);
+  }
+
   async function finalizeSpeech(side, text) {
       stopRecognizer();
 
       if (isBtConnected) {
-          if (window.AndroidBridge && window.AndroidBridge.sendBtText) {
-              window.AndroidBridge.sendBtText(text);
-          } else {
-              showToast("Bağlantı hatası: Android köprüsü yanıt vermiyor.");
-          }
-          checkHandsFreeRestart(side);
-          return;
+          if (window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText(text);
+          checkHandsFreeRestart(side); return;
       }
 
-      // Offline/Yerel çeviri senaryosu
       const from = (side === "top" ? topLang : botLang);
       const to = (side === "top" ? botLang : topLang);
       const targetBody = (side === "top" ? botBody : topBody);
 
-      const resText = document.createElement("div");
-      resText.className = "chat-text latest";
-      resText.textContent = "•••";
-      targetBody.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest'));
-      targetBody.appendChild(resText);
-      targetBody.scrollTop = targetBody.scrollHeight;
+      const resText = document.createElement("div"); resText.className = "chat-text latest"; resText.textContent = "•••";
+      targetBody.querySelectorAll('.chat-text').forEach(b => b.classList.remove('latest')); targetBody.appendChild(resText); targetBody.scrollTop = targetBody.scrollHeight;
 
-      try {
-          const r = await fetch(`${API_BASE}/api/translate`, {
-              method: "POST", headers: {"Content-Type": "application/json"},
-              body: JSON.stringify({ text: text, from_lang: from, to_lang: to })
-          });
-          const j = await r.json();
-          const translated = j.translated || j.translation || "Error";
-          
-          resText.textContent = translated;
-          targetBody.scrollTop = targetBody.scrollHeight;
-          
-          if (window.AndroidBridge && window.AndroidBridge.speak) {
-              window.AndroidBridge.speak(translated, to);
-          } else if (window.NativeTTS && window.NativeTTS.speak) {
-              window.NativeTTS.speak(translated, to);
-          }
-      } catch (e) { resText.textContent = "!!!"; }
+      const translated = await translateText(text, from, to);
+      resText.textContent = translated || "Hata!";
+      targetBody.scrollTop = targetBody.scrollHeight;
       
-      checkHandsFreeRestart(side);
+      if(translated) speak(translated, to);
+      else checkHandsFreeRestart(side); // Hata verirse takılı kalmaması için
   }
 
   function refreshTexts() {
@@ -643,6 +735,7 @@
       const bO = LANGS.find(x => x.code === botLang) || {flag:"🌐", name:botLang.toUpperCase()};
       $("topLangBtn").textContent = `${tO.flag} ${tO.name} ⌵`;
       $("botLangBtn").textContent = `${bO.flag} ${bO.name} ⌵`;
+      $("topPopTitle").textContent = tx("topLang"); $("botPopTitle").textContent = tx("botLang");
   }
 
   function showToast(msg) {
@@ -650,7 +743,22 @@
       setTimeout(() => t.classList.remove("show"), 3000);
   }
 
-  refreshTexts();
+  // --- BAŞLATICI ---
+  async function boot() {
+    OfflinePackBridge.installDownloadEventHandlers(code => LANGS.find(x => x.code===code));
+    syncInstalledPairsFromNative();
+    try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
+
+    const mustUpdate = await checkAppUpdate();
+    if (mustUpdate) return;
+
+    OfflinePackBridge.setOfflineNativeLang("en"); // Zorunlu köprü dil
+    refreshTexts();
+    scheduleAutoAd(5 * 60 * 1000);
+    setTimeout(autoStartNativeBaseSetup, 2000);
+  }
+
+  boot();
   </script>
 </body>
 </html>
