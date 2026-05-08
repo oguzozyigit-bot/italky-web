@@ -27,13 +27,26 @@
       transition: background 0.5s ease;
     }
 
+    /* BLUETOOTH MODU EFEKTLERİ */
     body.bt-active { background: #020617; }
     body.bt-active .half-screen.top { transform: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
     body.bt-active .half-screen.top .mic-line { display: none !important; }
     body.bt-active #topLangBtn { pointer-events: none; opacity: 0.8; }
     
+    /* YENİ: REHBER MODU EFEKTLERİ (TAM EKRAN) */
+    body.guide-active .half-screen.top { display: none !important; } /* Üst ekranı yok et */
+    body.guide-active .half-screen.bottom { height: 100%; flex: 1; padding-top: 15px; } /* Alt ekranı tam boy yap */
+    body.guide-active .center-hub { background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    
+    /* DİNLEYİCİ İÇİN ÖZEL GİZLEMELER */
+    body.guide-listener #botMic { display: none !important; }
+    body.guide-listener #handsFreeToggle { display: none !important; }
+    body.guide-listener .mic-line { display: flex; justify-content: center; } /* QR'ı ortaya al */
+    body.guide-listener .mic-side { min-height: auto; }
+
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
+    /* YAN BUTONLAR (SABİT KALACAKLAR) */
     .edge-handle{
       position:fixed; top:50%; transform:translateY(-50%); z-index:998; width:28px; height:118px;
       border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
@@ -94,7 +107,7 @@
     .premium-link::before { background: radial-gradient(circle at left,rgba(236,72,153,.2),transparent 55%), linear-gradient(135deg,rgba(255,255,255,.035),rgba(236,72,153,.20)); }
     .drawer-footer-seal{ margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46); font-size:11px; font-weight:1000; }
 
-    .half-screen{ flex:1; min-height:0; position:relative; display:flex; flex-direction:column; justify-content:space-between; align-items:center; overflow:hidden; padding:10px 8px; }
+    .half-screen{ flex:1; min-height:0; position:relative; display:flex; flex-direction:column; justify-content:space-between; align-items:center; overflow:hidden; padding:10px 8px; transition: all 0.3s ease; }
     .half-screen.top{ transform:rotate(180deg); background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg)); }
     .half-screen.bottom{ background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg)); padding-bottom:calc(4px + var(--safe-bottom)); }
 
@@ -264,7 +277,6 @@
     </div>
   </div>
 
-  <!-- YENİ: REHBER (BROADCAST) MODU MODALI -->
   <div id="guideModal" class="modal">
     <div class="modal-card">
       <h3 class="modal-title" style="color: #6366f1;">Toplantı & Rehber Modu</h3>
@@ -272,7 +284,6 @@
       <div class="modal-actions" style="grid-template-columns: 1fr;">
         <button id="guideHostBtn" class="modal-btn primary" type="button">🎙️ Ben Rehberim (Yayını Başlat)</button>
         <button id="guideListenBtn" class="modal-btn secondary" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #86efac;" type="button">🎧 Ben Dinleyiciyim (Yayına Katıl)</button>
-        <button id="guideStopBtn" class="modal-btn secondary" style="display:none; color:#f87171; border-color:#f87171; background: rgba(248,113,113,0.15);" type="button">⏹️ Yayından Çık / Bitir</button>
         <button onclick="document.getElementById('guideModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" style="margin-top: 5px;" type="button">Şimdilik Kapat</button>
       </div>
     </div>
@@ -328,7 +339,6 @@
   let isHandsFree = false; 
   let isSpeaking = false; 
   
-  // REHBER MODU DEĞİŞKENLERİ
   let isGuideMode = false;
   let isGuideHost = false;
 
@@ -410,10 +420,24 @@
   drawerBackdrop.onclick = (e) => { if(e.target === drawerBackdrop) { drawerBackdrop.classList.remove("show"); setNativeBanner(true); }};
   $("shareQrBtn").onclick = () => { setNativeBanner(false); $("qrModal").classList.add("show"); };
 
-  // --- REHBER MODU YÖNETİMİ ---
+  // --- REHBER MODU YÖNETİMİ (TAM EKRAN DESTEKLİ) ---
   $("guideBtn").onclick = () => {
-      setNativeBanner(false);
-      $("guideModal").classList.add("show");
+      if (isGuideMode) {
+          isGuideMode = false; isGuideHost = false;
+          window.AndroidBridge?.stopGuideMode();
+          
+          document.body.classList.remove("guide-active", "guide-host", "guide-listener");
+          $("guideBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`;
+          $("guideBtn").style.color = "#fff";
+          $("guideBtn").style.borderColor = "rgba(255,255,255,0.15)";
+          $("guideBtn").style.background = "rgba(255,255,255,0.05)";
+          
+          handsFreeToggle.style.display = "none";
+          showToast("Rehber Modu Kapatıldı.");
+      } else {
+          setNativeBanner(false);
+          $("guideModal").classList.add("show");
+      }
   };
 
   $("guideHostBtn").onclick = () => {
@@ -421,10 +445,15 @@
       $("guideModal").classList.remove("show"); setNativeBanner(true);
       window.AndroidBridge?.startGuideBroadcast();
       
-      $("guideBtn").style.color = "#a5b4fc";
-      $("guideStopBtn").style.display = "block";
-      $("guideHostBtn").style.display = "none";
-      $("guideListenBtn").style.display = "none";
+      document.body.classList.add("guide-active", "guide-host");
+      
+      $("guideBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>`;
+      $("guideBtn").style.color = "#f87171";
+      $("guideBtn").style.borderColor = "rgba(248,113,113,0.5)";
+      $("guideBtn").style.background = "rgba(239,68,68,0.15)";
+      handsFreeToggle.style.display = "flex";
+      
+      clearBody(botBody);
       showToast("Yayın başlatılıyor, mikrofonu kullanabilirsiniz.");
   };
 
@@ -433,35 +462,25 @@
       $("guideModal").classList.remove("show"); setNativeBanner(true);
       window.AndroidBridge?.joinGuideBroadcast();
       
+      document.body.classList.add("guide-active", "guide-listener");
+      
+      $("guideBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>`;
       $("guideBtn").style.color = "#86efac";
-      $("guideStopBtn").style.display = "block";
-      $("guideHostBtn").style.display = "none";
-      $("guideListenBtn").style.display = "none";
+      $("guideBtn").style.borderColor = "rgba(74,222,128,0.5)";
+      $("guideBtn").style.background = "rgba(34,197,94,0.15)";
       
-      // Dinleyici artık mikrofonunu kullanamaz
-      botMic.style.opacity = "0.3"; botMic.style.pointerEvents = "none";
-  };
-
-  $("guideStopBtn").onclick = () => {
-      isGuideMode = false; isGuideHost = false;
-      window.AndroidBridge?.stopGuideMode();
-      
-      $("guideStopBtn").style.display = "none";
-      $("guideHostBtn").style.display = "block";
-      $("guideListenBtn").style.display = "block";
-      $("guideBtn").style.color = "#fff";
-      $("guideModal").classList.remove("show"); setNativeBanner(true);
-      
-      botMic.style.opacity = "1"; botMic.style.pointerEvents = "auto";
+      clearBody(botBody);
+      showToast("Rehber aranıyor...");
   };
 
   // KOTLİNDEN GELEN REHBER MESAJI
   window.onBroadcastMessageReceived = async function(text) {
-      if (!isGuideMode || isGuideHost) return; // Rehbersek kendi mesajımızı kendimiz okumayız
+      if (!isGuideMode || isGuideHost) return; 
       const clean = cleanupTranscript(text);
       if(!clean) return;
 
-      const targetRow = addBubble("top", "", true);
+      // Tam ekrandayız, yazıyı botBody'ye ekliyoruz
+      const targetRow = addBubble("bot", "", true);
       try {
           const translated = await translateText(clean, "auto", botLang);
           targetRow.textContent = translated || "Hata";
@@ -610,6 +629,10 @@
       // REHBER İSE 50 KİŞİYE FIRLAT
       if (isGuideMode && isGuideHost && side === "bot") {
           window.AndroidBridge?.sendBroadcastText(clean);
+          addBubble("bot", clean, false); // Söylediğini ekranda görsün
+          checkHandsFreeRestart("bot");
+          liveText = ""; setMicState(side,false);
+          return; // Çeviri yapmasına gerek yok
       }
 
       if (isBtConnected && side === "bot") {
