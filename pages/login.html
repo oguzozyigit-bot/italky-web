@@ -132,7 +132,6 @@
     .pop-code{font-size:12px;font-weight:900;opacity:.7}
     .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
-    /* OFFLINE MODAL İNDİRME BUTONLARI */
     .pop-download, .pop-installed, .pop-active, .pop-queued, .pop-native{ width:32px; height:32px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:15px; line-height:1; font-weight:1000; }
     .pop-download{ border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); color:#fff; cursor:pointer; }
     .pop-download:active{transform:scale(.94)}
@@ -173,9 +172,11 @@
     .orb{ width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; position:relative; overflow:visible; }
     .orb-main{position:relative;z-index:3}
     .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .sat{ position:absolute; left:50%; top:50%; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; z-index:1; filter:blur(1.5px); }
-    .sat1{background:#6366f1;box-shadow:0 0 15px #6366f1;animation:orbit1 4.8s linear infinite}
-    .sat2{background:#ec4899;box-shadow:0 0 15px #ec4899;animation:orbit2 6.2s linear infinite}
+    .sat{ position:absolute; top:50%; left:50%; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; z-index:1; filter:blur(1px); }
+    .sat1{ background:#6366f1; box-shadow:0 0 15px #6366f1; animation:orbit1 4s linear infinite; }
+    .sat2{ background:#ec4899; box-shadow:0 0 15px #ec4899; animation:orbit2 5s linear infinite; }
+    @keyframes orbit1 { 0% { transform: rotate(0deg) translateX(45px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(45px) rotate(-360deg); } }
+    @keyframes orbit2 { 0% { transform: rotate(180deg) translateX(45px) rotate(-180deg); } 100% { transform: rotate(540deg) translateX(45px) rotate(-540deg); } }
 
     .modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2147483647; padding:20px; }
     .modal.show{display:flex}
@@ -210,6 +211,7 @@
 
   <div id="drawerBackdrop" class="drawer-backdrop">
     <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
+      
       <div class="drawer-logo-row">
         <div class="drawer-logo">
           <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
@@ -218,13 +220,31 @@
       </div>
 
       <div class="holo-container">
-        <div class="crystal-cage"><div class="crystal-side side1"></div><div class="crystal-side side2"></div><div class="crystal-side side3"></div><div class="crystal-side side4"></div><div class="crystal-side side5"></div><div class="crystal-side side6"></div></div>
-        <div class="holo-qr ai-planet" aria-hidden="true"><div class="planet-glow"></div><div class="planet-rays"></div><div class="planet-core"><div class="planet-center"><div class="planet-ai-badge"><span>AI</span></div></div></div></div>
+        <div class="crystal-cage">
+          <div class="crystal-side side1"></div>
+          <div class="crystal-side side2"></div>
+          <div class="crystal-side side3"></div>
+          <div class="crystal-side side4"></div>
+          <div class="crystal-side side5"></div>
+          <div class="crystal-side side6"></div>
+        </div>
+
+        <div class="holo-qr ai-planet" aria-hidden="true">
+          <div class="planet-glow"></div>
+          <div class="planet-rays"></div>
+          <div class="planet-core">
+            <div class="planet-center">
+              <div class="planet-ai-badge">
+                <span>AI</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <nav class="drawer-links">
-        <a class="drawer-link premium-link" id="premiumBtn"><span>🌟 Premium (Reklamsız)</span><small>›</small></a>
-        <a class="drawer-link offline-menu-btn" id="menuOfflineBtn"><span>📥 Offline Dil Paketleri</span><small>›</small></a>
+        <a class="drawer-link premium-link" id="premiumBtn" style="display: none !important;"><span>🌟 Premium (Reklamsız)</span><small>›</small></a>
+        <a class="drawer-link offline-menu-btn" id="menuOfflineBtn" style="display: none !important;"><span>📥 Offline Dil Paketleri</span><small>›</small></a>
         <a class="drawer-link" id="menuQrBtn" style="border-color: rgba(103,232,249,0.4);"><span>QR Kod ile Paylaş</span><small>›</small></a>
         <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
         <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
@@ -258,11 +278,21 @@
     </section>
 
     <section class="center-hub" id="centerHub">
-      <button id="btToggleBtn" class="hub-btn" aria-label="Bağlan"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 7l10 10-5 5V2l5 5-10 10"></path></svg></button>
+      <button id="btToggleBtn" class="hub-btn" aria-label="Bağlan">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
+        </svg>
+      </button>
+
       <div class="orb" style="display: flex !important;">
         <span class="sat sat1"></span><span class="sat sat2"></span><span class="orb-main">italky<span class="ai">AI</span></span>
       </div>
-      <button id="qrToggleBtn" class="hub-btn" aria-label="Paylaş / Ayrıl"><svg id="qrToggleIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></button>
+
+      <button id="qrToggleBtn" class="hub-btn" aria-label="Paylaş / Ayrıl">
+        <svg id="qrToggleIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </button>
     </section>
 
     <section class="half-screen bottom" id="botSection">
@@ -301,12 +331,23 @@
     </div>
   </div>
 
+  <div id="premiumOfferModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" style="color: #f472b6;">🌟 Premium Özellik</h3>
+      <p class="modal-text">Çevrimdışı (İnternetsiz) çeviri paketlerini indirmek ve reklamsız bir deneyim yaşamak için Premium üye olmalısınız.</p>
+      <div class="modal-actions" style="grid-template-columns: 1fr;">
+        <button onclick="document.getElementById('premiumOfferModal').classList.remove('show'); premiumBtn.click();" class="modal-btn primary" type="button">Premium'a Geç</button>
+        <button onclick="document.getElementById('premiumOfferModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button">Daha Sonra</button>
+      </div>
+    </div>
+  </div>
+
   <div id="offlineModal" class="modal">
     <div class="modal-card" style="height: 85vh; max-height: 600px; display: flex; flex-direction: column;">
       <h3 class="modal-title">Offline Dil Paketleri</h3>
       <p class="modal-text" style="margin-bottom: 10px;">İnternetsiz çeviri için dilleri cihazınıza indirebilirsiniz.</p>
       <div id="offlineList" class="pop-list" style="flex: 1; overflow-y: auto; text-align: left; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 10px;">
-        </div>
+      </div>
       <div class="modal-actions" style="grid-template-columns: 1fr;">
         <button onclick="document.getElementById('offlineModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button">Kapat</button>
       </div>
@@ -511,12 +552,6 @@
     });
     if(!offerOk) return false;
 
-    const adOk = await showAdModal({
-      title:tx("downloadAdTitle"), text:`${targetInfo.flag} ${targetInfo.name} \n\n${tx("downloadAdText")}`,
-      adUnit:`offline_download_${target}`, langCode:target
-    });
-    if(!adOk){ showToast(tx("adNeeded")); return false; }
-
     const result = OfflinePackBridge.startNativeDownload("en", target, langObj);
     if(!result?.ok){ showToast("İndirme başlatılamadı."); return false; }
 
@@ -591,7 +626,6 @@
 
   function closeAllPops() { popTop.classList.remove("show"); popBot.classList.remove("show"); lastOpenPopSide = null; }
 
-  // YENİ: Sadece menüden açılan Offline Ekranı için Buton Oluşturucu
   function renderActionForLang(code, isLocked) {
     const c = canonical(code);
     if (OfflinePackBridge.isPairActive("en", c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
@@ -601,7 +635,6 @@
     return `<button class="pop-download" type="button" data-download-code="${c}" aria-label="Dil indir">⬇️</button>`;
   }
 
-  // YENİ: Menüden açılan Özel Offline Modal Ekranı
   function renderOfflinePacks() {
       const list = $("offlineList");
       if(!list) return;
@@ -631,7 +664,6 @@
       });
   }
 
-  // YENİ: Chat ekranındaki pop-up artık TERTEMİZ (İndirme butonu yok)
   function renderPop(side) {
       if(!side) return;
       const list = (side === "top" ? listTop : listBot);
@@ -663,9 +695,14 @@
 
   menuOfflineBtn.onclick = () => {
       drawerBackdrop.classList.remove("show");
-      renderOfflinePacks();
-      offlineModal.classList.add("show");
-      setNativeBanner(false);
+      if (!isPremium) {
+          $("premiumOfferModal").classList.add("show");
+          setNativeBanner(false);
+      } else {
+          renderOfflinePacks();
+          offlineModal.classList.add("show");
+          setNativeBanner(false);
+      }
   };
 
   $("topLangBtn").onclick = (e) => { e.stopPropagation(); lastOpenPopSide = "top"; renderPop("top"); popTop.classList.add("show"); popBot.classList.remove("show"); };
@@ -701,7 +738,6 @@
   $("qrToggleBtn").onclick = () => { if (!isBtConnected) { setNativeBanner(false); $("qrModal").classList.add("show"); } else { window.AndroidBridge?.disconnectBluetooth(); window.onBtDisconnected(); } };
   $("menuQrBtn").onclick = () => { drawerBackdrop.classList.remove("show"); $("qrModal").classList.add("show"); };
 
-  // YENİ: BLUETOOTH BAĞLANDIĞINDA MODALLAR OTOMATİK KAPANACAK
   window.onBtConnected = function() {
       isBtConnected = true; document.body.classList.add("bt-active");
       $("qrToggleIcon").innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>`;
@@ -709,7 +745,6 @@
       clearBody(topBody); clearBody(botBody);
       showToast("Bağlantı kuruldu!");
       
-      // QR ekranını ve menüyü anında kapat
       $("qrModal").classList.remove("show");
       drawerBackdrop.classList.remove("show");
       setNativeBanner(true);
@@ -957,17 +992,6 @@
 
     checkAppUpdate();
     scheduleAutoAd(5 * 60 * 1000);
-
-    // Arka plan temel dil kurulumu (Kullanıcıyı rahatsız etmez)
-    setTimeout(() => {
-        try {
-            OfflinePackBridge.setOfflineNativeLang("en");
-            if (!hasInstalledPair("en", "en")) OfflinePackBridge.startNativeDownload("en", "en", langObj);
-            if (SITE_LANG !== "en" && !hasInstalledPair("en", SITE_LANG)) {
-                setTimeout(() => { OfflinePackBridge.startNativeDownload("en", SITE_LANG, langObj); }, 2000);
-            }
-        } catch(e){}
-    }, 2500);
   }
 
   boot();
