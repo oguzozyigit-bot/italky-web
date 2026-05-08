@@ -159,7 +159,6 @@
     @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
     @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
 
-    /* ELLER SERBEST BUTONU EKLENDİ */
     .hf-btn{
       background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.7);
       padding: 8px 12px; display: none; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.3s ease; outline: none;
@@ -360,7 +359,7 @@
       translateError:"Çeviri yapılamadı", packReady:"Dil paketi zaten hazır.",
       packDownloading:"Dil paketiniz indiriliyor. Bu işlem bağlantı hızınıza göre biraz sürebilir.", packQueued:"Dil paketi sıraya alındı.", packDownloaded:"Dil paketiniz başarıyla indirildi.",
       offerTitle:"Offline Dil Paketi", offerText:"Seçilen dil: {targetLang}\n\nBu dili çevrimdışı kullanabilmek için paketi indirebilirsiniz.",
-      offerOk:"İndir", offerCancel:"Şimdilik Kapat", nativeNotReady:"Ana Altyapı (EN) kuruluyor, lütfen bekleyin."
+      offerOk:"İndir", offerCancel:"Şimdilik Kapat"
     },
     en:{
       topLang:"OTHER LANGUAGE", botLang:"MY LANGUAGE", adTitle:"Mandatory Ad",
@@ -371,13 +370,12 @@
       translateError:"Translation failed", packReady:"Language pack is already ready.",
       packDownloading:"Your language pack is downloading. This may take a while.", packQueued:"Language pack added to queue.", packDownloaded:"Your language pack has been downloaded.",
       offerTitle:"Offline Language Pack", offerText:"Selected language: {targetLang}\n\nYou can download the pack to use this language offline.",
-      offerOk:"Download", offerCancel:"Not Now", nativeNotReady:"Native download is not ready on this device."
+      offerOk:"Download", offerCancel:"Not Now"
     }
   };
 
   function canonical(code){ return OfflinePackBridge.canonical(code); }
   
-  // DİNAMİK DİL YÖNETİMİ
   let SITE_LANG = "tr";
   let botLang = "tr";
   let topLang = "en";
@@ -578,7 +576,7 @@
   function closeAllPops() { popTop.classList.remove("show"); popBot.classList.remove("show"); lastOpenPopSide = null; }
   function refreshOpenPop(){ if(lastOpenPopSide === "top" && popTop.classList.contains("show")) renderPop("top"); if(lastOpenPopSide === "bot" && popBot.classList.contains("show")) renderPop("bot"); }
 
-  // KİLİT SİSTEMİ TAMAMEN KALDIRILDI! Kullanıcı dilediği dili anında indirebilir.
+  // KİLİT KALDIRILDI! Anında dilediğin dili indirebilirsin.
   function renderActionForLang(code) {
     const c = canonical(code);
     if (OfflinePackBridge.isPairActive("en", c)) return `<span class="pop-active" title="İndiriliyor">⏳</span>`;
@@ -703,9 +701,6 @@
       if (recordingSide === side) { stopRecognizer(); if (side === "bot" && isHandsFree) { isHandsFree = false; handsFreeToggle.classList.remove("active"); showToast("Kulaklık Modu kapatıldı."); } } 
       else { startRecording(side); }
   }
-
-  topMic.onclick = () => handleMicClick("top");
-  botMic.onclick = () => handleMicClick("bot");
 
   function startRecording(side) {
       if (recordingSide) stopRecognizer(); 
@@ -835,8 +830,9 @@
       
       let spokenViaNative = false;
       try {
-        if(window.AndroidBridge?.speak) { window.AndroidBridge.speak(value, code); spokenViaNative = true; }
-        else if(window.NativeTTS?.speak) { window.NativeTTS.speak(value, code); spokenViaNative = true; }
+        // Çökmeyi engelleyen, Web Speech motorunu arka planda karıştıran yapı düzeltildi
+        if(window.AndroidBridge && window.AndroidBridge.speak) { window.AndroidBridge.speak(value, code); spokenViaNative = true; }
+        else if(window.NativeTTS && window.NativeTTS.speak) { window.NativeTTS.speak(value, code); spokenViaNative = true; }
       } catch(e){}
 
       // Web Fallback (TTS)
@@ -887,27 +883,25 @@
       liveText = ""; setMicState(side,false);
   }
 
-  // --- KUSURSUZ BAŞLATICI (Dondurma ve Kilitlenme Yapmaz) ---
+  // --- KUSURSUZ BAŞLATICI ---
   async function boot() {
-    // 1. Ekranı anında doldur (Yükleniyor... yazısından kurtul)
     let savedLang = localStorage.getItem(SITE_LANG_KEY);
+    
+    // Uygulama anında açılsın, ekran dillerle dolsun
     if (savedLang) {
         SITE_LANG = savedLang;
         botLang = SITE_LANG;
         topLang = botLang === "tr" ? "en" : "tr";
+    } else {
+        // IP'den dili anında bul ve kaydet
+        savedLang = await getLangFromIP();
+        SITE_LANG = savedLang;
+        localStorage.setItem(SITE_LANG_KEY, SITE_LANG);
+        botLang = SITE_LANG;
+        topLang = botLang === "tr" ? "en" : "tr";
     }
+    
     refreshTexts(); 
-
-    // 2. IP Tespiti (Kayıtlı dil yoksa arka planda sessizce bulur ve ekranı günceller)
-    if (!savedLang) {
-        getLangFromIP().then(ipLang => {
-            SITE_LANG = ipLang;
-            localStorage.setItem(SITE_LANG_KEY, SITE_LANG);
-            botLang = SITE_LANG;
-            topLang = botLang === "tr" ? "en" : "tr";
-            refreshTexts();
-        });
-    }
 
     try { if (window.Native && typeof window.Native.requestF2FPermissions === "function") window.Native.requestF2FPermissions(); } catch (e) {}
 
@@ -915,15 +909,13 @@
     try { syncInstalledPairsFromNative(); }catch(e){}
     try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
-    // Güncelleme kontrolü arkada çalışsın, ekranı dondurmasın
     checkAppUpdate();
-
-    try { OfflinePackBridge.setOfflineNativeLang("en"); }catch(e){}
     scheduleAutoAd(5 * 60 * 1000);
 
-    // 3. Arka Planda Sessiz ML Kit İndirmeleri (Kilitlenme yapmaz)
+    // Kilit Sistemi Olmadan Bağımsız Arka Plan İndirmeleri
     setTimeout(() => {
         try {
+            OfflinePackBridge.setOfflineNativeLang("en");
             if (!hasInstalledPair("en", "en")) OfflinePackBridge.startNativeDownload("en", "en", langObj);
             if (SITE_LANG !== "en" && !hasInstalledPair("en", SITE_LANG)) OfflinePackBridge.startNativeDownload("en", SITE_LANG, langObj);
         } catch(e){}
