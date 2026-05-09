@@ -109,6 +109,8 @@
     const $ = (id) => document.getElementById(id);
     const HOME = "/pages/home.html";
     const LOGIN = "/pages/login.html";
+    const MEMBERSHIP = "/pages/membership.html";
+    const LOGIN_WITH_NEXT = `${LOGIN}?next=${MEMBERSHIP}`;
     const CODE_PAGE = "/pages/code_login.html";
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
     const PRODUCT_ID = "reklamsiz";
@@ -269,15 +271,38 @@
       else UI.statusBox.textContent = text;
     }
 
-    async function getSessionOrLogin() {
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function readSessionOnce() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        location.replace(LOGIN);
-        throw new Error(t("loginRequired"));
+      if (session) return session;
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const refreshed = await supabase.auth.getSession();
+          return refreshed?.data?.session || null;
+        }
+      } catch {}
+
+      return null;
+    }
+
+    async function getSessionOrLogin() {
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const session = await readSessionOnce();
+        if (session) {
+          currentSession = session;
+          currentUserId = session.user?.id || "";
+          return session;
+        }
+        if (attempt < 4) await wait(400);
       }
-      currentSession = session;
-      currentUserId = session.user?.id || "";
-      return session;
+
+      location.replace(LOGIN_WITH_NEXT);
+      throw new Error(t("loginRequired"));
     }
 
     async function getAccessState() {
