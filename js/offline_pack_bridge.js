@@ -6,15 +6,20 @@ const OFFLINE_LICENSE_DAYS_KEY = "italky_offline_license_days_v7";
 const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
 const QUEUE_KEY = "italky_offline_download_queue_v1";
 const ACTIVE_KEY = "italky_offline_download_active_v1";
+const GUEST_MODE_KEY = "italky_guest_mode_v1";
+const BT_GUEST_MODAL_ID = "italkyBtGuestRewardModal";
 
 const ACTIVE_STALE_MS = 8 * 60 * 1000;
 const PENDING_START_TIMEOUT_MS = 6 * 60 * 1000;
+const BT_GUEST_REWARD_INTERVAL_MS = 3 * 60 * 1000;
 
 let pendingRewardResolve = null;
 let pendingRewardTimer = null;
 let activeDownload = null;
 let langInfoResolverGlobal = null;
 let handlersInstalled = false;
+let btGuestRewardTimer = null;
+let btGuestRewardBusy = false;
 
 function canonical(code = "") {
   return String(code || "").toLowerCase().split("-")[0].trim();
@@ -75,8 +80,8 @@ function isPendingStartExpired(item) {
 
   const percent = Number(item.percent || 0);
 
-  // Native started/progress event geldiyse artık web tarafı erken temizlemesin.
-  // ML Kit ilk model indirmesi birkaç dakika sürebilir.
+  // Native started/progress event geldiyse artik web tarafi erken temizlemesin.
+  // ML Kit ilk model indirmesi birkac dakika surebilir.
   if (percent >= 10) return false;
 
   const t = getItemTime(item);
@@ -555,6 +560,233 @@ function preloadRewardedAd() {
   } catch {}
 }
 
+function isGuestMode() {
+  try {
+    return localStorage.getItem(GUEST_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function hasCachedSupabaseSession() {
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = String(localStorage.key(i) || "");
+      if (!key.startsWith("sb-")) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      const token = parsed?.access_token || parsed?.currentSession?.access_token || parsed?.session?.access_token;
+      if (token) return true;
+    }
+  } catch {}
+  return false;
+}
+
+function isBluetoothTwoPhoneActive() {
+  try {
+    return document.body?.classList?.contains("bt-active") === true;
+  } catch {
+    return false;
+  }
+}
+
+function canRunBluetoothGuestRewardTimer() {
+  return isGuestMode() && !hasCachedSupabaseSession();
+}
+
+function getOrCreateBluetoothGuestModal() {
+  let modal = document.getElementById(BT_GUEST_MODAL_ID);
+  if (modal) return modal;
+
+  if (!document.getElementById("italkyBtGuestRewardModalStyle")) {
+    const style = document.createElement("style");
+    style.id = "italkyBtGuestRewardModalStyle";
+    style.textContent = `
+      .italky-bt-guest-ad-backdrop{
+        position:fixed;
+        inset:0;
+        z-index:2147483647;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        background:rgba(2,6,23,.72);
+        backdrop-filter:blur(12px);
+        -webkit-backdrop-filter:blur(12px);
+      }
+      .italky-bt-guest-ad-backdrop.open{display:flex;}
+      .italky-bt-guest-ad-card{
+        width:min(100%,430px);
+        border-radius:24px;
+        overflow:hidden;
+        border:1px solid rgba(96,165,250,.22);
+        background:linear-gradient(180deg,#0f1b33 0%,#071225 100%);
+        box-shadow:0 26px 64px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.045);
+        color:#fff;
+        font-family:Outfit,system-ui,sans-serif;
+      }
+      .italky-bt-guest-ad-top{
+        padding:22px 20px 16px;
+        background:radial-gradient(circle at top left,rgba(96,165,250,.18),transparent 42%),linear-gradient(180deg,rgba(15,27,51,.98),rgba(11,20,38,.98));
+      }
+      .italky-bt-guest-ad-badge{
+        display:inline-flex;
+        align-items:center;
+        min-height:30px;
+        padding:7px 12px;
+        border-radius:999px;
+        border:1px solid rgba(147,197,253,.22);
+        background:rgba(59,130,246,.11);
+        color:#dbeafe;
+        font-size:11px;
+        font-weight:1000;
+        letter-spacing:.3px;
+      }
+      .italky-bt-guest-ad-title{
+        margin:14px 0 10px;
+        color:#f8fbff;
+        font-size:23px;
+        line-height:1.1;
+        font-weight:1000;
+        letter-spacing:-.35px;
+      }
+      .italky-bt-guest-ad-text{
+        margin:0;
+        color:rgba(226,232,240,.84);
+        font-size:14px;
+        line-height:1.62;
+        font-weight:760;
+      }
+      .italky-bt-guest-ad-actions{
+        display:grid;
+        gap:10px;
+        padding:16px;
+        background:rgba(5,10,22,.76);
+      }
+      .italky-bt-guest-ad-btn{
+        min-height:52px;
+        border:none;
+        border-radius:16px;
+        cursor:pointer;
+        font:inherit;
+        font-size:14px;
+        font-weight:1000;
+        transition:transform .14s ease,opacity .14s ease;
+      }
+      .italky-bt-guest-ad-btn:active{transform:scale(.985);}
+      .italky-bt-guest-ad-btn.primary{
+        color:#061227;
+        background:linear-gradient(135deg,#dbeafe 0%,#60a5fa 100%);
+        box-shadow:0 14px 28px rgba(37,99,235,.22);
+      }
+      .italky-bt-guest-ad-btn.secondary{
+        color:#eaf2ff;
+        background:rgba(255,255,255,.055);
+        border:1px solid rgba(255,255,255,.11);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  modal = document.createElement("div");
+  modal.id = BT_GUEST_MODAL_ID;
+  modal.className = "italky-bt-guest-ad-backdrop";
+  modal.innerHTML = `
+    <div class="italky-bt-guest-ad-card" role="dialog" aria-modal="true">
+      <div class="italky-bt-guest-ad-top">
+        <div class="italky-bt-guest-ad-badge">BLUETOOTH MODU</div>
+        <h2 class="italky-bt-guest-ad-title">Reklamsız Deneyime Geçin</h2>
+        <p class="italky-bt-guest-ad-text">İki telefonla çeviriye reklamsız devam etmek ve tüm özellikleri açmak için Google hesabınızla üyeliğinizi başlatabilirsiniz.</p>
+      </div>
+      <div class="italky-bt-guest-ad-actions">
+        <button class="italky-bt-guest-ad-btn primary" id="italkyBtGuestLoginBtn" type="button">Google ile Üye Ol</button>
+        <button class="italky-bt-guest-ad-btn secondary" id="italkyBtGuestWatchBtn" type="button">Reklamı İzleyip Devam Et</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function showBluetoothGuestChoice() {
+  return new Promise((resolve) => {
+    const modal = getOrCreateBluetoothGuestModal();
+    const loginBtn = modal.querySelector("#italkyBtGuestLoginBtn");
+    const watchBtn = modal.querySelector("#italkyBtGuestWatchBtn");
+
+    const cleanup = (value) => {
+      modal.classList.remove("open");
+      loginBtn?.removeEventListener("click", onLogin);
+      watchBtn?.removeEventListener("click", onWatch);
+      resolve(value);
+    };
+
+    const onLogin = () => cleanup("login");
+    const onWatch = () => cleanup("watch");
+
+    loginBtn?.addEventListener("click", onLogin);
+    watchBtn?.addEventListener("click", onWatch);
+    modal.classList.add("open");
+  });
+}
+
+async function runBluetoothGuestRewardFlow() {
+  if (!canRunBluetoothGuestRewardTimer() || !isBluetoothTwoPhoneActive()) return true;
+
+  const choice = await showBluetoothGuestChoice();
+  if (choice === "login") {
+    location.href = "/pages/login.html";
+    return false;
+  }
+
+  if (choice !== "watch") return false;
+
+  const ok = await showRewardedAd({
+    adUnit: "public_bluetooth_guest_timer",
+    langCode: "",
+    timeoutMs: 90000
+  });
+
+  if (!ok) {
+    try {
+      if (typeof window.showToast === "function") window.showToast("Reklam hazır değil, bağlantı korunuyor.");
+    } catch {}
+  }
+
+  return ok !== false;
+}
+
+function scheduleBluetoothGuestRewardTimer(delayMs = BT_GUEST_REWARD_INTERVAL_MS) {
+  clearTimeout(btGuestRewardTimer);
+  if (!canRunBluetoothGuestRewardTimer()) return;
+
+  btGuestRewardTimer = setTimeout(async () => {
+    if (!canRunBluetoothGuestRewardTimer()) return;
+
+    if (isBluetoothTwoPhoneActive() && !btGuestRewardBusy) {
+      btGuestRewardBusy = true;
+      try {
+        await runBluetoothGuestRewardFlow();
+      } catch (e) {
+        console.warn("[offline_pack_bridge] bluetooth guest reward failed:", e);
+      } finally {
+        btGuestRewardBusy = false;
+      }
+    }
+
+    scheduleBluetoothGuestRewardTimer(BT_GUEST_REWARD_INTERVAL_MS);
+  }, Math.max(1000, Number(delayMs) || BT_GUEST_REWARD_INTERVAL_MS));
+}
+
+function startBluetoothGuestRewardTimer() {
+  try {
+    const path = String(location.pathname || "").toLowerCase();
+    if (!path.endsWith("/pages/login_entry.html")) return;
+    scheduleBluetoothGuestRewardTimer(BT_GUEST_REWARD_INTERVAL_MS);
+  } catch {}
+}
+
 function startNativeDownload(source, target, langInfoResolver, options = {}) {
   clearStaleActiveDownload({ notify: true });
 
@@ -734,6 +966,8 @@ function translateOffline(text, source, target) {
     }
   });
 }
+
+startBluetoothGuestRewardTimer();
 
 export const OfflinePackBridge = {
   canonical,
