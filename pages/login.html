@@ -35,74 +35,58 @@
 
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-    .edge-handle{
-      position:fixed; top:50%; transform:translateY(-50%); z-index:998; width:28px; height:118px;
-      border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
-      backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:#fff;
-      font-family:Outfit,Arial,sans-serif; font-size:11px; font-weight:1000; line-height:1.15;
-      text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30);
-    }
-    .edge-handle.open{ right:0; border-radius:18px 0 0 18px; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-right:none; box-shadow:-10px 0 32px rgba(0,0,0,.30); }
-    .edge-handle.open::before { content: "M\A E\A N\A U"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
-    .edge-handle.clear{ left:0; border-radius:0 18px 18px 0; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-left:none; box-shadow:10px 0 32px rgba(0,0,0,.30); }
-    .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+    .edge-handle{ position:fixed; top:50%; transform:translateY(-50%); z-index:998; width:28px; height:118px; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:#fff; font-family:Outfit,Arial,sans-serif; font-size:11px; font-weight:1000; line-height:1.15; text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30); }
+    .edge-handle.open{ right:0; border-radius:18px 0 0 18px; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-right:none; }
+    .edge-handle.open::before { content: "M\A E\A N\A U"; white-space: pre; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+    .edge-handle.clear{ left:0; border-radius:0 18px 18px 0; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-left:none; }
+    .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; text-shadow: 0 0 12px rgba(255,255,255,.28); }
     .edge-handle:active{transform:translateY(-50%) scale(.96)}
 
     .drawer-backdrop{ position:fixed; inset:0; z-index:2147483646; display:none; background:rgba(0,0,0,.48); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
     .drawer-backdrop.show{display:block}
-    .side-drawer{
-      position:absolute; top:0; right:0; width:min(86vw,360px); height:100%;
-      padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
-      background: radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%), radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%), linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98));
-      border-left:1px solid rgba(255,255,255,.10); box-shadow:-24px 0 70px rgba(0,0,0,.52); transform:translateX(102%); transition:transform .24s ease; overflow:auto; scrollbar-width:none;
-    }
+    
+    /* YENİ YAN MENÜ TASARIMI */
+    .side-drawer{ position:absolute; top:0; right:0; width:min(86vw,360px); height:100%; padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px)); background: radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%), radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%), linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98)); border-left:1px solid rgba(255,255,255,.10); box-shadow:-24px 0 70px rgba(0,0,0,.52); transform:translateX(102%); transition:transform .24s ease; display:flex; flex-direction:column; }
     .drawer-backdrop.show .side-drawer{transform:translateX(0)}
-    .side-drawer::-webkit-scrollbar{display:none}
+    .drawer-header { flex: 0 0 auto; margin-bottom: 20px; }
+    .drawer-scroll { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+    .drawer-scroll::-webkit-scrollbar { display: none; }
+    .drawer-footer { flex: 0 0 auto; margin-top: 10px; }
 
-    .drawer-logo-row{ margin:4px 0 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
-    .drawer-logo{min-width:0;text-align:left}
+    .drawer-logo-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; }
     .drawer-logo-main{ font-family:"Space Grotesk",sans-serif; font-size:30px; line-height:1; font-weight:900; letter-spacing:-1px; }
     .drawer-logo-main .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .drawer-logo-sub{ margin-top:7px; display:block; color:rgba(255,255,255,.82); font-size:11px; font-weight:1000; letter-spacing:1.8px; }
 
-    .holo-container{ width: 140px; height: 140px; position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 24px auto 30px; }
-    .crystal-cage{ position: absolute; width: 100px; height: 100px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
-    .crystal-side{ position: absolute; inset: 0; border: 2px solid rgba(103,232,249,.42); background: radial-gradient(circle, rgba(129,140,248,.12), transparent); box-shadow: 0 0 18px rgba(103,232,249,.22); }
-    .side1{ transform: rotateY(0deg) translateZ(50px); } .side2{ transform: rotateY(90deg) translateZ(50px); } .side3{ transform: rotateY(180deg) translateZ(50px); }
-    .side4{ transform: rotateY(270deg) translateZ(50px); } .side5{ transform: rotateX(90deg) translateZ(50px); } .side6{ transform: rotateX(-90deg) translateZ(50px); }
-    .holo-qr{ position: absolute; width: 72px; height: 72px; z-index: 2; overflow: visible; display: flex; align-items: center; justify-content: center; animation: floatQR 4s ease-in-out infinite; }
-    .ai-planet{ background: transparent; box-shadow: none; }
-    .planet-glow{ position: absolute; inset: -12px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%), radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%); filter: blur(12px); animation: planetGlow 3.2s ease-in-out infinite; z-index: 1; }
-    .planet-core{ position: relative; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 2; background: radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%), radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%), radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%), linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%); box-shadow: inset -10px -12px 20px rgba(0,0,0,.72), inset 10px 12px 22px rgba(255,255,255,.04), inset 0 0 26px rgba(255,255,255,.04), 0 0 18px rgba(255,255,255,.10), 0 0 34px rgba(103,232,249,.20), 0 0 64px rgba(129,140,248,.18); animation: planetBreath 2.8s ease-in-out infinite; }
-    .planet-core::before{ content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 0 12px rgba(255,255,255,.05); }
-    .planet-core::after{ content: ""; position: absolute; left: 12px; top: 10px; width: 22px; height: 10px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%); filter: blur(2px); transform: rotate(-18deg); opacity: .9; }
-    .planet-rays{ position: absolute; inset: -12px; border-radius: 50%; pointer-events: none; z-index: 1; }
-    .planet-rays::before, .planet-rays::after{ content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0deg 18deg, rgba(255,255,255,.28) 24deg, transparent 36deg 62deg, rgba(255,255,255,.16) 70deg, transparent 84deg 116deg, rgba(255,255,255,.22) 124deg, transparent 136deg 180deg, rgba(255,255,255,.18) 192deg, transparent 206deg 250deg, rgba(255,255,255,.24) 258deg, transparent 270deg 310deg, rgba(255,255,255,.15) 318deg, transparent 330deg 360deg); mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%); -webkit-mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%); filter: blur(1px); opacity: .55; animation: planetRaySpin 12s linear infinite; }
-    .planet-rays::after{ opacity: .35; transform: scale(1.14); animation-duration: 18s; animation-direction: reverse; }
-    .planet-center{ position: relative; z-index: 3; display: flex; align-items: center; justify-content: center; }
-    .planet-ai-badge{ position: relative; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20); backdrop-filter: blur(10px); }
-    .planet-ai-badge::before{ content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(255,255,255,.10); }
-    .planet-ai-badge::after{ content: ""; position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.10); animation: aiSpin 8s linear infinite; }
-    .planet-ai-badge span{ position: relative; z-index: 2; font-family: 'Space Grotesk',sans-serif; font-size: 11px; font-weight: 900; letter-spacing: .5px; color: #fff; text-shadow: 0 0 12px rgba(255,255,255,.22); }
-    @keyframes rotateCrystal{ from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
-    @keyframes floatQR{ 0%,100%{ transform:translateY(0) rotateX(0deg); } 50%{ transform:translateY(-8px) rotateX(5deg); } }
-    @keyframes planetBreath{ 0%,100%{ transform:scale(1); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 22px rgba(255,255,255,.04),inset 0 0 26px rgba(255,255,255,.04),0 0 18px rgba(255,255,255,.10),0 0 34px rgba(103,232,249,.20),0 0 64px rgba(129,140,248,.18); } 50%{ transform:scale(1.045); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 24px rgba(255,255,255,.05),inset 0 0 28px rgba(255,255,255,.06),0 0 22px rgba(255,255,255,.12),0 0 42px rgba(103,232,249,.28),0 0 78px rgba(129,140,248,.24); } }
-    @keyframes planetGlow{ 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.92; transform:scale(1.16); } }
-    @keyframes planetRaySpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
-    @keyframes aiSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+    /* Profil Bilgisi */
+    .drawer-profile-info { display: flex; align-items: center; gap: 10px; }
+    .drawer-avatar { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); object-fit: cover; }
+    .drawer-user-name { font-size: 13px; font-weight: 800; color: #fff; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .drawer-links{ display:grid; gap:9px; margin-top: 14px;}
+    .drawer-links{ display:grid; gap:9px; }
+    
+    /* DİL SEÇİCİ */
+    .drawer-lang-select-wrapper { position: relative; margin-bottom: 10px; }
+    .drawer-lang-select { width: 100%; min-height: 50px; appearance: none; border-radius: 18px; background: rgba(15,39,66,.44); border: 1px solid rgba(96,165,250,.18); color: #fff; padding: 0 13px; font-size: 14px; font-weight: 1000; cursor: pointer; outline: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.045); }
+    .drawer-lang-select-wrapper::after { content: "▼"; position: absolute; right: 15px; top: 16px; font-size: 12px; pointer-events: none; color: rgba(255,255,255,0.7); }
+
     .drawer-link{ min-height:50px; border-radius:18px; text-decoration:none; color:#fff; border:1px solid rgba(96,165,250,.18); display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 13px; font-size:14px; font-weight:1000; cursor:pointer; position:relative; overflow:hidden; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); box-shadow:inset 0 1px 0 rgba(255,255,255,.045); background:rgba(15,39,66,.44); font-family:inherit; }
     .drawer-link::before{ content:""; position:absolute; inset:0; opacity:.9; pointer-events:none; background: radial-gradient(circle at left,rgba(56,189,248,.12),transparent 55%), linear-gradient(135deg,rgba(255,255,255,.035),rgba(15,39,66,.20)); }
     .drawer-link span, .drawer-link small{ position:relative; z-index:2; }
     .drawer-link:active{transform:scale(.985)}
     .drawer-link small{ color:rgba(255,255,255,.56); font-size:12px; font-weight:1000; }
     
-    .premium-link { border: 1px solid rgba(236,72,153,.4); background: rgba(236,72,153,.15); }
-    .premium-link::before { background: radial-gradient(circle at left,rgba(236,72,153,.2),transparent 55%), linear-gradient(135deg,rgba(255,255,255,.035),rgba(236,72,153,.20)); }
-    .offline-menu-btn { border-color: rgba(34,197,94,0.4); }
+    .drawer-link.locked { opacity: 0.6; }
+    .drawer-link.locked small { color: #f87171; }
+    .drawer-link.danger { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.1); }
+    .drawer-link.danger span { color: #fca5a5; }
 
-    .drawer-footer-seal{ margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46); font-size:11px; font-weight:1000; letter-spacing:.4px; }
+    /* Google Button */
+    .google-login-btn{ width:100%; min-height:54px; border:none; border-radius:18px; background:linear-gradient(135deg,#fff 0%,#f8f9fa 100%); color:#3c4043; font-size:14px; font-weight:900; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 8px 24px rgba(0,0,0,.2); transition: transform 0.2s ease; margin-bottom: 10px;}
+    .google-login-btn:active{transform:scale(.96)}
+    .google-icon{ width:22px; height:22px; flex:0 0 22px; }
+
+    .drawer-footer-seal{ padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46); font-size:11px; font-weight:1000; letter-spacing:.4px; }
     .drawer-footer-seal .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
     .half-screen{ flex:1; min-height:0; position:relative; display:flex; flex-direction:column; justify-content:space-between; align-items:center; overflow:hidden; padding:10px 8px; }
@@ -128,9 +112,8 @@
     .pop-flag{font-size:18px}
     .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pop-code{font-size:12px;font-weight:900;opacity:.7}
-    .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
-    .chat-body{ flex:1; width:100%; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:14px; padding:18px 0 18px; text-align:center; scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent); }
+    .chat-body{ flex:1; width:100%; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:14px; padding:18px 0 18px; text-align:center; scrollbar-width:none; mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent); }
     .chat-body::before{ content:""; flex:1 0 auto; min-height:12px; }
     .chat-body::-webkit-scrollbar{ display:none; width:0; height:0; }
     .bubble{ max-width:86%; line-height:1.18; word-break:break-word; font-size:24px; font-weight:900; opacity:.9; text-align:center; }
@@ -148,48 +131,27 @@
     @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
 
     .hf-btn{ background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.7); padding: 8px 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.3s ease; outline: none; }
-    .hf-btn:active{ transform: scale(0.95); }
     .hf-btn.active{ background: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.5); color: #d8b4fe; box-shadow: 0 0 15px rgba(168,85,247,0.25); }
     .hf-btn svg{ width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
     .center-hub{ height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; position:relative; background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05); padding: 0 45px;}
-    .hub-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; outline: none; z-index: 10; }
-    .hub-btn:active { transform: scale(0.9); }
+    .hub-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     
     .orb-wrapper { position: relative; width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; }
     .orb{ width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; z-index: 5;}
     .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    
     .satellite-orbit { position: absolute; width: 100px; height: 100px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.03); animation: spin 6s linear infinite; }
     .satellite { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 0; left: 50%; margin-left: -4px; }
     .sat-blue { background: #6366f1; box-shadow: 0 0 12px #6366f1; }
     .sat-pink { background: #ec4899; box-shadow: 0 0 12px #ec4899; top: auto; bottom: 0; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    .modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2147483647; padding:20px; }
-    .modal.show{display:flex}
-    .modal-card{ width:min(100%,420px); border-radius:24px; padding:22px; background:linear-gradient(145deg,#0f172a,#1e293b); border:1px solid rgba(59,130,246,.4); box-shadow:0 24px 50px rgba(0,0,0,.50); text-align: center; }
-    .modal-title{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:900; color:#93c5fd;}
-    .modal-text{margin:0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85);white-space:pre-line}
-    .modal-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px}
-    .modal-btn{ min-height:48px; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:900; }
-    .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
-    .modal-btn.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff}
-
-    .square-qr-container { position: relative; width: 200px; height: 200px; margin: 30px auto; display: flex; align-items: center; justify-content: center; }
-    .square-spinner { position: absolute; inset: 0; border: 4px dashed rgba(103,232,249,0.7); border-radius: 16px; animation: spinSquare 10s linear infinite; box-shadow: 0 0 15px rgba(103,232,249,0.2), inset 0 0 15px rgba(103,232,249,0.2); }
-    .square-spinner-inner { position: absolute; inset: -14px; border: 2px solid rgba(236,72,153,0.4); border-radius: 22px; animation: spinSquare 15s linear infinite reverse; }
-    .qr-wrapper { position: relative; z-index: 5; background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    .qr-wrapper img { width: 140px; height: 140px; display: block; }
-    @keyframes spinSquare { 100% { transform: rotate(360deg); } }
-
-    .toast{ position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px); max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px; background:rgba(12,16,28,.98); border:1px solid rgba(255,255,255,.15); color:#fff; font-size:12px; font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center; z-index:2147483647; box-shadow:0 18px 36px rgba(0,0,0,.45); transition:.22s ease; pointer-events:none; }
+    .toast{ position:fixed; left:50%; top:30px; transform:translateX(-50%) translateY(-120px); max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px; background:rgba(12,16,28,.98); border:1px solid rgba(255,255,255,.15); color:#fff; font-size:12px; font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center; z-index:2147483647; box-shadow:0 18px 36px rgba(0,0,0,.45); transition:.22s ease; pointer-events:none; }
     .toast.show{transform:translateX(-50%) translateY(0)}
 
     @media(max-width:390px){
       .mic-line{grid-template-columns:1fr 66px 1fr;gap:8px;transform:translateY(-7px)}
       .mic-btn{width:66px;height:66px} .mic-btn svg{width:28px;height:28px}
-      .bubble{font-size:22px} .bubble.latest{font-size:30px}
     }
   </style>
 </head>
@@ -201,644 +163,174 @@
   <div id="drawerBackdrop" class="drawer-backdrop">
     <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
       
-      <div class="drawer-logo-row">
-        <div class="drawer-logo">
-          <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
-          <div class="drawer-logo-sub">BE FREE</div>
-        </div>
-      </div>
-
-      <div class="holo-container">
-        <div class="crystal-cage">
-          <div class="crystal-side side1"></div>
-          <div class="crystal-side side2"></div>
-          <div class="crystal-side side3"></div>
-          <div class="crystal-side side4"></div>
-          <div class="crystal-side side5"></div>
-          <div class="crystal-side side6"></div>
-        </div>
-
-        <div class="holo-qr ai-planet" aria-hidden="true">
-          <div class="planet-glow"></div>
-          <div class="planet-rays"></div>
-          <div class="planet-core">
-            <div class="planet-center">
-              <div class="planet-ai-badge">
-                <span>AI</span>
-              </div>
-            </div>
+      <!-- LOGO VE KULLANICI BİLGİSİ (HEADER) -->
+      <div class="drawer-header">
+        <div class="drawer-logo-row">
+          <div class="drawer-logo">
+            <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
+            <div class="drawer-logo-sub">BE FREE</div>
+          </div>
+          
+          <!-- Sadece Login Sonrası Gösterilecek Kullanıcı Bilgisi -->
+          <div id="drawerProfileInfo" class="drawer-profile-info" style="display: none;">
+             <div class="drawer-user-name" id="drawerUserName">Oğuz Özyiğit</div>
+             <img src="https://ui-avatars.com/api/?name=Oguz&background=6366f1&color=fff" id="drawerUserAvatar" class="drawer-avatar" alt="Profil">
           </div>
         </div>
       </div>
 
-      <nav class="drawer-links">
-        <a class="drawer-link premium-link" id="premiumBtn" style="display: none !important;"><span>🌟 Premium (Reklamsız)</span><small>›</small></a>
-        <a class="drawer-link offline-menu-btn" id="menuOfflineBtn" style="display: none !important;"><span>📥 Offline Dil Paketleri</span><small>›</small></a>
+      <!-- MENÜ LİNKLERİ (SCROLL ALANI) -->
+      <div class="drawer-scroll">
         
-        <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
-        <a class="drawer-link" onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'"><span>⭐ Bizi Puanla</span><small>›</small></a>
-      </nav>
+        <!-- HER DURUMDA GÖRÜNEN DİL SEÇİMİ -->
+        <div class="drawer-lang-select-wrapper">
+          <select id="siteLangSelect" class="drawer-lang-select">
+            <option value="tr">🇹🇷 Site Dili: Türkçe</option>
+            <option value="en">🇬🇧 Site Lang: English</option>
+          </select>
+        </div>
 
-      <div class="drawer-footer-seal">italky<span class="ai">AI</span> By Ozyigit's 2026</div>
+        <!-- 1. LOGİN ÖNCESİ MENÜ -->
+        <nav id="preLoginMenu" class="drawer-links">
+          <a class="drawer-link locked" href="#" onclick="showToast('Önce giriş yapmalısınız')">
+            <span>Offline Diller</span><small>🔒</small>
+          </a>
+          <a class="drawer-link" href="#"><span>Yazıdan Çeviri</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Eğlenerek Öğren</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Seviye Tespit</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Hakkımızda</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Gizlilik</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Bizi Puanla</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Kısa Yol Oluştur</span><small>›</small></a>
+        </nav>
+
+        <!-- 2. LOGİN SONRASI MENÜ -->
+        <nav id="postLoginMenu" class="drawer-links" style="display: none;">
+          <a class="drawer-link" href="#"><span>Offline Diller</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Yazıdan Çeviri</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Eğlenerek Öğren</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Seviye Tespit</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Hakkımızda</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Gizlilik</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Bizi Puanla</span><small>›</small></a>
+          <a class="drawer-link" href="#"><span>Kısa Yol Oluştur</span><small>›</small></a>
+          
+          <button class="drawer-link" id="safeLogoutBtn" type="button" style="margin-top: 10px;">
+            <span>Güvenli Çıkış</span><small>›</small>
+          </button>
+          <button class="drawer-link danger" id="deleteAccountBtn" type="button">
+            <span>Hesabımı Sil</span><small>🗑️</small>
+          </button>
+        </nav>
+      </div>
+
+      <!-- ALT KISIM (FOOTER - GOOGLE BUTONU BURADA) -->
+      <div class="drawer-footer">
+        <!-- Sadece Login Öncesi Görünecek Google Butonu -->
+        <button id="googleLoginBtn" class="google-login-btn" type="button">
+          <svg class="google-icon" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C36.9 39.3 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+          </svg>
+          <span>Google ile Giriş Yap</span>
+        </button>
+
+        <div class="drawer-footer-seal">italky<span class="ai">AI</span> By Ozyigit's 2026</div>
+      </div>
     </aside>
   </div>
 
   <main class="container">
     <section class="half-screen top" id="topSection">
       <div class="lang-row">
-        <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-      </div>
-      <div class="popover" id="pop-top">
-        <div class="pop-head"><div id="topPopTitle">KARŞI DİL</div><div class="pop-close" id="close-top">✕</div></div>
-        <div class="pop-list" id="list-top"></div>
+        <button id="topLangBtn" class="lang-trigger" type="button">🌐 İngilizce ⌵</button>
       </div>
       <div class="chat-body" id="topBody"></div>
       <div class="mic-line">
         <div class="mic-side empty"></div>
-        <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
-          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
-        </button>
+        <button id="topMic" class="mic-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg></button>
         <div class="mic-side empty"></div>
       </div>
     </section>
 
     <section class="center-hub" id="centerHub">
-      <button id="btToggleBtn" class="hub-btn" aria-label="Bağlan">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
-        </svg>
-      </button>
-
+      <button id="btToggleBtn" class="hub-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5-10 10"></path></svg></button>
       <div class="orb-wrapper">
         <div class="satellite-orbit"><div class="satellite sat-blue"></div><div class="satellite sat-pink"></div></div>
         <div class="orb"><span class="orb-main">italky<span class="ai">AI</span></span></div>
       </div>
-
-      <button id="guideBtn" class="hub-btn" aria-label="Rehber Modu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-      </button>
+      <button id="guideBtn" class="hub-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></button>
     </section>
 
     <section class="half-screen bottom" id="botSection">
       <div class="lang-row">
-        <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-      </div>
-      <div class="popover" id="pop-bot">
-        <div class="pop-head"><div id="botPopTitle">BENİM DİLİM</div><div class="pop-close" id="close-bot">✕</div></div>
-        <div class="pop-list" id="list-bot"></div>
+        <button id="botLangBtn" class="lang-trigger" type="button">🌐 Türkçe ⌵</button>
       </div>
       <div class="chat-body" id="botBody"></div>
       <div class="mic-line">
-        <div class="mic-side">
-          <button id="shareQrBtn" class="hf-btn" type="button" aria-label="Uygulamayı Paylaş">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            <span>Paylaş</span>
-          </button>
-        </div>
-        <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
-          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
-        </button>
-        <div class="mic-side">
-          <button id="handsFreeToggle" class="hf-btn" type="button" aria-label="Kulaklık Modu" style="display: none;">
-            <svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
-            <span>Kulaklık</span>
-          </button>
-        </div>
+        <div class="mic-side"></div>
+        <button id="botMic" class="mic-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg></button>
+        <div class="mic-side"></div>
       </div>
     </section>
   </main>
 
-  <div id="qrModal" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title">italkyAI'ı Paylaş</h3>
-      <p class="modal-text">Arkadaşının kamerasına bu kodu okutarak anında indirmesini sağla.</p>
-      <div class="square-qr-container">
-        <div class="square-spinner"></div><div class="square-spinner-inner"></div>
-        <div class="qr-wrapper"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://play.google.com/store/apps/details?id=com.ozyigits.italkyai&margin=0" alt="italkyAI QR"></div>
-      </div>
-      <div class="modal-actions" style="grid-template-columns: 1fr;"><button onclick="document.getElementById('qrModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button">Kapat</button></div>
-    </div>
-  </div>
-
-  <div id="adModal" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title" id="adTitle">Zorunlu Reklam</h3>
-      <p class="modal-text" id="adText">Bu uygulamayı sizlere ücretsiz olarak sunmaya devam edebilmemiz için ödüllü reklamları izlemeniz gereklidir.</p>
-      <div class="modal-actions" style="grid-template-columns: 1fr;">
-        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklamı İzle ve Devam Et</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="updateModal" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title">Güncelleme Gerekli</h3>
-      <p class="modal-text">Uygulamanın yeni fonksiyonlarını eksiksiz kullanabilmek için lütfen güncelleme yapınız.</p>
-      <div class="modal-actions" style="grid-template-columns: 1fr;">
-        <button onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'" class="modal-btn primary" type="button">Play Store'dan Güncelle</button>
-      </div>
-    </div>
-  </div>
-
   <div id="toast" class="toast"></div>
 
-  <script type="module">
-  import { getLangPoolForSite } from "/js/lang_pool_full.js";
-  import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
-
-  const API_BASE = "https://italky-api.onrender.com";
+  <script>
   const $ = (id) => document.getElementById(id);
-  const SITE_LANG_KEY = "site_lang";
-  const MIN_REQUIRED_VERSION = 81;
-
-  const BCP = {
-    tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
-    ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR",
-    fa:"fa-IR", uz:"uz-UZ", kz:"kk-KZ", uk:"uk-UA", vi:"vi-VN", nl:"nl-NL", pl:"pl-PL", hi:"hi-IN"
-  };
-
-  let SITE_LANG = "tr";
-  let botLang = "tr";
-  let topLang = "en";
-
-  const UI = {
-    tr:{ topLang:"KARŞI DİL", botLang:"BENİM DİLİM", adTitle:"Zorunlu Reklam", adText:"Ücretsiz çeviriye devam edebilmek için ödül reklamını izlemeniz gereklidir.", watchAd:"Reklamı İzle ve Devam Et", micError:"Mikrofon hatası.", micDenied:"Mikrofon izni gerekli.", micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.", translateError:"Çeviri yapılamadı" },
-    en:{ topLang:"OTHER LANGUAGE", botLang:"MY LANGUAGE", adTitle:"Mandatory Ad", adText:"To continue free translation, you need to watch a rewarded ad.", watchAd:"Watch Ad to Continue", micError:"Microphone error.", micDenied:"Microphone permission is required.", micUnsupported:"Speech recognition is not supported on this device.", translateError:"Translation failed" }
-  };
-
-  function canonical(code){ return OfflinePackBridge.canonical(code); }
   
-  const FALLBACK_LANGS = [
-    { code:"tr", flag:"🇹🇷", name:"Türkçe" }, { code:"en", flag:"🇬🇧", name:"İngilizce" },
-    { code:"de", flag:"🇩🇪", name:"Almanca" }, { code:"fr", flag:"🇫🇷", name:"Fransızca" },
-    { code:"it", flag:"🇮🇹", name:"İtalyanca" }, { code:"es", flag:"🇪🇸", name:"İspanyolca" },
-    { code:"ar", flag:"🇸🇦", name:"Arapça" }, { code:"ru", flag:"🇷🇺", name:"Rusça" },
-    { code:"zh", flag:"🇨🇳", name:"Çince" }, { code:"ja", flag:"🇯🇵", name:"Japonca" },
-    { code:"ko", flag:"🇰🇷", name:"Korece" }, { code:"fa", flag:"🇮🇷", name:"Farsça" },
-    { code:"uz", flag:"🇺🇿", name:"Özbekçe" }, { code:"kz", flag:"🇰🇿", name:"Kazakça" },
-    { code:"uk", flag:"🇺🇦", name:"Ukraynaca" }, { code:"vi", flag:"🇻🇳", name:"Vietnamca" },
-    { code:"nl", flag:"🇳🇱", name:"Felemenkçe" }, { code:"pl", flag:"🇵🇱", name:"Lehçe" },
-    { code:"hi", flag:"🇮🇳", name:"Hintçe" }
-  ];
+  // YAN MENÜYÜ AÇ/KAPAT
+  $("drawerEdgeBtn").onclick = () => $("drawerBackdrop").classList.add("show");
+  $("drawerBackdrop").onclick = (e) => { if(e.target === $("drawerBackdrop")) $("drawerBackdrop").classList.remove("show"); };
 
-  let rawLangs = Array.isArray(getLangPoolForSite(SITE_LANG)) ? getLangPoolForSite(SITE_LANG) : [];
-  if(rawLangs.length === 0) rawLangs = FALLBACK_LANGS;
-
-  const LANGS = rawLangs.map(l => {
-      const code = canonical(l.code);
-      if(!code) return null;
-      return { code, flag:l.flag || "🌐", name:l.name || l.tr_name || code.toUpperCase(), bcp:BCP[code] || "en-US" };
-  }).filter(Boolean);
-
-  function langObj(code){ const c = canonical(code); return LANGS.find(x => x.code === c) || { code:c||"en", flag:"🌐", name:(c||"en").toUpperCase(), bcp:"en-US" }; }
-
-  let isPremium = false; 
-  let liveText = "";
-  let recordingSide = null;
-  let isBtConnected = false;
-  let isHandsFree = false; 
-  let isSpeaking = false; 
-
-  const topBody = $("topBody"); const botBody = $("botBody");
-  const topMic = $("topMic"); const botMic = $("botMic");
-  const adModal = $("adModal"); const watchAdBtn = $("watchAdBtn");
-  const updateModal = $("updateModal"); 
-  const drawerBackdrop = $("drawerBackdrop");
-  const handsFreeToggle = $("handsFreeToggle");
-
-  function tx(key){ const c = UI[SITE_LANG] ? SITE_LANG : "en"; return UI[c]?.[key] || UI.en[key] || key; }
-
-  function setNativeBanner(visible) {
-    if (isPremium) visible = false;
-    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-    if (bridge && typeof bridge.toggleBannerAd === "function") bridge.toggleBannerAd(visible, "");
-  }
-
+  // TOAST MESAJI
   function showToast(msg){
-    const toast = $("toast"); toast.textContent = String(msg || ""); toast.classList.add("show");
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+      const t = $("toast"); t.textContent = msg; t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2500);
   }
 
-  async function checkAppUpdate() {
-    try {
-      const v = window.AndroidBridge?.getVersionCode ? window.AndroidBridge.getVersionCode() : (window.Native?.getVersionCode ? window.Native.getVersionCode() : null);
-      if (v !== null && Number(v) < MIN_REQUIRED_VERSION) { if(updateModal) { updateModal.classList.add("show"); setNativeBanner(false); } return true; }
-    } catch(e){}
-    if(updateModal) { updateModal.classList.remove("show"); setNativeBanner(true); } return false;
-  }
+  // LOGIN DURUMUNU KONTROL ET VE MENÜYÜ GÜNCELLE
+  function updateMenuState() {
+      // Çerezi (veya localStorage'ı) kontrol et
+      const isLogged = localStorage.getItem("user_logged") === "true";
 
-  async function getLangFromIP() {
-      try {
-          const res = await fetch("https://freeipapi.com/api/json");
-          const data = await res.json();
-          const country = data.countryCode;
-          const map = {
-              "TR":"tr", "US":"en", "GB":"en", "DE":"de", "FR":"fr", "IT":"it", "ES":"es",
-              "SA":"ar", "AE":"ar", "RU":"ru", "CN":"zh", "JP":"ja", "KR":"ko", "IR":"fa",
-              "UZ":"uz", "KZ":"kz", "UA":"uk", "VN":"vi", "NL":"nl", "PL":"pl", "IN":"hi"
-          };
-          if (country && map[country]) return map[country];
-      } catch (e) {}
-      return "tr"; 
-  }
-
-  function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
-  function syncInstalledPairsFromNative(){ try{ OfflinePackBridge.syncInstalledPairsFromNative(); }catch(e){} }
-
-  let autoAdTimer = null; let globalAdEarned = false;
-  window.onRewardedAdCompleted = function() { globalAdEarned = true; };
-
-  function showAdModal({title, text, adUnit = "public_facetoface_auto", langCode = ""} = {}){
-      return new Promise((resolve) => {
-          if(isPremium) { resolve(true); return; }
-          setNativeBanner(false);
-          if($("adTitle")) $("adTitle").textContent = title || tx("adTitle");
-          if($("adText")) $("adText").textContent = text || tx("adText");
-          if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
-          adModal.classList.add("show");
-
-          watchAdBtn.onclick = async () => {
-              watchAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true);
-              globalAdEarned = false;
-              const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
-              resolve(ok !== false || globalAdEarned === true);
-          };
-      });
-  }
-
-  function scheduleAutoAd(intervalMs) {
-      if(isPremium) return;
-      clearTimeout(autoAdTimer);
-      autoAdTimer = setTimeout(async () => {
-          const isDrawerOpen = drawerBackdrop.classList.contains('show');
-          const isUpdateModalOpen = updateModal?.classList.contains('show');
-          const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
-
-          if (!isDrawerOpen && !isUpdateModalOpen && !isRecording) {
-              const success = await showAdModal({ adUnit: "public_facetoface_auto", langCode: "" });
-              if(!success) { scheduleAutoAd(2000); return; }
-          }
-          scheduleAutoAd(5 * 60 * 1000); 
-      }, intervalMs);
-  }
-
-  function refreshTexts(){
-    const tO = langObj(topLang); const bO = langObj(botLang);
-    $("topLangBtn").textContent = `${tO.flag} ${tO.name} ⌵`;
-    $("botLangBtn").textContent = `${bO.flag} ${bO.name} ⌵`;
-    $("topPopTitle").textContent = tx("topLang"); $("botPopTitle").textContent = tx("botLang");
-  }
-
-  function closeAllPops() { $("pop-top").classList.remove("show"); $("pop-bot").classList.remove("show"); }
-
-  function renderPop(side) {
-      if(!side) return;
-      const list = (side === "top" ? $("list-top") : $("list-bot"));
-      const selected = (side === "top" ? topLang : botLang);
-      
-      let html = LANGS.map(l => {
-        return `
-        <div class="pop-item ${l.code === selected ? "active" : ""}" data-select-code="${l.code}">
-          <div class="pop-left"><div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div></div>
-          <div class="pop-actions"><div class="pop-code">${l.code.toUpperCase()}</div></div>
-        </div>
-      `}).join("");
-
-      list.innerHTML = html;
-
-      list.querySelectorAll(".pop-item").forEach(item => {
-          item.onclick = (e) => {
-              e.stopPropagation();
-              const code = item.getAttribute("data-select-code");
-              if(side === "top") topLang = code; else {
-                  botLang = code;
-                  if (isBtConnected && window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText("SYS_CMD:LANG:" + code);
-              }
-              if(topLang === botLang) topLang = code === "tr" ? "en" : "tr";
-              closeAllPops(); refreshTexts();
-          };
-      });
-  }
-
-  $("topLangBtn").onclick = (e) => { e.stopPropagation(); renderPop("top"); $("pop-top").classList.add("show"); $("pop-bot").classList.remove("show"); };
-  $("botLangBtn").onclick = (e) => { e.stopPropagation(); renderPop("bot"); $("pop-bot").classList.add("show"); $("pop-top").classList.remove("show"); };
-  document.onclick = (e) => { if(!$("pop-top").contains(e.target) && !$("pop-bot").contains(e.target) && !e.target.closest(".lang-trigger")) closeAllPops(); };
-
-  function clearBody(body){ if(body) body.innerHTML = ""; }
-  function addBubble(side,text,latest=false){
-    const body = side === "top" ? topBody : botBody;
-    if(!body) return null;
-    if(latest){ body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest")); }
-    const div = document.createElement("div"); div.className = `bubble${latest ? " latest" : ""}`; div.textContent = String(text || "").trim();
-    body.appendChild(div);
-    const scroll = () => { try{ body.scrollTop = body.scrollHeight; }catch{} };
-    scroll(); requestAnimationFrame(scroll); setTimeout(scroll,60);
-    return div;
-  }
-
-  function clearChat(){
-    try{ stopRecognizer(); }catch{}
-    try{ window.speechSynthesis?.cancel?.(); }catch{}
-    try{ window.NativeTTS?.stop?.(); }catch{}
-    liveText = ""; recordingSide = null;
-    topMic.classList.remove("listening"); botMic.classList.remove("listening");
-    clearBody(topBody); clearBody(botBody);
-  }
-
-  $("sideClearBtn").onclick = clearChat;
-  $("drawerEdgeBtn").onclick = () => { setNativeBanner(false); drawerBackdrop.classList.add("show"); };
-  drawerBackdrop.onclick = (e) => { if(e.target === drawerBackdrop) { drawerBackdrop.classList.remove("show"); setNativeBanner(true); }};
-  
-  $("guideBtn").onclick = () => { showToast("Rehber Modu Çok Yakında! (Premium)"); };
-
-  $("shareQrBtn").onclick = () => { setNativeBanner(false); $("qrModal").classList.add("show"); };
-  
-  $("btToggleBtn").onclick = () => {
-      if (!isBtConnected) { window.AndroidBridge?.startBluetoothConnect(); } 
-      else { window.AndroidBridge?.disconnectBluetooth(); window.onBtDisconnected(); }
-  };
-
-  window.onBtConnected = function() {
-      isBtConnected = true; document.body.classList.add("bt-active");
-      
-      $("btToggleBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-      $("btToggleBtn").style.color = "#f87171";
-      $("btToggleBtn").style.borderColor = "rgba(248,113,113,0.5)";
-      $("btToggleBtn").style.background = "rgba(239,68,68,0.15)";
-
-      handsFreeToggle.style.display = "flex";
-      $("shareQrBtn").style.display = "none";
-      
-      clearBody(topBody); clearBody(botBody);
-      showToast("Bağlantı kuruldu!");
-      $("qrModal").classList.remove("show"); drawerBackdrop.classList.remove("show"); setNativeBanner(true);
-  };
-
-  window.onBtDisconnected = function() {
-      isBtConnected = false; document.body.classList.remove("bt-active");
-      
-      $("btToggleBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5-10 10"></path></svg>`;
-      $("btToggleBtn").style.color = "#fff";
-      $("btToggleBtn").style.borderColor = "rgba(255,255,255,0.15)";
-      $("btToggleBtn").style.background = "rgba(255,255,255,0.05)";
-
-      handsFreeToggle.style.display = "none";
-      $("shareQrBtn").style.display = "flex";
-
-      if(isHandsFree) { isHandsFree = false; handsFreeToggle.classList.remove("active"); }
-      window.location.href = "login.html"; 
-  };
-
-  window.onBtMessageReceived = async function(text) {
-      if (text.startsWith("SYS_CMD:LANG:")) { topLang = text.replace("SYS_CMD:LANG:", "").trim(); refreshTexts(); return; }
-      const targetRow = addBubble("top", "", true);
-      try {
-          const translated = await translateText(text, "auto", botLang);
-          targetRow.textContent = translated || "Hata";
-          if (translated) speak(translated, botLang);
-      } catch (e) { targetRow.textContent = "Bağlantı Hatası!"; }
-  };
-
-  handsFreeToggle.onclick = () => {
-      isHandsFree = !isHandsFree;
-      if (isHandsFree) {
-          handsFreeToggle.classList.add("active"); showToast("Kulaklık Modu Aktif.");
-          if (!recordingSide && !isSpeaking) startRecording("bot");
+      if(isLogged) {
+          // GİRİŞ YAPILMIŞ - Post Login UI
+          $("preLoginMenu").style.display = "none";
+          $("googleLoginBtn").style.display = "none";
+          
+          $("postLoginMenu").style.display = "grid";
+          $("drawerProfileInfo").style.display = "flex";
+          $("drawerUserName").textContent = localStorage.getItem("user_name") || "Kullanıcı";
       } else {
-          handsFreeToggle.classList.remove("active"); showToast("Kulaklık Modu Kapalı.");
-          if (recordingSide === "bot") stopRecognizer();
+          // GİRİŞ YAPILMAMIŞ - Pre Login UI
+          $("postLoginMenu").style.display = "none";
+          $("drawerProfileInfo").style.display = "none";
+          
+          $("preLoginMenu").style.display = "grid";
+          $("googleLoginBtn").style.display = "flex";
       }
+  }
+
+  // SAHTE LOGOUT BUTONU İŞLEVİ (Sistemi test etmek için)
+  $("safeLogoutBtn").onclick = () => { 
+      localStorage.removeItem("user_logged"); 
+      localStorage.removeItem("user_name");
+      updateMenuState(); 
+      showToast("Güvenli Çıkış Yapıldı"); 
   };
 
-  function setMicState(side,listening){
-    const mic = side === "top" ? topMic : botMic;
-    mic.classList.toggle("listening", !!listening);
-  }
-
-  function handleMicClick(side) {
-      if (recordingSide === side) { stopRecognizer(); if (side === "bot" && isHandsFree) { isHandsFree = false; handsFreeToggle.classList.remove("active"); showToast("Kulaklık Modu kapatıldı."); } } 
-      else { startRecording(side); }
-  }
-
-  function startRecording(side) {
-      if (recordingSide) stopRecognizer(); 
-      recordingSide = side; setMicState(side, true); liveText = "";
-      const code = (side === "top" ? topLang : botLang);
-      const bcp = langObj(code).bcp;
-      
-      if (window.Native && window.Native.startSpeechRecognition) {
-        window.Native.startSpeechRecognition(bcp, side);
-      } else if (window.AndroidBridge && window.AndroidBridge.startSpeechRecognition) {
-        window.AndroidBridge.startSpeechRecognition(bcp, side);
-      } else if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        window.webRecognizer = new SpeechRecognition();
-        window.webRecognizer.lang = bcp;
-        window.webRecognizer.continuous = false;
-        window.webRecognizer.interimResults = true;
-
-        window.webRecognizer.onresult = (event) => {
-          let finalTranscript = ''; let interimTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-            else interimTranscript += event.results[i][0].transcript;
-          }
-          if (finalTranscript) window.onNativeSpeechResult(JSON.stringify({side: side, text: finalTranscript, isFinal: true}));
-          else if (interimTranscript) window.onNativeSpeechResult(JSON.stringify({side: side, text: interimTranscript, isFinal: false}));
-        };
-
-        window.webRecognizer.onerror = (e) => window.onNativeSpeechError(e.error);
-        window.webRecognizer.onend = () => { if(recordingSide === side) { setMicState(side, false); recordingSide = null; } };
-        try { window.webRecognizer.start(); } catch(e) { window.onNativeSpeechError("start_error"); }
-      } else {
-        showToast(tx("micUnsupported"));
-        setMicState(side, false); recordingSide = null;
-      }
-  }
-
-  function stopRecognizer() {
-      if (!recordingSide) return; 
-      setMicState(recordingSide, false); recordingSide = null;
-      if (window.Native && window.Native.stopSpeechRecognition) window.Native.stopSpeechRecognition(); 
-      else if (window.AndroidBridge && window.AndroidBridge.stopSpeechRecognition) window.AndroidBridge.stopSpeechRecognition();
-      else if (window.webRecognizer) { window.webRecognizer.stop(); window.webRecognizer = null; }
-  }
-
-  function checkHandsFreeRestart(side) {
-      if (isHandsFree && side === "bot" && !isSpeaking) {
-          setTimeout(() => { if (isHandsFree && !recordingSide && !isSpeaking) startRecording("bot"); }, 800); 
-      }
-  }
-
-  function cleanupTranscript(text){ return String(text || "").replace(/\s+/g," ").replace(/\b(\S+)( \1\b)+/gi,"$1").trim(); }
-
-  window.onNativeSpeechError = function(errorMsg) {
-      setMicState("top", false); setMicState("bot", false); recordingSide = null;
-      [topBody, botBody].forEach(body => {
-        if(body) { const activeBubble = body.querySelector(".bubble.latest"); if(activeBubble && activeBubble.textContent.endsWith("...")) activeBubble.remove(); }
-      });
-      if(errorMsg === "manual_stop_empty") return;
-      if(errorMsg !== "no speech") {
-        if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") showToast(tx("micDenied"));
-        else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
-        else if (errorMsg === "network_error" || errorMsg === "server_error") showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
-        else showToast(tx("micError") + " (" + errorMsg + ")");
-      }
-      checkHandsFreeRestart("bot");
+  // GOOGLE BUTONU YÖNLENDİRMESİ
+  $("googleLoginBtn").onclick = () => {
+      // Senin istediğin şekilde login sayfasına atar.
+      window.location.href = "login_entry.html";
   };
 
-  window.onNativeSpeechResult = function(arg1, arg2, arg3) {
-      let side = "top"; let text = ""; let isFinal = true;
-      if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) { side = arg1; text = typeof arg2 === "string" ? arg2 : ""; isFinal = typeof arg3 !== "undefined" ? arg3 : true; } 
-      else if (typeof arg1 === "string") { try { const data = JSON.parse(arg1); side = data.side || "top"; text = data.text || ""; isFinal = data.isFinal !== undefined ? data.isFinal : true; } catch (e) { side = "top"; text = arg1; isFinal = true; } } 
-      else if (typeof arg1 === "object" && arg1 !== null) { side = arg1.side || "top"; text = arg1.text || ""; isFinal = arg1.isFinal !== undefined ? arg1.isFinal : true; }
-
-      liveText = cleanupTranscript(text);
-
-      if (isFinal) {
-        setMicState(side, false); recordingSide = null;
-        if (liveText) finalizeSpeech(side, liveText);
-        const body = side === "top" ? topBody : botBody;
-        if (body) { const activeBubble = body.querySelector(".bubble.latest"); if (activeBubble && activeBubble.textContent.endsWith("...")) activeBubble.remove(); }
-      } else {
-        const body = side === "top" ? topBody : botBody; if (!body) return;
-        let activeBubble = body.querySelector(".bubble.latest");
-        if (!activeBubble) { activeBubble = document.createElement("div"); activeBubble.className = "bubble latest"; body.appendChild(activeBubble); }
-        activeBubble.textContent = liveText + "...";
-        try { body.scrollTop = body.scrollHeight; } catch {}
-      }
-  };
-
-  async function translateOnline(text,from,to){
-    const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
-    for(const endpoint of endpoints){
-      try{
-        const r = await fetch(endpoint,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ text:String(text || "").trim(), from_lang:canonical(from), to_lang:canonical(to), source:canonical(from), target:canonical(to), mode:"normal", use_ai:false, cultural:false, tone:"neutral", style:"warm" }) });
-        const j = await r.json().catch(() => null);
-        const value = String(j?.translated || j?.translation || j?.text || "").trim();
-        if(r.ok && value) return value;
-      }catch{}
-    }
-    return null;
-  }
-
-  async function translateText(text, from, to) {
-    const src = canonical(from); const dst = canonical(to);
-    if ((src === "en" || hasInstalledPair("en", src)) && (dst === "en" || hasInstalledPair("en", dst))) {
-      try {
-        const offlineResult = OfflinePackBridge.translateOffline(text, src, dst);
-        if (offlineResult && offlineResult.trim() !== "") return offlineResult;
-      } catch (e) {}
-    }
-    return await translateOnline(text, src, dst);
-  }
-
-  function speak(text, langCode) {
-      const value = String(text || "").trim();
-      if(!value) return;
-      const code = canonical(langCode);
-      const bcp = langObj(code).bcp;
-
-      if (isHandsFree) stopRecognizer();
-      isSpeaking = true;
-      const delay = Math.max(3000, value.length * 80);
-      
-      let spokenViaNative = false;
-      try {
-        if(window.AndroidBridge && window.AndroidBridge.speak) { window.AndroidBridge.speak(value, code); spokenViaNative = true; }
-        else if(window.NativeTTS && window.NativeTTS.speak) { window.NativeTTS.speak(value, code); spokenViaNative = true; }
-      } catch(e){}
-
-      if (!spokenViaNative) {
-          try {
-            if(window.speechSynthesis){
-              window.speechSynthesis.cancel();
-              const u = new SpeechSynthesisUtterance(value);
-              u.lang = bcp; u.rate = .95; u.pitch = 1; u.volume = 1;
-              const voices = window.speechSynthesis.getVoices?.() || [];
-              const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(code));
-              if(found) u.voice = found;
-              setTimeout(() => { try{ window.speechSynthesis.speak(u); }catch{} }, 80);
-            }
-          } catch(e){}
-      }
-
-      setTimeout(() => { isSpeaking = false; if (isHandsFree && !recordingSide) startRecording("bot"); }, delay);
-  }
-
-  async function finalizeSpeech(side, text) {
-      recordingSide = null;
-      const clean = cleanupTranscript(text);
-      if(!clean){ liveText = ""; setMicState(side,false); return; }
-
-      if (isBtConnected && side === "bot") {
-          if (window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText(clean);
-          addBubble("bot", clean, false);
-          checkHandsFreeRestart("bot"); 
-          return;
-      }
-
-      const src = side === "top" ? topLang : botLang;
-      const dst = side === "top" ? botLang : topLang;
-      const other = side === "top" ? "bot" : "top";
-
-      addBubble(side,clean,false);
-      const targetRow = addBubble(other,"",true);
-
-      const translated = await translateText(clean, src, dst);
-      if(!translated){
-        if(targetRow) targetRow.textContent = tx("translateError");
-        liveText = ""; setMicState(side,false); return;
-      }
-
-      targetRow.textContent = translated;
-      speak(translated, dst);
-      liveText = ""; setMicState(side,false);
-  }
-
-  topMic.onclick = () => handleMicClick("top");
-  botMic.onclick = () => handleMicClick("bot");
-
-  async function boot() {
-    let savedLang = localStorage.getItem(SITE_LANG_KEY);
-    
-    if (savedLang) {
-        SITE_LANG = savedLang;
-        botLang = SITE_LANG;
-        topLang = botLang === "tr" ? "en" : "tr";
-    } else {
-        savedLang = await getLangFromIP();
-        SITE_LANG = savedLang;
-        localStorage.setItem(SITE_LANG_KEY, SITE_LANG);
-        botLang = SITE_LANG;
-        topLang = botLang === "tr" ? "en" : "tr";
-    }
-    
-    refreshTexts(); 
-
-    try { if (window.Native && typeof window.Native.requestF2FPermissions === "function") window.Native.requestF2FPermissions(); } catch (e) {}
-
-    try { OfflinePackBridge.installDownloadEventHandlers(code => langObj(code)); }catch(e){}
-    try { syncInstalledPairsFromNative(); }catch(e){}
-    try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
-
-    checkAppUpdate();
-    scheduleAutoAd(5 * 60 * 1000);
-  }
-
-  boot();
+  // Sayfa yüklendiğinde durumu kontrol et
+  updateMenuState();
   </script>
 </body>
 </html>
