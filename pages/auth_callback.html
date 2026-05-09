@@ -70,7 +70,6 @@
     import { supabase } from "/js/supabase_client.js";
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-    const HOME = "/pages/home.html";
     const LOGIN = "/pages/login.html";
     const MEMBERSHIP = "/pages/membership.html";
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
@@ -82,25 +81,29 @@
       errBox.textContent = String(msg || "");
     }
 
+    function safePath(value){
+      const raw = String(value || "").trim();
+      if(!raw) return "";
+      if(raw.startsWith("http://")) return "";
+      if(raw.startsWith("https://")) return "";
+      if(raw.startsWith("//")) return "";
+      if(!raw.startsWith("/")) return "";
+      return raw;
+    }
+
     function getNextTarget(){
       try{
         const url = new URL(location.href);
-        return String(url.searchParams.get("next") || "").trim();
+        return safePath(url.searchParams.get("next") || "");
       }catch{
         return "";
       }
     }
 
-    function goLogin(next = ""){
-      location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}` : LOGIN);
+    function goLogin(next = MEMBERSHIP){
+      const safeNext = safePath(next) || MEMBERSHIP;
+      location.replace(`${LOGIN}?next=${encodeURIComponent(safeNext)}`);
     }
-
-    if (sessionStorage.getItem("italky_cb_lock_v5") === "1") {
-      const next = getNextTarget();
-      goLogin(next);
-      throw new Error("callback_lock");
-    }
-    sessionStorage.setItem("italky_cb_lock_v5", "1");
 
     async function waitForSession(maxMs = 9000){
       const start = Date.now();
@@ -112,38 +115,33 @@
       return null;
     }
 
-    async function getAccessState(){
-      const { data:{ session } } = await supabase.auth.getSession();
+    async function fetchAccessStateSafe(session){
+      try{
+        if (!session?.access_token) return null;
 
-      if (!session?.access_token) {
-        throw new Error("Oturum bulunamadı");
-      }
+        const resp = await fetch(ACCESS_API, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`
+          }
+        });
 
-      const resp = await fetch(ACCESS_API, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`
+        const json = await resp.json().catch(() => ({}));
+
+        if (!resp.ok) {
+          console.warn("auth_callback access-state not ok:", resp.status, json);
+          return null;
         }
-      });
 
-      const json = await resp.json().catch(() => ({}));
-
-      if (!resp.ok) {
-        throw new Error(json?.detail || "Erişim kontrolü yapılamadı");
+        return json;
+      }catch(e){
+        console.warn("auth_callback access-state failed:", e);
+        return null;
       }
-
-      return json;
     }
 
-    async function resolvePostLoginTarget(next = ""){
-      const access = await getAccessState();
-
-      if (!access?.access_open) {
-        return MEMBERSHIP;
-      }
-
-      if (next) return next;
-      return HOME;
+    function resolvePostLoginTarget(next = ""){
+      return safePath(next) || MEMBERSHIP;
     }
 
     try{
@@ -156,36 +154,38 @@
         if (error){
           console.error("exchangeCodeForSession error:", error);
           showErr("OAuth exchange hatası: " + (error.message || "unknown"));
-          setTimeout(() => goLogin(next), 900);
+          setTimeout(() => goLogin(next || MEMBERSHIP), 900);
           throw error;
         }
       }
 
-      const s = await waitForSession();
-      if (!s){
+      const session = await waitForSession();
+      if (!session){
         showErr("Oturum bulunamadı. Tekrar giriş sayfasına yönlendiriliyor…");
-        setTimeout(() => goLogin(next), 900);
+        setTimeout(() => goLogin(next || MEMBERSHIP), 900);
         throw new Error("session_not_found");
       }
 
-      await ensureAuthAndCacheUser();
+      try{
+        await ensureAuthAndCacheUser();
+      }catch(e){
+        console.warn("auth_callback ensureAuthAndCacheUser failed:", e);
+      }
 
-      const target = await resolvePostLoginTarget(next);
+      await fetchAccessStateSafe(session);
+
+      const target = resolvePostLoginTarget(next);
       location.replace(target);
 
     }catch(e){
       console.error("auth_callback fatal:", e);
 
-      if (String(e?.message || "") !== "callback_lock") {
-        const next = getNextTarget();
-        setTimeout(() => {
-          location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}&e=auth` : `${LOGIN}?e=auth`);
-        }, 700);
-      }
-    } finally {
-      setTimeout(() => {
-        try{ sessionStorage.removeItem("italky_cb_lock_v5"); }catch{}
-      }, 10000);
+      try{
+        const { data:{ session } } = await supabase.auth.getSession();
+        if (session) {
+          location.replace(resolvePostLoginTarget(getNextTarget()));
+        }
+      }catch{}
     }
   </script>
 </body>
