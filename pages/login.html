@@ -229,6 +229,59 @@
     .footer-nav a:hover{ color:var(--neon); text-shadow:0 0 8px var(--neon); }
     .prestige-signature{ font-size:11px; font-weight:900; letter-spacing:1.2px; background:var(--signature-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
+    .update-modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      z-index:2147483647;
+      background:rgba(0,0,0,.72);
+      backdrop-filter:blur(12px);
+    }
+
+    .update-modal.show{ display:flex; }
+
+    .update-card{
+      width:min(100%,390px);
+      border-radius:24px;
+      padding:22px;
+      text-align:center;
+      background:linear-gradient(145deg,rgba(8,12,24,.98),rgba(15,8,24,.98));
+      border:1px solid rgba(0,242,255,.22);
+      box-shadow:0 24px 60px rgba(0,0,0,.52), 0 0 36px rgba(0,242,255,.12);
+    }
+
+    .update-title{
+      margin:0 0 10px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:22px;
+      font-weight:1000;
+    }
+
+    .update-text{
+      margin:0;
+      color:rgba(255,255,255,.82);
+      font-size:15px;
+      line-height:1.55;
+      font-weight:800;
+    }
+
+    .update-btn{
+      width:100%;
+      min-height:52px;
+      margin-top:18px;
+      border:none;
+      border-radius:18px;
+      background:var(--brand-grad);
+      color:#05060d;
+      font-family:inherit;
+      font-size:15px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
     #toast{ position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-120px); background:rgba(6,6,12,.95); border:1px solid var(--accent); padding:12px 24px; border-radius:999px; color:#fff; z-index:9999; font-weight:900; font-size:13px; transition:.3s ease; backdrop-filter:blur(15px); pointer-events:none; max-width:90vw; text-align:center; box-shadow:0 10px 30px rgba(0,242,255,.2); }
     #toast.show{ transform:translateX(-50%) translateY(0); }
   </style>
@@ -278,6 +331,15 @@
     </div>
     <div class="prestige-signature">italkyAI By Oyzigit's 2026 V8.1 </div>
   </footer>
+
+  <div id="updateModal" class="update-modal" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+    <div class="update-card">
+      <h2 id="updateTitle" class="update-title">Güncelleme Gerekli</h2>
+      <p class="update-text">Uygulamada güncelleme var. Lütfen uygulamayı güncelleyin.</p>
+      <button id="updatePlayBtn" class="update-btn" type="button">Play Store'da Güncelle</button>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script>
@@ -291,6 +353,7 @@
         let lastRun = 0;
         const wrapped = function(event){
           try{ event.preventDefault(); }catch(e){}
+          if(window.__italkyUpdateRequired) return;
           const now = Date.now();
           if(now - lastRun < 550) return;
           lastRun = now;
@@ -344,7 +407,12 @@
     const googleBtn = document.getElementById("googleBtn");
     const guestBtn = document.getElementById("guestBtn");
     const typeEl = document.getElementById("typewriter");
+    const updateModal = document.getElementById("updateModal");
+    const updatePlayBtn = document.getElementById("updatePlayBtn");
 
+    const MIN_REQUIRED_VERSION = 83;
+    const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+    const MARKET_INTENT_URL = "intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end";
     const MEMBERSHIP = "/pages/membership.html";
     const CALLBACK = "/pages/auth_callback.html";
     const GUEST_MODE_KEY = "italky_guest_mode_v1";
@@ -352,6 +420,7 @@
 
     let googlePressBusy = false;
     let guestPressBusy = false;
+    window.__italkyUpdateRequired = false;
 
     function toast(msg){
       if(!toastEl) return;
@@ -363,6 +432,7 @@
 
     function resetLoginButtons(){
       googlePressBusy = false;
+      if(window.__italkyUpdateRequired) return;
       if(googleBtn) googleBtn.disabled = false;
       if(guestBtn) guestBtn.disabled = false;
     }
@@ -372,6 +442,7 @@
       let lastRun = 0;
       const wrapped = (event) => {
         try{ event?.preventDefault?.(); }catch{}
+        if(window.__italkyUpdateRequired) return;
         const now = Date.now();
         if(now - lastRun < 550) return;
         lastRun = now;
@@ -410,6 +481,7 @@
     }
 
     function continueAsGuest(){
+      if(window.__italkyUpdateRequired) return;
       try{ localStorage.setItem(GUEST_MODE_KEY, "1"); }catch{}
       location.assign("/pages/login_entry.html");
     }
@@ -436,6 +508,49 @@
     }
 
     window.generateItalkyPromoCode = generateItalkyPromoCode;
+
+    function normalizeVersionCode(value){
+      const n = Number(String(value ?? "").trim());
+      return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    function readBridgeVersionCode(bridge){
+      try{
+        if(!bridge || typeof bridge.getVersionCode !== "function") return null;
+        return normalizeVersionCode(bridge.getVersionCode());
+      }catch{
+        return null;
+      }
+    }
+
+    function getNativeVersionCode(){
+      return readBridgeVersionCode(window.AndroidBridge) || readBridgeVersionCode(window.Native);
+    }
+
+    function openPlayStore(){
+      try{ location.href = MARKET_INTENT_URL; }catch{}
+      setTimeout(() => {
+        try{ location.href = PLAY_STORE_URL; }catch{}
+      }, 650);
+    }
+
+    function showUpdateRequired(){
+      window.__italkyUpdateRequired = true;
+      if(googleBtn) googleBtn.disabled = true;
+      if(guestBtn) guestBtn.disabled = true;
+      if(updateModal) updateModal.classList.add("show");
+    }
+
+    function checkAppUpdate(){
+      const versionCode = getNativeVersionCode();
+      if(versionCode === null) return;
+      if(versionCode < MIN_REQUIRED_VERSION) showUpdateRequired();
+    }
+
+    updatePlayBtn?.addEventListener("click", (event) => {
+      try{ event.preventDefault(); }catch{}
+      openPlayStore();
+    });
 
     async function grantSignupBonusOnce(){
       try{
@@ -478,6 +593,7 @@
     })();
 
     window.onNativeLoginSuccess = async function(payload){
+      if(window.__italkyUpdateRequired) return;
       try{
         const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
         const idToken = String(data?.id_token || data?.idToken || "").trim();
@@ -497,6 +613,7 @@
     };
 
     async function handleGooglePress(){
+      if(window.__italkyUpdateRequired) return;
       if(googlePressBusy) return;
       googlePressBusy = true;
       try{
@@ -519,6 +636,7 @@
     }
 
     function handleGuestPress(){
+      if(window.__italkyUpdateRequired) return;
       if(guestPressBusy) return;
       guestPressBusy = true;
       continueAsGuest();
@@ -547,8 +665,11 @@
       }
     }, 5600);
 
+    checkAppUpdate();
+
     (async function boot(){
       try{
+        if(window.__italkyUpdateRequired) return;
         const { data:{ session } } = await supabase.auth.getSession();
         if(!session) return;
         await routeAfterLogin();
