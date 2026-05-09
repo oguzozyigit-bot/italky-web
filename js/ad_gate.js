@@ -448,7 +448,7 @@ export async function runGuestRewardedAdFlow(options = {}) {
   const choice = await showGuestRewardChoice();
 
   if (choice === "login") {
-    location.href = "/pages/login.html";
+    location.href = "/pages/membership.html";
     return false;
   }
 
