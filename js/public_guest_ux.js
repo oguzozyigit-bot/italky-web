@@ -54,6 +54,16 @@ function shouldShowGuestCta() {
   return isGuestMode() && !hasCachedSupabaseSession() && !isAccessOpen();
 }
 
+function pauseGuestRewardTimersForGuide() {
+  try {
+    window.__ITALKY_GUIDE_MODE_ACTIVE__ = true;
+    const timers = window.__ITALKY_GUEST_REWARD_TIMERS__ || {};
+    Object.values(timers).forEach((controller) => {
+      try { controller?.stop?.(); } catch {}
+    });
+  } catch {}
+}
+
 function toast(message) {
   const value = String(message || "").trim();
   if (!value) return;
@@ -272,6 +282,8 @@ function guideCode() {
 }
 
 function showGuideStart() {
+  pauseGuestRewardTimersForGuide();
+
   const modal = setModalContent(
     "Rehber Modu",
     "Konuşmacı bir oda başlatır, dinleyiciler kod veya bağlantı ile katılır. Bu ilk sürüm yayın altyapısını kurmadan giriş akışını açar.",
