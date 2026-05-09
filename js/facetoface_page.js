@@ -171,33 +171,21 @@ function getPlaceholder(code) {
 }
 
 function getInstalledOfflinePairs() {
-  let webPairs = {};
-
   try {
-    const parsed = JSON.parse(localStorage.getItem(OFFLINE_INSTALLED_KEY) || "{}");
-    if (parsed && typeof parsed === "object") webPairs = parsed;
-  } catch {}
+    const localPairs = JSON.parse(localStorage.getItem(OFFLINE_INSTALLED_KEY) || "{}");
+    const localMap = localPairs && typeof localPairs === "object" ? localPairs : {};
 
-  let nativePairs = {};
+    if (!window.OfflineTranslate?.getInstalledOfflinePairs) return localMap;
 
-  try {
-    if (window.OfflineTranslate?.getInstalledOfflinePairs) {
-      const raw = window.OfflineTranslate.getInstalledOfflinePairs();
-      const parsed = typeof raw === "string" ? JSON.parse(raw || "{}") : raw;
-      if (parsed && typeof parsed === "object") nativePairs = parsed;
-    }
-  } catch {}
+    const nativePairs = JSON.parse(window.OfflineTranslate.getInstalledOfflinePairs() || "{}");
+    const nativeMap = nativePairs && typeof nativePairs === "object" ? nativePairs : {};
+    const merged = { ...localMap, ...nativeMap };
 
-  const merged = {
-    ...nativePairs,
-    ...webPairs
-  };
-
-  try {
     localStorage.setItem(OFFLINE_INSTALLED_KEY, JSON.stringify(merged));
-  } catch {}
-
-  return merged;
+    return merged;
+  } catch {
+    return {};
+  }
 }
 
 function getInstalledTargetLangsForNative(nativeLang) {
@@ -345,6 +333,8 @@ let liveTranscript = "";
 let latestPreviewTranscript = "";
 let recognitionSessionId = 0;
 let typewriterRunId = 0;
+let offlineSpeechEventsBound = false;
+let activeOfflineSpeechRecognizer = null;
 
 let altMenuEl = null;
 let holdTimer = null;
@@ -1083,7 +1073,10 @@ async function speak(text, langCode, tone = "neutral") {
     try {
       const ok = await playCachedAudio(cachedAudio, ++speakRunId);
       if (ok) return;
-    } catch {}
+    } catch {
+      showToast("Offline Ã§eviri baÅŸarÄ±sÄ±z");
+      return null;
+    }
   }
 
   const wantsApiVoice = ["mine", "second", "memory"].includes(selectedVoice);
@@ -1217,42 +1210,35 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
   const style = mode === "normal" ? "warm" : "balanced";
 
   if (currentRuntimeMode === "offline") {
-  try {
-    const offlineRaw = await offlineTranslateRequest({
-      from: src,
-      to: dst,
-      text: String(text || "").trim(),
-      sourceLang: src,
-      targetLang: dst,
-      source: src,
-      target: dst,
-      tone: canonTone(tone),
-      side: context.side || "",
-      targetSide: context.targetSide || "",
-      messageId: context.messageId || `${Date.now()}_${Math.random().toString(36).slice(2)}`
-    });
+    try {
+      const offlineRaw = await offlineTranslateRequest({
+        from: src,
+        to: dst,
+        text: String(text || "").trim(),
+        sourceLang: src,
+        targetLang: dst,
+        source: src,
+        target: dst,
+        tone: canonTone(tone),
+        side: context.side || "",
+        targetSide: context.targetSide || "",
+        messageId: context.messageId || `${Date.now()}_${Math.random().toString(36).slice(2)}`
+      });
 
-    const offlineValue = String(offlineRaw?.translatedText || "").trim();
-    if (offlineRaw?.ok && offlineValue) return offlineValue;
+      const offlineValue = String(offlineRaw?.translatedText || "").trim();
+      if (offlineRaw?.ok && offlineValue) return offlineValue;
 
-    const offlineError = String(offlineRaw?.error || "");
-
-    if (offlineError === "offline_engine_missing") {
-      showToast("Offline ceviri motoru bulunamadi");
-    } else if (offlineError === "offline_translate_timeout") {
-      showToast("Offline ceviri yanit vermedi");
-    } else if (offlineError === "offline_license_required") {
-      showToast("Offline ceviri icin lisans dogrulanamadi");
-    } else {
+      const offlineError = String(offlineRaw?.error || "");
+      if (offlineError === "offline_engine_missing") showToast("Offline ceviri motoru bulunamadi");
+      else if (offlineError === "offline_translate_timeout") showToast("Offline ceviri yanit vermedi");
+      else if (offlineError === "offline_license_required") showToast("Offline ceviri icin lisans dogrulanamadi");
+      else showToast("Offline ceviri basarisiz");
+      return null;
+    } catch {
       showToast("Offline ceviri basarisiz");
+      return null;
     }
-
-    return null;
-  } catch {
-    showToast("Offline ceviri basarisiz");
-    return null;
   }
-}
 
   const { data: { session } = {} } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
   const accessToken = session?.access_token || "";
@@ -1298,7 +1284,141 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
   return null;
 }
 
-function buildRecognizer(langCode) {
+const OFFLINE_SPEECH_NOT_READY_MESSAGE = "Offline konu\u015fma tan\u0131ma haz\u0131r de\u011fil";
+
+function buildSpeechResultEvent(text, isFinal = true) {
+  const item = [{ transcript: String(text || "") }];
+  item.isFinal = !!isFinal;
+  return { results: [item] };
+}
+
+function bindOfflineSpeechEvents() {
+  if (offlineSpeechEventsBound) return;
+  offlineSpeechEventsBound = true;
+
+  const prevNativeResult = window.onNativeSpeechResult;
+  window.onNativeSpeechResult = (side, text, isFinal = true) => {
+    try { prevNativeResult?.(side, text, isFinal); } catch {}
+    const rec = activeOfflineSpeechRecognizer;
+    if (rec && rec.side === side) rec.emitResult(text, isFinal !== false);
+  };
+
+  const prevNativeError = window.onNativeSpeechError;
+  window.onNativeSpeechError = (error) => {
+    try { prevNativeError?.(error); } catch {}
+    activeOfflineSpeechRecognizer?.handleNativeError(error);
+  };
+
+  window.addEventListener("offlineSpeechPartial", (e) => {
+    const d = e.detail || {};
+    const rec = activeOfflineSpeechRecognizer;
+    if (rec && rec.side === d.side) rec.emitResult(d.text, false);
+  });
+
+  window.addEventListener("offlineSpeechResult", (e) => {
+    const d = e.detail || {};
+    const rec = activeOfflineSpeechRecognizer;
+    if (rec && rec.side === d.side) rec.emitResult(d.text, true);
+  });
+
+  window.addEventListener("offlineSpeechError", (e) => {
+    const d = e.detail || {};
+    const rec = activeOfflineSpeechRecognizer;
+    if (!rec || (d.side && rec.side !== d.side)) return;
+    rec.fail(d.error || "offline_speech_error");
+  });
+
+  window.addEventListener("offlineSpeechStopped", (e) => {
+    const d = e.detail || {};
+    const rec = activeOfflineSpeechRecognizer;
+    if (!rec || (d.side && rec.side !== d.side)) return;
+    rec.finish();
+  });
+}
+
+function buildOfflineRecognizer(langCode, side) {
+  const lang = canonical(langCode);
+  const bcp = langObj(lang).bcp;
+  const nativeStart = window.Native?.startSpeechRecognition || window.Native?.startNativeSpeechRecognition;
+  const nativeStop = window.Native?.stopSpeechRecognition || window.Native?.stopNativeSpeechRecognition;
+  const offline = window.OfflineSpeech;
+
+  if (!nativeStart && !offline?.start) return null;
+
+  bindOfflineSpeechEvents();
+
+  return {
+    lang: bcp,
+    side,
+    mode: "",
+    ended: false,
+    onstart: null,
+    onresult: null,
+    onerror: null,
+    onend: null,
+    start() {
+      activeOfflineSpeechRecognizer = this;
+      this.onstart?.();
+
+      if (nativeStart) {
+        this.mode = "native";
+        try {
+          nativeStart.call(window.Native, bcp, side);
+          return;
+        } catch {}
+      }
+
+      if (!this.startOfflineFallback()) {
+        this.fail("offline_speech_not_ready");
+      }
+    },
+    stop() {
+      try {
+        if (this.mode === "native") nativeStop?.call(window.Native);
+        else if (this.mode === "offline") offline?.stop?.();
+      } catch {}
+      setTimeout(() => this.finish(), 700);
+    },
+    emitResult(text, isFinal = true) {
+      const value = String(text || "").trim();
+      if (!value || this.ended) return;
+      this.onresult?.(buildSpeechResultEvent(value, isFinal));
+      if (isFinal) this.finish();
+    },
+    handleNativeError() {
+      if (this.ended) return;
+      if (this.mode === "native" && this.startOfflineFallback()) return;
+      this.fail("offline_speech_not_ready");
+    },
+    startOfflineFallback() {
+      if (!offline?.start) return false;
+      try {
+        if (offline.isReady && !offline.isReady(lang)) return false;
+        this.mode = "offline";
+        offline.start(lang, side);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    finish() {
+      if (this.ended) return;
+      this.ended = true;
+      if (activeOfflineSpeechRecognizer === this) activeOfflineSpeechRecognizer = null;
+      this.onend?.();
+    },
+    fail(error) {
+      if (this.ended) return;
+      this.ended = true;
+      if (activeOfflineSpeechRecognizer === this) activeOfflineSpeechRecognizer = null;
+      this.onerror?.({ error });
+    }
+  };
+}
+
+function buildRecognizer(langCode, side = "") {
+  if (currentRuntimeMode === "offline") return buildOfflineRecognizer(langCode, side);
+
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
 
@@ -1370,10 +1490,7 @@ async function finalizeRecognition(side, text) {
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(cleaned, src, dst, sourceTone, {
-  side,
-  targetSide: other
-});
+  const tr = await translateText(cleaned, src, dst, sourceTone, { side, targetSide: other });
 
   if (!tr) {
     setErrorUI();
@@ -1420,10 +1537,7 @@ async function finalizeTypedMessage(side, rawText) {
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(text, src, dst, tone, {
-  side,
-  targetSide: other
-});
+  const tr = await translateText(text, src, dst, tone, { side, targetSide: other });
 
   if (!tr) {
     setErrorUI();
@@ -1539,10 +1653,15 @@ function startRecording(side) {
   setInputPlaceholder(side, "");
 
   const lang = side === "top" ? topLang : botLang;
-  const rec = buildRecognizer(lang);
+  const rec = buildRecognizer(lang, side);
 
   if (!rec) {
     setErrorUI();
+    if (currentRuntimeMode === "offline") {
+      showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
+      bounceToReady(1800);
+      return;
+    }
     showToast("Bu cihazda konuşma algılama desteklenmiyor");
     bounceToReady(1800);
     return;
@@ -1580,6 +1699,17 @@ function startRecording(side) {
 
   rec.onerror = (e) => {
     if (mySessionId !== recognitionSessionId) return;
+
+    if (currentRuntimeMode === "offline") {
+      showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
+      recognizer = null;
+      recordingSide = null;
+      liveTranscript = "";
+      latestPreviewTranscript = "";
+      setErrorUI();
+      bounceToReady(1600);
+      return;
+    }
 
     if (String(e?.error || "").includes("not-allowed")) showToast("Mikrofon izni gerekli");
     else showToast("Mikrofon hatası");
