@@ -9,36 +9,84 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet"/>
 
   <style>
-    :root{
-      --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
-      --bg:#050508;
-      --border:rgba(255,255,255,.15);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
+    :root {
+      --ai-gradient: linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      --border: rgba(255,255,255,.15);
+      --safe-bottom: env(safe-area-inset-bottom,0px);
+
+      /* DİNAMİK TEMA DEĞİŞKENLERİ (STANDART GECE MAVİSİ) */
+      --theme-bg: #050508;
+      --top-glow: rgba(236,72,153,.06);
+      --bot-glow: rgba(99,102,241,.06);
+      --half-top-bg: rgba(128,19,54,.18);
+      --half-bot-bg: rgba(30,58,138,.18);
+      --hub-bg: rgba(0,0,0,.58);
+      --hub-border: rgba(255,255,255,.05);
+      --mic-glow-1: rgba(99,102,241,.12);
+      --mic-glow-2: rgba(99,102,241,.45);
+      --mic-glow-3: rgba(236,72,153,.25);
+    }
+
+    /* BLUETOOTH (YÜZ YÜZE) MODU - UZAY MAVİSİ / MOR */
+    body.bt-active {
+      --theme-bg: #02000a;
+      --top-glow: rgba(168,85,247,.09);
+      --bot-glow: rgba(59,130,246,.09);
+      --half-top-bg: rgba(168,85,247,.12);
+      --half-bot-bg: rgba(59,130,246,.12);
+      --hub-bg: rgba(2,0,10,.8);
+      --hub-border: rgba(168,85,247,.2);
+      --mic-glow-1: rgba(168,85,247,.15);
+      --mic-glow-2: rgba(168,85,247,.5);
+      --mic-glow-3: rgba(59,130,246,.3);
+    }
+
+    /* REHBER (HOST) MODU - CANLI YAYIN KIRMIZISI */
+    body.guide-host {
+      --theme-bg: #0a0000;
+      --top-glow: rgba(239,68,68,.09);
+      --bot-glow: rgba(245,158,11,.09);
+      --half-top-bg: rgba(239,68,68,.12);
+      --half-bot-bg: rgba(220,38,38,.12);
+      --hub-bg: rgba(10,0,0,.8);
+      --hub-border: rgba(239,68,68,.2);
+      --mic-glow-1: rgba(239,68,68,.15);
+      --mic-glow-2: rgba(239,68,68,.5);
+      --mic-glow-3: rgba(245,158,11,.3);
+    }
+
+    /* DİNLEYİCİ (LISTENER) MODU - ZÜMRÜT YEŞİLİ */
+    body.guide-listener {
+      --theme-bg: #000a04;
+      --top-glow: rgba(34,197,94,.09);
+      --bot-glow: rgba(16,185,129,.09);
+      --half-top-bg: rgba(34,197,94,.12);
+      --half-bot-bg: rgba(16,185,129,.12);
+      --hub-bg: rgba(0,10,4,.8);
+      --hub-border: rgba(34,197,94,.2);
+      --mic-glow-1: rgba(34,197,94,.15);
+      --mic-glow-2: rgba(34,197,94,.5);
+      --mic-glow-3: rgba(16,185,129,.3);
     }
 
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:Outfit,Arial,sans-serif}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;color:#fff;font-family:Outfit,Arial,sans-serif}
 
-    body{
-      background:
-        radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),
-        radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),
-        #050508;
-      transition: background 0.5s ease;
+    body {
+      background-color: var(--theme-bg);
+      background-image: radial-gradient(circle at top, var(--top-glow), transparent 25%), radial-gradient(circle at bottom, var(--bot-glow), transparent 25%);
+      transition: background-color 0.8s ease;
     }
 
-    /* BLUETOOTH EFEKTLERİ */
-    body.bt-active { background: #020617; }
+    /* GİZLEME / GÖSTERME KURALLARI */
     body.bt-active .half-screen.top { transform: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
     body.bt-active .half-screen.top .mic-line { display: none !important; }
     body.bt-active #topLangBtn { pointer-events: none; opacity: 0.8; }
     body.bt-active #btToggleBtn { color: #f87171; border-color: rgba(248,113,113,0.5); background: rgba(239,68,68,0.15); box-shadow: 0 0 15px rgba(239,68,68,0.3); }
 
-    /* REHBER MODU EFEKTLERİ (TAM EKRAN ODAKLI) */
     body.guide-active .half-screen.top { display: none !important; }
     body.guide-active .half-screen.bottom { height: 100%; flex: 1; padding-top: 15px; } 
-    body.guide-active .center-hub { background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    
+    body.guide-active .center-hub { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     body.guide-listener #botMic { display: none !important; } 
     body.guide-listener #handsFreeToggle { display: none !important; } 
     body.guide-listener .mic-line { display: flex; justify-content: center; } 
@@ -46,931 +94,334 @@
 
     .container{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-    .edge-handle{
-      position:fixed; top:50%; transform:translateY(-50%); z-index:998; width:28px; height:118px;
-      border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
-      backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:#fff;
-      font-family:Outfit,Arial,sans-serif; font-size:11px; font-weight:1000; line-height:1.15;
-      text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30);
-    }
-    .edge-handle.open{ right:0; border-radius:18px 0 0 18px; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-right:none; box-shadow:-10px 0 32px rgba(0,0,0,.30); }
-    .edge-handle.open::before { content: "M\A E\A N\A U"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
-    .edge-handle.clear{ left:0; border-radius:0 18px 18px 0; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-left:none; box-shadow:10px 0 32px rgba(0,0,0,.30); }
-    .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
-    .edge-handle:active{transform:translateY(-50%) scale(.96)}
+    /* DİĞER CSS KURALLARI (BUTONLAR, DRAWER VS.) */
+    .edge-handle{ position:fixed; top:50%; transform:translateY(-50%); z-index:998; width:28px; height:118px; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(14px); color:#fff; font-size:11px; font-weight:1000; text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30); }
+    .edge-handle.open{ right:0; border-radius:18px 0 0 18px; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-right:none; }
+    .edge-handle.open::before { content: "M\A E\A N\A U"; white-space: pre; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+    .edge-handle.clear{ left:0; border-radius:0 18px 18px 0; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-left:none; }
+    .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; text-shadow: 0 0 12px rgba(255,255,255,.28); }
 
-    .drawer-backdrop{ position:fixed; inset:0; z-index:2147483646; display:none; background:rgba(0,0,0,.48); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+    .drawer-backdrop{ position:fixed; inset:0; z-index:1000; display:none; background:rgba(0,0,0,.48); backdrop-filter:blur(6px); }
     .drawer-backdrop.show{display:block}
-    .side-drawer{
-      position:absolute; top:0; right:0; width:min(86vw,360px); height:100%;
-      padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));
-      background: radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%), radial-gradient(circle at bottom left,rgba(236,72,153,.10),transparent 30%), linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98));
-      border-left:1px solid rgba(255,255,255,.10); box-shadow:-24px 0 70px rgba(0,0,0,.52); transform:translateX(102%); transition:transform .24s ease; overflow:auto; scrollbar-width:none;
-    }
+    .side-drawer{ position:absolute; top:0; right:0; width:min(86vw,360px); height:100%; padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px)); background: radial-gradient(circle at top right,rgba(56,189,248,.16),transparent 34%), linear-gradient(180deg,rgba(7,15,30,.98),rgba(5,8,18,.98)); box-shadow:-24px 0 70px rgba(0,0,0,.52); transform:translateX(102%); transition:transform .24s ease; display:flex; flex-direction:column; }
     .drawer-backdrop.show .side-drawer{transform:translateX(0)}
-    .side-drawer::-webkit-scrollbar{display:none}
-
-    .drawer-logo-row{ margin:4px 0 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
-    .drawer-logo{min-width:0;text-align:left}
-    .drawer-logo-main{ font-family:"Space Grotesk",sans-serif; font-size:30px; line-height:1; font-weight:900; letter-spacing:-1px; }
+    .drawer-logo-main{ font-family:"Space Grotesk",sans-serif; font-size:30px; font-weight:900; }
     .drawer-logo-main .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .drawer-logo-sub{ margin-top:7px; display:block; color:rgba(255,255,255,.82); font-size:11px; font-weight:1000; letter-spacing:1.8px; }
+    .drawer-card{ border-radius:24px; padding:14px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.10); margin-bottom:14px; }
+    .drawer-label{ font-size:11px; font-weight:1000; color:rgba(255,255,255,.58); text-transform:uppercase; margin-bottom:10px; }
+    .drawer-scroll{ flex:1 1 auto; overflow-y:auto; scrollbar-width:none; }
+    .drawer-scroll::-webkit-scrollbar{ display:none; }
 
-    .holo-container{ width: 140px; height: 140px; position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 24px auto 30px; }
-    .crystal-cage{ position: absolute; width: 100px; height: 100px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
-    .crystal-side{ position: absolute; inset: 0; border: 2px solid rgba(103,232,249,.42); background: radial-gradient(circle, rgba(129,140,248,.12), transparent); box-shadow: 0 0 18px rgba(103,232,249,.22); }
-    .side1{ transform: rotateY(0deg) translateZ(50px); } .side2{ transform: rotateY(90deg) translateZ(50px); } .side3{ transform: rotateY(180deg) translateZ(50px); }
-    .side4{ transform: rotateY(270deg) translateZ(50px); } .side5{ transform: rotateX(90deg) translateZ(50px); } .side6{ transform: rotateX(-90deg) translateZ(50px); }
-    .holo-qr{ position: absolute; width: 72px; height: 72px; z-index: 2; overflow: visible; display: flex; align-items: center; justify-content: center; animation: floatQR 4s ease-in-out infinite; }
-    .ai-planet{ background: transparent; box-shadow: none; }
-    .planet-glow{ position: absolute; inset: -12px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%), radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%); filter: blur(12px); animation: planetGlow 3.2s ease-in-out infinite; z-index: 1; }
-    .planet-core{ position: relative; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 2; background: radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%), radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%), radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%), linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%); box-shadow: inset -10px -12px 20px rgba(0,0,0,.72), inset 10px 12px 22px rgba(255,255,255,.04), inset 0 0 26px rgba(255,255,255,.04), 0 0 18px rgba(255,255,255,.10), 0 0 34px rgba(103,232,249,.20), 0 0 64px rgba(129,140,248,.18); animation: planetBreath 2.8s ease-in-out infinite; }
-    .planet-core::before{ content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 0 12px rgba(255,255,255,.05); }
-    .planet-core::after{ content: ""; position: absolute; left: 12px; top: 10px; width: 22px; height: 10px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%); filter: blur(2px); transform: rotate(-18deg); opacity: .9; }
-    .planet-rays{ position: absolute; inset: -12px; border-radius: 50%; pointer-events: none; z-index: 1; }
-    .planet-rays::before, .planet-rays::after{ content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0deg 18deg, rgba(255,255,255,.28) 24deg, transparent 36deg 62deg, rgba(255,255,255,.16) 70deg, transparent 84deg 116deg, rgba(255,255,255,.22) 124deg, transparent 136deg 180deg, rgba(255,255,255,.18) 192deg, transparent 206deg 250deg, rgba(255,255,255,.24) 258deg, transparent 270deg 310deg, rgba(255,255,255,.15) 318deg, transparent 330deg 360deg); mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%); -webkit-mask: radial-gradient(circle, transparent 46%, #000 66%, transparent 76%); filter: blur(1px); opacity: .55; animation: planetRaySpin 12s linear infinite; }
-    .planet-rays::after{ opacity: .35; transform: scale(1.14); animation-duration: 18s; animation-direction: reverse; }
-    .planet-center{ position: relative; z-index: 3; display: flex; align-items: center; justify-content: center; }
-    .planet-ai-badge{ position: relative; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20); backdrop-filter: blur(10px); }
-    .planet-ai-badge::before{ content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(255,255,255,.10); }
-    .planet-ai-badge::after{ content: ""; position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.10); animation: aiSpin 8s linear infinite; }
-    .planet-ai-badge span{ position: relative; z-index: 2; font-family: 'Space Grotesk',sans-serif; font-size: 11px; font-weight: 900; letter-spacing: .5px; color: #fff; text-shadow: 0 0 12px rgba(255,255,255,.22); }
-    @keyframes rotateCrystal{ from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
-    @keyframes floatQR{ 0%,100%{ transform:translateY(0) rotateX(0deg); } 50%{ transform:translateY(-8px) rotateX(5deg); } }
-    @keyframes planetBreath{ 0%,100%{ transform:scale(1); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 22px rgba(255,255,255,.04),inset 0 0 26px rgba(255,255,255,.04),0 0 18px rgba(255,255,255,.10),0 0 34px rgba(103,232,249,.20),0 0 64px rgba(129,140,248,.18); } 50%{ transform:scale(1.045); box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),inset 10px 12px 24px rgba(255,255,255,.05),inset 0 0 28px rgba(255,255,255,.06),0 0 22px rgba(255,255,255,.12),0 0 42px rgba(103,232,249,.28),0 0 78px rgba(129,140,248,.24); } }
-    @keyframes planetGlow{ 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.92; transform:scale(1.16); } }
-    @keyframes planetRaySpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
-    @keyframes aiSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
-
-    .drawer-links{ display:grid; gap:9px; margin-top: 14px;}
-    .drawer-link{ min-height:50px; border-radius:18px; text-decoration:none; color:#fff; border:1px solid rgba(96,165,250,.18); display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 13px; font-size:14px; font-weight:1000; cursor:pointer; position:relative; overflow:hidden; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); box-shadow:inset 0 1px 0 rgba(255,255,255,.045); background:rgba(15,39,66,.44); font-family:inherit; }
-    .drawer-link::before{ content:""; position:absolute; inset:0; opacity:.9; pointer-events:none; background: radial-gradient(circle at left,rgba(56,189,248,.12),transparent 55%), linear-gradient(135deg,rgba(255,255,255,.035),rgba(15,39,66,.20)); }
-    .drawer-link span, .drawer-link small{ position:relative; z-index:2; }
-    .drawer-link:active{transform:scale(.985)}
-    .drawer-link small{ color:rgba(255,255,255,.56); font-size:12px; font-weight:1000; }
+    .my-lang-btn{ width:100%; min-height:50px; border-radius:18px; background:rgba(255,255,255,.065); border:1px solid rgba(255,255,255,.10); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 12px; font-size:14px; font-weight:900; cursor:pointer; }
+    .drawer-link{ min-height:50px; border-radius:18px; color:#fff; border:1px solid rgba(96,165,250,.18); display:flex; align-items:center; justify-content:space-between; padding:0 13px; font-size:14px; font-weight:1000; text-decoration:none; margin-bottom:9px; background:rgba(15,39,66,.44); }
+    .drawer-link.locked{ opacity: 0.6; }
     
-    .premium-link { border: 1px solid rgba(236,72,153,.4); background: rgba(236,72,153,.15); }
-    .premium-link::before { background: radial-gradient(circle at left,rgba(236,72,153,.2),transparent 55%), linear-gradient(135deg,rgba(255,255,255,.035),rgba(236,72,153,.20)); }
-    .offline-menu-btn { border-color: rgba(34,197,94,0.4); }
-    .shortcut-btn { border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.1); }
+    /* LOGIN & PROFİL TASARIMI */
+    .google-login-btn{ margin-top:14px; width:100%; min-height:56px; border-radius:18px; background:linear-gradient(135deg,#fff7ed 0%,#fb923c 100%); color:#202124; font-size:14px; font-weight:1000; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; border:none; box-shadow:0 16px 32px rgba(251,146,60,.16); }
+    .user-profile-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); margin-top: 14px; }
+    .user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #333; }
+    .user-info { flex: 1; display: flex; flex-direction: column; }
+    .user-name { font-size: 14px; font-weight: 900; color: #fff; }
+    .user-status { font-size: 11px; color: #86efac; font-weight: 700; margin-top: 2px; }
+    .logout-btn { background: rgba(239,68,68,.15); color: #fca5a5; border: none; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 800; cursor: pointer; }
 
-    .drawer-footer-seal{ margin-top:14px; padding:11px 10px 2px; text-align:center; color:rgba(255,255,255,.46); font-size:11px; font-weight:1000; letter-spacing:.4px; }
-    .drawer-footer-seal .ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .half-screen{ flex:1; position:relative; display:flex; flex-direction:column; justify-content:space-between; align-items:center; padding:10px 8px; transition: background 0.8s ease; }
+    .half-screen.top{ transform:rotate(180deg); background:linear-gradient(180deg,var(--half-top-bg),transparent); }
+    .half-screen.bottom{ background:linear-gradient(180deg,var(--half-bot-bg),transparent); padding-bottom:calc(4px + var(--safe-bottom)); }
 
-    .half-screen{ flex:1; min-height:0; position:relative; display:flex; flex-direction:column; justify-content:space-between; align-items:center; overflow:hidden; padding:10px 8px; transition: all 0.3s ease;}
-    .half-screen.top{ transform:rotate(180deg); background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg)); }
-    .half-screen.bottom{ background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg)); padding-bottom:calc(4px + var(--safe-bottom)); }
+    .center-hub{ height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; position:relative; background:var(--hub-bg); backdrop-filter:blur(16px); z-index:50; border-top:1px solid var(--hub-border); border-bottom:1px solid var(--hub-border); padding: 0 45px; transition: background 0.8s ease, border-color 0.8s ease;}
+    .hub-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; outline: none; z-index: 10; }
+    .orb{ width:66px; height:66px; border-radius:50%; background:#000; border:1px solid rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; z-index: 5;}
+    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-    .lang-row{ width:100%; display:flex; align-items:center; justify-content:center; z-index:20; }
-    .lang-trigger{ min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:82vw; padding:8px 14px; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+    .mic-line{ width:100%; display:grid; grid-template-columns:1fr 70px 1fr; align-items:center; gap:12px; padding:0 8px 0; transform:translateY(-8px); }
+    .mic-btn{ width:70px; height:70px; border:none; border-radius:999px; background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06)); border:1px solid rgba(255,255,255,.18); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .mic-btn.listening{ background: radial-gradient(circle at 50% 35%, rgba(255,255,255,.3), var(--mic-glow-1) 44%, transparent); box-shadow: 0 0 0 10px var(--mic-glow-1), 0 0 34px var(--mic-glow-2), 0 0 70px var(--mic-glow-3); animation: micBreath 1.05s infinite; }
+    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
 
-    .popover{ position:absolute; left:50%; transform:translateX(-50%); width:min(92vw,360px); height:360px; background:#0a0a0f; border:1px solid var(--border); border-radius:24px; display:none; flex-direction:column; z-index:100; overflow:hidden; box-shadow:0 22px 60px rgba(0,0,0,.92); }
-    .popover.show{display:flex}
-    .half-screen.top .popover{top:58px}
-    .half-screen.bottom .popover{bottom:58px}
-
-    .pop-head{ padding:14px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; justify-content:space-between; align-items:center; font-weight:900; }
-    .pop-close{ cursor:pointer; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
-    .pop-list{ flex:1; overflow-y:auto; padding:10px; scrollbar-width:none; }
-    .pop-list::-webkit-scrollbar{display:none}
-
-    .pop-item{ padding:12px; border-radius:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; border:1px solid transparent; }
-    .pop-item.active{ background:rgba(99,102,241,.14); border-color:rgba(99,102,241,.25); }
-    .pop-left{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
-    .pop-flag{font-size:18px}
-    .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pop-code{font-size:12px;font-weight:900;opacity:.7}
-    .pop-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
-
-    .chat-body{ flex:1; width:100%; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:14px; padding:18px 0 18px; text-align:center; scrollbar-width:none; mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent); }
-    .chat-body::before{ content:""; flex:1 0 auto; min-height:12px; }
-    .chat-body::-webkit-scrollbar{ display:none; width:0; height:0; }
-    .bubble{ max-width:86%; line-height:1.18; word-break:break-word; font-size:24px; font-weight:900; opacity:.9; text-align:center; }
+    .lang-trigger{ min-height:38px; border:none; border-radius:999px; background:transparent; color:#fff; font-size:13px; font-weight:900; cursor:pointer; padding:8px 14px; }
+    .chat-body{ flex:1; width:100%; overflow-y:auto; display:flex; flex-direction:column; align-items:center; gap:14px; padding:18px 0; text-align:center; scrollbar-width:none; mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent); }
+    .bubble{ max-width:86%; line-height:1.18; font-size:24px; font-weight:900; opacity:.9; }
     .bubble.latest{ font-size:32px; font-weight:1000; opacity:1; }
 
-    .mic-line{ width:100%; display:grid; grid-template-columns:1fr 70px 1fr; align-items:center; gap:12px; padding:0 8px 0; flex:0 0 auto; transform:translateY(-8px); }
-    .mic-side{ min-height:60px; display:flex; align-items:center; justify-content:center; }
-    
-    .mic-btn{ width:70px; height:70px; border:none; border-radius:999px; background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06)); border:1px solid rgba(255,255,255,.18); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08); position:relative; }
-    .mic-btn svg{ width:30px; height:30px; stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-    .mic-btn.listening{ background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12)); box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10); animation:micBreath 1.05s ease-in-out infinite; }
-    .mic-btn.listening::after{ content:""; position:absolute; inset:-13px; border-radius:50%; border:2px solid rgba(165,180,252,.78); box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35); animation:micPulse 1s ease-out infinite; }
-
-    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
-    @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
-
-    .hf-btn{ background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.7); padding: 8px 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.3s ease; outline: none; }
-    .hf-btn:active{ transform: scale(0.95); }
-    .hf-btn.active{ background: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.5); color: #d8b4fe; box-shadow: 0 0 15px rgba(168,85,247,0.25); }
-    .hf-btn svg{ width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-
-    .center-hub{ height:82px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; position:relative; background:rgba(0,0,0,.58); backdrop-filter:blur(16px); z-index:50; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05); padding: 0 45px;}
-    .hub-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; outline: none; z-index: 10; }
-    .hub-btn:active { transform: scale(0.9); }
-    
-    .orb-wrapper { position: relative; width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; }
-    .orb{ width:66px; height:66px; border-radius:50%; background:#000; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:"Space Grotesk",sans-serif; font-size:13px; font-weight:900; z-index: 5;}
-    .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    
-    .satellite-orbit { position: absolute; width: 100px; height: 100px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.03); animation: spin 6s linear infinite; }
-    .satellite { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 0; left: 50%; margin-left: -4px; }
-    .sat-blue { background: #6366f1; box-shadow: 0 0 12px #6366f1; }
-    .sat-pink { background: #ec4899; box-shadow: 0 0 12px #ec4899; top: auto; bottom: 0; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-    .modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2147483647; padding:20px; }
+    .modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:9999; padding:20px; }
     .modal.show{display:flex}
-    .modal-card{ width:min(100%,420px); border-radius:24px; padding:22px; background:linear-gradient(145deg,#0f172a,#1e293b); border:1px solid rgba(59,130,246,.4); box-shadow:0 24px 50px rgba(0,0,0,.50); text-align: center; }
+    .modal-card{ width:min(100%,420px); border-radius:24px; padding:22px; background:linear-gradient(145deg,#0f172a,#1e293b); border:1px solid rgba(59,130,246,.4); text-align: center; }
     .modal-title{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:900; color:#93c5fd;}
-    .modal-text{margin:0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85);white-space:pre-line}
-    .modal-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px}
-    .modal-btn{ min-height:48px; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:900; }
+    .modal-text{margin:0 0 16px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85);}
+    .modal-btn{ min-height:48px; border:none; border-radius:16px; cursor:pointer; font-size:14px; font-weight:900; margin-bottom:10px; width: 100%;}
     .modal-btn.primary{background:var(--ai-gradient);color:#05060d}
     .modal-btn.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff}
 
-    .square-qr-container { position: relative; width: 200px; height: 200px; margin: 30px auto; display: flex; align-items: center; justify-content: center; }
-    .square-spinner { position: absolute; inset: 0; border: 4px dashed rgba(103,232,249,0.7); border-radius: 16px; animation: spinSquare 10s linear infinite; box-shadow: 0 0 15px rgba(103,232,249,0.2), inset 0 0 15px rgba(103,232,249,0.2); }
-    .square-spinner-inner { position: absolute; inset: -14px; border: 2px solid rgba(236,72,153,0.4); border-radius: 22px; animation: spinSquare 15s linear infinite reverse; }
-    .qr-wrapper { position: relative; z-index: 5; background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    .qr-wrapper img { width: 140px; height: 140px; display: block; }
-    @keyframes spinSquare { 100% { transform: rotate(360deg); } }
-
-    .toast{ position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px); max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px; background:rgba(12,16,28,.98); border:1px solid rgba(255,255,255,.15); color:#fff; font-size:12px; font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center; z-index:2147483647; box-shadow:0 18px 36px rgba(0,0,0,.45); transition:.22s ease; pointer-events:none; }
+    .toast{ position:fixed; left:50%; top:30px; transform:translateX(-50%) translateY(-120px); padding:11px 16px; border-radius:16px; background:rgba(12,16,28,.98); border:1px solid rgba(255,255,255,.15); color:#fff; font-size:12px; font-weight:1000; display:flex; align-items:center; justify-content:center; z-index:10000; transition:.22s ease; pointer-events:none; }
     .toast.show{transform:translateX(-50%) translateY(0)}
 
-    @media(max-width:390px){
-      .mic-line{grid-template-columns:1fr 66px 1fr;gap:8px;transform:translateY(-7px)}
-      .mic-btn{width:66px;height:66px} .mic-btn svg{width:28px;height:28px}
-      .bubble{font-size:22px} .bubble.latest{font-size:30px}
-    }
+    .popover{ position:absolute; left:50%; transform:translateX(-50%); width:min(92vw,360px); height:360px; background:#0a0a0f; border:1px solid var(--border); border-radius:24px; display:none; flex-direction:column; z-index:100; box-shadow:0 22px 60px rgba(0,0,0,.92); }
+    .popover.show{display:flex}
+    .half-screen.top .popover{top:58px} .half-screen.bottom .popover{bottom:58px}
+    .pop-head{ padding:14px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; justify-content:space-between; align-items:center; font-weight:900; }
+    .pop-list{ flex:1; overflow-y:auto; padding:10px; scrollbar-width:none; }
+    .pop-item{ padding:12px; border-radius:16px; display:flex; align-items:center; gap:12px; cursor:pointer; }
   </style>
 </head>
 
 <body>
-  <button id="sideClearBtn" class="edge-handle clear" type="button" aria-label="Ekranı temizle"></button>
-  <button id="drawerEdgeBtn" class="edge-handle open" type="button" aria-label="Menüyü aç"></button>
+  <button id="sideClearBtn" class="edge-handle clear" type="button"></button>
+  <button id="drawerEdgeBtn" class="edge-handle open" type="button"></button>
 
   <div id="drawerBackdrop" class="drawer-backdrop">
-    <aside class="side-drawer" role="dialog" aria-label="italkyAI menü">
-      
-      <div class="drawer-logo-row">
-        <div class="drawer-logo">
-          <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
-          <div class="drawer-logo-sub">BE FREE</div>
+    <aside class="side-drawer" role="dialog">
+      <div style="flex:0 0 auto;">
+        <div class="drawer-logo-main">italky<span class="ai">AI</span></div>
+        <div style="margin:20px 0 10px;">
+           <div class="drawer-label">Uygulama Dili</div>
+           <select id="siteLangSelect" class="my-lang-btn" style="appearance:none; outline:none;">
+              <option value="tr">🇹🇷 Türkçe</option>
+              <option value="en">🇬🇧 English</option>
+           </select>
         </div>
       </div>
 
-      <div class="holo-container">
-        <div class="crystal-cage">
-          <div class="crystal-side side1"></div>
-          <div class="crystal-side side2"></div>
-          <div class="crystal-side side3"></div>
-          <div class="crystal-side side4"></div>
-          <div class="crystal-side side5"></div>
-          <div class="crystal-side side6"></div>
+      <div class="drawer-scroll">
+        <a class="drawer-link" href="/pages/text_translate_public.html"><span>1. Yazıdan Çeviri</span></a>
+        <a class="drawer-link" href="/pages/game_menu_public.html"><span>2. Eğlenerek Öğren</span></a>
+        <button class="drawer-link locked locked-feature" data-feature="SohbetAI" type="button"><span>3. SohbetAI</span><small>🔒</small></button>
+        <button class="drawer-link locked locked-feature" data-feature="Ataların Dili" type="button"><span>4. Ataların Dili</span><small>🔒</small></button>
+        <button class="drawer-link locked locked-feature" data-feature="Seviye Tespit" type="button"><span>5. Seviye Tespit</span><small>🔒</small></button>
+      </div>
+
+      <div style="flex:0 0 auto; padding-top:8px;">
+        <!-- LOGGED OUT VIEW -->
+        <div id="loggedOutView">
+          <button id="drawerLoginBtn" class="google-login-btn" type="button">
+             <span>Google ile Giriş Yap</span>
+          </button>
+          <div style="margin-top:10px; font-size:11px; text-align:center; color:rgba(255,255,255,0.6);">
+             Reklamsız deneyim ve offline paketler için üye olun.
+          </div>
         </div>
 
-        <div class="holo-qr ai-planet" aria-hidden="true">
-          <div class="planet-glow"></div>
-          <div class="planet-rays"></div>
-          <div class="planet-core">
-            <div class="planet-center">
-              <div class="planet-ai-badge">
-                <span>AI</span>
-              </div>
-            </div>
+        <!-- LOGGED IN VIEW -->
+        <div id="loggedInView" style="display: none;">
+          <div class="user-profile-card">
+             <img id="userAvatar" src="" class="user-avatar" alt="Avatar">
+             <div class="user-info">
+                <div id="userName" class="user-name">Kullanıcı</div>
+                <div id="userStatus" class="user-status">Premium Üye</div>
+             </div>
+             <button id="drawerLogoutBtn" class="logout-btn">Çıkış</button>
           </div>
         </div>
       </div>
-
-      <nav class="drawer-links">
-        <a class="drawer-link premium-link" id="premiumBtn" style="display: none !important;"><span>🌟 Premium (Reklamsız)</span><small>›</small></a>
-        <a class="drawer-link offline-menu-btn" id="menuOfflineBtn" style="display: none !important;"><span>📥 Offline Dil Paketleri</span><small>›</small></a>
-        <a class="drawer-link shortcut-btn" id="addShortcutBtn"><span>📲 Ana Ekrana Kısayol Ekle</span><small>›</small></a>
-        
-        <a class="drawer-link" href="/pages/text_translate_public.html"><span>Yazıdan Çeviri</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/game_menu_public.html"><span>Eğlenerek Öğren</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/level_test_public.html"><span>Seviye Tespit</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/about.html"><span>Hakkımızda</span><small>›</small></a>
-        <a class="drawer-link" href="/pages/privacy.html"><span>Gizlilik</span><small>›</small></a>
-        <a class="drawer-link" onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'"><span>⭐ Bizi Puanla</span><small>›</small></a>
-      </nav>
-
-      <div class="drawer-footer-seal">italky<span class="ai">AI</span> By Ozyigit's 2026</div>
     </aside>
   </div>
 
   <main class="container">
     <section class="half-screen top" id="topSection">
-      <div class="lang-row">
-        <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-      </div>
-      <div class="popover" id="pop-top">
-        <div class="pop-head"><div id="topPopTitle">KARŞI DİL</div><div class="pop-close" id="close-top">✕</div></div>
-        <div class="pop-list" id="list-top"></div>
-      </div>
+      <div class="lang-row"><button id="topLangBtn" class="lang-trigger" type="button">🌐 Seçiliyor...</button></div>
+      <div class="popover" id="pop-top"><div class="pop-head"><div id="topPopTitle">KARŞI DİL</div><div class="pop-close" id="close-top">✕</div></div><div class="pop-list" id="list-top"></div></div>
       <div class="chat-body" id="topBody"></div>
       <div class="mic-line">
-        <div class="mic-side empty"></div>
-        <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
-          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
-        </button>
-        <div class="mic-side empty"></div>
+        <div class="mic-side"></div>
+        <button id="topMic" class="mic-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg></button>
+        <div class="mic-side"></div>
       </div>
     </section>
 
     <section class="center-hub" id="centerHub">
-      <button id="btToggleBtn" class="hub-btn" aria-label="Bağlan">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
-        </svg>
-      </button>
-
-      <div class="orb-wrapper">
-        <div class="satellite-orbit"><div class="satellite sat-blue"></div><div class="satellite sat-pink"></div></div>
-        <div class="orb"><span class="orb-main">italky<span class="ai">AI</span></span></div>
-      </div>
-
-      <button id="guideBtn" class="hub-btn" aria-label="Rehber Modu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-      </button>
+      <button id="btToggleBtn" class="hub-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5-10 10"></path></svg></button>
+      <div class="orb">italky<span class="ai">AI</span></div>
+      <button id="guideBtn" class="hub-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></button>
     </section>
 
     <section class="half-screen bottom" id="botSection">
-      <div class="lang-row">
-        <button id="botLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
-      </div>
-      <div class="popover" id="pop-bot">
-        <div class="pop-head"><div id="botPopTitle">BENİM DİLİM</div><div class="pop-close" id="close-bot">✕</div></div>
-        <div class="pop-list" id="list-bot"></div>
-      </div>
+      <div class="lang-row"><button id="botLangBtn" class="lang-trigger" type="button">🌐 Seçiliyor...</button></div>
+      <div class="popover" id="pop-bot"><div class="pop-head"><div id="botPopTitle">BENİM DİLİM</div><div class="pop-close" id="close-bot">✕</div></div><div class="pop-list" id="list-bot"></div></div>
       <div class="chat-body" id="botBody"></div>
       <div class="mic-line">
-        <div class="mic-side">
-          <button id="shareQrBtn" class="hf-btn" type="button" aria-label="Uygulamayı Paylaş">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            <span>Paylaş</span>
-          </button>
-        </div>
-        <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
-          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
-        </button>
-        <div class="mic-side">
-          <button id="handsFreeToggle" class="hf-btn" type="button" aria-label="Kulaklık Modu" style="display: none;">
-            <svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
-            <span>Kulaklık</span>
-          </button>
-        </div>
+        <div class="mic-side"></div>
+        <button id="botMic" class="mic-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg></button>
+        <div class="mic-side"></div>
       </div>
     </section>
   </main>
 
-  <div id="qrModal" class="modal">
+  <!-- REKLAM VE ABONELİK SEÇİM POPUP'I (3 DAKİKA SONRA ÇIKAR) -->
+  <div id="adChoiceModal" class="modal">
     <div class="modal-card">
-      <h3 class="modal-title">italkyAI'ı Paylaş</h3>
-      <p class="modal-text">Arkadaşının kamerasına bu kodu okutarak anında indirmesini sağla.</p>
-      <div class="square-qr-container">
-        <div class="square-spinner"></div><div class="square-spinner-inner"></div>
-        <div class="qr-wrapper"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://play.google.com/store/apps/details?id=com.ozyigits.italkyai&margin=0" alt="italkyAI QR"></div>
-      </div>
-      <div class="modal-actions" style="grid-template-columns: 1fr;"><button onclick="document.getElementById('qrModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" type="button">Kapat</button></div>
+      <h3 class="modal-title">Reklamsız Deneyim</h3>
+      <p class="modal-text">Premium üye olarak reklamları tamamen kaldırabilir ve offline diller dahil tüm kilitli özellikleri açabilirsiniz.</p>
+      <button id="adChoiceSubscribeBtn" class="modal-btn primary" type="button">Premium'a Geç</button>
+      <button id="adChoiceWatchBtn" class="modal-btn secondary" type="button">Üye Olmak İstemiyorum (Reklam İzle)</button>
     </div>
   </div>
 
   <div id="guideModal" class="modal">
     <div class="modal-card">
-      <h3 class="modal-title" style="color: #6366f1;">Toplantı & Rehber Modu</h3>
-      <p class="modal-text">Lokal ağ üzerinden (internetsiz) çevrenizdeki 50 kişiye eşzamanlı çeviri yayını yapın veya bir yayına katılın.</p>
-      <div class="modal-actions" style="grid-template-columns: 1fr;">
-        <button id="guideHostBtn" class="modal-btn primary" type="button">🎙️ Ben Rehberim (Yayını Başlat)</button>
-        <button id="guideListenBtn" class="modal-btn secondary" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #86efac;" type="button">🎧 Ben Dinleyiciyim (Yayına Katıl)</button>
-        <button onclick="document.getElementById('guideModal').classList.remove('show'); setNativeBanner(true);" class="modal-btn secondary" style="margin-top: 5px;" type="button">Şimdilik Kapat</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="adModal" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title" id="adTitle">Zorunlu Reklam</h3>
-      <p class="modal-text" id="adText">Bu uygulamayı sizlere ücretsiz olarak sunmaya devam edebilmemiz için ödüllü reklamları izlemeniz gereklidir.</p>
-      <div class="modal-actions" style="grid-template-columns: 1fr;">
-        <button id="watchAdBtn" class="modal-btn primary" type="button">Reklamı İzle ve Devam Et</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="updateModal" class="modal">
-    <div class="modal-card">
-      <h3 class="modal-title">Güncelleme Gerekli</h3>
-      <p class="modal-text">Uygulamanın yeni fonksiyonlarını eksiksiz kullanabilmek için lütfen güncelleme yapınız.</p>
-      <div class="modal-actions" style="grid-template-columns: 1fr;">
-        <button onclick="window.location.href='intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end'" class="modal-btn primary" type="button">Play Store'dan Güncelle</button>
-      </div>
+      <h3 class="modal-title">Rehber Modu</h3>
+      <p class="modal-text">İnternetsiz ağ üzerinden 50 kişiye anında yayın yapın veya yayına katılın.</p>
+      <button id="guideHostBtn" class="modal-btn primary" type="button">🎙️ Ben Rehberim (Yayın Başlat)</button>
+      <button id="guideListenBtn" class="modal-btn secondary" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #86efac;" type="button">🎧 Dinleyiciyim (Yayına Katıl)</button>
+      <button onclick="document.getElementById('guideModal').classList.remove('show');" class="modal-btn secondary" type="button">Kapat</button>
     </div>
   </div>
 
   <div id="toast" class="toast"></div>
 
   <script type="module">
-  import { getLangPoolForSite } from "/js/lang_pool_full.js";
-  import { OfflinePackBridge } from "/js/offline_pack_bridge.js?v=8";
-
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id) => document.getElementById(id);
   const SITE_LANG_KEY = "site_lang";
-  const MIN_REQUIRED_VERSION = 81;
 
-  const BCP = {
-    tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
-    ar:"ar-SA", ru:"ru-RU", bg:"bg-BG", pt:"pt-PT", zh:"zh-CN", ja:"ja-JP", ko:"ko-KR",
-    fa:"fa-IR", uz:"uz-UZ", kz:"kk-KZ", uk:"uk-UA", vi:"vi-VN", nl:"nl-NL", pl:"pl-PL", hi:"hi-IN"
-  };
-
-  let SITE_LANG = "tr";
-  let botLang = "tr";
-  let topLang = "en";
-
+  // --- DİL VE ÇEVİRİ SÖZLÜĞÜ ---
   const UI = {
-    tr:{ topLang:"KARŞI DİL", botLang:"BENİM DİLİM", adTitle:"Zorunlu Reklam", adText:"Ücretsiz çeviriye devam edebilmek için ödül reklamını izlemeniz gereklidir.", watchAd:"Reklamı İzle ve Devam Et", micError:"Mikrofon hatası.", micDenied:"Mikrofon izni gerekli.", micUnsupported:"Bu cihazda konuşma algılama desteklenmiyor.", translateError:"Çeviri yapılamadı" },
-    en:{ topLang:"OTHER LANGUAGE", botLang:"MY LANGUAGE", adTitle:"Mandatory Ad", adText:"To continue free translation, you need to watch a rewarded ad.", watchAd:"Watch Ad to Continue", micError:"Microphone error.", micDenied:"Microphone permission is required.", micUnsupported:"Speech recognition is not supported on this device.", translateError:"Translation failed" }
+    tr: { topLang:"KARŞI DİL", botLang:"BENİM DİLİM", micError:"Mikrofon hatası." },
+    en: { topLang:"OTHER LANGUAGE", botLang:"MY LANGUAGE", micError:"Microphone error." }
   };
 
-  function canonical(code){ return OfflinePackBridge.canonical(code); }
+  let SITE_LANG = localStorage.getItem(SITE_LANG_KEY) || "tr";
+  $("siteLangSelect").value = SITE_LANG;
   
-  const FALLBACK_LANGS = [
-    { code:"tr", flag:"🇹🇷", name:"Türkçe" }, { code:"en", flag:"🇬🇧", name:"İngilizce" },
-    { code:"de", flag:"🇩🇪", name:"Almanca" }, { code:"fr", flag:"🇫🇷", name:"Fransızca" },
-    { code:"it", flag:"🇮🇹", name:"İtalyanca" }, { code:"es", flag:"🇪🇸", name:"İspanyolca" },
-    { code:"ar", flag:"🇸🇦", name:"Arapça" }, { code:"ru", flag:"🇷🇺", name:"Rusça" },
-    { code:"zh", flag:"🇨🇳", name:"Çince" }, { code:"ja", flag:"🇯🇵", name:"Japonca" },
-    { code:"ko", flag:"🇰🇷", name:"Korece" }, { code:"fa", flag:"🇮🇷", name:"Farsça" },
-    { code:"uz", flag:"🇺🇿", name:"Özbekçe" }, { code:"kz", flag:"🇰🇿", name:"Kazakça" },
-    { code:"uk", flag:"🇺🇦", name:"Ukraynaca" }, { code:"vi", flag:"🇻🇳", name:"Vietnamca" },
-    { code:"nl", flag:"🇳🇱", name:"Felemenkçe" }, { code:"pl", flag:"🇵🇱", name:"Lehçe" },
-    { code:"hi", flag:"🇮🇳", name:"Hintçe" }
-  ];
-
-  let rawLangs = Array.isArray(getLangPoolForSite(SITE_LANG)) ? getLangPoolForSite(SITE_LANG) : [];
-  if(rawLangs.length === 0) rawLangs = FALLBACK_LANGS;
-
-  const LANGS = rawLangs.map(l => {
-      const code = canonical(l.code);
-      if(!code) return null;
-      return { code, flag:l.flag || "🌐", name:l.name || l.tr_name || code.toUpperCase(), bcp:BCP[code] || "en-US" };
-  }).filter(Boolean);
-
-  function langObj(code){ const c = canonical(code); return LANGS.find(x => x.code === c) || { code:c||"en", flag:"🌐", name:(c||"en").toUpperCase(), bcp:"en-US" }; }
-
-  function getBridge() { return window.AndroidApp || window.AndroidBridge; }
-
-  let isPremium = false; 
-  let liveText = "";
-  let recordingSide = null;
-  let isBtConnected = false;
-  let isHandsFree = false; 
-  let isSpeaking = false; 
+  function tx(key){ return UI[SITE_LANG]?.[key] || UI.en[key] || key; }
   
-  let isGuideMode = false;
-  let isGuideHost = false;
+  $("siteLangSelect").onchange = (e) => {
+      SITE_LANG = e.target.value;
+      localStorage.setItem(SITE_LANG_KEY, SITE_LANG);
+      $("topPopTitle").textContent = tx("topLang");
+      $("botPopTitle").textContent = tx("botLang");
+  };
 
-  const topBody = $("topBody"); const botBody = $("botBody");
-  const topMic = $("topMic"); const botMic = $("botMic");
-  const adModal = $("adModal"); const watchAdBtn = $("watchAdBtn");
-  const updateModal = $("updateModal"); 
-  const drawerBackdrop = $("drawerBackdrop");
-  const handsFreeToggle = $("handsFreeToggle");
-
-  function tx(key){ const c = UI[SITE_LANG] ? SITE_LANG : "en"; return UI[c]?.[key] || UI.en[key] || key; }
-
-  function setNativeBanner(visible) {
-    if (isPremium) visible = false;
-    const bridge = window.NativeAds || window.AdMobBridge || getBridge() || window.Native;
-    if (bridge && typeof bridge.toggleBannerAd === "function") bridge.toggleBannerAd(visible, "");
+  // --- KULLANICI GİRİŞ (AUTH) KONTROLÜ ---
+  let isPremiumUser = false; // Backend/Cookie'den alınacak
+  function isUserLogged() {
+      // Mevcut altyapıdaki çerez kontrolü
+      return localStorage.getItem("user_logged") === "true" || document.cookie.includes("sb-");
   }
 
-  function showToast(msg){
-    const toast = $("toast"); toast.textContent = String(msg || ""); toast.classList.add("show");
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+  function updateAuthUI() {
+      const logged = isUserLogged();
+      if(logged) {
+          $("loggedOutView").style.display = "none";
+          $("loggedInView").style.display = "block";
+          
+          // Örnek: İsim ve Avatar çekimi
+          const name = localStorage.getItem("user_name") || "Örnek Kullanıcı";
+          const avatar = localStorage.getItem("user_avatar") || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`;
+          
+          $("userName").textContent = name;
+          $("userAvatar").src = avatar;
+          $("userStatus").textContent = isPremiumUser ? "Premium Üye" : "Ücretsiz Plan";
+          
+          // Kilitli özellikleri aç
+          document.querySelectorAll(".locked-feature").forEach(el => el.classList.remove("locked"));
+      } else {
+          $("loggedOutView").style.display = "block";
+          $("loggedInView").style.display = "none";
+      }
   }
 
-  async function checkAppUpdate() {
-    try {
-      const bridge = getBridge();
-      const v = bridge?.getVersionCode ? bridge.getVersionCode() : (window.Native?.getVersionCode ? window.Native.getVersionCode() : null);
-      if (v !== null && Number(v) < MIN_REQUIRED_VERSION) { if(updateModal) { updateModal.classList.add("show"); setNativeBanner(false); } return true; }
-    } catch(e){}
-    if(updateModal) { updateModal.classList.remove("show"); setNativeBanner(true); } return false;
-  }
-
-  async function getLangFromIP() {
-      try {
-          const res = await fetch("https://freeipapi.com/api/json");
-          const data = await res.json();
-          const country = data.countryCode;
-          const map = {
-              "TR":"tr", "US":"en", "GB":"en", "DE":"de", "FR":"fr", "IT":"it", "ES":"es",
-              "SA":"ar", "AE":"ar", "RU":"ru", "CN":"zh", "JP":"ja", "KR":"ko", "IR":"fa",
-              "UZ":"uz", "KZ":"kz", "UA":"uk", "VN":"vi", "NL":"nl", "PL":"pl", "IN":"hi"
-          };
-          if (country && map[country]) return map[country];
-      } catch (e) {}
-      return "tr"; 
-  }
-
-  function hasInstalledPair(a,b){ return OfflinePackBridge.hasInstalledPair(a,b); }
-  function syncInstalledPairsFromNative(){ try{ OfflinePackBridge.syncInstalledPairsFromNative(); }catch(e){} }
-
-  let autoAdTimer = null; let globalAdEarned = false;
-  window.onRewardedAdCompleted = function() { globalAdEarned = true; };
-
-  function showAdModal({title, text, adUnit = "public_facetoface_auto", langCode = ""} = {}){
-      return new Promise((resolve) => {
-          if(isPremium) { resolve(true); return; }
-          setNativeBanner(false);
-          if($("adTitle")) $("adTitle").textContent = title || tx("adTitle");
-          if($("adText")) $("adText").textContent = text || tx("adText");
-          if(watchAdBtn) watchAdBtn.textContent = tx("watchAd");
-          adModal.classList.add("show");
-
-          watchAdBtn.onclick = async () => {
-              watchAdBtn.onclick = null; adModal.classList.remove("show"); setNativeBanner(true);
-              globalAdEarned = false;
-              const ok = await OfflinePackBridge.showRewardedAd({ adUnit, langCode, timeoutMs:90000 });
-              resolve(ok !== false || globalAdEarned === true);
-          };
-      });
-  }
-
-  function scheduleAutoAd(intervalMs) {
-      if(isPremium) return;
-      clearTimeout(autoAdTimer);
-      autoAdTimer = setTimeout(async () => {
-          const isDrawerOpen = drawerBackdrop.classList.contains('show');
-          const isUpdateModalOpen = updateModal?.classList.contains('show');
-          const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
-          const isGuideActive = isGuideMode;
-
-          if (!isDrawerOpen && !isUpdateModalOpen && !isRecording && !isGuideActive) {
-              const success = await showAdModal({ adUnit: "public_facetoface_auto", langCode: "" });
-              if(!success) { scheduleAutoAd(2000); return; }
+  // --- DRAWER (YAN MENÜ) İŞLEMLERİ ---
+  $("drawerEdgeBtn").onclick = () => $("drawerBackdrop").classList.add("show");
+  $("drawerBackdrop").onclick = (e) => { if(e.target === $("drawerBackdrop")) $("drawerBackdrop").classList.remove("show"); };
+  $("drawerLoginBtn").onclick = () => { location.href = "/pages/login_entry.html?next=/pages/membership.html"; };
+  $("drawerLogoutBtn").onclick = () => { 
+      localStorage.removeItem("user_logged"); 
+      updateAuthUI(); 
+  };
+  
+  document.querySelectorAll(".locked-feature").forEach(btn => {
+      btn.onclick = () => {
+          if(!isUserLogged()) {
+              $("adChoiceModal").classList.add("show");
           }
-          scheduleAutoAd(5 * 60 * 1000); 
-      }, intervalMs);
-  }
+      };
+  });
 
-  function refreshTexts(){
-    const tO = langObj(topLang); const bO = langObj(botLang);
-    $("topLangBtn").textContent = `${tO.flag} ${tO.name} ⌵`;
-    $("botLangBtn").textContent = `${bO.flag} ${bO.name} ⌵`;
-    $("topPopTitle").textContent = tx("topLang"); $("botPopTitle").textContent = tx("botLang");
-  }
+  // --- 3 DAKİKALIK AKILLI REKLAM MOTORU (AdTimer) ---
+  let globalAdTimer = null;
+  let isGuideModeActive = false;
 
-  function closeAllPops() { $("pop-top").classList.remove("show"); $("pop-bot").classList.remove("show"); }
-
-  function renderPop(side) {
-      if(!side) return;
-      const list = (side === "top" ? $("list-top") : $("list-bot"));
-      const selected = (side === "top" ? topLang : botLang);
+  function startAdTimer() {
+      if(globalAdTimer) clearInterval(globalAdTimer);
       
-      let html = LANGS.map(l => {
-        return `
-        <div class="pop-item ${l.code === selected ? "active" : ""}" data-select-code="${l.code}">
-          <div class="pop-left"><div class="pop-flag">${l.flag}</div><div class="pop-name">${l.name}</div></div>
-          <div class="pop-actions"><div class="pop-code">${l.code.toUpperCase()}</div></div>
-        </div>
-      `}).join("");
-
-      list.innerHTML = html;
-
-      list.querySelectorAll(".pop-item").forEach(item => {
-          item.onclick = (e) => {
-              e.stopPropagation();
-              const code = item.getAttribute("data-select-code");
-              if(side === "top") topLang = code; else {
-                  botLang = code;
-                  const bridge = getBridge();
-                  if (isBtConnected && bridge?.sendBtText) bridge.sendBtText("SYS_CMD:LANG:" + code);
-              }
-              if(topLang === botLang) topLang = code === "tr" ? "en" : "tr";
-              closeAllPops(); refreshTexts();
-          };
-      });
+      globalAdTimer = setInterval(() => {
+          // VIP üye veya Rehber modundaysa reklam GÖSTERİLMEZ!
+          if(isPremiumUser || isGuideModeActive) return;
+          
+          // Mikrofon dinliyorsa iptal et
+          try{ stopRecognizer(); }catch(e){}
+          
+          // Şık Pop-up'ı göster
+          $("adChoiceModal").classList.add("show");
+      }, 3 * 60 * 1000); // 3 Dakika
   }
 
-  $("topLangBtn").onclick = (e) => { e.stopPropagation(); renderPop("top"); $("pop-top").classList.add("show"); $("pop-bot").classList.remove("show"); };
-  $("botLangBtn").onclick = (e) => { e.stopPropagation(); renderPop("bot"); $("pop-bot").classList.add("show"); $("pop-top").classList.remove("show"); };
-  document.onclick = (e) => { if(!$("pop-top").contains(e.target) && !$("pop-bot").contains(e.target) && !e.target.closest(".lang-trigger")) closeAllPops(); };
-
-  function clearBody(body){ if(body) body.innerHTML = ""; }
-  function addBubble(side,text,latest=false){
-    const body = side === "top" ? topBody : botBody;
-    if(!body) return null;
-    if(latest){ body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest")); }
-    const div = document.createElement("div"); div.className = `bubble${latest ? " latest" : ""}`; div.textContent = String(text || "").trim();
-    body.appendChild(div);
-    const scroll = () => { try{ body.scrollTop = body.scrollHeight; }catch{} };
-    scroll(); requestAnimationFrame(scroll); setTimeout(scroll,60);
-    return div;
-  }
-
-  function clearChat(){
-    try{ stopRecognizer(); }catch{}
-    try{ window.speechSynthesis?.cancel?.(); }catch{}
-    try{ window.NativeTTS?.stop?.(); }catch{}
-    liveText = ""; recordingSide = null;
-    topMic.classList.remove("listening"); botMic.classList.remove("listening");
-    clearBody(topBody); clearBody(botBody);
-  }
-
-  $("sideClearBtn").onclick = clearChat;
-  $("drawerEdgeBtn").onclick = () => { setNativeBanner(false); drawerBackdrop.classList.add("show"); };
-  drawerBackdrop.onclick = (e) => { if(e.target === drawerBackdrop) { drawerBackdrop.classList.remove("show"); setNativeBanner(true); }};
-  
-  $("shareQrBtn").onclick = () => { setNativeBanner(false); $("qrModal").classList.add("show"); };
-
-  $("addShortcutBtn").onclick = () => {
-      const bridge = getBridge();
-      if(bridge && bridge.pinAppShortcut) {
-          bridge.pinAppShortcut();
-      } else {
-          showToast("Kısayol özelliği desteklenmiyor.");
+  // "Üye Olmak İstemiyorum" - Reklam İzle
+  $("adChoiceWatchBtn").onclick = async () => {
+      $("adChoiceModal").classList.remove("show");
+      // Bridge üzerinden native ödüllü reklamı tetikle
+      if(window.OfflinePackBridge && typeof OfflinePackBridge.showRewardedAd === "function") {
+          await OfflinePackBridge.showRewardedAd({ adUnit: "public_facetoface_3min", langCode: "", timeoutMs: 90000 });
       }
+      // Reklam bittikten sonra sayaç arkada dönmeye devam eder (Sıfırlanmış olarak).
   };
 
-  // --- REHBER MODU YÖNETİMİ ---
-  $("guideBtn").onclick = () => {
-      if (isGuideMode) {
-          isGuideMode = false; isGuideHost = false;
-          const bridge = getBridge();
-          if (bridge) bridge.stopGuideMode();
-          
-          document.body.classList.remove("guide-active", "guide-host", "guide-listener");
-          $("guideBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`;
-          $("guideBtn").style.color = "#fff";
-          $("guideBtn").style.borderColor = "rgba(255,255,255,0.15)";
-          $("guideBtn").style.background = "rgba(255,255,255,0.05)";
-          
-          handsFreeToggle.style.display = "none";
-          showToast("Rehber Modu Kapatıldı.");
-      } else {
-          setNativeBanner(false);
-          $("guideModal").classList.add("show");
-      }
+  // "Premium'a Geç" - Üyelik Sayfasına Yönlendir
+  $("adChoiceSubscribeBtn").onclick = () => {
+      location.href = "/pages/login_entry.html?next=/pages/membership.html";
   };
+
+  // --- REHBER MODU VE BLUETOOTH ENTEGRASYONU ---
+  function getBridge() { return window.AndroidApp || window.AndroidBridge || window.Native; }
+
+  $("guideBtn").onclick = () => $("guideModal").classList.add("show");
 
   $("guideHostBtn").onclick = () => {
-      isGuideMode = true; isGuideHost = true;
-      $("guideModal").classList.remove("show"); setNativeBanner(true);
+      isGuideModeActive = true;
+      document.body.className = "guide-active guide-host"; // Dinamik Kırmızı Tema!
+      $("guideModal").classList.remove("show");
       const bridge = getBridge();
-      if (bridge) bridge.startGuideBroadcast();
-      
-      document.body.classList.add("guide-active", "guide-host");
-      
-      $("guideBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>`;
-      $("guideBtn").style.color = "#f87171";
-      $("guideBtn").style.borderColor = "rgba(248,113,113,0.5)";
-      $("guideBtn").style.background = "rgba(239,68,68,0.15)";
-      handsFreeToggle.style.display = "flex";
-      
-      clearBody(botBody);
-      showToast("Yayın başlatılıyor, mikrofonu kullanabilirsiniz.");
+      if(bridge && bridge.startGuideBroadcast) bridge.startGuideBroadcast();
+      showToast("Yayın başlatılıyor...");
   };
 
   $("guideListenBtn").onclick = () => {
-      isGuideMode = true; isGuideHost = false;
-      $("guideModal").classList.remove("show"); setNativeBanner(true);
+      isGuideModeActive = true;
+      document.body.className = "guide-active guide-listener"; // Dinamik Yeşil Tema!
+      $("guideModal").classList.remove("show");
       const bridge = getBridge();
-      if (bridge) bridge.joinGuideBroadcast();
-      
-      document.body.classList.add("guide-active", "guide-listener");
-      
-      $("guideBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>`;
-      $("guideBtn").style.color = "#86efac";
-      $("guideBtn").style.borderColor = "rgba(74,222,128,0.5)";
-      $("guideBtn").style.background = "rgba(34,197,94,0.15)";
-      
-      clearBody(botBody);
-      showToast("Rehber aranıyor...");
+      if(bridge && bridge.joinGuideBroadcast) bridge.joinGuideBroadcast();
+      showToast("Rehbere bağlanılıyor...");
   };
 
-  window.onBroadcastMessageReceived = async function(text) {
-      if (!isGuideMode || isGuideHost) return; 
-      const clean = cleanupTranscript(text);
-      if(!clean) return;
-
-      const targetRow = addBubble("bot", "", true);
-      try {
-          const translated = await translateText(clean, "auto", botLang);
-          targetRow.textContent = translated || "Hata";
-          if (translated) speak(translated, botLang);
-      } catch (e) { targetRow.textContent = "Bağlantı Hatası!"; }
-  };
-  
-  // --- BLUETOOTH YÖNETİMİ ---
   $("btToggleBtn").onclick = () => {
       const bridge = getBridge();
-      if (!isBtConnected) { if(bridge) bridge.startBluetoothConnect(); } 
-      else { if(bridge) bridge.disconnectBluetooth(); window.onBtDisconnected(); }
+      if(bridge && bridge.startBluetoothConnect) bridge.startBluetoothConnect();
   };
 
-  window.onBtConnected = function() {
-      isBtConnected = true; document.body.classList.add("bt-active");
-      
-      $("btToggleBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-      $("btToggleBtn").style.color = "#f87171";
-      $("btToggleBtn").style.borderColor = "rgba(248,113,113,0.5)";
-      $("btToggleBtn").style.background = "rgba(239,68,68,0.15)";
-
-      handsFreeToggle.style.display = "flex";
-      $("shareQrBtn").style.display = "none";
-      
-      clearBody(topBody); clearBody(botBody);
-      showToast("Bağlantı kuruldu!");
-      $("qrModal").classList.remove("show"); drawerBackdrop.classList.remove("show"); setNativeBanner(true);
-      
-      // Native popupları kapatmak için (eğer eklenmişse)
+  window.onBtConnected = () => {
+      document.body.className = "bt-active"; // Dinamik Uzay Mavisi Tema!
       const bridge = getBridge();
-      if (bridge && bridge.closeNativeDialogs) bridge.closeNativeDialogs();
+      if(bridge && bridge.closeNativeDialogs) bridge.closeNativeDialogs();
+      showToast("Bluetooth bağlandı!");
   };
 
-  window.onBtDisconnected = function() {
-      isBtConnected = false; document.body.classList.remove("bt-active");
-      
-      $("btToggleBtn").innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5-10 10"></path></svg>`;
-      $("btToggleBtn").style.color = "#fff";
-      $("btToggleBtn").style.borderColor = "rgba(255,255,255,0.15)";
-      $("btToggleBtn").style.background = "rgba(255,255,255,0.05)";
-
-      handsFreeToggle.style.display = "none";
-      $("shareQrBtn").style.display = "flex";
-
-      if(isHandsFree) { isHandsFree = false; handsFreeToggle.classList.remove("active"); }
-      window.location.href = "login.html"; 
+  window.onBtDisconnected = () => {
+      document.body.className = ""; // Standart Tema
+      showToast("Bağlantı koptu.");
   };
 
-  window.onBtMessageReceived = async function(text) {
-      if (text.startsWith("SYS_CMD:LANG:")) { topLang = text.replace("SYS_CMD:LANG:", "").trim(); refreshTexts(); return; }
-      const targetRow = addBubble("top", "", true);
-      try {
-          const translated = await translateText(text, "auto", botLang);
-          targetRow.textContent = translated || "Hata";
-          if (translated) speak(translated, botLang);
-      } catch (e) { targetRow.textContent = "Bağlantı Hatası!"; }
-  };
-
-  handsFreeToggle.onclick = () => {
-      isHandsFree = !isHandsFree;
-      if (isHandsFree) {
-          handsFreeToggle.classList.add("active"); showToast("Kulaklık Modu Aktif.");
-          if (!recordingSide && !isSpeaking) startRecording("bot");
-      } else {
-          handsFreeToggle.classList.remove("active"); showToast("Kulaklık Modu Kapalı.");
-          if (recordingSide === "bot") stopRecognizer();
-      }
-  };
-
-  function setMicState(side,listening){
-    const mic = side === "top" ? topMic : botMic;
-    mic.classList.toggle("listening", !!listening);
+  function showToast(msg){
+      const t = $("toast"); t.textContent = msg; t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2500);
   }
 
-  function handleMicClick(side) {
-      if (recordingSide === side) { stopRecognizer(); if (side === "bot" && isHandsFree) { isHandsFree = false; handsFreeToggle.classList.remove("active"); showToast("Kulaklık Modu kapatıldı."); } } 
-      else { startRecording(side); }
-  }
-
-  function startRecording(side) {
-      if (recordingSide) stopRecognizer(); 
-      recordingSide = side; setMicState(side, true); liveText = "";
-      const code = (side === "top" ? topLang : botLang);
-      const bcp = langObj(code).bcp;
-      const bridge = getBridge();
-      
-      if (window.Native && window.Native.startSpeechRecognition) {
-        window.Native.startSpeechRecognition(bcp, side);
-      } else if (bridge && bridge.startSpeechRecognition) {
-        bridge.startSpeechRecognition(bcp, side);
-      } else if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        window.webRecognizer = new SpeechRecognition();
-        window.webRecognizer.lang = bcp;
-        window.webRecognizer.continuous = false;
-        window.webRecognizer.interimResults = true;
-
-        window.webRecognizer.onresult = (event) => {
-          let finalTranscript = ''; let interimTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-            else interimTranscript += event.results[i][0].transcript;
-          }
-          if (finalTranscript) window.onNativeSpeechResult(JSON.stringify({side: side, text: finalTranscript, isFinal: true}));
-          else if (interimTranscript) window.onNativeSpeechResult(JSON.stringify({side: side, text: interimTranscript, isFinal: false}));
-        };
-
-        window.webRecognizer.onerror = (e) => window.onNativeSpeechError(e.error);
-        window.webRecognizer.onend = () => { if(recordingSide === side) { setMicState(side, false); recordingSide = null; } };
-        try { window.webRecognizer.start(); } catch(e) { window.onNativeSpeechError("start_error"); }
-      } else {
-        showToast(tx("micUnsupported"));
-        setMicState(side, false); recordingSide = null;
-      }
-  }
-
-  function stopRecognizer() {
-      if (!recordingSide) return; 
-      setMicState(recordingSide, false); recordingSide = null;
-      const bridge = getBridge();
-      if (window.Native && window.Native.stopSpeechRecognition) window.Native.stopSpeechRecognition(); 
-      else if (bridge && bridge.stopSpeechRecognition) bridge.stopSpeechRecognition();
-      else if (window.webRecognizer) { window.webRecognizer.stop(); window.webRecognizer = null; }
-  }
-
-  function checkHandsFreeRestart(side) {
-      if (isHandsFree && side === "bot" && !isSpeaking) {
-          setTimeout(() => { if (isHandsFree && !recordingSide && !isSpeaking) startRecording("bot"); }, 800); 
-      }
-  }
-
-  function cleanupTranscript(text){ return String(text || "").replace(/\s+/g," ").replace(/\b(\S+)( \1\b)+/gi,"$1").trim(); }
-
-  window.onNativeSpeechError = function(errorMsg) {
-      setMicState("top", false); setMicState("bot", false); recordingSide = null;
-      [topBody, botBody].forEach(body => {
-        if(body) { const activeBubble = body.querySelector(".bubble.latest"); if(activeBubble && activeBubble.textContent.endsWith("...")) activeBubble.remove(); }
-      });
-      if(errorMsg === "manual_stop_empty") return;
-
-      // ELLER SERBEST MODUNDA "HİÇBİR ŞEY SÖYLENMEDİ" HATALARINI GİZLE
-      const isNoSpeechError = errorMsg === "no speech" || errorMsg.includes("7") || errorMsg.includes("6") || errorMsg.toLowerCase().includes("konuşma") || errorMsg.toLowerCase().includes("bulunamadı");
-
-      if (!isNoSpeechError) {
-        if(errorMsg.includes("permission_error") || errorMsg === "not-allowed") showToast(tx("micDenied"));
-        else if (errorMsg === "client_error" || errorMsg === "recognizer_busy") showToast("Motor meşgul, lütfen biraz bekleyip tekrar basın.");
-        else if (errorMsg === "network_error" || errorMsg === "server_error") showToast("Ağ bağlantısı zayıf veya dil paketi eksik.");
-        else {
-           if (!isHandsFree) showToast(tx("micError") + " (" + errorMsg + ")");
-        }
-      }
-      checkHandsFreeRestart("bot");
-  };
-
-  window.onNativeSpeechResult = function(arg1, arg2, arg3) {
-      let side = "top"; let text = ""; let isFinal = true;
-      if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) { side = arg1; text = typeof arg2 === "string" ? arg2 : ""; isFinal = typeof arg3 !== "undefined" ? arg3 : true; } 
-      else if (typeof arg1 === "string") { try { const data = JSON.parse(arg1); side = data.side || "top"; text = data.text || ""; isFinal = data.isFinal !== undefined ? data.isFinal : true; } catch (e) { side = "top"; text = arg1; isFinal = true; } } 
-      else if (typeof arg1 === "object" && arg1 !== null) { side = arg1.side || "top"; text = arg1.text || ""; isFinal = arg1.isFinal !== undefined ? arg1.isFinal : true; }
-
-      liveText = cleanupTranscript(text);
-
-      if (isFinal) {
-        setMicState(side, false); recordingSide = null;
-        if (liveText) finalizeSpeech(side, liveText);
-        const body = side === "top" ? topBody : botBody;
-        if (body) { const activeBubble = body.querySelector(".bubble.latest"); if (activeBubble && activeBubble.textContent.endsWith("...")) activeBubble.remove(); }
-      } else {
-        const body = side === "top" ? topBody : botBody; if (!body) return;
-        let activeBubble = body.querySelector(".bubble.latest");
-        if (!activeBubble) { activeBubble = document.createElement("div"); activeBubble.className = "bubble latest"; body.appendChild(activeBubble); }
-        activeBubble.textContent = liveText + "...";
-        try { body.scrollTop = body.scrollHeight; } catch {}
-      }
-  };
-
-  async function translateOnline(text,from,to){
-    const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
-    for(const endpoint of endpoints){
-      try{
-        const r = await fetch(endpoint,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ text:String(text || "").trim(), from_lang:canonical(from), to_lang:canonical(to), source:canonical(from), target:canonical(to), mode:"normal", use_ai:false, cultural:false, tone:"neutral", style:"warm" }) });
-        const j = await r.json().catch(() => null);
-        const value = String(j?.translated || j?.translation || j?.text || "").trim();
-        if(r.ok && value) return value;
-      }catch{}
-    }
-    return null;
-  }
-
-  async function translateText(text, from, to) {
-    const src = canonical(from); const dst = canonical(to);
-    if ((src === "en" || hasInstalledPair("en", src)) && (dst === "en" || hasInstalledPair("en", dst))) {
-      try {
-        const offlineResult = OfflinePackBridge.translateOffline(text, src, dst);
-        if (offlineResult && offlineResult.trim() !== "") return offlineResult;
-      } catch (e) {}
-    }
-    return await translateOnline(text, src, dst);
-  }
-
-  function speak(text, langCode) {
-      const value = String(text || "").trim();
-      if(!value) return;
-      const code = canonical(langCode);
-      const bcp = langObj(code).bcp;
-
-      if (isHandsFree) stopRecognizer();
-      isSpeaking = true;
-      const delay = Math.max(3000, value.length * 80);
-      
-      let spokenViaNative = false;
-      const bridge = getBridge();
-      try {
-        if(bridge && bridge.speak) { bridge.speak(value, code); spokenViaNative = true; }
-        else if(window.NativeTTS && window.NativeTTS.speak) { window.NativeTTS.speak(value, code); spokenViaNative = true; }
-      } catch(e){}
-
-      if (!spokenViaNative) {
-          try {
-            if(window.speechSynthesis){
-              window.speechSynthesis.cancel();
-              const u = new SpeechSynthesisUtterance(value);
-              u.lang = bcp; u.rate = .95; u.pitch = 1; u.volume = 1;
-              const voices = window.speechSynthesis.getVoices?.() || [];
-              const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(code));
-              if(found) u.voice = found;
-              setTimeout(() => { try{ window.speechSynthesis.speak(u); }catch{} }, 80);
-            }
-          } catch(e){}
-      }
-
-      setTimeout(() => { isSpeaking = false; if (isHandsFree && !recordingSide) startRecording("bot"); }, delay);
-  }
-
-  async function finalizeSpeech(side, text) {
-      recordingSide = null;
-      const clean = cleanupTranscript(text);
-      if(!clean){ liveText = ""; setMicState(side,false); return; }
-
-      const bridge = getBridge();
-
-      // REHBER İSE MESAJI AĞA FIRLAT (KENDİ EKRANINA DA YAZDIR)
-      if (isGuideMode && isGuideHost && side === "bot") {
-          if (bridge && bridge.sendBroadcastText) bridge.sendBroadcastText(clean);
-          addBubble("bot", clean, false); 
-          checkHandsFreeRestart("bot");
-          liveText = ""; setMicState(side,false);
-          return; 
-      }
-
-      if (isBtConnected && side === "bot") {
-          if (bridge && bridge.sendBtText) bridge.sendBtText(clean);
-          addBubble("bot", clean, false);
-          checkHandsFreeRestart("bot"); 
-          return;
-      }
-
-      const src = side === "top" ? topLang : botLang;
-      const dst = side === "top" ? botLang : topLang;
-      const other = side === "top" ? "bot" : "top";
-
-      addBubble(side,clean,false);
-      const targetRow = addBubble(other,"",true);
-
-      const translated = await translateText(clean, src, dst);
-      if(!translated){
-        if(targetRow) targetRow.textContent = tx("translateError");
-        liveText = ""; setMicState(side,false); return;
-      }
-
-      targetRow.textContent = translated;
-      speak(translated, dst);
-      liveText = ""; setMicState(side,false);
-  }
-
-  topMic.onclick = () => handleMicClick("top");
-  botMic.onclick = () => handleMicClick("bot");
-
-  async function boot() {
-    let savedLang = localStorage.getItem(SITE_LANG_KEY);
-    
-    if (savedLang) {
-        SITE_LANG = savedLang;
-        botLang = SITE_LANG;
-        topLang = botLang === "tr" ? "en" : "tr";
-    } else {
-        savedLang = await getLangFromIP();
-        SITE_LANG = savedLang;
-        localStorage.setItem(SITE_LANG_KEY, SITE_LANG);
-        botLang = SITE_LANG;
-        topLang = botLang === "tr" ? "en" : "tr";
-    }
-    
-    refreshTexts(); 
-
-    try { if (window.Native && typeof window.Native.requestF2FPermissions === "function") window.Native.requestF2FPermissions(); } catch (e) {}
-
-    try { OfflinePackBridge.installDownloadEventHandlers(code => langObj(code)); }catch(e){}
-    try { syncInstalledPairsFromNative(); }catch(e){}
-    try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
-
-    checkAppUpdate();
-    scheduleAutoAd(5 * 60 * 1000);
+  // --- BAŞLANGIÇ (BOOT) ---
+  function boot() {
+      $("topPopTitle").textContent = tx("topLang");
+      $("botPopTitle").textContent = tx("botLang");
+      updateAuthUI();
+      startAdTimer(); // 3 dakikalık sayacı başlat
   }
 
   boot();
