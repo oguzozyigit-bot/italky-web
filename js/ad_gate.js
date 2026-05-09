@@ -3,6 +3,9 @@
 const MODULE_AD_STATE_KEY = "italky_module_ad_state_v2";
 const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v2";
 const AD_INFO_MODAL_ID = "italkyAdInfoModal";
+const GUEST_REWARD_MODAL_ID = "italkyGuestRewardModal";
+const GUEST_MODE_KEY = "italky_guest_mode_v1";
+const GUEST_REWARD_INTERVAL_MS = 3 * 60 * 1000;
 
 function nowTs() {
   return Date.now();
@@ -59,6 +62,14 @@ function setOfflineAdState(next) {
 
   writeJson(OFFLINE_AD_STATE_KEY, safe);
   return safe;
+}
+
+function isGuestMode() {
+  try {
+    return localStorage.getItem(GUEST_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
 }
 
 function hasNativeRewarded() {
@@ -184,6 +195,122 @@ function getOrCreateAdInfoModal() {
   return modal;
 }
 
+function getOrCreateGuestRewardModal() {
+  let modal = document.getElementById(GUEST_REWARD_MODAL_ID);
+  if (modal) return modal;
+
+  if (!document.getElementById("italkyGuestRewardModalStyle")) {
+    const style = document.createElement("style");
+    style.id = "italkyGuestRewardModalStyle";
+    style.textContent = `
+      .italky-guest-ad-backdrop{
+        position:fixed;
+        inset:0;
+        z-index:1000000;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        background:rgba(2,6,23,.72);
+        backdrop-filter:blur(12px);
+        -webkit-backdrop-filter:blur(12px);
+      }
+      .italky-guest-ad-backdrop.open{ display:flex; }
+      .italky-guest-ad-card{
+        width:min(100%,430px);
+        border-radius:24px;
+        overflow:hidden;
+        border:1px solid rgba(96,165,250,.20);
+        background:linear-gradient(180deg,#0f1b33 0%,#071225 100%);
+        box-shadow:0 26px 64px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.045);
+        color:#fff;
+        font-family:Outfit, system-ui, sans-serif;
+      }
+      .italky-guest-ad-top{
+        padding:22px 20px 16px;
+        text-align:left;
+        background:radial-gradient(circle at top left, rgba(96,165,250,.18), transparent 42%), linear-gradient(180deg,rgba(15,27,51,.98),rgba(11,20,38,.98));
+      }
+      .italky-guest-ad-badge{
+        display:inline-flex;
+        align-items:center;
+        min-height:30px;
+        padding:7px 12px;
+        border-radius:999px;
+        border:1px solid rgba(147,197,253,.22);
+        background:rgba(59,130,246,.11);
+        color:#dbeafe;
+        font-size:11px;
+        font-weight:1000;
+        letter-spacing:.3px;
+      }
+      .italky-guest-ad-title{
+        margin:14px 0 10px;
+        color:#f8fbff;
+        font-size:23px;
+        line-height:1.1;
+        font-weight:1000;
+        letter-spacing:-.35px;
+      }
+      .italky-guest-ad-text{
+        margin:0;
+        color:rgba(226,232,240,.84);
+        font-size:14px;
+        line-height:1.62;
+        font-weight:760;
+      }
+      .italky-guest-ad-actions{
+        display:grid;
+        gap:10px;
+        padding:16px;
+        background:rgba(5,10,22,.76);
+      }
+      .italky-guest-ad-btn{
+        min-height:52px;
+        border:none;
+        border-radius:16px;
+        cursor:pointer;
+        font:inherit;
+        font-size:14px;
+        font-weight:1000;
+        transition:transform .14s ease, opacity .14s ease;
+      }
+      .italky-guest-ad-btn:active{ transform:scale(.985); }
+      .italky-guest-ad-btn.primary{
+        color:#061227;
+        background:linear-gradient(135deg,#dbeafe 0%,#60a5fa 100%);
+        box-shadow:0 14px 28px rgba(37,99,235,.22);
+      }
+      .italky-guest-ad-btn.secondary{
+        color:#eaf2ff;
+        background:rgba(255,255,255,.055);
+        border:1px solid rgba(255,255,255,.11);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  modal = document.createElement("div");
+  modal.id = GUEST_REWARD_MODAL_ID;
+  modal.className = "italky-guest-ad-backdrop";
+  modal.innerHTML = `
+    <div class="italky-guest-ad-card" role="dialog" aria-modal="true">
+      <div class="italky-guest-ad-top">
+        <div class="italky-guest-ad-badge">MİSAFİR MODU</div>
+        <h2 class="italky-guest-ad-title">Reklamsız Deneyime Geçin</h2>
+        <p class="italky-guest-ad-text">Kısıtlama olmadan, reklamsız ve tüm özelliklerle devam etmek için Google hesabınızla üyeliğinizi başlatabilirsiniz.</p>
+      </div>
+      <div class="italky-guest-ad-actions">
+        <button class="italky-guest-ad-btn primary" id="italkyGuestLoginBtn" type="button">Google ile Üye Ol</button>
+        <button class="italky-guest-ad-btn secondary" id="italkyGuestWatchBtn" type="button">Reklamı İzleyip Devam Et</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  return modal;
+}
+
 function showSoftAdModal({
   title = "Bu modül için kısa bir reklam gösterilecek",
   text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir."
@@ -211,6 +338,28 @@ function showSoftAdModal({
 
     okBtn?.addEventListener("click", onOk);
     modal.addEventListener("click", onBackdrop);
+    modal.classList.add("open");
+  });
+}
+
+function showGuestRewardChoice() {
+  return new Promise((resolve) => {
+    const modal = getOrCreateGuestRewardModal();
+    const loginBtn = modal.querySelector("#italkyGuestLoginBtn");
+    const watchBtn = modal.querySelector("#italkyGuestWatchBtn");
+
+    const cleanup = (value) => {
+      modal.classList.remove("open");
+      loginBtn?.removeEventListener("click", onLogin);
+      watchBtn?.removeEventListener("click", onWatch);
+      resolve(value);
+    };
+
+    const onLogin = () => cleanup("login");
+    const onWatch = () => cleanup("watch");
+
+    loginBtn?.addEventListener("click", onLogin);
+    watchBtn?.addEventListener("click", onWatch);
     modal.classList.add("open");
   });
 }
@@ -406,6 +555,82 @@ export async function ensureModuleAdAccess(options = {}) {
   } catch {}
 
   return rewarded;
+}
+
+export async function runGuestRewardedAdFlow(options = {}) {
+  const {
+    moduleKey = "guest_mode",
+    placement = "guest_mode_timer"
+  } = options;
+
+  if (!isGuestMode()) return true;
+
+  const choice = await showGuestRewardChoice();
+
+  if (choice === "login") {
+    location.href = "/pages/login.html";
+    return false;
+  }
+
+  if (choice !== "watch") return false;
+
+  let rewarded = false;
+
+  if (hasNativeRewarded()) {
+    rewarded = await showNativeRewarded(moduleKey, placement);
+  } else {
+    showFallbackAdInfo("Reklam hazır değilse misafir oturumu bu aşamada devam eder.");
+    rewarded = true;
+  }
+
+  return rewarded;
+}
+
+export function startGuestRewardedAdTimer(options = {}) {
+  const {
+    moduleKey = "guest_mode",
+    placement = "guest_mode_timer",
+    intervalMs = GUEST_REWARD_INTERVAL_MS,
+    startDelayMs = GUEST_REWARD_INTERVAL_MS
+  } = options;
+
+  if (!isGuestMode()) return null;
+
+  let stopped = false;
+  let busy = false;
+  let timerId = null;
+
+  const schedule = (delay = intervalMs) => {
+    if (stopped || !isGuestMode()) return;
+    clearTimeout(timerId);
+    timerId = setTimeout(run, Math.max(1000, Number(delay) || intervalMs));
+  };
+
+  const run = async () => {
+    if (stopped || busy || !isGuestMode()) return;
+    busy = true;
+    try {
+      await runGuestRewardedAdFlow({ moduleKey, placement });
+    } catch (e) {
+      console.warn("guest rewarded ad flow failed:", e);
+    } finally {
+      busy = false;
+      schedule(intervalMs);
+    }
+  };
+
+  schedule(startDelayMs);
+
+  return {
+    stop() {
+      stopped = true;
+      clearTimeout(timerId);
+    },
+    triggerNow() {
+      clearTimeout(timerId);
+      run();
+    }
+  };
 }
 
 export function hasShownOfflineDownloadAd(sessionKey = "offline_languages_page") {
