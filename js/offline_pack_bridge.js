@@ -21,6 +21,46 @@ let handlersInstalled = false;
 let btGuestRewardTimer = null;
 let btGuestRewardBusy = false;
 
+function isLoginEntryPage() {
+  try {
+    return String(location.pathname || "").toLowerCase().endsWith("/pages/login_entry.html");
+  } catch {
+    return false;
+  }
+}
+
+function installLoginEntryGuestAdGate() {
+  if (!isLoginEntryPage()) return;
+
+  try {
+    if (!window.__ITALKY_AD_GATE_IMPORT_REQUESTED__) {
+      window.__ITALKY_AD_GATE_IMPORT_REQUESTED__ = true;
+      import("/js/ad_gate.js").catch((e) => {
+        console.warn("[offline_pack_bridge] ad_gate import failed:", e);
+      });
+    }
+  } catch {}
+
+  try {
+    if (window.__ITALKY_LEGACY_LOGIN_ENTRY_AD_GUARD__) return;
+    window.__ITALKY_LEGACY_LOGIN_ENTRY_AD_GUARD__ = true;
+
+    const nativeSetTimeout = window.setTimeout.bind(window);
+    window.setTimeout = function (callback, delay, ...args) {
+      try {
+        const source = Function.prototype.toString.call(callback);
+        const ms = Number(delay || 0);
+
+        if (ms >= 250000 && source.includes("showAdModal") && source.includes("scheduleAutoAd")) {
+          return 0;
+        }
+      } catch {}
+
+      return nativeSetTimeout(callback, delay, ...args);
+    };
+  } catch {}
+}
+
 function canonical(code = "") {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
@@ -780,11 +820,8 @@ function scheduleBluetoothGuestRewardTimer(delayMs = BT_GUEST_REWARD_INTERVAL_MS
 }
 
 function startBluetoothGuestRewardTimer() {
-  try {
-    const path = String(location.pathname || "").toLowerCase();
-    if (!path.endsWith("/pages/login_entry.html")) return;
-    scheduleBluetoothGuestRewardTimer(BT_GUEST_REWARD_INTERVAL_MS);
-  } catch {}
+  clearTimeout(btGuestRewardTimer);
+  btGuestRewardTimer = null;
 }
 
 function startNativeDownload(source, target, langInfoResolver, options = {}) {
@@ -967,6 +1004,7 @@ function translateOffline(text, source, target) {
   });
 }
 
+installLoginEntryGuestAdGate();
 startBluetoothGuestRewardTimer();
 
 export const OfflinePackBridge = {
