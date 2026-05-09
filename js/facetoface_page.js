@@ -1161,46 +1161,77 @@ function clearLatest(side) {
 function offlineTranslateRequest(payload) {
   return new Promise((resolve) => {
     if (!window.OfflineTranslate?.translate) {
-      resolve(null);
+      resolve({ ok: false, error: "offline_engine_missing" });
       return;
     }
 
+    let timeoutId;
+
     const handler = (e) => {
+      clearTimeout(timeoutId);
       resolve(e.detail || null);
     };
+
+    timeoutId = setTimeout(() => {
+      window.removeEventListener("offlineTranslateResult", handler);
+      resolve({ ok: false, error: "offline_translate_timeout" });
+    }, 12000);
 
     window.addEventListener("offlineTranslateResult", handler, { once: true });
 
     try {
       window.OfflineTranslate.translate(JSON.stringify(payload));
     } catch {
-      resolve(null);
+      clearTimeout(timeoutId);
+      window.removeEventListener("offlineTranslateResult", handler);
+      resolve({ ok: false, error: "offline_translate_failed" });
     }
   });
 }
 
-async function translateText(text, from, to, tone = "neutral") {
+async function translateText(text, from, to, tone = "neutral", context = {}) {
   const src = canonical(from);
   const dst = canonical(to);
   const mode = getFaceTranslateMode();
   const style = mode === "normal" ? "warm" : "balanced";
 
   if (currentRuntimeMode === "offline") {
-    try {
-      const offlineRaw = await offlineTranslateRequest({
-        from: src,
-        to: dst,
-        text: String(text || "").trim()
-      });
+  try {
+    const offlineRaw = await offlineTranslateRequest({
+      from: src,
+      to: dst,
+      text: String(text || "").trim(),
+      sourceLang: src,
+      targetLang: dst,
+      source: src,
+      target: dst,
+      tone: canonTone(tone),
+      side: context.side || "",
+      targetSide: context.targetSide || "",
+      messageId: context.messageId || `${Date.now()}_${Math.random().toString(36).slice(2)}`
+    });
 
-      const offlineValue = String(offlineRaw?.translatedText || "").trim();
-      if (offlineRaw?.ok && offlineValue) return offlineValue;
+    const offlineValue = String(offlineRaw?.translatedText || "").trim();
+    if (offlineRaw?.ok && offlineValue) return offlineValue;
 
-      if (offlineRaw?.error === "offline_license_required") {
-        showToast("Offline çeviri için lisans doğrulanamadı");
-      }
-    } catch {}
+    const offlineError = String(offlineRaw?.error || "");
+
+    if (offlineError === "offline_engine_missing") {
+      showToast("Offline ceviri motoru bulunamadi");
+    } else if (offlineError === "offline_translate_timeout") {
+      showToast("Offline ceviri yanit vermedi");
+    } else if (offlineError === "offline_license_required") {
+      showToast("Offline ceviri icin lisans dogrulanamadi");
+    } else {
+      showToast("Offline ceviri basarisiz");
+    }
+
+    return null;
+  } catch {
+    showToast("Offline ceviri basarisiz");
+    return null;
   }
+}
 
   const { data: { session } = {} } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
   const accessToken = session?.access_token || "";
@@ -1318,7 +1349,10 @@ async function finalizeRecognition(side, text) {
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(cleaned, src, dst, sourceTone);
+  const tr = await translateText(cleaned, src, dst, sourceTone, {
+  side,
+  targetSide: other
+});
 
   if (!tr) {
     setErrorUI();
@@ -1365,7 +1399,10 @@ async function finalizeTypedMessage(side, rawText) {
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(text, src, dst, tone);
+  const tr = await translateText(text, src, dst, tone, {
+  side,
+  targetSide: other
+});
 
   if (!tr) {
     setErrorUI();
