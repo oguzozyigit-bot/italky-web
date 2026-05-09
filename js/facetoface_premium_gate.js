@@ -1,8 +1,14 @@
 // FILE: /js/facetoface_premium_gate.js
 
 import { supabase } from "/js/supabase_client.js";
+import { startGuestRewardedAdTimer } from "/js/ad_gate.js";
 
 const JETON_PAGE_URL = "/pages/jetonbuy.html";
+
+startGuestRewardedAdTimer({
+  moduleKey: "facetoface_guest",
+  placement: "facetoface_guest_timer"
+});
 
 const POPUPS = [
   {
