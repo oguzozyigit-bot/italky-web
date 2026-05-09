@@ -72,12 +72,39 @@ function isGuestMode() {
   }
 }
 
-function hasNativeRewarded() {
+function hasCachedSupabaseSession() {
   try {
-    return !!(window.Native && typeof window.Native.showRewardedAd === "function");
-  } catch {
-    return false;
-  }
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = String(localStorage.key(i) || "");
+      if (!key.startsWith("sb-")) continue;
+
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+
+      const parsed = JSON.parse(raw);
+      const token =
+        parsed?.access_token ||
+        parsed?.currentSession?.access_token ||
+        parsed?.session?.access_token;
+
+      if (token) return true;
+    }
+  } catch {}
+
+  return false;
+}
+
+function getRewardedBridge() {
+  try {
+    if (window.Native && typeof window.Native.showRewardedAd === "function") return window.Native;
+    if (window.AndroidBridge && typeof window.AndroidBridge.showRewardedAd === "function") return window.AndroidBridge;
+  } catch {}
+
+  return null;
+}
+
+function hasNativeRewarded() {
+  return !!getRewardedBridge();
 }
 
 function getOrCreateAdInfoModal() {
@@ -99,9 +126,7 @@ function getOrCreateAdInfoModal() {
       backdrop-filter:blur(10px);
       -webkit-backdrop-filter:blur(10px);
     }
-    .italky-ad-info-backdrop.open{
-      display:flex;
-    }
+    .italky-ad-info-backdrop.open{ display:flex; }
     .italky-ad-info-card{
       width:min(100%,430px);
       border-radius:26px;
@@ -114,9 +139,7 @@ function getOrCreateAdInfoModal() {
     }
     .italky-ad-info-top{
       padding:18px 18px 14px;
-      background:
-        radial-gradient(circle at top left, rgba(191,219,254,.16), transparent 38%),
-        linear-gradient(135deg, #142033 0%, #1a2740 52%, #202b46 100%);
+      background:radial-gradient(circle at top left, rgba(191,219,254,.16), transparent 38%), linear-gradient(135deg, #142033 0%, #1a2740 52%, #202b46 100%);
       border-bottom:1px solid rgba(255,255,255,.06);
     }
     .italky-ad-info-chip{
@@ -164,9 +187,7 @@ function getOrCreateAdInfoModal() {
       font-weight:1000;
       transition:transform .14s ease, opacity .14s ease;
     }
-    .italky-ad-info-btn:active{
-      transform:scale(.985);
-    }
+    .italky-ad-info-btn:active{ transform:scale(.985); }
     .italky-ad-info-btn.primary{
       background:linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 50%, #ddd6fe 100%);
       color:#111827;
@@ -182,7 +203,7 @@ function getOrCreateAdInfoModal() {
     <div class="italky-ad-info-card">
       <div class="italky-ad-info-top">
         <div class="italky-ad-info-chip">italkyAI</div>
-        <div class="italky-ad-info-title" id="italkyAdInfoTitle">Küçük Bir Bilgilendirme</div>
+        <div class="italky-ad-info-title" id="italkyAdInfoTitle">Kucuk Bir Bilgilendirme</div>
         <p class="italky-ad-info-text" id="italkyAdInfoText"></p>
       </div>
       <div class="italky-ad-info-body">
@@ -296,7 +317,7 @@ function getOrCreateGuestRewardModal() {
   modal.innerHTML = `
     <div class="italky-guest-ad-card" role="dialog" aria-modal="true">
       <div class="italky-guest-ad-top">
-        <div class="italky-guest-ad-badge">MİSAFİR MODU</div>
+        <div class="italky-guest-ad-badge">MISAFIR MODU</div>
         <h2 class="italky-guest-ad-title">Reklamsız Deneyime Geçin</h2>
         <p class="italky-guest-ad-text">Kısıtlama olmadan, reklamsız ve tüm özelliklerle devam etmek için Google hesabınızla üyeliğinizi başlatabilirsiniz.</p>
       </div>
@@ -409,11 +430,12 @@ function waitForRewardedResult(timeoutMs = 35000) {
 }
 
 async function showNativeRewarded(referenceKey = "", placement = "module_access") {
-  if (!hasNativeRewarded()) return false;
+  const bridge = getRewardedBridge();
+  if (!bridge) return false;
 
   try {
     const waitPromise = waitForRewardedResult();
-    window.Native.showRewardedAd(String(referenceKey || ""), String(placement || "module_access"));
+    bridge.showRewardedAd(String(referenceKey || ""), String(placement || "module_access"));
     const result = await waitPromise;
 
     if (result?.earned) return true;
@@ -520,6 +542,11 @@ export async function ensureModuleAdAccess(options = {}) {
 
   const key = normalizeModuleKey(moduleKey);
   if (!key) return false;
+
+  if (isGuestMode() || hasCachedSupabaseSession()) {
+    if (typeof onAfterAd === "function") await onAfterAd(true);
+    return true;
+  }
 
   const current = getModuleAccessState(key);
   if (current.active) {
@@ -632,6 +659,35 @@ export function startGuestRewardedAdTimer(options = {}) {
     }
   };
 }
+
+function autoStartGuestRewardTimerForKnownPages() {
+  try {
+    const path = String(location.pathname || "").toLowerCase();
+    const configs = [
+      {
+        match: "/facetoface.html",
+        moduleKey: "facetoface_guest",
+        placement: "facetoface_guest_timer"
+      },
+      {
+        match: "/pages/text_translate_public.html",
+        moduleKey: "text_translate_public_guest",
+        placement: "text_translate_public_guest_timer"
+      },
+      {
+        match: "/pages/game_menu_public.html",
+        moduleKey: "public_games_guest",
+        placement: "public_games_guest_timer"
+      }
+    ];
+    const found = configs.find((item) => path.endsWith(item.match));
+    if (!found) return;
+
+    startGuestRewardedAdTimer(found);
+  } catch {}
+}
+
+autoStartGuestRewardTimerForKnownPages();
 
 export function hasShownOfflineDownloadAd(sessionKey = "offline_languages_page") {
   const key = normalizeModuleKey(sessionKey);
