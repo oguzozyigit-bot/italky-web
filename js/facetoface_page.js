@@ -171,12 +171,33 @@ function getPlaceholder(code) {
 }
 
 function getInstalledOfflinePairs() {
+  let webPairs = {};
+
   try {
     const parsed = JSON.parse(localStorage.getItem(OFFLINE_INSTALLED_KEY) || "{}");
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
+    if (parsed && typeof parsed === "object") webPairs = parsed;
+  } catch {}
+
+  let nativePairs = {};
+
+  try {
+    if (window.OfflineTranslate?.getInstalledOfflinePairs) {
+      const raw = window.OfflineTranslate.getInstalledOfflinePairs();
+      const parsed = typeof raw === "string" ? JSON.parse(raw || "{}") : raw;
+      if (parsed && typeof parsed === "object") nativePairs = parsed;
+    }
+  } catch {}
+
+  const merged = {
+    ...nativePairs,
+    ...webPairs
+  };
+
+  try {
+    localStorage.setItem(OFFLINE_INSTALLED_KEY, JSON.stringify(merged));
+  } catch {}
+
+  return merged;
 }
 
 function getInstalledTargetLangsForNative(nativeLang) {
