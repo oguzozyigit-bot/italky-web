@@ -94,7 +94,6 @@ function injectStyles() {
     .italky-member-link::before{background:radial-gradient(circle at left,rgba(96,165,250,.20),transparent 55%),linear-gradient(135deg,rgba(255,255,255,.045),rgba(37,99,235,.22))!important;}
     .italky-shortcut-link{border-color:rgba(56,189,248,.28)!important;}
     .italky-login-mic-btn{background:rgba(37,99,235,.12);border-color:rgba(96,165,250,.35);color:#dbeafe;}
-    .italky-guide-grid{display:grid;gap:10px;margin-top:20px;}
     .italky-guide-card{width:100%;min-height:56px;border:none;border-radius:16px;padding:12px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(147,197,253,.18);color:#fff;font:inherit;text-align:left;cursor:pointer;}
     .italky-guide-card strong{display:block;font-size:14px;font-weight:1000;color:#eaf2ff;}
     .italky-guide-card span{display:block;margin-top:4px;font-size:12px;font-weight:800;line-height:1.45;color:rgba(226,232,240,.72);}
@@ -222,8 +221,26 @@ function installMicLoginButton() {
   if (composer) composer.appendChild(btn);
 }
 
+function ensureGuideModal() {
+  let modal = $("uiModal") || $("guideModeModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "guideModeModal";
+  modal.className = "modal";
+  modal.innerHTML = `
+    <div class="modal-card">
+      <h3 class="modal-title"></h3>
+      <p class="modal-text"></p>
+      <div class="modal-actions" style="grid-template-columns:1fr;"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
 function setModalContent(title, text, actionsHtml) {
-  const modal = $("uiModal") || $("guideModeModal");
+  const modal = ensureGuideModal();
   if (!modal) return null;
 
   const titleEl = $("uiModalTitle") || modal.querySelector(".modal-title");
