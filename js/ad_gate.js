@@ -1,3 +1,5 @@
+import "/js/public_guest_ux.js";
+
 // /js/ad_gate.js
 
 const MODULE_AD_STATE_KEY = "italky_module_ad_state_v2";
