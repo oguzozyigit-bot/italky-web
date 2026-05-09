@@ -21,6 +21,39 @@ function getOrCreateNacId() {
   }
 }
 
+function safeRedirectPath(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("http://")) return "";
+  if (raw.startsWith("https://")) return "";
+  if (raw.startsWith("//")) return "";
+  if (!raw.startsWith("/")) return "";
+  return raw;
+}
+
+export async function loginWithGoogle(next = "") {
+  const callbackUrl = new URL("/pages/auth_callback.html", location.origin);
+  const safeNext = safeRedirectPath(next);
+
+  if (safeNext) {
+    callbackUrl.searchParams.set("next", safeNext);
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: callbackUrl.toString(),
+      queryParams: {
+        access_type: "offline",
+        prompt: "select_account"
+      }
+    }
+  });
+
+  if (error) throw error;
+  return data;
+}
+
 async function lockThisDevice() {
   const nacId = getOrCreateNacId();
   const { error } = await supabase.rpc("lock_device", { p_nac_id: nacId });
