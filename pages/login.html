@@ -210,6 +210,7 @@
       position:relative;
       z-index:40;
       pointer-events:auto;
+      touch-action:manipulation;
       width:100%;
       height:56px;
       border:none;
@@ -385,6 +386,62 @@
   </footer>
 
   <div id="toast"></div>
+
+  <script>
+    (function(){
+      const GUEST_MODE_KEY = "italky_guest_mode_v1";
+      let guestBusy = false;
+      let googleBusy = false;
+
+      function bindPress(el, handler){
+        if(!el) return;
+        let lastRun = 0;
+        const wrapped = function(event){
+          try{ event.preventDefault(); }catch(e){}
+          const now = Date.now();
+          if(now - lastRun < 550) return;
+          lastRun = now;
+          handler(event);
+        };
+
+        el.addEventListener("click", wrapped);
+        el.addEventListener("pointerup", wrapped);
+        el.addEventListener("touchend", wrapped, { passive:false });
+      }
+
+      function continueAsGuestFallback(){
+        if(guestBusy) return;
+        guestBusy = true;
+        try{ localStorage.setItem(GUEST_MODE_KEY, "1"); }catch(e){}
+        location.assign("/pages/login_entry.html");
+      }
+
+      function googleFallback(){
+        if(googleBusy) return;
+        googleBusy = true;
+
+        if(typeof window.__italkyLoginGooglePress === "function"){
+          window.__italkyLoginGooglePress();
+          return;
+        }
+
+        try{
+          if(window.Native && typeof window.Native.startGoogleLogin === "function"){
+            window.Native.startGoogleLogin();
+            return;
+          }
+        }catch(e){}
+
+        googleBusy = false;
+        document.dispatchEvent(new CustomEvent("italkyLoginGooglePress"));
+      }
+
+      document.addEventListener("DOMContentLoaded", function(){
+        bindPress(document.getElementById("guestBtn"), continueAsGuestFallback);
+        bindPress(document.getElementById("googleBtn"), googleFallback);
+      });
+    })();
+  </script>
 
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
@@ -625,6 +682,8 @@
       continueAsGuest();
     }
 
+    window.__italkyLoginGooglePress = handleGooglePress;
+    document.addEventListener("italkyLoginGooglePress", handleGooglePress);
     bindSafePress(googleBtn, handleGooglePress);
     bindSafePress(guestBtn, handleGuestPress);
 
