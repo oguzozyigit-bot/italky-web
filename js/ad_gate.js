@@ -45,23 +45,19 @@ function setModuleAdState(next) {
 
 function getOfflineAdState() {
   const state = readJson(OFFLINE_AD_STATE_KEY, { shown_pairs: {} });
-
-  if (!state.shown_pairs || typeof state.shown_pairs !== "object") {
-    state.shown_pairs = {};
-  }
-
+  if (!state.shown_pairs || typeof state.shown_pairs !== "object") state.shown_pairs = {};
   return state;
 }
 
 function setOfflineAdState(next) {
   const safe = next && typeof next === "object" ? next : { shown_pairs: {} };
-
-  if (!safe.shown_pairs || typeof safe.shown_pairs !== "object") {
-    safe.shown_pairs = {};
-  }
-
+  if (!safe.shown_pairs || typeof safe.shown_pairs !== "object") safe.shown_pairs = {};
   writeJson(OFFLINE_AD_STATE_KEY, safe);
   return safe;
+}
+
+function isTruthy(value) {
+  return value === true || value === "true" || value === 1 || value === "1";
 }
 
 function isGuestMode() {
@@ -94,17 +90,74 @@ function hasCachedSupabaseSession() {
   return false;
 }
 
+function getCachedAccess() {
+  try {
+    return window.__ITALKY_ACCESS__ || null;
+  } catch {
+    return null;
+  }
+}
+
+function isAdsDisabledByAccess() {
+  const access = getCachedAccess();
+  return Boolean(
+    isTruthy(access?.ads_disabled) ||
+    isTruthy(access?.no_ads) ||
+    isTruthy(access?.is_no_ads_member) ||
+    isTruthy(access?.subscription_active) ||
+    isTruthy(access?.has_active_membership) ||
+    isTruthy(access?.is_member) ||
+    isTruthy(access?.is_admin) ||
+    isTruthy(access?.is_superadmin)
+  );
+}
+
+function canRunGuestRewardAds() {
+  return isGuestMode() && !hasCachedSupabaseSession() && !isAdsDisabledByAccess();
+}
+
 function getRewardedBridge() {
   try {
-    if (window.Native && typeof window.Native.showRewardedAd === "function") return window.Native;
-    if (window.AndroidBridge && typeof window.AndroidBridge.showRewardedAd === "function") return window.AndroidBridge;
-  } catch {}
-
-  return null;
+    const candidates = [window.AndroidAdBridge, window.NativeAds, window.AdMobBridge, window.Native, window.AndroidBridge];
+    return candidates.find((bridge) => bridge && (
+      typeof bridge.showRewardedAd === "function" ||
+      typeof bridge.showRewardedAdForLang === "function"
+    )) || null;
+  } catch {
+    return null;
+  }
 }
 
 function hasNativeRewarded() {
   return !!getRewardedBridge();
+}
+
+function callRewardedBridge(referenceKey = "", placement = "module_access") {
+  const bridge = getRewardedBridge();
+  if (!bridge) return false;
+
+  try {
+    if (typeof bridge.showRewardedAdForLang === "function") {
+      bridge.showRewardedAdForLang("", placement || referenceKey || "guest_reward");
+      return true;
+    }
+  } catch {}
+
+  try {
+    if (typeof bridge.showRewardedAd === "function") {
+      bridge.showRewardedAd(String(referenceKey || ""), String(placement || "guest_reward"));
+      return true;
+    }
+  } catch {}
+
+  try {
+    if (typeof bridge.showRewardedAd === "function") {
+      bridge.showRewardedAd(String(placement || referenceKey || "guest_reward"));
+      return true;
+    }
+  } catch {}
+
+  return false;
 }
 
 function getOrCreateAdInfoModal() {
@@ -114,85 +167,17 @@ function getOrCreateAdInfoModal() {
   const style = document.createElement("style");
   style.id = "italkyAdInfoModalStyle";
   style.textContent = `
-    .italky-ad-info-backdrop{
-      position:fixed;
-      inset:0;
-      z-index:999999;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      background:rgba(4,8,18,.58);
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
-    }
-    .italky-ad-info-backdrop.open{ display:flex; }
-    .italky-ad-info-card{
-      width:min(100%,430px);
-      border-radius:26px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(10,16,30,.98), rgba(8,12,24,.98));
-      box-shadow:0 24px 50px rgba(0,0,0,.34);
-      color:#fff;
-      font-family:Outfit, system-ui, sans-serif;
-    }
-    .italky-ad-info-top{
-      padding:18px 18px 14px;
-      background:radial-gradient(circle at top left, rgba(191,219,254,.16), transparent 38%), linear-gradient(135deg, #142033 0%, #1a2740 52%, #202b46 100%);
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .italky-ad-info-chip{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:32px;
-      padding:8px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      color:rgba(255,255,255,.92);
-      font-size:12px;
-      font-weight:1000;
-    }
-    .italky-ad-info-title{
-      margin:12px 0 8px;
-      font-size:24px;
-      line-height:1.08;
-      font-weight:1000;
-      letter-spacing:-.5px;
-      color:#eef4ff;
-    }
-    .italky-ad-info-text{
-      margin:0;
-      font-size:13px;
-      line-height:1.68;
-      font-weight:800;
-      color:rgba(235,242,255,.82);
-      white-space:pre-line;
-    }
-    .italky-ad-info-body{
-      padding:16px;
-      display:grid;
-      gap:10px;
-      background:linear-gradient(180deg, rgba(9,13,24,.98), rgba(7,10,20,.98));
-    }
-    .italky-ad-info-btn{
-      min-height:50px;
-      border:none;
-      border-radius:16px;
-      cursor:pointer;
-      font-family:inherit;
-      font-size:14px;
-      font-weight:1000;
-      transition:transform .14s ease, opacity .14s ease;
-    }
-    .italky-ad-info-btn:active{ transform:scale(.985); }
-    .italky-ad-info-btn.primary{
-      background:linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 50%, #ddd6fe 100%);
-      color:#111827;
-      box-shadow:0 12px 24px rgba(99,102,241,.16);
-    }
+    .italky-ad-info-backdrop{position:fixed;inset:0;z-index:999999;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(4,8,18,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    .italky-ad-info-backdrop.open{display:flex}
+    .italky-ad-info-card{width:min(100%,430px);border-radius:26px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(10,16,30,.98),rgba(8,12,24,.98));box-shadow:0 24px 50px rgba(0,0,0,.34);color:#fff;font-family:Outfit,system-ui,sans-serif}
+    .italky-ad-info-top{padding:18px 18px 14px;background:radial-gradient(circle at top left,rgba(191,219,254,.16),transparent 38%),linear-gradient(135deg,#142033 0%,#1a2740 52%,#202b46 100%);border-bottom:1px solid rgba(255,255,255,.06)}
+    .italky-ad-info-chip{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.92);font-size:12px;font-weight:1000}
+    .italky-ad-info-title{margin:12px 0 8px;font-size:24px;line-height:1.08;font-weight:1000;letter-spacing:-.5px;color:#eef4ff}
+    .italky-ad-info-text{margin:0;font-size:13px;line-height:1.68;font-weight:800;color:rgba(235,242,255,.82);white-space:pre-line}
+    .italky-ad-info-body{padding:16px;display:grid;gap:10px;background:linear-gradient(180deg,rgba(9,13,24,.98),rgba(7,10,20,.98))}
+    .italky-ad-info-btn{min-height:50px;border:none;border-radius:16px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:1000;transition:transform .14s ease,opacity .14s ease}
+    .italky-ad-info-btn:active{transform:scale(.985)}
+    .italky-ad-info-btn.primary{background:linear-gradient(135deg,#c7d2fe 0%,#a5b4fc 50%,#ddd6fe 100%);color:#111827;box-shadow:0 12px 24px rgba(99,102,241,.16)}
   `;
   document.head.appendChild(style);
 
@@ -224,89 +209,18 @@ function getOrCreateGuestRewardModal() {
     const style = document.createElement("style");
     style.id = "italkyGuestRewardModalStyle";
     style.textContent = `
-      .italky-guest-ad-backdrop{
-        position:fixed;
-        inset:0;
-        z-index:1000000;
-        display:none;
-        align-items:center;
-        justify-content:center;
-        padding:20px;
-        background:rgba(2,6,23,.72);
-        backdrop-filter:blur(12px);
-        -webkit-backdrop-filter:blur(12px);
-      }
-      .italky-guest-ad-backdrop.open{ display:flex; }
-      .italky-guest-ad-card{
-        width:min(100%,430px);
-        border-radius:24px;
-        overflow:hidden;
-        border:1px solid rgba(96,165,250,.20);
-        background:linear-gradient(180deg,#0f1b33 0%,#071225 100%);
-        box-shadow:0 26px 64px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.045);
-        color:#fff;
-        font-family:Outfit, system-ui, sans-serif;
-      }
-      .italky-guest-ad-top{
-        padding:22px 20px 16px;
-        text-align:left;
-        background:radial-gradient(circle at top left, rgba(96,165,250,.18), transparent 42%), linear-gradient(180deg,rgba(15,27,51,.98),rgba(11,20,38,.98));
-      }
-      .italky-guest-ad-badge{
-        display:inline-flex;
-        align-items:center;
-        min-height:30px;
-        padding:7px 12px;
-        border-radius:999px;
-        border:1px solid rgba(147,197,253,.22);
-        background:rgba(59,130,246,.11);
-        color:#dbeafe;
-        font-size:11px;
-        font-weight:1000;
-        letter-spacing:.3px;
-      }
-      .italky-guest-ad-title{
-        margin:14px 0 10px;
-        color:#f8fbff;
-        font-size:23px;
-        line-height:1.1;
-        font-weight:1000;
-        letter-spacing:-.35px;
-      }
-      .italky-guest-ad-text{
-        margin:0;
-        color:rgba(226,232,240,.84);
-        font-size:14px;
-        line-height:1.62;
-        font-weight:760;
-      }
-      .italky-guest-ad-actions{
-        display:grid;
-        gap:10px;
-        padding:16px;
-        background:rgba(5,10,22,.76);
-      }
-      .italky-guest-ad-btn{
-        min-height:52px;
-        border:none;
-        border-radius:16px;
-        cursor:pointer;
-        font:inherit;
-        font-size:14px;
-        font-weight:1000;
-        transition:transform .14s ease, opacity .14s ease;
-      }
-      .italky-guest-ad-btn:active{ transform:scale(.985); }
-      .italky-guest-ad-btn.primary{
-        color:#061227;
-        background:linear-gradient(135deg,#dbeafe 0%,#60a5fa 100%);
-        box-shadow:0 14px 28px rgba(37,99,235,.22);
-      }
-      .italky-guest-ad-btn.secondary{
-        color:#eaf2ff;
-        background:rgba(255,255,255,.055);
-        border:1px solid rgba(255,255,255,.11);
-      }
+      .italky-guest-ad-backdrop{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,.74);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+      .italky-guest-ad-backdrop.open{display:flex}
+      .italky-guest-ad-card{width:min(100%,430px);border-radius:24px;overflow:hidden;border:1px solid rgba(96,165,250,.22);background:linear-gradient(180deg,#0f1b33 0%,#071225 100%);box-shadow:0 26px 64px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.045);color:#fff;font-family:Outfit,system-ui,sans-serif}
+      .italky-guest-ad-top{padding:22px 20px 16px;text-align:left;background:radial-gradient(circle at top left,rgba(96,165,250,.18),transparent 42%),linear-gradient(180deg,rgba(15,27,51,.98),rgba(11,20,38,.98))}
+      .italky-guest-ad-badge{display:inline-flex;align-items:center;min-height:30px;padding:7px 12px;border-radius:999px;border:1px solid rgba(147,197,253,.22);background:rgba(59,130,246,.11);color:#dbeafe;font-size:11px;font-weight:1000;letter-spacing:.3px}
+      .italky-guest-ad-title{margin:14px 0 10px;color:#f8fbff;font-size:23px;line-height:1.1;font-weight:1000;letter-spacing:-.35px}
+      .italky-guest-ad-text{margin:0;color:rgba(226,232,240,.86);font-size:14px;line-height:1.62;font-weight:760}
+      .italky-guest-ad-actions{display:grid;gap:10px;padding:16px;background:rgba(5,10,22,.76)}
+      .italky-guest-ad-btn{min-height:52px;border:none;border-radius:16px;cursor:pointer;font:inherit;font-size:14px;font-weight:1000;transition:transform .14s ease,opacity .14s ease}
+      .italky-guest-ad-btn:active{transform:scale(.985)}
+      .italky-guest-ad-btn.primary{color:#061227;background:linear-gradient(135deg,#dbeafe 0%,#60a5fa 100%);box-shadow:0 14px 28px rgba(37,99,235,.22)}
+      .italky-guest-ad-btn.secondary{color:#eaf2ff;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.11)}
     `;
     document.head.appendChild(style);
   }
@@ -318,12 +232,12 @@ function getOrCreateGuestRewardModal() {
     <div class="italky-guest-ad-card" role="dialog" aria-modal="true">
       <div class="italky-guest-ad-top">
         <div class="italky-guest-ad-badge">MISAFIR MODU</div>
-        <h2 class="italky-guest-ad-title">Reklamsız Deneyime Geçin</h2>
-        <p class="italky-guest-ad-text">Kısıtlama olmadan, reklamsız ve tüm özelliklerle devam etmek için Google hesabınızla üyeliğinizi başlatabilirsiniz.</p>
+        <h2 class="italky-guest-ad-title">Reklamsız Devam Etmek İster misiniz?</h2>
+        <p class="italky-guest-ad-text">Misafir kullanımını sürdürebilmek için kısa bir ödüllü reklam izleyebilirsiniz. Reklamsız ve sınırsız kullanım için Google hesabınızla üyeliğinizi başlatabilirsiniz.</p>
       </div>
       <div class="italky-guest-ad-actions">
-        <button class="italky-guest-ad-btn primary" id="italkyGuestLoginBtn" type="button">Google ile Üye Ol</button>
-        <button class="italky-guest-ad-btn secondary" id="italkyGuestWatchBtn" type="button">Reklamı İzleyip Devam Et</button>
+        <button class="italky-guest-ad-btn primary" id="italkyGuestWatchBtn" type="button">Reklamı İzleyip Devam Et</button>
+        <button class="italky-guest-ad-btn secondary" id="italkyGuestLoginBtn" type="button">Reklamsız Kullanım İçin Üye Ol</button>
       </div>
     </div>
   `;
@@ -332,10 +246,7 @@ function getOrCreateGuestRewardModal() {
   return modal;
 }
 
-function showSoftAdModal({
-  title = "Bu modül için kısa bir reklam gösterilecek",
-  text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir."
-} = {}) {
+function showSoftAdModal({ title = "Bu modül için kısa bir reklam gösterilecek", text = "Bu modülü kullanabilmeniz için 1 kısa reklam gösterilecektir." } = {}) {
   return new Promise((resolve) => {
     const modal = getOrCreateAdInfoModal();
     const titleEl = modal.querySelector("#italkyAdInfoTitle");
@@ -395,52 +306,38 @@ function waitForRewardedResult(timeoutMs = 35000) {
 
     const finish = (payload) => {
       if (done) return;
-
       done = true;
       clearTimeout(timer);
-
       window.onNativeRewardEarned = prevEarned;
       window.onNativeRewardClosed = prevClosed;
-
-      resolve({
-        shown: !!payload?.shown,
-        earned,
-        payload: payload || {}
-      });
+      resolve({ shown: !!payload?.shown, earned, payload: payload || {} });
     };
 
     window.onNativeRewardEarned = function (payload) {
-      try {
-        if (typeof prevEarned === "function") prevEarned(payload);
-      } catch {}
+      try { if (typeof prevEarned === "function") prevEarned(payload); } catch {}
       earned = true;
     };
 
     window.onNativeRewardClosed = function (payload) {
-      try {
-        if (typeof prevClosed === "function") prevClosed(payload);
-      } catch {}
+      try { if (typeof prevClosed === "function") prevClosed(payload); } catch {}
       finish(payload || { shown: true });
     };
 
-    const timer = setTimeout(() => {
-      finish({ shown: false, reason: "timeout" });
-    }, timeoutMs);
+    const timer = setTimeout(() => finish({ shown: false, reason: "timeout" }), timeoutMs);
   });
 }
 
 async function showNativeRewarded(referenceKey = "", placement = "module_access") {
-  const bridge = getRewardedBridge();
-  if (!bridge) return false;
+  if (!hasNativeRewarded()) return false;
 
   try {
     const waitPromise = waitForRewardedResult();
-    bridge.showRewardedAd(String(referenceKey || ""), String(placement || "module_access"));
-    const result = await waitPromise;
+    const called = callRewardedBridge(referenceKey, placement);
+    if (!called) return false;
 
+    const result = await waitPromise;
     if (result?.earned) return true;
     if (result?.shown) return true;
-
     return false;
   } catch {
     return false;
@@ -462,29 +359,7 @@ function showFallbackAdInfo(message = "Bu modül için kısa bir reklam gösteri
     const toast = document.createElement("div");
     toast.id = "italkyAdMiniToast";
     toast.textContent = String(message || "");
-
-    toast.style.position = "fixed";
-    toast.style.left = "50%";
-    toast.style.bottom = "28px";
-    toast.style.transform = "translateX(-50%) translateY(120px)";
-    toast.style.maxWidth = "min(92vw, 520px)";
-    toast.style.padding = "14px 18px";
-    toast.style.borderRadius = "18px";
-    toast.style.background = "rgba(10,16,30,.96)";
-    toast.style.border = "1px solid rgba(255,255,255,.10)";
-    toast.style.boxShadow = "0 18px 36px rgba(0,0,0,.32)";
-    toast.style.backdropFilter = "blur(12px)";
-    toast.style.webkitBackdropFilter = "blur(12px)";
-    toast.style.color = "#eef4ff";
-    toast.style.fontFamily = "Outfit, system-ui, sans-serif";
-    toast.style.fontSize = "13px";
-    toast.style.fontWeight = "800";
-    toast.style.lineHeight = "1.55";
-    toast.style.textAlign = "center";
-    toast.style.zIndex = "1000000";
-    toast.style.transition = "transform .22s ease, opacity .22s ease";
-    toast.style.opacity = "0";
-
+    toast.style.cssText = "position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(120px);max-width:min(92vw,520px);padding:14px 18px;border-radius:18px;background:rgba(10,16,30,.96);border:1px solid rgba(255,255,255,.10);box-shadow:0 18px 36px rgba(0,0,0,.32);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#eef4ff;font-family:Outfit,system-ui,sans-serif;font-size:13px;font-weight:800;line-height:1.55;text-align:center;z-index:1000000;transition:transform .22s ease,opacity .22s ease;opacity:0";
     document.body.appendChild(toast);
 
     requestAnimationFrame(() => {
@@ -504,12 +379,7 @@ export function getModuleAccessState(moduleKey = "") {
   const key = normalizeModuleKey(moduleKey);
   const state = getModuleAdState();
   const until = Number(state?.[key]?.until || 0);
-
-  return {
-    moduleKey: key,
-    until,
-    active: until > nowTs()
-  };
+  return { moduleKey: key, until, active: until > nowTs() };
 }
 
 export function markModuleAdShown(moduleKey = "", hours = 24) {
@@ -518,15 +388,10 @@ export function markModuleAdShown(moduleKey = "", hours = 24) {
 
   const state = getModuleAdState();
   const until = nowTs() + Number(hours || 24) * 60 * 60 * 1000;
-
   state[key] = { until };
   setModuleAdState(state);
 
-  return {
-    moduleKey: key,
-    until,
-    active: true
-  };
+  return { moduleKey: key, until, active: true };
 }
 
 export async function ensureModuleAdAccess(options = {}) {
@@ -543,7 +408,7 @@ export async function ensureModuleAdAccess(options = {}) {
   const key = normalizeModuleKey(moduleKey);
   if (!key) return false;
 
-  if (isGuestMode() || hasCachedSupabaseSession()) {
+  if (isGuestMode() || hasCachedSupabaseSession() || isAdsDisabledByAccess()) {
     if (typeof onAfterAd === "function") await onAfterAd(true);
     return true;
   }
@@ -554,9 +419,7 @@ export async function ensureModuleAdAccess(options = {}) {
     return true;
   }
 
-  try {
-    if (typeof onBeforeAd === "function") await onBeforeAd();
-  } catch {}
+  try { if (typeof onBeforeAd === "function") await onBeforeAd(); } catch {}
 
   const accepted = await showSoftAdModal({ title, text });
   if (!accepted) {
@@ -565,32 +428,22 @@ export async function ensureModuleAdAccess(options = {}) {
   }
 
   let rewarded = false;
-
-  if (hasNativeRewarded()) {
-    rewarded = await showNativeRewarded(key, placement);
-  } else {
+  if (hasNativeRewarded()) rewarded = await showNativeRewarded(key, placement);
+  else {
     showFallbackAdInfo("Bu modülü kullanmak için kısa bir reklam gösterilebilir.");
     rewarded = true;
   }
 
-  if (rewarded) {
-    markModuleAdShown(key, hours);
-  }
+  if (rewarded && hours > 0) markModuleAdShown(key, hours);
 
-  try {
-    if (typeof onAfterAd === "function") await onAfterAd(rewarded);
-  } catch {}
-
+  try { if (typeof onAfterAd === "function") await onAfterAd(rewarded); } catch {}
   return rewarded;
 }
 
 export async function runGuestRewardedAdFlow(options = {}) {
-  const {
-    moduleKey = "guest_mode",
-    placement = "guest_mode_timer"
-  } = options;
+  const { moduleKey = "guest_mode", placement = "guest_mode_timer" } = options;
 
-  if (!isGuestMode()) return true;
+  if (!canRunGuestRewardAds()) return true;
 
   const choice = await showGuestRewardChoice();
 
@@ -602,10 +455,8 @@ export async function runGuestRewardedAdFlow(options = {}) {
   if (choice !== "watch") return false;
 
   let rewarded = false;
-
-  if (hasNativeRewarded()) {
-    rewarded = await showNativeRewarded(moduleKey, placement);
-  } else {
+  if (hasNativeRewarded()) rewarded = await showNativeRewarded(moduleKey, placement);
+  else {
     showFallbackAdInfo("Reklam hazır değilse misafir oturumu bu aşamada devam eder.");
     rewarded = true;
   }
@@ -621,68 +472,78 @@ export function startGuestRewardedAdTimer(options = {}) {
     startDelayMs = GUEST_REWARD_INTERVAL_MS
   } = options;
 
-  if (!isGuestMode()) return null;
+  if (!canRunGuestRewardAds()) return null;
+
+  const key = normalizeModuleKey(moduleKey || placement || "guest_mode");
+  window.__ITALKY_GUEST_REWARD_TIMERS__ = window.__ITALKY_GUEST_REWARD_TIMERS__ || {};
+
+  if (window.__ITALKY_GUEST_REWARD_TIMERS__[key]) {
+    return window.__ITALKY_GUEST_REWARD_TIMERS__[key];
+  }
 
   let stopped = false;
   let busy = false;
   let timerId = null;
 
   const schedule = (delay = intervalMs) => {
-    if (stopped || !isGuestMode()) return;
+    if (stopped || !canRunGuestRewardAds()) return;
     clearTimeout(timerId);
     timerId = setTimeout(run, Math.max(1000, Number(delay) || intervalMs));
   };
 
   const run = async () => {
-    if (stopped || busy || !isGuestMode()) return;
+    if (stopped || busy || !canRunGuestRewardAds()) return;
+    if (document.getElementById(GUEST_REWARD_MODAL_ID)?.classList.contains("open")) return;
+
     busy = true;
+    let ok = false;
     try {
-      await runGuestRewardedAdFlow({ moduleKey, placement });
+      ok = await runGuestRewardedAdFlow({ moduleKey: key, placement });
     } catch (e) {
       console.warn("guest rewarded ad flow failed:", e);
     } finally {
       busy = false;
-      schedule(intervalMs);
+      schedule(ok === false ? 15000 : intervalMs);
     }
   };
 
   schedule(startDelayMs);
 
-  return {
+  const controller = {
     stop() {
       stopped = true;
       clearTimeout(timerId);
+      delete window.__ITALKY_GUEST_REWARD_TIMERS__?.[key];
     },
     triggerNow() {
       clearTimeout(timerId);
       run();
     }
   };
+
+  window.__ITALKY_GUEST_REWARD_TIMERS__[key] = controller;
+  return controller;
 }
 
 function autoStartGuestRewardTimerForKnownPages() {
   try {
     const path = String(location.pathname || "").toLowerCase();
-    const configs = [
-      {
-        match: "/facetoface.html",
-        moduleKey: "facetoface_guest",
-        placement: "facetoface_guest_timer"
-      },
-      {
-        match: "/pages/text_translate_public.html",
-        moduleKey: "text_translate_public_guest",
-        placement: "text_translate_public_guest_timer"
-      },
-      {
-        match: "/pages/game_menu_public.html",
-        moduleKey: "public_games_guest",
-        placement: "public_games_guest_timer"
-      }
-    ];
-    const found = configs.find((item) => path.endsWith(item.match));
-    if (!found) return;
 
+    const configs = [
+      { match: "/facetoface.html", moduleKey: "facetoface_guest", placement: "facetoface_guest_timer" },
+      { match: "/pages/login_entry.html", moduleKey: "public_facetoface_guest", placement: "public_facetoface_guest_timer" },
+      { match: "/pages/text_translate_public.html", moduleKey: "text_translate_public_guest", placement: "text_translate_public_guest_timer" },
+      { match: "/pages/game_menu_public.html", moduleKey: "public_games_guest", placement: "public_games_guest_timer" },
+      { match: "/pages/level_test_public.html", moduleKey: "public_level_test_guest", placement: "public_level_test_guest_timer" }
+    ];
+
+    let found = configs.find((item) => path.endsWith(item.match));
+
+    if (!found && path.startsWith("/pages/public/") && path.endsWith(".html")) {
+      found = { moduleKey: "public_game_play_guest", placement: "public_game_play_guest_timer" };
+    }
+
+    if (!found) return;
     startGuestRewardedAdTimer(found);
   } catch {}
 }
@@ -726,9 +587,7 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
     return true;
   }
 
-  try {
-    if (typeof onBeforeAd === "function") await onBeforeAd();
-  } catch {}
+  try { if (typeof onBeforeAd === "function") await onBeforeAd(); } catch {}
 
   if (!skipInfoModal) {
     const accepted = await showSoftAdModal({ title, text });
@@ -739,33 +598,22 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
   }
 
   let rewarded = false;
-
-  if (hasNativeRewarded()) {
-    rewarded = await showNativeRewarded(key, "offline_languages_download");
-  } else {
+  if (hasNativeRewarded()) rewarded = await showNativeRewarded(key, "offline_languages_download");
+  else {
     showFallbackAdInfo("Reklam hazırlanıyor, indirme başlatılıyor.");
     rewarded = true;
   }
 
-  if (rewarded && hours > 0) {
-    markOfflineDownloadAdShown(key, hours);
-  }
+  if (rewarded && hours > 0) markOfflineDownloadAdShown(key, hours);
 
-  try {
-    if (typeof onAfterAd === "function") await onAfterAd(rewarded);
-  } catch {}
-
+  try { if (typeof onAfterAd === "function") await onAfterAd(rewarded); } catch {}
   return rewarded;
 }
 
 export function resetModuleAdStateForDebug() {
-  try {
-    localStorage.removeItem(MODULE_AD_STATE_KEY);
-  } catch {}
+  try { localStorage.removeItem(MODULE_AD_STATE_KEY); } catch {}
 }
 
 export function resetOfflineAdStateForDebug() {
-  try {
-    localStorage.removeItem(OFFLINE_AD_STATE_KEY);
-  } catch {}
+  try { localStorage.removeItem(OFFLINE_AD_STATE_KEY); } catch {}
 }
