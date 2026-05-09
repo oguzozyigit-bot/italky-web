@@ -237,20 +237,43 @@
       justify-content:center;
       padding:22px;
       z-index:2147483647;
-      background:rgba(0,0,0,.72);
-      backdrop-filter:blur(12px);
+      background:rgba(2,6,23,.78);
+      backdrop-filter:blur(14px);
     }
 
     .update-modal.show{ display:flex; }
 
     .update-card{
-      width:min(100%,390px);
-      border-radius:24px;
-      padding:22px;
+      width:min(100%,392px);
+      border-radius:22px;
+      padding:24px 22px;
       text-align:center;
-      background:linear-gradient(145deg,rgba(8,12,24,.98),rgba(15,8,24,.98));
-      border:1px solid rgba(0,242,255,.22);
-      box-shadow:0 24px 60px rgba(0,0,0,.52), 0 0 36px rgba(0,242,255,.12);
+      background:linear-gradient(180deg,#0f1b33 0%,#071225 100%);
+      border:1px solid rgba(96,165,250,.26);
+      box-shadow:0 26px 64px rgba(0,0,0,.56), 0 0 0 1px rgba(255,255,255,.035) inset;
+    }
+
+    .update-icon{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      margin:0 auto 16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg,rgba(59,130,246,.18),rgba(14,165,233,.08));
+      border:1px solid rgba(147,197,253,.26);
+      color:#93c5fd;
+    }
+
+    .update-icon svg{
+      width:30px;
+      height:30px;
+      stroke:currentColor;
+      stroke-width:2.2;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
     }
 
     .update-title{
@@ -258,28 +281,30 @@
       font-family:'Space Grotesk',sans-serif;
       font-size:22px;
       font-weight:1000;
+      color:#f8fbff;
     }
 
     .update-text{
       margin:0;
-      color:rgba(255,255,255,.82);
-      font-size:15px;
-      line-height:1.55;
-      font-weight:800;
+      color:rgba(226,232,240,.84);
+      font-size:14px;
+      line-height:1.58;
+      font-weight:750;
     }
 
     .update-btn{
       width:100%;
       min-height:52px;
-      margin-top:18px;
+      margin-top:20px;
       border:none;
-      border-radius:18px;
-      background:var(--brand-grad);
-      color:#05060d;
+      border-radius:16px;
+      background:linear-gradient(135deg,#e0f2fe 0%,#60a5fa 100%);
+      color:#061227;
       font-family:inherit;
       font-size:15px;
       font-weight:1000;
       cursor:pointer;
+      box-shadow:0 14px 28px rgba(37,99,235,.24);
     }
 
     #toast{ position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-120px); background:rgba(6,6,12,.95); border:1px solid var(--accent); padding:12px 24px; border-radius:999px; color:#fff; z-index:9999; font-weight:900; font-size:13px; transition:.3s ease; backdrop-filter:blur(15px); pointer-events:none; max-width:90vw; text-align:center; box-shadow:0 10px 30px rgba(0,242,255,.2); }
@@ -334,9 +359,16 @@
 
   <div id="updateModal" class="update-modal" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
     <div class="update-card">
+      <div class="update-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="M12 16V8"></path>
+          <path d="M8.5 11.5 12 8l3.5 3.5"></path>
+        </svg>
+      </div>
       <h2 id="updateTitle" class="update-title">Güncelleme Gerekli</h2>
-      <p class="update-text">Uygulamada güncelleme var. Lütfen uygulamayı güncelleyin.</p>
-      <button id="updatePlayBtn" class="update-btn" type="button">Play Store'da Güncelle</button>
+      <p class="update-text">Uygulamaya yeni özellikler ve iyileştirmeler eklendi. Devam etmek için lütfen uygulamayı güncelleyin.</p>
+      <button id="updatePlayBtn" class="update-btn" type="button">Güncelle</button>
     </div>
   </div>
 
@@ -410,8 +442,10 @@
     const updateModal = document.getElementById("updateModal");
     const updatePlayBtn = document.getElementById("updatePlayBtn");
 
-    const MIN_REQUIRED_VERSION = 83;
+    const MIN_REQUIRED_VERSION = 82;
+    const PLAY_STORE_PACKAGE = "com.ozyigits.italkyai";
     const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+    const MARKET_URL = "market://details?id=com.ozyigits.italkyai";
     const MARKET_INTENT_URL = "intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end";
     const MEMBERSHIP = "/pages/membership.html";
     const CALLBACK = "/pages/auth_callback.html";
@@ -527,11 +561,28 @@
       return readBridgeVersionCode(window.AndroidBridge) || readBridgeVersionCode(window.Native);
     }
 
+    function callNativePlayStore(){
+      const bridges = [window.AndroidBridge, window.Native];
+      for(const bridge of bridges){
+        try{
+          if(bridge && typeof bridge.openPlayStore === "function"){
+            bridge.openPlayStore(PLAY_STORE_PACKAGE);
+            return true;
+          }
+        }catch{}
+      }
+      return false;
+    }
+
     function openPlayStore(){
-      try{ location.href = MARKET_INTENT_URL; }catch{}
+      if(callNativePlayStore()) return;
+      try{ location.href = MARKET_URL; }catch{}
+      setTimeout(() => {
+        try{ location.href = MARKET_INTENT_URL; }catch{}
+      }, 450);
       setTimeout(() => {
         try{ location.href = PLAY_STORE_URL; }catch{}
-      }, 650);
+      }, 1000);
     }
 
     function showUpdateRequired(){
