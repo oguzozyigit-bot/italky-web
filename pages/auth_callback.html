@@ -75,6 +75,12 @@
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
     const errBox = document.getElementById("errBox");
 
+    function authLog(reason, detail = {}){
+      try{
+        console.warn("[membership auth]", reason, detail);
+      }catch{}
+    }
+
     function showErr(msg){
       if(!errBox) return;
       errBox.style.display = "block";
@@ -102,13 +108,15 @@
 
     function goLogin(next = MEMBERSHIP){
       const safeNext = safePath(next) || MEMBERSHIP;
+      authLog("callback redirect login", { next: safeNext });
       location.replace(`${LOGIN}?next=${encodeURIComponent(safeNext)}`);
     }
 
     async function waitForSession(maxMs = 9000){
       const start = Date.now();
       while (Date.now() - start < maxMs){
-        const { data:{ session } } = await supabase.auth.getSession();
+        const { data:{ session }, error } = await supabase.auth.getSession();
+        authLog("callback getSession", { hasSession: !!session, error: error?.message || "" });
         if (session) return session;
         await new Promise(r => setTimeout(r, 250));
       }
@@ -127,6 +135,7 @@
         });
 
         const json = await resp.json().catch(() => ({}));
+        authLog("callback access-state status", { status: resp.status, ok: resp.ok });
 
         if (!resp.ok) {
           console.warn("auth_callback access-state not ok:", resp.status, json);
@@ -140,8 +149,8 @@
       }
     }
 
-    function resolvePostLoginTarget(next = ""){
-      return safePath(next) || MEMBERSHIP;
+    function resolvePostLoginTarget(){
+      return MEMBERSHIP;
     }
 
     try{
@@ -161,8 +170,9 @@
 
       const session = await waitForSession();
       if (!session){
+        authLog("callback redirect reason", { reason: "session_not_found", target: `${LOGIN}?next=${MEMBERSHIP}` });
         showErr("Oturum bulunamadı. Tekrar giriş sayfasına yönlendiriliyor…");
-        setTimeout(() => goLogin(next || MEMBERSHIP), 900);
+        setTimeout(() => goLogin(MEMBERSHIP), 900);
         throw new Error("session_not_found");
       }
 
@@ -174,7 +184,8 @@
 
       await fetchAccessStateSafe(session);
 
-      const target = resolvePostLoginTarget(next);
+      const target = resolvePostLoginTarget();
+      authLog("callback redirect target", { target });
       location.replace(target);
 
     }catch(e){
@@ -183,7 +194,7 @@
       try{
         const { data:{ session } } = await supabase.auth.getSession();
         if (session) {
-          location.replace(resolvePostLoginTarget(getNextTarget()));
+          location.replace(resolvePostLoginTarget());
         }
       }catch{}
     }
