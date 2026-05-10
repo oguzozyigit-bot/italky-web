@@ -53,7 +53,9 @@
     .plan-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:18px 0 12px; }
     .plan-card{ position:relative; min-height:178px; display:flex; flex-direction:column; gap:10px; padding:15px; border-radius:23px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.055); box-shadow:0 16px 34px rgba(0,0,0,.22); overflow:hidden; }
     .plan-card.featured{ border-color:rgba(96,165,250,.62); background:radial-gradient(circle at top right,rgba(34,211,238,.24),transparent 42%), linear-gradient(145deg,rgba(96,165,250,.18),rgba(255,255,255,.06)); box-shadow:0 22px 44px rgba(37,99,235,.26),0 0 0 1px rgba(147,197,253,.12) inset; }
+    .plan-card.selected{ border-color:rgba(190,242,100,.78); box-shadow:0 22px 46px rgba(34,197,94,.22),0 0 0 1px rgba(190,242,100,.26) inset; }
     .plan-card.featured::before{ content:"En Popüler"; position:absolute; top:10px; right:10px; padding:6px 8px; border-radius:999px; background:linear-gradient(135deg,#dbeafe,#60a5fa); color:#07111f; font-size:9px; font-weight:1000; letter-spacing:.5px; }
+    .plan-card.selected::after{ content:"Seçildi"; position:absolute; left:10px; bottom:10px; padding:5px 8px; border-radius:999px; background:rgba(190,242,100,.14); border:1px solid rgba(190,242,100,.28); color:#ecfccb; font-size:9px; font-weight:1000; letter-spacing:.45px; }
     .plan-name{ font-size:18px; font-weight:1000; letter-spacing:-.2px; padding-right:68px; }
     .plan-badge{ align-self:flex-start; min-height:25px; display:inline-flex; align-items:center; padding:5px 9px; border-radius:999px; border:1px solid rgba(125,211,252,.20); background:rgba(14,165,233,.10); color:#dffbff; font-size:10px; font-weight:1000; letter-spacing:.2px; }
     .plan-price{ margin-top:auto; font-size:23px; font-weight:1000; letter-spacing:-.5px; }
@@ -66,8 +68,9 @@
     .actions{ display:grid; gap:12px; margin:18px 0; }
     .action-btn{ width:100%; min-height:58px; border:none; border-radius:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; font:inherit; font-size:15px; font-weight:1000; transition:transform .15s ease, opacity .15s ease; touch-action:manipulation; }
     .code-btn{ color:#fff; background:radial-gradient(circle at left,rgba(45,212,191,.22),transparent 56%), linear-gradient(135deg,#082f49 0%,#0e7490 55%,#38bdf8 100%); border:1px solid rgba(125,211,252,.24); box-shadow:0 16px 36px rgba(14,165,233,.14); }
-    .home-btn{ color:#fff; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
+    .home-btn{ display:none; color:#fff; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
     body.access-open .plans-block, body.access-open #codeBtn{ display:none; }
+    body.access-open .home-btn{ display:flex; }
 
     .status-box{ margin:16px 0; padding:15px 16px; border-radius:20px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.045); color:rgba(255,255,255,.80); font-size:13px; line-height:1.55; font-weight:800; text-align:center; }
     .status-box.ok{ border-color:rgba(190,242,100,.22); background:rgba(190,242,100,.08); color:#f3ffd6; }
@@ -143,6 +146,7 @@
     const CODE_PAGE = "/pages/promo_gate.html";
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
     const SITE_LANG_KEY = "site_lang";
+    const PENDING_PRODUCT_KEY = "italky_pending_membership_product";
 
     const SUBSCRIPTION_PRODUCTS = [
       { key: "monthly", productId: "1-ay-abonelik", badgeKey: "badgeMonthly", nameKey: "monthly" },
@@ -257,6 +261,25 @@
       window.__membershipToast = setTimeout(() => UI.toast.classList.remove("show"), 2200);
     }
 
+    function isKnownProduct(productId = "") {
+      return SUBSCRIPTION_PRODUCTS.some((p) => p.productId === String(productId || ""));
+    }
+
+    function getPendingProductId() {
+      try {
+        const value = String(localStorage.getItem(PENDING_PRODUCT_KEY) || "").trim();
+        return isKnownProduct(value) ? value : "";
+      } catch { return ""; }
+    }
+
+    function savePendingProduct(productId = "") {
+      try {
+        if (isKnownProduct(productId)) localStorage.setItem(PENDING_PRODUCT_KEY, productId);
+      } catch {}
+    }
+
+    function goToLogin() { location.href = LOGIN_WITH_NEXT; }
+
     function normalizeLang(value) {
       const raw = String(value || "").trim().toLowerCase();
       if (raw.startsWith("tr")) return "tr";
@@ -337,12 +360,16 @@
     }
 
     function renderPlans() {
+      const pendingProductId = getPendingProductId();
       UI.planGrid.innerHTML = SUBSCRIPTION_PRODUCTS.map((plan) => {
         const price = getPriceInfo(plan.productId);
         const priceText = price?.formattedPrice || price?.price || t("priceFallback");
         const taxText = price?.formattedPrice ? t("tax") : "";
+        const classes = ["plan-card"];
+        if (plan.featured) classes.push("featured");
+        if (pendingProductId === plan.productId) classes.push("selected");
         return `
-          <article class="plan-card${plan.featured ? " featured" : ""}">
+          <article class="${classes.join(" ")}">
             <div class="plan-name">${escapeHtml(t(plan.nameKey))}</div>
             <div class="plan-badge">${escapeHtml(t(plan.badgeKey))}</div>
             <div class="plan-price">${escapeHtml(priceText)}</div>
@@ -523,26 +550,30 @@
       } catch {}
     }
 
-    async function requireSessionForAction() {
+    async function requireSessionForAction(productId = "") {
       const session = currentSession || await getSessionOrStay();
       if (!session) {
+        if (productId) savePendingProduct(productId);
         setSignedOutUi();
         toast(t("loginRequired"));
+        setTimeout(goToLogin, 450);
         return null;
       }
       return session;
     }
 
     async function handleGooglePlaySubscribe(productId) {
-      const session = await requireSessionForAction();
+      const selectedProductId = String(productId || getPendingProductId() || "12-ay-abonelik").trim();
+      const session = await requireSessionForAction(selectedProductId);
       if (!session) return;
-      const selectedProductId = String(productId || "12-ay-abonelik").trim();
       try {
         const access = await getAccessState(session);
         if (access?.access_open) { syncAccessUi(access); return; }
       } catch (e) {
         setStatus("err", e?.message || t("accessError"));
       }
+      savePendingProduct(selectedProductId);
+      renderPlans();
       sendUserIdToNative();
       if (!isNativeBillingReady()) { toast(t("playMissing")); return; }
       toast(t("openingPlay"));
@@ -575,11 +606,13 @@
 
     window.onNativeSubscriptionSuccess = function () {
       toast(t("purchaseOk"));
+      try { localStorage.removeItem(PENDING_PRODUCT_KEY); } catch {}
       setTimeout(recheckAndRoute, 1500);
     };
 
     window.addEventListener("italky-subscription-success", () => {
       toast(t("purchaseOk"));
+      try { localStorage.removeItem(PENDING_PRODUCT_KEY); } catch {}
       setTimeout(recheckAndRoute, 1500);
     });
 
