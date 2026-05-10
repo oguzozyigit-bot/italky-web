@@ -1,4 +1,5 @@
 // /js/public_guest_ux.js
+import "/js/site_language_boot.js";
 
 const GUEST_MODE_KEY = "italky_guest_mode_v1";
 const MEMBERSHIP_URL = "/pages/membership.html";
