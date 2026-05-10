@@ -1,4 +1,5 @@
 // FILE: /js/supabase_client.js
+import "/js/site_language_boot.js";
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL = "https://rkbwcmeqdwuewqeokfas.supabase.co";
