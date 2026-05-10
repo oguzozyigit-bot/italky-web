@@ -131,13 +131,20 @@ function getNavigatorLang() {
   return "";
 }
 
+function emitSiteLangReady(lang) {
+  const detail = { lang };
+  try { window.dispatchEvent(new CustomEvent("italky-site-lang-changed", { detail })); } catch {}
+  try { document.dispatchEvent(new CustomEvent("italky-site-lang-ready", { detail })); } catch {}
+}
+
 function applySiteLang(lang) {
   const finalLang = normalizeSiteLang(lang) || FALLBACK_LANG;
   safeLocalStorageSet("site_lang", finalLang);
   safeLocalStorageSet("italky_site_lang_v1", finalLang);
+  safeLocalStorageSet("siteLang", finalLang);
   window.ITalkySiteLang = finalLang;
   document.documentElement.lang = finalLang;
-  document.dispatchEvent(new CustomEvent("italky-site-lang-ready", { detail: { lang: finalLang } }));
+  emitSiteLangReady(finalLang);
   return finalLang;
 }
 
