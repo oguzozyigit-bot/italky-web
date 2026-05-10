@@ -468,6 +468,43 @@
       try{ console.warn("[SUPABASE_AUTH]", reason, detail); }catch{}
     }
 
+    function nativeTokenHash(token){
+      const raw = String(token || "");
+      return `${raw.length}:${raw.slice(0, 18)}:${raw.slice(-18)}`;
+    }
+
+    function isRateLimitError(error){
+      const msg = String(error?.message || error || "").toLowerCase();
+      return msg.includes("rate limit") || msg.includes("too many") || msg.includes("429");
+    }
+
+    function shouldProcessNativeToken(idToken){
+      const now = Date.now();
+      const hash = nativeTokenHash(idToken);
+      const lastHash = String(window.__italkyLastNativeIdTokenHash || "");
+      const lastAt = Number(window.__italkyLastNativeLoginAt || 0);
+
+      if(window.__italkyNativeLoginDone){
+        authDebug("native login ignored", { reason: "already_done" });
+        return false;
+      }
+
+      if(window.__italkyNativeLoginInFlight){
+        authDebug("native login ignored", { reason: "in_flight" });
+        return false;
+      }
+
+      if(lastHash === hash && now - lastAt < 30000){
+        authDebug("native login ignored", { reason: "duplicate_token_30s", ageMs: now - lastAt });
+        return false;
+      }
+
+      window.__italkyLastNativeIdTokenHash = hash;
+      window.__italkyLastNativeLoginAt = now;
+      window.__italkyNativeLoginInFlight = true;
+      return true;
+    }
+
     function decodeJwtPayload(token){
       try{
         const part = String(token || "").split(".")[1] || "";
@@ -685,9 +722,10 @@
 
     window.onNativeLoginSuccess = async function(payload){
       if(window.__italkyUpdateRequired) return;
+      let idToken = "";
       try{
         const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
-        const idToken = String(data?.id_token || data?.idToken || "").trim();
+        idToken = String(data?.id_token || data?.idToken || "").trim();
         const tokenPayload = decodeJwtPayload(idToken);
 
         authDebug("native login payload received", {
@@ -706,6 +744,8 @@
           return;
         }
 
+        if(!shouldProcessNativeToken(idToken)) return;
+
         googleBtn.disabled = true;
         guestBtn.disabled = true;
         toast("Oturum açılıyor...");
@@ -719,6 +759,11 @@
             name: error.name || "",
             aud: tokenPayload?.aud || ""
           });
+          window.__italkyNativeLoginInFlight = false;
+          if(isRateLimitError(error)){
+            toast("Çok fazla giriş denemesi oldu. Lütfen biraz bekleyip tekrar deneyin.");
+            return;
+          }
           toast(`Oturum açılamadı: ${message}`);
           await fallbackToWebOAuth("signInWithIdToken_failed");
           return;
@@ -727,15 +772,23 @@
         const session = await waitForNativeSession();
         if(!session){
           authDebug("native sign-in completed but session missing", { aud: tokenPayload?.aud || "" });
+          window.__italkyNativeLoginInFlight = false;
           toast("Oturum hazırlanamadı, Google yönlendirmesi deneniyor...");
           await fallbackToWebOAuth("session_missing_after_native_signin");
           return;
         }
 
+        window.__italkyNativeLoginDone = true;
+        window.__italkyNativeLoginInFlight = false;
         authDebug("native sign-in success", { userId: session.user?.id || "", email: session.user?.email || "" });
         await routeAfterLogin();
       }catch(e){
         authDebug("native login handler failed", { message: e?.message || String(e || "") });
+        window.__italkyNativeLoginInFlight = false;
+        if(idToken){
+          window.__italkyLastNativeIdTokenHash = nativeTokenHash(idToken);
+          window.__italkyLastNativeLoginAt = Date.now();
+        }
         toast("Giriş hatası. Google yönlendirmesi deneniyor...");
         await fallbackToWebOAuth("native_handler_exception");
       }
@@ -743,17 +796,23 @@
 
     window.onNativeLoginError = function(reason){
       authDebug("native login error", { reason: String(reason || "unknown") });
+      window.__italkyNativeLoginInFlight = false;
       toast(reason ? `Google giriş tamamlanamadı: ${reason}` : "Google giriş tamamlanamadı.");
       resetLoginButtons();
     };
 
     async function handleGooglePress(){
       if(window.__italkyUpdateRequired) return;
-      if(googlePressBusy) return;
+      const now = Date.now();
+      if(googlePressBusy || (window.__italkyNativeLoginStartAt && now - Number(window.__italkyNativeLoginStartAt) < 8000)){
+        authDebug("google login start ignored", { reason: "start_debounce" });
+        return;
+      }
       googlePressBusy = true;
       try{
         const next = getNextTarget();
         if(isNative()){
+          window.__italkyNativeLoginStartAt = now;
           googleBtn.disabled = true;
           guestBtn.disabled = true;
           authDebug("native google login start", { next: next || DEFAULT_AFTER_LOGIN });
