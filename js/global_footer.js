@@ -1,5 +1,12 @@
 const FALLBACK_VERSION_CODE = 83;
 const FOOTER_PREFIX = "italkyAI By Oyzigit's 2026 V.";
+const MEMBERSHIP_SUBSCRIPTION_PRODUCT_ID = "reklamsiz";
+const MEMBERSHIP_BASE_PLAN_IDS = new Set([
+  "1-ay-abonelik",
+  "3-ay-abonelik",
+  "6-ay-abonelik",
+  "12-ay-abonelik"
+]);
 const FOOTER_SELECTOR = [
   "[data-italky-footer]",
   ".footer",
@@ -128,11 +135,43 @@ function installMembershipCancelButtons() {
   }
 }
 
+function installMembershipBillingBridgePatch() {
+  try {
+    const bridge = window.AndroidBilling;
+    if (!bridge || bridge.__italkyBasePlanBillingPatched) return;
+
+    const originalBuy = typeof bridge.buy === "function" ? bridge.buy.bind(bridge) : null;
+    if (originalBuy) {
+      bridge.buy = function(productId, basePlanId) {
+        const rawProductId = String(productId || "").trim();
+        const rawBasePlanId = String(basePlanId || "").trim();
+
+        if (MEMBERSHIP_BASE_PLAN_IDS.has(rawProductId) && !rawBasePlanId) {
+          return originalBuy(MEMBERSHIP_SUBSCRIPTION_PRODUCT_ID, rawProductId);
+        }
+
+        if (rawProductId === MEMBERSHIP_SUBSCRIPTION_PRODUCT_ID && rawBasePlanId) {
+          return originalBuy(rawProductId, rawBasePlanId);
+        }
+
+        return originalBuy(rawProductId || MEMBERSHIP_SUBSCRIPTION_PRODUCT_ID, rawBasePlanId || undefined);
+      };
+    }
+
+    bridge.__italkyBasePlanBillingPatched = true;
+  } catch {}
+}
+
 function installMembershipHelpers() {
   if (!location.pathname.endsWith("/pages/membership.html")) return;
 
   installMembershipCancelButtons();
-  setTimeout(installMembershipCancelButtons, 500);
+  installMembershipBillingBridgePatch();
+  setTimeout(() => {
+    installMembershipCancelButtons();
+    installMembershipBillingBridgePatch();
+  }, 500);
+  setTimeout(installMembershipBillingBridgePatch, 1600);
 
   let redirected = false;
   const redirectIfActive = () => {
