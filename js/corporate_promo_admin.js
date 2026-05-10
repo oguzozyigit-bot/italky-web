@@ -122,13 +122,14 @@ function renderShell() {
               <th>Giriş Son Tarihi</th>
               <th>Durum</th>
               <th>E-posta</th>
-              <th>Telefon</th>
+              <th>E-posta İzni</th>
+              <th>İzin Tarihi</th>
               <th>Aktivasyon</th>
               <th>Üyelik Bitişi</th>
             </tr>
           </thead>
           <tbody id="corpPromoTableBody">
-            <tr><td colspan="9" class="empty">Yükleniyor...</td></tr>
+            <tr><td colspan="10" class="empty">Yükleniyor...</td></tr>
           </tbody>
         </table>
       </div>
@@ -157,7 +158,7 @@ function renderRows(rows = []) {
   const tbody = $("corpPromoTableBody");
   if (!tbody) return;
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="9" class="empty">Kayıt bulunamadı.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="empty">Kayıt bulunamadı.</td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map((row) => `
@@ -168,7 +169,8 @@ function renderRows(rows = []) {
       <td>${escapeHtml(fmt(row.valid_until))}</td>
       <td>${escapeHtml(statusText(row.status))}</td>
       <td>${escapeHtml(row.activated_email || "-")}</td>
-      <td>${escapeHtml(row.activated_phone || "-")}</td>
+      <td>${row.email_consent ? "Var" : "-"}</td>
+      <td>${escapeHtml(fmt(row.consent_at))}</td>
       <td>${escapeHtml(fmt(row.activated_at))}</td>
       <td>${escapeHtml(fmt(row.membership_ends_at))}</td>
     </tr>
@@ -226,7 +228,7 @@ function csvValue(value) {
 }
 
 function exportCsv() {
-  const headers = ["code", "company_name", "duration_months", "valid_until", "status", "activated_email", "activated_phone", "activated_at", "membership_ends_at", "sms_consent", "email_consent"];
+  const headers = ["code", "company_name", "duration_months", "valid_until", "status", "activated_email", "email_consent", "consent_at", "activated_at", "membership_ends_at"];
   const lines = [headers.join(",")];
   latestRows.forEach((row) => {
     lines.push(headers.map((key) => csvValue(row[key])).join(","));
