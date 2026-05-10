@@ -263,6 +263,24 @@ export function startGuestRewardedAdTimer(options = {}) {
   return controller;
 }
 
+function resetBtUiWithoutNavigation() {
+  try { window.isBtConnected = false; } catch {}
+  try { document.body.classList.remove("bt-active"); } catch {}
+  try {
+    const btn = document.getElementById("btToggleBtn");
+    if (btn) {
+      btn.style.color = "#fff";
+      btn.style.borderColor = "rgba(255,255,255,0.15)";
+      btn.style.background = "rgba(255,255,255,0.05)";
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5-10 10"></path></svg>';
+    }
+    const hf = document.getElementById("handsFreeToggle");
+    if (hf) { hf.style.display = "none"; hf.classList.remove("active"); }
+    const share = document.getElementById("shareQrBtn");
+    if (share) share.style.display = "flex";
+  } catch {}
+}
+
 function installLoginEntryLegacyGuards() {
   const path = String(location.pathname || "").toLowerCase();
   if (!path.endsWith("/pages/login_entry.html")) return;
@@ -283,16 +301,8 @@ function installLoginEntryLegacyGuards() {
   } catch {}
 
   setTimeout(() => {
-    try {
-      const original = window.onBtDisconnected;
-      window.onBtDisconnected = function (...args) {
-        try {
-          if (typeof original === "function") original.apply(this, args);
-        } catch {}
-        try { history.replaceState(null, "", location.pathname + location.search + location.hash); } catch {}
-        try { document.body.classList.remove("bt-active"); } catch {}
-      };
-    } catch {}
+    try { window.onBtDisconnected = resetBtUiWithoutNavigation; } catch {}
+    try { window.onBtDevicePickerClosed = window.onBtDevicePickerClosed || function () {}; } catch {}
 
     try {
       const handsFree = document.getElementById("handsFreeToggle");
