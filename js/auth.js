@@ -4,6 +4,58 @@ import { STORAGE_KEY } from "/js/config.js";
 const ACTIVE_SESSION_LOCAL_KEY = "ITALKY_ACTIVE_SESSION_KEY";
 let __singleWatcherStarted = false;
 
+function readNativeIdToken(payload) {
+  try {
+    const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+    return String(data?.id_token || data?.idToken || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function installGoogleAuthDebugHooks() {
+  try {
+    if (window.__italkyGoogleAuthDebugInstalled) return;
+    window.__italkyGoogleAuthDebugInstalled = true;
+
+    let nativeLoginSuccessHandler = window.onNativeLoginSuccess;
+    Object.defineProperty(window, "onNativeLoginSuccess", {
+      configurable: true,
+      get() {
+        return nativeLoginSuccessHandler;
+      },
+      set(handler) {
+        if (typeof handler !== "function") {
+          nativeLoginSuccessHandler = handler;
+          return;
+        }
+
+        nativeLoginSuccessHandler = function(payload) {
+          const idToken = readNativeIdToken(payload);
+          console.warn("[ITALKY AUTH] payload", payload);
+          console.warn("[ITALKY AUTH] idToken exists", !!idToken);
+          return handler.apply(this, arguments);
+        };
+      }
+    });
+
+    const originalSignInWithIdToken = supabase.auth.signInWithIdToken?.bind(supabase.auth);
+    if (originalSignInWithIdToken) {
+      supabase.auth.signInWithIdToken = async function() {
+        const result = await originalSignInWithIdToken(...arguments);
+        if (result?.error) {
+          console.error("[ITALKY AUTH] signInWithIdToken error", result.error);
+        }
+        return result;
+      };
+    }
+  } catch (e) {
+    console.warn("[ITALKY AUTH] debug hook failed", e);
+  }
+}
+
+installGoogleAuthDebugHooks();
+
 function getOrCreateNacId() {
   const key = "NAC_ID";
   try {
