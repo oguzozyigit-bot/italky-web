@@ -275,39 +275,96 @@
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    async function readSessionOnce() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) return session;
+    function authLog(reason, detail = {}) {
+      try {
+        console.warn("[membership auth]", reason, detail);
+      } catch {}
+    }
+
+    async function readSessionOnce(attempt) {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        authLog("getSession result", { attempt, hasSession: !!session, error: error?.message || "" });
+        if (session) return session;
+      } catch (e) {
+        authLog("getSession exception", { attempt, error: e?.message || String(e) });
+      }
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error } = await supabase.auth.getUser();
+        authLog("getUser result", { attempt, hasUser: !!user, error: error?.message || "" });
         if (user) {
           const refreshed = await supabase.auth.getSession();
-          return refreshed?.data?.session || null;
+          const refreshedSession = refreshed?.data?.session || null;
+          authLog("getSession after getUser", { attempt, hasSession: !!refreshedSession, error: refreshed?.error?.message || "" });
+          return refreshedSession;
         }
-      } catch {}
+      } catch (e) {
+        authLog("getUser exception", { attempt, error: e?.message || String(e) });
+      }
 
       return null;
     }
 
+    function waitForAuthState(timeoutMs = 500) {
+      return new Promise((resolve) => {
+        let finished = false;
+        let subscription = null;
+
+        const finish = (session) => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timer);
+          try { subscription?.unsubscribe?.(); } catch {}
+          resolve(session || null);
+        };
+
+        const timer = setTimeout(() => finish(null), timeoutMs);
+
+        try {
+          const result = supabase.auth.onAuthStateChange((event, session) => {
+            authLog("auth state", { event, hasSession: !!session });
+            if (session) finish(session);
+          });
+          subscription = result?.data?.subscription || null;
+        } catch (e) {
+          authLog("auth state exception", { error: e?.message || String(e) });
+          finish(null);
+        }
+      });
+    }
+
     async function getSessionOrLogin() {
-      for (let attempt = 0; attempt < 5; attempt += 1) {
-        const session = await readSessionOnce();
+      if (currentSession) return currentSession;
+
+      for (let attempt = 1; attempt <= 10; attempt += 1) {
+        const session = await readSessionOnce(attempt);
         if (session) {
           currentSession = session;
           currentUserId = session.user?.id || "";
           return session;
         }
-        if (attempt < 4) await wait(400);
+
+        if (attempt < 10) {
+          const stateSession = await waitForAuthState(500);
+          if (stateSession) {
+            authLog("session hydrated from auth state", { attempt });
+            currentSession = stateSession;
+            currentUserId = stateSession.user?.id || "";
+            return stateSession;
+          }
+        }
       }
 
+      authLog("redirect reason", { reason: "session_not_found_after_retry", target: LOGIN_WITH_NEXT });
       location.replace(LOGIN_WITH_NEXT);
       throw new Error(t("loginRequired"));
     }
 
-    async function getAccessState() {
-      const session = await getSessionOrLogin();
+    async function getAccessState(existingSession = null) {
+      const session = existingSession || await getSessionOrLogin();
       const resp = await fetch(ACCESS_API, { headers: { Authorization: `Bearer ${session.access_token}` } });
+      authLog("access-state status", { status: resp.status, ok: resp.ok });
       const json = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(json?.detail || t("accessError"));
       return json;
@@ -388,9 +445,9 @@
 
     async function recheckAndRoute() {
       try {
-        await getSessionOrLogin();
+        const session = await getSessionOrLogin();
         sendUserIdToNative();
-        const access = await getAccessState();
+        const access = await getAccessState(session);
         syncAccessUi(access);
       } catch (e) {
         toast(e?.message || t("checkFailed"));
@@ -438,9 +495,9 @@
         try { localStorage.setItem(SITE_LANG_KEY, currentLang); } catch {}
         applyLanguage();
         lockMembershipPageBack();
-        await getSessionOrLogin();
+        const session = await getSessionOrLogin();
         sendUserIdToNative();
-        const access = await getAccessState();
+        const access = await getAccessState(session);
         syncAccessUi(access);
       } catch (e) {
         if (String(e?.message || "").includes("Google")) return;
