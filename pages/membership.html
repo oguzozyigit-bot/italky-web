@@ -40,10 +40,15 @@
     .price-line b{ color:#fff; font-weight:1000; }
 
     .actions{ display:grid; gap:12px; margin:18px 0; }
+    .plan-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0 12px; }
     .action-btn{ width:100%; min-height:62px; border:none; border-radius:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; font-size:16px; font-weight:1000; transition:transform .15s ease, opacity .15s ease; touch-action:manipulation; }
     .action-btn:active{ transform:scale(.992); }
     .action-btn[disabled]{ opacity:.42; cursor:not-allowed; filter:grayscale(.25); }
     .play-btn{ color:#07111f; background:#fff; box-shadow:0 16px 36px rgba(0,0,0,.34); }
+    .plan-btn{ min-height:78px; flex-direction:column; gap:4px; padding:12px 8px; position:relative; overflow:hidden; }
+    .plan-btn small{ color:rgba(7,17,31,.62); font-size:11px; font-weight:900; }
+    .plan-btn.recommended{ background:linear-gradient(135deg,#e0f2fe,#ffffff 48%,#dbeafe); border:1px solid rgba(34,211,238,.5); }
+    .plan-btn.recommended::after{ content:"ÖNERİLEN"; position:absolute; top:7px; right:9px; color:#075985; font-size:9px; font-weight:1000; letter-spacing:.6px; }
     .code-btn{ color:#fff; background:radial-gradient(circle at left,rgba(45,212,191,.22),transparent 56%), linear-gradient(135deg,#082f49 0%,#0e7490 55%,#38bdf8 100%); border:1px solid rgba(125,211,252,.24); box-shadow:0 16px 36px rgba(14,165,233,.14); }
     .home-btn{ color:#fff; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
 
@@ -60,6 +65,7 @@
     .footer{ margin-top:34px; text-align:center; color:rgba(255,255,255,.40); font-size:11px; font-weight:900; letter-spacing:1.2px; }
     .toast{ position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-120px); max-width:min(92vw,420px); min-height:44px; padding:10px 16px; border-radius:16px; background:rgba(12,16,28,.96); border:1px solid rgba(255,255,255,.10); color:#fff; font-size:12px; font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center; z-index:9999; box-shadow:0 18px 36px rgba(0,0,0,.35); transition:.22s ease; pointer-events:none; backdrop-filter:blur(14px); }
     .toast.show{ transform:translateX(-50%) translateY(0); }
+    @media(max-width:380px){ .plan-grid{ grid-template-columns:1fr; } }
   </style>
 </head>
 
@@ -76,11 +82,17 @@
     <section class="hero">
       <h1 id="heroTitle">Üyelik Seçimi</h1>
       <p id="heroText">Google Play ile abone olabilir veya satın aldığınız üyelik kodunu hesabınıza tanımlayabilirsiniz.</p>
-      <div class="price-line" id="priceLine"><b>Google Play yıllık üyelik ücreti 699 TL’dir.</b><br/>Üyelikte reklam gösterilmez.</div>
+      <div class="price-line" id="priceLine"><b>Size uygun abonelik paketini seçin.</b><br/>Üyelikte reklam gösterilmez.</div>
+    </section>
+
+    <section class="plan-grid" aria-label="Google Play abonelik seçenekleri">
+      <button class="action-btn play-btn plan-btn" type="button" data-product-id="1-ay-abonelik"><span>Aylık</span><small>1-ay-abonelik</small></button>
+      <button class="action-btn play-btn plan-btn" type="button" data-product-id="3-ay-abonelik"><span>3 Aylık</span><small>3-ay-abonelik</small></button>
+      <button class="action-btn play-btn plan-btn" type="button" data-product-id="6-ay-abonelik"><span>6 Aylık</span><small>6-ay-abonelik</small></button>
+      <button class="action-btn play-btn plan-btn recommended" type="button" data-product-id="12-ay-abonelik"><span>Yıllık</span><small>12-ay-abonelik</small></button>
     </section>
 
     <section class="actions">
-      <button id="buyBtn" class="action-btn play-btn" type="button">Google Play ile Abone Ol</button>
       <button id="codeBtn" class="action-btn code-btn" type="button">Kod ile Abone Ol</button>
       <button id="homeBtn" class="action-btn home-btn" type="button" disabled>Üyelik Gereklidir</button>
     </section>
@@ -111,13 +123,18 @@
     const LOGIN = "/pages/login.html";
     const MEMBERSHIP = "/pages/membership.html";
     const LOGIN_WITH_NEXT = `${LOGIN}?next=${MEMBERSHIP}`;
-    const CODE_PAGE = "/pages/code_login.html";
+    const CODE_PAGE = "/pages/promo_gate.html";
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
-    const PRODUCT_ID = "reklamsiz";
+    const SUBSCRIPTION_PRODUCTS = {
+      monthly: "1-ay-abonelik",
+      quarterly: "3-ay-abonelik",
+      halfYear: "6-ay-abonelik",
+      yearly: "12-ay-abonelik"
+    };
     const SITE_LANG_KEY = "site_lang";
 
     const UI = {
-      buyBtn: $("buyBtn"),
+      planBtns: Array.from(document.querySelectorAll("[data-product-id]")),
       codeBtn: $("codeBtn"),
       homeBtn: $("homeBtn"),
       toast: $("toast"),
@@ -129,8 +146,7 @@
         secure: "Google Hesabı Bağlı",
         title: "Üyelik Seçimi",
         hero: "Google Play ile abone olabilir veya satın aldığınız üyelik kodunu hesabınıza tanımlayabilirsiniz.",
-        price: "<b>Google Play yıllık üyelik ücreti 699 TL’dir.</b><br/>Üyelikte reklam gösterilmez.",
-        buy: "Google Play ile Abone Ol",
+        price: "<b>Size uygun abonelik paketini seçin.</b><br/>Üyelikte reklam gösterilmez.",
         code: "Kod ile Abone Ol",
         homeLocked: "Üyelik Gereklidir",
         home: "Uygulamaya Git",
@@ -157,8 +173,7 @@
         secure: "Google Account Connected",
         title: "Membership",
         hero: "Subscribe with Google Play or activate a membership code on your account.",
-        price: "<b>Google Play yearly membership is 699 TRY.</b><br/>No ads are shown with membership.",
-        buy: "Subscribe with Google Play",
+        price: "<b>Choose the subscription package that fits you.</b><br/>No ads are shown with membership.",
         code: "Subscribe with Code",
         homeLocked: "Membership Required",
         home: "Go to App",
@@ -241,7 +256,6 @@
       $("heroTitle").textContent = t("title");
       $("heroText").textContent = t("hero");
       $("priceLine").innerHTML = t("price");
-      UI.buyBtn.textContent = t("buy");
       UI.codeBtn.textContent = t("code");
       UI.homeBtn.textContent = t("homeLocked");
       UI.statusBox.textContent = t("checking");
@@ -269,10 +283,6 @@
       if (kind) UI.statusBox.classList.add(kind);
       if (allowHtml) UI.statusBox.innerHTML = text;
       else UI.statusBox.textContent = text;
-    }
-
-    function wait(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     function authLog(reason, detail = {}) {
@@ -370,6 +380,10 @@
       return json;
     }
 
+    function setPlanButtonsDisabled(disabled) {
+      UI.planBtns.forEach((btn) => { btn.disabled = !!disabled; });
+    }
+
     function syncAccessUi(data) {
       const accessOpen = !!data?.access_open;
       const tokenCount = Number(data?.tokens ?? 0);
@@ -378,7 +392,7 @@
 
       if (accessOpen) {
         setStatus("ok", `${escapeHtml(displayName)}<br/>${escapeHtml(t("ready"))}`, true);
-        UI.buyBtn.disabled = true;
+        setPlanButtonsDisabled(true);
         UI.codeBtn.disabled = true;
         UI.homeBtn.disabled = false;
         UI.homeBtn.textContent = t("home");
@@ -387,7 +401,7 @@
       }
 
       setStatus("", `${escapeHtml(displayName)}<br/>${escapeHtml(t("needAccess"))}`, true);
-      UI.buyBtn.disabled = false;
+      setPlanButtonsDisabled(false);
       UI.codeBtn.disabled = false;
       UI.homeBtn.disabled = true;
       UI.homeBtn.textContent = t("homeLocked");
@@ -405,19 +419,20 @@
       } catch {}
     }
 
-    async function handleGooglePlaySubscribe() {
+    async function handleGooglePlaySubscribe(productId) {
       try {
+        const selectedProductId = String(productId || SUBSCRIPTION_PRODUCTS.yearly).trim();
         const access = await getAccessState();
         if (access?.access_open) { location.replace(HOME); return; }
         sendUserIdToNative();
         if (!isNativeBillingReady()) { toast(t("playMissing")); return; }
-        pendingSubscriptionMode = "purchase";
-        UI.buyBtn.disabled = true;
+        pendingSubscriptionMode = selectedProductId;
+        setPlanButtonsDisabled(true);
         toast(t("openingPlay"));
-        window.AndroidBilling.buy(PRODUCT_ID);
+        window.AndroidBilling.buy(selectedProductId);
       } catch (e) {
         toast(e?.message || t("playMissing"));
-        UI.buyBtn.disabled = false;
+        setPlanButtonsDisabled(false);
       }
     }
 
@@ -453,7 +468,7 @@
         toast(e?.message || t("checkFailed"));
       } finally {
         pendingSubscriptionMode = "unknown";
-        UI.buyBtn.disabled = false;
+        setPlanButtonsDisabled(false);
       }
     }
 
@@ -469,7 +484,7 @@
 
     window.addEventListener("italky-billing-error", (e) => {
       pendingSubscriptionMode = "unknown";
-      UI.buyBtn.disabled = false;
+      setPlanButtonsDisabled(false);
       toast(e?.detail?.message || t("cancelled"));
     });
 
@@ -485,7 +500,9 @@
       });
     }
 
-    bindAction(UI.buyBtn, handleGooglePlaySubscribe);
+    UI.planBtns.forEach((btn) => {
+      bindAction(btn, async () => handleGooglePlaySubscribe(btn.dataset.productId));
+    });
     bindAction(UI.codeBtn, handleCodeSubscribe);
     bindAction(UI.homeBtn, handleHomeClick);
 
