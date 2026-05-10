@@ -1,6 +1,7 @@
 const API_BASE = "https://italky-api.onrender.com";
 
 const STORAGE_KEY = "site_lang";
+const LEGACY_STORAGE_KEYS = ["italky_site_lang_v1", "siteLang", "italky_native_lang_v1"];
 const DEFAULT_LANG = "tr";
 const RTL_LANGS = new Set(["ar", "fa", "ur"]);
 
@@ -24,6 +25,20 @@ function normalizeLang(code) {
   const val = String(code || "").trim().toLowerCase().replace("_", "-");
   const base = val.split("-")[0];
   return SUPPORTED_LANGS.has(base) ? base : DEFAULT_LANG;
+}
+
+function persistSiteLanguage(lang) {
+  const nextLang = normalizeLang(lang);
+  localStorage.setItem(STORAGE_KEY, nextLang);
+  LEGACY_STORAGE_KEYS.forEach((key) => localStorage.setItem(key, nextLang));
+  window.ITalkySiteLang = nextLang;
+  return nextLang;
+}
+
+function emitSiteLanguageEvents(lang) {
+  const detail = { lang };
+  try { window.dispatchEvent(new CustomEvent("italky-site-lang-changed", { detail })); } catch {}
+  try { document.dispatchEvent(new CustomEvent("italky-site-lang-ready", { detail })); } catch {}
 }
 
 function getTranslateRoot() {
@@ -69,6 +84,11 @@ function shouldSkipElement(el) {
 async function detectInitialLanguage() {
   const saved = normalizeLang(localStorage.getItem(STORAGE_KEY) || "");
   if (saved !== DEFAULT_LANG || localStorage.getItem(STORAGE_KEY)) return saved;
+
+  const legacy = LEGACY_STORAGE_KEYS
+    .map((key) => normalizeLang(localStorage.getItem(key) || ""))
+    .find((lang) => lang && (lang !== DEFAULT_LANG || localStorage.getItem("italky_site_lang_v1") || localStorage.getItem("siteLang")));
+  if (legacy) return legacy;
 
   const langs = Array.isArray(navigator.languages) && navigator.languages.length
     ? navigator.languages
@@ -191,8 +211,9 @@ class SiteLanguageManager {
   }
 
   async init() {
-    this.currentLang = await detectInitialLanguage();
+    this.currentLang = persistSiteLanguage(await detectInitialLanguage());
     setDocumentDirection(this.currentLang);
+    emitSiteLanguageEvents(this.currentLang);
 
     if (this.currentLang !== DEFAULT_LANG) {
       await this.applyLanguage(this.currentLang);
@@ -229,10 +250,10 @@ class SiteLanguageManager {
   }
 
   async setLanguage(lang) {
-    const nextLang = normalizeLang(lang);
+    const nextLang = persistSiteLanguage(lang);
     this.currentLang = nextLang;
-    localStorage.setItem(STORAGE_KEY, nextLang);
     setDocumentDirection(nextLang);
+    emitSiteLanguageEvents(nextLang);
     await this.applyLanguage(nextLang);
   }
 
