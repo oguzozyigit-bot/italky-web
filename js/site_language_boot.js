@@ -2,31 +2,8 @@ const STORAGE_KEYS = ["site_lang", "italky_site_lang_v1", "siteLang"];
 const FALLBACK_LANG = "en";
 const IP_LOOKUP_TIMEOUT_MS = 1200;
 
-const SUPPORTED_LANGS = new Set([
-  "tr", "en", "de", "fr", "it", "es", "pt", "ru", "ar", "zh", "ja", "ko",
-  "fa", "uz", "kz", "uk", "nl", "pl", "hi"
-]);
-
-const COUNTRY_TO_LANG = {
-  TR: "tr",
-  DE: "de", AT: "de", CH: "de",
-  FR: "fr",
-  IT: "it",
-  ES: "es", MX: "es", AR: "es", CL: "es", CO: "es", PE: "es",
-  PT: "pt", BR: "pt",
-  RU: "ru",
-  SA: "ar", AE: "ar", QA: "ar", KW: "ar", EG: "ar", JO: "ar", LB: "ar", IQ: "ar",
-  CN: "zh",
-  JP: "ja",
-  KR: "ko",
-  IR: "fa",
-  UZ: "uz",
-  KZ: "kz",
-  UA: "uk",
-  NL: "nl", BE: "nl",
-  PL: "pl",
-  IN: "hi"
-};
+const SUPPORTED_LANGS = new Set(["tr", "en"]);
+const COUNTRY_TO_LANG = { TR: "tr" };
 
 function safeLocalStorageGet(key) {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -148,6 +125,80 @@ function applySiteLang(lang) {
   return finalLang;
 }
 
+function installUiSafetyStyle() {
+  if (document.getElementById("italkySiteLanguageUiSafety")) return;
+
+  const style = document.createElement("style");
+  style.id = "italkySiteLanguageUiSafety";
+  style.textContent = `
+    #siteLangGrid .site-lang-item:not([data-lang="tr"]):not([data-lang="en"]) { display: none !important; }
+    .section-grid.primary-grid { align-items: stretch !important; }
+    #faceCard.primary-card,
+    #bluetoothCard.primary-card {
+      min-height: 330px !important;
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      padding: 18px 15px !important;
+    }
+    #faceCard.primary-card .card-desc,
+    #bluetoothCard.primary-card .card-desc { margin-bottom: 12px !important; }
+    #faceCard .primary-art,
+    #bluetoothCard .primary-art {
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+      width: 100% !important;
+      height: 72px !important;
+      flex: 0 0 72px !important;
+      margin-top: auto !important;
+      margin-bottom: 14px !important;
+      pointer-events: none !important;
+    }
+    #faceCard.primary-card .card-icon,
+    #bluetoothCard.primary-card .card-icon,
+    #faceCard.primary-card .arrow-chip,
+    #bluetoothCard.primary-card .arrow-chip {
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+      top: auto !important;
+      flex: 0 0 auto !important;
+      z-index: 3 !important;
+    }
+    #faceCard.primary-card .card-icon,
+    #bluetoothCard.primary-card .card-icon { align-self: flex-start !important; }
+    #faceCard.primary-card .arrow-chip,
+    #bluetoothCard.primary-card .arrow-chip {
+      align-self: flex-end !important;
+      margin-top: -50px !important;
+    }
+    .wide-card {
+      height: auto !important;
+      min-height: 144px !important;
+      align-items: flex-start !important;
+      padding-right: 72px !important;
+    }
+    .wide-card .wide-icon { margin-top: 8px !important; }
+    .wide-card .wide-body { min-width: 0 !important; padding-right: 4px !important; }
+    .wide-card .arrow-chip {
+      right: 16px !important;
+      top: 50% !important;
+      bottom: auto !important;
+      transform: translateY(-50%) !important;
+    }
+    @media (max-width: 390px) {
+      #faceCard.primary-card,
+      #bluetoothCard.primary-card { min-height: 300px !important; }
+      .wide-card { min-height: 144px !important; padding-right: 66px !important; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 async function detectSiteLang() {
   const stored = readStoredLang();
   if (stored) return stored;
@@ -165,6 +216,8 @@ async function detectSiteLang() {
 }
 
 export async function resolveSiteLanguage() {
+  installUiSafetyStyle();
+
   if (window.__ITALKY_SITE_LANG_BOOT_PROMISE__) return window.__ITALKY_SITE_LANG_BOOT_PROMISE__;
 
   window.__ITALKY_SITE_LANG_BOOT_PROMISE__ = (async () => {
