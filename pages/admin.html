@@ -375,9 +375,9 @@
               <h3>Yetki Bilgisi</h3>
               <div class="desc">Admin promosyon ve bildirim yönetebilir. Superadmin manuel jeton yükleyebilir.</div>
               <div id="meLine"></div>
-              <div class="pill">Promo Campaign</div>
-              <div class="pill">Promo Code</div>
-              <div class="pill">Redemption</div>
+              <div class="pill">Kurumsal Promo</div>
+              <div class="pill">Aktivasyon Raporu</div>
+              <div class="pill">CSV Export</div>
               <div class="pill">Push Bildirim</div>
             </section>
           </div>
@@ -434,132 +434,9 @@
         </div>
 
         <div id="panelPromo" class="hidden">
-          <div class="grid grid-2">
-            <section class="card">
-              <h3>Yeni Promosyon Oluştur</h3>
-              <div class="desc">Campaign oluşturur ve istenen adet kadar promosyon kodu üretir.</div>
-
-              <div class="row">
-                <input id="campaignCode" type="text" placeholder="Campaign kodu (örn: PROMO_1AY_2026)" />
-                <input id="campaignName" type="text" placeholder="Campaign adı" />
-              </div>
-
-              <div class="row" style="margin-top:10px">
-                <select id="grantType">
-                  <option value="membership">Sadece Üyelik</option>
-                  <option value="tokens">Sadece Jeton</option>
-                  <option value="bundle">Üyelik + Jeton</option>
-                </select>
-
-                <select id="deliveryType">
-                  <option value="manual">Manual</option>
-                  <option value="qr">QR</option>
-                </select>
-              </div>
-
-              <div class="row" style="margin-top:10px">
-                <input id="membershipMonths" type="number" min="0" step="1" placeholder="Üyelik ayı" />
-                <input id="tokenAmount" type="number" min="0" step="1" placeholder="Jeton miktarı" />
-              </div>
-
-              <div class="row" style="margin-top:10px">
-                <input id="packageCode" type="text" placeholder="Paket kodu (örn: member)" />
-                <input id="perUserLimit" type="number" min="1" step="1" placeholder="Kullanıcı başı limit" value="1" />
-              </div>
-
-              <div class="row" style="margin-top:10px">
-                <input id="promoCodeValue" type="text" placeholder="Tekil promosyon kodu (tekli üretim için opsiyonel)" />
-                <input id="promoQuantity" type="number" min="1" step="1" value="1" placeholder="Üretilecek kod adeti" />
-              </div>
-
-              <div class="row" style="margin-top:10px">
-                <button id="generatePromoBtn" class="btn-primary" type="button">Kodları Üret</button>
-              </div>
-
-              <div class="row" style="margin-top:10px">
-                <textarea id="campaignDescription" placeholder="Açıklama / not"></textarea>
-              </div>
-
-              <div class="quick-row">
-                <button class="btn-secondary" type="button" data-month="1">1 Ay</button>
-                <button class="btn-secondary" type="button" data-month="3">3 Ay</button>
-                <button class="btn-secondary" type="button" data-month="12">12 Ay</button>
-                <button class="btn-secondary" type="button" data-token="10">10 Jeton</button>
-                <button class="btn-secondary" type="button" data-token="25">25 Jeton</button>
-                <button class="btn-secondary" type="button" data-token="50">50 Jeton</button>
-              </div>
-
-              <button id="savePromoBtn" class="btn-secondary" type="button" style="margin-top:10px">Tekli Promosyonu Kaydet</button>
-              <div id="promoStatus" class="status-line"></div>
-            </section>
-
-            <section class="card">
-              <h3>Önizleme</h3>
-              <div class="desc">Son oluşturulan promosyon burada görünür.</div>
-              <div id="promoPreview" class="preview-box">Henüz promosyon oluşturulmadı.</div>
-
-              <div class="row" style="margin-top:12px">
-                <button id="printQrBtn" class="btn-primary" type="button">QR Yazdır</button>
-                <button id="copyPromoBtn" class="btn-secondary" type="button">Kodu Kopyala</button>
-              </div>
-            </section>
-          </div>
-
-          <section class="card" style="margin-top:14px">
-            <h3>Promosyon Kodları</h3>
-            <div class="row">
-              <input id="promoSearch" type="text" placeholder="Kod veya campaign ara..." />
-              <button id="promoRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
-            </div>
-
-            <div class="table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Campaign</th>
-                    <th>Kod</th>
-                    <th>Teslim</th>
-                    <th>Tür</th>
-                    <th>Üyelik</th>
-                    <th>Jeton</th>
-                    <th>Durum</th>
-                    <th>Kullanan</th>
-                    <th>İşlem</th>
-                  </tr>
-                </thead>
-                <tbody id="promoTableBody">
-                  <tr><td colspan="9" class="empty">Yükleniyor...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="card" style="margin-top:14px">
-            <h3>Promosyon Kullanım Logları</h3>
-            <div class="row">
-              <input id="promoLogSearch" type="text" placeholder="Kullanıcı, campaign veya kod ara..." />
-              <button id="promoLogRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
-            </div>
-
-            <div class="table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Kullanıcı</th>
-                    <th>Campaign</th>
-                    <th>Tür</th>
-                    <th>Üyelik</th>
-                    <th>Jeton</th>
-                    <th>Önce</th>
-                    <th>Sonra</th>
-                    <th>Tarih</th>
-                  </tr>
-                </thead>
-                <tbody id="promoLogTableBody">
-                  <tr><td colspan="8" class="empty">Yükleniyor...</td></tr>
-                </tbody>
-              </table>
-            </div>
+          <section class="card">
+            <h3>Kurumsal Promosyonlar</h3>
+            <div class="desc">Kurumsal promo paneli yükleniyor...</div>
           </section>
         </div>
 
@@ -658,5 +535,6 @@
   </div>
 
   <script type="module" src="/js/admin.js"></script>
+  <script type="module" src="/js/corporate_promo_admin.js"></script>
 </body>
 </html>
