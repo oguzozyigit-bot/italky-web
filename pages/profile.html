@@ -26,8 +26,8 @@ body{background:radial-gradient(circle at 80% 10%, rgba(244,114,182,.10), transp
   <div class="back-row"><button class="back-btn" onclick="history.back()" type="button" aria-label="Geri dön"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="page-title">Profil</div></div>
   <div class="profile-card"><div class="avatar"><div class="avatar-inner"><img id="avatarImg" class="avatar-img" src="" alt="Avatar"><div id="avatarFallback" class="avatar-fallback">A</div></div></div><div class="name" id="pName">Ad Soyad</div><div class="email" id="pEmail">mail@example.com</div></div>
   <div class="info-panel">
-    <div class="row"><div class="label">Üyelik başlangıcı</div><div class="value" id="membershipStart">-</div></div>
-    <div class="row"><div class="label">Üyelik bitişi</div><div class="value" id="membershipEnd">-</div></div>
+    <div class="row"><div class="label">Üyelik başlangıcı</div><div class="value" id="membershipStart">Bilgi yok</div></div>
+    <div class="row"><div class="label">Üyelik bitişi</div><div class="value" id="membershipEnd">Bilgi yok</div></div>
     <div class="row"><div class="label">Üyelik No</div><div class="copy-wrap"><div class="value mono" id="memberNo">—</div><button class="copy-btn" id="copyMemberBtn" type="button" aria-label="Kopyala"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="10" height="10" rx="2"></rect><path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
     <div class="row"><div class="label">Kayıt Tarihi</div><div class="value" id="createdAt">—</div></div>
     <div class="row"><div class="label">Son Giriş</div><div class="value" id="lastLogin">—</div></div>
@@ -43,12 +43,14 @@ import { STORAGE_KEY } from "/js/config.js";
 
 try{ mountShell({ scroll:"auto" }); }catch(e){ console.warn("[profile shell]", e); }
 
+const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 const toastEl = $("toast");
 
 function showToast(msg){ toastEl.textContent = String(msg || ""); toastEl.classList.add("show"); clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2000); }
 function getCachedUser(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }catch{ return {}; } }
-function formatDate(d){ try{ if(!d) return "-"; const date = new Date(d); if(isNaN(date.getTime())) return "-"; return new Intl.DateTimeFormat("tr-TR", { year:"numeric", month:"long", day:"numeric" }).format(date); }catch{ return "-"; } }
+function pickFirst(...values){ return values.find((value) => String(value || "").trim()) || ""; }
+function formatDate(d, emptyText = "-"){ try{ if(!d) return emptyText; const date = new Date(d); if(isNaN(date.getTime())) return emptyText; return new Intl.DateTimeFormat("tr-TR", { year:"numeric", month:"long", day:"numeric" }).format(date); }catch{ return emptyText; } }
 
 function setAvatar(name, avatarUrl){
   const img = $("avatarImg"); const fallback = $("avatarFallback"); const initial = String(name || "A").trim().charAt(0).toUpperCase() || "A";
@@ -59,31 +61,88 @@ function setAvatar(name, avatarUrl){
 
 function buildMemberNo(user, cached){ const meta = user?.user_metadata || {}; return meta.membership_no || meta.member_no || cached?.membership_no || cached?.uyelik_no || (user?.id ? user.id.replace(/-/g, "").slice(0, 8).toUpperCase() : "—"); }
 
+async function getAccessState(session){
+  try{
+    const token = session?.access_token || "";
+    if(!token) return {};
+    const response = await fetch(`${API_BASE}/api/session/access-state`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store"
+    });
+    const data = await response.json().catch(() => ({}));
+    return data || {};
+  }catch(e){
+    console.warn("[profile access-state]", e);
+    return {};
+  }
+}
+
 async function loadProfile(){
   try{
     const cached = getCachedUser();
+    const { data: { session } } = await supabase.auth.getSession();
     const { data: { user } } = await supabase.auth.getUser();
     if(!user) return;
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("full_name,email,avatar_url,created_at,package_started_at,package_ends_at,membership_starts_at,membership_ends_at")
+      .select("*")
       .eq("id", user.id)
       .maybeSingle();
 
+    if(profileError) console.warn("[profile data]", profileError);
+
+    const accessState = await getAccessState(session);
     const meta = user.user_metadata || {};
     const name = profile?.full_name || meta.full_name || meta.name || meta.display_name || cached?.display_name || cached?.name || user.email || "italky Kullanıcısı";
     const email = user.email || profile?.email || cached?.email || "—";
     const avatarUrl = meta.avatar_url || meta.picture || meta.avatar || profile?.avatar_url || cached?.picture || cached?.avatar || cached?.avatar_url || "";
     const memberNo = buildMemberNo(user, cached);
-    const membershipStart = profile?.package_started_at || profile?.membership_starts_at || cached?.package_started_at || cached?.membership_starts_at || "";
-    const membershipEnd = profile?.package_ends_at || profile?.membership_ends_at || cached?.package_ends_at || cached?.membership_ends_at || "";
+    const membershipStart = pickFirst(
+      profile?.package_started_at,
+      profile?.membership_starts_at,
+      profile?.subscription_started_at,
+      profile?.trial_started_at,
+      profile?.activated_at,
+      profile?.created_at,
+      accessState?.package_started_at,
+      accessState?.membership_starts_at,
+      accessState?.subscription_started_at,
+      accessState?.trial_started_at,
+      accessState?.activated_at,
+      cached?.package_started_at,
+      cached?.membership_starts_at,
+      cached?.subscription_started_at,
+      cached?.trial_started_at,
+      cached?.activated_at,
+      cached?.created_at
+    );
+    const membershipEnd = pickFirst(
+      profile?.package_ends_at,
+      profile?.membership_ends_at,
+      profile?.subscription_ends_at,
+      profile?.trial_ends_at,
+      profile?.expires_at,
+      profile?.nfc_expires_at,
+      accessState?.package_ends_at,
+      accessState?.membership_ends_at,
+      accessState?.subscription_ends_at,
+      accessState?.trial_ends_at,
+      accessState?.expires_at,
+      accessState?.nfc_expires_at,
+      cached?.package_ends_at,
+      cached?.membership_ends_at,
+      cached?.subscription_ends_at,
+      cached?.trial_ends_at,
+      cached?.expires_at,
+      cached?.nfc_expires_at
+    );
 
     $("pName").textContent = name;
     $("pEmail").textContent = email;
     $("memberNo").textContent = memberNo;
-    $("membershipStart").textContent = formatDate(membershipStart);
-    $("membershipEnd").textContent = formatDate(membershipEnd);
+    $("membershipStart").textContent = formatDate(membershipStart, "Bilgi yok");
+    $("membershipEnd").textContent = formatDate(membershipEnd, "Bilgi yok");
     $("createdAt").textContent = formatDate(profile?.created_at || user.created_at);
     $("lastLogin").textContent = formatDate(user.last_sign_in_at);
     setAvatar(name, avatarUrl);
