@@ -293,6 +293,8 @@ const SILENT_SPEECH_ERRORS = new Set([
 const HANDSFREE_RETRY_ERRORS = new Set(["client_error", "recognizer_busy"]);
 const lastSpeechToastAt = new Map();
 let handsFreeRestartTimer = null;
+let lastHandsfreeSentText = "";
+let lastHandsfreeSentAt = 0;
 
 function normalizeSpeechError(errorMsg) {
   return String(errorMsg || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
@@ -328,9 +330,13 @@ function cleanupSpeechPreview() {
 function scheduleHandsFreeRestart() {
   if (!isHandsFreeVisibleAndActive()) return;
   clearTimeout(handsFreeRestartTimer);
-  const delay = 600 + Math.floor(Math.random() * 601);
+  const delay = 800 + Math.floor(Math.random() * 601);
   handsFreeRestartTimer = setTimeout(() => {
     if (!isHandsFreeVisibleAndActive()) return;
+    if (typeof window.__italkyStartHandsFreeListening === "function") {
+      window.__italkyStartHandsFreeListening();
+      return;
+    }
     const botMic = document.getElementById("botMic");
     const topMic = document.getElementById("topMic");
     if (botMic?.classList.contains("listening") || topMic?.classList.contains("listening")) return;
@@ -338,45 +344,113 @@ function scheduleHandsFreeRestart() {
   }, delay);
 }
 
-function installHandsFreeSpeechGuard() {
-  if (window.onNativeSpeechError?.__italkyHandsFreeGuard) return;
-  window.__ITALKY_HANDSFREE_SPEECH_GUARD__ = true;
+function parseSpeechResultArgs(arg1, arg2, arg3) {
+  let side = "top";
+  let text = "";
+  let isFinal = true;
 
-  const guardedSpeechErrorHandler = function (errorMsg) {
-    const raw = String(errorMsg || "").trim();
-    const code = normalizeSpeechError(raw);
-
+  if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
+    side = arg1;
+    text = typeof arg2 === "string" ? arg2 : "";
+    isFinal = typeof arg3 !== "undefined" ? arg3 : true;
+  } else if (typeof arg1 === "string") {
     try {
-      document.getElementById("topMic")?.classList.remove("listening");
-      document.getElementById("botMic")?.classList.remove("listening");
+      const data = JSON.parse(arg1);
+      side = data?.side || "top";
+      text = data?.text || "";
+      isFinal = data?.isFinal !== undefined ? data.isFinal : true;
+    } catch {
+      text = arg1;
+    }
+  } else if (arg1 && typeof arg1 === "object") {
+    side = arg1.side || "top";
+    text = arg1.text || "";
+    isFinal = arg1.isFinal !== undefined ? arg1.isFinal : true;
+  }
+
+  return { side, text: String(text || "").replace(/\s+/g, " ").trim(), isFinal: isFinal !== false };
+}
+
+function shouldSuppressDuplicateHandsFreeResult(parsed) {
+  if (!isHandsFreeVisibleAndActive()) return false;
+  if (!parsed?.isFinal || parsed.side !== "bot") return false;
+  const text = String(parsed.text || "").trim().toLowerCase();
+  if (!text) return false;
+  const now = Date.now();
+  if (text === lastHandsfreeSentText && now - lastHandsfreeSentAt < 4500) return true;
+  lastHandsfreeSentText = text;
+  lastHandsfreeSentAt = now;
+  return false;
+}
+
+function installHandsFreeSpeechGuard() {
+  const previousSpeechErrorHandler = window.onNativeSpeechError?.__italkyHandsFreeGuard ? null : window.onNativeSpeechError;
+  const previousSpeechResultHandler = window.onNativeSpeechResult?.__italkyHandsFreeResultGuard ? null : window.onNativeSpeechResult;
+
+  if (!window.onNativeSpeechError?.__italkyHandsFreeGuard) {
+    const resetLegacySpeechState = () => {
+      if (typeof previousSpeechErrorHandler === "function") {
+        try { previousSpeechErrorHandler("manual_stop_empty"); return true; } catch {}
+      }
+      return false;
+    };
+
+    const restartLegacyHandsFree = () => {
+      if (typeof previousSpeechErrorHandler === "function") {
+        try { previousSpeechErrorHandler("no speech"); return; } catch {}
+      }
+      scheduleHandsFreeRestart();
+    };
+
+    const guardedSpeechErrorHandler = function (errorMsg) {
+      const raw = String(errorMsg || "").trim();
+      const code = normalizeSpeechError(raw);
+
+      resetLegacySpeechState();
       cleanupSpeechPreview();
-    } catch {}
 
-    if (SILENT_SPEECH_ERRORS.has(code) || SILENT_SPEECH_ERRORS.has(raw.toLowerCase())) {
+      if (SILENT_SPEECH_ERRORS.has(code) || SILENT_SPEECH_ERRORS.has(raw.toLowerCase())) {
+        restartLegacyHandsFree();
+        return;
+      }
+
+      if (isHandsFreeVisibleAndActive() && HANDSFREE_RETRY_ERRORS.has(code)) {
+        restartLegacyHandsFree();
+        return;
+      }
+
+      if (code.includes("permission") || code === "not_allowed") {
+        localSpeechToast("Mikrofon izni gerekli", "permission");
+      } else if (code.includes("network") || code === "server_error") {
+        localSpeechToast("Ağ bağlantısı zayıf veya konuşma motoru yanıt vermiyor.", "network");
+      } else if (code.includes("not_available") || code.includes("unavailable") || code.includes("engine") || code === "start_error") {
+        localSpeechToast("Konuşma tanıma hazır değil.", "engine");
+      } else if (!isHandsFreeVisibleAndActive()) {
+        localSpeechToast(`Mikrofon hatası (${raw || "unknown"})`, code || "unknown");
+      }
+
       scheduleHandsFreeRestart();
-      return;
-    }
+    };
 
-    if (isHandsFreeVisibleAndActive() && HANDSFREE_RETRY_ERRORS.has(code)) {
-      scheduleHandsFreeRestart();
-      return;
-    }
+    guardedSpeechErrorHandler.__italkyHandsFreeGuard = true;
+    window.onNativeSpeechError = guardedSpeechErrorHandler;
+    window.__ITALKY_HANDSFREE_SPEECH_GUARD__ = true;
+  }
 
-    if (code.includes("permission") || code === "not_allowed") {
-      localSpeechToast("Mikrofon izni gerekli", "permission");
-    } else if (code.includes("network") || code === "server_error") {
-      localSpeechToast("Ağ bağlantısı zayıf veya konuşma motoru yanıt vermiyor.", "network");
-    } else if (code.includes("not_available") || code.includes("unavailable") || code.includes("engine") || code === "start_error") {
-      localSpeechToast("Konuşma tanıma hazır değil.", "engine");
-    } else if (!isHandsFreeVisibleAndActive()) {
-      localSpeechToast(`Mikrofon hatası (${raw || "unknown"})`, code || "unknown");
-    }
-
-    scheduleHandsFreeRestart();
-  };
-
-  guardedSpeechErrorHandler.__italkyHandsFreeGuard = true;
-  window.onNativeSpeechError = guardedSpeechErrorHandler;
+  if (typeof previousSpeechResultHandler === "function" && !window.onNativeSpeechResult?.__italkyHandsFreeResultGuard) {
+    const guardedSpeechResultHandler = function (...args) {
+      const parsed = parseSpeechResultArgs(args[0], args[1], args[2]);
+      if (shouldSuppressDuplicateHandsFreeResult(parsed)) {
+        cleanupSpeechPreview();
+        try { previousSpeechResultHandler(JSON.stringify({ side: parsed.side, text: "", isFinal: true })); } catch {}
+        scheduleHandsFreeRestart();
+        return;
+      }
+      return previousSpeechResultHandler.apply(this, args);
+    };
+    guardedSpeechResultHandler.__italkyHandsFreeResultGuard = true;
+    window.onNativeSpeechResult = guardedSpeechResultHandler;
+  }
 }
 
 function installLoginEntryLegacyGuards() {
