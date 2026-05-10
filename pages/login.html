@@ -464,6 +464,45 @@
       window.__to = setTimeout(() => toastEl.classList.remove("show"), 2200);
     }
 
+    function authDebug(reason, detail = {}){
+      try{ console.warn("[SUPABASE_AUTH]", reason, detail); }catch{}
+    }
+
+    function decodeJwtPayload(token){
+      try{
+        const part = String(token || "").split(".")[1] || "";
+        if(!part) return null;
+        const normalized = part.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+        return JSON.parse(atob(padded));
+      }catch(e){
+        return null;
+      }
+    }
+
+    async function waitForNativeSession(attempts = 8, delayMs = 350){
+      for(let i = 0; i < attempts; i++){
+        const { data:{ session }, error } = await supabase.auth.getSession();
+        authDebug("native getSession", { attempt: i + 1, hasSession: !!session, error: error?.message || "" });
+        if(session) return session;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+      return null;
+    }
+
+    async function fallbackToWebOAuth(reason){
+      try{
+        const next = getNextTarget();
+        authDebug("native fallback to web oauth", { reason, next: next || DEFAULT_AFTER_LOGIN });
+        toast("Google oturumu web üzerinden tekrar açılıyor...");
+        await loginWithGoogle(next);
+      }catch(e){
+        authDebug("web oauth fallback failed", { reason, message: e?.message || String(e || "") });
+        toast(e?.message || "Giriş başlatılamadı.");
+        resetLoginButtons();
+      }
+    }
+
     function resetLoginButtons(){
       googlePressBusy = false;
       if(window.__italkyUpdateRequired) return;
@@ -629,6 +668,7 @@
         toast("Giriş başarılı.");
         setTimeout(() => location.replace(target), 350);
       }catch(e){
+        authDebug("routeAfterLogin fallback", { message: e?.message || String(e || "") });
         clearGuestMode();
         const next = getNextTarget();
         location.replace(next || DEFAULT_AFTER_LOGIN);
@@ -648,19 +688,63 @@
       try{
         const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
         const idToken = String(data?.id_token || data?.idToken || "").trim();
-        if(!idToken){ toast("Token alınamadı, giriş tamamlanamadı."); resetLoginButtons(); return; }
+        const tokenPayload = decodeJwtPayload(idToken);
+
+        authDebug("native login payload received", {
+          payloadType: typeof payload,
+          keys: data && typeof data === "object" ? Object.keys(data) : [],
+          hasIdToken: !!idToken,
+          tokenLength: idToken.length,
+          aud: tokenPayload?.aud || "",
+          iss: tokenPayload?.iss || "",
+          email: tokenPayload?.email || data?.email || ""
+        });
+
+        if(!idToken){
+          toast("Google token alınamadı. Lütfen tekrar deneyin.");
+          resetLoginButtons();
+          return;
+        }
+
         googleBtn.disabled = true;
         guestBtn.disabled = true;
         toast("Oturum açılıyor...");
+
         const { error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
-        if(error){ toast("Oturum açılamadı."); resetLoginButtons(); return; }
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){ toast("Oturum bulunamadı."); resetLoginButtons(); return; }
+        if(error){
+          const message = String(error.message || "Supabase token reddetti");
+          authDebug("signInWithIdToken failed", {
+            message,
+            status: error.status || "",
+            name: error.name || "",
+            aud: tokenPayload?.aud || ""
+          });
+          toast(`Oturum açılamadı: ${message}`);
+          await fallbackToWebOAuth("signInWithIdToken_failed");
+          return;
+        }
+
+        const session = await waitForNativeSession();
+        if(!session){
+          authDebug("native sign-in completed but session missing", { aud: tokenPayload?.aud || "" });
+          toast("Oturum hazırlanamadı, Google yönlendirmesi deneniyor...");
+          await fallbackToWebOAuth("session_missing_after_native_signin");
+          return;
+        }
+
+        authDebug("native sign-in success", { userId: session.user?.id || "", email: session.user?.email || "" });
         await routeAfterLogin();
       }catch(e){
-        toast("Giriş hatası.");
-        resetLoginButtons();
+        authDebug("native login handler failed", { message: e?.message || String(e || "") });
+        toast("Giriş hatası. Google yönlendirmesi deneniyor...");
+        await fallbackToWebOAuth("native_handler_exception");
       }
+    };
+
+    window.onNativeLoginError = function(reason){
+      authDebug("native login error", { reason: String(reason || "unknown") });
+      toast(reason ? `Google giriş tamamlanamadı: ${reason}` : "Google giriş tamamlanamadı.");
+      resetLoginButtons();
     };
 
     async function handleGooglePress(){
@@ -672,15 +756,18 @@
         if(isNative()){
           googleBtn.disabled = true;
           guestBtn.disabled = true;
+          authDebug("native google login start", { next: next || DEFAULT_AFTER_LOGIN });
           toast("Google girişi başlatılıyor...");
           window.Native.startGoogleLogin();
           return;
         }
         googleBtn.disabled = true;
         guestBtn.disabled = true;
+        authDebug("web oauth login start", { next: next || DEFAULT_AFTER_LOGIN });
         toast("Google yönlendiriliyor...");
         await loginWithGoogle(next);
       }catch(e){
+        authDebug("google login start failed", { message: e?.message || String(e || "") });
         toast(e?.message || "Giriş başlatılamadı.");
         resetLoginButtons();
       }
@@ -725,6 +812,7 @@
         if(!session) return;
         await routeAfterLogin();
       }catch(e){
+        authDebug("login boot failed", { message: e?.message || String(e || "") });
         resetLoginButtons();
       }
     })();
