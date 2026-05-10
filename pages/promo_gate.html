@@ -53,6 +53,7 @@
       margin-bottom:14px;
       background:#111827;
       color:#fff;
+      text-transform:uppercase;
     }
 
     button{
@@ -66,6 +67,11 @@
       margin-bottom:10px;
     }
 
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
     .btn-primary{
       background:linear-gradient(135deg,#8bd3ff,#7c5cff,#ff66c4);
       color:#fff;
@@ -77,9 +83,11 @@
     }
 
     .error{
-      color:#ff6b6b;
+      color:#ff8b8b;
       font-size:13px;
       margin-top:10px;
+      min-height:20px;
+      line-height:1.45;
     }
   </style>
 </head>
@@ -92,7 +100,7 @@
     Kodunuz varsa girin. Yoksa devam ederek üyeliğinizi başlatabilirsiniz.
   </p>
 
-  <input id="promoInput" placeholder="KOD GİR"/>
+  <input id="promoInput" placeholder="KOD GİR" maxlength="8" autocomplete="one-time-code"/>
 
   <button class="btn-primary" id="applyBtn">KODU ONAYLA</button>
   <button class="btn-secondary" id="continueBtn">DEVAM ET</button>
@@ -103,70 +111,100 @@
 <script type="module">
 import { supabase } from "/js/supabase_client.js";
 
-const API = "https://italky-api.onrender.com";
-
 const promoInput = document.getElementById("promoInput");
 const applyBtn = document.getElementById("applyBtn");
 const continueBtn = document.getElementById("continueBtn");
 const errorText = document.getElementById("errorText");
 
-async function getUser(){
-  const { data } = await supabase.auth.getUser();
-  return data?.user;
+function setMessage(msg = ""){
+  errorText.innerText = String(msg || "");
 }
 
-async function getToken(){
-  const { data } = await supabase.auth.getSession();
-  return data?.session?.access_token || "";
+function normalizePromoCode(value){
+  return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
 }
+
+function isValidPromoCode(code){
+  const letters = code.replace(/[^A-Z]/g, "");
+  const digits = code.replace(/[^0-9]/g, "");
+  return /^[A-Z0-9]{8}$/.test(code)
+    && letters.length === 2
+    && digits.length === 6
+    && !["AK", "FG", "FB", "GS"].includes(letters);
+}
+
+async function getSessionOrLogin(){
+  for(let i = 0; i < 10; i += 1){
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(session) return session;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  location.href = "/pages/login.html?next=/pages/promo_gate.html";
+  return null;
+}
+
+async function redeemPromoCode(code){
+  const { data, error } = await supabase.rpc("redeem_promo_code_v1", { p_code: code });
+  if(error) throw error;
+  return data;
+}
+
+promoInput.addEventListener("input", () => {
+  promoInput.value = normalizePromoCode(promoInput.value);
+});
 
 applyBtn.onclick = async () => {
+  const code = normalizePromoCode(promoInput.value);
 
-  const code = promoInput.value.trim().toUpperCase();
-
-  if(!code){
-    errorText.innerText = "Lütfen kod giriniz";
+  if(!isValidPromoCode(code)){
+    setMessage("Kod 8 karakter, tam 2 harf ve 6 rakam olmalı.");
     return;
   }
 
-  const user = await getUser();
-  const token = await getToken();
+  try{
+    applyBtn.disabled = true;
+    setMessage("Kod kontrol ediliyor...");
 
-  const res = await fetch(`${API}/api/promo/redeem`,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":`Bearer ${token}`
-    },
-    body: JSON.stringify({
-      source:"manual",
-      code: code,
-      user_id: user.id
-    })
-  });
+    const session = await getSessionOrLogin();
+    if(!session) return;
 
-  const json = await res.json();
+    const result = await redeemPromoCode(code);
 
-  if(json.ok){
-    location.href="/pages/home.html";
-  }else{
-    errorText.innerText = mapError(json.reason);
+    if(result?.ok){
+      try{
+        localStorage.removeItem("italky_guest_mode_v1");
+        localStorage.setItem("italky_access_open_v1", "1");
+      }catch{}
+      location.href = "/pages/home.html";
+      return;
+    }
+
+    setMessage(mapError(result?.reason));
+  }catch(e){
+    console.error("promo redeem failed:", e);
+    setMessage(e?.message || "Kod kullanılamadı");
+  }finally{
+    applyBtn.disabled = false;
   }
 };
 
 continueBtn.onclick = () => {
-  location.href="/pages/jetonbuy.html";
+  location.href = "/pages/membership.html";
 };
 
 function mapError(r){
   if(!r) return "Kod geçersiz";
 
-  r = r.toUpperCase();
+  r = String(r).toUpperCase();
 
-  if(r==="PROMO_NOT_FOUND") return "Kod bulunamadı";
-  if(r==="PROMO_ALREADY_USED") return "Kod kullanılmış";
-  if(r==="PROMO_NOT_ELIGIBLE_FOR_PAID_MEMBER") return "Bu kod bu hesapta kullanılamaz";
-  if(r==="PROMO_EXPIRED") return "Kod süresi dolmuş";
+  if(r === "AUTH_REQUIRED") return "Önce Google hesabınızla giriş yapın";
+  if(r === "PROMO_NOT_FOUND") return "Kod bulunamadı";
+  if(r === "PROMO_ALREADY_USED") return "Kod kullanılmış";
+  if(r === "PROMO_NOT_ACTIVE") return "Kod aktif değil";
+  if(r === "PROMO_ASSIGNED_TO_ANOTHER_USER") return "Bu kod başka bir kullanıcıya tanımlı";
+  if(r === "PROMO_ASSIGNED_TO_ANOTHER_EMAIL") return "Bu kod başka bir e-posta adresine tanımlı";
+  if(r === "PROMO_EXPIRED") return "Kod süresi dolmuş";
 
   return "Kod geçersiz";
 }
