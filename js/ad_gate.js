@@ -339,10 +339,10 @@ function scheduleHandsFreeRestart() {
 }
 
 function installHandsFreeSpeechGuard() {
-  if (window.__ITALKY_HANDSFREE_SPEECH_GUARD__) return;
+  if (window.onNativeSpeechError?.__italkyHandsFreeGuard) return;
   window.__ITALKY_HANDSFREE_SPEECH_GUARD__ = true;
 
-  window.onNativeSpeechError = function (errorMsg) {
+  const guardedSpeechErrorHandler = function (errorMsg) {
     const raw = String(errorMsg || "").trim();
     const code = normalizeSpeechError(raw);
 
@@ -374,6 +374,9 @@ function installHandsFreeSpeechGuard() {
 
     scheduleHandsFreeRestart();
   };
+
+  guardedSpeechErrorHandler.__italkyHandsFreeGuard = true;
+  window.onNativeSpeechError = guardedSpeechErrorHandler;
 }
 
 function installLoginEntryLegacyGuards() {
