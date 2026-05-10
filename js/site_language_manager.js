@@ -3,14 +3,8 @@ const API_BASE = "https://italky-api.onrender.com";
 const STORAGE_KEY = "site_lang";
 const LEGACY_STORAGE_KEYS = ["italky_site_lang_v1", "siteLang", "italky_native_lang_v1"];
 const DEFAULT_LANG = "tr";
-const RTL_LANGS = new Set(["ar", "fa", "ur"]);
-
-const SUPPORTED_LANGS = new Set([
-  "tr","en","de","fr","it","es","ar",
-  "ru","bg","bn","ca","cs","da","el","et","eu","fi","gl","hu","id","lt","lv",
-  "ms","nl","pl","ro","sk","sl","sq","th","ur","vi","zh","pt","hi","ja","ko",
-  "sv","no","uk","fa"
-]);
+const SUPPORTED_LANGS = new Set(["tr", "en"]);
+const RTL_LANGS = new Set();
 
 const TEXT_SELECTOR_BLOCKLIST = new Set([
   "SCRIPT",
@@ -24,7 +18,8 @@ const TEXT_SELECTOR_BLOCKLIST = new Set([
 function normalizeLang(code) {
   const val = String(code || "").trim().toLowerCase().replace("_", "-");
   const base = val.split("-")[0];
-  return SUPPORTED_LANGS.has(base) ? base : DEFAULT_LANG;
+  if (!base) return DEFAULT_LANG;
+  return SUPPORTED_LANGS.has(base) ? base : "en";
 }
 
 function persistSiteLanguage(lang) {
@@ -82,13 +77,14 @@ function shouldSkipElement(el) {
 }
 
 async function detectInitialLanguage() {
-  const saved = normalizeLang(localStorage.getItem(STORAGE_KEY) || "");
-  if (saved !== DEFAULT_LANG || localStorage.getItem(STORAGE_KEY)) return saved;
+  const savedRaw = localStorage.getItem(STORAGE_KEY) || "";
+  const saved = normalizeLang(savedRaw);
+  if (savedRaw) return saved;
 
-  const legacy = LEGACY_STORAGE_KEYS
-    .map((key) => normalizeLang(localStorage.getItem(key) || ""))
-    .find((lang) => lang && (lang !== DEFAULT_LANG || localStorage.getItem("italky_site_lang_v1") || localStorage.getItem("siteLang")));
-  if (legacy) return legacy;
+  for (const key of LEGACY_STORAGE_KEYS) {
+    const raw = localStorage.getItem(key) || "";
+    if (raw) return normalizeLang(raw);
+  }
 
   const langs = Array.isArray(navigator.languages) && navigator.languages.length
     ? navigator.languages
@@ -102,8 +98,8 @@ async function detectInitialLanguage() {
   try {
     const resp = await fetch(`${API_BASE}/api/site-country`);
     const json = await resp.json().catch(() => ({}));
-    const suggested = normalizeLang(json?.suggested_lang || "");
-    if (suggested) return suggested;
+    const country = String(json?.country_code || json?.country || "").trim().toUpperCase();
+    if (country === "TR") return "tr";
   } catch (e) {
     console.warn("[site country detect]", e);
   }
