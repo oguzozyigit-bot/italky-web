@@ -1,4 +1,5 @@
 // FILE: italky-web/js/config.js
+import "/js/site_language_boot.js";
 
 export const GOOGLE_CLIENT_ID =
   "300866462204-c76rl1eia9a4cuogehsuf2cm1uc08iov.apps.googleusercontent.com";
