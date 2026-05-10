@@ -3,7 +3,6 @@ import "/js/site_language_boot.js";
 
 const GUEST_MODE_KEY = "italky_guest_mode_v1";
 const MEMBERSHIP_URL = "/pages/membership.html";
-const LOGIN_URL = "/pages/login.html";
 const GUIDE_ROOM_KEY = "italky_guide_room_v1";
 const GUIDE_MESSAGE_KEY = "italky_guide_message_v1";
 const GUIDE_LANGS = [
@@ -256,7 +255,7 @@ function installMicLoginButton() {
   btn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    location.href = LOGIN_URL;
+    location.href = MEMBERSHIP_URL;
   });
 
   const loginEntrySlot = document.querySelector(".half-screen.bottom .mic-line .mic-side:last-child");
