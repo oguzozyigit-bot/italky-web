@@ -78,21 +78,11 @@ function shouldSkipElement(el) {
 
 async function detectInitialLanguage() {
   const savedRaw = localStorage.getItem(STORAGE_KEY) || "";
-  const saved = normalizeLang(savedRaw);
-  if (savedRaw) return saved;
+  if (savedRaw) return normalizeLang(savedRaw);
 
   for (const key of LEGACY_STORAGE_KEYS) {
     const raw = localStorage.getItem(key) || "";
     if (raw) return normalizeLang(raw);
-  }
-
-  const langs = Array.isArray(navigator.languages) && navigator.languages.length
-    ? navigator.languages
-    : [navigator.language || DEFAULT_LANG];
-
-  for (const lang of langs) {
-    const n = normalizeLang(lang);
-    if (n && n !== DEFAULT_LANG) return n;
   }
 
   try {
@@ -104,7 +94,17 @@ async function detectInitialLanguage() {
     console.warn("[site country detect]", e);
   }
 
-  return DEFAULT_LANG;
+  const langs = Array.isArray(navigator.languages) && navigator.languages.length
+    ? navigator.languages
+    : [navigator.language || ""];
+
+  for (const lang of langs) {
+    const val = String(lang || "").trim().toLowerCase().replace("_", "-");
+    const base = val.split("-")[0];
+    if (SUPPORTED_LANGS.has(base)) return base;
+  }
+
+  return "en";
 }
 
 function setDocumentDirection(lang) {
