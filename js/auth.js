@@ -83,6 +83,45 @@ function safeRedirectPath(value) {
   return raw;
 }
 
+function isAndroidWebView() {
+  try {
+    return !!(
+      window.Native?.startGoogleLogin ||
+      window.AndroidBridge ||
+      window.AndroidBilling ||
+      /; wv\)/i.test(navigator.userAgent || "")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function toAndroidBrowserIntent(url) {
+  const parsed = new URL(url);
+  const path = `${parsed.host}${parsed.pathname}${parsed.search}${parsed.hash}`;
+  return `intent://${path}#Intent;scheme=${parsed.protocol.replace(":", "")};package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end`;
+}
+
+function openOAuthUrlOutsideWebView(url) {
+  if (!url) throw new Error("Google OAuth adresi alınamadı.");
+
+  if (isAndroidWebView()) {
+    try {
+      location.assign(toAndroidBrowserIntent(url));
+      return;
+    } catch (e) {
+      console.warn("[ITALKY AUTH] Chrome intent failed", e);
+    }
+  }
+
+  try {
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
+    if (popup) return;
+  } catch {}
+
+  location.assign(url);
+}
+
 export async function loginWithGoogle(next = "") {
   const callbackUrl = new URL("/pages/auth_callback.html", location.origin);
   const safeNext = safeRedirectPath(next);
@@ -95,6 +134,7 @@ export async function loginWithGoogle(next = "") {
     provider: "google",
     options: {
       redirectTo: callbackUrl.toString(),
+      skipBrowserRedirect: true,
       queryParams: {
         access_type: "offline",
         prompt: "select_account"
@@ -103,6 +143,7 @@ export async function loginWithGoogle(next = "") {
   });
 
   if (error) throw error;
+  openOAuthUrlOutsideWebView(data?.url || "");
   return data;
 }
 
