@@ -13,6 +13,11 @@ function readNativeIdToken(payload) {
   }
 }
 
+function isDatabaseSaveError(error) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return message.includes("database error saving new user");
+}
+
 function installGoogleAuthDebugHooks() {
   try {
     if (window.__italkyGoogleAuthDebugInstalled) return;
@@ -44,6 +49,10 @@ function installGoogleAuthDebugHooks() {
       supabase.auth.signInWithIdToken = async function() {
         const result = await originalSignInWithIdToken(...arguments);
         if (result?.error) {
+          if (isDatabaseSaveError(result.error)) {
+            window.__italkyNativeLoginDatabaseSaveError = true;
+            console.error("[SUPABASE_AUTH] database_save_error", result.error);
+          }
           console.error("[ITALKY AUTH] signInWithIdToken error", result.error);
         }
         return result;
@@ -137,8 +146,12 @@ function openOAuthUrlOutsideWebView(url) {
 
 export async function loginWithGoogle(next = "") {
   if (hasNativeGoogleLogin()) {
-    window.Native.startGoogleLogin();
-    return { native: true };
+    const message = window.__italkyNativeLoginDatabaseSaveError
+      ? "Hesap oluşturulurken veritabanı hatası oluştu. Lütfen yöneticiye bildirin."
+      : "Google giriş işlemi uygulama içinde tamamlanamadı. Lütfen tekrar deneyin.";
+
+    console.warn("[ITALKY AUTH] Native auth fallback blocked inside APK");
+    throw new Error(message);
   }
 
   const callbackUrl = new URL("/pages/auth_callback.html", location.origin);
