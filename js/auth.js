@@ -83,10 +83,18 @@ function safeRedirectPath(value) {
   return raw;
 }
 
+function hasNativeGoogleLogin() {
+  try {
+    return typeof window.Native?.startGoogleLogin === "function";
+  } catch {
+    return false;
+  }
+}
+
 function isAndroidWebView() {
   try {
     return !!(
-      window.Native?.startGoogleLogin ||
+      hasNativeGoogleLogin() ||
       window.AndroidBridge ||
       window.AndroidBilling ||
       /; wv\)/i.test(navigator.userAgent || "")
@@ -104,6 +112,11 @@ function toAndroidBrowserIntent(url) {
 
 function openOAuthUrlOutsideWebView(url) {
   if (!url) throw new Error("Google OAuth adresi alınamadı.");
+
+  if (hasNativeGoogleLogin()) {
+    console.warn("[ITALKY AUTH] Browser OAuth blocked because native Google login is available");
+    throw new Error("Uygulama içinde Google girişi native akışla tamamlanmalı.");
+  }
 
   if (isAndroidWebView()) {
     try {
@@ -123,6 +136,11 @@ function openOAuthUrlOutsideWebView(url) {
 }
 
 export async function loginWithGoogle(next = "") {
+  if (hasNativeGoogleLogin()) {
+    window.Native.startGoogleLogin();
+    return { native: true };
+  }
+
   const callbackUrl = new URL("/pages/auth_callback.html", location.origin);
   const safeNext = safeRedirectPath(next);
 
