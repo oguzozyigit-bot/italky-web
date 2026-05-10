@@ -4,6 +4,7 @@ import "/js/public_guest_ux.js";
 
 const MODULE_AD_STATE_KEY = "italky_module_ad_state_v2";
 const OFFLINE_AD_STATE_KEY = "italky_offline_ad_state_v2";
+const GUEST_TIMER_STATE_KEY = "italky_guest_reward_timer_state_v1";
 const AD_INFO_MODAL_ID = "italkyAdInfoModal";
 const GUEST_REWARD_MODAL_ID = "italkyGuestRewardModal";
 const GUEST_MODE_KEY = "italky_guest_mode_v1";
@@ -34,30 +35,6 @@ function normalizeModuleKey(moduleKey = "") {
   return String(moduleKey || "").trim().toLowerCase();
 }
 
-function getModuleAdState() {
-  const state = readJson(MODULE_AD_STATE_KEY, {});
-  return state && typeof state === "object" ? state : {};
-}
-
-function setModuleAdState(next) {
-  const safe = next && typeof next === "object" ? next : {};
-  writeJson(MODULE_AD_STATE_KEY, safe);
-  return safe;
-}
-
-function getOfflineAdState() {
-  const state = readJson(OFFLINE_AD_STATE_KEY, { shown_pairs: {} });
-  if (!state.shown_pairs || typeof state.shown_pairs !== "object") state.shown_pairs = {};
-  return state;
-}
-
-function setOfflineAdState(next) {
-  const safe = next && typeof next === "object" ? next : { shown_pairs: {} };
-  if (!safe.shown_pairs || typeof safe.shown_pairs !== "object") safe.shown_pairs = {};
-  writeJson(OFFLINE_AD_STATE_KEY, safe);
-  return safe;
-}
-
 function isTruthy(value) {
   return value === true || value === "true" || value === 1 || value === "1";
 }
@@ -75,20 +52,13 @@ function hasCachedSupabaseSession() {
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = String(localStorage.key(i) || "");
       if (!key.startsWith("sb-")) continue;
-
       const raw = localStorage.getItem(key);
       if (!raw) continue;
-
       const parsed = JSON.parse(raw);
-      const token =
-        parsed?.access_token ||
-        parsed?.currentSession?.access_token ||
-        parsed?.session?.access_token;
-
+      const token = parsed?.access_token || parsed?.currentSession?.access_token || parsed?.session?.access_token;
       if (token) return true;
     }
   } catch {}
-
   return false;
 }
 
@@ -130,10 +100,6 @@ function getRewardedBridge() {
   }
 }
 
-function hasNativeRewarded() {
-  return !!getRewardedBridge();
-}
-
 function callRewardedBridge(referenceKey = "", placement = "module_access") {
   const bridge = getRewardedBridge();
   if (!bridge) return false;
@@ -162,6 +128,23 @@ function callRewardedBridge(referenceKey = "", placement = "module_access") {
   return false;
 }
 
+function getGuestTimerState() {
+  const state = readJson(GUEST_TIMER_STATE_KEY, {});
+  return state && typeof state === "object" ? state : {};
+}
+
+function getNextGuestAdAt(key) {
+  const state = getGuestTimerState();
+  return Number(state?.[key]?.nextAt || 0);
+}
+
+function setNextGuestAdAt(key, nextAt) {
+  if (!key) return;
+  const state = getGuestTimerState();
+  state[key] = { nextAt: Number(nextAt || 0) };
+  writeJson(GUEST_TIMER_STATE_KEY, state);
+}
+
 function getOrCreateAdInfoModal() {
   let modal = document.getElementById(AD_INFO_MODAL_ID);
   if (modal) return modal;
@@ -173,8 +156,7 @@ function getOrCreateAdInfoModal() {
     .italky-ad-info-backdrop.open{display:flex}
     .italky-ad-info-card{width:min(100%,430px);border-radius:26px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(10,16,30,.98),rgba(8,12,24,.98));box-shadow:0 24px 50px rgba(0,0,0,.34);color:#fff;font-family:Outfit,system-ui,sans-serif}
     .italky-ad-info-top{padding:18px 18px 14px;background:radial-gradient(circle at top left,rgba(191,219,254,.16),transparent 38%),linear-gradient(135deg,#142033 0%,#1a2740 52%,#202b46 100%);border-bottom:1px solid rgba(255,255,255,.06)}
-    .italky-ad-info-chip{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.92);font-size:12px;font-weight:1000}
-    .italky-ad-info-title{margin:12px 0 8px;font-size:24px;line-height:1.08;font-weight:1000;letter-spacing:-.5px;color:#eef4ff}
+    .italky-ad-info-title{margin:0 0 8px;font-size:22px;line-height:1.12;font-weight:1000;color:#eef4ff}
     .italky-ad-info-text{margin:0;font-size:13px;line-height:1.68;font-weight:800;color:rgba(235,242,255,.82);white-space:pre-line}
     .italky-ad-info-body{padding:16px;display:grid;gap:10px;background:linear-gradient(180deg,rgba(9,13,24,.98),rgba(7,10,20,.98))}
     .italky-ad-info-btn{min-height:50px;border:none;border-radius:16px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:1000;transition:transform .14s ease,opacity .14s ease}
@@ -189,7 +171,6 @@ function getOrCreateAdInfoModal() {
   modal.innerHTML = `
     <div class="italky-ad-info-card">
       <div class="italky-ad-info-top">
-        <div class="italky-ad-info-chip">italkyAI</div>
         <div class="italky-ad-info-title" id="italkyAdInfoTitle">Kucuk Bir Bilgilendirme</div>
         <p class="italky-ad-info-text" id="italkyAdInfoText"></p>
       </div>
@@ -199,7 +180,6 @@ function getOrCreateAdInfoModal() {
     </div>
   `;
   document.body.appendChild(modal);
-
   return modal;
 }
 
@@ -244,7 +224,6 @@ function getOrCreateGuestRewardModal() {
     </div>
   `;
   document.body.appendChild(modal);
-
   return modal;
 }
 
@@ -261,17 +240,11 @@ function showSoftAdModal({ title = "Bu modül için kısa bir reklam gösterilec
     const cleanup = (value) => {
       modal.classList.remove("open");
       okBtn?.removeEventListener("click", onOk);
-      modal.removeEventListener("click", onBackdrop);
       resolve(value);
     };
 
     const onOk = () => cleanup(true);
-    const onBackdrop = (e) => {
-      if (e.target === modal) cleanup(true);
-    };
-
     okBtn?.addEventListener("click", onOk);
-    modal.addEventListener("click", onBackdrop);
     modal.classList.add("open");
   });
 }
@@ -302,7 +275,6 @@ function waitForRewardedResult(timeoutMs = 35000) {
   return new Promise((resolve) => {
     let done = false;
     let earned = false;
-
     const prevEarned = window.onNativeRewardEarned;
     const prevClosed = window.onNativeRewardClosed;
 
@@ -330,7 +302,8 @@ function waitForRewardedResult(timeoutMs = 35000) {
 }
 
 async function showNativeRewarded(referenceKey = "", placement = "module_access") {
-  if (!hasNativeRewarded()) return false;
+  const bridge = getRewardedBridge();
+  if (!bridge) return false;
 
   try {
     const waitPromise = waitForRewardedResult();
@@ -379,7 +352,7 @@ function showFallbackAdInfo(message = "Bu modül için kısa bir reklam gösteri
 
 export function getModuleAccessState(moduleKey = "") {
   const key = normalizeModuleKey(moduleKey);
-  const state = getModuleAdState();
+  const state = readJson(MODULE_AD_STATE_KEY, {});
   const until = Number(state?.[key]?.until || 0);
   return { moduleKey: key, until, active: until > nowTs() };
 }
@@ -387,12 +360,10 @@ export function getModuleAccessState(moduleKey = "") {
 export function markModuleAdShown(moduleKey = "", hours = 24) {
   const key = normalizeModuleKey(moduleKey);
   if (!key) return null;
-
-  const state = getModuleAdState();
+  const state = readJson(MODULE_AD_STATE_KEY, {});
   const until = nowTs() + Number(hours || 24) * 60 * 60 * 1000;
   state[key] = { until };
-  setModuleAdState(state);
-
+  writeJson(MODULE_AD_STATE_KEY, state);
   return { moduleKey: key, until, active: true };
 }
 
@@ -422,42 +393,34 @@ export async function ensureModuleAdAccess(options = {}) {
   }
 
   try { if (typeof onBeforeAd === "function") await onBeforeAd(); } catch {}
-
   const accepted = await showSoftAdModal({ title, text });
-  if (!accepted) {
-    if (typeof onAfterAd === "function") await onAfterAd(false);
-    return false;
-  }
+  if (!accepted) return false;
 
   let rewarded = false;
-  if (hasNativeRewarded()) rewarded = await showNativeRewarded(key, placement);
+  if (getRewardedBridge()) rewarded = await showNativeRewarded(key, placement);
   else {
     showFallbackAdInfo("Bu modülü kullanmak için kısa bir reklam gösterilebilir.");
     rewarded = true;
   }
 
   if (rewarded && hours > 0) markModuleAdShown(key, hours);
-
   try { if (typeof onAfterAd === "function") await onAfterAd(rewarded); } catch {}
   return rewarded;
 }
 
 export async function runGuestRewardedAdFlow(options = {}) {
   const { moduleKey = "guest_mode", placement = "guest_mode_timer" } = options;
-
   if (!canRunGuestRewardAds()) return true;
 
   const choice = await showGuestRewardChoice();
-
   if (choice === "login") {
     location.href = "/pages/membership.html";
     return false;
   }
-
   if (choice !== "watch") return false;
 
   let rewarded = false;
-  if (hasNativeRewarded()) rewarded = await showNativeRewarded(moduleKey, placement);
+  if (getRewardedBridge()) rewarded = await showNativeRewarded(moduleKey, placement);
   else {
     showFallbackAdInfo("Reklam hazır değilse misafir oturumu bu aşamada devam eder.");
     rewarded = true;
@@ -493,9 +456,18 @@ export function startGuestRewardedAdTimer(options = {}) {
     timerId = setTimeout(run, Math.max(1000, Number(delay) || intervalMs));
   };
 
+  const scheduleFromState = () => {
+    const nextAt = getNextGuestAdAt(key);
+    const storedDelay = nextAt > nowTs() ? nextAt - nowTs() : 0;
+    schedule(Math.max(Number(startDelayMs) || intervalMs, storedDelay || 0));
+  };
+
   const run = async () => {
     if (stopped || busy || !canRunGuestRewardAds()) return;
-    if (document.getElementById(GUEST_REWARD_MODAL_ID)?.classList.contains("open")) return;
+    if (document.getElementById(GUEST_REWARD_MODAL_ID)?.classList.contains("open")) {
+      schedule(15000);
+      return;
+    }
 
     busy = true;
     let ok = false;
@@ -505,11 +477,13 @@ export function startGuestRewardedAdTimer(options = {}) {
       console.warn("guest rewarded ad flow failed:", e);
     } finally {
       busy = false;
-      schedule(ok === false ? 15000 : intervalMs);
+      const nextDelay = ok === false ? 15000 : intervalMs;
+      setNextGuestAdAt(key, nowTs() + nextDelay);
+      schedule(nextDelay);
     }
   };
 
-  schedule(startDelayMs);
+  scheduleFromState();
 
   const controller = {
     stop() {
@@ -530,7 +504,6 @@ export function startGuestRewardedAdTimer(options = {}) {
 function autoStartGuestRewardTimerForKnownPages() {
   try {
     const path = String(location.pathname || "").toLowerCase();
-
     const configs = [
       { match: "/facetoface.html", moduleKey: "facetoface_guest", placement: "facetoface_guest_timer" },
       { match: "/pages/login_entry.html", moduleKey: "public_facetoface_guest", placement: "public_facetoface_guest_timer" },
@@ -540,11 +513,9 @@ function autoStartGuestRewardTimerForKnownPages() {
     ];
 
     let found = configs.find((item) => path.endsWith(item.match));
-
     if (!found && path.startsWith("/pages/public/") && path.endsWith(".html")) {
       found = { moduleKey: "public_game_play_guest", placement: "public_game_play_guest_timer" };
     }
-
     if (!found) return;
     startGuestRewardedAdTimer(found);
   } catch {}
@@ -555,19 +526,18 @@ autoStartGuestRewardTimerForKnownPages();
 export function hasShownOfflineDownloadAd(sessionKey = "offline_languages_page") {
   const key = normalizeModuleKey(sessionKey);
   if (!key) return false;
-
-  const state = getOfflineAdState();
-  const until = Number(state.shown_pairs[key] || 0);
+  const state = readJson(OFFLINE_AD_STATE_KEY, { shown_pairs: {} });
+  const until = Number(state?.shown_pairs?.[key] || 0);
   return until > nowTs();
 }
 
 export function markOfflineDownloadAdShown(sessionKey = "offline_languages_page", hours = 24) {
   const key = normalizeModuleKey(sessionKey);
   if (!key) return;
-
-  const state = getOfflineAdState();
+  const state = readJson(OFFLINE_AD_STATE_KEY, { shown_pairs: {} });
+  if (!state.shown_pairs || typeof state.shown_pairs !== "object") state.shown_pairs = {};
   state.shown_pairs[key] = nowTs() + Number(hours || 24) * 60 * 60 * 1000;
-  setOfflineAdState(state);
+  writeJson(OFFLINE_AD_STATE_KEY, state);
 }
 
 export async function maybeShowOfflineDownloadAd(options = {}) {
@@ -593,21 +563,17 @@ export async function maybeShowOfflineDownloadAd(options = {}) {
 
   if (!skipInfoModal) {
     const accepted = await showSoftAdModal({ title, text });
-    if (!accepted) {
-      if (typeof onAfterAd === "function") await onAfterAd(false);
-      return false;
-    }
+    if (!accepted) return false;
   }
 
   let rewarded = false;
-  if (hasNativeRewarded()) rewarded = await showNativeRewarded(key, "offline_languages_download");
+  if (getRewardedBridge()) rewarded = await showNativeRewarded(key, "offline_languages_download");
   else {
     showFallbackAdInfo("Reklam hazırlanıyor, indirme başlatılıyor.");
     rewarded = true;
   }
 
   if (rewarded && hours > 0) markOfflineDownloadAdShown(key, hours);
-
   try { if (typeof onAfterAd === "function") await onAfterAd(rewarded); } catch {}
   return rewarded;
 }
