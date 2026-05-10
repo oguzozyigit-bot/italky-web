@@ -70,8 +70,69 @@ function appendFooterIfMissing() {
   document.body.appendChild(el);
 }
 
+function ensureMembershipCancelStyle() {
+  if (document.getElementById("italkyMembershipCancelStyle")) return;
+  const style = document.createElement("style");
+  style.id = "italkyMembershipCancelStyle";
+  style.textContent = `
+    .italky-membership-cancel-btn{
+      width:100%;
+      min-height:50px;
+      border-radius:17px;
+      border:1px solid rgba(148,163,184,.20);
+      background:rgba(255,255,255,.045);
+      color:rgba(226,232,240,.82);
+      font:inherit;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      margin-top:10px;
+      touch-action:manipulation;
+    }
+    .italky-membership-cancel-btn:active{transform:scale(.99)}
+    body.signed-out #signinCancelBtn{display:flex}
+    body:not(.signed-out):not(.access-open) #membershipCancelBtn{display:flex}
+    body.access-open #signinCancelBtn,
+    body.access-open #membershipCancelBtn{display:none!important}
+  `;
+  document.head.appendChild(style);
+}
+
+function createCancelButton(id) {
+  const btn = document.createElement("button");
+  btn.id = id;
+  btn.type = "button";
+  btn.className = "italky-membership-cancel-btn";
+  btn.textContent = "Vazgeç";
+  btn.addEventListener("click", (event) => {
+    event.preventDefault();
+    location.href = "/pages/login_entry.html";
+  });
+  return btn;
+}
+
+function installMembershipCancelButtons() {
+  ensureMembershipCancelStyle();
+
+  const signinBtn = document.getElementById("signinBtn");
+  if (signinBtn && !document.getElementById("signinCancelBtn")) {
+    signinBtn.insertAdjacentElement("afterend", createCancelButton("signinCancelBtn"));
+  }
+
+  const actions = document.querySelector(".actions");
+  if (actions && !document.getElementById("membershipCancelBtn")) {
+    actions.appendChild(createCancelButton("membershipCancelBtn"));
+  }
+}
+
 function installMembershipHelpers() {
   if (!location.pathname.endsWith("/pages/membership.html")) return;
+
+  installMembershipCancelButtons();
+  setTimeout(installMembershipCancelButtons, 500);
 
   let redirected = false;
   const redirectIfActive = () => {
