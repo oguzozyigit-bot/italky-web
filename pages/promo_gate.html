@@ -3,125 +3,145 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>italkyAI • Aktivasyon</title>
+  <title>italkyAI • Kod Aktivasyonu</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 
   <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     body{
       margin:0;
-      background:#05070f;
+      min-height:100vh;
+      background:radial-gradient(circle at top,rgba(96,165,250,.16),transparent 34%),linear-gradient(180deg,#07111f,#040813);
       font-family:'Outfit',sans-serif;
       color:#fff;
       display:flex;
       align-items:center;
       justify-content:center;
-      height:100vh;
+      padding:20px;
     }
 
     .card{
-      width:90%;
-      max-width:420px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
+      width:100%;
+      max-width:440px;
+      background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+      border:1px solid rgba(148,163,184,.18);
       border-radius:26px;
-      padding:26px;
-      text-align:center;
+      padding:24px;
+      box-shadow:0 24px 56px rgba(0,0,0,.34);
     }
 
-    h1{
-      margin:0 0 10px;
-      font-size:26px;
-      font-weight:900;
-    }
-
-    p{
-      font-size:14px;
-      color:rgba(255,255,255,.7);
-      margin-bottom:20px;
-    }
+    h1{margin:0 0 10px;font-size:25px;font-weight:900;letter-spacing:-.4px}
+    p{font-size:14px;color:rgba(255,255,255,.72);line-height:1.55;margin:0 0 18px}
+    label{display:block;margin:12px 0 7px;color:rgba(255,255,255,.74);font-size:12px;font-weight:900;text-align:left}
 
     input{
       width:100%;
-      height:54px;
+      min-height:52px;
       border-radius:16px;
-      border:none;
-      text-align:center;
-      font-size:18px;
-      font-weight:900;
-      letter-spacing:2px;
-      margin-bottom:14px;
-      background:#111827;
+      border:1px solid rgba(148,163,184,.18);
+      background:#0f172a;
       color:#fff;
-      text-transform:uppercase;
+      padding:0 14px;
+      font-size:16px;
+      font-weight:900;
+      outline:none;
     }
+
+    #promoInput,#otpInput{text-align:center;letter-spacing:2px;text-transform:uppercase}
 
     button{
       width:100%;
-      height:54px;
+      min-height:52px;
       border:none;
       border-radius:16px;
-      font-size:16px;
+      font-size:15px;
       font-weight:900;
       cursor:pointer;
-      margin-bottom:10px;
+      margin-top:12px;
+      font-family:inherit;
     }
 
-    button:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-    }
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .btn-primary{background:linear-gradient(135deg,#dbeafe,#60a5fa);color:#07111f}
+    .btn-secondary{background:#172033;color:#fff;border:1px solid rgba(148,163,184,.18)}
 
-    .btn-primary{
-      background:linear-gradient(135deg,#8bd3ff,#7c5cff,#ff66c4);
-      color:#fff;
-    }
-
-    .btn-secondary{
-      background:#1f2937;
-      color:#fff;
-    }
-
-    .error{
-      color:#ff8b8b;
-      font-size:13px;
-      margin-top:10px;
-      min-height:20px;
+    .check{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      color:rgba(255,255,255,.76);
+      font-size:12px;
       line-height:1.45;
+      margin-top:12px;
+      text-align:left;
     }
+    .check input{width:18px;min-height:18px;height:18px;flex:0 0 18px;margin-top:1px}
+
+    .hidden{display:none!important}
+    .message{min-height:22px;margin-top:12px;color:#ffb4b4;font-size:13px;line-height:1.45;text-align:center;font-weight:800}
+    .ok{color:#b8f7c7}
   </style>
 </head>
 
 <body>
+  <div class="card">
+    <h1>Kurumsal Kod Aktivasyonu</h1>
+    <p>Promosyon kodunuzu aktive etmek için Google hesabınızla giriş yapmış olmanız ve telefon numaranızı doğrulamanız gerekir.</p>
 
-<div class="card">
-  <h1>Promosyon Kodunuz Var mı?</h1>
-  <p>
-    Kodunuz varsa girin. Yoksa devam ederek üyeliğinizi başlatabilirsiniz.
-  </p>
+    <div id="stepCode">
+      <label for="promoInput">Promosyon Kodu</label>
+      <input id="promoInput" placeholder="KOD GİR" maxlength="8" autocomplete="one-time-code"/>
 
-  <input id="promoInput" placeholder="KOD GİR" maxlength="8" autocomplete="one-time-code"/>
+      <label for="phoneInput">Telefon Numarası</label>
+      <input id="phoneInput" placeholder="+90..." inputmode="tel" autocomplete="tel"/>
 
-  <button class="btn-primary" id="applyBtn">KODU ONAYLA</button>
-  <button class="btn-secondary" id="continueBtn">DEVAM ET</button>
+      <label class="check">
+        <input id="consentInput" type="checkbox"/>
+        <span>Telefon numaramın doğrulanmasını ve üyelik/kampanya bilgilendirmeleri için benimle SMS/e-posta yoluyla iletişime geçilmesini kabul ediyorum.</span>
+      </label>
 
-  <div id="errorText" class="error"></div>
-</div>
+      <button class="btn-primary" id="sendOtpBtn" type="button">SMS Kodu Gönder</button>
+    </div>
+
+    <div id="stepOtp" class="hidden">
+      <label for="otpInput">4 Haneli SMS Kodu</label>
+      <input id="otpInput" placeholder="0000" maxlength="4" inputmode="numeric" autocomplete="one-time-code"/>
+      <button class="btn-primary" id="verifyOtpBtn" type="button">Kodu Aktive Et</button>
+      <button class="btn-secondary" id="backBtn" type="button">Geri Dön</button>
+    </div>
+
+    <button class="btn-secondary" id="continueBtn" type="button">Üyelik Sayfasına Dön</button>
+    <div id="message" class="message"></div>
+  </div>
 
 <script type="module">
 import { supabase } from "/js/supabase_client.js";
 
+const API = "https://italky-api.onrender.com/api/promo/corporate";
 const promoInput = document.getElementById("promoInput");
-const applyBtn = document.getElementById("applyBtn");
+const phoneInput = document.getElementById("phoneInput");
+const consentInput = document.getElementById("consentInput");
+const otpInput = document.getElementById("otpInput");
+const sendOtpBtn = document.getElementById("sendOtpBtn");
+const verifyOtpBtn = document.getElementById("verifyOtpBtn");
 const continueBtn = document.getElementById("continueBtn");
-const errorText = document.getElementById("errorText");
+const backBtn = document.getElementById("backBtn");
+const stepCode = document.getElementById("stepCode");
+const stepOtp = document.getElementById("stepOtp");
+const message = document.getElementById("message");
 
-function setMessage(msg = ""){
-  errorText.innerText = String(msg || "");
+function setMessage(text = "", ok = false){
+  message.textContent = String(text || "");
+  message.classList.toggle("ok", !!ok);
 }
 
 function normalizePromoCode(value){
   return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+}
+
+function normalizePhone(value){
+  return String(value || "").trim().replace(/[^+0-9]/g, "").slice(0, 24);
 }
 
 function isValidPromoCode(code){
@@ -144,72 +164,103 @@ async function getSessionOrLogin(){
   return null;
 }
 
-async function redeemPromoCode(code){
-  const { data, error } = await supabase.rpc("redeem_promo_code_v1", { p_code: code });
-  if(error) throw error;
-  return data;
+async function post(path, body){
+  const session = await getSessionOrLogin();
+  if(!session) return null;
+  const res = await fetch(`${API}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`
+    },
+    body: JSON.stringify(body || {})
+  });
+  const json = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(mapError(json?.detail));
+  return json;
 }
 
-promoInput.addEventListener("input", () => {
-  promoInput.value = normalizePromoCode(promoInput.value);
-});
+function mapError(reason){
+  const r = String(reason || "").toUpperCase();
+  if(r.includes("AUTH")) return "Önce Google hesabınızla giriş yapın.";
+  if(r.includes("PROMO_NOT_FOUND")) return "Kod bulunamadı.";
+  if(r.includes("PROMO_ALREADY_USED")) return "Bu kod daha önce kullanılmış.";
+  if(r.includes("PROMO_EXPIRED")) return "Kod giriş süresi dolmuş.";
+  if(r.includes("CONSENT_REQUIRED")) return "Devam etmek için telefon doğrulama ve iletişim iznini onaylayın.";
+  if(r.includes("PHONE_REQUIRED")) return "Telefon numarası gerekli.";
+  if(r.includes("OTP_INVALID")) return "SMS kodu hatalı.";
+  if(r.includes("OTP_EXPIRED")) return "SMS kodunun süresi dolmuş.";
+  return reason || "İşlem tamamlanamadı.";
+}
 
-applyBtn.onclick = async () => {
+promoInput.addEventListener("input", () => { promoInput.value = normalizePromoCode(promoInput.value); });
+phoneInput.addEventListener("input", () => { phoneInput.value = normalizePhone(phoneInput.value); });
+otpInput.addEventListener("input", () => { otpInput.value = otpInput.value.replace(/[^0-9]/g, "").slice(0, 4); });
+
+sendOtpBtn.addEventListener("click", async () => {
   const code = normalizePromoCode(promoInput.value);
-
-  if(!isValidPromoCode(code)){
-    setMessage("Kod 8 karakter, tam 2 harf ve 6 rakam olmalı.");
-    return;
-  }
+  const phone = normalizePhone(phoneInput.value);
+  if(!isValidPromoCode(code)){ setMessage("Kod 8 karakter, tam 2 harf ve 6 rakam olmalı."); return; }
+  if(phone.length < 8){ setMessage("Telefon numarası gerekli."); return; }
+  if(!consentInput.checked){ setMessage("Devam etmek için izin metnini onaylayın."); return; }
 
   try{
-    applyBtn.disabled = true;
-    setMessage("Kod kontrol ediliyor...");
+    sendOtpBtn.disabled = true;
+    setMessage("SMS kodu hazırlanıyor...");
+    const result = await post("/otp/send", { code, phone, sms_consent: true, email_consent: true });
+    if(!result) return;
+    stepCode.classList.add("hidden");
+    stepOtp.classList.remove("hidden");
+    setMessage(result.debug_otp ? `Test SMS kodu: ${result.debug_otp}` : "SMS kodu gönderildi.", true);
+  }catch(e){
+    setMessage(e.message || "SMS kodu gönderilemedi.");
+  }finally{
+    sendOtpBtn.disabled = false;
+  }
+});
 
-    const session = await getSessionOrLogin();
-    if(!session) return;
+verifyOtpBtn.addEventListener("click", async () => {
+  const code = normalizePromoCode(promoInput.value);
+  const phone = normalizePhone(phoneInput.value);
+  const otp = String(otpInput.value || "").trim();
+  if(otp.length !== 4){ setMessage("4 haneli SMS kodunu girin."); return; }
 
-    const result = await redeemPromoCode(code);
-
+  try{
+    verifyOtpBtn.disabled = true;
+    setMessage("Kod aktive ediliyor...");
+    const result = await post("/otp/verify", { code, phone, otp, sms_consent: true, email_consent: true });
     if(result?.ok){
       try{
         localStorage.removeItem("italky_guest_mode_v1");
         localStorage.setItem("italky_access_open_v1", "1");
       }catch{}
-      location.href = "/pages/home.html";
+      setMessage("Üyeliğiniz aktive edildi. Yönlendiriliyorsunuz...", true);
+      setTimeout(() => { location.href = "/pages/home.html"; }, 600);
       return;
     }
-
-    setMessage(mapError(result?.reason));
+    setMessage("Kod aktive edilemedi.");
   }catch(e){
-    console.error("promo redeem failed:", e);
-    setMessage(e?.message || "Kod kullanılamadı");
+    setMessage(e.message || "Kod aktive edilemedi.");
   }finally{
-    applyBtn.disabled = false;
+    verifyOtpBtn.disabled = false;
   }
-};
+});
 
-continueBtn.onclick = () => {
-  location.href = "/pages/membership.html";
-};
+backBtn.addEventListener("click", () => {
+  stepOtp.classList.add("hidden");
+  stepCode.classList.remove("hidden");
+  setMessage("");
+});
 
-function mapError(r){
-  if(!r) return "Kod geçersiz";
+continueBtn.addEventListener("click", () => { location.href = "/pages/membership.html"; });
 
-  r = String(r).toUpperCase();
-
-  if(r === "AUTH_REQUIRED") return "Önce Google hesabınızla giriş yapın";
-  if(r === "PROMO_NOT_FOUND") return "Kod bulunamadı";
-  if(r === "PROMO_ALREADY_USED") return "Kod kullanılmış";
-  if(r === "PROMO_NOT_ACTIVE") return "Kod aktif değil";
-  if(r === "PROMO_ASSIGNED_TO_ANOTHER_USER") return "Bu kod başka bir kullanıcıya tanımlı";
-  if(r === "PROMO_ASSIGNED_TO_ANOTHER_EMAIL") return "Bu kod başka bir e-posta adresine tanımlı";
-  if(r === "PROMO_EXPIRED") return "Kod süresi dolmuş";
-
-  return "Kod geçersiz";
-}
-
+(function boot(){
+  try{
+    const u = new URL(location.href);
+    const code = normalizePromoCode(u.searchParams.get("code") || "");
+    if(code) promoInput.value = code;
+  }catch{}
+})();
 </script>
-
 </body>
 </html>
