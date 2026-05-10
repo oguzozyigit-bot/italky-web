@@ -13,10 +13,15 @@
   <style>
     :root{
       --bg:#07111f;
+      --panel:rgba(255,255,255,.055);
       --line:rgba(255,255,255,.11);
       --text:#ffffff;
-      --muted:rgba(255,255,255,.68);
+      --muted:rgba(255,255,255,.70);
       --soft:rgba(255,255,255,.50);
+      --cyan:#22d3ee;
+      --blue:#60a5fa;
+      --indigo:#818cf8;
+      --pink:#ec4899;
       --grad:linear-gradient(135deg,#22d3ee 0%,#818cf8 56%,#ec4899 100%);
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --safe-top:env(safe-area-inset-top,0px);
@@ -24,33 +29,45 @@
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html,body{ margin:0; width:100%; min-height:100%; background:var(--bg); color:var(--text); font-family:Outfit,Arial,sans-serif; overflow-x:hidden; }
-    body{ background:radial-gradient(circle at 50% 0%, rgba(34,211,238,.14), transparent 34%), radial-gradient(circle at 100% 18%, rgba(129,140,248,.10), transparent 32%), linear-gradient(180deg,#07111f 0%,#050914 100%); }
+    body{ background:radial-gradient(circle at 50% 0%, rgba(34,211,238,.16), transparent 34%), radial-gradient(circle at 100% 18%, rgba(129,140,248,.12), transparent 32%), linear-gradient(180deg,#07111f 0%,#050914 100%); }
 
-    .page{ width:100%; max-width:560px; margin:0 auto; padding:calc(26px + var(--safe-top)) 20px calc(42px + var(--safe-bottom)); }
-    .brand{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; }
+    .page{ width:100%; max-width:580px; margin:0 auto; padding:calc(26px + var(--safe-top)) 20px calc(42px + var(--safe-bottom)); }
+    .brand{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
     .logo-main{ font-family:"Space Grotesk",sans-serif; font-size:34px; font-weight:900; line-height:1; letter-spacing:-1.2px; }
     .logo-main span{ background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .logo-sub{ margin-top:8px; font-size:11px; letter-spacing:2.2px; font-weight:1000; color:rgba(255,255,255,.78); }
     .secure-pill{ flex:0 0 auto; padding:9px 12px; border-radius:999px; border:1px solid rgba(34,211,238,.18); background:rgba(34,211,238,.08); color:#dffbff; font-size:11px; font-weight:900; white-space:nowrap; }
 
-    .hero{ padding:22px 20px; border-radius:28px; background:radial-gradient(circle at top left, rgba(34,211,238,.13), transparent 36%), linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035)); border:1px solid var(--line); box-shadow:0 20px 46px rgba(0,0,0,.30); margin-bottom:16px; }
-    .hero h1{ margin:0; font-family:"Space Grotesk",sans-serif; font-size:28px; line-height:1.08; letter-spacing:-1px; }
-    .hero p{ margin:12px 0 0; color:var(--muted); font-size:14px; line-height:1.55; font-weight:650; }
+    .hero{ padding:24px 20px; border-radius:28px; background:radial-gradient(circle at top left, rgba(34,211,238,.16), transparent 38%), linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.035)); border:1px solid var(--line); box-shadow:0 20px 46px rgba(0,0,0,.30); margin-bottom:14px; }
+    .hero h1{ margin:0; font-family:"Space Grotesk",sans-serif; font-size:30px; line-height:1.05; letter-spacing:-1px; }
+    .hero p{ margin:12px 0 0; color:var(--muted); font-size:14px; line-height:1.58; font-weight:650; }
     .price-line{ margin-top:16px; padding:13px 14px; border-radius:18px; border:1px solid rgba(190,242,100,.16); background:rgba(190,242,100,.07); color:#f3ffd6; font-size:14px; line-height:1.5; font-weight:850; }
     .price-line b{ color:#fff; font-weight:1000; }
 
+    .signin-card{ display:none; margin:14px 0 18px; padding:16px; border-radius:22px; border:1px solid rgba(96,165,250,.22); background:linear-gradient(145deg,rgba(30,64,175,.24),rgba(15,23,42,.72)); box-shadow:0 18px 36px rgba(0,0,0,.22); }
+    .signin-card.show{ display:block; }
+    .signin-card h2{ margin:0; font-size:18px; font-weight:1000; letter-spacing:-.2px; }
+    .signin-card p{ margin:8px 0 14px; color:var(--muted); font-size:13px; line-height:1.55; font-weight:700; }
+    .signin-btn{ width:100%; min-height:50px; border:none; border-radius:17px; color:#07111f; background:#fff; font:inherit; font-size:14px; font-weight:1000; cursor:pointer; }
+
+    .plan-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:18px 0 12px; }
+    .plan-card{ position:relative; min-height:178px; display:flex; flex-direction:column; gap:10px; padding:15px; border-radius:23px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.055); box-shadow:0 16px 34px rgba(0,0,0,.22); overflow:hidden; }
+    .plan-card.featured{ border-color:rgba(96,165,250,.62); background:radial-gradient(circle at top right,rgba(34,211,238,.24),transparent 42%), linear-gradient(145deg,rgba(96,165,250,.18),rgba(255,255,255,.06)); box-shadow:0 22px 44px rgba(37,99,235,.26),0 0 0 1px rgba(147,197,253,.12) inset; }
+    .plan-card.featured::before{ content:"En Popüler"; position:absolute; top:10px; right:10px; padding:6px 8px; border-radius:999px; background:linear-gradient(135deg,#dbeafe,#60a5fa); color:#07111f; font-size:9px; font-weight:1000; letter-spacing:.5px; }
+    .plan-name{ font-size:18px; font-weight:1000; letter-spacing:-.2px; padding-right:68px; }
+    .plan-badge{ align-self:flex-start; min-height:25px; display:inline-flex; align-items:center; padding:5px 9px; border-radius:999px; border:1px solid rgba(125,211,252,.20); background:rgba(14,165,233,.10); color:#dffbff; font-size:10px; font-weight:1000; letter-spacing:.2px; }
+    .plan-price{ margin-top:auto; font-size:23px; font-weight:1000; letter-spacing:-.5px; }
+    .plan-tax{ color:var(--soft); font-size:11px; line-height:1.35; font-weight:850; min-height:30px; }
+    .plan-buy{ width:100%; min-height:42px; border:none; border-radius:15px; color:#07111f; background:#fff; font:inherit; font-size:13px; font-weight:1000; cursor:pointer; transition:transform .15s ease, opacity .15s ease; touch-action:manipulation; }
+    .plan-buy:active,.signin-btn:active,.action-btn:active{ transform:scale(.99); }
+    .plan-buy[disabled],.action-btn[disabled]{ opacity:.42; cursor:not-allowed; filter:grayscale(.25); }
+    .plan-card.featured .plan-buy{ background:linear-gradient(135deg,#dbeafe 0%,#60a5fa 100%); box-shadow:0 14px 28px rgba(37,99,235,.22); }
+
     .actions{ display:grid; gap:12px; margin:18px 0; }
-    .plan-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0 12px; }
-    .action-btn{ width:100%; min-height:62px; border:none; border-radius:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; font-size:16px; font-weight:1000; transition:transform .15s ease, opacity .15s ease; touch-action:manipulation; }
-    .action-btn:active{ transform:scale(.992); }
-    .action-btn[disabled]{ opacity:.42; cursor:not-allowed; filter:grayscale(.25); }
-    .play-btn{ color:#07111f; background:#fff; box-shadow:0 16px 36px rgba(0,0,0,.34); }
-    .plan-btn{ min-height:78px; flex-direction:column; gap:4px; padding:12px 8px; position:relative; overflow:hidden; }
-    .plan-btn small{ color:rgba(7,17,31,.62); font-size:11px; font-weight:900; }
-    .plan-btn.recommended{ background:linear-gradient(135deg,#e0f2fe,#ffffff 48%,#dbeafe); border:1px solid rgba(34,211,238,.5); }
-    .plan-btn.recommended::after{ content:"ÖNERİLEN"; position:absolute; top:7px; right:9px; color:#075985; font-size:9px; font-weight:1000; letter-spacing:.6px; }
+    .action-btn{ width:100%; min-height:58px; border:none; border-radius:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; font:inherit; font-size:15px; font-weight:1000; transition:transform .15s ease, opacity .15s ease; touch-action:manipulation; }
     .code-btn{ color:#fff; background:radial-gradient(circle at left,rgba(45,212,191,.22),transparent 56%), linear-gradient(135deg,#082f49 0%,#0e7490 55%,#38bdf8 100%); border:1px solid rgba(125,211,252,.24); box-shadow:0 16px 36px rgba(14,165,233,.14); }
     .home-btn{ color:#fff; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
+    body.access-open .plans-block, body.access-open #codeBtn{ display:none; }
 
     .status-box{ margin:16px 0; padding:15px 16px; border-radius:20px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.045); color:rgba(255,255,255,.80); font-size:13px; line-height:1.55; font-weight:800; text-align:center; }
     .status-box.ok{ border-color:rgba(190,242,100,.22); background:rgba(190,242,100,.08); color:#f3ffd6; }
@@ -65,7 +82,7 @@
     .footer{ margin-top:34px; text-align:center; color:rgba(255,255,255,.40); font-size:11px; font-weight:900; letter-spacing:1.2px; }
     .toast{ position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-120px); max-width:min(92vw,420px); min-height:44px; padding:10px 16px; border-radius:16px; background:rgba(12,16,28,.96); border:1px solid rgba(255,255,255,.10); color:#fff; font-size:12px; font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center; z-index:9999; box-shadow:0 18px 36px rgba(0,0,0,.35); transition:.22s ease; pointer-events:none; backdrop-filter:blur(14px); }
     .toast.show{ transform:translateX(-50%) translateY(0); }
-    @media(max-width:380px){ .plan-grid{ grid-template-columns:1fr; } }
+    @media(max-width:430px){ .plan-grid{ grid-template-columns:1fr; } .plan-card{ min-height:160px; } }
   </style>
 </head>
 
@@ -76,20 +93,23 @@
         <div class="logo-main">italky<span>AI</span></div>
         <div class="logo-sub">BE FREE</div>
       </div>
-      <div id="securePill" class="secure-pill">Google Hesabı Bağlı</div>
+      <div id="securePill" class="secure-pill">Google Play Güvenli</div>
     </header>
 
     <section class="hero">
-      <h1 id="heroTitle">Üyelik Seçimi</h1>
-      <p id="heroText">Google Play ile abone olabilir veya satın aldığınız üyelik kodunu hesabınıza tanımlayabilirsiniz.</p>
-      <div class="price-line" id="priceLine"><b>Size uygun abonelik paketini seçin.</b><br/>Üyelikte reklam gösterilmez.</div>
+      <h1 id="heroTitle">Reklamsız ve Sınırsız italkyAI</h1>
+      <p id="heroText">Aboneliğinizi Google Play üzerinden güvenle başlatın ya da promosyon kodunuzu hesabınıza tanımlayın.</p>
+      <div class="price-line" id="priceLine"><b>Size uygun paketi seçin.</b><br/>Fiyatlar ülkenize göre Google Play tarafından vergi/KDV dahil gösterilir.</div>
     </section>
 
-    <section class="plan-grid" aria-label="Google Play abonelik seçenekleri">
-      <button class="action-btn play-btn plan-btn" type="button" data-product-id="1-ay-abonelik"><span>Aylık</span><small>1-ay-abonelik</small></button>
-      <button class="action-btn play-btn plan-btn" type="button" data-product-id="3-ay-abonelik"><span>3 Aylık</span><small>3-ay-abonelik</small></button>
-      <button class="action-btn play-btn plan-btn" type="button" data-product-id="6-ay-abonelik"><span>6 Aylık</span><small>6-ay-abonelik</small></button>
-      <button class="action-btn play-btn plan-btn recommended" type="button" data-product-id="12-ay-abonelik"><span>Yıllık</span><small>12-ay-abonelik</small></button>
+    <section id="signinCard" class="signin-card" aria-live="polite">
+      <h2 id="signinTitle">Google hesabınızla devam edin</h2>
+      <p id="signinText">Aboneliğinizi başlatmak veya kodunuzu kullanmak için Google hesabınızla giriş yapmanız gerekir.</p>
+      <button id="signinBtn" class="signin-btn" type="button">Google ile Giriş Yap</button>
+    </section>
+
+    <section class="plans-block" aria-label="Google Play abonelik seçenekleri">
+      <div class="plan-grid" id="planGrid"></div>
     </section>
 
     <section class="actions">
@@ -98,16 +118,16 @@
     </section>
 
     <div id="statusBox" class="status-box">Üyelik durumunuz kontrol ediliyor...</div>
-    <div id="sectionTitle" class="section-title">Üyelikle Açılan Özellikler</div>
+    <div id="sectionTitle" class="section-title">Üyelik Avantajları</div>
 
     <section class="features">
-      <div class="feature"><div class="feature-icon">🌍</div><div id="featureOffline"><b>Online ve offline diller</b><br/>58 offline dili 1 yıl boyunca kullanabilir, desteklenen online dillerle çeviri yapabilirsiniz.</div></div>
-      <div class="feature"><div class="feature-icon">🎙️</div><div id="featureVoice"><b>Sesli çeviri ve AI sohbet</b><br/>Kendi sesinizle çeviri, sesli iletişim ve SohbetAI özelliklerinden yararlanabilirsiniz.</div></div>
-      <div class="feature"><div class="feature-icon">🏛️</div><div id="featureCulture"><b>Kültürel dil modülleri</b><br/>Mezopotamya, Balkan, Kafkas, Turan Dilleri ve Ataların Dili gibi kilitli modüller açılır.</div></div>
-      <div class="feature"><div class="feature-icon">🎮</div><div id="featureGame"><b>Eğlenerek öğrenme</b><br/>Hangman dışındaki gelişmiş oyunlar ve seviye tespit özellikleri üyelikle kullanılabilir.</div></div>
+      <div class="feature"><div class="feature-icon">✓</div><div id="featureNoAds"><b>Reklamsız kullanım</b><br/>Misafir reklam kapıları olmadan daha temiz ve kesintisiz kullanım.</div></div>
+      <div class="feature"><div class="feature-icon">↓</div><div id="featureOffline"><b>58 offline dil paketi indirme</b><br/>Desteklenen dillerde internet olmadan çeviri hazırlığı.</div></div>
+      <div class="feature"><div class="feature-icon">↔</div><div id="featureFlow"><b>Daha akıcı deneyim</b><br/>FaceToFace, yazıdan çeviri, oyunlar ve seviye tespitte daha rahat kullanım.</div></div>
+      <div class="feature"><div class="feature-icon">G</div><div id="featurePlay"><b>Google Play üzerinden güvenli abonelik</b><br/>Abonelik Google Play hesabınızdan yönetilir ve otomatik yenilenir.</div></div>
     </section>
 
-    <div id="noteText" class="note">Google Play ödemeleri Google tarafından yönetilir. Kod ile abonelik, satın aldığınız üyelik kodunu Google hesabınıza tanımlar.</div>
+    <div id="noteText" class="note">Abonelik işlemleri Google Play hesabınız üzerinden güvenli şekilde yapılır. Fiyatlar ülkenize göre Google Play tarafından vergi/KDV dahil gösterilir.</div>
     <div class="footer">Italky Teknoloji A.Ş</div>
   </main>
 
@@ -116,25 +136,25 @@
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
     import { setHeaderTokens } from "/js/ui_shell.js";
-    import { lockMembershipPageBack } from "/js/global_access.js";
 
     const $ = (id) => document.getElementById(id);
     const HOME = "/pages/home.html";
-    const LOGIN = "/pages/login.html";
-    const MEMBERSHIP = "/pages/membership.html";
-    const LOGIN_WITH_NEXT = `${LOGIN}?next=${MEMBERSHIP}`;
+    const LOGIN_WITH_NEXT = "/pages/login.html?next=/pages/membership.html";
     const CODE_PAGE = "/pages/promo_gate.html";
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
-    const SUBSCRIPTION_PRODUCTS = {
-      monthly: "1-ay-abonelik",
-      quarterly: "3-ay-abonelik",
-      halfYear: "6-ay-abonelik",
-      yearly: "12-ay-abonelik"
-    };
     const SITE_LANG_KEY = "site_lang";
 
+    const SUBSCRIPTION_PRODUCTS = [
+      { key: "monthly", productId: "1-ay-abonelik", badgeKey: "badgeMonthly", nameKey: "monthly" },
+      { key: "quarterly", productId: "3-ay-abonelik", badgeKey: "badgeQuarterly", nameKey: "quarterly" },
+      { key: "halfYear", productId: "6-ay-abonelik", badgeKey: "badgeHalfYear", nameKey: "halfYear" },
+      { key: "yearly", productId: "12-ay-abonelik", badgeKey: "badgeYearly", nameKey: "yearly", featured: true }
+    ];
+
     const UI = {
-      planBtns: Array.from(document.querySelectorAll("[data-product-id]")),
+      planGrid: $("planGrid"),
+      signinCard: $("signinCard"),
+      signinBtn: $("signinBtn"),
       codeBtn: $("codeBtn"),
       homeBtn: $("homeBtn"),
       toast: $("toast"),
@@ -143,56 +163,80 @@
 
     const TXT = {
       tr: {
-        secure: "Google Hesabı Bağlı",
-        title: "Üyelik Seçimi",
-        hero: "Google Play ile abone olabilir veya satın aldığınız üyelik kodunu hesabınıza tanımlayabilirsiniz.",
-        price: "<b>Size uygun abonelik paketini seçin.</b><br/>Üyelikte reklam gösterilmez.",
+        secure: "Google Play Güvenli",
+        title: "Reklamsız ve Sınırsız italkyAI",
+        hero: "Aboneliğinizi Google Play üzerinden güvenle başlatın ya da promosyon kodunuzu hesabınıza tanımlayın.",
+        price: "<b>Size uygun paketi seçin.</b><br/>Fiyatlar ülkenize göre Google Play tarafından vergi/KDV dahil gösterilir.",
+        signinTitle: "Google hesabınızla devam edin",
+        signinText: "Aboneliğinizi başlatmak veya kodunuzu kullanmak için Google hesabınızla giriş yapmanız gerekir.",
+        signinBtn: "Google ile Giriş Yap",
+        monthly: "Aylık",
+        quarterly: "3 Aylık",
+        halfYear: "6 Aylık",
+        yearly: "Yıllık",
+        badgeMonthly: "Esnek Başlangıç",
+        badgeQuarterly: "Dengeli Seçim",
+        badgeHalfYear: "Avantajlı",
+        badgeYearly: "En Popüler",
+        buy: "Abone Ol",
+        tax: "Vergiler dahil",
+        priceFallback: "Fiyat Google Play’de gösterilecek",
         code: "Kod ile Abone Ol",
         homeLocked: "Üyelik Gereklidir",
         home: "Uygulamaya Git",
         checking: "Üyelik durumunuz kontrol ediliyor...",
-        featuresTitle: "Üyelikle Açılan Özellikler",
-        f1: "<b>Online ve offline diller</b><br/>58 offline dili 1 yıl boyunca kullanabilir, desteklenen online dillerle çeviri yapabilirsiniz.",
-        f2: "<b>Sesli çeviri ve AI sohbet</b><br/>Kendi sesinizle çeviri, sesli iletişim ve SohbetAI özelliklerinden yararlanabilirsiniz.",
-        f3: "<b>Kültürel dil modülleri</b><br/>Mezopotamya, Balkan, Kafkas, Turan Dilleri ve Ataların Dili gibi kilitli modüller açılır.",
-        f4: "<b>Eğlenerek öğrenme</b><br/>Hangman dışındaki gelişmiş oyunlar ve seviye tespit özellikleri üyelikle kullanılabilir.",
-        note: "Google Play ödemeleri Google tarafından yönetilir. Kod ile abonelik, satın aldığınız üyelik kodunu Google hesabınıza tanımlar.",
-        loginRequired: "Önce Google hesabınızla giriş yapın",
-        accessError: "Erişim bilgisi alınamadı",
-        ready: "Aktif üyeliğiniz hazır. Uygulamaya yönlendiriliyorsunuz...",
-        needAccess: "Devam etmek için Google Play aboneliği başlatabilir veya üyelik kodunuzu kullanabilirsiniz.",
-        playMissing: "Google Play bağlantısı kurulamadı",
+        featuresTitle: "Üyelik Avantajları",
+        f1: "<b>Reklamsız kullanım</b><br/>Misafir reklam kapıları olmadan daha temiz ve kesintisiz kullanım.",
+        f2: "<b>58 offline dil paketi indirme</b><br/>Desteklenen dillerde internet olmadan çeviri hazırlığı.",
+        f3: "<b>Daha akıcı deneyim</b><br/>FaceToFace, yazıdan çeviri, oyunlar ve seviye tespitte daha rahat kullanım.",
+        f4: "<b>Google Play üzerinden güvenli abonelik</b><br/>Abonelik Google Play hesabınızdan yönetilir ve otomatik yenilenir.",
+        note: "Abonelik işlemleri Google Play hesabınız üzerinden güvenli şekilde yapılır. Fiyatlar ülkenize göre Google Play tarafından vergi/KDV dahil gösterilir.",
+        loginRequired: "Abonelik için önce Google hesabınızla giriş yapın.",
+        noSessionStatus: "Paketleri inceleyebilirsiniz. Satın alma veya kod kullanımı için Google hesabınızla giriş yapmanız gerekir.",
+        accessError: "Üyelik durumu şu anda kontrol edilemedi. Lütfen biraz sonra tekrar deneyin.",
+        ready: "Aktif üyeliğiniz hazır.",
+        needAccess: "Devam etmek için Google Play aboneliği başlatabilir veya promosyon kodunuzu kullanabilirsiniz.",
+        playMissing: "Google Play ödeme bağlantısı bu cihazda hazır değil.",
         openingPlay: "Google Play ödeme ekranı açılıyor...",
-        codeFailed: "Kod ekranı açılamadı",
-        needMembership: "Devam etmek için üyelik gereklidir.",
-        checkFailed: "Üyelik durumu kontrol edilemedi.",
         purchaseOk: "Ödeme tamamlandı. Erişim tanımlanıyor...",
         cancelled: "İşlem iptal edildi"
       },
       en: {
-        secure: "Google Account Connected",
-        title: "Membership",
-        hero: "Subscribe with Google Play or activate a membership code on your account.",
-        price: "<b>Choose the subscription package that fits you.</b><br/>No ads are shown with membership.",
+        secure: "Google Play Secure",
+        title: "Ad-free and Unlimited italkyAI",
+        hero: "Start your subscription securely through Google Play or activate your promo code on your account.",
+        price: "<b>Choose the plan that fits you.</b><br/>Prices are shown by Google Play for your country, including tax/VAT.",
+        signinTitle: "Continue with your Google account",
+        signinText: "You need to sign in with Google to start a subscription or use your code.",
+        signinBtn: "Sign in with Google",
+        monthly: "Monthly",
+        quarterly: "3 Months",
+        halfYear: "6 Months",
+        yearly: "Yearly",
+        badgeMonthly: "Flexible Start",
+        badgeQuarterly: "Balanced Choice",
+        badgeHalfYear: "Better Value",
+        badgeYearly: "Most Popular",
+        buy: "Subscribe",
+        tax: "Taxes included",
+        priceFallback: "Price will be shown in Google Play",
         code: "Subscribe with Code",
         homeLocked: "Membership Required",
         home: "Go to App",
         checking: "Checking your membership status...",
-        featuresTitle: "Included With Membership",
-        f1: "<b>Online and offline languages</b><br/>Use 58 offline languages for 1 year and translate with supported online languages.",
-        f2: "<b>Voice translation and AI chat</b><br/>Use voice translation, spoken communication, and ChatAI features.",
-        f3: "<b>Cultural language modules</b><br/>Locked modules such as Mesopotamia, Balkan, Caucasus, Turan Languages, and Ancestral Language are opened.",
-        f4: "<b>Learn through play</b><br/>Advanced games beyond Hangman and level assessment features become available.",
-        note: "Google Play payments are managed by Google. Code membership activates the purchased code on your Google account.",
-        loginRequired: "Please sign in with your Google account first",
-        accessError: "Could not retrieve access information",
-        ready: "Your active membership is ready. Redirecting to the app...",
-        needAccess: "Start a Google Play subscription or use your membership code to continue.",
-        playMissing: "Google Play connection could not be started",
+        featuresTitle: "Membership Benefits",
+        f1: "<b>Ad-free use</b><br/>A cleaner experience without guest ad gates.",
+        f2: "<b>Download 58 offline language packs</b><br/>Prepare supported languages for translation without internet.",
+        f3: "<b>Smoother experience</b><br/>A better flow in FaceToFace, text translation, games, and level tests.",
+        f4: "<b>Secure subscription through Google Play</b><br/>Your subscription is managed in Google Play and renews automatically.",
+        note: "Subscriptions are handled securely through your Google Play account. Prices are shown by Google Play for your country, including tax/VAT.",
+        loginRequired: "Please sign in with your Google account before subscribing.",
+        noSessionStatus: "You can review the plans. Sign in with Google to buy or use a code.",
+        accessError: "Membership status could not be checked right now. Please try again shortly.",
+        ready: "Your active membership is ready.",
+        needAccess: "Start a Google Play subscription or use your promo code to continue.",
+        playMissing: "Google Play billing is not ready on this device.",
         openingPlay: "Opening Google Play payment screen...",
-        codeFailed: "Could not open code screen",
-        needMembership: "Membership is required to continue.",
-        checkFailed: "Membership status could not be checked.",
         purchaseOk: "Payment completed. Assigning access...",
         cancelled: "Action cancelled"
       }
@@ -200,12 +244,10 @@
 
     let currentSession = null;
     let currentUserId = "";
-    let pendingSubscriptionMode = "unknown";
     let currentLang = "en";
+    const priceMap = new Map();
 
-    function t(key) {
-      return TXT[currentLang]?.[key] || TXT.en[key] || key;
-    }
+    function t(key) { return TXT[currentLang]?.[key] || TXT.en[key] || key; }
 
     function toast(msg = "") {
       if (!UI.toast) return;
@@ -223,11 +265,8 @@
     }
 
     function getStoredLang() {
-      try {
-        return normalizeLang(localStorage.getItem(SITE_LANG_KEY) || localStorage.getItem("italky_site_lang_v1") || localStorage.getItem("siteLang"));
-      } catch {
-        return "";
-      }
+      try { return normalizeLang(localStorage.getItem(SITE_LANG_KEY) || localStorage.getItem("italky_site_lang_v1") || localStorage.getItem("siteLang")); }
+      catch { return ""; }
     }
 
     async function getIpLang() {
@@ -250,34 +289,6 @@
       return navLang || "en";
     }
 
-    function applyLanguage() {
-      document.documentElement.lang = currentLang;
-      $("securePill").textContent = t("secure");
-      $("heroTitle").textContent = t("title");
-      $("heroText").textContent = t("hero");
-      $("priceLine").innerHTML = t("price");
-      UI.codeBtn.textContent = t("code");
-      UI.homeBtn.textContent = t("homeLocked");
-      UI.statusBox.textContent = t("checking");
-      $("sectionTitle").textContent = t("featuresTitle");
-      $("featureOffline").innerHTML = t("f1");
-      $("featureVoice").innerHTML = t("f2");
-      $("featureCulture").innerHTML = t("f3");
-      $("featureGame").innerHTML = t("f4");
-      $("noteText").textContent = t("note");
-    }
-
-    function escapeHtml(value = "") {
-      return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-    }
-
-    function getDisplayNameFromSession(session) {
-      const user = session?.user;
-      if (!user) return currentLang === "tr" ? "kullanıcımız" : "there";
-      const meta = user.user_metadata || {};
-      return String(meta.hitap || meta.full_name || meta.name || user.email || (currentLang === "tr" ? "kullanıcımız" : "there")).trim();
-    }
-
     function setStatus(kind, text, allowHtml = false) {
       UI.statusBox.className = "status-box";
       if (kind) UI.statusBox.classList.add(kind);
@@ -285,9 +296,112 @@
       else UI.statusBox.textContent = text;
     }
 
+    function escapeHtml(value = "") {
+      return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+    }
+
     function authLog(reason, detail = {}) {
+      try { console.warn("[membership auth]", reason, detail); } catch {}
+    }
+
+    function getDisplayNameFromSession(session) {
+      const user = session?.user;
+      if (!user) return currentLang === "tr" ? "Misafir" : "Guest";
+      const meta = user.user_metadata || {};
+      return String(meta.hitap || meta.full_name || meta.name || user.email || (currentLang === "tr" ? "kullanıcımız" : "there")).trim();
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = currentLang;
+      $("securePill").textContent = t("secure");
+      $("heroTitle").textContent = t("title");
+      $("heroText").textContent = t("hero");
+      $("priceLine").innerHTML = t("price");
+      $("signinTitle").textContent = t("signinTitle");
+      $("signinText").textContent = t("signinText");
+      UI.signinBtn.textContent = t("signinBtn");
+      UI.codeBtn.textContent = t("code");
+      UI.homeBtn.textContent = t("homeLocked");
+      UI.statusBox.textContent = t("checking");
+      $("sectionTitle").textContent = t("featuresTitle");
+      $("featureNoAds").innerHTML = t("f1");
+      $("featureOffline").innerHTML = t("f2");
+      $("featureFlow").innerHTML = t("f3");
+      $("featurePlay").innerHTML = t("f4");
+      $("noteText").textContent = t("note");
+      renderPlans();
+    }
+
+    function getPriceInfo(productId) {
+      return priceMap.get(productId) || null;
+    }
+
+    function renderPlans() {
+      UI.planGrid.innerHTML = SUBSCRIPTION_PRODUCTS.map((plan) => {
+        const price = getPriceInfo(plan.productId);
+        const priceText = price?.formattedPrice || price?.price || t("priceFallback");
+        const taxText = price?.formattedPrice ? t("tax") : "";
+        return `
+          <article class="plan-card${plan.featured ? " featured" : ""}">
+            <div class="plan-name">${escapeHtml(t(plan.nameKey))}</div>
+            <div class="plan-badge">${escapeHtml(t(plan.badgeKey))}</div>
+            <div class="plan-price">${escapeHtml(priceText)}</div>
+            <div class="plan-tax">${escapeHtml(taxText)}</div>
+            <button class="plan-buy" type="button" data-product-id="${escapeHtml(plan.productId)}">${escapeHtml(t("buy"))}</button>
+          </article>
+        `;
+      }).join("");
+
+      UI.planGrid.querySelectorAll("[data-product-id]").forEach((btn) => {
+        bindAction(btn, async () => handleGooglePlaySubscribe(btn.dataset.productId));
+      });
+    }
+
+    function normalizeProductDetails(raw) {
+      if (!raw) return [];
+      if (typeof raw === "string") {
+        try { return normalizeProductDetails(JSON.parse(raw)); } catch { return []; }
+      }
+      const items = Array.isArray(raw) ? raw : (Array.isArray(raw.products) ? raw.products : (Array.isArray(raw.details) ? raw.details : []));
+      return items.map((item) => {
+        const offer = item.subscriptionOfferDetails?.[0]?.pricingPhases?.pricingPhaseList?.[0] || item.pricingPhases?.[0] || item;
+        return {
+          productId: item.productId || item.id || item.sku || item.product_id,
+          formattedPrice: offer.formattedPrice || item.formattedPrice || item.price || "",
+          billingPeriod: offer.billingPeriod || item.billingPeriod || "",
+          currencyCode: offer.priceCurrencyCode || item.currencyCode || item.currency || ""
+        };
+      }).filter((item) => item.productId);
+    }
+
+    function applyProductDetails(raw) {
+      const details = normalizeProductDetails(raw);
+      details.forEach((item) => priceMap.set(item.productId, item));
+      if (details.length) renderPlans();
+    }
+
+    async function loadGooglePlayPrices() {
+      const ids = SUBSCRIPTION_PRODUCTS.map((p) => p.productId);
+      const bridge = window.AndroidBilling;
+      if (!bridge) return;
+
+      window.onAndroidBillingProducts = function (payload) { applyProductDetails(payload); };
+      window.onBillingProductsLoaded = function (payload) { applyProductDetails(payload); };
+      window.onProductDetailsLoaded = function (payload) { applyProductDetails(payload); };
+
+      const methods = ["getProductDetails", "getProductsJson", "getSubscriptionProducts", "getPrices"];
+      for (const method of methods) {
+        try {
+          if (typeof bridge[method] === "function") {
+            const result = bridge[method](JSON.stringify(ids));
+            if (result) applyProductDetails(result);
+            return;
+          }
+        } catch {}
+      }
+
       try {
-        console.warn("[membership auth]", reason, detail);
+        if (typeof bridge.requestProductDetails === "function") bridge.requestProductDetails(JSON.stringify(ids));
       } catch {}
     }
 
@@ -296,23 +410,16 @@
         const { data: { session }, error } = await supabase.auth.getSession();
         authLog("getSession result", { attempt, hasSession: !!session, error: error?.message || "" });
         if (session) return session;
-      } catch (e) {
-        authLog("getSession exception", { attempt, error: e?.message || String(e) });
-      }
+      } catch (e) { authLog("getSession exception", { attempt, error: e?.message || String(e) }); }
 
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
         authLog("getUser result", { attempt, hasUser: !!user, error: error?.message || "" });
         if (user) {
           const refreshed = await supabase.auth.getSession();
-          const refreshedSession = refreshed?.data?.session || null;
-          authLog("getSession after getUser", { attempt, hasSession: !!refreshedSession, error: refreshed?.error?.message || "" });
-          return refreshedSession;
+          return refreshed?.data?.session || null;
         }
-      } catch (e) {
-        authLog("getUser exception", { attempt, error: e?.message || String(e) });
-      }
-
+      } catch (e) { authLog("getUser exception", { attempt, error: e?.message || String(e) }); }
       return null;
     }
 
@@ -320,7 +427,6 @@
       return new Promise((resolve) => {
         let finished = false;
         let subscription = null;
-
         const finish = (session) => {
           if (finished) return;
           finished = true;
@@ -328,9 +434,7 @@
           try { subscription?.unsubscribe?.(); } catch {}
           resolve(session || null);
         };
-
         const timer = setTimeout(() => finish(null), timeoutMs);
-
         try {
           const result = supabase.auth.onAuthStateChange((event, session) => {
             authLog("auth state", { event, hasSession: !!session });
@@ -344,9 +448,8 @@
       });
     }
 
-    async function getSessionOrLogin() {
+    async function getSessionOrStay() {
       if (currentSession) return currentSession;
-
       for (let attempt = 1; attempt <= 10; attempt += 1) {
         const session = await readSessionOnce(attempt);
         if (session) {
@@ -354,25 +457,21 @@
           currentUserId = session.user?.id || "";
           return session;
         }
-
         if (attempt < 10) {
           const stateSession = await waitForAuthState(500);
           if (stateSession) {
-            authLog("session hydrated from auth state", { attempt });
             currentSession = stateSession;
             currentUserId = stateSession.user?.id || "";
             return stateSession;
           }
         }
       }
-
-      authLog("redirect reason", { reason: "session_not_found_after_retry", target: LOGIN_WITH_NEXT });
-      location.replace(LOGIN_WITH_NEXT);
-      throw new Error(t("loginRequired"));
+      authLog("session not found; staying on membership page", { target: LOGIN_WITH_NEXT });
+      return null;
     }
 
-    async function getAccessState(existingSession = null) {
-      const session = existingSession || await getSessionOrLogin();
+    async function getAccessState(session) {
+      if (!session?.access_token) return null;
       const resp = await fetch(ACCESS_API, { headers: { Authorization: `Bearer ${session.access_token}` } });
       authLog("access-state status", { status: resp.status, ok: resp.ok });
       const json = await resp.json().catch(() => ({}));
@@ -380,8 +479,13 @@
       return json;
     }
 
-    function setPlanButtonsDisabled(disabled) {
-      UI.planBtns.forEach((btn) => { btn.disabled = !!disabled; });
+    function setSignedOutUi() {
+      document.body.classList.remove("access-open");
+      UI.signinCard.classList.add("show");
+      UI.homeBtn.disabled = true;
+      UI.homeBtn.textContent = t("homeLocked");
+      setStatus("", t("noSessionStatus"));
+      try { setHeaderTokens(0); } catch {}
     }
 
     function syncAccessUi(data) {
@@ -389,19 +493,19 @@
       const tokenCount = Number(data?.tokens ?? 0);
       const displayName = getDisplayNameFromSession(currentSession);
       try { setHeaderTokens(tokenCount); } catch {}
+      UI.signinCard.classList.remove("show");
 
       if (accessOpen) {
+        document.body.classList.add("access-open");
         setStatus("ok", `${escapeHtml(displayName)}<br/>${escapeHtml(t("ready"))}`, true);
-        setPlanButtonsDisabled(true);
         UI.codeBtn.disabled = true;
         UI.homeBtn.disabled = false;
         UI.homeBtn.textContent = t("home");
-        setTimeout(() => location.replace(HOME), 700);
         return;
       }
 
+      document.body.classList.remove("access-open");
       setStatus("", `${escapeHtml(displayName)}<br/>${escapeHtml(t("needAccess"))}`, true);
-      setPlanButtonsDisabled(false);
       UI.codeBtn.disabled = false;
       UI.homeBtn.disabled = true;
       UI.homeBtn.textContent = t("homeLocked");
@@ -419,56 +523,53 @@
       } catch {}
     }
 
-    async function handleGooglePlaySubscribe(productId) {
-      try {
-        const selectedProductId = String(productId || SUBSCRIPTION_PRODUCTS.yearly).trim();
-        const access = await getAccessState();
-        if (access?.access_open) { location.replace(HOME); return; }
-        sendUserIdToNative();
-        if (!isNativeBillingReady()) { toast(t("playMissing")); return; }
-        pendingSubscriptionMode = selectedProductId;
-        setPlanButtonsDisabled(true);
-        toast(t("openingPlay"));
-        window.AndroidBilling.buy(selectedProductId);
-      } catch (e) {
-        toast(e?.message || t("playMissing"));
-        setPlanButtonsDisabled(false);
+    async function requireSessionForAction() {
+      const session = currentSession || await getSessionOrStay();
+      if (!session) {
+        setSignedOutUi();
+        toast(t("loginRequired"));
+        return null;
       }
+      return session;
+    }
+
+    async function handleGooglePlaySubscribe(productId) {
+      const session = await requireSessionForAction();
+      if (!session) return;
+      const selectedProductId = String(productId || "12-ay-abonelik").trim();
+      try {
+        const access = await getAccessState(session);
+        if (access?.access_open) { syncAccessUi(access); return; }
+      } catch (e) {
+        setStatus("err", e?.message || t("accessError"));
+      }
+      sendUserIdToNative();
+      if (!isNativeBillingReady()) { toast(t("playMissing")); return; }
+      toast(t("openingPlay"));
+      try { window.AndroidBilling.buy(selectedProductId); }
+      catch { toast(t("playMissing")); }
     }
 
     async function handleCodeSubscribe() {
-      try {
-        const access = await getAccessState();
-        if (access?.access_open) { location.replace(HOME); return; }
-        location.href = CODE_PAGE;
-      } catch (e) {
-        toast(e?.message || t("codeFailed"));
-      }
+      const session = await requireSessionForAction();
+      if (!session) return;
+      location.href = CODE_PAGE;
     }
 
     async function handleHomeClick() {
-      try {
-        const access = await getAccessState();
-        if (access?.access_open) { location.replace(HOME); return; }
-        UI.homeBtn.disabled = true;
-        toast(t("needMembership"));
-      } catch {
-        UI.homeBtn.disabled = true;
-        toast(t("checkFailed"));
-      }
+      if (UI.homeBtn.disabled) return;
+      location.href = HOME;
     }
 
     async function recheckAndRoute() {
+      const session = await getSessionOrStay();
+      if (!session) { setSignedOutUi(); return; }
+      sendUserIdToNative();
       try {
-        const session = await getSessionOrLogin();
-        sendUserIdToNative();
         const access = await getAccessState(session);
         syncAccessUi(access);
       } catch (e) {
-        toast(e?.message || t("checkFailed"));
-      } finally {
-        pendingSubscriptionMode = "unknown";
-        setPlanButtonsDisabled(false);
+        setStatus("err", e?.message || t("accessError"));
       }
     }
 
@@ -483,8 +584,6 @@
     });
 
     window.addEventListener("italky-billing-error", (e) => {
-      pendingSubscriptionMode = "unknown";
-      setPlanButtonsDisabled(false);
       toast(e?.detail?.message || t("cancelled"));
     });
 
@@ -500,27 +599,25 @@
       });
     }
 
-    UI.planBtns.forEach((btn) => {
-      bindAction(btn, async () => handleGooglePlaySubscribe(btn.dataset.productId));
-    });
+    bindAction(UI.signinBtn, () => { location.href = LOGIN_WITH_NEXT; });
     bindAction(UI.codeBtn, handleCodeSubscribe);
     bindAction(UI.homeBtn, handleHomeClick);
 
     (async function boot() {
+      currentLang = await resolveSiteLang();
+      try { localStorage.setItem(SITE_LANG_KEY, currentLang); } catch {}
+      applyLanguage();
+      loadGooglePlayPrices();
+
+      const session = await getSessionOrStay();
+      if (!session) { setSignedOutUi(); return; }
+
+      sendUserIdToNative();
       try {
-        currentLang = await resolveSiteLang();
-        try { localStorage.setItem(SITE_LANG_KEY, currentLang); } catch {}
-        applyLanguage();
-        lockMembershipPageBack();
-        const session = await getSessionOrLogin();
-        sendUserIdToNative();
         const access = await getAccessState(session);
         syncAccessUi(access);
       } catch (e) {
-        if (String(e?.message || "").includes("Google")) return;
         setStatus("err", e?.message || t("accessError"));
-        UI.homeBtn.disabled = true;
-        UI.homeBtn.textContent = t("homeLocked");
       }
     })();
   </script>
