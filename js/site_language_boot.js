@@ -1,5 +1,6 @@
 const STORAGE_KEYS = ["site_lang", "italky_site_lang_v1", "siteLang"];
 const FALLBACK_LANG = "en";
+const IP_LOOKUP_TIMEOUT_MS = 1200;
 
 const SUPPORTED_LANGS = new Set([
   "tr", "en", "de", "fr", "it", "es", "pt", "ru", "ar", "zh", "ja", "ko",
@@ -81,6 +82,20 @@ async function getNativeCountryCode() {
   return "";
 }
 
+async function fetchJsonWithTimeout(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), IP_LOOKUP_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    if (!response.ok) return null;
+    return await response.json().catch(() => null);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getCountryFromIp() {
   const endpoints = [
     "https://freeipapi.com/api/json",
@@ -89,18 +104,14 @@ async function getCountryFromIp() {
   ];
 
   for (const url of endpoints) {
-    try {
-      const response = await fetch(url, { cache: "no-store" });
-      if (!response.ok) continue;
-      const data = await response.json().catch(() => null);
-      const country = normalizeCountry(
-        data?.countryCode ||
-        data?.country_code ||
-        data?.country ||
-        data?.location?.country_code
-      );
-      if (country) return country;
-    } catch {}
+    const data = await fetchJsonWithTimeout(url);
+    const country = normalizeCountry(
+      data?.countryCode ||
+      data?.country_code ||
+      data?.country ||
+      data?.location?.country_code
+    );
+    if (country) return country;
   }
 
   return "";
