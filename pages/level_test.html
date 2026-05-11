@@ -1,1853 +1,516 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Seviye Sınavı</title>
-
 <meta name="theme-color" content="#02000f">
-<style>html,body{background:#02000f !important;}</style>
-
+<style>html,body{background:#02000f!important;}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
 <style>
-  :root{
-    --bg:#02000f;
-    --text:#fff;
-    --muted:rgba(255,255,255,.64);
-    --line:rgba(255,255,255,.10);
-    --ai:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#a855f7 72%,#ec4899 100%);
-    --safe-bottom:env(safe-area-inset-bottom,0px);
-    --safe-top:env(safe-area-inset-top,0px);
-  }
-
-  *{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-    outline:none;
-  }
-
-  html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:
-      radial-gradient(circle at 50% 0%, rgba(103,232,249,.10) 0%, transparent 26%),
-      radial-gradient(circle at 15% 20%, rgba(244,114,182,.08) 0%, transparent 18%),
-      radial-gradient(circle at 85% 18%, rgba(96,165,250,.09) 0%, transparent 18%),
-      linear-gradient(180deg,#08101d 0%, #02000f 100%);
-    color:var(--text);
-    font-family:'Plus Jakarta Sans',sans-serif;
-  }
-
-  #pageContent{
-    width:100%;
-    height:100%;
-    padding:
-      calc(8px + var(--safe-top))
-      12px
-      calc(10px + var(--safe-bottom))
-      12px;
-    opacity:0;
-    transition:opacity .25s ease;
-  }
-  #pageContent.ready{ opacity:1; }
-
-  .wrap{
-    width:100%;
-    max-width:520px;
-    height:100%;
-    margin:0 auto;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-
-  .appTop{
-    flex:0 0 auto;
-    height:52px;
-    display:grid;
-    grid-template-columns:44px 1fr 44px;
-    align-items:center;
-    gap:8px;
-  }
-
-  .topIconBtn{
-    width:44px;
-    height:44px;
-    border:none;
-    border-radius:14px;
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.10);
-    color:#fff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    box-shadow:0 10px 22px rgba(0,0,0,.18);
-  }
-
-  .topIconBtn:active{
-    transform:scale(.985);
-  }
-
-  .topIconBtn svg{
-    width:19px;
-    height:19px;
-    display:block;
-  }
-
-  .topIconBtn.soundOn{
-    box-shadow:0 10px 22px rgba(91,124,255,.18);
-    border-color:rgba(143,181,255,.22);
-  }
-
-  .brandBtn{
-    height:44px;
-    border:none;
-    border-radius:16px;
-    background:transparent;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-  }
-
-  .brandLine{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:22px;
-    line-height:1;
-    font-weight:700;
-    letter-spacing:-.35px;
-    color:#fff;
-  }
-
-  .brandLine .ai{
-    background:var(--ai);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-  }
-
-  .topCard{
-    flex:0 0 auto;
-    border-radius:24px;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.04);
-    box-shadow:0 14px 28px rgba(0,0,0,.24);
-    overflow:hidden;
-    padding:10px 12px 12px;
-    position:relative;
-  }
-
-  .topCard::before{
-    content:"";
-    position:absolute;
-    inset:-20%;
-    background:
-      radial-gradient(circle at 20% 20%, rgba(103,232,249,.14), transparent 26%),
-      radial-gradient(circle at 80% 25%, rgba(236,72,153,.10), transparent 24%);
-    filter:blur(26px);
-    pointer-events:none;
-  }
-
-  .topHead{
-    position:relative;
-    z-index:2;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:6px;
-    gap:10px;
-  }
-
-  .heroPill{
-    min-height:32px;
-    padding:6px 12px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.10);
-    background:rgba(255,255,255,.06);
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    font-size:11px;
-    font-weight:1000;
-    white-space:nowrap;
-    color:#fff;
-  }
-
-  .miniTimer{
-    font-size:11px;
-    font-weight:1000;
-    color:rgba(255,255,255,.72);
-    padding-left:4px;
-  }
-
-  .progressWrap{
-    position:relative;
-    z-index:2;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-
-  .levelLabels{
-    display:grid;
-    grid-template-columns:repeat(5,1fr);
-    gap:6px;
-    text-align:center;
-  }
-
-  .levelLabels span{
-    font-size:10px;
-    font-weight:1000;
-    color:rgba(255,255,255,.50);
-    transition:.18s ease;
-  }
-
-  .levelLabels span.active{
-    color:#a8c7ff;
-    text-shadow:0 0 14px rgba(110,168,255,.28);
-  }
-
-  .track{
-    position:relative;
-    height:14px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.10);
-    background:rgba(255,255,255,.05);
-    overflow:hidden;
-  }
-
-  .fill{
-    position:absolute;
-    left:2px;
-    top:2px;
-    bottom:2px;
-    width:20%;
-    border-radius:999px;
-    background:var(--ai);
-    box-shadow:0 0 16px rgba(91,124,255,.24);
-    transition:width .32s ease;
-  }
-
-  .knob{
-    position:absolute;
-    top:50%;
-    left:calc(20% - 12px);
-    width:24px;
-    height:24px;
-    transform:translateY(-50%);
-    border-radius:50%;
-    background:#10192c;
-    border:1px solid rgba(255,255,255,.16);
-    box-shadow:0 0 0 4px rgba(110,168,255,.08), 0 10px 20px rgba(0,0,0,.22);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition:left .32s ease;
-    z-index:3;
-  }
-
-  .knob::before{
-    content:"▶";
-    font-size:10px;
-    color:#fff;
-    transform:translateX(1px);
-    opacity:.92;
-  }
-
-  .levelTitle{
-    text-align:center;
-    font-size:11px;
-    font-weight:1000;
-    color:#6ea8ff;
-    text-transform:uppercase;
-    letter-spacing:1.8px;
-    text-shadow:0 0 14px rgba(110,168,255,.18);
-  }
-
-  .planetCard{
-    flex:0 0 auto;
-    min-height:145px;
-    border-radius:24px;
-    border:1px solid var(--line);
-    background:
-      radial-gradient(circle at 50% 10%, rgba(255,255,255,.05), transparent 26%),
-      linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    position:relative;
-    overflow:hidden;
-    box-shadow:0 14px 28px rgba(0,0,0,.22);
-  }
-
-  .planetWrap{
-    width:96px;
-    height:96px;
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition:transform .26s ease, filter .26s ease;
-  }
-
-  .planetWrap.okFlash{ animation:planetSuccess .8s ease; }
-  .planetWrap.badFlash{ animation:planetFail .8s ease; }
-
-  .planet-glow{
-    position:absolute;
-    inset:-18px;
-    border-radius:50%;
-    background:
-      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-      radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%);
-    filter:blur(12px);
-    animation:planetGlow 3.2s ease-in-out infinite;
-    z-index:1;
-  }
-
-  .planet-rays{
-    position:absolute;
-    inset:-18px;
-    border-radius:50%;
-    pointer-events:none;
-    z-index:1;
-  }
-
-  .planet-rays::before,
-  .planet-rays::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    border-radius:50%;
-    background:
-      conic-gradient(
-        from 0deg,
-        transparent 0deg 18deg,
-        rgba(255,255,255,.28) 24deg,
-        transparent 36deg 62deg,
-        rgba(255,255,255,.16) 70deg,
-        transparent 84deg 116deg,
-        rgba(255,255,255,.22) 124deg,
-        transparent 136deg 180deg,
-        rgba(255,255,255,.18) 192deg,
-        transparent 206deg 250deg,
-        rgba(255,255,255,.24) 258deg,
-        transparent 270deg 310deg,
-        rgba(255,255,255,.15) 318deg,
-        transparent 330deg 360deg
-      );
-    mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-    -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
-    filter:blur(1px);
-    opacity:.55;
-    animation:planetRaySpin 12s linear infinite;
-  }
-
-  .planet-rays::after{
-    opacity:.34;
-    transform:scale(1.14);
-    animation-duration:18s;
-    animation-direction:reverse;
-  }
-
-  .planet-core{
-    position:relative;
-    width:96px;
-    height:96px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-    z-index:2;
-    background:
-      radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
-      radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
-      radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
-      linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
-    box-shadow:
-      inset -10px -12px 20px rgba(0,0,0,.72),
-      inset 10px 12px 22px rgba(255,255,255,.04),
-      inset 0 0 26px rgba(255,255,255,.04),
-      0 0 18px rgba(255,255,255,.10),
-      0 0 34px rgba(103,232,249,.20),
-      0 0 64px rgba(129,140,248,.18);
-    animation:planetBreath 2.8s ease-in-out infinite;
-    transition:box-shadow .18s ease, transform .18s ease;
-  }
-
-  .planet-core::before{
-    content:"";
-    position:absolute;
-    inset:6px;
-    border-radius:50%;
-    border:1px solid rgba(255,255,255,.08);
-    box-shadow:inset 0 0 12px rgba(255,255,255,.05);
-  }
-
-  .planet-core::after{
-    content:"";
-    position:absolute;
-    left:16px;
-    top:12px;
-    width:28px;
-    height:14px;
-    border-radius:50%;
-    background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
-    filter:blur(2px);
-    transform:rotate(-18deg);
-    opacity:.9;
-  }
-
-  .planetBadge{
-    position:relative;
-    width:44px;
-    height:44px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.02) 100%);
-    border:1px solid rgba(255,255,255,.18);
-    box-shadow:0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.20);
-    backdrop-filter:blur(10px);
-    z-index:3;
-  }
-
-  .planetBadge::before{
-    content:"";
-    position:absolute;
-    inset:7px;
-    border-radius:50%;
-    border:1px solid rgba(255,255,255,.10);
-  }
-
-  .planetBadge::after{
-    content:"";
-    position:absolute;
-    width:54px;
-    height:54px;
-    border-radius:50%;
-    border:1px solid rgba(255,255,255,.10);
-    animation:aiSpin 8s linear infinite;
-  }
-
-  .planetBadge span{
-    position:relative;
-    z-index:2;
-    font-family:'Space Grotesk',sans-serif;
-    font-size:15px;
-    font-weight:900;
-    letter-spacing:.5px;
-    color:#fff;
-    text-shadow:0 0 12px rgba(255,255,255,.22);
-  }
-
-  .planetStatus{
-    position:absolute;
-    left:50%;
-    bottom:10px;
-    transform:translateX(-50%);
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-height:26px;
-    padding:5px 10px;
-    border-radius:999px;
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.08);
-    font-size:10px;
-    font-weight:1000;
-    color:rgba(255,255,255,.78);
-    white-space:nowrap;
-    z-index:5;
-  }
-
-  .planetStatus.ok{
-    color:#d9ffe8;
-    border-color:rgba(34,197,94,.22);
-    background:rgba(34,197,94,.12);
-  }
-
-  .planetStatus.bad{
-    color:#ffe2e2;
-    border-color:rgba(239,68,68,.24);
-    background:rgba(239,68,68,.12);
-  }
-
-  .card{
-    flex:1;
-    min-height:0;
-    border-radius:22px;
-    border:1px solid rgba(110,168,255,.16);
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)),
-      radial-gradient(circle at 8% 50%, rgba(59,130,246,.20), transparent 13%);
-    box-shadow:0 14px 28px rgba(0,0,0,.22);
-    padding:14px 14px 12px;
-    overflow:auto;
-    scrollbar-width:none;
-    -webkit-overflow-scrolling:touch;
-    position:relative;
-  }
-
-  .card::-webkit-scrollbar{
-    display:none;
-  }
-
-  .card::before{
-    content:"";
-    position:absolute;
-    left:0;
-    top:0;
-    bottom:0;
-    width:5px;
-    border-radius:12px;
-    background:var(--ai);
-    box-shadow:0 0 18px rgba(110,168,255,.30);
-  }
-
-  .q-meta{
-    display:flex;
-    justify-content:space-between;
-    gap:8px;
-    margin-bottom:8px;
-    flex-wrap:wrap;
-  }
-
-  .meta{
-    font-size:10px;
-    font-weight:900;
-    color:rgba(255,255,255,.55);
-  }
-
-  .q-type{
-    text-align:center;
-    font-size:12px;
-    font-weight:1000;
-    color:rgba(255,255,255,.92);
-    margin-bottom:6px;
-  }
-
-  .q-text{
-    text-align:center;
-    font-size:16px;
-    font-weight:1000;
-    line-height:1.28;
-    margin:4px 0 10px;
-    white-space:normal;
-    color:#fff;
-  }
-
-  .opt{
-    width:100%;
-    min-height:58px;
-    padding:10px 12px;
-    border-radius:18px;
-    border:1px solid rgba(255,255,255,.12);
-    background:rgba(0,0,0,0.22);
-    color:#fff;
-    font-weight:900;
-    text-align:left;
-    margin-bottom:8px;
-    cursor:pointer;
-    display:grid;
-    grid-template-columns:38px 1fr 24px;
-    align-items:center;
-    column-gap:10px;
-    transition:transform .16s ease, background .18s ease, border-color .18s ease, opacity .18s ease, box-shadow .18s ease;
-  }
-
-  .opt:active{ transform:scale(.99); }
-
-  .opt.dim{
-    opacity:.42;
-    transform:none!important;
-  }
-
-  .opt.sel{
-    background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(168,85,247,.10));
-    border-color:rgba(110,168,255,.38);
-    box-shadow:0 14px 30px rgba(59,130,246,.18);
-  }
-
-  .opt.correct{
-    border-color:rgba(34,197,94,.46);
-    background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(22,163,74,.11));
-    box-shadow:0 16px 34px rgba(34,197,94,.18);
-  }
-
-  .opt.wrong{
-    border-color:rgba(239,68,68,.44);
-    background:linear-gradient(135deg, rgba(239,68,68,.20), rgba(220,38,38,.10));
-    box-shadow:0 16px 34px rgba(239,68,68,.16);
-    animation:shakeX .32s ease;
-  }
-
-  .optKey{
-    width:38px;
-    height:38px;
-    min-width:38px;
-    border-radius:12px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.08);
-    color:#d7e4ff;
-    font-size:18px;
-    font-weight:1000;
-    align-self:start;
-  }
-
-  .opt.correct .optKey{
-    background:rgba(34,197,94,.16);
-    border-color:rgba(34,197,94,.28);
-    color:#e6fff0;
-  }
-
-  .opt.wrong .optKey{
-    background:rgba(239,68,68,.16);
-    border-color:rgba(239,68,68,.28);
-    color:#ffe4e4;
-  }
-
-  .optText{
-    min-width:0;
-    font-size:15px;
-    line-height:1.2;
-    word-break:break-word;
-    overflow-wrap:anywhere;
-  }
-
-  .optIcon{
-    width:24px;
-    height:24px;
-    min-width:24px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border:1px solid rgba(255,255,255,.08);
-    background:rgba(255,255,255,.04);
-    color:rgba(255,255,255,.26);
-    font-size:12px;
-    font-weight:1000;
-    align-self:center;
-  }
-
-  .opt.correct .optIcon{
-    background:linear-gradient(135deg,#4ade80 0%,#16a34a 100%);
-    border-color:transparent;
-    color:#fff;
-  }
-
-  .opt.wrong .optIcon{
-    background:linear-gradient(135deg,#fb7185 0%,#dc2626 100%);
-    border-color:transparent;
-    color:#fff;
-  }
-
-  .nav{
-    flex:0 0 auto;
-    display:flex;
-    gap:8px;
-  }
-
-  .btn{
-    flex:1;
-    height:48px;
-    border-radius:16px;
-    border:1px solid rgba(255,255,255,0.12);
-    background:rgba(255,255,255,0.06);
-    color:#fff;
-    font-weight:1000;
-    cursor:pointer;
-    transition:transform .16s ease, opacity .16s ease, filter .16s ease;
-  }
-
-  .btn:active{ transform:scale(.985); }
-
-  .btn-primary{
-    background:#fff;
-    color:#000;
-    border:none;
-  }
-
-  .btn:disabled{
-    opacity:.35;
-    cursor:not-allowed;
-  }
-
-  .note{
-    flex:0 0 auto;
-    font-size:11px;
-    color:var(--muted);
-    font-weight:800;
-    line-height:1.35;
-  }
-
-  .footerLine{
-    flex:0 0 auto;
-    text-align:center;
-    font-size:11px;
-    font-weight:900;
-    color:rgba(255,255,255,.72);
-    padding:2px 0 0;
-  }
-
-  .footerLine .ai{
-    background:var(--ai);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-  }
-
-  .errBox{
-    border-radius:18px;
-    border:1px solid rgba(255,90,140,0.35);
-    background:rgba(255,0,90,0.10);
-    padding:12px 12px;
-    color:rgba(255,255,255,0.92);
-    font-weight:900;
-    font-size:12px;
-    line-height:1.45;
-    white-space:pre-wrap;
-  }
-
-  .infoBox{
-    border-radius:18px;
-    border:1px solid rgba(165,180,252,0.35);
-    background:rgba(99,102,241,0.10);
-    padding:12px 12px;
-    color:rgba(255,255,255,0.92);
-    font-weight:900;
-    font-size:12px;
-    line-height:1.45;
-    white-space:pre-wrap;
-  }
-
-  .overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.60);
-    backdrop-filter:blur(10px);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:16px;
-    z-index:999999;
-  }
-
-  .overlay.show{
-    display:flex;
-  }
-
-  .resultCard{
-    width:min(520px, 100%);
-    border-radius:28px;
-    border:1px solid rgba(255,255,255,0.12);
-    background:rgba(10,10,18,0.92);
-    padding:16px;
-  }
-
-  .rTitle{
-    font-size:16px;
-    font-weight:1000;
-    color:#fff;
-    margin:4px 0 10px;
-  }
-
-  .rLevel{
-    font-size:28px;
-    font-weight:1000;
-    color:#a5b4fc;
-    margin:0 0 10px;
-    letter-spacing:-0.5px;
-  }
-
-  .rText{
-    font-size:13px;
-    font-weight:900;
-    color:rgba(255,255,255,0.78);
-    line-height:1.55;
-    white-space:pre-wrap;
-  }
-
-  .rBtns{
-    display:flex;
-    gap:10px;
-    margin-top:12px;
-  }
-
-  #fxBurst{
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    overflow:hidden;
-    z-index:99999;
-  }
-
-  .particle{
-    position:absolute;
-    width:12px;
-    height:12px;
-    border-radius:4px;
-    opacity:.98;
-    animation:burstFly .84s ease-out forwards;
-    box-shadow:0 0 16px rgba(255,255,255,.18);
-  }
-
-  @keyframes aiSpin{
-    from{ transform:rotate(0deg); }
-    to{ transform:rotate(360deg); }
-  }
-
-  @keyframes planetBreath{
-    0%,100%{
-      transform:scale(1);
-      box-shadow:
-        inset -10px -12px 20px rgba(0,0,0,.72),
-        inset 10px 12px 22px rgba(255,255,255,.04),
-        inset 0 0 26px rgba(255,255,255,.04),
-        0 0 18px rgba(255,255,255,.10),
-        0 0 34px rgba(103,232,249,.20),
-        0 0 64px rgba(129,140,248,.18);
-    }
-    50%{
-      transform:scale(1.045);
-      box-shadow:
-        inset -10px -12px 20px rgba(0,0,0,.72),
-        inset 10px 12px 24px rgba(255,255,255,.05),
-        inset 0 0 28px rgba(255,255,255,.06),
-        0 0 22px rgba(255,255,255,.12),
-        0 0 42px rgba(103,232,249,.28),
-        0 0 78px rgba(129,140,248,.24);
-    }
-  }
-
-  @keyframes planetGlow{
-    0%,100%{ opacity:.55; transform:scale(1); }
-    50%{ opacity:.92; transform:scale(1.16); }
-  }
-
-  @keyframes planetRaySpin{
-    from{ transform:rotate(0deg); }
-    to{ transform:rotate(360deg); }
-  }
-
-  @keyframes shakeX{
-    0%{ transform:translateX(0); }
-    25%{ transform:translateX(-7px); }
-    50%{ transform:translateX(6px); }
-    75%{ transform:translateX(-4px); }
-    100%{ transform:translateX(0); }
-  }
-
-  @keyframes burstFly{
-    0%{
-      transform:translate(0,0) scale(1);
-      opacity:1;
-    }
-    100%{
-      transform:translate(var(--x), var(--y)) scale(.2) rotate(180deg);
-      opacity:0;
-    }
-  }
-
-  @keyframes planetSuccess{
-    0%{ transform:scale(1); }
-    20%{ transform:scale(1.06); }
-    50%{ transform:scale(1.12); }
-    100%{ transform:scale(1); }
-  }
-
-  @keyframes planetFail{
-    0%{ transform:scale(1) rotate(0deg); }
-    20%{ transform:scale(1.03) rotate(-3deg); }
-    40%{ transform:scale(1.06) rotate(3deg); }
-    60%{ transform:scale(1.03) rotate(-2deg); }
-    100%{ transform:scale(1) rotate(0deg); }
-  }
-
-  @media (max-width:390px){
-    #pageContent{
-      padding:
-        calc(8px + var(--safe-top))
-        10px
-        calc(10px + var(--safe-bottom))
-        10px;
-    }
-
-    .wrap{ gap:7px; }
-
-    .appTop{
-      height:48px;
-      grid-template-columns:40px 1fr 40px;
-    }
-
-    .topIconBtn{
-      width:40px;
-      height:40px;
-    }
-
-    .brandLine{
-      font-size:20px;
-    }
-
-    .topCard{
-      padding:9px 10px 10px;
-      border-radius:22px;
-    }
-
-    .planetCard{
-      min-height:132px;
-      border-radius:22px;
-    }
-
-    .planetWrap{
-      width:84px;
-      height:84px;
-    }
-
-    .planet-core{
-      width:84px;
-      height:84px;
-    }
-
-    .planetBadge{
-      width:40px;
-      height:40px;
-    }
-
-    .planetBadge span{
-      font-size:13px;
-    }
-
-    .card{
-      padding:12px 12px 10px;
-      border-radius:20px;
-    }
-
-    .q-text{
-      font-size:15px;
-      margin-bottom:8px;
-    }
-
-    .opt{
-      min-height:54px;
-      padding:9px 10px;
-      margin-bottom:7px;
-      border-radius:16px;
-      grid-template-columns:34px 1fr 22px;
-      column-gap:8px;
-    }
-
-    .optKey{
-      width:34px;
-      height:34px;
-      min-width:34px;
-      font-size:17px;
-    }
-
-    .optText{
-      font-size:14px;
-    }
-
-    .btn{
-      height:44px;
-      border-radius:14px;
-      font-size:14px;
-    }
-
-    .note{
-      font-size:10.5px;
-      line-height:1.3;
-    }
-  }
+:root{--bg:#02000f;--text:#fff;--muted:rgba(255,255,255,.64);--line:rgba(255,255,255,.10);--panel:rgba(255,255,255,.045);--ai:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#a855f7 72%,#ec4899 100%);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 0%,rgba(103,232,249,.10),transparent 26%),radial-gradient(circle at 15% 20%,rgba(244,114,182,.08),transparent 18%),linear-gradient(180deg,#08101d 0%,#02000f 100%);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;}
+#pageContent{width:100%;height:100%;padding:calc(8px + var(--safe-top)) 12px calc(12px + var(--safe-bottom));opacity:0;transition:opacity .25s ease;}
+#pageContent.ready{opacity:1;}
+.wrap{width:100%;max-width:520px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px;min-height:0;}
+.appTop{flex:0 0 auto;height:52px;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;}
+.topIconBtn{width:44px;height:44px;border:none;border-radius:14px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 22px rgba(0,0,0,.18);}
+.topIconBtn:active,.btn:active,.listenBtn:active,.opt:active{transform:scale(.985);}
+.topIconBtn svg{width:19px;height:19px;display:block;}
+.brandBtn{height:44px;border:none;border-radius:16px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.brandLine{font-family:'Space Grotesk',sans-serif;font-size:22px;line-height:1;font-weight:700;letter-spacing:-.35px;color:#fff;}.brandLine .ai{background:var(--ai);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.headerCard{flex:0 0 auto;border-radius:24px;border:1px solid var(--line);background:var(--panel);box-shadow:0 14px 28px rgba(0,0,0,.24);padding:12px;position:relative;overflow:hidden;}
+.headerCard::before{content:"";position:absolute;inset:-25%;background:radial-gradient(circle at 18% 18%,rgba(103,232,249,.14),transparent 28%),radial-gradient(circle at 82% 24%,rgba(236,72,153,.10),transparent 26%);filter:blur(26px);pointer-events:none;}
+.headerTop{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.pill{min-height:32px;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:1000;color:#fff;white-space:nowrap;}
+.timer{font-size:12px;font-weight:1000;color:#d8e4ff;}
+.progress{position:relative;z-index:2;display:flex;flex-direction:column;gap:7px;}
+.track{height:14px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);overflow:hidden;}.fill{height:100%;width:0;background:var(--ai);border-radius:inherit;box-shadow:0 0 16px rgba(91,124,255,.24);transition:width .22s ease;}
+.levelLabels{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center;}.levelLabels span{font-size:10px;font-weight:1000;color:rgba(255,255,255,.48);}.levelLabels span.active{color:#a8c7ff;text-shadow:0 0 14px rgba(110,168,255,.28);}
+.questionPanel{flex:1;min-height:0;border-radius:24px;border:1px solid rgba(110,168,255,.16);background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.03));box-shadow:0 14px 28px rgba(0,0,0,.22);padding:14px;overflow:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.questionPanel::-webkit-scrollbar{display:none;}
+.qMeta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}.meta{font-size:11px;font-weight:900;color:rgba(255,255,255,.58);}.qText{font-size:17px;font-weight:1000;line-height:1.35;text-align:center;margin:10px 0 12px;color:#fff;white-space:pre-wrap;}
+.listenRow{display:flex;justify-content:center;margin:0 0 12px;}.listenBtn{min-height:42px;padding:9px 15px;border:none;border-radius:999px;background:#fff;color:#0b1020;font-weight:1000;cursor:pointer;box-shadow:0 12px 28px rgba(255,255,255,.08);}.listenBtn:disabled{opacity:.5;cursor:not-allowed;}
+.opt{width:100%;min-height:58px;padding:10px 12px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);color:#fff;font-weight:900;text-align:left;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:38px 1fr 24px;align-items:center;column-gap:10px;transition:transform .16s ease,background .18s ease,border-color .18s ease,opacity .18s ease;}
+.opt.dim{opacity:.42;transform:none!important;}.opt.sel{background:linear-gradient(135deg,rgba(59,130,246,.14),rgba(168,85,247,.10));border-color:rgba(110,168,255,.38);}.opt.correct{border-color:rgba(34,197,94,.46);background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(22,163,74,.11));}.opt.wrong{border-color:rgba(239,68,68,.44);background:linear-gradient(135deg,rgba(239,68,68,.20),rgba(220,38,38,.10));}
+.optKey{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#d7e4ff;font-size:18px;font-weight:1000;}.optText{min-width:0;font-size:15px;line-height:1.2;word-break:break-word;overflow-wrap:anywhere;}.optIcon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.42);font-size:12px;font-weight:1000;}
+.nav{flex:0 0 auto;display:flex;gap:8px;}.btn{flex:1;height:48px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-weight:1000;cursor:pointer;transition:transform .16s ease,opacity .16s ease;}.btn-primary{background:#fff;color:#000;border:none;}.btn:disabled{opacity:.35;cursor:not-allowed;}
+.note{flex:0 0 auto;font-size:11px;color:var(--muted);font-weight:800;line-height:1.35;text-align:center;}.msgBox{border-radius:18px;border:1px solid rgba(165,180,252,.35);background:rgba(99,102,241,.10);padding:14px;color:rgba(255,255,255,.92);font-weight:900;font-size:13px;line-height:1.5;white-space:pre-wrap;}.msgBox.err{border-color:rgba(255,90,140,.35);background:rgba(255,0,90,.10);}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:16px;z-index:999999;}.overlay.show{display:flex;}.resultCard{width:min(520px,100%);border-radius:28px;border:1px solid rgba(255,255,255,.12);background:rgba(10,10,18,.94);padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.35);}.rTitle{font-size:16px;font-weight:1000;color:#fff;margin:0 0 10px;}.rLevel{font-size:30px;font-weight:1000;color:#a5b4fc;margin:0 0 10px;letter-spacing:-.5px;}.rText{font-size:13px;font-weight:900;color:rgba(255,255,255,.78);line-height:1.55;white-space:pre-wrap;}.rBtns{display:flex;gap:10px;margin-top:14px;}
+@media(max-width:390px){#pageContent{padding:calc(8px + var(--safe-top)) 10px calc(12px + var(--safe-bottom));}.wrap{gap:8px}.appTop{height:48px;grid-template-columns:40px 1fr 40px}.topIconBtn{width:40px;height:40px}.brandLine{font-size:20px}.headerCard{border-radius:22px}.questionPanel{border-radius:22px;padding:12px}.qText{font-size:16px}.opt{min-height:54px;padding:9px 10px;border-radius:16px;grid-template-columns:34px 1fr 22px}.optKey{width:34px;height:34px;font-size:17px}.optText{font-size:14px}.btn{height:44px;border-radius:14px;font-size:14px}.rBtns{flex-direction:column}}
 </style>
 </head>
-
 <body>
-  <div id="fxBurst"></div>
-
-  <main id="pageContent">
-    <div class="wrap">
-
-      <div class="appTop">
-        <button class="topIconBtn" id="backBtn" aria-label="Geri">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M14.5 5L8 12L14.5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-
-        <button class="brandBtn" id="homeBtn" aria-label="Ana sayfa">
-          <div class="brandLine">italky<span class="ai">AI</span></div>
-        </button>
-
-        <button class="topIconBtn soundOn" id="soundToggleBtn" aria-label="Ses Aç Kapat" title="Ses Aç Kapat">
-          <svg id="soundOnIcon" viewBox="0 0 24 24" fill="none">
-            <path d="M5 14H8L13 18V6L8 10H5V14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M17 9C18.3 10.1 19 11.5 19 12.9C19 14.3 18.3 15.7 17 16.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="M19.5 6.8C21.4 8.4 22.5 10.6 22.5 12.9C22.5 15.2 21.4 17.4 19.5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <svg id="soundOffIcon" viewBox="0 0 24 24" fill="none" style="display:none;">
-            <path d="M5 14H8L13 18V6L8 10H5V14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M17 9L22 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="M22 9L17 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-
-      <section class="topCard">
-        <div class="topHead">
-          <div class="miniTimer" id="timerMini">40:00</div>
-          <div class="heroPill" id="heroPill">Soru 1 / 50</div>
-        </div>
-
-        <div class="progressWrap">
-          <div class="levelLabels" id="levelLabels">
-            <span class="active">A1</span>
-            <span>A2</span>
-            <span>B1</span>
-            <span>B2</span>
-            <span>C1</span>
-          </div>
-
-          <div class="track">
-            <div class="fill" id="levelFill"></div>
-            <div class="knob" id="levelKnob"></div>
-          </div>
-
-          <div class="levelTitle" id="levelTitle">Başlangıç Seviyesi</div>
-        </div>
-      </section>
-
-      <section class="planetCard">
-        <div class="planetWrap" id="planetWrap">
-          <div class="planet-glow" id="planetGlow"></div>
-          <div class="planet-rays"></div>
-          <div class="planet-core" id="planetCore">
-            <div class="planetBadge">
-              <span>AI</span>
-            </div>
-          </div>
-        </div>
-        <div class="planetStatus" id="planetStatus">Hazır</div>
-      </section>
-
-      <section class="card" id="qCard">
-        <div class="q-text">Yükleniyor…</div>
-      </section>
-
-      <div class="nav">
-        <button class="btn" id="btnPrev" disabled>GERİ</button>
-        <button class="btn" id="btnSkip" disabled>ATLA</button>
-        <button class="btn btn-primary" id="btnNext" disabled>İLERİ</button>
-      </div>
-
-      <div class="note">
-        Bilmediğin soruyu <b>Atla</b>. Süre varsa atladıkların tekrar gelir. Her soru en fazla <b>2 tur</b> gösterilir.
-      </div>
-
-      <div class="footerLine">
-        <span>italky<span class="ai">AI</span> By Ozyigit's • 2026</span>
-      </div>
+<main id="pageContent">
+  <div class="wrap">
+    <div class="appTop">
+      <button class="topIconBtn" id="backBtn" type="button" aria-label="Geri"><svg viewBox="0 0 24 24" fill="none"><path d="M14.5 5L8 12L14.5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="brandBtn" id="homeBtn" type="button" aria-label="Ana sayfa"><div class="brandLine">italky<span class="ai">AI</span></div></button>
+      <button class="topIconBtn" id="listenTopBtn" type="button" aria-label="Dinle"><svg viewBox="0 0 24 24" fill="none"><path d="M5 9v6h4l5 4V5L9 9H5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M17 9.5c1.2 1.5 1.2 3.5 0 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     </div>
-  </main>
-
-  <div class="overlay" id="resultOverlay">
-    <div class="resultCard">
-      <div class="rTitle">italkyAI • Sonuç</div>
-      <div class="rLevel" id="rLevel">—</div>
-      <div class="rText" id="rText">—</div>
-      <div class="rBtns">
-        <button class="btn btn-primary" id="rGo">Tamam</button>
-        <button class="btn" id="rLater">Kapat</button>
-      </div>
-    </div>
+    <section class="headerCard">
+      <div class="headerTop"><div class="pill" id="heroPill">Seviye Tespit</div><div class="timer" id="timerMini">40:00</div></div>
+      <div class="progress"><div class="track"><div class="fill" id="levelFill"></div></div><div class="levelLabels" id="levelLabels"><span>A1</span><span>A2</span><span>B1</span><span>B2</span><span>C1</span><span>C2</span></div></div>
+    </section>
+    <section class="questionPanel" id="qCard"><div class="msgBox">Test yükleniyor...</div></section>
+    <div class="nav"><button class="btn" id="btnPrev" type="button">GERİ</button><button class="btn" id="btnSkip" type="button">ATLA</button><button class="btn btn-primary" id="btnNext" type="button">İLERİ</button></div>
+    <div class="note">Ses için “Dinle” butonuna basın. Ses başlatılamazsa sınav devam eder.</div>
   </div>
-
+</main>
+<div class="overlay" id="resultOverlay"><div class="resultCard"><div class="rTitle">Seviye tespit tamamlandı</div><div class="rLevel" id="rLevel">Seviye: —</div><div class="rText" id="rText"></div><div class="rBtns"><button class="btn btn-primary" id="rGo" type="button">Profile Git</button><button class="btn" id="rLater" type="button">Kapat</button></div></div></div>
 <script type="module">
-  import { supabase } from "/js/supabase_client.js";
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
 
-  const $ = (id)=>document.getElementById(id);
-  const qCard = $("qCard");
-  const btnPrev = $("btnPrev");
-  const btnSkip = $("btnSkip");
-  const btnNext = $("btnNext");
-  const heroPill = $("heroPill");
-  const levelLabels = $("levelLabels");
-  const levelFill = $("levelFill");
-  const levelKnob = $("levelKnob");
-  const levelTitle = $("levelTitle");
-  const planetWrap = $("planetWrap");
-  const planetCore = $("planetCore");
-  const planetGlow = $("planetGlow");
-  const planetStatus = $("planetStatus");
-  const fxBurst = $("fxBurst");
-  const backBtn = $("backBtn");
-  const homeBtn = $("homeBtn");
-  const soundToggleBtn = $("soundToggleBtn");
-  const soundOnIcon = $("soundOnIcon");
-  const soundOffIcon = $("soundOffIcon");
-  const timerMini = $("timerMini");
+mountShell({ scroll:"none" });
 
-  let soundEnabled = true;
-  let ttsEnabled = true;
-  let audioCtx = null;
-  let ttsTimer = null;
+const $ = (id) => document.getElementById(id);
+const qCard = $("qCard");
+const levelFill = $("levelFill");
+const levelLabels = $("levelLabels");
+const heroPill = $("heroPill");
+const timerMini = $("timerMini");
+const btnPrev = $("btnPrev");
+const btnSkip = $("btnSkip");
+const btnNext = $("btnNext");
+const listenTopBtn = $("listenTopBtn");
+const SUPPORTED_LANGS = ["en", "de", "fr", "es", "it"];
+const LANG_NAMES_TR = { en:"İngilizce", de:"Almanca", fr:"Fransızca", es:"İspanyolca", it:"İtalyanca" };
+const TTS_LANGS = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT", tr:"tr-TR" };
+const params = new URLSearchParams(location.search);
+const testId = String(params.get("test_id") || "").trim();
+const langCode = normalizeSupportedLang(params.get("lang") || "en");
+const langNameTR = LANG_NAMES_TR[langCode] || "İngilizce";
+const TEST_SOURCE_BASE = "https://auth.italky.ai/storage/v1/object/public/tests/level_tests";
+const TOTAL_TIME = 40 * 60;
+let session = null;
+let QUESTIONS = [];
+let answers = [];
+let idx = 0;
+let remaining = TOTAL_TIME;
+let timer = null;
+let currentAudio = null;
 
-  function qs(k){
-    return new URLSearchParams(location.search).get(k);
+function ltLog(label, data = {}) {
+  try { console.log(`[LevelTest] ${label} ${JSON.stringify(data || {})}`); }
+  catch { console.log(`[LevelTest] ${label}`); }
+}
+
+function normalizeSupportedLang(input) {
+  const raw = String(input || "en").trim().toLowerCase().split(/[-_]/)[0];
+  return SUPPORTED_LANGS.includes(raw) ? raw : "en";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", "\"":"&quot;" }[c]));
+}
+
+function stripChoiceLabel(s) {
+  return String(s || "").trim().replace(/^\s*([A-D])\s*[\)\.\:\-]\s*/i, "").trim();
+}
+
+function showMessage(msg, isError = false) {
+  qCard.innerHTML = `<div class="msgBox ${isError ? "err" : ""}">${escapeHtml(msg)}</div>`;
+}
+
+function buildReturnUrl() {
+  const redirect = String(params.get("redirect") || "").trim();
+  return redirect || "/pages/profile.html";
+}
+
+function buildCloseUrl() {
+  const next = String(params.get("next") || "").trim();
+  return next || "/pages/level_test_hub.html";
+}
+
+function calculateLevel(score, total) {
+  const ratio = total > 0 ? score / total : 0;
+  if (ratio <= 0.20) return "A1";
+  if (ratio <= 0.40) return "A2";
+  if (ratio <= 0.60) return "B1";
+  if (ratio <= 0.80) return "B2";
+  if (ratio <= 0.90) return "C1";
+  return "C2";
+}
+
+function normalizeQuestion(row, fallbackId) {
+  const qText = String(row?.question || row?.text || row?.prompt || "").trim();
+  const rawOptions = Array.isArray(row?.options) ? row.options : Array.isArray(row?.choices) ? row.choices : [];
+  const options = rawOptions.map(stripChoiceLabel).filter(Boolean).slice(0, 6);
+  let correctIndex = Number.isFinite(Number(row?.correct_index)) ? Number(row.correct_index) : Number.isFinite(Number(row?.correct)) ? Number(row.correct) : -1;
+  if (correctIndex < 0 || correctIndex >= options.length) {
+    const answer = stripChoiceLabel(row?.answer || row?.correct_answer || row?.solution || "");
+    const found = options.findIndex((opt) => opt.toLowerCase() === answer.toLowerCase());
+    correctIndex = found >= 0 ? found : 0;
   }
-
-  const testId = String(qs("test_id") || "").trim();
-  const langParamRaw = String(qs("lang") || "").trim().toLowerCase();
-  const redirect = String(qs("redirect") || "").trim();
-  const next = String(qs("next") || "").trim();
-
-  function buildReturnUrl() {
-    if (next) return `/pages/${next}.html`;
-    if (redirect === "practice_ai") return "/pages/practice_ai.html";
-    if (redirect === "hangman") return "/pages/hangman.html";
-    if (redirect) return `/pages/${redirect}.html`;
-    return "/pages/level_test_hub.html";
-  }
-
-  function buildCloseUrl() {
-    if (redirect) {
-      if (next) return `/pages/${next}.html`;
-      if (redirect === "practice_ai") return "/pages/practice_ai.html";
-      if (redirect === "hangman") return "/pages/hangman.html";
-      return `/pages/${redirect}.html`;
-    }
-    return "/pages/home.html";
-  }
-
-  backBtn.onclick = () => {
-    stopSpeech();
-    location.href = buildReturnUrl();
+  if (!qText || options.length < 2) return null;
+  return {
+    id: row?.id || `q-${fallbackId}`,
+    level: String(row?.level || row?.cefr || "").trim() || "A1",
+    question: qText,
+    options,
+    correct_index: correctIndex,
+    audio_url: row?.audio_url || row?.audioUrl || row?.audio || ""
   };
+}
 
-  homeBtn.onclick = () => {
-    stopSpeech();
-    location.href = "/pages/home.html";
-  };
+async function loadStaticTest(lang, version) {
+  const url = `${TEST_SOURCE_BASE}/${encodeURIComponent(lang)}_v${version}.json`;
+  ltLog("questions source", { url, lang, version });
+  const response = await fetch(url, { method:"GET", cache:"no-store" });
+  ltLog("questions fetch", { status: response.status, ok: response.ok, url });
+  if (!response.ok) return [];
+  const raw = await response.text();
+  ltLog("questions preview", { preview: raw.slice(0, 180) });
+  let json = null;
+  try { json = JSON.parse(raw); }
+  catch (e) { ltLog("questions parse fail", { message: e?.message || String(e), url }); return []; }
+  const source = Array.isArray(json) ? json : Array.isArray(json?.questions) ? json.questions : Array.isArray(json?.items) ? json.items : [];
+  return source.map((item, i) => normalizeQuestion(item, `${version}-${i}`)).filter(Boolean);
+}
 
-  function updateSoundToggleUI(){
-    soundToggleBtn.classList.toggle("soundOn", soundEnabled);
-    soundOnIcon.style.display = soundEnabled ? "block" : "none";
-    soundOffIcon.style.display = soundEnabled ? "none" : "block";
-  }
-
-  soundToggleBtn.onclick = async () => {
-    soundEnabled = !soundEnabled;
-    ttsEnabled = soundEnabled;
-    updateSoundToggleUI();
-
-    if (soundEnabled) {
-      await ensureAudioContext();
-      speakCurrentQuestion();
-    } else {
-      stopSpeech();
-    }
-  };
-
-  async function ensureAudioContext(){
-    if (!audioCtx) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return null;
-      audioCtx = new AudioContextClass();
-    }
-    if (audioCtx.state === "suspended") {
-      try { await audioCtx.resume(); } catch {}
-    }
-    return audioCtx;
-  }
-
-  function stopSpeech(){
-    try{
-      clearTimeout(ttsTimer);
-      window.speechSynthesis?.cancel();
-    }catch{}
-  }
-
-  function getTTSLang(code){
-    const m = {
-      en:"en-US",
-      de:"de-DE",
-      fr:"fr-FR",
-      it:"it-IT",
-      ru:"ru-RU",
-      es:"es-ES",
-      zh:"zh-CN",
-      ja:"ja-JP",
-      ko:"ko-KR",
-      ar:"ar-SA",
-      el:"el-GR",
-      cs:"cs-CZ",
-      sr:"sr-RS",
-      sv:"sv-SE",
-      uk:"uk-UA",
-      fa:"fa-IR",
-      pt:"pt-PT",
-      ro:"ro-RO",
-      hr:"hr-HR",
-      th:"th-TH",
-      bg:"bg-BG",
-      tr:"tr-TR"
-    };
-    return m[code] || "en-US";
-  }
-
-  function speakText(text, lang){
-    if (!ttsEnabled || !soundEnabled || !("speechSynthesis" in window)) return;
-    stopSpeech();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = getTTSLang(lang);
-    utter.rate = 0.95;
-    utter.pitch = 1;
-    utter.volume = 1;
-    try{
-      window.speechSynthesis.speak(utter);
-    }catch{}
-  }
-
-  function speakCurrentQuestion(){
-    if (!QUESTIONS.length) return;
-    const q = QUESTIONS[idx];
-    if (!q || !soundEnabled || !ttsEnabled) return;
-
-    const opts = Array.isArray(q.options) ? q.options : [];
-    const spoken = [
-      q.question || "",
-      ...opts.map((opt, i) => `${["A","B","C","D"][i] || i+1}. ${opt}`)
-    ].join(". ");
-
-    stopSpeech();
-    ttsTimer = setTimeout(() => {
-      speakText(spoken, langCode);
-    }, 250);
-  }
-
-  function playSuccessSound(){
-    if (!soundEnabled) return;
-    ensureAudioContext().then((ctx) => {
-      if (!ctx) return;
-      const now = ctx.currentTime;
-
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = "sine";
-      osc1.frequency.setValueAtTime(520, now);
-      osc1.frequency.exponentialRampToValueAtTime(760, now + 0.18);
-      gain1.gain.setValueAtTime(0.0001, now);
-      gain1.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
-      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-      osc1.connect(gain1).connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.3);
-
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = "triangle";
-      osc2.frequency.setValueAtTime(860, now + 0.02);
-      osc2.frequency.exponentialRampToValueAtTime(1080, now + 0.20);
-      gain2.gain.setValueAtTime(0.0001, now + 0.02);
-      gain2.gain.exponentialRampToValueAtTime(0.05, now + 0.05);
-      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
-      osc2.connect(gain2).connect(ctx.destination);
-      osc2.start(now + 0.02);
-      osc2.stop(now + 0.28);
+async function buildQuestionPool(lang) {
+  const seen = new Set();
+  const out = [];
+  for (let version = 1; version <= 6; version += 1) {
+    const rows = await loadStaticTest(lang, version).catch((e) => {
+      ltLog("questions load fail", { version, message: e?.message || String(e) });
+      return [];
     });
-  }
-
-  function playFailSound(){
-    if (!soundEnabled) return;
-    ensureAudioContext().then((ctx) => {
-      if (!ctx) return;
-      const now = ctx.currentTime;
-
-      const bufferSize = ctx.sampleRate * 0.45;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-
-      for (let i = 0; i < bufferSize; i++) {
-        const decay = 1 - i / bufferSize;
-        data[i] = (Math.random() * 2 - 1) * decay * 0.8;
-      }
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(1400, now);
-      filter.frequency.exponentialRampToValueAtTime(180, now + 0.34);
-
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.22, now + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
-
-      const osc = ctx.createOscillator();
-      const oscGain = ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.exponentialRampToValueAtTime(48, now + 0.34);
-      oscGain.gain.setValueAtTime(0.0001, now);
-      oscGain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
-      oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
-
-      noise.connect(filter).connect(gain).connect(ctx.destination);
-      osc.connect(oscGain).connect(ctx.destination);
-
-      noise.start(now);
-      noise.stop(now + 0.42);
-      osc.start(now);
-      osc.stop(now + 0.34);
-    });
-  }
-
-  function setProgressByQuestion(index, total){
-    const current = index + 1;
-    const ratio = Math.max(0, Math.min(1, current / total));
-    const fill = Math.max(8, Math.min(100, ratio * 100));
-
-    let levelCode = "A1";
-    let title = "Başlangıç Seviyesi";
-
-    if (ratio <= 0.20) { levelCode = "A1"; title = "Başlangıç Seviyesi"; }
-    else if (ratio <= 0.40) { levelCode = "A2"; title = "Temel Seviye"; }
-    else if (ratio <= 0.60) { levelCode = "B1"; title = "Orta Seviye"; }
-    else if (ratio <= 0.80) { levelCode = "B2"; title = "İyi Seviye"; }
-    else { levelCode = "C1"; title = "İleri Seviye"; }
-
-    levelFill.style.width = `${fill}%`;
-    levelKnob.style.left = `calc(${fill}% - 12px)`;
-    levelTitle.textContent = title;
-
-    [...levelLabels.children].forEach(el => {
-      el.classList.toggle("active", el.textContent.trim() === levelCode);
-    });
-  }
-
-  function setPlanetNeutral(text="Hazır"){
-    planetWrap.classList.remove("okFlash","badFlash");
-    planetCore.style.boxShadow = `
-      inset -10px -12px 20px rgba(0,0,0,.72),
-      inset 10px 12px 22px rgba(255,255,255,.04),
-      inset 0 0 26px rgba(255,255,255,.04),
-      0 0 18px rgba(255,255,255,.10),
-      0 0 34px rgba(103,232,249,.20),
-      0 0 64px rgba(129,140,248,.18)
-    `;
-    planetGlow.style.background = `
-      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-      radial-gradient(circle, rgba(103,232,249,.25) 0%, transparent 70%)
-    `;
-    planetStatus.className = "planetStatus";
-    planetStatus.textContent = text;
-  }
-
-  function setPlanetSuccess(){
-    planetWrap.classList.remove("badFlash");
-    void planetWrap.offsetWidth;
-    planetWrap.classList.add("okFlash");
-
-    planetCore.style.boxShadow = `
-      inset -10px -12px 20px rgba(0,0,0,.72),
-      inset 10px 12px 22px rgba(255,255,255,.04),
-      inset 0 0 26px rgba(255,255,255,.04),
-      0 0 18px rgba(255,255,255,.12),
-      0 0 36px rgba(34,197,94,.28),
-      0 0 78px rgba(34,197,94,.34)
-    `;
-    planetGlow.style.background = `
-      radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-      radial-gradient(circle, rgba(34,197,94,.35) 0%, transparent 70%)
-    `;
-    planetStatus.className = "planetStatus ok";
-    planetStatus.textContent = "Doğru Cevap";
-    burstFromPlanet("ok");
-    playSuccessSound();
-  }
-
-  function setPlanetFail(){
-    planetWrap.classList.remove("okFlash");
-    void planetWrap.offsetWidth;
-    planetWrap.classList.add("badFlash");
-
-    planetCore.style.boxShadow = `
-      inset -10px -12px 20px rgba(0,0,0,.72),
-      inset 10px 12px 22px rgba(255,255,255,.04),
-      inset 0 0 26px rgba(255,255,255,.04),
-      0 0 18px rgba(255,255,255,.10),
-      0 0 36px rgba(239,68,68,.30),
-      0 0 82px rgba(220,38,38,.32)
-    `;
-    planetGlow.style.background = `
-      radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,.03) 28%, transparent 62%),
-      radial-gradient(circle, rgba(239,68,68,.34) 0%, transparent 70%)
-    `;
-    planetStatus.className = "planetStatus bad";
-    planetStatus.textContent = "Yanlış Cevap";
-    burstFromPlanet("bad");
-    playFailSound();
-  }
-
-  function burstFromPlanet(type = "ok"){
-    const rect = planetWrap.getBoundingClientRect();
-    const x0 = rect.left + rect.width / 2;
-    const y0 = rect.top + rect.height / 2;
-    const count = type === "ok" ? 28 : 34;
-
-    for(let i=0; i<count; i++){
-      const p = document.createElement("span");
-      p.className = "particle";
-      p.style.left = `${x0}px`;
-      p.style.top = `${y0}px`;
-
-      const angle = (Math.PI * 2 * i) / count;
-      const distance = (type === "ok" ? 42 : 52) + Math.random() * 52;
-      const jitterX = Math.random() * 26 - 13;
-      const jitterY = Math.random() * 26 - 13;
-      const dx = Math.cos(angle) * distance + jitterX;
-      const dy = Math.sin(angle) * distance + jitterY;
-
-      p.style.setProperty("--x", `${dx}px`);
-      p.style.setProperty("--y", `${dy}px`);
-
-      if(type === "ok"){
-        p.style.background = Math.random() > .5
-          ? "linear-gradient(135deg,#dcfce7,#22c55e)"
-          : "linear-gradient(135deg,#86efac,#16a34a)";
-        p.style.borderRadius = Math.random() > .5 ? "50%" : "4px";
-      }else{
-        p.style.background = Math.random() > .5
-          ? "linear-gradient(135deg,#fecaca,#ef4444)"
-          : "linear-gradient(135deg,#fb7185,#dc2626)";
-        p.style.borderRadius = Math.random() > .5 ? "50%" : "3px";
-      }
-
-      fxBurst.appendChild(p);
-      setTimeout(() => p.remove(), 860);
+    for (const q of rows) {
+      const key = q.question.toLowerCase().replace(/\s+/g, " ").trim();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(q);
     }
   }
+  ltLog("questions count", { lang, count: out.length });
+  return shuffle(out).slice(0, Math.min(50, out.length));
+}
 
-  function showError(title, detail){
-    qCard.innerHTML = `<div class="errBox">${title}\n\n${detail || ""}</div>`;
-    btnPrev.disabled = btnSkip.disabled = btnNext.disabled = true;
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
+  return a;
+}
 
-  function showInfo(msg){
-    qCard.innerHTML = `<div class="infoBox">${msg}</div>`;
-  }
-
-  if(!testId){
-    showError("Test ID yok.", "Bu sayfa Seviye Tespit merkezinden açılmalı.");
-    throw new Error("missing test_id");
-  }
-
-  const { data:{ session } = {} } = await supabase.auth.getSession();
-  if(!session?.user){
-    location.replace("/pages/login.html");
-    throw new Error("no session");
-  }
-
-  const LANG_ALIASES = { cn:"zh", jp:"ja", kr:"ko", sa:"ar", gr:"el", cz:"cs", rs:"sr", se:"sv", ua:"uk", ir:"fa" };
-  const normLang = (l) => {
-    const x = String(l || "en").trim().toLowerCase();
-    return LANG_ALIASES[x] || x;
-  };
-
-  const LANG_NAMES_TR = {
-    en:"İngilizce",
-    de:"Almanca",
-    fr:"Fransızca",
-    it:"İtalyanca",
-    ru:"Rusça",
-    es:"İspanyolca",
-    zh:"Çince",
-    ja:"Japonca",
-    ko:"Korece",
-    ar:"Arapça",
-    el:"Yunanca",
-    cs:"Çekçe",
-    sr:"Sırpça",
-    sv:"İsveççe",
-    uk:"Ukraynaca",
-    fa:"Farsça",
-    pt:"Portekizce",
-    ro:"Romence",
-    hr:"Hırvatça",
-    th:"Tayca",
-    bg:"Bulgarca"
-  };
-
-  async function loadTestRow(){
-    const { data, error } = await supabase
-      .from("level_tests")
-      .select("id, user_id, language_code, test_version, started_at, status")
-      .eq("id", testId)
-      .single();
-
-    if(error) throw error;
-    return data;
-  }
-
-  async function loadStaticTest(lang, version){
-    const L = normLang(lang);
-    const v = Number(version || 1) || 1;
-    const url = `https://auth.italky.ai/storage/v1/object/public/tests/level_tests/${encodeURIComponent(L)}_v${v}.json`;
-    const r = await fetch(url, { cache:"no-store" });
-
-    if(!r.ok) return null;
-
-    const j = await r.json().catch(()=>null);
-    if(!j) return null;
-
-    if(Array.isArray(j)) return j;
-    if(j && Array.isArray(j.questions)) return j.questions;
-
-    return null;
-  }
-
-  function stripChoiceLabel(s){
-    const t = String(s || "").trim();
-    return t.replace(/^\s*([A-D])\s*[\)\.\:\-]\s*/i, "").trim();
-  }
-
-  function normQ(q){
-    return String(q || "").toLowerCase().replace(/\s+/g, " ").trim();
-  }
-
-  function shuffleArray(arr){
-    const a = arr.slice();
-    for(let i = a.length - 1; i > 0; i--){
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  async function buildUniquePool(lang){
-    const MAX_V = 6;
-    const allQuestions = [];
-    const seen = new Set();
-
-    for(let v=1; v<=MAX_V; v++){
-      showInfo(`Test hazırlanıyor…\n\n${lang.toUpperCase()} • v${v} yükleniyor…`);
-      const arr = await loadStaticTest(lang, v);
-      if(!arr || !Array.isArray(arr) || !arr.length) continue;
-
-      for(const q of arr){
-        const qtxt = normQ(q?.question);
-        if(!qtxt) continue;
-        if(seen.has(qtxt)) continue;
-        seen.add(qtxt);
-
-        const optsRaw = Array.isArray(q?.options) ? q.options : [];
-        const opts = optsRaw.map(stripChoiceLabel).filter(Boolean);
-        const ci = (q?.correct_index != null) ? Number(q.correct_index) : Number(q?.correct ?? -1);
-
-        allQuestions.push({
-          id: q?.id ?? crypto.randomUUID(),
-          level: String(q?.level || "").trim() || "A1",
-          type: "mcq",
-          question: String(q?.question || "").trim(),
-          options: opts,
-          correct_index: Number.isFinite(ci) ? ci : 0
-        });
-      }
-    }
-
-    const shuffled = shuffleArray(allQuestions);
-    return shuffled.slice(0, 50);
-  }
-
-  async function attachQuestionsToDB(langCode, questions){
+async function attachQuestions() {
+  if (!testId || !QUESTIONS.length) return;
+  try {
     const { error } = await supabase.rpc("attach_level_test_questions", {
       p_test_id: testId,
-      p_questions: questions,
+      p_questions: QUESTIONS,
       p_language_code: langCode
     });
-    if(error) throw error;
+    if (error) throw error;
+  } catch (e) {
+    ltLog("attach questions skipped", { message: e?.message || String(e) });
   }
+}
 
-  showInfo("Test yükleniyor…");
-  setPlanetNeutral("Hazırlanıyor");
-  updateSoundToggleUI();
-
-  let testRow;
-  try{
-    testRow = await loadTestRow();
-  }catch(e){
-    showError("Test okunamadı.", e?.message || String(e));
-    throw e;
+async function updateProfileLevels(result) {
+  if (!session?.user?.id) return false;
+  const userId = String(session.user.id);
+  try {
+    const { data: profile, error: readError } = await supabase
+      .from("profiles")
+      .select("levels")
+      .eq("id", userId)
+      .maybeSingle();
+    if (readError) throw readError;
+    const current = profile?.levels && typeof profile.levels === "object" && !Array.isArray(profile.levels) ? profile.levels : {};
+    const nextLevels = {
+      ...current,
+      [langCode]: {
+        level: result.level,
+        score: result.score,
+        total: result.total,
+        tested_at: new Date().toISOString()
+      }
+    };
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ levels: nextLevels })
+      .eq("id", userId);
+    if (updateError) throw updateError;
+    ltLog("profile update success", { lang: langCode, level: result.level, score: result.score, total: result.total });
+    return true;
+  } catch (e) {
+    ltLog("profile update fail", { message: e?.message || String(e) });
+    return false;
   }
+}
 
-  const langCode = normLang(testRow?.language_code || langParamRaw || "en");
-  const langNameTR = LANG_NAMES_TR[langCode] || langCode.toUpperCase();
+function getTtsLang(code) {
+  return TTS_LANGS[code] || "en-US";
+}
 
-  const QUESTIONS = await buildUniquePool(langCode);
+function stopAudio() {
+  try { currentAudio?.pause(); } catch {}
+  currentAudio = null;
+  try { window.speechSynthesis?.cancel(); } catch {}
+}
 
-  if(!QUESTIONS.length){
-    showError("Test dosyaları bulunamadı.", `${langCode.toUpperCase()} için storage dosyaları yok.`);
-    throw new Error("no test files");
-  }
-
-  if(QUESTIONS.length < 50){
-    showInfo(`Uyarı: ${QUESTIONS.length}/50 benzersiz soru bulundu.\n\nYine de sınav başlıyor…`);
-    await new Promise(r => setTimeout(r, 900));
-  }
-
-  try{
-    await attachQuestionsToDB(langCode, QUESTIONS);
-  }catch(e){
-    console.log("attach_level_test_questions fail:", e);
-  }
-
-  const TOTAL_TIME = 40 * 60;
-
-  let remaining = TOTAL_TIME;
-  try{
-    const startedAt = testRow?.started_at ? new Date(testRow.started_at).getTime() : null;
-    if(startedAt){
-      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-      remaining = Math.max(0, TOTAL_TIME - elapsed);
+async function callNativeTts(text, bcpLang) {
+  const bridges = [window.NativeTTS, window.AndroidTTS, window.AndroidBridge, window.Native];
+  const methods = ["speak", "speakText", "ttsSpeak"];
+  for (const bridge of bridges) {
+    if (!bridge) continue;
+    for (const method of methods) {
+      if (typeof bridge[method] !== "function") continue;
+      try {
+        const ret = bridge[method](String(text), String(bcpLang));
+        if (ret && typeof ret.then === "function") await ret;
+        return true;
+      } catch (e) {
+        ltLog("tts bridge fail", { method, message: e?.message || String(e) });
+      }
     }
-  }catch{}
-
-  const answers = Array(QUESTIONS.length).fill(null);
-  const seenCount = Array(QUESTIONS.length).fill(0);
-
-  let idx = 0;
-  let answeredLocked = false;
-
-  function nextIndex(from){
-    for(let i=from+1; i<QUESTIONS.length; i++){
-      if(answers[i] === null && seenCount[i] < 2) return i;
-    }
-    for(let i=0; i<QUESTIONS.length; i++){
-      if(answers[i] === null && seenCount[i] < 2) return i;
-    }
-    return -1;
   }
+  return false;
+}
 
-  function render(){
-    const q = QUESTIONS[idx];
-    if(!q){
-      showError("Soru yok.", `idx=${idx}`);
-      return;
+async function playAudioUrl(audioUrl) {
+  if (!audioUrl) return false;
+  try {
+    stopAudio();
+    currentAudio = new Audio(audioUrl);
+    currentAudio.preload = "auto";
+    await currentAudio.play();
+    return true;
+  } catch (e) {
+    ltLog("audio url fail", { message: e?.message || String(e) });
+    return false;
+  }
+}
+
+async function speakText(text, lang, audioUrl = "") {
+  const clean = String(text || "").trim();
+  if (!clean && !audioUrl) return false;
+  const bcp = getTtsLang(lang);
+  ltLog("tts start", { lang, bcp, textLength: clean.length, hasAudio: !!audioUrl });
+  stopAudio();
+  try {
+    if (clean && await callNativeTts(clean, bcp)) {
+      ltLog("tts success", { mode:"native", lang });
+      return true;
     }
+    if (audioUrl && await playAudioUrl(audioUrl)) {
+      ltLog("tts success", { mode:"audio_url", lang });
+      return true;
+    }
+    if (clean && "speechSynthesis" in window) {
+      const utter = new SpeechSynthesisUtterance(clean);
+      utter.lang = bcp;
+      utter.rate = 0.95;
+      utter.pitch = 1;
+      utter.volume = 1;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+      ltLog("tts success", { mode:"speechSynthesis", lang });
+      return true;
+    }
+  } catch (e) {
+    ltLog("tts fail", { message: e?.message || String(e) });
+  }
+  ltLog("tts fail", { message:"no playable mode" });
+  showInlineMessage("Ses şu anda başlatılamadı. Lütfen tekrar deneyin.");
+  return false;
+}
 
-    answeredLocked = false;
-    seenCount[idx] = Math.min(2, seenCount[idx] + 1);
+function currentQuestionSpokenText() {
+  const q = QUESTIONS[idx];
+  if (!q) return "";
+  const opts = Array.isArray(q.options) ? q.options : [];
+  return [q.question || "", ...opts.map((opt, i) => `${["A", "B", "C", "D", "E", "F"][i] || i + 1}. ${opt}`)].join(". ");
+}
 
-    const picked = answers[idx];
-    const status = picked !== null ? "Cevaplandı" : (seenCount[idx] >= 2 ? "Son Tur" : "Bekliyor");
-    const passInfo = `Tur: ${seenCount[idx]}/2`;
+function showInlineMessage(text) {
+  const old = qCard.querySelector(".inlineMsg");
+  if (old) old.remove();
+  const box = document.createElement("div");
+  box.className = "msgBox inlineMsg";
+  box.style.marginBottom = "10px";
+  box.textContent = text;
+  qCard.prepend(box);
+  setTimeout(() => { try { box.remove(); } catch {} }, 1800);
+}
 
-    heroPill.textContent = `Soru ${idx+1} / ${QUESTIONS.length}`;
-    setProgressByQuestion(idx, QUESTIONS.length);
-    setPlanetNeutral(picked !== null ? "Cevaplandı" : "Hazır");
+async function speakCurrentQuestion() {
+  const q = QUESTIONS[idx];
+  if (!q) return;
+  await speakText(currentQuestionSpokenText(), langCode, q.audio_url || "");
+}
 
-    const opts = Array.isArray(q.options) ? q.options : [];
+function setProgress() {
+  const total = QUESTIONS.length || 1;
+  const ratio = Math.max(0, Math.min(1, (idx + 1) / total));
+  levelFill.style.width = `${Math.round(ratio * 100)}%`;
+  const roughLevel = calculateLevel(idx + 1, total);
+  [...levelLabels.children].forEach((el) => el.classList.toggle("active", el.textContent.trim() === roughLevel));
+}
 
-    qCard.innerHTML = `
-      <div class="q-meta">
-        <div class="meta">Soru ${idx+1}/${QUESTIONS.length} • ${q.level || "-"}</div>
-        <div class="meta">${status} • ${passInfo}</div>
-      </div>
-      <div class="q-text">${q.question || ""}</div>
-      ${opts.map((opt, i) => `
-        <button class="opt ${picked===i ? "sel" : ""}" data-i="${i}" type="button">
-          <div class="optKey">${["A","B","C","D"][i] || i+1}</div>
-          <div class="optText">${opt}</div>
-          <div class="optIcon">${picked===i ? "●" : "○"}</div>
-        </button>
-      `).join("")}
-    `;
+function render() {
+  const q = QUESTIONS[idx];
+  if (!q) {
+    showMessage("İçerik şu anda yüklenemedi. Lütfen tekrar deneyin.", true);
+    return;
+  }
+  const picked = answers[idx];
+  heroPill.textContent = `${langNameTR} • Soru ${idx + 1}/${QUESTIONS.length}`;
+  setProgress();
+  qCard.innerHTML = `
+    <div class="qMeta"><div class="meta">${escapeHtml(q.level || "A1")}</div><div class="meta">${picked === null ? "Bekliyor" : "Cevaplandı"}</div></div>
+    <div class="qText">${escapeHtml(q.question)}</div>
+    <div class="listenRow"><button class="listenBtn" id="listenQuestionBtn" type="button">Dinle</button></div>
+    ${q.options.map((opt, i) => {
+      const isPicked = picked === i;
+      return `<button class="opt ${isPicked ? "sel" : ""}" data-index="${i}" type="button"><div class="optKey">${["A", "B", "C", "D", "E", "F"][i] || i + 1}</div><div class="optText">${escapeHtml(opt)}</div><div class="optIcon">${isPicked ? "●" : "○"}</div></button>`;
+    }).join("")}
+  `;
+  $("listenQuestionBtn")?.addEventListener("click", speakCurrentQuestion);
+  qCard.querySelectorAll(".opt").forEach((btn) => {
+    btn.addEventListener("click", () => chooseAnswer(Number(btn.getAttribute("data-index"))));
+  });
+  btnPrev.disabled = idx <= 0;
+  btnNext.disabled = answers[idx] === null;
+  btnNext.textContent = nextUnansweredIndex(idx) === -1 ? "SINAVI TAMAMLA" : "İLERİ";
+}
 
-    qCard.querySelectorAll(".opt").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        if(answeredLocked) return;
+function chooseAnswer(choice) {
+  const q = QUESTIONS[idx];
+  if (!q) return;
+  answers[idx] = choice;
+  stopAudio();
+  qCard.querySelectorAll(".opt").forEach((btn) => {
+    const value = Number(btn.getAttribute("data-index"));
+    btn.classList.add("dim");
+    btn.classList.remove("sel");
+    const icon = btn.querySelector(".optIcon");
+    if (value === q.correct_index) {
+      btn.classList.remove("dim");
+      btn.classList.add("correct");
+      if (icon) icon.textContent = "✓";
+    } else if (value === choice) {
+      btn.classList.remove("dim");
+      btn.classList.add("wrong");
+      if (icon) icon.textContent = "×";
+    }
+  });
+  btnNext.disabled = false;
+  btnNext.textContent = nextUnansweredIndex(idx) === -1 ? "SINAVI TAMAMLA" : "İLERİ";
+}
 
-        if (soundEnabled) {
-          await ensureAudioContext();
-        }
+function nextUnansweredIndex(from) {
+  for (let i = from + 1; i < QUESTIONS.length; i += 1) if (answers[i] === null) return i;
+  for (let i = 0; i < QUESTIONS.length; i += 1) if (answers[i] === null) return i;
+  return -1;
+}
 
-        const i = Number(btn.getAttribute("data-i"));
-        answers[idx] = i;
-        answeredLocked = true;
-        stopSpeech();
+async function finishExam() {
+  stopAudio();
+  clearInterval(timer);
+  btnPrev.disabled = btnSkip.disabled = btnNext.disabled = true;
+  const localScore = answers.reduce((sum, answer, i) => sum + (answer === QUESTIONS[i]?.correct_index ? 1 : 0), 0);
+  const total = QUESTIONS.length;
+  const localLevel = calculateLevel(localScore, total);
+  let result = { level: localLevel, score: localScore, total };
 
-        const buttons = [...qCard.querySelectorAll(".opt")];
-        const correctBtn = buttons[q.correct_index];
-        const isCorrect = i === q.correct_index;
-
-        buttons.forEach(b => {
-          b.classList.add("dim");
-          b.classList.remove("sel");
-        });
-
-        const selectedBtn = buttons[i];
-        selectedBtn.classList.remove("dim");
-        selectedBtn.classList.add("sel");
-
-        setTimeout(() => {
-          if(isCorrect){
-            selectedBtn.classList.remove("sel");
-            selectedBtn.classList.add("correct");
-            const icon = selectedBtn.querySelector(".optIcon");
-            if(icon) icon.textContent = "✓";
-            setPlanetSuccess();
-          }else{
-            selectedBtn.classList.remove("sel");
-            selectedBtn.classList.add("wrong");
-            const badIcon = selectedBtn.querySelector(".optIcon");
-            if(badIcon) badIcon.textContent = "✕";
-
-            if(correctBtn){
-              correctBtn.classList.remove("dim");
-              correctBtn.classList.add("correct");
-              const okIcon = correctBtn.querySelector(".optIcon");
-              if(okIcon) okIcon.textContent = "✓";
-            }
-            setPlanetFail();
-          }
-
-          btnPrev.disabled = (idx === 0);
-          btnNext.disabled = false;
-          btnSkip.disabled = false;
-          btnNext.textContent = (nextIndex(idx) === -1) ? "SINAVI TAMAMLA" : "İLERİ";
-        }, 120);
+  try {
+    if (testId) {
+      const { data, error } = await supabase.rpc("finish_level_test", {
+        p_test_id: testId,
+        p_answers: answers,
+        p_remaining_seconds: remaining
       });
-    });
-
-    btnPrev.disabled = (idx === 0);
-    btnNext.disabled = (answers[idx] === null);
-    btnSkip.disabled = false;
-    btnNext.textContent = (nextIndex(idx) === -1) ? "SINAVI TAMAMLA" : "İLERİ";
-
-    speakCurrentQuestion();
+      if (error) throw error;
+      const row = Array.isArray(data) ? (data[0] || null) : data;
+      result = {
+        level: row?.result_level || localLevel,
+        score: Number(row?.correct ?? localScore),
+        total: Number(row?.total ?? total)
+      };
+    }
+  } catch (e) {
+    ltLog("finish rpc skipped", { message: e?.message || String(e) });
   }
 
-  function requireAnswerToast(){
-    const box = document.createElement("div");
-    box.className = "infoBox";
-    box.style.marginBottom = "10px";
-    box.textContent = "Lütfen bir seçenek işaretleyin.";
-    qCard.prepend(box);
-    setTimeout(() => {
-      try { box.remove(); } catch {}
-    }, 1200);
-  }
+  ltLog("result level", { lang: langCode, ...result });
+  const profileSaved = await updateProfileLevels(result);
+  $("rLevel").textContent = `Seviye: ${result.level}`;
+  $("rText").textContent = `Dil: ${langNameTR}\nDoğru: ${result.score} / ${result.total}\nBaşarı: %${Math.round((result.score / Math.max(1, result.total)) * 100)}\n\n${profileSaved ? "Sonuç profilinize işlendi." : "Sonuç hesaplandı. Profil bağlantısı daha sonra tekrar denenebilir."}`;
+  $("resultOverlay").classList.add("show");
+}
 
-  async function finishExam(){
-    stopSpeech();
+function updateTimerUI() {
+  const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
+  const ss = String(remaining % 60).padStart(2, "0");
+  timerMini.textContent = `${mm}:${ss}`;
+}
 
-    const { data, error } = await supabase.rpc("finish_level_test", {
-      p_test_id: testId,
-      p_answers: answers,
-      p_remaining_seconds: remaining
-    });
-
-    if(error){
-      showError("Sonuç kaydedilemedi.", error.message || String(error));
-      return;
-    }
-
-    const row = Array.isArray(data) ? (data[0] || null) : data;
-    const level = row?.result_level || "A1";
-    const correct = Number(row?.correct ?? 0);
-    const total = Number(row?.total ?? 0);
-    const percent = Number(row?.percent ?? 0);
-
-    $("rLevel").textContent = `Seviye: ${level}`;
-    $("rText").textContent =
-`Dil: ${langNameTR}
-Doğru: ${correct} / ${total}
-Başarı: %${Math.round(percent * 100)}
-
-Sonuç profilinize işlendi.`;
-
-    $("resultOverlay").classList.add("show");
-
-    $("rGo").onclick = () => {
-      location.href = buildReturnUrl();
-    };
-
-    $("rLater").onclick = () => {
-      location.href = buildCloseUrl();
-    };
-  }
-
-  btnPrev.onclick = () => {
-    stopSpeech();
-    if(idx > 0){
-      idx--;
-      render();
-    }
-  };
-
-  btnSkip.onclick = () => {
-    stopSpeech();
-    if(seenCount[idx] >= 2 && answers[idx] === null){
-      requireAnswerToast();
-      return;
-    }
-
-    const ni = nextIndex(idx);
-    if(ni === -1) finishExam();
-    else{
-      idx = ni;
-      render();
-    }
-  };
-
-  btnNext.onclick = () => {
-    stopSpeech();
-    if(answers[idx] === null){
-      requireAnswerToast();
-      return;
-    }
-
-    const ni = nextIndex(idx);
-    if(ni === -1) finishExam();
-    else{
-      idx = ni;
-      render();
-    }
-  };
-
-  function updateTimerUI(){
-    const mm = String(Math.floor(remaining / 60)).padStart(2,"0");
-    const ss = String(remaining % 60).padStart(2,"0");
-    timerMini.textContent = `${mm}:${ss}`;
-    document.title = `italkyAI • ${mm}:${ss}`;
-  }
-
-  const timer = setInterval(() => {
-    remaining--;
-    if(remaining < 0) remaining = 0;
-    updateTimerUI();
-
-    if(remaining === 0){
-      clearInterval(timer);
-      finishExam();
-    }
-  }, 1000);
-
-  updateTimerUI();
-  render();
+async function init() {
   $("pageContent").classList.add("ready");
+  ltLog("ready", { href: location.href, selectedLang: langCode, testId: !!testId });
+  const { data:{ session: authSession } = {} } = await supabase.auth.getSession();
+  session = authSession;
+  if (!session?.user) {
+    location.replace("/pages/login.html");
+    return;
+  }
+
+  if (testId) {
+    try {
+      const { data, error } = await supabase
+        .from("level_tests")
+        .select("id, user_id, language_code, test_version, started_at, status")
+        .eq("id", testId)
+        .single();
+      if (error) throw error;
+      ltLog("test row", { id: data?.id, language_code: data?.language_code, test_version: data?.test_version, status: data?.status });
+      if (data?.language_code && normalizeSupportedLang(data.language_code) !== langCode) ltLog("selectedLang normalized", { urlLang: langCode, rowLang: data.language_code });
+      if (data?.started_at) {
+        const elapsed = Math.floor((Date.now() - new Date(data.started_at).getTime()) / 1000);
+        if (Number.isFinite(elapsed)) remaining = Math.max(0, TOTAL_TIME - elapsed);
+      }
+    } catch (e) {
+      ltLog("test row fail", { message: e?.message || String(e) });
+    }
+  }
+
+  showMessage("Test hazırlanıyor...");
+  QUESTIONS = await buildQuestionPool(langCode);
+  if (!QUESTIONS.length) {
+    showMessage("İçerik şu anda yüklenemedi. Lütfen tekrar deneyin.", true);
+    ltLog("questions unavailable", { lang: langCode });
+    return;
+  }
+  answers = Array(QUESTIONS.length).fill(null);
+  await attachQuestions();
+  render();
+  updateTimerUI();
+  timer = setInterval(() => {
+    remaining = Math.max(0, remaining - 1);
+    updateTimerUI();
+    if (remaining === 0) finishExam();
+  }, 1000);
+}
+
+$("backBtn").onclick = () => { stopAudio(); location.href = buildCloseUrl(); };
+$("homeBtn").onclick = () => { stopAudio(); location.href = "/pages/home.html"; };
+listenTopBtn.onclick = speakCurrentQuestion;
+btnPrev.onclick = () => { if (idx > 0) { idx -= 1; render(); } };
+btnSkip.onclick = () => { const ni = nextUnansweredIndex(idx); if (ni === -1) finishExam(); else { idx = ni; render(); } };
+btnNext.onclick = () => { if (answers[idx] === null) { showInlineMessage("Lütfen bir seçenek işaretleyin."); return; } const ni = nextUnansweredIndex(idx); if (ni === -1) finishExam(); else { idx = ni; render(); } };
+$("rGo").onclick = () => { location.href = buildReturnUrl(); };
+$("rLater").onclick = () => { location.href = buildCloseUrl(); };
+
+init();
 </script>
 </body>
 </html>
