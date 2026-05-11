@@ -71,7 +71,6 @@ const state = {
 
 let personalBestVal = null;
 let globalBestVal = null;
-let listenSolvedBtn = null;
 let hangAudioCtx = null;
 
 function normalizeWord(word) {
@@ -109,22 +108,26 @@ function injectHangmanUiPolish() {
     body.hangman-game-screen .ready-gate.hidden,
     body.hangman-direct-start #readyGate{display:none!important;pointer-events:none!important;visibility:hidden!important}
     body.hangman-game-screen #shellMain{overflow:hidden!important;padding-bottom:calc(var(--footerH,0px) + 8px)!important}
-    body.hangman-game-screen #pageContent{height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:10px 14px calc(236px + var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 18px)!important;position:relative!important}
+    body.hangman-game-screen #pageContent{height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:10px 14px calc(228px + var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 12px)!important;position:relative!important}
     body.hangman-game-screen .top{flex:1 1 auto!important;min-height:0!important;height:auto!important;display:flex!important;flex-direction:column!important;gap:8px!important}
     body.hangman-game-screen .title{font-size:20px!important;letter-spacing:7px!important;padding-top:0!important;margin:0!important;flex:0 0 auto!important}
-    body.hangman-game-screen .hud{top:72px!important;left:0!important;right:0!important;gap:10px!important}
-    body.hangman-game-screen .stage{flex:1 1 auto!important;min-height:0!important;padding-top:44px!important;justify-content:flex-start!important}
-    body.hangman-game-screen .gallows{width:126px!important;height:132px!important;flex:0 0 auto!important}
-    body.hangman-game-screen .man{transform:scale(.86);transform-origin:top center!important}
-    body.hangman-game-screen .trBox{margin-top:12px!important;min-height:44px!important;font-size:15px!important;padding:10px 12px!important}
-    body.hangman-game-screen .dock{position:absolute!important;left:14px!important;right:14px!important;bottom:calc(var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 12px)!important;height:232px!important;gap:8px!important;padding:10px!important;border-radius:22px!important;overflow:hidden!important;box-shadow:0 24px 70px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.14)!important}
+    body.hangman-game-screen .hud{top:58px!important;left:0!important;right:0!important;gap:10px!important;align-items:flex-start!important;pointer-events:none!important}
+    body.hangman-game-screen .leftHud,body.hangman-game-screen .rightHud{pointer-events:auto!important}
+    body.hangman-game-screen .rightHud{min-width:124px!important;max-width:142px!important;padding:8px 9px!important;border-radius:16px!important;background:rgba(3,7,18,.52)!important;border:1px solid rgba(148,163,184,.16)!important;box-shadow:0 14px 38px rgba(0,0,0,.25)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;gap:7px!important}
+    body.hangman-game-screen .score .best{font-size:8px!important;line-height:1.15!important;letter-spacing:.6px!important}.score .val{font-size:24px!important;line-height:1!important}
+    body.hangman-game-screen #hangmanScoreMeta{margin-top:4px!important;gap:4px!important;font-size:8.5px!important;line-height:1.2!important;max-width:122px!important}
+    body.hangman-game-screen .stage{flex:1 1 auto!important;min-height:0!important;padding-top:96px!important;justify-content:flex-start!important}
+    body.hangman-game-screen .gallows{width:118px!important;height:126px!important;flex:0 0 auto!important}
+    body.hangman-game-screen .man{transform:scale(.82);transform-origin:top center!important}
+    body.hangman-game-screen .trBox{margin-top:14px!important;min-height:46px!important;font-size:15px!important;padding:10px 12px!important;width:100%!important;max-width:100%!important;position:relative!important;z-index:1!important}
+    body.hangman-game-screen .dock{position:absolute!important;left:14px!important;right:14px!important;bottom:calc(var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 6px)!important;height:232px!important;gap:8px!important;padding:10px!important;border-radius:22px!important;overflow:hidden!important;box-shadow:0 24px 70px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.14)!important}
     body.hangman-game-screen .matrix{min-height:40px!important;max-height:48px!important;gap:5px!important;overflow:hidden!important;flex:0 0 auto!important}
     body.hangman-game-screen .slot{width:24px!important;height:36px!important;font-size:21px!important}
     body.hangman-game-screen .kb{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-rows:34px!important;align-content:start!important;gap:5px!important;min-height:0!important;overflow:hidden!important;flex:1 1 auto!important}
     body.hangman-game-screen .key{min-width:0!important;width:100%!important;height:34px!important;border-radius:10px!important;padding:0!important;font-size:13px!important}
     body.hangman-game-screen .hearts{display:grid!important;grid-template-columns:repeat(9,max-content)!important;gap:3px!important;max-width:142px!important}
     body.hangman-game-screen .heart{font-size:16px!important}.heart.lost{opacity:.16;filter:none!important}
-    body.hangman-game-screen .jokerCol{align-items:flex-end!important;gap:7px!important}.joker.secondary-joker{display:none!important}.joker.joker-main{width:auto!important;min-width:90px!important;height:38px!important;padding:0 12px!important;font-size:13px!important;font-weight:1000!important}
+    body.hangman-game-screen .jokerCol{align-items:flex-end!important;gap:6px!important;margin-top:4px!important}.joker.secondary-joker{display:none!important}.joker.joker-main{width:auto!important;min-width:86px!important;height:36px!important;padding:0 10px!important;font-size:12px!important;font-weight:1000!important}
     .hangman-back-btn{position:relative;z-index:20;align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;margin:0 0 8px;border:1px solid rgba(167,243,208,.25);background:linear-gradient(135deg,rgba(15,23,42,.78),rgba(30,64,175,.48));color:rgba(239,246,255,.94);border-radius:999px;padding:9px 12px;font:900 12px/1 Inter,system-ui,sans-serif;letter-spacing:.2px;box-shadow:0 14px 36px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
     .hangman-back-btn:active{transform:translateY(1px) scale(.99)}
     .game-over-modal{position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;padding:18px;background:radial-gradient(circle at 50% 20%,rgba(34,211,238,.18),transparent 34%),rgba(2,6,23,.74);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
@@ -132,7 +135,7 @@ function injectHangmanUiPolish() {
     .game-over-eyebrow{color:rgba(125,211,252,.92);font:900 11px/1 Inter,system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:10px}.game-over-card h2{margin:0 0 12px;font:1000 28px/1.05 Inter,system-ui,sans-serif;letter-spacing:0}
     .game-over-word{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:12px 14px;margin:12px 0;background:rgba(15,23,42,.52);color:rgba(226,232,240,.9);font:800 14px/1.4 Inter,system-ui,sans-serif}.game-over-word strong{color:#fff;font-size:17px}
     .game-over-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.game-over-stat{min-height:62px;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px;background:rgba(2,6,23,.34)}.game-over-stat span{display:block;color:rgba(203,213,225,.72);font:900 10px/1 Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}.game-over-stat b{font:1000 18px/1 Inter,system-ui,sans-serif}.game-over-record{min-height:24px;margin:8px 0 14px;color:#fde68a;font:900 13px/1.35 Inter,system-ui,sans-serif}.game-over-actions{display:grid;gap:10px}.game-over-actions button{border:0;border-radius:18px;min-height:48px;color:#f8fafc;font:1000 14px/1 Inter,system-ui,sans-serif;box-shadow:0 14px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.14)}.game-over-actions .primary{background:linear-gradient(135deg,#06b6d4,#2563eb 58%,#7c3aed)}.game-over-actions .secondary{background:rgba(15,23,42,.74);border:1px solid rgba(148,163,184,.28)}
-    @media(max-width:420px){body.hangman-game-screen #pageContent{padding:8px 12px calc(228px + var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 14px)!important}body.hangman-game-screen .dock{left:12px!important;right:12px!important;bottom:calc(var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 10px)!important;height:224px!important;padding:9px!important}body.hangman-game-screen .kb{grid-auto-rows:31px!important;gap:5px!important}body.hangman-game-screen .key{height:31px!important;font-size:12px!important}body.hangman-game-screen .slot{width:22px!important;height:32px!important;font-size:19px!important}.hangman-back-btn{padding:8px 10px;font-size:11px;margin-bottom:6px}.game-over-card{padding:18px;border-radius:23px}}
+    @media(max-width:420px){body.hangman-game-screen #pageContent{padding:8px 12px calc(224px + var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 10px)!important}body.hangman-game-screen .hud{top:54px!important}body.hangman-game-screen .rightHud{max-width:132px!important;min-width:116px!important;padding:7px!important}body.hangman-game-screen .score .val{font-size:22px!important}body.hangman-game-screen #hangmanScoreMeta{font-size:8px!important;max-width:116px!important}body.hangman-game-screen .stage{padding-top:92px!important}body.hangman-game-screen .dock{left:12px!important;right:12px!important;bottom:calc(var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 5px)!important;height:224px!important;padding:9px!important}body.hangman-game-screen .kb{grid-auto-rows:31px!important;gap:5px!important}body.hangman-game-screen .key{height:31px!important;font-size:12px!important}body.hangman-game-screen .slot{width:22px!important;height:32px!important;font-size:19px!important}.hangman-back-btn{padding:8px 10px;font-size:11px;margin-bottom:6px}.game-over-card{padding:18px;border-radius:23px}}
   `;
   document.head.appendChild(style);
 }
@@ -174,16 +177,10 @@ function createScoreMetaUi() {
   meta.innerHTML = `
     <div>SENİN REKORUN: <span id="personalBestVal">—</span></div>
     <div id="globalBestVal">GENEL REKOR: —</div>
-    <button id="listenSolvedBtn" type="button" style="border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:#fff;border-radius:999px;padding:8px 10px;font:1000 11px Inter,system-ui,sans-serif;display:none">Anlamı Dinle</button>
   `;
   jokerCol.appendChild(meta);
   personalBestVal = $("personalBestVal");
   globalBestVal = $("globalBestVal");
-  listenSolvedBtn = $("listenSolvedBtn");
-  listenSolvedBtn?.addEventListener("click", () => {
-    if (state.roundEnded && state.lastSolvedWord) speakGameText(state.lastSolvedWord, state.lastSolvedLang);
-    else if (state.clue) speakGameText(state.clue, "tr");
-  });
 }
 
 function createGameOverModal() {
@@ -389,10 +386,6 @@ function startRound() {
   renderJokers();
   resetMan();
   if ($("trText")) $("trText").textContent = `Türkçe anlam: ${state.clue}`;
-  if (listenSolvedBtn) {
-    listenSolvedBtn.textContent = "Anlamı Dinle";
-    listenSolvedBtn.style.display = "block";
-  }
 }
 
 function renderWord() {
@@ -513,10 +506,6 @@ function endRound(win) {
   state.lastSolvedWord = state.word;
   state.lastSolvedClue = state.clue;
   state.lastSolvedLang = state.lang;
-  if (listenSolvedBtn) {
-    listenSolvedBtn.textContent = "Kelimeyi Dinle";
-    listenSolvedBtn.style.display = "block";
-  }
   if (win) {
     const perfect = !state.wrongThisRound && !state.usedJokerThisRound;
     updateScore(40 + (perfect ? 20 : 0));
