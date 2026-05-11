@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Word Cracker</title>
+  <title>italkyAI • Code Cracker</title>
   <link rel="icon" href="data:," />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
   <style>
     :root{
@@ -22,486 +22,124 @@
       --shellLift:0px;
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      user-select:none;
-      outline:none;
-    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;outline:none;}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg-deep);font-family:'Outfit',sans-serif;color:var(--text);}
+    body{background:radial-gradient(circle at center,#001a00 0%,#000 100%);}
 
-    html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      overflow:hidden;
-      background:var(--bg-deep);
-      font-family:'Outfit',sans-serif;
-      color:var(--text);
-    }
+    .cosmos-bg{position:fixed;inset:0;z-index:0;}
+    .grid-lines{position:absolute;inset:0;background-image:linear-gradient(var(--matrix-dim) 1px,transparent 1px),linear-gradient(90deg,var(--matrix-dim) 1px,transparent 1px);background-size:30px 30px;opacity:.25;}
 
-    body{
-      background:
-        radial-gradient(circle at center, #001a00 0%, #000 100%);
-    }
-
-    .cosmos-bg{
-      position:fixed;
-      inset:0;
-      z-index:0;
-    }
-
-    .grid-lines{
-      position:absolute;
-      inset:0;
-      background-image:
-        linear-gradient(var(--matrix-dim) 1px, transparent 1px),
-        linear-gradient(90deg, var(--matrix-dim) 1px, transparent 1px);
-      background-size:30px 30px;
-      opacity:.25;
-    }
-
-    #pageContent{
-      height:100%;
-      padding:8px 10px calc(10px + var(--safeB) + var(--shellLift)) 10px;
-      overflow-y:auto;
-      overflow-x:hidden;
-      scrollbar-width:none;
-    }
+    #pageContent{height:100%;padding:8px 10px calc(10px + var(--safeB) + var(--shellLift));overflow-y:auto;overflow-x:hidden;scrollbar-width:none;}
     #pageContent::-webkit-scrollbar{display:none}
 
-    .mobile-frame{
-      width:100%;
-      max-width:480px;
-      min-height:100%;
-      margin:0 auto;
-      position:relative;
-      z-index:5;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      background:rgba(0,10,0,0.82);
-      backdrop-filter:blur(15px);
-      border:1px solid var(--border);
-      border-radius:22px;
-      overflow:hidden;
-      box-shadow:0 0 30px var(--matrix-dim);
-      transition: box-shadow .2s ease;
-    }
+    .mobile-frame{width:100%;max-width:480px;min-height:100%;margin:0 auto;position:relative;z-index:5;display:flex;flex-direction:column;gap:8px;background:rgba(0,10,0,0.82);backdrop-filter:blur(15px);border:1px solid var(--border);border-radius:22px;overflow:hidden;box-shadow:0 0 30px var(--matrix-dim);}
 
-    .header{
-      min-height:64px;
-      display:grid;
-      grid-template-columns:1fr auto auto;
-      align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      border-bottom:1px solid var(--border);
-      background:rgba(0,0,0,.28);
-    }
+    .header{min-height:64px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.28);}
+    .page-title{font-family:'Share Tech Mono',monospace;font-size:18px;letter-spacing:1px;color:var(--matrix);font-weight:900;text-shadow:0 0 10px var(--matrix);}
+    .lang-badge,.top-pill{min-width:66px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:0 10px;font-size:11px;font-weight:900;}
+    .lang-badge{background:var(--matrix);color:#001100;box-shadow:0 0 16px rgba(0,255,65,.25);}
+    .top-pill{border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;}
 
-    .page-title{
-      font-family:'Share Tech Mono', monospace;
-      font-size:18px;
-      letter-spacing:1px;
-      color:var(--matrix);
-      font-weight:900;
-      text-shadow:0 0 10px var(--matrix);
-    }
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 10px 4px;}
+    .stat{min-height:52px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;}
+    .statVal{font-family:'Share Tech Mono',monospace;font-size:15px;font-weight:900;color:var(--matrix);line-height:1;}
+    .statLab{font-size:8.5px;letter-spacing:.7px;opacity:.65;font-weight:900;}
 
-    .lang-badge,
-    .top-pill{
-      min-width:66px;
-      height:34px;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:0 10px;
-      font-size:11px;
-      font-weight:900;
-    }
+    .toast{text-align:center;min-height:18px;color:var(--matrix);font-size:12px;font-weight:800;opacity:0;transition:.25s;padding:0 12px;}
+    .game-screen{flex:1;display:flex;flex-direction:column;gap:12px;padding:0 12px 12px;}
 
-    .lang-badge{
-      background:var(--matrix);
-      color:#001100;
-      box-shadow:0 0 16px rgba(0,255,65,.25);
-    }
+    .guide-copy{margin:0;color:rgba(255,255,255,.72);font-size:12px;line-height:1.35;font-weight:800;text-align:center;}
+    .hint-box{width:100%;padding:16px;background:rgba(0,255,65,.05);border:1px solid var(--matrix);border-radius:16px;text-align:center;position:relative;overflow:hidden;}
+    .hint-box::before{content:'HEDEF ANLAM';position:absolute;top:4px;left:8px;font-size:8px;color:var(--matrix);opacity:.5;letter-spacing:1px;}
+    .hint-text{font-size:20px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;line-height:1.3;}
 
-    .top-pill{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.05);
-      color:#fff;
-    }
+    .listen-row{display:flex;justify-content:center;gap:8px;margin-top:-2px;}
+    .listen-btn{min-height:38px;padding:0 14px;border-radius:13px;border:1px solid rgba(0,255,65,.42);background:rgba(0,255,65,.10);color:#fff;font-weight:900;font-size:12px;cursor:pointer;}
 
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:8px;
-      padding:0 10px 4px;
-    }
+    .slots-container{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0;min-height:60px;align-content:center;padding:0 4px;}
+    .slot{width:40px;height:50px;border:1px solid var(--matrix);background:rgba(0,20,0,.5);display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:26px;font-weight:bold;color:var(--matrix);text-shadow:0 0 5px var(--matrix);cursor:pointer;transition:.12s;border-radius:8px;}
+    .slot.empty{border-color:rgba(0,255,65,.2);color:transparent;text-shadow:none;animation:pulseBorder 2s infinite;}
+    .slot.wrong{border-color:var(--error);color:var(--error);text-shadow:0 0 10px var(--error);animation:shake .4s;}
+    @keyframes pulseBorder{0%{border-color:rgba(0,255,65,.2)}50%{border-color:rgba(0,255,65,.6)}100%{border-color:rgba(0,255,65,.2)}}
 
-    .stat{
-      min-height:52px;
-      border:1px solid var(--border);
-      border-radius:14px;
-      background:rgba(255,255,255,.04);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:3px;
-      text-align:center;
-    }
+    .keyboard{flex:1;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-content:center;padding:0 2px 6px;}
+    .key-btn{width:48px;height:48px;background:rgba(0,255,65,.15);border:1px solid var(--matrix);border-radius:10px;color:#fff;font-size:20px;font-weight:bold;font-family:'Space Grotesk',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,50,0,.8);transition:.1s;}
+    .key-btn:active{transform:translateY(4px);box-shadow:none;}
+    .key-btn.used{opacity:0;pointer-events:none;transform:scale(.5);background:transparent;border-color:rgba(0,255,65,.1);box-shadow:none;}
 
-    .statVal{
-      font-family:'Share Tech Mono', monospace;
-      font-size:16px;
-      font-weight:900;
-      color:var(--matrix);
-      line-height:1;
-    }
+    .bottom-actions{display:flex;gap:10px;}
+    .btn-main{width:100%;padding:14px;border:none;border-radius:14px;font-weight:900;cursor:pointer;font-size:15px;}
+    .btn-primary{background:var(--matrix);color:#001100;box-shadow:0 0 20px rgba(0,255,65,.25);}
+    .btn-sec{background:transparent;border:1px solid var(--border);color:#fff;}
 
-    .statLab{
-      font-size:9px;
-      letter-spacing:1px;
-      opacity:.65;
-      font-weight:900;
-    }
-
-    .toast{
-      text-align:center;
-      min-height:18px;
-      color:var(--matrix);
-      font-size:12px;
-      font-weight:800;
-      opacity:0;
-      transition:0.25s;
-      padding:0 12px;
-    }
-
-    .game-screen{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      padding:0 12px 12px;
-    }
-
-    .hint-box{
-      width:100%;
-      padding:16px;
-      background:rgba(0,255,65,0.05);
-      border:1px solid var(--matrix);
-      border-radius:16px;
-      text-align:center;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .hint-box::before{
-      content:'HEDEF ANLAM';
-      position:absolute;
-      top:4px;
-      left:8px;
-      font-size:8px;
-      color:var(--matrix);
-      opacity:0.5;
-      letter-spacing:1px;
-    }
-
-    .hint-text{
-      font-size:20px;
-      font-weight:800;
-      color:#fff;
-      text-transform:uppercase;
-      letter-spacing:1px;
-      line-height:1.3;
-    }
-
-    .slots-container{
-      display:flex;
-      gap:6px;
-      justify-content:center;
-      flex-wrap:wrap;
-      margin:0;
-      min-height:60px;
-      align-content:center;
-      padding:0 4px;
-    }
-
-    .slot{
-      width:40px;
-      height:50px;
-      border:1px solid var(--matrix);
-      background:rgba(0,20,0,0.5);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:'Share Tech Mono', monospace;
-      font-size:26px;
-      font-weight:bold;
-      color:var(--matrix);
-      text-shadow:0 0 5px var(--matrix);
-      cursor:pointer;
-      transition:0.12s;
-      border-radius:8px;
-    }
-
-    .slot.empty{
-      border-color:rgba(0,255,65,0.2);
-      color:transparent;
-      text-shadow:none;
-      animation:pulseBorder 2s infinite;
-    }
-
-    .slot.wrong{
-      border-color:var(--error);
-      color:var(--error);
-      text-shadow:0 0 10px var(--error);
-      animation:shake 0.4s;
-    }
-
-    @keyframes pulseBorder{
-      0%{border-color:rgba(0,255,65,0.2)}
-      50%{border-color:rgba(0,255,65,0.6)}
-      100%{border-color:rgba(0,255,65,0.2)}
-    }
-
-    .keyboard{
-      flex:1;
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      justify-content:center;
-      align-content:center;
-      padding:0 2px 6px;
-    }
-
-    .key-btn{
-      width:48px;
-      height:48px;
-      background:rgba(0,255,65,0.15);
-      border:1px solid var(--matrix);
-      border-radius:10px;
-      color:#fff;
-      font-size:20px;
-      font-weight:bold;
-      font-family:'Space Grotesk', sans-serif;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 4px 0 rgba(0,50,0,0.8);
-      transition:0.1s;
-    }
-
-    .key-btn:active{
-      transform:translateY(4px);
-      box-shadow:none;
-    }
-
-    .key-btn.used{
-      opacity:0;
-      pointer-events:none;
-      transform:scale(0.5);
-      background:transparent;
-      border-color:rgba(0,255,65,0.1);
-      box-shadow:none;
-    }
-
-    .bottom-actions{
-      display:flex;
-      gap:10px;
-    }
-
-    .btn-main{
-      width:100%;
-      padding:14px;
-      border:none;
-      border-radius:14px;
-      font-weight:900;
-      cursor:pointer;
-      font-size:15px;
-    }
-
-    .btn-primary{
-      background:var(--matrix);
-      color:#001100;
-      box-shadow:0 0 20px rgba(0,255,65,0.25);
-    }
-
-    .btn-sec{
-      background:transparent;
-      border:1px solid var(--border);
-      color:#fff;
-    }
-
-    .modal-wrap{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.95);
-      z-index:99;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      backdrop-filter:blur(10px);
-      padding:20px;
-    }
-
-    .modal-card{
-      width:100%;
-      max-width:360px;
-      background:#050505;
-      border:1px solid var(--matrix);
-      border-radius:18px;
-      padding:24px;
-      text-align:center;
-      box-shadow:0 0 40px var(--matrix-dim);
-      max-height:88vh;
-      overflow:auto;
-      scrollbar-width:none;
-    }
+    .modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:99;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);padding:20px;}
+    .modal-card{width:100%;max-width:360px;background:#050505;border:1px solid var(--matrix);border-radius:18px;padding:24px;text-align:center;box-shadow:0 0 40px var(--matrix-dim);max-height:88vh;overflow:auto;scrollbar-width:none;}
     .modal-card::-webkit-scrollbar{display:none}
-
-    .lang-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin:18px 0;
-    }
-
-    .lang-btn{
-      background:rgba(0,255,65,0.08);
-      border:1px solid var(--border);
-      color:#fff;
-      min-height:78px;
-      border-radius:12px;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      font-weight:800;
-    }
-
-    .lang-btn .flag{font-size:26px}
-    .lang-btn.active{
-      background:var(--matrix);
-      color:#001100;
-      box-shadow:0 0 15px var(--matrix);
-    }
-
-    .rulesList{
-      text-align:left;
-      margin:16px 0 8px;
-      padding-left:18px;
-      line-height:1.8;
-      color:rgba(255,255,255,.85);
-      font-size:14px;
-    }
-
+    .lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0;}
+    .lang-btn{background:rgba(0,255,65,.08);border:1px solid var(--border);color:#fff;min-height:78px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:800;}
+    .lang-btn .flag{font-size:26px}.lang-btn.active{background:var(--matrix);color:#001100;box-shadow:0 0 15px var(--matrix);}
     .hidden{display:none!important}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
-    @keyframes shake{
-      0%,100%{transform:translateX(0)}
-      25%{transform:translateX(-5px)}
-      75%{transform:translateX(5px)}
+    @media(max-width:380px){
+      .stats{gap:5px}.statVal{font-size:13px}.statLab{font-size:7.5px}.key-btn{width:42px;height:44px}.slot{width:36px;height:46px}.hint-text{font-size:18px}.bottom-actions{gap:8px}.btn-main{font-size:13px;padding:13px 8px}
     }
   </style>
 </head>
 <body>
-
   <div class="cosmos-bg"><div class="grid-lines"></div></div>
 
   <div class="mobile-frame" id="pageContent">
     <div class="header">
-      <div class="page-title">WORD_CRACKER</div>
+      <div class="page-title">CODE_CRACKER</div>
       <div id="langBadge" class="lang-badge">EN</div>
       <div id="scoreTop" class="top-pill">0</div>
     </div>
 
     <div class="stats">
-      <div class="stat">
-        <div id="scoreVal" class="statVal">0</div>
-        <div class="statLab">SKOR</div>
-      </div>
-      <div class="stat">
-        <div id="livesVal" class="statVal">❤️❤️❤️</div>
-        <div class="statLab">CAN</div>
-      </div>
-      <div class="stat">
-        <div id="roundVal" class="statVal">1/30</div>
-        <div class="statLab">TUR</div>
-      </div>
+      <div class="stat"><div id="scoreVal" class="statVal">0</div><div class="statLab">SKOR</div></div>
+      <div class="stat"><div id="highScoreVal" class="statVal">0</div><div class="statLab">YÜKSEK</div></div>
+      <div class="stat"><div id="livesVal" class="statVal">3</div><div class="statLab">CAN</div></div>
+      <div class="stat"><div id="roundVal" class="statVal">1/30</div><div class="statLab">TUR</div></div>
     </div>
 
     <div id="resToast" class="toast">HAZIR</div>
 
     <div class="game-screen" id="gameScreen">
-      <div class="hint-box">
-        <div class="hint-text" id="hintText">...</div>
-      </div>
-
+      <p class="guide-copy">Hedef anlamı inceleyin, doğru kelimeyi harflerden kurun.</p>
+      <div class="hint-box"><div class="hint-text" id="hintText">...</div></div>
+      <div class="listen-row"><button class="listen-btn" id="listenBtn" type="button">Dinle</button></div>
       <div class="slots-container" id="slotsArea"></div>
       <div class="keyboard" id="keyboardArea"></div>
-
       <div class="bottom-actions">
-        <button class="btn-main btn-primary" id="replayBtn">YENİDEN DENE</button>
-        <button class="btn-main btn-sec" id="menuBtn">ANA MENÜ</button>
+        <button class="btn-main btn-primary" id="replayBtn" type="button">YENİDEN DENE</button>
+        <button class="btn-main btn-sec" id="menuBtn" type="button">ANA MENÜ</button>
       </div>
     </div>
   </div>
 
-  <div class="modal-wrap" id="startModal">
+  <div class="modal-wrap hidden" id="langModal">
     <div class="modal-card">
-      <h2 style="color:var(--matrix); font-family:'Share Tech Mono'; margin:0">WORD CRACKER</h2>
-      <p style="color:#fff; opacity:0.7; font-size:13px; margin-top:10px">Bayrağa dokun, dili seç.</p>
-
+      <h2 style="color:var(--matrix);font-family:'Share Tech Mono';margin:0">CODE CRACKER</h2>
+      <p style="color:#fff;opacity:.72;font-size:13px;margin-top:10px">Bu oyunu hangi dilde oynamak istiyorsunuz?</p>
       <div class="lang-grid" id="langGrid"></div>
-      <button class="btn-main btn-primary" id="toRulesBtn">DEVAM ET</button>
-    </div>
-  </div>
-
-  <div class="modal-wrap hidden" id="rulesModal">
-    <div class="modal-card">
-      <h2 style="color:var(--gold); font-family:'Share Tech Mono'; margin:0">KURALLAR</h2>
-      <ul class="rulesList">
-        <li>Üstte verilen Türkçe anlamın yabancı dildeki kelimesini çöz.</li>
-        <li>Harfleri doğru sırayla yerleştir.</li>
-        <li>Yanlış kelime kurarsan bir can gider.</li>
-        <li>Doğru kelimeyi sistem seçili dilde sesli okur.</li>
-        <li>Havuz bitmeden aynı kelime tekrar gelmez.</li>
-      </ul>
-      <button class="btn-main btn-primary" id="startBtn">ANLADIM, BAŞLA</button>
+      <button class="btn-main btn-primary" id="startFromLangBtn" type="button">BAŞLA</button>
     </div>
   </div>
 
   <div class="modal-wrap hidden" id="endModal">
     <div class="modal-card">
-      <h2 id="endTitle" style="color:var(--matrix); font-family:'Share Tech Mono'; margin:0">OYUN BİTTİ</h2>
-      <div id="endDesc" style="color:#fff; opacity:0.9; margin:15px 0; font-size:14px; line-height:1.6;">...</div>
-      <button class="btn-main btn-primary" id="endReplayBtn">YENİDEN DENE</button>
-      <button class="btn-main btn-sec" id="endMenuBtn">ANA MENÜ</button>
+      <h2 id="endTitle" style="color:var(--matrix);font-family:'Share Tech Mono';margin:0">OYUN BİTTİ</h2>
+      <div id="endDesc" style="color:#fff;opacity:.9;margin:15px 0;font-size:14px;line-height:1.6">...</div>
+      <button class="btn-main btn-primary" id="endReplayBtn" type="button">YENİDEN DENE</button>
+      <button class="btn-main btn-sec" id="endMenuBtn" type="button">ANA MENÜ</button>
     </div>
   </div>
 
   <script type="module">
     const $ = id => document.getElementById(id);
-
-    let currentLang = "en";
-    let runList = [];
-    let runIndex = 0;
-    let currentWordObj = null;
-    let targetChars = [];
-    let userChars = [];
-    let shuffledChars = [];
-    let score = 0;
-    let lives = 3;
-    let lastSpoken = 0;
-
     const TOTAL_ROUNDS = 30;
-
+    const SUPPORTED_LANGS = ["en", "de", "fr", "es", "it"];
     const LANGS = {
       en:{ name:"İngilizce", flag:"🇬🇧", bcp:"en-US" },
       de:{ name:"Almanca", flag:"🇩🇪", bcp:"de-DE" },
@@ -510,252 +148,103 @@
       it:{ name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" }
     };
 
-    async function safeMountShell() {
-      try {
-        const mod = await import("/js/ui_shell.js");
-        if (typeof mod.mountShell === "function") {
-          mod.mountShell({ scroll:"none" });
-        }
-      } catch (e) {
-        console.warn("ui_shell.js yüklenemedi, oyuna devam ediliyor.", e);
-      }
+    let currentLang = readInitialLang();
+    let runList = [];
+    let runIndex = 0;
+    let currentWordObj = null;
+    let targetChars = [];
+    let userChars = [];
+    let shuffledChars = [];
+    let score = 0;
+    let highScore = 0;
+    let lives = 3;
+    let lastSpoken = 0;
+    let gameStarted = false;
+    const usedWordCracker = {};
+
+    function readInitialLang(){
+      const urlLang = new URLSearchParams(location.search).get("lang");
+      const stored = sessionStorage.getItem("italky_game_selected_lang_v1") || localStorage.getItem("italky_game_lang_v1");
+      const candidate = String(urlLang || stored || "en").toLowerCase().slice(0,2);
+      return SUPPORTED_LANGS.includes(candidate) ? candidate : "en";
     }
 
-    async function safeEnsureAuth() {
-      try {
+    function highScoreKey(){
+      return `italky_game_high_score_code_cracker_${currentLang}`;
+    }
+
+    function readHighScore(){
+      highScore = Math.max(0, Number(localStorage.getItem(highScoreKey()) || 0));
+      $("highScoreVal").innerText = highScore;
+    }
+
+    function updateHighScore(showToast = false){
+      if (score <= highScore) return false;
+      highScore = score;
+      localStorage.setItem(highScoreKey(), String(highScore));
+      $("highScoreVal").innerText = highScore;
+      if (showToast) toast("Yeni yüksek skor!", "var(--gold)");
+      return true;
+    }
+
+    async function safeMountShell(){
+      try{
+        const mod = await import("/js/ui_shell.js");
+        if (typeof mod.mountShell === "function") mod.mountShell({ scroll:"none" });
+      }catch(e){ console.warn("[CODE_CRACKER] ui shell skipped", e); }
+    }
+
+    async function safeEnsureAuth(){
+      try{
         const mod = await import("/js/auth.js");
-        if (typeof mod.ensureAuthAndCacheUser === "function") {
-          return await mod.ensureAuthAndCacheUser();
-        }
-        return true;
-      } catch (e) {
-        console.warn("auth.js yüklenemedi, oyuna devam ediliyor.", e);
-        return true;
-      }
+        if (typeof mod.ensureAuthAndCacheUser === "function") return await mod.ensureAuthAndCacheUser();
+      }catch(e){ console.warn("[CODE_CRACKER] auth check skipped", e); }
+      return true;
     }
 
     let audioCtx = null;
     function getAudioCtx(){
       try{
-        if(!audioCtx){
-          const AC = window.AudioContext || window.webkitAudioContext;
-          audioCtx = AC ? new AC() : null;
-        }
+        if(!audioCtx){ const AC = window.AudioContext || window.webkitAudioContext; audioCtx = AC ? new AC() : null; }
         return audioCtx;
-      }catch{
-        return null;
-      }
+      }catch{ return null; }
     }
 
     async function unlockAudio(){
-      try{
-        const ctx = getAudioCtx();
-        if(ctx && ctx.state === "suspended") await ctx.resume();
-      }catch{}
+      try{ const ctx = getAudioCtx(); if(ctx && ctx.state === "suspended") await ctx.resume(); }catch{}
     }
 
-    function playSFXInternal({freq=440,duration=0.08,gain=0.03,type="sine",when=0}){
+    function playSFXInternal({freq=440,duration=.08,gain=.03,type="sine",when=0}){
       const c = getAudioCtx();
       if(!c) return;
       if (c.state === "suspended") c.resume().catch(()=>{});
-
       const osc = c.createOscillator();
       const g = c.createGain();
-      osc.connect(g);
-      g.connect(c.destination);
-      osc.frequency.value = freq;
-      osc.type = type;
-
+      osc.connect(g); g.connect(c.destination);
+      osc.frequency.value = freq; osc.type = type;
       const now = c.currentTime + when;
       g.gain.setValueAtTime(gain, now);
-      g.gain.exponentialRampToValueAtTime(0.01, now + duration);
-
-      osc.start(now);
-      osc.stop(now + duration);
+      g.gain.exponentialRampToValueAtTime(.01, now + duration);
+      osc.start(now); osc.stop(now + duration);
     }
 
-    function playSFX(type) {
-      if (type === "type") playSFXInternal({freq:800,duration:0.05,gain:0.05,type:"square"});
-      if (type === "win") {
-        playSFXInternal({freq:440,duration:0.15,gain:0.08,type:"sawtooth"});
-        playSFXInternal({freq:880,duration:0.15,gain:0.05,type:"sawtooth",when:0.16});
-      }
-      if (type === "error") {
-        playSFXInternal({freq:100,duration:0.20,gain:0.12,type:"sawtooth"});
-      }
+    function playSFX(type){
+      if (type === "type") playSFXInternal({freq:800,duration:.05,gain:.05,type:"square"});
+      if (type === "win") { playSFXInternal({freq:440,duration:.15,gain:.08,type:"sawtooth"}); playSFXInternal({freq:880,duration:.15,gain:.05,type:"sawtooth",when:.16}); }
+      if (type === "error") playSFXInternal({freq:100,duration:.20,gain:.12,type:"sawtooth"});
     }
 
-    ["click","touchstart","pointerdown"].forEach(evt => {
-      window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
-    });
+    ["click","touchstart","pointerdown"].forEach(evt => window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true }));
 
     function normalizeCharString(s){
       let t = String(s || "");
-      t = t.replace(/ß/g, "ss").replace(/Æ/g, "AE").replace(/æ/g, "ae").replace(/Œ/g, "OE").replace(/œ/g, "oe");
-      t = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      t = t.replace(/ß/g,"ss").replace(/Æ/g,"AE").replace(/æ/g,"ae").replace(/Œ/g,"OE").replace(/œ/g,"oe");
+      t = t.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
       return t.toUpperCase();
     }
 
     function normalizeKey(s){
-      return String(s||"")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"")
-        .replace(/[^a-z0-9]/g,"")
-        .trim();
-    }
-
-    function pickVoiceFor(langCode){
-      try{
-        const voices = speechSynthesis?.getVoices?.() || [];
-        if(!voices.length) return null;
-        const lc = String(langCode||"").toLowerCase();
-        let v = voices.find(x => (x.lang||"").toLowerCase() === lc);
-        if(v) return v;
-        const short = lc.split("-")[0];
-        v = voices.find(x => (x.lang||"").toLowerCase().startsWith(short));
-        return v || null;
-      }catch{
-        return null;
-      }
-    }
-
-    function speak(text) {
-      const now = Date.now();
-      if (now - lastSpoken < 250) return;
-      lastSpoken = now;
-
-      const clean = String(text || "").trim();
-      if (!clean) return;
-      const bcp = LANGS[currentLang]?.bcp || "en-US";
-
-      try {
-        if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-          window.NativeTTS.speak(clean, bcp);
-          return;
-        }
-      } catch (e) {
-        console.warn("NativeTTS speak failed:", e);
-      }
-
-      try {
-        if (!("speechSynthesis" in window)) return;
-
-        speechSynthesis.cancel();
-
-        const u = new SpeechSynthesisUtterance(clean);
-        u.lang = bcp;
-        u.rate = 0.85;
-        u.pitch = 1;
-        u.volume = 1;
-
-        const v = pickVoiceFor(bcp);
-        if (v) u.voice = v;
-
-        setTimeout(() => {
-          try { speechSynthesis.speak(u); } catch {}
-        }, 120);
-      } catch {}
-    }
-
-    function getPublicLangUrl(langCode){
-      return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
-    }
-
-    async function fileExists(url){
-      try{
-        const res = await fetch(url, { method:"HEAD", cache:"no-store" });
-        return res.ok;
-      }catch{
-        return false;
-      }
-    }
-
-    function extractItems(payload){
-      if (Array.isArray(payload)) return payload;
-      if (payload && typeof payload === "object") {
-        const keys = ["items","words","data","list","entries","pool"];
-        for (const key of keys) {
-          if (Array.isArray(payload[key])) return payload[key];
-        }
-      }
-      return [];
-    }
-
-    function normalizePoolItems(items){
-      return items.map((item) => {
-        const rawWord =
-          item?.word ??
-          item?.w ??
-          item?.text ??
-          item?.term ??
-          item?.answer ??
-          "";
-
-        const rawMeaning =
-          item?.meaning ??
-          item?.tr ??
-          item?.translation ??
-          "";
-
-        return {
-          w: String(rawWord || "").trim(),
-          tr: String(rawMeaning || "").trim()
-        };
-      }).filter(x => x.w && x.tr);
-    }
-
-    async function loadLangPool(langCode){
-      const url = getPublicLangUrl(langCode);
-      const ok = await fileExists(url);
-      if (!ok) return { items: [] };
-
-      const res = await fetch(url, { cache:"no-store" });
-      if (!res.ok) return { items: [] };
-
-      const json = await res.json();
-      return { items: normalizePoolItems(extractItems(json)) };
-    }
-
-    const usedWordCracker = {};
-    function pickFreshSet(items, count, langCode){
-      if (!usedWordCracker[langCode]) usedWordCracker[langCode] = new Set();
-      const used = usedWordCracker[langCode];
-
-      if (used.size >= items.length) used.clear();
-
-      const fresh = [];
-      let guard = 0;
-      while (fresh.length < count && guard < items.length * 20) {
-        const pick = items[Math.floor(Math.random() * items.length)];
-        const cleanWord = normalizeCharString(pick.w).replace(/[^A-Z]/g, "");
-        const key = normalizeKey(pick.w);
-
-        if (
-          cleanWord.length >= 4 &&
-          cleanWord.length <= 8 &&
-          !used.has(key) &&
-          !fresh.some(x => normalizeKey(x.w) === key)
-        ) {
-          used.add(key);
-          fresh.push(pick);
-        }
-        guard++;
-      }
-
-      if (fresh.length < count) {
-        const fallback = items.filter(x => !fresh.some(y => normalizeKey(y.w) === normalizeKey(x.w)));
-        while (fresh.length < count && fallback.length) {
-          const item = fallback.shift();
-          const cleanWord = normalizeCharString(item.w).replace(/[^A-Z]/g, "");
-          if (cleanWord.length >= 4 && cleanWord.length <= 8) {
-            used.add(normalizeKey(item.w));
-            fresh.push(item);
-          }
-        }
-      }
-
-      return fresh.sort(() => Math.random() - 0.5).slice(0, count);
+      return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"").trim();
     }
 
     function toast(msg, color = "var(--matrix)"){
@@ -764,58 +253,146 @@
       t.style.color = color;
       t.style.opacity = "1";
       clearTimeout(window.__wordToast);
-      window.__wordToast = setTimeout(() => t.style.opacity = "0", 1600);
+      window.__wordToast = setTimeout(() => t.style.opacity = "0", 1700);
     }
 
-    function updateStats() {
+    function pickVoiceFor(langCode){
+      try{
+        const voices = speechSynthesis?.getVoices?.() || [];
+        if(!voices.length) return null;
+        const lc = String(langCode||"").toLowerCase();
+        return voices.find(x => (x.lang||"").toLowerCase() === lc) || voices.find(x => (x.lang||"").toLowerCase().startsWith(lc.split("-")[0])) || null;
+      }catch{ return null; }
+    }
+
+    function speak(text){
+      const clean = String(text || "").trim();
+      if (!clean) return;
+      const now = Date.now();
+      if (now - lastSpoken < 220) return;
+      lastSpoken = now;
+      const bcp = LANGS[currentLang]?.bcp || "en-US";
+
+      try{
+        if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+          if (typeof window.NativeTTS.stop === "function") window.NativeTTS.stop();
+          window.NativeTTS.speak(clean, bcp);
+          return;
+        }
+      }catch(e){ console.warn("[CODE_CRACKER] NativeTTS failed", e); }
+
+      try{
+        if (!("speechSynthesis" in window)) return;
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(clean);
+        u.lang = bcp; u.rate = .86; u.pitch = 1; u.volume = 1;
+        const v = pickVoiceFor(bcp);
+        if (v) u.voice = v;
+        setTimeout(() => { try{ speechSynthesis.speak(u); }catch{} }, 80);
+      }catch(e){ console.warn("[CODE_CRACKER] web TTS failed", e); }
+    }
+
+    function getPublicLangUrl(langCode){
+      return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
+    }
+
+    function extractItems(payload){
+      if (Array.isArray(payload)) return payload;
+      if (payload && typeof payload === "object") {
+        for (const key of ["items","words","data","list","entries","pool"]) if (Array.isArray(payload[key])) return payload[key];
+      }
+      return [];
+    }
+
+    function normalizePoolItems(items){
+      return items.map(item => {
+        const rawWord = item?.word ?? item?.w ?? item?.text ?? item?.term ?? item?.answer ?? "";
+        const rawMeaning = item?.meaning ?? item?.tr ?? item?.translation ?? item?.hint ?? "";
+        return { w:String(rawWord || "").trim(), tr:String(rawMeaning || "").trim() };
+      }).filter(x => x.w && x.tr);
+    }
+
+    async function loadLangPool(langCode){
+      const url = getPublicLangUrl(langCode);
+      try{
+        const res = await fetch(url, { cache:"no-store" });
+        if (!res.ok) return { items: [] };
+        const json = await res.json();
+        return { items: normalizePoolItems(extractItems(json)) };
+      }catch(e){
+        console.warn("[CODE_CRACKER] pool load failed", { langCode, error:e });
+        return { items: [] };
+      }
+    }
+
+    function pickFreshSet(items, count, langCode){
+      if (!usedWordCracker[langCode]) usedWordCracker[langCode] = new Set();
+      const used = usedWordCracker[langCode];
+      if (used.size >= items.length) used.clear();
+      const fresh = [];
+      let guard = 0;
+      while (fresh.length < count && guard < items.length * 24) {
+        const pick = items[Math.floor(Math.random() * items.length)];
+        const cleanWord = normalizeCharString(pick.w).replace(/[^A-Z]/g,"");
+        const key = normalizeKey(pick.w);
+        if (cleanWord.length >= 4 && cleanWord.length <= 8 && !used.has(key) && !fresh.some(x => normalizeKey(x.w) === key)) {
+          used.add(key); fresh.push(pick);
+        }
+        guard++;
+      }
+      if (fresh.length < count) {
+        for (const item of items) {
+          if (fresh.length >= count) break;
+          const cleanWord = normalizeCharString(item.w).replace(/[^A-Z]/g,"");
+          if (cleanWord.length >= 4 && cleanWord.length <= 8 && !fresh.some(x => normalizeKey(x.w) === normalizeKey(item.w))) fresh.push(item);
+        }
+      }
+      return fresh.sort(() => Math.random() - .5).slice(0, count);
+    }
+
+    function updateStats(){
       $("scoreVal").innerText = score;
       $("scoreTop").innerText = score;
-      let hearts = "";
-      for (let i = 0; i < 3; i++) hearts += (i < lives ? "❤️" : "💀");
-      $("livesVal").innerText = hearts;
+      $("livesVal").innerText = String(lives);
       $("roundVal").innerText = `${Math.min(runIndex + 1, TOTAL_ROUNDS)}/${TOTAL_ROUNDS}`;
+      $("langBadge").innerText = currentLang.toUpperCase();
+      $("highScoreVal").innerText = highScore;
     }
 
     function renderLangs(){
       $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
-        <button class="lang-btn ${currentLang===code ? "active" : ""}" data-lang="${code}">
-          <div class="flag">${meta.flag}</div>
-          <div>${meta.name}</div>
+        <button class="lang-btn ${currentLang===code ? "active" : ""}" data-lang="${code}" type="button">
+          <div class="flag">${meta.flag}</div><div>${meta.name}</div>
         </button>
       `).join("");
-
       $("langGrid").querySelectorAll(".lang-btn").forEach(btn => {
         btn.onclick = () => {
           currentLang = btn.dataset.lang;
-          $("langBadge").innerText = currentLang.toUpperCase();
-          renderLangs();
+          localStorage.setItem("italky_game_lang_v1", currentLang);
+          readHighScore(); updateStats(); renderLangs();
         };
       });
     }
 
-    async function ensureRunList() {
+    async function ensureRunList(){
+      toast("Kelimeler hazırlanıyor...");
       const poolCache = await loadLangPool(currentLang);
-
       if (!poolCache?.items?.length) {
-        alert("Dil havuzu boş.");
+        toast("Bu dil için oyun içeriği hazırlanamadı.", "var(--gold)");
         return false;
       }
-
       runList = pickFreshSet(poolCache.items, TOTAL_ROUNDS, currentLang);
       runIndex = 0;
-
       if (!runList.length) {
-        alert("Bu dil için uygun kelime bulunamadı.");
+        toast("Bu dil için uygun kelime bulunamadı.", "var(--gold)");
         return false;
       }
-
       return true;
     }
 
-    function renderUI() {
+    function renderUI(){
       const slotsArea = $("slotsArea");
       const keyboardArea = $("keyboardArea");
-
       slotsArea.innerHTML = "";
       userChars.forEach((char, idx) => {
         const slot = document.createElement("div");
@@ -824,9 +401,8 @@
         if (char) slot.onclick = () => removeChar(idx);
         slotsArea.appendChild(slot);
       });
-
       keyboardArea.innerHTML = "";
-      shuffledChars.forEach((item) => {
+      shuffledChars.forEach(item => {
         const btn = document.createElement("div");
         const isUsed = userChars.some(u => u && u.id === item.id);
         btn.className = isUsed ? "key-btn used" : "key-btn";
@@ -843,164 +419,118 @@
       let guard = 0;
       while(out.length < n && guard < 300){
         const ch = common[Math.floor(Math.random()*common.length)];
-        if(!set.has(ch)){
-          set.add(ch);
-          out.push({ id: `d${out.length}_${guard}`, char: ch });
-        }
+        if(!set.has(ch)){ set.add(ch); out.push({ id:`d${out.length}_${guard}`, char:ch }); }
         guard++;
       }
       return out;
     }
 
-    async function loadLevel() {
-      if (runIndex >= runList.length || runIndex >= TOTAL_ROUNDS) {
-        endGame();
-        return;
-      }
-
+    async function loadLevel(){
+      if (runIndex >= runList.length || runIndex >= TOTAL_ROUNDS) { endGame(); return; }
       currentWordObj = runList[runIndex];
-
       const rawWord = currentWordObj.w;
       const hint = currentWordObj.tr || "...";
-
       $("hintText").innerText = String(hint).toUpperCase();
-
-      const cleaned = normalizeCharString(rawWord).replace(/[^A-Z]/g, "");
+      const cleaned = normalizeCharString(rawWord).replace(/[^A-Z]/g,"");
       targetChars = cleaned.split("");
       userChars = new Array(targetChars.length).fill(null);
-
-      const base = targetChars.map((char, idx) => ({ id: `t${idx}`, char }));
+      const base = targetChars.map((char, idx) => ({ id:`t${idx}`, char }));
       const decoys = makeDecoys(targetChars, 2);
-
-      shuffledChars = base.concat(decoys).sort(() => Math.random() - 0.5);
-
-      renderUI();
-      updateStats();
-
-      setTimeout(() => {
-        speak(rawWord);
-      }, 350);
+      shuffledChars = base.concat(decoys).sort(() => Math.random() - .5);
+      renderUI(); updateStats();
     }
 
-    function typeChar(item) {
+    function typeChar(item){
       const emptyIndex = userChars.findIndex(c => c === null);
       if (emptyIndex === -1) return;
-
       userChars[emptyIndex] = item;
-      playSFX("type");
-      renderUI();
-
+      playSFX("type"); renderUI();
       if (!userChars.includes(null)) checkWord();
     }
 
-    function removeChar(index) {
+    function removeChar(index){
       userChars[index] = null;
-      playSFX("type");
-      renderUI();
+      playSFX("type"); renderUI();
     }
 
-    function checkWord() {
+    function checkWord(){
       const currentString = userChars.map(u => u.char).join("");
       const targetString = targetChars.join("");
-
       if (currentString === targetString) {
         playSFX("win");
         score += 100;
-        updateStats();
-
-        speak(currentWordObj.w);
-
-        setTimeout(() => {
-          runIndex++;
-          loadLevel();
-        }, 1200);
-
-      } else {
-        playSFX("error");
-        lives--;
-        updateStats();
-
-        const slots = document.querySelectorAll(".slot");
-        slots.forEach(s => s.classList.add("wrong"));
-
-        setTimeout(() => {
-          slots.forEach(s => s.classList.remove("wrong"));
-          userChars.fill(null);
-          renderUI();
-
-          if (lives <= 0) {
-            endGame();
-          } else {
-            speak(currentWordObj.w);
-          }
-        }, 650);
-      }
-    }
-
-    function endGame() {
-      $("endModal").classList.remove("hidden");
-
-      const correctWordRaw = (currentWordObj?.w || "").trim();
-      const correctWordClean = normalizeCharString(correctWordRaw).replace(/[^A-Z]/g,"");
-
-      $("endTitle").innerText = "OYUN BİTTİ";
-      $("endDesc").innerHTML = `
-        Toplam Puan: <strong style="color:#00ff41">${score}</strong><br><br>
-        DOĞRU KELİME:<br>
-        <strong style="color:#fff; font-size:24px; letter-spacing:2px">${correctWordClean}</strong>
-      `;
-
-      speak(correctWordRaw);
-    }
-
-    async function startGame() {
-      const ok = await safeEnsureAuth();
-      if (!ok) {
-        location.href = "/pages/login.html";
+        updateHighScore(false); updateStats();
+        toast("Doğru!", "var(--ok)");
+        setTimeout(() => { runIndex++; loadLevel(); }, 850);
         return;
       }
 
-      score = 0;
-      lives = 3;
-      $("startModal").classList.add("hidden");
-      $("rulesModal").classList.add("hidden");
-      $("endModal").classList.add("hidden");
+      playSFX("error");
+      lives--;
+      updateStats();
+      const slots = document.querySelectorAll(".slot");
+      slots.forEach(s => s.classList.add("wrong"));
+      setTimeout(() => {
+        slots.forEach(s => s.classList.remove("wrong"));
+        userChars.fill(null); renderUI();
+        if (lives <= 0) endGame();
+        else toast("Tekrar deneyin.", "var(--gold)");
+      }, 650);
+    }
 
+    function endGame(){
+      const isRecord = updateHighScore(false);
+      $("endModal").classList.remove("hidden");
+      const correctWordRaw = (currentWordObj?.w || "").trim();
+      const correctWordClean = normalizeCharString(correctWordRaw).replace(/[^A-Z]/g,"");
+      $("endTitle").innerText = isRecord ? "YENİ YÜKSEK SKOR!" : "OYUN BİTTİ";
+      $("endDesc").innerHTML = `
+        Toplam Puan: <strong style="color:#00ff41">${score}</strong><br>
+        Yüksek Skor: <strong style="color:#ffb800">${highScore}</strong><br><br>
+        DOĞRU KELİME:<br>
+        <strong style="color:#fff;font-size:24px;letter-spacing:2px">${correctWordClean || "-"}</strong>
+      `;
+    }
+
+    async function startGame(){
+      const ok = await safeEnsureAuth();
+      if (!ok) { location.href = "/pages/login.html?next=/pages/game_menu.html"; return; }
+      gameStarted = true;
+      localStorage.setItem("italky_game_lang_v1", currentLang);
+      score = 0; lives = 3;
+      $("langModal").classList.add("hidden");
+      $("endModal").classList.add("hidden");
+      readHighScore(); updateStats();
       const loaded = await ensureRunList();
       if (!loaded) return;
-
       loadLevel();
     }
 
-    $("toRulesBtn").onclick = async () => {
-      const ok = await safeEnsureAuth();
-      if (!ok) {
-        location.href = "/pages/login.html";
+    function showLanguageModalIfNeeded(){
+      const hasUrlLang = SUPPORTED_LANGS.includes(String(new URLSearchParams(location.search).get("lang") || "").toLowerCase().slice(0,2));
+      if (hasUrlLang) {
+        startGame();
         return;
       }
-      $("startModal").classList.add("hidden");
-      $("rulesModal").classList.remove("hidden");
-    };
+      renderLangs();
+      $("langModal").classList.remove("hidden");
+    }
 
-    $("startBtn").onclick = startGame;
+    $("listenBtn").onclick = () => speak(currentWordObj?.w || "");
+    $("startFromLangBtn").onclick = startGame;
     $("replayBtn").onclick = startGame;
     $("menuBtn").onclick = () => location.href = "/pages/game_menu.html";
     $("endReplayBtn").onclick = startGame;
     $("endMenuBtn").onclick = () => location.href = "/pages/game_menu.html";
 
-    window.addEventListener("click", () => {
-      try { speechSynthesis?.getVoices?.(); } catch {}
-    }, { once:true });
-
-    window.addEventListener("touchstart", () => {
-      try { speechSynthesis?.getVoices?.(); } catch {}
-    }, { once:true });
+    window.addEventListener("click", () => { try{ speechSynthesis?.getVoices?.(); }catch{} }, { once:true });
+    window.addEventListener("touchstart", () => { try{ speechSynthesis?.getVoices?.(); }catch{} }, { once:true });
 
     window.onload = async () => {
       await safeMountShell();
-      renderLangs();
-      updateStats();
-      $("langBadge").innerText = currentLang.toUpperCase();
+      readHighScore(); updateStats(); renderLangs();
+      showLanguageModalIfNeeded();
+      console.warn("[CODE_CRACKER] ready", { lang:currentLang, highScore, ads:false, content:"storage:lang/<lang>.json" });
     };
   </script>
 </body>
