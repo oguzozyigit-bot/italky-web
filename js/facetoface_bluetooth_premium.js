@@ -1,18 +1,7 @@
 // FILE: /js/facetoface_bluetooth_premium.js
-
-const $ = (id) => document.getElementById(id);
-const API_BASE = "https://italky-api.onrender.com";
+import { installFaceToFaceBluetoothGuestFlow } from "/js/facetoface_bluetooth_guest_flow.js";
 
 const isBluetoothMode = new URLSearchParams(location.search).get("mode") === "bluetooth";
-
-let isBtConnected = false;
-let isHandsFree = false;
-let isSpeaking = false;
-let recordingSide = null;
-let webRecognizer = null;
-let lastSentText = "";
-let lastSentAt = 0;
-let btPickerTimeout = null;
 
 function injectPremiumUiCss() {
   if (document.getElementById("italkyPremiumF2fBtPolishStyle")) return;
@@ -21,18 +10,18 @@ function injectPremiumUiCss() {
   style.textContent = `
     body#frameRoot .italky-global-footer,
     body#frameRoot [data-italky-footer]{display:none!important;}
-    body#frameRoot .half-screen.bottom{padding-bottom:calc(18px + var(--safe-bottom))!important;}
-    body#frameRoot .half-screen.bottom .composer-stack{transform:translateY(-10px);}
-    body#frameRoot.premium-bt-mode.bt-active #topSection .composer-stack{display:none!important;}
-    body#frameRoot.premium-bt-mode.bt-active #topLangBtn{pointer-events:none!important;opacity:.78;}
-    body#frameRoot.premium-bt-mode.bt-active #pop-top{display:none!important;}
+    body#frameRoot.premium-bt-mode .half-screen.bottom{padding-bottom:calc(18px + var(--safe-bottom))!important;}
+    body#frameRoot.premium-bt-mode .half-screen.bottom .composer-stack{transform:translateY(-10px);}
+    body#frameRoot.premium-bt-mode #topSection .composer-stack{display:none!important;}
+    body#frameRoot.premium-bt-mode #topLangBtn{pointer-events:none!important;opacity:.78;}
+    body#frameRoot.premium-bt-mode #pop-top{display:none!important;}
     body#frameRoot.premium-bt-mode #btToggleBtn{
       position:fixed!important;
       left:38px!important;
       top:50%!important;
       transform:translateY(-50%)!important;
       z-index:1810!important;
-      display:flex;
+      display:flex!important;
       width:48px;
       height:48px;
     }
@@ -57,462 +46,24 @@ function injectPremiumUiCss() {
     @media(max-width:390px){
       body#frameRoot.premium-bt-mode #btToggleBtn{left:36px!important;width:44px;height:44px;}
       body#frameRoot.premium-bt-mode #handsFreeToggle{right:34px!important;top:calc(50% - 94px)!important;padding:7px 9px;font-size:10px;}
-      body#frameRoot .half-screen.bottom .composer-stack{transform:translateY(-12px);}
+      body#frameRoot.premium-bt-mode .half-screen.bottom .composer-stack{transform:translateY(-12px);}
     }
   `;
   document.head.appendChild(style);
 }
 
-function canonical(code) {
-  return String(code || "").toLowerCase().split("-")[0].trim() || "en";
-}
-
-function bcpFor(code) {
-  const c = canonical(code);
-  return {
-    tr: "tr-TR",
-    en: "en-US",
-    de: "de-DE",
-    fr: "fr-FR",
-    it: "it-IT",
-    es: "es-ES",
-    ar: "ar-SA",
-    ru: "ru-RU",
-    bg: "bg-BG",
-    pt: "pt-PT",
-    zh: "zh-CN",
-    ja: "ja-JP",
-    ko: "ko-KR"
-  }[c] || "en-US";
-}
-
-function currentBotLang() {
-  return canonical(window.botLang || localStorage.getItem("f2f_bot_lang") || localStorage.getItem("site_lang") || "en");
-}
-
-function currentTopLang() {
-  return canonical(window.topLang || localStorage.getItem("f2f_top_lang") || "en");
-}
-
-function toast(message) {
-  const el = $("miniToast");
-  if (!el) return;
-  el.textContent = String(message || "");
-  el.classList.add("show");
-  clearTimeout(window.__premiumBtToastTimer);
-  window.__premiumBtToastTimer = setTimeout(() => el.classList.remove("show"), 1800);
-}
-
-function addBubble(side, text, latest = false) {
-  const body = side === "top" ? $("topBody") : $("botBody");
-  if (!body) return null;
-  if (latest) body.querySelectorAll(".bubble.me.is-latest,.bubble.latest").forEach((x) => x.classList.remove("is-latest", "latest"));
-
-  const div = document.createElement("div");
-  div.className = `bubble me${latest ? " is-latest latest" : ""}`;
-  div.innerHTML = `<span class="bubble-row"><span class="txt"></span></span>`;
-  const txt = div.querySelector(".txt");
-  if (txt) txt.textContent = String(text || "").trim();
-  else div.textContent = String(text || "").trim();
-  body.appendChild(div);
-
-  const scroll = () => {
-    try { body.scrollTop = body.scrollHeight; } catch {}
-  };
-  scroll();
-  requestAnimationFrame(scroll);
-  setTimeout(scroll, 60);
-  return div;
-}
-
-function clearBody(side) {
-  const body = side === "top" ? $("topBody") : $("botBody");
-  if (body) body.innerHTML = "";
-}
-
-async function translateOnline(text, from, to) {
-  const payload = {
-    text: String(text || "").trim(),
-    from_lang: canonical(from),
-    to_lang: canonical(to),
-    source: canonical(from),
-    target: canonical(to),
-    mode: "normal",
-    use_ai: false,
-    cultural: false,
-    tone: "neutral",
-    style: "warm"
-  };
-
-  const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
-  for (const endpoint of endpoints) {
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json().catch(() => null);
-      const value = String(data?.translated || data?.translation || data?.text || "").trim();
-      if (res.ok && value) return value;
-    } catch {}
-  }
-  return null;
-}
-
-function speak(text, langCode) {
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  isSpeaking = true;
-  const delay = Math.max(2600, value.length * 75);
-
-  try {
-    if (window.AndroidBridge?.speak) window.AndroidBridge.speak(value, canonical(langCode));
-    else if (window.NativeTTS?.speak) window.NativeTTS.speak(value, canonical(langCode));
-    else if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(value);
-      u.lang = bcpFor(langCode);
-      u.rate = 0.95;
-      window.speechSynthesis.speak(u);
-    }
-  } catch {}
-
-  setTimeout(() => {
-    isSpeaking = false;
-    restartHandsFreeIfNeeded();
-  }, delay);
-}
-
-function setMicState(side, listening) {
-  const mic = side === "top" ? $("topMic") : $("botMic");
-  mic?.classList.toggle("listening", !!listening);
-}
-
-function cleanupTranscript(text) {
-  return String(text || "").replace(/\s+/g, " ").trim();
-}
-
-function stopRecognizer() {
-  const side = recordingSide;
-  recordingSide = null;
-  if (side) setMicState(side, false);
-
-  try {
-    if (window.Native?.stopSpeechRecognition) window.Native.stopSpeechRecognition();
-    else if (window.AndroidBridge?.stopSpeechRecognition) window.AndroidBridge.stopSpeechRecognition();
-    else if (webRecognizer) webRecognizer.stop();
-  } catch {}
-  webRecognizer = null;
-}
-
-function startRecording(side = "bot") {
-  if (!isBtConnected && side === "bot") {
-    toast("Önce Bluetooth bağlantısı kurun.");
-    return;
-  }
-
-  stopRecognizer();
-  recordingSide = side;
-  setMicState(side, true);
-
-  const lang = side === "top" ? currentTopLang() : currentBotLang();
-  const bcp = bcpFor(lang);
-
-  try {
-    if (window.Native?.startSpeechRecognition) {
-      window.Native.startSpeechRecognition(bcp, side);
-      return;
-    }
-    if (window.AndroidBridge?.startSpeechRecognition) {
-      window.AndroidBridge.startSpeechRecognition(bcp, side);
-      return;
-    }
-  } catch {}
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    recordingSide = null;
-    setMicState(side, false);
-    toast("Bu cihazda konuşma tanıma hazır değil.");
-    return;
-  }
-
-  const rec = new SpeechRecognition();
-  webRecognizer = rec;
-  rec.lang = bcp;
-  rec.continuous = false;
-  rec.interimResults = true;
-
-  rec.onresult = (event) => {
-    let finalText = "";
-    for (let i = event.resultIndex; i < event.results.length; i += 1) {
-      if (event.results[i].isFinal) finalText += event.results[i][0]?.transcript || "";
-    }
-    if (finalText) handleSpeechFinal("bot", finalText);
-  };
-
-  rec.onerror = () => {
-    recordingSide = null;
-    setMicState(side, false);
-    restartHandsFreeIfNeeded();
-  };
-
-  rec.onend = () => {
-    recordingSide = null;
-    setMicState(side, false);
-    restartHandsFreeIfNeeded();
-  };
-
-  try { rec.start(); }
-  catch {
-    recordingSide = null;
-    setMicState(side, false);
-    restartHandsFreeIfNeeded();
-  }
-}
-
-function handleSpeechFinal(side, text) {
-  const clean = cleanupTranscript(text);
-  recordingSide = null;
-  setMicState(side, false);
-  if (!clean) {
-    restartHandsFreeIfNeeded();
-    return;
-  }
-
-  if (isBtConnected) {
-    const now = Date.now();
-    if (clean === lastSentText && now - lastSentAt < 2500) {
-      restartHandsFreeIfNeeded();
-      return;
-    }
-    lastSentText = clean;
-    lastSentAt = now;
-    try { window.AndroidBridge?.sendBtText?.(clean); } catch {}
-    addBubble("bot", clean, false);
-    restartHandsFreeIfNeeded();
-    return;
-  }
-}
-
-function restartHandsFreeIfNeeded() {
-  if (!isHandsFree || !isBtConnected || recordingSide || isSpeaking) return;
-  const delay = 800 + Math.floor(Math.random() * 600);
-  setTimeout(() => {
-    if (isHandsFree && isBtConnected && !recordingSide && !isSpeaking) startRecording("bot");
-  }, delay);
-}
-
-function setBtButtonConnected(connected) {
-  const btn = $("btToggleBtn");
-  if (!btn) return;
-  btn.classList.toggle("connected", !!connected);
-}
-
-function setHandsFreeVisible(visible) {
-  const btn = $("handsFreeToggle");
-  if (!btn) return;
-  btn.style.display = visible ? "inline-flex" : "none";
-  if (!visible) btn.classList.remove("active");
-}
-
-function clearBluetoothPickerTimer() {
-  clearTimeout(btPickerTimeout);
-  btPickerTimeout = null;
-}
-
-function connectBluetooth() {
-  try {
-    console.warn("[BT_PREMIUM] startBluetoothConnect requested");
-    clearBluetoothPickerTimer();
-    btPickerTimeout = setTimeout(() => {
-      if (!isBtConnected) toast("Yeni cihaz bulunamadı. Telefonların Bluetooth'unu ve görünürlüğünü kontrol edin.");
-    }, 22000);
-
-    if (window.AndroidBridge?.startBluetoothConnect) window.AndroidBridge.startBluetoothConnect();
-    else {
-      clearBluetoothPickerTimer();
-      toast("Bluetooth köprüsü hazır değil.");
-    }
-  } catch {
-    clearBluetoothPickerTimer();
-    toast("Bluetooth başlatılamadı.");
-  }
-}
-
-function bindControls() {
-  const btBtn = $("btToggleBtn");
-  const hfBtn = $("handsFreeToggle");
-  if (btBtn) {
-    btBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (isBtConnected) {
-        toast("Bluetooth bağlantısı aktif.");
-        return;
-      }
-      connectBluetooth();
-    });
-  }
-
-  if (hfBtn) {
-    hfBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      isHandsFree = !isHandsFree;
-      hfBtn.classList.toggle("active", isHandsFree);
-      if (isHandsFree) startRecording("bot");
-      else stopRecognizer();
-    });
-  }
-
-  const botMic = $("botMic");
-  if (botMic) {
-    botMic.addEventListener("click", (e) => {
-      if (!isBtConnected) return;
-      e.preventDefault();
-      e.stopImmediatePropagation?.();
-      if (recordingSide === "bot") stopRecognizer();
-      else startRecording("bot");
-    }, true);
-  }
-}
-
-function parseNativeSpeechArgs(arg1, arg2, arg3) {
-  let side = recordingSide || "bot";
-  let text = "";
-  let isFinal = true;
-
-  if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
-    side = arg1;
-    text = String(arg2 || "");
-    isFinal = arg3 !== false;
-  } else if (typeof arg1 === "string") {
-    try {
-      const data = JSON.parse(arg1);
-      side = data?.side || recordingSide || "bot";
-      text = String(data?.text || data?.transcript || "");
-      isFinal = data?.isFinal !== false && data?.final !== false;
-    } catch {
-      side = recordingSide || "bot";
-      text = arg1;
-      isFinal = arg3 !== false;
-    }
-  } else if (arg1 && typeof arg1 === "object") {
-    side = arg1.side || recordingSide || "bot";
-    text = String(arg1.text || arg1.transcript || "");
-    isFinal = arg1.isFinal !== false && arg1.final !== false;
-  }
-
-  return { side, text, isFinal };
-}
-
-function closeLanguagePopupsForBluetooth() {
-  $("pop-top")?.classList.remove("show");
-  $("pop-bot")?.classList.remove("show");
-}
-
-function bindBridgeEvents() {
-  const previousMessage = window.onBtMessageReceived;
-  const previousError = window.onNativeSpeechError;
-  const previousPickerClosed = window.onBtDevicePickerClosed;
-  const previousPermissionMissing = window.onBtPermissionMissing;
-  const previousDiscoveryError = window.onBtDiscoveryError;
-  const previousDiscoveryFinished = window.onBtDiscoveryFinished;
-
-  window.onBtConnected = function () {
-    clearBluetoothPickerTimer();
-    isBtConnected = true;
-    document.body.classList.add("bt-active");
-    setBtButtonConnected(true);
-    setHandsFreeVisible(true);
-    clearBody("top");
-    clearBody("bot");
-    closeLanguagePopupsForBluetooth();
-    toast("Bluetooth bağlantısı kuruldu.");
-  };
-
-  window.onBtDisconnected = function () {
-    clearBluetoothPickerTimer();
-    isBtConnected = false;
-    isHandsFree = false;
-    stopRecognizer();
-    document.body.classList.remove("bt-active");
-    closeLanguagePopupsForBluetooth();
-    setBtButtonConnected(false);
-    setHandsFreeVisible(false);
-    toast("Bluetooth bağlantısı kapandı.");
-  };
-
-  window.onBtDevicePickerClosed = function (...args) {
-    clearBluetoothPickerTimer();
-    try { previousPickerClosed?.(...args); } catch {}
-  };
-
-  window.onBtPermissionMissing = function (...args) {
-    clearBluetoothPickerTimer();
-    toast("Bluetooth tarama izni gerekli.");
-    try { previousPermissionMissing?.(...args); } catch {}
-  };
-
-  window.onBtDiscoveryError = function (message, ...args) {
-    clearBluetoothPickerTimer();
-    const raw = String(message || "").toLowerCase();
-    if (raw.includes("permission") || raw.includes("izin")) toast("Bluetooth tarama izni gerekli.");
-    else toast("Yeni cihaz bulunamadı. Telefonların Bluetooth'unu ve görünürlüğünü kontrol edin.");
-    try { previousDiscoveryError?.(message, ...args); } catch {}
-  };
-
-  window.onBtDiscoveryFinished = function (count, ...args) {
-    clearBluetoothPickerTimer();
-    const found = Number(count || 0);
-    if (!isBtConnected && found <= 0) toast("Yeni cihaz bulunamadı. Telefonların Bluetooth'unu ve görünürlüğünü kontrol edin.");
-    try { previousDiscoveryFinished?.(count, ...args); } catch {}
-  };
-
-  window.onBtMessageReceived = async function (text, ...args) {
-    const raw = String(text || "");
-    if (raw.startsWith("SYS_CMD:LANG:")) {
-      try { previousMessage?.(text, ...args); } catch {}
-      return;
-    }
-
-    const row = addBubble("top", "", true);
-    const translated = await translateOnline(raw, "auto", currentBotLang());
-    const value = translated || "Çeviri alınamadı.";
-    const target = row?.querySelector(".txt") || row;
-    if (target) target.textContent = value;
-    if (translated) speak(translated, currentBotLang());
-  };
-
-  window.onNativeSpeechResult = function (arg1, arg2, arg3) {
-    if (isBtConnected) {
-      const parsed = parseNativeSpeechArgs(arg1, arg2, arg3);
-      if (parsed.isFinal) handleSpeechFinal("bot", parsed.text);
-      return;
-    }
-  };
-
-  window.onNativeSpeechError = function (error) {
-    if (isBtConnected) {
-      recordingSide = null;
-      setMicState("bot", false);
-      if (isHandsFree) restartHandsFreeIfNeeded();
-      return;
-    }
-    try { previousError?.(error); } catch {}
-  };
+function closeLanguagePopups() {
+  document.getElementById("pop-top")?.classList.remove("show");
+  document.getElementById("pop-bot")?.classList.remove("show");
 }
 
 function boot() {
   injectPremiumUiCss();
   if (!isBluetoothMode) return;
+
   document.body.classList.add("premium-bt-mode");
-  setHandsFreeVisible(false);
-  bindControls();
-  bindBridgeEvents();
+  closeLanguagePopups();
+  installFaceToFaceBluetoothGuestFlow({ homeHref: "/pages/home.html" });
 }
 
 if (document.readyState === "loading") {
