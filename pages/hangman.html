@@ -13,6 +13,17 @@
     rel="stylesheet"
   />
 
+  <script>
+    (function () {
+      try {
+        var lang = new URLSearchParams(location.search).get("lang");
+        if (/^(en|de|fr|es|it)$/i.test(String(lang || ""))) {
+          document.documentElement.classList.add("hangman-direct-start");
+        }
+      } catch (_) {}
+    })();
+  </script>
+
   <style>
     :root{
       --bg:#030014;
@@ -41,6 +52,12 @@
         radial-gradient(circle at top, rgba(99,102,241,.20), transparent 35%),
         radial-gradient(circle at bottom, rgba(236,72,153,.14), transparent 30%),
         var(--bg);
+    }
+
+    html.hangman-direct-start .ready-gate{
+      display:none!important;
+      visibility:hidden!important;
+      pointer-events:none!important;
     }
 
     #pageContent{
@@ -657,7 +674,7 @@
     <div class="ready-gate" id="readyGate">
       <div class="gate-logo">🎯</div>
       <div class="gate-title">HANGMAN</div>
-      <div class="gate-sub" id="gateInfo">BAĞLANILIYOR...</div>
+      <div class="gate-sub" id="gateInfo">Hazırlanıyor...</div>
       <button class="start-btn" id="realStartBtn" type="button">BAŞLA</button>
       <button class="langChangeBtn" id="langChangeBtn" type="button">Dil Değiştir</button>
     </div>
