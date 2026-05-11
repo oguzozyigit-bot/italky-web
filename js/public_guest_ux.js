@@ -4,8 +4,6 @@ import "/js/site_language_boot.js";
 const GUEST_MODE_KEY = "italky_guest_mode_v1";
 const MEMBERSHIP_URL = "/pages/membership.html";
 
-let deferredInstallPrompt = null;
-
 function $(id) {
   return document.getElementById(id);
 }
@@ -75,11 +73,16 @@ function injectStyles() {
   const style = document.createElement("style");
   style.id = "italkyPublicGuestUxStyle";
   style.textContent = `
-    #guideBtn{display:none!important;pointer-events:none!important;}
+    #guideBtn,#publicMicLoginBtn{display:none!important;pointer-events:none!important;}
+    .center-hub{justify-content:space-between!important;padding:0 40px!important;}
+    .center-hub .orb-wrapper{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;z-index:3!important;}
+    .center-hub .hub-btn{position:relative!important;z-index:8!important;}
+    .center-hub .hub-btn:first-of-type{margin-right:auto!important;}
+    .center-hub .hub-btn:last-of-type{margin-left:auto!important;}
+    .drawer-links{gap:10px!important;}
     .italky-member-link{border-color:rgba(96,165,250,.36)!important;background:rgba(37,99,235,.18)!important;}
     .italky-member-link::before{background:radial-gradient(circle at left,rgba(96,165,250,.20),transparent 55%),linear-gradient(135deg,rgba(255,255,255,.045),rgba(37,99,235,.22))!important;}
-    .italky-shortcut-link{border-color:rgba(56,189,248,.28)!important;}
-    .italky-login-mic-btn{background:rgba(37,99,235,.12);border-color:rgba(96,165,250,.35);color:#dbeafe;}
+    @media(max-width:390px){.center-hub{padding:0 34px!important}.center-hub .hub-btn{width:48px!important;height:48px!important}.center-hub .orb-wrapper{width:62px!important;height:62px!important}.center-hub .orb{width:62px!important;height:62px!important}}
   `;
   document.head.appendChild(style);
 }
@@ -114,16 +117,6 @@ async function addHomeShortcut() {
   }
 
   try {
-    if (deferredInstallPrompt) {
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice.catch(() => null);
-      deferredInstallPrompt = null;
-      toast("Kısa yol ana ekrana eklendi");
-      return;
-    }
-  } catch {}
-
-  try {
     if (navigator.share) {
       await navigator.share({ title: "italkyAI", text: "italkyAI", url: location.origin + "/pages/login_entry.html" });
       toast("Kısa yol bağlantısı paylaşıldı");
@@ -135,7 +128,6 @@ async function addHomeShortcut() {
 }
 
 function createDrawerLink({ id, className = "", label, suffix = "›", onClick }) {
-  if ($(id)) return null;
   const btn = document.createElement("button");
   btn.id = id;
   btn.type = "button";
@@ -149,55 +141,27 @@ function createDrawerLink({ id, className = "", label, suffix = "›", onClick }
   return btn;
 }
 
+function openRateFlow() {
+  try {
+    if (window.AndroidBridge?.openAppReview) { window.AndroidBridge.openAppReview(); return; }
+    if (window.Native?.openAppReview) { window.Native.openAppReview(); return; }
+    if (window.AndroidBridge?.rateApp) { window.AndroidBridge.rateApp(); return; }
+    if (window.Native?.rateApp) { window.Native.rateApp(); return; }
+  } catch {}
+  toast("Değerlendirmeniz bizim için önemli.");
+}
+
 function installDrawerActions() {
   const drawer = document.querySelector(".drawer-links");
   if (!drawer) return;
 
-  const shortcut = createDrawerLink({
-    id: "publicShortcutBtn",
-    className: "italky-shortcut-link",
-    label: "📌 Kısa Yol Ekle",
-    onClick: addHomeShortcut
-  });
-  if (shortcut) drawer.prepend(shortcut);
-
-  if (shouldShowGuestCta()) {
-    const member = createDrawerLink({
-      id: "publicMembershipBtn",
-      className: "italky-member-link",
-      label: "⭐ Google ile Üye Ol",
-      onClick: () => { location.href = MEMBERSHIP_URL; }
-    });
-    if (member) drawer.prepend(member);
-  }
-}
-
-function installMicLoginButton() {
-  if (!shouldShowGuestCta() || $("publicMicLoginBtn")) return;
-
-  const btn = document.createElement("button");
-  btn.id = "publicMicLoginBtn";
-  btn.type = "button";
-  btn.className = "hf-btn italky-login-mic-btn";
-  btn.setAttribute("aria-label", "Üye Ol");
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
-    <span>Üye Ol</span>
-  `;
-  btn.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    location.href = MEMBERSHIP_URL;
-  });
-
-  const loginEntrySlot = document.querySelector(".half-screen.bottom .mic-line .mic-side:last-child");
-  if (loginEntrySlot) {
-    loginEntrySlot.appendChild(btn);
-    return;
-  }
-
-  const composer = document.querySelector("#botComposer.composer");
-  if (composer) composer.appendChild(btn);
+  drawer.innerHTML = "";
+  drawer.append(
+    createDrawerLink({ id: "guestAboutBtn", label: "Hakkımızda", onClick: () => { location.href = "/pages/about.html"; } }),
+    createDrawerLink({ id: "guestPrivacyBtn", label: "Gizlilik", onClick: () => { location.href = "/pages/privacy.html"; } }),
+    createDrawerLink({ id: "guestRateBtn", label: "Bizi Puanla", onClick: openRateFlow }),
+    createDrawerLink({ id: "guestMembershipBtn", className: "italky-member-link", label: "Üye Ol", onClick: () => { location.href = MEMBERSHIP_URL; } })
+  );
 }
 
 function hideGuestGuideEntry() {
@@ -208,17 +172,22 @@ function hideGuestGuideEntry() {
   guideBtn.setAttribute("aria-hidden", "true");
 }
 
+function hideGuestMembershipCtaOnMain() {
+  const micLogin = $("publicMicLoginBtn");
+  if (micLogin) micLogin.remove();
+  try {
+    document.querySelectorAll(".italky-member-link").forEach((el) => {
+      if (!el.closest(".drawer-links")) el.remove();
+    });
+  } catch {}
+}
+
 function boot() {
   injectStyles();
   hideGuestGuideEntry();
   installDrawerActions();
-  installMicLoginButton();
+  hideGuestMembershipCtaOnMain();
 }
-
-window.addEventListener("beforeinstallprompt", (event) => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
-});
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", boot, { once: true });
@@ -226,4 +195,5 @@ if (document.readyState === "loading") {
   boot();
 }
 
-setTimeout(boot, 700);
+setTimeout(boot, 200);
+setTimeout(boot, 900);
