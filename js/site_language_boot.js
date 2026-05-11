@@ -135,54 +135,31 @@ function installUiSafetyStyle() {
     .section-grid.primary-grid { align-items: stretch !important; }
     #faceCard.primary-card,
     #bluetoothCard.primary-card {
-      min-height: 330px !important;
-      height: 100% !important;
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 10px !important;
-      padding: 18px 15px !important;
+      min-height: 300px !important;
+      padding-bottom: 126px !important;
     }
-    #faceCard.primary-card .card-desc,
-    #bluetoothCard.primary-card .card-desc { margin-bottom: 12px !important; }
     #faceCard .primary-art,
     #bluetoothCard .primary-art {
-      position: relative !important;
-      left: auto !important;
-      right: auto !important;
-      bottom: auto !important;
-      width: 100% !important;
+      bottom: 78px !important;
       height: 72px !important;
-      flex: 0 0 72px !important;
-      margin-top: auto !important;
-      margin-bottom: 14px !important;
       pointer-events: none !important;
+    }
+    #faceCard.primary-card .card-desc,
+    #bluetoothCard.primary-card .card-desc {
+      margin-bottom: 8px !important;
     }
     #faceCard.primary-card .card-icon,
     #bluetoothCard.primary-card .card-icon,
     #faceCard.primary-card .arrow-chip,
     #bluetoothCard.primary-card .arrow-chip {
-      position: relative !important;
-      left: auto !important;
-      right: auto !important;
-      bottom: auto !important;
-      top: auto !important;
-      flex: 0 0 auto !important;
-      z-index: 3 !important;
-    }
-    #faceCard.primary-card .card-icon,
-    #bluetoothCard.primary-card .card-icon { align-self: flex-start !important; }
-    #faceCard.primary-card .arrow-chip,
-    #bluetoothCard.primary-card .arrow-chip {
-      align-self: flex-end !important;
-      margin-top: -50px !important;
+      bottom: 16px !important;
+      z-index: 4 !important;
     }
     .wide-card {
       height: auto !important;
       min-height: 144px !important;
-      align-items: flex-start !important;
       padding-right: 72px !important;
     }
-    .wide-card .wide-icon { margin-top: 8px !important; }
     .wide-card .wide-body { min-width: 0 !important; padding-right: 4px !important; }
     .wide-card .arrow-chip {
       right: 16px !important;
@@ -192,7 +169,15 @@ function installUiSafetyStyle() {
     }
     @media (max-width: 390px) {
       #faceCard.primary-card,
-      #bluetoothCard.primary-card { min-height: 300px !important; }
+      #bluetoothCard.primary-card {
+        min-height: 280px !important;
+        padding-bottom: 118px !important;
+      }
+      #faceCard .primary-art,
+      #bluetoothCard .primary-art {
+        bottom: 74px !important;
+        height: 68px !important;
+      }
       .wide-card { min-height: 144px !important; padding-right: 66px !important; }
     }
   `;
