@@ -19,11 +19,28 @@ function extractRows(raw) {
     for (const key of ITEM_ARRAY_KEYS) {
       if (Array.isArray(raw[key])) return raw[key];
     }
+
+    const entries = Object.entries(raw);
+    if (entries.length && entries.every(([, value]) => typeof value === "string")) {
+      return entries.map(([word, meaning]) => ({ word, meaning }));
+    }
+
+    const values = Object.values(raw);
+    if (values.length && values.every(value => value && typeof value === "object" && !Array.isArray(value))) {
+      return values;
+    }
   }
   return [];
 }
 
 function readFirstString(item, keys) {
+  if (Array.isArray(item)) {
+    for (const value of item) {
+      if (typeof value === "string" && value.trim()) return value.trim();
+      if (value != null && typeof value !== "object" && String(value).trim()) return String(value).trim();
+    }
+  }
+
   for (const key of keys) {
     const value = item?.[key];
     if (typeof value === "string" && value.trim()) return value.trim();
@@ -48,11 +65,19 @@ export function normalizeGameWordRows(raw, lang = "en") {
   const normalized = [];
 
   for (const item of rows) {
-    const word = readFirstString(item, ["word", "w", "text", "term", "answer", "source", cleanLang]);
-    const meaning = readFirstString(item, ["meaning", "tr", "translation", "mean", "hint", "target"]);
-    const key = `${normalizeKey(word)}:${normalizeKey(meaning)}`;
+    let word = "";
+    let meaning = "";
 
-    if (!word || !meaning || !key || seen.has(key)) continue;
+    if (Array.isArray(item)) {
+      word = readFirstString([item[0]], []);
+      meaning = readFirstString([item[1]], []);
+    } else {
+      word = readFirstString(item, ["word", "w", "text", "term", "answer", "source", cleanLang]);
+      meaning = readFirstString(item, ["meaning", "tr", "translation", "mean", "hint", "target"]);
+    }
+
+    const key = `${normalizeKey(word)}:${normalizeKey(meaning)}`;
+    if (!word || !meaning || key === ":" || seen.has(key)) continue;
     seen.add(key);
     normalized.push({ word, meaning, lang: cleanLang });
   }
@@ -60,7 +85,7 @@ export function normalizeGameWordRows(raw, lang = "en") {
   return normalized;
 }
 
-function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
+function fetchWithTimeout(url, options = {}, timeoutMs = 9000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
@@ -74,18 +99,26 @@ export async function loadGameWords(lang, options = {}) {
   console.warn("[GAME_CONTENT] load start", { caller, selectedLang: cleanLang, source: GAME_CONTENT_SOURCE, url: sourceUrl });
 
   try {
-    const response = await fetchWithTimeout(sourceUrl, { cache: "no-store" }, options.timeoutMs || 12000);
+    const response = await fetchWithTimeout(sourceUrl, { cache: "no-store" }, options.timeoutMs || 9000);
     console.warn("[GAME_CONTENT] fetch status", { caller, selectedLang: cleanLang, url: sourceUrl, status: response.status, ok: response.ok });
 
     if (!response.ok) return [];
 
-    const raw = await response.json();
+    let raw = null;
+    try {
+      raw = await response.json();
+    } catch (error) {
+      console.warn("[GAME_CONTENT] json parse failed", { caller, selectedLang: cleanLang, url: sourceUrl, error: error?.message || String(error) });
+      return [];
+    }
+
     const rawRows = extractRows(raw);
     const normalizedRows = normalizeGameWordRows(raw, cleanLang);
 
     console.warn("[GAME_CONTENT] rows normalized", {
       caller,
       selectedLang: cleanLang,
+      rawType: Array.isArray(raw) ? "array" : typeof raw,
       rawCount: rawRows.length,
       normalizedCount: normalizedRows.length,
       sample: normalizedRows[0] || null
@@ -97,8 +130,22 @@ export async function loadGameWords(lang, options = {}) {
       caller,
       selectedLang: cleanLang,
       url: sourceUrl,
-      error: error?.message || String(error)
+      error: error?.name === "AbortError" ? "fetch_timeout" : (error?.message || String(error))
     });
     return [];
   }
 }
+
+const GameContentHelper = Object.freeze({
+  GAME_CONTENT_SOURCE,
+  getGameContentUrl,
+  loadGameWords,
+  normalizeGameContentLang,
+  normalizeGameWordRows
+});
+
+try {
+  window.GameContentHelper = GameContentHelper;
+  window.loadGameWords = loadGameWords;
+  console.warn("[GAME_CONTENT] global helper ready", { source: GAME_CONTENT_SOURCE });
+} catch {}
