@@ -49,6 +49,9 @@
         #050508;
     }
 
+    body.bt-active{ background:#020617; }
+    body.bt-active .half-screen.top{ transform:none; border-bottom:1px solid rgba(255,255,255,.05); }
+
     .container{
       display:flex;
       flex-direction:column;
@@ -566,6 +569,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      gap:18px;
       position:relative;
       background:rgba(0,0,0,.58);
       backdrop-filter:blur(16px);
@@ -626,6 +630,59 @@
     }
 
     .btn-clear{ left:0; }
+
+    .premium-bt-only{ display:none; }
+    body.premium-bt-mode .premium-bt-only{ display:flex; }
+
+    .hub-btn{
+      width:50px;
+      height:50px;
+      border-radius:50%;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.15);
+      color:#fff;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:all .2s ease;
+      box-shadow:0 14px 30px rgba(0,0,0,.24);
+    }
+
+    .hub-btn:active{ transform:scale(.94); }
+    .hub-btn.connected{
+      color:#93c5fd;
+      border-color:rgba(147,197,253,.5);
+      background:rgba(37,99,235,.18);
+      box-shadow:0 0 18px rgba(37,99,235,.28);
+    }
+
+    .hf-btn{
+      position:fixed;
+      right:42px;
+      bottom:calc(18px + var(--safe-bottom));
+      min-height:38px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.15);
+      color:rgba(255,255,255,.78);
+      padding:8px 12px;
+      align-items:center;
+      gap:7px;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+      z-index:1700;
+    }
+
+    .hf-btn.active{
+      background:rgba(168,85,247,.16);
+      border-color:rgba(168,85,247,.5);
+      color:#d8b4fe;
+      box-shadow:0 0 18px rgba(168,85,247,.22);
+    }
+
+    .hf-btn svg{ width:16px; height:16px; stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
 
     .orb-container{
       width:82px;
@@ -945,6 +1002,12 @@
     <div class="center-hub" id="centerHub">
       <a class="nav-btn" id="homeLink" href="/pages/home.html"><span id="homeText" class="label-rotate">HOME</span></a>
 
+      <button id="btToggleBtn" class="hub-btn premium-bt-only" type="button" aria-label="Bluetooth bağlan">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
+        </svg>
+      </button>
+
       <div class="orb-container" id="homeBtn" title="Ana sayfa">
         <div class="energy-orbit">
           <div class="ball-1"></div>
@@ -960,7 +1023,12 @@
         </div>
       </div>
 
-      <div class="nav-btn btn-clear" id="clearBtn"><span id="clearText" class="label-rotate">Clear</span></div>
+      <div class="nav-btn btn-clear" id="clearBtn"><span id="clearText" class="label-rotate">CLEAR</span></div>
+
+      <button id="handsFreeToggle" class="hf-btn premium-bt-only" type="button" aria-label="Eller Serbest" style="display:none;">
+        <svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+        <span>Eller Serbest</span>
+      </button>
 
       <div id="statusPill" class="status-pill">Hazır</div>
     </div>
@@ -1044,6 +1112,7 @@
   <div class="mini-toast" id="miniToast"></div>
 
   <script type="module" src="/js/facetoface_page.js?v=F2F_PAGE_V123"></script>
+  <script type="module" src="/js/facetoface_bluetooth_premium.js?v=F2F_BT_PREMIUM_V1"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     await initGlobalAccess({ allowPublicPageBypass: false });
