@@ -94,7 +94,7 @@
     .lang-row-inner{
       width:min(92vw, 420px);
       display:grid;
-      grid-template-columns:76px 1fr;
+      grid-template-columns:1fr;
       align-items:center;
       gap:8px;
       margin:0 auto;
@@ -104,22 +104,7 @@
     }
 
     .mode-toggle-inline{
-      width:76px;
-      min-width:76px;
-      height:38px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      padding:4px;
-      display:flex;
-      align-items:center;
-      cursor:pointer;
-      overflow:hidden;
-      backdrop-filter:blur(10px);
-      position:relative;
-      flex:0 0 auto;
-      pointer-events:auto;
-      z-index:3002;
+      display:none !important;
     }
 
     .mode-toggle-inline-track{
@@ -192,7 +177,7 @@
       text-decoration:none;
       flex:0 1 auto;
       white-space:nowrap;
-      justify-self:end;
+      justify-self:center;
       pointer-events:auto;
       z-index:3002;
     }
@@ -381,27 +366,24 @@
     }
 
     .composer{
-      width:100%;
+      width:auto;
+      min-width:86px;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:10px;
-      min-height:62px;
-      padding:9px 12px;
-      border-radius:22px;
-      background:var(--composer-bg);
-      border:1px solid var(--composer-line);
-      box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03);
+      gap:0;
+      min-height:86px;
+      padding:8px;
+      border-radius:999px;
+      background:transparent;
+      border:none;
+      box-shadow:none;
       position:relative;
     }
 
     .composer.listening{
-      box-shadow:
-        0 0 0 1px rgba(99,102,241,.30),
-        0 0 0 8px rgba(99,102,241,.08),
-        0 0 30px rgba(99,102,241,.20),
-        inset 0 1px 0 rgba(255,255,255,.04);
-      animation:composerPulse 1.2s ease-in-out infinite;
+      box-shadow:none;
+      animation:none;
     }
 
     @keyframes composerPulse{
@@ -409,11 +391,10 @@
       50%{ transform:scale(1.006); }
     }
 
-    .composer-center{
-      flex:1;
-      min-width:0;
-      display:flex;
-      flex-direction:column;
+    .composer-center,
+    .send-btn,
+    .kb-wrap{
+      display:none !important;
     }
 
     .composer-input{
@@ -444,8 +425,8 @@
     }
 
     .send-btn,.mic-btn{
-      width:42px;
-      height:42px;
+      width:70px;
+      height:70px;
       border:none;
       border-radius:50%;
       cursor:pointer;
@@ -453,38 +434,37 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      background:transparent;
+      background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.18);
       color:#fff;
       position:relative;
       z-index:2;
+      box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .mic-btn.listening{
+      background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
+      box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
+      animation:micBreath 1.05s ease-in-out infinite;
     }
 
     .mic-btn.listening::after{
       content:"";
       position:absolute;
-      inset:-6px;
+      inset:-13px;
       border-radius:50%;
-      border:2px solid rgba(34,197,94,.72);
-      box-shadow:0 0 0 8px rgba(34,197,94,.10), 0 0 24px rgba(34,197,94,.18);
+      border:2px solid rgba(165,180,252,.78);
+      box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35);
       animation:micPulse 1s ease-out infinite;
     }
 
-    @keyframes micPulse{
-      0%{ transform:scale(.92); opacity:.95; }
-      70%{ transform:scale(1.14); opacity:.14; }
-      100%{ transform:scale(1.18); opacity:0; }
-    }
-
-    .send-btn{
-      background:#fff;
-      color:#000;
-      box-shadow:0 0 24px rgba(255,255,255,.10);
-    }
+    @keyframes micBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+    @keyframes micPulse{0%{transform:scale(.92);opacity:.95}70%{transform:scale(1.18);opacity:.16}100%{transform:scale(1.24);opacity:0}}
 
     .send-btn svg,
     .mic-btn svg{
-      width:22px;
-      height:22px;
+      width:30px;
+      height:30px;
       stroke:currentColor;
       stroke-width:2.2;
       fill:none;
@@ -493,18 +473,6 @@
     }
 
     .hidden{ display:none !important; }
-
-    .kb-wrap{
-      width:100%;
-      display:none;
-      justify-content:center;
-      position:relative;
-      flex:0 0 auto;
-    }
-
-    .kb-wrap.show{
-      display:flex;
-    }
 
     .kb{
       width:100%;
@@ -608,36 +576,42 @@
     }
 
     .nav-btn{
-      position:absolute;
-      padding:10px 18px;
-      border-radius:100px;
-      background:transparent;
-      border:1px solid var(--border);
+      position:fixed !important;
+      right:0;
+      left:auto !important;
+      width:30px;
+      height:118px;
+      padding:0;
+      border-radius:18px 0 0 18px;
+      background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.14);
+      border-right:none;
       color:#fff;
-      font-size:10px;
-      font-weight:900;
+      font-size:11px;
+      font-weight:1000;
       cursor:pointer;
-      z-index:650;
+      z-index:1800;
       text-decoration:none;
-      display:inline-flex;
+      display:flex;
       align-items:center;
       justify-content:center;
-      gap:6px;
-      box-shadow:none;
+      box-shadow:-10px 0 32px rgba(0,0,0,.30);
       transition:transform .2s ease;
+      writing-mode:vertical-rl;
+      text-orientation:upright;
+      letter-spacing:1px;
+      line-height:1.15;
     }
+
+    #homeLink{ top:calc(50% - 124px); }
+    #clearBtn{ top:calc(50% + 6px); }
 
     .nav-btn .label-rotate{
       display:inline-block;
-      transition:transform .22s ease;
+      transform:none !important;
     }
 
-    .center-hub.to-top #homeLink .label-rotate,
-    .center-hub.to-top #clearBtn .label-rotate{
-      transform:rotate(180deg);
-    }
-
-    .btn-clear{ right:14px; }
+    .btn-clear{ right:0; }
 
     .orb-container{
       width:82px;
@@ -879,20 +853,21 @@
     @media (max-width:390px){
       .lang-row-inner{
         width:min(94vw, 410px);
-        grid-template-columns:72px 1fr;
-      }
-
-      .mode-toggle-inline{
-        width:72px;
-        min-width:72px;
-      }
-
-      .mode-toggle-inline.offline .mode-toggle-inline-thumb{
-        transform:translateX(32px);
+        grid-template-columns:1fr;
       }
 
       .lang-trigger{
-        width:min(68vw, 260px);
+        width:min(76vw, 280px);
+      }
+
+      .mic-btn{
+        width:66px;
+        height:66px;
+      }
+
+      .mic-btn svg{
+        width:28px;
+        height:28px;
       }
     }
   </style>
@@ -954,7 +929,7 @@
     </div>
 
     <div class="center-hub" id="centerHub">
-      <a class="nav-btn" id="homeLink" href="/pages/home.html" style="left:14px;"><span id="homeText" class="label-rotate">ANA SAYFA</span></a>
+      <a class="nav-btn" id="homeLink" href="/pages/home.html"><span id="homeText" class="label-rotate">HOME</span></a>
 
       <div class="orb-container" id="homeBtn" title="Ana sayfa">
         <div class="energy-orbit">
@@ -971,7 +946,7 @@
         </div>
       </div>
 
-      <div class="nav-btn btn-clear" id="clearBtn" style="position:absolute;"><span id="clearText" class="label-rotate">TEMİZLE</span></div>
+      <div class="nav-btn btn-clear" id="clearBtn"><span id="clearText" class="label-rotate">Clear</span></div>
 
       <div id="statusPill" class="status-pill">Hazır</div>
     </div>
@@ -1054,7 +1029,7 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/facetoface_page.js?v=F2F_PAGE_V122"></script>
+  <script type="module" src="/js/facetoface_page.js?v=F2F_PAGE_V123"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     await initGlobalAccess({ allowPublicPageBypass: false });
