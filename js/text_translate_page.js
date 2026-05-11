@@ -8,7 +8,6 @@ const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
 const frameRoot = $("frameRoot");
-
 const fromBtn = $("fromBtn");
 const toBtn = $("toBtn");
 const swapBtn = $("swapBtn");
@@ -16,72 +15,65 @@ const fromFlag = $("fromFlag");
 const toFlag = $("toFlag");
 const fromText = $("fromText");
 const toText = $("toText");
-
 const soundToggle = $("soundToggle");
-
 const resultBubble = $("resultBubble");
 const resultSub = $("resultSub");
 const resultArea = $("resultArea");
-
 const inputBox = $("inputBox");
 const inputPreviewBubble = $("inputPreviewBubble");
 const micBtn = $("micBtn");
 const translateBtn = $("translateBtn");
-
 const homeBtn = $("homeBtn");
 const homeLink = $("homeLink");
 const clearBtn = $("clearBtn");
-
 const langPopover = $("langPopover");
 const popoverTitle = $("popoverTitle");
 const popoverClose = $("popoverClose");
 const langSearch = $("langSearch");
 const langList = $("langList");
-
 const toastEl = $("toast");
 
 const BCP = {
-  tr: "tr-TR",
-  en: "en-US",
-  de: "de-DE",
-  fr: "fr-FR",
-  it: "it-IT",
-  es: "es-ES",
-  ar: "ar-SA",
-  ru: "ru-RU",
-  bg: "bg-BG",
-  pt: "pt-PT",
-  zh: "zh-CN",
-  ja: "ja-JP",
-  ko: "ko-KR"
+  tr: "tr-TR", en: "en-US", de: "de-DE", fr: "fr-FR", it: "it-IT", es: "es-ES",
+  ar: "ar-SA", ru: "ru-RU", bg: "bg-BG", pt: "pt-PT", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR"
+};
+
+const TR_NAMES = {
+  tr: "Türkçe", en: "İngilizce", de: "Almanca", fr: "Fransızca", it: "İtalyanca", es: "İspanyolca",
+  ar: "Arapça", ru: "Rusça", bg: "Bulgarca", pt: "Portekizce", zh: "Çince", ja: "Japonca", ko: "Korece",
+  nl: "Hollandaca", pl: "Lehçe", uk: "Ukraynaca", fa: "Farsça", hi: "Hintçe", ur: "Urduca",
+  ro: "Romence", el: "Yunanca", he: "İbranice", id: "Endonezce", vi: "Vietnamca", th: "Tayca"
+};
+
+const FLAGS = {
+  tr: "🇹🇷", en: "🇬🇧", de: "🇩🇪", fr: "🇫🇷", it: "🇮🇹", es: "🇪🇸", ru: "🇷🇺", ar: "🇸🇦",
+  zh: "🇨🇳", ja: "🇯🇵", ko: "🇰🇷", pt: "🇵🇹", nl: "🇳🇱", el: "🇬🇷", uk: "🇺🇦", pl: "🇵🇱",
+  ro: "🇷🇴", bg: "🇧🇬", he: "🇮🇱", hi: "🇮🇳", id: "🇮🇩", fa: "🇮🇷", ur: "🇵🇰", th: "🇹🇭", vi: "🇻🇳"
 };
 
 let fromLang = localStorage.getItem("text_single_from_lang") || "tr";
 let toLang = localStorage.getItem("text_single_to_lang") || "en";
-let ALL_LANGS = [];
+let allLangs = [];
 let popoverMode = "from";
-
-let audio = null;
-let speakCtl = null;
-let speakToken = 0;
-let lastTranslateToken = 0;
-
-let recognizer = null;
+let soundEnabled = localStorage.getItem("text_single_sound_enabled") !== "0";
 let listening = false;
+let recognizer = null;
+let audio = null;
+let speakToken = 0;
+let translateToken = 0;
+let speechTranslateTimer = null;
 let booted = false;
 
-let soundEnabled = localStorage.getItem("text_single_sound_enabled") !== "0";
-
 function canonical(code) {
-  return String(code || "").trim().toLowerCase().split("-")[0];
+  return String(code || "").trim().toLowerCase().replace("_", "-").split("-")[0] || "en";
 }
 
-function normalizeText(text) {
+function cleanText(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
 
-function escapeHtml(str) {
-  return String(str ?? "")
+function escapeHtml(value) {
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -89,70 +81,36 @@ function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
-function toast(msg) {
+function logAuthFlow(step, extra = {}) {
+  console.warn("[TEXT_TRANSLATE_SPEECH]", step, extra);
+}
+
+function toast(message) {
   if (!toastEl) return;
-
-  toastEl.textContent = String(msg || "");
+  toastEl.textContent = String(message || "");
   toastEl.classList.add("show");
-
   clearTimeout(window.__textSingleToast);
-  window.__textSingleToast = setTimeout(() => {
-    toastEl.classList.remove("show");
-  }, 2200);
+  window.__textSingleToast = setTimeout(() => toastEl.classList.remove("show"), 2200);
 }
 
 function setState(state) {
   if (!frameRoot) return;
-
   frameRoot.classList.remove("is-ready", "is-error", "is-translating", "is-idle");
-
-  if (state === "translating") frameRoot.classList.add("is-translating");
-  else if (state === "error") frameRoot.classList.add("is-error");
-  else if (state === "idle") frameRoot.classList.add("is-idle");
-  else frameRoot.classList.add("is-ready");
+  frameRoot.classList.add(state === "translating" ? "is-translating" : state === "error" ? "is-error" : state === "idle" ? "is-idle" : "is-ready");
 }
 
 function setOutput(main, sub = "") {
-  if (!resultBubble || !resultSub) return;
-
   const value = String(main || "");
-  resultBubble.textContent = value || "...";
-  resultSub.textContent = sub || "";
-
-  resultBubble.className =
-    `bubble ${value.trim() && value.trim() !== "..." ? "latest" : "normal"}`;
-
-  try {
-    resultArea.scrollTop = resultArea.scrollHeight + 300;
-  } catch {}
+  if (resultBubble) {
+    resultBubble.textContent = value || "...";
+    resultBubble.className = `bubble ${value.trim() && value.trim() !== "..." ? "latest" : "normal"}`;
+  }
+  if (resultSub) resultSub.textContent = sub || "";
+  try { resultArea.scrollTop = resultArea.scrollHeight + 300; } catch {}
 }
 
 function syncInputPreview() {
-  if (!inputPreviewBubble || !inputBox) return;
-  inputPreviewBubble.textContent = normalizeText(inputBox.value);
-}
-
-function syncInputButtons() {
-  if (!inputBox || !micBtn || !translateBtn) return;
-
-  const hasText = normalizeText(inputBox.value).length > 0;
-
-  if (listening) {
-    micBtn.classList.remove("hidden");
-    micBtn.classList.add("listening");
-    translateBtn.classList.add("hidden");
-    return;
-  }
-
-  micBtn.classList.remove("listening");
-
-  if (hasText) {
-    micBtn.classList.add("hidden");
-    translateBtn.classList.remove("hidden");
-  } else {
-    micBtn.classList.remove("hidden");
-    translateBtn.classList.add("hidden");
-  }
+  if (inputPreviewBubble && inputBox) inputPreviewBubble.textContent = cleanText(inputBox.value);
 }
 
 function autoResizeInput() {
@@ -161,303 +119,64 @@ function autoResizeInput() {
   inputBox.style.height = `${Math.min(inputBox.scrollHeight, 140)}px`;
 }
 
-function stopSpeak() {
-  try {
-    speakCtl?.abort?.();
-  } catch {}
-
-  speakCtl = null;
-
-  try {
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-  } catch {}
-
-  audio = null;
-
-  try { window.NativeTTS?.stop?.(); } catch {}
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-}
-
-function chooseWebVoice(langCode) {
-  const lang = canonical(langCode);
-  const voices = window.speechSynthesis?.getVoices?.() || [];
-
-  return (
-    voices.find((v) => String(v.lang || "").toLowerCase().startsWith(lang)) ||
-    voices.find((v) => String(v.lang || "").toLowerCase().startsWith("en")) ||
-    voices[0] ||
-    null
-  );
-}
-
-function speakNativeFallback(text, langCode) {
-  const value = normalizeText(text);
-  if (!value) return false;
-
-  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-    try { window.NativeTTS.stop?.(); } catch {}
-
-    setTimeout(() => {
-      try {
-        window.NativeTTS.speak(value, canonical(langCode || "en"));
-      } catch {}
-    }, 80);
-
-    return true;
-  }
-
-  if (!window.speechSynthesis) return false;
-
-  try { window.speechSynthesis.cancel(); } catch {}
-
-  const u = new SpeechSynthesisUtterance(value);
-  u.lang = BCP[canonical(langCode)] || String(langCode || "en-US");
-
-  const voice = chooseWebVoice(langCode);
-  if (voice) u.voice = voice;
-
-  setTimeout(() => {
-    try {
-      window.speechSynthesis.speak(u);
-    } catch {}
-  }, 60);
-
-  return true;
-}
-
-async function speakText(text, langCode) {
-  if (!soundEnabled) return;
-
-  const value = normalizeText(text);
-  if (!value || value === "...") return;
-
-  stopSpeak();
-
-  const myToken = ++speakToken;
-
-  try {
-    speakCtl = new AbortController();
-
-    const r = await fetch(`${API_BASE}/api/tts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: value,
-        lang: canonical(langCode || "en")
-      }),
-      signal: speakCtl.signal
-    });
-
-    if (myToken !== speakToken) return;
-
-    const j = await r.json().catch(() => null);
-
-    if (myToken !== speakToken) return;
-
-    if (j?.audio_base64) {
-      audio = new Audio("data:audio/mpeg;base64," + j.audio_base64);
-      audio.playsInline = true;
-      audio.onended = () => {
-        if (myToken === speakToken) audio = null;
-      };
-      audio.onerror = () => {
-        if (myToken === speakToken) audio = null;
-      };
-
-      await audio.play();
-      return;
-    }
-
-    speakNativeFallback(value, canonical(langCode));
-  } catch (e) {
-    if (e?.name !== "AbortError") {
-      speakNativeFallback(value, canonical(langCode));
-    }
+function syncInputButtons() {
+  if (!inputBox || !micBtn || !translateBtn) return;
+  const hasText = cleanText(inputBox.value).length > 0;
+  micBtn.classList.toggle("listening", listening);
+  if (listening) {
+    micBtn.classList.remove("hidden");
+    translateBtn.classList.add("hidden");
+  } else if (hasText) {
+    micBtn.classList.add("hidden");
+    translateBtn.classList.remove("hidden");
+  } else {
+    micBtn.classList.remove("hidden");
+    translateBtn.classList.add("hidden");
   }
 }
 
-async function translateViaBackend(text, from, to) {
-  const endpoints = [
-    `${API_BASE}/api/translate_ai`,
-    `${API_BASE}/api/translate-ai`,
-    `${API_BASE}/api/translate`
-  ];
-
-  for (const endpoint of endpoints) {
-    try {
-      const r = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: normalizeText(text),
-          from_lang: canonical(from),
-          to_lang: canonical(to),
-          source: canonical(from),
-          target: canonical(to),
-          mode: "normal",
-          use_ai: false,
-          cultural: false,
-          tone: "neutral",
-          style: "warm"
-        })
-      });
-
-      const j = await r.json().catch(() => null);
-      const value = normalizeText(j?.translated || j?.translation || j?.text || "");
-
-      if (r.ok && value) return value;
-    } catch {}
-  }
-
-  return null;
+function langName(item) {
+  const code = canonical(item?.code || item);
+  return TR_NAMES[code] || item?.tr || item?.tr_name || item?.name_tr || item?.nativeName || item?.name || code.toUpperCase();
 }
 
-async function translateGoogleFree(text, from, to) {
-  const params = new URLSearchParams({
-    client: "gtx",
-    sl: canonical(from),
-    tl: canonical(to),
-    dt: "t",
-    q: text
-  });
-
-  const r = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
-
-  if (!r.ok) {
-    throw new Error("google_free_failed");
-  }
-
-  const data = await r.json().catch(() => null);
-  let translated = "";
-
-  if (Array.isArray(data) && Array.isArray(data[0])) {
-    for (const item of data[0]) {
-      if (Array.isArray(item) && item[0]) {
-        translated += String(item[0]);
-      }
-    }
-  }
-
-  translated = normalizeText(translated);
-  if (!translated) throw new Error("google_free_empty");
-
-  return translated;
+function langFlag(item) {
+  const code = canonical(item?.code || item);
+  return item?.flag || FLAGS[code] || "🌐";
 }
 
-async function translateAny(text, from, to) {
-  const backend = await translateViaBackend(text, from, to);
-  if (backend) return backend;
-
-  return await translateGoogleFree(text, from, to);
-}
-
-const TURKISH_LANG_NAMES = {
-  af:"Afrikanca", sq:"Arnavutça", am:"Amharca", ar:"Arapça", hy:"Ermenice", az:"Azerbaycanca",
-  eu:"Baskça", be:"Belarusça", bn:"Bengalce", bs:"Boşnakça", bg:"Bulgarca", ca:"Katalanca",
-  ceb:"Cebuano", zh:"Çince", "zh-cn":"Basitleştirilmiş Çince", "zh-tw":"Geleneksel Çince",
-  co:"Korsikaca", hr:"Hırvatça", cs:"Çekçe", da:"Danca", nl:"Hollandaca", en:"İngilizce",
-  eo:"Esperanto", et:"Estonca", fi:"Fince", fr:"Fransızca", fy:"Frizce", gl:"Galiçyaca",
-  ka:"Gürcüce", de:"Almanca", el:"Yunanca", gu:"Guceratça", ht:"Haiti Kreyolu", ha:"Hausa",
-  haw:"Hawaii Dili", he:"İbranice", iw:"İbranice", hi:"Hintçe", hmn:"Hmongca", hu:"Macarca",
-  is:"İzlandaca", ig:"İgbo", id:"Endonezce", ga:"İrlandaca", it:"İtalyanca", ja:"Japonca",
-  jv:"Cava Dili", kn:"Kannada", kk:"Kazakça", km:"Kmerce", rw:"Kinyarwanda", ko:"Korece",
-  ku:"Kürtçe", ky:"Kırgızca", lo:"Laoca", la:"Latince", lv:"Letonca", lt:"Litvanca",
-  lb:"Lüksemburgca", mk:"Makedonca", mg:"Malgaşça", ms:"Malayca", ml:"Malayalamca", mt:"Maltaca",
-  mi:"Maorice", mr:"Marathi", mn:"Moğolca", my:"Burmaca", ne:"Nepalce", no:"Norveççe",
-  ny:"Nyanja", or:"Oriyaca", ps:"Peştuca", fa:"Farsça", pl:"Lehçe", pt:"Portekizce",
-  pa:"Pencapça", ro:"Romence", ru:"Rusça", sm:"Samoaca", gd:"İskoç Galcesi", sr:"Sırpça",
-  st:"Sotho", sn:"Shona", sd:"Sindhi", si:"Sinhalaca", sk:"Slovakça", sl:"Slovence",
-  so:"Somalice", es:"İspanyolca", su:"Sundaca", sw:"Svahili", sv:"İsveççe", tl:"Tagalog",
-  tg:"Tacikçe", ta:"Tamilce", tt:"Tatarca", te:"Teluguca", th:"Tayca", tr:"Türkçe",
-  tk:"Türkmence", uk:"Ukraynaca", ur:"Urduca", ug:"Uygurca", uz:"Özbekçe", vi:"Vietnamca",
-  cy:"Galce", xh:"Xhosa", yi:"Yidiş", yo:"Yorubaca", zu:"Zuluca"
-};
-
-const FLAG_MAP = {
-  tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", ru:"🇷🇺", ar:"🇸🇦", zh:"🇨🇳",
-  ja:"🇯🇵", ko:"🇰🇷", pt:"🇵🇹", nl:"🇳🇱", el:"🇬🇷", uk:"🇺🇦", pl:"🇵🇱", ro:"🇷🇴", bg:"🇧🇬",
-  he:"🇮🇱", hi:"🇮🇳", id:"🇮🇩", fa:"🇮🇷", ur:"🇵🇰", th:"🇹🇭", vi:"🇻🇳"
-};
-
-function getFlag(code, item) {
-  return item?.flag || FLAG_MAP[canonical(code)] || "🌐";
-}
-
-function getTurkishName(item) {
-  const code = canonical(item?.code);
-
-  return (
-    TURKISH_LANG_NAMES[code] ||
-    item?.tr ||
-    item?.tr_name ||
-    item?.name_tr ||
-    item?.nativeName ||
-    item?.name ||
-    code.toUpperCase()
-  );
-}
-
-function sanitizeLangPool() {
-  const raw = Array.isArray(LANG_POOL) ? LANG_POOL : [];
+function buildLangs() {
   const seen = new Set();
-
-  return raw
+  return (Array.isArray(LANG_POOL) ? LANG_POOL : [])
     .map((item) => {
       const code = canonical(item?.code);
-      if (!code || seen.has(code) || code === "auto" || code === "detect") return null;
-
+      if (!code || code === "auto" || code === "detect" || seen.has(code)) return null;
       seen.add(code);
-
-      const trName = getTurkishName(item);
-
-      return {
-        code,
-        flag: getFlag(code, item),
-        trName,
-        searchText: [
-          code,
-          trName,
-          item?.name || "",
-          item?.nativeName || ""
-        ].join(" ").toLowerCase()
-      };
+      const name = langName(item);
+      return { code, name, flag: langFlag(item), search: `${code} ${name} ${item?.name || ""} ${item?.nativeName || ""}`.toLowerCase() };
     })
     .filter(Boolean)
-    .sort((a, b) => a.trName.localeCompare(b.trName, "tr"));
+    .sort((a, b) => a.name.localeCompare(b.name, "tr"));
 }
 
-function getLangByCode(code) {
-  return ALL_LANGS.find((x) => x.code === canonical(code)) || {
-    code: canonical(code),
-    flag: "🌐",
-    trName: String(code || "").toUpperCase()
-  };
+function getLang(code) {
+  const lang = allLangs.find((item) => item.code === canonical(code));
+  return lang || { code: canonical(code), name: TR_NAMES[canonical(code)] || canonical(code).toUpperCase(), flag: FLAGS[canonical(code)] || "🌐" };
 }
 
-function ensureValidLanguages() {
-  if (!ALL_LANGS.find((x) => x.code === canonical(fromLang))) fromLang = "tr";
-  if (!ALL_LANGS.find((x) => x.code === canonical(toLang))) toLang = "en";
-
-  if (canonical(fromLang) === canonical(toLang)) {
-    const fallback = canonical(fromLang) === "en" ? "tr" : "en";
-    if (ALL_LANGS.find((x) => x.code === fallback)) {
-      toLang = fallback;
-    }
-  }
+function ensureLangs() {
+  if (!allLangs.some((item) => item.code === canonical(fromLang))) fromLang = "tr";
+  if (!allLangs.some((item) => item.code === canonical(toLang))) toLang = "en";
+  if (canonical(fromLang) === canonical(toLang)) toLang = canonical(fromLang) === "en" ? "tr" : "en";
 }
 
 function renderTopLanguageButtons() {
-  const fromObj = getLangByCode(fromLang);
-  const toObj = getLangByCode(toLang);
-
-  if (fromFlag) fromFlag.textContent = fromObj.flag;
-  if (toFlag) toFlag.textContent = toObj.flag;
-  if (fromText) fromText.textContent = fromObj.trName;
-  if (toText) toText.textContent = toObj.trName;
-
+  const from = getLang(fromLang);
+  const to = getLang(toLang);
+  if (fromFlag) fromFlag.textContent = from.flag;
+  if (toFlag) toFlag.textContent = to.flag;
+  if (fromText) fromText.textContent = from.name;
+  if (toText) toText.textContent = to.name;
   localStorage.setItem("text_single_from_lang", canonical(fromLang));
   localStorage.setItem("text_single_to_lang", canonical(toLang));
 }
@@ -467,59 +186,38 @@ function renderToggles() {
     soundToggle.classList.toggle("active", !!soundEnabled);
     soundToggle.classList.toggle("inactive", !soundEnabled);
   }
-
   localStorage.setItem("text_single_sound_enabled", soundEnabled ? "1" : "0");
 }
 
 function renderLangList(query = "") {
   if (!langList) return;
-
   const q = String(query || "").trim().toLowerCase();
-  const currentCode = popoverMode === "from" ? canonical(fromLang) : canonical(toLang);
-
-  const filtered = !q
-    ? ALL_LANGS
-    : ALL_LANGS.filter((item) => item.searchText.includes(q));
-
-  if (!filtered.length) {
+  const current = popoverMode === "from" ? canonical(fromLang) : canonical(toLang);
+  const items = q ? allLangs.filter((item) => item.search.includes(q)) : allLangs;
+  if (!items.length) {
     langList.innerHTML = `<div style="padding:22px 14px;text-align:center;color:rgba(255,255,255,.52);font-size:13px;">Aradığın dil bulunamadı.</div>`;
     return;
   }
-
-  langList.innerHTML = filtered.map((item) => `
-    <button class="lang-option ${item.code === currentCode ? "active" : ""}" type="button" data-code="${item.code}">
+  langList.innerHTML = items.map((item) => `
+    <button class="lang-option ${item.code === current ? "active" : ""}" type="button" data-code="${item.code}">
       <div class="lang-option-left">
         <div class="lang-option-flag">${item.flag}</div>
         <div class="lang-option-text">
-          <div class="lang-option-name">${escapeHtml(item.trName)}</div>
+          <div class="lang-option-name">${escapeHtml(item.name)}</div>
           <div class="lang-option-code">${escapeHtml(item.code)}</div>
         </div>
       </div>
       <div class="lang-option-check">✓</div>
-    </button>
-  `).join("");
-
-  langList.querySelectorAll(".lang-option").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const code = canonical(btn.dataset.code);
-      if (!code) return;
-
-      if (popoverMode === "from") {
-        fromLang = code;
-
-        if (canonical(fromLang) === canonical(toLang)) {
-          const other = ALL_LANGS.find((x) => x.code !== canonical(fromLang));
-          if (other) toLang = other.code;
-        }
-      } else {
-        toLang = code;
-
-        if (canonical(toLang) === canonical(fromLang)) {
-          const other = ALL_LANGS.find((x) => x.code !== canonical(toLang));
-          if (other) fromLang = other.code;
-        }
+    </button>`).join("");
+  langList.querySelectorAll(".lang-option").forEach((button) => {
+    button.addEventListener("click", () => {
+      const code = canonical(button.dataset.code);
+      if (popoverMode === "from") fromLang = code;
+      else toLang = code;
+      if (canonical(fromLang) === canonical(toLang)) {
+        if (popoverMode === "from") toLang = code === "en" ? "tr" : "en";
+        else fromLang = code === "en" ? "tr" : "en";
       }
-
       renderTopLanguageButtons();
       closeLangPopover();
     });
@@ -528,286 +226,353 @@ function renderLangList(query = "") {
 
 function openLangPopover(mode) {
   popoverMode = mode === "to" ? "to" : "from";
-
-  if (popoverTitle) {
-    popoverTitle.textContent = popoverMode === "from" ? "Kaynak Dil Seç" : "Hedef Dil Seç";
-  }
-
-  langPopover?.classList.add("show");
-
-  if (langSearch) {
-    langSearch.value = "";
-  }
-
+  if (popoverTitle) popoverTitle.textContent = popoverMode === "from" ? "Kaynak Dil Seç" : "Hedef Dil Seç";
+  if (langSearch) langSearch.value = "";
   renderLangList("");
-
-  setTimeout(() => {
-    try { langSearch?.focus?.(); } catch {}
-  }, 40);
+  langPopover?.classList.add("show");
+  setTimeout(() => langSearch?.focus?.(), 40);
 }
 
 function closeLangPopover() {
   langPopover?.classList.remove("show");
 }
 
-async function translateText() {
-  const sourceText = normalizeText(inputBox?.value || "");
+function stopSpeak() {
+  speakToken += 1;
+  try { if (audio) { audio.pause(); audio.currentTime = 0; } } catch {}
+  audio = null;
+  try { window.NativeTTS?.stop?.(); } catch {}
+  try { window.AndroidBridge?.stopTts?.(); } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+}
 
+function chooseWebVoice(langCode) {
+  const lang = canonical(langCode);
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  return voices.find((v) => String(v.lang || "").toLowerCase().startsWith(lang)) || voices.find((v) => String(v.lang || "").toLowerCase().startsWith("en")) || voices[0] || null;
+}
+
+async function speakText(text, langCode) {
+  if (!soundEnabled) return;
+  const value = cleanText(text);
+  if (!value || value === "...") return;
+  stopRecognition();
+  stopSpeak();
+  const token = ++speakToken;
+  const lang = canonical(langCode || "en");
+  try {
+    if (window.NativeTTS?.speak) {
+      window.NativeTTS.speak(value, lang);
+      return;
+    }
+    if (window.AndroidBridge?.speak) {
+      window.AndroidBridge.speak(value, lang);
+      return;
+    }
+  } catch (e) {
+    console.warn("[TEXT_TRANSLATE_TTS] native failed", e);
+  }
+  try {
+    const res = await fetch(`${API_BASE}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: value, lang })
+    });
+    const data = await res.json().catch(() => null);
+    if (token !== speakToken) return;
+    if (data?.audio_base64) {
+      audio = new Audio("data:audio/mpeg;base64," + data.audio_base64);
+      audio.playsInline = true;
+      await audio.play();
+      return;
+    }
+  } catch (e) {
+    console.warn("[TEXT_TRANSLATE_TTS] api failed", e);
+  }
+  if (!window.speechSynthesis) return;
+  try {
+    const utterance = new SpeechSynthesisUtterance(value);
+    utterance.lang = BCP[lang] || `${lang}-${lang.toUpperCase()}`;
+    const voice = chooseWebVoice(lang);
+    if (voice) utterance.voice = voice;
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    console.warn("[TEXT_TRANSLATE_TTS] web failed", e);
+  }
+}
+
+async function translateViaBackend(text, from, to) {
+  const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
+  for (const endpoint of endpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: cleanText(text), from_lang: canonical(from), to_lang: canonical(to),
+          source: canonical(from), target: canonical(to), mode: "normal", use_ai: false, cultural: false, tone: "neutral", style: "warm"
+        })
+      });
+      const data = await res.json().catch(() => null);
+      const value = cleanText(data?.translated || data?.translation || data?.text || "");
+      if (res.ok && value) return value;
+    } catch (e) {
+      console.warn("[TEXT_TRANSLATE] backend failed", { endpoint, error: e?.message });
+    }
+  }
+  return null;
+}
+
+async function translateGoogleFree(text, from, to) {
+  const params = new URLSearchParams({ client: "gtx", sl: canonical(from), tl: canonical(to), dt: "t", q: text });
+  const res = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
+  if (!res.ok) throw new Error("translate_fallback_failed");
+  const data = await res.json().catch(() => null);
+  let out = "";
+  if (Array.isArray(data?.[0])) {
+    for (const item of data[0]) if (Array.isArray(item) && item[0]) out += String(item[0]);
+  }
+  out = cleanText(out);
+  if (!out) throw new Error("translate_empty");
+  return out;
+}
+
+async function translateAny(text, from, to) {
+  return (await translateViaBackend(text, from, to)) || (await translateGoogleFree(text, from, to));
+}
+
+async function translateText() {
+  const sourceText = cleanText(inputBox?.value || "");
   if (!sourceText) {
     setOutput("...");
     toast("Önce çevrilecek bir metin yaz.");
     syncInputButtons();
     return;
   }
-
-  const myToken = ++lastTranslateToken;
+  const token = ++translateToken;
   const from = canonical(fromLang);
   const to = canonical(toLang);
-
   const originalText = sourceText;
-
   if (inputBox) {
     inputBox.value = "";
     autoResizeInput();
   }
-
-  if (inputPreviewBubble) {
-    inputPreviewBubble.textContent = originalText;
-  }
-
+  if (inputPreviewBubble) inputPreviewBubble.textContent = originalText;
   syncInputButtons();
-
   setState("translating");
   setOutput("Çevriliyor...");
-
+  console.warn("[TEXT_TRANSLATE] translate triggered", { from, to, length: originalText.length });
   try {
     const out = await translateAny(originalText, from, to);
-
-    if (myToken !== lastTranslateToken) return;
-
+    if (token !== translateToken) return;
     setOutput(out);
     setState("ready");
-
-    if (soundEnabled) {
-      setTimeout(() => {
-        speakText(out, to);
-      }, 140);
-    }
+    console.warn("[TEXT_TRANSLATE] translate success", { length: out.length });
+    if (soundEnabled) setTimeout(() => speakText(out, to), 140);
   } catch (e) {
-    if (myToken !== lastTranslateToken) return;
-
-    setOutput("⚠️ Çeviri şu an yapılamadı.");
+    if (token !== translateToken) return;
+    console.warn("[TEXT_TRANSLATE] translate failure", e);
+    setOutput("Çeviri şu anda tamamlanamadı. Lütfen tekrar deneyin.");
     setState("error");
-    toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
-
-    setTimeout(() => {
-      setState("ready");
-    }, 1200);
+    toast("Çeviri şu anda tamamlanamadı. Lütfen tekrar deneyin.");
+    setTimeout(() => setState("ready"), 1200);
   }
 }
+
+function dispatchInputUpdated() {
+  try { inputBox?.dispatchEvent(new Event("input", { bubbles: true })); } catch {}
+}
+
+function applyTranscriptToInput(transcript, autoTranslate = true) {
+  const value = cleanText(transcript);
+  console.warn("[TEXT_TRANSLATE_SPEECH] speech result received", { length: value.length });
+  if (!value || !inputBox) return;
+  inputBox.value = value;
+  autoResizeInput();
+  syncInputPreview();
+  syncInputButtons();
+  dispatchInputUpdated();
+  console.warn("[TEXT_TRANSLATE_SPEECH] input updated", { length: value.length });
+  if (autoTranslate && value.length > 1) {
+    clearTimeout(speechTranslateTimer);
+    speechTranslateTimer = setTimeout(() => {
+      console.warn("[TEXT_TRANSLATE_SPEECH] translate triggered");
+      translateText();
+    }, 180);
+  }
+}
+
+function parseNativeSpeechPayload(payload) {
+  if (typeof payload === "string") {
+    try { return JSON.parse(payload); } catch { return { text: payload }; }
+  }
+  return payload || {};
+}
+
+window.onNativeSpeechResult = function(payload, maybeText, maybeFinal) {
+  const data = typeof payload === "string" && (payload === "text" || payload === "text_public")
+    ? { text: maybeText, isFinal: maybeFinal !== false }
+    : parseNativeSpeechPayload(payload);
+  const transcript = data?.text || data?.result || data?.transcript || data?.value || "";
+  const isFinal = data?.isFinal !== false && data?.final !== false;
+  if (transcript) applyTranscriptToInput(transcript, isFinal);
+  if (isFinal) {
+    listening = false;
+    syncInputButtons();
+  }
+};
+
+function friendlySpeechError(error) {
+  const code = String(error || "").toLowerCase();
+  if (code.includes("permission") || code.includes("denied") || code.includes("not_allowed")) {
+    return "Mikrofonu kullanmak için izin vermeniz gerekiyor.";
+  }
+  if (code.includes("no_speech") || code.includes("no speech") || code.includes("timeout") || code.includes("empty")) {
+    return "Ses algılanamadı. Tekrar deneyebilirsiniz.";
+  }
+  return "Mikrofon şu anda başlatılamadı. Lütfen tekrar deneyin.";
+}
+
+window.onNativeSpeechError = function(error) {
+  console.warn("[TEXT_TRANSLATE_SPEECH] speech failure", { error });
+  listening = false;
+  syncInputButtons();
+  toast(friendlySpeechError(error));
+};
 
 function extractStableRecognitionText(results) {
   let latestFinal = "";
   let latestInterim = "";
-
-  for (let i = 0; i < results.length; i++) {
-    const piece = normalizeText(results[i]?.[0]?.transcript || "");
+  for (let i = 0; i < results.length; i += 1) {
+    const piece = cleanText(results[i]?.[0]?.transcript || "");
     if (!piece) continue;
-
-    if (results[i].isFinal) {
-      latestFinal = piece;
-    } else {
-      latestInterim = piece;
-    }
+    if (results[i].isFinal) latestFinal = piece;
+    else latestInterim = piece;
   }
-
-  return normalizeText(latestFinal || latestInterim);
+  return cleanText(latestFinal || latestInterim);
 }
 
 function stopRecognition() {
   try { recognizer?.stop?.(); } catch {}
   try { recognizer?.abort?.(); } catch {}
-
+  try { window.Native?.stopSpeechRecognition?.(); } catch {}
+  try { window.AndroidBridge?.stopSpeechRecognition?.(); } catch {}
   recognizer = null;
   listening = false;
   syncInputButtons();
 }
 
-window.onNativeSpeechResult = function(payload) {
-  try {
-    const data = typeof payload === "string" ? JSON.parse(payload) : payload;
-    const value = normalizeText(data?.text || data?.result || "");
-
-    if (value && inputBox) {
-      inputBox.value = value;
-      autoResizeInput();
-      syncInputPreview();
-      syncInputButtons();
-    }
-  } catch {}
-
-  listening = false;
-  syncInputButtons();
-};
-
-window.onNativeSpeechError = function() {
-  listening = false;
-  syncInputButtons();
-  toast("Mikrofon hatası");
-};
-
 function startRecognition() {
+  console.warn("[TEXT_TRANSLATE_SPEECH] mic button clicked");
   if (listening) {
     stopRecognition();
     return;
   }
-
+  stopSpeak();
   const langCode = BCP[canonical(fromLang)] || `${canonical(fromLang)}-${canonical(fromLang).toUpperCase()}`;
-
-  if (window.Native && typeof window.Native.startSpeechRecognition === "function") {
+  const nativeBridge = [window.Native, window.AndroidBridge, window.OfflineSpeech].find((bridge) => bridge && typeof bridge.startSpeechRecognition === "function");
+  if (nativeBridge) {
     try {
       listening = true;
       syncInputButtons();
-      window.Native.startSpeechRecognition(langCode, "text");
+      console.warn("[TEXT_TRANSLATE_SPEECH] speech start requested", { bridge: nativeBridge === window.Native ? "Native" : nativeBridge === window.AndroidBridge ? "AndroidBridge" : "OfflineSpeech", langCode });
+      nativeBridge.startSpeechRecognition(langCode, "text");
       return;
-    } catch {
+    } catch (e) {
+      console.warn("[TEXT_TRANSLATE_SPEECH] native start failed", e);
       listening = false;
       syncInputButtons();
     }
   }
-
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SR) {
-    toast("Bu cihazda sesli giriş desteklenmiyor");
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    toast("Bu cihazda sesli giriş desteklenmiyor.");
     return;
   }
-
-  recognizer = new SR();
+  recognizer = new SpeechRecognition();
   recognizer.lang = langCode;
   recognizer.interimResults = true;
   recognizer.continuous = false;
   recognizer.maxAlternatives = 1;
-
   recognizer.onstart = () => {
     listening = true;
     syncInputButtons();
+    console.warn("[TEXT_TRANSLATE_SPEECH] browser speech started", { langCode });
   };
-
-  recognizer.onresult = (e) => {
-    const stableText = extractStableRecognitionText(e.results);
-
-    if (inputBox) {
-      inputBox.value = stableText;
-      autoResizeInput();
-    }
-
-    syncInputPreview();
-    syncInputButtons();
+  recognizer.onresult = (event) => {
+    const text = extractStableRecognitionText(event.results);
+    if (text) applyTranscriptToInput(text, false);
+    const last = event.results[event.results.length - 1];
+    if (last?.isFinal && text) applyTranscriptToInput(text, true);
   };
-
-  recognizer.onerror = () => {
+  recognizer.onerror = (event) => {
+    console.warn("[TEXT_TRANSLATE_SPEECH] browser speech error", event?.error);
     stopRecognition();
-    toast("Mikrofon hatası");
+    toast(friendlySpeechError(event?.error));
   };
-
   recognizer.onend = () => {
     listening = false;
     syncInputButtons();
   };
-
-  try {
-    recognizer.start();
-  } catch {
+  try { recognizer.start(); }
+  catch (e) {
+    console.warn("[TEXT_TRANSLATE_SPEECH] browser start failed", e);
     stopRecognition();
+    toast("Mikrofon şu anda başlatılamadı. Lütfen tekrar deneyin.");
   }
 }
 
 async function requireLogin() {
   const { data: { session } = {} } = await supabase.auth.getSession();
-
   if (!session?.user) {
     location.replace("/pages/login.html");
     return false;
   }
-
-  try {
-    await ensureAuthAndCacheUser();
-  } catch {}
-
+  try { await ensureAuthAndCacheUser(); } catch {}
   return true;
 }
 
 function bindEvents() {
   fromBtn?.addEventListener("click", () => openLangPopover("from"));
   toBtn?.addEventListener("click", () => openLangPopover("to"));
-
   swapBtn?.addEventListener("click", () => {
     const oldFrom = fromLang;
     fromLang = toLang;
     toLang = oldFrom;
-
     renderTopLanguageButtons();
-    toast("Diller değiştirildi");
+    toast("Diller değiştirildi.");
   });
-
   popoverClose?.addEventListener("click", closeLangPopover);
-
-  langPopover?.addEventListener("click", (e) => {
-    if (e.target === langPopover) closeLangPopover();
-  });
-
-  langSearch?.addEventListener("input", (e) => {
-    renderLangList(e.target.value || "");
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && langPopover?.classList.contains("show")) {
-      closeLangPopover();
-    }
-  });
-
+  langPopover?.addEventListener("click", (event) => { if (event.target === langPopover) closeLangPopover(); });
+  langSearch?.addEventListener("input", (event) => renderLangList(event.target.value || ""));
+  window.addEventListener("keydown", (event) => { if (event.key === "Escape" && langPopover?.classList.contains("show")) closeLangPopover(); });
   soundToggle?.addEventListener("click", () => {
     soundEnabled = !soundEnabled;
     renderToggles();
-
     if (!soundEnabled) stopSpeak();
-
-    toast(soundEnabled ? "Ses açıldı" : "Ses kapatıldı");
+    toast(soundEnabled ? "Ses açıldı." : "Ses kapatıldı.");
   });
-
   translateBtn?.addEventListener("click", translateText);
-
-  inputBox?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  inputBox?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
       translateText();
     }
   });
-
   inputBox?.addEventListener("input", () => {
     autoResizeInput();
     syncInputPreview();
     syncInputButtons();
   });
-
   micBtn?.addEventListener("click", startRecognition);
-
-  homeLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    location.href = "/pages/home.html";
-  });
-
-  homeBtn?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
-  });
-
+  homeLink?.addEventListener("click", (event) => { event.preventDefault(); location.href = "/pages/home.html"; });
+  homeBtn?.addEventListener("click", () => { location.href = "/pages/home.html"; });
   clearBtn?.addEventListener("click", () => {
     if (inputBox) {
       inputBox.value = "";
       autoResizeInput();
     }
-
+    clearTimeout(speechTranslateTimer);
     setOutput("...");
     syncInputPreview();
     stopSpeak();
@@ -819,40 +584,26 @@ function bindEvents() {
 async function boot() {
   if (booted) return;
   booted = true;
-
   if (!(await requireLogin())) return;
-
-  ALL_LANGS = sanitizeLangPool();
-
-  ensureValidLanguages();
+  allLangs = buildLangs();
+  ensureLangs();
   renderTopLanguageButtons();
   renderToggles();
   bindEvents();
-
   setOutput("...");
-
   if (inputBox) {
     inputBox.removeAttribute("readonly");
     inputBox.disabled = false;
     autoResizeInput();
   }
-
   syncInputPreview();
   syncInputButtons();
   setState("ready");
-
-  console.log("TEXT_TRANSLATE_READY_V8", {
-    fromLang,
-    toLang,
-    langs: ALL_LANGS.length
-  });
+  console.warn("[TEXT_TRANSLATE] ready", { fromLang, toLang, langs: allLangs.length });
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", boot);
-} else {
-  boot();
-}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+else boot();
 
 window.addEventListener("beforeunload", () => {
   stopSpeak();
