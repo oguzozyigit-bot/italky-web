@@ -29,7 +29,7 @@ import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { GAME_LANG_META, formatGlobalBest, getGameLangFromUrl, getGlobalBest, getLocalHighScore, refreshGameScoreLabels, saveGameScore, setLocalHighScore, speakGameText } from "/js/game_score_helper.js";
 
 function gmSafe(data){
-  if(data instanceof Error) return { message:data.message||String(data), stack:data.stack||"", name:data.name||"Error" };
+  if(data instanceof Error) return { message:data.message||String(data), stack:data.stack||"", name:data.name||"Error", code:data.code||"" };
   if(data && typeof data === "object") return data;
   return { value:data };
 }
@@ -86,6 +86,22 @@ function updateHud(){const meta=GAME_LANG_META[lang]||GAME_LANG_META.en;$("langC
 async function refreshScores(){const localBest=getLocalHighScore(GAME_SLUG,lang);$("personalBestLabel").textContent=`SENİN REKORUN: ${localBest||"—"}`;$("globalBestLabel").textContent="GENEL REKOR: —";try{return await refreshGameScoreLabels({gameSlug:GAME_SLUG,lang,personalEl:$("personalBestLabel"),globalEl:$("globalBestLabel")});}catch(error){gmLog("score refresh failed",error);return null;}}
 function updateLocalBest(){const best=getLocalHighScore(GAME_SLUG,lang);if(score>best){setLocalHighScore(GAME_SLUG,lang,score);$("personalBestLabel").textContent=`SENİN REKORUN: ${score}`;return true;}return false;}
 async function saveScoreOnce(){if(scoreSaved)return;scoreSaved=true;updateLocalBest();const durationSeconds=Math.max(1,Math.round((Date.now()-startedAt)/1000));try{await saveGameScore({gameSlug:GAME_SLUG,lang,score,correctCount,wrongCount,durationSeconds});}catch(error){gmLog("score save failed",error);}try{const best=await getGlobalBest(GAME_SLUG,lang);$("globalBestLabel").textContent=formatGlobalBest(best);}catch(error){gmLog("global best refresh failed",error);}}
+function isLockDevicePermissionError(error){const code=String(error?.code||"");const message=String(error?.message||error||"").toLowerCase();return code==="42501"||message.includes("lock_device")||message.includes("permission denied for function lock_device");}
+async function ensureGameAccessForPlay(){
+  try{
+    const ok=await ensureAuthAndCacheUser();
+    if(!ok)return false;
+    return true;
+  }catch(error){
+    const payload={code:error?.code||"",message:error?.message||String(error)};
+    if(isLockDevicePermissionError(error)){
+      gmLog("device lock skipped",payload);
+    }else{
+      gmLog("auth init skipped",{...payload,stack:error?.stack||""});
+    }
+    return true;
+  }
+}
 function buildItems(words){const seen=new Set();return words.filter(item=>{const key=normalizeKey(item.word)+":"+normalizeKey(item.meaning);if(!item.word||!item.meaning||seen.has(key))return false;seen.add(key);return true;});}
 function pickRun(items){return shuffle(items).slice(0,TOTAL_ROUNDS);}
 function buildOptions(answer){const opts=[answer];const wrongs=shuffle(pool.map(item=>item.word).filter(word=>normalizeKey(word)!==normalizeKey(answer)));for(const word of wrongs){if(opts.length>=4)break;if(!opts.some(item=>normalizeKey(item)===normalizeKey(word)))opts.push(word);}return shuffle(opts);}
@@ -108,7 +124,7 @@ function hideResult(){$("resultOverlay").classList.remove("show");$("resultOverl
 async function initGame(){
   try{
     hideResult();setStatus("Hazırlanıyor");setBusy(true);$("meaningText").textContent="...";$("sentenceText").innerHTML='<span class="gap">____</span>';$("optionsGrid").innerHTML="";
-    const ok=await ensureAuthAndCacheUser();if(!ok){location.href="/pages/login.html";return;}
+    const ok=await ensureGameAccessForPlay();if(!ok){location.href="/pages/login.html";return;}
     score=0;lives=3;correctCount=0;wrongCount=0;runIndex=0;scoreSaved=false;startedAt=Date.now();current=null;updateHud();refreshScores();
     const rows=await loadGapPool(lang);
     pool=buildItems(rows);
