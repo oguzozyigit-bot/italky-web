@@ -24,6 +24,8 @@ function injectPremiumUiCss() {
     body#frameRoot .half-screen.bottom{padding-bottom:calc(18px + var(--safe-bottom))!important;}
     body#frameRoot .half-screen.bottom .composer-stack{transform:translateY(-10px);}
     body#frameRoot.premium-bt-mode.bt-active #topSection .composer-stack{display:none!important;}
+    body#frameRoot.premium-bt-mode.bt-active #topLangBtn{pointer-events:none!important;opacity:.78;}
+    body#frameRoot.premium-bt-mode.bt-active #pop-top{display:none!important;}
     body#frameRoot.premium-bt-mode #btToggleBtn{
       position:fixed!important;
       left:38px!important;
@@ -248,7 +250,7 @@ function startRecording(side = "bot") {
     for (let i = event.resultIndex; i < event.results.length; i += 1) {
       if (event.results[i].isFinal) finalText += event.results[i][0]?.transcript || "";
     }
-    if (finalText) handleSpeechFinal(side, finalText);
+    if (finalText) handleSpeechFinal("bot", finalText);
   };
 
   rec.onerror = () => {
@@ -280,7 +282,7 @@ function handleSpeechFinal(side, text) {
     return;
   }
 
-  if (side === "bot" && isBtConnected) {
+  if (isBtConnected) {
     const now = Date.now();
     if (clean === lastSentText && now - lastSentAt < 2500) {
       restartHandsFreeIfNeeded();
@@ -378,17 +380,49 @@ function bindControls() {
   }
 }
 
+function parseNativeSpeechArgs(arg1, arg2, arg3) {
+  let side = recordingSide || "bot";
+  let text = "";
+  let isFinal = true;
+
+  if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
+    side = arg1;
+    text = String(arg2 || "");
+    isFinal = arg3 !== false;
+  } else if (typeof arg1 === "string") {
+    try {
+      const data = JSON.parse(arg1);
+      side = data?.side || recordingSide || "bot";
+      text = String(data?.text || data?.transcript || "");
+      isFinal = data?.isFinal !== false && data?.final !== false;
+    } catch {
+      side = recordingSide || "bot";
+      text = arg1;
+      isFinal = arg3 !== false;
+    }
+  } else if (arg1 && typeof arg1 === "object") {
+    side = arg1.side || recordingSide || "bot";
+    text = String(arg1.text || arg1.transcript || "");
+    isFinal = arg1.isFinal !== false && arg1.final !== false;
+  }
+
+  return { side, text, isFinal };
+}
+
+function closeLanguagePopupsForBluetooth() {
+  $("pop-top")?.classList.remove("show");
+  $("pop-bot")?.classList.remove("show");
+}
+
 function bindBridgeEvents() {
-  const previousConnected = window.onBtConnected;
   const previousMessage = window.onBtMessageReceived;
-  const previousSpeech = window.onNativeSpeechResult;
   const previousError = window.onNativeSpeechError;
   const previousPickerClosed = window.onBtDevicePickerClosed;
   const previousPermissionMissing = window.onBtPermissionMissing;
   const previousDiscoveryError = window.onBtDiscoveryError;
   const previousDiscoveryFinished = window.onBtDiscoveryFinished;
 
-  window.onBtConnected = function (...args) {
+  window.onBtConnected = function () {
     clearBluetoothPickerTimer();
     isBtConnected = true;
     document.body.classList.add("bt-active");
@@ -396,8 +430,8 @@ function bindBridgeEvents() {
     setHandsFreeVisible(true);
     clearBody("top");
     clearBody("bot");
+    closeLanguagePopupsForBluetooth();
     toast("Bluetooth bağlantısı kuruldu.");
-    try { previousConnected?.(...args); } catch {}
   };
 
   window.onBtDisconnected = function () {
@@ -406,6 +440,7 @@ function bindBridgeEvents() {
     isHandsFree = false;
     stopRecognizer();
     document.body.classList.remove("bt-active");
+    closeLanguagePopupsForBluetooth();
     setBtButtonConnected(false);
     setHandsFreeVisible(false);
     toast("Bluetooth bağlantısı kapandı.");
@@ -453,40 +488,18 @@ function bindBridgeEvents() {
   };
 
   window.onNativeSpeechResult = function (arg1, arg2, arg3) {
-    let side = "";
-    let text = "";
-    let isFinal = true;
-
-    try {
-      if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
-        side = arg1;
-        text = String(arg2 || "");
-        isFinal = arg3 !== false;
-      } else if (typeof arg1 === "string") {
-        const data = JSON.parse(arg1);
-        side = data?.side || "";
-        text = String(data?.text || "");
-        isFinal = data?.isFinal !== false;
-      } else if (arg1 && typeof arg1 === "object") {
-        side = arg1.side || "";
-        text = String(arg1.text || "");
-        isFinal = arg1.isFinal !== false;
-      }
-    } catch {}
-
-    if (isBtConnected && side === "bot") {
-      if (isFinal) handleSpeechFinal("bot", text);
+    if (isBtConnected) {
+      const parsed = parseNativeSpeechArgs(arg1, arg2, arg3);
+      if (parsed.isFinal) handleSpeechFinal("bot", parsed.text);
       return;
     }
-
-    try { previousSpeech?.(arg1, arg2, arg3); } catch {}
   };
 
   window.onNativeSpeechError = function (error) {
-    if (isBtConnected && isHandsFree) {
+    if (isBtConnected) {
       recordingSide = null;
       setMicState("bot", false);
-      restartHandsFreeIfNeeded();
+      if (isHandsFree) restartHandsFreeIfNeeded();
       return;
     }
     try { previousError?.(error); } catch {}
