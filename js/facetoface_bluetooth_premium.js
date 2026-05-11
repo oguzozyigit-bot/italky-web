@@ -27,16 +27,20 @@ function injectPremiumUiCss() {
       text-orientation:mixed!important;
     }
 
+    body#frameRoot.bt-premium-mode .half-screen.top,
+    body#frameRoot.bt-premium-mode .half-screen.bottom{
+      flex:1 1 0!important;
+      min-height:0!important;
+    }
+
     body#frameRoot.bt-premium-mode .half-screen.top{
-      flex:.78 1 0!important;
       justify-content:flex-start!important;
-      padding:12px 10px 6px!important;
+      padding:10px 10px 6px!important;
       background:linear-gradient(180deg,rgba(15,23,42,.74),rgba(2,6,23,.22))!important;
       border-bottom:1px solid rgba(147,197,253,.08)!important;
     }
 
     body#frameRoot.bt-premium-mode .half-screen.bottom{
-      flex:1.22 1 0!important;
       padding:8px 8px calc(18px + var(--safe-bottom))!important;
       background:linear-gradient(180deg,rgba(14,165,233,.08),rgba(2,6,23,.30))!important;
     }
@@ -65,16 +69,14 @@ function injectPremiumUiCss() {
 
     body#frameRoot.bt-premium-mode .chat-body{
       mask-image:none!important;
-      padding:14px 0!important;
-    }
-
-    body#frameRoot.bt-premium-mode #topBody{
-      justify-content:center!important;
+      padding:12px 0!important;
       min-height:0!important;
+      flex:1 1 auto!important;
     }
 
+    body#frameRoot.bt-premium-mode #topBody,
     body#frameRoot.bt-premium-mode #botBody{
-      justify-content:flex-start!important;
+      min-height:0!important;
     }
 
     body#frameRoot.bt-premium-mode .half-screen.bottom .composer-stack{
@@ -83,8 +85,8 @@ function injectPremiumUiCss() {
 
     body#frameRoot.bt-premium-mode .premium-bt-hint{
       width:min(78vw,430px);
-      margin:18px auto 0;
-      padding:13px 15px;
+      margin:12px auto 0;
+      padding:12px 15px;
       border-radius:18px;
       color:rgba(255,255,255,.88);
       font-size:12px;
@@ -170,7 +172,7 @@ function injectPremiumUiCss() {
     @media(max-width:390px){
       body#frameRoot.bt-premium-mode #btToggleBtn{left:36px!important;width:44px!important;height:44px!important;}
       body#frameRoot.bt-premium-mode #handsFreeToggle{right:34px!important;top:calc(50% - 94px)!important;padding:7px 9px!important;font-size:10px!important;}
-      body#frameRoot.bt-premium-mode .premium-bt-hint{width:min(76vw,340px);margin-top:12px;padding:11px 12px;font-size:11px;}
+      body#frameRoot.bt-premium-mode .premium-bt-hint{width:min(76vw,340px);margin-top:10px;padding:10px 12px;font-size:11px;}
     }
   `;
   document.head.appendChild(style);
