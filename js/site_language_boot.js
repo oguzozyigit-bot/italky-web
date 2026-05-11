@@ -122,6 +122,7 @@ function applySiteLang(lang) {
   window.ITalkySiteLang = finalLang;
   document.documentElement.lang = finalLang;
   patchTwoPhoneHomeCopy();
+  patchHomeGreeting();
   emitSiteLangReady(finalLang);
   return finalLang;
 }
@@ -142,6 +143,77 @@ function patchTwoPhoneHomeCopy() {
   if (icon) {
     icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13 19.07"></path></svg>';
   }
+}
+
+function isHomePage() {
+  const path = String(location.pathname || "").toLowerCase();
+  return path.endsWith("/home.html") || path === "/home.html" || path === "/pages/home.html";
+}
+
+function formatHomeGreetingText(text) {
+  const raw = String(text || "").trim();
+  if (!raw || raw === "Hoş geldin") return raw;
+
+  const firstPart = raw.includes(",") ? raw.split(",")[0] : raw.split(" ")[0];
+  const name = String(firstPart || "").trim();
+  if (!name || name.toLowerCase() === "hoş") return raw;
+
+  return `${name}, dünyayı anlamaya hazır mısın?`;
+}
+
+function patchHomeGreeting() {
+  if (!isHomePage()) return;
+
+  const el = document.getElementById("heroUserName");
+  if (!el || el.dataset.homeGreetingPatched === "1") return;
+
+  const applyGreeting = () => {
+    const next = formatHomeGreetingText(el.textContent);
+    if (next && next !== el.textContent) {
+      el.textContent = next;
+    }
+  };
+
+  el.dataset.homeGreetingPatched = "1";
+  applyGreeting();
+
+  const observer = new MutationObserver(() => applyGreeting());
+  observer.observe(el, { childList: true, characterData: true, subtree: true });
+
+  window.setTimeout(applyGreeting, 250);
+  window.setTimeout(applyGreeting, 900);
+  window.setTimeout(() => observer.disconnect(), 4000);
+}
+
+function installHomePolishStyle() {
+  if (!isHomePage()) return;
+  if (document.getElementById("italkyHomePolishStyle")) return;
+
+  const style = document.createElement("style");
+  style.id = "italkyHomePolishStyle";
+  style.textContent = `
+    #italkyFooter {
+      background: rgba(9, 12, 22, .94) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    #italkyFooter .signature,
+    #italkyFooter .signature-main,
+    #italkyFooter .signature-year,
+    #italkyFooter .signature-dot {
+      text-shadow: none !important;
+      filter: none !important;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+    #italkyFooter .signature-main {
+      letter-spacing: .18px !important;
+    }
+    #italkyFooter .signature + .signature {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 function installUiSafetyStyle() {
@@ -221,7 +293,9 @@ async function detectSiteLang() {
 
 export async function resolveSiteLanguage() {
   installUiSafetyStyle();
+  installHomePolishStyle();
   patchTwoPhoneHomeCopy();
+  patchHomeGreeting();
 
   if (window.__ITALKY_SITE_LANG_BOOT_PROMISE__) return window.__ITALKY_SITE_LANG_BOOT_PROMISE__;
 
