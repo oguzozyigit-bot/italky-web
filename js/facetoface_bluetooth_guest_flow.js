@@ -12,9 +12,11 @@ let webRecognizer = null;
 let liveText = "";
 let lastSentText = "";
 let lastSentAt = 0;
+let lastSentMessageId = "";
 let handsFreeRestartTimer = null;
 let btPickerTimeout = null;
 let previousHandlers = null;
+let allowIncomingBtTts = false;
 
 function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim() || "en";
@@ -90,6 +92,29 @@ function cleanupTranscript(text) {
     .replace(/\s+/g, " ")
     .replace(/\b(\S+)( \1\b)+/gi, "$1")
     .trim();
+}
+
+function makeMessageId() {
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function parseBluetoothPayload(value) {
+  const raw = String(value || "");
+  if (!raw.trim().startsWith("{")) {
+    return { text: raw, origin: "remote_bt", messageId: "", sentAt: 0 };
+  }
+
+  try {
+    const data = JSON.parse(raw);
+    return {
+      text: String(data?.text || data?.message || ""),
+      origin: String(data?.origin || "remote_bt"),
+      messageId: String(data?.messageId || data?.id || ""),
+      sentAt: Number(data?.sentAt || 0)
+    };
+  } catch {
+    return { text: raw, origin: "remote_bt", messageId: "", sentAt: 0 };
+  }
 }
 
 function stopRecognizer() {
@@ -202,13 +227,41 @@ async function translateOnline(text, from, to) {
   return null;
 }
 
-function speak(text, langCode) {
+function installBluetoothTtsGuard() {
+  if (window.__italkyBtTtsGuardInstalled) return;
+  window.__italkyBtTtsGuardInstalled = true;
+
+  const wrapSpeak = (owner, key) => {
+    try {
+      if (!owner || typeof owner[key] !== "function" || owner[key].__italkyBtGuarded) return;
+      const original = owner[key].bind(owner);
+      const guarded = function (...args) {
+        if (!allowIncomingBtTts) {
+          console.warn("[BT_GUEST_FLOW] blocked local bluetooth TTS");
+          return undefined;
+        }
+        return original(...args);
+      };
+      guarded.__italkyBtGuarded = true;
+      guarded.__italkyBtOriginal = original;
+      owner[key] = guarded;
+    } catch {}
+  };
+
+  wrapSpeak(window.AndroidBridge, "speak");
+  wrapSpeak(window.NativeTTS, "speak");
+  wrapSpeak(window.speechSynthesis, "speak");
+}
+
+function speakIncomingBluetoothTranslation(text, langCode) {
   const value = String(text || "").trim();
   if (!value) return;
   if (isHandsFree) stopRecognizer();
   isSpeaking = true;
 
+  allowIncomingBtTts = true;
   try {
+    installBluetoothTtsGuard();
     if (window.AndroidBridge?.speak) window.AndroidBridge.speak(value, canonical(langCode));
     else if (window.NativeTTS?.speak) window.NativeTTS.speak(value, canonical(langCode));
     else if (window.speechSynthesis) {
@@ -219,6 +272,9 @@ function speak(text, langCode) {
       window.speechSynthesis.speak(u);
     }
   } catch {}
+  finally {
+    allowIncomingBtTts = false;
+  }
 
   setTimeout(() => {
     isSpeaking = false;
@@ -231,21 +287,33 @@ function sendBluetoothText(text) {
   if (!clean) return;
   const now = Date.now();
   if (clean === lastSentText && now - lastSentAt < 2500) return;
+
+  const messageId = makeMessageId();
+  const payload = {
+    text: clean,
+    origin: "local_speech",
+    messageId,
+    sentAt: now
+  };
+  const wireText = JSON.stringify(payload);
+
   lastSentText = clean;
   lastSentAt = now;
+  lastSentMessageId = messageId;
 
   try {
-    if (window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText(clean);
-    else if (window.Native?.sendBtText) window.Native.sendBtText(clean);
-    else if (window.AndroidBridge?.sendBluetoothText) window.AndroidBridge.sendBluetoothText(clean);
+    if (window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText(wireText);
+    else if (window.Native?.sendBtText) window.Native.sendBtText(wireText);
+    else if (window.AndroidBridge?.sendBluetoothText) window.AndroidBridge.sendBluetoothText(wireText);
   } catch (e) {
     console.warn("[BT_GUEST_FLOW] sendBtText failed", e);
   }
   addBubble("bot", clean, false);
 }
 
-function isRecentLocalBluetoothEcho(text) {
+function isRecentLocalBluetoothEcho(text, messageId = "") {
   const clean = cleanupTranscript(text);
+  if (messageId && messageId === lastSentMessageId) return true;
   return !!clean && clean === lastSentText && Date.now() - lastSentAt < 8000;
 }
 
@@ -361,6 +429,7 @@ function closeLanguagePopups() {
 
 function handleConnected() {
   clearBluetoothPickerTimer();
+  installBluetoothTtsGuard();
   isBtConnected = true;
   window.isBtConnected = true;
   document.body.classList.add("bt-active");
@@ -392,16 +461,19 @@ async function handleBluetoothMessage(text, ...args) {
     return;
   }
 
-  if (isRecentLocalBluetoothEcho(raw)) {
+  const payload = parseBluetoothPayload(raw);
+  const incomingText = cleanupTranscript(payload.text);
+
+  if (!incomingText || isRecentLocalBluetoothEcho(incomingText, payload.messageId)) {
     console.warn("[BT_GUEST_FLOW] ignored local bluetooth echo");
     return;
   }
 
   const row = addBubble("top", "", true);
-  const translated = await translateOnline(raw, "auto", currentBotLang());
+  const translated = await translateOnline(incomingText, "auto", currentBotLang());
   const value = translated || "Çeviri alınamadı.";
   if (row) row.textContent = value;
-  if (translated) speak(translated, currentBotLang());
+  if (translated) speakIncomingBluetoothTranslation(translated, currentBotLang());
 }
 
 function connectBluetooth() {
@@ -494,6 +566,7 @@ function bindBridgeEvents() {
     };
   }
 
+  installBluetoothTtsGuard();
   window.onBtConnected = handleConnected;
   window.onBtDisconnected = handleDisconnected;
   window.onBtMessageReceived = handleBluetoothMessage;
