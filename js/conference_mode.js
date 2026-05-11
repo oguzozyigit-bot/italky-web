@@ -5,6 +5,7 @@ import { LANG_POOL, getLangName } from "/js/lang_pool_full.js";
 const API_BASE = "https://italky-api.onrender.com";
 const ROOM_PREFIX = "italky-conference-";
 const LOCAL_MESSAGE_KEY = "italky_conference_last_message_v1";
+const SOFT_SPEECH_ERRORS = new Set(["no_speech", "speech_timeout", "timeout", "empty", "empty_result", "no_match", "manual_stop_empty", "client_error", "recognizer_busy", "busy"]);
 const $ = (id) => document.getElementById(id);
 
 let role = "";
@@ -18,6 +19,7 @@ let webRecognizer = null;
 let lastMessageId = "";
 let localPollTimer = null;
 let nativeRestore = null;
+let restartTimer = null;
 
 function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim() || "en";
@@ -94,6 +96,10 @@ function clean(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
 
+function normalizeSpeechError(error) {
+  return String(error || "").toLowerCase().replace(/[\s-]+/g, "_").trim();
+}
+
 function hasPremiumAccess(access) {
   return !!(
     access?.is_admin || access?.is_superadmin || access?.has_active_membership || access?.is_member ||
@@ -133,10 +139,10 @@ function sessionUrl(code) {
   return `${location.origin}/pages/conference.html?join=${encodeURIComponent(code)}`;
 }
 
-function renderQr(code) {
-  const el = $("sessionQr");
+function renderSessionLink(code) {
+  const el = $("sessionLink");
   if (!el) return;
-  el.innerHTML = `<img alt="Konferans QR" src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(sessionUrl(code))}">`;
+  el.textContent = sessionUrl(code);
 }
 
 function transportLabel() {
@@ -155,6 +161,8 @@ async function closeChannel() {
   channel = null;
   clearInterval(localPollTimer);
   localPollTimer = null;
+  clearTimeout(restartTimer);
+  restartTimer = null;
 }
 
 async function connectRoom(code) {
@@ -243,8 +251,7 @@ async function handleIncomingSpeech(payload) {
   if (payload.messageId && payload.messageId === lastMessageId) return;
   const source = clean(payload.text);
   if (!source) return;
-  const rowText = "Çevriliyor...";
-  addMessage("listenerTranscript", rowText);
+  addMessage("listenerTranscript", "Çevriliyor...");
   const translated = await translateText(source, payload.sourceLang || "auto", listenerLang);
   const finalText = translated || "Çeviri alınamadı.";
   const latest = $("listenerTranscript")?.querySelector(".message.latest");
@@ -280,7 +287,6 @@ function installNativeSpeechHook() {
     if (role === "speaker") {
       if (result.text && !result.isFinal) addMessage("speakerTranscript", `${result.text}...`);
       if (result.text && result.isFinal) {
-        recording = false;
         setMic(false);
         broadcastSpeech(result.text).finally(restartHandsFreeIfNeeded);
       }
@@ -289,14 +295,14 @@ function installNativeSpeechHook() {
     try { previous?.(arg1, arg2, arg3); } catch {}
   };
   window.onNativeSpeechError = function(error) {
-    const code = String(error || "").toLowerCase().replace(/[\s-]+/g, "_");
-    recording = false;
+    const code = normalizeSpeechError(error);
     setMic(false);
-    if (["no_speech", "speech_timeout", "timeout", "empty", "empty_result", "client_error", "recognizer_busy"].includes(code)) {
+    if (SOFT_SPEECH_ERRORS.has(code)) {
       restartHandsFreeIfNeeded();
       return;
     }
     toast(code.includes("permission") ? "Mikrofon izni gerekli." : "Mikrofon başlatılamadı.");
+    restartHandsFreeIfNeeded();
   };
 }
 
@@ -306,6 +312,8 @@ function setMic(value) {
 }
 
 function stopSpeech() {
+  clearTimeout(restartTimer);
+  restartTimer = null;
   try {
     if (window.Native?.stopSpeechRecognition) window.Native.stopSpeechRecognition();
     else if (window.AndroidBridge?.stopSpeechRecognition) window.AndroidBridge.stopSpeechRecognition();
@@ -317,7 +325,7 @@ function stopSpeech() {
 
 function startSpeech() {
   if (role !== "speaker") return;
-  if (recording) { stopSpeech(); return; }
+  if (recording) return;
   installNativeSpeechHook();
   const bcp = bcpFor(speakerLang);
   setMic(true);
@@ -352,14 +360,25 @@ function startSpeech() {
       broadcastSpeech(finalText).finally(restartHandsFreeIfNeeded);
     }
   };
-  rec.onerror = () => { setMic(false); restartHandsFreeIfNeeded(); };
-  rec.onend = () => { if (recording) { setMic(false); restartHandsFreeIfNeeded(); } };
-  try { rec.start(); } catch { setMic(false); toast("Mikrofon başlatılamadı."); }
+  rec.onerror = (event) => {
+    const code = normalizeSpeechError(event?.error);
+    setMic(false);
+    if (!SOFT_SPEECH_ERRORS.has(code)) toast("Mikrofon başlatılamadı.");
+    restartHandsFreeIfNeeded();
+  };
+  rec.onend = () => {
+    setMic(false);
+    restartHandsFreeIfNeeded();
+  };
+  try { rec.start(); } catch { setMic(false); toast("Mikrofon başlatılamadı."); restartHandsFreeIfNeeded(); }
 }
 
 function restartHandsFreeIfNeeded() {
+  clearTimeout(restartTimer);
   if (!handsFree || role !== "speaker" || recording) return;
-  setTimeout(() => { if (handsFree && role === "speaker" && !recording) startSpeech(); }, 900 + Math.floor(Math.random() * 500));
+  restartTimer = setTimeout(() => {
+    if (handsFree && role === "speaker" && !recording) startSpeech();
+  }, 500 + Math.floor(Math.random() * 400));
 }
 
 async function startSpeakerSession() {
@@ -370,7 +389,7 @@ async function startSpeakerSession() {
   $("sessionCode").textContent = sessionCode;
   setBadge("speakerLangBadge", `Dil: ${langLabel(speakerLang)}`);
   setBadge("speakerTransportBadge", transportLabel());
-  renderQr(sessionCode);
+  renderSessionLink(sessionCode);
   addMessage("speakerTranscript", "Yayın hazır. Mikrofonu açıp konuşabilirsiniz.");
   showView("speakerLiveView");
   try {
@@ -402,7 +421,10 @@ function bind() {
   document.querySelectorAll(".back-role").forEach((btn) => btn.addEventListener("click", () => showView("roleView")));
   $("createSessionBtn")?.addEventListener("click", startSpeakerSession);
   $("joinSessionBtn")?.addEventListener("click", joinListenerSession);
-  $("speakerMicBtn")?.addEventListener("click", startSpeech);
+  $("speakerMicBtn")?.addEventListener("click", () => {
+    if (recording && !handsFree) { stopSpeech(); return; }
+    startSpeech();
+  });
   $("handsFreeBtn")?.addEventListener("click", () => {
     handsFree = !handsFree;
     $("handsFreeBtn")?.classList.toggle("active", handsFree);
@@ -411,6 +433,8 @@ function bind() {
   });
   $("endSessionBtn")?.addEventListener("click", async () => {
     try { await channel?.send({ type: "broadcast", event: "session_end", payload: { sessionCode } }); } catch {}
+    handsFree = false;
+    $("handsFreeBtn")?.classList.remove("active");
     stopSpeech();
     await closeChannel();
     showView("roleView");
