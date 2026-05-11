@@ -80,12 +80,12 @@ function injectPremiumUiCss() {
     }
 
     body#frameRoot.bt-premium-mode .mic-line{
-      transform:translateY(-10px)!important;
+      transform:translateY(0)!important;
       align-items:center!important;
     }
 
     body#frameRoot.bt-premium-mode .half-screen.bottom .composer-stack{
-      transform:translateY(-10px)!important;
+      transform:translateY(0)!important;
     }
 
     body#frameRoot.bt-premium-mode .premium-bt-hint{
@@ -157,10 +157,10 @@ function injectPremiumUiCss() {
     }
 
     body#frameRoot.bt-premium-mode #btToggleBtn.connected{
-      color:#93c5fd!important;
-      border-color:rgba(147,197,253,.52)!important;
-      background:rgba(37,99,235,.18)!important;
-      box-shadow:0 0 18px rgba(37,99,235,.28)!important;
+      color:#bbf7d0!important;
+      border-color:rgba(34,197,94,.68)!important;
+      background:rgba(22,163,74,.22)!important;
+      box-shadow:0 0 18px rgba(34,197,94,.36), inset 0 1px 0 rgba(255,255,255,.10)!important;
     }
 
     body#frameRoot.bt-premium-mode #handsFreeToggle{
