@@ -4,303 +4,64 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Eğlenerek Öğren</title>
-
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Space+Grotesk:wght@700;800&display=swap');
-
-  :root{
-    --bg:#07101f;
-    --panel:rgba(15,23,42,.72);
-    --panel2:rgba(255,255,255,.055);
-    --line:rgba(255,255,255,.12);
-    --muted:rgba(226,232,240,.68);
-    --txt:#f8fafc;
-    --cyan:#67e8f9;
-    --blue:#60a5fa;
-    --gold:#facc15;
-    --safe-bottom:env(safe-area-inset-bottom,0px);
-    --safe-top:env(safe-area-inset-top,0px);
-  }
-
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
-  html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--txt);font-family:Outfit,system-ui,sans-serif;overflow:hidden;}
-  body{background:radial-gradient(circle at 18% 0%,rgba(96,165,250,.18),transparent 34%),radial-gradient(circle at 88% 12%,rgba(250,204,21,.10),transparent 30%),linear-gradient(180deg,#08111f,#050812 55%,#03050b);}
-
-  #pageContent{height:100dvh;display:flex;flex-direction:column;opacity:0;transform:translateY(8px);transition:opacity .28s ease,transform .28s ease;padding:calc(12px + var(--safe-top)) 14px calc(18px + var(--safe-bottom));}
-  #pageContent.ui-ready{opacity:1;transform:translateY(0);}
-
-  .shell{width:min(100%,680px);height:100%;margin:0 auto;display:flex;flex-direction:column;min-height:0;}
-  .topbar{flex:0 0 auto;display:grid;grid-template-columns:44px 1fr 44px;gap:10px;align-items:center;margin-bottom:12px;}
-  .icon-btn{width:44px;height:44px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.055);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
-  .titlebox{text-align:center;min-width:0;}
-  .eyebrow{font-size:10px;font-weight:1000;letter-spacing:.55px;text-transform:uppercase;color:rgba(103,232,249,.86);}
-  h1{margin:3px 0 0;font-family:'Space Grotesk',sans-serif;font-size:23px;line-height:1;font-weight:900;letter-spacing:-.35px;}
-  .subtitle{margin:8px auto 0;max-width:360px;color:var(--muted);font-size:12.5px;line-height:1.35;font-weight:800;text-align:center;}
-
-  .hero-strip{flex:0 0 auto;margin-bottom:12px;padding:13px 14px;border:1px solid rgba(147,197,253,.18);border-radius:22px;background:linear-gradient(135deg,rgba(15,23,42,.82),rgba(30,64,175,.20));box-shadow:0 16px 36px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;gap:12px;}
-  .hero-strip strong{font-size:14px;font-weight:1000;}
-  .hero-strip span{display:block;margin-top:4px;color:rgba(226,232,240,.66);font-size:11.5px;font-weight:800;line-height:1.35;}
-  .hero-badge{flex:0 0 auto;padding:8px 11px;border-radius:999px;background:rgba(34,197,94,.13);border:1px solid rgba(34,197,94,.26);color:#bbf7d0;font-size:10px;font-weight:1000;white-space:nowrap;}
-
-  .game-hub{flex:1;min-height:0;overflow-y:auto;display:grid;gap:11px;padding:1px 1px 8px;scrollbar-width:none;}
-  .game-hub::-webkit-scrollbar{display:none;}
-
-  .game-card{position:relative;min-height:104px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(15,23,42,.62));box-shadow:0 14px 30px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.045);display:grid;grid-template-columns:58px 1fr auto;gap:13px;align-items:center;padding:14px;overflow:hidden;cursor:pointer;color:#fff;text-align:left;font:inherit;}
-  .game-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 0% 45%,var(--accent),transparent 40%);opacity:.14;pointer-events:none;}
-  .game-card:active{transform:scale(.987);filter:brightness(1.06);}
-  .g-cyan{--accent:#67e8f9}.g-gold{--accent:#facc15}.g-pink{--accent:#f472b6}.g-green{--accent:#34d399}.g-violet{--accent:#a78bfa}.g-orange{--accent:#fb923c}
-  .game-icon{position:relative;z-index:2;width:58px;height:58px;border-radius:19px;background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:inset 0 0 18px rgba(255,255,255,.04);}
-  .game-info{position:relative;z-index:2;min-width:0;}
-  .game-head{display:flex;align-items:center;gap:8px;min-width:0;}
-  .game-info h2{margin:0;font-family:'Space Grotesk',sans-serif;font-size:19px;line-height:1;font-weight:900;letter-spacing:-.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .tag{flex:0 0 auto;padding:5px 8px;border-radius:999px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.22);color:#dbeafe;font-size:9px;font-weight:1000;letter-spacing:.2px;}
-  .game-info p{margin:7px 0 0;color:rgba(226,232,240,.72);font-size:12px;line-height:1.32;font-weight:800;}
-  .start-chip{position:relative;z-index:2;align-self:center;min-width:58px;padding:9px 10px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:11px;font-weight:1000;text-align:center;}
-
-  .modal{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,23,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
-  .modal.show{display:flex;}
-  .modal-card{width:min(100%,420px);border-radius:24px;border:1px solid rgba(147,197,253,.22);background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(2,6,23,.98));box-shadow:0 26px 70px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.06);padding:18px;color:#fff;}
-  .modal-title{margin:0;font-family:'Space Grotesk',sans-serif;font-size:22px;line-height:1.05;font-weight:900;}
-  .modal-desc{margin:9px 0 15px;color:rgba(226,232,240,.74);font-size:13px;line-height:1.45;font-weight:800;}
-  .language-grid{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:14px;}
-  .lang-choice{min-height:48px;border:1px solid rgba(255,255,255,.11);border-radius:16px;background:rgba(255,255,255,.055);color:#fff;font:inherit;font-size:14px;font-weight:1000;display:flex;align-items:center;justify-content:space-between;padding:0 13px;cursor:pointer;}
-  .lang-choice.active{border-color:rgba(103,232,249,.46);background:linear-gradient(135deg,rgba(103,232,249,.15),rgba(96,165,250,.10));}
-  .rule-box{margin:12px 0 14px;padding:13px;border-radius:18px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);}
-  .rule-meta{color:#bfdbfe;font-size:12px;font-weight:1000;margin-bottom:8px;}
-  .rule-box p{margin:0 0 9px;color:rgba(226,232,240,.78);font-size:13px;line-height:1.45;font-weight:800;}
-  .rule-box ul{margin:0;padding-left:18px;color:rgba(226,232,240,.80);font-size:13px;line-height:1.5;font-weight:800;}
-  .modal-actions{display:grid;gap:9px;}
-  .primary-btn,.secondary-btn{min-height:50px;border:0;border-radius:16px;font:inherit;font-size:14px;font-weight:1000;cursor:pointer;}
-  .primary-btn{color:#061227;background:linear-gradient(135deg,#dbeafe,#60a5fa);box-shadow:0 14px 28px rgba(37,99,235,.22);}
-  .secondary-btn{color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);}
-
-  .toast{position:fixed;left:50%;bottom:calc(22px + var(--safe-bottom));transform:translateX(-50%) translateY(120px);max-width:min(92vw,430px);min-height:44px;padding:11px 16px;border-radius:16px;background:rgba(12,16,28,.96);border:1px solid rgba(255,255,255,.10);color:#fff;font-size:12px;font-weight:1000;display:flex;align-items:center;justify-content:center;text-align:center;z-index:9999;box-shadow:0 18px 36px rgba(0,0,0,.35);transition:.22s ease;pointer-events:none;}
-  .toast.show{transform:translateX(-50%) translateY(0);}
-
-  @media(max-width:390px){
-    #pageContent{padding-left:10px;padding-right:10px;}
-    .game-card{grid-template-columns:50px 1fr auto;gap:10px;min-height:100px;padding:12px;}
-    .game-icon{width:50px;height:50px;font-size:26px;border-radius:17px;}
-    .game-info h2{font-size:17px;}
-    .game-info p{font-size:11.5px;}
-    .start-chip{min-width:52px;padding:8px 8px;font-size:10px;}
-  }
+  :root{--bg:#07101f;--line:rgba(255,255,255,.12);--muted:rgba(226,232,240,.68);--txt:#f8fafc;--cyan:#67e8f9;--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--txt);font-family:Outfit,system-ui,sans-serif;overflow:hidden}body{background:radial-gradient(circle at 18% 0%,rgba(96,165,250,.18),transparent 34%),radial-gradient(circle at 88% 12%,rgba(250,204,21,.10),transparent 30%),linear-gradient(180deg,#08111f,#050812 55%,#03050b)}
+  #pageContent{height:100dvh;display:flex;flex-direction:column;opacity:0;transform:translateY(8px);transition:opacity .28s ease,transform .28s ease;padding:calc(12px + var(--safe-top)) 14px calc(18px + var(--safe-bottom))}#pageContent.ui-ready{opacity:1;transform:translateY(0)}
+  .shell{width:min(100%,680px);height:100%;margin:0 auto;display:flex;flex-direction:column;min-height:0}.topbar{flex:0 0 auto;display:grid;grid-template-columns:44px 1fr 44px;gap:10px;align-items:center;margin-bottom:12px}.icon-btn{width:44px;height:44px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.055);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;cursor:pointer}.titlebox{text-align:center;min-width:0}.eyebrow{font-size:10px;font-weight:1000;letter-spacing:.55px;text-transform:uppercase;color:rgba(103,232,249,.86)}h1{margin:3px 0 0;font-family:'Space Grotesk',sans-serif;font-size:23px;line-height:1;font-weight:900;letter-spacing:-.35px}
+  .hero-strip{flex:0 0 auto;margin-bottom:12px;padding:13px 14px;border:1px solid rgba(147,197,253,.18);border-radius:22px;background:linear-gradient(135deg,rgba(15,23,42,.82),rgba(30,64,175,.20));box-shadow:0 16px 36px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;gap:12px}.hero-strip strong{font-size:14px;font-weight:1000}.hero-strip span{display:block;margin-top:4px;color:rgba(226,232,240,.66);font-size:11.5px;font-weight:800;line-height:1.35}.hero-badge{flex:0 0 auto;padding:8px 11px;border-radius:999px;background:rgba(34,197,94,.13);border:1px solid rgba(34,197,94,.26);color:#bbf7d0;font-size:10px;font-weight:1000;white-space:nowrap}
+  .game-hub{flex:1;min-height:0;overflow-y:auto;display:grid;gap:11px;padding:1px 1px 8px;scrollbar-width:none}.game-hub::-webkit-scrollbar{display:none}.game-card{position:relative;min-height:104px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(15,23,42,.62));box-shadow:0 14px 30px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.045);display:grid;grid-template-columns:58px 1fr auto;gap:13px;align-items:center;padding:14px;overflow:hidden;cursor:pointer;color:#fff;text-align:left;font:inherit}.game-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 0% 45%,var(--accent),transparent 40%);opacity:.14;pointer-events:none}.game-card:active{transform:scale(.987);filter:brightness(1.06)}.g-cyan{--accent:#67e8f9}.g-gold{--accent:#facc15}.g-pink{--accent:#f472b6}.g-green{--accent:#34d399}.g-violet{--accent:#a78bfa}.g-orange{--accent:#fb923c}.game-icon{position:relative;z-index:2;width:58px;height:58px;border-radius:19px;background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:30px}.game-info{position:relative;z-index:2;min-width:0}.game-head{display:flex;align-items:center;gap:8px;min-width:0}.game-info h2{margin:0;font-family:'Space Grotesk',sans-serif;font-size:19px;line-height:1;font-weight:900;letter-spacing:-.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tag{flex:0 0 auto;padding:5px 8px;border-radius:999px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.22);color:#dbeafe;font-size:9px;font-weight:1000;letter-spacing:.2px}.tag.featured{background:rgba(250,204,21,.16);border-color:rgba(250,204,21,.30);color:#fef3c7}.game-info p{margin:7px 0 0;color:rgba(226,232,240,.72);font-size:12px;line-height:1.32;font-weight:800}.start-chip{position:relative;z-index:2;align-self:center;min-width:58px;padding:9px 10px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:11px;font-weight:1000;text-align:center}
+  .modal{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,23,.72);backdrop-filter:blur(12px)}.modal.show{display:flex}.modal-card{width:min(100%,420px);border-radius:24px;border:1px solid rgba(147,197,253,.22);background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(2,6,23,.98));box-shadow:0 26px 70px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.06);padding:18px;color:#fff}.modal-title{margin:0;font-family:'Space Grotesk',sans-serif;font-size:22px;line-height:1.05;font-weight:900}.modal-desc{margin:9px 0 15px;color:rgba(226,232,240,.74);font-size:13px;line-height:1.45;font-weight:800}.language-grid{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:14px}.lang-choice{min-height:48px;border:1px solid rgba(255,255,255,.11);border-radius:16px;background:rgba(255,255,255,.055);color:#fff;font:inherit;font-size:14px;font-weight:1000;display:flex;align-items:center;justify-content:space-between;padding:0 13px;cursor:pointer}.lang-choice.active{border-color:rgba(103,232,249,.46);background:linear-gradient(135deg,rgba(103,232,249,.15),rgba(96,165,250,.10))}.rule-box{margin:12px 0 14px;padding:13px;border-radius:18px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10)}.rule-meta{color:#bfdbfe;font-size:12px;font-weight:1000;margin-bottom:8px}.rule-box p{margin:0 0 9px;color:rgba(226,232,240,.78);font-size:13px;line-height:1.45;font-weight:800}.rule-box ul{margin:0;padding-left:18px;color:rgba(226,232,240,.80);font-size:13px;line-height:1.5;font-weight:800}.modal-actions{display:grid;gap:9px}.primary-btn,.secondary-btn{min-height:50px;border:0;border-radius:16px;font:inherit;font-size:14px;font-weight:1000;cursor:pointer}.primary-btn{color:#061227;background:linear-gradient(135deg,#dbeafe,#60a5fa);box-shadow:0 14px 28px rgba(37,99,235,.22)}.secondary-btn{color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)}.toast{position:fixed;left:50%;bottom:calc(22px + var(--safe-bottom));transform:translateX(-50%) translateY(120px);max-width:min(92vw,430px);min-height:44px;padding:11px 16px;border-radius:16px;background:rgba(12,16,28,.96);border:1px solid rgba(255,255,255,.10);color:#fff;font-size:12px;font-weight:1000;display:flex;align-items:center;justify-content:center;text-align:center;z-index:9999;box-shadow:0 18px 36px rgba(0,0,0,.35);transition:.22s ease;pointer-events:none}.toast.show{transform:translateX(-50%) translateY(0)}
+  @media(max-width:390px){#pageContent{padding-left:10px;padding-right:10px}.game-card{grid-template-columns:50px 1fr auto;gap:10px;min-height:100px;padding:12px}.game-icon{width:50px;height:50px;font-size:26px;border-radius:17px}.game-info h2{font-size:17px}.game-info p{font-size:11.5px}.start-chip{min-width:52px;padding:8px 8px;font-size:10px}}
 </style>
 </head>
-
 <body>
 <main id="pageContent">
   <div class="shell">
     <header class="topbar">
       <button id="backBtn" class="icon-btn" type="button" aria-label="Ana sayfa">‹</button>
-      <div class="titlebox">
-        <div class="eyebrow">italkyAI Premium</div>
-        <h1>Eğlenerek Öğren</h1>
-      </div>
+      <div class="titlebox"><div class="eyebrow">italkyAI Premium</div><h1>Eğlenerek Öğren</h1></div>
       <div></div>
     </header>
-
     <section class="hero-strip" aria-label="Oyun açıklaması">
-      <div>
-        <strong>Oyunlarla kelime, anlam ve hız pratiği yapın.</strong>
-        <span>Her oyundan önce dilinizi seçin, kuralları görün ve pratik akışına başlayın.</span>
-      </div>
+      <div><strong>Oyunlarla kelime, anlam ve hız pratiği yapın.</strong><span>Her oyundan önce dilinizi seçin, kuralları görün ve pratik akışına başlayın.</span></div>
       <div class="hero-badge">Reklamsız</div>
     </section>
-
     <section id="gameHub" class="game-hub" aria-label="Oyunlar">
-      <button class="game-card g-pink" type="button" data-game-id="word_cracker" data-url="/pages/word_cracker.html" data-popularity="96" data-desc="Şifreleri kır, kelime bağlantılarını çöz." data-goal="Verilen ipuçlarından doğru kelimeyi bulmaya çalışın.">
-        <div class="game-icon">🔐</div><div class="game-info"><div class="game-head"><h2>Code Cracker</h2><span class="tag">Popüler</span></div><p>Şifreleri kır, kelime bağlantılarını çöz.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-cyan" type="button" data-game-id="echo_rush" data-url="/pages/echo_rush.html" data-popularity="93" data-desc="Duyduğunu hızlı yakala ve tekrar et." data-goal="Sesli ipuçlarını dikkatle dinleyip doğru cevabı seçin.">
-        <div class="game-icon">🎙️</div><div class="game-info"><div class="game-head"><h2>Echo Rush</h2><span class="tag">Hız</span></div><p>Duyduğunu hızlı yakala ve tekrar et.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-blue g-violet" type="button" data-game-id="gap_master" data-url="/pages/gap_master.html" data-popularity="89" data-desc="Boşlukları doğru kelimeyle tamamla." data-goal="Eksik cümlede anlamı tamamlayan doğru seçeneği bulun.">
-        <div class="game-icon">📝</div><div class="game-info"><div class="game-head"><h2>Gap Master</h2></div><p>Boşlukları doğru kelimeyle tamamla.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-gold" type="button" data-game-id="hangman" data-url="/pages/hangman.html" data-popularity="84" data-desc="Kelimeyi tahmin et, harfleri doğru seç." data-goal="Sınırlı denemeyle gizli kelimeyi bulmaya çalışın.">
-        <div class="game-icon">🪂</div><div class="game-info"><div class="game-head"><h2>Hangman</h2></div><p>Kelimeyi tahmin et, harfleri doğru seç.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-green" type="button" data-game-id="memory_pulse" data-url="/pages/memory_pulse.html" data-popularity="81" data-desc="Kartları eşleştir, hafızanı güçlendir." data-goal="Kelime ve anlam kartlarını en az hata ile eşleştirin.">
-        <div class="game-icon">🧠</div><div class="game-info"><div class="game-head"><h2>Memory Pulse</h2></div><p>Kartları eşleştir, hafızanı güçlendir.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-orange" type="button" data-game-id="meteor" data-url="/pages/meteor.html" data-popularity="76" data-desc="Kelimeleri yakala, doğru anlamı seç." data-goal="Ekrana gelen kelimeyi hızlı okuyun ve doğru karşılığı seçin.">
-        <div class="game-icon">☄️</div><div class="game-info"><div class="game-head"><h2>Meteor Strike</h2></div><p>Kelimeleri yakala, doğru anlamı seç.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-violet" type="button" data-game-id="sentence_master" data-url="/pages/sentence_master.html" data-popularity="72" data-desc="Kelimeleri diz, doğru cümleyi kur." data-goal="Dağınık kelimeleri anlamlı bir cümle olacak şekilde sıralayın.">
-        <div class="game-icon">🧩</div><div class="game-info"><div class="game-head"><h2>Sentence Builder</h2></div><p>Kelimeleri diz, doğru cümleyi kur.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-pink" type="button" data-game-id="glitch" data-url="/pages/glitch.html" data-popularity="68" data-desc="Hatalı ifadeyi bul ve düzelt." data-goal="Verilen seçeneklerdeki anlam veya yazım hatasını yakalayın.">
-        <div class="game-icon">👾</div><div class="game-info"><div class="game-head"><h2>Glitch Hunt</h2></div><p>Hatalı ifadeyi bul ve düzelt.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-cyan" type="button" data-game-id="morse_game" data-url="/pages/morse_game.html" data-popularity="60" data-desc="Sinyali dinle, kodu çöz." data-goal="Ses veya işaret ipuçlarını takip edip doğru cevabı seçin.">
-        <div class="game-icon">📡</div><div class="game-info"><div class="game-head"><h2>Kod Çöz</h2></div><p>Sinyali dinle, kodu çöz.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-gold" type="button" data-game-id="duo_friend" data-url="/pages/duo_friend.html" data-popularity="58" data-desc="Karşılıklı dil düellosu yap." data-goal="Soruları sırayla çözün ve doğru cevaplarla puan toplayın.">
-        <div class="game-icon">⚔️</div><div class="game-info"><div class="game-head"><h2>Quantum Duo</h2></div><p>Karşılıklı dil düellosu yap.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-green" type="button" data-game-id="neural_box" data-url="/pages/neural_box.html" data-popularity="52" data-desc="Doğru kutuyu seç, anlamı yakala." data-goal="Verilen kelime veya cümle için doğru anlam kutusunu bulun.">
-        <div class="game-icon">📦</div><div class="game-info"><div class="game-head"><h2>Neural Box</h2></div><p>Doğru kutuyu seç, anlamı yakala.</p></div><div class="start-chip">Başla</div>
-      </button>
-      <button class="game-card g-violet" type="button" data-game-id="signal_hunt" data-url="/pages/signal_hunt.html" data-popularity="48" data-desc="İpucunu takip et, doğru kelimeyi bul." data-goal="Gelen sinyalleri ve ipuçlarını okuyarak doğru seçeneğe ulaşın.">
-        <div class="game-icon">🕵️</div><div class="game-info"><div class="game-head"><h2>Spy Master</h2></div><p>İpucunu takip et, doğru kelimeyi bul.</p></div><div class="start-chip">Başla</div>
-      </button>
+      <button class="game-card g-gold" type="button" data-game-id="hangman" data-url="/pages/hangman.html" data-featured="1" data-popularity="84" data-desc="Kelimeyi tahmin et, harfleri doğru seç." data-goal="Sınırlı denemeyle gizli kelimeyi bulmaya çalışın."><div class="game-icon">🪂</div><div class="game-info"><div class="game-head"><h2>Hangman</h2><span class="tag featured">Öne çıkan</span></div><p>Kelimeyi tahmin et, harfleri doğru seç.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-pink" type="button" data-game-id="word_cracker" data-url="/pages/word_cracker.html" data-popularity="96" data-desc="Şifreleri kır, kelime bağlantılarını çöz." data-goal="Verilen ipuçlarından doğru kelimeyi bulmaya çalışın."><div class="game-icon">🔐</div><div class="game-info"><div class="game-head"><h2>Code Cracker</h2><span class="tag">Popüler</span></div><p>Şifreleri kır, kelime bağlantılarını çöz.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-cyan" type="button" data-game-id="echo_rush" data-url="/pages/echo_rush.html" data-popularity="93" data-desc="Duyduğunu hızlı yakala ve tekrar et." data-goal="Sesli ipuçlarını dikkatle dinleyip doğru cevabı seçin."><div class="game-icon">🎙️</div><div class="game-info"><div class="game-head"><h2>Echo Rush</h2><span class="tag">Hız</span></div><p>Duyduğunu hızlı yakala ve tekrar et.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-violet" type="button" data-game-id="gap_master" data-url="/pages/gap_master.html" data-popularity="89" data-desc="Boşlukları doğru kelimeyle tamamla." data-goal="Eksik cümlede anlamı tamamlayan doğru seçeneği bulun."><div class="game-icon">📝</div><div class="game-info"><div class="game-head"><h2>Gap Master</h2></div><p>Boşlukları doğru kelimeyle tamamla.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-green" type="button" data-game-id="memory_pulse" data-url="/pages/memory_pulse.html" data-popularity="81" data-desc="Kartları eşleştir, hafızanı güçlendir." data-goal="Kelime ve anlam kartlarını en az hata ile eşleştirin."><div class="game-icon">🧠</div><div class="game-info"><div class="game-head"><h2>Memory Pulse</h2></div><p>Kartları eşleştir, hafızanı güçlendir.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-orange" type="button" data-game-id="meteor" data-url="/pages/meteor.html" data-popularity="76" data-desc="Kelimeleri yakala, doğru anlamı seç." data-goal="Ekrana gelen kelimeyi hızlı okuyun ve doğru karşılığı seçin."><div class="game-icon">☄️</div><div class="game-info"><div class="game-head"><h2>Meteor Strike</h2></div><p>Kelimeleri yakala, doğru anlamı seç.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-violet" type="button" data-game-id="sentence_master" data-url="/pages/sentence_master.html" data-popularity="72" data-desc="Kelimeleri diz, doğru cümleyi kur." data-goal="Dağınık kelimeleri anlamlı bir cümle olacak şekilde sıralayın."><div class="game-icon">🧩</div><div class="game-info"><div class="game-head"><h2>Sentence Builder</h2></div><p>Kelimeleri diz, doğru cümleyi kur.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-pink" type="button" data-game-id="glitch" data-url="/pages/glitch.html" data-popularity="68" data-desc="Hatalı ifadeyi bul ve düzelt." data-goal="Verilen seçeneklerdeki anlam veya yazım hatasını yakalayın."><div class="game-icon">👾</div><div class="game-info"><div class="game-head"><h2>Glitch Hunt</h2></div><p>Hatalı ifadeyi bul ve düzelt.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-cyan" type="button" data-game-id="morse_game" data-url="/pages/morse_game.html" data-popularity="60" data-desc="Sinyali dinle, kodu çöz." data-goal="Ses veya işaret ipuçlarını takip edip doğru cevabı seçin."><div class="game-icon">📡</div><div class="game-info"><div class="game-head"><h2>Kod Çöz</h2></div><p>Sinyali dinle, kodu çöz.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-gold" type="button" data-game-id="duo_friend" data-url="/pages/duo_friend.html" data-popularity="58" data-desc="Karşılıklı dil düellosu yap." data-goal="Soruları sırayla çözün ve doğru cevaplarla puan toplayın."><div class="game-icon">⚔️</div><div class="game-info"><div class="game-head"><h2>Quantum Duo</h2></div><p>Karşılıklı dil düellosu yap.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-green" type="button" data-game-id="neural_box" data-url="/pages/neural_box.html" data-popularity="52" data-desc="Doğru kutuyu seç, anlamı yakala." data-goal="Verilen kelime veya cümle için doğru anlam kutusunu bulun."><div class="game-icon">📦</div><div class="game-info"><div class="game-head"><h2>Neural Box</h2></div><p>Doğru kutuyu seç, anlamı yakala.</p></div><div class="start-chip">Başla</div></button>
+      <button class="game-card g-violet" type="button" data-game-id="signal_hunt" data-url="/pages/signal_hunt.html" data-popularity="48" data-desc="İpucunu takip et, doğru kelimeyi bul." data-goal="Gelen sinyalleri ve ipuçlarını okuyarak doğru seçeneğe ulaşın."><div class="game-icon">🕵️</div><div class="game-info"><div class="game-head"><h2>Spy Master</h2></div><p>İpucunu takip et, doğru kelimeyi bul.</p></div><div class="start-chip">Başla</div></button>
     </section>
   </div>
 </main>
-
-<div id="languageModal" class="modal" aria-hidden="true">
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="languageTitle">
-    <h2 id="languageTitle" class="modal-title">Dil seçin</h2>
-    <p class="modal-desc">Bu oyunu hangi dilde oynamak istiyorsunuz?</p>
-    <div id="languageGrid" class="language-grid"></div>
-    <div class="modal-actions">
-      <button id="languageContinue" class="primary-btn" type="button">Devam et</button>
-      <button id="languageCancel" class="secondary-btn" type="button">Vazgeç</button>
-    </div>
-  </div>
-</div>
-
-<div id="rulesModal" class="modal" aria-hidden="true">
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
-    <h2 id="rulesTitle" class="modal-title">Oyun Kuralları</h2>
-    <p id="rulesGameName" class="modal-desc"></p>
-    <div class="rule-box">
-      <div id="rulesLang" class="rule-meta"></div>
-      <p id="rulesGoal"></p>
-      <ul>
-        <li>Verilen kelime veya cümleleri dikkatlice inceleyin.</li>
-        <li>Doğru seçeneği bulun ve hızlı cevap verin.</li>
-        <li>Ne kadar hızlı ve doğru cevap verirseniz puanınız o kadar artar.</li>
-      </ul>
-    </div>
-    <div class="modal-actions">
-      <button id="rulesStart" class="primary-btn" type="button">Anladım, başla</button>
-      <button id="rulesBack" class="secondary-btn" type="button">Dile geri dön</button>
-    </div>
-  </div>
-</div>
-
+<div id="languageModal" class="modal" aria-hidden="true"><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="languageTitle"><h2 id="languageTitle" class="modal-title">Dil seçin</h2><p class="modal-desc">Bu oyunu hangi dilde oynamak istiyorsunuz?</p><div id="languageGrid" class="language-grid"></div><div class="modal-actions"><button id="languageContinue" class="primary-btn" type="button">Devam et</button><button id="languageCancel" class="secondary-btn" type="button">Vazgeç</button></div></div></div>
+<div id="rulesModal" class="modal" aria-hidden="true"><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="rulesTitle"><h2 id="rulesTitle" class="modal-title">Oyun Kuralları</h2><p id="rulesGameName" class="modal-desc"></p><div class="rule-box"><div id="rulesLang" class="rule-meta"></div><p id="rulesGoal"></p><ul><li>Verilen kelime veya cümleleri dikkatlice inceleyin.</li><li>Doğru seçeneği bulun ve hızlı cevap verin.</li><li>Ne kadar hızlı ve doğru cevap verirseniz puanınız o kadar artar.</li></ul></div><div class="modal-actions"><button id="rulesStart" class="primary-btn" type="button">Anladım, başla</button><button id="rulesBack" class="secondary-btn" type="button">Dile geri dön</button></div></div></div>
 <div id="toast" class="toast"></div>
-
 <script type="module">
-  const pageContent = document.getElementById("pageContent");
-  const gameHub = document.getElementById("gameHub");
-  const backBtn = document.getElementById("backBtn");
-  const toastEl = document.getElementById("toast");
-  const languageModal = document.getElementById("languageModal");
-  const languageGrid = document.getElementById("languageGrid");
-  const languageContinue = document.getElementById("languageContinue");
-  const languageCancel = document.getElementById("languageCancel");
-  const rulesModal = document.getElementById("rulesModal");
-  const rulesGameName = document.getElementById("rulesGameName");
-  const rulesLang = document.getElementById("rulesLang");
-  const rulesGoal = document.getElementById("rulesGoal");
-  const rulesStart = document.getElementById("rulesStart");
-  const rulesBack = document.getElementById("rulesBack");
-
-  const LANGS = [
-    { code: "en", name: "İngilizce", flag: "🇬🇧" },
-    { code: "de", name: "Almanca", flag: "🇩🇪" },
-    { code: "fr", name: "Fransızca", flag: "🇫🇷" },
-    { code: "es", name: "İspanyolca", flag: "🇪🇸" },
-    { code: "it", name: "İtalyanca", flag: "🇮🇹" }
-  ];
-
-  let selectedCard = null;
-  let selectedLang = localStorage.getItem("italky_game_lang_v1") || "en";
-
-  function toast(msg){
-    if(!toastEl) return;
-    toastEl.textContent = String(msg || "");
-    toastEl.classList.add("show");
-    clearTimeout(window.__gameToastTimer);
-    window.__gameToastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
-  }
-
-  function sortByPopularity(){
-    const cards = Array.from(gameHub.querySelectorAll(".game-card[data-url]"));
-    cards.sort((a,b) => {
-      const bp = Number(b.dataset.playCount || b.dataset.popularity || b.dataset.totalPlays || 0);
-      const ap = Number(a.dataset.playCount || a.dataset.popularity || a.dataset.totalPlays || 0);
-      return bp - ap;
-    }).forEach(card => gameHub.appendChild(card));
-  }
-
-  function setModal(modal, open){
-    modal?.classList.toggle("show", !!open);
-    modal?.setAttribute("aria-hidden", open ? "false" : "true");
-  }
-
-  function renderLanguages(){
-    languageGrid.innerHTML = LANGS.map(lang => `
-      <button class="lang-choice ${lang.code === selectedLang ? "active" : ""}" type="button" data-lang="${lang.code}">
-        <span>${lang.flag} ${lang.name}</span>
-        <strong>${lang.code.toUpperCase()}</strong>
-      </button>
-    `).join("");
-    languageGrid.querySelectorAll(".lang-choice").forEach(button => {
-      button.addEventListener("click", () => {
-        selectedLang = button.dataset.lang || "en";
-        localStorage.setItem("italky_game_lang_v1", selectedLang);
-        renderLanguages();
-      });
-    });
-  }
-
-  function openLanguageStep(card){
-    selectedCard = card;
-    renderLanguages();
-    setModal(languageModal, true);
-  }
-
-  function openRulesStep(){
-    if(!selectedCard) return;
-    const title = selectedCard.querySelector("h2")?.textContent?.trim() || "Oyun";
-    const goal = selectedCard.dataset.goal || "Bu oyunda verilen kelime veya cümleleri dikkatlice inceleyin ve doğru seçeneği bulun. Ne kadar hızlı ve doğru cevap verirseniz puanınız o kadar artar.";
-    const lang = LANGS.find(item => item.code === selectedLang) || LANGS[0];
-    rulesGameName.textContent = title;
-    rulesLang.textContent = `Seçilen dil: ${lang.flag} ${lang.name}`;
-    rulesGoal.textContent = goal;
-    setModal(languageModal, false);
-    setModal(rulesModal, true);
-  }
-
-  function startSelectedGame(){
-    if(!selectedCard) return;
-    const targetUrl = selectedCard.dataset.url || "";
-    const gameId = selectedCard.dataset.gameId || "game";
-    if(!targetUrl) return;
-    const url = new URL(targetUrl, location.origin);
-    url.searchParams.set("lang", selectedLang);
-    sessionStorage.setItem("italky_game_selected_lang_v1", selectedLang);
-    sessionStorage.setItem(`italky_game_lang_${gameId}`, selectedLang);
-    location.href = `${url.pathname}${url.search}`;
-  }
-
-  gameHub.querySelectorAll(".game-card[data-url]").forEach(card => {
-    card.addEventListener("click", () => openLanguageStep(card));
-  });
-
-  languageContinue?.addEventListener("click", openRulesStep);
-  languageCancel?.addEventListener("click", () => setModal(languageModal, false));
-  rulesStart?.addEventListener("click", startSelectedGame);
-  rulesBack?.addEventListener("click", () => {
-    setModal(rulesModal, false);
-    setModal(languageModal, true);
-  });
-  [languageModal, rulesModal].forEach(modal => {
-    modal?.addEventListener("click", event => {
-      if(event.target === modal) setModal(modal, false);
-    });
-  });
-  backBtn?.addEventListener("click", () => { location.href = "/pages/home.html"; });
-
-  sortByPopularity();
-  window.addEventListener("load", () => setTimeout(() => pageContent?.classList.add("ui-ready"), 90));
-  setTimeout(() => pageContent?.classList.add("ui-ready"), 180);
-
-  console.warn("[GAME_MENU] ready", { games: gameHub.querySelectorAll(".game-card").length, source: "static-html", ads: false });
+  const pageContent=document.getElementById("pageContent"),gameHub=document.getElementById("gameHub"),backBtn=document.getElementById("backBtn"),toastEl=document.getElementById("toast"),languageModal=document.getElementById("languageModal"),languageGrid=document.getElementById("languageGrid"),languageContinue=document.getElementById("languageContinue"),languageCancel=document.getElementById("languageCancel"),rulesModal=document.getElementById("rulesModal"),rulesGameName=document.getElementById("rulesGameName"),rulesLang=document.getElementById("rulesLang"),rulesGoal=document.getElementById("rulesGoal"),rulesStart=document.getElementById("rulesStart"),rulesBack=document.getElementById("rulesBack");
+  const LANGS=[{code:"en",name:"İngilizce",flag:"🇬🇧"},{code:"de",name:"Almanca",flag:"🇩🇪"},{code:"fr",name:"Fransızca",flag:"🇫🇷"},{code:"es",name:"İspanyolca",flag:"🇪🇸"},{code:"it",name:"İtalyanca",flag:"🇮🇹"}];
+  let selectedCard=null,selectedLang=localStorage.getItem("italky_game_lang_v1")||"en";
+  function toast(msg){if(!toastEl)return;toastEl.textContent=String(msg||"");toastEl.classList.add("show");clearTimeout(window.__gameToastTimer);window.__gameToastTimer=setTimeout(()=>toastEl.classList.remove("show"),2200)}
+  function sortByPopularity(){const cards=Array.from(gameHub.querySelectorAll(".game-card[data-url]"));cards.sort((a,b)=>{const bf=b.dataset.featured==="1"?1:0,af=a.dataset.featured==="1"?1:0;if(bf!==af)return bf-af;const bp=Number(b.dataset.playCount||b.dataset.totalPlays||b.dataset.popularity||0),ap=Number(a.dataset.playCount||a.dataset.totalPlays||a.dataset.popularity||0);return bp-ap}).forEach(card=>gameHub.appendChild(card))}
+  function setModal(modal,open){modal?.classList.toggle("show",!!open);modal?.setAttribute("aria-hidden",open?"false":"true")}
+  function renderLanguages(){languageGrid.innerHTML=LANGS.map(lang=>`<button class="lang-choice ${lang.code===selectedLang?"active":""}" type="button" data-lang="${lang.code}"><span>${lang.flag} ${lang.name}</span><strong>${lang.code.toUpperCase()}</strong></button>`).join("");languageGrid.querySelectorAll(".lang-choice").forEach(button=>{button.addEventListener("click",()=>{selectedLang=button.dataset.lang||"en";localStorage.setItem("italky_game_lang_v1",selectedLang);renderLanguages()})})}
+  function openLanguageStep(card){selectedCard=card;renderLanguages();setModal(languageModal,true)}
+  function openRulesStep(){if(!selectedCard)return;const title=selectedCard.querySelector("h2")?.textContent?.trim()||"Oyun";const goal=selectedCard.dataset.goal||"Bu oyunda verilen kelime veya cümleleri dikkatlice inceleyin ve doğru seçeneği bulun. Ne kadar hızlı ve doğru cevap verirseniz puanınız o kadar artar.";const lang=LANGS.find(item=>item.code===selectedLang)||LANGS[0];rulesGameName.textContent=title;rulesLang.textContent=`Seçilen dil: ${lang.flag} ${lang.name}`;rulesGoal.textContent=goal;setModal(languageModal,false);setModal(rulesModal,true)}
+  function startSelectedGame(){if(!selectedCard)return;const targetUrl=selectedCard.dataset.url||"",gameId=selectedCard.dataset.gameId||"game";if(!targetUrl)return;const url=new URL(targetUrl,location.origin);url.searchParams.set("lang",selectedLang);sessionStorage.setItem("italky_game_selected_lang_v1",selectedLang);sessionStorage.setItem(`italky_game_lang_${gameId}`,selectedLang);location.href=`${url.pathname}${url.search}`}
+  gameHub.querySelectorAll(".game-card[data-url]").forEach(card=>card.addEventListener("click",()=>openLanguageStep(card)));
+  languageContinue?.addEventListener("click",openRulesStep);languageCancel?.addEventListener("click",()=>setModal(languageModal,false));rulesStart?.addEventListener("click",startSelectedGame);rulesBack?.addEventListener("click",()=>{setModal(rulesModal,false);setModal(languageModal,true)});[languageModal,rulesModal].forEach(modal=>modal?.addEventListener("click",event=>{if(event.target===modal)setModal(modal,false)}));backBtn?.addEventListener("click",()=>{location.href="/pages/home.html"});
+  sortByPopularity();window.addEventListener("load",()=>setTimeout(()=>pageContent?.classList.add("ui-ready"),90));setTimeout(()=>pageContent?.classList.add("ui-ready"),180);
+  console.warn("[GAME_MENU] ready",{games:gameHub.querySelectorAll(".game-card").length,featured:"hangman",source:"static-html",ads:false});
 </script>
 <script type="module" src="/js/site_language_boot.js"></script>
 </body>
