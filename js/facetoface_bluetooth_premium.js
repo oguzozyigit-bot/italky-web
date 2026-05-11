@@ -1,7 +1,13 @@
 // FILE: /js/facetoface_bluetooth_premium.js
 import { installTwoPhoneBluetoothMode } from "/js/facetoface_bluetooth_two_phone.js";
 
-const isBluetoothMode = new URLSearchParams(location.search).get("mode") === "bluetooth";
+const mode = new URLSearchParams(location.search).get("mode");
+const isBluetoothMode = mode === "bluetooth";
+const isGuideMode = mode === "guide" || mode === "conference" || mode === "tour";
+
+if (isGuideMode) {
+  location.replace("/pages/conference.html");
+}
 
 function injectPremiumUiCss() {
   if (document.getElementById("italkyPremiumTwoPhoneStyle")) return;
