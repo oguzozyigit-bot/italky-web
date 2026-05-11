@@ -41,7 +41,7 @@ function injectPremiumUiCss() {
     }
 
     body#frameRoot.bt-premium-mode .half-screen.bottom{
-      padding:8px 8px calc(18px + var(--safe-bottom))!important;
+      padding:8px 8px calc(26px + var(--safe-bottom))!important;
       background:linear-gradient(180deg,rgba(14,165,233,.08),rgba(2,6,23,.30))!important;
     }
 
@@ -77,6 +77,11 @@ function injectPremiumUiCss() {
     body#frameRoot.bt-premium-mode #topBody,
     body#frameRoot.bt-premium-mode #botBody{
       min-height:0!important;
+    }
+
+    body#frameRoot.bt-premium-mode .mic-line{
+      transform:translateY(-10px)!important;
+      align-items:center!important;
     }
 
     body#frameRoot.bt-premium-mode .half-screen.bottom .composer-stack{
@@ -159,19 +164,26 @@ function injectPremiumUiCss() {
     }
 
     body#frameRoot.bt-premium-mode #handsFreeToggle{
-      position:fixed!important;
-      right:42px!important;
-      top:calc(50% - 92px)!important;
+      position:static!important;
+      right:auto!important;
+      top:auto!important;
       bottom:auto!important;
       transform:none!important;
-      z-index:1810!important;
-      max-width:122px!important;
+      z-index:70!important;
+      max-width:112px!important;
       white-space:nowrap!important;
+      padding:8px 10px!important;
+      font-size:10px!important;
+    }
+
+    body#frameRoot.bt-premium-mode #handsFreeToggle span{
+      display:inline!important;
     }
 
     @media(max-width:390px){
       body#frameRoot.bt-premium-mode #btToggleBtn{left:36px!important;width:44px!important;height:44px!important;}
-      body#frameRoot.bt-premium-mode #handsFreeToggle{right:34px!important;top:calc(50% - 94px)!important;padding:7px 9px!important;font-size:10px!important;}
+      body#frameRoot.bt-premium-mode #handsFreeToggle{padding:7px 8px!important;font-size:9px!important;max-width:98px!important;}
+      body#frameRoot.bt-premium-mode #handsFreeToggle svg{width:14px!important;height:14px!important;}
       body#frameRoot.bt-premium-mode .premium-bt-hint{width:min(76vw,340px);margin-top:10px;padding:10px 12px;font-size:11px;}
     }
   `;
