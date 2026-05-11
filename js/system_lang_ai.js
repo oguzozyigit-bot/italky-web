@@ -37,10 +37,14 @@ const SUPPORTED = ["en", "de", "fr", "it", "es"];
     return loginVisible && !profileVisible;
   }
 
+  function findNativeBridge() {
+    return window.AndroidBilling || window.AndroidBridge || window.Native || window.AndroidAppBridge;
+  }
+
   function openRate() {
     const packageName = "com.ozyigits.italkyai";
     try {
-      const bridge = window.AndroidBridge || window.Native || window.AndroidAppBridge;
+      const bridge = findNativeBridge();
       if (bridge?.openAppReview) { bridge.openAppReview(); return; }
       if (bridge?.rateApp) { bridge.rateApp(); return; }
       if (bridge?.openPlayStore) { bridge.openPlayStore(); return; }
@@ -57,7 +61,7 @@ const SUPPORTED = ["en", "de", "fr", "it", "es"];
   }
 
   function requestWidget() {
-    const bridge = window.AndroidBridge || window.Native || window.AndroidAppBridge;
+    const bridge = findNativeBridge();
     const methods = ["requestPinWidget", "pinWidget", "pinAppWidget", "pinAppShortcut", "requestPinShortcut", "addHomeShortcut", "addShortcut"];
     for (const method of methods) {
       try {
