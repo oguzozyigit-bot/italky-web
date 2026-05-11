@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>italkyAI • Kod Aktivasyonu</title>
+  <title>italkyAI • Promosyon Kodu</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 
@@ -85,8 +85,8 @@
 
 <body>
   <div class="card">
-    <h1>Kurumsal Kod Aktivasyonu</h1>
-    <p>Promosyon kodunuzu Google hesabınıza bağlı e-posta adresinizle aktive edin. Üyelik süreniz kod aktive edildiğinde başlar.</p>
+    <h1>Promosyon kodunuzu girin</h1>
+    <p>Size verilen erişim kodunu kullanarak üyeliğinizi başlatabilirsiniz.</p>
 
     <label for="promoInput">Promosyon Kodu</label>
     <input id="promoInput" placeholder="KOD GİR" maxlength="8" autocomplete="one-time-code"/>
@@ -96,7 +96,7 @@
       <span>Üyelik sürem, kampanyalar ve yenileme hatırlatmaları hakkında e-posta ile bilgilendirilmeyi kabul ediyorum.</span>
     </label>
 
-    <button class="btn-primary" id="activateBtn" type="button">Kodu Aktifleştir</button>
+    <button class="btn-primary" id="activateBtn" type="button">Devam et</button>
     <button class="btn-secondary" id="continueBtn" type="button">Üyelik Sayfasına Dön</button>
     <div id="message" class="message"></div>
   </div>
@@ -175,20 +175,20 @@ activateBtn.addEventListener("click", async () => {
 
   try{
     activateBtn.disabled = true;
-    setMessage("Kod aktive ediliyor...");
+    setMessage("Kod kontrol ediliyor...");
     const result = await activateCode(code);
     if(result?.ok){
       try{
         localStorage.removeItem("italky_guest_mode_v1");
         localStorage.setItem("italky_access_open_v1", "1");
       }catch{}
-      setMessage("Üyeliğiniz aktive edildi. Yönlendiriliyorsunuz...", true);
+      setMessage("Üyeliğiniz başlatıldı. Yönlendiriliyorsunuz...", true);
       setTimeout(() => { location.href = "/pages/home.html"; }, 600);
       return;
     }
-    setMessage("Kod aktive edilemedi.");
+    setMessage("Kod doğrulanamadı.");
   }catch(e){
-    setMessage(e.message || "Kod aktive edilemedi.");
+    setMessage(e.message || "Kod doğrulanamadı.");
   }finally{
     activateBtn.disabled = false;
   }
