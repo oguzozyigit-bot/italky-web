@@ -244,6 +244,11 @@ function sendBluetoothText(text) {
   addBubble("bot", clean, false);
 }
 
+function isRecentLocalBluetoothEcho(text) {
+  const clean = cleanupTranscript(text);
+  return !!clean && clean === lastSentText && Date.now() - lastSentAt < 8000;
+}
+
 function finalizeSpeech(side, text) {
   recordingSide = null;
   setMicState(side, false);
@@ -384,6 +389,11 @@ async function handleBluetoothMessage(text, ...args) {
   const raw = String(text || "");
   if (raw.startsWith("SYS_CMD:LANG:")) {
     try { previousHandlers?.btMessage?.(text, ...args); } catch {}
+    return;
+  }
+
+  if (isRecentLocalBluetoothEcho(raw)) {
+    console.warn("[BT_GUEST_FLOW] ignored local bluetooth echo");
     return;
   }
 
