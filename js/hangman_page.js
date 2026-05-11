@@ -22,29 +22,6 @@ const HAS_GAME_MENU_LANG = SUPPORTED_LANGS.includes(requestedLang);
 const selectedLang = getGameLangFromUrl("en");
 const $ = (id) => document.getElementById(id);
 
-const BASE_WORDS = [
-  { tr: "uyumak", en: "sleep", de: "schlafen", fr: "dormir", es: "dormir", it: "dormire" },
-  { tr: "elma", en: "apple", de: "apfel", fr: "pomme", es: "manzana", it: "mela" },
-  { tr: "su", en: "water", de: "wasser", fr: "eau", es: "agua", it: "acqua" },
-  { tr: "ev", en: "house", de: "haus", fr: "maison", es: "casa", it: "casa" },
-  { tr: "kitap", en: "book", de: "buch", fr: "livre", es: "libro", it: "libro" },
-  { tr: "arkadas", en: "friend", de: "freund", fr: "ami", es: "amigo", it: "amico" },
-  { tr: "okul", en: "school", de: "schule", fr: "ecole", es: "escuela", it: "scuola" },
-  { tr: "pencere", en: "window", de: "fenster", fr: "fenetre", es: "ventana", it: "finestra" },
-  { tr: "kopru", en: "bridge", de: "brucke", fr: "pont", es: "puente", it: "ponte" },
-  { tr: "seyahat", en: "travel", de: "reisen", fr: "voyage", es: "viaje", it: "viaggio" },
-  { tr: "gunes", en: "sun", de: "sonne", fr: "soleil", es: "sol", it: "sole" },
-  { tr: "ay", en: "moon", de: "mond", fr: "lune", es: "luna", it: "luna" },
-  { tr: "yildiz", en: "star", de: "stern", fr: "etoile", es: "estrella", it: "stella" },
-  { tr: "zaman", en: "time", de: "zeit", fr: "temps", es: "tiempo", it: "tempo" },
-  { tr: "pazar", en: "market", de: "markt", fr: "marche", es: "mercado", it: "mercato" },
-  { tr: "renk", en: "color", de: "farbe", fr: "couleur", es: "color", it: "colore" },
-  { tr: "hizli", en: "quick", de: "schnell", fr: "rapide", es: "rapido", it: "veloce" },
-  { tr: "mutlu", en: "happy", de: "glucklich", fr: "heureux", es: "feliz", it: "felice" },
-  { tr: "yemek", en: "food", de: "essen", fr: "nourriture", es: "comida", it: "cibo" },
-  { tr: "calismak", en: "work", de: "arbeit", fr: "travail", es: "trabajo", it: "lavoro" },
-];
-
 const state = {
   lang: selectedLang,
   words: [],
@@ -67,6 +44,7 @@ const state = {
   roundJokers: JOKERS_PER_ROUND,
   roundEnded: false,
   previousWord: "",
+  contentReady: false,
 };
 
 let personalBestVal = null;
@@ -135,7 +113,35 @@ function injectHangmanUiPolish() {
     .game-over-eyebrow{color:rgba(125,211,252,.92);font:900 11px/1 Inter,system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:10px}.game-over-card h2{margin:0 0 12px;font:1000 28px/1.05 Inter,system-ui,sans-serif;letter-spacing:0}
     .game-over-word{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:12px 14px;margin:12px 0;background:rgba(15,23,42,.52);color:rgba(226,232,240,.9);font:800 14px/1.4 Inter,system-ui,sans-serif}.game-over-word strong{color:#fff;font-size:17px}
     .game-over-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.game-over-stat{min-height:62px;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px;background:rgba(2,6,23,.34)}.game-over-stat span{display:block;color:rgba(203,213,225,.72);font:900 10px/1 Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}.game-over-stat b{font:1000 18px/1 Inter,system-ui,sans-serif}.game-over-record{min-height:24px;margin:8px 0 14px;color:#fde68a;font:900 13px/1.35 Inter,system-ui,sans-serif}.game-over-actions{display:grid;gap:10px}.game-over-actions button{border:0;border-radius:18px;min-height:48px;color:#f8fafc;font:1000 14px/1 Inter,system-ui,sans-serif;box-shadow:0 14px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.14)}.game-over-actions .primary{background:linear-gradient(135deg,#06b6d4,#2563eb 58%,#7c3aed)}.game-over-actions .secondary{background:rgba(15,23,42,.74);border:1px solid rgba(148,163,184,.28)}
-    @media(max-width:420px){body.hangman-game-screen #pageContent{padding:8px 12px calc(224px + var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 10px)!important}body.hangman-game-screen .hud{top:54px!important}body.hangman-game-screen .rightHud{max-width:132px!important;min-width:116px!important;padding:7px!important}body.hangman-game-screen .score .val{font-size:22px!important}body.hangman-game-screen #hangmanScoreMeta{font-size:8px!important;max-width:116px!important}body.hangman-game-screen .stage{padding-top:92px!important}body.hangman-game-screen .dock{left:12px!important;right:12px!important;bottom:calc(var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 5px)!important;height:224px!important;padding:9px!important}body.hangman-game-screen .kb{grid-auto-rows:31px!important;gap:5px!important}body.hangman-game-screen .key{height:31px!important;font-size:12px!important}body.hangman-game-screen .slot{width:22px!important;height:32px!important;font-size:19px!important}.hangman-back-btn{padding:8px 10px;font-size:11px;margin-bottom:6px}.game-over-card{padding:18px;border-radius:23px}}
+    @media(max-width:700px){
+      body.hangman-game-screen #pageContent{padding:8px 12px calc(224px + var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 10px)!important}
+      body.hangman-game-screen .top{gap:6px!important}
+      body.hangman-game-screen .title{font-size:18px!important;letter-spacing:5px!important}
+      body.hangman-game-screen .hud{position:relative!important;top:auto!important;left:auto!important;right:auto!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:6px!important;margin:0 0 4px!important;pointer-events:auto!important;z-index:12!important}
+      body.hangman-game-screen .leftHud{width:100%!important;align-items:center!important;gap:0!important}
+      body.hangman-game-screen .hearts{display:flex!important;flex-wrap:nowrap!important;justify-content:center!important;max-width:100%!important;gap:4px!important}
+      body.hangman-game-screen .heart{font-size:16px!important}
+      body.hangman-game-screen .rightHud{position:relative!important;width:100%!important;min-width:0!important;max-width:100%!important;display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;justify-content:center!important;gap:5px 8px!important;margin:0!important;padding:7px 8px!important;border-radius:15px!important;background:rgba(255,255,255,.055)!important;border:1px solid rgba(255,255,255,.10)!important;box-shadow:0 10px 24px rgba(0,0,0,.20)!important;overflow:hidden!important;transform:none!important}
+      body.hangman-game-screen .score{display:inline-flex!important;align-items:baseline!important;justify-content:center!important;gap:4px!important;min-width:0!important;flex:0 0 auto!important}
+      body.hangman-game-screen .score::before{content:"SKOR:";color:rgba(255,255,255,.66);font-size:9px;font-weight:900;letter-spacing:.4px}
+      body.hangman-game-screen .score .best{display:none!important}
+      body.hangman-game-screen .score .val{font-size:17px!important;line-height:1!important;text-align:left!important}
+      body.hangman-game-screen .jokerCol{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:6px!important;margin:0!important;min-width:0!important;flex:1 1 190px!important;max-width:100%!important}
+      body.hangman-game-screen .joker.joker-main{width:auto!important;min-width:72px!important;height:29px!important;padding:0 9px!important;border-radius:999px!important;font-size:10px!important;white-space:nowrap!important;flex:0 0 auto!important}
+      body.hangman-game-screen #j1{display:none!important}
+      body.hangman-game-screen #hangmanScoreMeta{display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:center!important;gap:3px 7px!important;margin:0!important;max-width:none!important;min-width:0!important;flex:1 1 92px!important;font-size:7.8px!important;line-height:1.1!important;text-align:center!important;overflow:hidden!important}
+      body.hangman-game-screen #hangmanScoreMeta div{white-space:nowrap!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important}
+      body.hangman-game-screen .stage{padding-top:6px!important;min-height:0!important;flex:1 1 auto!important;justify-content:flex-start!important}
+      body.hangman-game-screen .gallows{width:118px!important;height:126px!important;margin-top:4px!important}
+      body.hangman-game-screen .trBox{margin-top:12px!important}
+    }
+    @media(max-width:420px){
+      body.hangman-game-screen #pageContent{padding-left:12px!important;padding-right:12px!important}
+      body.hangman-game-screen .dock{left:12px!important;right:12px!important;bottom:calc(var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 5px)!important;height:224px!important;padding:9px!important}
+      body.hangman-game-screen .kb{grid-auto-rows:31px!important;gap:5px!important}
+      body.hangman-game-screen .key{height:31px!important;font-size:12px!important}
+      body.hangman-game-screen .slot{width:22px!important;height:32px!important;font-size:19px!important}.hangman-back-btn{padding:8px 10px;font-size:11px;margin-bottom:6px}.game-over-card{padding:18px;border-radius:23px}
+    }
   `;
   document.head.appendChild(style);
 }
@@ -175,8 +181,8 @@ function createScoreMetaUi() {
   meta.id = "hangmanScoreMeta";
   meta.style.cssText = "display:grid;gap:7px;margin-top:8px;color:rgba(255,255,255,.85);font:900 10px/1.25 Inter,system-ui,sans-serif;letter-spacing:.3px;text-transform:uppercase";
   meta.innerHTML = `
-    <div>SENİN REKORUN: <span id="personalBestVal">—</span></div>
-    <div id="globalBestVal">GENEL REKOR: —</div>
+    <div>SENİN: <span id="personalBestVal">—</span></div>
+    <div id="globalBestVal">GENEL: —</div>
   `;
   jokerCol.appendChild(meta);
   personalBestVal = $("personalBestVal");
@@ -299,12 +305,60 @@ async function fetchWordsFromLangStorage(lang) {
   }
 }
 
+async function fetchWordsFromSupabase(lang) {
+  const tableCandidates = [
+    "game_words",
+    "learning_words",
+    "vocabulary_words",
+    "vocabulary",
+    "words",
+  ];
+  try {
+    const { supabase } = await import("/js/supabase_client.js");
+    for (const table of tableCandidates) {
+      try {
+        const { data, error } = await supabase.from(table).select("*").limit(300);
+        if (error || !Array.isArray(data) || !data.length) continue;
+        const mapped = data
+          .filter((item) => {
+            const slug = String(item.game_slug || item.game || item.slug || item.type || "").toLowerCase();
+            return !slug || slug === GAME_SLUG || slug.includes("hangman") || slug.includes("word");
+          })
+          .map((item) => normalizeWordItem(item, lang))
+          .filter(Boolean);
+        if (mapped.length) {
+          console.info("[HANGMAN] words loaded from Supabase", { table, count: mapped.length, lang });
+          return mapped;
+        }
+      } catch (inner) {
+        console.warn("[HANGMAN] Supabase word table skipped", { table, inner });
+      }
+    }
+  } catch (err) {
+    console.warn("[HANGMAN] Supabase word load failed", err);
+  }
+  return [];
+}
+
+function showContentUnavailable() {
+  state.contentReady = false;
+  if ($("trText")) $("trText").textContent = "İçerik şu anda yüklenemedi. Lütfen tekrar deneyin.";
+  if ($("matrix")) $("matrix").innerHTML = "";
+  const kb = $("kb");
+  if (kb) kb.innerHTML = "";
+  toast("İçerik şu anda yüklenemedi. Lütfen tekrar deneyin.");
+}
+
 async function loadData(lang) {
-  const externalWords = await fetchWordsFromLangStorage(lang);
-  const fallbackWords = BASE_WORDS.map((item) => normalizeWordItem(item, lang)).filter(Boolean);
-  state.words = externalWords.length ? externalWords : fallbackWords;
-  state.lang = state.words.length ? lang : "en";
-  if (!state.words.length) state.words = BASE_WORDS.map((item) => normalizeWordItem(item, "en")).filter(Boolean);
+  const storageWords = await fetchWordsFromLangStorage(lang);
+  const remoteWords = storageWords.length ? storageWords : await fetchWordsFromSupabase(lang);
+  state.words = remoteWords;
+  state.lang = lang;
+  state.contentReady = state.words.length > 0;
+  if (!state.contentReady) {
+    showContentUnavailable();
+    return;
+  }
   if ($("trText")) $("trText").textContent = `Türkçe anlam: ${state.words[0]?.clue || "—"}`;
 }
 
@@ -312,9 +366,12 @@ async function refreshScoreUi() {
   const localBest = getLocalHighScore(GAME_SLUG, state.lang);
   if ($("bestVal")) $("bestVal").textContent = String(localBest || 0);
   if (personalBestVal) personalBestVal.textContent = String(localBest || 0);
-  if (globalBestVal) globalBestVal.textContent = "GENEL REKOR: —";
+  if (globalBestVal) globalBestVal.textContent = "GENEL: —";
   try {
     const best = await refreshGameScoreLabels(GAME_SLUG, state.lang, { personalEl: personalBestVal, globalEl: globalBestVal });
+    if (globalBestVal && String(globalBestVal.textContent || "").startsWith("GENEL REKOR:")) {
+      globalBestVal.textContent = String(globalBestVal.textContent).replace("GENEL REKOR:", "GENEL:");
+    }
     return best?.globalBest || null;
   } catch (err) {
     console.warn("[HANGMAN] score labels failed", err);
@@ -354,7 +411,7 @@ function revealParts(n) {
 }
 
 function pickWord() {
-  if (!state.words.length) return { w: "SLEEP", clue: "uyumak" };
+  if (!state.words.length) return null;
   let pick = state.words[Math.floor(Math.random() * state.words.length)];
   if (state.words.length > 1) {
     let guard = 0;
@@ -368,9 +425,21 @@ function pickWord() {
 
 function startRound() {
   hideReadyGate();
+  if (!state.contentReady || !state.words.length) {
+    showContentUnavailable();
+    return;
+  }
   const pick = pickWord();
-  state.word = normalizeWord(pick?.w) || "SLEEP";
-  state.clue = String(pick?.clue || "uyumak").trim();
+  if (!pick) {
+    showContentUnavailable();
+    return;
+  }
+  state.word = normalizeWord(pick?.w);
+  state.clue = String(pick?.clue || "").trim();
+  if (!state.word || !state.clue) {
+    showContentUnavailable();
+    return;
+  }
   state.previousWord = state.word;
   state.guessed = new Set();
   state.roundJokers = JOKERS_PER_ROUND;
@@ -433,7 +502,7 @@ function renderJokers() {
   if (j0) {
     j0.className = `joker joker-main${state.roundJokers <= 0 ? " spent" : ""}`;
     j0.textContent = `Joker: ${state.roundJokers}`;
-    j0.disabled = state.roundJokers <= 0 || state.roundEnded;
+    j0.disabled = state.roundJokers <= 0 || state.roundEnded || !state.contentReady;
     j0.onclick = useJoker;
   }
   if (j1) {
@@ -453,7 +522,7 @@ function isSolved() {
 }
 
 function makeGuess(letter, btn) {
-  if (state.roundEnded || state.guessed.has(letter) || btn?.disabled) return;
+  if (state.roundEnded || !state.contentReady || state.guessed.has(letter) || btn?.disabled) return;
   state.guessed.add(letter);
   if (btn) btn.disabled = true;
   if (state.word.includes(letter)) {
@@ -477,7 +546,7 @@ function makeGuess(letter, btn) {
 }
 
 function useJoker() {
-  if (state.roundEnded || state.roundJokers <= 0) return;
+  if (state.roundEnded || !state.contentReady || state.roundJokers <= 0) return;
   const hidden = [...new Set(state.word.split(""))].filter((ch) => !state.guessed.has(ch));
   if (!hidden.length) return;
   const ch = hidden[Math.floor(Math.random() * hidden.length)];
@@ -560,7 +629,7 @@ async function finishGameAndSave() {
     const beforeScore = Number(beforeGlobal?.score || 0);
     const afterScore = Number(afterGlobal?.score || 0);
     state.newGlobalBest = state.totalScore > beforeScore && afterScore === state.totalScore;
-    if (globalBestVal) globalBestVal.textContent = formatGlobalBest(afterGlobal);
+    if (globalBestVal) globalBestVal.textContent = formatGlobalBest(afterGlobal).replace("GENEL REKOR:", "GENEL:");
   } catch (_) {}
   return afterGlobal || beforeGlobal;
 }
