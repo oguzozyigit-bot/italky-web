@@ -1,7 +1,6 @@
 // FILE: /js/facetoface_premium_gate.js
 
 import { supabase } from "/js/supabase_client.js";
-import "/js/ad_gate.js";
 
 const JETON_PAGE_URL = "/pages/jetonbuy.html";
 
