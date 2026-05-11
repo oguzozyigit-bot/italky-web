@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Gezi & Konferans</title>
+  <meta name="theme-color" content="#07111f" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#050814;
+      --panel:rgba(15,23,42,.76);
+      --line:rgba(147,197,253,.18);
+      --text:rgba(255,255,255,.96);
+      --muted:rgba(219,234,254,.68);
+      --cyan:#67e8f9;
+      --blue:#60a5fa;
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+    html,body{margin:0;width:100%;min-height:100%;background:var(--bg);color:var(--text);font-family:Outfit,Arial,sans-serif}
+    body{min-height:100dvh;overflow:hidden;background:radial-gradient(circle at 18% 0%,rgba(56,189,248,.20),transparent 34%),radial-gradient(circle at 84% 18%,rgba(99,102,241,.18),transparent 36%),linear-gradient(180deg,#07111f,#050814 48%,#020617)}
+    button,select,input{font:inherit}
+
+    .page{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+    .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 10px}
+    .brand{min-width:0}
+    .brand h1{margin:0;font-family:"Space Grotesk",sans-serif;font-size:24px;line-height:1;font-weight:900;letter-spacing:-.6px}
+    .brand p{margin:5px 0 0;color:var(--muted);font-size:12px;font-weight:900}
+    .home-btn{min-height:42px;border:none;border-radius:16px;padding:0 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:1000;cursor:pointer}
+
+    .content{flex:1 1 auto;min-height:0;overflow-y:auto;padding:8px 14px calc(18px + var(--safe-bottom));scrollbar-width:none}
+    .content::-webkit-scrollbar{display:none}
+    .shell{width:min(100%,760px);margin:0 auto;display:grid;gap:12px}
+
+    .card{border-radius:24px;background:linear-gradient(145deg,rgba(15,23,42,.82),rgba(2,6,23,.74));border:1px solid var(--line);box-shadow:0 18px 48px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.06);padding:16px;position:relative;overflow:hidden}
+    .card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 0%,rgba(103,232,249,.14),transparent 36%),linear-gradient(135deg,rgba(255,255,255,.05),transparent 45%);pointer-events:none}
+    .card > *{position:relative;z-index:2}
+    .hero{min-height:142px;display:flex;flex-direction:column;justify-content:center;gap:10px;text-align:center}
+    .hero-title{margin:0;font-family:"Space Grotesk",sans-serif;font-size:30px;line-height:1.04;font-weight:900;letter-spacing:-.9px}
+    .hero-text{margin:0 auto;max-width:520px;color:var(--muted);font-size:14px;line-height:1.5;font-weight:800}
+
+    .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .role-btn{min-height:154px;border:none;border-radius:24px;padding:16px;text-align:left;color:#fff;cursor:pointer;border:1px solid rgba(255,255,255,.12);box-shadow:0 16px 36px rgba(0,0,0,.28);display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+    .role-btn strong{font-family:"Space Grotesk",sans-serif;font-size:23px;line-height:1;font-weight:900;letter-spacing:-.5px}
+    .role-btn span{display:block;color:rgba(255,255,255,.80);font-size:13px;line-height:1.42;font-weight:800}
+    .speaker-btn{background:radial-gradient(circle at 12% 0%,rgba(251,191,36,.28),transparent 34%),linear-gradient(145deg,#451a03,#92400e 48%,#0f172a)}
+    .listener-btn{background:radial-gradient(circle at 12% 0%,rgba(45,212,191,.24),transparent 34%),linear-gradient(145deg,#064e3b,#0f766e 48%,#1e3a8a)}
+
+    .view{display:none;gap:12px}
+    .view.active{display:grid}
+    .form-grid{display:grid;gap:11px}
+    .field{display:grid;gap:7px;text-align:left}
+    .field label{font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.5px;color:rgba(191,219,254,.70)}
+    .field select,.field input{width:100%;min-height:48px;border-radius:16px;border:1px solid rgba(147,197,253,.20);background:rgba(2,6,23,.60);color:#fff;padding:0 12px;font-size:14px;font-weight:900}
+    .primary,.secondary{min-height:50px;border:none;border-radius:17px;font-size:14px;font-weight:1000;cursor:pointer}
+    .primary{background:linear-gradient(135deg,#67e8f9,#60a5fa,#6366f1);color:#020617;box-shadow:0 14px 30px rgba(96,165,250,.24)}
+    .secondary{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff}
+    .danger{color:#fecaca;border-color:rgba(248,113,113,.25)}
+
+    .session-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px}
+    .session-code{font-family:"Space Grotesk",sans-serif;font-size:34px;font-weight:900;letter-spacing:5px;color:#bfdbfe}
+    .qr{width:118px;height:118px;border-radius:18px;background:#fff;padding:8px;box-shadow:0 14px 32px rgba(0,0,0,.38)}
+    .qr img{display:block;width:102px;height:102px}
+    .badge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .badge{display:inline-flex;align-items:center;min-height:30px;border-radius:999px;padding:0 10px;background:rgba(96,165,250,.12);border:1px solid rgba(147,197,253,.20);color:#dbeafe;font-size:11px;font-weight:1000}
+    .badge.live{background:rgba(34,197,94,.13);border-color:rgba(74,222,128,.24);color:#bbf7d0}
+
+    .transcript{min-height:190px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;overflow:hidden}
+    .message{max-width:92%;margin:0 auto;text-align:center;line-height:1.18;word-break:break-word;font-size:19px;font-weight:850;color:rgba(255,255,255,.58)}
+    .message.latest{font-size:32px;font-weight:1000;color:#fff}
+    .speaker-live .message.latest{color:#e0f2fe}
+    .listener-live .message.latest{color:#dcfce7}
+
+    .mic-row{display:grid;grid-template-columns:1fr 82px 1fr;align-items:center;gap:12px;margin-top:2px}
+    .mic-btn{width:82px;height:82px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:radial-gradient(circle at 50% 34%,rgba(255,255,255,.18),rgba(96,165,250,.16) 48%,rgba(15,23,42,.82));color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 18px 44px rgba(0,0,0,.34),0 0 32px rgba(96,165,250,.18)}
+    .mic-btn.listening{animation:micPulse 1.08s ease-in-out infinite;background:radial-gradient(circle at 50% 34%,rgba(103,232,249,.32),rgba(96,165,250,.24) 48%,rgba(99,102,241,.16))}
+    .mic-btn svg{width:34px;height:34px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+    .handsfree{justify-self:start;min-height:42px;border-radius:14px;padding:0 12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:11px;font-weight:1000;cursor:pointer}
+    .handsfree.active{background:rgba(34,197,94,.14);border-color:rgba(74,222,128,.28);color:#bbf7d0}
+    @keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+
+    .toast{position:fixed;left:50%;top:24px;transform:translateX(-50%) translateY(-120px);z-index:2147483647;min-height:44px;max-width:min(92vw,430px);padding:11px 16px;border-radius:16px;background:rgba(12,16,28,.98);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:1000;text-align:center;box-shadow:0 18px 36px rgba(0,0,0,.45);transition:.22s ease;pointer-events:none}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+
+    @media(max-width:520px){.role-grid{grid-template-columns:1fr}.hero-title{font-size:25px}.session-row{grid-template-columns:1fr;text-align:center}.qr{margin:0 auto}.message.latest{font-size:28px}.mic-row{grid-template-columns:1fr 78px 1fr}.mic-btn{width:78px;height:78px}.handsfree{padding:0 9px;font-size:10px}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Gezi & Konferans</h1>
+        <p>Premium canlı çeviri yayını</p>
+      </div>
+      <button id="homeBtn" class="home-btn" type="button">HOME</button>
+    </header>
+
+    <section class="content">
+      <div class="shell">
+        <section id="roleView" class="view active">
+          <div class="card hero">
+            <h2 class="hero-title">Tek konuşmacı, herkes kendi dilinde dinler.</h2>
+            <p class="hero-text">Rehber, toplantı veya konferans konuşmasını yayınlayın. Katılımcılar kodla katılır, seçtikleri dilde çeviriyi görür ve duyar.</p>
+          </div>
+          <div class="role-grid">
+            <button id="speakerRoleBtn" class="role-btn speaker-btn" type="button"><strong>Konuşmacı Olarak Başlat</strong><span>Oturum kodu üret, mikrofonu aç ve yayını başlat.</span></button>
+            <button id="listenerRoleBtn" class="role-btn listener-btn" type="button"><strong>Dinleyici Olarak Katıl</strong><span>Kodu gir, dinleme dilini seç ve çeviriyi dinle.</span></button>
+          </div>
+        </section>
+
+        <section id="speakerSetupView" class="view">
+          <div class="card form-grid">
+            <div class="field"><label>Konuşma dili</label><select id="speakerLang"></select></div>
+            <button id="createSessionBtn" class="primary" type="button">Yayını Başlat</button>
+            <button class="secondary back-role" type="button">Geri</button>
+          </div>
+        </section>
+
+        <section id="speakerLiveView" class="view">
+          <div class="card">
+            <div class="session-row">
+              <div>
+                <div class="badge-row"><span class="badge live">Konuşmacı</span><span id="speakerLangBadge" class="badge"></span><span id="speakerTransportBadge" class="badge"></span></div>
+                <div id="sessionCode" class="session-code">000000</div>
+              </div>
+              <div id="sessionQr" class="qr"></div>
+            </div>
+          </div>
+          <div class="card transcript speaker-live" id="speakerTranscript"></div>
+          <div class="mic-row">
+            <span></span>
+            <button id="speakerMicBtn" class="mic-btn" type="button" aria-label="Mikrofon"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg></button>
+            <button id="handsFreeBtn" class="handsfree" type="button">Eller Serbest</button>
+          </div>
+          <button id="endSessionBtn" class="secondary danger" type="button">Yayını Kapat</button>
+        </section>
+
+        <section id="listenerSetupView" class="view">
+          <div class="card form-grid">
+            <div class="field"><label>Oturum kodu</label><input id="joinCode" inputmode="numeric" maxlength="6" placeholder="123456" /></div>
+            <div class="field"><label>Dinleme dili</label><select id="listenerLang"></select></div>
+            <button id="joinSessionBtn" class="primary" type="button">Katıl</button>
+            <button class="secondary back-role" type="button">Geri</button>
+          </div>
+        </section>
+
+        <section id="listenerLiveView" class="view">
+          <div class="card">
+            <div class="badge-row"><span class="badge live">Dinleyici</span><span id="listenerLangBadge" class="badge"></span><span id="listenerTransportBadge" class="badge"></span></div>
+          </div>
+          <div class="card transcript listener-live" id="listenerTranscript"></div>
+          <button id="leaveSessionBtn" class="secondary" type="button">Ayrıl</button>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script type="module" src="/js/conference_mode.js?v=CONF_PREMIUM_V1"></script>
+</body>
+</html>
