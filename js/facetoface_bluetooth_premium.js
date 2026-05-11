@@ -77,15 +77,15 @@ function injectPremiumUiCss() {
 
     body#frameRoot.bt-premium-mode #centerHub #handsFreeToggle,
     body#frameRoot.bt-premium-mode .center-hub #handsFreeToggle{display:none!important;pointer-events:none!important;}
-    body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle{position:absolute!important;left:calc(50% + 50px)!important;top:50%!important;right:auto!important;bottom:auto!important;transform:translateY(-50%)!important;z-index:70!important;width:auto!important;max-width:108px!important;min-height:40px!important;white-space:nowrap!important;padding:7px 10px!important;font-size:10px!important;flex-shrink:0!important;}
-    body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle span{display:inline!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+    body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle{position:absolute!important;left:calc(50% + 50px)!important;top:50%!important;right:auto!important;bottom:auto!important;transform:translateY(-50%)!important;z-index:70!important;width:auto!important;max-width:116px!important;min-height:40px!important;white-space:nowrap!important;padding:7px 10px!important;font-size:10px!important;line-height:1!important;gap:6px!important;flex-shrink:0!important;}
+    body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle span{display:inline!important;overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;}
 
     @media(max-width:390px){
       body#frameRoot.bt-premium-mode #botSection .composer-stack{transform:translateY(-3px)!important;}
       body#frameRoot.bt-premium-mode #btToggleBtn{left:36px!important;width:44px!important;height:44px!important;}
-      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle{left:calc(50% + 46px)!important;width:42px!important;height:42px!important;min-height:42px!important;max-width:42px!important;padding:0!important;justify-content:center!important;gap:0!important;}
-      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle span{display:none!important;}
-      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle svg{width:16px!important;height:16px!important;}
+      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle{left:calc(50% + 42px)!important;width:auto!important;height:38px!important;min-height:38px!important;max-width:112px!important;padding:6px 8px!important;justify-content:center!important;gap:5px!important;font-size:9px!important;}
+      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle span{display:inline!important;font-size:9px!important;line-height:1!important;max-width:76px!important;overflow:visible!important;text-overflow:clip!important;}
+      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle svg{width:15px!important;height:15px!important;flex:0 0 auto!important;}
       body#frameRoot.bt-premium-mode .premium-bt-hint{width:min(76vw,340px);margin-top:10px;padding:10px 12px;font-size:11px;}
     }
   `;
@@ -139,6 +139,11 @@ function updateConnectButtonCopy() {
   if (!btn) return;
   btn.setAttribute("aria-label", "Kod ile bağlan");
   btn.setAttribute("title", "Kod ile bağlan");
+  btn.innerHTML = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"></path>
+      <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13 19.07"></path>
+    </svg>`;
 }
 
 function boot() {
