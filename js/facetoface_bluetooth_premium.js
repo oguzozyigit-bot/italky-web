@@ -79,25 +79,15 @@ function injectPremiumUiCss() {
       min-height:0!important;
     }
 
-    body#frameRoot.bt-premium-mode .mic-line{
-      grid-template-columns:minmax(72px,1fr) 70px minmax(104px,1fr)!important;
-      gap:12px!important;
-      padding:0 14px!important;
+    body#frameRoot.bt-premium-mode #botSection .composer-stack{
+      position:relative!important;
       transform:translateY(-3px)!important;
-      align-items:center!important;
+      isolation:isolate!important;
     }
 
-    body#frameRoot.bt-premium-mode .mic-line .mic-side{
-      min-width:0!important;
-    }
-
-    body#frameRoot.bt-premium-mode .mic-line .mic-side:last-child{
-      justify-content:flex-start!important;
-      padding-left:8px!important;
-    }
-
-    body#frameRoot.bt-premium-mode .half-screen.bottom .composer-stack{
-      transform:translateY(-3px)!important;
+    body#frameRoot.bt-premium-mode #botComposer{
+      position:relative!important;
+      z-index:2!important;
     }
 
     body#frameRoot.bt-premium-mode .premium-bt-hint{
@@ -175,12 +165,19 @@ function injectPremiumUiCss() {
       box-shadow:0 0 18px rgba(34,197,94,.36), inset 0 1px 0 rgba(255,255,255,.10)!important;
     }
 
-    body#frameRoot.bt-premium-mode #handsFreeToggle{
-      position:static!important;
+    body#frameRoot.bt-premium-mode #centerHub #handsFreeToggle,
+    body#frameRoot.bt-premium-mode .center-hub #handsFreeToggle{
+      display:none!important;
+      pointer-events:none!important;
+    }
+
+    body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle{
+      position:absolute!important;
+      left:calc(50% + 50px)!important;
+      top:50%!important;
       right:auto!important;
-      top:auto!important;
       bottom:auto!important;
-      transform:none!important;
+      transform:translateY(-50%)!important;
       z-index:70!important;
       width:auto!important;
       max-width:108px!important;
@@ -188,22 +185,21 @@ function injectPremiumUiCss() {
       white-space:nowrap!important;
       padding:7px 10px!important;
       font-size:10px!important;
-      flex-shrink:1!important;
+      flex-shrink:0!important;
     }
 
-    body#frameRoot.bt-premium-mode #handsFreeToggle span{
+    body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle span{
       display:inline!important;
       overflow:hidden!important;
       text-overflow:ellipsis!important;
     }
 
     @media(max-width:390px){
-      body#frameRoot.bt-premium-mode .mic-line{grid-template-columns:minmax(66px,1fr) 66px minmax(74px,1fr)!important;gap:8px!important;padding:0 10px!important;transform:translateY(-3px)!important;}
-      body#frameRoot.bt-premium-mode .mic-line .mic-side:last-child{padding-left:5px!important;}
+      body#frameRoot.bt-premium-mode #botSection .composer-stack{transform:translateY(-3px)!important;}
       body#frameRoot.bt-premium-mode #btToggleBtn{left:36px!important;width:44px!important;height:44px!important;}
-      body#frameRoot.bt-premium-mode #handsFreeToggle{width:42px!important;height:42px!important;min-height:42px!important;max-width:42px!important;padding:0!important;justify-content:center!important;gap:0!important;}
-      body#frameRoot.bt-premium-mode #handsFreeToggle span{display:none!important;}
-      body#frameRoot.bt-premium-mode #handsFreeToggle svg{width:16px!important;height:16px!important;}
+      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle{left:calc(50% + 46px)!important;width:42px!important;height:42px!important;min-height:42px!important;max-width:42px!important;padding:0!important;justify-content:center!important;gap:0!important;}
+      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle span{display:none!important;}
+      body#frameRoot.bt-premium-mode #botSection .composer-stack > #handsFreeToggle svg{width:16px!important;height:16px!important;}
       body#frameRoot.bt-premium-mode .premium-bt-hint{width:min(76vw,340px);margin-top:10px;padding:10px 12px;font-size:11px;}
     }
   `;
@@ -246,6 +242,13 @@ function detachFaceToFaceHandlers() {
   replaceInteractiveNode("handsFreeToggle");
 }
 
+function moveHandsFreeToBottomMic() {
+  const handsFree = document.getElementById("handsFreeToggle");
+  const target = document.querySelector("#botSection .composer-stack");
+  if (!handsFree || !target || handsFree.parentElement === target) return;
+  target.appendChild(handsFree);
+}
+
 function boot() {
   injectPremiumUiCss();
   if (!isBluetoothMode) return;
@@ -254,6 +257,7 @@ function boot() {
   closeLanguagePopups();
   injectBluetoothHint();
   detachFaceToFaceHandlers();
+  moveHandsFreeToBottomMic();
   installTwoPhoneBluetoothMode({ homeHref: "/pages/home.html" });
 }
 
