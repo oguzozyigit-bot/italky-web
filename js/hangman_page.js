@@ -14,12 +14,11 @@ const GAME_SLUG = "hangman";
 const SUPPORTED_LANGS = Object.keys(GAME_LANG_META);
 const MAX_MISTAKES = 6;
 const qs = new URLSearchParams(location.search);
-const requestedLang = qs.get("lang");
-const HAS_GAME_MENU_LANG = SUPPORTED_LANGS.includes(String(requestedLang || "").toLowerCase());
+const requestedLang = String(qs.get("lang") || "").toLowerCase();
+const HAS_GAME_MENU_LANG = SUPPORTED_LANGS.includes(requestedLang);
 const selectedLang = getGameLangFromUrl("en");
 
 const $ = (id) => document.getElementById(id);
-const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
 const W = innerWidth;
 const H = innerHeight;
@@ -38,6 +37,7 @@ window.addEventListener("orientationchange", applyShellLift);
 
 function injectHangmanUiPolish() {
   document.body.classList.add("hangman-game-screen");
+  if (HAS_GAME_MENU_LANG) document.body.classList.add("hangman-direct-start");
   if ($("hangmanUiPolish")) return;
   const style = document.createElement("style");
   style.id = "hangmanUiPolish";
@@ -46,6 +46,12 @@ function injectHangmanUiPolish() {
     body.hangman-game-screen [data-italky-footer],
     body.hangman-game-screen .italky-global-footer {
       display: none !important;
+    }
+    body.hangman-game-screen .ready-gate.hidden,
+    body.hangman-direct-start #readyGate {
+      display: none !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
     }
     body.hangman-game-screen .dock {
       bottom: calc(var(--safeB) + var(--shellLift) + 34px) !important;
@@ -196,6 +202,22 @@ function getBackUrl() {
   return qs.get("back") || (window.__ITalkyPublicGuest ? "/pages/login_entry.html" : "/pages/game_menu.html");
 }
 
+function hideReadyGate() {
+  const gate = $("readyGate");
+  if (!gate) return;
+  gate.classList.add("hidden");
+  gate.style.display = "none";
+  gate.setAttribute("aria-hidden", "true");
+}
+
+function showReadyGate() {
+  const gate = $("readyGate");
+  if (!gate) return;
+  gate.classList.remove("hidden");
+  gate.style.display = "flex";
+  gate.setAttribute("aria-hidden", "false");
+}
+
 function createBackButton() {
   if ($("hangmanBackBtn")) return;
   const btn = document.createElement("button");
@@ -299,9 +321,9 @@ function toast(msg) {
   const t = $("toast");
   if (!t) return;
   t.textContent = msg;
-  t.classList.add("on");
+  t.classList.add("show");
   clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(() => t.classList.remove("on"), 1600);
+  window.__toastTimer = setTimeout(() => t.classList.remove("show"), 1600);
 }
 
 function createScoreMetaUi() {
@@ -427,6 +449,7 @@ function playWrongSound() {
 
 async function refreshScoreUi() {
   const localBest = getLocalHighScore(GAME_SLUG, state.lang);
+  if ($("bestVal")) $("bestVal").textContent = String(localBest || 0);
   if (personalBestVal) personalBestVal.textContent = String(localBest || 0);
   if (globalBestVal) globalBestVal.textContent = "GENEL REKOR: —";
   try {
@@ -446,6 +469,7 @@ function markLocalBestIfNeeded() {
   if (state.totalScore > current) {
     setLocalHighScore(GAME_SLUG, state.lang, state.totalScore);
     state.newPersonalBest = true;
+    if ($("bestVal")) $("bestVal").textContent = String(state.totalScore);
     if (personalBestVal) personalBestVal.textContent = String(state.totalScore);
     toast("Yeni yüksek skor!");
     return true;
@@ -478,10 +502,9 @@ async function fetchWordsFromLangStorage(lang) {
 async function loadData(lang) {
   const externalWords = await fetchWordsFromLangStorage(lang);
   state.words = externalWords.length ? externalWords : (DICT[lang] || DICT.en);
-  state.lang = DICT[lang] || externalWords.length ? lang : "en";
+  state.lang = (DICT[lang] || externalWords.length) ? lang : "en";
   if ($("langBadge")) $("langBadge").textContent = GAME_LANG_META[state.lang]?.flag || "🇬🇧";
   if ($("trText")) $("trText").textContent = `Dil: ${langLabel(state.lang)}`;
-  await refreshScoreUi();
 }
 
 function createStars() {
@@ -496,6 +519,7 @@ function createStars() {
 }
 
 function drawGallows() {
+  // HTML/CSS hangman figure is kept; this function stays harmless for older SVG builds.
   const svg = $("gallowsSvg");
   if (!svg) return;
   const wood = "rgba(255,255,255,.56)";
@@ -511,31 +535,19 @@ function drawGallows() {
   line(228, 90, 228, 138, 5);
 }
 
-function part(name, attrs = {}) {
-  const e = document.createElementNS("http://www.w3.org/2000/svg", name);
-  Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
-  e.classList.add("manPart");
-  $("gallowsSvg")?.appendChild(e);
-  return e;
-}
-
 function resetMan() {
-  document.querySelectorAll(".manPart").forEach((p) => p.remove());
-  const cx = 228, top = 165;
-  part("circle", { cx, cy: top, r: 25, fill: "none", stroke: "#fff", "stroke-width": 7 });
-  part("line", { x1: cx, y1: top + 25, x2: cx, y2: top + 100, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
-  part("line", { x1: cx, y1: top + 52, x2: cx - 42, y2: top + 82, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
-  part("line", { x1: cx, y1: top + 52, x2: cx + 42, y2: top + 82, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
-  part("line", { x1: cx, y1: top + 100, x2: cx - 36, y2: top + 148, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
-  part("line", { x1: cx, y1: top + 100, x2: cx + 36, y2: top + 148, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
-  document.querySelectorAll(".manPart").forEach((p) => p.classList.remove("on"));
+  document.querySelectorAll(".organ").forEach((p) => p.classList.remove("on"));
+  $("man")?.classList.remove("swing");
 }
 
 function revealParts(n) {
-  document.querySelectorAll(".manPart").forEach((p, i) => p.classList.toggle("on", i < n));
+  const parts = ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"];
+  parts.forEach((id, i) => $(id)?.classList.toggle("on", i < n));
+  $("man")?.classList.toggle("swing", n >= MAX_MISTAKES);
 }
 
 function startRound() {
+  hideReadyGate();
   if (!state.words.length) state.words = DICT[state.lang] || DICT.en;
   const pick = state.words[Math.floor(Math.random() * state.words.length)];
   state.word = normalizeWord(pick?.w || pick?.word || pick?.text);
@@ -557,23 +569,25 @@ function startRound() {
 }
 
 function renderWord() {
-  const wordEl = $("word");
+  const wordEl = $("matrix");
   if (!wordEl) return;
   wordEl.innerHTML = "";
   state.word.split("").forEach((ch) => {
     const span = document.createElement("span");
-    span.className = "letter";
-    span.textContent = state.guessed.has(ch) ? ch : "";
+    const found = state.guessed.has(ch);
+    span.className = `slot${found ? " found" : ""}`;
+    span.textContent = found ? ch : "";
     wordEl.appendChild(span);
   });
 }
 
 function renderKeyboard() {
-  const kb = $("keyboard");
+  const kb = $("kb");
   if (!kb) return;
   kb.innerHTML = "";
   "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach((ch) => {
     const btn = document.createElement("button");
+    btn.type = "button";
     btn.className = "key";
     btn.textContent = ch;
     btn.addEventListener("click", () => makeGuess(ch, btn));
@@ -595,7 +609,7 @@ function renderHearts() {
 
 function updateScore(delta = 0) {
   state.totalScore = Math.max(0, state.totalScore + delta);
-  if ($("score")) $("score").textContent = state.totalScore;
+  if ($("scoreVal")) $("scoreVal").textContent = state.totalScore;
 }
 
 function makeGuess(letter, btn) {
@@ -625,26 +639,36 @@ function endRound(win) {
   document.querySelectorAll(".key").forEach((b) => (b.disabled = true));
   const modal = $("modal");
   const mTitle = $("mTitle");
-  const mMsg = $("mMsg");
+  const mWord = $("mWord");
+  const mTr = $("mTr");
   const mBtn = $("mBtn");
-  if (!modal || !mTitle || !mMsg || !mBtn) return;
+  if (!modal || !mTitle || !mWord || !mTr || !mBtn) return;
   state.lastSolvedWord = state.word;
   state.lastSolvedLang = state.lang;
   if (win) {
     updateScore(40);
     markLocalBestIfNeeded();
     mTitle.textContent = "Başarılı!";
-    mMsg.textContent = `Kelime: ${state.word} • +40 puan`;
+    mWord.textContent = state.word;
+    mTr.textContent = "+40 puan";
     mBtn.textContent = "Sonraki kelime";
     if (listenSolvedBtn) listenSolvedBtn.style.display = "block";
-  } else {
-    state.lives -= 1;
-    renderHearts();
-    mTitle.textContent = "Oyun bitti";
-    mMsg.textContent = `Doğru kelime: ${state.word}`;
-    mBtn.textContent = state.lives > 0 ? "Devam et" : "Sonuçları gör";
+    speakGameText(state.word, state.lang);
+    modal.classList.add("on");
+    return;
   }
+
+  state.lives -= 1;
+  renderHearts();
   speakGameText(state.word, state.lang);
+  if (state.lives <= 0) {
+    showGameOverModal();
+    return;
+  }
+  mTitle.textContent = "Oyun bitti";
+  mWord.textContent = state.word;
+  mTr.textContent = "Bir can gitti, devam edebilirsin.";
+  mBtn.textContent = "Devam et";
   modal.classList.add("on");
 }
 
@@ -689,19 +713,25 @@ function resetGameState() {
   state.scoreSaved = false;
   state.newPersonalBest = false;
   state.newGlobalBest = false;
-  if ($("score")) $("score").textContent = "0";
+  if ($("scoreVal")) $("scoreVal").textContent = "0";
   renderHearts();
 }
 
-$("mBtn")?.addEventListener("click", async () => {
+function startGameNow() {
+  hideReadyGate();
+  resetGameState();
+  startRound();
+}
+
+$("mBtn")?.addEventListener("click", () => {
   $("modal")?.classList.remove("on");
-  if (state.lives > 0) {
-    startRound();
-  } else {
-    await showGameOverModal();
-  }
+  startRound();
 });
 
+$("realStartBtn")?.addEventListener("click", startGameNow);
+$("langChangeBtn")?.addEventListener("click", () => {
+  toast("Dil seçimi oyun menüsünden yapılıyor.");
+});
 $("logo")?.addEventListener("click", () => {
   location.href = getBackUrl();
 });
@@ -714,15 +744,14 @@ window.onload = async () => {
   createScoreMetaUi();
   createGameOverModal();
   await loadData(selectedLang);
-  resetGameState();
+  refreshScoreUi().catch((err) => console.warn("[HANGMAN] score refresh non-blocking", err));
+
   if (HAS_GAME_MENU_LANG) {
-    $("readyGate")?.classList.remove("on");
-    startRound();
-  } else {
-    $("readyGate")?.classList.add("on");
-    $("goBtn")?.addEventListener("click", () => {
-      $("readyGate")?.classList.remove("on");
-      startRound();
-    }, { once: true });
+    startGameNow();
+    return;
   }
+
+  showReadyGate();
+  const gateInfo = $("gateInfo");
+  if (gateInfo) gateInfo.textContent = `${langLabel(state.lang)} ile başla`;
 };
