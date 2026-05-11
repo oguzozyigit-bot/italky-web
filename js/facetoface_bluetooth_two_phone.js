@@ -3,6 +3,7 @@ import { LANG_POOL, getLangName } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const MY_LANG_KEY = "italky_bt_my_lang_v1";
+const HOME_HREF = "/pages/home.html";
 const $ = (id) => document.getElementById(id);
 
 let installed = false;
@@ -10,6 +11,7 @@ let btConnected = false;
 let handsFree = false;
 let recording = false;
 let speakingRemote = false;
+let leavingPage = false;
 let lastSentText = "";
 let lastSentAt = 0;
 let lastSentMessageId = "";
@@ -130,6 +132,7 @@ function parseWirePayload(value) {
     const data = JSON.parse(raw);
     return {
       type: String(data?.type || "message"),
+      reason: String(data?.reason || ""),
       text: String(data?.text || data?.message || ""),
       messageId: String(data?.messageId || data?.id || ""),
       origin: String(data?.origin || "remote_bt"),
@@ -222,21 +225,11 @@ function injectTwoPhoneCss() {
       font-size:16px;
       text-shadow:0 0 16px rgba(59,130,246,.45);
     }
-    body.bt-premium-mode .two-phone-remote-pair{
-      width:min(88vw,560px);
-      min-height:24px;
-      margin:0 auto 4px;
-      color:rgba(226,232,240,.72);
-      font-size:11px;
-      font-weight:900;
-      text-align:center;
-      position:relative;
-      z-index:39;
-    }
+    body.bt-premium-mode .two-phone-remote-pair{display:none!important;}
     body.bt-premium-mode .two-phone-bt-status{
       width:min(80vw,430px);
-      min-height:28px;
-      margin:4px auto 0;
+      min-height:22px;
+      margin:2px auto 0;
       color:rgba(219,234,254,.82);
       font-size:11px;
       font-weight:900;
@@ -244,6 +237,7 @@ function injectTwoPhoneCss() {
       position:relative;
       z-index:39;
     }
+    body.bt-premium-mode .two-phone-bt-status:empty{display:none!important;}
     body.bt-premium-mode .two-phone-bt-status.connected{color:#86efac;}
     body.bt-premium-mode .two-phone-bt-status.warn{color:#fcd34d;}
     body.bt-premium-mode .two-phone-bt-status.error{color:#fca5a5;}
@@ -395,7 +389,6 @@ function ensureLanguageUi() {
   const remotePair = document.createElement("div");
   remotePair.id = "twoPhoneRemotePair";
   remotePair.className = "two-phone-remote-pair";
-  remotePair.textContent = "Karşı telefonun dili bağlantıdan sonra görünür.";
 
   const status = document.createElement("div");
   status.id = "twoPhoneBtStatus";
@@ -657,6 +650,17 @@ function sendLangState() {
   });
 }
 
+function sendLeave(reason = "user_left") {
+  if (!btConnected) return;
+  sendWirePayload({ type: "leave", reason, sentAt: Date.now() });
+}
+
+function goHome() {
+  if (leavingPage) return;
+  leavingPage = true;
+  location.href = HOME_HREF;
+}
+
 function handleLangState(payload) {
   const lang = canonical(payload.myLang || payload.sourceLang || "");
   if (!lang) return;
@@ -699,7 +703,7 @@ function sendLocalSpeech(text) {
     toast("Bluetooth mesajı gönderilemedi.");
   }
 
-  addLine("bot", "Gönderildi", true);
+  addLine("bot", value, true);
   setRemotePair(src, dst);
   restartHandsFreeIfNeeded();
 }
@@ -714,6 +718,10 @@ async function handleBtMessage(value) {
   const payload = parseWirePayload(value);
   if (payload.type === "lang_state") {
     handleLangState(payload);
+    return;
+  }
+  if (payload.type === "leave") {
+    goHome();
     return;
   }
 
@@ -868,6 +876,7 @@ function connectBluetooth() {
 }
 
 function setConnected(value, deviceName = "") {
+  const wasConnected = btConnected;
   btConnected = !!value;
   window.isBtConnected = btConnected;
   document.body.classList.toggle("bt-active", btConnected);
@@ -880,7 +889,7 @@ function setConnected(value, deviceName = "") {
   }
   if (btConnected) {
     stopDiscoveryStatus();
-    setBtStatus(deviceName ? `${deviceName} · Bağlandı` : "Bağlandı", "connected");
+    setBtStatus("", "connected");
     sendLangState();
     setTimeout(sendLangState, 700);
   } else {
@@ -889,6 +898,10 @@ function setConnected(value, deviceName = "") {
     stopSpeech();
     updateLanguageUi();
     setBtStatus("Önce Bluetooth bağlantısı kurun.", "warn");
+    if (wasConnected && !leavingPage) {
+      toast("Bluetooth bağlantısı kapandı.");
+      setTimeout(goHome, 500);
+    }
   }
 }
 
@@ -898,6 +911,7 @@ function bindControls(options = {}) {
   const hfBtn = $("handsFreeToggle");
   const clearBtn = $("clearBtn") || $("sideClearBtn");
   const homeLink = $("homeLink");
+  const homeHref = options.homeHref || HOME_HREF;
 
   botMic?.addEventListener("click", (event) => {
     event.preventDefault();
@@ -937,7 +951,9 @@ function bindControls(options = {}) {
 
   homeLink?.addEventListener("click", (event) => {
     event.preventDefault();
-    location.href = options.homeHref || "/pages/home.html";
+    sendLeave("user_left");
+    leavingPage = true;
+    setTimeout(() => { location.href = homeHref; }, 80);
   }, true);
 }
 
@@ -953,7 +969,6 @@ function bindBridge() {
 
   window.onBtDisconnected = function () {
     setConnected(false);
-    toast("Bluetooth bağlantısı kapandı.");
   };
 
   window.onBtDevicePickerClosed = function () {
@@ -993,6 +1008,10 @@ function bindBridge() {
   window.onNativeSpeechResult = handleSpeechResult;
   window.onNativeSpeechError = handleSpeechError;
   window.__italkyStartHandsFreeListening = () => startSpeech();
+
+  window.addEventListener("pagehide", () => {
+    if (btConnected && !leavingPage) sendLeave("user_left");
+  });
 }
 
 export function installTwoPhoneBluetoothMode(options = {}) {
