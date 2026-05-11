@@ -121,8 +121,27 @@ function applySiteLang(lang) {
   safeLocalStorageSet("siteLang", finalLang);
   window.ITalkySiteLang = finalLang;
   document.documentElement.lang = finalLang;
+  patchTwoPhoneHomeCopy();
   emitSiteLangReady(finalLang);
   return finalLang;
+}
+
+function patchTwoPhoneHomeCopy() {
+  const card = document.getElementById("bluetoothCard");
+  if (!card) return;
+  card.setAttribute("href", "/facetoface.html?mode=two-phone");
+
+  const kicker = card.querySelector(".card-kicker");
+  const title = card.querySelector(".card-title");
+  const desc = card.querySelector(".card-desc");
+  if (kicker) kicker.textContent = "Kod ile Bağlan";
+  if (title) title.textContent = "İki Telefon";
+  if (desc) desc.textContent = "Bir telefonda görüşme başlat, diğerinde kodu girerek katıl.";
+
+  const icon = card.querySelector(".card-icon");
+  if (icon) {
+    icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13 19.07"></path></svg>';
+  }
 }
 
 function installUiSafetyStyle() {
@@ -202,6 +221,7 @@ async function detectSiteLang() {
 
 export async function resolveSiteLanguage() {
   installUiSafetyStyle();
+  patchTwoPhoneHomeCopy();
 
   if (window.__ITALKY_SITE_LANG_BOOT_PROMISE__) return window.__ITALKY_SITE_LANG_BOOT_PROMISE__;
 
