@@ -2,8 +2,7 @@
 import { LANG_POOL, getLangName } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com";
-const SOURCE_LANG_KEY = "italky_two_phone_source_lang_v1";
-const TARGET_LANG_KEY = "italky_two_phone_target_lang_v1";
+const MY_LANG_KEY = "italky_bt_my_lang_v1";
 const $ = (id) => document.getElementById(id);
 
 let installed = false;
@@ -18,6 +17,7 @@ let restartTimer = null;
 let webRecognizer = null;
 let allowRemoteTts = false;
 let discoveryTimer = null;
+let remoteLangState = null;
 
 const COMMON_LANGS = ["tr", "en", "de", "fr", "es", "it", "ru", "ar", "pt", "nl", "pl", "uk", "fa", "zh", "ja", "ko"];
 
@@ -35,16 +35,25 @@ function siteLang() {
   );
 }
 
-function defaultTargetFor(source) {
-  return canonical(source) === "tr" ? "en" : "tr";
+function defaultRemoteFor(lang) {
+  return canonical(lang) === "tr" ? "en" : "tr";
 }
 
-function sourceLang() {
-  return canonical(localStorage.getItem(SOURCE_LANG_KEY) || siteLang());
+function myLang() {
+  return canonical(localStorage.getItem(MY_LANG_KEY) || siteLang() || "en");
 }
 
-function targetLang() {
-  return canonical(localStorage.getItem(TARGET_LANG_KEY) || defaultTargetFor(sourceLang()));
+function remoteLang() {
+  return canonical(remoteLangState?.myLang || defaultRemoteFor(myLang()));
+}
+
+function langMeta(code) {
+  const lang = canonical(code);
+  return LANG_POOL.find((item) => canonical(item?.code) === lang) || { code: lang, flag: "🌐" };
+}
+
+function langFlag(code) {
+  return langMeta(code).flag || "🌐";
 }
 
 function langLabel(code) {
@@ -54,6 +63,11 @@ function langLabel(code) {
   } catch {
     return lang.toUpperCase();
   }
+}
+
+function langDisplay(code) {
+  const lang = canonical(code);
+  return `${langFlag(lang)} ${langLabel(lang)}`;
 }
 
 function availableLanguages() {
@@ -109,22 +123,39 @@ function makeMessageId() {
 function parseWirePayload(value) {
   const raw = String(value || "");
   if (!raw.trim().startsWith("{")) {
-    return { text: raw, messageId: "", origin: "remote_bt", sourceLang: "auto", targetLang: targetLang(), sentAt: 0 };
+    return { type: "message", text: raw, messageId: "", origin: "remote_bt", sourceLang: "auto", targetLang: myLang(), sentAt: 0 };
   }
 
   try {
     const data = JSON.parse(raw);
     return {
+      type: String(data?.type || "message"),
       text: String(data?.text || data?.message || ""),
       messageId: String(data?.messageId || data?.id || ""),
       origin: String(data?.origin || "remote_bt"),
-      sourceLang: canonical(data?.sourceLang || "auto"),
-      targetLang: canonical(data?.targetLang || targetLang()),
+      sourceLang: canonical(data?.sourceLang || data?.myLang || "auto"),
+      targetLang: canonical(data?.targetLang || myLang()),
+      myLang: canonical(data?.myLang || data?.sourceLang || ""),
+      myLangName: String(data?.myLangName || ""),
+      myFlag: String(data?.myFlag || ""),
       sentAt: Number(data?.sentAt || 0)
     };
   } catch {
-    return { text: raw, messageId: "", origin: "remote_bt", sourceLang: "auto", targetLang: targetLang(), sentAt: 0 };
+    return { type: "message", text: raw, messageId: "", origin: "remote_bt", sourceLang: "auto", targetLang: myLang(), sentAt: 0 };
   }
+}
+
+function getVersionCode() {
+  const read = (bridge) => {
+    try {
+      if (!bridge || typeof bridge.getVersionCode !== "function") return null;
+      const value = Number(String(bridge.getVersionCode() ?? "").trim());
+      return Number.isFinite(value) && value > 0 ? value : null;
+    } catch {
+      return null;
+    }
+  };
+  return read(window.AndroidBridge) || read(window.Native) || 83;
 }
 
 function injectTwoPhoneCss() {
@@ -158,6 +189,11 @@ function injectTwoPhoneCss() {
       box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 12px 28px rgba(2,6,23,.22);
       font-family:inherit;
       text-align:left;
+    }
+    body.bt-premium-mode .two-phone-lang-card.readonly{
+      cursor:default;
+      border-color:rgba(45,212,191,.18);
+      background:linear-gradient(145deg,rgba(15,23,42,.78),rgba(20,184,166,.12));
     }
     body.bt-premium-mode .two-phone-lang-label{
       color:rgba(191,219,254,.70);
@@ -211,6 +247,21 @@ function injectTwoPhoneCss() {
     body.bt-premium-mode .two-phone-bt-status.connected{color:#86efac;}
     body.bt-premium-mode .two-phone-bt-status.warn{color:#fcd34d;}
     body.bt-premium-mode .two-phone-bt-status.error{color:#fca5a5;}
+    body.bt-premium-mode .two-phone-footer-seal{
+      position:fixed;
+      left:50%;
+      bottom:calc(4px + env(safe-area-inset-bottom,0px));
+      transform:translateX(-50%);
+      z-index:60;
+      pointer-events:none;
+      color:rgba(255,255,255,.78);
+      font-size:10px;
+      line-height:1;
+      font-weight:900;
+      letter-spacing:.25px;
+      text-shadow:none;
+      white-space:nowrap;
+    }
     body.bt-premium-mode .two-phone-lang-picker{
       position:fixed;
       inset:0;
@@ -315,6 +366,7 @@ function injectTwoPhoneCss() {
       body.bt-premium-mode .chat-body .two-phone-message{font-size:17px!important;}
       body.bt-premium-mode .chat-body .two-phone-message.latest,
       body.bt-premium-mode .chat-body .two-phone-message.is-latest{font-size:27px!important;}
+      body.bt-premium-mode .two-phone-footer-seal{font-size:9px;bottom:calc(3px + env(safe-area-inset-bottom,0px));}
     }
   `;
   document.head.appendChild(style);
@@ -329,21 +381,21 @@ function ensureLanguageUi() {
   bar.id = "twoPhoneLangBar";
   bar.className = "two-phone-lang-bar";
   bar.innerHTML = `
-    <button id="twoPhoneSourceLang" class="two-phone-lang-card" type="button">
+    <button id="twoPhoneMyLang" class="two-phone-lang-card" type="button">
       <span class="two-phone-lang-label">Benim Dilim</span>
       <span class="two-phone-lang-value"></span>
     </button>
-    <div class="two-phone-lang-arrow" aria-hidden="true">→</div>
-    <button id="twoPhoneTargetLang" class="two-phone-lang-card" type="button">
-      <span class="two-phone-lang-label">Çeviri Dili</span>
+    <div class="two-phone-lang-arrow" aria-hidden="true">↔</div>
+    <div id="twoPhoneRemoteLang" class="two-phone-lang-card readonly" role="status" aria-live="polite">
+      <span class="two-phone-lang-label">Karşı Dil</span>
       <span class="two-phone-lang-value"></span>
-    </button>
+    </div>
   `;
 
   const remotePair = document.createElement("div");
   remotePair.id = "twoPhoneRemotePair";
   remotePair.className = "two-phone-remote-pair";
-  remotePair.textContent = "Karşı telefondan gelecek çeviri burada görünecek.";
+  remotePair.textContent = "Karşı telefonun dili bağlantıdan sonra görünür.";
 
   const status = document.createElement("div");
   status.id = "twoPhoneBtStatus";
@@ -361,23 +413,32 @@ function ensureLanguageUi() {
     topSection.insertBefore(status, remotePair.nextSibling);
   }
 
-  $("twoPhoneSourceLang")?.addEventListener("click", () => openLanguagePicker("source"));
-  $("twoPhoneTargetLang")?.addEventListener("click", () => openLanguagePicker("target"));
+  $("twoPhoneMyLang")?.addEventListener("click", () => openLanguagePicker());
   updateLanguageUi();
+  ensureFooterSeal();
+}
+
+function ensureFooterSeal() {
+  if ($("twoPhoneFooterSeal")) return;
+  const seal = document.createElement("div");
+  seal.id = "twoPhoneFooterSeal";
+  seal.className = "two-phone-footer-seal";
+  seal.textContent = `italkyAI By Ozyigit's 2026 V.${getVersionCode()}`;
+  document.body.appendChild(seal);
 }
 
 function updateLanguageUi() {
-  const src = sourceLang();
-  const dst = targetLang();
-  const srcEl = $("twoPhoneSourceLang")?.querySelector(".two-phone-lang-value");
-  const dstEl = $("twoPhoneTargetLang")?.querySelector(".two-phone-lang-value");
-  if (srcEl) srcEl.textContent = langLabel(src);
-  if (dstEl) dstEl.textContent = langLabel(dst);
+  const mine = myLang();
+  const remote = remoteLangState?.myLang ? canonical(remoteLangState.myLang) : "";
+  const myEl = $("twoPhoneMyLang")?.querySelector(".two-phone-lang-value");
+  const remoteEl = $("twoPhoneRemoteLang")?.querySelector(".two-phone-lang-value");
+  if (myEl) myEl.textContent = langDisplay(mine);
+  if (remoteEl) remoteEl.textContent = remote ? langDisplay(remote) : "Bekleniyor";
+  setRemotePair(remote || defaultRemoteFor(mine), mine);
 }
 
-function openLanguagePicker(kind) {
-  const current = kind === "source" ? sourceLang() : targetLang();
-  const title = kind === "source" ? "Benim Dilim" : "Çeviri Dili";
+function openLanguagePicker() {
+  const current = myLang();
   let picker = $("twoPhoneLangPicker");
   if (!picker) {
     picker = document.createElement("div");
@@ -398,7 +459,7 @@ function openLanguagePicker(kind) {
   picker.innerHTML = `
     <div class="two-phone-lang-picker-card">
       <div class="two-phone-lang-picker-head">
-        <span>${title}</span>
+        <span>Benim Dilim</span>
         <button class="two-phone-lang-picker-close" type="button" aria-label="Kapat">×</button>
       </div>
       <div class="two-phone-lang-picker-list">${list}</div>
@@ -409,15 +470,9 @@ function openLanguagePicker(kind) {
   picker.querySelectorAll(".two-phone-lang-option").forEach((button) => {
     button.addEventListener("click", () => {
       const code = canonical(button.getAttribute("data-code"));
-      if (kind === "source") {
-        localStorage.setItem(SOURCE_LANG_KEY, code);
-        if (!localStorage.getItem(TARGET_LANG_KEY) || targetLang() === code) {
-          localStorage.setItem(TARGET_LANG_KEY, defaultTargetFor(code));
-        }
-      } else {
-        localStorage.setItem(TARGET_LANG_KEY, code);
-      }
+      localStorage.setItem(MY_LANG_KEY, code);
       updateLanguageUi();
+      sendLangState();
       picker.classList.remove("show");
     });
   });
@@ -429,8 +484,8 @@ function setRemotePair(source, target) {
   const el = $("twoPhoneRemotePair");
   if (!el) return;
   const src = canonical(source || "auto");
-  const dst = canonical(target || targetLang());
-  el.textContent = `${src === "auto" ? "Otomatik" : langLabel(src)} → ${langLabel(dst)}`;
+  const dst = canonical(target || myLang());
+  el.textContent = `${src === "auto" ? "Otomatik" : langDisplay(src)} → ${langDisplay(dst)}`;
 }
 
 function setBtStatus(message, state = "warn") {
@@ -576,6 +631,43 @@ function speakRemoteTranslation(text, lang) {
   }, Math.max(2600, value.length * 70));
 }
 
+function sendWirePayload(payload) {
+  const wire = JSON.stringify(payload);
+  try {
+    if (window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText(wire);
+    else if (window.Native?.sendBtText) window.Native.sendBtText(wire);
+    else if (window.AndroidBridge?.sendBluetoothText) window.AndroidBridge.sendBluetoothText(wire);
+    else return false;
+    return true;
+  } catch (e) {
+    console.warn("[TWO_PHONE_BT] send failed", e);
+    return false;
+  }
+}
+
+function sendLangState() {
+  if (!btConnected) return;
+  const lang = myLang();
+  sendWirePayload({
+    type: "lang_state",
+    myLang: lang,
+    myLangName: langLabel(lang),
+    myFlag: langFlag(lang),
+    sentAt: Date.now()
+  });
+}
+
+function handleLangState(payload) {
+  const lang = canonical(payload.myLang || payload.sourceLang || "");
+  if (!lang) return;
+  remoteLangState = {
+    myLang: lang,
+    myLangName: payload.myLangName || langLabel(lang),
+    myFlag: payload.myFlag || langFlag(lang)
+  };
+  updateLanguageUi();
+}
+
 function sendLocalSpeech(text) {
   const value = clean(text);
   if (!value) {
@@ -587,9 +679,10 @@ function sendLocalSpeech(text) {
   if (value === lastSentText && now - lastSentAt < 2500) return;
 
   const messageId = makeMessageId();
-  const src = sourceLang();
-  const dst = targetLang();
+  const src = myLang();
+  const dst = remoteLang();
   const payload = {
+    type: "message",
     text: value,
     messageId,
     origin: "local_speech",
@@ -597,23 +690,16 @@ function sendLocalSpeech(text) {
     targetLang: dst,
     sentAt: now
   };
-  const wire = JSON.stringify(payload);
 
   lastSentText = value;
   lastSentAt = now;
   lastSentMessageId = messageId;
 
-  try {
-    if (window.AndroidBridge?.sendBtText) window.AndroidBridge.sendBtText(wire);
-    else if (window.Native?.sendBtText) window.Native.sendBtText(wire);
-    else if (window.AndroidBridge?.sendBluetoothText) window.AndroidBridge.sendBluetoothText(wire);
-    else toast("Bluetooth gönderim köprüsü hazır değil.");
-  } catch (e) {
-    console.warn("[TWO_PHONE_BT] send failed", e);
+  if (!sendWirePayload(payload)) {
     toast("Bluetooth mesajı gönderilemedi.");
   }
 
-  addLine("bot", value, true);
+  addLine("bot", "Gönderildi", true);
   setRemotePair(src, dst);
   restartHandsFreeIfNeeded();
 }
@@ -626,17 +712,20 @@ function isLocalEcho(text, messageId) {
 
 async function handleBtMessage(value) {
   const payload = parseWirePayload(value);
-  const incomingText = clean(payload.text);
+  if (payload.type === "lang_state") {
+    handleLangState(payload);
+    return;
+  }
 
+  const incomingText = clean(payload.text);
   if (!incomingText || isLocalEcho(incomingText, payload.messageId)) {
     console.warn("[TWO_PHONE_BT] ignored local echo");
     return;
   }
 
-  const target = canonical(payload.targetLang || targetLang());
-  const source = payload.sourceLang || "auto";
+  const target = myLang();
+  const source = payload.sourceLang || remoteLang();
   setRemotePair(source, target);
-  addLine("top", incomingText, false);
   const row = addLine("top", "Çevriliyor...", true);
   const translated = await translateIncoming(incomingText, source, target);
   const finalText = translated || "Çeviri alınamadı.";
@@ -701,7 +790,7 @@ function startSpeech() {
     return;
   }
 
-  const lang = bcpFor(sourceLang());
+  const lang = bcpFor(myLang());
   recording = true;
   setMicListening(true);
 
@@ -792,9 +881,13 @@ function setConnected(value, deviceName = "") {
   if (btConnected) {
     stopDiscoveryStatus();
     setBtStatus(deviceName ? `${deviceName} · Bağlandı` : "Bağlandı", "connected");
+    sendLangState();
+    setTimeout(sendLangState, 700);
   } else {
     handsFree = false;
+    remoteLangState = null;
     stopSpeech();
+    updateLanguageUi();
     setBtStatus("Önce Bluetooth bağlantısı kurun.", "warn");
   }
 }
@@ -905,6 +998,7 @@ function bindBridge() {
 export function installTwoPhoneBluetoothMode(options = {}) {
   if (installed) return;
   installed = true;
+  if (!localStorage.getItem(MY_LANG_KEY)) localStorage.setItem(MY_LANG_KEY, siteLang() || "en");
   ensureLanguageUi();
   bindControls(options);
   bindBridge();
