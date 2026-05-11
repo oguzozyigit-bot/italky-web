@@ -55,10 +55,10 @@
     </div>
   </div>
 </div>
+<script type="module" src="/js/game_content_helper.js"></script>
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
-import { loadGameWords, GAME_CONTENT_SOURCE } from "/js/game_content_helper.js";
 import { GAME_LANG_META, formatGlobalBest, getGameLangFromUrl, getGlobalBest, getLocalHighScore, refreshGameScoreLabels, saveGameScore, setLocalHighScore, speakGameText } from "/js/game_score_helper.js";
 
 mountShell({ scroll:"none" });
@@ -67,11 +67,15 @@ const $ = id => document.getElementById(id);
 const GAME_SLUG = "echo_rush";
 const TOTAL_ROUNDS = 20;
 const CONTENT_ERROR_TEXT = "İçerik şu anda yüklenemedi. Lütfen tekrar deneyin.";
+const GAME_CONTENT_HELPER_PATH = "/js/game_content_helper.js";
+const GAME_CONTENT_SOURCE_FALLBACK = "https://auth.italky.ai/storage/v1/object/public/lang/{lang}.json";
 let lang = getGameLangFromUrl("en");
 let pool = [], runList = [], runIndex = 0, current = null;
 let score = 0, lives = 3, correctCount = 0, wrongCount = 0, scoreSaved = false, startedAt = Date.now(), listening = false;
 let audioCtx = null;
 
+function wait(ms, value = null){return new Promise(resolve=>setTimeout(()=>resolve(value),ms));}
+function rejectAfter(ms, reason){return new Promise((_,reject)=>setTimeout(()=>reject(new Error(reason)),ms));}
 function getAudioCtx(){try{if(!audioCtx){const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;audioCtx=new Ctx();}return audioCtx;}catch{return null;}}
 async function unlockAudio(){try{const ctx=getAudioCtx();if(ctx&&ctx.state==="suspended")await ctx.resume();}catch{}}
 function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){const ctx=getAudioCtx();if(!ctx)return;if(ctx.state==="suspended")ctx.resume().catch(()=>{});const now=ctx.currentTime+when;const osc=ctx.createOscillator();const g=ctx.createGain();osc.type=type;osc.frequency.setValueAtTime(freq,now);g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(gain,now+.01);g.gain.exponentialRampToValueAtTime(.0001,now+duration);osc.connect(g);g.connect(ctx.destination);osc.start(now);osc.stop(now+duration+.02);}
@@ -87,10 +91,56 @@ function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Mat
 function pickRunList(items){const seen=new Set();const fresh=shuffle(items).filter(item=>{const key=normalize(item.word);if(seen.has(key))return false;seen.add(key);return true;});return fresh.slice(0,TOTAL_ROUNDS);}
 function setStatus(msg,color="var(--cyan)"){$("status").textContent=msg;$("status").style.color=color;}
 function setBusy(busy){$("listenBtn").disabled=busy||!current;$("micBtn").disabled=busy||!current;}
+function setContentUnavailable(reason="no_content"){
+  current = null;
+  runList = [];
+  setBusy(true);
+  setStatus(CONTENT_ERROR_TEXT,"var(--gold)");
+  $("wordText").textContent="—";
+  $("meaningText").textContent=CONTENT_ERROR_TEXT;
+  $("hintText").textContent="Oyun menüsüne dönüp tekrar deneyebilirsiniz.";
+  console.warn("[EchoRush] content unavailable", { selectedLang: lang, reason });
+}
 function updateHud(){const meta=GAME_LANG_META[lang]||GAME_LANG_META.en;$("langChip").textContent=lang.toUpperCase();$("scoreVal").textContent=score;$("roundVal").textContent=`${Math.min(runIndex+1,TOTAL_ROUNDS)}/${TOTAL_ROUNDS}`;$("lifeVal").textContent=lives;$("hitVal").textContent=correctCount;$("roundTag").textContent=`${meta.flag} ${meta.name} • Duy ve tekrar et`;}
 async function refreshScores(){const localBest=getLocalHighScore(GAME_SLUG,lang);$("personalBestLabel").textContent=`SENİN REKORUN: ${localBest||"—"}`;$("globalBestLabel").textContent="GENEL REKOR: —";try{return await refreshGameScoreLabels({gameSlug:GAME_SLUG,lang,personalEl:$("personalBestLabel"),globalEl:$("globalBestLabel")});}catch(error){console.warn("[ECHO_RUSH] score refresh failed",error);return null;}}
 function updateLocalBest(){const best=getLocalHighScore(GAME_SLUG,lang);if(score>best){setLocalHighScore(GAME_SLUG,lang,score);$("personalBestLabel").textContent=`SENİN REKORUN: ${score}`;return true;}return false;}
 async function saveScoreOnce(){if(scoreSaved)return;scoreSaved=true;updateLocalBest();const durationSeconds=Math.max(1,Math.round((Date.now()-startedAt)/1000));try{await saveGameScore({gameSlug:GAME_SLUG,lang,score,correctCount,wrongCount,durationSeconds});}catch(error){console.warn("[ECHO_RUSH] score save failed",error);}try{const best=await getGlobalBest(GAME_SLUG,lang);$("globalBestLabel").textContent=formatGlobalBest(best);}catch{}}
+async function resolveGameContentHelper(){
+  const globalHelper = window.GameContentHelper;
+  console.warn("[EchoRush] helper exists", { global: Boolean(globalHelper?.loadGameWords), selectedLang: lang });
+  if (globalHelper?.loadGameWords) return globalHelper;
+
+  try {
+    const mod = await Promise.race([import(GAME_CONTENT_HELPER_PATH), rejectAfter(3500, "helper_import_timeout")]);
+    const importedHelper = {
+      loadGameWords: mod.loadGameWords,
+      normalizeGameWordRows: mod.normalizeGameWordRows,
+      GAME_CONTENT_SOURCE: mod.GAME_CONTENT_SOURCE || GAME_CONTENT_SOURCE_FALLBACK
+    };
+    if (typeof importedHelper.loadGameWords === "function") {
+      window.GameContentHelper = window.GameContentHelper || importedHelper;
+      console.warn("[EchoRush] helper imported", { source: importedHelper.GAME_CONTENT_SOURCE });
+      return importedHelper;
+    }
+  } catch (error) {
+    console.warn("[EchoRush] helper import failed", { error: error?.message || String(error), path: GAME_CONTENT_HELPER_PATH });
+  }
+
+  const lateGlobal = window.GameContentHelper;
+  if (lateGlobal?.loadGameWords) return lateGlobal;
+  throw new Error("game_content_helper_unavailable");
+}
+async function loadEchoRushWords(){
+  const helper = await resolveGameContentHelper();
+  const source = helper.GAME_CONTENT_SOURCE || GAME_CONTENT_SOURCE_FALLBACK;
+  console.warn("[EchoRush] content request", { selectedLang: lang, source });
+  const words = await Promise.race([
+    helper.loadGameWords(lang, { caller: "echo_rush", timeoutMs: 9000 }),
+    wait(10500, [])
+  ]);
+  console.warn("[EchoRush] content result", { selectedLang: lang, count: Array.isArray(words) ? words.length : -1, source });
+  return Array.isArray(words) ? words : [];
+}
 function renderCurrent(){if(!current)return;$("wordText").textContent="••••";$("meaningText").textContent=current.meaning||"—";$("hintText").textContent="Kelimeyi dinle, sonra mikrofonla tekrar et.";updateHud();}
 async function speakCurrent(){if(!current)return;setStatus("Dinletiliyor...");await unlockAudio();speakGameText(current.word,lang);setTimeout(()=>setStatus("Mikrofona basıp tekrar et"),650);}
 function nextRound(){if(lives<=0||runIndex>=runList.length){finishGame();return;}current=runList[runIndex];renderCurrent();setBusy(false);setStatus("Kelimeyi dinle");setTimeout(()=>speakCurrent(),350);}
@@ -99,14 +149,50 @@ function hideResult(){$("resultOverlay").classList.remove("show");$("resultOverl
 async function finishGame(){setBusy(true);playFinish();const newBest=updateLocalBest();await saveScoreOnce();await refreshScores();const globalText=$("globalBestLabel").textContent||"GENEL REKOR: —";showResult(newBest?"Yeni Rekor!":"Oyun Bitti",`Skor: ${score}\nDoğru: ${correctCount}\nYanlış: ${wrongCount}\n${$("personalBestLabel").textContent}\n${globalText}`);}
 function applySpeechResult(spoken){const similarity=similarityScore(current?.word||"",spoken);const success=similarity>=82;setBusy(true);if(success){correctCount++;const points=similarity>=96?120:90;score+=points;playGood();setStatus(`Doğru • %${similarity}`,"var(--green)");}else{wrongCount++;lives=Math.max(0,lives-1);playBad();setStatus(`Tekrar dene • %${similarity}`,"var(--red)");}runIndex++;updateHud();setTimeout(()=>nextRound(),1150);}
 function startListening(){if(!current||listening)return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setStatus("Bu cihazda konuşma algılama hazır değil.","var(--gold)");return;}try{window.speechSynthesis?.cancel?.();}catch{}listening=true;setBusy(true);$("micBtn").classList.add("listening");$("micBtn").textContent="👂 Dinliyor";setStatus("Dinliyor...");const rec=new SR();rec.lang=(GAME_LANG_META[lang]||GAME_LANG_META.en).bcp||"en-US";rec.interimResults=false;rec.maxAlternatives=1;const cleanup=()=>{listening=false;$("micBtn").classList.remove("listening");$("micBtn").textContent="🎙️ Tekrar Et";setBusy(false);};const watchdog=setTimeout(()=>{try{rec.stop();}catch{}},7500);rec.onresult=e=>{clearTimeout(watchdog);cleanup();const spoken=e.results?.[0]?.[0]?.transcript||"";console.warn("[ECHO_RUSH] speech result",{target:current?.word,spoken,lang});applySpeechResult(spoken);};rec.onerror=()=>{clearTimeout(watchdog);cleanup();wrongCount++;lives=Math.max(0,lives-1);playBad();setStatus("Dinleme tamamlanamadı. Lütfen tekrar deneyin.","var(--gold)");runIndex++;updateHud();setTimeout(()=>nextRound(),1200);};rec.onend=()=>{clearTimeout(watchdog);if(listening)cleanup();};rec.start();}catch(error){listening=false;setBusy(false);console.warn("[ECHO_RUSH] speech start failed",error);setStatus("Mikrofonu kullanmak için izin vermeniz gerekiyor.","var(--gold)");}}
-async function initGame(){setStatus("Hazırlanıyor");hideResult();$("wordText").textContent="...";$("meaningText").textContent="...";setBusy(true);const ok=await ensureAuthAndCacheUser();if(!ok){location.href="/pages/login.html";return;}score=0;lives=3;correctCount=0;wrongCount=0;runIndex=0;scoreSaved=false;startedAt=Date.now();current=null;updateHud();refreshScores();console.warn("[ECHO_RUSH] using shared content helper",{selectedLang:lang,source:GAME_CONTENT_SOURCE});pool=await loadGameWords(lang,{caller:"echo_rush"});if(!pool.length){setStatus(CONTENT_ERROR_TEXT,"var(--gold)");console.warn("[ECHO_RUSH] no usable content",{lang,source:GAME_CONTENT_SOURCE});return;}runList=pickRunList(pool);if(!runList.length){setStatus(CONTENT_ERROR_TEXT,"var(--gold)");console.warn("[ECHO_RUSH] empty run list",{lang,poolCount:pool.length});return;}console.warn("[ECHO_RUSH] game started",{lang,poolCount:pool.length,rounds:runList.length,ads:false});nextRound();}
+async function initGame(){
+  setStatus("Hazırlanıyor");
+  hideResult();
+  $("wordText").textContent="...";
+  $("meaningText").textContent="...";
+  $("hintText").textContent="Kelimeyi dinle, sonra mikrofonla tekrar et.";
+  setBusy(true);
+
+  const ok=await ensureAuthAndCacheUser();
+  if(!ok){location.href="/pages/login.html";return;}
+
+  score=0;lives=3;correctCount=0;wrongCount=0;runIndex=0;scoreSaved=false;startedAt=Date.now();current=null;
+  updateHud();
+  refreshScores();
+
+  try {
+    console.warn("[EchoRush] selectedLang", { selectedLang: lang });
+    pool = await loadEchoRushWords();
+  } catch (error) {
+    console.warn("[EchoRush] load failed reason", { selectedLang: lang, error: error?.message || String(error) });
+    pool = [];
+  }
+
+  if(!pool.length){
+    setContentUnavailable("empty_or_failed_pool");
+    return;
+  }
+
+  runList=pickRunList(pool);
+  if(!runList.length){
+    setContentUnavailable("empty_run_list");
+    return;
+  }
+
+  console.warn("[EchoRush] game started",{lang,poolCount:pool.length,rounds:runList.length,ads:false});
+  nextRound();
+}
 
 $("backBtn").onclick=()=>{location.href="/pages/game_menu.html";};
 $("listenBtn").onclick=()=>speakCurrent();
 $("micBtn").onclick=()=>startListening();
 $("replayBtn").onclick=()=>initGame();
 $("menuBtn").onclick=()=>{location.href="/pages/game_menu.html";};
-window.addEventListener("load",()=>{initGame().catch(error=>{console.warn("[ECHO_RUSH] init failed",error);setStatus(CONTENT_ERROR_TEXT,"var(--gold)");});console.warn("[ECHO_RUSH] ready",{lang,ads:false,content:"shared-game-content-helper"});});
+window.addEventListener("load",()=>{initGame().catch(error=>{console.warn("[EchoRush] init failed",error);setContentUnavailable("init_failed");});console.warn("[EchoRush] ready",{lang,ads:false,content:"shared-game-content-helper"});});
 </script>
 </body>
 </html>
