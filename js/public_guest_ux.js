@@ -108,46 +108,6 @@ function injectStyles() {
   document.head.appendChild(style);
 }
 
-function callShortcutBridge() {
-  const calls = [
-    [window.AndroidBridge, "addHomeShortcut"],
-    [window.Native, "addHomeShortcut"],
-    [window.AndroidBridge, "pinWidget"],
-    [window.Native, "pinWidget"],
-    [window.AndroidBridge, "requestPinShortcut"],
-    [window.Native, "requestPinShortcut"],
-    [window.AndroidBridge, "addShortcut"],
-    [window.Native, "addShortcut"]
-  ];
-
-  for (const [bridge, method] of calls) {
-    try {
-      if (bridge && typeof bridge[method] === "function") {
-        bridge[method]();
-        return true;
-      }
-    } catch {}
-  }
-  return false;
-}
-
-async function addHomeShortcut() {
-  if (callShortcutBridge()) {
-    toast("Kısa yol ana ekrana eklendi");
-    return;
-  }
-
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: "italkyAI", text: "italkyAI", url: location.origin + "/pages/login_entry.html" });
-      toast("Kısa yol bağlantısı paylaşıldı");
-      return;
-    }
-  } catch {}
-
-  toast("Bu cihazda kısa yol ekleme desteklenmiyor");
-}
-
 function createDrawerLink({ id, className = "", label, suffix = "›", onClick }) {
   const btn = document.createElement("button");
   btn.id = id;
@@ -162,16 +122,6 @@ function createDrawerLink({ id, className = "", label, suffix = "›", onClick }
   return btn;
 }
 
-function openRateFlow() {
-  try {
-    if (window.AndroidBridge?.openAppReview) { window.AndroidBridge.openAppReview(); return; }
-    if (window.Native?.openAppReview) { window.Native.openAppReview(); return; }
-    if (window.AndroidBridge?.rateApp) { window.AndroidBridge.rateApp(); return; }
-    if (window.Native?.rateApp) { window.Native.rateApp(); return; }
-  } catch {}
-  toast("Değerlendirmeniz bizim için önemli.");
-}
-
 function installDrawerActions() {
   const drawer = document.querySelector(".drawer-links");
   if (!drawer) return;
@@ -180,7 +130,6 @@ function installDrawerActions() {
   drawer.append(
     createDrawerLink({ id: "guestAboutBtn", label: "Hakkımızda", onClick: () => { location.href = "/pages/about.html"; } }),
     createDrawerLink({ id: "guestPrivacyBtn", label: "Gizlilik", onClick: () => { location.href = "/pages/privacy.html"; } }),
-    createDrawerLink({ id: "guestRateBtn", label: "Bizi Puanla", onClick: openRateFlow }),
     createDrawerLink({ id: "guestMembershipBtn", className: "italky-member-link", label: "Üye Ol", onClick: () => { location.href = MEMBERSHIP_URL; } })
   );
 }
