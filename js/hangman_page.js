@@ -28,21 +28,21 @@ const BASE_WORDS = [
   { tr: "su", en: "water", de: "wasser", fr: "eau", es: "agua", it: "acqua" },
   { tr: "ev", en: "house", de: "haus", fr: "maison", es: "casa", it: "casa" },
   { tr: "kitap", en: "book", de: "buch", fr: "livre", es: "libro", it: "libro" },
-  { tr: "arkadaş", en: "friend", de: "freund", fr: "ami", es: "amigo", it: "amico" },
+  { tr: "arkadas", en: "friend", de: "freund", fr: "ami", es: "amigo", it: "amico" },
   { tr: "okul", en: "school", de: "schule", fr: "ecole", es: "escuela", it: "scuola" },
   { tr: "pencere", en: "window", de: "fenster", fr: "fenetre", es: "ventana", it: "finestra" },
-  { tr: "köprü", en: "bridge", de: "brucke", fr: "pont", es: "puente", it: "ponte" },
+  { tr: "kopru", en: "bridge", de: "brucke", fr: "pont", es: "puente", it: "ponte" },
   { tr: "seyahat", en: "travel", de: "reisen", fr: "voyage", es: "viaje", it: "viaggio" },
-  { tr: "güneş", en: "sun", de: "sonne", fr: "soleil", es: "sol", it: "sole" },
+  { tr: "gunes", en: "sun", de: "sonne", fr: "soleil", es: "sol", it: "sole" },
   { tr: "ay", en: "moon", de: "mond", fr: "lune", es: "luna", it: "luna" },
-  { tr: "yıldız", en: "star", de: "stern", fr: "etoile", es: "estrella", it: "stella" },
+  { tr: "yildiz", en: "star", de: "stern", fr: "etoile", es: "estrella", it: "stella" },
   { tr: "zaman", en: "time", de: "zeit", fr: "temps", es: "tiempo", it: "tempo" },
   { tr: "pazar", en: "market", de: "markt", fr: "marche", es: "mercado", it: "mercato" },
   { tr: "renk", en: "color", de: "farbe", fr: "couleur", es: "color", it: "colore" },
-  { tr: "hızlı", en: "quick", de: "schnell", fr: "rapide", es: "rapido", it: "veloce" },
+  { tr: "hizli", en: "quick", de: "schnell", fr: "rapide", es: "rapido", it: "veloce" },
   { tr: "mutlu", en: "happy", de: "glucklich", fr: "heureux", es: "feliz", it: "felice" },
   { tr: "yemek", en: "food", de: "essen", fr: "nourriture", es: "comida", it: "cibo" },
-  { tr: "çalışmak", en: "work", de: "arbeit", fr: "travail", es: "trabajo", it: "lavoro" },
+  { tr: "calismak", en: "work", de: "arbeit", fr: "travail", es: "trabajo", it: "lavoro" },
 ];
 
 const state = {
@@ -73,17 +73,6 @@ let personalBestVal = null;
 let globalBestVal = null;
 let listenSolvedBtn = null;
 let hangAudioCtx = null;
-
-function applyShellLift() {
-  try {
-    const shell = document.querySelector(".premium-footer, .italky-mobile-shell, .bottom-nav, .mobile-nav, [data-italky-shell]");
-    const h = shell ? Math.min(92, Math.max(0, shell.getBoundingClientRect().height || 0)) : 0;
-    document.documentElement.style.setProperty("--shellLift", h ? `${h + 8}px` : "0px");
-  } catch (_) {}
-}
-applyShellLift();
-window.addEventListener("resize", applyShellLift);
-window.addEventListener("orientationchange", applyShellLift);
 
 function normalizeWord(word) {
   return String(word || "")
@@ -350,7 +339,7 @@ function markLocalBestIfNeeded() {
 }
 
 function createStars() {
-  for (let i = 0; i < 55; i++) {
+  for (let i = 0; i < 32; i++) {
     const s = document.createElement("div");
     s.className = "star";
     s.style.left = Math.random() * 100 + "%";
@@ -359,7 +348,6 @@ function createStars() {
     document.body.appendChild(s);
   }
 }
-function drawGallows() {}
 function resetMan() { document.querySelectorAll(".organ").forEach((p) => p.classList.remove("on")); $("man")?.classList.remove("swing"); }
 function revealParts(n) {
   const parts = ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"];
@@ -384,12 +372,8 @@ function pickWord() {
 function startRound() {
   hideReadyGate();
   const pick = pickWord();
-  state.word = normalizeWord(pick?.w);
-  state.clue = String(pick?.clue || "").trim();
-  if (!state.word || !state.clue) {
-    state.word = "SLEEP";
-    state.clue = "uyumak";
-  }
+  state.word = normalizeWord(pick?.w) || "SLEEP";
+  state.clue = String(pick?.clue || "uyumak").trim();
   state.previousWord = state.word;
   state.guessed = new Set();
   state.roundJokers = JOKERS_PER_ROUND;
@@ -469,7 +453,8 @@ function renderJokers() {
 function updateScore(delta = 0) {
   state.totalScore = Math.max(0, state.totalScore + delta);
   if ($("scoreVal")) $("scoreVal").textContent = state.totalScore;
-}\n
+}
+
 function isSolved() {
   return state.word.split("").every((c) => state.guessed.has(c));
 }
@@ -628,7 +613,6 @@ window.onload = async () => {
   createGameOverModal();
   await loadData(selectedLang);
   refreshScoreUi().catch((err) => console.warn("[HANGMAN] score refresh non-blocking", err));
-  requestAnimationFrame(applyShellLift);
   if (HAS_GAME_MENU_LANG) {
     startGameNow();
     return;
