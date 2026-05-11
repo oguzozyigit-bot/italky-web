@@ -281,6 +281,42 @@ function resetBtUiWithoutNavigation() {
   } catch {}
 }
 
+function hideGuestBluetoothUi() {
+  try { document.body.classList.remove("bt-active"); } catch {}
+  try {
+    const styleId = "italkyGuestNoBluetoothStyle";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        body #btToggleBtn,
+        body #handsFreeToggle,
+        body [href*="mode=bluetooth"],
+        body [data-mode="bluetooth"],
+        body [data-route*="bluetooth"]{display:none!important;pointer-events:none!important;}
+      `;
+      document.head.appendChild(style);
+    }
+  } catch {}
+  try {
+    ["btToggleBtn", "handsFreeToggle"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = "none";
+      el.setAttribute("aria-hidden", "true");
+      if ("disabled" in el) el.disabled = true;
+      if (!el.__italkyGuestBtBlocked) {
+        el.__italkyGuestBtBlocked = true;
+        el.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation?.();
+        }, true);
+      }
+    });
+  } catch {}
+}
+
 const SILENT_SPEECH_ERRORS = new Set([
   "no_speech",
   "no speech",
@@ -473,6 +509,7 @@ function installLoginEntryLegacyGuards() {
   } catch {}
 
   setTimeout(() => {
+    try { hideGuestBluetoothUi(); } catch {}
     try { window.onBtDisconnected = resetBtUiWithoutNavigation; } catch {}
     try { window.onBtDevicePickerClosed = window.onBtDevicePickerClosed || function () {}; } catch {}
     try { installHandsFreeSpeechGuard(); } catch {}
@@ -482,13 +519,13 @@ function installLoginEntryLegacyGuards() {
       const share = document.getElementById("shareQrBtn");
       const micLine = document.querySelector("#botSection .mic-line");
       const sides = micLine ? micLine.querySelectorAll(".mic-side") : [];
-      if (handsFree && sides[0] && !sides[0].contains(handsFree)) sides[0].appendChild(handsFree);
+      if (handsFree) handsFree.style.display = "none";
       if (share && sides[2] && !sides[2].contains(share)) sides[2].appendChild(share);
     } catch {}
   }, 0);
 
-  setTimeout(() => { try { installHandsFreeSpeechGuard(); } catch {} }, 350);
-  setTimeout(() => { try { installHandsFreeSpeechGuard(); } catch {} }, 1200);
+  setTimeout(() => { try { hideGuestBluetoothUi(); installHandsFreeSpeechGuard(); } catch {} }, 350);
+  setTimeout(() => { try { hideGuestBluetoothUi(); installHandsFreeSpeechGuard(); } catch {} }, 1200);
 }
 
 function autoStartGuestRewardTimerForKnownPages() {
