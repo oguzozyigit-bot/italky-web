@@ -1,6 +1,3 @@
-/* FILE: /js/hangman_page.js */
-import { mountShell } from "/js/ui_shell.js";
-import { supabase } from "/js/supabase_client.js";
 import {
   GAME_LANG_META,
   formatGlobalBest,
@@ -10,568 +7,722 @@ import {
   refreshGameScoreLabels,
   saveGameScore,
   setLocalHighScore,
-  speakGameText
+  speakGameText,
 } from "/js/game_score_helper.js";
 
-const $ = (id) => document.getElementById(id);
-const PARAMS = new URLSearchParams(location.search);
-const URL_LANG = PARAMS.get("lang");
-const HAS_GAME_MENU_LANG = ["en", "de", "fr", "es", "it"].includes(String(URL_LANG || "").toLowerCase());
-const IS_PUBLIC_GAME =
-  PARAMS.get("public") === "1" ||
-  PARAMS.get("from_public_games") === "1" ||
-  document.referrer.includes("/pages/game_menu_public.html");
-
-const PUBLIC_BACK_URL = "/pages/game_menu_public.html";
-const PRIVATE_BACK_URL = "/pages/game_menu.html";
-const WORD_BUCKET = "lang";
 const GAME_SLUG = "hangman";
+const SUPPORTED_LANGS = Object.keys(GAME_LANG_META);
 const MAX_MISTAKES = 6;
+const qs = new URLSearchParams(location.search);
+const requestedLang = qs.get("lang");
+const HAS_GAME_MENU_LANG = SUPPORTED_LANGS.includes(String(requestedLang || "").toLowerCase());
+const selectedLang = getGameLangFromUrl("en");
 
-const LANG_FILE_MAP = {
-  en: "en.json",
-  de: "de.json",
-  es: "es.json",
-  fr: "fr.json",
-  it: "it.json"
-};
+const $ = (id) => document.getElementById(id);
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
-const LOCAL_FALLBACK_POOL = {
-  en: [
-    { w: "APPLE", tr: "Elma" }, { w: "HOUSE", tr: "Ev" }, { w: "WATER", tr: "Su" },
-    { w: "LIGHT", tr: "Işık" }, { w: "WORLD", tr: "Dünya" }, { w: "FRIEND", tr: "Arkadaş" },
-    { w: "SCHOOL", tr: "Okul" }, { w: "FAMILY", tr: "Aile" }, { w: "MUSIC", tr: "Müzik" },
-    { w: "TRAVEL", tr: "Seyahat" }
-  ],
-  de: [
-    { w: "HAUS", tr: "Ev" }, { w: "WASSER", tr: "Su" }, { w: "LICHT", tr: "Işık" },
-    { w: "FREUND", tr: "Arkadaş" }, { w: "SCHULE", tr: "Okul" }, { w: "FAMILIE", tr: "Aile" }
-  ],
-  fr: [
-    { w: "MAISON", tr: "Ev" }, { w: "EAU", tr: "Su" }, { w: "AMI", tr: "Arkadaş" },
-    { w: "ECOLE", tr: "Okul" }, { w: "FAMILLE", tr: "Aile" }, { w: "MUSIQUE", tr: "Müzik" }
-  ],
-  es: [
-    { w: "CASA", tr: "Ev" }, { w: "AGUA", tr: "Su" }, { w: "AMIGO", tr: "Arkadaş" },
-    { w: "ESCUELA", tr: "Okul" }, { w: "FAMILIA", tr: "Aile" }, { w: "MUSICA", tr: "Müzik" }
-  ],
-  it: [
-    { w: "CASA", tr: "Ev" }, { w: "ACQUA", tr: "Su" }, { w: "AMICO", tr: "Arkadaş" },
-    { w: "SCUOLA", tr: "Okul" }, { w: "FAMIGLIA", tr: "Aile" }, { w: "MUSICA", tr: "Müzik" }
-  ]
-};
+const W = innerWidth;
+const H = innerHeight;
+const floor = Math.round(H * 0.60);
 
-try {
-  mountShell({ scroll: "none" });
-} catch (error) {
-  console.warn("[HANGMAN] shell skipped", error);
+function applyShellLift() {
+  try {
+    const shell = document.querySelector(".italky-mobile-shell, .bottom-nav, .mobile-nav, [data-italky-shell]");
+    const h = shell ? Math.min(92, Math.max(0, shell.getBoundingClientRect().height || 0)) : 0;
+    document.documentElement.style.setProperty("--shellLift", h ? `${h + 8}px` : "0px");
+  } catch (_) {}
+}
+applyShellLift();
+window.addEventListener("resize", applyShellLift);
+window.addEventListener("orientationchange", applyShellLift);
+
+function injectHangmanUiPolish() {
+  document.body.classList.add("hangman-game-screen");
+  if ($("hangmanUiPolish")) return;
+  const style = document.createElement("style");
+  style.id = "hangmanUiPolish";
+  style.textContent = `
+    body.hangman-game-screen .global-footer,
+    body.hangman-game-screen [data-italky-footer],
+    body.hangman-game-screen .italky-global-footer {
+      display: none !important;
+    }
+    body.hangman-game-screen .dock {
+      bottom: calc(var(--safeB) + var(--shellLift) + 34px) !important;
+      height: 204px !important;
+      gap: 8px !important;
+      padding: 10px !important;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255,255,255,.14) !important;
+    }
+    body.hangman-game-screen #pageContent {
+      padding-bottom: calc(204px + var(--shellLift) + var(--safeB) + 58px) !important;
+    }
+    body.hangman-game-screen .kb { gap: 5px !important; }
+    body.hangman-game-screen .key {
+      min-width: 27px !important;
+      height: 35px !important;
+      border-radius: 11px !important;
+    }
+    .hangman-back-btn {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 12px);
+      left: 14px;
+      z-index: 9500;
+      border: 1px solid rgba(167, 243, 208, .25);
+      background: linear-gradient(135deg, rgba(15, 23, 42, .78), rgba(30, 64, 175, .48));
+      color: rgba(239, 246, 255, .94);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font: 900 12px/1 Inter, system-ui, sans-serif;
+      letter-spacing: .2px;
+      box-shadow: 0 14px 36px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .hangman-back-btn:active { transform: translateY(1px) scale(.99); }
+    .game-over-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: radial-gradient(circle at 50% 20%, rgba(34,211,238,.18), transparent 34%), rgba(2, 6, 23, .74);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .game-over-modal.on { display: flex; }
+    .game-over-card {
+      width: min(420px, calc(100vw - 28px));
+      max-height: min(86vh, 680px);
+      overflow: auto;
+      border: 1px solid rgba(125, 211, 252, .28);
+      border-radius: 26px;
+      padding: 20px;
+      color: #f8fafc;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(34,211,238,.18), transparent 34%),
+        linear-gradient(150deg, rgba(15,23,42,.96), rgba(30,41,59,.92));
+      box-shadow: 0 30px 90px rgba(0,0,0,.56), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    .game-over-eyebrow {
+      color: rgba(125, 211, 252, .92);
+      font: 900 11px/1 Inter, system-ui, sans-serif;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .game-over-card h2 {
+      margin: 0 0 12px;
+      font: 1000 28px/1.05 Inter, system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+    .game-over-word {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 12px 14px;
+      margin: 12px 0;
+      background: rgba(15,23,42,.52);
+      color: rgba(226,232,240,.9);
+      font: 800 14px/1.4 Inter, system-ui, sans-serif;
+    }
+    .game-over-word strong { color: #fff; font-size: 17px; }
+    .game-over-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .game-over-stat {
+      min-height: 62px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 10px;
+      background: rgba(2,6,23,.34);
+    }
+    .game-over-stat span {
+      display: block;
+      color: rgba(203,213,225,.72);
+      font: 900 10px/1 Inter, system-ui, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 8px;
+    }
+    .game-over-stat b { font: 1000 18px/1 Inter, system-ui, sans-serif; }
+    .game-over-record {
+      min-height: 24px;
+      margin: 8px 0 14px;
+      color: #fde68a;
+      font: 900 13px/1.35 Inter, system-ui, sans-serif;
+    }
+    .game-over-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .game-over-actions button {
+      border: 0;
+      border-radius: 18px;
+      min-height: 48px;
+      color: #f8fafc;
+      font: 1000 14px/1 Inter, system-ui, sans-serif;
+      box-shadow: 0 14px 34px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.14);
+    }
+    .game-over-actions .primary {
+      background: linear-gradient(135deg, #06b6d4, #2563eb 58%, #7c3aed);
+    }
+    .game-over-actions .secondary {
+      background: rgba(15,23,42,.74);
+      border: 1px solid rgba(148,163,184,.28);
+    }
+    @media (max-width: 420px) {
+      body.hangman-game-screen .dock {
+        bottom: calc(var(--safeB) + var(--shellLift) + 30px) !important;
+        height: 198px !important;
+      }
+      body.hangman-game-screen #pageContent {
+        padding-bottom: calc(198px + var(--shellLift) + var(--safeB) + 54px) !important;
+      }
+      body.hangman-game-screen .key { height: 33px !important; min-width: 25px !important; }
+      .hangman-back-btn { padding: 8px 10px; font-size: 11px; }
+      .game-over-card { padding: 18px; border-radius: 23px; }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
-try {
-  const root = getComputedStyle(document.documentElement);
-  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-  document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
-} catch {}
+function getBackUrl() {
+  return qs.get("back") || (window.__ITalkyPublicGuest ? "/pages/login_entry.html" : "/pages/game_menu.html");
+}
 
-let state = {
-  lang: getGameLangFromUrl("en"),
-  level: normalizeLevel(PARAMS.get("level") || localStorage.getItem("italky_game_level")) || "A1",
-  pool: [],
-  usedWords: new Set(),
-  target: null,
-  lastWord: null,
-  lives: 3,
-  MAX_LIVES: 9,
-  totalScore: 0,
-  roundScore: 100,
+function createBackButton() {
+  if ($("hangmanBackBtn")) return;
+  const btn = document.createElement("button");
+  btn.id = "hangmanBackBtn";
+  btn.type = "button";
+  btn.className = "hangman-back-btn";
+  btn.textContent = "← Oyun Menüsü";
+  btn.addEventListener("click", () => {
+    location.href = getBackUrl();
+  });
+  document.body.appendChild(btn);
+}
+
+const DICT = {
+  en: [
+    { w: "ORANGE", h: "A citrus fruit" },
+    { w: "BRIDGE", h: "Connects two sides" },
+    { w: "WINDOW", h: "Lets light in" },
+    { w: "MARKET", h: "A place to buy things" },
+    { w: "TRAVEL", h: "To go from one place to another" },
+    { w: "FRIEND", h: "Someone you trust" },
+    { w: "PLANET", h: "Earth is one" },
+    { w: "SILVER", h: "A shiny metal" },
+  ],
+  de: [
+    { w: "APFEL", h: "Eine Frucht" },
+    { w: "BRUCKE", h: "Verbindet zwei Seiten" },
+    { w: "FENSTER", h: "Dort kommt Licht herein" },
+    { w: "REISEN", h: "Von Ort zu Ort gehen" },
+    { w: "FREUND", h: "Eine vertraute Person" },
+    { w: "SCHULE", h: "Ein Ort zum Lernen" },
+    { w: "WASSER", h: "Man trinkt es" },
+  ],
+  fr: [
+    { w: "ORANGE", h: "Un fruit" },
+    { w: "PONT", h: "Relie deux côtés" },
+    { w: "FENETRE", h: "Laisse entrer la lumière" },
+    { w: "VOYAGE", h: "Aller ailleurs" },
+    { w: "AMI", h: "Une personne de confiance" },
+    { w: "ECOLE", h: "Un lieu pour apprendre" },
+    { w: "SOLEIL", h: "Il brille dans le ciel" },
+  ],
+  es: [
+    { w: "NARANJA", h: "Una fruta" },
+    { w: "PUENTE", h: "Une dos lados" },
+    { w: "VENTANA", h: "Deja entrar la luz" },
+    { w: "VIAJE", h: "Ir a otro lugar" },
+    { w: "AMIGO", h: "Persona de confianza" },
+    { w: "ESCUELA", h: "Lugar para aprender" },
+    { w: "TIEMPO", h: "Pasa cada día" },
+  ],
+  it: [
+    { w: "ARANCIA", h: "Un frutto" },
+    { w: "PONTE", h: "Unisce due lati" },
+    { w: "FINESTRA", h: "Fa entrare la luce" },
+    { w: "VIAGGIO", h: "Andare altrove" },
+    { w: "AMICO", h: "Persona fidata" },
+    { w: "SCUOLA", h: "Luogo per imparare" },
+    { w: "STELLA", h: "Brilla nel cielo" },
+  ],
+};
+
+const state = {
+  lang: selectedLang,
+  words: [],
+  word: "",
+  hint: "",
   guessed: new Set(),
   mistakes: 0,
-  flawless: true,
-  jokerUsed: false,
-  lock: false,
-  gameStartedAt: 0,
+  lives: 3,
+  roundScore: 0,
+  totalScore: 0,
+  gameStartedAt: Date.now(),
   scoreSaved: false,
   correctCount: 0,
   wrongCount: 0,
   lastSolvedWord: "",
-  lastSolvedLang: "en"
+  lastSolvedLang: selectedLang,
+  newPersonalBest: false,
+  newGlobalBest: false,
 };
 
-function normalizeLevel(value) {
-  const raw = String(value || "").trim().toUpperCase();
-  return ["A1", "A2", "B1", "B2", "C1", "C2"].includes(raw) ? raw : null;
-}
+let personalBestVal = null;
+let globalBestVal = null;
+let listenSolvedBtn = null;
+let hangAudioCtx = null;
 
-function setGate(message) {
-  const el = $("gateInfo");
-  if (el) el.textContent = message;
-}
-
-function disableStartBtn(disabled = true, text = "BAŞLA") {
-  const btn = $("realStartBtn");
-  if (!btn) return;
-  btn.disabled = disabled;
-  btn.style.opacity = disabled ? "0.5" : "1";
-  btn.style.pointerEvents = disabled ? "none" : "auto";
-  btn.textContent = text;
-}
-
-function escapeHtml(str) {
-  return String(str || "").replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[char]));
-}
-
-function toast(message) {
-  const el = $("toast");
-  if (!el) return;
-  el.textContent = message;
-  el.classList.add("show");
-  clearTimeout(window.__hangToast);
-  window.__hangToast = setTimeout(() => el.classList.remove("show"), 1800);
-}
-
-function getBackUrl() {
-  return IS_PUBLIC_GAME ? PUBLIC_BACK_URL : PRIVATE_BACK_URL;
-}
-
-function cleanHangmanWord(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase()
+function normalizeWord(word) {
+  return String(word || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replaceAll("ß", "SS")
-    .replaceAll("ẞ", "SS")
-    .replace(/[^A-Z]/g, "");
+    .replace(/[^A-Za-z]/g, "")
+    .toUpperCase();
 }
 
-function getGameDurationSeconds() {
-  if (!state.gameStartedAt) return 0;
-  return Math.max(0, Math.round((Date.now() - state.gameStartedAt) / 1000));
+function langLabel(lang) {
+  return GAME_LANG_META[lang]?.name || GAME_LANG_META.en.name;
+}
+
+function toast(msg) {
+  const t = $("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.classList.remove("on"), 1600);
 }
 
 function createScoreMetaUi() {
-  const scoreBox = document.querySelector(".rightHud .score");
-  if (!scoreBox || $("personalBestVal")) return;
-
-  const personal = document.createElement("div");
-  personal.className = "best";
-  personal.id = "personalBestVal";
-  personal.textContent = "SENİN REKORUN: —";
-
-  const global = document.createElement("div");
-  global.className = "best";
-  global.id = "globalBestVal";
-  global.textContent = "GENEL REKOR: —";
-
-  const listen = document.createElement("button");
-  listen.className = "joker";
-  listen.id = "listenSolvedBtn";
-  listen.type = "button";
-  listen.title = "Dinle";
-  listen.setAttribute("aria-label", "Dinle");
-  listen.textContent = "🔊";
-
-  scoreBox.appendChild(personal);
-  scoreBox.appendChild(global);
-  document.querySelector(".jokerCol")?.appendChild(listen);
-
-  listen.onclick = () => {
-    if (!state.lastSolvedWord) {
-      toast("Kelimeyi oyun sonunda dinleyebilirsiniz");
-      return;
-    }
+  const jokerCol = document.querySelector(".jokerCol");
+  if (!jokerCol || $("hangmanScoreMeta")) return;
+  const meta = document.createElement("div");
+  meta.id = "hangmanScoreMeta";
+  meta.style.cssText = "display:grid;gap:7px;margin-top:8px;color:rgba(255,255,255,.85);font:900 10px/1.25 Inter,system-ui,sans-serif;letter-spacing:.3px;text-transform:uppercase";
+  meta.innerHTML = `
+    <div>SENİN REKORUN: <span id="personalBestVal">—</span></div>
+    <div id="globalBestVal">GENEL REKOR: —</div>
+    <button id="listenSolvedBtn" type="button" style="border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:#fff;border-radius:999px;padding:8px 10px;font:1000 11px Inter,system-ui,sans-serif;display:none">Dinle</button>
+  `;
+  jokerCol.appendChild(meta);
+  personalBestVal = $("personalBestVal");
+  globalBestVal = $("globalBestVal");
+  listenSolvedBtn = $("listenSolvedBtn");
+  listenSolvedBtn?.addEventListener("click", () => {
+    if (!state.lastSolvedWord) return;
     speakGameText(state.lastSolvedWord, state.lastSolvedLang);
-  };
-}
-
-async function refreshScoreUi() {
-  $("bestVal") && ($("bestVal").textContent = String(getLocalHighScore(GAME_SLUG, state.lang) || 0));
-  await refreshGameScoreLabels({
-    gameSlug: GAME_SLUG,
-    lang: state.lang,
-    personalEl: $("personalBestVal"),
-    globalEl: $("globalBestVal")
   });
 }
 
-function markLocalBestIfNeeded() {
-  const previous = getLocalHighScore(GAME_SLUG, state.lang);
-  const next = setLocalHighScore(GAME_SLUG, state.lang, state.totalScore);
-  $("bestVal") && ($("bestVal").textContent = String(next || 0));
-  $("personalBestVal") && ($("personalBestVal").textContent = `SENİN REKORUN: ${next || "—"}`);
-  return state.totalScore > previous;
+function createGameOverModal() {
+  if ($("gameOverModal")) return;
+  const modal = document.createElement("div");
+  modal.id = "gameOverModal";
+  modal.className = "game-over-modal";
+  modal.setAttribute("aria-hidden", "true");
+  modal.innerHTML = `
+    <div class="game-over-card" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
+      <div class="game-over-eyebrow">Hangman</div>
+      <h2 id="gameOverTitle">Oyun bitti</h2>
+      <div class="game-over-word">Kelime: <strong id="gameOverWord">—</strong></div>
+      <div class="game-over-stats">
+        <div class="game-over-stat"><span>Skor</span><b id="gameOverScore">0</b></div>
+        <div class="game-over-stat"><span>Senin Rekorun</span><b id="gameOverPersonal">—</b></div>
+      </div>
+      <div class="game-over-word" id="gameOverGlobal">GENEL REKOR: —</div>
+      <div class="game-over-record" id="gameOverRecord"></div>
+      <div class="game-over-actions">
+        <button class="primary" id="gameOverReplay" type="button">Tekrar oyna</button>
+        <button class="secondary" id="gameOverMenu" type="button">Oyun menüsüne dön</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  $("gameOverReplay")?.addEventListener("click", () => {
+    hideGameOverModal();
+    resetGameState();
+    startRound();
+  });
+  $("gameOverMenu")?.addEventListener("click", () => {
+    location.href = getBackUrl();
+  });
 }
 
-function normalizeWordItem(item, lang, level) {
-  if (!item) return null;
-  if (typeof item === "string") {
-    const w = cleanHangmanWord(item);
-    return w ? { w, tr: "—" } : null;
-  }
-  if (typeof item !== "object") return null;
-
-  const itemLevel = String(item.level || item.seviye || item.cefr || item.difficulty || "").trim().toUpperCase();
-  const wantedLevel = String(level || "").trim().toUpperCase();
-  if (itemLevel && wantedLevel && itemLevel !== wantedLevel) return null;
-
-  const rawWord = item.w || item.word || item.kelime || item.text || item.value || item.target || item.question || item.answer || item[lang] || item.en || item.de || item.fr || item.es || item.it || "";
-  const rawHint = item.tr || item.tr_meaning || item.turkish || item.turkce || item.meaning_tr || item.meaning || item.translation || item.ceviri || item.answer_tr || "—";
-  const w = cleanHangmanWord(rawWord);
-  return w ? { w, tr: String(rawHint || "—") } : null;
+function hideGameOverModal() {
+  const modal = $("gameOverModal");
+  if (!modal) return;
+  modal.classList.remove("on");
+  modal.setAttribute("aria-hidden", "true");
 }
 
-function extractWordsFromJson(json, lang, level) {
-  const out = [];
-  const wantedLevel = String(level || "A1").toUpperCase();
-  const pushArray = (arr, strictLevel = true) => {
-    if (!Array.isArray(arr)) return;
-    arr.forEach((item) => {
-      const normalized = normalizeWordItem(item, lang, strictLevel ? wantedLevel : "");
-      if (normalized) out.push(normalized);
-    });
-  };
-
-  if (Array.isArray(json)) {
-    pushArray(json, true);
-    if (!out.length) pushArray(json, false);
-    return out;
-  }
-  if (!json || typeof json !== "object") return out;
-
-  if (Array.isArray(json[wantedLevel])) {
-    pushArray(json[wantedLevel], false);
-    return out;
-  }
-  if (json.levels && Array.isArray(json.levels[wantedLevel])) {
-    pushArray(json.levels[wantedLevel], false);
-    return out;
-  }
-
-  ["words", "data", "items", "list", "pool", "vocabulary", "kelimeler"].forEach((key) => pushArray(json[key], true));
-  if (out.length) return out;
-
-  Object.values(json).forEach((value) => pushArray(value, true));
-  if (out.length) return out;
-
-  ["words", "data", "items", "list", "pool", "vocabulary", "kelimeler"].forEach((key) => pushArray(json[key], false));
-  Object.values(json).forEach((value) => pushArray(value, false));
-  return out;
+async function showGameOverModal() {
+  const globalBest = await finishGameAndSave();
+  const modal = $("gameOverModal");
+  if (!modal) return;
+  const title = state.newPersonalBest || state.newGlobalBest ? "Tebrikler!" : "Oyun bitti";
+  $("gameOverTitle").textContent = title;
+  $("gameOverWord").textContent = state.lastSolvedWord || state.word || "—";
+  $("gameOverScore").textContent = String(state.totalScore || 0);
+  $("gameOverPersonal").textContent = String(getLocalHighScore(GAME_SLUG, state.lang) || state.totalScore || 0);
+  $("gameOverGlobal").textContent = formatGlobalBest(globalBest);
+  const messages = [];
+  if (state.newPersonalBest) messages.push("Yeni yüksek skor!");
+  if (state.newGlobalBest) messages.push("Yeni genel rekor!");
+  $("gameOverRecord").textContent = messages.join(" ");
+  modal.classList.add("on");
+  modal.setAttribute("aria-hidden", "false");
 }
 
-async function fetchWordsFromLangStorage(lang, level) {
+function getAudioContext() {
   try {
-    const code = GAME_LANG_META[lang] ? lang : "en";
-    const fileName = LANG_FILE_MAP[code] || `${code}.json`;
-    const { data, error } = await supabase.storage.from(WORD_BUCKET).download(fileName);
-    if (error || !data) {
-      console.warn("[HANGMAN] word bucket empty", { bucket: WORD_BUCKET, fileName, error });
-      return [];
-    }
-    const json = JSON.parse(await data.text());
-    const seen = new Set();
-    return extractWordsFromJson(json, code, level)
-      .map((item) => ({ w: cleanHangmanWord(item.w), tr: String(item.tr || "—") }))
-      .filter((item) => {
-        if (!item.w || item.w.length < 2) return false;
-        if (seen.has(item.w)) return false;
-        seen.add(item.w);
-        return true;
-      });
-  } catch (error) {
-    console.warn("[HANGMAN] word load failed", error);
+    if (!hangAudioCtx) hangAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (hangAudioCtx.state === "suspended") hangAudioCtx.resume().catch(() => {});
+    return hangAudioCtx;
+  } catch (_) {
+    return null;
+  }
+}
+
+function playTone(freq, duration = 0.08, delay = 0, type = "sine", volume = 0.025) {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const start = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.02);
+}
+
+function playCorrectSound() {
+  playTone(540, 0.07, 0, "triangle", 0.025);
+  playTone(780, 0.09, 0.07, "triangle", 0.021);
+}
+
+function playWrongSound() {
+  playTone(190, 0.08, 0, "sine", 0.022);
+  playTone(135, 0.10, 0.075, "sine", 0.018);
+}
+
+["pointerdown", "touchstart", "click"].forEach((evt) => {
+  window.addEventListener(evt, () => getAudioContext(), { once: true, passive: true });
+});
+
+async function refreshScoreUi() {
+  const localBest = getLocalHighScore(GAME_SLUG, state.lang);
+  if (personalBestVal) personalBestVal.textContent = String(localBest || 0);
+  if (globalBestVal) globalBestVal.textContent = "GENEL REKOR: —";
+  try {
+    const best = await refreshGameScoreLabels(GAME_SLUG, state.lang, {
+      personalEl: personalBestVal,
+      globalEl: globalBestVal,
+    });
+    return best?.globalBest || null;
+  } catch (err) {
+    console.warn("[HANGMAN] score labels failed", err);
+    return null;
+  }
+}
+
+function markLocalBestIfNeeded() {
+  const current = getLocalHighScore(GAME_SLUG, state.lang);
+  if (state.totalScore > current) {
+    setLocalHighScore(GAME_SLUG, state.lang, state.totalScore);
+    state.newPersonalBest = true;
+    if (personalBestVal) personalBestVal.textContent = String(state.totalScore);
+    toast("Yeni yüksek skor!");
+    return true;
+  }
+  return false;
+}
+
+async function fetchWordsFromLangStorage(lang) {
+  try {
+    const res = await fetch("/data/game_word_sets.json", { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const words = data?.hangman?.[lang] || data?.words?.[lang] || data?.[lang];
+    if (!Array.isArray(words)) return [];
+    return words
+      .map((item) => {
+        if (typeof item === "string") return { w: normalizeWord(item), h: langLabel(lang) };
+        return {
+          w: normalizeWord(item.word || item.w || item.text || item.answer),
+          h: String(item.hint || item.h || item.clue || langLabel(lang)),
+        };
+      })
+      .filter((item) => item.w && item.w.length >= 3);
+  } catch (err) {
+    console.warn("[HANGMAN] word fetch failed", err);
     return [];
   }
 }
 
-function getFallbackPool(lang) {
-  return (LOCAL_FALLBACK_POOL[lang] || LOCAL_FALLBACK_POOL.en).map((item) => ({
-    w: cleanHangmanWord(item.w),
-    tr: String(item.tr || "—")
-  }));
-}
-
-function renderLangCards() {
-  const box = $("langGrid");
-  if (!box) return;
-  box.innerHTML = Object.entries(GAME_LANG_META).map(([code, meta]) => `
-    <button class="langCard ${state.lang === code ? "active" : ""}" data-lang="${code}" type="button">
-      <div class="langFlag">${meta.flag}</div>
-      <div class="langName">${meta.name}</div>
-      <div class="langHint">${code.toUpperCase()}</div>
-    </button>
-  `).join("");
-  box.querySelectorAll(".langCard").forEach((btn) => {
-    btn.onclick = async () => {
-      state.lang = btn.dataset.lang || "en";
-      localStorage.setItem("italky_game_lang", state.lang);
-      renderLangCards();
-      setGate(`${state.lang.toUpperCase()} SEÇİLDİ`);
-      await loadGameData();
-    };
-  });
-}
-
-function openLangSheet() { $("langSheet")?.classList.add("show"); }
-function closeLangSheet() { $("langSheet")?.classList.remove("show"); }
-function openRulesSheet() { $("rulesSheet")?.classList.add("show"); }
-function closeRulesSheet() { $("rulesSheet")?.classList.remove("show"); }
-
-async function loadGameData() {
-  disableStartBtn(true, "YÜKLENİYOR...");
-  setGate("OYUN VERİSİ HAZIRLANIYOR...");
-
-  state.lang = HAS_GAME_MENU_LANG ? getGameLangFromUrl("en") : (GAME_LANG_META[state.lang] ? state.lang : "en");
-  state.level = normalizeLevel(PARAMS.get("level") || localStorage.getItem("italky_game_level") || state.level) || "A1";
-  localStorage.setItem("italky_game_lang", state.lang);
-  localStorage.setItem("italky_game_level", state.level);
-
-  setGate(`${state.lang.toUpperCase()} • ${state.level} YÜKLENİYOR...`);
-  let words = await fetchWordsFromLangStorage(state.lang, state.level);
-  if (!words.length) {
-    console.warn("[HANGMAN] fallback pool used", { lang: state.lang, level: state.level });
-    words = getFallbackPool(state.lang);
-  }
-
-  state.pool = words;
+async function loadData(lang) {
+  const externalWords = await fetchWordsFromLangStorage(lang);
+  state.words = externalWords.length ? externalWords : (DICT[lang] || DICT.en);
+  state.lang = DICT[lang] || externalWords.length ? lang : "en";
+  if ($("langBadge")) $("langBadge").textContent = GAME_LANG_META[state.lang]?.flag || "🇬🇧";
+  if ($("trText")) $("trText").textContent = `Dil: ${langLabel(state.lang)}`;
   await refreshScoreUi();
-
-  if (!state.pool.length) {
-    setGate(`${state.lang.toUpperCase()} için oyun havuzu bulunamadı.`);
-    disableStartBtn(true, "HAZIR DEĞİL");
-    return false;
-  }
-
-  setGate(`${state.lang.toUpperCase()} • ${state.level} HAZIR`);
-  disableStartBtn(false, "BAŞLA");
-  return true;
 }
 
-function pickWord() {
-  if (!state.pool.length) return null;
-  const available = state.pool.filter((item) => item.w !== state.lastWord && !state.usedWords.has(item.w));
-  if (!available.length) state.usedWords.clear();
-  const list = available.length ? available : state.pool.filter((item) => item.w !== state.lastWord);
-  const chosen = (list.length ? list : state.pool)[Math.floor(Math.random() * (list.length ? list.length : state.pool.length))];
-  if (chosen?.w) state.usedWords.add(chosen.w);
-  return chosen || null;
+function createStars() {
+  for (let i = 0; i < 55; i++) {
+    const s = document.createElement("div");
+    s.className = "star";
+    s.style.left = Math.random() * 100 + "%";
+    s.style.top = Math.random() * 100 + "%";
+    s.style.animationDuration = (2.5 + Math.random() * 3) + "s";
+    document.body.appendChild(s);
+  }
+}
+
+function drawGallows() {
+  const svg = $("gallowsSvg");
+  if (!svg) return;
+  const wood = "rgba(255,255,255,.56)";
+  function line(x1, y1, x2, y2, w = 8) {
+    const e = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    e.setAttribute("x1", x1); e.setAttribute("y1", y1); e.setAttribute("x2", x2); e.setAttribute("y2", y2);
+    e.setAttribute("stroke", wood); e.setAttribute("stroke-width", w); e.setAttribute("stroke-linecap", "round");
+    svg.appendChild(e);
+  }
+  line(35, floor, W - 35, floor, 10);
+  line(82, floor, 82, 90, 9);
+  line(82, 90, 228, 90, 9);
+  line(228, 90, 228, 138, 5);
+}
+
+function part(name, attrs = {}) {
+  const e = document.createElementNS("http://www.w3.org/2000/svg", name);
+  Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  e.classList.add("manPart");
+  $("gallowsSvg")?.appendChild(e);
+  return e;
+}
+
+function resetMan() {
+  document.querySelectorAll(".manPart").forEach((p) => p.remove());
+  const cx = 228, top = 165;
+  part("circle", { cx, cy: top, r: 25, fill: "none", stroke: "#fff", "stroke-width": 7 });
+  part("line", { x1: cx, y1: top + 25, x2: cx, y2: top + 100, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
+  part("line", { x1: cx, y1: top + 52, x2: cx - 42, y2: top + 82, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
+  part("line", { x1: cx, y1: top + 52, x2: cx + 42, y2: top + 82, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
+  part("line", { x1: cx, y1: top + 100, x2: cx - 36, y2: top + 148, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
+  part("line", { x1: cx, y1: top + 100, x2: cx + 36, y2: top + 148, stroke: "#fff", "stroke-width": 7, "stroke-linecap": "round" });
+  document.querySelectorAll(".manPart").forEach((p) => p.classList.remove("on"));
+}
+
+function revealParts(n) {
+  document.querySelectorAll(".manPart").forEach((p, i) => p.classList.toggle("on", i < n));
 }
 
 function startRound() {
-  if (!state.pool.length) return;
-  if (!state.gameStartedAt) state.gameStartedAt = Date.now();
-  state.lock = false;
-  state.guessed.clear();
+  if (!state.words.length) state.words = DICT[state.lang] || DICT.en;
+  const pick = state.words[Math.floor(Math.random() * state.words.length)];
+  state.word = normalizeWord(pick?.w || pick?.word || pick?.text);
+  if (!state.word) state.word = normalizeWord((DICT[state.lang] || DICT.en)[0].w);
+  state.hint = pick?.h || pick?.hint || "";
+  state.guessed = new Set();
   state.mistakes = 0;
-  state.roundScore = 100;
-  state.flawless = true;
-  state.jokerUsed = false;
-  state.lastSolvedWord = "";
-  $("j0")?.classList.remove("spent");
-  $("j1")?.classList.remove("spent");
-
-  state.target = pickWord();
-  if (!state.target?.w) {
-    setGate("Kelime seçilemedi.");
-    return;
-  }
-  state.lastWord = state.target.w;
+  state.roundScore = 0;
+  state.scoreSaved = false;
+  state.lastSolvedWord = state.word;
+  state.lastSolvedLang = state.lang;
   renderWord();
   renderKeyboard();
   renderHearts();
   resetMan();
-  $("trText").textContent = String(state.target.tr || "—").toUpperCase();
-  $("scoreVal").textContent = String(state.totalScore);
+  if ($("trText")) $("trText").textContent = `İpucu: ${state.hint || langLabel(state.lang)}`;
+  if ($("resultBox")) $("resultBox").innerHTML = "";
+  if (listenSolvedBtn) listenSolvedBtn.style.display = "none";
 }
 
 function renderWord() {
-  const word = String(state.target?.w || "").toUpperCase();
-  $("matrix").innerHTML = word.split("").map((char) => {
-    const isLetter = /[A-Z]/.test(char);
-    const found = !isLetter || state.guessed.has(char);
-    return `<div class="slot ${found && isLetter ? "found" : ""}">${found ? escapeHtml(char) : ""}</div>`;
-  }).join("");
+  const wordEl = $("word");
+  if (!wordEl) return;
+  wordEl.innerHTML = "";
+  state.word.split("").forEach((ch) => {
+    const span = document.createElement("span");
+    span.className = "letter";
+    span.textContent = state.guessed.has(ch) ? ch : "";
+    wordEl.appendChild(span);
+  });
 }
 
 function renderKeyboard() {
-  const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  $("kb").innerHTML = abc.map((letter) => `<button class="key" id="key-${letter}" data-l="${letter}" type="button">${letter}</button>`).join("");
-  $("kb").querySelectorAll(".key").forEach((btn) => {
-    btn.onclick = () => makeGuess(btn.dataset.l);
+  const kb = $("keyboard");
+  if (!kb) return;
+  kb.innerHTML = "";
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach((ch) => {
+    const btn = document.createElement("button");
+    btn.className = "key";
+    btn.textContent = ch;
+    btn.addEventListener("click", () => makeGuess(ch, btn));
+    kb.appendChild(btn);
   });
-}
-
-function makeGuess(letter) {
-  if (!state.target?.w || state.lock || state.guessed.has(letter)) return;
-  state.guessed.add(letter);
-  const btn = $(`key-${letter}`);
-  const word = String(state.target.w).toUpperCase();
-
-  if (word.includes(letter)) {
-    btn?.classList.add("hit");
-    state.correctCount += 1;
-    renderWord();
-    const completed = word.split("").filter((char) => /[A-Z]/.test(char)).every((char) => state.guessed.has(char));
-    if (completed) endRound(true);
-    return;
-  }
-
-  btn?.classList.add("miss");
-  state.wrongCount += 1;
-  state.mistakes += 1;
-  state.flawless = false;
-  state.roundScore = Math.max(0, state.roundScore - 15);
-  updateMan(state.mistakes);
-  if (state.mistakes >= MAX_MISTAKES) endRound(false);
-}
-
-function updateMan(errorCount) {
-  const seq = ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"];
-  seq.forEach((id, index) => $(id)?.classList.toggle("on", index < errorCount));
-  $("man")?.classList.toggle("swing", errorCount >= MAX_MISTAKES);
-}
-
-function resetMan() {
-  ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"].forEach((id) => $(id)?.classList.remove("on"));
-  $("man")?.classList.remove("swing");
 }
 
 function renderHearts() {
-  $("hearts").innerHTML = Array.from({ length: state.lives }).map(() => `<span class="heart">❤️</span>`).join("");
+  const h = $("hearts");
+  if (!h) return;
+  h.innerHTML = "";
+  for (let i = 0; i < 3; i++) {
+    const s = document.createElement("span");
+    s.textContent = "♥";
+    s.className = i < state.lives ? "heart" : "heart lost";
+    h.appendChild(s);
+  }
 }
 
-async function endRound(win) {
-  state.lock = true;
-  const solvedWord = String(state.target?.w || "").toUpperCase();
-  const solvedHint = String(state.target?.tr || "—");
-  state.lastSolvedWord = solvedWord;
-  state.lastSolvedLang = state.lang;
+function updateScore(delta = 0) {
+  state.totalScore = Math.max(0, state.totalScore + delta);
+  if ($("score")) $("score").textContent = state.totalScore;
+}
 
+function makeGuess(letter, btn) {
+  if (state.guessed.has(letter) || btn?.disabled) return;
+  state.guessed.add(letter);
+  if (btn) btn.disabled = true;
+  if (state.word.includes(letter)) {
+    btn?.classList.add("hit");
+    playCorrectSound();
+    const matches = state.word.split("").filter((c) => c === letter).length;
+    state.correctCount += matches;
+    updateScore(10 * matches);
+    renderWord();
+    if (state.word.split("").every((c) => state.guessed.has(c))) endRound(true);
+  } else {
+    btn?.classList.add("miss");
+    playWrongSound();
+    state.wrongCount += 1;
+    state.mistakes += 1;
+    updateScore(-5);
+    revealParts(state.mistakes);
+    if (state.mistakes >= MAX_MISTAKES) endRound(false);
+  }
+}
+
+function endRound(win) {
+  document.querySelectorAll(".key").forEach((b) => (b.disabled = true));
+  const modal = $("modal");
+  const mTitle = $("mTitle");
+  const mMsg = $("mMsg");
+  const mBtn = $("mBtn");
+  if (!modal || !mTitle || !mMsg || !mBtn) return;
+  state.lastSolvedWord = state.word;
+  state.lastSolvedLang = state.lang;
   if (win) {
-    state.totalScore += state.roundScore;
-    if (state.flawless && !state.jokerUsed && state.lives < state.MAX_LIVES) state.lives += 1;
-    const isNewBest = markLocalBestIfNeeded();
-    if (isNewBest) toast("Yeni kişisel rekor!");
+    updateScore(40);
+    markLocalBestIfNeeded();
+    mTitle.textContent = "Başarılı!";
+    mMsg.textContent = `Kelime: ${state.word} • +40 puan`;
+    mBtn.textContent = "Sonraki kelime";
+    if (listenSolvedBtn) listenSolvedBtn.style.display = "block";
   } else {
     state.lives -= 1;
+    renderHearts();
+    mTitle.textContent = "Oyun bitti";
+    mMsg.textContent = `Doğru kelime: ${state.word}`;
+    mBtn.textContent = state.lives > 0 ? "Devam et" : "Sonuçları gör";
   }
-
-  renderHearts();
-  $("mTitle").textContent = win ? "BAŞARILI!" : "DOĞRU CEVAP";
-  $("mTitle").style.color = win ? "var(--green)" : "#60a5fa";
-  $("mWord").textContent = solvedWord;
-  $("mTr").textContent = `(${solvedHint})`;
-  $("modal").classList.add("on");
-  speakGameText(solvedWord, state.lang);
-}
-
-function useJ(index) {
-  if (state.lock || !state.target?.w) return;
-  const button = $(`j${index}`);
-  if (!button || button.classList.contains("spent")) return;
-  state.jokerUsed = true;
-  button.classList.add("spent");
-  state.roundScore = Math.max(0, state.roundScore - 20);
-  const remaining = String(state.target.w).toUpperCase().split("").filter((letter) => /[A-Z]/.test(letter) && !state.guessed.has(letter));
-  if (remaining.length) makeGuess(remaining[0]);
+  speakGameText(state.word, state.lang);
+  modal.classList.add("on");
 }
 
 async function finishGameAndSave() {
-  if (state.scoreSaved) return;
-  state.scoreSaved = true;
-  const beforeGlobal = await getGlobalBest(GAME_SLUG, state.lang);
-  const beforeScore = Number(beforeGlobal?.score || 0) || 0;
-  await saveGameScore({
-    gameSlug: GAME_SLUG,
-    lang: state.lang,
-    score: state.totalScore,
-    correctCount: state.correctCount,
-    wrongCount: state.wrongCount,
-    durationSeconds: getGameDurationSeconds()
-  });
-  const afterGlobal = await getGlobalBest(GAME_SLUG, state.lang);
-  if (state.totalScore > beforeScore && Number(afterGlobal?.score || 0) === state.totalScore) {
-    toast("Yeni genel rekor!");
+  if (state.scoreSaved) {
+    try { return await getGlobalBest(GAME_SLUG, state.lang); } catch (_) { return null; }
   }
-  $("globalBestVal") && ($("globalBestVal").textContent = formatGlobalBest(afterGlobal));
-  await refreshScoreUi();
+  state.scoreSaved = true;
+  const durationSeconds = Math.max(1, Math.round((Date.now() - state.gameStartedAt) / 1000));
+  let beforeGlobal = null;
+  try { beforeGlobal = await getGlobalBest(GAME_SLUG, state.lang); } catch (_) {}
+  markLocalBestIfNeeded();
+  try {
+    await saveGameScore({
+      gameSlug: GAME_SLUG,
+      lang: state.lang,
+      score: state.totalScore,
+      correctCount: state.correctCount,
+      wrongCount: state.wrongCount,
+      durationSeconds,
+    });
+  } catch (err) {
+    console.warn("[HANGMAN] score save failed", err);
+  }
+  let afterGlobal = null;
+  try {
+    afterGlobal = await getGlobalBest(GAME_SLUG, state.lang);
+    const beforeScore = Number(beforeGlobal?.score || 0);
+    const afterScore = Number(afterGlobal?.score || 0);
+    state.newGlobalBest = state.totalScore > beforeScore && afterScore === state.totalScore;
+    if (globalBestVal) globalBestVal.textContent = formatGlobalBest(afterGlobal);
+  } catch (_) {}
+  return afterGlobal || beforeGlobal;
 }
 
 function resetGameState() {
-  state.totalScore = 0;
   state.lives = 3;
-  state.gameStartedAt = Date.now();
-  state.scoreSaved = false;
+  state.totalScore = 0;
   state.correctCount = 0;
   state.wrongCount = 0;
-  state.lastSolvedWord = "";
-  $("scoreVal") && ($("scoreVal").textContent = "0");
+  state.gameStartedAt = Date.now();
+  state.scoreSaved = false;
+  state.newPersonalBest = false;
+  state.newGlobalBest = false;
+  if ($("score")) $("score").textContent = "0";
   renderHearts();
 }
 
-$("j0").onclick = () => useJ(0);
-$("j1").onclick = () => useJ(1);
-
-$("mBtn").onclick = async () => {
+$("mBtn")?.addEventListener("click", async () => {
   $("modal")?.classList.remove("on");
   if (state.lives > 0) {
     startRound();
-    return;
-  }
-
-  await finishGameAndSave();
-  const again = confirm(`Oyun bitti! Skor: ${state.totalScore}. Yeniden başla?`);
-  if (again) {
-    resetGameState();
-    startRound();
   } else {
-    location.href = getBackUrl();
+    await showGameOverModal();
   }
-};
+});
 
-$("realStartBtn").onclick = () => {
-  if (!state.pool.length) {
-    toast("Bu dil için oyun havuzu hazır değil");
-    return;
-  }
-  $("readyGate").style.display = "none";
-  resetGameState();
-  startRound();
-};
-
-$("langChangeBtn").onclick = () => openLangSheet();
-$("langSheetClose").onclick = () => closeLangSheet();
-$("toRulesBtn").onclick = async () => {
-  closeLangSheet();
-  await loadGameData();
-  openRulesSheet();
-};
-$("rulesClose").onclick = () => closeRulesSheet();
-$("finishRulesBtn").onclick = async () => {
-  closeRulesSheet();
-  await loadGameData();
-};
+$("logo")?.addEventListener("click", () => {
+  location.href = getBackUrl();
+});
 
 window.onload = async () => {
+  injectHangmanUiPolish();
+  createBackButton();
+  createStars();
+  drawGallows();
   createScoreMetaUi();
-  renderLangCards();
-  renderHearts();
-  const ready = await loadGameData();
-
-  if (HAS_GAME_MENU_LANG && ready) {
-    $("langChangeBtn")?.style.setProperty("display", "none");
-    $("readyGate").style.display = "none";
-    resetGameState();
+  createGameOverModal();
+  await loadData(selectedLang);
+  resetGameState();
+  if (HAS_GAME_MENU_LANG) {
+    $("readyGate")?.classList.remove("on");
     startRound();
-    return;
-  }
-
-  if (!HAS_GAME_MENU_LANG) {
-    setGate(`${state.lang.toUpperCase()} • ${state.level} HAZIR`);
+  } else {
+    $("readyGate")?.classList.add("on");
+    $("goBtn")?.addEventListener("click", () => {
+      $("readyGate")?.classList.remove("on");
+      startRound();
+    }, { once: true });
   }
 };
