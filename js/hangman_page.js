@@ -1,3 +1,4 @@
+import { mountShell } from "/js/ui_shell.js";
 import {
   GAME_LANG_META,
   formatGlobalBest,
@@ -75,7 +76,7 @@ let hangAudioCtx = null;
 
 function applyShellLift() {
   try {
-    const shell = document.querySelector(".italky-mobile-shell, .bottom-nav, .mobile-nav, [data-italky-shell]");
+    const shell = document.querySelector(".premium-footer, .italky-mobile-shell, .bottom-nav, .mobile-nav, [data-italky-shell]");
     const h = shell ? Math.min(92, Math.max(0, shell.getBoundingClientRect().height || 0)) : 0;
     document.documentElement.style.setProperty("--shellLift", h ? `${h + 8}px` : "0px");
   } catch (_) {}
@@ -116,26 +117,33 @@ function injectHangmanUiPolish() {
   const style = document.createElement("style");
   style.id = "hangmanUiPolish";
   style.textContent = `
-    body.hangman-game-screen .global-footer,
-    body.hangman-game-screen [data-italky-footer],
-    body.hangman-game-screen .italky-global-footer{display:none!important}
     body.hangman-game-screen .ready-gate.hidden,
     body.hangman-direct-start #readyGate{display:none!important;pointer-events:none!important;visibility:hidden!important}
-    body.hangman-game-screen .dock{bottom:calc(var(--safeB) + var(--shellLift) + 34px)!important;height:204px!important;gap:8px!important;padding:10px!important;box-shadow:0 24px 70px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.14)!important}
-    body.hangman-game-screen #pageContent{padding-bottom:calc(204px + var(--shellLift) + var(--safeB) + 58px)!important}
-    body.hangman-game-screen .kb{gap:5px!important}
-    body.hangman-game-screen .key{min-width:27px!important;height:35px!important;border-radius:11px!important}
+    body.hangman-game-screen #shellMain{overflow:hidden!important;padding-bottom:calc(var(--footerH,0px) + 8px)!important}
+    body.hangman-game-screen #pageContent{height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:10px 14px calc(236px + var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 18px)!important;position:relative!important}
+    body.hangman-game-screen .top{flex:1 1 auto!important;min-height:0!important;height:auto!important;display:flex!important;flex-direction:column!important;gap:8px!important}
+    body.hangman-game-screen .title{font-size:20px!important;letter-spacing:7px!important;padding-top:0!important;margin:0!important;flex:0 0 auto!important}
+    body.hangman-game-screen .hud{top:72px!important;left:0!important;right:0!important;gap:10px!important}
+    body.hangman-game-screen .stage{flex:1 1 auto!important;min-height:0!important;padding-top:44px!important;justify-content:flex-start!important}
+    body.hangman-game-screen .gallows{width:126px!important;height:132px!important;flex:0 0 auto!important}
+    body.hangman-game-screen .man{transform:scale(.86);transform-origin:top center!important}
+    body.hangman-game-screen .trBox{margin-top:12px!important;min-height:44px!important;font-size:15px!important;padding:10px 12px!important}
+    body.hangman-game-screen .dock{position:absolute!important;left:14px!important;right:14px!important;bottom:calc(var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 12px)!important;height:232px!important;gap:8px!important;padding:10px!important;border-radius:22px!important;overflow:hidden!important;box-shadow:0 24px 70px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.14)!important}
+    body.hangman-game-screen .matrix{min-height:40px!important;max-height:48px!important;gap:5px!important;overflow:hidden!important;flex:0 0 auto!important}
+    body.hangman-game-screen .slot{width:24px!important;height:36px!important;font-size:21px!important}
+    body.hangman-game-screen .kb{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-rows:34px!important;align-content:start!important;gap:5px!important;min-height:0!important;overflow:hidden!important;flex:1 1 auto!important}
+    body.hangman-game-screen .key{min-width:0!important;width:100%!important;height:34px!important;border-radius:10px!important;padding:0!important;font-size:13px!important}
     body.hangman-game-screen .hearts{display:grid!important;grid-template-columns:repeat(9,max-content)!important;gap:3px!important;max-width:142px!important}
     body.hangman-game-screen .heart{font-size:16px!important}.heart.lost{opacity:.16;filter:none!important}
-    body.hangman-game-screen .jokerCol{align-items:flex-end!important;gap:7px!important}.joker.secondary-joker{display:none!important}.joker.joker-main{width:auto!important;min-width:90px!important;padding:0 12px!important;font-size:13px!important;font-weight:1000!important}
-    .hangman-back-btn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:14px;z-index:9500;border:1px solid rgba(167,243,208,.25);background:linear-gradient(135deg,rgba(15,23,42,.78),rgba(30,64,175,.48));color:rgba(239,246,255,.94);border-radius:999px;padding:9px 12px;font:900 12px/1 Inter,system-ui,sans-serif;letter-spacing:.2px;box-shadow:0 14px 36px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+    body.hangman-game-screen .jokerCol{align-items:flex-end!important;gap:7px!important}.joker.secondary-joker{display:none!important}.joker.joker-main{width:auto!important;min-width:90px!important;height:38px!important;padding:0 12px!important;font-size:13px!important;font-weight:1000!important}
+    .hangman-back-btn{position:relative;z-index:20;align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;margin:0 0 8px;border:1px solid rgba(167,243,208,.25);background:linear-gradient(135deg,rgba(15,23,42,.78),rgba(30,64,175,.48));color:rgba(239,246,255,.94);border-radius:999px;padding:9px 12px;font:900 12px/1 Inter,system-ui,sans-serif;letter-spacing:.2px;box-shadow:0 14px 36px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
     .hangman-back-btn:active{transform:translateY(1px) scale(.99)}
     .game-over-modal{position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;padding:18px;background:radial-gradient(circle at 50% 20%,rgba(34,211,238,.18),transparent 34%),rgba(2,6,23,.74);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
     .game-over-modal.on{display:flex}.game-over-card{width:min(420px,calc(100vw - 28px));max-height:min(86vh,680px);overflow:auto;border:1px solid rgba(125,211,252,.28);border-radius:26px;padding:20px;color:#f8fafc;background:radial-gradient(circle at 12% 0%,rgba(34,211,238,.18),transparent 34%),linear-gradient(150deg,rgba(15,23,42,.96),rgba(30,41,59,.92));box-shadow:0 30px 90px rgba(0,0,0,.56),inset 0 1px 0 rgba(255,255,255,.12)}
     .game-over-eyebrow{color:rgba(125,211,252,.92);font:900 11px/1 Inter,system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:10px}.game-over-card h2{margin:0 0 12px;font:1000 28px/1.05 Inter,system-ui,sans-serif;letter-spacing:0}
     .game-over-word{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:12px 14px;margin:12px 0;background:rgba(15,23,42,.52);color:rgba(226,232,240,.9);font:800 14px/1.4 Inter,system-ui,sans-serif}.game-over-word strong{color:#fff;font-size:17px}
     .game-over-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.game-over-stat{min-height:62px;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px;background:rgba(2,6,23,.34)}.game-over-stat span{display:block;color:rgba(203,213,225,.72);font:900 10px/1 Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}.game-over-stat b{font:1000 18px/1 Inter,system-ui,sans-serif}.game-over-record{min-height:24px;margin:8px 0 14px;color:#fde68a;font:900 13px/1.35 Inter,system-ui,sans-serif}.game-over-actions{display:grid;gap:10px}.game-over-actions button{border:0;border-radius:18px;min-height:48px;color:#f8fafc;font:1000 14px/1 Inter,system-ui,sans-serif;box-shadow:0 14px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.14)}.game-over-actions .primary{background:linear-gradient(135deg,#06b6d4,#2563eb 58%,#7c3aed)}.game-over-actions .secondary{background:rgba(15,23,42,.74);border:1px solid rgba(148,163,184,.28)}
-    @media(max-width:420px){body.hangman-game-screen .dock{bottom:calc(var(--safeB) + var(--shellLift) + 30px)!important;height:198px!important}body.hangman-game-screen #pageContent{padding-bottom:calc(198px + var(--shellLift) + var(--safeB) + 54px)!important}body.hangman-game-screen .key{height:33px!important;min-width:25px!important}.hangman-back-btn{padding:8px 10px;font-size:11px}.game-over-card{padding:18px;border-radius:23px}}
+    @media(max-width:420px){body.hangman-game-screen #pageContent{padding:8px 12px calc(228px + var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 14px)!important}body.hangman-game-screen .dock{left:12px!important;right:12px!important;bottom:calc(var(--footerH,0px) + env(safe-area-inset-bottom,0px) + 10px)!important;height:224px!important;padding:9px!important}body.hangman-game-screen .kb{grid-auto-rows:31px!important;gap:5px!important}body.hangman-game-screen .key{height:31px!important;font-size:12px!important}body.hangman-game-screen .slot{width:22px!important;height:32px!important;font-size:19px!important}.hangman-back-btn{padding:8px 10px;font-size:11px;margin-bottom:6px}.game-over-card{padding:18px;border-radius:23px}}
   `;
   document.head.appendChild(style);
 }
@@ -164,7 +172,8 @@ function createBackButton() {
   btn.className = "hangman-back-btn";
   btn.textContent = "← Oyun Menüsü";
   btn.addEventListener("click", () => { location.href = getBackUrl(); });
-  document.body.appendChild(btn);
+  const host = $("pageContent") || document.body;
+  host.insertBefore(btn, host.firstElementChild || null);
 }
 
 function createScoreMetaUi() {
@@ -460,8 +469,7 @@ function renderJokers() {
 function updateScore(delta = 0) {
   state.totalScore = Math.max(0, state.totalScore + delta);
   if ($("scoreVal")) $("scoreVal").textContent = state.totalScore;
-}
-
+}\n
 function isSolved() {
   return state.word.split("").every((c) => state.guessed.has(c));
 }
@@ -612,6 +620,7 @@ $("langChangeBtn")?.addEventListener("click", () => toast("Dil seçimi oyun men�
 $("logo")?.addEventListener("click", () => { location.href = getBackUrl(); });
 
 window.onload = async () => {
+  try { mountShell({ scroll: "none" }); } catch (err) { console.warn("[HANGMAN] shell mount skipped", err); }
   injectHangmanUiPolish();
   createBackButton();
   createStars();
@@ -619,6 +628,7 @@ window.onload = async () => {
   createGameOverModal();
   await loadData(selectedLang);
   refreshScoreUi().catch((err) => console.warn("[HANGMAN] score refresh non-blocking", err));
+  requestAnimationFrame(applyShellLift);
   if (HAS_GAME_MENU_LANG) {
     startGameNow();
     return;
