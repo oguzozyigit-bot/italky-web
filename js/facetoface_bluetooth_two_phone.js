@@ -120,8 +120,7 @@ function clean(text) {
 }
 
 function makeCode() {
-  const value = Math.floor(100000 + Math.random() * 900000);
-  return String(value);
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 function formatCode(code) {
@@ -155,34 +154,18 @@ function injectTwoPhoneCss() {
   const style = document.createElement("style");
   style.id = "italkyTwoPhoneUxStyle";
   style.textContent = `
-    body.bt-premium-mode .two-phone-room-gate{
-      position:fixed; inset:0; z-index:2147483600; display:none; align-items:center; justify-content:center;
-      padding:20px; background:radial-gradient(circle at 50% 0%,rgba(59,130,246,.26),transparent 42%),rgba(2,6,23,.92);
-      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); color:#fff;
-    }
+    body.bt-premium-mode .two-phone-room-gate{position:fixed;inset:0;z-index:2147483600;display:none;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 0%,rgba(59,130,246,.26),transparent 42%),rgba(2,6,23,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;}
     body.two-phone-room-pending .two-phone-room-gate{display:flex;}
-    body.two-phone-room-pending .container{filter:blur(2px); pointer-events:none;}
-    body.bt-premium-mode .two-phone-room-card{
-      width:min(92vw,420px); border:1px solid rgba(147,197,253,.25); border-radius:26px;
-      background:linear-gradient(180deg,rgba(15,23,42,.96),rgba(2,6,23,.98));
-      box-shadow:0 28px 80px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.07); padding:20px;
-    }
+    body.two-phone-room-pending .container{filter:blur(2px);pointer-events:none;}
+    body.bt-premium-mode .two-phone-room-card{width:min(92vw,420px);border:1px solid rgba(147,197,253,.25);border-radius:26px;background:linear-gradient(180deg,rgba(15,23,42,.96),rgba(2,6,23,.98));box-shadow:0 28px 80px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.07);padding:20px;}
     body.bt-premium-mode .two-phone-room-title{font-size:24px;font-weight:1000;letter-spacing:-.3px;margin:0 0 8px;}
     body.bt-premium-mode .two-phone-room-desc{margin:0 0 18px;color:rgba(219,234,254,.78);font-size:14px;line-height:1.45;font-weight:700;}
     body.bt-premium-mode .two-phone-room-actions{display:grid;gap:10px;margin-top:14px;}
-    body.bt-premium-mode .two-phone-room-btn{
-      min-height:52px;border:0;border-radius:16px;padding:0 15px;font:inherit;font-weight:1000;color:#fff;cursor:pointer;
-      background:linear-gradient(135deg,#2563eb,#0891b2); box-shadow:0 14px 30px rgba(37,99,235,.25);
-    }
+    body.bt-premium-mode .two-phone-room-btn{min-height:52px;border:0;border-radius:16px;padding:0 15px;font:inherit;font-weight:1000;color:#fff;cursor:pointer;background:linear-gradient(135deg,#2563eb,#0891b2);box-shadow:0 14px 30px rgba(37,99,235,.25);}
     body.bt-premium-mode .two-phone-room-btn.secondary{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);}
-    body.bt-premium-mode .two-phone-room-code{
-      margin:16px 0 10px;padding:18px;border-radius:20px;text-align:center;font-size:42px;line-height:1;font-weight:1000;letter-spacing:5px;
-      background:rgba(15,23,42,.72);border:1px solid rgba(96,165,250,.24);color:#bfdbfe;
-    }
-    body.bt-premium-mode .two-phone-code-input{
-      width:100%;min-height:56px;border-radius:16px;border:1px solid rgba(147,197,253,.28);background:rgba(15,23,42,.72);
-      color:#fff;text-align:center;font-size:28px;font-weight:1000;letter-spacing:4px;outline:none;
-    }
+    body.bt-premium-mode .two-phone-room-btn.home{background:rgba(15,23,42,.82);border:1px solid rgba(147,197,253,.22);box-shadow:none;}
+    body.bt-premium-mode .two-phone-room-code{margin:16px 0 10px;padding:18px;border-radius:20px;text-align:center;font-size:42px;line-height:1;font-weight:1000;letter-spacing:5px;background:rgba(15,23,42,.72);border:1px solid rgba(96,165,250,.24);color:#bfdbfe;}
+    body.bt-premium-mode .two-phone-code-input{width:100%;min-height:56px;border-radius:16px;border:1px solid rgba(147,197,253,.28);background:rgba(15,23,42,.72);color:#fff;text-align:center;font-size:28px;font-weight:1000;letter-spacing:4px;outline:none;}
     body.bt-premium-mode .two-phone-room-status{min-height:22px;margin-top:12px;color:#bfdbfe;font-size:13px;font-weight:900;text-align:center;}
     body.bt-premium-mode .two-phone-room-status.error{color:#fca5a5;}
     body.bt-premium-mode .two-phone-lang-bar{width:min(88vw,560px);margin:10px auto 6px;display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;position:relative;z-index:40;}
@@ -191,8 +174,7 @@ function injectTwoPhoneCss() {
     body.bt-premium-mode .two-phone-lang-label{color:rgba(191,219,254,.70);font-size:10px;font-weight:1000;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;}
     body.bt-premium-mode .two-phone-lang-value{margin-top:4px;max-width:100%;color:#fff;font-size:14px;font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     body.bt-premium-mode .two-phone-lang-arrow{display:flex;align-items:center;justify-content:center;color:#93c5fd;font-weight:1000;font-size:16px;text-shadow:0 0 16px rgba(59,130,246,.45);}
-    body.bt-premium-mode .two-phone-remote-pair{display:none!important;}
-    body.bt-premium-mode .two-phone-bt-status{display:none!important;}
+    body.bt-premium-mode .two-phone-remote-pair,.two-phone-bt-status{display:none!important;}
     body.bt-premium-mode .two-phone-footer-seal{position:fixed;left:50%;bottom:calc(4px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;pointer-events:none;color:rgba(255,255,255,.78);font-size:10px;line-height:1;font-weight:900;letter-spacing:.25px;text-shadow:none;white-space:nowrap;}
     body.bt-premium-mode .two-phone-lang-picker{position:fixed;inset:0;z-index:2147483647;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,23,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
     body.bt-premium-mode .two-phone-lang-picker.show{display:flex;}
@@ -233,11 +215,13 @@ function renderRoomHome(status = "") {
       <div class="two-phone-room-actions">
         <button id="twoPhoneCreateRoom" class="two-phone-room-btn" type="button">Görüşme başlat</button>
         <button id="twoPhoneJoinRoom" class="two-phone-room-btn secondary" type="button">Görüşmeye katıl</button>
+        <button id="twoPhoneHomeRoom" class="two-phone-room-btn home" type="button">Ana sayfaya dön</button>
       </div>
       <div id="twoPhoneRoomStatus" class="two-phone-room-status">${status}</div>
     </div>`;
   $("twoPhoneCreateRoom")?.addEventListener("click", () => showHostRoom());
   $("twoPhoneJoinRoom")?.addEventListener("click", () => showJoinRoom());
+  $("twoPhoneHomeRoom")?.addEventListener("click", goHome);
 }
 
 function showRoomGate(status = "") {
@@ -269,12 +253,14 @@ function showHostRoom() {
       <div id="twoPhoneRoomStatus" class="two-phone-room-status">Bağlanıyor…</div>
       <div class="two-phone-room-actions">
         <button id="twoPhoneRoomBack" class="two-phone-room-btn secondary" type="button">Geri</button>
+        <button id="twoPhoneHomeRoom" class="two-phone-room-btn home" type="button">Ana sayfaya dön</button>
       </div>
     </div>`;
   $("twoPhoneRoomBack")?.addEventListener("click", () => {
     closeRoomSocket();
     renderRoomHome();
   });
+  $("twoPhoneHomeRoom")?.addEventListener("click", goHome);
   connectRoom("host", code);
 }
 
@@ -289,17 +275,15 @@ function showJoinRoom() {
       <div class="two-phone-room-actions">
         <button id="twoPhoneConnectRoom" class="two-phone-room-btn" type="button">Bağlan</button>
         <button id="twoPhoneRoomBack" class="two-phone-room-btn secondary" type="button">Geri</button>
+        <button id="twoPhoneHomeRoom" class="two-phone-room-btn home" type="button">Ana sayfaya dön</button>
       </div>
     </div>`;
   const input = $("twoPhoneCodeInput");
-  input?.addEventListener("input", () => {
-    input.value = formatCode(input.value);
-  });
-  input?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") connectRoom("guest", input.value);
-  });
+  input?.addEventListener("input", () => { input.value = formatCode(input.value); });
+  input?.addEventListener("keydown", (event) => { if (event.key === "Enter") connectRoom("guest", input.value); });
   $("twoPhoneConnectRoom")?.addEventListener("click", () => connectRoom("guest", input?.value || ""));
   $("twoPhoneRoomBack")?.addEventListener("click", () => renderRoomHome());
+  $("twoPhoneHomeRoom")?.addEventListener("click", goHome);
   setTimeout(() => input?.focus(), 120);
 }
 
@@ -338,20 +322,19 @@ function connectRoom(role, rawCode) {
     handleRoomPayload(data);
   };
 
-  ws.onerror = () => {
-    setGateStatus("Bağlantı kurulamadı. Kodu kontrol edip tekrar deneyin.", true);
-  };
-
+  ws.onerror = () => setGateStatus("Bağlantı kurulamadı. Kodu kontrol edip tekrar deneyin.", true);
   ws.onclose = () => {
     if (leavingPage) return;
     const wasConnected = roomConnected;
     setConnected(false, false);
-    if (wasConnected) {
-      showRoomGate("Bağlantı kapandı. Tekrar bağlanabilirsiniz.");
-    } else if (!roomReady) {
-      setGateStatus("Bağlantı kurulamadı. Kodu kontrol edip tekrar deneyin.", true);
-    }
+    if (wasConnected) showRoomGate("Bağlantı kapandı. Tekrar bağlanabilir veya ana sayfaya dönebilirsiniz.");
+    else if (!roomReady) setGateStatus("Bağlantı kurulamadı. Kodu kontrol edip tekrar deneyin.", true);
   };
+}
+
+function findRemoteFromRoster(roster) {
+  if (!Array.isArray(roster)) return null;
+  return roster.find((p) => String(p?.from || p?.id || "") !== peerId) || null;
 }
 
 function handleRoomPayload(data) {
@@ -377,34 +360,36 @@ function handleRoomPayload(data) {
   }
 
   if (type === "peer_joined") {
+    const peer = data?.peer || findRemoteFromRoster(data?.roster);
+    if (peer?.me_lang) handleLangState({ myLang: peer.me_lang });
     if (roomRole === "host" && waitingForPeer) enterConversation();
     sendLangState();
     return;
   }
 
   if (type === "presence") {
-    const peers = Array.isArray(data?.peers) ? data.peers : [];
-    const remote = peers.find((p) => String(p?.id || p?.from || "") !== peerId);
+    const roster = Array.isArray(data?.roster) ? data.roster : (Array.isArray(data?.peers) ? data.peers : []);
+    const remote = findRemoteFromRoster(roster);
     if (remote?.me_lang) handleLangState({ myLang: remote.me_lang });
-    if (roomRole === "host" && waitingForPeer && peers.length >= 2) enterConversation();
+    if (roomRole === "host" && waitingForPeer && roster.length >= 2) enterConversation();
     return;
   }
 
-  if (type === "profile_updated") {
-    const from = String(data?.from || "");
-    if (from && from !== peerId) handleLangState({ myLang: data?.me_lang });
+  if (type === "profile_updated" || type === "language_update") {
+    const peer = data?.peer || data;
+    const sender = String(peer?.from || peer?.senderId || data?.from || data?.senderId || "");
+    const lang = peer?.me_lang || peer?.lang || data?.me_lang || data?.lang;
+    if ((!sender || sender !== peerId) && lang) handleLangState({ myLang: lang });
     return;
   }
 
   if (type === "peer_left") {
     setConnected(false, false);
-    showRoomGate("Karşı telefon ayrıldı. Yeni bir görüşme başlatabilir veya koda katılabilirsiniz.");
+    showRoomGate("Bağlantı kapandı. Tekrar bağlanabilir veya ana sayfaya dönebilirsiniz.");
     return;
   }
 
-  if (type === "message") {
-    handleRoomMessage(data);
-  }
+  if (type === "message") handleRoomMessage(data);
 }
 
 function enterConversation() {
@@ -430,7 +415,8 @@ function sendRoomJson(data) {
 
 function sendLangState() {
   if (!roomSocket || roomSocket.readyState !== WebSocket.OPEN) return;
-  sendRoomJson({ type: "profile_sync", from: peerId, from_name: "italkyAI", me_lang: myLang() });
+  const lang = myLang();
+  sendRoomJson({ type: "profile_sync", from: peerId, from_name: "italkyAI", me_lang: lang, role: roomRole });
 }
 
 function sendLeave() {
@@ -445,7 +431,7 @@ function goHome() {
 }
 
 function handleLangState(payload) {
-  const lang = canonical(payload.myLang || payload.me_lang || "");
+  const lang = canonical(payload.myLang || payload.me_lang || payload.lang || "");
   if (!lang) return;
   remoteLangState = { myLang: lang, myLangName: langLabel(lang), myFlag: langFlag(lang) };
   updateLanguageUi();
@@ -468,13 +454,11 @@ function ensureLanguageUi() {
     <div id="twoPhoneRemoteLang" class="two-phone-lang-card readonly" role="status" aria-live="polite">
       <span class="two-phone-lang-label">Karşı Dil</span>
       <span class="two-phone-lang-value"></span>
-    </div>
-  `;
+    </div>`;
 
   const remotePair = document.createElement("div");
   remotePair.id = "twoPhoneRemotePair";
   remotePair.className = "two-phone-remote-pair";
-
   const status = document.createElement("div");
   status.id = "twoPhoneBtStatus";
   status.className = "two-phone-bt-status";
@@ -552,7 +536,6 @@ function openLanguagePicker() {
       picker.classList.remove("show");
     });
   });
-
   picker.classList.add("show");
 }
 
@@ -583,10 +566,7 @@ function addLine(side, text, latest = false) {
   return div;
 }
 
-function setMicListening(value) {
-  $("botMic")?.classList.toggle("listening", !!value);
-}
-
+function setMicListening(value) { $("botMic")?.classList.toggle("listening", !!value); }
 function updateMicAvailability() {
   const mic = $("botMic");
   if (!mic) return;
@@ -630,24 +610,13 @@ function installTtsGuard() {
 
 async function translateIncoming(text, from, to) {
   const payload = {
-    text: clean(text),
-    from_lang: canonical(from || "auto"),
-    to_lang: canonical(to),
-    source: canonical(from || "auto"),
-    target: canonical(to),
-    mode: "normal",
-    use_ai: false,
-    cultural: false,
-    tone: "neutral"
+    text: clean(text), from_lang: canonical(from || "auto"), to_lang: canonical(to),
+    source: canonical(from || "auto"), target: canonical(to), mode: "normal", use_ai: false, cultural: false, tone: "neutral"
   };
   const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
   for (const endpoint of endpoints) {
     try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json().catch(() => null);
       const value = clean(data?.translated || data?.translation || data?.text || "");
       if (res.ok && value) return value;
@@ -673,9 +642,7 @@ function speakRemoteTranslation(text, lang) {
       window.speechSynthesis.speak(utterance);
     }
   } catch {}
-  finally {
-    allowRemoteTts = false;
-  }
+  finally { allowRemoteTts = false; }
   setTimeout(() => {
     speakingRemote = false;
     restartHandsFreeIfNeeded();
@@ -684,31 +651,15 @@ function speakRemoteTranslation(text, lang) {
 
 function sendLocalSpeech(text) {
   const value = clean(text);
-  if (!value) {
-    restartHandsFreeIfNeeded();
-    return;
-  }
-  if (!roomConnected) {
-    toast("Önce görüşme bağlantısı kurun.");
-    restartHandsFreeIfNeeded();
-    return;
-  }
+  if (!value) { restartHandsFreeIfNeeded(); return; }
+  if (!roomConnected) { toast("Önce görüşme bağlantısı kurun."); restartHandsFreeIfNeeded(); return; }
   const now = Date.now();
   if (value === lastSentText && now - lastSentAt < 2500) return;
   const src = myLang();
   const dst = remoteLang();
   lastSentText = value;
   lastSentAt = now;
-
-  const ok = sendRoomJson({
-    type: "message",
-    text: value,
-    lang: src,
-    messageId: makeMessageId(),
-    targetLang: dst,
-    origin: "local_speech",
-    sentAt: now
-  });
+  const ok = sendRoomJson({ type: "message", text: value, lang: src, messageId: makeMessageId(), targetLang: dst, origin: "local_speech", sentAt: now });
   if (!ok) toast("Mesaj gönderilemedi.");
   addLine("bot", value, true);
   setRemotePair(src, dst);
@@ -733,20 +684,12 @@ function parseSpeechResult(arg1, arg2, arg3) {
   let text = "";
   let isFinal = true;
   if (typeof arg1 === "string" && (arg1 === "top" || arg1 === "bot")) {
-    text = String(arg2 || "");
-    isFinal = arg3 !== false;
+    text = String(arg2 || ""); isFinal = arg3 !== false;
   } else if (typeof arg1 === "string") {
-    try {
-      const data = JSON.parse(arg1);
-      text = String(data?.text || data?.transcript || "");
-      isFinal = data?.isFinal !== false && data?.final !== false;
-    } catch {
-      text = arg1;
-      isFinal = arg3 !== false;
-    }
+    try { const data = JSON.parse(arg1); text = String(data?.text || data?.transcript || ""); isFinal = data?.isFinal !== false && data?.final !== false; }
+    catch { text = arg1; isFinal = arg3 !== false; }
   } else if (arg1 && typeof arg1 === "object") {
-    text = String(arg1.text || arg1.transcript || "");
-    isFinal = arg1.isFinal !== false && arg1.final !== false;
+    text = String(arg1.text || arg1.transcript || ""); isFinal = arg1.isFinal !== false && arg1.final !== false;
   }
   return { text: clean(text), isFinal };
 }
@@ -773,39 +716,18 @@ function handleSpeechError(errorMsg) {
 }
 
 function startSpeech() {
-  if (!roomConnected) {
-    toast("Önce görüşme bağlantısı kurun.");
-    showRoomGate();
-    return;
-  }
-  if (recording) {
-    stopSpeech();
-    return;
-  }
+  if (!roomConnected) { toast("Önce görüşme bağlantısı kurun."); showRoomGate(); return; }
+  if (recording) { stopSpeech(); return; }
   const lang = bcpFor(myLang());
   recording = true;
   setMicListening(true);
   try {
-    if (window.Native?.startSpeechRecognition) {
-      window.Native.startSpeechRecognition(lang, "bot");
-      return;
-    }
-    if (window.AndroidBridge?.startSpeechRecognition) {
-      window.AndroidBridge.startSpeechRecognition(lang, "bot");
-      return;
-    }
-  } catch (e) {
-    console.warn("[TWO_PHONE_ROOM] native speech start failed", e);
-  }
+    if (window.Native?.startSpeechRecognition) { window.Native.startSpeechRecognition(lang, "bot"); return; }
+    if (window.AndroidBridge?.startSpeechRecognition) { window.AndroidBridge.startSpeechRecognition(lang, "bot"); return; }
+  } catch (e) { console.warn("[TWO_PHONE_ROOM] native speech start failed", e); }
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    recording = false;
-    setMicListening(false);
-    toast("Bu cihazda konuşma tanıma hazır değil.");
-    return;
-  }
-
+  if (!SpeechRecognition) { recording = false; setMicListening(false); toast("Bu cihazda konuşma tanıma hazır değil."); return; }
   const rec = new SpeechRecognition();
   webRecognizer = rec;
   rec.lang = lang;
@@ -813,24 +735,13 @@ function startSpeech() {
   rec.interimResults = true;
   rec.onresult = (event) => {
     let finalText = "";
-    for (let i = event.resultIndex; i < event.results.length; i += 1) {
-      if (event.results[i].isFinal) finalText += event.results[i][0]?.transcript || "";
-    }
+    for (let i = event.resultIndex; i < event.results.length; i += 1) if (event.results[i].isFinal) finalText += event.results[i][0]?.transcript || "";
     if (finalText) handleSpeechResult("bot", finalText, true);
   };
   rec.onerror = (event) => handleSpeechError(event?.error || "speech_error");
-  rec.onend = () => {
-    if (recording) {
-      recording = false;
-      setMicListening(false);
-      restartHandsFreeIfNeeded();
-    }
-  };
+  rec.onend = () => { if (recording) { recording = false; setMicListening(false); restartHandsFreeIfNeeded(); } };
   try { rec.start(); }
-  catch (e) {
-    console.warn("[TWO_PHONE_ROOM] web speech start failed", e);
-    handleSpeechError("start_error");
-  }
+  catch (e) { console.warn("[TWO_PHONE_ROOM] web speech start failed", e); handleSpeechError("start_error"); }
 }
 
 function restartHandsFreeIfNeeded() {
@@ -865,10 +776,6 @@ function setConnected(value, notify = true) {
   }
 }
 
-function openConnectionGate() {
-  showRoomGate();
-}
-
 function bindControls(options = {}) {
   const botMic = $("botMic");
   const roomBtn = $("btToggleBtn");
@@ -877,48 +784,15 @@ function bindControls(options = {}) {
   const homeLink = $("homeLink");
   const homeHref = options.homeHref || HOME_HREF;
 
-  botMic?.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation?.();
-    startSpeech();
-  }, true);
-
-  botMic?.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    event.stopPropagation();
-    startSpeech();
-  }, true);
-
-  roomBtn?.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    openConnectionGate();
-  }, true);
-
+  botMic?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation?.(); startSpeech(); }, true);
+  botMic?.addEventListener("keydown", (event) => { if (event.key !== "Enter" && event.key !== " ") return; event.preventDefault(); event.stopPropagation(); startSpeech(); }, true);
+  roomBtn?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); showRoomGate(); }, true);
   hfBtn?.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    handsFree = !handsFree;
-    hfBtn.classList.toggle("active", handsFree);
-    if (handsFree) startSpeech();
-    else stopSpeech();
+    event.preventDefault(); event.stopPropagation(); handsFree = !handsFree; hfBtn.classList.toggle("active", handsFree);
+    if (handsFree) startSpeech(); else stopSpeech();
   }, true);
-
-  clearBtn?.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    clearPanel("top");
-    clearPanel("bot");
-  }, true);
-
-  homeLink?.addEventListener("click", (event) => {
-    event.preventDefault();
-    leavingPage = true;
-    sendLeave();
-    setTimeout(() => { location.href = homeHref; }, 80);
-  }, true);
+  clearBtn?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); clearPanel("top"); clearPanel("bot"); }, true);
+  homeLink?.addEventListener("click", (event) => { event.preventDefault(); leavingPage = true; sendLeave(); setTimeout(() => { location.href = homeHref; }, 80); }, true);
 }
 
 function bindBridge() {
@@ -926,9 +800,7 @@ function bindBridge() {
   window.onNativeSpeechResult = handleSpeechResult;
   window.onNativeSpeechError = handleSpeechError;
   window.__italkyStartHandsFreeListening = () => startSpeech();
-  window.addEventListener("pagehide", () => {
-    if (roomConnected && !leavingPage) sendLeave();
-  });
+  window.addEventListener("pagehide", () => { if (roomConnected && !leavingPage) sendLeave(); });
 }
 
 export function installTwoPhoneBluetoothMode(options = {}) {
