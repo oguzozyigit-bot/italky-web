@@ -19,6 +19,8 @@ const DICT = {
   "İletişim": { en: "Contact", de: "Kontakt", fr: "Contact", it: "Contatti", es: "Contacto" },
   "Güvenli Çıkış": { en: "Secure Logout", de: "Sicher abmelden", fr: "Déconnexion sécurisée", it: "Uscita sicura", es: "Cerrar sesión segura" },
   "Hesabımı Sil": { en: "Delete My Account", de: "Mein Konto löschen", fr: "Supprimer mon compte", it: "Elimina il mio account", es: "Eliminar mi cuenta" },
+  "Bizi Puanla": { en: "Rate Us", de: "Bewerte uns", fr: "Notez-nous", it: "Valutaci", es: "Califícanos" },
+  "Kısayol / Widget Ekle": { en: "Add Shortcut / Widget", de: "Verknüpfung / Widget hinzufügen", fr: "Ajouter un raccourci / widget", it: "Aggiungi scorciatoia / widget", es: "Añadir acceso directo / widget" },
 
   "Translation": { en: "Translation", de: "Übersetzung", fr: "Traduction", it: "Traduzione", es: "Traducción" },
   "Tercihler": { en: "Preferences", de: "Einstellungen", fr: "Préférences", it: "Preferenze", es: "Preferencias" },
@@ -212,3 +214,131 @@ export function installAutoTranslate(root = document.body) {
     subtree: true
   });
 }
+
+function showMenuPolicyMessage(message) {
+  const text = String(message || "").trim();
+  if (!text) return;
+  try {
+    if (typeof window.showToast === "function") {
+      window.showToast(text);
+      return;
+    }
+  } catch {}
+  const existing = document.getElementById("italkyMenuPolicyToast");
+  if (existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.id = "italkyMenuPolicyToast";
+  toast.textContent = text;
+  toast.style.cssText = "position:fixed;left:50%;top:22px;transform:translateX(-50%);max-width:min(92vw,430px);padding:11px 14px;border-radius:16px;background:rgba(10,16,30,.96);border:1px solid rgba(255,255,255,.14);color:#fff;font-family:Outfit,system-ui,sans-serif;font-size:12px;font-weight:900;text-align:center;z-index:2147483647;box-shadow:0 18px 38px rgba(0,0,0,.38);";
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
+}
+
+function isShellGuestMenu(nav) {
+  const login = nav?.querySelector?.("#menuLoginLink");
+  const profile = nav?.querySelector?.("#profileLink");
+  const loginVisible = !!login && !login.hidden && getComputedStyle(login).display !== "none";
+  const profileVisible = !!profile && !profile.hidden && getComputedStyle(profile).display !== "none";
+  try {
+    if (localStorage.getItem("italky_guest_mode_v1") === "1" && loginVisible) return true;
+  } catch {}
+  return loginVisible && !profileVisible;
+}
+
+function openPlayStoreRating() {
+  const packageName = "com.ozyigits.italkyai";
+  const marketUrl = `market://details?id=${packageName}`;
+  const webUrl = `https://play.google.com/store/apps/details?id=${packageName}`;
+  try {
+    const bridge = window.AndroidBridge || window.Native || window.AndroidAppBridge;
+    if (bridge?.openAppReview) { bridge.openAppReview(); return; }
+    if (bridge?.rateApp) { bridge.rateApp(); return; }
+    if (bridge?.openPlayStore) { bridge.openPlayStore(); return; }
+  } catch {}
+  try {
+    window.location.href = marketUrl;
+    setTimeout(() => {
+      try { window.location.href = webUrl; }
+      catch { showMenuPolicyMessage("Puanlama sayfası açılamadı. Lütfen daha sonra tekrar deneyin."); }
+    }, 650);
+  } catch {
+    showMenuPolicyMessage("Puanlama sayfası açılamadı. Lütfen daha sonra tekrar deneyin.");
+  }
+}
+
+function requestWidgetPin() {
+  const bridge = window.AndroidBridge || window.Native || window.AndroidAppBridge;
+  const methods = ["requestPinWidget", "pinWidget", "pinAppWidget", "pinAppShortcut", "requestPinShortcut", "addHomeShortcut", "addShortcut"];
+  for (const method of methods) {
+    try {
+      if (bridge && typeof bridge[method] === "function") {
+        bridge[method]();
+        return;
+      }
+    } catch {}
+  }
+  showMenuPolicyMessage("Bu cihazda otomatik widget ekleme desteklenmiyor. Ana ekrandan widget ekleyebilirsiniz.");
+}
+
+function createShellMenuButton(id, label, onClick) {
+  const btn = document.createElement("button");
+  btn.id = id;
+  btn.type = "button";
+  btn.className = "menu-action member-only-menu-action";
+  btn.setAttribute("data-i18n", "");
+  btn.textContent = label;
+  btn.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onClick();
+  });
+  return btn;
+}
+
+function applyMemberGuestMenuPolicy() {
+  const nav = document.querySelector(".menu-nav");
+  if (!nav) return;
+
+  nav.querySelectorAll("#logoutBtn,[data-menu-policy='logout']").forEach((el) => el.remove());
+  Array.from(nav.querySelectorAll("button,a")).forEach((el) => {
+    const text = (el.textContent || "").toLocaleLowerCase("tr-TR");
+    if (text.includes("güvenli çıkış") || text.includes("çıkış yap") || text.trim() === "logout") {
+      el.remove();
+    }
+  });
+
+  const guest = isShellGuestMenu(nav);
+  nav.querySelectorAll("#memberRateAppBtn,#memberPinWidgetBtn").forEach((el) => el.remove());
+  if (guest) return;
+
+  const privacy = nav.querySelector("a[href='/pages/privacy.html']") || nav.querySelector("#privacyLink");
+  const anchor = privacy || nav.lastElementChild;
+  const rate = createShellMenuButton("memberRateAppBtn", "Bizi Puanla", openPlayStoreRating);
+  const widget = createShellMenuButton("memberPinWidgetBtn", "Kısayol / Widget Ekle", requestWidgetPin);
+
+  if (anchor?.parentNode) {
+    anchor.insertAdjacentElement("afterend", widget);
+    anchor.insertAdjacentElement("afterend", rate);
+  } else {
+    nav.append(rate, widget);
+  }
+}
+
+function installMemberGuestMenuPolicy() {
+  if (window.__ITALKY_MEMBER_GUEST_MENU_POLICY__) return;
+  window.__ITALKY_MEMBER_GUEST_MENU_POLICY__ = true;
+  const run = () => applyMemberGuestMenuPolicy();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run, { once: true });
+  } else {
+    run();
+  }
+  setTimeout(run, 200);
+  setTimeout(run, 900);
+  const menuObserver = new MutationObserver(() => run());
+  try {
+    menuObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "style", "class"] });
+  } catch {}
+}
+
+installMemberGuestMenuPolicy();
