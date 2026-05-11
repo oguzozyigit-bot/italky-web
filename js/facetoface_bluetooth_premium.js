@@ -80,12 +80,24 @@ function injectPremiumUiCss() {
     }
 
     body#frameRoot.bt-premium-mode .mic-line{
-      transform:translateY(0)!important;
+      grid-template-columns:minmax(72px,1fr) 70px minmax(104px,1fr)!important;
+      gap:12px!important;
+      padding:0 14px!important;
+      transform:translateY(-3px)!important;
       align-items:center!important;
     }
 
+    body#frameRoot.bt-premium-mode .mic-line .mic-side{
+      min-width:0!important;
+    }
+
+    body#frameRoot.bt-premium-mode .mic-line .mic-side:last-child{
+      justify-content:flex-start!important;
+      padding-left:8px!important;
+    }
+
     body#frameRoot.bt-premium-mode .half-screen.bottom .composer-stack{
-      transform:translateY(0)!important;
+      transform:translateY(-3px)!important;
     }
 
     body#frameRoot.bt-premium-mode .premium-bt-hint{
@@ -170,20 +182,28 @@ function injectPremiumUiCss() {
       bottom:auto!important;
       transform:none!important;
       z-index:70!important;
-      max-width:112px!important;
+      width:auto!important;
+      max-width:108px!important;
+      min-height:40px!important;
       white-space:nowrap!important;
-      padding:8px 10px!important;
+      padding:7px 10px!important;
       font-size:10px!important;
+      flex-shrink:1!important;
     }
 
     body#frameRoot.bt-premium-mode #handsFreeToggle span{
       display:inline!important;
+      overflow:hidden!important;
+      text-overflow:ellipsis!important;
     }
 
     @media(max-width:390px){
+      body#frameRoot.bt-premium-mode .mic-line{grid-template-columns:minmax(66px,1fr) 66px minmax(74px,1fr)!important;gap:8px!important;padding:0 10px!important;transform:translateY(-3px)!important;}
+      body#frameRoot.bt-premium-mode .mic-line .mic-side:last-child{padding-left:5px!important;}
       body#frameRoot.bt-premium-mode #btToggleBtn{left:36px!important;width:44px!important;height:44px!important;}
-      body#frameRoot.bt-premium-mode #handsFreeToggle{padding:7px 8px!important;font-size:9px!important;max-width:98px!important;}
-      body#frameRoot.bt-premium-mode #handsFreeToggle svg{width:14px!important;height:14px!important;}
+      body#frameRoot.bt-premium-mode #handsFreeToggle{width:42px!important;height:42px!important;min-height:42px!important;max-width:42px!important;padding:0!important;justify-content:center!important;gap:0!important;}
+      body#frameRoot.bt-premium-mode #handsFreeToggle span{display:none!important;}
+      body#frameRoot.bt-premium-mode #handsFreeToggle svg{width:16px!important;height:16px!important;}
       body#frameRoot.bt-premium-mode .premium-bt-hint{width:min(76vw,340px);margin-top:10px;padding:10px 12px;font-size:11px;}
     }
   `;
