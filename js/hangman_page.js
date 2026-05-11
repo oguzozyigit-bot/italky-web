@@ -78,6 +78,7 @@ function toast(msg) {
 
 function injectHangmanUiPolish() {
   document.body.classList.add("hangman-game-screen");
+  document.getElementById("hangmanMobileScoreBarFix")?.remove();
   if (HAS_GAME_MENU_LANG) document.body.classList.add("hangman-direct-start");
   if ($("hangmanUiPolish")) return;
   const style = document.createElement("style");
@@ -277,67 +278,45 @@ function playWrongSound() { playTone(190, 0.08, 0, "sine", 0.022); playTone(135,
 function playJokerSound() { playTone(420, 0.08, 0, "triangle", 0.018); }
 ["pointerdown", "touchstart", "click"].forEach((evt) => window.addEventListener(evt, () => getAudioContext(), { once: true, passive: true }));
 
-function normalizeWordItem(item, lang) {
+function normalizeWordItem(item) {
   if (!item || typeof item !== "object") return null;
-  const clue = String(item.tr || item.turkish || item.meaning_tr || item.clue_tr || "").trim();
-  const answer = normalizeWord(item[lang] || item.answer?.[lang] || item.word?.[lang] || item.target?.[lang]);
+  const rawWord = item.word ?? item.w ?? item.text ?? item.term ?? item.answer ?? "";
+  const rawMeaning = item.meaning ?? item.tr ?? item.translation ?? item.hint ?? "";
+  const clue = String(rawMeaning || "").trim();
+  const answer = normalizeWord(rawWord);
   if (!clue || !answer || answer.length < 2) return null;
   return { w: answer, clue };
 }
 
-async function fetchWordsFromLangStorage(lang) {
-  try {
-    const res = await fetch("/data/game_word_sets.json", { cache: "no-store" });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const sources = [data?.hangman, data?.hangman?.words, data?.words, data];
-    const out = [];
-    for (const source of sources) {
-      if (!source) continue;
-      const list = Array.isArray(source) ? source : source.common || source.items || source.vocabulary;
-      if (!Array.isArray(list)) continue;
-      list.map((item) => normalizeWordItem(item, lang)).filter(Boolean).forEach((item) => out.push(item));
-    }
-    return out;
-  } catch (err) {
-    console.warn("[HANGMAN] word fetch failed", err);
-    return [];
-  }
+function getPublicLangUrl(langCode) {
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
 }
 
-async function fetchWordsFromSupabase(lang) {
-  const tableCandidates = [
-    "game_words",
-    "learning_words",
-    "vocabulary_words",
-    "vocabulary",
-    "words",
-  ];
-  try {
-    const { supabase } = await import("/js/supabase_client.js");
-    for (const table of tableCandidates) {
-      try {
-        const { data, error } = await supabase.from(table).select("*").limit(300);
-        if (error || !Array.isArray(data) || !data.length) continue;
-        const mapped = data
-          .filter((item) => {
-            const slug = String(item.game_slug || item.game || item.slug || item.type || "").toLowerCase();
-            return !slug || slug === GAME_SLUG || slug.includes("hangman") || slug.includes("word");
-          })
-          .map((item) => normalizeWordItem(item, lang))
-          .filter(Boolean);
-        if (mapped.length) {
-          console.info("[HANGMAN] words loaded from Supabase", { table, count: mapped.length, lang });
-          return mapped;
-        }
-      } catch (inner) {
-        console.warn("[HANGMAN] Supabase word table skipped", { table, inner });
-      }
+function extractItems(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    for (const key of ["items", "words", "data", "list", "entries", "pool"]) {
+      if (Array.isArray(payload[key])) return payload[key];
     }
-  } catch (err) {
-    console.warn("[HANGMAN] Supabase word load failed", err);
   }
   return [];
+}
+
+async function loadCodeCrackerPool(langCode) {
+  try {
+    const res = await fetch(getPublicLangUrl(langCode), { cache: "no-store" });
+    if (!res.ok) {
+      console.warn("[HANGMAN] Code Cracker pool fetch failed", { source: "storage:lang", langCode, status: res.status });
+      return [];
+    }
+    const json = await res.json();
+    const items = extractItems(json).map(normalizeWordItem).filter(Boolean);
+    console.info("[HANGMAN] words loaded from Code Cracker pool", { source: "storage:lang", langCode, rowCount: items.length });
+    return items;
+  } catch (err) {
+    console.warn("[HANGMAN] Code Cracker pool load failed", { source: "storage:lang", langCode, error: err });
+    return [];
+  }
 }
 
 function showContentUnavailable() {
@@ -350,9 +329,8 @@ function showContentUnavailable() {
 }
 
 async function loadData(lang) {
-  const storageWords = await fetchWordsFromLangStorage(lang);
-  const remoteWords = storageWords.length ? storageWords : await fetchWordsFromSupabase(lang);
-  state.words = remoteWords;
+  const poolWords = await loadCodeCrackerPool(lang);
+  state.words = poolWords;
   state.lang = lang;
   state.contentReady = state.words.length > 0;
   if (!state.contentReady) {
