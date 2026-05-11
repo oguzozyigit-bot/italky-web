@@ -7,6 +7,8 @@ const SUPPORTED = ["en", "de", "fr", "it", "es"];
   window.__ITALKY_STABLE_MEMBER_MENU_POLICY__ = true;
   window.__ITALKY_MEMBER_GUEST_MENU_POLICY__ = true;
 
+  const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+
   function notify(message) {
     const text = String(message || "").trim();
     if (!text) return;
@@ -42,7 +44,6 @@ const SUPPORTED = ["en", "de", "fr", "it", "es"];
   }
 
   function openRate() {
-    const packageName = "com.ozyigits.italkyai";
     try {
       const bridge = findNativeBridge();
       if (bridge?.openAppReview) { bridge.openAppReview(); return; }
@@ -50,11 +51,7 @@ const SUPPORTED = ["en", "de", "fr", "it", "es"];
       if (bridge?.openPlayStore) { bridge.openPlayStore(); return; }
     } catch {}
     try {
-      window.location.href = `market://details?id=${packageName}`;
-      setTimeout(() => {
-        try { window.location.href = `https://play.google.com/store/apps/details?id=${packageName}`; }
-        catch { notify("Puanlama sayfası açılamadı. Lütfen daha sonra tekrar deneyin."); }
-      }, 650);
+      window.location.href = PLAY_STORE_URL;
     } catch {
       notify("Puanlama sayfası açılamadı. Lütfen daha sonra tekrar deneyin.");
     }
