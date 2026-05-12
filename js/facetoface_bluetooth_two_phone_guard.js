@@ -144,8 +144,7 @@ function closeRejectedSocket(socket) {
   try { socket?.close?.(); } catch {}
 }
 
-function showSelfRoomFull(socket, targetDeviceId = "") {
-  rejectRoomFull(socket, targetDeviceId);
+function showSelfRoomFull() {
   setConnectionState("full");
   setRoomStatus(ROOM_FULL_MESSAGE, true);
   toast(ROOM_FULL_MESSAGE);
@@ -165,9 +164,7 @@ function handlePresence(socket, data) {
 
   if (uniqueIds.length > 2) {
     if (myIndex >= 2 || (!remoteDeviceId && roomRole !== "host" && remoteCandidates.length > 1)) {
-      setConnectionState("full");
-      setRoomStatus(ROOM_FULL_MESSAGE, true);
-      toast(ROOM_FULL_MESSAGE);
+      showSelfRoomFull();
       btLog("room full rejected", { deviceId: localDeviceId, roster: uniqueIds, selfRejected: true });
       closeRejectedSocket(socket);
       return false;
@@ -243,7 +240,7 @@ function handleGuardPayload(socket, data) {
     const target = String(data?.to || "").trim();
     if (target && target !== localDeviceId) return false;
     if (data?.accepted === false || data?.reason === "room_full") {
-      showSelfRoomFull(socket, senderIdOf(data));
+      showSelfRoomFull();
       btLog("room full rejected", { by: senderIdOf(data), reason: data?.reason || "rejected" });
       closeRejectedSocket(socket);
       return false;
@@ -312,6 +309,7 @@ function patchSocket(socket, url) {
 
   const nativeSend = socket.send.bind(socket);
   const nativeClose = socket.close.bind(socket);
+  const nativeAddEventListener = socket.addEventListener.bind(socket);
   socket.__italkyNativeSend = nativeSend;
 
   socket.send = function guardedSend(raw) {
@@ -347,26 +345,25 @@ function patchSocket(socket, url) {
   Object.defineProperty(socket, "onmessage", {
     configurable: true,
     get() { return guardedOnMessage; },
-    set(handler) {
-      guardedOnMessage = function guardedMessage(event) {
-        let data = null;
-        try { data = JSON.parse(event?.data); } catch {}
-        btLog("ws message", { type: data?.type || "raw" });
-        if (data && !handleGuardPayload(socket, data)) return;
-        if (typeof handler === "function") return handler.call(socket, event);
-        return undefined;
-      };
-    }
+    set(handler) { guardedOnMessage = handler; }
   });
 
-  socket.addEventListener("open", () => {
+  nativeAddEventListener("message", (event) => {
+    let data = null;
+    try { data = JSON.parse(event?.data); } catch {}
+    btLog("ws message", { type: data?.type || "raw" });
+    if (data && !handleGuardPayload(socket, data)) return;
+    if (typeof guardedOnMessage === "function") guardedOnMessage.call(socket, event);
+  });
+
+  nativeAddEventListener("open", () => {
     btLog("ws open", { url: String(url || ""), state: connectionState });
   });
-  socket.addEventListener("error", () => {
+  nativeAddEventListener("error", () => {
     btLog("connect retry n", { attempt: joinAttempt + 1, reason: "socket_error" });
     setTimeout(() => maybeScheduleRetry(socket, "socket_error"), 40);
   });
-  socket.addEventListener("close", () => {
+  nativeAddEventListener("close", () => {
     if (connectionState === "full") return;
     setTimeout(() => maybeScheduleRetry(socket, "socket_close"), 40);
   });
