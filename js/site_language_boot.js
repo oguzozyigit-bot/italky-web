@@ -123,7 +123,7 @@ function applySiteLang(lang) {
   document.documentElement.lang = finalLang;
   patchTwoPhoneHomeCopy();
   patchHomeGreeting();
-  injectMultiChatHomeCard();
+  removeMultiChatHomeCard();
   patchMultiChatDemoComposer();
   emitSiteLangReady(finalLang);
   return finalLang;
@@ -223,79 +223,10 @@ function installHomePolishStyle() {
   document.head.appendChild(style);
 }
 
-function installMultiChatHomeCardStyle() {
+function removeMultiChatHomeCard() {
   if (!isHomePage()) return;
-  if (document.getElementById("italkyMultiChatHomeCardStyle")) return;
-
-  const style = document.createElement("style");
-  style.id = "italkyMultiChatHomeCardStyle";
-  style.textContent = `
-    .multi-chat-home-card {
-      color: #082033 !important;
-      background:
-        radial-gradient(circle at 12% 30%, rgba(255,255,255,.52), transparent 25%),
-        radial-gradient(circle at 86% 12%, rgba(255,255,255,.60), transparent 24%),
-        linear-gradient(135deg, #00AEEF 0%, #38BDF8 45%, #E0F7FF 100%) !important;
-      border-color: rgba(224,247,255,.70) !important;
-      box-shadow: 0 18px 44px rgba(56,189,248,.24), inset 0 1px 0 rgba(255,255,255,.44) !important;
-    }
-    .multi-chat-home-card::before {
-      background:
-        linear-gradient(135deg, rgba(255,255,255,.36), transparent 44%, rgba(255,255,255,.28)),
-        radial-gradient(circle at 78% 68%, rgba(14,165,233,.20), transparent 28%) !important;
-    }
-    .multi-chat-home-card .wide-kicker,
-    .multi-chat-home-card .wide-desc {
-      color: rgba(8,32,51,.74) !important;
-    }
-    .multi-chat-home-card .wide-title {
-      color: #041827 !important;
-      text-shadow: 0 1px 0 rgba(255,255,255,.34);
-    }
-    .multi-chat-home-card .wide-icon,
-    .multi-chat-home-card .arrow-chip {
-      background: rgba(255,255,255,.42) !important;
-      border-color: rgba(255,255,255,.58) !important;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.36), 0 10px 24px rgba(2,132,199,.16) !important;
-    }
-    .multi-chat-home-card .wide-icon svg {
-      stroke: #053047 !important;
-    }
-    .multi-chat-home-card .arrow-chip::before {
-      border-color: #053047 !important;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-function injectMultiChatHomeCard() {
-  if (!isHomePage()) return;
-  if (document.getElementById("multiChatCard")) return;
-
-  installMultiChatHomeCardStyle();
-
-  const guideCard = document.getElementById("guideConferenceCard");
-  const stack = guideCard?.parentElement || document.querySelector(".wide-stack");
-  if (!stack) return;
-
-  const card = document.createElement("a");
-  card.id = "multiChatCard";
-  card.className = "wide-card multi-chat-home-card";
-  card.href = "/pages/multi_chat_demo.html";
-  card.innerHTML = `
-    <div class="wide-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M7 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path><path d="M17 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path><path d="M3 21a5 5 0 0 1 8 0"></path><path d="M13.5 21a4.5 4.5 0 0 1 7 0"></path><path d="M8.5 13h7"></path><path d="M13 10l2.5 3L13 16"></path></svg>
-    </div>
-    <div class="wide-body">
-      <div class="wide-kicker">Canlı Sohbet</div>
-      <h2 class="wide-title">Çoklu Katılımcı</h2>
-      <p class="wide-desc">İstediğiniz kadar kişi aynı odaya katılsın. Herkes kendi dilinde yazsın, herkes kendi dilinde anlasın.</p>
-    </div>
-    <div class="arrow-chip"></div>
-  `;
-
-  if (guideCard) stack.insertBefore(card, guideCard);
-  else stack.prepend(card);
+  document.getElementById("multiChatCard")?.remove();
+  document.getElementById("italkyMultiChatHomeCardStyle")?.remove();
 }
 
 function installMultiChatComposerStyle() {
@@ -487,11 +418,10 @@ async function detectSiteLang() {
 export async function resolveSiteLanguage() {
   installUiSafetyStyle();
   installHomePolishStyle();
-  installMultiChatHomeCardStyle();
   installMultiChatComposerStyle();
   patchTwoPhoneHomeCopy();
   patchHomeGreeting();
-  injectMultiChatHomeCard();
+  removeMultiChatHomeCard();
   patchMultiChatDemoComposer();
 
   if (window.__ITALKY_SITE_LANG_BOOT_PROMISE__) return window.__ITALKY_SITE_LANG_BOOT_PROMISE__;
