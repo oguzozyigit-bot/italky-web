@@ -46,6 +46,30 @@
       justify-content:center;
     }
 
+    body.auth-checking .main,
+    body.auth-checking footer{ visibility:hidden; opacity:0; }
+    body.auth-checking::after{
+      content:"italkyAI\A BE FREE\A Yükleniyor...";
+      white-space:pre;
+      position:fixed;
+      inset:0;
+      z-index:9998;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-family:'Outfit',sans-serif;
+      font-size:15px;
+      line-height:1.9;
+      font-weight:1000;
+      letter-spacing:.5px;
+      color:#fff;
+      background:
+        radial-gradient(circle at 25% 20%, rgba(0,242,255,.12), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(255,0,122,.10), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(15,8,22,1) 0%, #060408 100%);
+    }
+
     .nebula{
       position:fixed;
       inset:0;
@@ -312,7 +336,7 @@
   </style>
 </head>
 
-<body>
+<body class="auth-checking">
   <div class="nebula"></div>
 
   <div class="main">
@@ -447,14 +471,18 @@
     const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
     const MARKET_URL = "market://details?id=com.ozyigits.italkyai";
     const MARKET_INTENT_URL = "intent://details?id=com.ozyigits.italkyai#Intent;scheme=market;package=com.android.vending;end";
+    const HOME = "/pages/home.html";
     const MEMBERSHIP = "/pages/membership.html";
     const CALLBACK = "/pages/auth_callback.html";
+    const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
     const GUEST_MODE_KEY = "italky_guest_mode_v1";
     const DEFAULT_AFTER_LOGIN = MEMBERSHIP;
 
     let googlePressBusy = false;
     let guestPressBusy = false;
     window.__italkyUpdateRequired = false;
+
+    function unlockLoginUi(){ document.body.classList.remove("auth-checking"); }
 
     function toast(msg){
       if(!toastEl) return;
@@ -476,6 +504,41 @@
     function isRateLimitError(error){
       const msg = String(error?.message || error || "").toLowerCase();
       return msg.includes("rate limit") || msg.includes("too many") || msg.includes("429");
+    }
+
+    function isActiveAccess(access){
+      return Boolean(
+        access?.access_open ||
+        access?.ads_disabled ||
+        access?.no_ads ||
+        access?.is_no_ads_member ||
+        access?.subscription_active ||
+        access?.has_active_membership ||
+        access?.is_member ||
+        access?.package_active ||
+        access?.plan === "premium" ||
+        access?.app_access_mode === "premium" ||
+        access?.promo_active ||
+        access?.nfc_active
+      );
+    }
+
+    async function fetchAccessStateSafe(session){
+      try{
+        if(!session?.access_token) return null;
+        const resp = await fetch(ACCESS_API, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store"
+        });
+        const json = await resp.json().catch(() => ({}));
+        authDebug("login access-state", { status: resp.status, ok: resp.ok, accessOpen: !!json?.access_open });
+        if(!resp.ok) return null;
+        return json || null;
+      }catch(e){
+        authDebug("login access-state failed", { message: e?.message || String(e || "") });
+        return null;
+      }
     }
 
     function shouldProcessNativeToken(idToken){
@@ -725,20 +788,36 @@
       }
     }
 
+    async function resolvePostLoginTarget(){
+      const next = getNextTarget();
+      try{
+        const { data:{ session } } = await supabase.auth.getSession();
+        const access = await fetchAccessStateSafe(session);
+        if(isActiveAccess(access)) return HOME;
+      }catch(e){
+        authDebug("resolve post-login target failed", { message: e?.message || String(e || "") });
+      }
+      return next || DEFAULT_AFTER_LOGIN;
+    }
+
     async function routeAfterLogin(){
       try{
         await ensureAuthAndCacheUser();
         clearGuestMode();
         const bonus = await grantSignupBonusOnce();
-        const next = getNextTarget();
-        const target = next || DEFAULT_AFTER_LOGIN;
+        const target = await resolvePostLoginTarget();
+        const silent = document.body.classList.contains("auth-checking");
+        if(silent){
+          location.replace(target);
+          return;
+        }
         if(bonus?.bonus_granted){
           toast("5 jeton hediyeniz tanımlandı.");
-          setTimeout(() => location.replace(target), 700);
+          setTimeout(() => location.replace(target), 500);
           return;
         }
         toast("Giriş başarılı.");
-        setTimeout(() => location.replace(target), 350);
+        setTimeout(() => location.replace(target), 250);
       }catch(e){
         authDebug("routeAfterLogin fallback", { message: e?.message || String(e || "") });
         clearGuestMode();
@@ -903,10 +982,14 @@
       try{
         if(window.__italkyUpdateRequired) return;
         const { data:{ session } } = await supabase.auth.getSession();
-        if(!session) return;
+        if(!session){
+          unlockLoginUi();
+          return;
+        }
         await routeAfterLogin();
       }catch(e){
         authDebug("login boot failed", { message: e?.message || String(e || "") });
+        unlockLoginUi();
         resetLoginButtons();
       }
     })();
