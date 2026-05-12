@@ -413,6 +413,136 @@
       color:#fff;
     }
 
+    #confirmBackdrop.offline-first-setup{
+      align-items:flex-end;
+      justify-content:center;
+      padding:18px 14px calc(18px + var(--safe-bottom) + var(--shellLift));
+      background:
+        radial-gradient(circle at 50% 100%, rgba(56,189,248,.24), transparent 46%),
+        rgba(1,6,18,.72);
+      backdrop-filter:blur(18px) saturate(1.2);
+      -webkit-backdrop-filter:blur(18px) saturate(1.2);
+    }
+
+    #confirmBackdrop.offline-first-setup .modal{
+      position:relative;
+      width:min(94vw, 560px);
+      max-height:min(82vh, 640px);
+      overflow:auto;
+      border-radius:30px;
+      padding:24px 22px 22px;
+      border:1px solid rgba(125,211,252,.28);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(56,189,248,.24), transparent 34%),
+        radial-gradient(circle at 85% 15%, rgba(99,102,241,.20), transparent 30%),
+        linear-gradient(155deg, rgba(8,31,61,.98), rgba(4,10,26,.98) 54%, rgba(2,6,23,.98));
+      box-shadow:0 -18px 70px rgba(14,165,233,.24), 0 26px 80px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.10);
+      scrollbar-width:none;
+    }
+
+    #confirmBackdrop.offline-first-setup .modal::-webkit-scrollbar{
+      display:none;
+    }
+
+    #confirmBackdrop.offline-first-setup .modal::before{
+      content:"";
+      display:block;
+      width:54px;
+      height:5px;
+      margin:0 auto 18px;
+      border-radius:999px;
+      background:rgba(186,230,253,.55);
+      box-shadow:0 0 18px rgba(56,189,248,.32);
+    }
+
+    #confirmBackdrop.offline-first-setup .modal-title{
+      position:relative;
+      margin:0 0 14px;
+      padding-left:46px;
+      font-size:25px;
+      letter-spacing:-.35px;
+      color:#f8fbff;
+    }
+
+    #confirmBackdrop.offline-first-setup .modal-title::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:50%;
+      width:34px;
+      height:34px;
+      margin-top:-17px;
+      border-radius:14px;
+      background:linear-gradient(135deg,#38bdf8,#2563eb);
+      box-shadow:0 0 24px rgba(56,189,248,.38), inset 0 1px 0 rgba(255,255,255,.30);
+    }
+
+    #confirmBackdrop.offline-first-setup .modal-title::after{
+      content:"";
+      position:absolute;
+      left:11px;
+      top:50%;
+      width:12px;
+      height:12px;
+      margin-top:-6px;
+      border-radius:50%;
+      border:3px solid rgba(255,255,255,.92);
+      border-top-color:rgba(255,255,255,.28);
+      animation:offlineSpin 1s linear infinite;
+    }
+
+    #confirmBackdrop.offline-first-setup .modal-text{
+      padding:16px;
+      border-radius:22px;
+      border:1px solid rgba(186,230,253,.16);
+      background:rgba(15,23,42,.38);
+      color:rgba(239,246,255,.90);
+      font-size:14px;
+      line-height:1.62;
+      font-weight:750;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+    }
+
+    #confirmBackdrop.offline-first-setup .modal-text::after{
+      content:"Hazırlanıyor...";
+      display:inline-flex;
+      margin-top:14px;
+      padding:8px 12px;
+      border-radius:999px;
+      color:#dff7ff;
+      background:rgba(14,165,233,.16);
+      border:1px solid rgba(125,211,252,.20);
+      font-size:12px;
+      font-weight:1000;
+      letter-spacing:.2px;
+    }
+
+    #confirmBackdrop.offline-first-setup .modal-actions{
+      margin-top:16px;
+      display:block;
+    }
+
+    #confirmBackdrop.offline-first-setup #confirmCancel{
+      display:none;
+    }
+
+    #confirmBackdrop.offline-first-setup #confirmOk{
+      width:100%;
+      min-height:58px;
+      height:auto;
+      border-radius:20px;
+      color:#02111f;
+      background:linear-gradient(135deg,#7dd3fc,#22d3ee 48%,#e0f7ff);
+      border:1px solid rgba(224,247,255,.75);
+      box-shadow:0 16px 38px rgba(34,211,238,.24), inset 0 1px 0 rgba(255,255,255,.60);
+      font-size:14px;
+      letter-spacing:.9px;
+    }
+
+    @keyframes offlineSpin{
+      to{ transform:rotate(360deg); }
+    }
+
     .picker-list{
       margin-top:16px;
       max-height:58vh;
@@ -486,6 +616,8 @@
       .hero-title{ font-size:24px; }
       .hero-sub{ font-size:15px; }
       .modal-actions{ flex-direction:column; }
+      #confirmBackdrop.offline-first-setup .modal-title{font-size:22px;}
+      #confirmBackdrop.offline-first-setup .modal-text{font-size:13px;line-height:1.56;}
     }
   </style>
 </head>
@@ -555,11 +687,65 @@
     </div>
   </div>
 
+  <script>
+    (() => {
+      const SEEN_KEY = "italky_offline_first_setup_notice_seen_v1";
+      const PAIRS_KEY = "italky_offline_installed_pairs_v7";
+      const backdrop = document.getElementById("confirmBackdrop");
+      const title = document.getElementById("confirmTitle");
+      const text = document.getElementById("confirmText");
+      const ok = document.getElementById("confirmOk");
+
+      const setupText = "Offline çeviri sistemini ilk kez kuruyorsunuz. Bu işlem sırasında gerekli dil motorları ve konuşma bileşenleri cihazınıza hazırlanır.\n\nKurulum süresi telefon modelinize, internet hızınıza ve sistem yoğunluğuna göre değişebilir. İlk kurulum bazı cihazlarda daha uzun sürebilir.\n\nSonraki dil indirmeleri genellikle çok daha hızlı tamamlanır ve çoğu zaman birkaç dakika içinde kullanılabilir hale gelir.\n\nKurulum arka planda devam ederken uygulamayı kullanmaya devam edebilirsiniz.";
+
+      function hasInstalledPairs() {
+        try {
+          const pairs = JSON.parse(localStorage.getItem(PAIRS_KEY) || "{}");
+          return !!pairs && typeof pairs === "object" && Object.keys(pairs).length > 0;
+        } catch {
+          return false;
+        }
+      }
+
+      function shouldUpgradeConfirm() {
+        return !!backdrop?.classList.contains("show") &&
+          !localStorage.getItem(SEEN_KEY) &&
+          !hasInstalledPairs() &&
+          /indirilsin mi/i.test(String(title?.textContent || ""));
+      }
+
+      function applyFirstSetupSheet() {
+        if (!shouldUpgradeConfirm()) return;
+        backdrop.classList.add("offline-first-setup");
+        if (title) title.textContent = "Offline Dil Motoru Hazırlanıyor";
+        if (text) text.textContent = setupText;
+        if (ok) ok.textContent = "ARKA PLANDA DEVAM ET";
+      }
+
+      const observer = new MutationObserver(applyFirstSetupSheet);
+      if (backdrop) observer.observe(backdrop, { attributes: true, attributeFilter: ["class"] });
+
+      ok?.addEventListener("click", () => {
+        if (backdrop?.classList.contains("offline-first-setup")) {
+          localStorage.setItem(SEEN_KEY, "1");
+          setTimeout(() => backdrop.classList.remove("offline-first-setup"), 120);
+        }
+      }, true);
+
+      backdrop?.addEventListener("click", (event) => {
+        if (backdrop.classList.contains("offline-first-setup") && event.target === backdrop) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+    })();
+  </script>
+
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     await initGlobalAccess({ allowPublicPageBypass: false });
   </script>
 
-  <script type="module" src="/js/offline_languages_page.js?v=8"></script>
+  <script type="module" src="/js/offline_languages_page.js?v=9"></script>
 </body>
 </html>
