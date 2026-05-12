@@ -71,6 +71,7 @@
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
     const LOGIN = "/pages/login.html";
+    const HOME = "/pages/home.html";
     const MEMBERSHIP = "/pages/membership.html";
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
     const errBox = document.getElementById("errBox");
@@ -112,6 +113,23 @@
       location.replace(`${LOGIN}?next=${encodeURIComponent(safeNext)}`);
     }
 
+    function isActiveAccess(access){
+      return Boolean(
+        access?.access_open ||
+        access?.ads_disabled ||
+        access?.no_ads ||
+        access?.is_no_ads_member ||
+        access?.subscription_active ||
+        access?.has_active_membership ||
+        access?.is_member ||
+        access?.package_active ||
+        access?.plan === "premium" ||
+        access?.app_access_mode === "premium" ||
+        access?.promo_active ||
+        access?.nfc_active
+      );
+    }
+
     async function waitForSession(maxMs = 9000){
       const start = Date.now();
       while (Date.now() - start < maxMs){
@@ -131,11 +149,12 @@
           method: "GET",
           headers: {
             "Authorization": `Bearer ${session.access_token}`
-          }
+          },
+          cache: "no-store"
         });
 
         const json = await resp.json().catch(() => ({}));
-        authLog("callback access-state status", { status: resp.status, ok: resp.ok });
+        authLog("callback access-state status", { status: resp.status, ok: resp.ok, accessOpen: !!json?.access_open });
 
         if (!resp.ok) {
           console.warn("auth_callback access-state not ok:", resp.status, json);
@@ -149,8 +168,9 @@
       }
     }
 
-    function resolvePostLoginTarget(){
-      return MEMBERSHIP;
+    function resolvePostLoginTarget(access){
+      if (isActiveAccess(access)) return HOME;
+      return getNextTarget() || MEMBERSHIP;
     }
 
     try{
@@ -182,9 +202,8 @@
         console.warn("auth_callback ensureAuthAndCacheUser failed:", e);
       }
 
-      await fetchAccessStateSafe(session);
-
-      const target = resolvePostLoginTarget();
+      const access = await fetchAccessStateSafe(session);
+      const target = resolvePostLoginTarget(access);
       authLog("callback redirect target", { target });
       location.replace(target);
 
@@ -194,7 +213,8 @@
       try{
         const { data:{ session } } = await supabase.auth.getSession();
         if (session) {
-          location.replace(resolvePostLoginTarget());
+          const access = await fetchAccessStateSafe(session);
+          location.replace(resolvePostLoginTarget(access));
         }
       }catch{}
     }
