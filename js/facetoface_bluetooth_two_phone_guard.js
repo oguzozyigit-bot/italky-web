@@ -136,7 +136,6 @@ function sendHelloAck(socket, targetDeviceId, accepted, reason = "") {
 }
 
 function rejectRoomFull(socket, targetDeviceId = "") {
-  setConnectionState("full");
   sendHelloAck(socket, targetDeviceId, false, "room_full");
 }
 
@@ -145,8 +144,9 @@ function closeRejectedSocket(socket) {
   try { socket?.close?.(); } catch {}
 }
 
-function showRoomFull(socket, targetDeviceId = "") {
+function showSelfRoomFull(socket, targetDeviceId = "") {
   rejectRoomFull(socket, targetDeviceId);
+  setConnectionState("full");
   setRoomStatus(ROOM_FULL_MESSAGE, true);
   toast(ROOM_FULL_MESSAGE);
 }
@@ -175,7 +175,7 @@ function handlePresence(socket, data) {
 
     const allowedRemote = remoteDeviceId || remoteCandidates[0] || "";
     if (allowedRemote) rememberRemote(allowedRemote);
-    remoteCandidates.filter((id) => id !== allowedRemote).forEach((id) => sendHelloAck(socket, id, false, "room_full"));
+    remoteCandidates.filter((id) => id !== allowedRemote).forEach((id) => rejectRoomFull(socket, id));
     btLog("room full rejected", { roster: uniqueIds, allowedRemote });
     return false;
   }
@@ -212,7 +212,7 @@ function handleGuardPayload(socket, data) {
   if (type === "peer_joined") {
     const joinedId = peerIdOf(data?.peer) || senderIdOf(data);
     if (joinedId && !canAcceptPeer(joinedId)) {
-      showRoomFull(socket, joinedId);
+      rejectRoomFull(socket, joinedId);
       return false;
     }
     if (joinedId) {
@@ -227,7 +227,7 @@ function handleGuardPayload(socket, data) {
   if (type === "hello") {
     const incomingId = peerIdOf(data) || senderIdOf(data);
     if (incomingId && !canAcceptPeer(incomingId)) {
-      showRoomFull(socket, incomingId);
+      rejectRoomFull(socket, incomingId);
       return false;
     }
     if (incomingId) {
@@ -243,9 +243,7 @@ function handleGuardPayload(socket, data) {
     const target = String(data?.to || "").trim();
     if (target && target !== localDeviceId) return false;
     if (data?.accepted === false || data?.reason === "room_full") {
-      setConnectionState("full");
-      setRoomStatus(ROOM_FULL_MESSAGE, true);
-      toast(ROOM_FULL_MESSAGE);
+      showSelfRoomFull(socket, senderIdOf(data));
       btLog("room full rejected", { by: senderIdOf(data), reason: data?.reason || "rejected" });
       closeRejectedSocket(socket);
       return false;
