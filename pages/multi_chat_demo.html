@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>italkyAI • Çoklu Sohbet Demo</title>
+<meta name="theme-color" content="#07111f" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07111f;
+  --panel:rgba(255,255,255,.07);
+  --panel-strong:rgba(255,255,255,.11);
+  --line:rgba(255,255,255,.12);
+  --text:#f7fbff;
+  --muted:rgba(236,246,255,.68);
+  --blue:#36c7f4;
+  --blue2:#0c8fc4;
+  --green:#45d39d;
+  --danger:#fb7185;
+  --shadow:0 18px 48px rgba(0,0,0,.34);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;background:#050b14;color:var(--text);font-family:Outfit,system-ui,sans-serif;overflow:hidden}
+body{visibility:hidden}
+body.ready{visibility:visible}
+button,input,textarea,select{font:inherit}
+#pageContent{height:100%;min-height:100%;padding:12px;overflow:hidden}
+.multi-chat-page{height:100%;min-height:0;display:flex;flex-direction:column;gap:10px}
+.mc-card{position:relative;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.045));box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.05);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:24px}
+.mc-card::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 0%,rgba(54,199,244,.18),transparent 34%),radial-gradient(circle at 90% 18%,rgba(69,211,157,.12),transparent 30%)}
+.view{display:none;min-height:0;position:relative;z-index:1}
+.view.active{display:flex}
+.landing{flex:1;flex-direction:column;justify-content:center;gap:14px;padding:18px 4px}
+.hero-card{padding:22px 18px 18px;display:flex;flex-direction:column;gap:15px}
+.hero-top{display:flex;align-items:center;gap:13px}
+.logo-orb{width:58px;height:58px;border-radius:22px;display:grid;place-items:center;background:radial-gradient(circle at 30% 18%,rgba(255,255,255,.38),transparent 28%),linear-gradient(135deg,#0ea5e9,#0f766e);box-shadow:0 0 28px rgba(54,199,244,.25);font-family:"Space Grotesk",sans-serif;font-weight:900;color:#fff;letter-spacing:-.5px;flex:0 0 auto}
+.title-wrap{min-width:0}
+.kicker{font-size:10px;font-weight:1000;letter-spacing:.7px;text-transform:uppercase;color:rgba(125,211,252,.88);margin-bottom:5px}
+h1{margin:0;font-family:"Space Grotesk",sans-serif;font-size:28px;line-height:1;letter-spacing:-.8px}
+.subtitle{margin:0;color:var(--muted);font-size:14px;line-height:1.4;font-weight:700}
+.lang-box{padding:12px;border-radius:18px;border:1px solid rgba(255,255,255,.09);background:rgba(3,10,20,.36)}
+.lang-label{font-size:11px;font-weight:900;color:rgba(236,246,255,.65);margin-bottom:9px;text-transform:uppercase;letter-spacing:.35px}
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lang-btn{min-height:42px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.06);color:#fff;font-weight:900;cursor:pointer}
+.lang-btn.active{border-color:rgba(54,199,244,.72);background:linear-gradient(135deg,rgba(54,199,244,.24),rgba(69,211,157,.14));box-shadow:0 0 0 1px rgba(54,199,244,.12) inset}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.primary-btn,.secondary-btn,.ghost-btn,.icon-btn{border:0;color:#fff;cursor:pointer;font-weight:1000}
+.primary-btn,.secondary-btn{min-height:54px;border-radius:18px;padding:0 14px}
+.primary-btn{background:linear-gradient(135deg,#0284c7,#0f766e);box-shadow:0 16px 30px rgba(14,165,233,.22)}
+.secondary-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+.ghost-btn{background:transparent;color:rgba(236,246,255,.82);min-height:42px;border-radius:14px;padding:0 12px;border:1px solid rgba(255,255,255,.08)}
+.join-panel{display:none;gap:8px;align-items:center;padding:10px;border-radius:18px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}
+.join-panel.show{display:grid;grid-template-columns:1fr auto}
+.code-input{width:100%;min-height:48px;border:1px solid rgba(255,255,255,.12);border-radius:15px;background:rgba(2,6,23,.48);color:#fff;text-align:center;font-size:23px;font-weight:1000;letter-spacing:4px;outline:0}
+.status-line{min-height:20px;color:rgba(236,246,255,.72);font-size:12px;font-weight:800;text-align:center}
+.status-line.error{color:#fecdd3}
+.room{flex:1;min-height:0;flex-direction:column;gap:10px}
+.room-top{padding:12px;display:flex;flex-direction:column;gap:10px;flex:0 0 auto}
+.room-line{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.room-code-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.room-code{font-size:22px;font-family:"Space Grotesk",sans-serif;font-weight:900;letter-spacing:1.5px;color:#e0f7ff;white-space:nowrap}
+.copy-btn{min-width:38px;height:38px;border-radius:13px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:16px}
+.exit-btn{height:38px;border-radius:13px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);color:#fff;font-weight:900;padding:0 11px;cursor:pointer;white-space:nowrap}
+.participant-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.participants{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
+.avatar{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(54,199,244,.35),rgba(69,211,157,.20));border:1px solid rgba(255,255,255,.14);font-size:12px;font-weight:1000;color:#fff;flex:0 0 auto}
+.count-pill,.lang-pill{min-height:32px;border-radius:999px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);font-size:11px;font-weight:1000;color:rgba(236,246,255,.86);white-space:nowrap}
+.room-status{font-size:12px;color:rgba(236,246,255,.68);font-weight:800;min-height:18px}
+.chat-shell{flex:1;min-height:0;display:flex;flex-direction:column;padding:0;overflow:hidden}
+.chat-list{flex:1;min-height:0;overflow-y:auto;padding:12px 10px 10px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
+.chat-list::-webkit-scrollbar{display:none}
+.empty-chat{margin:auto;text-align:center;color:rgba(236,246,255,.58);font-weight:800;font-size:13px;line-height:1.35;padding:16px}
+.msg{max-width:82%;display:flex;flex-direction:column;gap:4px}
+.msg.me{align-self:flex-end;align-items:flex-end}
+.msg.other{align-self:flex-start;align-items:flex-start}
+.msg-name{font-size:10px;font-weight:900;color:rgba(236,246,255,.56);padding:0 4px}
+.bubble{border:1px solid rgba(255,255,255,.10);border-radius:19px;padding:11px 13px;font-size:15px;line-height:1.35;font-weight:750;word-break:break-word;white-space:pre-wrap}
+.msg.me .bubble{background:linear-gradient(135deg,rgba(54,199,244,.35),rgba(15,118,110,.28));border-bottom-right-radius:7px}
+.msg.other .bubble{background:rgba(255,255,255,.08);border-bottom-left-radius:7px}
+.translation-note{font-size:10px;color:rgba(236,246,255,.45);font-weight:800;padding:0 4px}
+.composer{flex:0 0 auto;padding:10px;display:grid;grid-template-columns:auto 1fr auto;gap:8px;border-top:1px solid rgba(255,255,255,.08);background:rgba(2,6,23,.26)}
+.icon-btn{width:44px;height:44px;border-radius:16px;background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.10);display:grid;place-items:center;font-size:18px}
+.icon-btn.recording{background:rgba(251,113,133,.18);border-color:rgba(251,113,133,.42)}
+.message-input{min-height:44px;max-height:96px;resize:none;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(255,255,255,.07);color:#fff;padding:12px 12px;outline:0;font-size:14px;font-weight:750;line-height:1.25}
+.message-input::placeholder{color:rgba(236,246,255,.42)}
+.send-btn{min-width:64px;height:44px;border-radius:16px;border:0;background:linear-gradient(135deg,#0284c7,#0f766e);color:#fff;font-weight:1000;cursor:pointer}
+.mini-toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));z-index:9999;transform:translate(-50%,18px);opacity:0;pointer-events:none;transition:.22s ease;background:rgba(2,6,23,.92);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:10px 14px;color:#fff;font-size:12px;font-weight:900;box-shadow:0 16px 36px rgba(0,0,0,.34);max-width:min(86vw,360px);text-align:center}
+.mini-toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:390px){
+  #pageContent{padding:10px}
+  .hero-card{padding:18px 14px 14px;border-radius:22px}
+  h1{font-size:24px}
+  .subtitle{font-size:13px}
+  .logo-orb{width:52px;height:52px;border-radius:19px}
+  .lang-grid{gap:7px}
+  .lang-btn{min-height:38px;font-size:12px}
+  .action-grid{grid-template-columns:1fr;gap:8px}
+  .primary-btn,.secondary-btn{min-height:50px}
+  .room-top{padding:10px}
+  .room-code{font-size:19px;letter-spacing:1px}
+  .composer{grid-template-columns:auto 1fr auto;padding:8px;gap:7px}
+  .icon-btn{width:41px;height:41px;border-radius:14px}
+  .send-btn{min-width:56px;height:41px;border-radius:14px}
+  .message-input{min-height:41px;padding:10px 11px}
+}
+</style>
+</head>
+<body>
+<main id="pageContent">
+  <div class="multi-chat-page">
+    <section id="landingView" class="view landing active">
+      <div class="mc-card hero-card">
+        <div class="hero-top">
+          <div class="logo-orb" data-no-translate="1">ÇS</div>
+          <div class="title-wrap">
+            <div class="kicker">Deneme Modülü</div>
+            <h1>Çoklu Sohbet</h1>
+          </div>
+        </div>
+        <p class="subtitle">Kod ile oda oluşturun veya mevcut sohbete katılın.</p>
+
+        <div class="lang-box">
+          <div class="lang-label">Sohbet dilim</div>
+          <div id="langGrid" class="lang-grid" role="group" aria-label="Dil seçimi"></div>
+        </div>
+
+        <div class="action-grid">
+          <button id="createRoomBtn" class="primary-btn" type="button">Sohbet Oluştur</button>
+          <button id="showJoinBtn" class="secondary-btn" type="button">Sohbete Katıl</button>
+        </div>
+
+        <div id="joinPanel" class="join-panel">
+          <input id="roomCodeInput" class="code-input" inputmode="numeric" maxlength="7" autocomplete="one-time-code" placeholder="482 913" />
+          <button id="joinRoomBtn" class="primary-btn" type="button">Katıl</button>
+        </div>
+
+        <div id="landingStatus" class="status-line" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="roomView" class="view room">
+      <div class="mc-card room-top">
+        <div class="room-line">
+          <div class="room-code-wrap">
+            <div>
+              <div class="kicker">Oda Kodu</div>
+              <div id="roomCodeLabel" class="room-code">---</div>
+            </div>
+            <button id="copyCodeBtn" class="copy-btn" type="button" aria-label="Kodu kopyala">⧉</button>
+          </div>
+          <button id="backBtn" class="exit-btn" type="button">← Çık</button>
+        </div>
+        <div class="participant-row">
+          <div id="participants" class="participants" aria-label="Katılımcılar"></div>
+          <div class="count-pill" id="participantCount">1 kişi</div>
+        </div>
+        <div class="participant-row">
+          <div id="roomStatus" class="room-status">Bağlantı hazırlanıyor...</div>
+          <div id="selectedLangPill" class="lang-pill">TR</div>
+        </div>
+      </div>
+
+      <div class="mc-card chat-shell">
+        <div id="chatList" class="chat-list">
+          <div class="empty-chat">Mesajlar burada görünecek. İlk deneme için oda kodunu diğer cihazda açıp aynı koda katılabilirsiniz.</div>
+        </div>
+        <div class="composer">
+          <button id="micBtn" class="icon-btn" type="button" aria-label="Mikrofon">🎙</button>
+          <textarea id="messageInput" class="message-input" rows="1" placeholder="Mesaj yaz..."></textarea>
+          <button id="sendBtn" class="send-btn" type="button">Gönder</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<div id="miniToast" class="mini-toast"></div>
+
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+
+const API_BASE = "https://italky-api.onrender.com";
+const WS_BASE = API_BASE.replace(/^http/i, "ws");
+const HOME_HREF = "/pages/home.html";
+const PEER_KEY = "italky_multi_chat_demo_peer_v1";
+const NAME_KEY = "italky_multi_chat_demo_name_v1";
+const LANG_KEY = "italky_multi_chat_demo_lang_v1";
+const langs = [
+  { code: "tr", name: "Türkçe", short: "TR" },
+  { code: "en", name: "İngilizce", short: "EN" },
+  { code: "de", name: "Almanca", short: "DE" },
+  { code: "fr", name: "Fransızca", short: "FR" },
+  { code: "es", name: "İspanyolca", short: "ES" },
+  { code: "it", name: "İtalyanca", short: "IT" }
+];
+
+let selectedLang = normalizeLang(localStorage.getItem(LANG_KEY) || "tr");
+let peerId = localStorage.getItem(PEER_KEY) || "";
+let displayName = localStorage.getItem(NAME_KEY) || "Kullanıcı";
+let role = "participant";
+let roomCode = "";
+let ws = null;
+let roster = [];
+let recognition = null;
+let recording = false;
+let leaving = false;
+
+if (!peerId) {
+  peerId = `mc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  localStorage.setItem(PEER_KEY, peerId);
+}
+
+const $ = (id) => document.getElementById(id);
+
+function log(label, data = {}) {
+  try {
+    console.warn(`[MultiChatDemo] ${label} ${JSON.stringify(data)}`);
+  } catch {
+    console.warn(`[MultiChatDemo] ${label}`);
+  }
+}
+
+function normalizeLang(value) {
+  const code = String(value || "").trim().toLowerCase().split("-")[0];
+  return langs.some((item) => item.code === code) ? code : "tr";
+}
+
+function langShort(code) {
+  return (langs.find((item) => item.code === normalizeLang(code)) || langs[0]).short;
+}
+
+function toast(message) {
+  const el = $("miniToast");
+  if (!el) return;
+  el.textContent = String(message || "");
+  el.classList.add("show");
+  clearTimeout(window.__multiChatToastTimer);
+  window.__multiChatToastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+function showLandingError(message) {
+  const el = $("landingStatus");
+  if (!el) return;
+  el.textContent = message || "";
+  el.classList.toggle("error", !!message);
+}
+
+function makeCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function normalizeCode(code) {
+  return String(code || "").replace(/\D/g, "").slice(0, 6);
+}
+
+function formatCode(code) {
+  const clean = normalizeCode(code);
+  return clean.length > 3 ? `${clean.slice(0, 3)} ${clean.slice(3)}` : clean;
+}
+
+function initials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "K";
+  return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() || "").join("") || "K";
+}
+
+function getMessageId() {
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function renderLanguages() {
+  const grid = $("langGrid");
+  if (!grid) return;
+  grid.innerHTML = langs.map((lang) => `
+    <button class="lang-btn${lang.code === selectedLang ? " active" : ""}" type="button" data-lang="${lang.code}">
+      ${lang.name}
+    </button>
+  `).join("");
+  grid.querySelectorAll("[data-lang]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedLang = normalizeLang(button.dataset.lang);
+      localStorage.setItem(LANG_KEY, selectedLang);
+      renderLanguages();
+      updateLangPill();
+      sendProfileSync();
+      log("selected language", { selectedLang });
+    });
+  });
+}
+
+function updateLangPill() {
+  const pill = $("selectedLangPill");
+  if (pill) pill.textContent = langShort(selectedLang);
+}
+
+function renderParticipants() {
+  const list = $("participants");
+  const count = $("participantCount");
+  if (!list) return;
+
+  const known = new Map();
+  known.set(peerId, { from: peerId, from_name: displayName, me_lang: selectedLang, role });
+  roster.forEach((item) => {
+    const id = String(item?.from || item?.id || item?.user_id || "");
+    if (id) known.set(id, item);
+  });
+
+  const people = Array.from(known.values());
+  list.innerHTML = people.map((person) => {
+    const name = person?.from_name || person?.display_name || (String(person?.from || "") === peerId ? displayName : "Kullanıcı");
+    const title = `${name} • ${langShort(person?.me_lang || selectedLang)}`;
+    return `<div class="avatar" title="${escapeHtml(title)}">${escapeHtml(initials(name))}</div>`;
+  }).join("");
+
+  if (count) count.textContent = `${people.length} kişi`;
+}
+
+function setRoomStatus(text) {
+  const el = $("roomStatus");
+  if (el) el.textContent = text || "";
+}
+
+function switchView(name) {
+  $("landingView")?.classList.toggle("active", name === "landing");
+  $("roomView")?.classList.toggle("active", name === "room");
+}
+
+function enterRoom(code, nextRole) {
+  roomCode = normalizeCode(code);
+  role = nextRole || "participant";
+  $("roomCodeLabel").textContent = formatCode(roomCode);
+  switchView("room");
+  updateLangPill();
+  renderParticipants();
+  connectSocket(roomCode, role);
+}
+
+function createRoom() {
+  const code = makeCode();
+  log("create room", { code, selectedLang });
+  enterRoom(code, "host");
+}
+
+function joinRoom() {
+  const code = normalizeCode($("roomCodeInput")?.value || "");
+  if (code.length !== 6) {
+    showLandingError("Lütfen geçerli bir sohbet kodu girin.");
+    log("error", { reason: "invalid_room_code", code });
+    return;
+  }
+  showLandingError("");
+  log("join room", { code, selectedLang });
+  enterRoom(code, "participant");
+}
+
+function connectSocket(code, nextRole) {
+  closeSocket();
+  setRoomStatus("Bağlanıyor...");
+  const url = `${WS_BASE}/api/f2f/ws/${encodeURIComponent(code)}`;
+  log("ws connect", { url, role: nextRole });
+
+  try {
+    ws = new WebSocket(url);
+  } catch (error) {
+    log("error", { stage: "ws_construct", message: error?.message || String(error) });
+    setRoomStatus("Bağlantı başlatılamadı.");
+    return;
+  }
+
+  ws.onopen = () => {
+    log("ws open", { roomCode: code, role: nextRole });
+    setRoomStatus("Bağlandı. Mesaj yazabilirsiniz.");
+    sendJson({ type: nextRole === "host" ? "create" : "join", from: peerId, from_name: displayName, me_lang: selectedLang, role: nextRole });
+  };
+
+  ws.onmessage = (event) => {
+    let data = null;
+    try { data = JSON.parse(event.data); } catch { data = { type: "raw", text: event.data }; }
+    log("ws message", data);
+    handleSocketPayload(data);
+  };
+
+  ws.onerror = () => {
+    log("error", { stage: "ws_error", roomCode: code });
+    setRoomStatus("Bağlantı hatası. UI deneme olarak kullanılabilir.");
+  };
+
+  ws.onclose = () => {
+    log("ws close", { roomCode: code, leaving });
+    if (!leaving) setRoomStatus("Bağlantı kapandı. Oda ekranı deneme olarak açık kalıyor.");
+  };
+}
+
+function closeSocket() {
+  try { ws?.close(); } catch {}
+  ws = null;
+}
+
+function sendJson(payload) {
+  try {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    ws.send(JSON.stringify(payload));
+    log("ws send", payload);
+    return true;
+  } catch (error) {
+    log("error", { stage: "ws_send", message: error?.message || String(error) });
+    return false;
+  }
+}
+
+function sendProfileSync() {
+  sendJson({ type: "profile_sync", from: peerId, from_name: displayName, me_lang: selectedLang, role });
+}
+
+function handleSocketPayload(data) {
+  const type = String(data?.type || "");
+
+  if (type === "room_created") {
+    setRoomStatus("Oda hazır. Kodu paylaşabilirsiniz.");
+    sendProfileSync();
+    return;
+  }
+
+  if (type === "room_joined") {
+    setRoomStatus("Odaya katıldınız.");
+    sendProfileSync();
+    return;
+  }
+
+  if (type === "room_not_found") {
+    setRoomStatus("Oda bulunamadı. Kodu kontrol edin.");
+    toast("Oda bulunamadı.");
+    return;
+  }
+
+  if (type === "presence" || type === "peer_joined") {
+    roster = Array.isArray(data?.roster) ? data.roster : (Array.isArray(data?.peers) ? data.peers : roster);
+    renderParticipants();
+    log("roster update", { count: roster.length, roster });
+    if (type === "peer_joined") setRoomStatus("Yeni katılımcı bağlandı.");
+    return;
+  }
+
+  if (type === "profile_updated" || type === "language_update") {
+    sendProfileSync();
+    return;
+  }
+
+  if (type === "message") {
+    const senderId = String(data?.from || data?.senderId || "");
+    if (senderId === peerId) return;
+    const senderName = data?.from_name || data?.senderName || "Katılımcı";
+    const sourceLang = normalizeLang(data?.lang || data?.sourceLang || "tr");
+    const originalText = String(data?.text || data?.message || "").trim();
+    if (!originalText) return;
+    renderIncomingMessage({ senderName, originalText, sourceLang });
+  }
+}
+
+async function renderIncomingMessage({ senderName, originalText, sourceLang }) {
+  const translated = sourceLang === selectedLang ? originalText : await translateMessage(originalText, sourceLang, selectedLang);
+  addMessage({ mine: false, name: senderName, text: translated || originalText, note: translated ? `${langShort(sourceLang)} → ${langShort(selectedLang)}` : "Orijinal mesaj" });
+}
+
+async function translateMessage(text, from, to) {
+  const payload = {
+    text,
+    from_lang: from,
+    to_lang: to,
+    source: from,
+    target: to,
+    mode: "normal",
+    use_ai: false,
+    cultural: false,
+    tone: "neutral"
+  };
+  const endpoints = [`${API_BASE}/api/translate_ai`, `${API_BASE}/api/translate-ai`, `${API_BASE}/api/translate`];
+  for (const endpoint of endpoints) {
+    try {
+      const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await res.json().catch(() => null);
+      const value = String(data?.translated || data?.translation || data?.text || "").trim();
+      if (res.ok && value) return value;
+    } catch (error) {
+      log("error", { stage: "translate", endpoint, message: error?.message || String(error) });
+    }
+  }
+  return "";
+}
+
+function addMessage({ mine, name, text, note }) {
+  const list = $("chatList");
+  if (!list) return;
+  list.querySelector(".empty-chat")?.remove();
+
+  const wrap = document.createElement("div");
+  wrap.className = `msg ${mine ? "me" : "other"}`;
+  wrap.innerHTML = `
+    <div class="msg-name">${escapeHtml(name || (mine ? "Ben" : "Katılımcı"))}</div>
+    <div class="bubble">${escapeHtml(text)}</div>
+    ${note ? `<div class="translation-note">${escapeHtml(note)}</div>` : ""}
+  `;
+  list.appendChild(wrap);
+  requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
+}
+
+function sendMessage() {
+  const input = $("messageInput");
+  const text = String(input?.value || "").trim();
+  if (!text) return;
+  input.value = "";
+  input.style.height = "";
+  addMessage({ mine: true, name: "Ben", text, note: langShort(selectedLang) });
+  const ok = sendJson({ type: "message", from: peerId, from_name: displayName, lang: selectedLang, text, messageId: getMessageId(), sentAt: Date.now() });
+  if (!ok) toast("Bağlantı yoksa mesaj sadece bu ekranda görünür.");
+}
+
+function startMic() {
+  if (recording) {
+    stopMic();
+    return;
+  }
+
+  log("mic start", { selectedLang });
+  const bcp = ({ tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" })[selectedLang] || "tr-TR";
+  recording = true;
+  $("micBtn")?.classList.add("recording");
+
+  try {
+    if (window.Native?.startSpeechRecognition) {
+      window.Native.startSpeechRecognition(bcp, "multi_chat");
+      return;
+    }
+    if (window.AndroidBridge?.startSpeechRecognition) {
+      window.AndroidBridge.startSpeechRecognition(bcp, "multi_chat");
+      return;
+    }
+  } catch (error) {
+    log("error", { stage: "native_mic", message: error?.message || String(error) });
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    stopMic();
+    toast("Bu cihazda mikrofonla yazıya çevirme hazır değil.");
+    return;
+  }
+
+  try {
+    recognition = new SpeechRecognition();
+    recognition.lang = bcp;
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results || []).map((result) => result?.[0]?.transcript || "").join(" ").trim();
+      handleMicResult(transcript);
+    };
+    recognition.onerror = (event) => {
+      log("error", { stage: "web_mic", message: event?.error || "speech_error" });
+      stopMic();
+      toast("Mikrofon başlatılamadı.");
+    };
+    recognition.onend = () => stopMic(false);
+    recognition.start();
+  } catch (error) {
+    log("error", { stage: "web_mic_start", message: error?.message || String(error) });
+    stopMic();
+    toast("Mikrofon başlatılamadı.");
+  }
+}
+
+function stopMic(tryNative = true) {
+  recording = false;
+  $("micBtn")?.classList.remove("recording");
+  if (tryNative) {
+    try {
+      if (window.Native?.stopSpeechRecognition) window.Native.stopSpeechRecognition();
+      else if (window.AndroidBridge?.stopSpeechRecognition) window.AndroidBridge.stopSpeechRecognition();
+      else recognition?.stop?.();
+    } catch {}
+  }
+  recognition = null;
+}
+
+function handleMicResult(text) {
+  const value = String(text || "").trim();
+  log("mic result", { text: value });
+  stopMic(false);
+  if (!value) return;
+  const input = $("messageInput");
+  if (input) {
+    input.value = input.value ? `${input.value.trim()} ${value}` : value;
+    input.focus();
+    autoGrowInput();
+  }
+}
+
+function bindNativeSpeechCallbacks() {
+  const previousResult = window.onNativeSpeechResult;
+  const previousError = window.onNativeSpeechError;
+
+  window.onNativeSpeechResult = function(...args) {
+    let text = "";
+    const first = args[0];
+    if (typeof first === "string") {
+      try {
+        const parsed = JSON.parse(first);
+        text = parsed?.text || parsed?.transcript || args[1] || "";
+      } catch {
+        text = args[1] || first;
+      }
+    } else if (first && typeof first === "object") {
+      text = first.text || first.transcript || "";
+    }
+    handleMicResult(text);
+    if (typeof previousResult === "function") {
+      try { previousResult.apply(window, args); } catch {}
+    }
+  };
+
+  window.onNativeSpeechError = function(...args) {
+    log("error", { stage: "native_mic", message: args[0] || "speech_error" });
+    stopMic(false);
+    toast("Mikrofon başlatılamadı.");
+    if (typeof previousError === "function") {
+      try { previousError.apply(window, args); } catch {}
+    }
+  };
+}
+
+function autoGrowInput() {
+  const input = $("messageInput");
+  if (!input) return;
+  input.style.height = "auto";
+  input.style.height = `${Math.min(96, Math.max(44, input.scrollHeight))}px`;
+}
+
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>"]/g, (ch) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[ch]));
+}
+
+function bindEvents() {
+  $("createRoomBtn")?.addEventListener("click", createRoom);
+  $("showJoinBtn")?.addEventListener("click", () => {
+    $("joinPanel")?.classList.toggle("show");
+    showLandingError("");
+    setTimeout(() => $("roomCodeInput")?.focus(), 80);
+  });
+  $("joinRoomBtn")?.addEventListener("click", joinRoom);
+  $("roomCodeInput")?.addEventListener("input", (event) => { event.target.value = formatCode(event.target.value); });
+  $("roomCodeInput")?.addEventListener("keydown", (event) => { if (event.key === "Enter") joinRoom(); });
+  $("copyCodeBtn")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      toast("Kod kopyalandı.");
+    } catch {
+      toast("Kod: " + formatCode(roomCode));
+    }
+  });
+  $("backBtn")?.addEventListener("click", () => {
+    leaving = true;
+    closeSocket();
+    leaving = false;
+    switchView("landing");
+    setRoomStatus("");
+  });
+  $("sendBtn")?.addEventListener("click", sendMessage);
+  $("messageInput")?.addEventListener("input", autoGrowInput);
+  $("messageInput")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+  $("micBtn")?.addEventListener("click", startMic);
+  window.addEventListener("pagehide", () => { leaving = true; closeSocket(); });
+}
+
+async function hydrateName() {
+  try {
+    const { supabase } = await import("/js/supabase_client.js");
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    const meta = user?.user_metadata || {};
+    const candidate = meta.name || meta.full_name || meta.display_name || user?.email || "Kullanıcı";
+    displayName = String(candidate).trim().split("@")[0] || "Kullanıcı";
+    localStorage.setItem(NAME_KEY, displayName);
+  } catch {
+    displayName = localStorage.getItem(NAME_KEY) || "Kullanıcı";
+  }
+}
+
+async function boot() {
+  mountShell({ scroll: "none", publicPage: true });
+  await hydrateName();
+  renderLanguages();
+  renderParticipants();
+  updateLangPill();
+  bindNativeSpeechCallbacks();
+  bindEvents();
+  log("ready", { href: location.href, selectedLang, peerId, displayName });
+  document.body.classList.add("ready");
+}
+
+boot();
+</script>
+<script type="module" src="/js/site_language_boot.js"></script>
+</body>
+</html>
