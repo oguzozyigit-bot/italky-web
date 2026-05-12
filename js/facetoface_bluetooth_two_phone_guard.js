@@ -48,12 +48,22 @@ function ensureLocalDeviceId() {
 
 function peerIdOf(value) {
   if (!value || typeof value !== "object") return "";
-  return String(value.deviceId || value.from || value.id || value.senderId || value.peerId || "").trim();
+  return String(value.deviceId || value.fromDeviceId || value.from || value.id || value.senderId || value.peerId || "").trim();
 }
 
 function senderIdOf(value) {
   if (!value || typeof value !== "object") return "";
-  return String(value.from || value.senderId || value.deviceId || value.peerId || value.id || "").trim();
+  return String(value.fromDeviceId || value.from || value.senderId || value.deviceId || value.peerId || value.id || "").trim();
+}
+
+function targetIdOf(value) {
+  if (!value || typeof value !== "object") return "";
+  return String(value.toDeviceId || value.to || value.targetDeviceId || value.target || "").trim();
+}
+
+function isForLocalDevice(value) {
+  const target = targetIdOf(value);
+  return !target || target === localDeviceId;
 }
 
 function setRoomStatus(message, error = false) {
@@ -97,6 +107,10 @@ function canAcceptPeer(deviceId) {
   return !remoteDeviceId || remoteDeviceId === deviceId;
 }
 
+function isKnownRemote(deviceId) {
+  return !!deviceId && !!remoteDeviceId && deviceId === remoteDeviceId;
+}
+
 function rememberRemote(deviceId) {
   if (!deviceId || deviceId === localDeviceId) return false;
   if (!remoteDeviceId) remoteDeviceId = deviceId;
@@ -114,25 +128,33 @@ function safeSendRaw(socket, payload) {
   }
 }
 
+function makeIdentityPayload(type) {
+  return {
+    type,
+    deviceId: localDeviceId,
+    fromDeviceId: localDeviceId,
+    from: localDeviceId,
+    role: "two_phone",
+    ts: Date.now()
+  };
+}
+
 function sendHello(socket) {
-  const payload = { type: "hello", deviceId: localDeviceId, from: localDeviceId, role: "two_phone", ts: Date.now() };
+  const payload = makeIdentityPayload("hello");
   if (safeSendRaw(socket, payload)) btLog("hello sent", { deviceId: localDeviceId, state: connectionState });
 }
 
 function sendHelloAck(socket, targetDeviceId, accepted, reason = "") {
   const payload = {
-    type: "hello_ack",
-    deviceId: localDeviceId,
-    from: localDeviceId,
+    ...makeIdentityPayload("hello_ack"),
+    toDeviceId: targetDeviceId,
     to: targetDeviceId,
-    role: "two_phone",
     accepted: !!accepted,
-    reason: reason || undefined,
-    ts: Date.now()
+    reason: reason || undefined
   };
   safeSendRaw(socket, payload);
   if (accepted) btLog("hello ack accepted", { targetDeviceId });
-  else btLog("room full rejected", { targetDeviceId, reason });
+  else btLog("room_full reject third", { third: targetDeviceId, reason });
 }
 
 function rejectRoomFull(socket, targetDeviceId = "") {
@@ -165,7 +187,7 @@ function handlePresence(socket, data) {
   if (uniqueIds.length > 2) {
     if (myIndex >= 2 || (!remoteDeviceId && roomRole !== "host" && remoteCandidates.length > 1)) {
       showSelfRoomFull();
-      btLog("room full rejected", { deviceId: localDeviceId, roster: uniqueIds, selfRejected: true });
+      btLog("room_full reject third", { third: localDeviceId, roster: uniqueIds, selfRejected: true });
       closeRejectedSocket(socket);
       return false;
     }
@@ -173,12 +195,24 @@ function handlePresence(socket, data) {
     const allowedRemote = remoteDeviceId || remoteCandidates[0] || "";
     if (allowedRemote) rememberRemote(allowedRemote);
     remoteCandidates.filter((id) => id !== allowedRemote).forEach((id) => rejectRoomFull(socket, id));
-    btLog("room full rejected", { roster: uniqueIds, allowedRemote });
+    btLog("reset skipped reason=third_party", { roster: uniqueIds, allowedRemote });
     return false;
   }
 
   if (!remoteDeviceId && remoteCandidates[0]) rememberRemote(remoteCandidates[0]);
   return true;
+}
+
+function shouldIgnoreThirdPartyExit(data) {
+  const sender = senderIdOf(data) || peerIdOf(data?.peer);
+  if (!sender || sender === localDeviceId) return true;
+  if (!remoteDeviceId) return false;
+  if (sender !== remoteDeviceId) {
+    btLog("leave ignored from non-peer", { fromDeviceId: sender, remoteDeviceId, type: data?.type || "unknown" });
+    btLog("reset skipped reason=third_party", { fromDeviceId: sender });
+    return true;
+  }
+  return false;
 }
 
 function handleGuardPayload(socket, data) {
@@ -210,6 +244,7 @@ function handleGuardPayload(socket, data) {
     const joinedId = peerIdOf(data?.peer) || senderIdOf(data);
     if (joinedId && !canAcceptPeer(joinedId)) {
       rejectRoomFull(socket, joinedId);
+      btLog("room_full reject third", { third: joinedId, remoteDeviceId });
       return false;
     }
     if (joinedId) {
@@ -225,6 +260,8 @@ function handleGuardPayload(socket, data) {
     const incomingId = peerIdOf(data) || senderIdOf(data);
     if (incomingId && !canAcceptPeer(incomingId)) {
       rejectRoomFull(socket, incomingId);
+      btLog("room_full reject third", { third: incomingId, remoteDeviceId });
+      setConnectionState("connected");
       return false;
     }
     if (incomingId) {
@@ -237,11 +274,19 @@ function handleGuardPayload(socket, data) {
   }
 
   if (type === "hello_ack") {
-    const target = String(data?.to || "").trim();
-    if (target && target !== localDeviceId) return false;
+    if (!isForLocalDevice(data)) {
+      if (data?.reason === "room_full" || data?.accepted === false) {
+        btLog("room_full ignored by active peer", { toDeviceId: targetIdOf(data), fromDeviceId: senderIdOf(data) });
+      }
+      return false;
+    }
     if (data?.accepted === false || data?.reason === "room_full") {
+      if (connectionState === "connected" && remoteDeviceId) {
+        btLog("room_full ignored by active peer", { fromDeviceId: senderIdOf(data), remoteDeviceId });
+        return false;
+      }
       showSelfRoomFull();
-      btLog("room full rejected", { by: senderIdOf(data), reason: data?.reason || "rejected" });
+      btLog("room_full reject third", { third: localDeviceId, by: senderIdOf(data), reason: data?.reason || "rejected" });
       closeRejectedSocket(socket);
       return false;
     }
@@ -253,7 +298,23 @@ function handleGuardPayload(socket, data) {
     return false;
   }
 
+  if (type === "room_full" || type === "rejected") {
+    if (!isForLocalDevice(data) || (connectionState === "connected" && remoteDeviceId)) {
+      btLog("room_full ignored by active peer", { toDeviceId: targetIdOf(data), fromDeviceId: senderIdOf(data) });
+      return false;
+    }
+    showSelfRoomFull();
+    closeRejectedSocket(socket);
+    return false;
+  }
+
+  if (type === "leave" || type === "peer_left") {
+    if (shouldIgnoreThirdPartyExit(data)) return false;
+    return true;
+  }
+
   if (type === "host_closed") {
+    if (shouldIgnoreThirdPartyExit(data)) return false;
     setRoomStatus("Sohbet sahibi oturumu kapattı.", true);
     toast("Sohbet sahibi oturumu kapattı.");
     resetState("host_closed");
@@ -266,7 +327,7 @@ function handleGuardPayload(socket, data) {
   if (type === "message") {
     const sender = senderIdOf(data);
     if (sender && sender !== localDeviceId && remoteDeviceId && sender !== remoteDeviceId) {
-      btLog("room full rejected", { sender, reason: "message_from_third_device" });
+      btLog("room_full reject third", { third: sender, reason: "message_from_third_device" });
       return false;
     }
   }
@@ -299,6 +360,19 @@ function maybeScheduleRetry(socket, reason) {
   }, delay);
 }
 
+function shouldSendExitPayload() {
+  return connectionState !== "full" && !suppressRetry && currentSocket?.readyState === WebSocket.OPEN;
+}
+
+function sendExitPayload(socket) {
+  if (!shouldSendExitPayload()) return false;
+  return safeSendRaw(socket, {
+    ...makeIdentityPayload(roomRole === "host" && helloAccepted ? "host_closed" : "leave"),
+    toDeviceId: remoteDeviceId || undefined,
+    to: remoteDeviceId || undefined
+  });
+}
+
 function patchSocket(socket, url) {
   if (!WS_ROOM_PATTERN.test(String(url || ""))) return socket;
   ensureLocalDeviceId();
@@ -327,17 +401,7 @@ function patchSocket(socket, url) {
   };
 
   socket.close = function guardedClose(...args) {
-    try {
-      if (socket.readyState === WebSocket.OPEN) {
-        safeSendRaw(socket, {
-          type: roomRole === "host" && helloAccepted ? "host_closed" : "leave",
-          from: localDeviceId,
-          deviceId: localDeviceId,
-          role: "two_phone",
-          ts: Date.now()
-        });
-      }
-    } catch {}
+    try { sendExitPayload(socket); } catch {}
     return nativeClose(...args);
   };
 
@@ -415,28 +479,14 @@ function installUiGuards(homeHref = HOME_HREF) {
 
     const home = event.target?.closest?.("#homeLink,#twoPhoneHomeRoom");
     if (home && currentSocket?.readyState === WebSocket.OPEN) {
-      safeSendRaw(currentSocket, {
-        type: roomRole === "host" && helloAccepted ? "host_closed" : "leave",
-        from: localDeviceId,
-        deviceId: localDeviceId,
-        role: "two_phone",
-        ts: Date.now()
-      });
+      sendExitPayload(currentSocket);
       resetState("home_leave");
       setTimeout(() => { if (location.pathname !== homeHref) location.href = homeHref; }, 80);
     }
   }, true);
 
   window.addEventListener("pagehide", () => {
-    if (currentSocket?.readyState === WebSocket.OPEN) {
-      safeSendRaw(currentSocket, {
-        type: roomRole === "host" && helloAccepted ? "host_closed" : "leave",
-        from: localDeviceId,
-        deviceId: localDeviceId,
-        role: "two_phone",
-        ts: Date.now()
-      });
-    }
+    if (currentSocket?.readyState === WebSocket.OPEN) sendExitPayload(currentSocket);
     resetState("pagehide");
   });
 }
