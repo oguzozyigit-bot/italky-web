@@ -638,27 +638,62 @@
     }
 
     function callNativePlayStore(){
-      const bridges = [window.AndroidBridge, window.Native];
+      const bridges = [window.AndroidBilling, window.AndroidBridge, window.Native, window.OpenExternal];
       for(const bridge of bridges){
         try{
           if(bridge && typeof bridge.openPlayStore === "function"){
             bridge.openPlayStore(PLAY_STORE_PACKAGE);
             return true;
           }
-        }catch{}
+        }catch{
+          try{
+            bridge.openPlayStore();
+            return true;
+          }catch{}
+        }
       }
+      return false;
+    }
+
+    function callNativeExternal(url){
+      const bridges = [window.AndroidBilling, window.AndroidBridge, window.Native, window.OpenExternal, window.DeviceBridge];
+      const methods = ["openExternal", "openExternalUrl", "openUrl", "openBrowser", "openLink"];
+      for(const bridge of bridges){
+        if(!bridge) continue;
+        for(const method of methods){
+          try{
+            if(typeof bridge[method] === "function"){
+              bridge[method](url);
+              return true;
+            }
+          }catch{}
+        }
+      }
+      return false;
+    }
+
+    function openExternalStoreUrl(url){
+      if(callNativeExternal(url)) return true;
+      try{
+        const opened = window.open(url, "_system");
+        if(opened) return true;
+      }catch{}
+      try{
+        const opened = window.open(url, "_blank", "noopener,noreferrer");
+        if(opened) return true;
+      }catch{}
       return false;
     }
 
     function openPlayStore(){
       if(callNativePlayStore()) return;
-      try{ location.href = MARKET_URL; }catch{}
+      if(openExternalStoreUrl(MARKET_URL)) return;
       setTimeout(() => {
         try{ location.href = MARKET_INTENT_URL; }catch{}
-      }, 450);
+      }, 120);
       setTimeout(() => {
-        try{ location.href = PLAY_STORE_URL; }catch{}
-      }, 1000);
+        openExternalStoreUrl(PLAY_STORE_URL);
+      }, 850);
     }
 
     function showUpdateRequired(){
