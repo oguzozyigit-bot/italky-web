@@ -1,5 +1,5 @@
 // FILE: /js/facetoface_bluetooth_premium.js
-import { installTwoPhoneBluetoothMode } from "/js/facetoface_bluetooth_two_phone.js";
+import { installTwoPhoneBluetoothMode } from "/js/facetoface_bluetooth_two_phone_guard.js";
 
 const mode = new URLSearchParams(location.search).get("mode");
 const isTwoPhoneMode = mode === "two-phone" || mode === "bluetooth";
