@@ -28,51 +28,63 @@
 
 <script>
 const API = "https://italky-api.onrender.com/api/promo/corporate";
-const ACTIVE_CODE_KEY = "italky_code_access_code_v1";
-const ACTIVE_SESSION_KEY = "italky_code_active_session_key_v1";
-const ACCESS_OPEN_KEY = "italky_access_open_v1";
+const ACTIVATION_CODE_KEY = "italky_activation_code";
+const ACTIVATION_SESSION_KEY = "italky_activation_session_key";
+const ACTIVATION_EXPIRES_KEY = "italky_activation_expires_at";
+const ACTIVATION_DEVICE_KEY = "italky_activation_device_id";
+const LEGACY_KEYS = ["italky_code_access_code_v1", "italky_code_active_session_key_v1", "italky_access_open_v1"];
 const promoInput = document.getElementById("promoInput");
 const activateBtn = document.getElementById("activateBtn");
 const backBtn = document.getElementById("backBtn");
 const message = document.getElementById("message");
 
 function setMessage(text = "", ok = false){message.textContent = String(text || "");message.classList.toggle("ok", !!ok)}
-function normalizeCode(value){return String(value || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 32)}
-function getDeviceKey(){
+function normalizeCode(value){return String(value || "").toUpperCase().replace(/[\s-]+/g, "").replace(/[^A-Z0-9_]/g, "").slice(0, 64)}
+function makeUUID(){return (crypto && crypto.randomUUID) ? crypto.randomUUID() : `device-${Date.now()}-${Math.floor(Math.random()*1e9)}`}
+function getDeviceId(){
   try{
-    const existing = localStorage.getItem(ACTIVE_SESSION_KEY);
-    if(existing && existing.length > 12) return existing;
-    const key = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `code-${Date.now()}-${Math.floor(Math.random()*1e9)}`;
-    localStorage.setItem(ACTIVE_SESSION_KEY, key);
-    return key;
-  }catch(e){return `code-${Date.now()}-${Math.floor(Math.random()*1e9)}`}
+    const existing = localStorage.getItem(ACTIVATION_DEVICE_KEY);
+    if(existing && existing.length > 8) return existing;
+    const deviceId = makeUUID();
+    localStorage.setItem(ACTIVATION_DEVICE_KEY, deviceId);
+    return deviceId;
+  }catch(e){return makeUUID()}
+}
+function clearActivation(){
+  try{
+    localStorage.removeItem(ACTIVATION_CODE_KEY);
+    localStorage.removeItem(ACTIVATION_SESSION_KEY);
+    localStorage.removeItem(ACTIVATION_EXPIRES_KEY);
+    LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
+    if(localStorage.getItem("italky_access_mode") === "code") localStorage.removeItem("italky_access_mode");
+  }catch(e){}
 }
 function mapError(){return "Kod geçersiz veya süresi dolmuş."}
 async function activateCode(code){
-  const active_session_key = getDeviceKey();
+  const device_id = getDeviceId();
   const res = await fetch(`${API}/activate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
-    body: JSON.stringify({ code, active_session_key, device_session_key: active_session_key, client: "android_web" })
+    body: JSON.stringify({ code, device_id, user_agent: navigator.userAgent || "" })
   });
   const json = await res.json().catch(() => ({}));
-  if(!res.ok || json?.ok === false) throw new Error(mapError());
-  return { ...(json || {}), active_session_key };
+  if(!res.ok || json?.ok !== true || !json?.active_session_key) throw new Error(mapError());
+  return json;
 }
 async function checkStillActive(){
   try{
-    const code = localStorage.getItem(ACTIVE_CODE_KEY) || "";
-    const active_session_key = localStorage.getItem(ACTIVE_SESSION_KEY) || "";
+    const code = localStorage.getItem(ACTIVATION_CODE_KEY) || "";
+    const active_session_key = localStorage.getItem(ACTIVATION_SESSION_KEY) || "";
+    const device_id = getDeviceId();
     if(!code || !active_session_key) return;
-    const url = `${API}/status?code=${encodeURIComponent(code)}&active_session_key=${encodeURIComponent(active_session_key)}`;
+    const url = `${API}/status?code=${encodeURIComponent(code)}&active_session_key=${encodeURIComponent(active_session_key)}&device_id=${encodeURIComponent(device_id)}`;
     const res = await fetch(url, { cache:"no-store" });
-    if(res.status === 404 || res.status === 405) return;
     const json = await res.json().catch(() => ({}));
     if(res.ok && json && json.active === false){
-      localStorage.removeItem(ACCESS_OPEN_KEY);
-      localStorage.removeItem(ACTIVE_CODE_KEY);
-      location.replace("/pages/login.html?code_session_expired=1");
+      clearActivation();
+      try{ sessionStorage.setItem("italky_code_session_message", "Bu kod başka bir cihazda aktif edildi."); }catch(e){}
+      location.replace("/pages/login.html?code_session_replaced=1");
     }
   }catch(e){}
 }
@@ -86,14 +98,18 @@ activateBtn.addEventListener("click", async () => {
     const result = await activateCode(code);
     try{
       localStorage.removeItem("italky_guest_mode_v1");
-      localStorage.setItem(ACCESS_OPEN_KEY, "1");
-      localStorage.setItem(ACTIVE_CODE_KEY, code);
-      localStorage.setItem(ACTIVE_SESSION_KEY, result.active_session_key);
+      localStorage.setItem(ACTIVATION_CODE_KEY, result.code || code);
+      localStorage.setItem(ACTIVATION_SESSION_KEY, result.active_session_key);
+      if(result.expires_at) localStorage.setItem(ACTIVATION_EXPIRES_KEY, result.expires_at);
       localStorage.setItem("italky_access_mode", "code");
+      localStorage.setItem("italky_code_access_code_v1", result.code || code);
+      localStorage.setItem("italky_code_active_session_key_v1", result.active_session_key);
+      localStorage.setItem("italky_access_open_v1", "1");
     }catch(e){}
     setMessage("Kod aktif edildi. Yönlendiriliyorsunuz...", true);
     setTimeout(() => { location.href = "/pages/home.html"; }, 700);
   }catch(e){
+    clearActivation();
     setMessage("Kod geçersiz veya süresi dolmuş.");
   }finally{
     activateBtn.disabled = false;
