@@ -34,11 +34,11 @@
         <div class="plans-title">Apple Store abonelikleri</div>
         <div class="plans-sub">Apple Store üzerinden güvenli premium üyelik planınızı seçin.</div>
         <div class="plan-list">
-          <article class="plan-card"><div><div class="plan-name">7 günlük</div><div class="plan-price" data-price-key="weekly">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">Hızlı deneme için</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.weekly" data-product-key="weekly">Üye Ol</button></article>
-          <article class="plan-card featured"><div><div class="plan-name">1 aylık</div><div class="plan-price" data-price-key="monthly">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">En popüler seçim</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.monthly" data-product-key="monthly">Üye Ol</button></article>
-          <article class="plan-card"><div><div class="plan-name">3 aylık</div><div class="plan-price" data-price-key="quarterly">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">Daha avantajlı fiyat</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.quarterly" data-product-key="quarterly">Üye Ol</button></article>
-          <article class="plan-card"><div><div class="plan-name">6 aylık</div><div class="plan-price" data-price-key="halfyear">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">Yoğun kullanım için</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.halfyear" data-product-key="halfyear">Üye Ol</button></article>
-          <article class="plan-card"><div><div class="plan-name">12 aylık</div><div class="plan-price" data-price-key="yearly">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">En yüksek tasarruf</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.yearly" data-product-key="yearly">Üye Ol</button></article>
+          <article class="plan-card"><div><div class="plan-name">7 günlük</div><div class="plan-price" data-price-key="weekly">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">Hızlı deneme için</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.weekly">Üye Ol</button></article>
+          <article class="plan-card featured"><div><div class="plan-name">1 aylık</div><div class="plan-price" data-price-key="monthly">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">En popüler seçim</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.monthly">Üye Ol</button></article>
+          <article class="plan-card"><div><div class="plan-name">3 aylık</div><div class="plan-price" data-price-key="quarterly">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">Daha avantajlı fiyat</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.quarterly">Üye Ol</button></article>
+          <article class="plan-card"><div><div class="plan-name">6 aylık</div><div class="plan-price" data-price-key="halfyear">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">Yoğun kullanım için</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.halfyear">Üye Ol</button></article>
+          <article class="plan-card"><div><div class="plan-name">12 aylık</div><div class="plan-price" data-price-key="yearly">Fiyat Apple Store’da gösterilecek</div><div class="plan-note">En yüksek tasarruf</div></div><button class="plan-buy-btn" type="button" data-product-id="com.ozyigits.italkyai.premium.yearly">Üye Ol</button></article>
         </div>
         <div class="plans-bottom">Satın alma tamamlanınca premium özellikler hesabınıza anında tanımlanır.</div>
         <div class="features">
@@ -61,24 +61,41 @@
   <script>
     (function(){
       const IOS_PRODUCTS={weekly:'com.ozyigits.italkyai.premium.weekly',monthly:'com.ozyigits.italkyai.premium.monthly',quarterly:'com.ozyigits.italkyai.premium.quarterly',halfyear:'com.ozyigits.italkyai.premium.halfyear',yearly:'com.ozyigits.italkyai.premium.yearly'};
-      var mainPanel=document.getElementById('main-login-panel');
-      var plansPanel=document.getElementById('apple-plans-panel');
-      var status=document.getElementById('plansStatus');
-      function showMessage(message,isError){status.className=isError?'status err':'status';status.textContent=message||'';}
-      function requestProducts(){try{var handlers=window.webkit&&window.webkit.messageHandlers;if(handlers&&handlers.IOSStoreKit)handlers.IOSStoreKit.postMessage({action:'loadProducts'});}catch(e){}}
-      function showPlans(){document.body.classList.add('apple-plans-open');mainPanel.hidden=true;plansPanel.hidden=false;showMessage('',false);setTimeout(function(){try{plansPanel.scrollTop=0;}catch(e){}},0);requestProducts();}
-      function showLogin(){document.body.classList.remove('apple-plans-open');plansPanel.hidden=true;mainPanel.hidden=false;showMessage('',false);}
-      window.updateIOSPrices=function(prices){prices=prices||{};Object.keys(IOS_PRODUCTS).forEach(function(key){var el=document.querySelector('[data-price-key="'+key+'"]');if(el&&prices[key])el.textContent=prices[key];});};
-      window.onIOSPurchaseError=function(productId,reason){console.warn('[italky-ios-storekit] purchase error callback',productId,reason||'unknown');showMessage('Bu paket Apple Store’da henüz hazır değil. Lütfen daha sonra tekrar deneyin.',true);};
-      window.onNativePurchaseComplete=function(detail){detail=detail||{};if(detail.ok||detail.premium||detail.active){showMessage('Satın alma tamamlandı. Yönlendiriliyorsunuz...',false);return;}if(detail.message&&detail.message!=='user_cancelled'){window.onIOSPurchaseError(detail.productId||'',detail.message);}else{showMessage('',false);}};
-      window.addEventListener('italkyStoreKitPurchaseResult',function(event){try{window.onNativePurchaseComplete(event.detail||{});}catch(e){}});
-      if(window.__ITALKY_IOS_PRICES__)window.updateIOSPrices(window.__ITALKY_IOS_PRICES__);
-      requestProducts();
-      document.getElementById('appleMembershipButton').addEventListener('click',showPlans);
-      document.getElementById('codeBtn').addEventListener('click',function(){window.location.href='https://italky.ai/pages/promo_gate.html?ios=1';});
-      document.getElementById('guestBtn').addEventListener('click',function(){window.location.href='https://italky.ai/pages/login_entry.html?guest=1&ios=1';});
-      document.getElementById('plansBackButton').addEventListener('click',showLogin);
-      Array.prototype.forEach.call(document.querySelectorAll('[data-product-id]'),function(btn){btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var productId=btn.getAttribute('data-product-id');var productKey=btn.getAttribute('data-product-key')||productId;console.warn('[italky-ios-storekit] buy click '+productKey);try{var handlers=window.webkit&&window.webkit.messageHandlers;if(!handlers||!handlers.IOSStoreKit)throw new Error('storekit_unavailable');handlers.IOSStoreKit.postMessage({action:'purchasePremium',productId:productId});showMessage('Apple Store ödeme ekranı açılıyor...',false);}catch(err){showMessage('Apple Store satın alma şu anda başlatılamadı.',true);}});});
+      function bindIOSLogin(){
+        var mainPanel=document.getElementById('main-login-panel');
+        var plansPanel=document.getElementById('apple-plans-panel');
+        var status=document.getElementById('plansStatus');
+        function showMessage(message,isError){status.className=isError?'status err':'status';status.textContent=message||'';}
+        function requestProducts(){try{var handlers=window.webkit&&window.webkit.messageHandlers;if(handlers&&handlers.IOSStoreKit)handlers.IOSStoreKit.postMessage({action:'loadProducts'});}catch(e){}}
+        function showPlans(){document.body.classList.add('apple-plans-open');mainPanel.hidden=true;plansPanel.hidden=false;showMessage('',false);setTimeout(function(){try{plansPanel.scrollTop=0;}catch(e){}},0);requestProducts();}
+        function showLogin(){document.body.classList.remove('apple-plans-open');plansPanel.hidden=true;mainPanel.hidden=false;showMessage('',false);}
+        window.updateIOSPrices=function(prices){prices=prices||{};Object.keys(IOS_PRODUCTS).forEach(function(key){var el=document.querySelector('[data-price-key="'+key+'"]');if(el&&prices[key])el.textContent=prices[key];});};
+        window.onIOSPurchaseError=function(productId,reason){console.warn('[italky-ios-storekit] purchase error callback',productId,reason||'unknown');showMessage('Bu paket Apple Store’da henüz hazır değil. Lütfen daha sonra tekrar deneyin.',true);};
+        window.onNativePurchaseComplete=function(detail){detail=detail||{};if(detail.ok||detail.premium||detail.active){showMessage('Satın alma tamamlandı. Yönlendiriliyorsunuz...',false);return;}if(detail.message&&detail.message!=='user_cancelled'){window.onIOSPurchaseError(detail.productId||'',detail.message);}else{showMessage('',false);}};
+        window.addEventListener('italkyStoreKitPurchaseResult',function(event){try{window.onNativePurchaseComplete(event.detail||{});}catch(e){}});
+        if(window.__ITALKY_IOS_PRICES__)window.updateIOSPrices(window.__ITALKY_IOS_PRICES__);
+        requestProducts();
+        document.getElementById('appleMembershipButton').addEventListener('click',showPlans);
+        document.getElementById('codeBtn').addEventListener('click',function(){window.location.href='https://italky.ai/pages/promo_gate.html?ios=1';});
+        document.getElementById('guestBtn').addEventListener('click',function(){window.location.href='https://italky.ai/pages/login_entry.html?guest=1&ios=1';});
+        document.getElementById('plansBackButton').addEventListener('click',showLogin);
+        document.querySelectorAll('.plan-buy-btn').forEach(function(btn){
+          btn.addEventListener('click',function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            var productId=btn.dataset.productId;
+            console.warn('[login_ios] storekit buy click',productId);
+            if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.IOSStoreKit){
+              window.webkit.messageHandlers.IOSStoreKit.postMessage({action:'purchasePremium',productId:productId});
+              showMessage('Apple Store ödeme ekranı açılıyor...',false);
+              return;
+            }
+            alert('IOSStoreKit bridge bulunamadı.');
+          });
+        });
+      }
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindIOSLogin);
+      else bindIOSLogin();
     })();
   </script>
 </body>
