@@ -33,6 +33,10 @@ const ACTIVATION_SESSION_KEY = "italky_activation_session_key";
 const ACTIVATION_EXPIRES_KEY = "italky_activation_expires_at";
 const ACTIVATION_DEVICE_KEY = "italky_activation_device_id";
 const ACCESS_MODE_KEY = "italky_access_mode";
+const IS_IOS = new URLSearchParams(location.search).get("ios") === "1";
+const BACK_URL = IS_IOS ? "https://italky.ai/pages/login_ios.html?v=55" : "https://italky.ai/pages/login.html";
+const LOGIN_URL = IS_IOS ? "https://italky.ai/pages/login_ios.html?v=55" : "/pages/login.html";
+const HOME_URL = IS_IOS ? "/pages/home.html?ios=1" : "/pages/home.html";
 const USER_CACHE_KEYS = [
   "italky_user_v1",
   "italky_user",
@@ -131,7 +135,7 @@ async function checkStillActive(){
     if(res.ok && json && json.active === false){
       clearActivation();
       try{ sessionStorage.setItem("italky_code_session_message", "Bu kod başka bir cihazda aktif edildi."); }catch(e){}
-      location.replace("/pages/login.html?code_session_replaced=1");
+      location.replace(LOGIN_URL + (LOGIN_URL.indexOf("?") >= 0 ? "&" : "?") + "code_session_replaced=1");
     }
   }catch(e){}
 }
@@ -155,7 +159,7 @@ activateBtn.addEventListener("click", async () => {
       localStorage.setItem("italky_access_open_v1", "1");
     }catch(e){}
     setMessage("Kod aktif edildi. Yönlendiriliyorsunuz...", true);
-    setTimeout(() => { location.replace("/pages/home.html"); }, 450);
+    setTimeout(() => { location.replace(HOME_URL); }, 450);
   }catch(e){
     clearActivation();
     setMessage("Kod geçersiz veya süresi dolmuş.");
@@ -163,7 +167,7 @@ activateBtn.addEventListener("click", async () => {
     activateBtn.disabled = false;
   }
 });
-backBtn.addEventListener("click", () => { location.href = "/pages/login.html"; });
+backBtn.addEventListener("click", () => { location.href = BACK_URL; });
 (function boot(){
   try{const u = new URL(location.href); const code = normalizeCode(u.searchParams.get("code") || ""); if(code) promoInput.value = code;}catch(e){}
   checkStillActive();
