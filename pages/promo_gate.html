@@ -32,6 +32,22 @@ const ACTIVATION_CODE_KEY = "italky_activation_code";
 const ACTIVATION_SESSION_KEY = "italky_activation_session_key";
 const ACTIVATION_EXPIRES_KEY = "italky_activation_expires_at";
 const ACTIVATION_DEVICE_KEY = "italky_activation_device_id";
+const ACCESS_MODE_KEY = "italky_access_mode";
+const USER_CACHE_KEYS = [
+  "italky_user_v1",
+  "italky_user",
+  "italky_cached_user",
+  "italky_user_cache",
+  "italky_profile",
+  "italky_profile_cache",
+  "italky_current_user",
+  "italky_google_user",
+  "italky_google_profile",
+  "italky_auth_user",
+  "italky_session_user",
+  "italky_guest_mode_v1",
+  "italky_ios_guest"
+];
 const LEGACY_KEYS = ["italky_code_access_code_v1", "italky_code_active_session_key_v1", "italky_access_open_v1"];
 const promoInput = document.getElementById("promoInput");
 const activateBtn = document.getElementById("activateBtn");
@@ -50,13 +66,44 @@ function getDeviceId(){
     return deviceId;
   }catch(e){return makeUUID()}
 }
+function removeMatchingStorage(prefixes, containsList){
+  try{
+    const keys = [];
+    for(let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+    keys.forEach((key) => {
+      const lower = String(key || "").toLowerCase();
+      if(prefixes.some((prefix) => lower.indexOf(prefix) === 0) || containsList.some((part) => lower.indexOf(part) >= 0)){
+        localStorage.removeItem(key);
+      }
+    });
+  }catch(e){}
+  try{
+    const keys = [];
+    for(let i = 0; i < sessionStorage.length; i++) keys.push(sessionStorage.key(i));
+    keys.forEach((key) => {
+      const lower = String(key || "").toLowerCase();
+      if(prefixes.some((prefix) => lower.indexOf(prefix) === 0) || containsList.some((part) => lower.indexOf(part) >= 0)){
+        sessionStorage.removeItem(key);
+      }
+    });
+  }catch(e){}
+}
+function clearAuthAndUserCaches(){
+  try{ USER_CACHE_KEYS.forEach((key) => localStorage.removeItem(key)); }catch(e){}
+  try{ USER_CACHE_KEYS.forEach((key) => sessionStorage.removeItem(key)); }catch(e){}
+  try{ LEGACY_KEYS.forEach((key) => localStorage.removeItem(key)); }catch(e){}
+  removeMatchingStorage(["sb-"], ["supabase", "google", "oauth", "auth-token", "provider-token"]);
+  try{
+    if(localStorage.getItem(ACCESS_MODE_KEY) !== "code") localStorage.removeItem(ACCESS_MODE_KEY);
+  }catch(e){}
+}
 function clearActivation(){
   try{
     localStorage.removeItem(ACTIVATION_CODE_KEY);
     localStorage.removeItem(ACTIVATION_SESSION_KEY);
     localStorage.removeItem(ACTIVATION_EXPIRES_KEY);
     LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
-    if(localStorage.getItem("italky_access_mode") === "code") localStorage.removeItem("italky_access_mode");
+    if(localStorage.getItem(ACCESS_MODE_KEY) === "code") localStorage.removeItem(ACCESS_MODE_KEY);
   }catch(e){}
 }
 function mapError(){return "Kod geçersiz veya süresi dolmuş."}
@@ -96,18 +143,19 @@ activateBtn.addEventListener("click", async () => {
     activateBtn.disabled = true;
     setMessage("Kod kontrol ediliyor...");
     const result = await activateCode(code);
+    clearAuthAndUserCaches();
+    clearActivation();
     try{
-      localStorage.removeItem("italky_guest_mode_v1");
       localStorage.setItem(ACTIVATION_CODE_KEY, result.code || code);
       localStorage.setItem(ACTIVATION_SESSION_KEY, result.active_session_key);
       if(result.expires_at) localStorage.setItem(ACTIVATION_EXPIRES_KEY, result.expires_at);
-      localStorage.setItem("italky_access_mode", "code");
+      localStorage.setItem(ACCESS_MODE_KEY, "code");
       localStorage.setItem("italky_code_access_code_v1", result.code || code);
       localStorage.setItem("italky_code_active_session_key_v1", result.active_session_key);
       localStorage.setItem("italky_access_open_v1", "1");
     }catch(e){}
     setMessage("Kod aktif edildi. Yönlendiriliyorsunuz...", true);
-    setTimeout(() => { location.href = "/pages/home.html"; }, 700);
+    setTimeout(() => { location.replace("/pages/home.html"); }, 450);
   }catch(e){
     clearActivation();
     setMessage("Kod geçersiz veya süresi dolmuş.");
