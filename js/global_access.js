@@ -42,6 +42,13 @@ const PUBLIC_PAGES = new Set([
   "/pages/signal_hunt.html"
 ]);
 
+const CODE_ACCESS_KEYS = {
+  mode: "italky_access_mode",
+  code: "italky_activation_code",
+  session: "italky_activation_session_key",
+  expires: "italky_activation_expires_at"
+};
+
 function normalizePath(pathname = "") {
   try {
     return String(pathname || "")
@@ -61,6 +68,71 @@ function isPublicPage(pathname = location.pathname) {
 
 function isTruthy(value) {
   return value === true || value === "true" || value === 1 || value === "1";
+}
+
+function getCodeAccessState() {
+  try {
+    const mode = localStorage.getItem(CODE_ACCESS_KEYS.mode);
+    const code = localStorage.getItem(CODE_ACCESS_KEYS.code) || "";
+    const sessionKey = localStorage.getItem(CODE_ACCESS_KEYS.session) || "";
+    const expiresAt = localStorage.getItem(CODE_ACCESS_KEYS.expires) || "";
+    if (mode !== "code" || !code || !sessionKey) return null;
+    return { code, sessionKey, expiresAt };
+  } catch {
+    return null;
+  }
+}
+
+function buildCodeAccess(codeState) {
+  const code = codeState?.code || "";
+  const expiresAt = codeState?.expiresAt || null;
+  return {
+    ok: true,
+    is_logged_in: true,
+    code_access: true,
+    access_mode: "code",
+    app_access_mode: "code",
+    user_id: `code:${code}`,
+    email: "",
+    display_name: "Kodlu Üyelik",
+    full_name: "Kodlu Üyelik",
+    access_open: true,
+    role: "",
+    is_admin: false,
+    is_superadmin: false,
+    tokens: 0,
+    trial_started_at: null,
+    trial_ends_at: null,
+    trial_used: false,
+    trial_days_left: 0,
+    gift_started_at: null,
+    gift_ends_at: expiresAt,
+    membership_status: "active",
+    membership_source: "activation_code",
+    membership_product_id: code,
+    membership_started_at: null,
+    membership_ends_at: expiresAt,
+    membership_last_checked_at: null,
+    package_active: true,
+    package_code: code,
+    selected_package_code: code,
+    package_started_at: null,
+    package_ends_at: expiresAt,
+    subscription_active: false,
+    subscription_product_id: "",
+    subscription_started_at: null,
+    subscription_ends_at: null,
+    is_member: true,
+    has_active_membership: true,
+    no_ads: true,
+    ads_disabled: true,
+    is_no_ads_member: true,
+    membership_date_valid: true,
+    membership_status_active: true,
+    is_reklamsiz_product: false,
+    server_time: null,
+    raw: { code_access: true, code, expires_at: expiresAt }
+  };
 }
 
 async function getSessionOrNull() {
@@ -307,6 +379,19 @@ export async function initGlobalAccess(options = {}) {
 
   const currentPath = normalizePath(location.pathname);
   const publicPage = isPublicPage(currentPath);
+  const codeState = getCodeAccessState();
+
+  if (codeState) {
+    const codeAccess = buildCodeAccess(codeState);
+    setCachedAccess(codeAccess);
+    dispatchAccessReady(codeAccess);
+    return {
+      ok: true,
+      code_access: true,
+      session: null,
+      access: codeAccess
+    };
+  }
 
   /*
     Public sayfalar:
@@ -420,7 +505,7 @@ export function isCurrentUserAdsDisabled() {
 
 /*
   Geri uyumluluk için bırakıldı.
-  Eski membership sayfası çağırsa bile sistemi bozmasın.
+  Eski membership sayfası çağırırsa bile sistemi bozmasın.
 */
 export function lockMembershipPageBack() {
   try {
