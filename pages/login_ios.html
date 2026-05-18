@@ -61,6 +61,11 @@
           if (el && prices[key]) el.textContent = prices[key];
         });
       };
+      if (window.__ITALKY_IOS_PRICES__) window.updateIOSPrices(window.__ITALKY_IOS_PRICES__);
+      try {
+        var handlersForPrices = window.webkit && window.webkit.messageHandlers;
+        if (handlersForPrices && handlersForPrices.IOSStoreKit) handlersForPrices.IOSStoreKit.postMessage({ action: 'loadProducts' });
+      } catch(e) {}
       document.getElementById('appleMembershipButton').addEventListener('click', showPlans);
       document.getElementById('codeBtn').addEventListener('click', function(){ window.location.href = 'https://italky.ai/pages/promo_gate.html?ios=1'; });
       document.getElementById('guestBtn').addEventListener('click', function(){ window.location.href = 'https://italky.ai/pages/login_entry.html?guest=1&ios=1'; });
