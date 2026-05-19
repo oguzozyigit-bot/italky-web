@@ -43,7 +43,7 @@
       text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30);
     }
     .edge-handle.open{ right:0; border-radius:18px 0 0 18px; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-right:none; box-shadow:-10px 0 32px rgba(0,0,0,.30); }
-    .edge-handle.open::before { content: "B\A C\A K"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+    .edge-handle.open::before { content: "B\A A\A C\A K"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
     .edge-handle.clear{ left:0; border-radius:0 18px 18px 0; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-left:none; box-shadow:10px 0 32px rgba(0,0,0,.30); }
     .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
     .edge-handle:active{transform:translateY(-50%) scale(.96)}
@@ -467,20 +467,8 @@
   }
 
   function scheduleAutoAd(intervalMs) {
-      if(isPremium) return;
-      clearTimeout(autoAdTimer);
-      autoAdTimer = setTimeout(async () => {
-          const isDrawerOpen = drawerBackdrop.classList.contains('show');
-          const isUpdateModalOpen = updateModal?.classList.contains('show');
-          const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
-
-          if (!isDrawerOpen && !isUpdateModalOpen && !isRecording) {
-              const success = await showAdModal({ adUnit: "public_facetoface_auto", langCode: "" });
-              if(!success) { scheduleAutoAd(2000); return; }
-          }
-          scheduleAutoAd(5 * 60 * 1000); 
-      }, intervalMs);
-  }
+  return;
+}
 
   function refreshTexts(){
     const tO = langObj(topLang); const bO = langObj(botLang);
