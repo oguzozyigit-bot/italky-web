@@ -62,6 +62,27 @@
     (function(){
       const IOS_PRODUCTS={weekly:'com.ozyigits.italkyai.premium.weekly',monthly:'com.ozyigits.italkyai.premium.monthly',quarterly:'com.ozyigits.italkyai.premium.quarterly',halfyear:'com.ozyigits.italkyai.premium.halfyear',yearly:'com.ozyigits.italkyai.premium.yearly'};
       window.IOS_PRODUCTS=IOS_PRODUCTS;
+      function normalizeIOSPrices(prices){
+        let pricesObj=prices&&prices.prices?prices.prices:prices||{};
+        if(typeof pricesObj==='string'){
+          try{pricesObj=JSON.parse(pricesObj);}catch(e){console.error('[login_ios] JSON parse error for prices:',e);pricesObj={};}
+        }
+        if(!pricesObj||typeof pricesObj!=='object')pricesObj={};
+        return pricesObj;
+      }
+      function applyIOSPrices(prices){
+        const pricesObj=normalizeIOSPrices(prices);
+        console.warn('[login_ios] Received prices:',pricesObj);
+        window.__ITALKY_IOS_PRICES__=pricesObj;
+        Object.keys(IOS_PRODUCTS).forEach(function(key){
+          const el=document.querySelector('[data-price-key="'+key+'"]');
+          if(el&&pricesObj[key])el.textContent=pricesObj[key];
+        });
+        return pricesObj;
+      }
+      window.onIOSStoreKitPrices=applyIOSPrices;
+      window.updateIOSPrices=applyIOSPrices;
+      window.addEventListener('italkyStoreKitPricesUpdated',function(event){try{applyIOSPrices(event.detail||{});}catch(e){console.error('[login_ios] price event error:',e);}});
       function bindIOSLogin(){
         var mainPanel=document.getElementById('main-login-panel');
         var plansPanel=document.getElementById('apple-plans-panel');
@@ -70,17 +91,6 @@
         function requestProducts(){try{var handlers=window.webkit&&window.webkit.messageHandlers;if(handlers&&handlers.IOSStoreKit)handlers.IOSStoreKit.postMessage({action:'loadProducts'});}catch(e){}}
         function showPlans(){document.body.classList.add('apple-plans-open');mainPanel.hidden=true;plansPanel.hidden=false;showMessage('',false);setTimeout(function(){try{plansPanel.scrollTop=0;}catch(e){}},0);requestProducts();}
         function showLogin(){document.body.classList.remove('apple-plans-open');plansPanel.hidden=true;mainPanel.hidden=false;showMessage('',false);}
-        window.updateIOSPrices=function(prices){
-          console.warn('[login_ios] Received prices:',prices);
-          let pricesObj=prices||{};
-          if(typeof prices==='string'){
-            try{pricesObj=JSON.parse(prices);}catch(e){console.error('[login_ios] JSON parse error for prices:',e);pricesObj={};}
-          }
-          Object.keys(IOS_PRODUCTS).forEach(function(key){
-            const el=document.querySelector('[data-price-key="'+key+'"]');
-            if(el&&pricesObj[key])el.textContent=pricesObj[key];
-          });
-        };
         window.onIOSPurchaseError=function(productId,reason){console.warn('[italky-ios-storekit] purchase error callback',productId,reason||'unknown');showMessage('Bu paket Apple Store’da henüz hazır değil. Lütfen daha sonra tekrar deneyin.',true);};
         window.onNativePurchaseComplete=function(detail){detail=detail||{};if(detail.ok||detail.premium||detail.active){showMessage('Satın alma tamamlandı. Yönlendiriliyorsunuz...',false);return;}if(detail.message&&detail.message!=='user_cancelled'){window.onIOSPurchaseError(detail.productId||'',detail.message);}else{showMessage('',false);}};
         window.addEventListener('italkyStoreKitPurchaseResult',function(event){try{window.onNativePurchaseComplete(event.detail||{});}catch(e){}});
