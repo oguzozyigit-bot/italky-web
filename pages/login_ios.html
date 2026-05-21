@@ -48,15 +48,14 @@
       </div>
     </section>
   </div>
-  <footer class="ios-footer"><div class="footer-nav"><a href="https://italky.ai/pages/about.html">Hakkımızda</a><a href="https://italky.ai/privacy-policy">Gizlilik</a><a href="https://italky.ai/pages/contact.html">İletişim</a></div><div class="prestige">italkyAI By Ozyigit's 2026 V8.8</div></footer>
+  <footer class="ios-footer"><div class="footer-nav"><a href="https://italky.ai/pages/about.html">Hakkımızda</a><a href="https://italky.ai/privacy-policy">Gizlilik</a><a href="https://italky.ai/pages/contact.html">İletişim</a></div><div class="prestige">italkyAI By Ozyigit's 2026 V8.9</div></footer>
   <script>
     (function(){
-      console.warn("[LOGIN_IOS_RUNTIME] file=login_ios.html build=88 timestamp=2026-05-21 native-redirect-v8");
-      document.body.setAttribute("data-login-ios-build", "88-native-redirect-v8");
+      console.warn("[LOGIN_IOS_RUNTIME] file=login_ios.html build=89 timestamp=2026-05-21 swift-native-routing-v9");
+      document.body.setAttribute("data-login-ios-build", "89-swift-native-routing-v9");
       document.body.setAttribute("data-ios-code-entry-disabled", "1");
 
       const IOS_PRODUCTS={weekly:'com.ozyigits.italkyai.premium.weekly',monthly:'com.ozyigits.italkyai.premium.monthly',quarterly:'com.ozyigits.italkyai.premium.quarterly',halfyear:'com.ozyigits.italkyai.premium.halfyear',yearly:'com.ozyigits.italkyai.premium.yearly'};
-      const HOME_URL='https://italky.ai/pages/home.html?premium=1&ios_iap=1&purchase=success';
       window.IOS_PRODUCTS=IOS_PRODUCTS;
       window.__ITALKY_IOS_CODE_ENTRY_DISABLED__=true;
 
@@ -64,7 +63,6 @@
         var mainPanel=document.getElementById('main-login-panel');
         var plansPanel=document.getElementById('apple-plans-panel');
         var status=document.getElementById('plansStatus');
-        var premiumRedirectStarted=false;
 
         function showMessage(message,isError){status.className=isError?'status err':'status';status.textContent=message||'';}
         function postStoreKitPayload(payload){try{var handlers=window.webkit&&window.webkit.messageHandlers;if(!(handlers&&handlers.IOSStoreKit))return false;handlers.IOSStoreKit.postMessage(payload);return true;}catch(e){return false;}}
@@ -74,18 +72,6 @@
         function hidePremiumGates(){try{document.querySelectorAll('[data-premium-gate],.premium-gate,.paywall-lock,.premium-lock').forEach(function(el){el.hidden=true;el.classList.add('premium-unlocked');});}catch(e){}}
         function isPurchaseSuccess(detail){detail=detail||{};return detail.ok===true||detail.premium===true||detail.active===true;}
         function planKeyFromProductId(productId){var keys=Object.keys(IOS_PRODUCTS);for(var i=0;i<keys.length;i++){if(IOS_PRODUCTS[keys[i]]===productId)return keys[i];}return 'unknown';}
-        function redirectToHome(){
-          console.warn('[IOS_PREMIUM_UNLOCK] redirecting to home');
-          try{window.location.assign(HOME_URL);}catch(e){window.location.href=HOME_URL;}
-          setTimeout(function(){
-            try{
-              if(String(window.location.pathname||'').toLowerCase().indexOf('/login_ios')>=0){
-                console.warn('[IOS_PREMIUM_UNLOCK] redirect fallback fired');
-                window.location.href=HOME_URL;
-              }
-            }catch(e){window.location.href=HOME_URL;}
-          },800);
-        }
         function unlockAndRedirect(detail){
           detail=detail||{};
           if(!isPurchaseSuccess(detail))return false;
@@ -102,7 +88,6 @@
           showMessage('Satın alma tamamlandı. Yönlendiriliyorsunuz...',false);
           console.warn('[IOS_PREMIUM_UNLOCK] web unlock applied',detail);
           try{window.dispatchEvent(new CustomEvent('italkyPremiumUnlockedWeb',{detail:detail}));}catch(e){}
-          if(!premiumRedirectStarted){premiumRedirectStarted=true;setTimeout(redirectToHome,800);}
           return true;
         }
         function showPlans(){document.body.classList.add('apple-plans-open');mainPanel.hidden=true;plansPanel.hidden=false;showMessage('',false);setTimeout(function(){try{plansPanel.scrollTop=0;}catch(e){}},0);requestProducts();}
@@ -138,7 +123,7 @@
         if(window.__ITALKY_IOS_PRICES__)window.updateIOSPrices(window.__ITALKY_IOS_PRICES__);
         requestProducts();
         document.getElementById('appleMembershipButton').addEventListener('click',showPlans);
-        document.getElementById('guestBtn').addEventListener('click',function(){window.location.href='https://italky.ai/pages/login_entry.html?guest=1&ios=1';});
+        document.getElementById('guestBtn').addEventListener('click',function(){location.href='https://italky.ai/pages/login_entry.html?guest=1&ios=1';});
         document.getElementById('plansBackButton').addEventListener('click',showLogin);
         document.getElementById('restorePurchaseButton').addEventListener('click',function(){showMessage('Satın almalar geri yükleniyor...',false);if(!postStoreKit('restorePurchases'))showMessage('Apple Store bağlantısı bulunamadı.',true);});
         document.querySelectorAll('.plan-card').forEach(function(card){card.addEventListener('click',function(e){if(e.target&&e.target.tagName==='A')return;e.preventDefault();e.stopPropagation();startPlanPurchase(card,e);});});
