@@ -66,10 +66,12 @@
         var premiumRedirectStarted=false;
 
         function showMessage(message,isError){status.className=isError?'status err':'status';status.textContent=message||'';}
-        function postStoreKit(action,extra){try{var handlers=window.webkit&&window.webkit.messageHandlers;if(!(handlers&&handlers.IOSStoreKit))return false;handlers.IOSStoreKit.postMessage(Object.assign({action:action},extra||{}));return true;}catch(e){return false;}}
+        function postStoreKitPayload(payload){try{var handlers=window.webkit&&window.webkit.messageHandlers;if(!(handlers&&handlers.IOSStoreKit))return false;handlers.IOSStoreKit.postMessage(payload);return true;}catch(e){return false;}}
+        function postStoreKit(action,extra){return postStoreKitPayload(Object.assign({action:action},extra||{}));}
         function requestProducts(){postStoreKit('loadProducts');}
         function setStoreValue(store,key,value){try{store.setItem(key,value);}catch(e){}}
         function hidePremiumGates(){try{document.querySelectorAll('[data-premium-gate],.premium-gate,.paywall-lock,.premium-lock').forEach(function(el){el.hidden=true;el.classList.add('premium-unlocked');});}catch(e){}}
+        function planKeyFromProductId(productId){var keys=Object.keys(IOS_PRODUCTS);for(var i=0;i<keys.length;i++){if(IOS_PRODUCTS[keys[i]]===productId)return keys[i];}return 'unknown';}
         function applyPremiumUnlock(detail){
           detail=detail||{};
           if(!(detail.ok||detail.premium||detail.active))return false;
@@ -94,6 +96,20 @@
         }
         function showPlans(){document.body.classList.add('apple-plans-open');mainPanel.hidden=true;plansPanel.hidden=false;showMessage('',false);setTimeout(function(){try{plansPanel.scrollTop=0;}catch(e){}},0);requestProducts();}
         function showLogin(){document.body.classList.remove('apple-plans-open');plansPanel.hidden=true;mainPanel.hidden=false;showMessage('',false);}
+        function startPlanPurchase(card,event){
+          var btn=card.querySelector('.plan-buy-btn');
+          if(!btn)return;
+          var productId=btn.dataset.productId||'';
+          var plan=planKeyFromProductId(productId);
+          console.warn('[LOGIN_IOS_PRODUCT] clicked plan='+plan+' productId='+productId);
+          if(event&&event.target&&event.target.closest&&event.target.closest('.plan-buy-btn'))console.warn('[LOGIN_IOS_PRODUCT] button click productId='+productId);
+          document.querySelectorAll('.plan-card').forEach(function(c){c.classList.remove('featured');});
+          card.classList.add('featured');
+          var payload={action:'purchasePremium',productId:productId};
+          console.warn('[LOGIN_IOS_PRODUCT] postMessage payload='+JSON.stringify(payload));
+          console.warn('[login_ios] storekit buy click',productId);
+          if(postStoreKitPayload(payload)){showMessage('Apple Store ödeme ekranı açılıyor...',false);}else{showMessage('IOSStoreKit bağlantısı bulunamadı.',true);}
+        }
 
         window.updateIOSPrices=function(prices){
           var pricesObj=prices||{};
@@ -114,7 +130,7 @@
         document.getElementById('guestBtn').addEventListener('click',function(){window.location.href='https://italky.ai/pages/login_entry.html?guest=1&ios=1';});
         document.getElementById('plansBackButton').addEventListener('click',showLogin);
         document.getElementById('restorePurchaseButton').addEventListener('click',function(){showMessage('Satın almalar geri yükleniyor...',false);if(!postStoreKit('restorePurchases'))showMessage('Apple Store bağlantısı bulunamadı.',true);});
-        document.querySelectorAll('.plan-card').forEach(function(card){card.addEventListener('click',function(e){if(e.target&&e.target.tagName==='A')return;e.preventDefault();e.stopPropagation();document.querySelectorAll('.plan-card').forEach(function(c){c.classList.remove('featured');});card.classList.add('featured');var btn=card.querySelector('.plan-buy-btn');if(!btn)return;var productId=btn.dataset.productId;console.warn('[login_ios] storekit buy click',productId);if(postStoreKit('purchasePremium',{productId:productId})){showMessage('Apple Store ödeme ekranı açılıyor...',false);}else{showMessage('IOSStoreKit bağlantısı bulunamadı.',true);}});});
+        document.querySelectorAll('.plan-card').forEach(function(card){card.addEventListener('click',function(e){if(e.target&&e.target.tagName==='A')return;e.preventDefault();e.stopPropagation();startPlanPurchase(card,e);});});
       }
       if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindIOSLogin);else bindIOSLogin();
     })();
