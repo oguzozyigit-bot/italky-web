@@ -135,6 +135,99 @@ function buildCodeAccess(codeState) {
   };
 }
 
+function safeStorageGet(storage, key) {
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeStorageSet(storage, key, value) {
+  try {
+    storage.setItem(key, value);
+  } catch {}
+}
+
+function getIOSIAPPremiumState() {
+  try {
+    const params = new URLSearchParams(location.search || "");
+    const queryPremium =
+      params.get("premium") === "1" ||
+      params.get("ios_iap") === "1" ||
+      params.get("purchase") === "success";
+
+    const storedPremium =
+      safeStorageGet(localStorage, "italky_premium_active") === "1" ||
+      safeStorageGet(localStorage, "italky_ios_premium_active") === "1" ||
+      safeStorageGet(sessionStorage, "italky_premium_active") === "1";
+
+    if (!queryPremium && !storedPremium) return null;
+
+    safeStorageSet(localStorage, "italky_membership_active", "1");
+    safeStorageSet(localStorage, "italky_membership_status", "active");
+    safeStorageSet(localStorage, "italky_premium_active", "1");
+    safeStorageSet(localStorage, "italky_ios_premium_active", "1");
+    safeStorageSet(localStorage, "italky_premium_source", "ios_iap");
+    safeStorageSet(sessionStorage, "italky_membership_active", "1");
+    safeStorageSet(sessionStorage, "italky_premium_active", "1");
+
+    return { source: queryPremium ? "ios_iap_query" : "ios_iap_storage" };
+  } catch {
+    return null;
+  }
+}
+
+function buildIOSIAPPremiumAccess(iapState = {}) {
+  return {
+    ok: true,
+    is_logged_in: true,
+    ios_iap_access: true,
+    access_mode: "ios_iap",
+    app_access_mode: "ios_iap",
+    user_id: "ios_iap:local",
+    email: "",
+    display_name: "iOS Premium",
+    full_name: "iOS Premium",
+    access_open: true,
+    role: "",
+    is_admin: false,
+    is_superadmin: false,
+    tokens: 0,
+    trial_started_at: null,
+    trial_ends_at: null,
+    trial_used: false,
+    trial_days_left: 0,
+    gift_started_at: null,
+    gift_ends_at: null,
+    membership_status: "active",
+    membership_source: "ios_iap",
+    membership_product_id: "com.ozyigits.italkyai.premium",
+    membership_started_at: null,
+    membership_ends_at: null,
+    membership_last_checked_at: null,
+    package_active: true,
+    package_code: "ios_iap",
+    selected_package_code: "ios_iap",
+    package_started_at: null,
+    package_ends_at: null,
+    subscription_active: true,
+    subscription_product_id: "com.ozyigits.italkyai.premium",
+    subscription_started_at: null,
+    subscription_ends_at: null,
+    is_member: true,
+    has_active_membership: true,
+    no_ads: true,
+    ads_disabled: true,
+    is_no_ads_member: true,
+    membership_date_valid: true,
+    membership_status_active: true,
+    is_reklamsiz_product: false,
+    server_time: null,
+    raw: { ios_iap_access: true, source: iapState?.source || "ios_iap" }
+  };
+}
+
 async function getSessionOrNull() {
   try {
     const { data, error } = await supabase.auth.getSession();
@@ -390,6 +483,19 @@ export async function initGlobalAccess(options = {}) {
       code_access: true,
       session: null,
       access: codeAccess
+    };
+  }
+
+  const iosIAPState = getIOSIAPPremiumState();
+  if (iosIAPState) {
+    const iosIAPAccess = buildIOSIAPPremiumAccess(iosIAPState);
+    setCachedAccess(iosIAPAccess);
+    dispatchAccessReady(iosIAPAccess);
+    return {
+      ok: true,
+      ios_iap_access: true,
+      session: null,
+      access: iosIAPAccess
     };
   }
 
