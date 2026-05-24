@@ -486,7 +486,7 @@ export async function initGlobalAccess(options = {}) {
       }
 
       const access = await fetchAccessStateSafe(session);
-      const safe = mergeIOSIAPPremiumFlags(buildSafeAccess(access || {}, session), iosIAPState);
+      const safe = buildSafeAccess(access || {}, session);
 
       setCachedAccess(safe);
       dispatchAccessReady(safe);
