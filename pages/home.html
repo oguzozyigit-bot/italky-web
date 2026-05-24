@@ -986,9 +986,28 @@ body.home-ready #pageContent{
   </div>
 </main>
 
+<script>
+(function(){
+  try {
+    var qs = new URLSearchParams(location.search || "");
+    var isIOSIAP = qs.get("ios_iap") === "1" || qs.get("purchase") === "success";
+    if (!isIOSIAP) return;
+
+    localStorage.setItem("italky_membership_active", "1");
+    localStorage.setItem("italky_membership_status", "active");
+    localStorage.setItem("italky_premium_active", "1");
+    localStorage.setItem("italky_ios_premium_active", "1");
+    localStorage.setItem("italky_premium_source", "ios_iap");
+    sessionStorage.setItem("italky_membership_active", "1");
+    sessionStorage.setItem("italky_premium_active", "1");
+    window.__ITALKY_IOS_IAP_PREMIUM__ = true;
+  } catch(e) {}
+})();
+</script>
+
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  import { initGlobalAccess } from "/js/global_access.js";
+  import { initGlobalAccess } from "/js/global_access.js?v=ios-iap-20260524-2";
   import { supabase } from "/js/supabase_client.js";
 
   const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
