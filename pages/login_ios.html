@@ -92,8 +92,77 @@
           });
         };
 
+        async function getSupabaseAccessToken(){
+          try{
+            const mod=await import('https://italky.ai/js/supabase_client.js?v=ios-iap-confirm-20260524');
+            const client=mod&&mod.supabase;
+            if(!client)throw new Error('supabase_client_missing');
+            const result=await client.auth.getSession();
+            if(result&&result.error)throw result.error;
+            return result&&result.data&&result.data.session&&result.data.session.access_token;
+          }catch(err){
+            console.warn('[IOS_PREMIUM_UNLOCK] session token error',err);
+            return '';
+          }
+        }
+
+        function buildConfirmPayload(detail){
+          detail=detail||{};
+          return {
+            productId:detail.productId||detail.product_id||detail.productIdentifier||'',
+            transactionId:detail.transactionId||detail.transaction_id||detail.originalTransactionId||'',
+            expirationDate:detail.expirationDate||detail.expiration_date||detail.expiresAt||detail.expires_at||'',
+            source:'ios_iap'
+          };
+        }
+
+        async function confirmIOSIAPPurchase(detail){
+          const token=await getSupabaseAccessToken();
+          if(!token)throw new Error('Satın alma tamamlandı ancak kullanıcı oturumu bulunamadı. Lütfen giriş yapıp tekrar deneyin.');
+          const payload=buildConfirmPayload(detail);
+          if(!payload.productId)throw new Error('Satın alma doğrulaması için ürün bilgisi bulunamadı.');
+          const resp=await fetch('https://italky-api.onrender.com/api/ios-iap/confirm',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            cache:'no-store',
+            body:JSON.stringify(payload)
+          });
+          const json=await resp.json().catch(function(){return {};});
+          if(!resp.ok||!json.ok){
+            throw new Error(json.detail||json.message||'Satın alma backend tarafından doğrulanamadı.');
+          }
+          return json;
+        }
+
+        function redirectHomeAfterConfirm(){
+          try{localStorage.setItem('italky_membership_active','1');}catch(e){}
+          try{localStorage.setItem('italky_membership_status','active');}catch(e){}
+          try{localStorage.setItem('italky_premium_active','1');}catch(e){}
+          try{localStorage.setItem('italky_ios_premium_active','1');}catch(e){}
+          try{localStorage.setItem('italky_premium_source','ios_iap');}catch(e){}
+          try{sessionStorage.setItem('italky_membership_active','1');}catch(e){}
+          try{sessionStorage.setItem('italky_premium_active','1');}catch(e){}
+          console.warn('[IOS_PREMIUM_UNLOCK] backend confirm ok, redirecting home');
+          window.location.assign('https://italky.ai/pages/home.html?premium=1&ios_iap=1&purchase=success');
+        }
+
         window.onIOSPurchaseError=function(productId,reason){console.warn('[italky-ios-storekit] purchase error callback',productId,reason||'unknown');showMessage('Bu paket Apple Store’da henüz hazır değil. Lütfen daha sonra tekrar deneyin.',true);};
-        window.onNativePurchaseComplete=function(detail){detail=detail||{};if(detail.ok||detail.premium||detail.active){showMessage('Satın alma tamamlandı. Yönlendiriliyorsunuz...',false);return;}if(detail.message&&detail.message!=='user_cancelled'){window.onIOSPurchaseError(detail.productId||'',detail.message);}else{showMessage('',false);}};
+        window.onNativePurchaseComplete=async function(detail){
+          detail=detail||{};
+          if(detail.ok===true||detail.premium===true||detail.active===true){
+            showMessage('Satın alma doğrulanıyor...',false);
+            try{
+              await confirmIOSIAPPurchase(detail);
+              showMessage('Satın alma tamamlandı. Yönlendiriliyorsunuz...',false);
+              redirectHomeAfterConfirm();
+            }catch(err){
+              console.warn('[IOS_PREMIUM_UNLOCK] backend confirm failed',err);
+              showMessage((err&&err.message)||'Satın alma doğrulanamadı. Lütfen tekrar deneyin.',true);
+            }
+            return;
+          }
+          if(detail.message&&detail.message!=='user_cancelled'){window.onIOSPurchaseError(detail.productId||'',detail.message);}else{showMessage('',false);}
+        };
         window.addEventListener('italkyStoreKitPurchaseResult',function(event){try{window.onNativePurchaseComplete(event.detail||{});}catch(e){}});
         
         if(window.__ITALKY_IOS_PRICES__)window.updateIOSPrices(window.__ITALKY_IOS_PRICES__);
