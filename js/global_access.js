@@ -525,28 +525,29 @@ export async function initGlobalAccess(options = {}) {
     };
   }
 
-  const session = await getSessionOrNull();
   const iosIAPState = getIOSIAPPremiumState();
 
-  if (session?.user?.id) {
-    if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") {
-      lockMembershipPageBack();
+  if (iosIAPState) {
+    const session = await getSessionOrNull();
+
+    if (session?.user?.id) {
+      if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") {
+        lockMembershipPageBack();
+      }
+
+      const access = await fetchAccessStateSafe(session);
+      const safe = mergeIOSIAPPremiumFlags(buildSafeAccess(access || {}, session), iosIAPState);
+
+      setCachedAccess(safe);
+      dispatchAccessReady(safe);
+
+      return {
+        ok: true,
+        session,
+        access: safe
+      };
     }
 
-    const access = await fetchAccessStateSafe(session);
-    const safe = mergeIOSIAPPremiumFlags(buildSafeAccess(access || {}, session), iosIAPState);
-
-    setCachedAccess(safe);
-    dispatchAccessReady(safe);
-
-    return {
-      ok: true,
-      session,
-      access: safe
-    };
-  }
-
-  if (iosIAPState) {
     const iosIAPAccess = buildIOSIAPPremiumAccess(iosIAPState);
     setCachedAccess(iosIAPAccess);
     dispatchAccessReady(iosIAPAccess);
@@ -555,6 +556,26 @@ export async function initGlobalAccess(options = {}) {
       ios_iap_access: true,
       session: null,
       access: iosIAPAccess
+    };
+  }
+
+  const session = await getSessionOrNull();
+
+  if (session?.user?.id) {
+    if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") {
+      lockMembershipPageBack();
+    }
+
+    const access = await fetchAccessStateSafe(session);
+    const safe = buildSafeAccess(access || {}, session);
+
+    setCachedAccess(safe);
+    dispatchAccessReady(safe);
+
+    return {
+      ok: true,
+      session,
+      access: safe
     };
   }
 
