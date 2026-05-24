@@ -178,56 +178,6 @@ function getIOSIAPPremiumState() {
   }
 }
 
-function buildIOSIAPPremiumAccess(iapState = {}) {
-  return {
-    ok: true,
-    is_logged_in: true,
-    ios_iap_access: true,
-    access_mode: "ios_iap",
-    app_access_mode: "ios_iap",
-    user_id: "ios_iap:local",
-    email: "",
-    display_name: "iOS Premium",
-    full_name: "iOS Premium",
-    access_open: true,
-    role: "",
-    is_admin: false,
-    is_superadmin: false,
-    tokens: 0,
-    trial_started_at: null,
-    trial_ends_at: null,
-    trial_used: false,
-    trial_days_left: 0,
-    gift_started_at: null,
-    gift_ends_at: null,
-    membership_status: "active",
-    membership_source: "ios_iap",
-    membership_product_id: "com.ozyigits.italkyai.premium",
-    membership_started_at: null,
-    membership_ends_at: null,
-    membership_last_checked_at: null,
-    package_active: true,
-    package_code: "ios_iap",
-    selected_package_code: "ios_iap",
-    package_started_at: null,
-    package_ends_at: null,
-    subscription_active: true,
-    subscription_product_id: "com.ozyigits.italkyai.premium",
-    subscription_started_at: null,
-    subscription_ends_at: null,
-    is_member: true,
-    has_active_membership: true,
-    no_ads: true,
-    ads_disabled: true,
-    is_no_ads_member: true,
-    membership_date_valid: true,
-    membership_status_active: true,
-    is_reklamsiz_product: false,
-    server_time: null,
-    raw: { ios_iap_access: true, source: iapState?.source || "ios_iap" }
-  };
-}
-
 function mergeIOSIAPPremiumFlags(access = {}, iapState = null) {
   if (!iapState) return access;
   return {
@@ -548,15 +498,18 @@ export async function initGlobalAccess(options = {}) {
       };
     }
 
-    const iosIAPAccess = buildIOSIAPPremiumAccess(iosIAPState);
-    setCachedAccess(iosIAPAccess);
-    dispatchAccessReady(iosIAPAccess);
-    return {
-      ok: true,
-      ios_iap_access: true,
-      session: null,
-      access: iosIAPAccess
-    };
+    console.warn("[global_access] ios_iap state ignored because there is no Supabase session");
+
+    if (!(allowPublicPageBypass && publicPage)) {
+      goLogin();
+
+      return {
+        ok: false,
+        redirected: "login",
+        session: null,
+        access: buildSafeAccess({}, null)
+      };
+    }
   }
 
   const session = await getSessionOrNull();
