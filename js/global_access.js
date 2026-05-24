@@ -228,6 +228,30 @@ function buildIOSIAPPremiumAccess(iapState = {}) {
   };
 }
 
+function mergeIOSIAPPremiumFlags(access = {}, iapState = null) {
+  if (!iapState) return access;
+  return {
+    ...access,
+    ios_iap_access: true,
+    access_open: true,
+    has_active_membership: true,
+    is_member: true,
+    package_active: true,
+    subscription_active: true,
+    no_ads: true,
+    ads_disabled: true,
+    is_no_ads_member: true,
+    membership_status: "active",
+    membership_source: "ios_iap",
+    membership_status_active: true,
+    raw: {
+      ...(access?.raw || {}),
+      ios_iap_access: true,
+      ios_iap_source: iapState?.source || "ios_iap"
+    }
+  };
+}
+
 async function getSessionOrNull() {
   try {
     const { data, error } = await supabase.auth.getSession();
@@ -304,7 +328,18 @@ function isReklamsizProduct(productId) {
 
 function buildSafeAccess(access = {}, session = null) {
   const userId = session?.user?.id || "";
-  const email = session?.user?.email || session?.user?.user_metadata?.email || "";
+  const metadata = session?.user?.user_metadata || {};
+  const email = session?.user?.email || metadata?.email || access?.email || "";
+  const displayName =
+    access?.display_name ||
+    access?.full_name ||
+    metadata?.display_name ||
+    metadata?.full_name ||
+    metadata?.name ||
+    metadata?.user_name ||
+    "";
+  const fullName = access?.full_name || metadata?.full_name || displayName;
+  const avatarUrl = access?.avatar_url || access?.picture || metadata?.avatar_url || metadata?.picture || "";
 
   const role = cleanLower(
     access?.role ||
@@ -396,6 +431,10 @@ function buildSafeAccess(access = {}, session = null) {
     is_logged_in: !!userId,
     user_id: userId,
     email,
+    display_name: displayName,
+    full_name: fullName,
+    avatar_url: avatarUrl,
+    picture: avatarUrl,
 
     access_open: accessOpen,
 
@@ -486,7 +525,27 @@ export async function initGlobalAccess(options = {}) {
     };
   }
 
+  const session = await getSessionOrNull();
   const iosIAPState = getIOSIAPPremiumState();
+
+  if (session?.user?.id) {
+    if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") {
+      lockMembershipPageBack();
+    }
+
+    const access = await fetchAccessStateSafe(session);
+    const safe = mergeIOSIAPPremiumFlags(buildSafeAccess(access || {}, session), iosIAPState);
+
+    setCachedAccess(safe);
+    dispatchAccessReady(safe);
+
+    return {
+      ok: true,
+      session,
+      access: safe
+    };
+  }
+
   if (iosIAPState) {
     const iosIAPAccess = buildIOSIAPPremiumAccess(iosIAPState);
     setCachedAccess(iosIAPAccess);
@@ -502,16 +561,13 @@ export async function initGlobalAccess(options = {}) {
   /*
     Public sayfalar:
     Giriş yoksa bile açılır.
-    Giriş varsa access state alınır, reklam/üyelik bilgisi cache’e yazılır.
   */
   if (allowPublicPageBypass && publicPage) {
     if (lockMembershipBack && currentPath === "/pages/membership.html") {
       lockMembershipPageBack();
     }
 
-    const session = await getSessionOrNull();
-    const access = session ? await fetchAccessStateSafe(session) : null;
-    const safe = buildSafeAccess(access || {}, session || null);
+    const safe = buildSafeAccess({}, null);
 
     setCachedAccess(safe);
     dispatchAccessReady(safe);
@@ -520,43 +576,18 @@ export async function initGlobalAccess(options = {}) {
       ok: true,
       bypass: true,
       public_page: true,
-      session,
+      session: null,
       access: safe
     };
   }
 
-  /*
-    Private sayfalar:
-    Giriş yoksa login’e gider.
-  */
-  const session = await getSessionOrNull();
-
-  if (!session?.user?.id) {
-    goLogin();
-
-    return {
-      ok: false,
-      redirected: "login",
-      session: null,
-      access: buildSafeAccess({}, null)
-    };
-  }
-
-  /*
-    Giriş varsa:
-    Üyelik yok diye membership’e zorla atma yok.
-    Uygulama açılır.
-  */
-  const access = await fetchAccessStateSafe(session);
-  const safe = buildSafeAccess(access || {}, session);
-
-  setCachedAccess(safe);
-  dispatchAccessReady(safe);
+  goLogin();
 
   return {
-    ok: true,
-    session,
-    access: safe
+    ok: false,
+    redirected: "login",
+    session: null,
+    access: buildSafeAccess({}, null)
   };
 }
 
