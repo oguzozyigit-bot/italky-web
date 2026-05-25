@@ -37,7 +37,7 @@
     <div class="status" id="status">Oturum kontrol ediliyor...</div>
     <div class="actions" id="loginActions" hidden>
       <button class="btn primary" id="appleLoginButton" type="button">Apple ile giriş yap</button>
-      <a class="btn secondary" id="existingLoginLink" href="/pages/login_entry.html?ios=1">Mevcut hesabımla giriş yap</a>
+      <a class="btn secondary" id="supportLink" href="/pages/contact.html">Destek ile iletişime geç</a>
     </div>
     <div class="details" id="details" hidden></div>
   </main>
@@ -53,7 +53,6 @@
     const statusEl = document.getElementById("status");
     const loginActions = document.getElementById("loginActions");
     const appleLoginButton = document.getElementById("appleLoginButton");
-    const existingLoginLink = document.getElementById("existingLoginLink");
     const detailsEl = document.getElementById("details");
 
     function setStatus(text, type = "") {
@@ -129,12 +128,10 @@
 
     function showLoginRequired(claim) {
       titleEl.textContent = "Satın alma tamamlandı";
-      messageEl.textContent = "Üyeliği hesabına bağlamak için giriş yap.";
-      setStatus("Giriş yaptıktan sonra satın alma bu hesaba bağlanacak.");
+      messageEl.textContent = "Üyeliği hesabına bağlamak için Apple ile giriş yap.";
+      setStatus("Giriş tamamlanınca satın alma aynı hesaba bağlanacak.");
       showDetails(claim);
       loginActions.hidden = false;
-      const next = encodeURIComponent(currentReturnPath());
-      existingLoginLink.href = `/pages/login_entry.html?ios=1&next=${next}&return=${next}&ios_iap_claim=1`;
     }
 
     async function startAppleLogin() {
