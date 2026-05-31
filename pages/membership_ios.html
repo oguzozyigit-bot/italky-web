@@ -23,6 +23,7 @@
   <script>
     (function(){
       const SUCCESS_URL = "/pages/home_ios.html?premium=1&ios_iap=1&purchase=success";
+      const SUCCESS_SOURCES = new Set(["purchase_success", "restore_success", "transaction_update"]);
       const PRODUCTS = [
         { key:"weekly", productId:"com.ozyigits.italkyai.premium.weekly", title:"7 günlük", desc:"Hızlı deneme için ideal." },
         { key:"monthly", productId:"com.ozyigits.italkyai.premium.monthly", title:"1 aylık", desc:"Esnek kullanım için.", badge:"Popüler", featured:true },
@@ -34,6 +35,7 @@
       const statusBox = document.getElementById("statusBox");
       let selectedProductId = PRODUCTS[1].productId;
       let prices = {};
+      let redirecting = false;
       function setStatus(kind, text){ statusBox.className = "status-box"; if(kind) statusBox.classList.add(kind); statusBox.textContent = text || ""; }
       function setFlag(storage, key, value){ try{ storage.setItem(key, value); }catch(e){} }
       function persistPremium(detail){
@@ -49,6 +51,25 @@
           setFlag(storage, "italky_premium_product_id", productId);
           setFlag(storage, "italky_premium_transaction_id", transactionId);
         });
+      }
+      function isSuccessfulStoreKit(detail){ return !!detail && detail.ok === true && SUCCESS_SOURCES.has(String(detail.source || "")); }
+      function handleNativeResult(detail){
+        detail = detail || {};
+        if(isSuccessfulStoreKit(detail)){
+          if(redirecting) return;
+          redirecting = true;
+          persistPremium(detail);
+          setStatus("ok", "Satın alma tamamlandı. Yönlendiriliyorsunuz...");
+          window.location.replace(SUCCESS_URL);
+          return;
+        }
+        if(detail.message === "user_cancelled" || detail.source === "purchase_cancelled"){
+          setStatus("", "Satın alma iptal edildi.");
+          return;
+        }
+        if(detail.ok === false || detail.message){
+          setStatus("err", "Satın alma tamamlanamadı. Lütfen tekrar deneyin.");
+        }
       }
       function render(){
         planGrid.innerHTML = PRODUCTS.map(function(plan){
@@ -68,18 +89,8 @@
       function requestProducts(){ try{ const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.IOSStoreKit; if(bridge) bridge.postMessage({ action:"loadProducts" }); }catch(e){} }
       window.updateIOSPrices = function(nextPrices){ if(typeof nextPrices === "string"){ try{ nextPrices = JSON.parse(nextPrices); }catch(e){ nextPrices = {}; } } prices = nextPrices || {}; render(); };
       window.onIOSPurchaseError = function(productId, reason){ setStatus("err", reason === "user_cancelled" ? "Satın alma iptal edildi." : "Satın alma tamamlanamadı. Lütfen tekrar deneyin."); };
-      window.onNativePurchaseComplete = function(detail){
-        detail = detail || {};
-        if(detail.ok === true || detail.premium === true || detail.active === true){
-          persistPremium(detail);
-          setStatus("ok", "Satın alma tamamlandı. Yönlendiriliyorsunuz...");
-          window.location.assign(SUCCESS_URL);
-          return;
-        }
-        if(detail.message === "user_cancelled") setStatus("", "Satın alma iptal edildi.");
-        else setStatus("err", "Satın alma tamamlanamadı. Lütfen tekrar deneyin.");
-      };
-      window.addEventListener("italkyStoreKitPurchaseResult", function(event){ window.onNativePurchaseComplete(event.detail || {}); });
+      window.onNativePurchaseComplete = handleNativeResult;
+      ["italkyStoreKitPurchaseResult", "italkyNativePurchaseComplete", "italkyPremiumUnlocked", "italkyStoreKitRestoreResult"].forEach(function(name){ window.addEventListener(name, function(event){ handleNativeResult(event.detail || {}); }); });
       window.addEventListener("italkyStoreKitProductLoaded", function(event){ const items = event.detail && event.detail.products; if(Array.isArray(items)){ const next = {}; items.forEach(function(item){ const product = PRODUCTS.find(function(plan){ return plan.productId === item.id; }); if(product && item.displayPrice) next[product.key] = item.displayPrice; }); window.updateIOSPrices(next); } });
       render(); requestProducts(); setStatus("", "Apple Store aboneliğinizi seçebilirsiniz.");
     })();
