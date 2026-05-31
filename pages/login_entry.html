@@ -43,7 +43,7 @@
       text-align:center; white-space:pre; box-shadow:0 0 32px rgba(0,0,0,.30);
     }
     .edge-handle.open{ right:0; border-radius:18px 0 0 18px; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-right:none; box-shadow:-10px 0 32px rgba(0,0,0,.30); }
-    .edge-handle.open::before { content: "B\A C\A K"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
+    .edge-handle.open::before { content: "B\A A\A C\A K"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
     .edge-handle.clear{ left:0; border-radius:0 18px 18px 0; background:linear-gradient(180deg,rgba(56,189,248,.24),rgba(99,102,241,.18),rgba(236,72,153,.18)); border:1px solid rgba(255,255,255,.14); border-left:none; box-shadow:10px 0 32px rgba(0,0,0,.30); }
     .edge-handle.clear::before { content: "C\A L\A E\A A\A R"; white-space: pre; display: block; line-height: 1.2; text-shadow: 0 0 12px rgba(255,255,255,.28); }
     .edge-handle:active{transform:translateY(-50%) scale(.96)}
@@ -185,6 +185,8 @@
 
     .toast{ position:fixed; left:50%; top:30px; bottom:auto; transform:translateX(-50%) translateY(-120px); max-width:min(92vw,430px); min-height:44px; padding:11px 16px; border-radius:16px; background:rgba(12,16,28,.98); border:1px solid rgba(255,255,255,.15); color:#fff; font-size:12px; font-weight:1000; display:flex; align-items:center; justify-content:center; text-align:center; z-index:2147483647; box-shadow:0 18px 36px rgba(0,0,0,.45); transition:.22s ease; pointer-events:none; }
     .toast.show{transform:translateX(-50%) translateY(0)}
+    .ad-banner-slot{ position:fixed; left:0; right:0; bottom:0; z-index:72; min-height:1px; padding-bottom:var(--safe-bottom); display:none; pointer-events:none; }
+    .ad-banner-slot.show{ display:block; }
 
     @media(max-width:390px){
       .mic-line{grid-template-columns:1fr 66px 1fr;gap:8px;transform:translateY(-7px)}
@@ -339,6 +341,7 @@
     </div>
   </div>
 
+  <div id="adBannerSlot" class="ad-banner-slot" aria-hidden="true"></div>
   <div id="toast" class="toast"></div>
 
   <script type="module">
@@ -349,6 +352,7 @@
   const $ = (id) => document.getElementById(id);
   const SITE_LANG_KEY = "site_lang";
   const MIN_REQUIRED_VERSION = 81;
+  const ENTRY_AD_INTERVAL_MS = 120 * 1000;
 
   const BCP = {
     tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
@@ -404,13 +408,57 @@
   const updateModal = $("updateModal"); 
   const drawerBackdrop = $("drawerBackdrop");
   const handsFreeToggle = $("handsFreeToggle");
+  const adBannerSlot = $("adBannerSlot");
 
   function tx(key){ const c = UI[SITE_LANG] ? SITE_LANG : "en"; return UI[c]?.[key] || UI.en[key] || key; }
 
+  function storageFlagEnabled(key) {
+    try {
+      const localValue = String(localStorage.getItem(key) || "").toLowerCase();
+      const sessionValue = String(sessionStorage.getItem(key) || "").toLowerCase();
+      return localValue === "1" || localValue === "true" || sessionValue === "1" || sessionValue === "true";
+    } catch (e) { return false; }
+  }
+
+  function hasNoAdsAccess() {
+    if (isPremium) return true;
+    try {
+      const access = window.italkyAccess || window.__italkyAccess || window.__ITALKY_ACCESS__ || window.__ITALKY_ACCESS_STATE__;
+      if (access && (access.no_ads || access.ads_disabled || access.is_member || access.subscription_active || access.has_active_membership)) return true;
+    } catch (e) {}
+    return ["italky_no_ads", "italky_ads_disabled", "italky_member", "italky_subscription_active"].some(storageFlagEnabled);
+  }
+
+  function adBridges() {
+    return [window.AndroidAds, window.AdMob, window.NativeAds, window.Native, window.AndroidAdBridge, window.AdMobBridge].filter(Boolean);
+  }
+
+  function callFirstAdBridge(methods, ...args) {
+    for (const bridge of adBridges()) {
+      for (const method of methods) {
+        try {
+          if (bridge && typeof bridge[method] === "function") {
+            bridge[method](...args);
+            return true;
+          }
+        } catch (e) { console.warn("[login_entry_ads] bridge call failed", method, e); }
+      }
+    }
+    return false;
+  }
+
   function setNativeBanner(visible) {
-    if (isPremium) visible = false;
-    const bridge = window.AndroidAdBridge || window.NativeAds || window.AdMobBridge || window.Native;
-    if (bridge && typeof bridge.toggleBannerAd === "function") bridge.toggleBannerAd(visible, "");
+    if (hasNoAdsAccess()) visible = false;
+    if (adBannerSlot) adBannerSlot.classList.toggle("show", !!visible);
+    if (!visible) {
+      callFirstAdBridge(["hideBanner", "removeBanner", "toggleBannerAd"], false, "");
+      return;
+    }
+    const ok = callFirstAdBridge(["showBanner", "loadBanner", "requestBanner", "toggleBannerAd"], true, "");
+    if (!ok) {
+      if (adBannerSlot) adBannerSlot.classList.remove("show");
+      console.warn("[login_entry_ads] banner bridge unavailable");
+    }
   }
 
   function showToast(msg){
@@ -450,7 +498,7 @@
 
   function showAdModal({title, text, adUnit = "public_facetoface_auto", langCode = ""} = {}){
       return new Promise((resolve) => {
-          if(isPremium) { resolve(true); return; }
+          if(hasNoAdsAccess()) { resolve(true); return; }
           setNativeBanner(false);
           if($("adTitle")) $("adTitle").textContent = title || tx("adTitle");
           if($("adText")) $("adText").textContent = text || tx("adText");
@@ -466,21 +514,47 @@
       });
   }
 
-  function scheduleAutoAd(intervalMs) {
-      if(isPremium) return;
-      clearTimeout(autoAdTimer);
-      autoAdTimer = setTimeout(async () => {
-          const isDrawerOpen = drawerBackdrop.classList.contains('show');
-          const isUpdateModalOpen = updateModal?.classList.contains('show');
-          const isRecording = (recordingSide !== null) || topMic.classList.contains('listening') || botMic.classList.contains('listening');
+  function clearAutoAdTimer() {
+      if (autoAdTimer) clearTimeout(autoAdTimer);
+      autoAdTimer = null;
+  }
 
-          if (!isDrawerOpen && !isUpdateModalOpen && !isRecording) {
-              const success = await showAdModal({ adUnit: "public_facetoface_auto", langCode: "" });
-              if(!success) { scheduleAutoAd(2000); return; }
-          }
-          scheduleAutoAd(5 * 60 * 1000); 
+  function canTriggerEntryAd() {
+      if (hasNoAdsAccess() || document.visibilityState === "hidden") return false;
+      const isDrawerOpen = drawerBackdrop?.classList.contains('show');
+      const isUpdateModalOpen = updateModal?.classList.contains('show');
+      const isRecording = (recordingSide !== null) || topMic?.classList.contains('listening') || botMic?.classList.contains('listening');
+      return !isDrawerOpen && !isUpdateModalOpen && !isRecording;
+  }
+
+  function triggerEntryAd() {
+      if (hasNoAdsAccess()) return true;
+      const ok = callFirstAdBridge(["showInterstitial", "showInterstitialAd", "showRewarded", "showAd", "requestInterstitial"], "public_facetoface_auto", "");
+      if (!ok) console.warn("[login_entry_ads] interstitial bridge unavailable");
+      return ok;
+  }
+
+  function scheduleAutoAd(intervalMs = ENTRY_AD_INTERVAL_MS) {
+      if (hasNoAdsAccess()) return;
+      clearAutoAdTimer();
+      autoAdTimer = setTimeout(() => {
+          if (document.visibilityState === "hidden") { clearAutoAdTimer(); return; }
+          if (canTriggerEntryAd()) triggerEntryAd();
+          scheduleAutoAd(ENTRY_AD_INTERVAL_MS);
       }, intervalMs);
   }
+
+  function stopEntryAds() {
+      clearAutoAdTimer();
+      setNativeBanner(false);
+  }
+
+  document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") { stopEntryAds(); return; }
+      if (!hasNoAdsAccess()) { setNativeBanner(true); scheduleAutoAd(ENTRY_AD_INTERVAL_MS); }
+  });
+  window.addEventListener("pagehide", stopEntryAds);
+  window.addEventListener("beforeunload", stopEntryAds);
 
   function refreshTexts(){
     const tO = langObj(topLang); const bO = langObj(botLang);
@@ -547,8 +621,8 @@
 
   $("sideClearBtn").onclick = clearChat;
   $("drawerEdgeBtn").onclick = () => {
-  window.location.href = "/pages/login_ios.html?v=66";
-};
+    window.location.href = "/pages/login.html";
+  };
   drawerBackdrop.onclick = (e) => { if(e.target === drawerBackdrop) { drawerBackdrop.classList.remove("show"); setNativeBanner(true); }};
   
   $("guideBtn").onclick = () => { showToast("Rehber Modu Çok Yakında! (Premium)"); };
@@ -825,7 +899,12 @@
     try { OfflinePackBridge.preloadRewardedAd(); } catch(e) {}
 
     checkAppUpdate();
-    scheduleAutoAd(5 * 60 * 1000);
+    if (!hasNoAdsAccess()) {
+      setNativeBanner(true);
+      scheduleAutoAd(ENTRY_AD_INTERVAL_MS);
+    } else {
+      setNativeBanner(false);
+    }
   }
 
   boot();
