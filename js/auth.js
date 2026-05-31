@@ -2,6 +2,8 @@ import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
 const ACTIVE_SESSION_LOCAL_KEY = "ITALKY_ACTIVE_SESSION_KEY";
+const NATIVE_GOOGLE_NEXT_KEY = "italky_native_google_login_next";
+const DEFAULT_NATIVE_GOOGLE_NEXT = "/pages/membership.html";
 let __singleWatcherStarted = false;
 
 function readNativeIdToken(payload) {
@@ -92,6 +94,31 @@ function safeRedirectPath(value) {
   return raw;
 }
 
+function rememberNativeGoogleNext(next = "") {
+  const safeNext = safeRedirectPath(next) || DEFAULT_NATIVE_GOOGLE_NEXT;
+  try { localStorage.setItem(NATIVE_GOOGLE_NEXT_KEY, safeNext); } catch {}
+  return safeNext;
+}
+
+function readNativeGoogleNext() {
+  try {
+    const stored = safeRedirectPath(localStorage.getItem(NATIVE_GOOGLE_NEXT_KEY) || "");
+    if (stored) return stored;
+  } catch {}
+
+  try {
+    const params = new URLSearchParams(location.search || "");
+    const next = safeRedirectPath(params.get("next") || "");
+    if (next) return next;
+  } catch {}
+
+  return DEFAULT_NATIVE_GOOGLE_NEXT;
+}
+
+function clearNativeGoogleNext() {
+  try { localStorage.removeItem(NATIVE_GOOGLE_NEXT_KEY); } catch {}
+}
+
 function hasNativeGoogleLogin() {
   try {
     return typeof window.Native?.startGoogleLogin === "function";
@@ -112,6 +139,47 @@ function isAndroidWebView() {
     return false;
   }
 }
+
+function installNativeGoogleLoginHandler() {
+  try {
+    window.onNativeLoginSuccess = async function(payload) {
+      const idToken = readNativeIdToken(payload);
+      console.warn("[ITALKY AUTH] native Google callback", { hasToken: !!idToken });
+
+      if (!idToken) {
+        throw new Error("Google giriş token boş geldi.");
+      }
+
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: idToken
+      });
+
+      if (error) throw error;
+
+      try {
+        await ensureAuthAndCacheUser();
+      } catch (e) {
+        console.warn("[ITALKY AUTH] ensureAuthAndCacheUser after native login failed", e);
+      }
+
+      try {
+        const userId = data?.user?.id || data?.session?.user?.id || "";
+        if (userId && typeof window.Native?.setUserId === "function") {
+          window.Native.setUserId(userId);
+        }
+      } catch {}
+
+      const target = readNativeGoogleNext();
+      clearNativeGoogleNext();
+      location.replace(target);
+    };
+  } catch (e) {
+    console.warn("[ITALKY AUTH] native Google handler install failed", e);
+  }
+}
+
+installNativeGoogleLoginHandler();
 
 function toAndroidBrowserIntent(url) {
   const parsed = new URL(url);
@@ -145,17 +213,16 @@ function openOAuthUrlOutsideWebView(url) {
 }
 
 export async function loginWithGoogle(next = "") {
-  if (hasNativeGoogleLogin()) {
-    const message = window.__italkyNativeLoginDatabaseSaveError
-      ? "Hesap oluşturulurken veritabanı hatası oluştu. Lütfen yöneticiye bildirin."
-      : "Google giriş işlemi uygulama içinde tamamlanamadı. Lütfen tekrar deneyin.";
+  const safeNext = safeRedirectPath(next);
 
-    console.warn("[ITALKY AUTH] Native auth fallback blocked inside APK");
-    throw new Error(message);
+  if (hasNativeGoogleLogin()) {
+    const target = rememberNativeGoogleNext(safeNext || DEFAULT_NATIVE_GOOGLE_NEXT);
+    console.warn("[ITALKY AUTH] starting native Google login", { next: target });
+    window.Native.startGoogleLogin();
+    return { native: true, next: target };
   }
 
   const callbackUrl = new URL("/pages/auth_callback.html", location.origin);
-  const safeNext = safeRedirectPath(next);
 
   if (safeNext) {
     callbackUrl.searchParams.set("next", safeNext);
