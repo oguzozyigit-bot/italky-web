@@ -1,823 +1,626 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-  <title>italkyAI • Üyelik</title>
-  <meta name="theme-color" content="#07111f" />
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
+  <title>italkyAI • Google Hesabı</title>
+
+  <script>
+    (function(){
+      try{
+        if(navigator.onLine === false){
+          location.replace("/facetoface.html?mode=offline-forced");
+        }
+      }catch(e){}
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet"
+  >
 
   <style>
-    :root{--bg:#07111f;--line:rgba(255,255,255,.12);--muted:rgba(226,232,240,.78);--soft:rgba(226,232,240,.56);--cyan:#22d3ee;--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;min-height:100%;background:var(--bg);color:#fff;font-family:Outfit,Arial,sans-serif;overflow-x:hidden}
-    body{background:radial-gradient(circle at 50% 0%,rgba(34,211,238,.17),transparent 32%),radial-gradient(circle at 100% 18%,rgba(129,140,248,.14),transparent 30%),linear-gradient(180deg,#07111f 0%,#050914 100%)}
-    button{font:inherit;cursor:pointer}
-    body.auth-checking .page{visibility:hidden;opacity:0}
-    body.auth-checking::after{content:"italkyAI\A BE FREE\A Yükleniyor...";white-space:pre;position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-family:Outfit,Arial,sans-serif;font-weight:900;line-height:1.9;letter-spacing:.4px;color:#fff;background:radial-gradient(circle at 50% 0%,rgba(34,211,238,.17),transparent 32%),linear-gradient(180deg,#07111f 0%,#050914 100%);z-index:9998}
-    .page{width:100%;max-width:620px;margin:0 auto;padding:calc(22px + var(--safe-top)) 16px calc(34px + var(--safe-bottom))}
-    .brand{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
-    .logo-main{font-family:"Space Grotesk",sans-serif;font-size:31px;font-weight:900;line-height:1;letter-spacing:-1px}
-    .logo-main span{background:linear-gradient(135deg,#22d3ee,#818cf8 58%,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .logo-sub{margin-top:6px;font-size:11px;letter-spacing:2px;font-weight:900;color:rgba(255,255,255,.76)}
-    .secure-pill{padding:9px 12px;border-radius:999px;border:1px solid rgba(34,211,238,.18);background:rgba(34,211,238,.08);font-size:11px;font-weight:900;white-space:nowrap}
-    .hero,.panel{border-radius:24px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.035));box-shadow:0 20px 46px rgba(0,0,0,.28)}
-    .hero{padding:20px 17px;margin-bottom:14px;background:radial-gradient(circle at top left,rgba(34,211,238,.16),transparent 42%),linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.035))}
-    .hero h1{margin:0;font-family:"Space Grotesk",sans-serif;font-size:27px;line-height:1.1;letter-spacing:-.6px}
-    .hero p{margin:10px 0 0;color:var(--muted);font-size:14px;line-height:1.55;font-weight:650}
-    .panel{margin:14px 0 18px;padding:16px}
-    .hidden{display:none!important}
-    .choice-grid{display:grid;gap:11px}
-    .choice-card{width:100%;min-height:98px;text-align:left;border-radius:21px;border:1px solid rgba(96,165,250,.22);background:radial-gradient(circle at top left,rgba(34,211,238,.13),transparent 42%),rgba(255,255,255,.055);color:#fff;padding:14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-    .choice-card.primary{border-color:rgba(96,165,250,.48);background:radial-gradient(circle at top left,rgba(34,211,238,.20),transparent 42%),linear-gradient(145deg,rgba(37,99,235,.25),rgba(255,255,255,.06))}
-    .choice-card.google{background:#fff;color:#172033;border-color:rgba(255,255,255,.72)}
-    .choice-card.code{border-color:rgba(45,212,191,.30);background:radial-gradient(circle at top left,rgba(45,212,191,.18),transparent 42%),rgba(255,255,255,.055)}
-    .choice-card h2{margin:0 0 6px;font-size:16px;font-weight:900}
-    .choice-card p{margin:0;color:rgba(226,232,240,.82);font-size:13px;line-height:1.42;font-weight:650}
-    .choice-card.google p{color:#536071}
-    .choice-title-row{display:flex;align-items:center;gap:10px}
-    .g-logo{width:23px;height:23px;flex:0 0 23px}
-    .choice-arrow{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:20px;font-weight:900}
-    .guest-link{width:100%;min-height:42px;margin-top:12px;border:none;background:transparent;color:#c7d2fe;font-size:13px;font-weight:900;text-decoration:underline;text-underline-offset:4px}
-    .guest-note{margin:3px 0 0;text-align:center;color:var(--soft);font-size:11px;font-weight:700}
-    .back-btn{min-height:42px;margin-bottom:12px;padding:0 13px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);color:#fff;font-size:12px;font-weight:900}
-    .panel-title{margin:0 0 8px;font-size:18px;font-weight:900}
-    .panel-text{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.5;font-weight:650}
-    .plan-grid{display:grid;gap:12px}
-    .plan-card{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:15px;border-radius:22px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.055);box-shadow:0 16px 34px rgba(0,0,0,.22)}
-    .plan-card.featured{border-color:rgba(96,165,250,.62);background:radial-gradient(circle at top right,rgba(34,211,238,.24),transparent 42%),linear-gradient(145deg,rgba(96,165,250,.18),rgba(255,255,255,.06))}
-    .plan-name{font-size:18px;font-weight:900}
-    .plan-desc{margin-top:5px;color:rgba(255,255,255,.66);font-size:12px;line-height:1.35;font-weight:700}
-    .plan-badge{display:inline-flex;align-items:center;min-height:24px;margin-top:9px;padding:5px 9px;border-radius:999px;border:1px solid rgba(125,211,252,.20);background:rgba(14,165,233,.10);color:#dffbff;font-size:10px;font-weight:900}
-    .plan-saving{margin-top:8px;color:#d9f99d;font-size:11px;line-height:1.35;font-weight:850}
-    .plan-side{text-align:right;min-width:122px}
-    .plan-price{font-size:19px;font-weight:900;letter-spacing:-.2px}
-    .plan-tax{color:var(--soft);font-size:10px;line-height:1.35;font-weight:800;min-height:14px}
-    .plan-buy{width:100%;min-height:40px;margin-top:9px;border:none;border-radius:14px;color:#07111f;background:#fff;font-size:12px;font-weight:900}
-    .plan-card.featured .plan-buy{background:linear-gradient(135deg,#dbeafe 0%,#60a5fa 100%)}
-    .status-box{margin:14px 0;padding:13px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);color:rgba(255,255,255,.80);font-size:13px;line-height:1.5;font-weight:750;text-align:center}
-    .status-box.ok{border-color:rgba(190,242,100,.22);background:rgba(190,242,100,.08);color:#f3ffd6}
-    .status-box.err{border-color:rgba(248,113,113,.22);background:rgba(248,113,113,.08);color:#ffe0e0}
-    .section-title{margin:20px 2px 12px;color:rgba(255,255,255,.82);font-size:13px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
-    .features{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-    .feature{display:flex;gap:9px;align-items:center;padding:10px 11px;border-radius:17px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:12px;line-height:1.32;font-weight:750}
-    .feature-icon{flex:0 0 23px;width:23px;height:23px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.14);font-size:12px}
-    .feature b{color:#fff;font-weight:900}
-    .footer{margin-top:28px;text-align:center;color:rgba(255,255,255,.40);font-size:11px;font-weight:850;letter-spacing:1.2px}
-    .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);max-width:min(92vw,420px);min-height:44px;padding:10px 16px;border-radius:16px;background:rgba(12,16,28,.96);border:1px solid rgba(255,255,255,.10);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;text-align:center;z-index:9999;box-shadow:0 18px 36px rgba(0,0,0,.35);transition:.22s ease;pointer-events:none}
-    .toast.show{transform:translateX(-50%) translateY(0)}
-    @media(max-width:430px){.page{padding-left:14px;padding-right:14px}.logo-main{font-size:29px}.hero{padding:18px 16px}.hero h1{font-size:25px}.plan-card{grid-template-columns:1fr}.plan-side{text-align:left;min-width:0}.plan-buy{width:auto;min-width:142px}.features{grid-template-columns:1fr}}
+    :root{
+      --bg-void:#060408;
+      --neon:#00f2ff;
+      --pink:#ff007a;
+      --brand-grad:linear-gradient(135deg,#00f2ff 0%,#6366f1 55%,#ff007a 100%);
+      --signature-grad:linear-gradient(to right,#fff,#00f2ff,#fff);
+      --accent:#00f2ff;
+      --muted:rgba(255,255,255,.65);
+      --safeB:env(safe-area-inset-bottom, 0px);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      margin:0;
+      padding:0;
+    }
+
+    html,body{
+      height:100%;
+      width:100%;
+    }
+
+    body{
+      background:var(--bg-void);
+      color:#fff;
+      font-family:'Outfit',sans-serif;
+      height:100dvh;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .nebula{
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 25% 20%, rgba(0,242,255,.12), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(255,0,122,.10), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(15,8,22,1) 0%, #060408 100%);
+      z-index:0;
+    }
+
+    .main{
+      flex:1;
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:0 26px;
+      z-index:10;
+      margin-top:-10px;
+      visibility:visible;
+      opacity:1;
+    }
+
+    .brand-section{
+      text-align:center;
+      margin-bottom:5px;
+    }
+
+    .brand-section h1{
+      font-family:'Space Grotesk', sans-serif;
+      font-size:64px;
+      font-weight:1000;
+      letter-spacing:-4px;
+      line-height:1;
+      filter:drop-shadow(0 0 15px rgba(0,242,255,.2));
+    }
+
+    .brand-section h1 span.ai{
+      background:var(--brand-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .brand-sub{
+      margin-top:8px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:8px;
+      text-transform:uppercase;
+      color:#fff;
+      opacity:.9;
+      text-shadow:0 0 10px rgba(255,255,255,.3);
+    }
+
+    .world-container{
+      position:relative;
+      width:280px;
+      height:280px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-top:10px;
+      margin-bottom:10px;
+      perspective:1000px;
+    }
+
+    .earth-glow{
+      position:absolute;
+      inset:10px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,242,255,.22) 0%, transparent 70%);
+      filter:blur(25px);
+      opacity:.95;
+      z-index:0;
+      animation:glowBreath 4.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowBreath{
+      from{ transform:scale(.95); opacity:.6; }
+      to{ transform:scale(1.1); opacity:.9; }
+    }
+
+    .earth{
+      position:relative;
+      width:210px;
+      height:210px;
+      border-radius:50%;
+      background-image:url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
+      background-size:cover;
+      background-position:center;
+      box-shadow:
+        inset -30px -30px 60px rgba(0,0,0,.9),
+        inset 10px 10px 30px rgba(255,255,255,.1),
+        0 0 80px rgba(0,242,255,.25);
+      transform-style:preserve-3d;
+      animation:rotateSphere 34s linear infinite;
+      z-index:2;
+      overflow:hidden;
+    }
+
+    @keyframes rotateSphere{
+      from{ transform:rotateY(0deg); }
+      to{ transform:rotateY(360deg); }
+    }
+
+    .ai-stamp{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:1000;
+      letter-spacing:2px;
+      color:rgba(255,255,255,.95);
+      text-shadow:0 0 20px rgba(0,242,255,.4);
+      mix-blend-mode:screen;
+      opacity:.95;
+      pointer-events:none;
+      user-select:none;
+      backface-visibility:hidden;
+    }
+
+    .ai-front{
+      font-size:44px;
+      transform:translateZ(1px);
+      z-index:4;
+    }
+
+    .ai-back{
+      font-size:50px;
+      letter-spacing:1px;
+      transform:rotateY(180deg) translateZ(1px);
+      z-index:3;
+    }
+
+    .typewriter-container{
+      height:40px;
+      margin-top:5px;
+      margin-bottom:15px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      width:100%;
+    }
+
+    .typewriter{
+      font-family:'JetBrains Mono', monospace;
+      font-size:14px;
+      color:var(--muted);
+      border-right:2px solid var(--accent);
+      white-space:nowrap;
+      overflow:hidden;
+      width:0;
+      animation:typing 5.6s steps(46, end) infinite, blink .85s step-end infinite;
+      text-shadow:0 0 10px rgba(0,242,255,.2);
+    }
+
+    @keyframes typing{
+      0%,10%{ width:0 }
+      62%,86%{ width:100% }
+      100%{ width:0 }
+    }
+
+    @keyframes blink{
+      from,to{ border-color:transparent }
+      50%{ border-color:var(--accent) }
+    }
+
+    .login-box{
+      width:100%;
+      max-width:314px;
+      z-index:20;
+      display:grid;
+      gap:12px;
+    }
+
+    .google-btn{
+      width:100%;
+      height:56px;
+      border:none;
+      border-radius:28px;
+      background:#ffffff;
+      color:#1f1f1f;
+      font-size:16px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      cursor:pointer;
+      box-shadow:0 10px 25px rgba(0,0,0,.3);
+      transition:all .2s ease;
+      user-select:none;
+    }
+
+    .google-btn:active{
+      transform:scale(.97);
+    }
+
+    .google-btn:disabled{
+      opacity:.7;
+      cursor:default;
+    }
+
+    .g-icon{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    .login-note{
+      color:rgba(255,255,255,.58);
+      font-size:12px;
+      line-height:1.45;
+      font-weight:800;
+      text-align:center;
+      padding:0 4px;
+    }
+
+    .login-note b{
+      color:#fff;
+      font-weight:1000;
+    }
+
+    footer{
+      width:100%;
+      text-align:center;
+      z-index:20;
+      padding-bottom:calc(20px + var(--safeB));
+      visibility:visible;
+      opacity:1;
+    }
+
+    .footer-nav{
+      display:flex;
+      justify-content:center;
+      gap:18px;
+      margin-bottom:12px;
+    }
+
+    .footer-nav a{
+      text-decoration:none;
+      color:rgba(255,255,255,.4);
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      transition:.3s;
+    }
+
+    .footer-nav a:hover{
+      color:var(--neon);
+      text-shadow:0 0 8px var(--neon);
+    }
+
+    .technology-title{
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:6px;
+      margin-bottom:6px;
+      line-height:1;
+    }
+
+    .technology-title b{
+      font-weight:1000;
+      text-transform:lowercase;
+      color:#fff;
+    }
+
+    .technology-title span{
+      background:var(--brand-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      text-transform:uppercase;
+    }
+
+    .prestige-signature{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:1.2px;
+      background:var(--signature-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    #toast{
+      position:fixed;
+      top:24px;
+      left:50%;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(6,6,12,.95);
+      border:1px solid var(--accent);
+      padding:12px 24px;
+      border-radius:999px;
+      color:#fff;
+      z-index:9999;
+      font-weight:900;
+      font-size:13px;
+      transition:.3s ease;
+      backdrop-filter:blur(15px);
+      pointer-events:none;
+      max-width:90vw;
+      text-align:center;
+      box-shadow:0 10px 30px rgba(0,242,255,.2);
+    }
+
+    #toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 
-<body class="auth-checking">
-  <main class="page">
-    <header class="brand">
-      <div>
-        <div class="logo-main">italky<span>AI</span></div>
-        <div class="logo-sub">BE FREE</div>
+<body>
+  <div class="nebula"></div>
+
+  <div class="main">
+    <div class="brand-section">
+      <h1>italky<span class="ai">AI</span></h1>
+      <div class="brand-sub">BE FREE</div>
+    </div>
+
+    <div class="world-container" aria-hidden="true">
+      <div class="earth-glow"></div>
+      <div class="earth">
+        <div class="ai-stamp ai-front">ITALKY</div>
+        <div class="ai-stamp ai-back">AI</div>
       </div>
-      <div class="secure-pill">Google Play Güvenli</div>
-    </header>
+    </div>
 
-    <section class="hero">
-      <h1>italkyAI’ye devam et</h1>
-      <p>Reklamsız ve kesintisiz kullanım için giriş yapabilir, promosyon kodu kullanabilir veya Play Store üzerinden abone olabilirsiniz.</p>
-    </section>
+    <div class="typewriter-container">
+      <div class="typewriter" id="typewriter">Google hesabınızla güvenli giriş yapın...</div>
+    </div>
 
-    <section id="choicePanel" class="panel hidden" aria-label="Erişim yöntemi seçimi">
-      <div class="choice-grid">
-        <button id="googleChoiceBtn" class="choice-card google" type="button">
-          <span>
-            <span class="choice-title-row">
-              <svg class="g-logo" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              <h2>Google ile devam et</h2>
-            </span>
-            <p>Hesabınızı bağlayın; aktif üyeliğiniz varsa doğrudan uygulamaya geçersiniz.</p>
-          </span>
-          <span class="choice-arrow">›</span>
-        </button>
+    <div class="login-box">
+      <button class="google-btn" id="googleBtn" type="button">
+        <svg class="g-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        <span>Google Hesabıyla Giriş Yap</span>
+      </button>
 
-        <button id="promoChoiceBtn" class="choice-card code" type="button">
-          <span>
-            <h2>Promosyon kodu ile devam et</h2>
-            <p>Size verilen erişim veya kampanya kodunu kullanarak üyeliğinizi başlatabilirsiniz.</p>
-          </span>
-          <span class="choice-arrow">›</span>
-        </button>
-
-        <button id="playChoiceBtn" class="choice-card primary" type="button">
-          <span>
-            <h2>Play Store ile abone ol</h2>
-            <p>Haftalık, aylık veya uzun dönem planlardan birini seçerek reklamsız ve sınırsız kullanıma geçebilirsiniz.</p>
-          </span>
-          <span class="choice-arrow">›</span>
-        </button>
+      <div class="login-note">
+        <b>İlk kayıt hediyesi:</b> Hesabınıza bir kereye mahsus 5 jeton tanımlanır.
       </div>
+    </div>
+  </div>
 
-      <button id="guestContinueBtn" class="guest-link" type="button">Misafir olarak devam et</button>
-      <p class="guest-note">Daha sonra üye olabilirsiniz.</p>
-    </section>
+  <footer>
+    <div class="footer-nav">
+      <a href="/pages/about.html">Hakkımızda</a>
+      <a href="/pages/faq.html">SSS</a>
+      <a href="/pages/privacy.html">Gizlilik</a>
+      <a href="/pages/contact.html">İletişim</a>
+    </div>
+    <div class="technology-title"><b>italky</b><span>TECHNOLOGY</span></div>
+    <div class="prestige-signature">italkyAI By Ozyigit's 2026</div>
+  </footer>
 
-    <section id="plansPanel" class="panel hidden" aria-label="Google Play abonelik seçenekleri">
-      <button id="backToChoiceBtn" class="back-btn" type="button">← Erişim seçenekleri</button>
-      <h2 class="panel-title">Play Store abonelikleri</h2>
-      <p class="panel-text">Fiyatlar Google Play’den alınıp ülkenize göre gösterilir.</p>
-      <div class="plan-grid" id="planGrid"></div>
-    </section>
-
-    <div id="statusBox" class="status-box">Üyelik durumunuz kontrol ediliyor...</div>
-
-    <div class="section-title">Üyelikle neler açılır?</div>
-    <section class="features">
-      <div class="feature"><div class="feature-icon">✓</div><div><b>Reklamsız kullanım</b></div></div>
-      <div class="feature"><div class="feature-icon">↔</div><div><b>Face to Face çeviri</b></div></div>
-      <div class="feature"><div class="feature-icon">⌁</div><div><b>İki telefonla görüşme</b></div></div>
-      <div class="feature"><div class="feature-icon">⌨</div><div><b>Yazıdan ve sesten çeviri</b></div></div>
-      <div class="feature"><div class="feature-icon">★</div><div><b>Eğlenerek Öğren oyunları</b></div></div>
-      <div class="feature"><div class="feature-icon">A</div><div><b>Seviye tespit sınavları</b></div></div>
-      <div class="feature"><div class="feature-icon">○</div><div><b>Konferans ve toplantı modülleri</b></div></div>
-      <div class="feature"><div class="feature-icon">↓</div><div><b>Çevrimdışı dil paketleri</b></div></div>
-    </section>
-
-    <div class="footer">Italky Teknoloji A.Ş</div>
-  </main>
-
-  <div id="toast" class="toast"></div>
+  <div id="toast"></div>
 
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
-    import { setHeaderTokens } from "/js/ui_shell.js";
-    import { loginWithGoogle } from "/js/auth.js";
+    import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
+
+    const toastEl = document.getElementById("toast");
+    const googleBtn = document.getElementById("googleBtn");
+    const typeEl = document.getElementById("typewriter");
 
     const HOME = "/pages/home.html";
-    const LOGIN_WITH_NEXT = "/pages/login.html?next=/pages/membership.html";
-    const CODE_PAGE = "/pages/promo_gate.html";
-    const GUEST_PAGE = "/pages/login_entry.html";
-    const GUEST_MODE_KEY = "italky_guest_mode_v1";
-    const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
+    const CALLBACK = "/pages/auth_callback.html";
 
-    const PRODUCTS = [
-      { key:"weekly", productId:"haftalık-abonelik", aliases:["haftalık-abonelik","haftalik-abonelik","reklamsız-haftalık","reklamsiz-haftalik","reklamsız-haftalik","reklamsiz-haftalık","weekly","weekly-subscription","1-week","7-day","7gun"], title:"Haftalık", desc:"Kısa süreli denemek isteyenler için ideal.", weeks:1, badge:"Denemek için ideal" },
-      { key:"monthly", productId:"1-ay-abonelik", aliases:["1-ay-abonelik","monthly","aylik","aylık"], title:"Aylık", desc:"Esnek kullanım için.", weeks:4 },
-      { key:"quarterly", productId:"3-ay-abonelik", aliases:["3-ay-abonelik","quarterly","3-aylik","3-aylık"], title:"3 Aylık", desc:"Seyahat, kurs veya kısa dönem hazırlıklar için.", weeks:13 },
-      { key:"halfyear", productId:"6-ay-abonelik", aliases:["6-ay-abonelik","halfyear","6-aylik","6-aylık"], title:"6 Aylık", desc:"Daha uzun çalışma ve pratik dönemleri için.", weeks:26, badge:"Popüler" },
-      { key:"yearly", productId:"12-ay-abonelik", aliases:["12-ay-abonelik","yearly","12-aylik","12-aylık"], title:"12 Aylık", desc:"En avantajlı plan.", weeks:52, badge:"En avantajlı", featured:true }
+    const DEFAULT_AFTER_LOGIN = HOME;
+
+    function toast(msg){
+      if(!toastEl) return;
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function isNative(){
+      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+    }
+
+    function safePath(value){
+      const raw = String(value || "").trim();
+
+      if(!raw) return "";
+      if(raw.startsWith("http://")) return "";
+      if(raw.startsWith("https://")) return "";
+      if(raw.startsWith("//")) return "";
+      if(!raw.startsWith("/")) return "";
+
+      return raw;
+    }
+
+    function getNextTarget(){
+      try{
+        const u = new URL(location.href);
+        return safePath(u.searchParams.get("next") || "");
+      }catch{
+        return "";
+      }
+    }
+
+    async function grantSignupBonusOnce(){
+      try{
+        const { data, error } = await supabase.rpc("grant_signup_bonus_once", {
+          p_bonus: 5
+        });
+
+        if(error){
+          console.warn("grant_signup_bonus_once error:", error);
+          return { ok:false, bonus_granted:false };
+        }
+
+        if(Array.isArray(data) && data.length){
+          return data[0] || { ok:true, bonus_granted:false };
+        }
+
+        return data || { ok:true, bonus_granted:false };
+      }catch(e){
+        console.warn("grantSignupBonusOnce failed:", e);
+        return { ok:false, bonus_granted:false };
+      }
+    }
+
+    async function routeAfterLogin(){
+      try{
+        await ensureAuthAndCacheUser();
+
+        const bonus = await grantSignupBonusOnce();
+
+        const next = getNextTarget();
+        const target = next || DEFAULT_AFTER_LOGIN;
+
+        if(bonus?.bonus_granted){
+          toast("5 jeton hediyeniz tanımlandı.");
+          setTimeout(() => location.replace(target), 700);
+          return;
+        }
+
+        toast("Giriş başarılı.");
+        setTimeout(() => location.replace(target), 350);
+      }catch(e){
+        console.error("routeAfterLogin error:", e);
+
+        const next = getNextTarget();
+        location.replace(next || DEFAULT_AFTER_LOGIN);
+      }
+    }
+
+    (function bounceToCallbackIfNeeded(){
+      const hasCode = new URLSearchParams(location.search).has("code");
+      const hasToken = location.hash.includes("access_token=");
+
+      if((hasCode || hasToken) && !location.pathname.endsWith("/pages/auth_callback.html")){
+        location.replace(CALLBACK + location.search + location.hash);
+      }
+    })();
+
+    window.onNativeLoginSuccess = async function(payload){
+      try{
+        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+        const idToken = String(data?.id_token || data?.idToken || "").trim();
+
+        if(!idToken){
+          googleBtn.disabled = false;
+          toast("Token alınamadı, giriş tamamlanamadı.");
+          return;
+        }
+
+        googleBtn.disabled = true;
+        toast("Oturum açılıyor...");
+
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: idToken
+        });
+
+        if(error){
+          console.error("signInWithIdToken error:", error);
+          googleBtn.disabled = false;
+          toast("Oturum açılamadı.");
+          return;
+        }
+
+        const { data:{ session } } = await supabase.auth.getSession();
+
+        if(!session){
+          googleBtn.disabled = false;
+          toast("Oturum bulunamadı.");
+          return;
+        }
+
+        await routeAfterLogin();
+      }catch(e){
+        console.error("onNativeLoginSuccess error:", e);
+        googleBtn.disabled = false;
+        toast("Giriş hatası.");
+      }
+    };
+
+    googleBtn?.addEventListener("click", async () => {
+      try{
+        const next = getNextTarget();
+
+        if(isNative()){
+          googleBtn.disabled = true;
+          toast("Google girişi başlatılıyor...");
+          window.Native.startGoogleLogin();
+          return;
+        }
+
+        googleBtn.disabled = true;
+        toast("Google yönlendiriliyor...");
+        await loginWithGoogle(next);
+      }catch(e){
+        console.error("googleBtn click error:", e);
+        googleBtn.disabled = false;
+        toast(e?.message || "Giriş başlatılamadı.");
+      }
+    });
+
+    const phrases = [
+      "Google hesabınızla güvenli giriş yapın...",
+      "Üyeliğiniz hesabınıza tanımlanır...",
+      "Kod ile abonelik de aynı hesaba bağlanır...",
+      "İlk kayıt hediyesi: 5 jeton...",
+      "Dünyayı küçülttük, cebinize sığdırdık..."
     ];
 
-    const $ = (id) => document.getElementById(id);
-
-    const UI = {
-      googleChoiceBtn:$("googleChoiceBtn"),
-      choicePanel:$("choicePanel"),
-      plansPanel:$("plansPanel"),
-      promoChoiceBtn:$("promoChoiceBtn"),
-      playChoiceBtn:$("playChoiceBtn"),
-      guestContinueBtn:$("guestContinueBtn"),
-      backToChoiceBtn:$("backToChoiceBtn"),
-      planGrid:$("planGrid"),
-      statusBox:$("statusBox"),
-      toast:$("toast")
-    };
-
-    let currentSession = null;
-    let currentUserId = "";
-    let priceFallbackReady = false;
-    let priceRequestCount = 0;
-    let priceRequestTimer = null;
-    let priceFallbackTimer = null;
-
-    const priceMap = new Map();
-
-    function unlockUi(){
-      document.body.classList.remove("auth-checking");
-    }
-
-    function toast(msg = ""){
-      UI.toast.textContent = String(msg || "");
-      UI.toast.classList.add("show");
-      clearTimeout(window.__membershipToast);
-      window.__membershipToast = setTimeout(() => UI.toast.classList.remove("show"), 2200);
-    }
-
-    function log(label, data = {}){
-      try{
-        console.warn(`[Membership] ${label} ${JSON.stringify(data || {})}`);
-      }catch{
-        console.warn(`[Membership] ${label}`);
+    let pi = 0;
+    setInterval(() => {
+      pi = (pi + 1) % phrases.length;
+      if(typeEl){
+        typeEl.style.animation = "none";
+        typeEl.offsetHeight;
+        typeEl.textContent = phrases[pi];
+        typeEl.style.animation = null;
       }
-    }
-
-    function setStatus(kind, text){
-      UI.statusBox.className = "status-box";
-      if(kind) UI.statusBox.classList.add(kind);
-      UI.statusBox.textContent = String(text || "");
-    }
-
-    function showOnly(name){
-      UI.choicePanel.classList.toggle("hidden", name !== "choice");
-      UI.plansPanel.classList.toggle("hidden", name !== "plans");
-    }
-
-    function idKey(value = ""){
-      return String(value || "")
-        .trim()
-        .toLowerCase()
-        .replaceAll("ı","i")
-        .replaceAll("İ","i")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"");
-    }
-
-    function planAliases(plan){
-      return Array.from(new Set([plan.productId, plan.key, ...(plan.aliases || [])].filter(Boolean).flatMap((x) => [String(x), idKey(x)])));
-    }
-
-    function idLooksWeekly(id = ""){
-      const v = idKey(id);
-      return (v.includes("weekly") || v.includes("hafta")) && !v.includes("month") && !v.includes("ay-") && !v.includes("1-ay");
-    }
-
-    function idLooksMonthly(id = ""){
-      const v = idKey(id);
-      return v.includes("1-ay") || v.includes("monthly") || v === "aylik" || v.includes("aylik");
-    }
-
-    function idLooksQuarterly(id = ""){
-      const v = idKey(id);
-      return v.includes("3-ay") || v.includes("quarter");
-    }
-
-    function idLooksHalfYear(id = ""){
-      const v = idKey(id);
-      return v.includes("6-ay") || v.includes("halfyear") || v.includes("half-year");
-    }
-
-    function idLooksYearly(id = ""){
-      const v = idKey(id);
-      return v.includes("12-ay") || v.includes("year") || v.includes("annual");
-    }
-
-    function findPlanForProduct(item){
-      const ids = [item.productId, item.basePlanId, item.realProductId, item.subscriptionProductId, item.id, item.sku, item.product_id, item.name].filter(Boolean);
-      const normalized = ids.map(idKey);
-
-      let matched = PRODUCTS.find((plan) => planAliases(plan).some((alias) => normalized.includes(idKey(alias))));
-      if(matched) return matched;
-
-      if(ids.some(idLooksWeekly)) return PRODUCTS[0];
-      if(ids.some(idLooksMonthly)) return PRODUCTS[1];
-      if(ids.some(idLooksQuarterly)) return PRODUCTS[2];
-      if(ids.some(idLooksHalfYear)) return PRODUCTS[3];
-      if(ids.some(idLooksYearly)) return PRODUCTS[4];
-
-      return null;
-    }
-
-    function isActiveAccess(data){
-      return !!(
-        data?.access_open ||
-        data?.ads_disabled ||
-        data?.no_ads ||
-        data?.is_no_ads_member ||
-        data?.subscription_active ||
-        data?.has_active_membership ||
-        data?.is_member ||
-        data?.plan === "premium" ||
-        data?.app_access_mode === "premium" ||
-        data?.promo_active ||
-        data?.nfc_active
-      );
-    }
-
-    function getBillingBridge(){
-      return (
-        window.AndroidBilling ||
-        window.BillingBridge ||
-        window.PlayBilling ||
-        window.NativeBilling ||
-        window.GooglePlayBilling ||
-        null
-      );
-    }
-
-    function getAuthBridge(){
-      return (
-        window.Native ||
-        window.AndroidAuth ||
-        window.AuthBridge ||
-        window.GoogleAuthBridge ||
-        null
-      );
-    }
-
-    async function getSessionOrStay(){
-      if(currentSession) return currentSession;
-
-      for(let attempt = 1; attempt <= 10; attempt += 1){
-        try{
-          const { data:{ session }, error } = await supabase.auth.getSession();
-          log("get session", { attempt, hasSession:!!session, error:error?.message || "" });
-
-          if(session){
-            currentSession = session;
-            currentUserId = session.user?.id || "";
-            return session;
-          }
-        }catch(error){
-          log("get session failed", { attempt, message:error?.message || String(error || "") });
-        }
-
-        await new Promise((r) => setTimeout(r, 350));
-      }
-
-      return null;
-    }
-
-    async function getAccessState(session){
-      if(!session?.access_token) return null;
-
-      const resp = await fetch(ACCESS_API, {
-        headers:{ Authorization:`Bearer ${session.access_token}` },
-        cache:"no-store"
-      });
-
-      const json = await resp.json().catch(() => ({}));
-
-      log("access-state", {
-        status:resp.status,
-        ok:resp.ok,
-        accessOpen:!!json?.access_open,
-        plan:json?.plan || "",
-        appAccessMode:json?.app_access_mode || ""
-      });
-
-      if(!resp.ok){
-        throw new Error(json?.detail || "Üyelik durumu şu anda kontrol edilemedi. Lütfen tekrar deneyin.");
-      }
-
-      return json;
-    }
-
-    function priceFromPhase(phase = {}, item = {}){
-      return {
-        formattedPrice: phase?.formattedPrice || phase?.price || item.formattedPrice || item.price || "",
-        priceAmountMicros: Number(phase?.priceAmountMicros || item.priceAmountMicros || item.price_amount_micros || 0),
-        currencyCode: phase?.priceCurrencyCode || phase?.currencyCode || item.currencyCode || item.currency || ""
-      };
-    }
-
-    function normalizeProductDetails(raw){
-      if(!raw) return [];
-
-      if(typeof raw === "string"){
-        try{
-          return normalizeProductDetails(JSON.parse(raw));
-        }catch{
-          return [];
-        }
-      }
-
-      const items = Array.isArray(raw) ? raw : (Array.isArray(raw.products) ? raw.products : (Array.isArray(raw.details) ? raw.details : []));
-      const out = [];
-
-      items.forEach((item) => {
-        const offersRaw = item.subscriptionOfferDetails || item.offers || item.offerDetails || [];
-        const offers = Array.isArray(offersRaw) && offersRaw.length ? offersRaw : [offersRaw || {}];
-
-        offers.forEach((offer) => {
-          const phases = offer?.pricingPhases?.pricingPhaseList || offer?.pricingPhases || item.pricingPhases || [];
-          const phase = Array.isArray(phases) && phases.length ? phases[0] : phases || item;
-          const price = priceFromPhase(phase, item);
-
-          out.push({
-            productId:item.productId || item.id || item.sku || item.product_id || "",
-            realProductId:item.realProductId || item.subscriptionProductId || item.real_product_id || "",
-            subscriptionProductId:item.subscriptionProductId || item.realProductId || "",
-            basePlanId:offer?.basePlanId || item.basePlanId || item.base_plan_id || "",
-            offerToken:offer?.offerToken || item.offerToken || item.offer_token || "",
-            formattedPrice:price.formattedPrice,
-            priceAmountMicros:price.priceAmountMicros,
-            currencyCode:price.currencyCode,
-            pricingPhases:Array.isArray(phases) ? phases.map((p) => priceFromPhase(p, item)) : [],
-            rawKeys:Object.keys(item || {})
-          });
-        });
-      });
-
-      return out.filter((item) => item.productId || item.basePlanId || item.realProductId);
-    }
-
-    function applyProductDetails(raw){
-      const details = normalizeProductDetails(raw);
-      log("billing products received", { count:details.length });
-
-      details.forEach((item) => {
-        const plan = findPlanForProduct(item);
-
-        log("billing product match", {
-          productId:item.productId,
-          realProductId:item.realProductId,
-          basePlanId:item.basePlanId,
-          matchedPlan:plan?.key || "",
-          price:item.formattedPrice,
-          priceAmountMicros:item.priceAmountMicros,
-          hasOfferToken:!!item.offerToken
-        });
-
-        [item.productId, item.basePlanId, item.realProductId, item.subscriptionProductId].filter(Boolean).forEach((id) => priceMap.set(idKey(id), item));
-
-        if(plan){
-          planAliases(plan).forEach((alias) => priceMap.set(idKey(alias), item));
-          priceMap.set(plan.key, item);
-        }
-      });
-
-      if(details.length){
-        clearTimeout(priceRequestTimer);
-        clearTimeout(priceFallbackTimer);
-        priceFallbackReady = false;
-        renderPlans();
-      }
-    }
-
-    function requestGooglePlayPricesOnce(){
-      const ids = Array.from(new Set(PRODUCTS.flatMap((p) => [p.productId, ...(p.aliases || [])]))).filter(Boolean);
-      const bridge = getBillingBridge();
-
-      log("requested product ids", { ids, hasBridge:!!bridge });
-
-      if(!bridge) return false;
-
-      const payload = JSON.stringify(ids);
-
-      for(const method of ["requestProductDetails","getProductDetails","getProductsJson","getSubscriptionProducts","getPrices","queryProducts","queryProductDetails"]){
-        try{
-          if(typeof bridge[method] === "function"){
-            const result = bridge[method](payload);
-            if(result) applyProductDetails(result);
-            return true;
-          }
-        }catch(error){
-          log("price request failed", { method, message:error?.message || String(error || "") });
-        }
-      }
-
-      return false;
-    }
-
-    function loadGooglePlayPrices(){
-      window.onAndroidBillingProducts = (payload) => applyProductDetails(payload);
-      window.onBillingProductsLoaded = (payload) => applyProductDetails(payload);
-      window.onProductDetailsLoaded = (payload) => applyProductDetails(payload);
-      window.onGooglePlayProductsLoaded = (payload) => applyProductDetails(payload);
-
-      const retry = () => {
-        if(priceMap.size >= PRODUCTS.length) return;
-
-        priceRequestCount += 1;
-        requestGooglePlayPricesOnce();
-
-        if(priceRequestCount < 8 && priceMap.size < PRODUCTS.length){
-          priceRequestTimer = setTimeout(retry, 1000);
-        }
-      };
-
-      retry();
-
-      clearTimeout(priceFallbackTimer);
-      priceFallbackTimer = setTimeout(() => {
-        if(priceMap.size < PRODUCTS.length){
-          priceFallbackReady = true;
-          renderPlans();
-        }
-      }, 8000);
-    }
-
-    function getPrice(plan){
-      return (
-        priceMap.get(plan.key) ||
-        priceMap.get(idKey(plan.productId)) ||
-        planAliases(plan).map((alias) => priceMap.get(idKey(alias))).find(Boolean) ||
-        null
-      );
-    }
-
-    function calculateSaving(plan){
-      if(plan.key === "weekly") return "";
-
-      const weekly = getPrice(PRODUCTS[0]);
-      const target = getPrice(plan);
-      const weeklyMicros = Number(weekly?.priceAmountMicros || 0);
-      const targetMicros = Number(target?.priceAmountMicros || 0);
-
-      if(!weeklyMicros || !targetMicros || !plan.weeks) return "";
-
-      const reference = weeklyMicros * plan.weeks;
-      if(targetMicros >= reference) return "";
-
-      const percent = Math.round(((reference - targetMicros) / reference) * 100);
-
-      return Number.isFinite(percent) && percent > 0 ? `Haftalık kullanıma göre yaklaşık %${percent} avantajlı` : "";
-    }
-
-    function renderPlans(){
-      UI.planGrid.innerHTML = PRODUCTS.map((plan) => {
-        const price = getPrice(plan);
-        const priceText = price?.formattedPrice || price?.price || (priceFallbackReady ? "Fiyat yüklenemedi" : "Fiyat yükleniyor...");
-        const saving = calculateSaving(plan);
-
-        return `
-          <article class="plan-card ${plan.featured ? "featured" : ""}">
-            <div>
-              <div class="plan-name">${plan.title}</div>
-              <div class="plan-desc">${plan.desc}</div>
-              ${plan.badge ? `<div class="plan-badge">${plan.badge}</div>` : ""}
-              ${saving ? `<div class="plan-saving">${saving}</div>` : ""}
-            </div>
-            <div class="plan-side">
-              <div class="plan-price">${priceText}</div>
-              <div class="plan-tax">${price?.formattedPrice ? "Google Play fiyatı" : ""}</div>
-              <button class="plan-buy" type="button" data-plan-key="${plan.key}">Abone Ol</button>
-            </div>
-          </article>
-        `;
-      }).join("");
-
-      UI.planGrid.querySelectorAll("[data-plan-key]").forEach((btn) => bindAction(btn, () => handleGooglePlaySubscribe(btn.dataset.planKey)));
-    }
-
-    function isNativeBillingReady(){
-      const bridge = getBillingBridge();
-
-      return !!(
-        bridge &&
-        (
-          typeof bridge.buy === "function" ||
-          typeof bridge.subscribe === "function" ||
-          typeof bridge.purchase === "function" ||
-          typeof bridge.launchBillingFlow === "function" ||
-          typeof bridge.startPurchase === "function"
-        )
-      );
-    }
-
-    async function sendUserIdToNative(){
-      try{
-        const bridge = getBillingBridge();
-        const session = currentSession || await getSessionOrStay();
-
-        if(!bridge) return;
-
-        if(typeof bridge.setAuthContext === "function" && currentUserId && session?.access_token){
-          bridge.setAuthContext(currentUserId, session.access_token);
-          return;
-        }
-
-        if(typeof bridge.setUserId === "function" && currentUserId){
-          bridge.setUserId(currentUserId);
-        }
-      }catch(error){
-        log("native auth context failed", { message:error?.message || String(error || "") });
-      }
-    }
-
-    async function startGoogleLogin(){
-      try{
-        const authBridge = getAuthBridge();
-
-        if(authBridge && typeof authBridge.startGoogleLogin === "function"){
-          authBridge.startGoogleLogin();
-          return;
-        }
-
-        if(authBridge && typeof authBridge.googleLogin === "function"){
-          authBridge.googleLogin();
-          return;
-        }
-
-        await loginWithGoogle("/pages/membership.html");
-      }catch(error){
-        log("google login failed", { message:error?.message || String(error || "") });
-        location.href = LOGIN_WITH_NEXT;
-      }
-    }
-
-    async function callNativeBuy(productId, basePlanId, offerToken){
-      const bridge = getBillingBridge();
-
-      if(!bridge){
-        throw new Error("Billing bridge bulunamadı.");
-      }
-
-      const pid = String(productId || "");
-      const bpid = String(basePlanId || "");
-      const token = String(offerToken || "");
-
-      if(typeof bridge.buy === "function"){
-        try{
-          bridge.buy(pid, bpid, token);
-          return;
-        }catch(error){
-          log("buy 3 args failed", { message:error?.message || String(error || "") });
-          bridge.buy(pid, bpid);
-          return;
-        }
-      }
-
-      if(typeof bridge.subscribe === "function"){
-        bridge.subscribe(pid, bpid, token);
-        return;
-      }
-
-      if(typeof bridge.purchase === "function"){
-        bridge.purchase(pid, bpid, token);
-        return;
-      }
-
-      if(typeof bridge.launchBillingFlow === "function"){
-        bridge.launchBillingFlow(pid, bpid, token);
-        return;
-      }
-
-      if(typeof bridge.startPurchase === "function"){
-        bridge.startPurchase(pid, bpid, token);
-        return;
-      }
-
-      throw new Error("Satın alma metodu bulunamadı.");
-    }
-
-    async function handleGooglePlaySubscribe(planKey){
-      const plan = PRODUCTS.find((p) => p.key === planKey) || PRODUCTS[4];
-      const price = getPrice(plan);
-
-      const buyProductId = price?.realProductId || price?.subscriptionProductId || price?.productId || plan.productId;
-      const buyBasePlanId = price?.basePlanId || plan.productId;
-      const offerToken = price?.offerToken || "";
-
-      if(!currentSession){
-        toast("Play Store aboneliği için önce Google ile devam edin.");
-        await startGoogleLogin();
-        return;
-      }
-
-      await sendUserIdToNative();
-
-      if(!isNativeBillingReady()){
-        toast("Satın alma başlatılamadı. Lütfen uygulama içinden tekrar deneyin.");
-        log("billing not ready", { hasBridge:!!getBillingBridge() });
-        return;
-      }
-
-      toast("Google Play ödeme ekranı açılıyor...");
-
-      try{
-        log("billing buy start", {
-          plan:plan.key,
-          productId:buyProductId,
-          basePlanId:buyBasePlanId,
-          offerTokenExists:!!offerToken
-        });
-
-        await callNativeBuy(buyProductId, buyBasePlanId, offerToken);
-      }catch(error){
-        log("billing buy failed", {
-          plan:plan.key,
-          productId:buyProductId,
-          basePlanId:buyBasePlanId,
-          message:error?.message || String(error || "")
-        });
-
-        toast("Satın alma başlatılamadı. Lütfen tekrar deneyin.");
-      }
-    }
-
-    function openCodePage(){
-      location.href = CODE_PAGE;
-    }
-
-    function continueAsGuest(){
-      try{
-        localStorage.setItem(GUEST_MODE_KEY, "1");
-      }catch{}
-
-      location.href = GUEST_PAGE;
-    }
-
-    async function recheckAndRoute(){
-      const session = await getSessionOrStay();
-
-      if(!session){
-        unlockUi();
-        showOnly("choice");
-        UI.googleChoiceBtn?.classList.remove("hidden");
-        setStatus("", "Devam etmek için Google hesabınızla giriş yapabilir, promosyon kodu kullanabilir veya misafir olarak dönebilirsiniz.");
-        return;
-      }
-
-      currentSession = session;
-      currentUserId = session.user?.id || "";
-
-      UI.googleChoiceBtn?.classList.add("hidden");
-
-      await sendUserIdToNative();
-
-      try{
-        const access = await getAccessState(session);
-
-        try{
-          setHeaderTokens(Number(access?.tokens || 0));
-        }catch{}
-
-        if(isActiveAccess(access)){
-          setStatus("ok", "Aktif üyeliğiniz hazır. Yönlendiriliyorsunuz...");
-          location.replace(HOME);
-          return;
-        }
-
-        unlockUi();
-        showOnly("choice");
-        setStatus("", "Devam etmek için promosyon kodunuzu kullanabilir, Play Store aboneliği başlatabilir veya misafir olarak dönebilirsiniz.");
-      }catch(error){
-        unlockUi();
-        showOnly("choice");
-        log("access check failed", { message:error?.message || String(error || "") });
-        setStatus("err", "Üyelik durumu şu anda kontrol edilemedi. Lütfen tekrar deneyin.");
-      }
-    }
-
-    window.onNativeSubscriptionSuccess = () => {
-      toast("Ödeme tamamlandı. Erişim tanımlanıyor...");
-      setTimeout(recheckAndRoute, 1500);
-    };
-
-    window.onAndroidBillingSuccess = () => {
-      toast("Ödeme tamamlandı. Erişim tanımlanıyor...");
-      setTimeout(recheckAndRoute, 1500);
-    };
-
-    window.onBillingPurchaseSuccess = () => {
-      toast("Ödeme tamamlandı. Erişim tanımlanıyor...");
-      setTimeout(recheckAndRoute, 1500);
-    };
-
-    window.addEventListener("italky-subscription-success", () => {
-      toast("Ödeme tamamlandı. Erişim tanımlanıyor...");
-      setTimeout(recheckAndRoute, 1500);
-    });
-
-    window.addEventListener("italky-billing-error", () => {
-      toast("Satın alma başlatılamadı. Lütfen tekrar deneyin.");
-    });
-
-    function bindAction(el, handler){
-      if(!el) return;
-
-      let busy = false;
-
-      el.addEventListener("click", async (event) => {
-        event.preventDefault();
-
-        if(busy) return;
-        busy = true;
-
-        try{
-          await handler(event);
-        }finally{
-          busy = false;
-        }
-      });
-    }
-
-    bindAction(UI.googleChoiceBtn, startGoogleLogin);
-    bindAction(UI.promoChoiceBtn, openCodePage);
-    bindAction(UI.guestContinueBtn, continueAsGuest);
-
-    bindAction(UI.playChoiceBtn, async () => {
-      if(!currentSession){
-        toast("Play Store aboneliği için önce Google ile devam edin.");
-        await startGoogleLogin();
-        return;
-      }
-
-      showOnly("plans");
-      await sendUserIdToNative();
-      loadGooglePlayPrices();
-    });
-
-    bindAction(UI.backToChoiceBtn, () => showOnly("choice"));
+    }, 5600);
 
     (async function boot(){
-      renderPlans();
-      await recheckAndRoute();
+      try{
+        const { data:{ session } } = await supabase.auth.getSession();
+
+        if(!session){
+          return;
+        }
+
+        await routeAfterLogin();
+      }catch(e){
+        console.error("boot error:", e);
+      }
     })();
   </script>
 </body>
