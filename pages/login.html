@@ -60,77 +60,87 @@
   <div id="toast"></div>
 
   <script type="module">
+    import { supabase } from "/js/supabase_client.js";
     import { loginWithGoogle } from "/js/auth.js";
 
-    (function(){
-      const GUEST_MODE_KEY = "italky_guest_mode_v1";
-      const phrases = ["Devam etmek için bir seçenek seçin...","Google Play üyeliği için hesabınızla üye olun...","Aktivasyon kodunuz varsa kod ile devam edin...","Misafir olarak temel akışı deneyebilirsiniz..."];
-      const typeEl = document.getElementById("typewriter");
-      const toastEl = document.getElementById("toast");
-      let pi = 0;
+    const GUEST_MODE_KEY = "italky_guest_mode_v1";
 
-      setInterval(function(){
-        pi = (pi + 1) % phrases.length;
-        if(typeEl){
-          typeEl.style.animation = "none";
-          typeEl.offsetHeight;
-          typeEl.textContent = phrases[pi];
-          typeEl.style.animation = null;
-        }
-      }, 5600);
+    const phrases = [
+      "Devam etmek için bir seçenek seçin...",
+      "Google Play üyeliği için hesabınızla üye olun...",
+      "Aktivasyon kodunuz varsa kod ile devam edin...",
+      "Misafir olarak temel akışı deneyebilirsiniz..."
+    ];
 
-      function go(url){
-        location.href = url;
+    const typeEl = document.getElementById("typewriter");
+    const toastEl = document.getElementById("toast");
+    let pi = 0;
+
+    setInterval(function(){
+      pi = (pi + 1) % phrases.length;
+      if(typeEl){
+        typeEl.style.animation = "none";
+        typeEl.offsetHeight;
+        typeEl.textContent = phrases[pi];
+        typeEl.style.animation = null;
       }
+    }, 5600);
 
-      function showToast(text){
-        if(!toastEl || !text) return;
-        toastEl.textContent = text;
-        toastEl.classList.add("show");
-        setTimeout(function(){
-          toastEl.classList.remove("show");
-        }, 4200);
+    function go(url){
+      location.href = url;
+    }
+
+    function showToast(text){
+      if(!toastEl || !text) return;
+      toastEl.textContent = text;
+      toastEl.classList.add("show");
+      setTimeout(function(){
+        toastEl.classList.remove("show");
+      }, 4200);
+    }
+
+    try{
+      const params = new URLSearchParams(location.search || "");
+      const sessionMessage = sessionStorage.getItem("italky_code_session_message") || "";
+      if(params.get("code_session_replaced") === "1" || sessionMessage){
+        showToast(sessionMessage || "Bu kod başka bir cihazda aktif edildi.");
+        sessionStorage.removeItem("italky_code_session_message");
       }
+    }catch(e){}
+
+    document.getElementById("googleMemberBtn")?.addEventListener("click", async function(){
+      try{
+        localStorage.removeItem(GUEST_MODE_KEY);
+      }catch(e){}
 
       try{
-        const params = new URLSearchParams(location.search || "");
-        const sessionMessage = sessionStorage.getItem("italky_code_session_message") || "";
-        if(params.get("code_session_replaced") === "1" || sessionMessage){
-          showToast(sessionMessage || "Bu kod başka bir cihazda aktif edildi.");
-          sessionStorage.removeItem("italky_code_session_message");
+        const { data } = await supabase.auth.getSession();
+        if(data && data.session){
+          go("/pages/membership.html");
+          return;
         }
       }catch(e){}
 
-      document.getElementById("googleMemberBtn")?.addEventListener("click", async function(){
-        try{ localStorage.removeItem(GUEST_MODE_KEY); }catch(e){}
+      try{
+        await loginWithGoogle("/pages/membership.html");
+      }catch(e){
+        go("/pages/membership.html");
+      }
+    });
 
-        try{
-          if(window.Native && typeof window.Native.startGoogleLogin === "function"){
-            window.Native.startGoogleLogin();
-            return;
-          }
+    document.getElementById("codeBtn")?.addEventListener("click", function(){
+      try{
+        localStorage.removeItem(GUEST_MODE_KEY);
+      }catch(e){}
+      go("/pages/promo_gate.html");
+    });
 
-          if(window.AndroidAuth && typeof window.AndroidAuth.startGoogleLogin === "function"){
-            window.AndroidAuth.startGoogleLogin();
-            return;
-          }
-
-          await loginWithGoogle("/pages/membership.html");
-        }catch(e){
-          go("/pages/membership.html");
-        }
-      });
-
-      document.getElementById("codeBtn")?.addEventListener("click", function(){
-        try{ localStorage.removeItem(GUEST_MODE_KEY); }catch(e){}
-        go("/pages/promo_gate.html");
-      });
-
-      document.getElementById("guestBtn")?.addEventListener("click", function(){
-        try{ localStorage.setItem(GUEST_MODE_KEY,"1"); }catch(e){}
-        go("/pages/login_entry.html");
-      });
-    })();
+    document.getElementById("guestBtn")?.addEventListener("click", function(){
+      try{
+        localStorage.setItem(GUEST_MODE_KEY,"1");
+      }catch(e){}
+      go("/pages/login_entry.html");
+    });
   </script>
 </body>
 </html>
