@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>iCanyAI Business • Music Showcase</title>
+  <meta name="description" content="iCanyAI Business radyo kanalları, müzik kartları ve karaoke söz akışı." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#05060b;
+      --panel:rgba(255,255,255,.075);
+      --panel2:rgba(255,255,255,.115);
+      --line:rgba(255,255,255,.16);
+      --text:#fff;
+      --muted:rgba(255,255,255,.64);
+      --soft:rgba(255,255,255,.42);
+      --cyan:#00f2ff;
+      --gold:#f8c76b;
+      --pink:#ff2d83;
+      --green:#32e875;
+      --danger:#ff5b6e;
+      --radius:28px;
+      --shadow:0 30px 90px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Outfit,system-ui,-apple-system,Segoe UI,sans-serif}
+    body{overflow-x:hidden}
+    .bg{position:fixed;inset:0;pointer-events:none;background:
+      radial-gradient(circle at 18% 12%,rgba(0,242,255,.16),transparent 36%),
+      radial-gradient(circle at 82% 18%,rgba(248,199,107,.13),transparent 34%),
+      radial-gradient(circle at 50% 78%,rgba(255,45,131,.10),transparent 42%),
+      linear-gradient(180deg,#070a14,#05060b 58%,#020307);z-index:0}
+    .grid{position:fixed;left:0;right:0;bottom:-8%;height:42%;opacity:.16;pointer-events:none;background:
+      linear-gradient(rgba(0,242,255,.18) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,242,255,.16) 1px,transparent 1px);background-size:44px 44px;transform:perspective(560px) rotateX(64deg);transform-origin:bottom;z-index:0}
+    .wrap{position:relative;z-index:1;width:min(1180px,94vw);margin:0 auto;padding:28px 0 48px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:6px 0 24px}
+    .brand{display:flex;align-items:center;gap:14px}.mark{width:48px;height:48px;border-radius:18px;background:linear-gradient(135deg,var(--cyan),#7c3aed,var(--gold));display:grid;place-items:center;font-family:Space Grotesk;font-weight:900;color:#06101a;box-shadow:0 0 45px rgba(0,242,255,.2)}
+    .brand h1{font-family:Space Grotesk;margin:0;font-size:clamp(26px,4vw,44px);letter-spacing:-1.6px}.brand small{display:block;color:var(--muted);font-weight:800;letter-spacing:1.6px;text-transform:uppercase;font-size:11px;margin-top:3px}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.pill{border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:11px 14px;font-weight:900;text-decoration:none;cursor:pointer}.pill.primary{background:linear-gradient(135deg,var(--cyan),#8b5cf6);color:#041018;border:0}.pill:active{transform:scale(.98)}
+    .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:stretch;margin-bottom:20px}.hero-card,.player-card,.channels,.lyrics-card{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.045));box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+    .hero-card{padding:26px;position:relative;overflow:hidden}.hero-card:before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 180deg,transparent,rgba(0,242,255,.12),transparent,rgba(248,199,107,.11),transparent);animation:spin 16s linear infinite;opacity:.9}@keyframes spin{to{transform:rotate(360deg)}}.hero-card>*{position:relative}.hero-title{font-size:clamp(28px,5vw,58px);line-height:.95;letter-spacing:-2px;margin:0 0 14px;font-family:Space Grotesk}.hero-title span{background:linear-gradient(135deg,#fff,var(--cyan),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero-text{color:var(--muted);font-size:16px;line-height:1.6;max-width:680px}.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.stat{padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}.stat b{display:block;font-size:20px}.stat span{font-size:12px;color:var(--soft);font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+    .player-card{padding:18px;display:flex;flex-direction:column;gap:14px}.cover{height:230px;border-radius:24px;background:radial-gradient(circle at 25% 20%,rgba(0,242,255,.30),transparent 36%),radial-gradient(circle at 80% 74%,rgba(248,199,107,.25),transparent 36%),linear-gradient(135deg,#11182e,#070914);position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12);display:grid;place-items:center}.orb{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,var(--cyan) 24%,#8b5cf6 62%,#111827 100%);box-shadow:0 0 80px rgba(0,242,255,.32);animation:pulse 3.8s ease-in-out infinite}.cover.playing .orb{animation:pulse 1.7s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.08);filter:saturate(1.3)}}.cover-label{position:absolute;left:18px;bottom:16px;right:18px}.cover-label strong{display:block;font-size:20px}.cover-label span{color:var(--muted);font-size:13px}
+    .now-title{font-size:18px;font-weight:900;line-height:1.25}.now-sub{color:var(--muted);font-size:13px;margin-top:4px}.audio-row{display:flex;align-items:center;gap:10px}.round{width:48px;height:48px;border-radius:50%;border:0;background:var(--cyan);color:#031018;font-weight:1000;cursor:pointer}.round.secondary{background:rgba(255,255,255,.10);color:#fff;border:1px solid var(--line)}.progress{flex:1}.bar{height:9px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;cursor:pointer}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--gold));border-radius:999px}.time{display:flex;justify-content:space-between;color:var(--soft);font-size:12px;font-family:JetBrains Mono;margin-top:6px}.player-card audio{display:none}
+    .main-grid{display:grid;grid-template-columns:360px 1fr;gap:18px}.channels{padding:16px}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px}.section-title h2{margin:0;font-size:18px}.section-title span{font-family:JetBrains Mono;font-size:12px;color:var(--muted)}.channel-list{display:grid;gap:10px;max-height:660px;overflow:auto;padding-right:4px}.ch{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.055);border-radius:20px;padding:14px;cursor:pointer;transition:.18s;position:relative;overflow:hidden}.ch:hover,.ch.active{background:rgba(255,255,255,.11);border-color:rgba(0,242,255,.36);transform:translateY(-1px)}.ch strong{display:block;font-size:15px}.ch small{display:block;color:var(--muted);margin-top:4px}.ch .count{position:absolute;right:12px;top:12px;font-size:11px;font-weight:900;color:#071018;background:var(--gold);padding:5px 8px;border-radius:999px}
+    .lyrics-card{padding:18px;min-height:640px;display:flex;flex-direction:column}.karaoke-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.karaoke-head h2{margin:0;font-size:22px}.karaoke-mode{font-size:12px;color:var(--muted);font-family:JetBrains Mono}.lyrics-window{flex:1;overflow:auto;border-radius:24px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.08);padding:18px;scroll-behavior:smooth}.lyric-line{font-size:clamp(18px,2.4vw,28px);line-height:1.35;color:rgba(255,255,255,.36);font-weight:900;padding:10px 12px;border-radius:16px;transition:.22s}.lyric-line.active{color:#061018;background:linear-gradient(135deg,var(--cyan),var(--gold));box-shadow:0 0 35px rgba(0,242,255,.18);transform:scale(1.015)}.lyric-line.done{color:rgba(255,255,255,.58)}.empty{height:100%;display:grid;place-items:center;text-align:center;color:var(--muted);padding:28px}.track-list{margin-top:14px;border-top:1px solid var(--line);padding-top:14px;max-height:190px;overflow:auto;display:grid;gap:8px}.track{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 12px;border-radius:16px;background:rgba(255,255,255,.055);cursor:pointer}.track:hover,.track.active{background:rgba(0,242,255,.12)}.track span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.badge{font-size:11px;color:var(--cyan);font-family:JetBrains Mono}
+    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120px);background:rgba(5,6,11,.94);border:1px solid var(--line);color:#fff;padding:12px 16px;border-radius:999px;box-shadow:var(--shadow);z-index:10;font-weight:900;transition:.25s}.toast.show{transform:translateX(-50%) translateY(0)}
+    @media(max-width:900px){.hero,.main-grid{grid-template-columns:1fr}.main-grid{gap:14px}.channel-list{max-height:none}.cover{height:210px}header{align-items:flex-start;flex-direction:column}.top-actions{justify-content:flex-start}.lyrics-card{min-height:520px}}
+  </style>
+</head>
+<body>
+  <div class="bg"></div><div class="grid"></div>
+  <div class="wrap">
+    <header>
+      <div class="brand"><div class="mark">AI</div><div><h1>iCanyAI Business</h1><small>Music Showcase • Live Radio Cards</small></div></div>
+      <div class="top-actions"><a class="pill" href="/login">Giriş</a><button class="pill primary" id="refreshBtn">Yenile</button></div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-card">
+        <h2 class="hero-title">Kurumsal radyonun <span>canlı vitrini</span></h2>
+        <p class="hero-text">R2 üzerinde üretilen iCanyAI müzikleri kanal kartlarıyla gösterilir. Her kanal kendi playlist manifestini okur; sözler varsa karaoke gibi akar, yoksa söz satırları süreye göre otomatik yayılır.</p>
+        <div class="stats"><div class="stat"><b id="statChannels">11</b><span>Kanal</span></div><div class="stat"><b id="statTracks">0</b><span>Yüklü parça</span></div><div class="stat"><b>190s</b><span>Hedef süre</span></div></div>
+      </div>
+      <aside class="player-card">
+        <div class="cover" id="cover"><div class="orb"></div><div class="cover-label"><strong id="coverChannel">Kanal seç</strong><span id="coverTrack">Playlist bekleniyor</span></div></div>
+        <div><div class="now-title" id="nowTitle">Henüz parça seçilmedi</div><div class="now-sub" id="nowSub">Bir kanal seçerek yayını başlat.</div></div>
+        <div class="audio-row"><button class="round" id="playBtn">▶</button><button class="round secondary" id="prevBtn">‹</button><button class="round secondary" id="nextBtn">›</button><div class="progress"><div class="bar" id="bar"><i id="barFill"></i></div><div class="time"><span id="curTime">0:00</span><span id="durTime">0:00</span></div></div></div>
+        <audio id="audio" crossorigin="anonymous"></audio>
+      </aside>
+    </section>
+
+    <section class="main-grid">
+      <aside class="channels"><div class="section-title"><h2>Radyo Kanalları</h2><span id="loadState">hazır</span></div><div class="channel-list" id="channelList"></div></aside>
+      <main class="lyrics-card"><div class="karaoke-head"><h2>Karaoke Söz Akışı</h2><span class="karaoke-mode" id="karaokeMode">otomatik zamanlama</span></div><div class="lyrics-window" id="lyricsWindow"><div class="empty">Kanal seçildiğinde sözler burada akar.</div></div><div class="track-list" id="trackList"></div></main>
+    </section>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+const PUBLIC_BASE = "https://media.icany.ai";
+const channels = [
+  ["09_turkish_pop_radio", "Turkish Pop Radio", "Türkçe", "TR", "#e11d48"],
+  ["01_global_pop_english", "Global Pop Radio", "English", "EN", "#00f2ff"],
+  ["02_french_lounge_pop", "French Lounge Pop", "Français", "FR", "#f8c76b"],
+  ["03_italian_dolce_pop", "Italian Dolce Pop", "Italiano", "IT", "#22c55e"],
+  ["04_spanish_latin_pop", "Spanish Latin Pop", "Español", "ES", "#fb923c"],
+  ["05_argentina_tango_pop", "Argentina Tango Pop", "Español Argentino", "AR", "#ef4444"],
+  ["06_russian_modern_pop", "Russian Modern Pop", "Русский", "RU", "#93c5fd"],
+  ["07_japanese_city_pop", "Japanese City Pop", "日本語", "JA", "#f472b6"],
+  ["08_brazilian_bossa_pop", "Brazilian Bossa Pop", "Português BR", "BR", "#34d399"],
+  ["10_hindi_bollywood_pop", "Hindi Bollywood Pop", "हिन्दी", "HI", "#c084fc"],
+  ["11_azerbaijani_modern_pop", "Azerbaijani Modern Pop", "Azərbaycanca", "AZ", "#38bdf8"]
+].map(([id,name,lang,code,color]) => ({id,name,lang,code,color,tracks:[],loaded:false,error:false}));
+
+const audio = document.getElementById('audio');
+const channelList = document.getElementById('channelList');
+const trackList = document.getElementById('trackList');
+const lyricsWindow = document.getElementById('lyricsWindow');
+const cover = document.getElementById('cover');
+const coverChannel = document.getElementById('coverChannel');
+const coverTrack = document.getElementById('coverTrack');
+const nowTitle = document.getElementById('nowTitle');
+const nowSub = document.getElementById('nowSub');
+const playBtn = document.getElementById('playBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const bar = document.getElementById('bar');
+const barFill = document.getElementById('barFill');
+const curTime = document.getElementById('curTime');
+const durTime = document.getElementById('durTime');
+const loadState = document.getElementById('loadState');
+const statTracks = document.getElementById('statTracks');
+const toast = document.getElementById('toast');
+const karaokeMode = document.getElementById('karaokeMode');
+let activeChannel = channels[0];
+let activeIndex = 0;
+let lyricLines = [];
+let lrcLines = [];
+
+function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 2600); }
+function fmt(sec){ if(!Number.isFinite(sec)) return '0:00'; const m=Math.floor(sec/60); const s=Math.floor(sec%60); return `${m}:${String(s).padStart(2,'0')}`; }
+function manifestUrl(ch){ return `${PUBLIC_BASE}/icanyai/radio/${ch.id}/playlist.json?t=${Date.now()}`; }
+function safeTitle(t){ return (t.title || t.name || (t.url||'').split('/').pop() || 'iCanyAI Track').replace(/\.mp3$/i,''); }
+function parseLyrics(text){ return String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(x=>x && !/^\[.*\]$/.test(x)); }
+function parseLRC(text){
+  const out=[]; String(text||'').split(/\r?\n/).forEach(line=>{ const m=line.match(/\[(\d+):(\d+(?:\.\d+)?)\](.*)/); if(m){ out.push({time:Number(m[1])*60+Number(m[2]), text:m[3].trim()}); }}); return out;
+}
+function makeFallbackLyrics(track){
+  const title = safeTitle(track).replace(/[_-]/g,' ');
+  return [
+    'iCanyAI Business canlı yayınındasın',
+    activeChannel.name,
+    title,
+    'Bu parça R2 üretim hattından geliyor',
+    'Söz zaman kodu geldiğinde karaoke tam senkron çalışacak'
+  ];
+}
+function buildLyricView(track){
+  lrcLines = parseLRC(track.lrc || track.lrc_text || '');
+  lyricLines = lrcLines.length ? lrcLines.map(x=>x.text) : parseLyrics(track.lyrics || track.lyrics_text || '');
+  if(!lyricLines.length) lyricLines = makeFallbackLyrics(track);
+  karaokeMode.textContent = lrcLines.length ? 'LRC senkron' : 'otomatik zamanlama';
+  lyricsWindow.innerHTML = lyricLines.map((line,i)=>`<div class="lyric-line" data-i="${i}">${line}</div>`).join('');
+}
+function activeLyricIndex(){
+  const t = audio.currentTime || 0;
+  if(lrcLines.length){ let idx=0; for(let i=0;i<lrcLines.length;i++){ if(t>=lrcLines[i].time) idx=i; else break; } return idx; }
+  const dur = audio.duration || activeChannel.tracks[activeIndex]?.duration || 190;
+  return Math.min(lyricLines.length-1, Math.max(0, Math.floor((t / Math.max(dur,1)) * lyricLines.length)));
+}
+function updateKaraoke(){
+  const idx = activeLyricIndex();
+  [...lyricsWindow.querySelectorAll('.lyric-line')].forEach((el,i)=>{ el.classList.toggle('active', i===idx); el.classList.toggle('done', i<idx); });
+  const active = lyricsWindow.querySelector('.lyric-line.active'); if(active) active.scrollIntoView({block:'center', behavior:'smooth'});
+}
+async function loadChannel(ch){
+  try{
+    loadState.textContent = 'yükleniyor';
+    const res = await fetch(manifestUrl(ch), {cache:'no-store'});
+    if(!res.ok) throw new Error('manifest yok');
+    const data = await res.json();
+    ch.tracks = (data.tracks || data.items || []).map(t => ({...t, url:t.url || t.audio_url || t.mp3_url})).filter(t=>t.url);
+    ch.loaded = true; ch.error = false;
+  }catch(e){
+    ch.tracks = []; ch.loaded = true; ch.error = true;
+  }
+  renderChannels(); renderTracks(); updateStats(); loadState.textContent='hazır';
+}
+async function loadAll(){ for(const ch of channels){ await loadChannel(ch); } }
+function updateStats(){ statTracks.textContent = channels.reduce((a,c)=>a+c.tracks.length,0); }
+function renderChannels(){
+  channelList.innerHTML = channels.map(ch=>`<div class="ch ${ch.id===activeChannel.id?'active':''}" data-id="${ch.id}" style="--c:${ch.color}"><span class="count">${ch.tracks.length || (ch.error?'—':'0')}</span><strong>${ch.name}</strong><small>${ch.lang} • ${ch.loaded ? (ch.error?'playlist bekleniyor':'hazır') : 'yükleniyor'}</small></div>`).join('');
+  channelList.querySelectorAll('.ch').forEach(el=>el.onclick=async()=>{ activeChannel = channels.find(c=>c.id===el.dataset.id); activeIndex=0; if(!activeChannel.loaded || activeChannel.error) await loadChannel(activeChannel); renderChannels(); renderTracks(); if(activeChannel.tracks.length) playTrack(0); else showEmptyChannel(); });
+}
+function renderTracks(){
+  if(!activeChannel.tracks.length){ trackList.innerHTML = `<div class="track"><span>${activeChannel.name} için playlist bekleniyor.</span><b class="badge">${activeChannel.code}</b></div>`; return; }
+  trackList.innerHTML = activeChannel.tracks.map((t,i)=>`<div class="track ${i===activeIndex?'active':''}" data-i="${i}"><span>${safeTitle(t)}</span><b class="badge">${fmt(t.duration||190)}</b></div>`).join('');
+  trackList.querySelectorAll('.track').forEach(el=>el.onclick=()=>playTrack(Number(el.dataset.i)));
+}
+function showEmptyChannel(){
+  coverChannel.textContent = activeChannel.name; coverTrack.textContent = 'Playlist üretimden gelince otomatik görünür'; nowTitle.textContent = activeChannel.name; nowSub.textContent = 'Bu kanal için R2 playlist bekleniyor.';
+  lyricsWindow.innerHTML = `<div class="empty">${activeChannel.name} için playlist henüz hazır değil.<br>Üretim devam ederken playlist.json oluşunca burada çalacak.</div>`;
+}
+function playTrack(i){
+  if(!activeChannel.tracks.length) return showEmptyChannel();
+  activeIndex = (i + activeChannel.tracks.length) % activeChannel.tracks.length;
+  const t = activeChannel.tracks[activeIndex];
+  audio.src = t.url; audio.play().catch(()=>showToast('Tarayıcı otomatik çalmayı engelledi; play butonuna bas.'));
+  cover.classList.add('playing'); coverChannel.textContent = activeChannel.name; coverTrack.textContent = safeTitle(t); nowTitle.textContent = safeTitle(t); nowSub.textContent = `${activeChannel.lang} • ${activeChannel.name}`;
+  buildLyricView(t); renderTracks();
+}
+function next(){ if(activeChannel.tracks.length) playTrack(activeIndex+1); }
+function prev(){ if(activeChannel.tracks.length) playTrack(activeIndex-1); }
+playBtn.onclick=()=>{ if(!audio.src && activeChannel.tracks.length) return playTrack(activeIndex); if(audio.paused){audio.play();}else{audio.pause();} };
+nextBtn.onclick=next; prevBtn.onclick=prev; audio.addEventListener('ended', next); audio.addEventListener('play',()=>{playBtn.textContent='Ⅱ';cover.classList.add('playing')}); audio.addEventListener('pause',()=>{playBtn.textContent='▶';cover.classList.remove('playing')});
+audio.addEventListener('timeupdate',()=>{ const d=audio.duration||0; barFill.style.width = d ? `${(audio.currentTime/d)*100}%` : '0%'; curTime.textContent=fmt(audio.currentTime); durTime.textContent=fmt(d); updateKaraoke(); });
+bar.onclick=(e)=>{ const d=audio.duration; if(!d) return; const r=bar.getBoundingClientRect(); audio.currentTime = ((e.clientX-r.left)/r.width)*d; };
+document.getElementById('refreshBtn').onclick=async()=>{ await loadAll(); showToast('Playlistler yenilendi'); };
+renderChannels(); showEmptyChannel(); loadAll(); setInterval(loadAll, 60000);
+</script>
+</body>
+</html>
