@@ -187,15 +187,20 @@
     function mapPromoError(reasonRaw) {
       const reason = String(reasonRaw || "").trim().toUpperCase();
 
+      if (reason === "CODE_REQUIRED") return "Lütfen promosyon kodunu giriniz.";
       if (reason === "PROMO_NOT_FOUND") return "Bu promosyon kodu sistemde kayıtlı değil.";
       if (reason === "PROMO_ALREADY_USED") return "Bu promosyon kodu daha önce kullanılmış.";
-      if (reason === "PROMO_INACTIVE") return "Bu promosyon kullanıma kapalı.";
+      if (reason === "PROMO_ALREADY_USED_BY_USER") return "Bu promosyon kodunu daha önce kullanmışsınız.";
+      if (reason === "PROMO_INACTIVE" || reason === "PROMO_NOT_ACTIVE") return "Bu promosyon kullanıma kapalı.";
       if (reason === "PROMO_EXPIRED") return "Bu promosyonun süresi dolmuş.";
       if (reason === "PROMO_NOT_STARTED") return "Bu promosyon henüz aktif değil.";
+      if (reason === "PROMO_NOT_ELIGIBLE_FOR_PAID_MEMBER") return "Ücretli üyeliği olan hesaplarda bu promosyon kullanılamaz.";
+      if (reason === "PROMO_NOT_ALLOWED_WHILE_MEMBERSHIP_ACTIVE") return "Aktif üyelik varken bu promosyon kullanılamaz.";
       if (reason === "PROMO_USER_LIMIT_REACHED") return "Bu kampanya için kullanım hakkınız dolmuş.";
       if (reason === "PROMO_GLOBAL_LIMIT_REACHED") return "Bu kampanyanın toplam kullanım limiti dolmuş.";
       if (reason === "PROMO_ACCOUNT_MISMATCH") return "Bu promosyon başka bir hesapla eşleşmiş.";
       if (reason === "PROMO_SKIPPED_ACTIVE_MEMBERSHIP") return "Aktif üyelik nedeniyle bu promosyon uygulanmadı.";
+      if (reason === "CAMPAIGN_NOT_FOUND") return "Bu promosyon kampanyası bulunamadı.";
       if (reason === "PROFILE_NOT_FOUND") return "Kullanıcı profili bulunamadı.";
 
       return "İşlem sırasında sistem hatası oluştu.";
@@ -284,7 +289,7 @@
           return;
         }
 
-        showResult(false, "İşlem Başarısız", mapPromoError(json.reason));
+        showResult(false, "İşlem Başarısız", mapPromoError(json.reason || json.detail));
         loadBtn.disabled = false;
       } catch (e) {
         showResult(false, "İşlem Başarısız", "Promosyon kodu uygulanamadı.");
