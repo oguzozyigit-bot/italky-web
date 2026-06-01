@@ -68,7 +68,7 @@ const homeBtn = $("homeBtn");
 const refreshBtn = $("refreshBtn");
 const logoutBtnTop = $("logoutBtnTop");
 
-const API_BASE = "https://italky-api.onrender.com/admin";
+const API_BASE = "https://italky-api.onrender.com/api/admin";
 const PUSH_API = "https://italky-api.onrender.com/api/admin/push";
 
 let currentUser = null;
@@ -126,7 +126,23 @@ function generateCampaignCode() {
 }
 
 function generatePromoCode() {
-  return `ITK-${randomPart(4)}-${randomPart(4)}`;
+  const letters = "ABCDEFGHJKLMNPRSTUVYZ";
+  const digits = "0123456789";
+  const bannedPairs = new Set(["AK", "FG", "FB", "GS"]);
+
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const pair = `${letters[Math.floor(Math.random() * letters.length)]}${letters[Math.floor(Math.random() * letters.length)]}`;
+    if (bannedPairs.has(pair)) continue;
+
+    let numberPart = "";
+    for (let i = 0; i < 6; i += 1) {
+      numberPart += digits[Math.floor(Math.random() * digits.length)];
+    }
+
+    return `${pair}${numberPart}`;
+  }
+
+  throw new Error("Promosyon kodu üretilemedi");
 }
 
 function buildQrUrl(code) {
@@ -442,6 +458,8 @@ async function createBulkPromoRecords() {
 }
 
 async function loadPromoRecords() {
+  if (!promoTableBody) return;
+
   try {
     const json = await apiGet("/promo/codes");
     let rows = Array.isArray(json?.items) ? json.items : [];
@@ -508,6 +526,8 @@ async function loadPromoRecords() {
 }
 
 async function loadPromoLogs() {
+  if (!promoLogTableBody) return;
+
   try {
     const json = await apiGet("/promo/redemptions");
     let rows = Array.isArray(json?.items) ? json.items : [];
