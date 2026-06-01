@@ -60,10 +60,11 @@
         </label>
         <div class="wide">
           <button id="generateBtn" type="button">Kodları Oluştur</button>
-          <div id="status" class="status"></div>
+          <div id="status" class="status">Admin oturumu bekleniyor.</div>
           <div class="hint">
-            Bu sayfa artık eski <b>code / duration_days / status</b> kolonlarına yazmaz.
+            Bu sayfa eski <b>code / duration_days / status</b> kolonlarına yazmaz.
             Kodlar API üzerinden <b>promo_campaigns</b> kampanyasına bağlanarak <b>promo_codes.code_value</b> alanına oluşturulur.
+            API yolu: <b>/api/admin/promo</b>.
           </div>
         </div>
       </div>
@@ -81,6 +82,7 @@
     import { supabase } from "/js/supabase_client.js";
 
     const API_BASE = "https://italky-api.onrender.com";
+    const ADMIN_PROMO_PREFIX = "/api/admin/promo";
 
     const countInput = document.getElementById("countInput");
     const durationSelect = document.getElementById("durationSelect");
@@ -117,9 +119,19 @@
     };
 
     function setStatus(message, isError = false){
+      if(!statusEl) return;
       statusEl.textContent = message || "";
       statusEl.classList.toggle("error", !!isError);
     }
+
+    window.addEventListener("error", (event) => {
+      setStatus(`Sayfa hatası: ${event.message || "JS çalıştırılamadı"}`, true);
+    });
+
+    window.addEventListener("unhandledrejection", (event) => {
+      const reason = event.reason?.message || event.reason || "Bilinmeyen hata";
+      setStatus(`İşlem hatası: ${reason}`, true);
+    });
 
     function pick(source){
       return source[Math.floor(Math.random() * source.length)];
@@ -146,15 +158,16 @@
 
     async function getSessionToken(){
       const { data, error } = await supabase.auth.getSession();
-      if(error) throw error;
+      if(error) throw new Error(`Token alınamadı: ${error.message || error}`);
       const token = data?.session?.access_token || "";
-      if(!token) throw new Error("Önce giriş yapın");
+      if(!token) throw new Error("Token yok. Önce admin hesabıyla giriş yapın.");
       return token;
     }
 
     async function requireAdmin(){
-      const { data:{ user } } = await supabase.auth.getUser();
-      if(!user?.id) throw new Error("Önce giriş yapın");
+      const { data:{ user }, error: userError } = await supabase.auth.getUser();
+      if(userError) throw new Error(`Admin kontrolü yapılamadı: ${userError.message || userError}`);
+      if(!user?.id) throw new Error("Token yok. Önce admin hesabıyla giriş yapın.");
 
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -162,31 +175,60 @@
         .eq("id", user.id)
         .maybeSingle();
 
-      if(error) throw error;
+      if(error) throw new Error(`Admin rolü okunamadı: ${error.message || error}`);
       const role = String(profile?.role || "").toLowerCase();
       if(!(profile?.is_admin || role === "admin" || role === "superadmin")){
-        throw new Error("Bu sayfa sadece admin içindir");
+        throw new Error("Admin rolü yok. Bu sayfa sadece admin içindir.");
       }
 
       return user;
     }
 
+    function parseMaybeJson(text){
+      if(!text) return null;
+      try { return JSON.parse(text); } catch { return null; }
+    }
+
+    function detailFromPayload(payload, fallback){
+      const detail = payload?.detail || payload?.reason || payload?.message || payload?.error || fallback;
+      return typeof detail === "string" ? detail : JSON.stringify(detail);
+    }
+
     async function apiJson(path, options = {}){
       const token = await getSessionToken();
-      const res = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          ...(options.headers || {})
-        }
-      });
+      const url = `${API_BASE}${path}`;
+      let res;
 
-      const json = await res.json().catch(() => null);
-      if(!res.ok || json?.ok === false){
-        const detail = json?.detail || json?.reason || json?.message || `HTTP ${res.status}`;
-        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      try{
+        res = await fetch(url, {
+          ...options,
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+            ...(options.headers || {})
+          }
+        });
+      }catch(e){
+        throw new Error(`API isteği gönderilemedi. CORS/preflight veya bağlantı hatası olabilir. URL: ${url}. Detay: ${e?.message || e}`);
       }
+
+      const text = await res.text().catch(() => "");
+      const json = parseMaybeJson(text);
+
+      if(!res.ok || json?.ok === false){
+        const detail = detailFromPayload(json, text || `HTTP ${res.status}`);
+        if(res.status === 401) throw new Error(`Yetki yok veya token geçersiz. ${detail}`);
+        if(res.status === 403) throw new Error(`Admin rolü yok veya API yetki vermedi. ${detail}`);
+        if(res.status === 404) throw new Error(`API endpoint bulunamadı: ${url}. ${detail}`);
+        throw new Error(`API hatası ${res.status}: ${detail}`);
+      }
+
+      if(!json && text){
+        throw new Error(`API JSON olmayan cevap döndü: ${text.slice(0, 240)}`);
+      }
+
       return json || {};
     }
 
@@ -198,7 +240,9 @@
 
     async function ensureCampaign(durationDays){
       const config = CAMPAIGN_BY_DURATION[durationDays] || CAMPAIGN_BY_DURATION[365];
-      const campaigns = await apiJson("/admin/promo/campaigns");
+      setStatus(`Kampanya kontrol ediliyor: ${config.code}`);
+
+      const campaigns = await apiJson(`${ADMIN_PROMO_PREFIX}/campaigns`);
       const existing = (campaigns.items || []).find((item) => String(item.code || "").toUpperCase() === config.code);
       if(existing?.id) return existing;
 
@@ -219,31 +263,35 @@
       };
 
       try{
-        const created = await apiJson("/admin/promo/campaigns", {
+        setStatus(`Kampanya oluşturuluyor: ${config.code}`);
+        const created = await apiJson(`${ADMIN_PROMO_PREFIX}/campaigns`, {
           method: "POST",
           body: JSON.stringify(payload)
         });
         const item = getCreatedItem(created);
         if(item?.id) return item;
       }catch(e){
-        if(!String(e?.message || "").includes("CAMPAIGN_CODE_ALREADY_EXISTS")) throw e;
+        if(!String(e?.message || "").includes("CAMPAIGN_CODE_ALREADY_EXISTS")){
+          throw new Error(`Kampanya oluşturulamadı: ${e?.message || e}`);
+        }
       }
 
-      const retry = await apiJson("/admin/promo/campaigns");
+      const retry = await apiJson(`${ADMIN_PROMO_PREFIX}/campaigns`);
       const found = (retry.items || []).find((item) => String(item.code || "").toUpperCase() === config.code);
-      if(!found?.id) throw new Error("Kampanya oluşturuldu ama bulunamadı");
+      if(!found?.id) throw new Error("Kampanya oluşturuldu ama tekrar listede bulunamadı.");
       return found;
     }
 
     async function createPromoCode(campaignId, codeValue){
-      return apiJson("/admin/promo/codes", {
+      return apiJson(`${ADMIN_PROMO_PREFIX}/codes`, {
         method: "POST",
         body: JSON.stringify({
           campaign_id: campaignId,
           code_value: codeValue,
           delivery_type: "manual",
           nfc_uid: null,
-          is_active: true
+          is_active: true,
+          is_used: false
         })
       });
     }
@@ -264,10 +312,10 @@
       `).join("");
     }
 
-    generateBtn.addEventListener("click", async () => {
+    generateBtn?.addEventListener("click", async () => {
       try{
         generateBtn.disabled = true;
-        setStatus("Kodlar oluşturuluyor...");
+        setStatus("Admin kontrolü yapılıyor...");
 
         await requireAdmin();
         const count = Math.max(1, Math.min(500, Number(countInput.value || 1)));
@@ -283,8 +331,11 @@
           unique.add(generatePromoCode());
         }
 
+        let index = 0;
         for(const codeValue of unique){
+          index += 1;
           try{
+            setStatus(`Kod oluşturuluyor (${index}/${count}): ${codeValue}`);
             const created = await createPromoCode(campaign.id, codeValue);
             const item = getCreatedItem(created) || {};
             createdRows.push({
@@ -295,8 +346,9 @@
               campaign_code: campaign.code,
               note
             });
+            renderRows(createdRows);
           }catch(e){
-            failedRows.push(`${codeValue}: ${e?.message || "oluşturulamadı"}`);
+            failedRows.push(`${codeValue}: ${e?.message || "Kod oluşturulamadı"}`);
           }
         }
 
@@ -311,6 +363,8 @@
         generateBtn.disabled = false;
       }
     });
+
+    setStatus("Hazır. Kod oluşturmak için admin oturumuyla devam edin.");
   </script>
 </body>
 </html>
