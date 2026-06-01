@@ -64,11 +64,12 @@
     import { loginWithGoogle } from "/js/auth.js";
 
     const GUEST_MODE_KEY = "italky_guest_mode_v1";
+    const CODE_LOAD_URL = "/pages/code_load.html";
 
     const phrases = [
       "Devam etmek için bir seçenek seçin...",
       "Google Play üyeliği için hesabınızla üye olun...",
-      "Aktivasyon kodunuz varsa kod ile devam edin...",
+      "Promosyon kodunuz varsa kod ile devam edin...",
       "Misafir olarak temel akışı deneyebilirsiniz..."
     ];
 
@@ -129,11 +130,26 @@
       }
     });
 
-    document.getElementById("codeBtn")?.addEventListener("click", function(){
+    document.getElementById("codeBtn")?.addEventListener("click", async function(){
       try{
         localStorage.removeItem(GUEST_MODE_KEY);
       }catch(e){}
-      go("/pages/promo_gate.html");
+
+      try{
+        const { data } = await supabase.auth.getSession();
+        if(data && data.session){
+          go(CODE_LOAD_URL);
+          return;
+        }
+      }catch(e){}
+
+      try{
+        showToast("Promosyon kodu için Google hesabınızla giriş yapın.");
+        await loginWithGoogle(CODE_LOAD_URL);
+      }catch(e){
+        console.warn("[LOGIN] Code promo login failed", e);
+        showToast(e?.message || "Google girişi başlatılamadı. Lütfen tekrar deneyin.");
+      }
     });
 
     document.getElementById("guestBtn")?.addEventListener("click", function(){
