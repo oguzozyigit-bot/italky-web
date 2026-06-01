@@ -8,7 +8,7 @@
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#07111f,#050914);color:#fff;font-family:Outfit,Arial,sans-serif;padding:22px}
-    .page{max-width:860px;margin:0 auto}
+    .page{max-width:940px;margin:0 auto}
     .card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);border-radius:24px;padding:18px;box-shadow:0 22px 54px rgba(0,0,0,.26)}
     h1{margin:0 0 8px;font-size:28px;font-weight:1000;letter-spacing:-.7px}
     p{margin:0 0 16px;color:rgba(255,255,255,.68);line-height:1.5;font-weight:700}
@@ -19,12 +19,14 @@
     textarea{min-height:92px;resize:vertical;text-transform:none}
     button{min-height:54px;cursor:pointer;font-size:15px;font-weight:1000;color:#06111f;background:linear-gradient(135deg,#67e8f9,#93c5fd,#c4b5fd)}
     button:disabled{opacity:.55;cursor:not-allowed}
-    .status{margin-top:12px;min-height:22px;color:#bef264;font-size:13px;font-weight:900;line-height:1.5}
+    .status{margin-top:12px;min-height:22px;color:#bef264;font-size:13px;font-weight:900;line-height:1.5;white-space:pre-line}
     .error{color:#fca5a5}
+    .hint{margin-top:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:18px;padding:12px;color:rgba(255,255,255,.74);font-size:13px;font-weight:800;line-height:1.55}
     .table{margin-top:16px;overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(0,0,0,.18)}
-    table{width:100%;border-collapse:collapse;min-width:720px}
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;text-align:left}
+    table{width:100%;border-collapse:collapse;min-width:820px}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;text-align:left;vertical-align:top}
     th{color:rgba(255,255,255,.58);font-weight:1000}
+    td b{letter-spacing:.8px}
     .top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}
     .link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;text-decoration:none;font-size:13px;font-weight:1000}
     @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}
@@ -35,7 +37,7 @@
     <div class="top">
       <div>
         <h1>Promosyon Kodları</h1>
-        <p>Yeni `promo_codes` tablosuna doğrudan kod üretir.</p>
+        <p>Kampanyalı yeni promo şemasına kod üretir: <b>campaign_id + code_value</b>.</p>
       </div>
       <a class="link" href="/pages/admin.html">Ana Admin</a>
     </div>
@@ -45,12 +47,12 @@
         <label>Kod Sayısı
           <input id="countInput" type="number" min="1" max="500" value="10" />
         </label>
-        <label>Süre
+        <label>Paket Süresi
           <select id="durationSelect">
-            <option value="30">30 gün</option>
-            <option value="90">90 gün</option>
-            <option value="180">180 gün</option>
-            <option value="365" selected>365 gün</option>
+            <option value="30">1 ay / 30 gün</option>
+            <option value="90">3 ay / 90 gün</option>
+            <option value="180">6 ay / 180 gün</option>
+            <option value="365" selected>12 ay / 365 gün</option>
           </select>
         </label>
         <label class="wide">Not
@@ -59,13 +61,17 @@
         <div class="wide">
           <button id="generateBtn" type="button">Kodları Oluştur</button>
           <div id="status" class="status"></div>
+          <div class="hint">
+            Bu sayfa artık eski <b>code / duration_days / status</b> kolonlarına yazmaz.
+            Kodlar API üzerinden <b>promo_campaigns</b> kampanyasına bağlanarak <b>promo_codes.code_value</b> alanına oluşturulur.
+          </div>
         </div>
       </div>
 
       <div class="table">
         <table>
-          <thead><tr><th>Kod</th><th>Süre</th><th>Durum</th><th>Not</th></tr></thead>
-          <tbody id="resultBody"><tr><td colspan="4">Henüz kod oluşturulmadı.</td></tr></tbody>
+          <thead><tr><th>Kod</th><th>Paket</th><th>Durum</th><th>Kampanya</th><th>Not</th></tr></thead>
+          <tbody id="resultBody"><tr><td colspan="5">Henüz kod oluşturulmadı.</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -73,6 +79,8 @@
 
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
+
+    const API_BASE = "https://italky-api.onrender.com";
 
     const countInput = document.getElementById("countInput");
     const durationSelect = document.getElementById("durationSelect");
@@ -84,6 +92,29 @@
     const LETTERS = "ABCDEFGHJKLMNPRSTUVYZ";
     const DIGITS = "0123456789";
     const BANNED_PAIRS = new Set(["AK", "FG", "FB", "GS"]);
+
+    const CAMPAIGN_BY_DURATION = {
+      30: {
+        code: "TRENDYOL_ANDROID_1AY",
+        name: "Trendyol Android 1 Ay Sınırsız",
+        membership_months: 1
+      },
+      90: {
+        code: "TRENDYOL_ANDROID_3AY",
+        name: "Trendyol Android 3 Ay Sınırsız",
+        membership_months: 3
+      },
+      180: {
+        code: "TRENDYOL_ANDROID_6AY",
+        name: "Trendyol Android 6 Ay Sınırsız",
+        membership_months: 6
+      },
+      365: {
+        code: "TRENDYOL_ANDROID_12AY",
+        name: "Trendyol Android 12 Ay Sınırsız",
+        membership_months: 12
+      }
+    };
 
     function setStatus(message, isError = false){
       statusEl.textContent = message || "";
@@ -113,6 +144,14 @@
       throw new Error("Kod üretilemedi");
     }
 
+    async function getSessionToken(){
+      const { data, error } = await supabase.auth.getSession();
+      if(error) throw error;
+      const token = data?.session?.access_token || "";
+      if(!token) throw new Error("Önce giriş yapın");
+      return token;
+    }
+
     async function requireAdmin(){
       const { data:{ user } } = await supabase.auth.getUser();
       if(!user?.id) throw new Error("Önce giriş yapın");
@@ -132,16 +171,94 @@
       return user;
     }
 
+    async function apiJson(path, options = {}){
+      const token = await getSessionToken();
+      const res = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          ...(options.headers || {})
+        }
+      });
+
+      const json = await res.json().catch(() => null);
+      if(!res.ok || json?.ok === false){
+        const detail = json?.detail || json?.reason || json?.message || `HTTP ${res.status}`;
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      return json || {};
+    }
+
+    function getCreatedItem(payload){
+      const item = payload?.item;
+      if(Array.isArray(item)) return item[0] || null;
+      return item || null;
+    }
+
+    async function ensureCampaign(durationDays){
+      const config = CAMPAIGN_BY_DURATION[durationDays] || CAMPAIGN_BY_DURATION[365];
+      const campaigns = await apiJson("/admin/promo/campaigns");
+      const existing = (campaigns.items || []).find((item) => String(item.code || "").toUpperCase() === config.code);
+      if(existing?.id) return existing;
+
+      const payload = {
+        code: config.code,
+        name: config.name,
+        description: "Admin panelden Trendyol / Android dijital aktivasyon kodu için otomatik oluşturuldu.",
+        is_active: true,
+        grant_type: "membership",
+        membership_months: config.membership_months,
+        token_amount: 0,
+        package_code: "promo_code",
+        stack_mode: "replace",
+        per_user_limit: 1,
+        max_total_redemptions: null,
+        starts_at: new Date().toISOString(),
+        ends_at: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      try{
+        const created = await apiJson("/admin/promo/campaigns", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        const item = getCreatedItem(created);
+        if(item?.id) return item;
+      }catch(e){
+        if(!String(e?.message || "").includes("CAMPAIGN_CODE_ALREADY_EXISTS")) throw e;
+      }
+
+      const retry = await apiJson("/admin/promo/campaigns");
+      const found = (retry.items || []).find((item) => String(item.code || "").toUpperCase() === config.code);
+      if(!found?.id) throw new Error("Kampanya oluşturuldu ama bulunamadı");
+      return found;
+    }
+
+    async function createPromoCode(campaignId, codeValue){
+      return apiJson("/admin/promo/codes", {
+        method: "POST",
+        body: JSON.stringify({
+          campaign_id: campaignId,
+          code_value: codeValue,
+          delivery_type: "manual",
+          nfc_uid: null,
+          is_active: true
+        })
+      });
+    }
+
     function renderRows(rows){
       if(!rows.length){
-        resultBody.innerHTML = '<tr><td colspan="4">Henüz kod oluşturulmadı.</td></tr>';
+        resultBody.innerHTML = '<tr><td colspan="5">Henüz kod oluşturulmadı.</td></tr>';
         return;
       }
       resultBody.innerHTML = rows.map((row) => `
         <tr>
-          <td><b>${row.code}</b></td>
-          <td>${row.duration_days} gün</td>
-          <td>${row.status}</td>
+          <td><b>${row.code_value || row.code || "-"}</b></td>
+          <td>${row.membership_months || "-"} ay</td>
+          <td>${row.is_active ? "active" : "inactive"}${row.is_used ? " / used" : ""}</td>
+          <td>${row.campaign_code || "-"}</td>
           <td>${row.note || "-"}</td>
         </tr>
       `).join("");
@@ -152,32 +269,41 @@
         generateBtn.disabled = true;
         setStatus("Kodlar oluşturuluyor...");
 
-        const user = await requireAdmin();
+        await requireAdmin();
         const count = Math.max(1, Math.min(500, Number(countInput.value || 1)));
         const durationDays = Number(durationSelect.value || 365);
-        const note = String(noteInput.value || "").trim() || null;
+        const note = String(noteInput.value || "").trim() || "-";
+        const campaign = await ensureCampaign(durationDays);
+        const membershipMonths = Number(campaign.membership_months || CAMPAIGN_BY_DURATION[durationDays]?.membership_months || 12);
         const unique = new Set();
+        const createdRows = [];
+        const failedRows = [];
 
         while(unique.size < count){
           unique.add(generatePromoCode());
         }
 
-        const rows = Array.from(unique).map((code) => ({
-          code,
-          duration_days: durationDays,
-          status: "active",
-          created_by: user.id,
-          note
-        }));
+        for(const codeValue of unique){
+          try{
+            const created = await createPromoCode(campaign.id, codeValue);
+            const item = getCreatedItem(created) || {};
+            createdRows.push({
+              code_value: item.code_value || codeValue,
+              is_active: item.is_active !== false,
+              is_used: !!item.is_used,
+              membership_months: membershipMonths,
+              campaign_code: campaign.code,
+              note
+            });
+          }catch(e){
+            failedRows.push(`${codeValue}: ${e?.message || "oluşturulamadı"}`);
+          }
+        }
 
-        const { data, error } = await supabase
-          .from("promo_codes")
-          .insert(rows)
-          .select("code,duration_days,status,note");
-
-        if(error) throw error;
-        renderRows(data || rows);
-        setStatus(`${rows.length} adet promosyon kodu oluşturuldu.`);
+        renderRows(createdRows);
+        const successText = `${createdRows.length} adet promosyon kodu oluşturuldu. Kampanya: ${campaign.code}`;
+        const failText = failedRows.length ? `\nOluşturulamayanlar:\n${failedRows.join("\n")}` : "";
+        setStatus(successText + failText, !!failedRows.length && !createdRows.length);
       }catch(e){
         console.error("promo code generation failed:", e);
         setStatus(e?.message || "Kod oluşturulamadı", true);
