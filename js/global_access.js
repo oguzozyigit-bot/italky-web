@@ -255,19 +255,15 @@ async function fetchAccessStateSafe(session) {
 
     const resp = await fetch(API_ACCESS, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`
-      },
+      headers: { Authorization: `Bearer ${session.access_token}` },
       cache: "no-store"
     });
 
     const json = await resp.json().catch(() => ({}));
-
     if (!resp.ok) {
       console.warn("[global_access] access-state not ok:", resp.status, json);
       return null;
     }
-
     return json || null;
   } catch (err) {
     console.warn("[global_access] access-state fetch failed:", err);
@@ -295,102 +291,32 @@ function goMembership() {
 
 function isReklamsizProduct(productId) {
   const p = cleanLower(productId);
-  return (
-    p === "reklamsiz" ||
-    p.includes("reklamsiz") ||
-    p.includes("no_ads") ||
-    p.includes("ads_free")
-  );
+  return p === "reklamsiz" || p.includes("reklamsiz") || p.includes("no_ads") || p.includes("ads_free");
 }
 
 function buildSafeAccess(access = {}, session = null) {
   const userId = session?.user?.id || "";
   const metadata = session?.user?.user_metadata || {};
   const email = session?.user?.email || metadata?.email || access?.email || "";
-  const displayName =
-    access?.display_name ||
-    access?.full_name ||
-    metadata?.display_name ||
-    metadata?.full_name ||
-    metadata?.name ||
-    metadata?.user_name ||
-    "";
+  const displayName = access?.display_name || access?.full_name || metadata?.display_name || metadata?.full_name || metadata?.name || metadata?.user_name || "";
   const fullName = access?.full_name || metadata?.full_name || displayName;
   const avatarUrl = access?.avatar_url || access?.picture || metadata?.avatar_url || metadata?.picture || "";
-
   const role = cleanLower(access?.role || session?.user?.user_metadata?.role || "");
   const tokens = safeNumber(access?.tokens ?? access?.wallet?.tokens ?? 0, 0);
   const membershipStatus = cleanLower(access?.membership_status || "");
-  const membershipProductId = cleanLower(
-    access?.membership_product_id ||
-    access?.subscription_product_id ||
-    access?.package_code ||
-    access?.selected_package_code ||
-    ""
-  );
-
-  const activeUntil =
-    access?.active_until ||
-    access?.membership_ends_at ||
-    access?.subscription_ends_at ||
-    access?.package_ends_at ||
-    access?.gift_ends_at ||
-    access?.trial_ends_at ||
-    null;
-
-  const membershipEndsAt =
-    access?.membership_ends_at ||
-    access?.subscription_ends_at ||
-    access?.package_ends_at ||
-    access?.gift_ends_at ||
-    access?.trial_ends_at ||
-    null;
-
-  const membershipStartedAt =
-    access?.membership_started_at ||
-    access?.subscription_started_at ||
-    access?.package_started_at ||
-    access?.gift_started_at ||
-    access?.trial_started_at ||
-    null;
-
+  const membershipProductId = cleanLower(access?.membership_product_id || access?.subscription_product_id || access?.package_code || access?.selected_package_code || "");
+  const activeUntil = access?.active_until || access?.membership_ends_at || access?.subscription_ends_at || access?.package_ends_at || access?.gift_ends_at || access?.trial_ends_at || null;
+  const membershipEndsAt = access?.membership_ends_at || access?.subscription_ends_at || access?.package_ends_at || access?.gift_ends_at || access?.trial_ends_at || null;
+  const membershipStartedAt = access?.membership_started_at || access?.subscription_started_at || access?.package_started_at || access?.gift_started_at || access?.trial_started_at || null;
   const isAdmin = isAdminRole(role);
   const isSuperadmin = role === "superadmin";
   const isReklamsiz = isReklamsizProduct(membershipProductId);
   const remainingSeconds = safeNumber(access?.remaining_seconds, secondsUntil(activeUntil));
-
-  const backendHasActiveMembership =
-    isTruthy(access?.has_active_membership) ||
-    isTruthy(access?.is_member) ||
-    isTruthy(access?.package_active) ||
-    isTruthy(access?.subscription_active);
-
-  const hasActiveMembership = Boolean(
-    isAdmin ||
-    (backendHasActiveMembership && remainingSeconds > 0) ||
-    (membershipStatus === "active" && remainingSeconds > 0)
-  );
-
-  const subscriptionActive = Boolean(
-    isTruthy(access?.subscription_active) ||
-    (hasActiveMembership && isReklamsiz)
-  );
-
-  const accessOpen = Boolean(
-    isAdmin ||
-    isTruthy(access?.access_open) ||
-    hasActiveMembership ||
-    remainingSeconds > 0
-  );
-
-  const adsDisabled = Boolean(
-    isAdmin ||
-    isTruthy(access?.ads_disabled) ||
-    isTruthy(access?.no_ads) ||
-    isTruthy(access?.is_no_ads_member) ||
-    subscriptionActive ||
-    hasActiveMembership
-  );
+  const backendHasActiveMembership = isTruthy(access?.has_active_membership) || isTruthy(access?.is_member) || isTruthy(access?.package_active) || isTruthy(access?.subscription_active);
+  const hasActiveMembership = Boolean(isAdmin || (backendHasActiveMembership && remainingSeconds > 0) || (membershipStatus === "active" && remainingSeconds > 0));
+  const subscriptionActive = Boolean(isTruthy(access?.subscription_active) || (hasActiveMembership && isReklamsiz));
+  const accessOpen = Boolean(isAdmin || isTruthy(access?.access_open) || hasActiveMembership || remainingSeconds > 0);
+  const adsDisabled = Boolean(isAdmin || isTruthy(access?.ads_disabled) || isTruthy(access?.no_ads) || isTruthy(access?.is_no_ads_member) || subscriptionActive || hasActiveMembership);
 
   return {
     ok: !!userId,
@@ -443,10 +369,35 @@ function buildSafeAccess(access = {}, session = null) {
   };
 }
 
+function hydrateMenuAccessBadge(access) {
+  try {
+    const meta = document.querySelector("#menuProfileTop .menu-user-meta");
+    if (!meta) return;
+
+    let badge = document.getElementById("menuAccessTime");
+    if (!badge) {
+      badge = document.createElement("div");
+      badge.id = "menuAccessTime";
+      badge.setAttribute("data-no-translate", "1");
+      badge.style.cssText = "font-size:11px;font-weight:900;line-height:1.35;color:#8bd3ff;background:rgba(139,211,255,.10);border:1px solid rgba(139,211,255,.18);border-radius:999px;padding:6px 9px;width:max-content;max-width:100%;";
+      const after = document.getElementById("menuLoginDate");
+      if (after?.parentNode === meta) after.insertAdjacentElement("afterend", badge);
+      else meta.appendChild(badge);
+    }
+
+    const label = access?.remaining_label || formatRemaining(access?.remaining_seconds || 0);
+    badge.textContent = access?.access_open ? `Kalan süre: ${label}` : "Kullanım süresi doldu";
+    badge.style.color = access?.access_open ? "#8bd3ff" : "#ffb4b4";
+    badge.style.borderColor = access?.access_open ? "rgba(139,211,255,.18)" : "rgba(255,120,120,.26)";
+    badge.style.background = access?.access_open ? "rgba(139,211,255,.10)" : "rgba(255,120,120,.10)";
+  } catch {}
+}
+
 function setCachedAccess(access) {
   try {
     window.__ITALKY_ACCESS__ = access;
     localStorage.setItem("italky_access_state", JSON.stringify(access));
+    hydrateMenuAccessBadge(access);
   } catch {}
 }
 
@@ -486,11 +437,7 @@ async function guardActiveAccess(session, safe, currentPath, allowPublicPageBypa
 }
 
 export async function initGlobalAccess(options = {}) {
-  const {
-    allowPublicPageBypass = true,
-    lockMembershipBack = false
-  } = options;
-
+  const { allowPublicPageBypass = true, lockMembershipBack = false } = options;
   const currentPath = normalizePath(location.pathname);
   const publicPage = isPublicPage(currentPath);
   const codeState = getCodeAccessState();
@@ -510,12 +457,8 @@ export async function initGlobalAccess(options = {}) {
 
   if (iosIAPState) {
     const session = await getSessionOrNull();
-
     if (session?.user?.id) {
-      if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") {
-        lockMembershipPageBack();
-      }
-
+      if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") lockMembershipPageBack();
       const access = mergeIOSIAPPremiumFlags(await fetchAccessStateSafe(session) || {}, iosIAPState);
       const safe = buildSafeAccess(access, session);
       setCachedAccess(safe);
@@ -524,7 +467,6 @@ export async function initGlobalAccess(options = {}) {
     }
 
     console.warn("[global_access] ios_iap state ignored because there is no Supabase session");
-
     if (!(allowPublicPageBypass && publicPage)) {
       goLogin();
       return { ok: false, redirected: "login", session: null, access: buildSafeAccess({}, null) };
@@ -534,28 +476,19 @@ export async function initGlobalAccess(options = {}) {
   const session = await getSessionOrNull();
 
   if (session?.user?.id) {
-    if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") {
-      lockMembershipPageBack();
-    }
-
+    if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") lockMembershipPageBack();
     const access = await fetchAccessStateSafe(session);
     const safe = buildSafeAccess(access || {}, session);
     setCachedAccess(safe);
     dispatchAccessReady(safe);
 
     const redirected = await guardActiveAccess(session, safe, currentPath, allowPublicPageBypass, publicPage);
-    if (redirected) {
-      return { ok: false, redirected: "membership", session, access: safe };
-    }
-
+    if (redirected) return { ok: false, redirected: "membership", session, access: safe };
     return { ok: true, session, access: safe };
   }
 
   if (allowPublicPageBypass && publicPage) {
-    if (lockMembershipBack && currentPath === "/pages/membership.html") {
-      lockMembershipPageBack();
-    }
-
+    if (lockMembershipBack && currentPath === "/pages/membership.html") lockMembershipPageBack();
     const safe = buildSafeAccess({}, null);
     setCachedAccess(safe);
     dispatchAccessReady(safe);
@@ -563,13 +496,7 @@ export async function initGlobalAccess(options = {}) {
   }
 
   goLogin();
-
-  return {
-    ok: false,
-    redirected: "login",
-    session: null,
-    access: buildSafeAccess({}, null)
-  };
+  return { ok: false, redirected: "login", session: null, access: buildSafeAccess({}, null) };
 }
 
 export function getCachedAccessState() {
@@ -612,7 +539,6 @@ export function getCachedAccessState() {
 
 export function isCurrentUserAdsDisabled() {
   const access = getCachedAccessState();
-
   return Boolean(
     isTruthy(access?.ads_disabled) ||
     isTruthy(access?.no_ads) ||
@@ -629,11 +555,9 @@ export function lockMembershipPageBack() {
   try {
     const currentPath = normalizePath(location.pathname);
     if (currentPath !== "/pages/membership.html") return;
-
     const here = location.pathname + location.search + location.hash;
     history.replaceState({ membershipLock: true }, "", here);
     history.pushState({ membershipLock: true }, "", here);
-
     window.addEventListener("popstate", () => {
       try {
         history.pushState({ membershipLock: true }, "", here);
