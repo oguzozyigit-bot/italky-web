@@ -179,23 +179,8 @@ const HOME_HEADER_HTML = `
       <button class="menu-action delete-action" id="deleteAccountBtn" type="button" data-i18n="menu_delete_account">Hesabımı Sil</button>
     </nav>
 
-    <div class="menu-orbit-wrap" aria-hidden="true">
-      <div class="menu-orbit-core" data-no-translate="1">italkyAI</div>
-      <div class="menu-orbit-ring ring-1">
-        <span class="orbit-dot dot-red"></span>
-      </div>
-      <div class="menu-orbit-ring ring-2">
-        <span class="orbit-dot dot-blue"></span>
-      </div>
-      <div class="menu-orbit-ring ring-3">
-        <span class="orbit-dot dot-green"></span>
-      </div>
-    </div>
-
     <div class="menu-sign" data-no-translate="1">
-      <span class="menu-sign-main" data-no-translate="1">italkyAI By Ozyigit's</span>
-      <span class="menu-sign-dot" data-no-translate="1">•</span>
-      <span class="menu-sign-year" data-no-translate="1">2026</span>
+      <span class="menu-sign-main" data-no-translate="1">italkyAI By Özyiğit's 2026</span>
     </div>
   </div>
 </aside>`;
@@ -203,9 +188,7 @@ const HOME_HEADER_HTML = `
 const HOME_FOOTER_HTML = `
 <footer class="premium-footer" id="italkyFooter">
   <div class="signature" data-no-translate="1">
-    <span class="signature-main" data-no-translate="1">italkyAI By Ozyigit's</span>
-    <span class="signature-dot" data-no-translate="1">•</span>
-    <span class="signature-year" data-no-translate="1">2026</span>
+    <span class="signature-main" data-no-translate="1">italkyAI By Özyiğit's 2026</span>
   </div>
 </footer>`;
 
@@ -322,8 +305,7 @@ body.ui-menu-open{overflow:hidden;}
 }
 .signature{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;font-size:11px;font-weight:800;letter-spacing:.25px;text-align:center;}
 .signature-main{font-size:12px;font-weight:900;background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 10px rgba(124,92,255,.18);}
-.signature-year{color:rgba(139,211,255,.78);}
-.signature-dot{color:rgba(255,255,255,.28);}
+.signature-year,.signature-dot{display:none!important;}
 .side-menu{position:fixed;inset:0;z-index:200;pointer-events:none;}
 .side-menu.open{pointer-events:auto;}
 .menu-backdrop{
@@ -428,6 +410,7 @@ body.ui-menu-open{overflow:hidden;}
 .logout-action{color:#f27a1a !important;}
 .delete-action{color:var(--danger-red) !important;}
 .menu-orbit-wrap{
+  display:none!important;
   position:absolute;left:50%;bottom:62px;transform:translateX(-50%);width:170px;height:170px;margin:0;
   pointer-events:none;z-index:1;opacity:.92;
 }
@@ -450,8 +433,7 @@ body.ui-menu-open{overflow:hidden;}
   font-size:11px;font-weight:800;letter-spacing:.2px;position:relative;z-index:3;
 }
 .menu-sign-main{font-size:13px;font-weight:900;background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 12px rgba(124,92,255,.18);}
-.menu-sign-year{color:rgba(139,211,255,.82);}
-.menu-sign-dot{color:rgba(255,255,255,.30);}
+.menu-sign-year,.menu-sign-dot{display:none!important;}
 .shell-modal{
   position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:400;padding:18px;
 }

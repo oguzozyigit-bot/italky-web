@@ -21,6 +21,7 @@ const ALWAYS_OPEN_PATHS = new Set([
 const CODE_ACCESS_KEYS = { mode: "italky_access_mode", code: "italky_activation_code", session: "italky_activation_session_key", expires: "italky_activation_expires_at" };
 
 let moduleGateInstalled = false;
+let pendingGateContinueUrl = "";
 
 function normalizePath(pathname = "") { try { return String(pathname || "").split("?")[0].split("#")[0].trim().replace(/\/+$/, "") || "/"; } catch { return "/"; } }
 function isPublicPage(pathname = location.pathname) { return PUBLIC_PAGES.has(normalizePath(pathname)); }
@@ -65,7 +66,11 @@ function installMenuFocusStyles() {
     st.textContent = `
       #menuProfileTop .menu-user-meta #menuAccessTime,
       #menuProfileTop .menu-user-meta #menuAccessTimeValue,
-      #menuProfileTop .menu-user-meta .menu-access-badge{display:none!important;}
+      #menuProfileTop .menu-user-meta .menu-access-badge,
+      #menuProfileTop [id*="Access"],
+      #menuProfileTop [class*="access"],
+      #menuProfileTop [class*="Access"]{display:none!important;}
+      .menu-orbit-wrap{display:none!important;}
       #menuAccessCard{position:relative;overflow:hidden;}
       #menuAccessCard::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,rgba(139,211,255,.52),rgba(245,158,11,.38),rgba(168,85,247,.44));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.55;pointer-events:none;}
       #menuAccessCard button{position:relative;z-index:1;}
@@ -160,6 +165,12 @@ function showGateModal({ title, text, buttons = [] }) {
       const action = btn.getAttribute("data-action");
       if (action === "membership") goMembership();
       else if (action === "code") goCodeLoad();
+      else if (action === "continue") {
+        const next = pendingGateContinueUrl;
+        pendingGateContinueUrl = "";
+        closeGateModal();
+        if (next) location.href = next;
+      }
       else closeGateModal();
     }));
     if (!document.getElementById("italkyAccessGateStyle")) {
@@ -169,11 +180,12 @@ function showGateModal({ title, text, buttons = [] }) {
 }
 
 async function showAccessExpiredPrompt() {
-  showGateModal({ title:"Kullanım süreniz doldu", text:"italkyAI’ı kullanmaya devam etmek için lütfen gün yükleyiniz. Abonelik yoktur, otomatik yenileme yapılmaz. Satın aldığınız günler mevcut sürenize eklenir.", buttons:[{ label:"Gün Yükle", action:"membership" }, { label:"Kod ile Gün Yükle", action:"code" }] });
+  showGateModal({ title:"Kullanım süreniz doldu", text:"Kullanım süreniz doldu. Devam etmek için gün yükleyebilir veya elinizde kod varsa Kod ile Gün Yükle sayfasından kodunuzu girebilirsiniz.", buttons:[{ label:"Gün Yükle", action:"membership" }, { label:"Kod ile Gün Yükle", action:"code" }] });
   await new Promise((resolve) => setTimeout(resolve, 250));
 }
 
-function showLowTimeChoicePrompt() {
+function showLowTimeChoicePrompt(continueUrl = "") {
+  pendingGateContinueUrl = continueUrl || "";
   showGateModal({ title:"Kullanım süreniz azalıyor", text:"Kullanım sürenizin dolmasına 60 dakikadan az kaldı. Kesintisiz devam etmek için gün yükleyebilirsiniz.", buttons:[{ label:"Gün Yükle", action:"membership" }, { label:"Devam Et", action:"continue" }] });
 }
 
@@ -197,14 +209,14 @@ function installGlobalModuleGate(access) {
       const current = getCachedAccessState();
       const remaining = getRemainingSeconds(current);
       const isAdmin = current?.is_admin || current?.is_superadmin;
-      if (isOfflineLanguagePath(targetPath) && !isAdmin && remaining < 86400) {
-        event.preventDefault(); event.stopPropagation(); showOfflineDownloadBlockedPrompt(); return;
+      if (isOfflineLanguagePath(targetPath) && !isAdmin && remaining < 86460) {
+        event.preventDefault(); event.stopPropagation(); return;
       }
       if (!isAdmin && remaining <= 0) {
         event.preventDefault(); event.stopPropagation(); showAccessExpiredPrompt(); return;
       }
       if (!isAdmin && remaining > 0 && remaining < 3600) {
-        event.preventDefault(); event.stopPropagation(); showLowTimeChoicePrompt(); return;
+        event.preventDefault(); event.stopPropagation(); showLowTimeChoicePrompt(link.href || href); return;
       }
     }, true);
   } catch {}

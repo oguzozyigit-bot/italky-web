@@ -441,43 +441,10 @@ function canUseNativeTranslator() {
 }
 
 function saveHomeWidget(source, target, langInfoResolver, status = "downloading", emit = true) {
-  const s = canonical(source);
-  const t = canonical(target);
-
-  if (!s || !t || s === t) return;
-
-  const sourceInfo = typeof langInfoResolver === "function"
-    ? langInfoResolver(s)
-    : { code: s, name: s.toUpperCase(), flag: "🌐" };
-
-  const targetInfo = typeof langInfoResolver === "function"
-    ? langInfoResolver(t)
-    : { code: t, name: t.toUpperCase(), flag: "🌐" };
-
-  let statusText = "Dil paketi indiriliyor";
-
-  if (status === "ready") statusText = "Dil paketi hazır";
-  if (status === "queued") statusText = "Sıraya alındı";
-  if (status === "failed") statusText = "İndirme başarısız";
-
-  const item = {
-    source: s,
-    target: t,
-    sourceName: sourceInfo?.name || s.toUpperCase(),
-    targetName: targetInfo?.name || t.toUpperCase(),
-    sourceFlag: sourceInfo?.flag || "🌐",
-    targetFlag: targetInfo?.flag || "🌐",
-    title: `${sourceInfo?.name || s.toUpperCase()} ⇄ ${targetInfo?.name || t.toUpperCase()}`,
-    status,
-    statusText,
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString()
-  };
-
   try {
-    localStorage.setItem(HOME_LANG_WIDGET_KEY, JSON.stringify(item));
+    localStorage.removeItem(HOME_LANG_WIDGET_KEY);
   } catch (e) {
-    console.warn("[offline_pack_bridge] home widget write failed:", e);
+    console.warn("[offline_pack_bridge] home widget cleanup failed:", e);
   }
 
   if (emit) dispatchState();

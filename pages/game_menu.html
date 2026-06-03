@@ -31,7 +31,9 @@
 <div id="toast" class="toast"></div>
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
+import { initGlobalAccess } from "/js/global_access.js";
 try{mountShell({scroll:"auto"});}catch(error){console.warn("[GAME_MENU] shell mount failed",JSON.stringify({message:error?.message||String(error)}));}
+initGlobalAccess({ allowPublicPageBypass: false }).catch((error)=>console.warn("[GAME_MENU] access init failed", JSON.stringify({ message:error?.message||String(error) })));
 const pageContent=document.getElementById("pageContent"),gameHub=document.getElementById("gameHub"),languageModal=document.getElementById("languageModal"),languageGrid=document.getElementById("languageGrid"),languageContinue=document.getElementById("languageContinue"),languageCancel=document.getElementById("languageCancel"),rulesModal=document.getElementById("rulesModal"),rulesGameName=document.getElementById("rulesGameName"),rulesLang=document.getElementById("rulesLang"),rulesGoal=document.getElementById("rulesGoal"),rulesStart=document.getElementById("rulesStart"),rulesBack=document.getElementById("rulesBack");
 const LANGS=[{code:"en",name:"İngilizce",flag:"🇬🇧"},{code:"de",name:"Almanca",flag:"🇩🇪"},{code:"fr",name:"Fransızca",flag:"🇫🇷"},{code:"es",name:"İspanyolca",flag:"🇪🇸"},{code:"it",name:"İtalyanca",flag:"🇮🇹"}];
 let selectedCard=null,selectedLang=localStorage.getItem("italky_game_lang_v1")||"en";

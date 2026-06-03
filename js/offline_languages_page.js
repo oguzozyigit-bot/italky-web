@@ -331,66 +331,17 @@ function getLatestInstalledPair(map = getInstalledPairs()) {
 }
 
 function saveHomeLangPackWidget(sourceCode, targetCode, status = "ready", percent = null) {
-  const source = canonical(sourceCode);
-  const target = canonical(targetCode);
-  if (!source || !target || source === target) return;
-
-  const map = getInstalledPairs();
-  const installedLangs = updateInstalledLangsStorage(map);
-  const sourceInfo = getLangInfo(source);
-  const targetInfo = getLangInfo(target);
-  const installedCount = installedLangs.length;
-  const isDownloading = status === "downloading";
-  const isFailed = status === "failed";
-
-  const item = {
-    installedCount,
-    activePair: {
-      source,
-      sourceName: sourceInfo.name,
-      sourceFlag: sourceInfo.flag,
-      target,
-      targetName: targetInfo.name,
-      targetFlag: targetInfo.flag
-    },
-    status,
-    percent: Number.isFinite(Number(percent)) ? Number(percent) : null,
-    title: installedCount > 0 ? `${installedCount} dil indirildi` : "Offline dilleri indir",
-    statusText: isDownloading ? `İndiriliyor${percent ? `... %${Math.round(percent)}` : "..."}` : (isFailed ? "İndirme tamamlanamadı" : "Hazır"),
-    source,
-    target,
-    sourceName: sourceInfo.name,
-    targetName: targetInfo.name,
-    sourceFlag: sourceInfo.flag,
-    targetFlag: targetInfo.flag,
-    updatedAt: new Date().toISOString()
-  };
-
   try {
-    localStorage.setItem(HOME_LANG_WIDGET_KEY, JSON.stringify(item));
+    localStorage.removeItem(HOME_LANG_WIDGET_KEY);
   } catch (e) {
-    console.warn("Ana sayfa offline widget kaydı yazılamadı:", e);
+    console.warn("Ana sayfa offline widget kaydı temizlenemedi:", e);
   }
 }
 
 function refreshHomeWidgetFromInstalled(status = "ready") {
-  const map = getInstalledPairs();
-  const latest = getLatestInstalledPair(map);
-  if (!latest) {
-    try {
-      localStorage.setItem(HOME_LANG_WIDGET_KEY, JSON.stringify({
-        installedCount: 0,
-        activePair: null,
-        status: "empty",
-        title: "Offline dilleri indir",
-        statusText: "Dil ara",
-        updatedAt: new Date().toISOString()
-      }));
-    } catch {}
-    return;
-  }
-
-  saveHomeLangPackWidget(latest.source, latest.target, status);
+  try {
+    localStorage.removeItem(HOME_LANG_WIDGET_KEY);
+  } catch {}
 }
 
 function isLangInstalledBiDirectional(langCode) {
@@ -859,7 +810,7 @@ async function init() {
     nativeMirror: canUseNativeMirror(),
     nativeInstaller: canUseNativeOfflineInstaller(),
     adPerDownload: false,
-    homeLangWidget: true
+    homeLangWidget: false
   });
 }
 

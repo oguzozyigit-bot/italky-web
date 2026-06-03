@@ -1,7 +1,7 @@
 import { STORAGE_KEY } from "/js/config.js";
 
 const FALLBACK_VERSION_CODE = 83;
-const FOOTER_PREFIX = "italkyAI By Ozyigit's 2026 V.";
+const STANDARD_SIGNATURE = "italkyAI By Özyiğit's 2026";
 const MEMBERSHIP_SUBSCRIPTION_PRODUCT_ID = "reklamsiz";
 const MEMBERSHIP_BASE_PLAN_IDS = new Set([
   "1-ay-abonelik",
@@ -82,7 +82,7 @@ function getVersionCode() {
 }
 
 function footerText() {
-  return `${FOOTER_PREFIX}${getVersionCode()}`;
+  return STANDARD_SIGNATURE;
 }
 
 function ensureGlobalFooterStyle() {

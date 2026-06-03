@@ -282,7 +282,7 @@ body.home-ready #pageContent{
 }
 
 .home-lang-pack-widget{
-  display:block;
+  display:none!important;
   text-decoration:none;
   color:#fff;
   padding:12px;
@@ -1014,6 +1014,47 @@ body.home-ready #pageContent{
 
   mountShell({ scroll: "auto" });
 
+  function getActiveUntil(access = {}) {
+    const dates = [
+      access?.active_until,
+      access?.membership_ends_at,
+      access?.package_ends_at,
+      access?.trial_ends_at,
+      access?.subscription_ends_at,
+      access?.gift_ends_at
+    ]
+      .map((value) => {
+        const ms = Date.parse(value || "");
+        return Number.isFinite(ms) ? ms : 0;
+      })
+      .filter(Boolean);
+
+    return dates.length ? Math.max(...dates) : 0;
+  }
+
+  function getRemainingSeconds(access = window.__ITALKY_ACCESS__ || {}) {
+    const direct = Number(access?.remaining_seconds);
+    if (Number.isFinite(direct) && direct >= 0) return direct;
+
+    const activeUntil = getActiveUntil(access);
+    if (!activeUntil) return 0;
+
+    return Math.max(0, Math.floor((activeUntil - Date.now()) / 1000));
+  }
+
+  function applyOfflineCardVisibility(access = window.__ITALKY_ACCESS__ || {}) {
+    const card = document.getElementById("offlineCard");
+    if (!card) return;
+
+    const isAdmin = access?.is_admin === true || access?.is_superadmin === true;
+    const remaining = getRemainingSeconds(access);
+    const showOffline = isAdmin || remaining >= 86460;
+
+    card.classList.toggle("hidden", !showOffline);
+    card.style.display = showOffline ? "" : "none";
+    card.setAttribute("aria-hidden", showOffline ? "false" : "true");
+  }
+
   function readHomeLangPackWidget() {
     try {
       const raw = localStorage.getItem(HOME_LANG_WIDGET_KEY);
@@ -1029,34 +1070,9 @@ body.home-ready #pageContent{
   function renderHomeLangPackWidget() {
     const widget = document.getElementById("homeLangPackWidget");
     if (!widget) return;
-
-    const item = readHomeLangPackWidget();
-
-    if (!item?.source || !item?.target) {
-      widget.classList.add("hidden");
-      return;
-    }
-
-    const statusEl = document.getElementById("homeLangPackStatus");
-
-    document.getElementById("homeLangPackTitle").textContent =
-      item.title || `${item.sourceName || item.source} ⇄ ${item.targetName || item.target}`;
-
-    document.getElementById("homeLangPackSourceFlag").textContent = item.sourceFlag || "🌐";
-    document.getElementById("homeLangPackSourceName").textContent = item.sourceName || String(item.source).toUpperCase();
-
-    document.getElementById("homeLangPackTargetFlag").textContent = item.targetFlag || "🌐";
-    document.getElementById("homeLangPackTargetName").textContent = item.targetName || String(item.target).toUpperCase();
-
-    const isReady = item.status === "ready";
-
-    statusEl.textContent = isReady ? "Hazır" : "Hazır";
-    statusEl.classList.toggle("downloading", !isReady);
-
-    widget.classList.remove("hidden");
-    widget.onclick = () => {
-      location.href = "/pages/offline_languages.html";
-    };
+    widget.classList.add("hidden");
+    widget.style.display = "none";
+    widget.onclick = null;
   }
 
   async function fillUserName() {
@@ -1094,6 +1110,7 @@ body.home-ready #pageContent{
 
       await fillUserName();
       renderHomeLangPackWidget();
+      applyOfflineCardVisibility(result.access);
 
       const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
       if (skipWelcome) {
@@ -1104,13 +1121,24 @@ body.home-ready #pageContent{
     } finally {
       document.body.classList.add("home-ready");
       renderHomeLangPackWidget();
+      applyOfflineCardVisibility();
     }
   }
 
-  window.addEventListener("storage", renderHomeLangPackWidget);
-  window.addEventListener("focus", renderHomeLangPackWidget);
+  window.addEventListener("italkyAccessReady", (event) => applyOfflineCardVisibility(event.detail));
+  window.addEventListener("storage", () => {
+    renderHomeLangPackWidget();
+    applyOfflineCardVisibility();
+  });
+  window.addEventListener("focus", () => {
+    renderHomeLangPackWidget();
+    applyOfflineCardVisibility();
+  });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) renderHomeLangPackWidget();
+    if (!document.hidden) {
+      renderHomeLangPackWidget();
+      applyOfflineCardVisibility();
+    }
   });
 
   bootHome();
