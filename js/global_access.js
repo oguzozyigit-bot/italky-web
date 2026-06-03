@@ -5,6 +5,7 @@ import { supabase } from "/js/supabase_client.js";
 const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
 const MEMBERSHIP_URL = "/pages/membership.html";
 const CODE_LOAD_URL = "/pages/code_load.html";
+const STANDARD_SIGNATURE = "italkyAI By Özyiğit's 2026";
 
 const PUBLIC_PAGES = new Set([
   "/", "/index.html", "/pages/login.html", "/pages/auth_callback.html", "/pages/membership.html",
@@ -26,6 +27,14 @@ function isAdminRole(role) { const r = cleanLower(role); return r === "admin" ||
 function parseTime(value) { if (!value) return null; const ms = Date.parse(value); return Number.isFinite(ms) ? ms : null; }
 function secondsUntil(value) { const ms = parseTime(value); if (!ms) return 0; return Math.max(0, Math.floor((ms - Date.now()) / 1000)); }
 function formatRemaining(seconds) { const s = Math.max(0, Math.floor(Number(seconds) || 0)); const days = Math.floor(s / 86400); const hours = Math.floor((s % 86400) / 3600); const minutes = Math.floor((s % 3600) / 60); if (days > 0) return `${days} Gün ${hours} Saat ${minutes} Dakika`; if (hours > 0) return `${hours} Saat ${minutes} Dakika`; if (minutes > 0) return `${minutes} Dakika`; return "Süre doldu"; }
+
+function standardizeShellSignature() {
+  try {
+    document.querySelectorAll(".signature-main,.menu-sign-main").forEach((el) => { el.textContent = STANDARD_SIGNATURE; });
+    document.querySelectorAll(".signature-dot,.signature-year,.menu-sign-dot,.menu-sign-year").forEach((el) => { el.textContent = ""; el.style.display = "none"; });
+    document.body?.classList?.add("shell-ready");
+  } catch {}
+}
 
 function getCodeAccessState() { try { const mode = localStorage.getItem(CODE_ACCESS_KEYS.mode); const code = localStorage.getItem(CODE_ACCESS_KEYS.code) || ""; const sessionKey = localStorage.getItem(CODE_ACCESS_KEYS.session) || ""; const expiresAt = localStorage.getItem(CODE_ACCESS_KEYS.expires) || ""; if (mode !== "code" || !code || !sessionKey) return null; return { code, sessionKey, expiresAt }; } catch { return null; } }
 
@@ -72,7 +81,7 @@ function maybeShowLowTimeToast(access) {
 function hydrateMenuAccessBadge(access) {
   try {
     document.querySelectorAll("#menuProfileTop .menu-user-meta #menuAccessTime,#menuProfileTop .menu-user-meta #menuAccessTimeValue,#menuProfileTop .menu-user-meta .menu-access-badge").forEach((el)=>el.remove());
-    const menuTop = document.getElementById("menuProfileTop"); if (!menuTop) return;
+    const menuTop = document.getElementById("menuProfileTop"); if (!menuTop) { standardizeShellSignature(); return; }
     let card = document.getElementById("menuAccessCard");
     if (!card) {
       card = document.createElement("div"); card.id = "menuAccessCard"; card.setAttribute("data-no-translate", "1"); card.style.cssText = "margin-top:10px;padding:12px;border-radius:18px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);display:grid;gap:9px;";
@@ -83,11 +92,12 @@ function hydrateMenuAccessBadge(access) {
     }
     const value = document.getElementById("menuAccessTimeValue"); const label = access?.remaining_label || formatRemaining(access?.remaining_seconds || 0);
     if (value) { value.textContent = access?.access_open ? label : "Kullanım süresi doldu"; value.style.color = access?.access_open ? "#8bd3ff" : "#ffb4b4"; }
-  } catch {}
+    standardizeShellSignature();
+  } catch { standardizeShellSignature(); }
 }
 
-function setCachedAccess(access) { try { window.__ITALKY_ACCESS__ = access; localStorage.setItem("italky_access_state", JSON.stringify(access)); hydrateMenuAccessBadge(access); maybeShowLowTimeToast(access); } catch {} }
-function dispatchAccessReady(access) { try { window.dispatchEvent(new CustomEvent("italkyAccessReady", { detail: access })); } catch {} }
+function setCachedAccess(access) { try { window.__ITALKY_ACCESS__ = access; localStorage.setItem("italky_access_state", JSON.stringify(access)); hydrateMenuAccessBadge(access); maybeShowLowTimeToast(access); standardizeShellSignature(); } catch {} }
+function dispatchAccessReady(access) { try { standardizeShellSignature(); window.dispatchEvent(new CustomEvent("italkyAccessReady", { detail: access })); } catch {} }
 
 async function showAccessExpiredPrompt() {
   try {
@@ -102,6 +112,7 @@ async function showAccessExpiredPrompt() {
 async function guardActiveAccess(session, safe, currentPath, allowPublicPageBypass, publicPage) { if (safe?.access_open) return false; if (!session?.user?.id) return false; if (safe?.is_admin || safe?.is_superadmin) return false; if (currentPath === "/pages/membership.html" || currentPath === "/pages/code_load.html") return false; if (allowPublicPageBypass && publicPage) return false; await showAccessExpiredPrompt(); return true; }
 
 export async function initGlobalAccess(options = {}) {
+  standardizeShellSignature();
   const { allowPublicPageBypass = true, lockMembershipBack = false } = options; const currentPath = normalizePath(location.pathname); const publicPage = isPublicPage(currentPath); const codeState = getCodeAccessState();
   if (codeState) { const codeAccess = buildCodeAccess(codeState); setCachedAccess(codeAccess); dispatchAccessReady(codeAccess); if (!codeAccess.access_open && currentPath !== "/pages/membership.html" && currentPath !== "/pages/code_load.html") await showAccessExpiredPrompt(); return { ok:true, code_access:true, session:null, access:codeAccess }; }
   const iosIAPState = getIOSIAPPremiumState();
