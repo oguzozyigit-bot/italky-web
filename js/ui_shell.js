@@ -180,7 +180,7 @@ const HOME_HEADER_HTML = `
     </nav>
 
     <div class="menu-sign" data-no-translate="1">
-      <span class="menu-sign-main" data-no-translate="1">italkyAI By Özyiğit's 2026</span>
+     
     </div>
   </div>
 </aside>`;
