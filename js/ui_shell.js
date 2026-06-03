@@ -188,7 +188,7 @@ const HOME_HEADER_HTML = `
 const HOME_FOOTER_HTML = `
 <footer class="premium-footer" id="italkyFooter">
   <div class="signature" data-no-translate="1">
-    <span class="signature-main" data-no-translate="1">italkyAI By Özyiğit's 2026</span>
+    
   </div>
 </footer>`;
 
