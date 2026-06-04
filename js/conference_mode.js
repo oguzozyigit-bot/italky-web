@@ -135,6 +135,29 @@ function setBadge(id, text) {
   if (el) el.textContent = text;
 }
 
+function ensureListenerLiveLanguageControl() {
+  const card = document.querySelector("#listenerLiveView .session-card");
+  if (!card) return;
+  let select = $("listenerLiveLang");
+  if (!select) {
+    const wrap = document.createElement("div");
+    wrap.id = "listenerLiveLangWrap";
+    wrap.innerHTML = `<label>Dinleme dili</label><select id="listenerLiveLang"></select>`;
+    card.appendChild(wrap);
+    select = $("listenerLiveLang");
+    select?.addEventListener("change", () => {
+      listenerLang = canonical(select.value || listenerLang);
+      setBadge("listenerLangBadge", `Dinleme: ${langLabel(listenerLang)}`);
+      toast(`Dinleme dili ${langLabel(listenerLang)} olarak değişti.`);
+      try {
+        getNativeBridge()?.joinBroadcast?.(JSON.stringify({ sessionCode, targetLang: listenerLang }));
+        window.AndroidBridge?.joinConferenceBroadcast?.(JSON.stringify({ sessionCode, targetLang: listenerLang }));
+      } catch {}
+    });
+  }
+  fillLangSelect(select, listenerLang);
+}
+
 function sessionUrl(code) {
   return `${location.origin}/pages/conference.html?join=${encodeURIComponent(code)}`;
 }
@@ -408,6 +431,7 @@ async function joinListenerSession() {
   setBadge("listenerTransportBadge", transportLabel());
   addMessage("listenerTranscript", "Rehberi dinliyorsunuz. Gelen çeviri burada görünecek.");
   showView("listenerLiveView");
+  ensureListenerLiveLanguageControl();
   try {
     getNativeBridge()?.joinBroadcast?.(JSON.stringify({ sessionCode: code, targetLang: listenerLang }));
     window.AndroidBridge?.joinConferenceBroadcast?.(JSON.stringify({ sessionCode: code, targetLang: listenerLang }));
