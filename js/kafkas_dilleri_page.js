@@ -7,25 +7,29 @@ function apiUrl(path) {
   return `${API_BASE}/api/${String(path || "").replace(/^\/+/, "")}`;
 }
 
-const F2F_AUTO_READ_KEY = "facetoface_auto_read";
-
 /*
   KAFKAS DİLLERİ
-  ÜST: /js/lang_pool_full.js
-  ALT: Kafkas dilleri
-  Input yok, klavye yok, send yok
-  Sadece mic
-  AI yok
+  - ÜST / 180 derece: /js/lang_pool_full.js full dil havuzu
+  - ALT: Google tarafında test edilen Kafkas dilleri
+  - Çıkarılanlar:
+    hy  / Ermenice
+    ady / Adıgece
+    az  / Azerbaycan Türkçesi, Turan Dilleri içinde var
+  - Input yok
+  - Klavye yok
+  - Send yok
+  - Sadece mikrofon
+  - AI yok
+  - /api/translate + use_ai:false + google_only:true
 */
+
+const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
 const KAFKAS_LANG_POOL = [
   { code: "ka", name: "Gürcüce", flag: "🇬🇪" },
-  { code: "hy", name: "Ermenice", flag: "🇦🇲" },
-  { code: "az", name: "Azerbaycan Türkçesi", flag: "🇦🇿" },
   { code: "ce", name: "Çeçence", flag: "🔹" },
   { code: "ab", name: "Abhazca", flag: "🔸" },
   { code: "av", name: "Avarca", flag: "🔹" },
-  { code: "ady", name: "Adıgece / Çerkesçe", flag: "🔸" },
   { code: "os", name: "Osetçe", flag: "🔹" }
 ];
 
@@ -57,24 +61,19 @@ const BCP = {
   es: "es-ES",
   ru: "ru-RU",
   ar: "ar-SA",
+
   ka: "ka-GE",
-  hy: "hy-AM",
-  az: "az-AZ",
   ce: "tr-TR",
   ab: "tr-TR",
   av: "tr-TR",
-  ady: "tr-TR",
   os: "tr-TR"
 };
 
 const TTS_FALLBACK_LANG = {
   ka: "tr",
-  hy: "tr",
-  az: "tr",
   ce: "tr",
   ab: "tr",
   av: "tr",
-  ady: "tr",
   os: "tr"
 };
 
@@ -505,15 +504,6 @@ function stopAudio() {
   try { window.NativeTTS?.stop?.(); } catch {}
 }
 
-async function getCurrentUserId() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    return data?.user?.id || null;
-  } catch {
-    return null;
-  }
-}
-
 function resolveSpeechLang(langCode) {
   const code = canon(langCode);
   return TTS_FALLBACK_LANG[code] || code || "tr";
@@ -618,10 +608,7 @@ function makeTtsReadable(text, langCode) {
   const value = String(text || "");
 
   if (code === "ka") return latinizeGeorgian(value);
-  if (code === "hy") return latinizeArmenian(value);
-  if (["ce", "ab", "av", "ady", "os"].includes(code)) {
-    return latinizeCyrillicKafkas(value);
-  }
+  if (["ce", "ab", "av", "os"].includes(code)) return latinizeCyrillicKafkas(value);
 
   return value;
 }
@@ -632,26 +619,6 @@ function latinizeGeorgian(text) {
     "ლ":"l","მ":"m","ნ":"n","ო":"o","პ":"p","ჟ":"zh","რ":"r","ს":"s","ტ":"t","უ":"u",
     "ფ":"p","ქ":"k","ღ":"gh","ყ":"q","შ":"sh","ჩ":"ch","ც":"ts","ძ":"dz","წ":"ts",
     "ჭ":"ch","ხ":"kh","ჯ":"j","ჰ":"h"
-  };
-
-  return String(text || "")
-    .split("")
-    .map((ch) => map[ch] ?? ch)
-    .join("")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function latinizeArmenian(text) {
-  const map = {
-    "Ա":"A","ա":"a","Բ":"B","բ":"b","Գ":"G","գ":"g","Դ":"D","դ":"d","Ե":"Ye","ե":"e",
-    "Զ":"Z","զ":"z","Է":"E","է":"e","Ը":"Y","ը":"y","Թ":"T","թ":"t","Ժ":"Zh","ժ":"zh",
-    "Ի":"I","ի":"i","Լ":"L","լ":"l","Խ":"Kh","խ":"kh","Ծ":"Ts","ծ":"ts","Կ":"K","կ":"k",
-    "Հ":"H","հ":"h","Ձ":"Dz","ձ":"dz","Ղ":"Gh","ղ":"gh","Ճ":"Ch","ճ":"ch","Մ":"M","մ":"m",
-    "Յ":"Y","յ":"y","Ն":"N","ն":"n","Շ":"Sh","շ":"sh","Ո":"Vo","ո":"o","Չ":"Ch","չ":"ch",
-    "Պ":"P","պ":"p","Ջ":"J","ջ":"j","Ռ":"R","ռ":"r","Ս":"S","ս":"s","Վ":"V","վ":"v",
-    "Տ":"T","տ":"t","Ր":"R","ր":"r","Ց":"Ts","ց":"ts","Ւ":"V","ւ":"v","Փ":"P","փ":"p",
-    "Ք":"K","ք":"k","Օ":"O","օ":"o","Ֆ":"F","ֆ":"f"
   };
 
   return String(text || "")
