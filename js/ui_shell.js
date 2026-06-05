@@ -132,9 +132,11 @@ const HOME_HEADER_HTML = `
 
   <div class="header-actions">
     <a class="eme-top-btn flat-top-btn" id="emeSupportBtn" href="/pages/support_eme.html" aria-label="Eme&#8217;ye Sor" title="Eme&#8217;ye Sor">
-      <span class="eme-mini-ear left"></span>
-      <span class="eme-mini-ear right"></span>
-      <span class="eme-mini-face"><span></span><span></span></span>
+      <span class="eme-avatar eme-header-avatar" aria-hidden="true">
+        <span class="eme-ear left"></span>
+        <span class="eme-ear right"></span>
+        <span class="eme-eyes"><span></span><span></span></span>
+      </span>
     </a>
     <button class="menu-btn flat-top-btn" id="menuBtn" aria-label="Menü" type="button">
       <span></span><span></span><span></span>
@@ -297,17 +299,28 @@ body.ui-menu-open{overflow:hidden;}
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;
 }
 .eme-top-btn{
-  color:#dbeafe;text-decoration:none;background:linear-gradient(145deg,#67e8f9 0%,#1495b6 48%,#061524 100%);
-  border:1px solid rgba(219,234,254,.18);box-shadow:0 12px 26px rgba(0,0,0,.22),0 0 18px rgba(56,189,248,.16);
+  color:#dbeafe;text-decoration:none;background:transparent;border:none;box-shadow:none;
+  position:relative;overflow:visible;
+}
+.eme-avatar{
+  width:48px;height:48px;flex:0 0 48px;border-radius:18px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#67e8f9 0%,#1495b6 48%,#061524 100%);
+  color:#dbeafe;box-shadow:0 16px 30px rgba(56,189,248,.16),inset 0 1px 0 rgba(255,255,255,.18);
   position:relative;overflow:hidden;
 }
-.eme-top-btn::before{content:"";position:absolute;inset:5px;border-radius:10px;background:linear-gradient(180deg,rgba(219,234,254,.20),rgba(2,6,23,.22));border:1px solid rgba(219,234,254,.16);}
-.eme-top-btn::after{content:"";position:absolute;width:17px;height:7px;left:50%;bottom:7px;transform:translateX(-50%);border-bottom:2px solid rgba(219,234,254,.88);border-radius:0 0 999px 999px;}
-.eme-mini-face{position:relative;z-index:2;display:flex;gap:7px;margin-top:-1px;}
-.eme-mini-face span{width:4px;height:4px;border-radius:50%;background:#dbeafe;box-shadow:0 0 9px rgba(103,232,249,.74);}
-.eme-mini-ear{position:absolute;top:15px;width:4px;height:10px;border-radius:8px;background:#38bdf8;box-shadow:0 0 9px rgba(56,189,248,.38);}
-.eme-mini-ear.left{left:3px;}
-.eme-mini-ear.right{right:3px;}
+.eme-header-avatar{width:38px;height:38px;flex-basis:38px;border-radius:14px;box-shadow:0 12px 26px rgba(0,0,0,.22),0 0 18px rgba(56,189,248,.16),inset 0 1px 0 rgba(255,255,255,.18);}
+.eme-avatar::before{content:"";position:absolute;inset:6px;border-radius:15px;background:linear-gradient(180deg,rgba(219,234,254,.20),rgba(2,6,23,.22));border:1px solid rgba(219,234,254,.18);}
+.eme-header-avatar::before{inset:5px;border-radius:11px;}
+.eme-avatar::after{content:"";position:absolute;width:21px;height:8px;left:50%;bottom:9px;transform:translateX(-50%);border-bottom:2px solid rgba(219,234,254,.86);border-radius:0 0 999px 999px;}
+.eme-header-avatar::after{width:17px;height:7px;bottom:7px;border-bottom-color:rgba(219,234,254,.88);}
+.eme-eyes{position:relative;z-index:2;display:flex;gap:8px;margin-top:-2px;}
+.eme-header-avatar .eme-eyes{gap:7px;margin-top:-1px;}
+.eme-eyes span{width:5px;height:5px;border-radius:50%;background:#dbeafe;box-shadow:0 0 10px rgba(103,232,249,.75);}
+.eme-header-avatar .eme-eyes span{width:4px;height:4px;box-shadow:0 0 9px rgba(103,232,249,.74);}
+.eme-ear{position:absolute;top:19px;width:5px;height:12px;border-radius:8px;background:#38bdf8;box-shadow:0 0 10px rgba(56,189,248,.38);}
+.eme-header-avatar .eme-ear{top:15px;width:4px;height:10px;box-shadow:0 0 9px rgba(56,189,248,.38);}
+.eme-ear.left{left:3px;}
+.eme-ear.right{right:3px;}
 .eme-top-btn:active{transform:scale(.96);}
 .menu-btn{
   display:flex;
