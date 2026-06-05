@@ -11,27 +11,15 @@
   <style>
     :root{
       --bg:#05070f;
-      --panel:rgba(10,18,34,.78);
       --line:rgba(255,255,255,.11);
       --text:rgba(255,255,255,.96);
       --muted:rgba(226,232,240,.70);
-      --cyan:#67e8f9;
-      --violet:#8b5cf6;
       --safe-top:env(safe-area-inset-top,0px);
       --safe-bottom:env(safe-area-inset-bottom,0px);
     }
 
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
-
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      background:var(--bg);
-      color:var(--text);
-      font-family:Outfit,Arial,sans-serif;
-    }
-
+    html,body{margin:0;width:100%;min-height:100%;background:var(--bg);color:var(--text);font-family:Outfit,Arial,sans-serif}
     body{
       min-height:100dvh;
       overflow:hidden;
@@ -42,295 +30,52 @@
         linear-gradient(180deg,#07111f 0%,#05070f 56%,#020617 100%);
     }
 
-    .page{
-      width:100%;
-      height:100dvh;
-      overflow-y:auto;
-      padding:calc(16px + var(--safe-top)) 14px calc(24px + var(--safe-bottom));
-      scrollbar-width:none;
-      -webkit-overflow-scrolling:touch;
-    }
+    .page{width:100%;height:100dvh;overflow-y:auto;padding:calc(16px + var(--safe-top)) 14px calc(24px + var(--safe-bottom));scrollbar-width:none;-webkit-overflow-scrolling:touch}
     .page::-webkit-scrollbar{display:none}
+    .shell{width:min(100%,640px);min-height:100%;margin:0 auto;display:grid;gap:13px;align-content:start}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{min-width:0;text-decoration:none;color:#fff}
+    .brand-main{font-family:"Space Grotesk",Outfit,sans-serif;font-size:28px;font-weight:900;line-height:1;letter-spacing:-.8px}
+    .brand-main span{background:linear-gradient(135deg,#67e8f9,#818cf8,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .back-btn{min-width:46px;min-height:46px;border-radius:16px;display:grid;place-items:center;color:#fff;text-decoration:none;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);font-size:22px;font-weight:1000}
 
-    .shell{
-      width:min(100%,640px);
-      min-height:100%;
-      margin:0 auto;
-      display:grid;
-      gap:13px;
-      align-content:start;
-    }
+    .hero,.card{border-radius:28px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.026));box-shadow:0 20px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);position:relative;overflow:hidden}
+    .hero{padding:18px;background:radial-gradient(circle at 12% 10%,rgba(103,232,249,.18),transparent 32%),radial-gradient(circle at 92% 0%,rgba(139,92,246,.20),transparent 34%),linear-gradient(145deg,rgba(8,24,44,.90),rgba(7,10,22,.86))}
+    .eme-badge{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:7px 11px;border-radius:999px;background:rgba(103,232,249,.10);border:1px solid rgba(103,232,249,.20);color:#bfdbfe;font-size:11px;font-weight:1000;letter-spacing:.4px;margin-bottom:13px}
+    .eme-dot{width:9px;height:9px;border-radius:50%;background:#67e8f9;box-shadow:0 0 18px rgba(103,232,249,.75)}
+    h1{margin:0;font-family:"Space Grotesk",Outfit,sans-serif;font-size:31px;line-height:1.04;font-weight:900;letter-spacing:-.8px}
+    .hero p{margin:10px 0 0;color:var(--muted);font-size:14px;line-height:1.55;font-weight:800}
 
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
+    .assistant-card{padding:16px;display:flex;gap:13px;align-items:flex-start;background:radial-gradient(circle at 12% 0%,rgba(103,232,249,.14),transparent 34%),linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.03))}
+    .eme-avatar{width:54px;height:54px;flex:0 0 54px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(135deg,#67e8f9,#8b5cf6,#ec4899);color:#020617;font-family:"Space Grotesk",Outfit,sans-serif;font-weight:900;box-shadow:0 16px 28px rgba(103,232,249,.16)}
+    .assistant-card strong{display:block;margin:2px 0 5px;font-size:16px;font-weight:1000}
+    .assistant-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;font-weight:800}
+    .card{padding:16px}
+    .section-title{margin:0 0 12px;font-size:15px;font-weight:1000;color:#fff}
+    .inline-help{margin:8px 0 0;color:rgba(226,232,240,.70);font-size:12px;line-height:1.5;font-weight:800}
 
-    .brand{
-      min-width:0;
-      text-decoration:none;
-      color:#fff;
-    }
-
-    .brand-main{
-      font-family:"Space Grotesk",Outfit,sans-serif;
-      font-size:28px;
-      font-weight:900;
-      line-height:1;
-      letter-spacing:-.8px;
-    }
-    .brand-main span{
-      background:linear-gradient(135deg,#67e8f9,#818cf8,#ec4899);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .back-btn{
-      min-width:46px;
-      min-height:46px;
-      border-radius:16px;
-      display:grid;
-      place-items:center;
-      color:#fff;
-      text-decoration:none;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.12);
-      font-size:22px;
-      font-weight:1000;
-    }
-
-    .hero,
-    .card{
-      border-radius:28px;
-      border:1px solid var(--line);
-      background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.026));
-      box-shadow:0 20px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);
-      position:relative;
-      overflow:hidden;
-    }
-
-    .hero{
-      padding:18px;
-      background:
-        radial-gradient(circle at 12% 10%,rgba(103,232,249,.18),transparent 32%),
-        radial-gradient(circle at 92% 0%,rgba(139,92,246,.20),transparent 34%),
-        linear-gradient(145deg,rgba(8,24,44,.90),rgba(7,10,22,.86));
-    }
-
-    .eme-badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      min-height:32px;
-      padding:7px 11px;
-      border-radius:999px;
-      background:rgba(103,232,249,.10);
-      border:1px solid rgba(103,232,249,.20);
-      color:#bfdbfe;
-      font-size:11px;
-      font-weight:1000;
-      letter-spacing:.4px;
-      margin-bottom:13px;
-    }
-
-    .eme-dot{
-      width:9px;
-      height:9px;
-      border-radius:50%;
-      background:#67e8f9;
-      box-shadow:0 0 18px rgba(103,232,249,.75);
-    }
-
-    h1{
-      margin:0;
-      font-family:"Space Grotesk",Outfit,sans-serif;
-      font-size:31px;
-      line-height:1.04;
-      font-weight:900;
-      letter-spacing:-.8px;
-    }
-
-    .hero p{
-      margin:10px 0 0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.55;
-      font-weight:800;
-    }
-
-    .assistant-card{
-      padding:16px;
-      display:flex;
-      gap:13px;
-      align-items:flex-start;
-      background:
-        radial-gradient(circle at 12% 0%,rgba(103,232,249,.14),transparent 34%),
-        linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.03));
-    }
-
-    .eme-avatar{
-      width:54px;
-      height:54px;
-      flex:0 0 54px;
-      border-radius:20px;
-      display:grid;
-      place-items:center;
-      background:linear-gradient(135deg,#67e8f9,#8b5cf6,#ec4899);
-      color:#020617;
-      font-family:"Space Grotesk",Outfit,sans-serif;
-      font-weight:900;
-      box-shadow:0 16px 28px rgba(103,232,249,.16);
-    }
-
-    .assistant-card strong{
-      display:block;
-      margin:2px 0 5px;
-      font-size:16px;
-      font-weight:1000;
-    }
-    .assistant-card p{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
-      font-weight:800;
-    }
-
-    .card{
-      padding:16px;
-    }
-
-    .section-title{
-      margin:0 0 12px;
-      font-size:15px;
-      font-weight:1000;
-      color:#fff;
-    }
-
-    .choice-grid,
-    .question-grid{
-      display:grid;
-      gap:9px;
-    }
-
-    .choice-btn,
-    .question-btn,
-    .action-btn{
-      width:100%;
-      min-height:50px;
-      border-radius:17px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.055);
-      color:#fff;
-      font:inherit;
-      font-size:13px;
-      font-weight:900;
-      text-align:left;
-      padding:12px 13px;
-      cursor:pointer;
-    }
-
-    .choice-btn.active,
-    .question-btn.active{
-      border-color:rgba(103,232,249,.36);
-      background:linear-gradient(135deg,rgba(103,232,249,.14),rgba(139,92,246,.10));
-      box-shadow:0 0 0 1px rgba(103,232,249,.10);
-    }
-
-    .answer-card{
-      display:none;
-      gap:12px;
-      margin-top:13px;
-      padding:14px;
-      border-radius:22px;
-      background:rgba(2,6,23,.48);
-      border:1px solid rgba(255,255,255,.09);
-    }
+    .choice-grid,.question-grid,.quick-ask{display:grid;gap:9px}
+    .choice-btn,.question-btn,.action-btn{width:100%;min-height:50px;border-radius:17px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.055);color:#fff;font:inherit;font-size:13px;font-weight:900;text-align:left;padding:12px 13px;cursor:pointer}
+    .choice-btn.active,.question-btn.active{border-color:rgba(103,232,249,.36);background:linear-gradient(135deg,rgba(103,232,249,.14),rgba(139,92,246,.10));box-shadow:0 0 0 1px rgba(103,232,249,.10)}
+    .answer-card{display:none;gap:12px;margin-top:13px;padding:14px;border-radius:22px;background:rgba(2,6,23,.48);border:1px solid rgba(255,255,255,.09)}
     .answer-card.show{display:grid}
+    .answer-title{margin:0;color:#bfdbfe;font-size:13px;font-weight:1000}
+    .answer-text{margin:0;color:rgba(255,255,255,.82);font-size:13px;line-height:1.58;font-weight:800}
 
-    .answer-title{
-      margin:0;
-      color:#bfdbfe;
-      font-size:13px;
-      font-weight:1000;
-    }
-    .answer-text{
-      margin:0;
-      color:rgba(255,255,255,.82);
-      font-size:13px;
-      line-height:1.58;
-      font-weight:800;
-    }
-
-    .field{
-      display:grid;
-      gap:7px;
-    }
-    .field label{
-      color:rgba(219,234,254,.74);
-      font-size:11px;
-      font-weight:1000;
-      text-transform:uppercase;
-      letter-spacing:.45px;
-    }
-    .field input,
-    .field textarea,
-    .field select{
-      width:100%;
-      min-height:50px;
-      border-radius:17px;
-      border:1px solid rgba(148,163,184,.18);
-      background:#06111f;
-      color:#fff;
-      font:inherit;
-      font-size:14px;
-      font-weight:850;
-      padding:11px 13px;
-    }
-    .field textarea{
-      min-height:112px;
-      resize:none;
-      line-height:1.45;
-    }
-
-    .action-btn{
-      text-align:center;
-      background:linear-gradient(135deg,#67e8f9,#8b5cf6,#ec4899);
-      color:#020617;
-      border:none;
-      font-weight:1000;
-    }
-    .action-btn.secondary{
-      background:rgba(255,255,255,.065);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.11);
-    }
-    .action-btn:disabled{
-      opacity:.64;
-      cursor:default;
-    }
-
-    .support-form{
-      display:none;
-      gap:11px;
-      margin-top:13px;
-    }
+    .field{display:grid;gap:7px}
+    .field label{color:rgba(219,234,254,.74);font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.45px}
+    .field input,.field textarea,.field select{width:100%;min-height:50px;border-radius:17px;border:1px solid rgba(148,163,184,.18);background:#06111f;color:#fff;font:inherit;font-size:14px;font-weight:850;padding:11px 13px}
+    .field textarea{min-height:112px;resize:none;line-height:1.45}
+    .quick-ask textarea{min-height:86px}
+    .action-btn{text-align:center;background:linear-gradient(135deg,#67e8f9,#8b5cf6,#ec4899);color:#020617;border:none;font-weight:1000}
+    .action-btn.secondary{background:rgba(255,255,255,.065);color:#fff;border:1px solid rgba(255,255,255,.11)}
+    .action-btn:disabled{opacity:.64;cursor:default}
+    .support-form{display:none;gap:11px;margin-top:13px}
     .support-form.show{display:grid}
-
-    .status{
-      min-height:24px;
-      border-radius:16px;
-      color:rgba(255,255,255,.78);
-      font-size:12px;
-      line-height:1.5;
-      font-weight:850;
-    }
+    .status{min-height:24px;border-radius:16px;color:rgba(255,255,255,.78);font-size:12px;line-height:1.5;font-weight:850}
     .status.ok{color:#bbf7d0}
     .status.err{color:#fecaca}
     .status.warn{color:#fde68a}
-
     .hidden{display:none!important}
 
     @media(max-width:420px){
@@ -360,7 +105,7 @@
         <div class="eme-avatar">Eme</div>
         <div>
           <strong>Merhaba, ben Eme. Size nasıl yardımcı olabilirim?</strong>
-          <p>Empatik Üye Deneyimi Asistanı olarak kod, üyelik ve aktivasyon sorunlarında size yardımcı olurum.</p>
+          <p>Empatik Üye Deneyimi Asistanı olarak italkyAI uygulaması, üyelik, ödeme, aktivasyon kodu ve kullanım sorunlarında size yardımcı olurum.</p>
         </div>
       </section>
 
@@ -370,7 +115,23 @@
       </section>
 
       <section class="card">
-        <h2 class="section-title">Eme’ye Sor</h2>
+        <h2 class="section-title">Sorununuzu yazın</h2>
+        <div class="quick-ask">
+          <div class="field">
+            <label for="freeQuestion">Eme’ye mesajınız</label>
+            <textarea id="freeQuestion" placeholder="Örn: Kodu aldım ama daha önce kullanılmış diyor."></textarea>
+          </div>
+          <button id="askEmeBtn" class="action-btn" type="button">Eme’ye Sor</button>
+        </div>
+        <div class="answer-card" id="freeAnswerCard">
+          <h3 class="answer-title" id="freeAnswerTitle"></h3>
+          <p class="answer-text" id="freeAnswerText"></p>
+          <button id="freeProblemContinuesBtn" class="action-btn secondary" type="button">Sorunum devam ediyor</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Hazır destek konuları</h2>
         <div class="question-grid" id="questionGrid"></div>
         <div class="answer-card" id="answerCard">
           <h3 class="answer-title" id="answerTitle"></h3>
@@ -385,12 +146,29 @@
             <div id="diagnosticStatus" class="status"></div>
           </div>
 
-          <button id="connectEmeBtn" class="action-btn secondary" type="button">Eme’ye bağlan</button>
+          <button id="connectEmeBtn" class="action-btn secondary" type="button">Sorunum devam ediyor</button>
         </div>
       </section>
 
       <section class="card support-form" id="ticketForm">
         <h2 class="section-title">Destek Talebi Oluştur</h2>
+        <p class="inline-help" id="ticketIntro"></p>
+        <div class="field">
+          <label for="ticketFirstName">Ad</label>
+          <input id="ticketFirstName" type="text" maxlength="80" autocomplete="given-name" placeholder="Adınız" />
+        </div>
+        <div class="field">
+          <label for="ticketLastName">Soyad</label>
+          <input id="ticketLastName" type="text" maxlength="80" autocomplete="family-name" placeholder="Soyadınız" />
+        </div>
+        <div class="field">
+          <label for="ticketEmail">E-posta</label>
+          <input id="ticketEmail" type="email" maxlength="160" autocomplete="email" placeholder="mail@example.com" />
+        </div>
+        <div class="field">
+          <label for="ticketPhone">Telefon</label>
+          <input id="ticketPhone" type="tel" maxlength="32" autocomplete="tel" placeholder="05xxxxxxxxx" />
+        </div>
         <div class="field">
           <label for="ticketChannel">Satın alma kanalı</label>
           <select id="ticketChannel">
@@ -398,6 +176,7 @@
             <option value="trendyol">Trendyol üzerinden aldım</option>
             <option value="other">Diğer / bilmiyorum</option>
           </select>
+          <p class="inline-help hidden" id="trendyolOrderHint">Trendyol için sipariş numarası incelemeyi hızlandırır; ilk fazda zorunlu değildir.</p>
         </div>
         <div class="field">
           <label for="ticketCode">Aktivasyon kodu</label>
@@ -408,7 +187,7 @@
           <input id="ticketOrder" type="text" maxlength="80" placeholder="Trendyol veya italkyAI sipariş no" />
         </div>
         <div class="field">
-          <label for="ticketMessage">Açıklama</label>
+          <label for="ticketMessage">Sorun açıklaması</label>
           <textarea id="ticketMessage" placeholder="Sorunu kısa ve net anlatın"></textarea>
         </div>
         <button id="createTicketBtn" class="action-btn" type="button">Destek Talebi Oluştur</button>
@@ -417,6 +196,6 @@
     </div>
   </main>
 
-  <script type="module" src="/js/eme_support.js?v=EME_SUPPORT_V1"></script>
+  <script type="module" src="/js/eme_support.js?v=EME_SUPPORT_V2"></script>
 </body>
 </html>

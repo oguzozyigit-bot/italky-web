@@ -3,6 +3,22 @@ import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com/api/support/eme";
 
+const OUT_OF_SCOPE_RESPONSE =
+  "Ben Eme, italkyAI destek asistanıyım. Size uygulama, üyelik, aktivasyon kodu, Trendyol dijital kod ve kullanım sorunları hakkında yardımcı olabilirim. Lütfen italkyAI ile ilgili sorunuzu yazın.";
+
+const HANDOFF_MESSAGE =
+  "Bu konuda size hemen net bir çözüm sunamadığım için özür dilerim. Müşteri hizmetlerimiz konuyu inceleyip en kısa sürede sizinle iletişime geçecektir. Lütfen aşağıdaki formu doldurun.";
+
+const CONNECTING_TEXT = "Eme’ye bağlanıyorsunuz...";
+const CONNECTING_DETAIL =
+  "Sorununuzu anlamaya çalışıyorum. Gerekirse sizi müşteri hizmetlerimize yönlendireceğim.";
+
+const SUCCESS_MESSAGE =
+  "Talebiniz alındı. Müşteri hizmetlerimiz en kısa sürede sizinle iletişime geçecektir.";
+
+const ERROR_MESSAGE =
+  "Talebiniz şu anda gönderilemedi. Lütfen biraz sonra tekrar deneyin veya iletişim sayfasından bize ulaşın.";
+
 const CHANNELS = [
   { id: "italky", label: "italkyAI üzerinden aldım" },
   { id: "trendyol", label: "Trendyol üzerinden aldım" },
@@ -13,55 +29,94 @@ const QUESTIONS = [
   {
     id: "used-code",
     title: "Kod daha önce kullanılmış diyor",
-    answer: "Bu durumda önce kodun hangi kanaldan alındığını ve kodun hesap geçmişinde nasıl göründüğünü kontrol etmemiz gerekir. Kod aynı hesapta kullanılmışsa üyelik süresi görünümünü, farklı hesapta kullanılmışsa gizliliği koruyarak destek adımını açarız.",
+    answer:
+      "Bu kod aynı hesapta daha önce kullanılmışsa üyelik süresi zaten eklenmiş olabilir. Kod farklı bir hesapta kullanılmış görünüyorsa başka kullanıcıya ait e-posta, ad veya hesap bilgisi paylaşamam. Bu durumda sadece şu bilgiyi verebilirim: Bu kod farklı bir hesapta kullanılmış görünüyor.",
     needsCode: true
   },
   {
     id: "invalid-code",
     title: "Kod geçersiz diyor",
-    answer: "Kodu boşluk bırakmadan, büyük harfle ve eksiksiz girin. Harf/sayı karışıklığı varsa O-0 veya I-1 gibi karakterleri kontrol edin. Sorun sürerse Eme’ye bağlanarak destek talebi oluşturabilirsiniz."
+    answer:
+      "Kodu boşluk bırakmadan, büyük harfle ve eksiksiz girin. O-0 veya I-1 gibi karakterleri kontrol edin. Sorun sürerse aktivasyon kodu ve satın alma kanalını yazarak destek formunu doldurun."
   },
   {
     id: "not-applied",
     title: "Kod hesabıma işlenmedi",
-    answer: "Kod uygulandıktan sonra üyelik süresi bazen kısa süre içinde yenilenir. Ana sayfaya dönüp hesabınızı yenileyin. Süre hâlâ görünmüyorsa kodu ve satın alma kanalını ekleyerek destek talebi oluşturun."
+    answer:
+      "Ana sayfaya dönüp hesabınızı yenileyin ve aynı hesapla giriş yaptığınızdan emin olun. Süre hâlâ görünmüyorsa kod, kanal ve varsa sipariş numarasıyla destek formu açın."
   },
   {
     id: "trendyol-activate",
     title: "Trendyol’dan aldım, nasıl aktif edeceğim?",
-    answer: "Trendyol siparişlerinde bu fazda canlı sipariş doğrulaması yoktur. Sipariş numaranızı ve aktivasyon kodunuzu destek talebine ekleyin. Gelecek fazda onay kodu ile sınırlı sipariş doğrulama akışı açılacaktır."
+    answer:
+      "Trendyol dijital kodunu italkyAI içindeki kod yükleme alanından deneyin. Kod kabul edilmezse sipariş numarası, aktivasyon kodu ve iletişim bilginizle destek formunu doldurun. Onay olmadan sipariş veya kod detayı gösterilmez."
   },
   {
     id: "wrong-account",
     title: "Kodumu başka hesaba girdim",
-    answer: "Kod farklı bir hesapta kullanıldıysa hesap detaylarını paylaşamayız. Size ait hesabı doğruladıktan sonra destek ekibi uygun aktarım veya inceleme seçeneklerini değerlendirebilir."
+    answer:
+      "Kod başka hesaba girildiyse o hesaba ait kişisel bilgi paylaşamam. Destek ekibi, sizin talebinizi ve doğrulama bilgilerinizi inceleyerek uygun seçeneği değerlendirebilir."
   },
   {
     id: "duration-missing",
     title: "Üyelik sürem görünmüyor",
-    answer: "Önce ana sayfayı yenileyin ve aynı hesapla giriş yaptığınızdan emin olun. Üyelik hâlâ görünmüyorsa kod, kanal ve varsa sipariş numarasıyla destek talebi oluşturun."
+    answer:
+      "Aynı hesapla giriş yaptığınızı kontrol edin ve ana sayfayı yenileyin. Üyelik süresi hâlâ görünmüyorsa destek formuna kodu, satın alma kanalını ve sorununuzu ekleyin."
   },
   {
     id: "app-rejects",
     title: "Uygulama kodu kabul etmiyor",
-    answer: "Kod alanında boşluk, küçük harf veya özel karakter kalmadığından emin olun. Kod türü doğru sayfada kullanılmalıdır: dijital aktivasyon kodları Kod ile Gün Yükle ekranından denenmelidir."
+    answer:
+      "Kod alanında boşluk, küçük harf veya özel karakter kalmadığından emin olun. Dijital aktivasyon kodları Kod ile Gün Yükle ekranından denenmelidir."
   },
   {
     id: "validity",
     title: "Kod kaç ay geçerli?",
-    answer: "Kodun süresi kampanya veya satın alma paketine göre değişir. Kodun kaç aylık hak verdiği sistemdeki kampanya kaydına bağlıdır; emin değilseniz kodu ekleyerek Eme’ye bağlanın."
+    answer:
+      "Kod süresi kampanya veya satın alma paketine göre değişebilir. Emin değilseniz kodu ve satın alma kanalını destek formuna ekleyin; müşteri hizmetleri kayıt üzerinden kontrol eder."
   },
   {
     id: "reuse",
     title: "Aynı kodu tekrar kullanabilir miyim?",
-    answer: "Genellikle aynı aktivasyon kodu bir kez kullanılabilir. Aynı hesapta daha önce kullanılmışsa üyelik süresi zaten eklenmiş olabilir; farklı hesapta kullanılmışsa gizlilik nedeniyle hesap detayı paylaşılmaz."
+    answer:
+      "Genellikle aynı aktivasyon kodu bir kez kullanılabilir. Aynı hesapta daha önce kullanılmışsa süre eklenmiş olabilir. Farklı hesapta kullanılmışsa kişisel detay paylaşılmaz."
   }
 ];
+
+const SCOPE_KEYWORDS = [
+  "italky", "italkyai", "eme", "aktivasyon", "kod", "üyelik", "uyelik", "üye", "uye",
+  "ödeme", "odeme", "satın", "satin", "gün", "gun", "trendyol", "dijital",
+  "sipariş", "siparis", "hesap", "giriş", "giris", "login", "profil",
+  "uygulama", "modül", "modul", "offline", "dil paketi", "iki telefon", "yüzyüze",
+  "yuzyuze", "facetoface", "gezi", "konferans", "yazıdan", "yazidan", "çeviri",
+  "ceviri", "seviye", "tespit", "oyun", "eğlenerek", "eglenerek", "teknik",
+  "çalışmıyor", "calismiyor", "çalışmadı", "calismadi", "hata", "kabul etmiyor"
+];
+
+const HANDOFF_KEYWORDS = [
+  "olmuyor", "çalışmadı", "calismadi", "çalışmıyor", "calismiyor", "yardım istiyorum",
+  "yardim istiyorum", "müşteri hizmetleri", "musteri hizmetleri", "arasın", "arasin",
+  "beni arayın", "beni arayin", "destek istiyorum", "çözülmedi", "cozulmedi",
+  "yapamadım", "yapamadim"
+];
+
+const QUESTION_KEYWORDS = {
+  "used-code": ["daha önce", "daha once", "kullanılmış", "kullanilmis", "used"],
+  "invalid-code": ["geçersiz", "gecersiz", "invalid"],
+  "not-applied": ["işlenmedi", "islenmedi", "eklenmedi", "yüklenmedi", "yuklenmedi"],
+  "trendyol-activate": ["trendyol"],
+  "wrong-account": ["başka hesap", "baska hesap", "yanlış hesap", "yanlis hesap"],
+  "duration-missing": ["sürem", "surem", "görünmüyor", "gorunmuyor"],
+  "app-rejects": ["kabul etmiyor", "reddediyor"],
+  validity: ["kaç ay", "kac ay", "geçerli", "gecerli"],
+  reuse: ["tekrar", "yeniden", "aynı kod", "ayni kod"]
+};
 
 const state = {
   channel: localStorage.getItem("italky_eme_purchase_channel_v1") || "italky",
   questionId: "",
-  lastCode: ""
+  lastCode: "",
+  lastUserMessage: ""
 };
 
 const $ = (id) => document.getElementById(id);
@@ -77,8 +132,20 @@ const els = {
   checkCodeBtn: $("checkCodeBtn"),
   diagnosticStatus: $("diagnosticStatus"),
   connectEmeBtn: $("connectEmeBtn"),
+  freeQuestion: $("freeQuestion"),
+  askEmeBtn: $("askEmeBtn"),
+  freeAnswerCard: $("freeAnswerCard"),
+  freeAnswerTitle: $("freeAnswerTitle"),
+  freeAnswerText: $("freeAnswerText"),
+  freeProblemContinuesBtn: $("freeProblemContinuesBtn"),
   ticketForm: $("ticketForm"),
+  ticketIntro: $("ticketIntro"),
+  ticketFirstName: $("ticketFirstName"),
+  ticketLastName: $("ticketLastName"),
+  ticketEmail: $("ticketEmail"),
+  ticketPhone: $("ticketPhone"),
   ticketChannel: $("ticketChannel"),
+  trendyolOrderHint: $("trendyolOrderHint"),
   ticketCode: $("ticketCode"),
   ticketOrder: $("ticketOrder"),
   ticketMessage: $("ticketMessage"),
@@ -86,12 +153,20 @@ const els = {
   ticketStatus: $("ticketStatus")
 };
 
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
 function normalizeCode(value) {
   return String(value || "")
     .toUpperCase()
     .replace(/\s+/g, "")
     .replace(/[^A-Z0-9_-]/g, "")
     .slice(0, 64);
+}
+
+function cleanField(value, max = 160) {
+  return String(value || "").trim().slice(0, max);
 }
 
 function setStatus(el, message = "", type = "") {
@@ -104,6 +179,23 @@ function selectedQuestion() {
   return QUESTIONS.find((item) => item.id === state.questionId) || null;
 }
 
+function includesAny(text, keywords) {
+  const haystack = normalizeText(text);
+  return keywords.some((keyword) => haystack.includes(keyword));
+}
+
+function isInScope(message) {
+  return includesAny(message, SCOPE_KEYWORDS);
+}
+
+function needsHumanSupport(message) {
+  return includesAny(message, HANDOFF_KEYWORDS);
+}
+
+function findQuestionByMessage(message) {
+  return QUESTIONS.find((q) => includesAny(message, QUESTION_KEYWORDS[q.id] || [])) || null;
+}
+
 async function getAuthHeaders() {
   const headers = { "Content-Type": "application/json" };
   try {
@@ -111,6 +203,13 @@ async function getAuthHeaders() {
     if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
   } catch {}
   return headers;
+}
+
+function setChannel(channel) {
+  state.channel = channel || "italky";
+  localStorage.setItem("italky_eme_purchase_channel_v1", state.channel);
+  if (els.ticketChannel) els.ticketChannel.value = state.channel;
+  els.trendyolOrderHint?.classList.toggle("hidden", state.channel !== "trendyol");
 }
 
 function renderChannels() {
@@ -122,9 +221,7 @@ function renderChannels() {
 
   els.channelGrid.querySelectorAll("[data-channel]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      state.channel = btn.dataset.channel || "italky";
-      localStorage.setItem("italky_eme_purchase_channel_v1", state.channel);
-      if (els.ticketChannel) els.ticketChannel.value = state.channel;
+      setChannel(btn.dataset.channel || "italky");
       renderChannels();
     });
   });
@@ -161,6 +258,44 @@ function openAnswer() {
   }
 }
 
+function answerFreeQuestion() {
+  const message = cleanField(els.freeQuestion?.value, 2000);
+  state.lastUserMessage = message;
+
+  els.freeAnswerCard.classList.add("show");
+  els.freeAnswerTitle.textContent = "Eme yanıtı";
+
+  if (!message) {
+    els.freeAnswerText.textContent = "Lütfen italkyAI ile ilgili sorununuzu kısaca yazın.";
+    return;
+  }
+
+  if (!isInScope(message)) {
+    els.freeAnswerText.textContent = OUT_OF_SCOPE_RESPONSE;
+    return;
+  }
+
+  if (needsHumanSupport(message)) {
+    els.freeAnswerText.textContent = HANDOFF_MESSAGE;
+    prefillTicket(message);
+    showTicketForm(true);
+    return;
+  }
+
+  const matched = findQuestionByMessage(message);
+  if (matched) {
+    state.questionId = matched.id;
+    renderQuestions();
+    openAnswer();
+    els.freeAnswerText.textContent = matched.answer;
+    return;
+  }
+
+  els.freeAnswerText.textContent =
+    "Eme’ye bağlanıyorsunuz... Sorununuzu anlamaya çalışıyorum. Gerekirse sizi müşteri hizmetlerimize yönlendireceğim.";
+  prefillTicket(message);
+}
+
 async function diagnoseCode() {
   const code = normalizeCode(els.activationCodeInput.value);
   els.activationCodeInput.value = code;
@@ -187,11 +322,14 @@ async function diagnoseCode() {
     const json = await res.json().catch(() => null);
     if (!res.ok || !json?.message) throw new Error(json?.message || json?.detail || `HTTP_${res.status}`);
 
-    setStatus(els.diagnosticStatus, json.message, json.status === "not_found" ? "err" : "ok");
+    const safeMessage = json.status === "used_by_other"
+      ? "Bu kod farklı bir hesapta kullanılmış görünüyor."
+      : String(json.message || "");
+    setStatus(els.diagnosticStatus, safeMessage, json.status === "not_found" ? "err" : "ok");
   } catch {
     setStatus(
       els.diagnosticStatus,
-      "Eme şu anda kodunuzu otomatik kontrol edemedi. Destek talebi oluşturarak devam edebilirsiniz.",
+      "Eme şu anda kodunuzu otomatik kontrol edemedi. Destek formunu doldurarak devam edebilirsiniz.",
       "warn"
     );
     prefillTicket();
@@ -201,45 +339,64 @@ async function diagnoseCode() {
   }
 }
 
-function prefillTicket() {
+function prefillTicket(message = "") {
   if (els.ticketChannel) els.ticketChannel.value = state.channel;
+  els.trendyolOrderHint?.classList.toggle("hidden", (els.ticketChannel?.value || state.channel) !== "trendyol");
   if (els.ticketCode && state.lastCode) els.ticketCode.value = state.lastCode;
+
   const q = selectedQuestion();
-  if (els.ticketMessage && q && !els.ticketMessage.value.trim()) {
-    els.ticketMessage.value = `${q.title}: ${q.answer}`;
+  const text = message || state.lastUserMessage || (q ? q.title : "");
+  if (els.ticketMessage && text && !els.ticketMessage.value.trim()) {
+    els.ticketMessage.value = text;
   }
 }
 
 function showTicketForm(fromConnect = false) {
   prefillTicket();
   els.ticketForm.classList.add("show");
+
   if (fromConnect) {
-    setStatus(els.ticketStatus, "Eme’ye bağlanıyorsunuz...", "warn");
+    if (els.ticketIntro) els.ticketIntro.textContent = HANDOFF_MESSAGE;
+    setStatus(els.ticketStatus, `${CONNECTING_TEXT} ${CONNECTING_DETAIL}`, "warn");
     setTimeout(() => {
-      if (els.ticketStatus.textContent === "Eme’ye bağlanıyorsunuz...") {
-        setStatus(els.ticketStatus, "Destek talebi bilgilerini doldurarak devam edebilirsiniz.", "");
+      if (els.ticketStatus.textContent.includes(CONNECTING_TEXT)) {
+        setStatus(els.ticketStatus, "Lütfen formu doldurun. En az e-posta veya telefon bilgilerinden biri gereklidir.", "");
       }
-    }, 650);
+    }, 800);
   }
+
   setTimeout(() => els.ticketForm.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+}
+
+function validateTicket(payload) {
+  if (!payload.first_name) return "Lütfen adınızı yazın.";
+  if (!payload.last_name) return "Lütfen soyadınızı yazın.";
+  if (!payload.email && !payload.phone) return "Lütfen e-posta veya telefon bilgilerinden en az birini yazın.";
+  if (!payload.message) return "Lütfen sorun açıklamasını yazın.";
+  return "";
 }
 
 async function createTicket() {
   const payload = {
-    purchase_channel: els.ticketChannel.value || state.channel,
-    activation_code: normalizeCode(els.ticketCode.value),
-    order_number: String(els.ticketOrder.value || "").trim().slice(0, 80),
-    message: String(els.ticketMessage.value || "").trim().slice(0, 2000),
-    topic: selectedQuestion()?.title || "Eme destek talebi"
+    first_name: cleanField(els.ticketFirstName?.value, 80),
+    last_name: cleanField(els.ticketLastName?.value, 80),
+    email: cleanField(els.ticketEmail?.value, 160),
+    phone: cleanField(els.ticketPhone?.value, 32),
+    purchase_channel: els.ticketChannel?.value || state.channel,
+    activation_code: normalizeCode(els.ticketCode?.value),
+    order_number: cleanField(els.ticketOrder?.value, 80),
+    message: cleanField(els.ticketMessage?.value, 2000),
+    source: "eme_support"
   };
 
-  if (!payload.message && !payload.activation_code && !payload.order_number) {
-    setStatus(els.ticketStatus, "Lütfen kod, sipariş numarası veya kısa açıklama ekleyin.", "err");
+  const validationError = validateTicket(payload);
+  if (validationError) {
+    setStatus(els.ticketStatus, validationError, "err");
     return;
   }
 
   els.createTicketBtn.disabled = true;
-  setStatus(els.ticketStatus, "Destek talebi oluşturuluyor...", "warn");
+  setStatus(els.ticketStatus, "Destek talebi gönderiliyor...", "warn");
 
   try {
     const res = await fetch(`${API_BASE}/tickets`, {
@@ -248,16 +405,10 @@ async function createTicket() {
       body: JSON.stringify(payload)
     });
 
-    const json = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(json?.message || json?.detail || `HTTP_${res.status}`);
-
-    setStatus(els.ticketStatus, json?.message || "Destek talebiniz oluşturuldu. Eme ekibi inceleyecek.", "ok");
+    if (!res.ok) throw new Error(`HTTP_${res.status}`);
+    setStatus(els.ticketStatus, SUCCESS_MESSAGE, "ok");
   } catch {
-    setStatus(
-      els.ticketStatus,
-      "Bu fazda otomatik kayıt servisi hazır değil. Bilgileriniz ekranda hazır; support@italky.ai üzerinden iletebilirsiniz.",
-      "warn"
-    );
+    setStatus(els.ticketStatus, ERROR_MESSAGE, "err");
   } finally {
     els.createTicketBtn.disabled = false;
   }
@@ -266,7 +417,7 @@ async function createTicket() {
 function boot() {
   renderChannels();
   renderQuestions();
-  if (els.ticketChannel) els.ticketChannel.value = state.channel;
+  setChannel(state.channel);
 
   els.activationCodeInput?.addEventListener("input", () => {
     els.activationCodeInput.value = normalizeCode(els.activationCodeInput.value);
@@ -274,8 +425,14 @@ function boot() {
   els.ticketCode?.addEventListener("input", () => {
     els.ticketCode.value = normalizeCode(els.ticketCode.value);
   });
+  els.ticketChannel?.addEventListener("change", () => {
+    setChannel(els.ticketChannel.value);
+    renderChannels();
+  });
   els.checkCodeBtn?.addEventListener("click", diagnoseCode);
   els.connectEmeBtn?.addEventListener("click", () => showTicketForm(true));
+  els.askEmeBtn?.addEventListener("click", answerFreeQuestion);
+  els.freeProblemContinuesBtn?.addEventListener("click", () => showTicketForm(true));
   els.createTicketBtn?.addEventListener("click", createTicket);
 }
 
