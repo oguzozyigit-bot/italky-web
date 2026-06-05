@@ -1,13 +1,13 @@
 // FILE: /js/eme_support.js
 import { supabase } from "/js/supabase_client.js";
+import {
+  EME_ALLOWED_SCOPE,
+  EME_HANDOFF_MESSAGE,
+  EME_KNOWLEDGE_BASE,
+  EME_OUT_OF_SCOPE_RESPONSE
+} from "/js/eme_knowledge_base.js";
 
 const API_BASE = "https://italky-api.onrender.com/api/support/eme";
-
-const OUT_OF_SCOPE_RESPONSE =
-  "Ben Eme, italkyAI destek asistanıyım. Size uygulama kullanımı, üyelik, aktivasyon kodu ve teknik destek konularında yardımcı olabilirim. Lütfen italkyAI ile ilgili sorunuzu yazın.";
-
-const HANDOFF_MESSAGE =
-  "Bu konuda size hemen net bir çözüm sunamadığım için özür dilerim. Müşteri hizmetlerimiz konuyu inceleyip en kısa sürede sizinle iletişime geçecektir. Lütfen aşağıdaki formu doldurun.";
 
 const SUCCESS_MESSAGE =
   "Talebiniz alındı. Müşteri hizmetlerimiz en kısa sürede sizinle iletişime geçecektir.";
@@ -15,104 +15,16 @@ const SUCCESS_MESSAGE =
 const ERROR_MESSAGE =
   "Talebiniz şu anda gönderilemedi. Lütfen biraz sonra tekrar deneyin veya iletişim sayfasından bize ulaşın.";
 
-const SUPPORT_TOPICS = [
-  {
-    id: "used-code",
-    topic: "activation_code",
-    title: "Kod daha önce kullanılmış diyor",
-    keywords: ["daha önce", "daha once", "kullanılmış", "kullanilmis", "used"],
-    answer:
-      "Bu uyarı, kodun daha önce işlenmiş olabileceğini gösterir. Aynı hesabı kullandığınızdan emin olun ve üyelik sürenizi yenileyerek kontrol edin. Kod farklı bir hesapta kullanılmış görünüyorsa kişisel hesap bilgisi paylaşamam; bu durumda destek ekibimiz inceleme yapar.",
-    codeDiagnostic: true
-  },
-  {
-    id: "invalid-code",
-    topic: "activation_code",
-    title: "Kod geçersiz diyor",
-    keywords: ["geçersiz", "gecersiz", "invalid", "hatalı kod", "hatali kod"],
-    answer:
-      "Kodu boşluk bırakmadan, büyük harfle ve eksiksiz girin. O-0 veya I-1 gibi benzer karakterleri kontrol edin. Uyarı devam ederse kodu ve sorunu forma ekleyin."
-  },
-  {
-    id: "not-applied",
-    topic: "activation_code",
-    title: "Kod hesabıma işlenmedi",
-    keywords: ["işlenmedi", "islenmedi", "eklenmedi", "yüklenmedi", "yuklenmedi", "hesabıma geçmedi", "hesabima gecmedi"],
-    answer:
-      "Ana sayfaya dönüp hesabınızı yenileyin ve aynı hesapla giriş yaptığınızı kontrol edin. Süre hâlâ görünmüyorsa destek ekibi kayıtları inceleyebilir."
-  },
-  {
-    id: "duration-missing",
-    topic: "membership",
-    title: "Üyelik sürem görünmüyor",
-    keywords: ["üyelik", "uyelik", "sürem", "surem", "görünmüyor", "gorunmuyor", "günüm", "gunum"],
-    answer:
-      "Aynı hesapla giriş yaptığınızı kontrol edin ve ana sayfayı yenileyin. Süre görünmüyorsa destek formunda hesabınızı ve sorunu kısaca yazın."
-  },
-  {
-    id: "activate-code",
-    topic: "activation_code",
-    title: "Aktivasyon kodu nasıl kullanılır?",
-    keywords: ["nasıl kullanılır", "nasil kullanilir", "aktivasyon", "kodu nereye", "kod nasıl", "kod nasil"],
-    answer:
-      "Aktivasyon kodunu uygulamadaki kod yükleme alanına boşluk bırakmadan girin. Kod kabul edilirse süre hesabınıza eklenir. İşlemden sonra ana sayfayı yenileyin."
-  },
-  {
-    id: "app-rejects",
-    topic: "activation_code",
-    title: "Uygulama kodu kabul etmiyor",
-    keywords: ["kabul etmiyor", "reddediyor", "almıyor", "almiyor"],
-    answer:
-      "Kod alanında boşluk, küçük harf veya özel karakter kalmadığından emin olun. Kod hâlâ kabul edilmiyorsa ekran uyarısını ve kodu destek formuna ekleyin."
-  },
-  {
-    id: "reuse",
-    topic: "activation_code",
-    title: "Aynı kodu tekrar kullanabilir miyim?",
-    keywords: ["tekrar", "yeniden", "aynı kod", "ayni kod", "bir daha"],
-    answer:
-      "Genellikle aynı aktivasyon kodu bir kez kullanılabilir. Daha önce işlendiğini düşünüyorsanız destek ekibi kayıtları kontrol edebilir."
-  },
-  {
-    id: "technical",
-    topic: "technical",
-    title: "Teknik sorun yaşıyorum",
-    keywords: ["teknik", "hata", "donuyor", "açılmıyor", "acilmiyor", "çalışmıyor", "calismiyor", "çöktü", "coktu"],
-    answer:
-      "Uygulamayı kapatıp tekrar açın, bağlantınızı kontrol edin ve aynı işlemi yeniden deneyin. Sorun devam ederse hangi ekranda olduğunu destek formuna yazın."
-  },
-  {
-    id: "mic",
-    topic: "technical",
-    title: "Mikrofon çalışmıyor",
-    keywords: ["mikrofon", "ses", "konuşma", "konusma", "duymuyor"],
-    answer:
-      "Cihazınızda mikrofon izninin açık olduğundan emin olun. Tarayıcı veya uygulama ayarlarından mikrofon erişimini kontrol edin, sonra sayfayı yenileyin."
-  },
-  {
-    id: "offline",
-    topic: "module_usage",
-    title: "Dil paketi görünmüyor",
-    keywords: ["dil paketi", "offline", "paket görünmüyor", "paket gorunmuyor", "indirme"],
-    answer:
-      "Dil paketleri ekranını yenileyin ve bağlantınızın açık olduğundan emin olun. Paket hâlâ görünmüyorsa hangi dili aradığınızı destek formuna yazın."
-  },
-  {
-    id: "two-phone",
-    topic: "module_usage",
-    title: "İki Telefon bağlanmıyor",
-    keywords: ["iki telefon", "oda kodu", "bağlanmıyor", "baglanmiyor", "eşleşmiyor", "eslesmiyor"],
-    answer:
-      "İki cihazda da aynı oda kodunun girildiğini kontrol edin. Her iki cihazda bağlantı açık olmalı ve kod süresi dolmadan işlem tamamlanmalıdır."
-  },
-  {
-    id: "conference",
-    topic: "module_usage",
-    title: "Gezi & Konferans çalışmıyor",
-    keywords: ["gezi", "konferans", "toplantı", "toplanti", "dinleyici", "konuşmacı", "konusmaci"],
-    answer:
-      "Gezi & Konferans modülünde bağlantı ve mikrofon izinlerini kontrol edin. Dinleyici bağlantısı yenilenmezse oturumu kapatıp yeniden başlatın."
-  }
+const FORBIDDEN_VISIBLE_TERMS = [
+  "trendyol",
+  "google",
+  "apple",
+  "app store",
+  "play store",
+  "dis platform",
+  "dis" + " platform",
+  "satin alma kanali",
+  "satin" + " alma kanali"
 ];
 
 const SCOPE_KEYWORDS = [
@@ -129,7 +41,7 @@ const HANDOFF_KEYWORDS = [
   "olmuyor", "çalışmadı", "calismadi", "çalışmıyor", "calismiyor", "yardım istiyorum",
   "yardim istiyorum", "müşteri hizmetleri", "musteri hizmetleri", "arasın", "arasin",
   "beni arayın", "beni arayin", "destek istiyorum", "çözülmedi", "cozulmedi",
-  "yapamadım", "yapamadim"
+  "yapamadım", "yapamadim", "yardım edin", "yardim edin"
 ];
 
 const els = {
@@ -160,8 +72,24 @@ const state = {
   listening: false
 };
 
+function foldTurkish(value) {
+  return String(value || "")
+    .toLocaleLowerCase("tr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c");
+}
+
 function normalizeText(value) {
-  return String(value || "").trim().toLowerCase();
+  return foldTurkish(value)
+    .replace(/[^\p{L}\p{N}_-]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function cleanField(value, max = 160) {
@@ -197,30 +125,58 @@ function appendMessage(role, text) {
   div.innerHTML = escapeHtml(text);
   els.messageList.appendChild(div);
   els.messageList.scrollTop = els.messageList.scrollHeight;
+  return div;
+}
+
+function updateMessage(node, text) {
+  if (!node) return;
+  node.innerHTML = escapeHtml(text);
+  els.messageList.scrollTop = els.messageList.scrollHeight;
 }
 
 function includesAny(text, keywords) {
   const haystack = normalizeText(text);
-  return keywords.some((keyword) => haystack.includes(keyword));
+  return keywords.some((keyword) => haystack.includes(normalizeText(keyword)));
+}
+
+function hasForbiddenVisibleTerms(text) {
+  const normalized = normalizeText(text);
+  return FORBIDDEN_VISIBLE_TERMS.some((term) => normalized.includes(normalizeText(term)));
 }
 
 function isInScope(message) {
-  return includesAny(message, SCOPE_KEYWORDS) || !!findTopic(message);
+  return includesAny(message, SCOPE_KEYWORDS) || !!findKnowledge(message);
 }
 
 function needsHumanSupport(message) {
   return includesAny(message, HANDOFF_KEYWORDS);
 }
 
-function findTopic(message) {
-  return SUPPORT_TOPICS.find((item) => includesAny(message, item.keywords)) || null;
+function findKnowledge(message) {
+  const normalized = normalizeText(message);
+  let best = null;
+
+  EME_KNOWLEDGE_BASE.forEach((item) => {
+    const score = item.keywords.reduce((total, keyword) => (
+      normalized.includes(normalizeText(keyword)) ? total + normalizeText(keyword).split(" ").length : total
+    ), 0);
+    if (score > 0 && (!best || score > best.score)) best = { item, score };
+  });
+
+  return best?.item || null;
 }
 
 function extractCode(message) {
-  const normalized = String(message || "").toUpperCase();
-  const matches = normalized.match(/\b[A-Z0-9][A-Z0-9_-]{5,31}\b/g) || [];
+  const raw = String(message || "").toUpperCase();
+  const compact = raw.replace(/[^A-Z0-9]/g, "");
+  const direct = raw.match(/\b[A-Z0-9][A-Z0-9_-]{5,31}\b/g) || [];
+  const spaced = raw.match(/\b[A-Z]{2}\s*[-_]?\s*\d{6,10}\b/g) || [];
+  const compactMatches = compact.match(/[A-Z]{2}\d{6,10}|[A-Z0-9]{8,24}/g) || [];
   const ignored = new Set(["ITALKYAI", "DESTEK", "YARDIM", "HESAP", "UYELIK", "ÜYELIK"]);
-  return matches.find((item) => /[0-9]/.test(item) && !ignored.has(item)) || "";
+
+  return [...spaced, ...direct, ...compactMatches]
+    .map(normalizeCode)
+    .find((item) => item.length >= 6 && /[0-9]/.test(item) && !ignored.has(item)) || "";
 }
 
 async function getAuthHeaders() {
@@ -279,9 +235,36 @@ async function diagnoseCode(code, message) {
     const json = await res.json().catch(() => null);
     if (!res.ok || !json) return "";
     if (json.status === "used_by_other") return "Bu kod farklı bir hesapta kullanılmış görünüyor.";
-    return cleanField(json.message, 500);
+    const safeMessage = cleanField(json.safe_message || json.message, 500);
+    return hasForbiddenVisibleTerms(safeMessage) ? "" : safeMessage;
   } catch {
     return "";
+  }
+}
+
+async function askAiFallback(message, matchedTopic) {
+  try {
+    const res = await fetch(`${API_BASE}/ai-message`, {
+      method: "POST",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({
+        message,
+        context: {
+          matched_topic: matchedTopic ? "partial" : "none",
+          app: "italkyAI",
+          allowed_scope: EME_ALLOWED_SCOPE
+        }
+      })
+    });
+
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json) return null;
+    const answer = cleanField(json.answer || json.message || "", 900);
+    if (!answer || json.open_form === true || json.needs_support_form === true) return null;
+    if (hasForbiddenVisibleTerms(answer)) return null;
+    return answer;
+  } catch {
+    return null;
   }
 }
 
@@ -291,7 +274,7 @@ function openTicketForm(message = "", topic = "other", code = "") {
   state.lastMessage = message || state.lastMessage;
 
   els.ticketForm.classList.add("show");
-  els.ticketIntro.textContent = HANDOFF_MESSAGE;
+  els.ticketIntro.textContent = EME_HANDOFF_MESSAGE;
   if (els.ticketTopic) els.ticketTopic.value = state.lastTopic;
   if (els.ticketCode && state.lastCode) els.ticketCode.value = state.lastCode;
   if (els.ticketMessage && state.lastMessage && !els.ticketMessage.value.trim()) {
@@ -310,41 +293,50 @@ async function handleUserMessage(rawMessage) {
   resizeInput();
   setStatus(els.composerStatus, "");
 
-  if (!isInScope(message)) {
-    appendMessage("eme", OUT_OF_SCOPE_RESPONSE);
-    return;
-  }
-
+  const waitNode = appendMessage("eme", "Sorununuzu kontrol ediyorum...");
   const code = normalizeCode(extractCode(message));
   if (code) state.lastCode = code;
 
-  const topic = findTopic(message);
-  if (topic) state.lastTopic = topic.topic;
+  const knowledge = findKnowledge(message);
+  if (knowledge) state.lastTopic = knowledge.topic || "other";
 
-  if ((topic?.codeDiagnostic || topic?.topic === "activation_code") && code) {
+  if (!knowledge && !isInScope(message)) {
+    updateMessage(waitNode, EME_OUT_OF_SCOPE_RESPONSE);
+    return;
+  }
+
+  if (knowledge?.needsCodeDiagnostic && code) {
     const diagnostic = await diagnoseCode(code, message);
     if (diagnostic) {
-      appendMessage("eme", `${diagnostic}\n\n${topic.answer}`);
+      updateMessage(waitNode, `${diagnostic}\n\n${knowledge.answer}`);
+      if (knowledge.openForm || needsHumanSupport(message)) openTicketForm(message, knowledge.topic, code);
       return;
     }
   }
 
-  if (topic) {
-    appendMessage("eme", topic.answer);
-    if (needsHumanSupport(message)) {
-      appendMessage("eme", HANDOFF_MESSAGE);
-      openTicketForm(message, topic.topic, code);
+  if (knowledge) {
+    updateMessage(waitNode, knowledge.answer);
+    if (knowledge.openForm || needsHumanSupport(message)) {
+      appendMessage("eme", EME_HANDOFF_MESSAGE);
+      openTicketForm(message, knowledge.topic, code);
     }
     return;
   }
 
   if (needsHumanSupport(message)) {
-    appendMessage("eme", HANDOFF_MESSAGE);
+    updateMessage(waitNode, EME_HANDOFF_MESSAGE);
     openTicketForm(message, state.lastTopic, code);
     return;
   }
 
-  appendMessage("eme", HANDOFF_MESSAGE);
+  updateMessage(waitNode, "Eme’ye bağlanıyorsunuz...");
+  const aiAnswer = await askAiFallback(message, knowledge);
+  if (aiAnswer) {
+    updateMessage(waitNode, aiAnswer);
+    return;
+  }
+
+  updateMessage(waitNode, EME_HANDOFF_MESSAGE);
   openTicketForm(message, state.lastTopic, code);
 }
 
@@ -399,11 +391,8 @@ function setupSpeech() {
 
   els.micBtn.addEventListener("click", () => {
     try {
-      if (state.listening) {
-        recognition.stop();
-      } else {
-        recognition.start();
-      }
+      if (state.listening) recognition.stop();
+      else recognition.start();
     } catch {
       setStatus(els.composerStatus, "Sesli giriş şu anda kullanılamıyor.", "err");
     }
