@@ -765,44 +765,66 @@ function latinizeSorani(text) {
     "أ": "a",
     "إ": "i",
     "آ": "a",
+
     "ب": "b",
     "پ": "p",
     "ت": "t",
+    "ث": "s",
+
     "ج": "j",
     "چ": "ch",
     "ح": "h",
     "خ": "kh",
+
     "د": "d",
+    "ذ": "z",
     "ر": "r",
-    "ڕ": "rr",
+    "ڕ": "r",
+
     "ز": "z",
     "ژ": "zh",
+
     "س": "s",
     "ش": "sh",
-    "ع": "e",
+    "ص": "s",
+    "ض": "z",
+    "ط": "t",
+    "ظ": "z",
+
+    "ع": "",
     "غ": "gh",
+
     "ف": "f",
     "ڤ": "v",
+
     "ق": "q",
     "ک": "k",
     "ك": "k",
     "گ": "g",
+
     "ل": "l",
-    "ڵ": "ll",
+    "ڵ": "l",
+
     "م": "m",
     "ن": "n",
+
     "و": "w",
     "ۆ": "o",
     "ۇ": "u",
+    "وو": "u",
+
     "ھ": "h",
     "ه": "a",
     "ە": "e",
+
     "ی": "y",
     "ي": "y",
     "ێ": "e",
     "ى": "a",
+
     "ء": "",
     "ئ": "",
+
     "َ": "a",
     "ُ": "u",
     "ِ": "i",
@@ -811,12 +833,20 @@ function latinizeSorani(text) {
     "ـ": ""
   };
 
-  return String(text || "")
+  const value = String(text || "")
+    .replace(/وو/g, "u")
     .split("")
     .map((ch) => map[ch] ?? ch)
     .join("")
+    .replace(/aa+/g, "a")
+    .replace(/ee+/g, "e")
+    .replace(/ii+/g, "i")
+    .replace(/oo+/g, "o")
+    .replace(/uu+/g, "u")
     .replace(/\s+/g, " ")
     .trim();
+
+  return value;
 }
 
 async function speakWithFallback(visibleText, langCode) {
@@ -826,6 +856,28 @@ async function speakWithFallback(visibleText, langCode) {
 
   if (!value || value === "...") return;
 
+  const code = canon(langCode);
+
+  /*
+    Sorani tarafında Android/NativeTTS bazen "okudum" diye true döndüğü halde
+    hiç ses vermiyor. Bu yüzden ckb için doğrudan gizli Latin okunuş okutuyoruz.
+    Ekrandaki görünen metin yine orijinal Sorani kalır.
+  */
+  if (code === "ckb") {
+    const readable = normalizeText(latinizeSorani(value));
+
+    if (readable) {
+      stopAudio();
+      await wait(120);
+      await speakText(readable, "tr");
+      return;
+    }
+  }
+
+  /*
+    İbranice şu an çalıştığı için önce orijinal he-IL ile deniyoruz.
+    Olmazsa Latin okunuşa düşer.
+  */
   const originalOk = await speakText(value, langCode);
 
   if (originalOk) return;
