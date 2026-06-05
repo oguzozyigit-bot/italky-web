@@ -11,6 +11,7 @@ function apiUrl(path) {
   BALKANLARIN DİLİ
   - ÜST / 180 derece: /js/lang_pool_full.js full dil havuzu
   - ALT: Balkan dilleri
+  - Slovence / sl çıkarıldı
   - Input yok
   - Klavye yok
   - Send yok
@@ -29,8 +30,7 @@ const BALKAN_LANG_POOL = [
   { code: "ro", name: "Romence", flag: "🇷🇴" },
   { code: "mk", name: "Makedonca", flag: "🇲🇰" },
   { code: "sr", name: "Sırpça", flag: "🇷🇸" },
-  { code: "hr", name: "Hırvatça", flag: "🇭🇷" },
-  { code: "sl", name: "Slovence", flag: "🇸🇮" }
+  { code: "hr", name: "Hırvatça", flag: "🇭🇷" }
 ];
 
 const REQUIRED_TOP_LANGS = [
@@ -68,8 +68,7 @@ const BCP = {
   ro: "ro-RO",
   mk: "mk-MK",
   sr: "sr-RS",
-  hr: "hr-HR",
-  sl: "sl-SI"
+  hr: "hr-HR"
 };
 
 const TTS_FALLBACK_LANG = {
@@ -80,8 +79,7 @@ const TTS_FALLBACK_LANG = {
   ro: "tr",
   mk: "tr",
   sr: "tr",
-  hr: "tr",
-  sl: "tr"
+  hr: "tr"
 };
 
 const UI = {
