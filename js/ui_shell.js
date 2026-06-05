@@ -131,6 +131,17 @@ const HOME_HEADER_HTML = `
   </div>
 
   <div class="header-actions">
+    <a class="eme-top-btn flat-top-btn" id="emeSupportBtn" href="/pages/support_eme.html" aria-label="Eme&#8217;ye Sor" title="Eme&#8217;ye Sor">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 4v2"></path>
+        <path d="M8 6h8a4 4 0 0 1 4 4v5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-5a4 4 0 0 1 4-4Z"></path>
+        <path d="M9 13h.01"></path>
+        <path d="M15 13h.01"></path>
+        <path d="M9.5 16c1.4 1 3.6 1 5 0"></path>
+        <path d="M4 11H2"></path>
+        <path d="M22 11h-2"></path>
+      </svg>
+    </a>
     <button class="menu-btn flat-top-btn" id="menuBtn" aria-label="Menü" type="button">
       <span></span><span></span><span></span>
     </button>
@@ -291,6 +302,14 @@ body.ui-menu-open{overflow:hidden;}
   width:38px;height:38px;border:none;border-radius:12px;background:transparent;box-shadow:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;
 }
+.eme-top-btn{
+  color:#020617;text-decoration:none;background:linear-gradient(135deg,#67e8f9 0%,#8b5cf6 58%,#ec4899 100%);
+  border:1px solid rgba(255,255,255,.16);box-shadow:0 12px 26px rgba(0,0,0,.22),0 0 18px rgba(103,232,249,.16);
+}
+.eme-top-btn svg{
+  width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
+}
+.eme-top-btn:active{transform:scale(.96);}
 .menu-btn{
   display:flex;
   flex-direction:column;
@@ -593,6 +612,15 @@ function setGuestMenuMode(isGuest) {
   }
 }
 
+function syncEmeHomeEntry() {
+  const btn = document.getElementById("emeSupportBtn");
+  if (!btn) return;
+
+  const path = String(location.pathname || "").toLowerCase();
+  const isHome = path === "/" || path.endsWith("/pages/home.html") || path.endsWith("/home.html");
+  if (!isHome) btn.remove();
+}
+
 export function mountShell(options = {}) {
   document.documentElement.style.backgroundColor = "#05070f";
 
@@ -619,6 +647,7 @@ export function mountShell(options = {}) {
   }
 
   if (document.getElementById("italkyAppShell")) {
+    syncEmeHomeEntry();
     finishMount(options);
     return;
   }
@@ -644,6 +673,7 @@ export function mountShell(options = {}) {
     location.href = "/pages/home.html";
   });
 
+  syncEmeHomeEntry();
   bindMenu(options);
   finishMount(options);
 
