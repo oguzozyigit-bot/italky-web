@@ -34,6 +34,15 @@
     function nextTarget(){try{return new URLSearchParams(location.search||"").get("next")||"/pages/home.html"}catch{return "/pages/home.html"}}
     async function startLogin(next){try{const {data}=await supabase.auth.getSession();if(data?.session){location.href=next;return}await loginWithGoogle(next)}catch(e){showToast(e?.message||"Google girişi başlatılamadı. Lütfen tekrar deneyin.")}}
     document.getElementById("googleBtn")?.addEventListener("click",()=>startLogin(nextTarget()));
+    const originalGoogleBtn=document.getElementById("googleBtn");
+    const guardedGoogleBtn=originalGoogleBtn?.cloneNode(true);
+    let googleLoginBusy=false;
+    if(originalGoogleBtn&&guardedGoogleBtn){
+      originalGoogleBtn.replaceWith(guardedGoogleBtn);
+      guardedGoogleBtn.addEventListener("click",async()=>{if(googleLoginBusy)return;googleLoginBusy=true;const next=nextTarget();try{console.warn("[ITALKY AUTH] google button clicked",{next});const {data}=await supabase.auth.getSession();if(data?.session){location.href=next;return}const result=await loginWithGoogle(next);if(result?.native){setTimeout(()=>{googleLoginBusy=false},8000)}else{googleLoginBusy=false}}catch(e){googleLoginBusy=false;showToast(e?.message||"Google girisi baslatilamadi. Lutfen tekrar deneyin.")}});
+    }
+    window.addEventListener("italky-native-login-error",(event)=>{googleLoginBusy=false;showToast(event?.detail?.message||"Google girisi tamamlanamadi. Lutfen tekrar deneyin.")});
+    window.addEventListener("italky-native-login-success",()=>{googleLoginBusy=false});
   </script>
 </body>
 </html>
