@@ -10,7 +10,8 @@ function apiUrl(path) {
 /*
   TURAN DİLLERİ
   - ÜST / 180 derece: /js/lang_pool_full.js full dil havuzu
-  - ALT: Google Translate tarafında kullanılabilen Turan/Türk dilleri
+  - ALT: Google tarafında çalışan Turan/Türk dilleri
+  - Çuvaşça çıkarıldı
   - Input yok, klavye yok, send yok
   - Sadece mikrofon
   - AI yok: /api/translate + use_ai:false + google_only:true
@@ -29,7 +30,6 @@ const TURAN_LANG_POOL = [
   { code: "ug", name: "Uygurca", flag: "🔹" },
   { code: "tt", name: "Tatarca", flag: "🔷" },
   { code: "ba", name: "Başkurtça", flag: "🔸" },
-  { code: "cv", name: "Çuvaşça", flag: "🔶" },
   { code: "crh", name: "Kırım Tatarcası", flag: "🔹" }
 ];
 
@@ -70,7 +70,6 @@ const BCP = {
   ug: "ug-CN",
   tt: "tt-RU",
   ba: "ba-RU",
-  cv: "cv-RU",
   crh: "crh"
 };
 
@@ -83,7 +82,6 @@ const TTS_FALLBACK_LANG = {
   ug: "tr",
   tt: "tr",
   ba: "tr",
-  cv: "tr",
   crh: "tr"
 };
 
@@ -161,8 +159,10 @@ function wait(ms) {
 
 function toast(msg = "") {
   if (!UI.miniToast) return;
+
   UI.miniToast.textContent = String(msg || "");
   UI.miniToast.classList.add("show");
+
   clearTimeout(window.__turanToast);
   window.__turanToast = setTimeout(() => {
     UI.miniToast.classList.remove("show");
@@ -220,7 +220,9 @@ function extractPoolFromModule(module) {
 
     if (candidate && typeof candidate === "object") {
       const values = Object.values(candidate);
-      if (values.length && values.every((item) => item && typeof item === "object")) return values;
+      if (values.length && values.every((item) => item && typeof item === "object")) {
+        return values;
+      }
     }
   }
 
@@ -268,6 +270,7 @@ function itemName(item, code) {
 
 function normalizeLangItem(item) {
   const code = canon(item?.code || item?.value || item?.lang || item?.id || item?.key);
+
   if (!code) return null;
 
   return {
@@ -284,12 +287,14 @@ function buildTopPool(poolItems) {
   for (const item of poolItems || []) {
     const normalized = normalizeLangItem(item);
     if (!normalized || seen.has(normalized.code)) continue;
+
     seen.add(normalized.code);
     out.push(normalized);
   }
 
   for (const item of REQUIRED_TOP_LANGS) {
     if (seen.has(item.code)) continue;
+
     seen.add(item.code);
     out.push(item);
   }
@@ -336,7 +341,9 @@ function updateLangButtons() {
 function pointOrbTo(side) {
   document.body.classList.remove("to-top", "to-bot");
   document.body.classList.add(side === "top" ? "to-top" : "to-bot");
+
   UI.centerHub?.classList.toggle("to-top", side === "top");
+
   state.activeSide = side;
 }
 
@@ -382,6 +389,7 @@ function clearLatest(side) {
 
 function createSpeakerButton(getText, getLang) {
   const btn = document.createElement("button");
+
   btn.type = "button";
   btn.className = "spk-icon";
   btn.setAttribute("aria-label", "Tekrar dinle");
@@ -397,6 +405,7 @@ function createSpeakerButton(getText, getLang) {
   btn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
+
     await speakWithFallback(getText(), getLang());
   });
 
@@ -428,15 +437,17 @@ function addBubble(where, kind, text, opts = {}) {
   }
 
   row.appendChild(inner);
-
   wrap.appendChild(row);
+
   keepVisible(where);
+
   return row;
 }
 
 function clearBubbles() {
   if (UI.topBody) UI.topBody.innerHTML = "";
   if (UI.botBody) UI.botBody.innerHTML = "";
+
   state.loadingTopRow = null;
   state.loadingBotRow = null;
 }
@@ -537,7 +548,6 @@ function resolveSpeechLang(langCode) {
 
 function bcpForSpeak(langCode) {
   const code = canon(langCode);
-
   return BCP[code] || BCP[resolveSpeechLang(code)] || code || BCP.tr;
 }
 
@@ -605,12 +615,14 @@ async function speakViaApi(text, langCode) {
   if (myRunId !== state.speakRunId) return false;
 
   const audio = new Audio(`data:audio/mp3;base64,${json.audio_base64}`);
+
   audio.preload = "auto";
   audio.playsInline = true;
 
   state.currentAudio = audio;
 
   await audio.play();
+
   return true;
 }
 
@@ -635,7 +647,6 @@ function speakWebOnce(text, langCode, timeoutMs = 700) {
       utter.lang = String(bcpForSpeak(langCode));
 
       const voice = chooseWebVoice(langCode);
-
       if (voice) utter.voice = voice;
 
       utter.rate = 0.95;
@@ -697,7 +708,7 @@ async function speakText(text, langCode) {
 function fallbackSpeakLang(langCode) {
   const code = canon(langCode);
 
-  if (["kk", "ky", "ug", "tt", "ba", "cv", "crh"].includes(code)) return "tr";
+  if (["kk", "ky", "ug", "tt", "ba", "crh"].includes(code)) return "tr";
 
   return resolveSpeechLang(code);
 }
@@ -706,8 +717,13 @@ function makeTtsReadable(text, langCode) {
   const code = canon(langCode);
   const value = String(text || "");
 
-  if (["kk", "ky", "tt", "ba", "cv", "crh"].includes(code)) return latinizeCyrillicTurkic(value);
-  if (code === "ug") return latinizeUyghur(value);
+  if (["kk", "ky", "tt", "ba", "crh"].includes(code)) {
+    return latinizeCyrillicTurkic(value);
+  }
+
+  if (code === "ug") {
+    return latinizeUyghur(value);
+  }
 
   return value;
 }
@@ -758,7 +774,7 @@ async function speakWithFallback(visibleText, langCode) {
 
   const code = canon(langCode);
 
-  if (["kk", "ky", "ug", "tt", "ba", "cv", "crh"].includes(code)) {
+  if (["kk", "ky", "ug", "tt", "ba", "crh"].includes(code)) {
     const readable = normalizeText(makeTtsReadable(value, code));
 
     if (readable && readable !== value) {
@@ -963,6 +979,7 @@ function startRecognition(side) {
   const listenCode = resolveSpeechLang(langCode);
 
   const recog = new SR();
+
   recog.lang = String(BCP[listenCode] || BCP[langCode] || listenCode || BCP.tr);
   recog.interimResults = true;
   recog.continuous = false;
@@ -1016,6 +1033,7 @@ function prepareInputs() {
     input.value = "";
     input.readOnly = true;
     input.disabled = true;
+
     input.setAttribute("inputmode", "none");
     input.setAttribute("autocomplete", "off");
     input.setAttribute("autocorrect", "off");
@@ -1083,8 +1101,10 @@ function bindEvents() {
     if (UI.botInput) UI.botInput.value = "";
 
     stopAudio();
+
     stopRecognition("top");
     stopRecognition("bot");
+
     clearBubbles();
 
     UI.topKeyboardWrap?.classList.remove("show");
