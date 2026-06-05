@@ -287,6 +287,7 @@ body.ui-menu-open{overflow:hidden;}
   filter:drop-shadow(0 0 10px rgba(124,92,255,.25));
 }
 .header-actions{display:flex;align-items:center;gap:6px;}
+.header-actions > :not(#menuBtn){display:none!important;}
 .flat-top-btn{
   width:38px;height:38px;border:none;border-radius:12px;background:transparent;box-shadow:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;
@@ -609,6 +610,10 @@ function removePublicEmeShortcuts() {
     document.querySelectorAll(selector).forEach((node) => {
       if (!node.closest(".eme-support-page")) node.remove();
     });
+  });
+
+  document.querySelectorAll(".premium-header .header-actions > :not(#menuBtn)").forEach((node) => {
+    node.remove();
   });
 }
 
