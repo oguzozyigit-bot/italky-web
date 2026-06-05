@@ -7,18 +7,16 @@ function apiUrl(path) {
   return `${API_BASE}/api/${String(path || "").replace(/^\/+/, "")}`;
 }
 
+const F2F_AUTO_READ_KEY = "facetoface_auto_read";
+
 /*
   KAFKAS DİLLERİ
-  - ÜST / 180 derece: /js/lang_pool_full.js full dil havuzu
-  - ALT: Google tarafında test edilecek Kafkas dilleri
-  - Input yok, klavye yok, send yok
-  - Sadece mikrofon
-  - AI yok: /api/translate + use_ai:false + google_only:true
+  ÜST: /js/lang_pool_full.js
+  ALT: Kafkas dilleri
+  Input yok, klavye yok, send yok
+  Sadece mic
+  AI yok
 */
-
-const F2F_VOICE_KEY = "facetoface_voice_mode";
-const F2F_PRESET_KEY = "facetoface_voice_preset";
-const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
 const KAFKAS_LANG_POOL = [
   { code: "ka", name: "Gürcüce", flag: "🇬🇪" },
@@ -28,9 +26,7 @@ const KAFKAS_LANG_POOL = [
   { code: "ab", name: "Abhazca", flag: "🔸" },
   { code: "av", name: "Avarca", flag: "🔹" },
   { code: "ady", name: "Adıgece / Çerkesçe", flag: "🔸" },
-  { code: "kbd", name: "Kabardeyce", flag: "🔸" },
-  { code: "os", name: "Osetçe", flag: "🔹" },
-  { code: "lez", name: "Lezgice", flag: "🌄" }
+  { code: "os", name: "Osetçe", flag: "🔹" }
 ];
 
 const REQUIRED_TOP_LANGS = [
@@ -64,13 +60,11 @@ const BCP = {
   ka: "ka-GE",
   hy: "hy-AM",
   az: "az-AZ",
-  ce: "ce",
-  ab: "ab",
-  av: "av",
-  ady: "ady",
-  kbd: "kbd",
-  os: "os",
-  lez: "lez"
+  ce: "tr-TR",
+  ab: "tr-TR",
+  av: "tr-TR",
+  ady: "tr-TR",
+  os: "tr-TR"
 };
 
 const TTS_FALLBACK_LANG = {
@@ -81,9 +75,7 @@ const TTS_FALLBACK_LANG = {
   ab: "tr",
   av: "tr",
   ady: "tr",
-  kbd: "tr",
-  os: "tr",
-  lez: "tr"
+  os: "tr"
 };
 
 const UI = {
@@ -97,7 +89,6 @@ const UI = {
   topComposer: $("topComposer"),
   topBody: $("topBody"),
   topKeyboardWrap: $("topKeyboardWrap"),
-  topKeyboard: $("topKeyboard"),
   popTop: $("pop-top"),
   closeTop: $("close-top"),
   listTop: $("list-top"),
@@ -110,7 +101,6 @@ const UI = {
   botComposer: $("botComposer"),
   botBody: $("botBody"),
   botKeyboardWrap: $("botKeyboardWrap"),
-  botKeyboard: $("botKeyboard"),
   popBot: $("pop-bot"),
   closeBot: $("close-bot"),
   listBot: $("list-bot"),
@@ -120,8 +110,6 @@ const UI = {
   clearBtn: $("clearBtn"),
 
   genericBackdrop: $("genericBackdrop"),
-  genericTitle: $("genericTitle"),
-  genericText: $("genericText"),
   genericCloseBtn: $("genericCloseBtn"),
   miniToast: $("miniToast")
 };
@@ -129,7 +117,6 @@ const UI = {
 const state = {
   topLang: "tr",
   botLang: "ka",
-  activeSide: "bot",
 
   topListening: false,
   botListening: false,
@@ -160,8 +147,10 @@ function wait(ms) {
 
 function toast(msg = "") {
   if (!UI.miniToast) return;
+
   UI.miniToast.textContent = String(msg || "");
   UI.miniToast.classList.add("show");
+
   clearTimeout(window.__kafkasToast);
   window.__kafkasToast = setTimeout(() => {
     UI.miniToast.classList.remove("show");
@@ -197,7 +186,7 @@ async function loadFullLangPoolModule() {
   try {
     return await import("/js/lang_pool_full.js");
   } catch (e) {
-    console.warn("[KAFKAS] /js/lang_pool_full.js yüklenemedi, fallback kullanılacak", e);
+    console.warn("[KAFKAS] lang_pool_full yüklenemedi, fallback kullanılacak", e);
     return {};
   }
 }
@@ -269,7 +258,6 @@ function itemName(item, code) {
 
 function normalizeLangItem(item) {
   const code = canon(item?.code || item?.value || item?.lang || item?.id || item?.key);
-
   if (!code) return null;
 
   return {
@@ -341,7 +329,6 @@ function pointOrbTo(side) {
   document.body.classList.remove("to-top", "to-bot");
   document.body.classList.add(side === "top" ? "to-top" : "to-bot");
   UI.centerHub?.classList.toggle("to-top", side === "top");
-  state.activeSide = side;
 }
 
 function syncComposerButtons() {
@@ -498,17 +485,6 @@ function renderLangLists() {
   renderLangList(UI.listBot, KAFKAS_LANG_POOL, state.botLang, "bot");
 }
 
-function getSelectedVoice() {
-  const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
-  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
-
-  if (mode === "clone") return "mine";
-  if (mode === "preset" && preset === "second") return "second";
-  if (mode === "preset" && preset === "memory") return "memory";
-
-  return "auto";
-}
-
 function isAutoReadEnabled() {
   return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
 }
@@ -561,68 +537,6 @@ function chooseWebVoice(langCode) {
          null;
 }
 
-async function speakViaApi(text, langCode) {
-  const selectedVoice = getSelectedVoice();
-
-  if (!["mine", "second", "memory"].includes(selectedVoice)) return false;
-
-  const userId = await getCurrentUserId();
-  if (!userId) return false;
-
-  const myRunId = ++state.speakRunId;
-
-  let apiVoiceMode = "auto";
-  let apiVoice = "auto";
-  let apiPresetVoice = "";
-
-  if (selectedVoice === "mine") {
-    apiVoiceMode = "clone";
-    apiVoice = "clone";
-  } else if (selectedVoice === "second") {
-    apiVoiceMode = "preset";
-    apiVoice = "second";
-    apiPresetVoice = "second";
-  } else if (selectedVoice === "memory") {
-    apiVoiceMode = "preset";
-    apiVoice = "memory";
-    apiPresetVoice = "memory";
-  }
-
-  const speakCode = resolveSpeechLang(langCode);
-
-  const resp = await fetch(apiUrl("tts"), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: String(text || "").trim(),
-      lang: speakCode,
-      user_id: userId,
-      module: "kafkas_dilleri",
-      voice: apiVoice,
-      voice_mode: apiVoiceMode,
-      preset_voice: apiPresetVoice,
-      selected_voice: selectedVoice,
-      tone: "neutral"
-    })
-  });
-
-  const json = await resp.json().catch(() => null);
-
-  if (!resp.ok || !json?.audio_base64) return false;
-  if (myRunId !== state.speakRunId) return false;
-
-  const audio = new Audio(`data:audio/mp3;base64,${json.audio_base64}`);
-
-  audio.preload = "auto";
-  audio.playsInline = true;
-
-  state.currentAudio = audio;
-
-  await audio.play();
-
-  return true;
-}
-
 function speakWebOnce(text, langCode, timeoutMs = 700) {
   return new Promise((resolve) => {
     try {
@@ -632,7 +546,6 @@ function speakWebOnce(text, langCode, timeoutMs = 700) {
       }
 
       const value = normalizeText(text);
-
       if (!value) {
         resolve(false);
         return;
@@ -679,16 +592,10 @@ async function speakText(text, langCode) {
   if (!isAutoReadEnabled()) return false;
 
   const value = normalizeText(text);
-
   if (!value || value === "...") return false;
 
   stopAudio();
-
   await wait(80);
-
-  const apiOk = await speakViaApi(value, langCode).catch(() => false);
-
-  if (apiOk) return true;
 
   try {
     const speakCode = resolveSpeechLang(langCode);
@@ -702,7 +609,7 @@ async function speakText(text, langCode) {
   return await speakWebOnce(value, langCode, 700);
 }
 
-function fallbackSpeakLang(langCode) {
+function fallbackSpeakLang() {
   return "tr";
 }
 
@@ -712,7 +619,7 @@ function makeTtsReadable(text, langCode) {
 
   if (code === "ka") return latinizeGeorgian(value);
   if (code === "hy") return latinizeArmenian(value);
-  if (["ce", "ab", "av", "ady", "kbd", "os", "lez"].includes(code)) {
+  if (["ce", "ab", "av", "ady", "os"].includes(code)) {
     return latinizeCyrillicKafkas(value);
   }
 
@@ -757,60 +664,39 @@ function latinizeArmenian(text) {
 
 function latinizeCyrillicKafkas(text) {
   const map = {
-    "А":"A","а":"a","Ӏ":"","Б":"B","б":"b","В":"V","в":"v","Г":"G","г":"g","Гъ":"Gh","гъ":"gh",
+    "А":"A","а":"a","Ӏ":"","Б":"B","б":"b","В":"V","в":"v","Г":"G","г":"g",
     "Д":"D","д":"d","Е":"E","е":"e","Ё":"Yo","ё":"yo","Ж":"Zh","ж":"zh","З":"Z","з":"z",
-    "И":"I","и":"i","Й":"Y","й":"y","К":"K","к":"k","Къ":"Q","къ":"q","Л":"L","л":"l",
-    "М":"M","м":"m","Н":"N","н":"n","О":"O","о":"o","П":"P","п":"p","ПӀ":"P","пӀ":"p",
-    "Р":"R","р":"r","С":"S","с":"s","Т":"T","т":"t","ТӀ":"T","тӀ":"t","У":"U","у":"u",
-    "Ф":"F","ф":"f","Х":"Kh","х":"kh","Хь":"H","хь":"h","Ц":"Ts","ц":"ts","ЦӀ":"Ts","цӀ":"ts",
-    "Ч":"Ch","ч":"ch","ЧӀ":"Ch","чӀ":"ch","Ш":"Sh","ш":"sh","Щ":"Sh","щ":"sh",
-    "Ъ":"","ъ":"","Ы":"I","ы":"i","Ь":"","ь":"","Э":"E","э":"e","Ю":"Yu","ю":"yu","Я":"Ya","я":"ya"
+    "И":"I","и":"i","Й":"Y","й":"y","К":"K","к":"k","Л":"L","л":"l","М":"M","м":"m",
+    "Н":"N","н":"n","О":"O","о":"o","П":"P","п":"p","Р":"R","р":"r","С":"S","с":"s",
+    "Т":"T","т":"t","У":"U","у":"u","Ф":"F","ф":"f","Х":"Kh","х":"kh","Ц":"Ts","ц":"ts",
+    "Ч":"Ch","ч":"ch","Ш":"Sh","ш":"sh","Щ":"Sh","щ":"sh","Ъ":"","ъ":"","Ы":"I","ы":"i",
+    "Ь":"","ь":"","Э":"E","э":"e","Ю":"Yu","ю":"yu","Я":"Ya","я":"ya"
   };
 
-  let value = String(text || "");
-
-  Object.keys(map)
-    .sort((a, b) => b.length - a.length)
-    .forEach((key) => {
-      value = value.split(key).join(map[key]);
-    });
-
-  return value.replace(/\s+/g, " ").trim();
+  return String(text || "")
+    .split("")
+    .map((ch) => map[ch] ?? ch)
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 async function speakWithFallback(visibleText, langCode) {
   if (!isAutoReadEnabled()) return;
 
   const value = normalizeText(visibleText);
-
   if (!value || value === "...") return;
-
-  const code = canon(langCode);
-
-  if (["ka", "hy", "ce", "ab", "av", "ady", "kbd", "os", "lez"].includes(code)) {
-    const readable = normalizeText(makeTtsReadable(value, code));
-
-    if (readable && readable !== value) {
-      stopAudio();
-      await wait(120);
-      await speakText(readable, fallbackSpeakLang(code));
-      return;
-    }
-  }
-
-  const originalOk = await speakText(value, langCode);
-
-  if (originalOk) return;
 
   const readable = normalizeText(makeTtsReadable(value, langCode));
 
-  if (!readable || readable === value) return;
+  if (readable && readable !== value) {
+    stopAudio();
+    await wait(120);
+    await speakText(readable, fallbackSpeakLang(langCode));
+    return;
+  }
 
-  stopAudio();
-
-  await wait(120);
-
-  await speakText(readable, fallbackSpeakLang(langCode));
+  await speakText(value, langCode);
 }
 
 async function getAccessToken() {
@@ -897,6 +783,7 @@ async function runTranslateText(fromSide, text) {
   try {
     const fromLang = langForSide(sourceSide);
     const toLang = langForSide(targetSide);
+
     const translated = await translateGoogle(cleanText, fromLang, toLang);
     const speakLang = toLang;
 
