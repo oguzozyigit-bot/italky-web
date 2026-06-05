@@ -4,66 +4,86 @@ const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
 function apiUrl(path) {
-  const clean = String(path || "").replace(/^\/+/, "");
-  return `${API_BASE}/api/${clean}`;
+  return `${API_BASE}/api/${String(path || "").replace(/^\/+/, "")}`;
 }
+
+/*
+  KAFKAS DİLLERİ
+  - ÜST / 180 derece: /js/lang_pool_full.js full dil havuzu
+  - ALT: Google tarafında test edilecek Kafkas dilleri
+  - Input yok, klavye yok, send yok
+  - Sadece mikrofon
+  - AI yok: /api/translate + use_ai:false + google_only:true
+*/
 
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
-const KAFKAS_POOL = [
-  { code: "ab",  name: "Abhazca",        flag: "🏔️" },
-  { code: "ady", name: "Adigece",        flag: "🛡️" },
-  { code: "kbd", name: "Kabardeyce",     flag: "⚔️" },
-  { code: "ce",  name: "Çeçence",        flag: "🦅" },
-  { code: "ka",  name: "Gürcüce",        flag: "🇬🇪" },
-  { code: "os",  name: "Osetçe",         flag: "⛰️" },
-  { code: "lez", name: "Lezgice",        flag: "🌄" },
-  { code: "av",  name: "Avarca",         flag: "🗻" }
+const KAFKAS_LANG_POOL = [
+  { code: "ka", name: "Gürcüce", flag: "🇬🇪" },
+  { code: "hy", name: "Ermenice", flag: "🇦🇲" },
+  { code: "az", name: "Azerbaycan Türkçesi", flag: "🇦🇿" },
+  { code: "ce", name: "Çeçence", flag: "🔹" },
+  { code: "ab", name: "Abhazca", flag: "🔸" },
+  { code: "av", name: "Avarca", flag: "🔹" },
+  { code: "ady", name: "Adıgece / Çerkesçe", flag: "🔸" },
+  { code: "kbd", name: "Kabardeyce", flag: "🔸" },
+  { code: "os", name: "Osetçe", flag: "🔹" },
+  { code: "lez", name: "Lezgice", flag: "🌄" }
 ];
 
+const REQUIRED_TOP_LANGS = [
+  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+  ...KAFKAS_LANG_POOL
+];
+
+const FALLBACK_TOP_LANG_POOL = [
+  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+  { code: "en", name: "İngilizce", flag: "🇬🇧" },
+  { code: "de", name: "Almanca", flag: "🇩🇪" },
+  { code: "fr", name: "Fransızca", flag: "🇫🇷" },
+  { code: "it", name: "İtalyanca", flag: "🇮🇹" },
+  { code: "es", name: "İspanyolca", flag: "🇪🇸" },
+  { code: "ru", name: "Rusça", flag: "🇷🇺" },
+  { code: "ar", name: "Arapça", flag: "🇸🇦" },
+  ...KAFKAS_LANG_POOL
+];
+
+let TOP_LANG_POOL = FALLBACK_TOP_LANG_POOL.slice();
+
 const BCP = {
-  tr:  "tr-TR",
-  ab:  "tr-TR",
-  ady: "tr-TR",
-  kbd: "tr-TR",
-  ce:  "tr-TR",
-  ka:  "ka-GE",
-  os:  "ru-RU",
-  lez: "tr-TR",
-  av:  "ru-RU"
+  tr: "tr-TR",
+  en: "en-US",
+  de: "de-DE",
+  fr: "fr-FR",
+  it: "it-IT",
+  es: "es-ES",
+  ru: "ru-RU",
+  ar: "ar-SA",
+  ka: "ka-GE",
+  hy: "hy-AM",
+  az: "az-AZ",
+  ce: "ce",
+  ab: "ab",
+  av: "av",
+  ady: "ady",
+  kbd: "kbd",
+  os: "os",
+  lez: "lez"
 };
 
 const TTS_FALLBACK_LANG = {
+  ka: "tr",
+  hy: "tr",
+  az: "tr",
+  ce: "tr",
   ab: "tr",
+  av: "tr",
   ady: "tr",
   kbd: "tr",
-  ce: "tr",
-  os: "ru",
-  lez: "tr",
-  av: "ru"
-};
-
-const ALT_CHARS = {
-  a: ["â", "á", "à"],
-  A: ["Â", "Á", "À"],
-  c: ["ç"],
-  C: ["Ç"],
-  g: ["ğ"],
-  G: ["Ğ"],
-  i: ["ı", "î"],
-  I: ["İ", "Î"],
-  o: ["ö", "ô", "ó"],
-  O: ["Ö", "Ô", "Ó"],
-  s: ["ş"],
-  S: ["Ş"],
-  u: ["ü", "û", "ú"],
-  U: ["Ü", "Û", "Ú"],
-  e: ["é", "è", "ê"],
-  E: ["É", "È", "Ê"],
-  n: ["ñ"],
-  N: ["Ñ"]
+  os: "tr",
+  lez: "tr"
 };
 
 const UI = {
@@ -71,7 +91,6 @@ const UI = {
 
   topLangBtn: $("topLangBtn"),
   topLangTxt: $("topLangTxt"),
-  topSettingsMini: $("topSettingsMini"),
   topInput: $("topInput"),
   topMic: $("topMic"),
   topSend: $("topSend"),
@@ -85,7 +104,6 @@ const UI = {
 
   botLangBtn: $("botLangBtn"),
   botLangTxt: $("botLangTxt"),
-  botSettingsMini: $("botSettingsMini"),
   botInput: $("botInput"),
   botMic: $("botMic"),
   botSend: $("botSend"),
@@ -93,6 +111,9 @@ const UI = {
   botBody: $("botBody"),
   botKeyboardWrap: $("botKeyboardWrap"),
   botKeyboard: $("botKeyboard"),
+  popBot: $("pop-bot"),
+  closeBot: $("close-bot"),
+  listBot: $("list-bot"),
 
   homeBtn: $("homeBtn"),
   homeLink: $("homeLink"),
@@ -106,7 +127,8 @@ const UI = {
 };
 
 const state = {
-  topLang: "ab",
+  topLang: "tr",
+  botLang: "ka",
   activeSide: "bot",
 
   topListening: false,
@@ -114,35 +136,14 @@ const state = {
   topRecognizer: null,
   botRecognizer: null,
 
-  currentAudio: null,
-  speakRunId: 0,
-
-  topShift: false,
-  botShift: false,
-
   topLastSpeech: "",
   botLastSpeech: "",
 
-  keyboardAudioCtx: null,
-  keyboardMasterGain: null,
+  currentAudio: null,
+  speakRunId: 0,
 
   loadingTopRow: null,
-  loadingBotRow: null,
-
-  altMenuEl: null,
-  holdTimer: null
-};
-
-const KB_NUM_ROW = ["1","2","3","4","5","6","7","8","9","0"];
-const KB_ROWS_TR = {
-  r1: ["q","w","e","r","t","y","u","ı","o","p"],
-  r2: ["a","s","d","f","g","h","j","k","l"],
-  r3: ["z","x","c","v","b","n","m"]
-};
-const KB_ROWS_LATIN = {
-  r1: ["q","w","e","r","t","y","u","i","o","p"],
-  r2: ["a","s","d","f","g","h","j","k","l"],
-  r3: ["z","x","c","v","b","n","m"]
+  loadingBotRow: null
 };
 
 function normalizeText(text) {
@@ -151,6 +152,10 @@ function normalizeText(text) {
 
 function canon(code) {
   return String(code || "").trim().toLowerCase();
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function toast(msg = "") {
@@ -163,26 +168,173 @@ function toast(msg = "") {
   }, 1800);
 }
 
-function showModal(title, text) {
-  if (UI.genericTitle) UI.genericTitle.textContent = title || "Bilgi";
-  if (UI.genericText) UI.genericText.textContent = text || "";
-  UI.genericBackdrop?.classList.add("show");
-  UI.genericBackdrop?.classList.add("open");
-}
-
 function closeModal() {
   UI.genericBackdrop?.classList.remove("show");
   UI.genericBackdrop?.classList.remove("open");
 }
 
-function currentKafkas() {
-  return KAFKAS_POOL.find((x) => x.code === state.topLang) || KAFKAS_POOL[0];
+function siteLang() {
+  const keys = [
+    "site_lang",
+    "siteLanguage",
+    "italky_site_lang",
+    "italky_site_language",
+    "italky_site_lang_v1",
+    "siteLang",
+    "app_lang",
+    "ui_lang"
+  ];
+
+  for (const key of keys) {
+    const value = canon(localStorage.getItem(key));
+    if (value) return value.split("-")[0];
+  }
+
+  return canon(document.documentElement?.lang || navigator.language || "tr").split("-")[0] || "tr";
+}
+
+async function loadFullLangPoolModule() {
+  try {
+    return await import("/js/lang_pool_full.js");
+  } catch (e) {
+    console.warn("[KAFKAS] /js/lang_pool_full.js yüklenemedi, fallback kullanılacak", e);
+    return {};
+  }
+}
+
+function extractPoolFromModule(module) {
+  const candidates = [
+    module.LANG_POOL_FULL,
+    module.LANG_FULL_POOL,
+    module.FULL_LANG_POOL,
+    module.LANG_POOL,
+    module.LANGS,
+    module.LANGUAGES,
+    module.languages,
+    module.default
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate) && candidate.length) return candidate;
+
+    if (candidate && typeof candidate === "object") {
+      const values = Object.values(candidate);
+      if (values.length && values.every((item) => item && typeof item === "object")) {
+        return values;
+      }
+    }
+  }
+
+  return FALLBACK_TOP_LANG_POOL;
+}
+
+function itemName(item, code) {
+  const lang = siteLang();
+
+  const groups = [
+    item?.names,
+    item?.nameByLang,
+    item?.labels,
+    item?.labelByLang,
+    item?.translations,
+    item?.i18n
+  ];
+
+  for (const group of groups) {
+    if (group && typeof group === "object") {
+      const found =
+        group[lang] ||
+        group[lang.toUpperCase()] ||
+        group.tr ||
+        group.TR ||
+        group.en ||
+        group.EN;
+
+      if (found) return String(found);
+    }
+  }
+
+  return String(
+    item?.[`name_${lang}`] ||
+    item?.[`label_${lang}`] ||
+    item?.name_tr ||
+    item?.label_tr ||
+    item?.tr ||
+    item?.name ||
+    item?.label ||
+    item?.title ||
+    code.toUpperCase()
+  );
+}
+
+function normalizeLangItem(item) {
+  const code = canon(item?.code || item?.value || item?.lang || item?.id || item?.key);
+
+  if (!code) return null;
+
+  return {
+    code,
+    name: itemName(item, code),
+    flag: String(item?.flag || item?.emoji || item?.icon || "🌐")
+  };
+}
+
+function buildTopPool(poolItems) {
+  const seen = new Set();
+  const out = [];
+
+  for (const item of poolItems || []) {
+    const normalized = normalizeLangItem(item);
+    if (!normalized || seen.has(normalized.code)) continue;
+
+    seen.add(normalized.code);
+    out.push(normalized);
+  }
+
+  for (const item of REQUIRED_TOP_LANGS) {
+    if (seen.has(item.code)) continue;
+
+    seen.add(item.code);
+    out.push(item);
+  }
+
+  return out.length ? out : FALLBACK_TOP_LANG_POOL;
+}
+
+async function loadTopLangPool() {
+  const module = await loadFullLangPoolModule();
+  TOP_LANG_POOL = buildTopPool(extractPoolFromModule(module));
+
+  if (!TOP_LANG_POOL.some((item) => item.code === state.topLang)) {
+    state.topLang = "tr";
+  }
+
+  updateLangButtons();
+  renderLangLists();
+}
+
+function langFromPool(pool, code) {
+  return pool.find((x) => x.code === code) || pool[0];
+}
+
+function currentTopLang() {
+  return langFromPool(TOP_LANG_POOL, state.topLang);
+}
+
+function currentBotLang() {
+  return langFromPool(KAFKAS_LANG_POOL, state.botLang);
+}
+
+function langForSide(side) {
+  return side === "top" ? state.topLang : state.botLang;
 }
 
 function updateLangButtons() {
-  const item = currentKafkas();
-  if (UI.topLangTxt) UI.topLangTxt.textContent = `${item.flag} ${item.name}`;
-  if (UI.botLangTxt) UI.botLangTxt.textContent = "🇹🇷 Türkçe";
+  const top = currentTopLang();
+  const bot = currentBotLang();
+
+  if (UI.topLangTxt) UI.topLangTxt.textContent = `${top.flag} ${top.name}`;
+  if (UI.botLangTxt) UI.botLangTxt.textContent = `${bot.flag} ${bot.name}`;
 }
 
 function pointOrbTo(side) {
@@ -192,24 +344,20 @@ function pointOrbTo(side) {
   state.activeSide = side;
 }
 
-function autoResize(textarea) {
-  if (!textarea) return;
-  textarea.style.height = "auto";
-  textarea.style.height = `${Math.min(textarea.scrollHeight, 84)}px`;
-}
-
 function syncComposerButtons() {
-  const topHas = normalizeText(UI.topInput?.value).length > 0;
-  UI.topMic?.classList.toggle("hidden", topHas && !state.topListening);
-  UI.topSend?.classList.toggle("hidden", !topHas);
-  UI.topMic?.classList.toggle("listening", state.topListening);
-  UI.topComposer?.classList.toggle("listening", state.topListening);
+  UI.topSend?.classList.add("hidden");
+  UI.botSend?.classList.add("hidden");
 
-  const botHas = normalizeText(UI.botInput?.value).length > 0;
-  UI.botMic?.classList.toggle("hidden", botHas && !state.botListening);
-  UI.botSend?.classList.toggle("hidden", !botHas);
+  UI.topMic?.classList.remove("hidden");
+  UI.botMic?.classList.remove("hidden");
+
+  UI.topMic?.classList.toggle("listening", state.topListening);
   UI.botMic?.classList.toggle("listening", state.botListening);
+
+  UI.topComposer?.classList.toggle("listening", state.topListening);
   UI.botComposer?.classList.toggle("listening", state.botListening);
+
+  document.body.classList.toggle("is-listening", state.topListening || state.botListening);
 }
 
 function keepVisible(side = "bot") {
@@ -230,6 +378,7 @@ function keepVisible(side = "bot") {
 function clearLatest(side) {
   const wrap = side === "top" ? UI.topBody : UI.botBody;
   if (!wrap) return;
+
   wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => {
     el.classList.remove("is-latest");
   });
@@ -237,9 +386,11 @@ function clearLatest(side) {
 
 function createSpeakerButton(getText, getLang) {
   const btn = document.createElement("button");
+
   btn.type = "button";
   btn.className = "spk-icon";
   btn.setAttribute("aria-label", "Tekrar dinle");
+
   btn.innerHTML = `
     <svg viewBox="0 0 24 24">
       <path d="M3 10v4h4l5 4V6L7 10H3"></path>
@@ -247,11 +398,14 @@ function createSpeakerButton(getText, getLang) {
       <path d="M19 5a8 8 0 0 1 0 14"></path>
     </svg>
   `;
+
   btn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    await speakText(getText(), getLang());
+
+    await speakWithFallback(getText(), getLang());
   });
+
   return btn;
 }
 
@@ -280,31 +434,52 @@ function addBubble(where, kind, text, opts = {}) {
   }
 
   row.appendChild(inner);
-
-  if (opts.subText) {
-    const sub = document.createElement("div");
-    sub.className = "bubble-sub";
-    sub.textContent = String(opts.subText || "");
-    row.appendChild(sub);
-  }
-
   wrap.appendChild(row);
+
   keepVisible(where);
+
   return row;
 }
 
 function clearBubbles() {
   if (UI.topBody) UI.topBody.innerHTML = "";
   if (UI.botBody) UI.botBody.innerHTML = "";
+
   state.loadingTopRow = null;
   state.loadingBotRow = null;
 }
 
-function renderTopLangList() {
-  if (!UI.listTop) return;
+function selectLang(side, code) {
+  const next = canon(code);
+  if (!next) return;
 
-  UI.listTop.innerHTML = KAFKAS_POOL.map((item) => `
-    <div class="pop-item ${item.code === state.topLang ? "active" : ""}" data-code="${item.code}">
+  if (side === "top" && next === state.botLang) {
+    toast("Aynı dili iki tarafta seçemezsiniz.");
+    return;
+  }
+
+  if (side === "bot" && next === state.topLang) {
+    toast("Aynı dili iki tarafta seçemezsiniz.");
+    return;
+  }
+
+  if (side === "top") state.topLang = next;
+  else state.botLang = next;
+
+  updateLangButtons();
+  renderLangLists();
+
+  UI.popTop?.classList.remove("show");
+  UI.popBot?.classList.remove("show");
+
+  toast("Dil değişti");
+}
+
+function renderLangList(listEl, pool, selectedCode, side) {
+  if (!listEl) return;
+
+  listEl.innerHTML = pool.map((item) => `
+    <div class="pop-item ${item.code === selectedCode ? "active" : ""}" data-code="${item.code}">
       <div class="pop-left">
         <div class="pop-flag">${item.flag}</div>
         <div class="pop-name">${item.name}</div>
@@ -313,379 +488,14 @@ function renderTopLangList() {
     </div>
   `).join("");
 
-  UI.listTop.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      state.topLang = el.dataset.code;
-      updateLangButtons();
-      renderTopLangList();
-      renderKeyboard(UI.topKeyboard, "top");
-      UI.popTop?.classList.remove("show");
-      toast("Kafkas dili değişti");
-    });
+  listEl.querySelectorAll(".pop-item").forEach((el) => {
+    el.addEventListener("click", () => selectLang(side, el.dataset.code));
   });
 }
 
-function ensureKeyboardAudio() {
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return null;
-
-    if (!state.keyboardAudioCtx) {
-      state.keyboardAudioCtx = new Ctx();
-      state.keyboardMasterGain = state.keyboardAudioCtx.createGain();
-      state.keyboardMasterGain.gain.value = 0.045;
-      state.keyboardMasterGain.connect(state.keyboardAudioCtx.destination);
-    }
-
-    return state.keyboardAudioCtx;
-  } catch {
-    return null;
-  }
-}
-
-async function unlockKeyboardAudio() {
-  const ctx = ensureKeyboardAudio();
-  if (!ctx) return;
-  try {
-    if (ctx.state === "suspended") await ctx.resume();
-  } catch {}
-}
-
-function vibrate(ms = 10) {
-  try {
-    if (navigator.vibrate) navigator.vibrate(ms);
-  } catch {}
-}
-
-function playKeyClick(kind = "key") {
-  const ctx = ensureKeyboardAudio();
-  if (!ctx || !state.keyboardMasterGain) return;
-
-  if (ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
-
-  const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const filter = ctx.createBiquadFilter();
-
-  filter.type = "highpass";
-  filter.frequency.value =
-    kind === "space" ? 900 :
-    kind === "backspace" ? 1450 :
-    kind === "enter" ? 1350 :
-    kind === "shift" ? 1250 : 1180;
-
-  osc.type = kind === "space" ? "triangle" : "square";
-  osc.frequency.setValueAtTime(
-    kind === "space" ? 460 :
-    kind === "backspace" ? 700 :
-    kind === "enter" ? 640 :
-    kind === "shift" ? 620 : 560,
-    now
-  );
-  osc.frequency.exponentialRampToValueAtTime(
-    kind === "space" ? 310 : 220,
-    now + 0.028
-  );
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(kind === "space" ? 0.026 : 0.022, now + 0.003);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
-
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(state.keyboardMasterGain);
-
-  try {
-    osc.start(now);
-    osc.stop(now + 0.035);
-  } catch {}
-}
-
-function hideAltMenu() {
-  state.altMenuEl?.remove();
-  state.altMenuEl = null;
-  clearTimeout(state.holdTimer);
-  state.holdTimer = null;
-}
-
-function createAltMenu(hostBtn, chars, onPick) {
-  hideAltMenu();
-  if (!hostBtn || !chars?.length) return;
-
-  const wrap = document.createElement("div");
-  wrap.className = "alt-pop";
-
-  chars.forEach((ch) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "alt-key";
-    b.textContent = ch;
-    b.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    b.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      vibrate(8);
-      playKeyClick("key");
-      onPick(ch);
-      hideAltMenu();
-    });
-    wrap.appendChild(b);
-  });
-
-  hostBtn.appendChild(wrap);
-  state.altMenuEl = wrap;
-}
-
-function createKey({ label = "", html = "", onTap, onLongPress = null, className = "", sound = "key" }) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = `kb-key ${className}`.trim();
-  if (html) btn.innerHTML = html;
-  else btn.textContent = label;
-
-  let longTriggered = false;
-
-  btn.addEventListener("pointerdown", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    longTriggered = false;
-    btn.classList.add("pressing");
-    await unlockKeyboardAudio();
-
-    if (onLongPress) {
-      state.holdTimer = setTimeout(() => {
-        longTriggered = true;
-        vibrate(12);
-        playKeyClick(sound);
-        onLongPress(btn);
-      }, 320);
-    }
-  });
-
-  btn.addEventListener("pointerup", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    clearTimeout(state.holdTimer);
-    state.holdTimer = null;
-    btn.classList.remove("pressing");
-
-    if (!longTriggered && onTap) {
-      vibrate(8);
-      playKeyClick(sound);
-      onTap();
-    }
-  });
-
-  btn.addEventListener("pointerleave", () => {
-    clearTimeout(state.holdTimer);
-    state.holdTimer = null;
-    btn.classList.remove("pressing");
-  });
-
-  btn.addEventListener("contextmenu", (e) => e.preventDefault());
-  return btn;
-}
-
-function svgShift() {
-  return `
-    <svg viewBox="0 0 24 24">
-      <path d="M12 4l6 7h-4v8H10v-8H6l6-7z"></path>
-    </svg>
-  `;
-}
-
-function svgBackspace() {
-  return `
-    <svg viewBox="0 0 24 24">
-      <path d="M21 6H9l-6 6 6 6h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"></path>
-      <path d="M10 9l5 6"></path>
-      <path d="M15 9l-5 6"></path>
-    </svg>
-  `;
-}
-
-function keyboardRows(side) {
-  const lang = side === "top" ? state.topLang : "tr";
-  const shifted = side === "top" ? state.topShift : state.botShift;
-  const base = lang === "tr" ? KB_ROWS_TR : KB_ROWS_LATIN;
-
-  const make = (row) => shifted ? row.map((x) => x.toUpperCase()) : row.slice();
-
-  return {
-    nums: KB_NUM_ROW.slice(),
-    r1: make(base.r1),
-    r2: make(base.r2),
-    r3: make(base.r3)
-  };
-}
-
-function insertText(side, text) {
-  const input = side === "top" ? UI.topInput : UI.botInput;
-  if (!input) return;
-  input.value = `${input.value || ""}${text}`;
-  autoResize(input);
-  syncComposerButtons();
-  pointOrbTo(side);
-}
-
-function backspaceText(side) {
-  const input = side === "top" ? UI.topInput : UI.botInput;
-  if (!input) return;
-  input.value = String(input.value || "").slice(0, -1);
-  autoResize(input);
-  syncComposerButtons();
-  pointOrbTo(side);
-}
-
-function renderCharKeys(rowEl, chars, side, root) {
-  chars.forEach((ch) => {
-    const alts = ALT_CHARS[ch] || ALT_CHARS[String(ch).toLowerCase()] || [];
-    rowEl.appendChild(createKey({
-      label: ch,
-      sound: "key",
-      onTap: () => {
-        hideAltMenu();
-        insertText(side, ch);
-
-        const shifted = side === "top" ? state.topShift : state.botShift;
-        if (shifted && /[A-ZÇĞİÖŞÜ]/.test(ch)) {
-          if (side === "top") state.topShift = false;
-          else state.botShift = false;
-          renderKeyboard(root, side);
-        }
-      },
-      onLongPress: alts.length
-        ? (btn) => createAltMenu(btn, alts, (picked) => insertText(side, picked))
-        : null
-    }));
-  });
-}
-
-function renderKeyboard(root, side) {
-  if (!root) return;
-
-  const rows = keyboardRows(side);
-  root.innerHTML = "";
-
-  const rowNums = document.createElement("div");
-  rowNums.className = "kb-row";
-  renderCharKeys(rowNums, rows.nums, side, root);
-  root.appendChild(rowNums);
-
-  const row1 = document.createElement("div");
-  row1.className = "kb-row";
-  renderCharKeys(row1, rows.r1, side, root);
-  root.appendChild(row1);
-
-  const row2 = document.createElement("div");
-  row2.className = "kb-row";
-  const padL = document.createElement("div");
-  padL.style.flex = "0.35";
-  row2.appendChild(padL);
-
-  renderCharKeys(row2, rows.r2, side, root);
-
-  const padR = document.createElement("div");
-  padR.style.flex = "0.35";
-  row2.appendChild(padR);
-  root.appendChild(row2);
-
-  const row3 = document.createElement("div");
-  row3.className = "kb-row";
-
-  row3.appendChild(createKey({
-    html: svgShift(),
-    className: "icon wide",
-    sound: "shift",
-    onTap: () => {
-      hideAltMenu();
-      if (side === "top") state.topShift = !state.topShift;
-      else state.botShift = !state.botShift;
-      renderKeyboard(root, side);
-    }
-  }));
-
-  renderCharKeys(row3, rows.r3, side, root);
-
-  row3.appendChild(createKey({
-    html: svgBackspace(),
-    className: "icon wide",
-    sound: "backspace",
-    onTap: () => {
-      hideAltMenu();
-      backspaceText(side);
-    }
-  }));
-
-  root.appendChild(row3);
-
-  const row4 = document.createElement("div");
-  row4.className = "kb-row";
-
-  row4.appendChild(createKey({
-    label: ",",
-    sound: "key",
-    onTap: () => { hideAltMenu(); insertText(side, ","); }
-  }));
-
-  row4.appendChild(createKey({
-    label: ".",
-    sound: "key",
-    onTap: () => { hideAltMenu(); insertText(side, "."); }
-  }));
-
-  row4.appendChild(createKey({
-    label: " ",
-    className: "xwide",
-    sound: "space",
-    onTap: () => { hideAltMenu(); insertText(side, " "); }
-  }));
-
-  row4.appendChild(createKey({
-    label: "?",
-    sound: "key",
-    onTap: () => { hideAltMenu(); insertText(side, "?"); }
-  }));
-
-  row4.appendChild(createKey({
-    label: "tamam",
-    className: "wide",
-    sound: "enter",
-    onTap: async () => {
-      hideAltMenu();
-      toggleKeyboard(side, false);
-      await sendTyped(side);
-    }
-  }));
-
-  root.appendChild(row4);
-}
-
-function toggleKeyboard(side, force = null) {
-  const wrap = side === "top" ? UI.topKeyboardWrap : UI.botKeyboardWrap;
-  const other = side === "top" ? UI.botKeyboardWrap : UI.topKeyboardWrap;
-  if (!wrap) return;
-
-  hideAltMenu();
-  other?.classList.remove("show");
-
-  const willShow = force === null ? !wrap.classList.contains("show") : !!force;
-  wrap.classList.toggle("show", willShow);
-  pointOrbTo(side);
-
-  if (willShow) {
-    const input = side === "top" ? UI.topInput : UI.botInput;
-    setTimeout(async () => {
-      await unlockKeyboardAudio();
-      try { input?.focus(); } catch {}
-    }, 20);
-  }
+function renderLangLists() {
+  renderLangList(UI.listTop, TOP_LANG_POOL, state.topLang, "top");
+  renderLangList(UI.listBot, KAFKAS_LANG_POOL, state.botLang, "bot");
 }
 
 function getSelectedVoice() {
@@ -695,6 +505,7 @@ function getSelectedVoice() {
   if (mode === "clone") return "mine";
   if (mode === "preset" && preset === "second") return "second";
   if (mode === "preset" && preset === "memory") return "memory";
+
   return "auto";
 }
 
@@ -713,6 +524,7 @@ function stopAudio() {
   } catch {}
 
   state.currentAudio = null;
+
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
@@ -731,12 +543,18 @@ function resolveSpeechLang(langCode) {
   return TTS_FALLBACK_LANG[code] || code || "tr";
 }
 
-function chooseWebVoice(langCode) {
-  const resolved = resolveSpeechLang(langCode);
-  const voices = window.speechSynthesis?.getVoices?.() || [];
-  const want = String(BCP[resolved] || BCP.tr).toLowerCase();
+function bcpForSpeak(langCode) {
+  const code = canon(langCode);
+  return BCP[code] || BCP[resolveSpeechLang(code)] || code || BCP.tr;
+}
 
-  return voices.find(v => String(v.lang || "").toLowerCase() === want) ||
+function chooseWebVoice(langCode) {
+  const code = canon(langCode);
+  const resolved = resolveSpeechLang(code);
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  const wantedBcp = String(bcpForSpeak(code)).toLowerCase();
+
+  return voices.find(v => String(v.lang || "").toLowerCase() === wantedBcp) ||
          voices.find(v => String(v.lang || "").toLowerCase().startsWith(resolved)) ||
          voices.find(v => String(v.lang || "").toLowerCase().startsWith("tr")) ||
          voices[0] ||
@@ -745,6 +563,7 @@ function chooseWebVoice(langCode) {
 
 async function speakViaApi(text, langCode) {
   const selectedVoice = getSelectedVoice();
+
   if (!["mine", "second", "memory"].includes(selectedVoice)) return false;
 
   const userId = await getCurrentUserId();
@@ -778,7 +597,7 @@ async function speakViaApi(text, langCode) {
       text: String(text || "").trim(),
       lang: speakCode,
       user_id: userId,
-      module: "kafkaslarin_dili",
+      module: "kafkas_dilleri",
       voice: apiVoice,
       voice_mode: apiVoiceMode,
       preset_voice: apiPresetVoice,
@@ -788,60 +607,225 @@ async function speakViaApi(text, langCode) {
   });
 
   const json = await resp.json().catch(() => null);
+
   if (!resp.ok || !json?.audio_base64) return false;
   if (myRunId !== state.speakRunId) return false;
 
   const audio = new Audio(`data:audio/mp3;base64,${json.audio_base64}`);
+
   audio.preload = "auto";
   audio.playsInline = true;
+
   state.currentAudio = audio;
+
   await audio.play();
+
   return true;
 }
 
+function speakWebOnce(text, langCode, timeoutMs = 700) {
+  return new Promise((resolve) => {
+    try {
+      if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+        resolve(false);
+        return;
+      }
+
+      const value = normalizeText(text);
+
+      if (!value) {
+        resolve(false);
+        return;
+      }
+
+      let settled = false;
+
+      const utter = new SpeechSynthesisUtterance(value);
+      utter.lang = String(bcpForSpeak(langCode));
+
+      const voice = chooseWebVoice(langCode);
+      if (voice) utter.voice = voice;
+
+      utter.rate = 0.95;
+      utter.pitch = 1;
+
+      const finish = (ok) => {
+        if (settled) return;
+        settled = true;
+        resolve(!!ok);
+      };
+
+      utter.onstart = () => finish(true);
+      utter.onerror = () => finish(false);
+
+      try { window.speechSynthesis.cancel(); } catch {}
+
+      setTimeout(() => {
+        try {
+          window.speechSynthesis.speak(utter);
+        } catch {
+          finish(false);
+        }
+      }, 120);
+
+      setTimeout(() => finish(false), timeoutMs);
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
 async function speakText(text, langCode) {
-  if (!isAutoReadEnabled()) return;
+  if (!isAutoReadEnabled()) return false;
+
   const value = normalizeText(text);
-  if (!value || value === "...") return;
+
+  if (!value || value === "...") return false;
 
   stopAudio();
 
-  const ok = await speakViaApi(value, langCode).catch(() => false);
-  if (ok) return;
+  await wait(80);
+
+  const apiOk = await speakViaApi(value, langCode).catch(() => false);
+
+  if (apiOk) return true;
 
   try {
     const speakCode = resolveSpeechLang(langCode);
 
     if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
       window.NativeTTS.speak(value, String(speakCode || "tr"));
-      return;
+      return true;
     }
   } catch {}
 
-  try {
-    if (window.speechSynthesis) {
-      const speakCode = resolveSpeechLang(langCode);
-      const utter = new SpeechSynthesisUtterance(value);
-      utter.lang = String(BCP[speakCode] || BCP.tr);
-      const voice = chooseWebVoice(speakCode);
-      if (voice) utter.voice = voice;
-      utter.rate = 0.95;
-      utter.pitch = 1;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utter);
+  return await speakWebOnce(value, langCode, 700);
+}
+
+function fallbackSpeakLang(langCode) {
+  return "tr";
+}
+
+function makeTtsReadable(text, langCode) {
+  const code = canon(langCode);
+  const value = String(text || "");
+
+  if (code === "ka") return latinizeGeorgian(value);
+  if (code === "hy") return latinizeArmenian(value);
+  if (["ce", "ab", "av", "ady", "kbd", "os", "lez"].includes(code)) {
+    return latinizeCyrillicKafkas(value);
+  }
+
+  return value;
+}
+
+function latinizeGeorgian(text) {
+  const map = {
+    "ა":"a","ბ":"b","გ":"g","დ":"d","ე":"e","ვ":"v","ზ":"z","თ":"t","ი":"i","კ":"k",
+    "ლ":"l","მ":"m","ნ":"n","ო":"o","პ":"p","ჟ":"zh","რ":"r","ს":"s","ტ":"t","უ":"u",
+    "ფ":"p","ქ":"k","ღ":"gh","ყ":"q","შ":"sh","ჩ":"ch","ც":"ts","ძ":"dz","წ":"ts",
+    "ჭ":"ch","ხ":"kh","ჯ":"j","ჰ":"h"
+  };
+
+  return String(text || "")
+    .split("")
+    .map((ch) => map[ch] ?? ch)
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function latinizeArmenian(text) {
+  const map = {
+    "Ա":"A","ա":"a","Բ":"B","բ":"b","Գ":"G","գ":"g","Դ":"D","դ":"d","Ե":"Ye","ե":"e",
+    "Զ":"Z","զ":"z","Է":"E","է":"e","Ը":"Y","ը":"y","Թ":"T","թ":"t","Ժ":"Zh","ժ":"zh",
+    "Ի":"I","ի":"i","Լ":"L","լ":"l","Խ":"Kh","խ":"kh","Ծ":"Ts","ծ":"ts","Կ":"K","կ":"k",
+    "Հ":"H","հ":"h","Ձ":"Dz","ձ":"dz","Ղ":"Gh","ղ":"gh","Ճ":"Ch","ճ":"ch","Մ":"M","մ":"m",
+    "Յ":"Y","յ":"y","Ն":"N","ն":"n","Շ":"Sh","շ":"sh","Ո":"Vo","ո":"o","Չ":"Ch","չ":"ch",
+    "Պ":"P","պ":"p","Ջ":"J","ջ":"j","Ռ":"R","ռ":"r","Ս":"S","ս":"s","Վ":"V","վ":"v",
+    "Տ":"T","տ":"t","Ր":"R","ր":"r","Ց":"Ts","ց":"ts","Ւ":"V","ւ":"v","Փ":"P","փ":"p",
+    "Ք":"K","ք":"k","Օ":"O","օ":"o","Ֆ":"F","ֆ":"f"
+  };
+
+  return String(text || "")
+    .split("")
+    .map((ch) => map[ch] ?? ch)
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function latinizeCyrillicKafkas(text) {
+  const map = {
+    "А":"A","а":"a","Ӏ":"","Б":"B","б":"b","В":"V","в":"v","Г":"G","г":"g","Гъ":"Gh","гъ":"gh",
+    "Д":"D","д":"d","Е":"E","е":"e","Ё":"Yo","ё":"yo","Ж":"Zh","ж":"zh","З":"Z","з":"z",
+    "И":"I","и":"i","Й":"Y","й":"y","К":"K","к":"k","Къ":"Q","къ":"q","Л":"L","л":"l",
+    "М":"M","м":"m","Н":"N","н":"n","О":"O","о":"o","П":"P","п":"p","ПӀ":"P","пӀ":"p",
+    "Р":"R","р":"r","С":"S","с":"s","Т":"T","т":"t","ТӀ":"T","тӀ":"t","У":"U","у":"u",
+    "Ф":"F","ф":"f","Х":"Kh","х":"kh","Хь":"H","хь":"h","Ц":"Ts","ц":"ts","ЦӀ":"Ts","цӀ":"ts",
+    "Ч":"Ch","ч":"ch","ЧӀ":"Ch","чӀ":"ch","Ш":"Sh","ш":"sh","Щ":"Sh","щ":"sh",
+    "Ъ":"","ъ":"","Ы":"I","ы":"i","Ь":"","ь":"","Э":"E","э":"e","Ю":"Yu","ю":"yu","Я":"Ya","я":"ya"
+  };
+
+  let value = String(text || "");
+
+  Object.keys(map)
+    .sort((a, b) => b.length - a.length)
+    .forEach((key) => {
+      value = value.split(key).join(map[key]);
+    });
+
+  return value.replace(/\s+/g, " ").trim();
+}
+
+async function speakWithFallback(visibleText, langCode) {
+  if (!isAutoReadEnabled()) return;
+
+  const value = normalizeText(visibleText);
+
+  if (!value || value === "...") return;
+
+  const code = canon(langCode);
+
+  if (["ka", "hy", "ce", "ab", "av", "ady", "kbd", "os", "lez"].includes(code)) {
+    const readable = normalizeText(makeTtsReadable(value, code));
+
+    if (readable && readable !== value) {
+      stopAudio();
+      await wait(120);
+      await speakText(readable, fallbackSpeakLang(code));
+      return;
     }
-  } catch {}
+  }
+
+  const originalOk = await speakText(value, langCode);
+
+  if (originalOk) return;
+
+  const readable = normalizeText(makeTtsReadable(value, langCode));
+
+  if (!readable || readable === value) return;
+
+  stopAudio();
+
+  await wait(120);
+
+  await speakText(readable, fallbackSpeakLang(langCode));
 }
 
 async function getAccessToken() {
-  const { data } = await supabase.auth.getSession();
-  return data?.session?.access_token || "";
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token || "";
+  } catch {
+    return "";
+  }
 }
 
-async function translateAI(text, from, to) {
+async function translateGoogle(text, from, to) {
   const token = await getAccessToken();
 
-  const r = await fetch(apiUrl("translate_ai"), {
+  const r = await fetch(apiUrl("translate"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -851,13 +835,14 @@ async function translateAI(text, from, to) {
       text,
       from_lang: from,
       to_lang: to,
-      mode: "cultural",
-      tone: "neutral",
-      style: "balanced"
+      mode: "normal",
+      use_ai: false,
+      google_only: true
     })
   });
 
   const j = await r.json().catch(() => null);
+
   const out =
     String(j?.translated || "").trim() ||
     String(j?.translation || "").trim() ||
@@ -875,6 +860,7 @@ function removeLoadingBubble(side) {
     state.loadingTopRow.remove();
     state.loadingTopRow = null;
   }
+
   if (side === "bot" && state.loadingBotRow) {
     state.loadingBotRow.remove();
     state.loadingBotRow = null;
@@ -883,7 +869,9 @@ function removeLoadingBubble(side) {
 
 function showLoadingBubble(side) {
   removeLoadingBubble(side);
+
   const row = addBubble(side, "me", "Çevriliyor...", { latest: true });
+
   if (side === "top") state.loadingTopRow = row;
   else state.loadingBotRow = row;
 }
@@ -892,34 +880,25 @@ async function runTranslateText(fromSide, text) {
   const sourceSide = fromSide;
   const targetSide = fromSide === "top" ? "bot" : "top";
   const cleanText = normalizeText(text);
+
   if (!cleanText) return;
 
   document.body.classList.remove("is-ready", "is-error");
   document.body.classList.add("is-translating");
+
   pointOrbTo(fromSide);
 
   clearLatest(sourceSide);
   clearLatest(targetSide);
 
-  if (sourceSide === "top") {
-    addBubble("top", "me", cleanText, { latest: true });
-    showLoadingBubble("bot");
-  } else {
-    addBubble("bot", "me", cleanText, { latest: true });
-    showLoadingBubble("top");
-  }
+  addBubble(sourceSide, "me", cleanText, { latest: true });
+  showLoadingBubble(targetSide);
 
   try {
-    let translated = "";
-    let speakLang = "tr";
-
-    if (fromSide === "top") {
-      translated = await translateAI(cleanText, currentKafkas().code, "tr");
-      speakLang = "tr";
-    } else {
-      translated = await translateAI(cleanText, "tr", currentKafkas().code);
-      speakLang = currentKafkas().code;
-    }
+    const fromLang = langForSide(sourceSide);
+    const toLang = langForSide(targetSide);
+    const translated = await translateGoogle(cleanText, fromLang, toLang);
+    const speakLang = toLang;
 
     removeLoadingBubble(targetSide);
 
@@ -930,7 +909,7 @@ async function runTranslateText(fromSide, text) {
       speakLang
     });
 
-    await speakText(translated, speakLang);
+    await speakWithFallback(translated, speakLang);
 
     document.body.classList.remove("is-translating", "is-error");
     document.body.classList.add("is-ready");
@@ -943,6 +922,7 @@ async function runTranslateText(fromSide, text) {
 
     document.body.classList.remove("is-translating");
     document.body.classList.add("is-error");
+
     toast(`Çeviri hatası: ${e?.message || "bilinmeyen hata"}`);
 
     setTimeout(() => {
@@ -952,21 +932,6 @@ async function runTranslateText(fromSide, text) {
   }
 }
 
-async function sendTyped(side) {
-  const input = side === "top" ? UI.topInput : UI.botInput;
-  if (!input) return;
-
-  const text = normalizeText(input.value);
-  if (!text) return;
-
-  input.value = "";
-  autoResize(input);
-  syncComposerButtons();
-
-  toggleKeyboard(side, false);
-  await runTranslateText(side, text);
-}
-
 function extractStableRecognitionText(results) {
   let latestFinal = "";
   let latestInterim = "";
@@ -974,9 +939,11 @@ function extractStableRecognitionText(results) {
   for (let i = 0; i < results.length; i++) {
     const piece = normalizeText(results[i]?.[0]?.transcript || "");
     if (!piece) continue;
+
     if (results[i].isFinal) latestFinal = piece;
     else latestInterim = piece;
   }
+
   return normalizeText(latestFinal || latestInterim);
 }
 
@@ -1004,11 +971,13 @@ function setListening(side, on) {
     UI.botComposer?.classList.toggle("listening", !!on);
     UI.botMic?.classList.toggle("listening", !!on);
   }
+
   syncComposerButtons();
 }
 
 function startRecognition(side) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
   if (!SR) {
     toast("Bu cihazda sesli giriş desteklenmiyor");
     return;
@@ -1019,31 +988,29 @@ function startRecognition(side) {
     return;
   }
 
-  const langCode = side === "top" ? currentKafkas().code : "tr";
+  const langCode = langForSide(side);
   const listenCode = resolveSpeechLang(langCode);
 
   const recog = new SR();
-  recog.lang = String(BCP[listenCode] || BCP.tr);
+
+  recog.lang = String(BCP[listenCode] || BCP[langCode] || listenCode || BCP.tr);
   recog.interimResults = true;
   recog.continuous = false;
   recog.maxAlternatives = 1;
 
-  const inputEl = side === "top" ? UI.topInput : UI.botInput;
-
   recog.onstart = () => {
     pointOrbTo(side);
     setListening(side, true);
+
     if (side === "top") state.topLastSpeech = "";
     else state.botLastSpeech = "";
   };
 
   recog.onresult = (e) => {
     const stableText = extractStableRecognitionText(e.results);
-    inputEl.value = stableText;
+
     if (side === "top") state.topLastSpeech = stableText;
     else state.botLastSpeech = stableText;
-    autoResize(inputEl);
-    syncComposerButtons();
   };
 
   recog.onerror = () => {
@@ -1053,12 +1020,10 @@ function startRecognition(side) {
 
   recog.onend = async () => {
     const finalText = normalizeText(side === "top" ? state.topLastSpeech : state.botLastSpeech);
+
     stopRecognition(side);
 
     if (finalText) {
-      inputEl.value = "";
-      autoResize(inputEl);
-      syncComposerButtons();
       await runTranslateText(side, finalText);
     }
   };
@@ -1070,6 +1035,7 @@ function startRecognition(side) {
     recog.start();
   } catch {
     stopRecognition(side);
+    toast("Mikrofon başlatılamadı");
   }
 }
 
@@ -1077,48 +1043,38 @@ function prepareInputs() {
   [UI.topInput, UI.botInput].forEach((input) => {
     if (!input) return;
 
+    input.value = "";
     input.readOnly = true;
-    input.disabled = false;
+    input.disabled = true;
+
     input.setAttribute("inputmode", "none");
     input.setAttribute("autocomplete", "off");
     input.setAttribute("autocorrect", "off");
     input.setAttribute("autocapitalize", "off");
     input.setAttribute("spellcheck", "false");
-
-    input.addEventListener("pointerdown", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const side = input === UI.topInput ? "top" : "bot";
-      await unlockKeyboardAudio();
-      toggleKeyboard(side, true);
-    });
-
-    input.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const side = input === UI.topInput ? "top" : "bot";
-      await unlockKeyboardAudio();
-      toggleKeyboard(side, true);
-    });
-
-    input.addEventListener("focus", () => {
-      try { input.blur(); } catch {}
-    });
-
-    input.addEventListener("keydown", async (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        const side = input === UI.topInput ? "top" : "bot";
-        await sendTyped(side);
-      }
-    });
+    input.setAttribute("aria-hidden", "true");
+    input.setAttribute("tabindex", "-1");
   });
+
+  UI.topKeyboardWrap?.classList.remove("show");
+  UI.botKeyboardWrap?.classList.remove("show");
+
+  UI.topKeyboardWrap?.setAttribute("aria-hidden", "true");
+  UI.botKeyboardWrap?.setAttribute("aria-hidden", "true");
+
+  UI.topSend?.classList.add("hidden");
+  UI.botSend?.classList.add("hidden");
 }
 
 function bindEvents() {
   UI.topLangBtn?.addEventListener("click", () => {
-    renderTopLangList();
+    renderLangLists();
     UI.popTop?.classList.add("show");
+  });
+
+  UI.botLangBtn?.addEventListener("click", () => {
+    renderLangLists();
+    UI.popBot?.classList.add("show");
   });
 
   UI.closeTop?.addEventListener("click", () => UI.popTop?.classList.remove("show"));
@@ -1126,28 +1082,23 @@ function bindEvents() {
     if (e.target === UI.popTop) UI.popTop.classList.remove("show");
   });
 
-  UI.topSettingsMini?.addEventListener("click", () => {
-    location.href = "/pages/premium_voice_settings.html?from=kafkaslarin_dili";
-  });
-
-  UI.botSettingsMini?.addEventListener("click", () => {
-    location.href = "/pages/premium_voice_settings.html?from=kafkaslarin_dili";
-  });
-
-  UI.topInput?.addEventListener("input", () => {
-    autoResize(UI.topInput);
-    syncComposerButtons();
-  });
-
-  UI.botInput?.addEventListener("input", () => {
-    autoResize(UI.botInput);
-    syncComposerButtons();
+  UI.closeBot?.addEventListener("click", () => UI.popBot?.classList.remove("show"));
+  UI.popBot?.addEventListener("click", (e) => {
+    if (e.target === UI.popBot) UI.popBot.classList.remove("show");
   });
 
   UI.topMic?.addEventListener("click", () => startRecognition("top"));
   UI.botMic?.addEventListener("click", () => startRecognition("bot"));
-  UI.topSend?.addEventListener("click", () => sendTyped("top"));
-  UI.botSend?.addEventListener("click", () => sendTyped("bot"));
+
+  UI.topSend?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  UI.botSend?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
 
   UI.homeLink?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1161,19 +1112,23 @@ function bindEvents() {
   UI.clearBtn?.addEventListener("click", () => {
     if (UI.topInput) UI.topInput.value = "";
     if (UI.botInput) UI.botInput.value = "";
-    autoResize(UI.topInput);
-    autoResize(UI.botInput);
+
     stopAudio();
+
     stopRecognition("top");
     stopRecognition("bot");
+
     clearBubbles();
+
     UI.topKeyboardWrap?.classList.remove("show");
     UI.botKeyboardWrap?.classList.remove("show");
+
     syncComposerButtons();
-    document.body.classList.remove("is-translating", "is-error");
+
+    document.body.classList.remove("is-translating", "is-error", "is-listening");
     document.body.classList.add("is-ready");
+
     pointOrbTo("bot");
-    hideAltMenu();
   });
 
   UI.genericCloseBtn?.addEventListener("click", closeModal);
@@ -1182,27 +1137,27 @@ function bindEvents() {
   });
 
   document.addEventListener("click", (e) => {
-    const insidePop = UI.popTop && UI.popTop.contains(e.target);
-    const isLangBtn = e.target?.closest?.("#topLangBtn");
-    const isInput = e.target?.closest?.("#topInput,#botInput");
-    const isKb = e.target?.closest?.("#topKeyboardWrap,#botKeyboardWrap");
-    const isAlt = e.target?.closest?.(".alt-pop");
+    const insidePop =
+      (UI.popTop && UI.popTop.contains(e.target)) ||
+      (UI.popBot && UI.popBot.contains(e.target));
 
-    if (!insidePop && !isLangBtn) UI.popTop?.classList.remove("show");
-    if (!isInput && !isKb && !isAlt) {
-      UI.topKeyboardWrap?.classList.remove("show");
-      UI.botKeyboardWrap?.classList.remove("show");
-      hideAltMenu();
+    const isLangBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+
+    if (!insidePop && !isLangBtn) {
+      UI.popTop?.classList.remove("show");
+      UI.popBot?.classList.remove("show");
     }
   }, { capture: true });
 }
 
 async function requireLogin() {
   const { data: { session } = {} } = await supabase.auth.getSession();
+
   if (!session?.user) {
     location.replace("/pages/login.html");
     return false;
   }
+
   return true;
 }
 
@@ -1210,12 +1165,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!(await requireLogin())) return;
 
   prepareInputs();
+
   updateLangButtons();
-  renderTopLangList();
-  renderKeyboard(UI.topKeyboard, "top");
-  renderKeyboard(UI.botKeyboard, "bot");
+  renderLangLists();
+
+  await loadTopLangPool();
+
   bindEvents();
   syncComposerButtons();
+
   document.body.classList.add("is-ready");
+
   pointOrbTo("bot");
 });
