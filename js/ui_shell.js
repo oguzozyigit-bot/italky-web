@@ -593,6 +593,25 @@ function setGuestMenuMode(isGuest) {
   }
 }
 
+function removePublicEmeShortcuts() {
+  const selectors = [
+    'a[href*="support_eme"]',
+    'button[data-href*="support_eme"]',
+    '[onclick*="support_eme"]',
+    '.eme-top-btn',
+    '.eme-header-avatar',
+    '.eme-mini-btn',
+    '.eme-mini',
+    '.ios-eme-btn'
+  ];
+
+  selectors.forEach((selector) => {
+    document.querySelectorAll(selector).forEach((node) => {
+      if (!node.closest(".eme-support-page")) node.remove();
+    });
+  });
+}
+
 export function mountShell(options = {}) {
   document.documentElement.style.backgroundColor = "#05070f";
 
@@ -619,6 +638,7 @@ export function mountShell(options = {}) {
   }
 
   if (document.getElementById("italkyAppShell")) {
+    removePublicEmeShortcuts();
     finishMount(options);
     return;
   }
@@ -645,6 +665,7 @@ export function mountShell(options = {}) {
   });
 
   bindMenu(options);
+  removePublicEmeShortcuts();
   finishMount(options);
 
   if (!__shellResizeBound) {
@@ -668,6 +689,7 @@ function finishMount(options) {
     hydrateFromCache();
     syncFooterHeight();
     hydrateNativeLangPill();
+    removePublicEmeShortcuts();
 
     if (isPublicPage) {
       try {

@@ -1032,13 +1032,36 @@ body.home-ready #pageContent{
 </script>
 
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
+  import { mountShell } from "/js/ui_shell.js?v=no-public-eme-shortcut-20260605";
   import { initGlobalAccess } from "/js/global_access.js?v=ios-iap-20260524-2";
   import { supabase } from "/js/supabase_client.js";
 
   const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
 
   mountShell({ scroll: "auto" });
+
+  function removePublicEmeShortcuts() {
+    const selectors = [
+      'a[href*="support_eme"]',
+      'button[data-href*="support_eme"]',
+      '[onclick*="support_eme"]',
+      '.eme-top-btn',
+      '.eme-header-avatar',
+      '.eme-mini-btn',
+      '.eme-mini',
+      '.ios-eme-btn'
+    ];
+
+    selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((node) => {
+        if (!node.closest(".eme-support-page")) node.remove();
+      });
+    });
+  }
+
+  removePublicEmeShortcuts();
+  setTimeout(removePublicEmeShortcuts, 0);
+  setTimeout(removePublicEmeShortcuts, 600);
 
   function getActiveUntil(access = {}) {
     const dates = [
