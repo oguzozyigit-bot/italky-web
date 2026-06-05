@@ -123,6 +123,7 @@ function applySiteLang(lang) {
   document.documentElement.lang = finalLang;
   patchTwoPhoneHomeCopy();
   patchHomeGreeting();
+  installTuranHomeCard();
   removeMultiChatHomeCard();
   patchMultiChatDemoComposer();
   emitSiteLangReady(finalLang);
@@ -227,6 +228,52 @@ function removeMultiChatHomeCard() {
   if (!isHomePage()) return;
   document.getElementById("multiChatCard")?.remove();
   document.getElementById("italkyMultiChatHomeCardStyle")?.remove();
+}
+
+function installTuranHomeCard() {
+  if (!isHomePage()) return;
+  const mezo = document.getElementById("mezoCard");
+  if (!mezo || document.getElementById("turanCard")) return;
+
+  if (!document.getElementById("italkyTuranHomeCardStyle")) {
+    const style = document.createElement("style");
+    style.id = "italkyTuranHomeCardStyle";
+    style.textContent = `
+      .turan-card{
+        background:
+          radial-gradient(circle at 14% 45%, rgba(186,230,253,.42), transparent 30%),
+          radial-gradient(circle at 92% 14%, rgba(255,255,255,.32), transparent 28%),
+          radial-gradient(circle at 68% 105%, rgba(30,64,175,.18), transparent 34%),
+          linear-gradient(90deg, #e0f2fe 0%, #38bdf8 42%, #0f172a 100%)!important;
+        color:#fff!important;
+      }
+      .turan-card .wide-desc{color:rgba(255,255,255,.88)!important;}
+      .turan-card .wide-icon{background:rgba(15,23,42,.20)!important;border-color:rgba(255,255,255,.28)!important;}
+    `;
+    document.head.appendChild(style);
+  }
+
+  const card = document.createElement("a");
+  card.id = "turanCard";
+  card.className = "wide-card turan-card";
+  card.href = "/pages/turan_dilleri.html";
+  card.innerHTML = `
+    <div class="wide-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path><path d="M8 5v14"></path><path d="M16 5v14"></path></svg>
+    </div>
+    <div class="wide-body">
+      <h2 class="wide-title">Turan Dilleri</h2>
+      <p class="wide-desc">Azerbaycan, Kazak, Kırgız, Özbek, Türkmen, Uygur, Tatar ve diğer Türk dilleri.</p>
+    </div>
+    <div class="arrow-chip"></div>
+  `;
+  card.addEventListener("click", (event) => {
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    document.body.dataset.moduleLoading = "Turan Dilleri hazırlanıyor...";
+    document.body.classList.add("module-leaving");
+  });
+
+  mezo.insertAdjacentElement("afterend", card);
 }
 
 function installMultiChatComposerStyle() {
@@ -418,6 +465,7 @@ async function detectSiteLang() {
 export async function resolveSiteLanguage() {
   installUiSafetyStyle();
   installHomePolishStyle();
+  installTuranHomeCard();
   installMultiChatComposerStyle();
   patchTwoPhoneHomeCopy();
   patchHomeGreeting();
