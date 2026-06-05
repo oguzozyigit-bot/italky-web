@@ -156,6 +156,8 @@ function boot() {
   moveHandsFreeToBottomMic();
   updateConnectButtonCopy();
   installTwoPhoneBluetoothMode({ homeHref: "/pages/home.html" });
+  document.documentElement.classList.remove("two-phone-booting");
+  document.documentElement.classList.add("two-phone-ready");
 }
 
 if (document.readyState === "loading") {

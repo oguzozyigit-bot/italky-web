@@ -7,6 +7,8 @@ const MY_LANG_KEY = "italky_bt_my_lang_v1";
 const ROOM_KEY = "italky_two_phone_room_code_v1";
 const HOME_HREF = "/pages/home.html";
 const $ = (id) => document.getElementById(id);
+const CONNECT_FAILED_MESSAGE = "Bağlantı kurulamadı. Kodu ve internet bağlantınızı kontrol edip tekrar deneyin.";
+const CONNECT_ERROR_GRACE_MS = 2800;
 
 let installed = false;
 let roomConnected = false;
@@ -25,6 +27,8 @@ let roomCode = "";
 let roomRole = "";
 let roomReady = false;
 let waitingForPeer = false;
+let connectAttemptId = 0;
+let pendingConnectErrorTimer = null;
 let peerId = localStorage.getItem("italky_two_phone_peer_id_v1") || "";
 
 if (!peerId) {
@@ -240,6 +244,19 @@ function setGateStatus(message, error = false) {
   el.classList.toggle("error", !!error);
 }
 
+function clearPendingConnectError() {
+  clearTimeout(pendingConnectErrorTimer);
+  pendingConnectErrorTimer = null;
+}
+
+function scheduleConnectError(attemptId, message = CONNECT_FAILED_MESSAGE) {
+  clearPendingConnectError();
+  pendingConnectErrorTimer = setTimeout(() => {
+    if (attemptId !== connectAttemptId || roomReady || roomConnected || leavingPage) return;
+    setGateStatus(message, true);
+  }, CONNECT_ERROR_GRACE_MS);
+}
+
 function showHostRoom() {
   const code = makeCode();
   roomCode = code;
@@ -288,6 +305,7 @@ function showJoinRoom() {
 }
 
 function closeRoomSocket() {
+  clearPendingConnectError();
   try { roomSocket?.close(); } catch {}
   roomSocket = null;
   roomReady = false;
@@ -297,11 +315,12 @@ function closeRoomSocket() {
 function connectRoom(role, rawCode) {
   const code = normalizeCode(rawCode);
   if (code.length !== 6) {
-    setGateStatus("Bağlantı kurulamadı. Kodu kontrol edip tekrar deneyin.", true);
+    setGateStatus(CONNECT_FAILED_MESSAGE, true);
     return;
   }
 
   closeRoomSocket();
+  const attemptId = ++connectAttemptId;
   roomCode = code;
   roomRole = role;
   roomReady = false;
@@ -322,13 +341,13 @@ function connectRoom(role, rawCode) {
     handleRoomPayload(data);
   };
 
-  ws.onerror = () => setGateStatus("Bağlantı kurulamadı. Kodu kontrol edip tekrar deneyin.", true);
+  ws.onerror = () => scheduleConnectError(attemptId);
   ws.onclose = () => {
     if (leavingPage) return;
     const wasConnected = roomConnected;
     setConnected(false, false);
     if (wasConnected) showRoomGate("Bağlantı kapandı. Tekrar bağlanabilir veya ana sayfaya dönebilirsiniz.");
-    else if (!roomReady) setGateStatus("Bağlantı kurulamadı. Kodu kontrol edip tekrar deneyin.", true);
+    else if (!roomReady) scheduleConnectError(attemptId);
   };
 }
 
@@ -349,13 +368,14 @@ function handleRoomPayload(data) {
 
   if (type === "room_joined") {
     roomReady = true;
+    clearPendingConnectError();
     enterConversation();
     sendLangState();
     return;
   }
 
   if (type === "room_not_found") {
-    setGateStatus("Bağlantı kurulamadı. Kodu kontrol edip tekrar deneyin.", true);
+    scheduleConnectError(connectAttemptId);
     return;
   }
 
@@ -395,6 +415,7 @@ function handleRoomPayload(data) {
 function enterConversation() {
   waitingForPeer = false;
   roomReady = true;
+  clearPendingConnectError();
   hideRoomGate();
   setConnected(true, true);
   clearPanel("top");

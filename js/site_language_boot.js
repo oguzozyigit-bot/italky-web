@@ -137,9 +137,9 @@ function patchTwoPhoneHomeCopy() {
   const kicker = card.querySelector(".card-kicker");
   const title = card.querySelector(".card-title");
   const desc = card.querySelector(".card-desc");
-  if (kicker) kicker.textContent = "Kod ile Bağlan";
+  if (kicker) kicker.textContent = "LİSANS";
   if (title) title.textContent = "İki Telefon";
-  if (desc) desc.textContent = "Bir telefonda görüşme başlat, diğerinde kodu girerek katıl.";
+  if (desc) desc.textContent = "Kodu al, diğer telefonda gir. İki cihaz arasında canlı çeviri yap.";
 
   const icon = card.querySelector(".card-icon");
   if (icon) {

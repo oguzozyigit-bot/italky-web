@@ -9,6 +9,34 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
 
   <style>
+    html.two-phone-booting body{
+      background:#020617;
+    }
+    html.two-phone-booting body::before{
+      content:"İki Telefon hazırlanıyor...";
+      position:fixed;
+      inset:0;
+      z-index:2147483599;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      background:radial-gradient(circle at 50% 0%,rgba(59,130,246,.24),transparent 42%),linear-gradient(180deg,#020617,#050508);
+      color:#dbeafe;
+      font-family:Outfit,sans-serif;
+      font-size:15px;
+      font-weight:1000;
+      letter-spacing:.2px;
+      text-align:center;
+    }
+    html.two-phone-booting .container{
+      visibility:hidden;
+      opacity:0;
+    }
+    html.two-phone-ready body::before{
+      display:none;
+    }
+
     :root{
       --ai-gradient: linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
       --bg:#050508;
@@ -1002,7 +1030,7 @@
     <div class="center-hub" id="centerHub">
       <a class="nav-btn" id="homeLink" href="/pages/home.html"><span id="homeText" class="label-rotate">HOME</span></a>
 
-      <button id="btToggleBtn" class="hub-btn premium-bt-only" type="button" aria-label="Bluetooth bağlan">
+      <button id="btToggleBtn" class="hub-btn premium-bt-only" type="button" aria-label="Kod ile bağlan" title="Kod ile bağlan">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M7 7l10 10-5 5V2l5 5-10 10"></path>
         </svg>
@@ -1111,6 +1139,16 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
+  <script>
+    (function(){
+      try {
+        var mode = new URLSearchParams(location.search || "").get("mode");
+        if (mode === "two-phone" || mode === "bluetooth") {
+          document.documentElement.classList.add("two-phone-booting");
+        }
+      } catch(e) {}
+    })();
+  </script>
   <script type="module" src="/js/facetoface_page.js?v=F2F_PAGE_V123"></script>
   <script type="module" src="/js/facetoface_bluetooth_premium.js?v=F2F_BT_PREMIUM_V1"></script>
   <script type="module">

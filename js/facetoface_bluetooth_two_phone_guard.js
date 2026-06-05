@@ -5,8 +5,8 @@ import { installTwoPhoneBluetoothMode as installBaseTwoPhoneMode } from "/js/fac
 
 const PEER_KEY = "italky_two_phone_peer_id_v1";
 const ROOM_FULL_MESSAGE = "Bu oturum yalnızca 2 cihaz destekler.";
-const CONNECT_FAILED_MESSAGE = "Bağlantı kurulamadı. Bluetooth eşleşmesini kontrol edip tekrar deneyin.";
-const RETRY_DELAYS = [0, 800, 1800];
+const CONNECT_FAILED_MESSAGE = "Bağlantı kurulamadı. Kodu ve internet bağlantınızı kontrol edip tekrar deneyin.";
+const RETRY_DELAYS = [0, 900, 1800, 2800];
 const WS_ROOM_PATTERN = /\/api\/f2f\/ws\//;
 const HOME_HREF = "/pages/home.html";
 
@@ -461,7 +461,7 @@ function installUiGuards(homeHref = HOME_HREF) {
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
-      toast(connectionState === "full" ? ROOM_FULL_MESSAGE : "Önce Bluetooth ile diğer telefonu bağlayın.");
+      toast(connectionState === "full" ? ROOM_FULL_MESSAGE : "Önce kod ile diğer telefonu bağlayın.");
       btLog("mic blocked", { state: connectionState, helloAccepted });
       return;
     }

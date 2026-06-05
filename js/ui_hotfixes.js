@@ -48,7 +48,7 @@ function patchTwoPhoneCopy() {
       if (kicker) kicker.textContent = "LİSANS";
       if (title) title.textContent = "İki Telefon";
       if (desc) desc.textContent = "Kodu al, diğer telefonda gir. İki cihaz arasında canlı çeviri yap.";
-      card.setAttribute("aria-label", "İki Telefon - Kodla bağlan");
+      card.setAttribute("aria-label", "İki Telefon - Kod ile bağlan");
     }
 
     document.querySelectorAll("body *").forEach((el) => {
