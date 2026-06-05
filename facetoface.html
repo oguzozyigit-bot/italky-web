@@ -9,11 +9,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
 
   <style>
-    html.two-phone-booting body{
+    html.two-phone-booting body,
+    html.guide-booting body{
       background:#020617;
     }
-    html.two-phone-booting body::before{
-      content:"İki Telefon hazırlanıyor...";
+    html.two-phone-booting body::before,
+    html.guide-booting body::before{
       position:fixed;
       inset:0;
       z-index:2147483599;
@@ -29,7 +30,14 @@
       letter-spacing:.2px;
       text-align:center;
     }
-    html.two-phone-booting .container{
+    html.two-phone-booting body::before{
+      content:"İki Telefon hazırlanıyor...";
+    }
+    html.guide-booting body::before{
+      content:"Gezi & Konferans hazırlanıyor...";
+    }
+    html.two-phone-booting .container,
+    html.guide-booting .container{
       visibility:hidden;
       opacity:0;
     }
@@ -1145,6 +1153,8 @@
         var mode = new URLSearchParams(location.search || "").get("mode");
         if (mode === "two-phone" || mode === "bluetooth") {
           document.documentElement.classList.add("two-phone-booting");
+        } else if (mode === "guide" || mode === "conference" || mode === "tour") {
+          document.documentElement.classList.add("guide-booting");
         }
       } catch(e) {}
     })();

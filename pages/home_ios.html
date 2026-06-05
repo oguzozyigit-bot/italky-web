@@ -3,44 +3,224 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-  <title>italkyAI • iOS Home</title>
+  <title>italkyAI - iOS Home</title>
   <meta name="theme-color" content="#0b1020" />
   <style>
-    :root{--txt:rgba(255,255,255,.96);--muted:rgba(255,255,255,.66);--line:rgba(255,255,255,.14);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;min-height:100%;color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#070b16}body{min-height:100dvh;overflow:hidden;background:radial-gradient(circle at 18% 0%,rgba(56,189,248,.16),transparent 30%),radial-gradient(circle at 86% 12%,rgba(168,85,247,.16),transparent 32%),radial-gradient(circle at 50% 100%,rgba(249,115,22,.10),transparent 34%),linear-gradient(180deg,#0b1020 0%,#090b16 48%,#05070d 100%)}body:not(.home-ready){visibility:hidden}.page{width:100%;height:100dvh;overflow-y:auto;padding:calc(14px + var(--safe-top)) 14px calc(22px + var(--safe-bottom));-webkit-overflow-scrolling:touch}.shell{width:min(100%,760px);min-height:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px}.hero{padding:4px 0 2px;text-align:center}.holo{width:138px;height:138px;margin:0 auto 7px;position:relative;display:grid;place-items:center}.glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(103,232,249,.25),transparent 65%);filter:blur(12px)}.planet{position:relative;width:88px;height:88px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 28% 24%,rgba(255,255,255,.20),transparent 24%),linear-gradient(145deg,#111827 0%,#070a12 50%,#030406 100%);box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),0 0 36px rgba(103,232,249,.22)}.planet span{font-weight:1000;font-size:18px}.brand{font-size:34px;font-weight:1000;letter-spacing:-1px;line-height:1}.brand span{background:linear-gradient(135deg,#22d3ee,#818cf8 58%,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.tag{margin-top:4px;font-size:11px;letter-spacing:2px;font-weight:900;color:rgba(255,255,255,.65)}.profile{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.035));box-shadow:0 18px 42px rgba(0,0,0,.28)}.avatar{flex:0 0 46px;width:46px;height:46px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(135deg,#22d3ee,#818cf8 58%,#ec4899);font-size:20px;font-weight:1000}.profile h1{margin:0;font-size:18px;line-height:1.15}.profile p{margin:4px 0 0;color:var(--muted);font-size:12px;font-weight:750}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tile{min-height:104px;padding:14px;border-radius:22px;border:1px solid rgba(255,255,255,.11);background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));color:#fff;text-decoration:none;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;flex-direction:column;justify-content:space-between}.tile strong{font-size:16px;line-height:1.15}.tile span{font-size:12px;line-height:1.35;color:var(--muted);font-weight:750}.icon{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.14);font-weight:1000}.wide{grid-column:1 / -1;min-height:94px}.footer{margin:auto 0 0;text-align:center;color:rgba(255,255,255,.38);font-size:11px;font-weight:850;letter-spacing:1.1px;padding-top:10px}@media(max-width:430px){.grid{gap:9px}.tile{min-height:100px;padding:13px;border-radius:20px}.tile strong{font-size:15px}.wide{min-height:88px}.brand{font-size:32px}}
+    :root{
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.66);
+      --line:rgba(255,255,255,.14);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --safe-top:env(safe-area-inset-top,0px);
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+
+    html,
+    body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      color:var(--txt);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+      background:#070b16;
+    }
+
+    body{
+      min-height:100dvh;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 18% 0%,rgba(56,189,248,.16),transparent 30%),
+        radial-gradient(circle at 86% 12%,rgba(168,85,247,.16),transparent 32%),
+        radial-gradient(circle at 50% 100%,rgba(20,184,166,.10),transparent 34%),
+        linear-gradient(180deg,#0b1020 0%,#090b16 48%,#05070d 100%);
+    }
+
+    body:not(.home-ready){visibility:hidden}
+
+    body.module-leaving{
+      visibility:visible;
+      background:#020617;
+    }
+
+    body.module-leaving::before{
+      content:attr(data-module-loading);
+      position:fixed;
+      inset:0;
+      z-index:2147483600;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      background:
+        radial-gradient(circle at 50% 0%,rgba(56,189,248,.20),transparent 42%),
+        radial-gradient(circle at 82% 100%,rgba(99,102,241,.14),transparent 36%),
+        linear-gradient(180deg,#020617,#05070d 58%,#020617);
+      color:#dbeafe;
+      font-size:15px;
+      font-weight:1000;
+      text-align:center;
+    }
+
+    .page{
+      width:100%;
+      height:100dvh;
+      overflow-y:auto;
+      padding:calc(14px + var(--safe-top)) 14px calc(22px + var(--safe-bottom));
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .page::-webkit-scrollbar{display:none}
+
+    .shell{
+      width:min(100%,760px);
+      min-height:100%;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .hero{padding:4px 0 2px;text-align:center}
+    .holo{width:138px;height:138px;margin:0 auto 7px;position:relative;display:grid;place-items:center}
+    .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(103,232,249,.25),transparent 65%);filter:blur(12px)}
+    .planet{position:relative;width:88px;height:88px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 28% 24%,rgba(255,255,255,.20),transparent 24%),linear-gradient(145deg,#111827 0%,#070a12 50%,#030406 100%);box-shadow:inset -10px -12px 20px rgba(0,0,0,.72),0 0 36px rgba(103,232,249,.22)}
+    .planet span{font-weight:1000;font-size:18px}
+    .brand{font-size:34px;font-weight:1000;letter-spacing:-1px;line-height:1}
+    .brand span{background:linear-gradient(135deg,#22d3ee,#818cf8 58%,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .tag{margin-top:4px;font-size:11px;letter-spacing:2px;font-weight:900;color:rgba(255,255,255,.65)}
+
+    .profile{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:13px 14px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.035));
+      box-shadow:0 18px 42px rgba(0,0,0,.28);
+    }
+    .avatar{flex:0 0 46px;width:46px;height:46px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(135deg,#22d3ee,#818cf8 58%,#ec4899);font-size:20px;font-weight:1000}
+    .profile h1{margin:0;font-size:18px;line-height:1.15}
+    .profile p{margin:4px 0 0;color:var(--muted);font-size:12px;font-weight:750}
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .tile{
+      min-height:112px;
+      padding:14px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.11);
+      color:#fff;
+      text-decoration:none;
+      box-shadow:0 14px 32px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.05);
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      position:relative;
+      overflow:hidden;
+    }
+    .tile::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,.08),transparent 42%,rgba(255,255,255,.035));
+      pointer-events:none;
+    }
+    .tile>*{position:relative;z-index:2}
+    .tile strong{font-size:16px;line-height:1.15}
+    .tile span{font-size:12px;line-height:1.35;color:var(--muted);font-weight:750}
+    .icon{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);font-weight:1000}
+    .wide{grid-column:1 / -1;min-height:98px}
+
+    .tile-face{background:radial-gradient(circle at 18% 8%,rgba(103,232,249,.38),transparent 38%),radial-gradient(circle at 90% 85%,rgba(236,72,153,.16),transparent 30%),linear-gradient(145deg,#32146f 0%,#27308a 48%,#0f5fbf 100%)}
+    .tile-two-phone{background:radial-gradient(circle at 18% 8%,rgba(125,211,252,.34),transparent 34%),radial-gradient(circle at 86% 82%,rgba(236,72,153,.18),transparent 32%),linear-gradient(145deg,#0f3b63 0%,#2563eb 48%,#7c3aed 100%)}
+    .tile-guide{background:radial-gradient(circle at 15% 45%,rgba(125,211,252,.28),transparent 30%),radial-gradient(circle at 92% 14%,rgba(56,189,248,.22),transparent 30%),radial-gradient(circle at 68% 105%,rgba(255,255,255,.08),transparent 34%),linear-gradient(90deg,#0b4f6c 0%,#0f6f8f 44%,#1495b6 100%)}
+    .tile-offline{background:radial-gradient(circle at 14% 50%,rgba(45,212,191,.27),transparent 28%),radial-gradient(circle at 88% 15%,rgba(59,130,246,.17),transparent 24%),linear-gradient(90deg,#064e3b 0%,#0f766e 48%,#2563eb 100%)}
+    .tile-text{background:radial-gradient(circle at 84% 12%,rgba(255,255,255,.10),transparent 27%),radial-gradient(circle at 20% 70%,rgba(236,72,153,.25),transparent 28%),linear-gradient(90deg,#831843 0%,#be185d 36%,#7c3aed 74%,#3730a3 100%)}
+    .tile-fun{background:radial-gradient(circle at 14% 50%,rgba(251,113,133,.24),transparent 28%),radial-gradient(circle at 90% 18%,rgba(168,85,247,.20),transparent 26%),linear-gradient(90deg,#701a75 0%,#9f1239 46%,#4338ca 100%)}
+    .tile-level{background:radial-gradient(circle at 12% 48%,rgba(34,197,94,.25),transparent 28%),radial-gradient(circle at 88% 18%,rgba(20,184,166,.18),transparent 26%),linear-gradient(90deg,#14532d 0%,#15803d 46%,#0f766e 100%)}
+
+    .footer{margin:auto 0 0;text-align:center;color:rgba(255,255,255,.38);font-size:11px;font-weight:850;letter-spacing:1.1px;padding-top:10px}
+
+    @media(max-width:430px){
+      .grid{gap:9px}
+      .tile{min-height:106px;padding:13px;border-radius:20px}
+      .tile strong{font-size:15px}
+      .wide{min-height:92px}
+      .brand{font-size:32px}
+    }
   </style>
 </head>
 <body>
   <main class="page">
     <div class="shell">
-      <section class="hero" aria-label="italkyAI"><div class="holo"><div class="glow"></div><div class="planet"><span>AI</span></div></div><div class="brand">italky<span>AI</span></div><div class="tag">BE FREE</div></section>
-      <section class="profile" aria-label="iOS premium hesabı"><div class="avatar"></div><div><h1>Apple Premium Üye</h1><p>App Store premium erişimi aktif</p></div></section>
+      <section class="hero" aria-label="italkyAI">
+        <div class="holo"><div class="glow"></div><div class="planet"><span>AI</span></div></div>
+        <div class="brand">italky<span>AI</span></div>
+        <div class="tag">BE FREE</div>
+      </section>
+
+      <section class="profile" aria-label="iOS premium hesabı">
+        <div class="avatar">AI</div>
+        <div><h1>Apple Premium Üye</h1><p>App Store premium erişimi aktif</p></div>
+      </section>
+
       <nav class="grid" aria-label="iOS premium menü">
-        <a class="tile wide" href="/facetoface.html?ios=1&premium=1"><div class="icon">↔</div><strong>FaceToFace</strong><span>Karşılıklı konuşma ve canlı çeviri</span></a>
-        <a class="tile" href="/pages/offline_languages.html?ios=1&premium=1"><div class="icon">↓</div><strong>Offline languages</strong><span>Dil paketlerini indir</span></a>
-        <a class="tile" href="/pages/text_translate.html?ios=1&premium=1"><div class="icon">T</div><strong>Text translate</strong><span>Yazı çevirisi</span></a>
-        <a class="tile" href="/pages/game_menu.html?ios=1&premium=1"><div class="icon">★</div><strong>Game menu</strong><span>Premium oyunlar</span></a>
-        <a class="tile" href="/pages/level_test_hub.html?ios=1&premium=1"><div class="icon">A</div><strong>Level test</strong><span>Seviye sınavları</span></a>
+        <a id="iosFaceCard" class="tile wide tile-face" href="/facetoface.html?ios=1&premium=1"><div class="icon">↔</div><strong>FaceToFace</strong><span>Karşılıklı konuşma ve canlı çeviri</span></a>
+        <a id="iosTwoPhoneCard" class="tile tile-two-phone" href="/facetoface.html?mode=two-phone&ios=1&premium=1"><div class="icon">⌁</div><strong>İki Telefon</strong><span>Kodla bağlan, iki cihaz arasında çevir</span></a>
+        <a id="iosGuideCard" class="tile tile-guide" href="/pages/conference.html?ios=1&premium=1"><div class="icon">☊</div><strong>Gezi & Konferans</strong><span>Tek konuşmacı, herkes kendi dilinde dinler</span></a>
+        <a id="iosOfflineCard" class="tile tile-offline" href="/pages/offline_languages.html?ios=1&premium=1"><div class="icon">↓</div><strong>Offline languages</strong><span>Dil paketlerini indir</span></a>
+        <a id="iosTextCard" class="tile tile-text" href="/pages/text_translate.html?ios=1&premium=1"><div class="icon">T</div><strong>Text translate</strong><span>Yazı çevirisi</span></a>
+        <a id="iosFunCard" class="tile tile-fun" href="/pages/game_menu.html?ios=1&premium=1"><div class="icon">★</div><strong>Game menu</strong><span>Premium oyunlar</span></a>
+        <a id="iosLevelCard" class="tile tile-level" href="/pages/level_test_hub.html?ios=1&premium=1"><div class="icon">A</div><strong>Level test</strong><span>Seviye sınavları</span></a>
       </nav>
+
       <div class="footer">Italky Teknoloji A.Ş</div>
     </div>
   </main>
+
   <script>
     (function(){
       const params = new URLSearchParams(window.location.search);
       const queryPremium = params.get("premium") === "1" || params.get("ios_iap") === "1" || params.get("purchase") === "success" || params.get("restore") === "success";
       let storedPremium = false;
-      try{ storedPremium = localStorage.getItem("italky_ios_premium_active") === "1"; }catch(e){}
-      if(!queryPremium && !storedPremium){ window.location.replace("/pages/membership_ios.html?ios=1"); return; }
+      try { storedPremium = localStorage.getItem("italky_ios_premium_active") === "1"; } catch(e) {}
+
+      if (!queryPremium && !storedPremium) {
+        window.location.replace("/pages/membership_ios.html?ios=1");
+        return;
+      }
+
       [localStorage, sessionStorage].forEach(function(storage){
-        try{
+        try {
           storage.setItem("italky_membership_active", "1");
           storage.setItem("italky_membership_status", "active");
           storage.setItem("italky_premium_active", "1");
           storage.setItem("italky_ios_premium_active", "1");
           storage.setItem("italky_premium_source", "ios_iap");
-        }catch(e){}
+        } catch(e) {}
       });
+
+      const loadingCopy = {
+        iosFaceCard: "YüzYüze Çeviri hazırlanıyor...",
+        iosTwoPhoneCard: "İki Telefon hazırlanıyor...",
+        iosGuideCard: "Gezi & Konferans hazırlanıyor...",
+        iosOfflineCard: "Modül açılıyor...",
+        iosTextCard: "Modül açılıyor...",
+        iosFunCard: "Modül açılıyor...",
+        iosLevelCard: "Modül açılıyor..."
+      };
+
+      document.querySelectorAll(".tile[href]").forEach(function(card){
+        card.addEventListener("click", function(event){
+          if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          const href = card.getAttribute("href");
+          if (!href || href.startsWith("#")) return;
+          document.body.dataset.moduleLoading = loadingCopy[card.id] || "Modül açılıyor...";
+          document.body.classList.add("module-leaving");
+        });
+      });
+
       document.body.classList.add("home-ready");
     })();
   </script>

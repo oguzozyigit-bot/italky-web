@@ -59,8 +59,33 @@ body{
   background:
     radial-gradient(circle at 18% 0%, rgba(56,189,248,.16), transparent 30%),
     radial-gradient(circle at 86% 12%, rgba(168,85,247,.16), transparent 32%),
-    radial-gradient(circle at 50% 100%, rgba(249,115,22,.10), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(20,184,166,.10), transparent 34%),
     linear-gradient(180deg, #0b1020 0%, #090b16 48%, #05070d 100%);
+}
+
+body.module-leaving{
+  background:#020617;
+}
+
+body.module-leaving::before{
+  content:attr(data-module-loading);
+  position:fixed;
+  inset:0;
+  z-index:2147483600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(56,189,248,.20), transparent 42%),
+    radial-gradient(circle at 82% 100%, rgba(99,102,241,.14), transparent 36%),
+    linear-gradient(180deg,#020617,#05070d 58%,#020617);
+  color:#dbeafe;
+  font-family:'Outfit',sans-serif;
+  font-size:15px;
+  font-weight:1000;
+  letter-spacing:.2px;
+  text-align:center;
 }
 
 body:not(.home-ready) #pageContent{
@@ -650,8 +675,8 @@ body.home-ready #pageContent{
   right:0;
   height:3px;
   border-radius:999px;
-  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,237,213,.98), rgba(255,255,255,.08));
-  box-shadow:0 0 16px rgba(251,146,60,.55);
+  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(125,211,252,.90), rgba(255,255,255,.08));
+  box-shadow:0 0 16px rgba(56,189,248,.42);
 }
 
 .bt-link::before{ top:8px; transform:rotate(8deg); }
@@ -666,9 +691,9 @@ body.home-ready #pageContent{
 
 .bluetooth-card{
   background:
-    radial-gradient(circle at 18% 8%, rgba(251,146,60,.36), transparent 34%),
-    radial-gradient(circle at 86% 82%, rgba(236,72,153,.20), transparent 32%),
-    linear-gradient(145deg, #7c2d12 0%, #dc2626 45%, #f97316 100%);
+    radial-gradient(circle at 18% 8%, rgba(125,211,252,.34), transparent 34%),
+    radial-gradient(circle at 86% 82%, rgba(236,72,153,.18), transparent 32%),
+    linear-gradient(145deg, #0f3b63 0%, #2563eb 48%, #7c3aed 100%);
 }
 
 .wide-stack{
@@ -749,9 +774,10 @@ body.home-ready #pageContent{
 
 .guide-conference-card{
   background:
-    radial-gradient(circle at 15% 45%, rgba(251,191,36,.26), transparent 30%),
-    radial-gradient(circle at 92% 14%, rgba(251,146,60,.18), transparent 30%),
-    linear-gradient(90deg, #451a03 0%, #7f1d1d 44%, #c2410c 100%);
+    radial-gradient(circle at 15% 45%, rgba(125,211,252,.28), transparent 30%),
+    radial-gradient(circle at 92% 14%, rgba(56,189,248,.22), transparent 30%),
+    radial-gradient(circle at 68% 105%, rgba(255,255,255,.08), transparent 34%),
+    linear-gradient(90deg, #0b4f6c 0%, #0f6f8f 44%, #1495b6 100%);
 }
 
 .offline-card{
@@ -770,9 +796,9 @@ body.home-ready #pageContent{
 
 .fun-card{
   background:
-    radial-gradient(circle at 14% 50%, rgba(251,146,60,.28), transparent 28%),
-    radial-gradient(circle at 90% 18%, rgba(244,63,94,.20), transparent 26%),
-    linear-gradient(90deg, #7c2d12 0%, #c2410c 40%, #be123c 100%);
+    radial-gradient(circle at 14% 50%, rgba(251,113,133,.24), transparent 28%),
+    radial-gradient(circle at 90% 18%, rgba(168,85,247,.20), transparent 26%),
+    linear-gradient(90deg, #701a75 0%, #9f1239 46%, #4338ca 100%);
 }
 
 .level-card{
@@ -927,7 +953,7 @@ body.home-ready #pageContent{
     </section>
 
     <section class="wide-stack" aria-label="Diğer araçlar">
-      <a id="guideConferenceCard" class="wide-card guide-conference-card" href="/facetoface.html?mode=guide">
+      <a id="guideConferenceCard" class="wide-card guide-conference-card" href="/pages/conference.html">
         <div class="wide-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 0 1 16 0"></path><path d="M7 11v7"></path><path d="M17 11v7"></path><path d="M12 14v7"></path><path d="M6 20h12"></path></svg>
         </div>
@@ -1141,6 +1167,29 @@ body.home-ready #pageContent{
     }
   });
 
+  const MODULE_LOADING_COPY = {
+    faceCard: "YüzYüze Çeviri hazırlanıyor...",
+    bluetoothCard: "İki Telefon hazırlanıyor...",
+    guideConferenceCard: "Gezi & Konferans hazırlanıyor...",
+    offlineCard: "Modül açılıyor...",
+    textCard: "Modül açılıyor...",
+    funCard: "Modül açılıyor...",
+    levelCard: "Modül açılıyor..."
+  };
+
+  function installModuleTransitionOverlay() {
+    document.querySelectorAll("#faceCard,#bluetoothCard,#guideConferenceCard,#offlineCard,#textCard,#funCard,#levelCard").forEach((card) => {
+      card.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const href = card.getAttribute("href");
+        if (!href || href.startsWith("#")) return;
+        document.body.dataset.moduleLoading = MODULE_LOADING_COPY[card.id] || "Modül açılıyor...";
+        document.body.classList.add("module-leaving");
+      });
+    });
+  }
+
+  installModuleTransitionOverlay();
   bootHome();
 </script>
 
