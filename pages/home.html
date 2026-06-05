@@ -788,6 +788,51 @@ body.home-ready #pageContent{
     linear-gradient(90deg, #78350f 0%, #a16207 46%, #166534 100%);
 }
 
+.turan-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(45,212,191,.42), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(103,232,249,.34), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(20,184,166,.38), transparent 36%),
+    linear-gradient(90deg, #042f2e 0%, #0f766e 42%, #06b6d4 100%);
+}
+
+.kafkas-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(248,113,113,.36), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(244,63,94,.30), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(190,18,60,.34), transparent 36%),
+    linear-gradient(90deg, #7f1d1d 0%, #be123c 46%, #4c0519 100%);
+}
+
+.balkan-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(168,85,247,.38), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(129,140,248,.30), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(30,64,175,.34), transparent 36%),
+    linear-gradient(90deg, #581c87 0%, #4338ca 46%, #0f172a 100%);
+}
+
+.turan-card .wide-desc,
+.kafkas-card .wide-desc,
+.balkan-card .wide-desc{
+  color:rgba(255,255,255,.92);
+}
+
+.turan-card .wide-icon,
+.kafkas-card .wide-icon,
+.balkan-card .wide-icon{
+  background:rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.28);
+  box-shadow:0 16px 34px rgba(0,0,0,.18), inset 0 0 18px rgba(255,255,255,.05);
+}
+
+.turan-card .arrow-chip,
+.kafkas-card .arrow-chip,
+.balkan-card .arrow-chip{
+  background:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.28);
+}
+
 .offline-card{
   background:
     radial-gradient(circle at 14% 50%, rgba(45,212,191,.27), transparent 28%),
@@ -983,6 +1028,39 @@ body.home-ready #pageContent{
         <div class="arrow-chip"></div>
       </a>
 
+      <a id="turanCard" class="wide-card turan-card" href="/pages/turan_dilleri.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path><path d="M8 5v14"></path><path d="M16 5v14"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Turan Dilleri</h2>
+          <p class="wide-desc">Azerbaycan, Kazak, Kırgız, Özbek, Türkmen, Uygur, Tatar ve diğer Türk dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="kafkasCard" class="wide-card kafkas-card" href="/pages/kafkas_dilleri.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 5v8l-8 5-8-5V8l8-5z"></path><path d="M12 7v10"></path><path d="M8 9.5l8 5"></path><path d="M16 9.5l-8 5"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Kafkas Dilleri</h2>
+          <p class="wide-desc">Gürcüce, Ermenice, Çeçence ve Kafkas coğrafyasının dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="balkanCard" class="wide-card balkan-card" href="/pages/balkan_dilleri.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 18c2-4 4-6 8-6s6 2 8 6"></path><path d="M6 14c1.6-3 3.4-4.5 6-4.5S16.4 11 18 14"></path><path d="M8 10c1.2-2 2.3-3 4-3s2.8 1 4 3"></path><path d="M12 4v3"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Balkan Dilleri</h2>
+          <p class="wide-desc">Arnavutça, Boşnakça, Bulgarca, Yunanca, Romence ve Balkan dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
       <a id="textCard" class="wide-card text-card" href="/pages/text_translate.html">
         <div class="wide-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M4 12h10"></path><path d="M4 19h7"></path><path d="M17 14l3 3-3 3"></path></svg>
@@ -1123,18 +1201,6 @@ body.home-ready #pageContent{
     card.setAttribute("aria-hidden", showOffline ? "false" : "true");
   }
 
-  function readHomeLangPackWidget() {
-    try {
-      const raw = localStorage.getItem(HOME_LANG_WIDGET_KEY);
-      if (!raw) return null;
-
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : null;
-    } catch {
-      return null;
-    }
-  }
-
   function renderHomeLangPackWidget() {
     const widget = document.getElementById("homeLangPackWidget");
     if (!widget) return;
@@ -1214,6 +1280,9 @@ body.home-ready #pageContent{
     bluetoothCard: "İki Telefon hazırlanıyor...",
     guideConferenceCard: "Gezi & Konferans hazırlanıyor...",
     mezoCard: "Mezopotamya’nın Dili hazırlanıyor...",
+    turanCard: "Turan Dilleri hazırlanıyor...",
+    kafkasCard: "Kafkas Dilleri hazırlanıyor...",
+    balkanCard: "Balkan Dilleri hazırlanıyor...",
     offlineCard: "Modül açılıyor...",
     textCard: "Modül açılıyor...",
     funCard: "Modül açılıyor...",
@@ -1221,7 +1290,7 @@ body.home-ready #pageContent{
   };
 
   function installModuleTransitionOverlay() {
-    document.querySelectorAll("#faceCard,#bluetoothCard,#guideConferenceCard,#mezoCard,#offlineCard,#textCard,#funCard,#levelCard").forEach((card) => {
+    document.querySelectorAll("#faceCard,#bluetoothCard,#guideConferenceCard,#mezoCard,#turanCard,#kafkasCard,#balkanCard,#offlineCard,#textCard,#funCard,#levelCard").forEach((card) => {
       card.addEventListener("click", (event) => {
         if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         const href = card.getAttribute("href");
