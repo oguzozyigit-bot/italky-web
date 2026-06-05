@@ -12,28 +12,29 @@ const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
-const MEZO_POOL = [
-  { code: "kmr", name: "Kürtçe Kurmanci", flag: "☀️" },
+const TOP_LANG_POOL = [
+  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+  { code: "ku", name: "Kürtçe Kurmanci", flag: "☀️" },
   { code: "ckb", name: "Kürtçe Sorani", flag: "🌙" },
-  { code: "zza", name: "Zazaca", flag: "🟠" },
-  { code: "syc", name: "Süryanice", flag: "✝️" },
+  { code: "he", name: "İbranice", flag: "✡️" }
+];
+
+const BOT_LANG_POOL = [
+  { code: "ku", name: "Kürtçe Kurmanci", flag: "☀️" },
+  { code: "ckb", name: "Kürtçe Sorani", flag: "🌙" },
   { code: "he", name: "İbranice", flag: "✡️" }
 ];
 
 const BCP = {
   tr: "tr-TR",
-  kmr: "tr-TR",
+  ku: "tr-TR",
   ckb: "ar-IQ",
-  zza: "tr-TR",
-  syc: "ar-SY",
   he: "he-IL"
 };
 
 const TTS_FALLBACK_LANG = {
-  kmr: "tr",
+  ku: "tr",
   ckb: "ar",
-  zza: "tr",
-  syc: "ar",
   he: "he"
 };
 
@@ -85,6 +86,9 @@ const UI = {
   botBody: $("botBody"),
   botKeyboardWrap: $("botKeyboardWrap"),
   botKeyboard: $("botKeyboard"),
+  popBot: $("pop-bot"),
+  closeBot: $("close-bot"),
+  listBot: $("list-bot"),
 
   homeBtn: $("homeBtn"),
   homeLink: $("homeLink"),
@@ -98,7 +102,8 @@ const UI = {
 };
 
 const state = {
-  topLang: "kmr",
+  topLang: "tr",
+  botLang: "ku",
   activeSide: "bot",
 
   topListening: false,
@@ -160,14 +165,27 @@ function closeModal() {
   UI.genericBackdrop?.classList.remove("open");
 }
 
-function currentMezo() {
-  return MEZO_POOL.find((x) => x.code === state.topLang) || MEZO_POOL[0];
+function langFromPool(pool, code) {
+  return pool.find((x) => x.code === code) || pool[0];
+}
+
+function currentTopLang() {
+  return langFromPool(TOP_LANG_POOL, state.topLang);
+}
+
+function currentBotLang() {
+  return langFromPool(BOT_LANG_POOL, state.botLang);
+}
+
+function langForSide(side) {
+  return side === "top" ? state.topLang : state.botLang;
 }
 
 function updateLangButtons() {
-  const item = currentMezo();
-  if (UI.topLangTxt) UI.topLangTxt.textContent = `${item.flag} ${item.name}`;
-  if (UI.botLangTxt) UI.botLangTxt.textContent = "🇹🇷 Türkçe";
+  const top = currentTopLang();
+  const bot = currentBotLang();
+  if (UI.topLangTxt) UI.topLangTxt.textContent = `${top.flag} ${top.name}`;
+  if (UI.botLangTxt) UI.botLangTxt.textContent = `${bot.flag} ${bot.name}`;
 }
 
 function pointOrbTo(side) {
@@ -285,11 +303,36 @@ function clearBubbles() {
   state.loadingBotRow = null;
 }
 
-function renderTopLangList() {
-  if (!UI.listTop) return;
+function selectLang(side, code) {
+  const next = canon(code);
+  if (!next) return;
 
-  UI.listTop.innerHTML = MEZO_POOL.map((item) => `
-    <div class="pop-item ${item.code === state.topLang ? "active" : ""}" data-code="${item.code}">
+  if (side === "top" && next === state.botLang) {
+    toast("Aynı dili iki tarafta seçemezsiniz.");
+    return;
+  }
+
+  if (side === "bot" && next === state.topLang) {
+    toast("Aynı dili iki tarafta seçemezsiniz.");
+    return;
+  }
+
+  if (side === "top") state.topLang = next;
+  else state.botLang = next;
+
+  updateLangButtons();
+  renderLangLists();
+  renderKeyboard(side === "top" ? UI.topKeyboard : UI.botKeyboard, side);
+  UI.popTop?.classList.remove("show");
+  UI.popBot?.classList.remove("show");
+  toast("Dil değişti");
+}
+
+function renderLangList(listEl, pool, selectedCode, side) {
+  if (!listEl) return;
+
+  listEl.innerHTML = pool.map((item) => `
+    <div class="pop-item ${item.code === selectedCode ? "active" : ""}" data-code="${item.code}">
       <div class="pop-left">
         <div class="pop-flag">${item.flag}</div>
         <div class="pop-name">${item.name}</div>
@@ -298,16 +341,14 @@ function renderTopLangList() {
     </div>
   `).join("");
 
-  UI.listTop.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      state.topLang = el.dataset.code;
-      updateLangButtons();
-      renderTopLangList();
-      renderKeyboard(UI.topKeyboard, "top");
-      UI.popTop?.classList.remove("show");
-      toast("Mezopotamya dili değişti");
-    });
+  listEl.querySelectorAll(".pop-item").forEach((el) => {
+    el.addEventListener("click", () => selectLang(side, el.dataset.code));
   });
+}
+
+function renderLangLists() {
+  renderLangList(UI.listTop, TOP_LANG_POOL, state.topLang, "top");
+  renderLangList(UI.listBot, BOT_LANG_POOL, state.botLang, "bot");
 }
 
 function ensureKeyboardAudio() {
@@ -496,7 +537,7 @@ function svgBackspace() {
 }
 
 function keyboardRows(side) {
-  const lang = side === "top" ? state.topLang : "tr";
+  const lang = langForSide(side);
   const shifted = side === "top" ? state.topShift : state.botShift;
   const base = lang === "tr" ? KB_ROWS_TR : KB_ROWS_LATIN;
 
@@ -823,10 +864,10 @@ async function getAccessToken() {
   return data?.session?.access_token || "";
 }
 
-async function translateAI(text, from, to) {
+async function translateGoogle(text, from, to) {
   const token = await getAccessToken();
 
-  const r = await fetch(apiUrl("translate_ai"), {
+  const r = await fetch(apiUrl("translate"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -836,9 +877,9 @@ async function translateAI(text, from, to) {
       text,
       from_lang: from,
       to_lang: to,
-      mode: "cultural",
-      tone: "neutral",
-      style: "balanced"
+      mode: "normal",
+      use_ai: false,
+      google_only: true
     })
   });
 
@@ -895,16 +936,10 @@ async function runTranslateText(fromSide, text) {
   }
 
   try {
-    let translated = "";
-    let speakLang = "tr";
-
-    if (fromSide === "top") {
-      translated = await translateAI(cleanText, currentMezo().code, "tr");
-      speakLang = "tr";
-    } else {
-      translated = await translateAI(cleanText, "tr", currentMezo().code);
-      speakLang = currentMezo().code;
-    }
+    const fromLang = langForSide(sourceSide);
+    const toLang = langForSide(targetSide);
+    const translated = await translateGoogle(cleanText, fromLang, toLang);
+    const speakLang = toLang;
 
     removeLoadingBubble(targetSide);
 
@@ -1004,7 +1039,7 @@ function startRecognition(side) {
     return;
   }
 
-  const langCode = side === "top" ? currentMezo().code : "tr";
+  const langCode = langForSide(side);
   const listenCode = resolveSpeechLang(langCode);
 
   const recog = new SR();
@@ -1102,13 +1137,23 @@ function prepareInputs() {
 
 function bindEvents() {
   UI.topLangBtn?.addEventListener("click", () => {
-    renderTopLangList();
+    renderLangLists();
     UI.popTop?.classList.add("show");
+  });
+
+  UI.botLangBtn?.addEventListener("click", () => {
+    renderLangLists();
+    UI.popBot?.classList.add("show");
   });
 
   UI.closeTop?.addEventListener("click", () => UI.popTop?.classList.remove("show"));
   UI.popTop?.addEventListener("click", (e) => {
     if (e.target === UI.popTop) UI.popTop.classList.remove("show");
+  });
+
+  UI.closeBot?.addEventListener("click", () => UI.popBot?.classList.remove("show"));
+  UI.popBot?.addEventListener("click", (e) => {
+    if (e.target === UI.popBot) UI.popBot.classList.remove("show");
   });
 
   UI.topSettingsMini?.addEventListener("click", () => {
@@ -1167,13 +1212,18 @@ function bindEvents() {
   });
 
   document.addEventListener("click", (e) => {
-    const insidePop = UI.popTop && UI.popTop.contains(e.target);
-    const isLangBtn = e.target?.closest?.("#topLangBtn");
+    const insidePop =
+      (UI.popTop && UI.popTop.contains(e.target)) ||
+      (UI.popBot && UI.popBot.contains(e.target));
+    const isLangBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
     const isInput = e.target?.closest?.("#topInput,#botInput");
     const isKb = e.target?.closest?.("#topKeyboardWrap,#botKeyboardWrap");
     const isAlt = e.target?.closest?.(".alt-pop");
 
-    if (!insidePop && !isLangBtn) UI.popTop?.classList.remove("show");
+    if (!insidePop && !isLangBtn) {
+      UI.popTop?.classList.remove("show");
+      UI.popBot?.classList.remove("show");
+    }
     if (!isInput && !isKb && !isAlt) {
       UI.topKeyboardWrap?.classList.remove("show");
       UI.botKeyboardWrap?.classList.remove("show");
@@ -1196,7 +1246,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   prepareInputs();
   updateLangButtons();
-  renderTopLangList();
+  renderLangLists();
   renderKeyboard(UI.topKeyboard, "top");
   renderKeyboard(UI.botKeyboard, "bot");
   bindEvents();
