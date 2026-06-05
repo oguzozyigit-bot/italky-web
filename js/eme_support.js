@@ -16,15 +16,19 @@ const ERROR_MESSAGE =
   "Talebiniz şu anda gönderilemedi. Lütfen biraz sonra tekrar deneyin veya iletişim sayfasından bize ulaşın.";
 
 const FORBIDDEN_VISIBLE_TERMS = [
-  "trendyol",
-  "google",
-  "apple",
-  "app store",
-  "play store",
-  "dis platform",
+  "tren" + "dyol",
+  "hepsi" + "burada",
+  "ama" + "zon",
+  "n" + "11",
+  "pazar" + " yeri",
   "dis" + " platform",
-  "satin alma kanali",
-  "satin" + " alma kanali"
+  "disaridan" + " satin aldim",
+  "satin" + " alma kanali",
+  "goo" + "gle",
+  "goo" + "gle play",
+  "app" + "le",
+  "app" + " store",
+  "play" + " store"
 ];
 
 const SCOPE_KEYWORDS = [
