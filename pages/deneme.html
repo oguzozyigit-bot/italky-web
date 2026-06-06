@@ -56,11 +56,43 @@
 
   const PUBLIC_BASE = "https://media.icany.ai";
   const INDEX_URL = `${PUBLIC_BASE}/icanyai/radio/index.json`;
-  const SETTINGS_KEY = "icany_radio_user_settings_v2";
+  const SETTINGS_KEY = "icany_radio_user_settings_v3";
   const SETTINGS_TABLE = "icany_radio_user_settings";
+
+  /*
+   * Gerçek uygulamada modül değişince müziğin kesilmemesi için bu player mantığı
+   * ui_shell veya global_audio_manager.js içine taşınmalı. Bu deneme dosyasında
+   * Home iframe içinde test edilecek şekilde modüler fonksiyonlara ayrıldı.
+   */
+
   const BANNED_CHANNEL_IDS = new Set([
     "09_turkish_pop_radio",
     "11_azerbaijani_modern_pop"
+  ]);
+
+  const ALLOWED_CHANNEL_IDS = new Set([
+    "01_global_pop_english",
+    "01_pop_radio",
+    "02_french_lounge_pop",
+    "02_rock_radio",
+    "03_italian_dolce_pop",
+    "03_jazz_radio",
+    "04_hiphop_radio",
+    "04_spanish_latin_pop",
+    "05_argentina_tango_pop",
+    "05_kpop_radio",
+    "06_kurdish_modern_folk_pop",
+    "06_rnb_radio",
+    "06_russian_modern_pop",
+    "07_edm_radio",
+    "07_japanese_city_pop",
+    "08_brazilian_bossa_pop",
+    "08_country_radio",
+    "09_reggae_radio",
+    "10_hindi_bollywood_pop",
+    "10_latin_radio",
+    "11_funk_radio",
+    "12_world_radio"
   ]);
 
   const FALLBACK_CHANNELS = [
@@ -110,6 +142,7 @@
   let lastSettings = null;
   let supabaseClientPromise = null;
   let currentUserPromise = null;
+  let lastPersistSecond = -1;
 
   function getDoc(){
     try{
@@ -119,12 +152,12 @@
     }
   }
 
-  function getWin(){
-    try{
-      return frame.contentWindow;
-    }catch(e){
-      return null;
-    }
+  function uniq(list){
+    return Array.from(new Set((Array.isArray(list) ? list : []).filter(Boolean)));
+  }
+
+  function clean(value){
+    return String(value || "").trim();
   }
 
   function safeJsonParse(value, fallback = null){
@@ -135,27 +168,27 @@
     }
   }
 
-  function uniq(list){
-    return Array.from(new Set((Array.isArray(list) ? list : []).filter(Boolean)));
-  }
-
-  function normalizeTextValue(value){
-    return String(value || "").trim();
+  function escapeHtml(value){
+    return String(value || "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
   }
 
   function normalizeChannel(raw){
-    const id = normalizeTextValue(raw?.id || raw?.channel_id || raw?.slug || raw?.folder || raw?.key);
-    if(!id || BANNED_CHANNEL_IDS.has(id)) return null;
+    const id = clean(raw?.id || raw?.channel_id || raw?.slug || raw?.folder || raw?.key);
+    if(!id || BANNED_CHANNEL_IDS.has(id) || !ALLOWED_CHANNEL_IDS.has(id)) return null;
 
-    const name = normalizeTextValue(raw?.name || raw?.title || id.replace(/_/g," "));
-    const language = normalizeTextValue(raw?.language || raw?.lang_name || raw?.lang || raw?.locale || "İngilizce");
-    const code = normalizeTextValue(raw?.code || raw?.lang_code || raw?.language_code || language.slice(0,2).toUpperCase()).toUpperCase();
-    const flag = normalizeTextValue(raw?.flag || "🎧");
+    const name = clean(raw?.name || raw?.title || id.replace(/_/g," "));
+    const language = clean(raw?.language || raw?.lang_name || raw?.lang || raw?.locale || "İngilizce");
+    const code = clean(raw?.code || raw?.lang_code || raw?.language_code || language.slice(0,2).toUpperCase()).toUpperCase();
+    const flag = clean(raw?.flag || "🎧");
 
     const genresRaw = raw?.genres || raw?.genre || raw?.tags || [];
     const genres = uniq(
       Array.isArray(genresRaw)
-        ? genresRaw.map((item) => normalizeTextValue(item))
+        ? genresRaw.map((item) => clean(item))
         : String(genresRaw).split(",").map((item) => item.trim())
     );
 
@@ -178,11 +211,9 @@
       if(!res.ok) throw new Error("index okunamadı");
 
       const data = await res.json();
-      const list = Array.isArray(data)
-        ? data
-        : (data.channels || data.items || data.radios || []);
-
+      const list = Array.isArray(data) ? data : (data.channels || data.items || data.radios || []);
       const normalized = list.map(normalizeChannel).filter(Boolean);
+
       if(normalized.length){
         ICANY_RADIO_CHANNELS = normalized;
       }
@@ -193,7 +224,7 @@
   }
 
   function manifestUrl(channel){
-    return `${PUBLIC_BASE}/icanyai/radio/${channel.id}/playlist.json?t=${Date.now()}`;
+    return `${PUBLIC_BASE}/icanyai/radio/${channel.id}/playlist.json`;
   }
 
   function safeTitle(track){
@@ -209,11 +240,9 @@
   function resolveUrl(url, channel){
     const value = String(url || "").trim();
     if(!value) return "";
-
     if(/^https?:\/\//i.test(value)) return value;
     if(value.startsWith("/")) return `${PUBLIC_BASE}${value}`;
     if(value.startsWith("icanyai/")) return `${PUBLIC_BASE}/${value}`;
-
     return `${PUBLIC_BASE}/icanyai/radio/${channel.id}/${value}`;
   }
 
@@ -240,7 +269,7 @@
     if(channel.loaded && Array.isArray(channel.tracks)) return channel.tracks;
 
     try{
-      const res = await fetch(manifestUrl(channel), { cache:"no-store" });
+      const res = await fetch(`${manifestUrl(channel)}?t=${Date.now()}`, { cache:"no-store" });
       if(!res.ok) throw new Error("manifest yok");
 
       const data = await res.json();
@@ -273,26 +302,26 @@
   }
 
   function getAllLanguages(){
-    return uniq(
-      ICANY_RADIO_CHANNELS
-        .filter((channel) => !BANNED_CHANNEL_IDS.has(channel.id))
-        .map((channel) => channel.language)
-    );
+    return uniq(ICANY_RADIO_CHANNELS.map((channel) => channel.language)).filter((language) => {
+      const lower = language.toLowerCase();
+      return !lower.includes("türk") && !lower.includes("azer");
+    });
   }
 
   function uniqueChannels(list){
     const seen = new Set();
+
     return list.filter((channel) => {
-      if(!channel || BANNED_CHANNEL_IDS.has(channel.id) || seen.has(channel.id)) return false;
+      if(!channel || BANNED_CHANNEL_IDS.has(channel.id) || !ALLOWED_CHANNEL_IDS.has(channel.id) || seen.has(channel.id)) return false;
       seen.add(channel.id);
       return true;
     });
   }
 
-  function findRadioChannels(genres, languages){
+  function findRadioChannels(genres, languages, options = {}){
     const wantedGenres = uniq(genres);
     const wantedLanguages = uniq(languages);
-    const allowed = ICANY_RADIO_CHANNELS.filter((channel) => !BANNED_CHANNEL_IDS.has(channel.id));
+    const allowed = ICANY_RADIO_CHANNELS.filter((channel) => !BANNED_CHANNEL_IDS.has(channel.id) && ALLOWED_CHANNEL_IDS.has(channel.id));
 
     const languageScoped = wantedLanguages.length
       ? allowed.filter((channel) => wantedLanguages.includes(channel.language))
@@ -306,50 +335,50 @@
 
     if(wantedLanguages.length) return uniqueChannels(languageScoped);
 
-    const byGenre = wantedGenres.length
-      ? allowed.filter((channel) => wantedGenres.some((genre) => (channel.genres || []).includes(genre)))
-      : [];
-
-    if(byGenre.length) return uniqueChannels(byGenre);
+    if(options.genreFallback !== false && wantedGenres.length){
+      const byGenre = allowed.filter((channel) => wantedGenres.some((genre) => (channel.genres || []).includes(genre)));
+      if(byGenre.length) return uniqueChannels(byGenre);
+    }
 
     return uniqueChannels(allowed);
   }
 
-  function filterTracksBySelection(list, genres, languages){
+  function filterTracksBySelection(list, genres, languages, strictGenre = true){
     const wantedGenres = uniq(genres);
     const wantedLanguages = uniq(languages);
 
     return list.filter((track) => {
       if(wantedLanguages.length && !wantedLanguages.includes(track.language)) return false;
-      if(wantedGenres.length && !wantedGenres.some((genre) => (track.genres || []).includes(genre))) {
-        if(wantedLanguages.length) return true;
-        return false;
-      }
+      if(strictGenre && wantedGenres.length && !wantedGenres.some((genre) => (track.genres || []).includes(genre))) return false;
       return true;
     });
   }
 
-  async function loadRadioTracksBySelection(genres, languages){
-    const channels = findRadioChannels(genres, languages);
+  async function loadTracksFromChannels(channels){
     let allTracks = [];
-
     for(const channel of channels){
       const channelTracks = await loadChannel(channel);
-      if(channelTracks.length){
-        allTracks = allTracks.concat(channelTracks);
-      }
+      if(channelTracks.length) allTracks = allTracks.concat(channelTracks);
+    }
+    return allTracks;
+  }
+
+  async function loadRadioTracksBySelection(genres, languages){
+    const exactChannels = findRadioChannels(genres, languages);
+    const exactTracks = await loadTracksFromChannels(exactChannels);
+    let scopedTracks = filterTracksBySelection(exactTracks, genres, languages, true);
+
+    if(!scopedTracks.length && languages?.length){
+      const languageChannels = findRadioChannels([], languages, { genreFallback:false });
+      const languageTracks = await loadTracksFromChannels(languageChannels);
+      scopedTracks = filterTracksBySelection(languageTracks, [], languages, false);
     }
 
-    tracks = filterTracksBySelection(allTracks, genres, languages);
-
-    if(!tracks.length && languages?.length){
-      tracks = allTracks.filter((track) => languages.includes(track.language));
+    if(!scopedTracks.length && !languages?.length){
+      scopedTracks = exactTracks;
     }
 
-    if(!tracks.length){
-      tracks = allTracks;
-    }
-
+    tracks = scopedTracks;
     currentTrackIndex = 0;
     activeChannel = tracks[0]
       ? ICANY_RADIO_CHANNELS.find((channel) => channel.id === tracks[0].channel_id)
@@ -365,6 +394,15 @@
         <circle cx="6" cy="18" r="3"></circle>
         <circle cx="17" cy="16" r="3"></circle>
       </svg>
+    `;
+  }
+
+  function businessLogo(className = ""){
+    return `
+      <div class="icany-business-logo ${className}" aria-label="icanyAI Business">
+        <span class="icany-business-main"><span class="icany-white">icany</span><span class="icany-ai">AI</span></span>
+        <span class="icany-business-sub">BUSINESS</span>
+      </div>
     `;
   }
 
@@ -438,6 +476,42 @@
         min-width:0;
       }
 
+      .icany-business-logo{
+        text-align:center;
+        line-height:1;
+        user-select:none;
+        overflow:hidden;
+      }
+
+      .icany-business-main{
+        display:block;
+        font-family:'Space Grotesk',Outfit,sans-serif;
+        font-size:15px;
+        font-weight:900;
+        letter-spacing:0;
+        white-space:nowrap;
+      }
+
+      .icany-business-main .icany-white{ color:#fff; -webkit-text-fill-color:#fff; }
+
+      .icany-business-main .icany-ai{
+        color:#67e8f9;
+        background:linear-gradient(135deg,#a5f3fc,#67e8f9,#38bdf8);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+      }
+
+      .icany-business-sub{
+        display:block;
+        margin-top:3px;
+        font-size:6.2px;
+        font-weight:1000;
+        letter-spacing:.9px;
+        color:rgba(226,232,240,.78);
+        white-space:nowrap;
+        transform:translateX(.4px);
+      }
+
       .icany-radio-brand{
         justify-self:end;
         width:86px;
@@ -449,40 +523,30 @@
           radial-gradient(circle at 80% 0%,rgba(56,189,248,.18),transparent 48%),
           linear-gradient(145deg,#020617,#071426 62%,#082f49);
         border:1px solid rgba(148,163,184,.20);
-        text-align:center;
-        line-height:1;
-        user-select:none;
-        overflow:hidden;
         box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.16);
       }
 
-      .icany-radio-brand-main{
-        display:block;
-        font-family:'Space Grotesk',Outfit,sans-serif;
-        font-size:15px;
-        font-weight:900;
-        letter-spacing:0;
-        white-space:nowrap;
+      .icany-card-logo{
+        position:absolute;
+        right:14px;
+        top:12px;
+        width:72px;
+        opacity:.94;
+        z-index:3;
+        pointer-events:none;
       }
 
-      .icany-radio-brand-main .icany-white{ color:#fff; -webkit-text-fill-color:#fff; }
-      .icany-radio-brand-main .icany-ai{
-        color:#67e8f9;
-        background:linear-gradient(135deg,#a5f3fc,#67e8f9,#38bdf8);
-        -webkit-background-clip:text;
-        -webkit-text-fill-color:transparent;
-      }
+      .icany-card-logo .icany-business-main{ font-size:13px; }
+      .icany-card-logo .icany-business-sub{ font-size:5.2px; letter-spacing:.7px; }
 
-      .icany-radio-brand-sub{
-        display:block;
+      .icany-karaoke-logo{
+        width:82px;
+        flex:0 0 auto;
         margin-top:3px;
-        font-size:6.2px;
-        font-weight:1000;
-        letter-spacing:.9px;
-        color:rgba(226,232,240,.78);
-        white-space:nowrap;
-        transform:translateX(.4px);
       }
+
+      .icany-karaoke-logo .icany-business-main{ font-size:14px; }
+      .icany-karaoke-logo .icany-business-sub{ font-size:5.8px; }
 
       .icany-eq-line{
         position:relative;
@@ -521,13 +585,8 @@
         animation-direction:reverse;
       }
 
-      .icany-radio-player.is-playing .icany-eq-line::before{
-        animation-duration:1.35s;
-      }
-
-      .icany-radio-player.is-playing .icany-eq-line::after{
-        animation-duration:2.2s;
-      }
+      .icany-radio-player.is-playing .icany-eq-line::before{ animation-duration:1.35s; }
+      .icany-radio-player.is-playing .icany-eq-line::after{ animation-duration:2.2s; }
 
       @keyframes icanyEqMove{
         from{ transform:translateX(-45%); }
@@ -712,9 +771,9 @@
       }
 
       .icany-karaoke-head{
-        display:flex;
-        align-items:flex-start;
-        justify-content:space-between;
+        display:grid;
+        grid-template-columns:1fr auto auto;
+        align-items:start;
         gap:12px;
         margin-bottom:14px;
         flex:0 0 auto;
@@ -801,10 +860,7 @@
       }
 
       @media(max-width:390px){
-        .icany-radio-player{
-          padding:6px 8px 9px;
-          border-radius:16px;
-        }
+        .icany-radio-player{ padding:6px 8px 9px; border-radius:16px; }
 
         .icany-radio-row{
           grid-template-columns:minmax(66px,.66fr) minmax(138px,1.42fr) minmax(78px,.82fr);
@@ -833,8 +889,17 @@
           padding:7px 7px 6px;
         }
 
-        .icany-radio-brand-main{ font-size:13.5px; }
-        .icany-radio-brand-sub{ font-size:5.7px; letter-spacing:.74px; }
+        .icany-radio-brand .icany-business-main{ font-size:13.5px; }
+        .icany-radio-brand .icany-business-sub{ font-size:5.7px; letter-spacing:.74px; }
+
+        .icany-card-logo{
+          width:66px;
+          right:12px;
+          top:11px;
+        }
+
+        .icany-card-logo .icany-business-main{ font-size:11.5px; }
+        .icany-card-logo .icany-business-sub{ font-size:4.8px; letter-spacing:.62px; }
 
         .icany-karaoke-modal{ padding:9px; }
 
@@ -846,6 +911,14 @@
         }
 
         .icany-karaoke-card h2{ font-size:28px; }
+
+        .icany-karaoke-head{
+          grid-template-columns:1fr auto;
+        }
+
+        .icany-karaoke-logo{
+          display:none;
+        }
 
         .icany-karaoke-line{
           font-size:21px;
@@ -862,14 +935,22 @@
         .icany-radio-btn{ width:29px; height:29px; }
         .icany-radio-btn.main{ width:39px; height:39px; }
         .icany-radio-brand{ width:74px; max-width:74px; }
-        .icany-radio-brand-main{ font-size:12.5px; }
-        .icany-radio-brand-sub{ font-size:5.3px; letter-spacing:.62px; }
+        .icany-radio-brand .icany-business-main{ font-size:12.5px; }
+        .icany-radio-brand .icany-business-sub{ font-size:5.3px; letter-spacing:.62px; }
         .icany-karaoke-mini{ max-width:68px; font-size:8.5px; }
         .icany-karaoke-line{ font-size:19px; }
       }
     `;
 
     doc.head.appendChild(style);
+  }
+
+  function firstTextField(track, keys){
+    for(const key of keys){
+      const value = track?.[key];
+      if(typeof value === "string" && value.trim()) return value;
+    }
+    return "";
   }
 
   function parsePlainLyrics(text){
@@ -918,7 +999,17 @@
         return { text:item.trim(), time:null };
       }
 
-      const text = String(item.text || item.line || item.lyric || item.words || "").trim();
+      const text = String(
+        item.latin ||
+        item.romanized ||
+        item.transliteration ||
+        item.text ||
+        item.line ||
+        item.lyric ||
+        item.words ||
+        ""
+      ).trim();
+
       const time = Number(
         item.time ??
         item.start ??
@@ -938,7 +1029,29 @@
   }
 
   function buildLyricsForTrack(track){
+    const lrcText = firstTextField(track, [
+      "lrc_latin",
+      "lrc_romanized",
+      "lyrics_lrc_latin",
+      "lyrics_lrc_romanized",
+      "lrc",
+      "lrc_text",
+      "lyrics_lrc"
+    ]);
+
+    const lrc = parseLRC(lrcText);
+    if(lrc.length){
+      timedLyricLines = lrc;
+      lyricLines = lrc.map((item) => item.text);
+      hasTimedLyrics = true;
+      return;
+    }
+
     const timedArray =
+      parseTimedArray(track?.lyrics_latin) ||
+      parseTimedArray(track?.lyrics_romanized) ||
+      parseTimedArray(track?.transliteration) ||
+      parseTimedArray(track?.romanized) ||
       parseTimedArray(track?.lyrics_json) ||
       parseTimedArray(track?.lyrics_lines) ||
       [];
@@ -952,19 +1065,21 @@
       return;
     }
 
-    const lrc = parseLRC(track?.lrc || track?.lrc_text || track?.lyrics_lrc || "");
-    if(lrc.length){
-      timedLyricLines = lrc;
-      lyricLines = lrc.map((item) => item.text);
-      hasTimedLyrics = true;
-      return;
-    }
+    const plainText = firstTextField(track, [
+      "lyrics_latin",
+      "lyrics_romanized",
+      "transliteration",
+      "romanized",
+      "lyrics",
+      "lyrics_text",
+      "lyric"
+    ]);
 
     const plainTimedTexts = timedArray.map((item) => item.text).filter(Boolean);
 
     lyricLines = plainTimedTexts.length
       ? plainTimedTexts
-      : parsePlainLyrics(track?.lyrics || track?.lyrics_text || track?.lyric || "");
+      : parsePlainLyrics(plainText);
 
     timedLyricLines = [];
     hasTimedLyrics = false;
@@ -1030,14 +1145,6 @@
     }
   }
 
-  function escapeHtml(value){
-    return String(value || "")
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;");
-  }
-
   function createKaraokeModal(doc){
     if(!doc || doc.getElementById("icanyKaraokeModal")) return;
 
@@ -1052,6 +1159,8 @@
             <h2>Karaoke</h2>
             <div class="icany-karaoke-lang" id="icanyKaraokeLang">iCanyAI</div>
           </div>
+
+          ${businessLogo("icany-karaoke-logo")}
 
           <button class="icany-karaoke-close" id="icanyKaraokeClose" type="button">×</button>
         </div>
@@ -1144,12 +1253,7 @@
           </button>
         </div>
 
-        <div class="icany-radio-brand" aria-label="iCanyAI Business">
-          <span class="icany-radio-brand-main">
-            <span class="icany-white">icany</span><span class="icany-ai">AI</span>
-          </span>
-          <span class="icany-radio-brand-sub">BUSINESS</span>
-        </div>
+        ${businessLogo("icany-radio-brand")}
       </div>
 
       <div class="icany-eq-line" id="icanyEqLine"></div>
@@ -1207,23 +1311,31 @@
         return loadTrack(currentTrackIndex);
       }
 
+      console.warn("Seçili radyo havuzunda çalınacak parça bulunamadı.");
       return false;
     }
 
     async function playCurrent(){
-      if(!audio) return;
+      if(!audio) return false;
 
       const ready = await ensureTrackLoaded();
-      if(!ready || !audio.src) return;
+      if(!ready || !audio.src) return false;
 
-      audio.play().then(() => {
+      try{
+        await audio.play();
         setPlaying(true);
-        persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
-      }).catch(() => {});
+        await persistPlaybackState(doc, tracks[currentTrackIndex], audio);
+        return true;
+      }catch(error){
+        console.warn("Tarayıcı otomatik çalmayı engelledi, Play ile devam edilebilir:", error);
+        setPlaying(false);
+        return false;
+      }
     }
 
     function chooseNextIndex(direction = 1){
       if(!tracks.length) return 0;
+
       if(shuffleEnabled && tracks.length > 1){
         let next = currentTrackIndex;
         let guard = 0;
@@ -1233,6 +1345,7 @@
         }
         return next;
       }
+
       return (currentTrackIndex + direction + tracks.length) % tracks.length;
     }
 
@@ -1241,7 +1354,8 @@
         await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
       }
 
-      if(!tracks.length) {
+      if(!tracks.length){
+        console.warn("Seçili radyo havuzunda sıradaki parça bulunamadı.");
         setPlaying(false);
         return;
       }
@@ -1254,7 +1368,13 @@
       }
 
       if(autoPlay){
-        audio.play().then(() => setPlaying(true)).catch(() => {});
+        try{
+          await audio.play();
+          setPlaying(true);
+        }catch(error){
+          console.warn("Sıradaki parça otomatik başlayamadı:", error);
+          setPlaying(false);
+        }
       }
     }
 
@@ -1288,7 +1408,10 @@
 
     audio?.addEventListener("timeupdate", () => {
       updateKaraoke(doc);
-      if(Math.floor(audio.currentTime) % 5 === 0){
+
+      const second = Math.floor(audio.currentTime || 0);
+      if(second > 0 && second % 5 === 0 && second !== lastPersistSecond){
+        lastPersistSecond = second;
         persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
       }
     });
@@ -1298,24 +1421,20 @@
       persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
     });
 
-    audio?.addEventListener("pause", () => {
-      setPlaying(false);
-    });
+    audio?.addEventListener("pause", () => setPlaying(false));
+    audio?.addEventListener("play", () => setPlaying(true));
+    audio?.addEventListener("ended", async () => nextTrack(1, true));
 
-    audio?.addEventListener("play", () => {
-      setPlaying(true);
-    });
-
-    audio?.addEventListener("ended", async () => {
-      await nextTrack(1, true);
-    });
+    doc.__icanyPlayCurrent = playCurrent;
+    doc.__icanyLoadTrack = loadTrack;
   }
 
   function createSetupCard(doc){
     if(!doc || doc.getElementById("icanyRadioSetupCard")) return;
 
-    const offlineCard = doc.getElementById("offlineCard");
-    if(!offlineCard) return;
+    const textCard = doc.getElementById("textCard");
+    const target = textCard || doc.getElementById("offlineCard");
+    if(!target) return;
 
     const card = doc.createElement("div");
     card.id = "icanyRadioSetupCard";
@@ -1324,13 +1443,14 @@
     card.setAttribute("tabindex","0");
 
     card.innerHTML = `
+      ${businessLogo("icany-card-logo")}
       <div class="wide-icon" aria-hidden="true">
         ${radioIcon()}
       </div>
 
       <div class="wide-body">
         <h2 class="wide-title">iCanyAI Radyo</h2>
-        <p class="wide-desc">Müzik türünü ve dili seç. Kendi radyo kanalını oluştur.</p>
+        <p class="wide-desc">Karaoke müzikle hem dinle hem öğren. Binlerce müzik seni bekliyor.</p>
       </div>
 
       <div class="arrow-chip"></div>
@@ -1344,7 +1464,16 @@
       }
     });
 
-    offlineCard.insertAdjacentElement("afterend", card);
+    target.insertAdjacentElement("afterend", card);
+    reorderCards(doc);
+  }
+
+  function reorderCards(doc){
+    const funCard = doc.getElementById("funCard");
+    const levelCard = doc.getElementById("levelCard");
+    if(funCard && levelCard){
+      funCard.insertAdjacentElement("afterend", levelCard);
+    }
   }
 
   function createModal(doc){
@@ -1362,8 +1491,8 @@
 
     modal.innerHTML = `
       <div class="icany-radio-modal-card">
-        <h2>Kendi Radyonu Kur</h2>
-        <p>Müzik türünü ve dili seç. Birden fazla seçim yapabilirsin.</p>
+        <h2>iCanyAI BUSINESS</h2>
+        <p>Aynı anda birden fazla dil ve tür seçebilirsiniz. Dilediğiniz zaman değiştirebilirsiniz.</p>
 
         <div class="icany-radio-group-title">Müzik Türü</div>
         <div class="icany-radio-chip-grid" data-group="genres">
@@ -1377,7 +1506,7 @@
 
         <div class="icany-radio-actions">
           <button class="icany-radio-action secondary" id="icanyRadioClose" type="button">Kapat</button>
-          <button class="icany-radio-action primary" id="icanyRadioSave" type="button">Radyomu Oluştur</button>
+          <button class="icany-radio-action primary" id="icanyRadioSave" type="button">KAYDET</button>
         </div>
       </div>
     `;
@@ -1488,6 +1617,7 @@
         .maybeSingle();
 
       if(error) throw error;
+
       if(data){
         lastSettings = data;
         writeLocalSettings(data);
@@ -1500,11 +1630,10 @@
     return local;
   }
 
-  function settingsFromCurrent(doc, track, audio){
+  function settingsFromCurrent(track, audio){
     const selectedChannels = findRadioChannels(lastSelection.genres, lastSelection.languages).map((channel) => channel.id);
 
     return {
-      user_id:lastSettings?.user_id || null,
       genres:uniq(lastSelection.genres),
       languages:uniq(lastSelection.languages),
       selected_channel_ids:selectedChannels,
@@ -1548,7 +1677,7 @@
 
   async function persistPlaybackState(doc, track, audio){
     if(!lastSelection.languages.length && !lastSelection.genres.length) return;
-    await persistSettings(settingsFromCurrent(doc, track || {}, audio || null));
+    await persistSettings(settingsFromCurrent(track || {}, audio || null));
   }
 
   function applySettings(settings){
@@ -1561,6 +1690,7 @@
 
     shuffleEnabled = !!settings.shuffle_enabled;
     lastSettings = settings;
+
     return !!(lastSelection.genres.length || lastSelection.languages.length);
   }
 
@@ -1569,13 +1699,11 @@
     const languages = selectedValues(doc,"languages");
 
     if(!genres.length || !languages.length){
-      alert("En az bir müzik türü ve bir dil seçelim.");
+      console.warn("Radyo kaydı için en az bir tür ve bir dil seçilmeli.");
       return;
     }
 
     lastSelection = { genres, languages };
-    shuffleEnabled = doc.getElementById("icanyShuffleBtn")?.classList.contains("active") || shuffleEnabled;
-
     closeModal(doc);
     showPlayer(doc);
 
@@ -1587,6 +1715,7 @@
     await loadRadioTracksBySelection(genres,languages);
 
     const audio = doc.getElementById("icanyRadioAudio");
+
     if(audio && tracks.length){
       currentTrackIndex = 0;
       const track = tracks[0];
@@ -1595,16 +1724,23 @@
       buildLyricsForTrack(track);
       renderKaraoke(doc);
       updatePlayerLanguageBadge(doc, track);
-      await persistSettings(settingsFromCurrent(doc, track, audio));
+      await persistSettings(settingsFromCurrent(track, audio));
+
+      if(typeof doc.__icanyPlayCurrent === "function"){
+        await doc.__icanyPlayCurrent();
+      }
     }else{
-      await persistSettings(settingsFromCurrent(doc, {}, audio));
+      console.warn("Seçili radyo havuzunda çalınacak parça bulunamadı.");
+      await persistSettings(settingsFromCurrent({}, audio));
     }
   }
 
   function showPlayer(doc){
     createPlayer(doc);
     createKaraokeModal(doc);
-    doc.getElementById("icanyRadioPlayer")?.classList.add("show");
+
+    const player = doc.getElementById("icanyRadioPlayer");
+    player?.classList.add("show");
 
     const shuffleBtn = doc.getElementById("icanyShuffleBtn");
     shuffleBtn?.classList.toggle("active", !!shuffleEnabled);
@@ -1650,6 +1786,7 @@
     createSetupCard(doc);
     createModal(doc);
     createKaraokeModal(doc);
+    reorderCards(doc);
 
     const saved = await loadSavedSettings();
     if(saved){
