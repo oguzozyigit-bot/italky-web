@@ -55,17 +55,37 @@
   frame.src = "/pages/home.html?deneme_radio=1&v=" + Date.now();
 
   const PUBLIC_BASE = "https://media.icany.ai";
+  const INDEX_URL = `${PUBLIC_BASE}/icanyai/radio/index.json`;
+  const SETTINGS_KEY = "icany_radio_user_settings_v2";
+  const SETTINGS_TABLE = "icany_radio_user_settings";
+  const BANNED_CHANNEL_IDS = new Set([
+    "09_turkish_pop_radio",
+    "11_azerbaijani_modern_pop"
+  ]);
 
-  const ICANY_RADIO_CHANNELS = [
-    ["01_global_pop_english", "Global Pop Radio", "İngilizce", "EN", "🇬🇧", ["Pop","Rock","Rap","Hip-Hop","Dance"]],
-    ["02_french_lounge_pop", "French Lounge Pop", "Fransızca", "FR", "🇫🇷", ["Pop","Lounge","Rock","Rap","Hip-Hop"]],
-    ["03_italian_dolce_pop", "Italian Dolce Pop", "İtalyanca", "IT", "🇮🇹", ["Pop","Lounge","Rock"]],
-    ["04_spanish_latin_pop", "Spanish Latin Pop", "İspanyolca", "ES", "🇪🇸", ["Pop","Latin","Dance","Rap"]],
-    ["05_argentina_tango_pop", "Argentina Tango Pop", "İspanyolca Arjantin", "AR", "🇦🇷", ["Pop","Tango","Latin"]],
-    ["06_russian_modern_pop", "Russian Modern Pop", "Rusça", "RU", "🇷🇺", ["Pop","Rock","Rap","Dance"]],
-    ["07_japanese_city_pop", "Japanese City Pop", "Japonca", "JA", "🇯🇵", ["Pop","City Pop","Electronic"]],
-    ["08_brazilian_bossa_pop", "Brazilian Bossa Pop", "Portekizce Brezilya", "BR", "🇧🇷", ["Pop","Bossa Nova","Lounge","Latin"]],
-    ["10_hindi_bollywood_pop", "Hindi Bollywood Pop", "Hintçe", "HI", "🇮🇳", ["Pop","Bollywood","Dance"]]
+  const FALLBACK_CHANNELS = [
+    ["01_global_pop_english", "Global Pop English", "İngilizce", "EN", "🇬🇧", ["Pop","Global","Dance"]],
+    ["01_pop_radio", "Pop Radio", "İngilizce", "EN", "🇬🇧", ["Pop"]],
+    ["02_french_lounge_pop", "French Lounge Pop", "Fransızca", "FR", "🇫🇷", ["Pop","Lounge"]],
+    ["02_rock_radio", "Rock Radio", "İngilizce", "EN", "🇬🇧", ["Rock"]],
+    ["03_italian_dolce_pop", "Italian Dolce Pop", "İtalyanca", "IT", "🇮🇹", ["Pop","Lounge"]],
+    ["03_jazz_radio", "Jazz Radio", "İngilizce", "EN", "🇬🇧", ["Jazz"]],
+    ["04_hiphop_radio", "Hip-Hop Radio", "İngilizce", "EN", "🇬🇧", ["Hip-Hop","Rap"]],
+    ["04_spanish_latin_pop", "Spanish Latin Pop", "İspanyolca", "ES", "🇪🇸", ["Pop","Latin","Dance"]],
+    ["05_argentina_tango_pop", "Argentina Tango Pop", "İspanyolca", "AR", "🇦🇷", ["Tango","Latin","Pop"]],
+    ["05_kpop_radio", "K-Pop Radio", "Korece", "KO", "🇰🇷", ["K-Pop","Pop","Dance"]],
+    ["06_kurdish_modern_folk_pop", "Kurdish Modern Folk Pop", "Kürtçe", "KU", "☀️", ["Folk","Pop","World"]],
+    ["06_rnb_radio", "R&B Radio", "İngilizce", "EN", "🇬🇧", ["R&B"]],
+    ["06_russian_modern_pop", "Russian Modern Pop", "Rusça", "RU", "🇷🇺", ["Pop","Rock","Dance"]],
+    ["07_edm_radio", "EDM Radio", "İngilizce", "EN", "🇬🇧", ["EDM","Dance","Electronic"]],
+    ["07_japanese_city_pop", "Japanese City Pop", "Japonca", "JA", "🇯🇵", ["City Pop","Pop","Electronic"]],
+    ["08_brazilian_bossa_pop", "Brazilian Bossa Pop", "Portekizce", "BR", "🇧🇷", ["Bossa Nova","Latin","Lounge"]],
+    ["08_country_radio", "Country Radio", "İngilizce", "EN", "🇺🇸", ["Country"]],
+    ["09_reggae_radio", "Reggae Radio", "İngilizce", "EN", "🇯🇲", ["Reggae"]],
+    ["10_hindi_bollywood_pop", "Hindi Bollywood Pop", "Hintçe", "HI", "🇮🇳", ["Bollywood","Pop","Dance"]],
+    ["10_latin_radio", "Latin Radio", "İspanyolca", "ES", "🇪🇸", ["Latin","Dance"]],
+    ["11_funk_radio", "Funk Radio", "İngilizce", "EN", "🇬🇧", ["Funk"]],
+    ["12_world_radio", "World Radio", "Çok Dilli", "WORLD", "🌍", ["World","Global"]]
   ].map(([id,name,language,code,flag,genres]) => ({
     id,
     name,
@@ -78,20 +98,97 @@
     error:false
   }));
 
+  let ICANY_RADIO_CHANNELS = FALLBACK_CHANNELS.slice();
   let tracks = [];
   let currentTrackIndex = 0;
   let shuffleEnabled = false;
   let activeChannel = null;
   let lyricLines = [];
   let timedLyricLines = [];
-  let lrcLines = [];
+  let hasTimedLyrics = false;
   let lastSelection = { genres:[], languages:[] };
+  let lastSettings = null;
+  let supabaseClientPromise = null;
+  let currentUserPromise = null;
 
   function getDoc(){
     try{
       return frame.contentDocument || frame.contentWindow.document;
     }catch(e){
       return null;
+    }
+  }
+
+  function getWin(){
+    try{
+      return frame.contentWindow;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function safeJsonParse(value, fallback = null){
+    try{
+      return JSON.parse(value);
+    }catch{
+      return fallback;
+    }
+  }
+
+  function uniq(list){
+    return Array.from(new Set((Array.isArray(list) ? list : []).filter(Boolean)));
+  }
+
+  function normalizeTextValue(value){
+    return String(value || "").trim();
+  }
+
+  function normalizeChannel(raw){
+    const id = normalizeTextValue(raw?.id || raw?.channel_id || raw?.slug || raw?.folder || raw?.key);
+    if(!id || BANNED_CHANNEL_IDS.has(id)) return null;
+
+    const name = normalizeTextValue(raw?.name || raw?.title || id.replace(/_/g," "));
+    const language = normalizeTextValue(raw?.language || raw?.lang_name || raw?.lang || raw?.locale || "İngilizce");
+    const code = normalizeTextValue(raw?.code || raw?.lang_code || raw?.language_code || language.slice(0,2).toUpperCase()).toUpperCase();
+    const flag = normalizeTextValue(raw?.flag || "🎧");
+
+    const genresRaw = raw?.genres || raw?.genre || raw?.tags || [];
+    const genres = uniq(
+      Array.isArray(genresRaw)
+        ? genresRaw.map((item) => normalizeTextValue(item))
+        : String(genresRaw).split(",").map((item) => item.trim())
+    );
+
+    return {
+      id,
+      name,
+      language,
+      code,
+      flag,
+      genres: genres.length ? genres : ["Pop"],
+      tracks:[],
+      loaded:false,
+      error:false
+    };
+  }
+
+  async function loadChannelIndex(){
+    try{
+      const res = await fetch(`${INDEX_URL}?t=${Date.now()}`, { cache:"no-store" });
+      if(!res.ok) throw new Error("index okunamadı");
+
+      const data = await res.json();
+      const list = Array.isArray(data)
+        ? data
+        : (data.channels || data.items || data.radios || []);
+
+      const normalized = list.map(normalizeChannel).filter(Boolean);
+      if(normalized.length){
+        ICANY_RADIO_CHANNELS = normalized;
+      }
+    }catch(error){
+      console.warn("Radyo index okunamadı, fallback kanal listesi kullanılıyor:", error);
+      ICANY_RADIO_CHANNELS = FALLBACK_CHANNELS.slice();
     }
   }
 
@@ -103,7 +200,8 @@
     return String(
       track?.title ||
       track?.name ||
-      (track?.url || "").split("/").pop() ||
+      track?.track_title ||
+      (track?.url || track?.audio_url || "").split("/").pop() ||
       "iCanyAI Track"
     ).replace(/\.mp3$/i,"");
   }
@@ -122,7 +220,6 @@
   function normalizeShowcaseTrack(track, channel){
     const rawUrl = track?.url || track?.audio_url || track?.mp3_url || track?.file || track?.src || "";
     const url = resolveUrl(rawUrl, channel);
-
     if(!url) return null;
 
     return {
@@ -140,6 +237,8 @@
   }
 
   async function loadChannel(channel){
+    if(channel.loaded && Array.isArray(channel.tracks)) return channel.tracks;
+
     try{
       const res = await fetch(manifestUrl(channel), { cache:"no-store" });
       if(!res.ok) throw new Error("manifest yok");
@@ -164,85 +263,93 @@
   }
 
   function getAllGenres(){
-    return [
-      "Pop",
-      "Rock",
-      "Rap",
-      "Hip-Hop",
-      "Lounge",
-      "Latin",
-      "Dance",
-      "Electronic",
-      "Tango",
-      "City Pop",
-      "Bossa Nova",
-      "Bollywood"
+    const fallback = [
+      "Pop","Rock","Rap","Hip-Hop","Lounge","Latin","Dance","Electronic","EDM",
+      "Tango","City Pop","Bossa Nova","Bollywood","K-Pop","Jazz","R&B",
+      "Country","Reggae","Funk","World","Global","Folk"
     ];
+
+    return uniq(ICANY_RADIO_CHANNELS.flatMap((channel) => channel.genres || []).concat(fallback)).sort();
   }
 
   function getAllLanguages(){
-    return ICANY_RADIO_CHANNELS.map((channel) => channel.language);
+    return uniq(
+      ICANY_RADIO_CHANNELS
+        .filter((channel) => !BANNED_CHANNEL_IDS.has(channel.id))
+        .map((channel) => channel.language)
+    );
   }
 
   function uniqueChannels(list){
     const seen = new Set();
-
     return list.filter((channel) => {
-      if(seen.has(channel.id)) return false;
+      if(!channel || BANNED_CHANNEL_IDS.has(channel.id) || seen.has(channel.id)) return false;
       seen.add(channel.id);
       return true;
     });
   }
 
   function findRadioChannels(genres, languages){
-    const wantedGenres = Array.isArray(genres) ? genres : [];
-    const wantedLanguages = Array.isArray(languages) ? languages : [];
+    const wantedGenres = uniq(genres);
+    const wantedLanguages = uniq(languages);
+    const allowed = ICANY_RADIO_CHANNELS.filter((channel) => !BANNED_CHANNEL_IDS.has(channel.id));
 
-    const exact = ICANY_RADIO_CHANNELS.filter((channel) => {
-      const genreOk =
-        !wantedGenres.length ||
-        wantedGenres.some((genre) => (channel.genres || []).includes(genre));
+    const languageScoped = wantedLanguages.length
+      ? allowed.filter((channel) => wantedLanguages.includes(channel.language))
+      : allowed;
 
-      const languageOk =
-        !wantedLanguages.length ||
-        wantedLanguages.includes(channel.language);
-
-      return genreOk && languageOk;
+    const exact = languageScoped.filter((channel) => {
+      return !wantedGenres.length || wantedGenres.some((genre) => (channel.genres || []).includes(genre));
     });
 
     if(exact.length) return uniqueChannels(exact);
 
-    const byLanguage = wantedLanguages.length
-      ? ICANY_RADIO_CHANNELS.filter((channel) => wantedLanguages.includes(channel.language))
-      : [];
-
-    if(byLanguage.length) return uniqueChannels(byLanguage);
+    if(wantedLanguages.length) return uniqueChannels(languageScoped);
 
     const byGenre = wantedGenres.length
-      ? ICANY_RADIO_CHANNELS.filter((channel) => wantedGenres.some((genre) => (channel.genres || []).includes(genre)))
+      ? allowed.filter((channel) => wantedGenres.some((genre) => (channel.genres || []).includes(genre)))
       : [];
 
     if(byGenre.length) return uniqueChannels(byGenre);
 
-    return ICANY_RADIO_CHANNELS.slice();
+    return uniqueChannels(allowed);
+  }
+
+  function filterTracksBySelection(list, genres, languages){
+    const wantedGenres = uniq(genres);
+    const wantedLanguages = uniq(languages);
+
+    return list.filter((track) => {
+      if(wantedLanguages.length && !wantedLanguages.includes(track.language)) return false;
+      if(wantedGenres.length && !wantedGenres.some((genre) => (track.genres || []).includes(genre))) {
+        if(wantedLanguages.length) return true;
+        return false;
+      }
+      return true;
+    });
   }
 
   async function loadRadioTracksBySelection(genres, languages){
-    const firstChannels = findRadioChannels(genres, languages);
-    const secondChannels = ICANY_RADIO_CHANNELS.filter((channel) => !firstChannels.some((item) => item.id === channel.id));
-    const searchOrder = firstChannels.concat(secondChannels);
-
+    const channels = findRadioChannels(genres, languages);
     let allTracks = [];
 
-    for(const channel of searchOrder){
+    for(const channel of channels){
       const channelTracks = await loadChannel(channel);
-
       if(channelTracks.length){
         allTracks = allTracks.concat(channelTracks);
       }
     }
 
-    tracks = allTracks;
+    tracks = filterTracksBySelection(allTracks, genres, languages);
+
+    if(!tracks.length && languages?.length){
+      tracks = allTracks.filter((track) => languages.includes(track.language));
+    }
+
+    if(!tracks.length){
+      tracks = allTracks;
+    }
+
     currentTrackIndex = 0;
     activeChannel = tracks[0]
       ? ICANY_RADIO_CHANNELS.find((channel) => channel.id === tracks[0].channel_id)
@@ -276,37 +383,36 @@
         position:relative;
         overflow:hidden;
         border-radius:18px;
-        padding:7px 9px 7px;
+        padding:7px 9px 10px;
         color:#fff;
-        border:1px solid rgba(255,255,255,.12);
+        border:1px solid rgba(255,255,255,.13);
         background:
-          radial-gradient(circle at 14% 30%,rgba(103,232,249,.13),transparent 32%),
-          radial-gradient(circle at 90% 10%,rgba(236,72,153,.10),transparent 30%),
-          linear-gradient(135deg,rgba(15,23,42,.80),rgba(15,23,42,.92));
+          radial-gradient(circle at 12% 18%,rgba(56,189,248,.16),transparent 34%),
+          radial-gradient(circle at 88% 20%,rgba(14,165,233,.12),transparent 30%),
+          linear-gradient(135deg,rgba(2,6,23,.90),rgba(15,23,42,.96) 52%,rgba(3,105,161,.72));
         box-shadow:0 12px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);
         backdrop-filter:blur(16px);
         -webkit-backdrop-filter:blur(16px);
       }
 
-      .icany-radio-player.show{
-        display:block;
-      }
+      .icany-radio-player.show{ display:block; }
 
       .icany-radio-row{
         position:relative;
         z-index:2;
         display:grid;
-        grid-template-columns:auto 1fr auto;
+        grid-template-columns:minmax(74px,.7fr) minmax(146px,1.4fr) minmax(86px,.8fr);
         align-items:center;
-        gap:7px;
+        gap:8px;
       }
 
       .icany-karaoke-mini{
         display:inline-flex;
         align-items:center;
         justify-content:center;
-        gap:4px;
-        min-width:76px;
+        gap:5px;
+        width:100%;
+        max-width:92px;
         height:31px;
         padding:0 8px;
         border-radius:999px;
@@ -320,13 +426,9 @@
         cursor:pointer;
         box-shadow:0 8px 18px rgba(0,0,0,.16);
         white-space:nowrap;
-        flex:0 0 auto;
       }
 
-      .icany-karaoke-mini-flag{
-        font-size:13px;
-        line-height:1;
-      }
+      .icany-karaoke-mini-flag{ font-size:13px; line-height:1; }
 
       .icany-radio-controls{
         display:flex;
@@ -337,58 +439,99 @@
       }
 
       .icany-radio-brand{
-        min-width:48px;
-        text-align:right;
+        justify-self:end;
+        width:86px;
+        max-width:86px;
+        min-height:38px;
+        padding:7px 9px 6px;
+        border-radius:12px;
+        background:
+          radial-gradient(circle at 80% 0%,rgba(56,189,248,.18),transparent 48%),
+          linear-gradient(145deg,#020617,#071426 62%,#082f49);
+        border:1px solid rgba(148,163,184,.20);
+        text-align:center;
         line-height:1;
         user-select:none;
+        overflow:hidden;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.16);
       }
 
       .icany-radio-brand-main{
         display:block;
         font-family:'Space Grotesk',Outfit,sans-serif;
-        font-size:10.8px;
+        font-size:15px;
         font-weight:900;
-        letter-spacing:.03px;
+        letter-spacing:0;
         white-space:nowrap;
       }
 
-      .icany-radio-brand-main .icany-white{
-        color:#fff;
-        -webkit-text-fill-color:#fff;
-      }
-
+      .icany-radio-brand-main .icany-white{ color:#fff; -webkit-text-fill-color:#fff; }
       .icany-radio-brand-main .icany-ai{
-        background:linear-gradient(135deg,#67e8f9,#38bdf8,#0ea5e9);
+        color:#67e8f9;
+        background:linear-gradient(135deg,#a5f3fc,#67e8f9,#38bdf8);
         -webkit-background-clip:text;
         -webkit-text-fill-color:transparent;
       }
 
       .icany-radio-brand-sub{
         display:block;
-        margin-top:2px;
-        font-size:5.8px;
+        margin-top:3px;
+        font-size:6.2px;
         font-weight:1000;
-        letter-spacing:.72px;
-        color:rgba(255,255,255,.66);
+        letter-spacing:.9px;
+        color:rgba(226,232,240,.78);
+        white-space:nowrap;
+        transform:translateX(.4px);
       }
 
-      .icany-radio-progress{
+      .icany-eq-line{
         position:relative;
         z-index:2;
-        height:3px;
-        border-radius:999px;
-        background:rgba(255,255,255,.16);
-        overflow:hidden;
+        height:8px;
         margin-top:7px;
+        overflow:hidden;
+        border-radius:999px;
+        background:
+          repeating-linear-gradient(90deg,
+            rgba(103,232,249,.20) 0 2px,
+            transparent 2px 7px);
+        opacity:.86;
       }
 
-      .icany-radio-progress span{
-        display:block;
-        width:0%;
-        height:100%;
+      .icany-eq-line::before,
+      .icany-eq-line::after{
+        content:"";
+        position:absolute;
+        inset:0;
         border-radius:999px;
-        background:linear-gradient(90deg,#67e8f9,#818cf8,#f0abfc);
-        box-shadow:0 0 14px rgba(129,140,248,.42);
+        background:
+          repeating-linear-gradient(90deg,
+            transparent 0 3px,
+            rgba(103,232,249,.88) 3px 5px,
+            transparent 5px 11px),
+          linear-gradient(90deg,transparent,rgba(255,255,255,.30),transparent);
+        transform:translateX(-42%);
+        animation:icanyEqMove 4.2s linear infinite;
+      }
+
+      .icany-eq-line::after{
+        opacity:.52;
+        filter:blur(2px);
+        animation-duration:6.4s;
+        animation-direction:reverse;
+      }
+
+      .icany-radio-player.is-playing .icany-eq-line::before{
+        animation-duration:1.35s;
+      }
+
+      .icany-radio-player.is-playing .icany-eq-line::after{
+        animation-duration:2.2s;
+      }
+
+      @keyframes icanyEqMove{
+        from{ transform:translateX(-45%); }
+        to{ transform:translateX(45%); }
       }
 
       .icany-radio-btn{
@@ -420,24 +563,15 @@
         box-shadow:0 0 18px rgba(103,232,249,.22);
       }
 
-      .icany-radio-btn svg{
-        width:18px;
-        height:18px;
-        fill:currentColor;
-        stroke:none;
-      }
-
-      .icany-radio-btn.main svg{
-        width:21px;
-        height:21px;
-      }
+      .icany-radio-btn svg{ width:18px; height:18px; fill:currentColor; stroke:none; }
+      .icany-radio-btn.main svg{ width:21px; height:21px; }
 
       .icany-radio-card{
         cursor:pointer;
         background:
-          radial-gradient(circle at 14% 42%,rgba(59,130,246,.34),transparent 30%),
+          radial-gradient(circle at 14% 42%,rgba(59,130,246,.30),transparent 30%),
           radial-gradient(circle at 92% 12%,rgba(14,165,233,.22),transparent 28%),
-          radial-gradient(circle at 72% 110%,rgba(255,255,255,.11),transparent 36%),
+          radial-gradient(circle at 72% 110%,rgba(255,255,255,.09),transparent 36%),
           linear-gradient(90deg,#020617 0%,#0f172a 48%,#0369a1 100%);
       }
 
@@ -446,13 +580,8 @@
         border-color:rgba(255,255,255,.28);
       }
 
-      .icany-radio-card .wide-icon svg{
-        stroke:#fff;
-      }
-
-      .icany-radio-card .wide-desc{
-        color:rgba(255,255,255,.90);
-      }
+      .icany-radio-card .wide-icon svg{ stroke:#fff; }
+      .icany-radio-card .wide-desc{ color:rgba(255,255,255,.90); }
 
       .icany-radio-modal,
       .icany-karaoke-modal{
@@ -469,9 +598,7 @@
       }
 
       .icany-radio-modal.show,
-      .icany-karaoke-modal.show{
-        display:flex;
-      }
+      .icany-karaoke-modal.show{ display:flex; }
 
       .icany-radio-modal-card{
         width:min(100%,430px);
@@ -486,14 +613,14 @@
       }
 
       .icany-karaoke-card{
-        width:min(96vw,680px);
-        height:min(88vh,820px);
+        width:min(96vw,760px);
+        height:min(90vh,860px);
         overflow:hidden;
         border-radius:30px;
         padding:22px;
         background:
-          radial-gradient(circle at 12% 0%,rgba(56,189,248,.12),transparent 34%),
-          radial-gradient(circle at 92% 100%,rgba(236,72,153,.10),transparent 34%),
+          radial-gradient(circle at 12% 0%,rgba(56,189,248,.14),transparent 34%),
+          radial-gradient(circle at 92% 100%,rgba(14,165,233,.10),transparent 34%),
           linear-gradient(145deg,rgba(16,23,42,.985),rgba(5,7,18,.985));
         border:1px solid rgba(255,255,255,.14);
         color:#fff;
@@ -589,13 +716,11 @@
         align-items:flex-start;
         justify-content:space-between;
         gap:12px;
-        margin-bottom:18px;
+        margin-bottom:14px;
         flex:0 0 auto;
       }
 
-      .icany-karaoke-title{
-        min-width:0;
-      }
+      .icany-karaoke-title{ min-width:0; }
 
       .icany-karaoke-lang{
         display:inline-flex;
@@ -608,6 +733,15 @@
         font-size:13px;
         font-weight:1000;
         margin-top:8px;
+      }
+
+      .icany-karaoke-note{
+        margin:0 0 12px;
+        color:rgba(226,232,240,.62);
+        font-size:12px;
+        font-weight:800;
+        line-height:1.4;
+        min-height:16px;
       }
 
       .icany-karaoke-close{
@@ -627,7 +761,7 @@
         flex:1 1 auto;
         min-height:0;
         overflow:auto;
-        padding:12px 2px 28px;
+        padding:8px 2px 28px;
         scroll-behavior:smooth;
       }
 
@@ -638,19 +772,23 @@
         font-size:22px;
         line-height:1.35;
         font-weight:900;
-        color:rgba(255,255,255,.36);
+        color:rgba(255,255,255,.70);
         transition:.18s ease;
       }
 
-      .icany-karaoke-line.done{
-        color:rgba(255,255,255,.50);
-      }
+      .icany-karaoke-line.done{ color:rgba(255,255,255,.50); }
 
       .icany-karaoke-line.active{
         color:#06111f;
         background:linear-gradient(135deg,#67e8f9,#f8fafc);
         box-shadow:0 0 30px rgba(103,232,249,.20);
         transform:scale(1.012);
+      }
+
+      .icany-karaoke-lines:not(.has-timing) .icany-karaoke-line{
+        color:rgba(255,255,255,.82);
+        background:rgba(255,255,255,.045);
+        border:1px solid rgba(255,255,255,.06);
       }
 
       .icany-karaoke-empty{
@@ -664,76 +802,50 @@
 
       @media(max-width:390px){
         .icany-radio-player{
-          padding:6px 8px 6px;
+          padding:6px 8px 9px;
           border-radius:16px;
         }
 
         .icany-radio-row{
-          gap:4px;
+          grid-template-columns:minmax(66px,.66fr) minmax(138px,1.42fr) minmax(78px,.82fr);
+          gap:5px;
         }
 
-        .icany-radio-controls{
-          gap:4px;
-        }
+        .icany-radio-controls{ gap:4px; }
 
         .icany-karaoke-mini{
-          min-width:68px;
+          max-width:76px;
           height:30px;
           padding:0 6px;
           font-size:9px;
         }
 
-        .icany-karaoke-mini-flag{
-          font-size:12px;
-        }
+        .icany-karaoke-mini-flag{ font-size:12px; }
 
-        .icany-radio-btn{
-          width:30px;
-          height:30px;
-        }
-
-        .icany-radio-btn.main{
-          width:40px;
-          height:40px;
-        }
-
-        .icany-radio-btn svg{
-          width:17px;
-          height:17px;
-        }
-
-        .icany-radio-btn.main svg{
-          width:20px;
-          height:20px;
-        }
+        .icany-radio-btn{ width:30px; height:30px; }
+        .icany-radio-btn.main{ width:40px; height:40px; }
+        .icany-radio-btn svg{ width:17px; height:17px; }
+        .icany-radio-btn.main svg{ width:20px; height:20px; }
 
         .icany-radio-brand{
-          min-width:46px;
+          width:78px;
+          max-width:78px;
+          padding:7px 7px 6px;
         }
 
-        .icany-radio-brand-main{
-          font-size:10px;
-        }
+        .icany-radio-brand-main{ font-size:13.5px; }
+        .icany-radio-brand-sub{ font-size:5.7px; letter-spacing:.74px; }
 
-        .icany-radio-brand-sub{
-          font-size:5.6px;
-          letter-spacing:.68px;
-        }
-
-        .icany-karaoke-modal{
-          padding:9px;
-        }
+        .icany-karaoke-modal{ padding:9px; }
 
         .icany-karaoke-card{
           width:94vw;
-          height:82vh;
+          height:84vh;
           border-radius:26px;
           padding:18px;
         }
 
-        .icany-karaoke-card h2{
-          font-size:28px;
-        }
+        .icany-karaoke-card h2{ font-size:28px; }
 
         .icany-karaoke-line{
           font-size:21px;
@@ -741,43 +853,19 @@
           margin:7px 0;
         }
 
-        .icany-karaoke-close{
-          width:38px;
-          height:38px;
-        }
+        .icany-karaoke-close{ width:38px; height:38px; }
       }
 
       @media(max-width:360px){
-        .icany-radio-chip-grid{
-          grid-template-columns:repeat(2,minmax(0,1fr));
-        }
-
-        .icany-radio-controls{
-          gap:3px;
-        }
-
-        .icany-radio-btn{
-          width:29px;
-          height:29px;
-        }
-
-        .icany-radio-btn.main{
-          width:39px;
-          height:39px;
-        }
-
-        .icany-radio-brand{
-          min-width:44px;
-        }
-
-        .icany-karaoke-mini{
-          min-width:62px;
-          font-size:8.5px;
-        }
-
-        .icany-karaoke-line{
-          font-size:19px;
-        }
+        .icany-radio-chip-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .icany-radio-controls{ gap:3px; }
+        .icany-radio-btn{ width:29px; height:29px; }
+        .icany-radio-btn.main{ width:39px; height:39px; }
+        .icany-radio-brand{ width:74px; max-width:74px; }
+        .icany-radio-brand-main{ font-size:12.5px; }
+        .icany-radio-brand-sub{ font-size:5.3px; letter-spacing:.62px; }
+        .icany-karaoke-mini{ max-width:68px; font-size:8.5px; }
+        .icany-karaoke-line{ font-size:19px; }
       }
     `;
 
@@ -795,16 +883,21 @@
     const out = [];
 
     String(text || "").split(/\r?\n/).forEach((line) => {
-      const match = line.match(/\[(\d+):(\d+(?:\.\d+)?)\](.*)/);
-      if(match){
+      const matches = Array.from(line.matchAll(/\[(\d+):(\d+(?:\.\d+)?)\]/g));
+      if(!matches.length) return;
+
+      const text = line.replace(/\[(\d+):(\d+(?:\.\d+)?)\]/g,"").trim();
+      if(!text) return;
+
+      matches.forEach((match) => {
         out.push({
           time: Number(match[1]) * 60 + Number(match[2]),
-          text: match[3].trim()
+          text
         });
-      }
+      });
     });
 
-    return out;
+    return out.sort((a,b) => a.time - b.time);
   }
 
   function parseTimedArray(value){
@@ -844,53 +937,7 @@
     }).filter(Boolean);
   }
 
-  function makeFallbackLyrics(track){
-    const title = safeTitle(track).replace(/[_-]/g," ");
-    return [
-      "iCanyAI Business canlı yayınındasın",
-      track?.channel_name || "iCanyAI Radyo",
-      title,
-      "Bu parça R2 üretim hattından geliyor",
-      "Söz zaman kodu geldiğinde karaoke tam senkron çalışacak"
-    ];
-  }
-
-  function estimateLineDurations(lines, totalDuration){
-    const safeDuration = Number.isFinite(totalDuration) && totalDuration > 20 ? totalDuration : 190;
-    const startOffset = Math.min(8, safeDuration * 0.04);
-    const endReserve = Math.min(8, safeDuration * 0.04);
-    const usable = Math.max(30, safeDuration - startOffset - endReserve);
-
-    const weights = lines.map((line) => {
-      const len = String(line || "").length;
-      return Math.max(1.8, Math.min(7.5, len / 13));
-    });
-
-    const totalWeight = weights.reduce((sum, item) => sum + item, 0) || 1;
-
-    let cursor = startOffset;
-
-    return lines.map((line, index) => {
-      const duration = (weights[index] / totalWeight) * usable;
-      const time = cursor;
-      cursor += duration;
-      return { time, text:line };
-    });
-  }
-
-  function rebuildAutoTimingFromAudio(doc){
-    const audio = doc.getElementById("icanyRadioAudio");
-
-    if(!audio || lrcLines.length) return;
-    if(!lyricLines.length) return;
-
-    const duration = Number(audio.duration || 0);
-    if(!Number.isFinite(duration) || duration <= 0) return;
-
-    timedLyricLines = estimateLineDurations(lyricLines, duration);
-  }
-
-  function buildLyricsForTrack(track, doc = null){
+  function buildLyricsForTrack(track){
     const timedArray =
       parseTimedArray(track?.lyrics_json) ||
       parseTimedArray(track?.lyrics_lines) ||
@@ -899,17 +946,17 @@
     const exactTimed = timedArray.filter((item) => Number.isFinite(item.time));
 
     if(exactTimed.length){
-      timedLyricLines = exactTimed;
-      lrcLines = exactTimed;
-      lyricLines = exactTimed.map((item) => item.text);
+      timedLyricLines = exactTimed.sort((a,b) => a.time - b.time);
+      lyricLines = timedLyricLines.map((item) => item.text);
+      hasTimedLyrics = true;
       return;
     }
 
-    lrcLines = parseLRC(track?.lrc || track?.lrc_text || track?.lyrics_lrc || "");
-
-    if(lrcLines.length){
-      timedLyricLines = lrcLines;
-      lyricLines = lrcLines.map((item) => item.text);
+    const lrc = parseLRC(track?.lrc || track?.lrc_text || track?.lyrics_lrc || "");
+    if(lrc.length){
+      timedLyricLines = lrc;
+      lyricLines = lrc.map((item) => item.text);
+      hasTimedLyrics = true;
       return;
     }
 
@@ -919,56 +966,52 @@
       ? plainTimedTexts
       : parsePlainLyrics(track?.lyrics || track?.lyrics_text || track?.lyric || "");
 
-    if(!lyricLines.length){
-      lyricLines = makeFallbackLyrics(track);
-    }
-
-    const audio = doc ? doc.getElementById("icanyRadioAudio") : null;
-    const duration =
-      Number(track?.duration) ||
-      Number(audio?.duration) ||
-      190;
-
-    timedLyricLines = estimateLineDurations(lyricLines, duration);
-    lrcLines = [];
+    timedLyricLines = [];
+    hasTimedLyrics = false;
   }
 
   function activeLyricIndex(audio){
+    if(!hasTimedLyrics || !timedLyricLines.length) return -1;
+
     const currentTime = audio?.currentTime || 0;
-    const timed = timedLyricLines.length ? timedLyricLines : lrcLines;
+    let index = 0;
 
-    if(timed.length){
-      let index = 0;
-
-      for(let i = 0; i < timed.length; i++){
-        if(currentTime >= Number(timed[i].time || 0)) index = i;
-        else break;
-      }
-
-      return index;
+    for(let i = 0; i < timedLyricLines.length; i++){
+      if(currentTime >= Number(timedLyricLines[i].time || 0)) index = i;
+      else break;
     }
 
-    const duration = audio?.duration || 190;
-
-    return Math.min(
-      lyricLines.length - 1,
-      Math.max(0, Math.floor((currentTime / Math.max(duration, 1)) * lyricLines.length))
-    );
+    return index;
   }
 
   function renderKaraoke(doc){
     const wrap = doc.getElementById("icanyKaraokeLines");
+    const note = doc.getElementById("icanyKaraokeNote");
     if(!wrap) return;
 
+    wrap.classList.toggle("has-timing", hasTimedLyrics);
+
+    if(note){
+      note.textContent = hasTimedLyrics
+        ? "Zaman kodlu karaoke akışı hazır."
+        : "Karaoke söz akışı hazırlanıyor.";
+    }
+
+    if(!lyricLines.length){
+      wrap.innerHTML = `<div class="icany-karaoke-empty">Bu parça için sözler henüz hazırlanıyor.</div>`;
+      return;
+    }
+
     wrap.innerHTML = lyricLines.map((line, index) => {
-      return `<div class="icany-karaoke-line" data-i="${index}">${line}</div>`;
+      return `<div class="icany-karaoke-line" data-i="${index}">${escapeHtml(line)}</div>`;
     }).join("");
   }
 
   function updateKaraoke(doc){
+    if(!hasTimedLyrics) return;
+
     const audio = doc.getElementById("icanyRadioAudio");
     const wrap = doc.getElementById("icanyKaraokeLines");
-
     if(!audio || !wrap || !lyricLines.length) return;
 
     const activeIndex = activeLyricIndex(audio);
@@ -985,6 +1028,14 @@
       const target = wrap.scrollTop + (activeRect.top - wrapRect.top) - (wrap.clientHeight / 2) + (active.clientHeight / 2);
       wrap.scrollTo({ top:Math.max(0, target), behavior:"smooth" });
     }
+  }
+
+  function escapeHtml(value){
+    return String(value || "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
   }
 
   function createKaraokeModal(doc){
@@ -1004,6 +1055,8 @@
 
           <button class="icany-karaoke-close" id="icanyKaraokeClose" type="button">×</button>
         </div>
+
+        <p class="icany-karaoke-note" id="icanyKaraokeNote">Karaoke söz akışı hazırlanıyor.</p>
 
         <div class="icany-karaoke-lines" id="icanyKaraokeLines">
           <div class="icany-karaoke-empty">Karaoke söz akışı hazırlanıyor.</div>
@@ -1026,9 +1079,7 @@
 
   function updatePlayerLanguageBadge(doc, track){
     const flag = doc.getElementById("icanyPlayerFlag");
-    if(!flag) return;
-
-    flag.textContent = track?.channel_flag || "🎧";
+    if(flag) flag.textContent = track?.channel_flag || "🎧";
   }
 
   function openKaraoke(doc){
@@ -1042,13 +1093,11 @@
       const flag = track?.channel_flag || "";
       const code = track?.channel_code || "";
       const language = track?.language || "";
-      lang.textContent = `${flag} ${code} • ${language}`.trim();
+      lang.textContent = `${flag} ${code} • ${language}`.trim() || "iCanyAI";
     }
 
-    rebuildAutoTimingFromAudio(doc);
     renderKaraoke(doc);
     updateKaraoke(doc);
-
     modal?.classList.add("show");
   }
 
@@ -1103,10 +1152,7 @@
         </div>
       </div>
 
-      <div class="icany-radio-progress">
-        <span id="icanyRadioProgress"></span>
-      </div>
-
+      <div class="icany-eq-line" id="icanyEqLine"></div>
       <audio id="icanyRadioAudio" preload="none"></audio>
     `;
 
@@ -1117,111 +1163,151 @@
   function bindPlayer(doc){
     const audio = doc.getElementById("icanyRadioAudio");
     const playIcon = doc.getElementById("icanyPlayIcon");
-    const progress = doc.getElementById("icanyRadioProgress");
     const playBtn = doc.getElementById("icanyPlayBtn");
     const nextBtn = doc.getElementById("icanyNextBtn");
     const prevBtn = doc.getElementById("icanyPrevBtn");
     const shuffleBtn = doc.getElementById("icanyShuffleBtn");
     const lyricsBtn = doc.getElementById("icanyLyricsBtn");
+    const player = doc.getElementById("icanyRadioPlayer");
 
     function setPlaying(isPlaying){
-      if(!playIcon) return;
-
-      playIcon.innerHTML = isPlaying
-        ? `<path d="M7 5h4v14H7zM13 5h4v14h-4z"></path>`
-        : `<path d="M8 5v14l11-7z"></path>`;
+      if(playIcon){
+        playIcon.innerHTML = isPlaying
+          ? `<path d="M7 5h4v14H7zM13 5h4v14h-4z"></path>`
+          : `<path d="M8 5v14l11-7z"></path>`;
+      }
+      player?.classList.toggle("is-playing", !!isPlaying);
     }
 
     function loadTrack(index){
-      if(!audio || !tracks.length) return;
+      if(!audio || !tracks.length) return false;
 
       const track = tracks[index];
-      if(!track || !track.audio_url) return;
+      if(!track || !track.audio_url) return false;
 
       audio.src = track.audio_url;
       audio.load();
 
-      buildLyricsForTrack(track, doc);
+      buildLyricsForTrack(track);
       renderKaraoke(doc);
       updateKaraoke(doc);
       updatePlayerLanguageBadge(doc, track);
+      persistPlaybackState(doc, track, audio).catch(() => {});
+      return true;
     }
 
-    lyricsBtn?.addEventListener("click", () => {
-      openKaraoke(doc);
-    });
-
-    playBtn?.addEventListener("click", async () => {
-      if(!audio) return;
+    async function ensureTrackLoaded(){
+      if(audio?.src) return true;
 
       if(!tracks.length){
         await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
       }
 
-      if(!audio.src && tracks.length){
-        loadTrack(currentTrackIndex);
+      if(tracks.length){
+        return loadTrack(currentTrackIndex);
       }
 
-      if(!audio.src) return;
+      return false;
+    }
+
+    async function playCurrent(){
+      if(!audio) return;
+
+      const ready = await ensureTrackLoaded();
+      if(!ready || !audio.src) return;
+
+      audio.play().then(() => {
+        setPlaying(true);
+        persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
+      }).catch(() => {});
+    }
+
+    function chooseNextIndex(direction = 1){
+      if(!tracks.length) return 0;
+      if(shuffleEnabled && tracks.length > 1){
+        let next = currentTrackIndex;
+        let guard = 0;
+        while(next === currentTrackIndex && guard < 12){
+          next = Math.floor(Math.random() * tracks.length);
+          guard++;
+        }
+        return next;
+      }
+      return (currentTrackIndex + direction + tracks.length) % tracks.length;
+    }
+
+    async function nextTrack(direction = 1, autoPlay = true){
+      if(!tracks.length){
+        await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
+      }
+
+      if(!tracks.length) {
+        setPlaying(false);
+        return;
+      }
+
+      let attempts = 0;
+      while(attempts < tracks.length){
+        currentTrackIndex = chooseNextIndex(direction);
+        if(loadTrack(currentTrackIndex)) break;
+        attempts++;
+      }
+
+      if(autoPlay){
+        audio.play().then(() => setPlaying(true)).catch(() => {});
+      }
+    }
+
+    lyricsBtn?.addEventListener("click", () => openKaraoke(doc));
+
+    playBtn?.addEventListener("click", async () => {
+      if(!audio) return;
 
       if(audio.paused){
-        audio.play().then(() => setPlaying(true)).catch(() => {});
+        await playCurrent();
       }else{
         audio.pause();
         setPlaying(false);
+        persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
       }
     });
 
-    nextBtn?.addEventListener("click", () => {
-      if(!tracks.length) return;
-
-      currentTrackIndex = shuffleEnabled
-        ? Math.floor(Math.random() * tracks.length)
-        : (currentTrackIndex + 1) % tracks.length;
-
-      loadTrack(currentTrackIndex);
-      audio.play().then(() => setPlaying(true)).catch(() => {});
-    });
-
-    prevBtn?.addEventListener("click", () => {
-      if(!tracks.length) return;
-
-      currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
-
-      loadTrack(currentTrackIndex);
-      audio.play().then(() => setPlaying(true)).catch(() => {});
-    });
+    nextBtn?.addEventListener("click", () => nextTrack(1, true));
+    prevBtn?.addEventListener("click", () => nextTrack(-1, true));
 
     shuffleBtn?.addEventListener("click", () => {
       shuffleEnabled = !shuffleEnabled;
       shuffleBtn.classList.toggle("active", shuffleEnabled);
+      persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
     });
 
     audio?.addEventListener("loadedmetadata", () => {
-      rebuildAutoTimingFromAudio(doc);
       renderKaraoke(doc);
       updateKaraoke(doc);
     });
 
     audio?.addEventListener("timeupdate", () => {
-      if(!audio.duration || !progress) return;
-
-      progress.style.width = `${Math.min(100, (audio.currentTime / audio.duration) * 100)}%`;
       updateKaraoke(doc);
+      if(Math.floor(audio.currentTime) % 5 === 0){
+        persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
+      }
     });
 
     audio?.addEventListener("seeked", () => {
       updateKaraoke(doc);
+      persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
     });
 
-    audio?.addEventListener("ended", () => {
-      if(tracks.length){
-        currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
-        loadTrack(currentTrackIndex);
-        audio.play().catch(() => {});
-      }else{
-        setPlaying(false);
-      }
+    audio?.addEventListener("pause", () => {
+      setPlaying(false);
+    });
+
+    audio?.addEventListener("play", () => {
+      setPlaying(true);
+    });
+
+    audio?.addEventListener("ended", async () => {
+      await nextTrack(1, true);
     });
   }
 
@@ -1262,7 +1348,10 @@
   }
 
   function createModal(doc){
-    if(!doc || doc.getElementById("icanyRadioModal")) return;
+    if(!doc) return;
+
+    const old = doc.getElementById("icanyRadioModal");
+    if(old) old.remove();
 
     const modal = doc.createElement("div");
     modal.id = "icanyRadioModal";
@@ -1274,16 +1363,16 @@
     modal.innerHTML = `
       <div class="icany-radio-modal-card">
         <h2>Kendi Radyonu Kur</h2>
-        <p>Müzik türünü ve dili seç. Yapay zekâ destekli iCanyAI radyo akışını başlat.</p>
+        <p>Müzik türünü ve dili seç. Birden fazla seçim yapabilirsin.</p>
 
         <div class="icany-radio-group-title">Müzik Türü</div>
         <div class="icany-radio-chip-grid" data-group="genres">
-          ${genres.map((genre) => `<button class="icany-radio-chip" data-value="${genre}" type="button">${genre}</button>`).join("")}
+          ${genres.map((genre) => `<button class="icany-radio-chip" data-value="${escapeHtml(genre)}" type="button">${escapeHtml(genre)}</button>`).join("")}
         </div>
 
         <div class="icany-radio-group-title">Dil</div>
         <div class="icany-radio-chip-grid" data-group="languages">
-          ${languages.map((language) => `<button class="icany-radio-chip" data-value="${language}" type="button">${language}</button>`).join("")}
+          ${languages.map((language) => `<button class="icany-radio-chip" data-value="${escapeHtml(language)}" type="button">${escapeHtml(language)}</button>`).join("")}
         </div>
 
         <div class="icany-radio-actions">
@@ -1305,6 +1394,20 @@
     modal.addEventListener("click", (event) => {
       if(event.target === modal) closeModal(doc);
     });
+
+    applySelectionToModal(doc, lastSelection);
+  }
+
+  function applySelectionToModal(doc, selection){
+    if(!selection) return;
+
+    doc.querySelectorAll('[data-group="genres"] .icany-radio-chip').forEach((button) => {
+      button.classList.toggle("active", (selection.genres || []).includes(button.dataset.value));
+    });
+
+    doc.querySelectorAll('[data-group="languages"] .icany-radio-chip').forEach((button) => {
+      button.classList.toggle("active", (selection.languages || []).includes(button.dataset.value));
+    });
   }
 
   function openModal(doc){
@@ -1322,16 +1425,156 @@
       .filter(Boolean);
   }
 
+  async function getSupabase(){
+    if(supabaseClientPromise) return supabaseClientPromise;
+
+    supabaseClientPromise = import("/js/supabase_client.js")
+      .then((mod) => mod.supabase || null)
+      .catch((error) => {
+        console.warn("Supabase yüklenemedi:", error);
+        return null;
+      });
+
+    return supabaseClientPromise;
+  }
+
+  async function getCurrentUser(){
+    if(currentUserPromise) return currentUserPromise;
+
+    currentUserPromise = (async () => {
+      const supabase = await getSupabase();
+      if(!supabase) return null;
+
+      try{
+        const { data } = await supabase.auth.getUser();
+        return data?.user || null;
+      }catch(error){
+        console.warn("Kullanıcı okunamadı:", error);
+        return null;
+      }
+    })();
+
+    return currentUserPromise;
+  }
+
+  function readLocalSettings(){
+    return safeJsonParse(localStorage.getItem(SETTINGS_KEY), null);
+  }
+
+  function writeLocalSettings(settings){
+    try{
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }catch(error){
+      console.warn("Radyo ayarı localStorage kaydedilemedi:", error);
+    }
+  }
+
+  async function loadSavedSettings(){
+    const local = readLocalSettings();
+    if(local) lastSettings = local;
+
+    const user = await getCurrentUser();
+    if(!user) return local;
+
+    const supabase = await getSupabase();
+    if(!supabase) return local;
+
+    try{
+      const { data, error } = await supabase
+        .from(SETTINGS_TABLE)
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if(error) throw error;
+      if(data){
+        lastSettings = data;
+        writeLocalSettings(data);
+        return data;
+      }
+    }catch(error){
+      console.warn("Supabase radyo ayarı okunamadı:", error);
+    }
+
+    return local;
+  }
+
+  function settingsFromCurrent(doc, track, audio){
+    const selectedChannels = findRadioChannels(lastSelection.genres, lastSelection.languages).map((channel) => channel.id);
+
+    return {
+      user_id:lastSettings?.user_id || null,
+      genres:uniq(lastSelection.genres),
+      languages:uniq(lastSelection.languages),
+      selected_channel_ids:selectedChannels,
+      shuffle_enabled:!!shuffleEnabled,
+      last_track_url:track?.audio_url || audio?.src || "",
+      last_track_title:track?.title || "",
+      last_channel_id:track?.channel_id || activeChannel?.id || "",
+      last_position_seconds:Math.floor(Number(audio?.currentTime || 0)),
+      is_active:true
+    };
+  }
+
+  async function persistSettings(settings){
+    lastSettings = { ...(lastSettings || {}), ...settings };
+    writeLocalSettings(lastSettings);
+
+    const user = await getCurrentUser();
+    if(!user) return;
+
+    const supabase = await getSupabase();
+    if(!supabase) return;
+
+    const payload = {
+      ...lastSettings,
+      user_id:user.id,
+      is_active:true
+    };
+
+    try{
+      const { error } = await supabase
+        .from(SETTINGS_TABLE)
+        .upsert(payload, { onConflict:"user_id" });
+
+      if(error) throw error;
+      lastSettings = payload;
+      writeLocalSettings(payload);
+    }catch(error){
+      console.warn("Supabase radyo ayarı kaydedilemedi:", error);
+    }
+  }
+
+  async function persistPlaybackState(doc, track, audio){
+    if(!lastSelection.languages.length && !lastSelection.genres.length) return;
+    await persistSettings(settingsFromCurrent(doc, track || {}, audio || null));
+  }
+
+  function applySettings(settings){
+    if(!settings) return false;
+
+    lastSelection = {
+      genres:uniq(settings.genres || []),
+      languages:uniq(settings.languages || [])
+    };
+
+    shuffleEnabled = !!settings.shuffle_enabled;
+    lastSettings = settings;
+    return !!(lastSelection.genres.length || lastSelection.languages.length);
+  }
+
   async function saveRadio(doc){
     const genres = selectedValues(doc,"genres");
     const languages = selectedValues(doc,"languages");
 
     if(!genres.length || !languages.length){
-      alert("Başkanım en az bir müzik türü ve bir dil seçelim.");
+      alert("En az bir müzik türü ve bir dil seçelim.");
       return;
     }
 
     lastSelection = { genres, languages };
+    shuffleEnabled = doc.getElementById("icanyShuffleBtn")?.classList.contains("active") || shuffleEnabled;
 
     closeModal(doc);
     showPlayer(doc);
@@ -1345,11 +1588,16 @@
 
     const audio = doc.getElementById("icanyRadioAudio");
     if(audio && tracks.length){
-      audio.src = tracks[0].audio_url;
+      currentTrackIndex = 0;
+      const track = tracks[0];
+      audio.src = track.audio_url;
       audio.load();
-      buildLyricsForTrack(tracks[0], doc);
+      buildLyricsForTrack(track);
       renderKaraoke(doc);
-      updatePlayerLanguageBadge(doc, tracks[0]);
+      updatePlayerLanguageBadge(doc, track);
+      await persistSettings(settingsFromCurrent(doc, track, audio));
+    }else{
+      await persistSettings(settingsFromCurrent(doc, {}, audio));
     }
   }
 
@@ -1357,18 +1605,56 @@
     createPlayer(doc);
     createKaraokeModal(doc);
     doc.getElementById("icanyRadioPlayer")?.classList.add("show");
+
+    const shuffleBtn = doc.getElementById("icanyShuffleBtn");
+    shuffleBtn?.classList.toggle("active", !!shuffleEnabled);
   }
 
-  function patchHome(){
+  async function restorePlayerFromSettings(doc, settings){
+    if(!settings || !applySettings(settings)) return;
+
+    showPlayer(doc);
+    await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
+
+    const audio = doc.getElementById("icanyRadioAudio");
+    if(!audio || !tracks.length) return;
+
+    let index = tracks.findIndex((track) => track.audio_url === settings.last_track_url);
+    if(index < 0) index = tracks.findIndex((track) => track.channel_id === settings.last_channel_id);
+    currentTrackIndex = index >= 0 ? index : 0;
+
+    const track = tracks[currentTrackIndex];
+    audio.src = track.audio_url;
+    audio.load();
+
+    const pos = Number(settings.last_position_seconds || 0);
+    if(Number.isFinite(pos) && pos > 0){
+      audio.addEventListener("loadedmetadata", () => {
+        try { audio.currentTime = Math.min(pos, audio.duration || pos); } catch {}
+      }, { once:true });
+    }
+
+    buildLyricsForTrack(track);
+    renderKaraoke(doc);
+    updatePlayerLanguageBadge(doc, track);
+  }
+
+  async function patchHome(){
     const doc = getDoc();
     if(!doc || !doc.body) return;
 
     boot?.remove();
 
     injectStyle(doc);
+    await loadChannelIndex();
     createSetupCard(doc);
     createModal(doc);
     createKaraokeModal(doc);
+
+    const saved = await loadSavedSettings();
+    if(saved){
+      await restorePlayerFromSettings(doc, saved);
+    }
   }
 
   frame.addEventListener("load", () => {
@@ -1379,4 +1665,4 @@
 })();
 </script>
 </body>
-  </html>
+</html>
