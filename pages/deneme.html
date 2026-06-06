@@ -45,12 +45,14 @@
 
 <body>
   <div id="denemeBoot">Deneme Home hazırlanıyor...</div>
-  <iframe id="denemeHomeFrame" src="/pages/home.html?deneme_radio=1&v=radiofix_final_1"></iframe>
+  <iframe id="denemeHomeFrame"></iframe>
 
 <script>
 (function(){
   const frame = document.getElementById("denemeHomeFrame");
   const boot = document.getElementById("denemeBoot");
+
+  frame.src = "/pages/home.html?deneme_radio=1&v=" + Date.now();
 
   const PUBLIC_BASE = "https://media.icany.ai";
 
@@ -123,6 +125,10 @@
   let tracks = [];
   let currentTrackIndex = 0;
   let shuffleEnabled = false;
+  let lastSelection = {
+    genres: [],
+    languages: []
+  };
 
   function getDoc(){
     try{
@@ -146,20 +152,39 @@
     ).replace(/\.mp3$/i,"");
   }
 
+  function resolveAudioUrl(rawUrl, channel){
+    const value = String(rawUrl || "").trim();
+    if(!value) return "";
+
+    if(/^https?:\/\//i.test(value)) return value;
+
+    if(value.startsWith("/")){
+      return `${PUBLIC_BASE}${value}`;
+    }
+
+    if(value.startsWith("icanyai/")){
+      return `${PUBLIC_BASE}/${value}`;
+    }
+
+    return `${PUBLIC_BASE}/icanyai/radio/${channel.id}/${value}`;
+  }
+
   function normalizeTrack(track, channel){
-    const url = track?.url || track?.audio_url || track?.mp3_url || "";
-    if(!url) return null;
+    const rawUrl = track?.url || track?.audio_url || track?.mp3_url || track?.file || track?.src || "";
+    const audioUrl = resolveAudioUrl(rawUrl, channel);
+
+    if(!audioUrl) return null;
 
     return {
       ...track,
-      url,
-      audio_url:url,
-      channel_id:channel.id,
-      channel_name:channel.name,
-      genre:Array.isArray(channel.genres) ? channel.genres[0] : "Pop",
-      genres:channel.genres || ["Pop"],
-      language:channel.language,
-      title:safeTitle({...track,url})
+      url: audioUrl,
+      audio_url: audioUrl,
+      channel_id: channel.id,
+      channel_name: channel.name,
+      genre: Array.isArray(channel.genres) ? channel.genres[0] : "Pop",
+      genres: channel.genres || ["Pop"],
+      language: channel.language,
+      title: safeTitle({...track, url: audioUrl})
     };
   }
 
@@ -186,6 +211,7 @@
 
   function uniqueChannels(list){
     const seen = new Set();
+
     return list.filter((channel) => {
       if(seen.has(channel.id)) return false;
       seen.add(channel.id);
@@ -226,29 +252,47 @@
     return ICANY_RADIO_CHANNELS.slice();
   }
 
+  async function readPlaylist(channel){
+    const res = await fetch(manifestUrl(channel), { cache:"no-store" });
+
+    if(!res.ok) return [];
+
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : (data.tracks || data.items || data.songs || []);
+
+    return list
+      .map((item) => normalizeTrack(item, channel))
+      .filter(Boolean);
+  }
+
   async function loadRadioTracksBySelection(genres, languages){
-    const channels = findRadioChannels(genres, languages);
-    const allTracks = [];
+    const primaryChannels = findRadioChannels(genres, languages);
+    let allTracks = [];
 
-    for(const channel of channels){
+    for(const channel of primaryChannels){
       try{
-        const res = await fetch(manifestUrl(channel), { cache:"no-store" });
-        if(!res.ok) continue;
-
-        const data = await res.json();
-        const list = data.tracks || data.items || [];
-
-        list.forEach((item) => {
-          const normalized = normalizeTrack(item, channel);
-          if(normalized) allTracks.push(normalized);
-        });
+        const channelTracks = await readPlaylist(channel);
+        allTracks = allTracks.concat(channelTracks);
       }catch(error){
         console.warn("iCanyAI playlist okunamadı:", channel.id, error);
       }
     }
 
+    if(!allTracks.length){
+      for(const channel of ICANY_RADIO_CHANNELS){
+        try{
+          const channelTracks = await readPlaylist(channel);
+          allTracks = allTracks.concat(channelTracks);
+          if(allTracks.length) break;
+        }catch(error){
+          console.warn("iCanyAI yedek playlist okunamadı:", channel.id, error);
+        }
+      }
+    }
+
     tracks = allTracks;
     currentTrackIndex = 0;
+
     return tracks;
   }
 
@@ -263,7 +307,10 @@
   }
 
   function injectStyle(doc){
-    if(!doc || doc.getElementById("icanyRadioDenemeStyle")) return;
+    if(!doc) return;
+
+    const old = doc.getElementById("icanyRadioDenemeStyle");
+    if(old) old.remove();
 
     const style = doc.createElement("style");
     style.id = "icanyRadioDenemeStyle";
@@ -296,19 +343,19 @@
         display:grid;
         grid-template-columns:1fr auto;
         align-items:center;
-        gap:6px;
+        gap:5px;
       }
 
       .icany-radio-controls{
         display:flex;
         align-items:center;
         justify-content:flex-start;
-        gap:6px;
+        gap:5px;
         min-width:0;
       }
 
       .icany-radio-brand{
-        min-width:50px;
+        min-width:48px;
         text-align:right;
         line-height:1;
         user-select:none;
@@ -317,9 +364,9 @@
       .icany-radio-brand-main{
         display:block;
         font-family:'Space Grotesk',Outfit,sans-serif;
-        font-size:11px;
+        font-size:10.8px;
         font-weight:900;
-        letter-spacing:.05px;
+        letter-spacing:.03px;
         white-space:nowrap;
       }
 
@@ -337,9 +384,9 @@
       .icany-radio-brand-sub{
         display:block;
         margin-top:2px;
-        font-size:6px;
+        font-size:5.8px;
         font-weight:1000;
-        letter-spacing:.82px;
+        letter-spacing:.72px;
         color:rgba(255,255,255,.66);
       }
 
@@ -363,8 +410,8 @@
       }
 
       .icany-radio-btn{
-        width:34px;
-        height:34px;
+        width:32px;
+        height:32px;
         border-radius:50%;
         border:1px solid rgba(255,255,255,.16);
         background:rgba(255,255,255,.09);
@@ -379,8 +426,8 @@
       }
 
       .icany-radio-btn.main{
-        width:44px;
-        height:44px;
+        width:43px;
+        height:43px;
         background:#fff;
         color:#0f172a;
         box-shadow:0 12px 28px rgba(0,0,0,.22);
@@ -392,15 +439,15 @@
       }
 
       .icany-radio-btn svg{
-        width:19px;
-        height:19px;
+        width:18px;
+        height:18px;
         fill:currentColor;
         stroke:none;
       }
 
       .icany-radio-btn.main svg{
-        width:22px;
-        height:22px;
+        width:21px;
+        height:21px;
       }
 
       .icany-radio-card{
@@ -542,50 +589,7 @@
         }
 
         .icany-radio-row{
-          gap:5px;
-        }
-
-        .icany-radio-controls{
-          gap:5px;
-        }
-
-        .icany-radio-btn{
-          width:31px;
-          height:31px;
-        }
-
-        .icany-radio-btn.main{
-          width:42px;
-          height:42px;
-        }
-
-        .icany-radio-btn svg{
-          width:17px;
-          height:17px;
-        }
-
-        .icany-radio-btn.main svg{
-          width:21px;
-          height:21px;
-        }
-
-        .icany-radio-brand{
-          min-width:48px;
-        }
-
-        .icany-radio-brand-main{
-          font-size:10.5px;
-        }
-
-        .icany-radio-brand-sub{
-          font-size:5.8px;
-          letter-spacing:.72px;
-        }
-      }
-
-      @media(max-width:360px){
-        .icany-radio-chip-grid{
-          grid-template-columns:repeat(2,minmax(0,1fr));
+          gap:4px;
         }
 
         .icany-radio-controls{
@@ -602,8 +606,51 @@
           height:40px;
         }
 
+        .icany-radio-btn svg{
+          width:17px;
+          height:17px;
+        }
+
+        .icany-radio-btn.main svg{
+          width:20px;
+          height:20px;
+        }
+
         .icany-radio-brand{
           min-width:46px;
+        }
+
+        .icany-radio-brand-main{
+          font-size:10px;
+        }
+
+        .icany-radio-brand-sub{
+          font-size:5.6px;
+          letter-spacing:.68px;
+        }
+      }
+
+      @media(max-width:360px){
+        .icany-radio-chip-grid{
+          grid-template-columns:repeat(2,minmax(0,1fr));
+        }
+
+        .icany-radio-controls{
+          gap:3px;
+        }
+
+        .icany-radio-btn{
+          width:29px;
+          height:29px;
+        }
+
+        .icany-radio-btn.main{
+          width:39px;
+          height:39px;
+        }
+
+        .icany-radio-brand{
+          min-width:44px;
         }
       }
     `;
@@ -661,7 +708,7 @@
         <span id="icanyRadioProgress"></span>
       </div>
 
-      <audio id="icanyRadioAudio" preload="none" crossorigin="anonymous"></audio>
+      <audio id="icanyRadioAudio" preload="none"></audio>
     `;
 
     hero.insertAdjacentElement("afterend", player);
@@ -695,8 +742,12 @@
       audio.load();
     }
 
-    playBtn?.addEventListener("click", () => {
+    playBtn?.addEventListener("click", async () => {
       if(!audio) return;
+
+      if(!tracks.length){
+        await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
+      }
 
       if(!audio.src && tracks.length){
         loadTrack(currentTrackIndex);
@@ -858,6 +909,8 @@
       alert("Başkanım en az bir müzik türü ve bir dil seçelim.");
       return;
     }
+
+    lastSelection = { genres, languages };
 
     closeModal(doc);
     showPlayer(doc);
