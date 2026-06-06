@@ -57,86 +57,34 @@
   const PUBLIC_BASE = "https://media.icany.ai";
 
   const ICANY_RADIO_CHANNELS = [
-    {
-      id:"01_global_pop_english",
-      name:"Global Pop Radio",
-      language:"İngilizce",
-      code:"EN",
-      flag:"🇬🇧",
-      genres:["Pop","Rock","Rap","Hip-Hop","Dance"]
-    },
-    {
-      id:"02_french_lounge_pop",
-      name:"French Lounge Pop",
-      language:"Fransızca",
-      code:"FR",
-      flag:"🇫🇷",
-      genres:["Pop","Lounge","Rock","Rap","Hip-Hop"]
-    },
-    {
-      id:"03_italian_dolce_pop",
-      name:"Italian Dolce Pop",
-      language:"İtalyanca",
-      code:"IT",
-      flag:"🇮🇹",
-      genres:["Pop","Lounge","Rock"]
-    },
-    {
-      id:"04_spanish_latin_pop",
-      name:"Spanish Latin Pop",
-      language:"İspanyolca",
-      code:"ES",
-      flag:"🇪🇸",
-      genres:["Pop","Latin","Dance","Rap"]
-    },
-    {
-      id:"05_argentina_tango_pop",
-      name:"Argentina Tango Pop",
-      language:"İspanyolca Arjantin",
-      code:"AR",
-      flag:"🇦🇷",
-      genres:["Pop","Tango","Latin"]
-    },
-    {
-      id:"06_russian_modern_pop",
-      name:"Russian Modern Pop",
-      language:"Rusça",
-      code:"RU",
-      flag:"🇷🇺",
-      genres:["Pop","Rock","Rap","Dance"]
-    },
-    {
-      id:"07_japanese_city_pop",
-      name:"Japanese City Pop",
-      language:"Japonca",
-      code:"JA",
-      flag:"🇯🇵",
-      genres:["Pop","City Pop","Electronic"]
-    },
-    {
-      id:"08_brazilian_bossa_pop",
-      name:"Brazilian Bossa Pop",
-      language:"Portekizce Brezilya",
-      code:"BR",
-      flag:"🇧🇷",
-      genres:["Pop","Bossa Nova","Lounge","Latin"]
-    },
-    {
-      id:"10_hindi_bollywood_pop",
-      name:"Hindi Bollywood Pop",
-      language:"Hintçe",
-      code:"HI",
-      flag:"🇮🇳",
-      genres:["Pop","Bollywood","Dance"]
-    }
-  ];
+    ["01_global_pop_english", "Global Pop Radio", "İngilizce", "EN", "🇬🇧", ["Pop","Rock","Rap","Hip-Hop","Dance"]],
+    ["02_french_lounge_pop", "French Lounge Pop", "Fransızca", "FR", "🇫🇷", ["Pop","Lounge","Rock","Rap","Hip-Hop"]],
+    ["03_italian_dolce_pop", "Italian Dolce Pop", "İtalyanca", "IT", "🇮🇹", ["Pop","Lounge","Rock"]],
+    ["04_spanish_latin_pop", "Spanish Latin Pop", "İspanyolca", "ES", "🇪🇸", ["Pop","Latin","Dance","Rap"]],
+    ["05_argentina_tango_pop", "Argentina Tango Pop", "İspanyolca Arjantin", "AR", "🇦🇷", ["Pop","Tango","Latin"]],
+    ["06_russian_modern_pop", "Russian Modern Pop", "Rusça", "RU", "🇷🇺", ["Pop","Rock","Rap","Dance"]],
+    ["07_japanese_city_pop", "Japanese City Pop", "Japonca", "JA", "🇯🇵", ["Pop","City Pop","Electronic"]],
+    ["08_brazilian_bossa_pop", "Brazilian Bossa Pop", "Portekizce Brezilya", "BR", "🇧🇷", ["Pop","Bossa Nova","Lounge","Latin"]],
+    ["10_hindi_bollywood_pop", "Hindi Bollywood Pop", "Hintçe", "HI", "🇮🇳", ["Pop","Bollywood","Dance"]]
+  ].map(([id,name,language,code,flag,genres]) => ({
+    id,
+    name,
+    language,
+    code,
+    flag,
+    genres,
+    tracks:[],
+    loaded:false,
+    error:false
+  }));
 
   let tracks = [];
   let currentTrackIndex = 0;
   let shuffleEnabled = false;
-  let lastSelection = { genres:[], languages:[] };
+  let activeChannel = null;
   let lyricLines = [];
   let lrcLines = [];
+  let lastSelection = { genres:[], languages:[] };
 
   function getDoc(){
     try{
@@ -154,14 +102,13 @@
     return String(
       track?.title ||
       track?.name ||
-      track?.url?.split("/").pop() ||
-      track?.audio_url?.split("/").pop() ||
+      (track?.url || "").split("/").pop() ||
       "iCanyAI Track"
     ).replace(/\.mp3$/i,"");
   }
 
-  function resolveAudioUrl(rawUrl, channel){
-    const value = String(rawUrl || "").trim();
+  function resolveUrl(url, channel){
+    const value = String(url || "").trim();
     if(!value) return "";
 
     if(/^https?:\/\//i.test(value)) return value;
@@ -171,25 +118,56 @@
     return `${PUBLIC_BASE}/icanyai/radio/${channel.id}/${value}`;
   }
 
-  function normalizeTrack(track, channel){
-    const rawUrl = track?.url || track?.audio_url || track?.mp3_url || track?.file || track?.src || "";
-    const audioUrl = resolveAudioUrl(rawUrl, channel);
+  function normalizeShowcaseTrack(track, channel){
+    const rawUrl = track?.url || track?.audio_url || track?.mp3_url || "";
+    const url = resolveUrl(rawUrl, channel);
 
-    if(!audioUrl) return null;
+    if(!url) return null;
 
     return {
       ...track,
-      url:audioUrl,
-      audio_url:audioUrl,
+      url,
+      audio_url:url,
       channel_id:channel.id,
       channel_name:channel.name,
       channel_code:channel.code,
       channel_flag:channel.flag,
-      genre:Array.isArray(channel.genres) ? channel.genres[0] : "Pop",
-      genres:channel.genres || ["Pop"],
       language:channel.language,
-      title:safeTitle({...track,url:audioUrl})
+      genres:channel.genres,
+      title:safeTitle({...track,url})
     };
+  }
+
+  async function loadChannel(channel){
+    try{
+      const res = await fetch(manifestUrl(channel), { cache:"no-store" });
+      if(!res.ok) throw new Error("manifest yok");
+
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.tracks || data.items || []);
+
+      channel.tracks = list
+        .map((track) => normalizeShowcaseTrack(track, channel))
+        .filter(Boolean);
+
+      channel.loaded = true;
+      channel.error = false;
+    }catch(error){
+      channel.tracks = [];
+      channel.loaded = true;
+      channel.error = true;
+      console.warn("Playlist okunamadı:", channel.id, error);
+    }
+
+    return channel.tracks;
+  }
+
+  async function loadAllChannels(){
+    for(const channel of ICANY_RADIO_CHANNELS){
+      if(!channel.loaded || channel.error){
+        await loadChannel(channel);
+      }
+    }
   }
 
   function getAllGenres(){
@@ -256,18 +234,6 @@
     return ICANY_RADIO_CHANNELS.slice();
   }
 
-  async function readPlaylist(channel){
-    const res = await fetch(manifestUrl(channel), { cache:"no-store" });
-    if(!res.ok) return [];
-
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.tracks || data.items || data.songs || []);
-
-    return list
-      .map((item) => normalizeTrack(item, channel))
-      .filter(Boolean);
-  }
-
   async function loadRadioTracksBySelection(genres, languages){
     const firstChannels = findRadioChannels(genres, languages);
     const secondChannels = ICANY_RADIO_CHANNELS.filter((channel) => !firstChannels.some((item) => item.id === channel.id));
@@ -276,18 +242,18 @@
     let allTracks = [];
 
     for(const channel of searchOrder){
-      try{
-        const channelTracks = await readPlaylist(channel);
-        if(channelTracks.length){
-          allTracks = allTracks.concat(channelTracks);
-        }
-      }catch(error){
-        console.warn("iCanyAI playlist okunamadı:", channel.id, error);
+      const channelTracks = await loadChannel(channel);
+
+      if(channelTracks.length){
+        allTracks = allTracks.concat(channelTracks);
       }
     }
 
     tracks = allTracks;
     currentTrackIndex = 0;
+    activeChannel = tracks[0]
+      ? ICANY_RADIO_CHANNELS.find((channel) => channel.id === tracks[0].channel_id)
+      : null;
 
     return tracks;
   }
@@ -804,6 +770,17 @@
     return out;
   }
 
+  function makeFallbackLyrics(track){
+    const title = safeTitle(track).replace(/[_-]/g," ");
+    return [
+      "iCanyAI Business canlı yayınındasın",
+      track?.channel_name || "iCanyAI Radyo",
+      title,
+      "Bu parça R2 üretim hattından geliyor",
+      "Söz zaman kodu geldiğinde karaoke tam senkron çalışacak"
+    ];
+  }
+
   function buildLyricsForTrack(track){
     lrcLines = parseLRC(track?.lrc || track?.lrc_text || "");
     lyricLines = lrcLines.length
@@ -811,7 +788,7 @@
       : parsePlainLyrics(track?.lyrics || track?.lyrics_text || "");
 
     if(!lyricLines.length){
-      lyricLines = ["Bu parça için karaoke söz akışı hazırlanıyor."];
+      lyricLines = makeFallbackLyrics(track);
       lrcLines = [];
     }
   }
@@ -885,7 +862,7 @@
         </div>
 
         <div class="icany-karaoke-lines" id="icanyKaraokeLines">
-          <div class="icany-karaoke-empty">Bu parça için karaoke söz akışı hazırlanıyor.</div>
+          <div class="icany-karaoke-empty">Karaoke söz akışı hazırlanıyor.</div>
         </div>
       </div>
     `;
@@ -907,8 +884,7 @@
     const flag = doc.getElementById("icanyPlayerFlag");
     if(!flag) return;
 
-    const value = track?.channel_flag || track?.flag || "🎧";
-    flag.textContent = value;
+    flag.textContent = track?.channel_flag || "🎧";
   }
 
   function openKaraoke(doc){
