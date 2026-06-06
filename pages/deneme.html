@@ -45,7 +45,7 @@
 
 <body>
   <div id="denemeBoot">Deneme Home hazırlanıyor...</div>
-  <iframe id="denemeHomeFrame" src="/pages/home.html?deneme_radio_v=11"></iframe>
+  <iframe id="denemeHomeFrame" src="/pages/home.html?deneme_radio=1&v=radiofix_final_1"></iframe>
 
 <script>
 (function(){
@@ -60,28 +60,28 @@
       name:"Global Pop Radio",
       language:"İngilizce",
       code:"EN",
-      genres:["Pop"]
+      genres:["Pop","Rock","Rap","Hip-Hop","Dance"]
     },
     {
       id:"02_french_lounge_pop",
       name:"French Lounge Pop",
       language:"Fransızca",
       code:"FR",
-      genres:["Pop","Lounge"]
+      genres:["Pop","Lounge","Rock","Rap","Hip-Hop"]
     },
     {
       id:"03_italian_dolce_pop",
       name:"Italian Dolce Pop",
       language:"İtalyanca",
       code:"IT",
-      genres:["Pop"]
+      genres:["Pop","Lounge","Rock"]
     },
     {
       id:"04_spanish_latin_pop",
       name:"Spanish Latin Pop",
       language:"İspanyolca",
       code:"ES",
-      genres:["Pop","Latin"]
+      genres:["Pop","Latin","Dance","Rap"]
     },
     {
       id:"05_argentina_tango_pop",
@@ -95,36 +95,34 @@
       name:"Russian Modern Pop",
       language:"Rusça",
       code:"RU",
-      genres:["Pop"]
+      genres:["Pop","Rock","Rap","Dance"]
     },
     {
       id:"07_japanese_city_pop",
       name:"Japanese City Pop",
       language:"Japonca",
       code:"JA",
-      genres:["Pop","City Pop"]
+      genres:["Pop","City Pop","Electronic"]
     },
     {
       id:"08_brazilian_bossa_pop",
       name:"Brazilian Bossa Pop",
       language:"Portekizce Brezilya",
       code:"BR",
-      genres:["Pop","Bossa Nova","Lounge"]
+      genres:["Pop","Bossa Nova","Lounge","Latin"]
     },
     {
       id:"10_hindi_bollywood_pop",
       name:"Hindi Bollywood Pop",
       language:"Hintçe",
       code:"HI",
-      genres:["Pop","Bollywood"]
+      genres:["Pop","Bollywood","Dance"]
     }
   ];
 
   let tracks = [];
   let currentTrackIndex = 0;
   let shuffleEnabled = false;
-  let lastSelectedGenres = [];
-  let lastSelectedLanguages = [];
 
   function getDoc(){
     try{
@@ -166,24 +164,40 @@
   }
 
   function getAllGenres(){
-    const set = new Set();
-    ICANY_RADIO_CHANNELS.forEach((channel) => {
-      (channel.genres || []).forEach((genre) => set.add(genre));
-    });
-    return Array.from(set);
+    return [
+      "Pop",
+      "Rock",
+      "Rap",
+      "Hip-Hop",
+      "Lounge",
+      "Latin",
+      "Dance",
+      "Electronic",
+      "Tango",
+      "City Pop",
+      "Bossa Nova",
+      "Bollywood"
+    ];
   }
 
   function getAllLanguages(){
-    const set = new Set();
-    ICANY_RADIO_CHANNELS.forEach((channel) => set.add(channel.language));
-    return Array.from(set);
+    return ICANY_RADIO_CHANNELS.map((channel) => channel.language);
+  }
+
+  function uniqueChannels(list){
+    const seen = new Set();
+    return list.filter((channel) => {
+      if(seen.has(channel.id)) return false;
+      seen.add(channel.id);
+      return true;
+    });
   }
 
   function findRadioChannels(genres, languages){
     const wantedGenres = Array.isArray(genres) ? genres : [];
     const wantedLanguages = Array.isArray(languages) ? languages : [];
 
-    let matched = ICANY_RADIO_CHANNELS.filter((channel) => {
+    const exact = ICANY_RADIO_CHANNELS.filter((channel) => {
       const genreOk =
         !wantedGenres.length ||
         wantedGenres.some((genre) => (channel.genres || []).includes(genre));
@@ -195,21 +209,21 @@
       return genreOk && languageOk;
     });
 
-    if(!matched.length && wantedLanguages.length){
-      matched = ICANY_RADIO_CHANNELS.filter((channel) => wantedLanguages.includes(channel.language));
-    }
+    if(exact.length) return uniqueChannels(exact);
 
-    if(!matched.length && wantedGenres.length){
-      matched = ICANY_RADIO_CHANNELS.filter((channel) => {
-        return wantedGenres.some((genre) => (channel.genres || []).includes(genre));
-      });
-    }
+    const byLanguage = wantedLanguages.length
+      ? ICANY_RADIO_CHANNELS.filter((channel) => wantedLanguages.includes(channel.language))
+      : [];
 
-    if(!matched.length){
-      matched = ICANY_RADIO_CHANNELS.slice();
-    }
+    if(byLanguage.length) return uniqueChannels(byLanguage);
 
-    return matched;
+    const byGenre = wantedGenres.length
+      ? ICANY_RADIO_CHANNELS.filter((channel) => wantedGenres.some((genre) => (channel.genres || []).includes(genre)))
+      : [];
+
+    if(byGenre.length) return uniqueChannels(byGenre);
+
+    return ICANY_RADIO_CHANNELS.slice();
   }
 
   async function loadRadioTracksBySelection(genres, languages){
@@ -249,27 +263,25 @@
   }
 
   function injectStyle(doc){
-    if(!doc) return;
-
-    const old = doc.getElementById("icanyRadioDenemeStyle");
-    if(old) old.remove();
+    if(!doc || doc.getElementById("icanyRadioDenemeStyle")) return;
 
     const style = doc.createElement("style");
     style.id = "icanyRadioDenemeStyle";
+
     style.textContent = `
       .icany-radio-player{
         display:none;
         position:relative;
         overflow:hidden;
         border-radius:18px;
-        padding:6px 9px 6px;
+        padding:7px 9px 7px;
         color:#fff;
         border:1px solid rgba(255,255,255,.12);
         background:
-          radial-gradient(circle at 14% 30%, rgba(33,150,243,.13), transparent 32%),
-          radial-gradient(circle at 90% 10%, rgba(45,212,191,.08), transparent 30%),
-          linear-gradient(135deg, rgba(2,24,43,.86), rgba(6,18,33,.94));
-        box-shadow:0 12px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
+          radial-gradient(circle at 14% 30%,rgba(103,232,249,.13),transparent 32%),
+          radial-gradient(circle at 90% 10%,rgba(236,72,153,.10),transparent 30%),
+          linear-gradient(135deg,rgba(15,23,42,.80),rgba(15,23,42,.92));
+        box-shadow:0 12px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);
         backdrop-filter:blur(16px);
         -webkit-backdrop-filter:blur(16px);
       }
@@ -284,7 +296,7 @@
         display:grid;
         grid-template-columns:1fr auto;
         align-items:center;
-        gap:7px;
+        gap:6px;
       }
 
       .icany-radio-controls{
@@ -296,45 +308,39 @@
       }
 
       .icany-radio-brand{
-        width:68px;
-        min-width:68px;
-        text-align:left;
+        min-width:50px;
+        text-align:right;
         line-height:1;
         user-select:none;
-        padding-left:2px;
       }
 
       .icany-radio-brand-main{
         display:block;
         font-family:'Space Grotesk',Outfit,sans-serif;
-        font-size:14px;
-        font-weight:1000;
-        letter-spacing:-.55px;
+        font-size:11px;
+        font-weight:900;
+        letter-spacing:.05px;
         white-space:nowrap;
-        transform:scaleX(.94);
-        transform-origin:left center;
       }
 
       .icany-radio-brand-main .icany-white{
         color:#fff;
         -webkit-text-fill-color:#fff;
-        text-shadow:0 1px 8px rgba(255,255,255,.18);
       }
 
       .icany-radio-brand-main .icany-ai{
-        color:#20aeea;
-        -webkit-text-fill-color:#20aeea;
-        text-shadow:0 0 10px rgba(32,174,234,.32);
+        background:linear-gradient(135deg,#67e8f9,#38bdf8,#0ea5e9);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
       }
 
       .icany-radio-brand-sub{
         display:block;
         margin-top:2px;
-        padding-left:1px;
-        font-size:6.5px;
+        font-size:6px;
         font-weight:1000;
-        letter-spacing:2.15px;
-        color:rgba(196,211,229,.75);
+        letter-spacing:.82px;
+        color:rgba(255,255,255,.66);
       }
 
       .icany-radio-progress{
@@ -344,7 +350,7 @@
         border-radius:999px;
         background:rgba(255,255,255,.16);
         overflow:hidden;
-        margin-top:6px;
+        margin-top:7px;
       }
 
       .icany-radio-progress span{
@@ -352,13 +358,13 @@
         width:0%;
         height:100%;
         border-radius:999px;
-        background:linear-gradient(90deg,#ffffff,#20aeea,#0f3e73);
-        box-shadow:0 0 12px rgba(32,174,234,.40);
+        background:linear-gradient(90deg,#67e8f9,#818cf8,#f0abfc);
+        box-shadow:0 0 14px rgba(129,140,248,.42);
       }
 
       .icany-radio-btn{
-        width:31px;
-        height:31px;
+        width:34px;
+        height:34px;
         border-radius:50%;
         border:1px solid rgba(255,255,255,.16);
         background:rgba(255,255,255,.09);
@@ -373,46 +379,46 @@
       }
 
       .icany-radio-btn.main{
-        width:42px;
-        height:42px;
+        width:44px;
+        height:44px;
         background:#fff;
-        color:#061827;
+        color:#0f172a;
         box-shadow:0 12px 28px rgba(0,0,0,.22);
       }
 
       .icany-radio-btn.active{
-        border-color:rgba(32,174,234,.78);
-        box-shadow:0 0 18px rgba(32,174,234,.24);
+        border-color:rgba(103,232,249,.72);
+        box-shadow:0 0 18px rgba(103,232,249,.22);
       }
 
       .icany-radio-btn svg{
-        width:17px;
-        height:17px;
+        width:19px;
+        height:19px;
         fill:currentColor;
         stroke:none;
       }
 
       .icany-radio-btn.main svg{
-        width:21px;
-        height:21px;
+        width:22px;
+        height:22px;
       }
 
       .icany-radio-card{
         cursor:pointer;
         background:
-          radial-gradient(circle at 14% 42%, rgba(32,174,234,.34), transparent 30%),
-          radial-gradient(circle at 92% 12%, rgba(255,255,255,.12), transparent 28%),
-          radial-gradient(circle at 72% 110%, rgba(15,62,115,.34), transparent 36%),
-          linear-gradient(90deg, #031827 0%, #0b3d68 48%, #061827 100%);
+          radial-gradient(circle at 14% 42%,rgba(59,130,246,.34),transparent 30%),
+          radial-gradient(circle at 92% 12%,rgba(14,165,233,.22),transparent 28%),
+          radial-gradient(circle at 72% 110%,rgba(255,255,255,.11),transparent 36%),
+          linear-gradient(90deg,#020617 0%,#0f172a 48%,#0369a1 100%);
       }
 
       .icany-radio-card .wide-icon{
-        background:linear-gradient(135deg,#ffffff,#20aeea,#0f3e73);
+        background:linear-gradient(135deg,#f8fafc,#38bdf8,#0f172a);
         border-color:rgba(255,255,255,.28);
       }
 
       .icany-radio-card .wide-icon svg{
-        stroke:#061827;
+        stroke:#fff;
       }
 
       .icany-radio-card .wide-desc{
@@ -442,7 +448,7 @@
         overflow:auto;
         border-radius:26px;
         padding:18px;
-        background:linear-gradient(145deg,rgba(6,24,39,.98),rgba(4,10,20,.98));
+        background:linear-gradient(145deg,rgba(16,23,42,.98),rgba(10,10,18,.98));
         border:1px solid rgba(255,255,255,.12);
         color:#fff;
         box-shadow:0 24px 70px rgba(0,0,0,.42);
@@ -457,7 +463,7 @@
 
       .icany-radio-modal-card p{
         margin:0 0 14px;
-        color:rgba(255,255,255,.70);
+        color:rgba(255,255,255,.72);
         font-size:13px;
         font-weight:800;
         line-height:1.45;
@@ -497,8 +503,7 @@
       }
 
       .icany-radio-chip.active{
-        background:linear-gradient(135deg,#ffffff,#20aeea,#0f3e73);
-        color:#061827;
+        background:linear-gradient(135deg,#06b6d4,#2563eb,#0f172a);
         border-color:rgba(255,255,255,.24);
       }
 
@@ -520,8 +525,8 @@
       }
 
       .icany-radio-action.primary{
-        background:linear-gradient(135deg,#ffffff,#20aeea);
-        color:#061827;
+        background:linear-gradient(135deg,#67e8f9,#38bdf8,#0ea5e9);
+        color:#06111f;
       }
 
       .icany-radio-action.secondary{
@@ -545,27 +550,36 @@
         }
 
         .icany-radio-btn{
-          width:30px;
-          height:30px;
+          width:31px;
+          height:31px;
         }
 
         .icany-radio-btn.main{
-          width:41px;
-          height:41px;
+          width:42px;
+          height:42px;
+        }
+
+        .icany-radio-btn svg{
+          width:17px;
+          height:17px;
+        }
+
+        .icany-radio-btn.main svg{
+          width:21px;
+          height:21px;
         }
 
         .icany-radio-brand{
-          width:63px;
-          min-width:63px;
+          min-width:48px;
         }
 
         .icany-radio-brand-main{
-          font-size:13px;
+          font-size:10.5px;
         }
 
         .icany-radio-brand-sub{
-          font-size:6px;
-          letter-spacing:1.85px;
+          font-size:5.8px;
+          letter-spacing:.72px;
         }
       }
 
@@ -574,19 +588,22 @@
           grid-template-columns:repeat(2,minmax(0,1fr));
         }
 
+        .icany-radio-controls{
+          gap:4px;
+        }
+
         .icany-radio-btn{
-          width:28px;
-          height:28px;
+          width:30px;
+          height:30px;
         }
 
         .icany-radio-btn.main{
-          width:39px;
-          height:39px;
+          width:40px;
+          height:40px;
         }
 
         .icany-radio-brand{
-          width:60px;
-          min-width:60px;
+          min-width:46px;
         }
       }
     `;
@@ -603,6 +620,7 @@
     const player = doc.createElement("section");
     player.id = "icanyRadioPlayer";
     player.className = "icany-radio-player";
+
     player.innerHTML = `
       <div class="icany-radio-row">
         <div class="icany-radio-controls">
@@ -631,7 +649,7 @@
           </button>
         </div>
 
-        <div class="icany-radio-brand" aria-label="icanyAI Business">
+        <div class="icany-radio-brand" aria-label="iCanyAI Business">
           <span class="icany-radio-brand-main">
             <span class="icany-white">icany</span><span class="icany-ai">AI</span>
           </span>
@@ -669,8 +687,10 @@
 
     function loadTrack(index){
       if(!audio || !tracks.length) return;
+
       const track = tracks[index];
       if(!track || !track.audio_url) return;
+
       audio.src = track.audio_url;
       audio.load();
     }
@@ -782,7 +802,7 @@
     modal.innerHTML = `
       <div class="icany-radio-modal-card">
         <h2>Kendi Radyonu Kur</h2>
-        <p>Müzik türünü ve dili seç. Türkçe ve Azerbaycan kanalları bu denemede kullanılmaz.</p>
+        <p>Müzik türünü ve dili seç. Yapay zekâ destekli iCanyAI radyo akışını başlat.</p>
 
         <div class="icany-radio-group-title">Müzik Türü</div>
         <div class="icany-radio-chip-grid" data-group="genres">
@@ -847,19 +867,7 @@
       block:"center"
     });
 
-    await loadRadioTracksBySelection(genres, languages);
-
-    if(!tracks.length){
-      await loadRadioTracksBySelection([], languages);
-    }
-
-    if(!tracks.length){
-      await loadRadioTracksBySelection(genres, []);
-    }
-
-    if(!tracks.length){
-      await loadRadioTracksBySelection([], []);
-    }
+    await loadRadioTracksBySelection(genres,languages);
 
     const audio = doc.getElementById("icanyRadioAudio");
     if(audio && tracks.length){
@@ -885,9 +893,9 @@
   }
 
   frame.addEventListener("load", () => {
-    setTimeout(patchHome, 600);
-    setTimeout(patchHome, 1400);
-    setTimeout(patchHome, 2600);
+    setTimeout(patchHome,600);
+    setTimeout(patchHome,1400);
+    setTimeout(patchHome,2600);
   });
 })();
 </script>
