@@ -134,14 +134,9 @@
   let tracks = [];
   let currentTrackIndex = 0;
   let shuffleEnabled = false;
-  let lastSelection = {
-    genres: [],
-    languages: []
-  };
-
+  let lastSelection = { genres:[], languages:[] };
   let lyricLines = [];
   let lrcLines = [];
-  let activeChannelInfo = null;
 
   function getDoc(){
     try{
@@ -170,14 +165,8 @@
     if(!value) return "";
 
     if(/^https?:\/\//i.test(value)) return value;
-
-    if(value.startsWith("/")){
-      return `${PUBLIC_BASE}${value}`;
-    }
-
-    if(value.startsWith("icanyai/")){
-      return `${PUBLIC_BASE}/${value}`;
-    }
+    if(value.startsWith("/")) return `${PUBLIC_BASE}${value}`;
+    if(value.startsWith("icanyai/")) return `${PUBLIC_BASE}/${value}`;
 
     return `${PUBLIC_BASE}/icanyai/radio/${channel.id}/${value}`;
   }
@@ -190,16 +179,16 @@
 
     return {
       ...track,
-      url: audioUrl,
-      audio_url: audioUrl,
-      channel_id: channel.id,
-      channel_name: channel.name,
-      channel_code: channel.code,
-      channel_flag: channel.flag,
-      genre: Array.isArray(channel.genres) ? channel.genres[0] : "Pop",
-      genres: channel.genres || ["Pop"],
-      language: channel.language,
-      title: safeTitle({...track, url: audioUrl})
+      url:audioUrl,
+      audio_url:audioUrl,
+      channel_id:channel.id,
+      channel_name:channel.name,
+      channel_code:channel.code,
+      channel_flag:channel.flag,
+      genre:Array.isArray(channel.genres) ? channel.genres[0] : "Pop",
+      genres:channel.genres || ["Pop"],
+      language:channel.language,
+      title:safeTitle({...track,url:audioUrl})
     };
   }
 
@@ -269,7 +258,6 @@
 
   async function readPlaylist(channel){
     const res = await fetch(manifestUrl(channel), { cache:"no-store" });
-
     if(!res.ok) return [];
 
     const data = await res.json();
@@ -281,27 +269,20 @@
   }
 
   async function loadRadioTracksBySelection(genres, languages){
-    const primaryChannels = findRadioChannels(genres, languages);
+    const firstChannels = findRadioChannels(genres, languages);
+    const secondChannels = ICANY_RADIO_CHANNELS.filter((channel) => !firstChannels.some((item) => item.id === channel.id));
+    const searchOrder = firstChannels.concat(secondChannels);
+
     let allTracks = [];
 
-    for(const channel of primaryChannels){
+    for(const channel of searchOrder){
       try{
         const channelTracks = await readPlaylist(channel);
-        allTracks = allTracks.concat(channelTracks);
+        if(channelTracks.length){
+          allTracks = allTracks.concat(channelTracks);
+        }
       }catch(error){
         console.warn("iCanyAI playlist okunamadı:", channel.id, error);
-      }
-    }
-
-    if(!allTracks.length){
-      for(const channel of ICANY_RADIO_CHANNELS){
-        try{
-          const channelTracks = await readPlaylist(channel);
-          allTracks = allTracks.concat(channelTracks);
-          if(allTracks.length) break;
-        }catch(error){
-          console.warn("iCanyAI yedek playlist okunamadı:", channel.id, error);
-        }
       }
     }
 
@@ -356,16 +337,43 @@
         position:relative;
         z-index:2;
         display:grid;
-        grid-template-columns:1fr auto;
+        grid-template-columns:auto 1fr auto;
         align-items:center;
-        gap:5px;
+        gap:7px;
+      }
+
+      .icany-karaoke-mini{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:4px;
+        min-width:76px;
+        height:31px;
+        padding:0 8px;
+        border-radius:999px;
+        border:1px solid rgba(255,255,255,.16);
+        background:rgba(255,255,255,.09);
+        color:#fff;
+        font-family:Outfit,sans-serif;
+        font-size:10px;
+        line-height:1;
+        font-weight:1000;
+        cursor:pointer;
+        box-shadow:0 8px 18px rgba(0,0,0,.16);
+        white-space:nowrap;
+        flex:0 0 auto;
+      }
+
+      .icany-karaoke-mini-flag{
+        font-size:13px;
+        line-height:1;
       }
 
       .icany-radio-controls{
         display:flex;
         align-items:center;
-        justify-content:flex-start;
-        gap:5px;
+        justify-content:center;
+        gap:6px;
         min-width:0;
       }
 
@@ -463,25 +471,6 @@
       .icany-radio-btn.main svg{
         width:21px;
         height:21px;
-      }
-
-      .icany-radio-lyrics-pill{
-        position:absolute;
-        top:5px;
-        right:61px;
-        z-index:4;
-        min-height:20px;
-        padding:4px 7px;
-        border-radius:999px;
-        border:1px solid rgba(255,255,255,.14);
-        background:rgba(255,255,255,.09);
-        color:#fff;
-        font-family:Outfit,sans-serif;
-        font-size:10px;
-        line-height:1;
-        font-weight:1000;
-        cursor:pointer;
-        backdrop-filter:blur(10px);
       }
 
       .icany-radio-card{
@@ -710,6 +699,17 @@
           gap:4px;
         }
 
+        .icany-karaoke-mini{
+          min-width:68px;
+          height:30px;
+          padding:0 6px;
+          font-size:9px;
+        }
+
+        .icany-karaoke-mini-flag{
+          font-size:12px;
+        }
+
         .icany-radio-btn{
           width:30px;
           height:30px;
@@ -743,14 +743,6 @@
           letter-spacing:.68px;
         }
 
-        .icany-radio-lyrics-pill{
-          right:56px;
-          top:4px;
-          min-height:18px;
-          padding:3px 6px;
-          font-size:9px;
-        }
-
         .icany-karaoke-line{
           font-size:16px;
         }
@@ -777,6 +769,11 @@
 
         .icany-radio-brand{
           min-width:44px;
+        }
+
+        .icany-karaoke-mini{
+          min-width:62px;
+          font-size:8.5px;
         }
       }
     `;
@@ -814,7 +811,7 @@
       : parsePlainLyrics(track?.lyrics || track?.lyrics_text || "");
 
     if(!lyricLines.length){
-      lyricLines = ["Bu parça için söz akışı hazırlanıyor."];
+      lyricLines = ["Bu parça için karaoke söz akışı hazırlanıyor."];
       lrcLines = [];
     }
   }
@@ -850,6 +847,7 @@
   function updateKaraoke(doc){
     const audio = doc.getElementById("icanyRadioAudio");
     const wrap = doc.getElementById("icanyKaraokeLines");
+
     if(!audio || !wrap || !lyricLines.length) return;
 
     const activeIndex = activeLyricIndex(audio);
@@ -879,7 +877,7 @@
       <div class="icany-karaoke-card">
         <div class="icany-karaoke-head">
           <div class="icany-karaoke-title">
-            <h2>Sözler</h2>
+            <h2>Karaoke</h2>
             <div class="icany-karaoke-lang" id="icanyKaraokeLang">iCanyAI</div>
           </div>
 
@@ -887,7 +885,7 @@
         </div>
 
         <div class="icany-karaoke-lines" id="icanyKaraokeLines">
-          <div class="icany-karaoke-empty">Bu parça için söz akışı hazırlanıyor.</div>
+          <div class="icany-karaoke-empty">Bu parça için karaoke söz akışı hazırlanıyor.</div>
         </div>
       </div>
     `;
@@ -903,6 +901,14 @@
         modal.classList.remove("show");
       }
     });
+  }
+
+  function updatePlayerLanguageBadge(doc, track){
+    const flag = doc.getElementById("icanyPlayerFlag");
+    if(!flag) return;
+
+    const value = track?.channel_flag || track?.flag || "🎧";
+    flag.textContent = value;
   }
 
   function openKaraoke(doc){
@@ -936,9 +942,12 @@
     player.className = "icany-radio-player";
 
     player.innerHTML = `
-      <button class="icany-radio-lyrics-pill" id="icanyLyricsBtn" type="button">Sözler</button>
-
       <div class="icany-radio-row">
+        <button class="icany-karaoke-mini" id="icanyLyricsBtn" type="button">
+          <span class="icany-karaoke-mini-flag" id="icanyPlayerFlag">🎧</span>
+          <span>Karaoke</span>
+        </button>
+
         <div class="icany-radio-controls">
           <button class="icany-radio-btn" id="icanyShuffleBtn" type="button" aria-label="Karıştır">
             <svg viewBox="0 0 24 24">
@@ -1014,6 +1023,7 @@
       buildLyricsForTrack(track);
       renderKaraoke(doc);
       updateKaraoke(doc);
+      updatePlayerLanguageBadge(doc, track);
     }
 
     lyricsBtn?.addEventListener("click", () => {
@@ -1208,6 +1218,7 @@
       audio.load();
       buildLyricsForTrack(tracks[0]);
       renderKaraoke(doc);
+      updatePlayerLanguageBadge(doc, tracks[0]);
     }
   }
 
