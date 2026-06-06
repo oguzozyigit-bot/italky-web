@@ -605,5 +605,611 @@
   });
 })();
 </script>
+  <!-- ICANYAI RADYO DENEME BLOĞU - BAŞLANGIÇ -->
+<style>
+  .icany-radio-player{
+    display:none;
+    position:relative;
+    overflow:hidden;
+    border-radius:20px;
+    padding:10px 14px 9px;
+    color:#fff;
+    border:1px solid rgba(255,255,255,.14);
+    background:
+      radial-gradient(circle at 14% 30%, rgba(103,232,249,.16), transparent 32%),
+      radial-gradient(circle at 90% 10%, rgba(236,72,153,.14), transparent 30%),
+      linear-gradient(135deg, rgba(15,23,42,.82), rgba(30,41,59,.78) 48%, rgba(15,23,42,.90));
+    box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+  }
+
+  .icany-radio-player.show{
+    display:block;
+  }
+
+  .icany-radio-brand{
+    position:relative;
+    z-index:2;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    margin-bottom:5px;
+    font-family:'Space Grotesk',Outfit,sans-serif;
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:.2px;
+    color:rgba(255,255,255,.88);
+  }
+
+  .icany-radio-brand span{
+    background:linear-gradient(135deg,#67e8f9,#818cf8,#f0abfc);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .icany-radio-controls{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .icany-radio-progress{
+    position:relative;
+    z-index:2;
+    height:4px;
+    border-radius:999px;
+    background:rgba(255,255,255,.18);
+    overflow:hidden;
+    margin-top:10px;
+  }
+
+  .icany-radio-progress span{
+    display:block;
+    width:0%;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#67e8f9,#818cf8,#f0abfc);
+    box-shadow:0 0 18px rgba(129,140,248,.45);
+  }
+
+  .icany-radio-btn{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.10);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    cursor:pointer;
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+  }
+
+  .icany-radio-btn.main{
+    width:50px;
+    height:50px;
+    background:#fff;
+    color:#0f172a;
+    box-shadow:0 16px 34px rgba(0,0,0,.25);
+  }
+
+  .icany-radio-btn.active{
+    border-color:rgba(103,232,249,.72);
+    box-shadow:0 0 22px rgba(103,232,249,.24);
+  }
+
+  .icany-radio-btn svg{
+    width:21px;
+    height:21px;
+    fill:currentColor;
+    stroke:none;
+  }
+
+  .icany-radio-card{
+    cursor:pointer;
+    background:
+      radial-gradient(circle at 14% 42%, rgba(103,232,249,.34), transparent 30%),
+      radial-gradient(circle at 92% 12%, rgba(236,72,153,.26), transparent 28%),
+      radial-gradient(circle at 72% 110%, rgba(129,140,248,.30), transparent 36%),
+      linear-gradient(90deg, #0f172a 0%, #312e81 45%, #831843 100%);
+  }
+
+  .icany-radio-card .wide-icon{
+    background:linear-gradient(135deg,#06b6d4,#6366f1,#ec4899);
+    border-color:rgba(255,255,255,.28);
+  }
+
+  .icany-radio-card .wide-icon svg{
+    stroke:#fff;
+  }
+
+  .icany-radio-card .wide-desc{
+    color:rgba(255,255,255,.90);
+  }
+
+  .icany-radio-modal{
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(0,0,0,.62);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+  }
+
+  .icany-radio-modal.show{
+    display:flex;
+  }
+
+  .icany-radio-modal-card{
+    width:min(100%,430px);
+    max-height:min(86vh,720px);
+    overflow:auto;
+    border-radius:26px;
+    padding:18px;
+    background:linear-gradient(145deg,rgba(16,23,42,.98),rgba(10,10,18,.98));
+    border:1px solid rgba(255,255,255,.12);
+    color:#fff;
+    box-shadow:0 24px 70px rgba(0,0,0,.42);
+  }
+
+  .icany-radio-modal-card h2{
+    margin:0 0 6px;
+    font-family:'Space Grotesk',Outfit,sans-serif;
+    font-size:22px;
+    font-weight:900;
+  }
+
+  .icany-radio-modal-card p{
+    margin:0 0 14px;
+    color:rgba(255,255,255,.70);
+    font-size:13px;
+    font-weight:800;
+    line-height:1.45;
+  }
+
+  .icany-radio-group-title{
+    margin:14px 0 8px;
+    font-size:12px;
+    font-weight:1000;
+    color:rgba(255,255,255,.86);
+    text-transform:uppercase;
+    letter-spacing:.35px;
+  }
+
+  .icany-radio-chip-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .icany-radio-chip{
+    border:none;
+    border-radius:999px;
+    padding:10px 12px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+    color:#fff;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  .icany-radio-chip.active{
+    background:linear-gradient(135deg,#06b6d4,#6366f1,#ec4899);
+    border-color:rgba(255,255,255,.24);
+  }
+
+  .icany-radio-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:16px;
+  }
+
+  .icany-radio-action{
+    min-height:46px;
+    border-radius:16px;
+    border:none;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:1000;
+    cursor:pointer;
+  }
+
+  .icany-radio-action.primary{
+    background:linear-gradient(135deg,#67e8f9,#818cf8,#f0abfc);
+    color:#06111f;
+  }
+
+  .icany-radio-action.secondary{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+    color:#fff;
+  }
+
+  @media(max-width:390px){
+    .icany-radio-btn{
+      width:36px;
+      height:36px;
+    }
+
+    .icany-radio-btn.main{
+      width:48px;
+      height:48px;
+    }
+
+    .icany-radio-brand{
+      font-size:11px;
+      margin-bottom:4px;
+    }
+  }
+</style>
+
+<script>
+(function(){
+  const STORAGE_KEY = "icany_radio_deneme_config_v6";
+
+  const ICANY_RADIO_TRACKS = [
+    /*
+      R2 müzikleri sonra buraya bağlanacak.
+
+      Örnek:
+      {
+        title: "Parça Adı",
+        audio_url: "https://r2-domain.com/music/parca.mp3"
+      }
+    */
+  ];
+
+  let currentTrackIndex = 0;
+  let shuffleEnabled = false;
+  let repeatEnabled = false;
+
+  function radioIcon(){
+    return `
+      <svg viewBox="0 0 24 24">
+        <path d="M9 18V5l11-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="17" cy="16" r="3"></circle>
+      </svg>
+    `;
+  }
+
+  function createPlayer(){
+    if (document.getElementById("icanyRadioPlayer")) return;
+
+    const hero = document.getElementById("heroSection");
+    if (!hero) return;
+
+    const player = document.createElement("section");
+    player.id = "icanyRadioPlayer";
+    player.className = "icany-radio-player";
+
+    player.innerHTML = `
+      <div class="icany-radio-brand">
+        <span>iCanyAI</span>
+      </div>
+
+      <div class="icany-radio-controls">
+        <button class="icany-radio-btn" id="icanyShuffleBtn" type="button" aria-label="Karıştır">
+          <svg viewBox="0 0 24 24">
+            <path d="M16 3h5v5h-2V6.4l-4.3 4.3-1.4-1.4L17.6 5H16V3zM4 7h3.6l3 3-1.4 1.4L6.8 9H4V7zm0 8h2.8l10.8-10.8L19 5.6 8.4 16.2H4v-1.2zm15 .6V14h2v5h-5v-2h1.6l-3.3-3.3 1.4-1.4 3.3 3.3z"></path>
+          </svg>
+        </button>
+
+        <button class="icany-radio-btn" id="icanyPrevBtn" type="button" aria-label="Geri">
+          <svg viewBox="0 0 24 24">
+            <path d="M6 6h2v12H6zM9 12l9-6v12z"></path>
+          </svg>
+        </button>
+
+        <button class="icany-radio-btn main" id="icanyPlayBtn" type="button" aria-label="Oynat">
+          <svg id="icanyPlayIcon" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"></path>
+          </svg>
+        </button>
+
+        <button class="icany-radio-btn" id="icanyNextBtn" type="button" aria-label="İleri">
+          <svg viewBox="0 0 24 24">
+            <path d="M16 6h2v12h-2zM6 18V6l9 6z"></path>
+          </svg>
+        </button>
+
+        <button class="icany-radio-btn" id="icanyRepeatBtn" type="button" aria-label="Tekrar">
+          <svg viewBox="0 0 24 24">
+            <path d="M17 1l4 4-4 4V6H7a4 4 0 0 0 0 8h1v2H7A6 6 0 0 1 7 4h10V1zM7 23l-4-4 4-4v3h10a4 4 0 0 0 0-8h-1V8h1a6 6 0 0 1 0 12H7v3z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="icany-radio-progress">
+        <span id="icanyRadioProgress"></span>
+      </div>
+
+      <audio id="icanyRadioAudio" preload="none"></audio>
+    `;
+
+    hero.insertAdjacentElement("afterend", player);
+    bindPlayer();
+  }
+
+  function bindPlayer(){
+    const audio = document.getElementById("icanyRadioAudio");
+    const playIcon = document.getElementById("icanyPlayIcon");
+    const progress = document.getElementById("icanyRadioProgress");
+    const shuffleBtn = document.getElementById("icanyShuffleBtn");
+    const repeatBtn = document.getElementById("icanyRepeatBtn");
+
+    function setPlaying(isPlaying){
+      if (!playIcon) return;
+
+      playIcon.innerHTML = isPlaying
+        ? `<path d="M7 5h4v14H7zM13 5h4v14h-4z"></path>`
+        : `<path d="M8 5v14l11-7z"></path>`;
+    }
+
+    function loadTrack(index){
+      if (!audio || !ICANY_RADIO_TRACKS.length) return;
+
+      const track = ICANY_RADIO_TRACKS[index];
+      if (!track || !track.audio_url) return;
+
+      audio.src = track.audio_url;
+      audio.load();
+    }
+
+    document.getElementById("icanyPlayBtn")?.addEventListener("click", () => {
+      if (!audio) return;
+
+      if (!audio.src && ICANY_RADIO_TRACKS.length) {
+        loadTrack(currentTrackIndex);
+      }
+
+      if (!audio.src) return;
+
+      if (audio.paused) {
+        audio.play().then(() => setPlaying(true)).catch(() => {});
+      } else {
+        audio.pause();
+        setPlaying(false);
+      }
+    });
+
+    document.getElementById("icanyNextBtn")?.addEventListener("click", () => {
+      if (!ICANY_RADIO_TRACKS.length) return;
+
+      currentTrackIndex = shuffleEnabled
+        ? Math.floor(Math.random() * ICANY_RADIO_TRACKS.length)
+        : (currentTrackIndex + 1) % ICANY_RADIO_TRACKS.length;
+
+      loadTrack(currentTrackIndex);
+
+      audio.play().then(() => setPlaying(true)).catch(() => {});
+    });
+
+    document.getElementById("icanyPrevBtn")?.addEventListener("click", () => {
+      if (!ICANY_RADIO_TRACKS.length) return;
+
+      currentTrackIndex = (currentTrackIndex - 1 + ICANY_RADIO_TRACKS.length) % ICANY_RADIO_TRACKS.length;
+
+      loadTrack(currentTrackIndex);
+
+      audio.play().then(() => setPlaying(true)).catch(() => {});
+    });
+
+    shuffleBtn?.addEventListener("click", () => {
+      shuffleEnabled = !shuffleEnabled;
+      shuffleBtn.classList.toggle("active", shuffleEnabled);
+    });
+
+    repeatBtn?.addEventListener("click", () => {
+      repeatEnabled = !repeatEnabled;
+      repeatBtn.classList.toggle("active", repeatEnabled);
+    });
+
+    audio?.addEventListener("timeupdate", () => {
+      if (!audio.duration || !progress) return;
+
+      progress.style.width = `${Math.min(100, (audio.currentTime / audio.duration) * 100)}%`;
+    });
+
+    audio?.addEventListener("ended", () => {
+      if (repeatEnabled) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+        return;
+      }
+
+      if (ICANY_RADIO_TRACKS.length) {
+        currentTrackIndex = (currentTrackIndex + 1) % ICANY_RADIO_TRACKS.length;
+        loadTrack(currentTrackIndex);
+        audio.play().catch(() => {});
+      } else {
+        setPlaying(false);
+      }
+    });
+  }
+
+  function createSetupCard(){
+    if (document.getElementById("icanyRadioSetupCard")) return;
+
+    const offlineCard = document.getElementById("offlineCard");
+    if (!offlineCard) return;
+
+    const card = document.createElement("div");
+    card.id = "icanyRadioSetupCard";
+    card.className = "wide-card icany-radio-card";
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+
+    card.innerHTML = `
+      <div class="wide-icon" aria-hidden="true">
+        ${radioIcon()}
+      </div>
+
+      <div class="wide-body">
+        <h2 class="wide-title">iCanyAI Radyo</h2>
+        <p class="wide-desc">Müzik türünü ve dili seç. Kendi radyo kanalını oluştur.</p>
+      </div>
+
+      <div class="arrow-chip"></div>
+    `;
+
+    card.addEventListener("click", openModal);
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openModal();
+      }
+    });
+
+    offlineCard.insertAdjacentElement("afterend", card);
+  }
+
+  function createModal(){
+    if (document.getElementById("icanyRadioModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "icanyRadioModal";
+    modal.className = "icany-radio-modal";
+
+    modal.innerHTML = `
+      <div class="icany-radio-modal-card">
+        <h2>Kendi Radyonu Kur</h2>
+        <p>Müzik türünü ve dili seç. Kaydedince üstte sadece medya player barı görünür.</p>
+
+        <div class="icany-radio-group-title">Müzik Türü</div>
+        <div class="icany-radio-chip-grid" data-group="genres">
+          <button class="icany-radio-chip" data-value="Pop" type="button">Pop</button>
+          <button class="icany-radio-chip" data-value="Rock" type="button">Rock</button>
+          <button class="icany-radio-chip" data-value="Rap" type="button">Rap</button>
+          <button class="icany-radio-chip" data-value="Arabesk" type="button">Arabesk</button>
+          <button class="icany-radio-chip" data-value="Halk Müziği" type="button">Halk Müziği</button>
+          <button class="icany-radio-chip" data-value="Elektronik" type="button">Elektronik</button>
+          <button class="icany-radio-chip" data-value="Enstrümantal" type="button">Enstrümantal</button>
+        </div>
+
+        <div class="icany-radio-group-title">Dil</div>
+        <div class="icany-radio-chip-grid" data-group="languages">
+          <button class="icany-radio-chip" data-value="Türkçe" type="button">Türkçe</button>
+          <button class="icany-radio-chip" data-value="İngilizce" type="button">İngilizce</button>
+          <button class="icany-radio-chip" data-value="Almanca" type="button">Almanca</button>
+          <button class="icany-radio-chip" data-value="Arapça" type="button">Arapça</button>
+          <button class="icany-radio-chip" data-value="Fransızca" type="button">Fransızca</button>
+          <button class="icany-radio-chip" data-value="İspanyolca" type="button">İspanyolca</button>
+        </div>
+
+        <div class="icany-radio-actions">
+          <button class="icany-radio-action secondary" id="icanyRadioClose" type="button">Kapat</button>
+          <button class="icany-radio-action primary" id="icanyRadioSave" type="button">Radyomu Oluştur</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelectorAll(".icany-radio-chip").forEach((button) => {
+      button.addEventListener("click", () => button.classList.toggle("active"));
+    });
+
+    modal.querySelector("#icanyRadioClose")?.addEventListener("click", closeModal);
+    modal.querySelector("#icanyRadioSave")?.addEventListener("click", saveRadio);
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) closeModal();
+    });
+  }
+
+  function openModal(){
+    createModal();
+    document.getElementById("icanyRadioModal")?.classList.add("show");
+  }
+
+  function closeModal(){
+    document.getElementById("icanyRadioModal")?.classList.remove("show");
+  }
+
+  function selectedValues(groupName){
+    return Array.from(document.querySelectorAll(`[data-group="${groupName}"] .icany-radio-chip.active`))
+      .map((item) => item.dataset.value)
+      .filter(Boolean);
+  }
+
+  function saveRadio(){
+    const genres = selectedValues("genres");
+    const languages = selectedValues("languages");
+
+    if (!genres.length || !languages.length) {
+      alert("Başkanım en az bir müzik türü ve bir dil seçelim.");
+      return;
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        genres,
+        languages,
+        created_at: Date.now()
+      }));
+    } catch {}
+
+    closeModal();
+    showPlayer();
+
+    document.getElementById("icanyRadioPlayer")?.scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+  }
+
+  function showPlayer(){
+    createPlayer();
+    document.getElementById("icanyRadioPlayer")?.classList.add("show");
+  }
+
+  function restorePlayerIfReady(){
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+
+      if (
+        saved &&
+        Array.isArray(saved.genres) &&
+        saved.genres.length &&
+        Array.isArray(saved.languages) &&
+        saved.languages.length
+      ) {
+        showPlayer();
+      }
+    } catch {}
+  }
+
+  function bootRadioDeneme(){
+    createSetupCard();
+    createModal();
+    restorePlayerIfReady();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootRadioDeneme);
+  } else {
+    bootRadioDeneme();
+  }
+
+  window.addEventListener("italkyAccessReady", () => {
+    setTimeout(createSetupCard, 250);
+  });
+})();
+</script>
+<!-- ICANYAI RADYO DENEME BLOĞU - BİTİŞ -->
 </body>
 </html>
