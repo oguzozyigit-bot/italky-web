@@ -45,7 +45,7 @@
 
 <body>
   <div id="denemeBoot">Deneme Home hazırlanıyor...</div>
-  <iframe id="denemeHomeFrame" src="/pages/home.html?deneme_radio=1"></iframe>
+  <iframe id="denemeHomeFrame" src="/pages/home.html?deneme_radio_v=11"></iframe>
 
 <script>
 (function(){
@@ -123,6 +123,8 @@
   let tracks = [];
   let currentTrackIndex = 0;
   let shuffleEnabled = false;
+  let lastSelectedGenres = [];
+  let lastSelectedLanguages = [];
 
   function getDoc(){
     try{
@@ -203,6 +205,10 @@
       });
     }
 
+    if(!matched.length){
+      matched = ICANY_RADIO_CHANNELS.slice();
+    }
+
     return matched;
   }
 
@@ -243,7 +249,10 @@
   }
 
   function injectStyle(doc){
-    if(!doc || doc.getElementById("icanyRadioDenemeStyle")) return;
+    if(!doc) return;
+
+    const old = doc.getElementById("icanyRadioDenemeStyle");
+    if(old) old.remove();
 
     const style = doc.createElement("style");
     style.id = "icanyRadioDenemeStyle";
@@ -253,14 +262,14 @@
         position:relative;
         overflow:hidden;
         border-radius:18px;
-        padding:7px 10px 7px;
+        padding:6px 9px 6px;
         color:#fff;
         border:1px solid rgba(255,255,255,.12);
         background:
-          radial-gradient(circle at 14% 30%, rgba(103,232,249,.13), transparent 32%),
-          radial-gradient(circle at 90% 10%, rgba(236,72,153,.10), transparent 30%),
-          linear-gradient(135deg, rgba(15,23,42,.80), rgba(15,23,42,.92));
-        box-shadow:0 12px 32px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
+          radial-gradient(circle at 14% 30%, rgba(33,150,243,.13), transparent 32%),
+          radial-gradient(circle at 90% 10%, rgba(45,212,191,.08), transparent 30%),
+          linear-gradient(135deg, rgba(2,24,43,.86), rgba(6,18,33,.94));
+        box-shadow:0 12px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
         backdrop-filter:blur(16px);
         -webkit-backdrop-filter:blur(16px);
       }
@@ -275,51 +284,57 @@
         display:grid;
         grid-template-columns:1fr auto;
         align-items:center;
-        gap:10px;
+        gap:7px;
       }
 
       .icany-radio-controls{
         display:flex;
         align-items:center;
         justify-content:flex-start;
-        gap:8px;
+        gap:6px;
         min-width:0;
       }
 
       .icany-radio-brand{
-        min-width:58px;
-        text-align:right;
+        width:68px;
+        min-width:68px;
+        text-align:left;
         line-height:1;
         user-select:none;
+        padding-left:2px;
       }
 
       .icany-radio-brand-main{
         display:block;
         font-family:'Space Grotesk',Outfit,sans-serif;
-        font-size:12px;
-        font-weight:900;
-        letter-spacing:.1px;
+        font-size:14px;
+        font-weight:1000;
+        letter-spacing:-.55px;
         white-space:nowrap;
+        transform:scaleX(.94);
+        transform-origin:left center;
       }
 
       .icany-radio-brand-main .icany-white{
         color:#fff;
         -webkit-text-fill-color:#fff;
+        text-shadow:0 1px 8px rgba(255,255,255,.18);
       }
 
       .icany-radio-brand-main .icany-ai{
-        background:linear-gradient(135deg,#67e8f9,#818cf8,#f0abfc);
-        -webkit-background-clip:text;
-        -webkit-text-fill-color:transparent;
+        color:#20aeea;
+        -webkit-text-fill-color:#20aeea;
+        text-shadow:0 0 10px rgba(32,174,234,.32);
       }
 
       .icany-radio-brand-sub{
         display:block;
         margin-top:2px;
-        font-size:7px;
+        padding-left:1px;
+        font-size:6.5px;
         font-weight:1000;
-        letter-spacing:1.15px;
-        color:rgba(255,255,255,.62);
+        letter-spacing:2.15px;
+        color:rgba(196,211,229,.75);
       }
 
       .icany-radio-progress{
@@ -329,7 +344,7 @@
         border-radius:999px;
         background:rgba(255,255,255,.16);
         overflow:hidden;
-        margin-top:7px;
+        margin-top:6px;
       }
 
       .icany-radio-progress span{
@@ -337,13 +352,13 @@
         width:0%;
         height:100%;
         border-radius:999px;
-        background:linear-gradient(90deg,#67e8f9,#818cf8,#f0abfc);
-        box-shadow:0 0 14px rgba(129,140,248,.42);
+        background:linear-gradient(90deg,#ffffff,#20aeea,#0f3e73);
+        box-shadow:0 0 12px rgba(32,174,234,.40);
       }
 
       .icany-radio-btn{
-        width:34px;
-        height:34px;
+        width:31px;
+        height:31px;
         border-radius:50%;
         border:1px solid rgba(255,255,255,.16);
         background:rgba(255,255,255,.09);
@@ -358,46 +373,46 @@
       }
 
       .icany-radio-btn.main{
-        width:44px;
-        height:44px;
+        width:42px;
+        height:42px;
         background:#fff;
-        color:#0f172a;
+        color:#061827;
         box-shadow:0 12px 28px rgba(0,0,0,.22);
       }
 
       .icany-radio-btn.active{
-        border-color:rgba(103,232,249,.72);
-        box-shadow:0 0 18px rgba(103,232,249,.22);
+        border-color:rgba(32,174,234,.78);
+        box-shadow:0 0 18px rgba(32,174,234,.24);
       }
 
       .icany-radio-btn svg{
-        width:19px;
-        height:19px;
+        width:17px;
+        height:17px;
         fill:currentColor;
         stroke:none;
       }
 
       .icany-radio-btn.main svg{
-        width:22px;
-        height:22px;
+        width:21px;
+        height:21px;
       }
 
       .icany-radio-card{
         cursor:pointer;
         background:
-          radial-gradient(circle at 14% 42%, rgba(103,232,249,.34), transparent 30%),
-          radial-gradient(circle at 92% 12%, rgba(236,72,153,.26), transparent 28%),
-          radial-gradient(circle at 72% 110%, rgba(129,140,248,.30), transparent 36%),
-          linear-gradient(90deg, #0f172a 0%, #312e81 45%, #831843 100%);
+          radial-gradient(circle at 14% 42%, rgba(32,174,234,.34), transparent 30%),
+          radial-gradient(circle at 92% 12%, rgba(255,255,255,.12), transparent 28%),
+          radial-gradient(circle at 72% 110%, rgba(15,62,115,.34), transparent 36%),
+          linear-gradient(90deg, #031827 0%, #0b3d68 48%, #061827 100%);
       }
 
       .icany-radio-card .wide-icon{
-        background:linear-gradient(135deg,#06b6d4,#6366f1,#ec4899);
+        background:linear-gradient(135deg,#ffffff,#20aeea,#0f3e73);
         border-color:rgba(255,255,255,.28);
       }
 
       .icany-radio-card .wide-icon svg{
-        stroke:#fff;
+        stroke:#061827;
       }
 
       .icany-radio-card .wide-desc{
@@ -427,7 +442,7 @@
         overflow:auto;
         border-radius:26px;
         padding:18px;
-        background:linear-gradient(145deg,rgba(16,23,42,.98),rgba(10,10,18,.98));
+        background:linear-gradient(145deg,rgba(6,24,39,.98),rgba(4,10,20,.98));
         border:1px solid rgba(255,255,255,.12);
         color:#fff;
         box-shadow:0 24px 70px rgba(0,0,0,.42);
@@ -482,7 +497,8 @@
       }
 
       .icany-radio-chip.active{
-        background:linear-gradient(135deg,#06b6d4,#6366f1,#ec4899);
+        background:linear-gradient(135deg,#ffffff,#20aeea,#0f3e73);
+        color:#061827;
         border-color:rgba(255,255,255,.24);
       }
 
@@ -504,8 +520,8 @@
       }
 
       .icany-radio-action.primary{
-        background:linear-gradient(135deg,#67e8f9,#818cf8,#f0abfc);
-        color:#06111f;
+        background:linear-gradient(135deg,#ffffff,#20aeea);
+        color:#061827;
       }
 
       .icany-radio-action.secondary{
@@ -516,55 +532,61 @@
 
       @media(max-width:390px){
         .icany-radio-player{
-          padding:6px 9px 6px;
+          padding:6px 8px 6px;
           border-radius:16px;
         }
 
         .icany-radio-row{
-          gap:7px;
+          gap:5px;
         }
 
         .icany-radio-controls{
-          gap:6px;
+          gap:5px;
         }
 
         .icany-radio-btn{
-          width:31px;
-          height:31px;
+          width:30px;
+          height:30px;
         }
 
         .icany-radio-btn.main{
-          width:42px;
-          height:42px;
-        }
-
-        .icany-radio-btn svg{
-          width:17px;
-          height:17px;
-        }
-
-        .icany-radio-btn.main svg{
-          width:21px;
-          height:21px;
+          width:41px;
+          height:41px;
         }
 
         .icany-radio-brand{
-          min-width:52px;
+          width:63px;
+          min-width:63px;
         }
 
         .icany-radio-brand-main{
-          font-size:11px;
+          font-size:13px;
         }
 
         .icany-radio-brand-sub{
           font-size:6px;
-          letter-spacing:.9px;
+          letter-spacing:1.85px;
         }
       }
 
       @media(max-width:360px){
         .icany-radio-chip-grid{
           grid-template-columns:repeat(2,minmax(0,1fr));
+        }
+
+        .icany-radio-btn{
+          width:28px;
+          height:28px;
+        }
+
+        .icany-radio-btn.main{
+          width:39px;
+          height:39px;
+        }
+
+        .icany-radio-brand{
+          width:60px;
+          min-width:60px;
         }
       }
     `;
@@ -609,9 +631,9 @@
           </button>
         </div>
 
-        <div class="icany-radio-brand" aria-label="iCanyAI Business">
+        <div class="icany-radio-brand" aria-label="icanyAI Business">
           <span class="icany-radio-brand-main">
-            <span class="icany-white">iCany</span><span class="icany-ai">AI</span>
+            <span class="icany-white">icany</span><span class="icany-ai">AI</span>
           </span>
           <span class="icany-radio-brand-sub">BUSINESS</span>
         </div>
@@ -828,12 +850,19 @@
     await loadRadioTracksBySelection(genres, languages);
 
     if(!tracks.length){
-      alert("Bu seçim için iCanyAI playlist bulunamadı. Başka tür veya dil seçelim.");
-      return;
+      await loadRadioTracksBySelection([], languages);
+    }
+
+    if(!tracks.length){
+      await loadRadioTracksBySelection(genres, []);
+    }
+
+    if(!tracks.length){
+      await loadRadioTracksBySelection([], []);
     }
 
     const audio = doc.getElementById("icanyRadioAudio");
-    if(audio){
+    if(audio && tracks.length){
       audio.src = tracks[0].audio_url;
       audio.load();
     }
