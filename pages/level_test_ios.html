@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Seviye Sınavı</title>
+<meta name="theme-color" content="#02000f">
+<style>html,body{background:#02000f!important;}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#02000f;--text:#fff;--muted:rgba(255,255,255,.64);--line:rgba(255,255,255,.10);--panel:rgba(255,255,255,.045);--ai:linear-gradient(135deg,#8fb5ff 0%,#5b7cff 42%,#a855f7 72%,#ec4899 100%);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 0%,rgba(103,232,249,.10),transparent 26%),radial-gradient(circle at 15% 20%,rgba(244,114,182,.08),transparent 18%),linear-gradient(180deg,#08101d 0%,#02000f 100%);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;}
+#pageContent{width:100%;height:100%;padding:calc(8px + var(--safe-top)) 12px calc(12px + var(--safe-bottom));opacity:0;transition:opacity .25s ease;}
+#pageContent.ready{opacity:1;}
+.wrap{width:100%;max-width:520px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px;min-height:0;}
+.appTop{flex:0 0 auto;height:52px;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;}
+.topIconBtn{width:44px;height:44px;border:none;border-radius:14px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 22px rgba(0,0,0,.18);}
+.topIconBtn:active,.btn:active,.listenBtn:active,.opt:active{transform:scale(.985);}
+.topIconBtn svg{width:19px;height:19px;display:block;}
+.brandBtn{height:44px;border:none;border-radius:16px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.brandLine{font-family:'Space Grotesk',sans-serif;font-size:22px;line-height:1;font-weight:700;letter-spacing:-.35px;color:#fff;}.brandLine .ai{background:var(--ai);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.headerCard{flex:0 0 auto;border-radius:24px;border:1px solid var(--line);background:var(--panel);box-shadow:0 14px 28px rgba(0,0,0,.24);padding:12px;position:relative;overflow:hidden;}
+.headerCard::before{content:"";position:absolute;inset:-25%;background:radial-gradient(circle at 18% 18%,rgba(103,232,249,.14),transparent 28%),radial-gradient(circle at 82% 24%,rgba(236,72,153,.10),transparent 26%);filter:blur(26px);pointer-events:none;}
+.headerTop{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.pill{min-height:32px;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:1000;color:#fff;white-space:nowrap;}
+.timer{font-size:12px;font-weight:1000;color:#d8e4ff;}
+.progress{position:relative;z-index:2;display:flex;flex-direction:column;gap:7px;}
+.track{height:14px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);overflow:hidden;}.fill{height:100%;width:0;background:var(--ai);border-radius:inherit;box-shadow:0 0 16px rgba(91,124,255,.24);transition:width .22s ease;}
+.levelLabels{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center;}.levelLabels span{font-size:10px;font-weight:1000;color:rgba(255,255,255,.48);}.levelLabels span.active{color:#a8c7ff;text-shadow:0 0 14px rgba(110,168,255,.28);}
+.questionPanel{flex:1;min-height:0;border-radius:24px;border:1px solid rgba(110,168,255,.16);background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.03));box-shadow:0 14px 28px rgba(0,0,0,.22);padding:14px;overflow:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.questionPanel::-webkit-scrollbar{display:none;}
+.qMeta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}.meta{font-size:11px;font-weight:900;color:rgba(255,255,255,.58);}.qText{font-size:17px;font-weight:1000;line-height:1.35;text-align:center;margin:10px 0 12px;color:#fff;white-space:pre-wrap;}
+.listenRow{display:flex;justify-content:center;margin:0 0 12px;}.listenBtn{min-height:42px;padding:9px 15px;border:none;border-radius:999px;background:#fff;color:#0b1020;font-weight:1000;cursor:pointer;box-shadow:0 12px 28px rgba(255,255,255,.08);}.listenBtn:disabled{opacity:.5;cursor:not-allowed;}
+.opt{width:100%;min-height:58px;padding:10px 12px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);color:#fff;font-weight:900;text-align:left;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:38px 1fr 24px;align-items:center;column-gap:10px;transition:transform .16s ease,background .18s ease,border-color .18s ease,opacity .18s ease;}
+.opt.dim{opacity:.42;transform:none!important;}.opt.sel{background:linear-gradient(135deg,rgba(59,130,246,.14),rgba(168,85,247,.10));border-color:rgba(110,168,255,.38);}.opt.correct{border-color:rgba(34,197,94,.46);background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(22,163,74,.11));}.opt.wrong{border-color:rgba(239,68,68,.44);background:linear-gradient(135deg,rgba(239,68,68,.20),rgba(220,38,38,.10));}
+.optKey{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#d7e4ff;font-size:18px;font-weight:1000;}.optText{min-width:0;font-size:15px;line-height:1.2;word-break:break-word;overflow-wrap:anywhere;}.optIcon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.42);font-size:12px;font-weight:1000;}
+.nav{flex:0 0 auto;display:flex;gap:8px;}.btn{flex:1;height:48px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-weight:1000;cursor:pointer;transition:transform .16s ease,opacity .16s ease;}.btn-primary{background:#fff;color:#000;border:none;}.btn:disabled{opacity:.35;cursor:not-allowed;}
+.note{flex:0 0 auto;font-size:11px;color:var(--muted);font-weight:800;line-height:1.35;text-align:center;}.msgBox{border-radius:18px;border:1px solid rgba(165,180,252,.35);background:rgba(99,102,241,.10);padding:14px;color:rgba(255,255,255,.92);font-weight:900;font-size:13px;line-height:1.5;white-space:pre-wrap;}.msgBox.err{border-color:rgba(255,90,140,.35);background:rgba(255,0,90,.10);}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:16px;z-index:999999;}.overlay.show{display:flex;}.resultCard{width:min(520px,100%);border-radius:28px;border:1px solid rgba(255,255,255,.12);background:rgba(10,10,18,.94);padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.35);}.rTitle{font-size:16px;font-weight:1000;color:#fff;margin:0 0 10px;}.rLevel{font-size:30px;font-weight:1000;color:#a5b4fc;margin:0 0 10px;letter-spacing:-.5px;}.rText{font-size:13px;font-weight:900;color:rgba(255,255,255,.78);line-height:1.55;white-space:pre-wrap;}.rBtns{display:flex;gap:10px;margin-top:14px;}
+@media(max-width:390px){#pageContent{padding:calc(8px + var(--safe-top)) 10px calc(12px + var(--safe-bottom));}.wrap{gap:8px}.appTop{height:48px;grid-template-columns:40px 1fr 40px}.topIconBtn{width:40px;height:40px}.brandLine{font-size:20px}.headerCard{border-radius:22px}.questionPanel{border-radius:22px;padding:12px}.qText{font-size:16px}.opt{min-height:54px;padding:9px 10px;border-radius:16px;grid-template-columns:34px 1fr 22px}.optKey{width:34px;height:34px;font-size:17px}.optText{font-size:14px}.btn{height:44px;border-radius:14px;font-size:14px}.rBtns{flex-direction:column}}
+</style>
+</head>
+<body>
+<main id="pageContent">
+  <div class="wrap">
+    <div class="appTop">
+      <button class="topIconBtn" id="backBtn" type="button" aria-label="Geri"><svg viewBox="0 0 24 24" fill="none"><path d="M14.5 5L8 12L14.5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="brandBtn" id="homeBtn" type="button" aria-label="Ana sayfa"><div class="brandLine">italky<span class="ai">AI</span></div></button>
+      <button class="topIconBtn" id="listenTopBtn" type="button" aria-label="Dinle"><svg viewBox="0 0 24 24" fill="none"><path d="M5 9v6h4l5 4V5L9 9H5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M17 9.5c1.2 1.5 1.2 3.5 0 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <section class="headerCard">
+      <div class="headerTop"><div class="pill" id="heroPill">Seviye Tespit</div><div class="timer" id="timerMini">40:00</div></div>
+      <div class="progress"><div class="track"><div class="fill" id="levelFill"></div></div><div class="levelLabels" id="levelLabels"><span>A1</span><span>A2</span><span>B1</span><span>B2</span><span>C1</span><span>C2</span></div></div>
+    </section>
+    <section class="questionPanel" id="qCard"><div class="msgBox">Test yükleniyor...</div></section>
+    <div class="nav"><button class="btn" id="btnPrev" type="button">GERİ</button><button class="btn" id="btnSkip" type="button">ATLA</button><button class="btn btn-primary" id="btnNext" type="button">İLERİ</button></div>
+    <div class="note">Ses için “Dinle” butonuna basın. Ses başlatılamazsa sınav devam eder.</div>
+  </div>
+</main>
+<div class="overlay" id="resultOverlay"><div class="resultCard"><div class="rTitle">Seviye tespit tamamlandı</div><div class="rLevel" id="rLevel">Seviye: —</div><div class="rText" id="rText"></div><div class="rBtns"><button class="btn btn-primary" id="rGo" type="button">Profile Git</button><button class="btn" id="rLater" type="button">Kapat</button></div></div></div>
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
+
+mountShell({ scroll:"none" });
+
+const $ = (id) => document.getElementById(id);
+const qCard = $("qCard");
+const levelFill = $("levelFill");
+const levelLabels = $("levelLabels");
+const heroPill = $("heroPill");
+const timerMini = $("timerMini");
+const btnPrev = $("btnPrev");
+const btnSkip = $("btnSkip");
+const btnNext = $("btnNext");
+const listenTopBtn = $("listenTopBtn");
+const SUPPORTED_LANGS = ["en", "de", "fr", "es", "it"];
+const LANG_NAMES_TR = { en:"İngilizce", de:"Almanca", fr:"Fransızca", es:"İspanyolca", it:"İtalyanca" };
+const TTS_LANGS = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT", tr:"tr-TR" };
+const params = new URLSearchParams(location.search);
+const testId = String(params.get("test_id") || "").trim();
+const langCode = normalizeSupportedLang(params.get("lang") || "en");
+const langNameTR = LANG_NAMES_TR[langCode] || "İngilizce";
+const TEST_SOURCE_BASE = "https://auth.italky.ai/storage/v1/object/public/tests/level_tests";
+const TOTAL_TIME = 40 * 60;
+let session = null;
+let QUESTIONS = [];
+let answers = [];
+let idx = 0;
+let remaining = TOTAL_TIME;
+let timer = null;
+let currentAudio = null;
+
+function ltLog(label, data = {}) {
+  try { console.log(`[LevelTest] ${label} ${JSON.stringify(data || {})}`); }
+  catch { console.log(`[LevelTest] ${label}`); }
+}
+
+function normalizeSupportedLang(input) {
+  const raw = String(input || "en").trim().toLowerCase().split(/[-_]/)[0];
+  return SUPPORTED_LANGS.includes(raw) ? raw : "en";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", "\"":"&quot;" }[c]));
+}
+
+function stripChoiceLabel(s) {
+  return String(s || "").trim().replace(/^\s*([A-D])\s*[\)\.\:\-]\s*/i, "").trim();
+}
+
+function showMessage(msg, isError = false) {
+  qCard.innerHTML = `<div class="msgBox ${isError ? "err" : ""}">${escapeHtml(msg)}</div>`;
+}
+
+function buildReturnUrl() {
+  const redirect = String(params.get("redirect") || "").trim();
+  return redirect || "/pages/profile.html";
+}
+
+function buildCloseUrl() {
+  const next = String(params.get("next") || "").trim();
+  return next || "/pages/level_test_hub_ios.html?ios=1";
+}
+
+function calculateLevel(score, total) {
+  const ratio = total > 0 ? score / total : 0;
+  if (ratio <= 0.20) return "A1";
+  if (ratio <= 0.40) return "A2";
+  if (ratio <= 0.60) return "B1";
+  if (ratio <= 0.80) return "B2";
+  if (ratio <= 0.90) return "C1";
+  return "C2";
+}
+
+function normalizeQuestion(row, fallbackId) {
+  const qText = String(row?.question || row?.text || row?.prompt || "").trim();
+  const rawOptions = Array.isArray(row?.options) ? row.options : Array.isArray(row?.choices) ? row.choices : [];
+  const options = rawOptions.map(stripChoiceLabel).filter(Boolean).slice(0, 6);
+  let correctIndex = Number.isFinite(Number(row?.correct_index)) ? Number(row.correct_index) : Number.isFinite(Number(row?.correct)) ? Number(row.correct) : -1;
+  if (correctIndex < 0 || correctIndex >= options.length) {
+    const answer = stripChoiceLabel(row?.answer || row?.correct_answer || row?.solution || "");
+    const found = options.findIndex((opt) => opt.toLowerCase() === answer.toLowerCase());
+    correctIndex = found >= 0 ? found : 0;
+  }
+  if (!qText || options.length < 2) return null;
+  return {
+    id: row?.id || `q-${fallbackId}`,
+    level: String(row?.level || row?.cefr || "").trim() || "A1",
+    question: qText,
+    options,
+    correct_index: correctIndex,
+    audio_url: row?.audio_url || row?.audioUrl || row?.audio || ""
+  };
+}
+
+async function loadStaticTest(lang, version) {
+  const url = `${TEST_SOURCE_BASE}/${encodeURIComponent(lang)}_v${version}.json`;
+  ltLog("questions source", { url, lang, version });
+  const response = await fetch(url, { method:"GET", cache:"no-store" });
+  ltLog("questions fetch", { status: response.status, ok: response.ok, url });
+  if (!response.ok) return [];
+  const raw = await response.text();
+  ltLog("questions preview", { preview: raw.slice(0, 180) });
+  let json = null;
+  try { json = JSON.parse(raw); }
+  catch (e) { ltLog("questions parse fail", { message: e?.message || String(e), url }); return []; }
+  const source = Array.isArray(json) ? json : Array.isArray(json?.questions) ? json.questions : Array.isArray(json?.items) ? json.items : [];
+  return source.map((item, i) => normalizeQuestion(item, `${version}-${i}`)).filter(Boolean);
+}
+
+async function buildQuestionPool(lang) {
+  const seen = new Set();
+  const out = [];
+  for (let version = 1; version <= 6; version += 1) {
+    const rows = await loadStaticTest(lang, version).catch((e) => {
+      ltLog("questions load fail", { version, message: e?.message || String(e) });
+      return [];
+    });
+    for (const q of rows) {
+      const key = q.question.toLowerCase().replace(/\s+/g, " ").trim();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(q);
+    }
+  }
+  ltLog("questions count", { lang, count: out.length });
+  return shuffle(out).slice(0, Math.min(50, out.length));
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+async function attachQuestions() {
+  if (!testId || !QUESTIONS.length) return;
+  try {
+    const { error } = await supabase.rpc("attach_level_test_questions", {
+      p_test_id: testId,
+      p_questions: QUESTIONS,
+      p_language_code: langCode
+    });
+    if (error) throw error;
+  } catch (e) {
+    ltLog("attach questions skipped", { message: e?.message || String(e) });
+  }
+}
+
+async function updateProfileLevels(result) {
+  if (!session?.user?.id) return false;
+  const userId = String(session.user.id);
+  try {
+    const { data: profile, error: readError } = await supabase
+      .from("profiles")
+      .select("levels")
+      .eq("id", userId)
+      .maybeSingle();
+    if (readError) throw readError;
+    const current = profile?.levels && typeof profile.levels === "object" && !Array.isArray(profile.levels) ? profile.levels : {};
+    const nextLevels = {
+      ...current,
+      [langCode]: {
+        level: result.level,
+        score: result.score,
+        total: result.total,
+        tested_at: new Date().toISOString()
+      }
+    };
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ levels: nextLevels })
+      .eq("id", userId);
+    if (updateError) throw updateError;
+    ltLog("profile update success", { lang: langCode, level: result.level, score: result.score, total: result.total });
+    return true;
+  } catch (e) {
+    ltLog("profile update fail", { message: e?.message || String(e) });
+    return false;
+  }
+}
+
+function getTtsLang(code) {
+  return TTS_LANGS[code] || "en-US";
+}
+
+function stopAudio() {
+  try { currentAudio?.pause(); } catch {}
+  currentAudio = null;
+  try { window.speechSynthesis?.cancel(); } catch {}
+}
+
+async function callDeviceTts() {
+  return false;
+}
+
+async function playAudioUrl(audioUrl) {
+  if (!audioUrl) return false;
+  try {
+    stopAudio();
+    currentAudio = new Audio(audioUrl);
+    currentAudio.preload = "auto";
+    await currentAudio.play();
+    return true;
+  } catch (e) {
+    ltLog("audio url fail", { message: e?.message || String(e) });
+    return false;
+  }
+}
+
+async function speakText(text, lang, audioUrl = "") {
+  const clean = String(text || "").trim();
+  if (!clean && !audioUrl) return false;
+  const bcp = getTtsLang(lang);
+  ltLog("tts start", { lang, bcp, textLength: clean.length, hasAudio: !!audioUrl });
+  stopAudio();
+  try {
+    if (clean && await callDeviceTts()) {
+      ltLog("tts success", { mode:"device", lang });
+      return true;
+    }
+    if (audioUrl && await playAudioUrl(audioUrl)) {
+      ltLog("tts success", { mode:"audio_url", lang });
+      return true;
+    }
+    if (clean && "speechSynthesis" in window) {
+      const utter = new SpeechSynthesisUtterance(clean);
+      utter.lang = bcp;
+      utter.rate = 0.95;
+      utter.pitch = 1;
+      utter.volume = 1;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+      ltLog("tts success", { mode:"speechSynthesis", lang });
+      return true;
+    }
+  } catch (e) {
+    ltLog("tts fail", { message: e?.message || String(e) });
+  }
+  ltLog("tts fail", { message:"no playable mode" });
+  showInlineMessage("Ses şu anda başlatılamadı. Lütfen tekrar deneyin.");
+  return false;
+}
+
+function currentQuestionSpokenText() {
+  const q = QUESTIONS[idx];
+  if (!q) return "";
+  const opts = Array.isArray(q.options) ? q.options : [];
+  return [q.question || "", ...opts.map((opt, i) => `${["A", "B", "C", "D", "E", "F"][i] || i + 1}. ${opt}`)].join(". ");
+}
+
+function showInlineMessage(text) {
+  const old = qCard.querySelector(".inlineMsg");
+  if (old) old.remove();
+  const box = document.createElement("div");
+  box.className = "msgBox inlineMsg";
+  box.style.marginBottom = "10px";
+  box.textContent = text;
+  qCard.prepend(box);
+  setTimeout(() => { try { box.remove(); } catch {} }, 1800);
+}
+
+async function speakCurrentQuestion() {
+  const q = QUESTIONS[idx];
+  if (!q) return;
+  await speakText(currentQuestionSpokenText(), langCode, q.audio_url || "");
+}
+
+function setProgress() {
+  const total = QUESTIONS.length || 1;
+  const ratio = Math.max(0, Math.min(1, (idx + 1) / total));
+  levelFill.style.width = `${Math.round(ratio * 100)}%`;
+  const roughLevel = calculateLevel(idx + 1, total);
+  [...levelLabels.children].forEach((el) => el.classList.toggle("active", el.textContent.trim() === roughLevel));
+}
+
+function render() {
+  const q = QUESTIONS[idx];
+  if (!q) {
+    showMessage("İçerik şu anda yüklenemedi. Lütfen tekrar deneyin.", true);
+    return;
+  }
+  const picked = answers[idx];
+  heroPill.textContent = `${langNameTR} • Soru ${idx + 1}/${QUESTIONS.length}`;
+  setProgress();
+  qCard.innerHTML = `
+    <div class="qMeta"><div class="meta">${escapeHtml(q.level || "A1")}</div><div class="meta">${picked === null ? "Bekliyor" : "Cevaplandı"}</div></div>
+    <div class="qText">${escapeHtml(q.question)}</div>
+    <div class="listenRow"><button class="listenBtn" id="listenQuestionBtn" type="button">Dinle</button></div>
+    ${q.options.map((opt, i) => {
+      const isPicked = picked === i;
+      return `<button class="opt ${isPicked ? "sel" : ""}" data-index="${i}" type="button"><div class="optKey">${["A", "B", "C", "D", "E", "F"][i] || i + 1}</div><div class="optText">${escapeHtml(opt)}</div><div class="optIcon">${isPicked ? "●" : "○"}</div></button>`;
+    }).join("")}
+  `;
+  $("listenQuestionBtn")?.addEventListener("click", speakCurrentQuestion);
+  qCard.querySelectorAll(".opt").forEach((btn) => {
+    btn.addEventListener("click", () => chooseAnswer(Number(btn.getAttribute("data-index"))));
+  });
+  btnPrev.disabled = idx <= 0;
+  btnNext.disabled = answers[idx] === null;
+  btnNext.textContent = nextUnansweredIndex(idx) === -1 ? "SINAVI TAMAMLA" : "İLERİ";
+}
+
+function chooseAnswer(choice) {
+  const q = QUESTIONS[idx];
+  if (!q) return;
+  answers[idx] = choice;
+  stopAudio();
+  qCard.querySelectorAll(".opt").forEach((btn) => {
+    const value = Number(btn.getAttribute("data-index"));
+    btn.classList.add("dim");
+    btn.classList.remove("sel");
+    const icon = btn.querySelector(".optIcon");
+    if (value === q.correct_index) {
+      btn.classList.remove("dim");
+      btn.classList.add("correct");
+      if (icon) icon.textContent = "✓";
+    } else if (value === choice) {
+      btn.classList.remove("dim");
+      btn.classList.add("wrong");
+      if (icon) icon.textContent = "×";
+    }
+  });
+  btnNext.disabled = false;
+  btnNext.textContent = nextUnansweredIndex(idx) === -1 ? "SINAVI TAMAMLA" : "İLERİ";
+}
+
+function nextUnansweredIndex(from) {
+  for (let i = from + 1; i < QUESTIONS.length; i += 1) if (answers[i] === null) return i;
+  for (let i = 0; i < QUESTIONS.length; i += 1) if (answers[i] === null) return i;
+  return -1;
+}
+
+async function finishExam() {
+  stopAudio();
+  clearInterval(timer);
+  btnPrev.disabled = btnSkip.disabled = btnNext.disabled = true;
+  const localScore = answers.reduce((sum, answer, i) => sum + (answer === QUESTIONS[i]?.correct_index ? 1 : 0), 0);
+  const total = QUESTIONS.length;
+  const localLevel = calculateLevel(localScore, total);
+  let result = { level: localLevel, score: localScore, total };
+
+  try {
+    if (testId) {
+      const { data, error } = await supabase.rpc("finish_level_test", {
+        p_test_id: testId,
+        p_answers: answers,
+        p_remaining_seconds: remaining
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? (data[0] || null) : data;
+      result = {
+        level: row?.result_level || localLevel,
+        score: Number(row?.correct ?? localScore),
+        total: Number(row?.total ?? total)
+      };
+    }
+  } catch (e) {
+    ltLog("finish rpc skipped", { message: e?.message || String(e) });
+  }
+
+  ltLog("result level", { lang: langCode, ...result });
+  const profileSaved = await updateProfileLevels(result);
+  $("rLevel").textContent = `Seviye: ${result.level}`;
+  $("rText").textContent = `Dil: ${langNameTR}\nDoğru: ${result.score} / ${result.total}\nBaşarı: %${Math.round((result.score / Math.max(1, result.total)) * 100)}\n\n${profileSaved ? "Sonuç profilinize işlendi." : "Sonuç hesaplandı. Profil bağlantısı daha sonra tekrar denenebilir."}`;
+  $("resultOverlay").classList.add("show");
+}
+
+function updateTimerUI() {
+  const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
+  const ss = String(remaining % 60).padStart(2, "0");
+  timerMini.textContent = `${mm}:${ss}`;
+}
+
+async function init() {
+  $("pageContent").classList.add("ready");
+  ltLog("ready", { href: location.href, selectedLang: langCode, testId: !!testId });
+  const { data:{ session: authSession } = {} } = await supabase.auth.getSession();
+  session = authSession;
+  if (!session?.user) {
+    location.replace("/pages/login_ios.html");
+    return;
+  }
+
+  if (testId) {
+    try {
+      const { data, error } = await supabase
+        .from("level_tests")
+        .select("id, user_id, language_code, test_version, started_at, status")
+        .eq("id", testId)
+        .single();
+      if (error) throw error;
+      ltLog("test row", { id: data?.id, language_code: data?.language_code, test_version: data?.test_version, status: data?.status });
+      if (data?.language_code && normalizeSupportedLang(data.language_code) !== langCode) ltLog("selectedLang normalized", { urlLang: langCode, rowLang: data.language_code });
+      if (data?.started_at) {
+        const elapsed = Math.floor((Date.now() - new Date(data.started_at).getTime()) / 1000);
+        if (Number.isFinite(elapsed)) remaining = Math.max(0, TOTAL_TIME - elapsed);
+      }
+    } catch (e) {
+      ltLog("test row fail", { message: e?.message || String(e) });
+    }
+  }
+
+  showMessage("Test hazırlanıyor...");
+  QUESTIONS = await buildQuestionPool(langCode);
+  if (!QUESTIONS.length) {
+    showMessage("İçerik şu anda yüklenemedi. Lütfen tekrar deneyin.", true);
+    ltLog("questions unavailable", { lang: langCode });
+    return;
+  }
+  answers = Array(QUESTIONS.length).fill(null);
+  await attachQuestions();
+  render();
+  updateTimerUI();
+  timer = setInterval(() => {
+    remaining = Math.max(0, remaining - 1);
+    updateTimerUI();
+    if (remaining === 0) finishExam();
+  }, 1000);
+}
+
+$("backBtn").onclick = () => { stopAudio(); location.href = buildCloseUrl(); };
+$("homeBtn").onclick = () => { stopAudio(); location.href = "/pages/home_ios.html?ios=1"; };
+listenTopBtn.onclick = speakCurrentQuestion;
+btnPrev.onclick = () => { if (idx > 0) { idx -= 1; render(); } };
+btnSkip.onclick = () => { const ni = nextUnansweredIndex(idx); if (ni === -1) finishExam(); else { idx = ni; render(); } };
+btnNext.onclick = () => { if (answers[idx] === null) { showInlineMessage("Lütfen bir seçenek işaretleyin."); return; } const ni = nextUnansweredIndex(idx); if (ni === -1) finishExam(); else { idx = ni; render(); } };
+$("rGo").onclick = () => { location.href = buildReturnUrl(); };
+$("rLater").onclick = () => { location.href = buildCloseUrl(); };
+
+init();
+</script>
+</body>
+</html>
