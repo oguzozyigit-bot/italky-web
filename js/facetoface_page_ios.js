@@ -1,0 +1,2103 @@
+﻿import { getLangPoolForSite } from "/js/lang_pool_full.js";
+import { supabase } from "/js/supabase_client.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
+import {
+  commitUsage,
+  buildUsageNote
+} from "/js/usage_meter.js";
+
+const ttsMemoryCache = new Map();
+const TTS_CACHE_LIMIT = 24;
+const API_BASE = "https://italky-api.onrender.com";
+const $ = (id) => document.getElementById(id);
+
+const SITE_LANG_KEY = "site_lang";
+const LEGACY_SITE_LANG_KEY = "italky_site_lang_v1";
+const F2F_TOP_LANG_KEY = "f2f_top_lang";
+const F2F_BOT_LANG_KEY = "f2f_bot_lang";
+
+const BCP = {
+  tr: "tr-TR",
+  en: "en-US",
+  de: "de-DE",
+  fr: "fr-FR",
+  it: "it-IT",
+  es: "es-ES",
+  ar: "ar-SA",
+  ru: "ru-RU",
+  bg: "bg-BG",
+  pt: "pt-PT",
+  zh: "zh-CN",
+  ja: "ja-JP",
+  ko: "ko-KR"
+};
+
+const PLACEHOLDERS = {
+  tr: "Mesaj yaz",
+  en: "Write your message here",
+  de: "Schreibe hier deine Nachricht",
+  fr: "Ã‰cris ici ton message",
+  it: "Scrivi qui il tuo messaggio",
+  es: "Escribe aquÃ­ tu mensaje",
+  ar: "Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„ØªÙƒ Ù‡Ù†Ø§",
+  ru: "ĞĞ°Ğ¿Ğ¸ÑˆĞ¸Ñ‚Ğµ ÑĞ¾Ğ¾Ğ±Ñ‰ĞµĞ½Ğ¸Ğµ",
+  bg: "ĞĞ°Ğ¿Ğ¸ÑˆĞµÑ‚Ğµ ÑÑŠĞ¾Ğ±Ñ‰ĞµĞ½Ğ¸ĞµÑ‚Ğ¾ ÑĞ¸",
+  pt: "Escreva sua mensagem",
+  zh: "åœ¨è¿™é‡Œè¾“å…¥æ¶ˆæ¯",
+  ja: "ã“ã“ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å…¥åŠ›",
+  ko: "ì—¬ê¸°ì— ë©”ì‹œì§€ë¥¼ ì…ë ¥"
+};
+
+const ALT_CHARS = {
+  a: ["Ã¢", "Ã¡", "Ã "],
+  A: ["Ã‚", "Ã", "Ã€"],
+  c: ["Ã§"],
+  C: ["Ã‡"],
+  g: ["ÄŸ"],
+  G: ["Ä"],
+  i: ["Ä±", "Ã®"],
+  I: ["Ä°", "Ã"],
+  o: ["Ã¶", "Ã´", "Ã³"],
+  O: ["Ã–", "Ã”", "Ã“"],
+  s: ["ÅŸ"],
+  S: ["Å"],
+  u: ["Ã¼", "Ã»", "Ãº"],
+  U: ["Ãœ", "Ã›", "Ãš"],
+  e: ["Ã©", "Ã¨", "Ãª"],
+  E: ["Ã‰", "Ãˆ", "ÃŠ"],
+  n: ["Ã±"],
+  N: ["Ã‘"]
+};
+
+const F2F_VOICE_KEY = "italkyai_voice_mode";
+const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
+const F2F_AUTO_READ_KEY = "italkyai_auto_read";
+const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
+const SHARED_VOICE_ID_KEY = "italkyai_selected_voice_id";
+const F2F_PRESET_KEY = "italkyai_voice_preset";
+const F2F_MODE_KEY = "facetoface_runtime_mode";
+const NATIVE_LANG_KEY = "italky_native_lang_v7";
+
+function isFaceAutoReadEnabled() {
+  return String(localStorage.getItem(F2F_AUTO_READ_KEY) || "1") !== "0";
+}
+
+function canonical(code) {
+  return String(code || "").toLowerCase().split("-")[0].trim();
+}
+
+function getSiteLang() {
+  const raw = canonical(
+    localStorage.getItem(SITE_LANG_KEY) ||
+    localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+    localStorage.getItem(NATIVE_LANG_KEY) ||
+    navigator.language ||
+    "en"
+  );
+  return raw || "en";
+}
+
+function getNativeLang() {
+  const raw = canonical(
+    localStorage.getItem(NATIVE_LANG_KEY) ||
+    localStorage.getItem(SITE_LANG_KEY) ||
+    localStorage.getItem(LEGACY_SITE_LANG_KEY) ||
+    navigator.language ||
+    "en"
+  );
+  return raw || "en";
+}
+
+function getPreferredBaseLang() {
+  const savedBot = canonical(localStorage.getItem(F2F_BOT_LANG_KEY));
+  if (savedBot) return savedBot;
+
+  const siteLang = getSiteLang();
+  if (siteLang) return siteLang;
+
+  const nativeLang = getNativeLang();
+  if (nativeLang) return nativeLang;
+
+  const navLang = canonical(navigator.language || navigator.userLanguage || "");
+  if (navLang) return navLang;
+
+  return "en";
+}
+
+const SITE_LANG = getSiteLang();
+const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
+  ? getLangPoolForSite(SITE_LANG)
+  : [];
+
+const LANGS = RAW_LANG_POOL
+  .map((l) => {
+    const code = canonical(l.code);
+    if (!code) return null;
+    return {
+      code,
+      flag: l.flag || "ğŸŒ",
+      name: l.name || l.tr_name || code.toUpperCase(),
+      bcp: BCP[code] || `${code}-${String(code).toUpperCase()}`
+    };
+  })
+  .filter(Boolean);
+
+function langExists(code) {
+  const c = canonical(code);
+  return !!LANGS.find((x) => x.code === c);
+}
+
+function langObj(code) {
+  const c = canonical(code);
+  return (
+    LANGS.find((x) => x.code === c) || {
+      code: c || "en",
+      flag: "ğŸŒ",
+      name: (c || "en").toUpperCase(),
+      bcp: BCP[c] || "en-US",
+    }
+  );
+}
+
+function labelChip(code) {
+  const o = langObj(code);
+  return `${o.flag} ${o.name}`;
+}
+
+function getPlaceholder(code) {
+  return PLACEHOLDERS[canonical(code)] || PLACEHOLDERS.en;
+}
+
+function getDifferentPairLang(baseLang) {
+  const base = canonical(baseLang);
+
+  const preferredOrder = base === "en"
+    ? ["tr", "de", "fr", "it", "es", "ar", "ru"]
+    : ["en", "tr", "de", "fr", "it", "es", "ar", "ru"];
+
+  for (const code of preferredOrder) {
+    if (code !== base && langExists(code)) return code;
+  }
+
+  const firstDifferent = LANGS.find((l) => canonical(l.code) !== base);
+  return canonical(firstDifferent?.code || "en");
+}
+
+function resolveInitialTopLang(botCode) {
+  const bot = canonical(botCode);
+  const savedTop = canonical(localStorage.getItem(F2F_TOP_LANG_KEY));
+
+  if (savedTop && savedTop !== bot && langExists(savedTop)) {
+    return savedTop;
+  }
+
+  return getDifferentPairLang(bot);
+}
+
+function persistFaceToFaceLangs() {
+  try {
+    localStorage.setItem(F2F_TOP_LANG_KEY, canonical(topLang));
+    localStorage.setItem(F2F_BOT_LANG_KEY, canonical(botLang));
+  } catch {}
+}
+
+const frameRoot = $("frameRoot");
+const centerHub = $("centerHub");
+
+const topBody = $("topBody");
+const botBody = $("botBody");
+
+const topMic = $("topMic");
+const botMic = $("botMic");
+const topSend = $("topSend");
+const botSend = $("botSend");
+const topInput = $("topInput");
+const botInput = $("botInput");
+const topComposer = $("topComposer");
+const botComposer = $("botComposer");
+
+const topKeyboardWrap = $("topKeyboardWrap");
+const botKeyboardWrap = $("botKeyboardWrap");
+const topKeyboard = $("topKeyboard");
+const botKeyboard = $("botKeyboard");
+
+const topLangBtn = $("topLangBtn");
+const botLangBtn = $("botLangBtn");
+const topLangTxt = $("topLangTxt");
+const botLangTxt = $("botLangTxt");
+const popTop = $("pop-top");
+const popBot = $("pop-bot");
+const listTop = $("list-top");
+const listBot = $("list-bot");
+const closeTop = $("close-top");
+const closeBot = $("close-bot");
+
+const topModeToggle = $("topModeToggle");
+const botModeToggle = $("botModeToggle");
+const topModeToggleLabel = $("topModeToggleLabel");
+const botModeToggleLabel = $("botModeToggleLabel");
+
+
+const clearBtn = $("clearBtn");
+const homeLink = $("homeLink");
+const homeBtn = $("homeBtn");
+const miniToast = $("miniToast");
+
+const iosModeBackdrop = $("iosModeBackdrop");
+const iosModeTitle = $("iosModeTitle");
+const iosModeText = $("iosModeText");
+const iosModeCloseBtn = $("iosModeCloseBtn");
+
+let topLang = "en";
+let botLang = "en";
+window.topLang = topLang;
+window.botLang = botLang;
+
+let activeSide = null;
+let activeKeyboardSide = null;
+let shiftState = { top: false, bot: false };
+
+let recognizer = null;
+let recordingSide = null;
+let currentAudio = null;
+let audioCtx = null;
+let bootReady = false;
+let bootStarted = false;
+let bootPromise = null;
+let voicesReady = false;
+let speakRunId = 0;
+
+let liveTranscript = "";
+let latestPreviewTranscript = "";
+let recognitionSessionId = 0;
+let typewriterRunId = 0;
+let altMenuEl = null;
+let holdTimer = null;
+
+let keyboardAudioCtx = null;
+let keyboardMasterGain = null;
+let currentRuntimeMode = "online";
+
+function showToast(msg = "") {
+  if (!miniToast) return;
+  miniToast.textContent = String(msg || "");
+  miniToast.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => {
+    miniToast.classList.remove("show");
+  }, 1800);
+}
+
+function getResolvedFaceVoice() {
+  const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
+  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+
+  if (mode === "mine" || mode === "clone") return "mine";
+  if (mode === "second") return "second";
+  if (mode === "memory") return "memory";
+
+  if (mode === "preset") {
+    if (preset === "second") return "second";
+    if (preset === "memory") return "memory";
+  }
+
+  return "auto";
+}
+
+function getFaceVoiceMode() {
+  return getResolvedFaceVoice();
+}
+
+function getFaceTranslateMode() {
+  const value = String(localStorage.getItem(F2F_TRANSLATE_KEY) || "normal").trim().toLowerCase();
+  return value === "cultural" ? "cultural" : "normal";
+}
+
+function isPaidFaceTextMode() {
+  return getFaceTranslateMode() === "cultural";
+}
+
+async function hasReadyVoiceProfile() {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return false;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(`
+        voice_sample_path,
+        tts_voice_ready,
+        tts_voice_id,
+        second_voice_sample_path,
+        second_tts_voice_ready,
+        second_tts_voice_id,
+        memory_voice_sample_path,
+        memory_tts_voice_ready,
+        memory_tts_voice_id
+      `)
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+
+    const mode = getResolvedFaceVoice();
+    if (mode === "mine") {
+      return !!data.voice_sample_path || (!!data.tts_voice_ready && !!String(data.tts_voice_id || "").trim());
+    }
+    if (mode === "second") {
+      return !!data.second_voice_sample_path || (!!data.second_tts_voice_ready && !!String(data.second_tts_voice_id || "").trim());
+    }
+    if (mode === "memory") {
+      return !!data.memory_voice_sample_path || (!!data.memory_tts_voice_ready && !!String(data.memory_tts_voice_id || "").trim());
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function isPaidFaceVoiceMode() {
+  const v = getResolvedFaceVoice();
+  return v === "mine" || v === "second" || v === "memory";
+}
+
+async function ensureCurrentFaceAdvancedAccess() {
+  return true;
+}
+
+function faceTextUsageModule() {
+  return getFaceTranslateMode() === "cultural" ? "facetoface_ai" : "usage_face_to_face";
+}
+
+function faceTextUsageNote() {
+  return buildUsageNote({
+    surface: "facetoface",
+    usageKind: "text",
+    mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
+  });
+}
+
+function canonTone(value) {
+  const v = String(value || "neutral").trim().toLowerCase();
+  return ["neutral", "happy", "angry", "sad", "excited"].includes(v) ? v : "neutral";
+}
+
+function detectToneFromText(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "neutral";
+
+  const s = raw.toLowerCase();
+  const exclamations = (raw.match(/!/g) || []).length;
+
+  const angryWords = ["saÃ§ma", "yeter", "sinir", "nefret", "rezalet", "berbat"];
+  const sadWords = ["Ã¼zgÃ¼n", "kÃ¶tÃ¼yÃ¼m", "moralim bozuk", "yoruldum"];
+  const happyWords = ["harika", "sÃ¼per", "mÃ¼thiÅŸ", "Ã§ok iyi", "sevindim"];
+  const excitedWords = ["inanamÄ±yorum", "ÅŸahane", "wow", "efsane", "heyecanlÄ±yÄ±m"];
+
+  const hasAny = (arr) => arr.some((w) => s.includes(w));
+
+  if (hasAny(angryWords) || exclamations >= 2) return "angry";
+  if (hasAny(sadWords)) return "sad";
+  if (hasAny(excitedWords)) return "excited";
+  if (hasAny(happyWords)) return "happy";
+  if (exclamations === 1) return "excited";
+
+  return "neutral";
+}
+
+function pointOrbTo(side) {
+  frameRoot?.classList.remove("to-top", "to-bot");
+  centerHub?.classList.remove("to-top", "to-bot");
+
+  if (side === "top") {
+    frameRoot?.classList.add("to-top");
+    centerHub?.classList.add("to-top");
+  } else {
+    frameRoot?.classList.add("to-bot");
+    centerHub?.classList.add("to-bot");
+  }
+}
+
+function setMicState(side, state) {
+  const mic = side === "top" ? topMic : botMic;
+  const composer = side === "top" ? topComposer : botComposer;
+  if (!mic || !composer) return;
+
+  mic.classList.remove("listening", "recorded");
+  composer.classList.remove("listening");
+
+  if (state === "listening") {
+    mic.classList.add("listening");
+    composer.classList.add("listening");
+  }
+
+  if (state === "recorded") {
+    mic.classList.add("recorded");
+  }
+}
+
+function resetMics() {
+  topMic?.classList.remove("listening", "recorded");
+  botMic?.classList.remove("listening", "recorded");
+  topComposer?.classList.remove("listening");
+  botComposer?.classList.remove("listening");
+}
+
+function setFrameVisual(state) {
+  if (!frameRoot) return;
+  frameRoot.classList.remove("is-idle", "is-listening", "is-translating", "is-ready", "is-error");
+  if (state) frameRoot.classList.add(`is-${state}`);
+}
+
+function setInputPlaceholder(side, value = "") {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+  input.placeholder = value;
+}
+
+function restoreInputPlaceholder(side) {
+  const lang = side === "top" ? topLang : botLang;
+  setInputPlaceholder(side, getPlaceholder(lang));
+}
+
+function setSystemReadyUI() {
+  activeSide = null;
+  resetMics();
+  setFrameVisual("ready");
+  restoreInputPlaceholder("top");
+  restoreInputPlaceholder("bot");
+}
+
+function setSystemPreparingUI() {
+  activeSide = null;
+  resetMics();
+  setFrameVisual("error");
+}
+
+function setListeningUI(side) {
+  activeSide = side;
+  pointOrbTo(side);
+  resetMics();
+  setMicState(side, "listening");
+  setFrameVisual("listening");
+  setInputPlaceholder(side, "");
+}
+
+function setTranslatingUI(side) {
+  activeSide = side;
+  pointOrbTo(side);
+  setMicState(side, "recorded");
+  setFrameVisual("translating");
+}
+
+function setErrorUI() {
+  activeSide = null;
+  resetMics();
+  setFrameVisual("error");
+  restoreInputPlaceholder("top");
+  restoreInputPlaceholder("bot");
+}
+
+function bounceToReady(delay = 1200) {
+  setTimeout(() => setSystemReadyUI(), delay);
+}
+
+function refreshLangLabels() {
+  if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
+  if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
+
+  if (topInput && recordingSide !== "top") topInput.placeholder = getPlaceholder(topLang);
+  if (botInput && recordingSide !== "bot") botInput.placeholder = getPlaceholder(botLang);
+}
+
+function closeAllPop() {
+  popTop?.classList.remove("show");
+  popBot?.classList.remove("show");
+}
+
+function openIosModeMessage(message = "iOS'ta Ã§evrimdÄ±ÅŸÄ± FaceToFace modu ÅŸu anda desteklenmiyor.") {
+  if (iosModeTitle) iosModeTitle.textContent = "FaceToFace";
+  if (iosModeText) iosModeText.textContent = message;
+  iosModeBackdrop?.classList.add("show");
+}
+
+function closeIosModeMessage() {
+  iosModeBackdrop?.classList.remove("show");
+}
+
+function syncModeUi() {
+  [topModeToggle, botModeToggle].forEach((el) => {
+    if (!el) return;
+    el.classList.add("online");
+    el.classList.remove("ios-disabled-mode");
+  });
+
+  if (topModeToggleLabel) topModeToggleLabel.textContent = "ONLINE";
+  if (botModeToggleLabel) botModeToggleLabel.textContent = "ONLINE";
+
+  currentRuntimeMode = "online";
+  localStorage.setItem(F2F_MODE_KEY, currentRuntimeMode);
+}
+
+function setModeOnline() {
+  currentRuntimeMode = "online";
+  syncModeUi();
+  refreshLangLabels();
+}
+
+function showIosUnsupportedMode() {
+  openIosModeMessage();
+  setModeOnline();
+  return true;
+}
+
+function renderPop(side) {
+  const list = side === "top" ? listTop : listBot;
+  if (!list) return;
+
+  let pool = LANGS;
+
+  const sel = side === "top" ? topLang : botLang;
+
+  list.innerHTML = pool.map((l) => {
+    const active = canonical(l.code) === canonical(sel) ? "active" : "";
+    return `
+      <div class="pop-item ${active}" data-code="${l.code}">
+        <div class="pop-left">
+          <div class="pop-flag">${l.flag}</div>
+          <div class="pop-name">${l.name}</div>
+        </div>
+        <div class="pop-code">${l.code.toUpperCase()}</div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".pop-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      const code = canonical(el.dataset.code || "en");
+
+      if (side === "top") {
+        topLang = code;
+        if (canonical(topLang) === canonical(botLang)) {
+          topLang = getDifferentPairLang(botLang);
+        }
+        window.topLang = topLang;
+      } else {
+        botLang = code;
+        window.botLang = botLang;
+
+        if (canonical(topLang) === canonical(botLang)) {
+          topLang = getDifferentPairLang(botLang);
+        }
+        window.topLang = topLang;
+      }
+
+      persistFaceToFaceLangs();
+
+      refreshLangLabels();
+      renderKeyboard("top");
+      renderKeyboard("bot");
+      closeAllPop();
+    });
+  });
+}
+
+function stopAudio() {
+  speakRunId += 1;
+
+  try {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+  } catch {}
+
+  currentAudio = null;
+
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+}
+
+function stopTypewriter() {
+  typewriterRunId += 1;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function autoResizeTextarea(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = `${Math.min(el.scrollHeight, 84)}px`;
+}
+
+function syncComposerButtons(side) {
+  const input = side === "top" ? topInput : botInput;
+  const mic = side === "top" ? topMic : botMic;
+  const send = side === "top" ? topSend : botSend;
+  if (!input || !mic || !send) return;
+
+  const hasText = String(input.value || "").trim().length > 0;
+  mic.classList.toggle("hidden", hasText);
+  send.classList.toggle("hidden", !hasText);
+}
+
+function syncAllComposerButtons() {
+  syncComposerButtons("top");
+  syncComposerButtons("bot");
+}
+
+function hideAltMenu() {
+  altMenuEl?.remove();
+  altMenuEl = null;
+  clearTimeout(holdTimer);
+  holdTimer = null;
+}
+
+function ensureKeyboardAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+
+    if (!keyboardAudioCtx) {
+      keyboardAudioCtx = new Ctx();
+      keyboardMasterGain = keyboardAudioCtx.createGain();
+      keyboardMasterGain.gain.value = 0.045;
+      keyboardMasterGain.connect(keyboardAudioCtx.destination);
+    }
+
+    return keyboardAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+async function unlockKeyboardAudio() {
+  const ctx = ensureKeyboardAudio();
+  if (!ctx) return;
+  try {
+    if (ctx.state === "suspended") await ctx.resume();
+  } catch {}
+}
+
+function playKeyClick(kind = "key") {
+  const ctx = ensureKeyboardAudio();
+  if (!ctx || !keyboardMasterGain) return;
+
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
+
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+
+  filter.type = "highpass";
+  filter.frequency.value =
+    kind === "space" ? 900 :
+    kind === "backspace" ? 1450 :
+    kind === "shift" ? 1250 : 1180;
+
+  osc.type = kind === "space" ? "triangle" : "square";
+  osc.frequency.setValueAtTime(
+    kind === "space" ? 460 :
+    kind === "backspace" ? 700 :
+    kind === "shift" ? 620 : 560,
+    now
+  );
+  osc.frequency.exponentialRampToValueAtTime(
+    kind === "space" ? 310 : 220,
+    now + 0.028
+  );
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(kind === "space" ? 0.026 : 0.022, now + 0.003);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(keyboardMasterGain);
+
+  try {
+    osc.start(now);
+    osc.stop(now + 0.035);
+  } catch {}
+}
+
+function buildTtsCacheKey(text, langCode, tone = "neutral") {
+  const voice = getResolvedFaceVoice();
+
+  return JSON.stringify({
+    t: String(text || "").trim(),
+    l: canonical(langCode),
+    v: voice,
+    n: canonTone(tone)
+  });
+}
+
+function storeTtsCache(key, audioSrc) {
+  if (!key || !audioSrc) return;
+
+  if (ttsMemoryCache.has(key)) {
+    ttsMemoryCache.delete(key);
+  }
+
+  ttsMemoryCache.set(key, audioSrc);
+
+  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
+    const firstKey = ttsMemoryCache.keys().next().value;
+    ttsMemoryCache.delete(firstKey);
+  }
+}
+
+async function playCachedAudio(audioSrc, runId) {
+  if (!audioSrc || runId !== speakRunId) return false;
+
+  await warmAudio();
+  if (runId !== speakRunId) return false;
+
+  const audio = new Audio(audioSrc);
+  audio.preload = "auto";
+  audio.playsInline = true;
+  audio.crossOrigin = "anonymous";
+
+  currentAudio = audio;
+
+  audio.onended = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  await audio.play();
+  return true;
+}
+
+function createSpeakerButton(getText, langCode, tone = "neutral") {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "spk-icon";
+  btn.setAttribute("aria-label", "Tekrar dinle");
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    </svg>
+  `;
+
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const value = typeof getText === "function" ? String(getText() || "").trim() : "";
+    if (!value) return;
+
+    const accessOk = await ensureCurrentFaceAdvancedAccess();
+    if (!accessOk) return;
+
+    await speak(value, langCode, tone);
+  });
+
+  return btn;
+}
+
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  const bcp = langObj(langCode).bcp.toLowerCase();
+  const langBase = canonical(langCode);
+
+  let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
+  if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
+  return pool[0] || voices[0] || null;
+}
+
+async function speakViaApi(text, langCode, tone = "neutral") {
+  if (!isFaceAutoReadEnabled()) return false;
+
+  const value = String(text || "").trim();
+  if (!value) return false;
+
+  const myRunId = ++speakRunId;
+  const userId = await getCurrentUserId();
+  const selectedVoice = getResolvedFaceVoice();
+
+  if (!userId) throw new Error("USER_ID_MISSING");
+
+  const { data: { session } = {} } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+  const accessToken = session?.access_token || "";
+
+  let apiVoiceMode = "auto";
+  let apiVoice = "auto";
+  let apiPresetVoice = "";
+
+  if (selectedVoice === "mine") {
+    apiVoiceMode = "clone";
+    apiVoice = "clone";
+  } else if (selectedVoice === "second") {
+    apiVoiceMode = "preset";
+    apiVoice = "second";
+    apiPresetVoice = "second";
+  } else if (selectedVoice === "memory") {
+    apiVoiceMode = "preset";
+    apiVoice = "memory";
+    apiPresetVoice = "memory";
+  }
+
+  const payload = {
+    text: value,
+    lang: canonical(langCode),
+    user_id: userId,
+    module: "facetoface",
+    voice: apiVoice,
+    voice_mode: apiVoiceMode,
+    preset_voice: apiPresetVoice,
+    selected_voice: selectedVoice,
+    tone: canonTone(tone),
+  };
+
+  const r = await fetch(`${API_BASE}/api/tts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {})
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (myRunId !== speakRunId) return false;
+
+  const j = await r.json().catch(() => null);
+
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || `TTS_${r.status}`);
+  }
+
+  const audioSrc = `data:audio/mp3;base64,${j.audio_base64}`;
+  storeTtsCache(buildTtsCacheKey(value, langCode, tone), audioSrc);
+
+  return await playCachedAudio(audioSrc, myRunId);
+}
+
+function speakFallback(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return false;
+
+  if (!window.speechSynthesis) return false;
+
+  try {
+    window.speechSynthesis.cancel();
+  } catch {}
+
+  try {
+    const u = new SpeechSynthesisUtterance(value);
+    u.lang = langObj(langCode).bcp;
+    u.rate = 0.95;
+    u.pitch = 1;
+    const voice = chooseWebVoice(langCode);
+    if (voice) u.voice = voice;
+    window.speechSynthesis.speak(u);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function speak(text, langCode, tone = "neutral") {
+  if (!isFaceAutoReadEnabled()) return;
+
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  stopAudio();
+  await warmAudio();
+
+  const selectedVoice = getResolvedFaceVoice();
+  const cacheKey = buildTtsCacheKey(value, langCode, tone);
+  const cachedAudio = ttsMemoryCache.get(cacheKey);
+
+  if (cachedAudio) {
+    try {
+      const ok = await playCachedAudio(cachedAudio, ++speakRunId);
+      if (ok) return;
+    } catch {
+      showToast("Ses çalma başarısız");
+      return null;
+    }
+  }
+
+  const wantsApiVoice = ["mine", "second", "memory"].includes(selectedVoice);
+
+  if (wantsApiVoice) {
+    const ready = await hasReadyVoiceProfile();
+
+    if (!ready) {
+      if (selectedVoice === "mine") showToast("Kendi Sesim hazÄ±r deÄŸil");
+      else if (selectedVoice === "second") showToast("2. Ses hazÄ±r deÄŸil");
+      else if (selectedVoice === "memory") showToast("HatÄ±ra Sesi hazÄ±r deÄŸil");
+      return;
+    }
+
+    try {
+      const ok = await speakViaApi(value, langCode, tone);
+      if (ok) return;
+    } catch (e) {
+      console.warn("[facetoface custom voice failed]", e);
+
+      if (selectedVoice === "mine") showToast("Kendi Sesim ÅŸu anda Ã¼retilemedi");
+      else if (selectedVoice === "second") showToast("2. Ses ÅŸu anda Ã¼retilemedi");
+      else if (selectedVoice === "memory") showToast("HatÄ±ra Sesi ÅŸu anda Ã¼retilemedi");
+    }
+  }
+
+  const fallbackOk = speakFallback(value, langCode);
+  if (!fallbackOk) showToast("HoparlÃ¶r sesi baÅŸlatÄ±lamadÄ±");
+}
+
+async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
+  const inLen = String(inputText || "").trim().length;
+  const outLen = String(outputText || "").trim().length;
+  const billableChars = Math.max(inLen, outLen);
+  if (billableChars <= 0) return null;
+
+  let latestResult = null;
+
+  if (isPaidFaceTextMode()) {
+    latestResult = await commitUsage({
+      module: faceTextUsageModule(),
+      usageKind: "text",
+      charCount: billableChars,
+      note: faceTextUsageNote(),
+      meta: {
+        surface: "facetoface",
+        from_lang: canonical(srcLang),
+        to_lang: canonical(dstLang),
+        translate_mode: getFaceTranslateMode(),
+        voice_mode: getFaceVoiceMode(),
+        input_chars: inLen,
+        output_chars: outLen,
+        billable_chars: billableChars
+      }
+    });
+  }
+
+  if (typeof latestResult?.tokens_after === "number") {
+    try { setHeaderTokens(latestResult.tokens_after); } catch {}
+  }
+
+  return latestResult;
+}
+
+function addBubble(side, kind, text, opts = {}) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return null;
+
+  const row = document.createElement("div");
+  row.className = `bubble ${kind}${opts.latest ? " is-latest" : ""}${opts.preview ? " preview" : ""}`;
+
+  const inner = document.createElement("div");
+  inner.className = "bubble-row";
+
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text || "").trim();
+
+  if ((opts.withSpeaker || kind === "me") && !opts.preview) {
+    inner.appendChild(createSpeakerButton(() => txt.textContent || "", opts.speakLang || "en", opts.speakTone || "neutral"));
+  }
+
+  inner.appendChild(txt);
+  row.appendChild(inner);
+  wrap.appendChild(row);
+  keepLatestVisible(side);
+  return row;
+}
+
+function clearLatest(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
+}
+
+async function translateText(text, from, to, tone = "neutral", context = {}) {
+  const src = canonical(from);
+  const dst = canonical(to);
+  const mode = getFaceTranslateMode();
+  const style = mode === "normal" ? "warm" : "balanced";
+
+  const { data: { session } = {} } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+  const accessToken = session?.access_token || "";
+
+  const endpoints = [
+    `${API_BASE}/api/translate_ai`,
+    `${API_BASE}/api/translate-ai`,
+    `${API_BASE}/api/translate`
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const payload = {
+        text: String(text || "").trim(),
+        from_lang: src,
+        to_lang: dst,
+        source: src,
+        target: dst,
+        mode: "normal",
+        use_ai: false,
+        cultural: false,
+        tone: canonTone(tone),
+        style
+      };
+
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const j = await r.json().catch(() => null);
+      if (!r.ok) continue;
+
+      const value = String(j?.translated || j?.translation || j?.text || "").trim();
+      if (value) return value;
+    } catch {}
+  }
+
+  return null;
+}
+
+function buildSpeechResultEvent(text, isFinal = true) {
+  const item = [{ transcript: String(text || "") }];
+  item.isFinal = !!isFinal;
+  return { results: [item] };
+}
+
+function buildRecognizer(langCode, side = "") {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+
+  const rec = new SR();
+  rec.lang = langObj(langCode).bcp;
+  rec.interimResults = true;
+  rec.continuous = true;
+  rec.maxAlternatives = 1;
+  return rec;
+}
+
+function stopRecognizer() {
+  if (recognizer) {
+    try { recognizer.stop(); } catch {}
+  }
+}
+
+function getPreviewText(side) {
+  const body = side === "top" ? topBody : botBody;
+  return String(body?.querySelector(".bubble.preview .txt")?.textContent || "").trim();
+}
+
+function buildStableTranscript(results) {
+  const pieces = [];
+
+  for (let i = 0; i < results.length; i++) {
+    const chunk = String(results[i]?.[0]?.transcript || "").replace(/\s+/g, " ").trim();
+    if (!chunk) continue;
+
+    const prev = pieces[pieces.length - 1] || "";
+    if (prev === chunk) continue;
+    if (prev && chunk.startsWith(prev)) {
+      pieces[pieces.length - 1] = chunk;
+      continue;
+    }
+    if (prev && prev.startsWith(chunk)) continue;
+
+    pieces.push(chunk);
+  }
+
+  return pieces.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function cleanupFinalTranscript(text) {
+  return String(text || "").replace(/\s+/g, " ").replace(/\b(\S+)( \1\b)+/gi, "$1").trim();
+}
+
+async function finalizeRecognition(side, text) {
+  const src = side === "top" ? topLang : botLang;
+  const dst = side === "top" ? botLang : topLang;
+  const sourceTone = detectToneFromText(text);
+  const other = side === "top" ? "bot" : "top";
+
+  const cleaned = cleanupFinalTranscript(text);
+  if (!cleaned) {
+    setErrorUI();
+    bounceToReady(1000);
+    return;
+  }
+
+  addBubble(side, "them", cleaned);
+  clearLatest(other);
+  setTranslatingUI(side);
+
+  const latestRow = addBubble(other, "me", "Ã‡evriliyor...", {
+    latest: true,
+    speakLang: dst,
+    speakTone: sourceTone,
+  });
+
+  const latestTxt = latestRow?.querySelector(".txt");
+  const tr = await translateText(cleaned, src, dst, sourceTone, { side, targetSide: other });
+
+  if (!tr) {
+    setErrorUI();
+    if (latestTxt) latestTxt.textContent = "âš ï¸ Ã‡eviri hatasÄ±";
+    bounceToReady(1200);
+    return;
+  }
+
+  try {
+    await chargeFaceUsage(cleaned, tr, src, dst);
+  } catch (e) {
+    if (e?.code === "INSUFFICIENT_TOKENS") {
+      showToast("KullanÄ±m hakkÄ± yetersiz");
+      return;
+    }
+  }
+
+  if (latestTxt) {
+    latestTxt.textContent = "";
+    await typewriteText(latestTxt, tr, other);
+    await speak(tr, dst, sourceTone);
+  }
+
+  setSystemReadyUI();
+}
+
+async function finalizeTypedMessage(side, rawText) {
+  const text = cleanupFinalTranscript(rawText);
+  if (!text) return;
+
+  const src = side === "top" ? topLang : botLang;
+  const dst = side === "top" ? botLang : topLang;
+  const other = side === "top" ? "bot" : "top";
+  const tone = detectToneFromText(text);
+
+  addBubble(side, "them", text);
+  clearLatest(other);
+  setTranslatingUI(side);
+
+  const latestRow = addBubble(other, "me", "Ã‡evriliyor...", {
+    latest: true,
+    speakLang: dst,
+    speakTone: tone,
+  });
+
+  const latestTxt = latestRow?.querySelector(".txt");
+  const tr = await translateText(text, src, dst, tone, { side, targetSide: other });
+
+  if (!tr) {
+    setErrorUI();
+    if (latestTxt) latestTxt.textContent = "âš ï¸ Ã‡eviri hatasÄ±";
+    bounceToReady(1200);
+    return;
+  }
+
+  try {
+    await chargeFaceUsage(text, tr, src, dst);
+  } catch (e) {
+    if (e?.code === "INSUFFICIENT_TOKENS") {
+      showToast("KullanÄ±m hakkÄ± yetersiz");
+      return;
+    }
+  }
+
+  if (latestTxt) {
+    latestTxt.textContent = "";
+    await typewriteText(latestTxt, tr, other);
+    await speak(tr, dst, tone);
+  }
+
+  setSystemReadyUI();
+}
+
+function getTypingProfile(text) {
+  const len = String(text || "").trim().length;
+  if (len <= 24) return { startChunk: 1, midChunk: 2, endChunk: 1, base: 9 };
+  if (len <= 70) return { startChunk: 1, midChunk: 2, endChunk: 1, base: 8 };
+  if (len <= 130) return { startChunk: 1, midChunk: 3, endChunk: 1, base: 7 };
+  return { startChunk: 2, midChunk: 3, endChunk: 1, base: 6 };
+}
+
+function getTypingDelay(ch, index, total, text) {
+  const profile = getTypingProfile(text);
+  const progress = total ? index / total : 0;
+  const tailBoost = progress > 0.82 ? 3 : 0;
+
+  if (ch === " ") return 0;
+  if (/[.!?]/.test(ch)) return 95 + tailBoost;
+  if (/[,]/.test(ch)) return 65 + tailBoost;
+  if (/[\n]/.test(ch)) return 45 + tailBoost;
+
+  return profile.base + tailBoost;
+}
+
+function getTypingChunkSize(index, total, text) {
+  const profile = getTypingProfile(text);
+  const progress = total ? index / total : 0;
+  if (progress < 0.18) return profile.startChunk;
+  if (progress < 0.78) return profile.midChunk;
+  return profile.endChunk;
+}
+
+async function typewriteText(el, finalText, side) {
+  if (!el) return;
+
+  stopTypewriter();
+  const runId = typewriterRunId;
+  const full = String(finalText || "").trim();
+
+  el.textContent = "";
+  if (!full) return;
+
+  let i = 0;
+  while (i < full.length) {
+    if (runId !== typewriterRunId) return;
+
+    const chunkSize = getTypingChunkSize(i, full.length, full);
+    const next = Math.min(full.length, i + chunkSize);
+
+    el.textContent = full.slice(0, next);
+    i = next;
+
+    const lastChar = full.charAt(i - 1);
+    keepLatestVisible(side);
+
+    await wait(getTypingDelay(lastChar, i, full.length, full));
+  }
+}
+
+async function getCurrentUserId() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || localStorage.getItem("user_id") || null;
+  } catch {
+    return localStorage.getItem("user_id") || null;
+  }
+}
+
+async function warmAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) {
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") await audioCtx.resume();
+    }
+  } catch {}
+
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch {}
+
+  await unlockKeyboardAudio();
+}
+
+function startRecording(side) {
+  hideKeyboards();
+  setInputPlaceholder(side, "");
+
+  const lang = side === "top" ? topLang : botLang;
+  const rec = buildRecognizer(lang, side);
+
+  if (!rec) {
+    setErrorUI();
+    showToast("Bu cihazda sesli giriÅŸ desteklenmiyor.");
+    bounceToReady(1800);
+    return;
+  }
+
+  const mySessionId = ++recognitionSessionId;
+
+  recognizer = rec;
+  recordingSide = side;
+  liveTranscript = "";
+  latestPreviewTranscript = "";
+
+  rec.onstart = () => setListeningUI(side);
+
+  rec.onresult = (e) => {
+    if (mySessionId !== recognitionSessionId) return;
+
+    const builtText = buildStableTranscript(e.results);
+    if (!builtText) return;
+
+    liveTranscript = builtText;
+    latestPreviewTranscript = builtText;
+
+    const body = side === "top" ? topBody : botBody;
+    let previewNode = body?.querySelector(".bubble.preview");
+
+    if (!previewNode) {
+      previewNode = addBubble(side, "them", "", { preview: true });
+    }
+
+    const txtEl = previewNode?.querySelector(".txt");
+    if (txtEl) txtEl.textContent = builtText;
+    keepLatestVisible(side);
+  };
+
+  rec.onerror = (e) => {
+    if (mySessionId !== recognitionSessionId) return;
+
+    if (String(e?.error || "").includes("not-allowed")) showToast("Mikrofon izni gerekli");
+    else showToast("Mikrofon hatasÄ±");
+
+    recognizer = null;
+    recordingSide = null;
+    liveTranscript = "";
+    latestPreviewTranscript = "";
+
+    setErrorUI();
+    bounceToReady(1600);
+  };
+
+  rec.onend = () => {
+    if (mySessionId !== recognitionSessionId) return;
+
+    const sideAtEnd = side;
+    const finalText = cleanupFinalTranscript(
+      getPreviewText(sideAtEnd) || latestPreviewTranscript || liveTranscript || ""
+    );
+
+    recognizer = null;
+    recordingSide = null;
+
+    (sideAtEnd === "top" ? topBody : botBody)?.querySelector(".bubble.preview")?.remove();
+
+    liveTranscript = "";
+    latestPreviewTranscript = "";
+
+    if (finalText) {
+      Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
+      return;
+    }
+
+    setSystemReadyUI();
+  };
+
+  try {
+    rec.start();
+  } catch {
+    recognizer = null;
+    recordingSide = null;
+    liveTranscript = "";
+    latestPreviewTranscript = "";
+    setErrorUI();
+    bounceToReady(1200);
+  }
+}
+
+async function toggleRecording(side) {
+  await ensureReady();
+  const accessOk = await ensureCurrentFaceAdvancedAccess();
+  if (!accessOk) return;
+
+  if (recordingSide === side) {
+    setTranslatingUI(side);
+    setTimeout(() => stopRecognizer(), 120);
+    return;
+  }
+
+  if (recordingSide && recordingSide !== side) {
+    setTranslatingUI(recordingSide);
+    setTimeout(() => stopRecognizer(), 80);
+    return;
+  }
+
+  startRecording(side);
+}
+
+async function sendTyped(side) {
+  await ensureReady();
+
+  const accessOk = await ensureCurrentFaceAdvancedAccess();
+  if (!accessOk) return;
+
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+
+  const text = String(input.value || "").trim();
+  if (!text) return;
+
+  input.value = "";
+  autoResizeTextarea(input);
+  restoreInputPlaceholder(side);
+  syncComposerButtons(side);
+
+  await finalizeTypedMessage(side, text);
+}
+
+function keyboardRows(lang, shift) {
+  const c = canonical(lang);
+  const upper = !!shift;
+  const numRow = ["1","2","3","4","5","6","7","8","9","0"];
+
+  if (c === "tr") {
+    return {
+      nums: numRow,
+      r1: upper ? ["Q","W","E","R","T","Y","U","I","O","P"] : ["q","w","e","r","t","y","u","Ä±","o","p"],
+      r2: upper ? ["A","S","D","F","G","H","J","K","L"] : ["a","s","d","f","g","h","j","k","l"],
+      r3: upper ? ["Z","X","C","V","B","N","M"] : ["z","x","c","v","b","n","m"],
+    };
+  }
+
+  const mapRow = (row) => upper ? row.map((x) => x.toUpperCase()) : row;
+  return {
+    nums: numRow,
+    r1: mapRow(["q","w","e","r","t","y","u","i","o","p"]),
+    r2: mapRow(["a","s","d","f","g","h","j","k","l"]),
+    r3: mapRow(["z","x","c","v","b","n","m"]),
+  };
+}
+
+function svgShift() {
+  return `
+    <svg viewBox="0 0 24 24">
+      <path d="M12 4l6 7h-4v8H10v-8H6l6-7z"></path>
+    </svg>
+  `;
+}
+
+function svgBackspace() {
+  return `
+    <svg viewBox="0 0 24 24">
+      <path d="M21 6H9l-6 6 6 6h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"></path>
+      <path d="M10 9l5 6"></path>
+      <path d="M15 9l-5 6"></path>
+    </svg>
+  `;
+}
+
+function createKey({ label = "", html = "", onTap, onLongPress = null, className = "", sound = "key" }) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `kb-key ${className}`.trim();
+  if (html) btn.innerHTML = html;
+  else btn.textContent = label;
+
+  let longTriggered = false;
+
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    longTriggered = false;
+    unlockKeyboardAudio();
+    btn.classList.add("pressing");
+
+    if (onLongPress) {
+      holdTimer = setTimeout(() => {
+        longTriggered = true;
+        playKeyClick(sound);
+        onLongPress(btn);
+      }, 320);
+    }
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    btn.classList.remove("pressing");
+
+    if (!longTriggered && onTap) {
+      playKeyClick(sound);
+      onTap();
+    }
+  });
+
+  btn.addEventListener("pointerleave", () => {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    btn.classList.remove("pressing");
+  });
+
+  btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  return btn;
+}
+
+function createAltMenu(hostBtn, chars, onPick) {
+  hideAltMenu();
+  if (!hostBtn || !chars?.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "alt-pop";
+
+  chars.forEach((ch) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "alt-key";
+    b.textContent = ch;
+    b.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      playKeyClick("key");
+      onPick(ch);
+      hideAltMenu();
+    });
+    wrap.appendChild(b);
+  });
+
+  hostBtn.appendChild(wrap);
+  altMenuEl = wrap;
+}
+
+function renderCharKeys(rowEl, chars, side) {
+  chars.forEach((ch) => {
+    const alts = ALT_CHARS[ch] || ALT_CHARS[String(ch).toLowerCase()] || [];
+    rowEl.appendChild(createKey({
+      label: ch,
+      sound: "key",
+      onTap: () => {
+        hideAltMenu();
+        appendInputValue(side, ch);
+        if (shiftState[side] && /[A-ZÃ‡ÄÄ°Ã–ÅÃœ]/.test(ch)) {
+          shiftState[side] = false;
+          renderKeyboard(side);
+        }
+      },
+      onLongPress: alts.length
+        ? (btn) => createAltMenu(btn, alts, (picked) => appendInputValue(side, picked))
+        : null
+    }));
+  });
+}
+
+function appendInputValue(side, value) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+  input.value = `${input.value || ""}${value}`;
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function backspaceInputValue(side) {
+  const input = side === "top" ? topInput : botInput;
+  if (!input) return;
+  input.value = String(input.value || "").slice(0, -1);
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function renderKeyboard(side) {
+  const wrap = side === "top" ? topKeyboard : botKeyboard;
+  const lang = side === "top" ? topLang : botLang;
+  if (!wrap) return;
+
+  const rows = keyboardRows(lang, shiftState[side]);
+  wrap.innerHTML = "";
+
+  const rowNums = document.createElement("div");
+  rowNums.className = "kb-row";
+  renderCharKeys(rowNums, rows.nums, side);
+  wrap.appendChild(rowNums);
+
+  const row1 = document.createElement("div");
+  row1.className = "kb-row";
+  renderCharKeys(row1, rows.r1, side);
+  wrap.appendChild(row1);
+
+  const row2 = document.createElement("div");
+  row2.className = "kb-row";
+  row2.appendChild(document.createElement("div")).style.flex = "0.35";
+  renderCharKeys(row2, rows.r2, side);
+  row2.appendChild(document.createElement("div")).style.flex = "0.35";
+  wrap.appendChild(row2);
+
+  const row3 = document.createElement("div");
+  row3.className = "kb-row";
+
+  row3.appendChild(createKey({
+    html: svgShift(),
+    className: "icon wide",
+    sound: "shift",
+    onTap: () => {
+      hideAltMenu();
+      shiftState[side] = !shiftState[side];
+      renderKeyboard(side);
+    }
+  }));
+
+  renderCharKeys(row3, rows.r3, side);
+
+  row3.appendChild(createKey({
+    html: svgBackspace(),
+    className: "icon wide",
+    sound: "backspace",
+    onTap: () => {
+      hideAltMenu();
+      backspaceInputValue(side);
+    }
+  }));
+
+  wrap.appendChild(row3);
+
+  const row4 = document.createElement("div");
+  row4.className = "kb-row";
+
+  row4.appendChild(createKey({
+    label: ",",
+    sound: "key",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, ",");
+    }
+  }));
+
+  row4.appendChild(createKey({
+    label: ".",
+    sound: "key",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, ".");
+    }
+  }));
+
+  row4.appendChild(createKey({
+    label: " ",
+    className: "xwide",
+    sound: "space",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, " ");
+    }
+  }));
+
+  row4.appendChild(createKey({
+    label: "?",
+    sound: "key",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, "?");
+    }
+  }));
+
+  row4.appendChild(createKey({
+    label: "!",
+    sound: "key",
+    onTap: () => {
+      hideAltMenu();
+      appendInputValue(side, "!");
+    }
+  }));
+
+  wrap.appendChild(row4);
+}
+
+function showKeyboard(side) {
+  activeKeyboardSide = side;
+  topKeyboardWrap?.classList.toggle("show", side === "top");
+  botKeyboardWrap?.classList.toggle("show", side === "bot");
+  hideAltMenu();
+  renderKeyboard(side);
+  keepLatestVisible(side);
+}
+
+function hideKeyboards() {
+  activeKeyboardSide = null;
+  hideAltMenu();
+  topKeyboardWrap?.classList.remove("show");
+  botKeyboardWrap?.classList.remove("show");
+}
+
+function keepLatestVisible(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+
+  const apply = () => {
+    try {
+      wrap.scrollTop = wrap.scrollHeight;
+    } catch {}
+  };
+
+  apply();
+  requestAnimationFrame(apply);
+  setTimeout(apply, 40);
+  setTimeout(apply, 120);
+}
+
+async function warmApis() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data?.user?.id;
+    if (!uid) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tokens")
+      .eq("id", uid)
+      .maybeSingle();
+
+    if (typeof profile?.tokens === "number") {
+      setHeaderTokens(profile.tokens);
+    }
+  } catch {}
+}
+
+function unlockOnFirstTouch() {
+  const once = async () => {
+    try { await warmAudio(); } catch {}
+    window.removeEventListener("touchstart", once);
+    window.removeEventListener("pointerdown", once);
+    window.removeEventListener("click", once);
+  };
+
+  window.addEventListener("touchstart", once, { passive: true });
+  window.addEventListener("pointerdown", once, { passive: true });
+  window.addEventListener("click", once, { passive: true });
+}
+
+function resolveStartupLang() {
+  let base = getPreferredBaseLang();
+  if (!langExists(base)) {
+    const siteLang = getSiteLang();
+    if (langExists(siteLang)) base = siteLang;
+  }
+  if (!langExists(base)) {
+    const nativeLang = getNativeLang();
+    if (langExists(nativeLang)) base = nativeLang;
+  }
+  if (!langExists(base)) base = langExists("en") ? "en" : (LANGS[0]?.code || "en");
+  return canonical(base);
+}
+
+function startBoot() {
+  if (bootStarted) return bootPromise;
+  bootStarted = true;
+
+  bootPromise = (async () => {
+    setSystemPreparingUI();
+    pointOrbTo("bot");
+
+    const startupLang = resolveStartupLang();
+
+    botLang = startupLang;
+    topLang = resolveInitialTopLang(botLang);
+
+    window.topLang = topLang;
+    window.botLang = botLang;
+    persistFaceToFaceLangs();
+
+    refreshLangLabels();
+
+    try {
+      await Promise.race([
+        Promise.allSettled([warmApis(), warmAudio()]),
+        new Promise((resolve) => setTimeout(resolve, 1800))
+      ]);
+    } catch {}
+
+    currentRuntimeMode = "online";
+    syncModeUi();
+
+    bootReady = true;
+    setSystemReadyUI();
+    syncAllComposerButtons();
+    renderKeyboard("top");
+    renderKeyboard("bot");
+  })();
+
+  return bootPromise;
+}
+
+async function ensureReady() {
+  if (bootReady) return true;
+  if (!bootStarted) startBoot();
+  try { await bootPromise; } catch {}
+  return true;
+}
+
+function safeHomeHref() {
+  return "/pages/home_ios.html?ios=1";
+}
+
+function bindKeyboardButton(el, handler) {
+  if (!el) return;
+  el.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      await handler(e);
+    }
+  });
+}
+
+function bindMicTap(el, side) {
+  if (!el) return;
+
+  let lastTouchTs = 0;
+
+  const run = async (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    await toggleRecording(side);
+  };
+
+  el.addEventListener("touchend", async (e) => {
+    lastTouchTs = Date.now();
+    await run(e);
+  }, { passive: false });
+
+  el.addEventListener("click", async (e) => {
+    if (Date.now() - lastTouchTs < 500) return;
+    await run(e);
+  });
+}
+
+function bindReadonlyInput(side) {
+  const input = side === "top" ? topInput : botInput;
+  const send = side === "top" ? topSend : botSend;
+  if (!input || !send) return;
+
+  const open = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showKeyboard(side);
+  };
+
+  input.setAttribute("readonly", "readonly");
+  input.addEventListener("pointerdown", open);
+  input.addEventListener("click", open);
+  input.addEventListener("focus", (e) => {
+    e.preventDefault();
+    input.blur();
+    showKeyboard(side);
+  });
+
+  send.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  send.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await sendTyped(side);
+  });
+
+  autoResizeTextarea(input);
+  syncComposerButtons(side);
+}
+
+function bindModeControls() {
+  window.f2fToggleMode = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+
+    showIosUnsupportedMode();
+  };
+
+  iosModeCloseBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeIosModeMessage();
+    setModeOnline();
+  });
+
+  iosModeBackdrop?.addEventListener("click", (e) => {
+    if (e.target === iosModeBackdrop) {
+      closeIosModeMessage();
+      setModeOnline();
+    }
+  });
+}
+
+
+function bindLanguageButtons() {
+  topLangBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    renderPop("top");
+    popTop?.classList.add("show");
+  });
+
+  botLangBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    renderPop("bot");
+    popBot?.classList.add("show");
+  });
+
+  closeTop?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+  });
+
+  closeBot?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+  });
+}
+
+function bindGlobalClicks() {
+  document.addEventListener("click", (e) => {
+    const insidePop =
+      (popTop && popTop.contains(e.target)) ||
+      (popBot && popBot.contains(e.target));
+    const isLangBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+    const isInput = e.target?.closest?.("#topInput,#botInput");
+    const isKb = e.target?.closest?.("#topKeyboardWrap,#botKeyboardWrap");
+    const isAlt = e.target?.closest?.(".alt-pop");
+
+    if (!insidePop && !isLangBtn) closeAllPop();
+    if (!isInput && !isKb && !isAlt) hideKeyboards();
+  }, { capture: true });
+}
+
+function bindUtilityButtons() {
+  clearBtn?.addEventListener("click", () => {
+    stopAudio();
+    stopTypewriter();
+    stopRecognizer();
+    recordingSide = null;
+    liveTranscript = "";
+    latestPreviewTranscript = "";
+
+    if (topBody) topBody.innerHTML = "";
+    if (botBody) botBody.innerHTML = "";
+
+    if (topInput) {
+      topInput.value = "";
+      autoResizeTextarea(topInput);
+    }
+    if (botInput) {
+      botInput.value = "";
+      autoResizeTextarea(botInput);
+    }
+
+    restoreInputPlaceholder("top");
+    restoreInputPlaceholder("bot");
+
+    hideKeyboards();
+    syncAllComposerButtons();
+    setSystemReadyUI();
+  });
+
+  homeLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = safeHomeHref();
+  });
+
+  homeBtn?.addEventListener("click", () => {
+    location.href = safeHomeHref();
+  });
+
+  bindKeyboardButton(homeBtn, async () => {
+    location.href = safeHomeHref();
+  });
+}
+
+function bindMicButtons() {
+  bindMicTap(topMic, "top");
+  bindMicTap(botMic, "bot");
+
+  bindKeyboardButton(topMic, async (e) => {
+    e.stopPropagation();
+    await toggleRecording("top");
+  });
+
+  bindKeyboardButton(botMic, async (e) => {
+    e.stopPropagation();
+    await toggleRecording("bot");
+  });
+}
+
+function bindInputs() {
+  bindReadonlyInput("top");
+  bindReadonlyInput("bot");
+}
+
+function bindSpeechVoices() {
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        voicesReady = true;
+      };
+      window.speechSynthesis.getVoices();
+    }
+  } catch {}
+}
+
+function bind() {
+  refreshLangLabels();
+  unlockOnFirstTouch();
+  bindModeControls();
+  bindLanguageButtons();
+  bindGlobalClicks();
+  bindUtilityButtons();
+  bindMicButtons();
+  bindInputs();
+  bindSpeechVoices();
+
+  try {
+    startBoot();
+  } catch (e) {
+    console.error("[facetoface startBoot error]", e);
+  }
+}
+
+const requiredDomOk =
+  !!frameRoot &&
+  !!topBody &&
+  !!botBody &&
+  !!topMic &&
+  !!botMic &&
+  !!topSend &&
+  !!botSend &&
+  !!topInput &&
+  !!botInput &&
+  !!topComposer &&
+  !!botComposer &&
+  !!topKeyboardWrap &&
+  !!botKeyboardWrap &&
+  !!topKeyboard &&
+  !!botKeyboard &&
+  !!topLangBtn &&
+  !!botLangBtn &&
+  !!topLangTxt &&
+  !!botLangTxt &&
+  !!popTop &&
+  !!popBot &&
+  !!listTop &&
+  !!listBot &&
+  !!closeTop &&
+  !!closeBot &&
+  !!clearBtn &&
+  !!homeLink &&
+  !!homeBtn &&
+  !!miniToast &&
+  !!iosModeBackdrop &&
+  !!iosModeTitle &&
+  !!iosModeText &&
+  !!iosModeCloseBtn;
+
+if (!requiredDomOk) {
+  console.error("[facetoface] Gerekli DOM elemanlarÄ± eksik.");
+} else {
+  try {
+    bind();
+  } catch (e) {
+    console.error("[facetoface bind error]", e);
+  }
+}
