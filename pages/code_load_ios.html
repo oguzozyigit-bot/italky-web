@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
+  <title>italkyAI - Kod ile Gün Yükle</title>
+  <meta name="theme-color" content="#05070f" />
+  <style>
+    :root{--txt:#fff;--muted:rgba(255,255,255,.70);--line:rgba(255,255,255,.12);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070f;color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}body{background:radial-gradient(circle at 18% 10%,rgba(34,211,238,.16),transparent 30%),radial-gradient(circle at 84% 18%,rgba(236,72,153,.14),transparent 28%),linear-gradient(180deg,#070b16 0%,#05070f 100%)}body:not(.ready){visibility:hidden}button,input{font:inherit}.page{width:100%;height:100dvh;overflow:auto;-webkit-overflow-scrolling:touch;padding:calc(16px + var(--safe-top)) 14px calc(22px + var(--safe-bottom));display:flex;align-items:center}.card{width:min(100%,560px);margin:auto;border-radius:28px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));box-shadow:0 22px 54px rgba(0,0,0,.34);padding:20px 16px;text-align:center}.badge{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:7px 12px;border-radius:999px;background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.18);color:#dffbff;font-size:11px;font-weight:1000;letter-spacing:.7px;margin-bottom:13px}h1{margin:0 0 10px;font-size:29px;line-height:1.12;font-weight:1000}.desc{margin:0;color:var(--muted);font-size:15px;line-height:1.58;font-weight:750}.note{margin:14px 0 20px;padding:12px 13px;border-radius:18px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);color:rgba(255,255,255,.74);font-size:13px;line-height:1.5;font-weight:750;text-align:left}.code-input{width:100%;min-height:76px;border-radius:24px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.04);color:#fff;text-align:center;font-size:24px;font-weight:1000;letter-spacing:2px;margin-bottom:12px;padding:0 12px;text-transform:uppercase}.btn{width:100%;min-height:56px;border:0;border-radius:18px;cursor:pointer;color:#fff;font-size:16px;font-weight:1000;background:linear-gradient(135deg,#22d3ee,#818cf8 58%,#ec4899);box-shadow:0 14px 30px rgba(129,140,248,.22)}.btn:disabled{opacity:.68;cursor:default}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.btn.secondary{background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.12);box-shadow:none}.result{display:none;margin-top:16px;border-radius:22px;padding:15px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);text-align:left}.result.show{display:block}.result.ok{border-color:rgba(190,242,100,.28);background:rgba(190,242,100,.08)}.result.err{border-color:rgba(248,113,113,.30);background:rgba(248,113,113,.08)}.result-title{font-size:17px;font-weight:1000;margin-bottom:7px}.result-text{color:rgba(255,255,255,.86);font-size:14px;line-height:1.55;font-weight:760}.footer{margin-top:18px;color:rgba(255,255,255,.42);font-size:11px;font-weight:900;letter-spacing:1px}@media(max-width:430px){.page{padding-left:12px;padding-right:12px}.card{padding:18px 14px}h1{font-size:26px}.actions{grid-template-columns:1fr}.code-input{font-size:21px}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="badge">iOS</div>
+      <h1>Kod ile Gün Yükle</h1>
+      <p class="desc">Size verilen aktivasyon kodunu girerek kullanım sürenizi uzatabilirsiniz.</p>
+      <p class="note">Kod geçerliyse günler hesabınıza backend tarafından eklenir. Gün satın almak için iOS Gün Yükle sayfasını kullanabilirsiniz.</p>
+      <input id="manualCode" class="code-input" type="text" maxlength="32" autocomplete="one-time-code" inputmode="text" placeholder="KODUNUZU GİRİN" />
+      <button id="loadBtn" class="btn" type="button">Kodu Kullan</button>
+      <div id="resultBox" class="result">
+        <div id="resultTitle" class="result-title"></div>
+        <div id="resultText" class="result-text"></div>
+        <div class="actions">
+          <button id="backBtn" class="btn secondary" type="button">Geri Dön</button>
+          <button id="retryBtn" class="btn" type="button">Tekrar Dene</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="plainBackBtn" class="btn secondary" type="button">Geri Dön</button>
+        <button id="iosDaysBtn" class="btn secondary" type="button">Gün Yükle</button>
+      </div>
+      <div class="footer">italkyAI By Özyiğit's 2026</div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initGlobalAccess } from "/js/global_access_ios.js";
+    import { supabase } from "/js/supabase_client.js";
+
+    const API_BASE = "https://italky-api.onrender.com";
+    const ACCESS_API = `${API_BASE}/api/session/access-state`;
+    const SUCCESS_TARGET = "/pages/home_ios.html?ios=1&code=success";
+    const BACK_TARGET = "/pages/home_ios.html?ios=1";
+    const IOS_DAYS_TARGET = "/pages/ios_days.html?ios=1";
+
+    const manualCode = document.getElementById("manualCode");
+    const loadBtn = document.getElementById("loadBtn");
+    const resultBox = document.getElementById("resultBox");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultText = document.getElementById("resultText");
+
+    function resetMobileViewportState() {
+      try { document.activeElement?.blur?.(); } catch {}
+      try {
+        document.documentElement.classList.remove("keyboard-open", "input-focus");
+        document.body.classList.remove("keyboard-open", "input-focus", "ui-menu-open");
+        window.scrollTo?.(0, 0);
+        document.querySelector(".page")?.scrollTo?.(0, 0);
+      } catch {}
+    }
+
+    function goSafe(url) {
+      resetMobileViewportState();
+      setTimeout(() => { location.href = url; }, 80);
+    }
+
+    function showResult(ok, title, html) {
+      resultBox.className = `result show ${ok ? "ok" : "err"}`;
+      resultTitle.textContent = title;
+      resultText.innerHTML = html;
+    }
+
+    function mapPromoError(reasonRaw) {
+      const reason = String(reasonRaw || "").trim().toUpperCase();
+      const messages = {
+        CODE_REQUIRED: "Lütfen kodunuzu giriniz.",
+        PROMO_NOT_FOUND: "Bu kod sistemde kayıtlı değil.",
+        PROMO_ALREADY_USED: "Bu kod daha önce kullanılmıştır.",
+        PROMO_ALREADY_USED_BY_USER: "Bu kod bu hesapta daha önce kullanılmıştır.",
+        PROMO_INACTIVE: "Bu kod kullanıma kapalı.",
+        PROMO_NOT_ACTIVE: "Bu kod kullanıma kapalı.",
+        PROMO_EXPIRED: "Bu kodun süresi dolmuş.",
+        PROMO_NOT_STARTED: "Bu kampanya henüz aktif değil.",
+        PROMO_USER_LIMIT_REACHED: "Bu kampanya için kullanım hakkınız dolmuş.",
+        PROMO_GLOBAL_LIMIT_REACHED: "Bu kampanyanın toplam kullanım limiti dolmuş.",
+        PROMO_ACCOUNT_MISMATCH: "Bu kod başka bir hesapla eşleşmiş.",
+        CAMPAIGN_NOT_FOUND: "Bu kodun kampanyası bulunamadı.",
+        PROFILE_NOT_FOUND: "Kullanıcı profili bulunamadı."
+      };
+      return messages[reason] || "Kod uygulanamadı. Lütfen kodu kontrol edip tekrar deneyin.";
+    }
+
+    async function getSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session || null;
+    }
+
+    async function getAuthHeaders(session) {
+      return {
+        "Content-Type": "application/json",
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+      };
+    }
+
+    async function refreshAccessState(session) {
+      try {
+        if (!session?.access_token) return null;
+        const resp = await fetch(ACCESS_API, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store"
+        });
+        const json = await resp.json().catch(() => null);
+        if (resp.ok && json) {
+          window.__ITALKY_ACCESS__ = json;
+          localStorage.setItem("italky_access_state", JSON.stringify(json));
+          window.dispatchEvent(new CustomEvent("italkyAccessReady", { detail: json }));
+        }
+        return json;
+      } catch {
+        return null;
+      }
+    }
+
+    function renderSuccessMessage(json) {
+      const parts = ["Kod başarıyla uygulandı. Kullanım süreniz uzatıldı."];
+      const until = json?.active_until || json?.package_ends_at || json?.gift_ends_at || json?.trial_ends_at || json?.expires_at || "";
+      if (until) {
+        const d = new Date(until);
+        if (!Number.isNaN(d.getTime())) parts.push(`Yeni kullanım bitişi: <b>${d.toLocaleDateString("tr-TR")}</b>`);
+      }
+      return parts.join("<br>");
+    }
+
+    async function redeemCode() {
+      const code = String(manualCode.value || "").trim().toUpperCase();
+      if (code.length < 4) {
+        showResult(false, "İşlem Başarısız", "Lütfen kodu eksiksiz giriniz.");
+        return;
+      }
+      const session = await getSession();
+      const userId = session?.user?.id || "";
+      if (!userId) {
+        goSafe(`/pages/login_ios.html?next=${encodeURIComponent("/pages/code_load_ios.html?ios=1")}`);
+        return;
+      }
+
+      resetMobileViewportState();
+      loadBtn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/api/promo/redeem`, {
+          method: "POST",
+          headers: await getAuthHeaders(session),
+          body: JSON.stringify({ source: "manual", code, user_id: userId })
+        });
+        const json = await res.json().catch(() => null);
+        if (json?.ok) {
+          await refreshAccessState(session);
+          showResult(true, "Kod Başarıyla Uygulandı", renderSuccessMessage(json));
+          setTimeout(() => goSafe(SUCCESS_TARGET), 900);
+        } else {
+          showResult(false, "İşlem Başarısız", mapPromoError(json?.reason || json?.detail));
+        }
+      } catch {
+        showResult(false, "İşlem Başarısız", "Kod uygulanamadı. Lütfen tekrar deneyin.");
+      } finally {
+        loadBtn.disabled = false;
+      }
+    }
+
+    manualCode?.addEventListener("input", () => {
+      manualCode.value = manualCode.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 32);
+    });
+    loadBtn?.addEventListener("click", redeemCode);
+    manualCode?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") redeemCode();
+    });
+    document.getElementById("backBtn")?.addEventListener("click", () => goSafe(BACK_TARGET));
+    document.getElementById("plainBackBtn")?.addEventListener("click", () => goSafe(BACK_TARGET));
+    document.getElementById("iosDaysBtn")?.addEventListener("click", () => goSafe(IOS_DAYS_TARGET));
+    document.getElementById("retryBtn")?.addEventListener("click", () => {
+      resultBox.className = "result";
+      manualCode.focus();
+    });
+
+    try {
+      await initGlobalAccess({ allowPublicPageBypass: false });
+      const session = await getSession();
+      if (!session?.user?.id) goSafe(`/pages/login_ios.html?next=${encodeURIComponent("/pages/code_load_ios.html?ios=1")}`);
+    } catch (error) {
+      console.error("ios code load boot error:", error);
+    } finally {
+      document.body.classList.add("ready");
+    }
+  </script>
+</body>
+</html>
