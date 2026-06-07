@@ -1100,7 +1100,7 @@ body.home-ready #pageContent{
         </div>
         <div class="wide-body">
           <h2 class="wide-title">Offline Dil Paketleri</h2>
-          <p class="wide-desc">Dil paketlerini indir. İnternet yokken de çeviri yap. Seyahatlerde güvenle kullan.</p>
+          <p class="wide-desc">Dil paketlerini indir. İnternet yokken de çeviri hazırlığını yanında taşı. Seyahatlerde güvenle kullan.</p>
         </div>
         <div class="arrow-chip"></div>
       </a>
@@ -1244,9 +1244,7 @@ body.home-ready #pageContent{
 
       await fillUserName();
       renderHomeLangPackWidget();
-      currentIcanyAccess = result.access || {};
       applyOfflineCardVisibility(result.access);
-      applyIcanyRadioAccess(result.access);
 
       const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
       if (skipWelcome) {
@@ -1258,31 +1256,22 @@ body.home-ready #pageContent{
       document.body.classList.add("home-ready");
       renderHomeLangPackWidget();
       applyOfflineCardVisibility();
-      applyIcanyRadioAccess();
-      applyIcanyRadioAccess();
     }
   }
 
-  window.addEventListener("italkyAccessReady", (event) => {
-    currentIcanyAccess = event.detail || {};
-    applyOfflineCardVisibility(event.detail);
-    applyIcanyRadioAccess(event.detail);
-  });
+  window.addEventListener("italkyAccessReady", (event) => applyOfflineCardVisibility(event.detail));
   window.addEventListener("storage", () => {
     renderHomeLangPackWidget();
     applyOfflineCardVisibility();
-    applyIcanyRadioAccess();
   });
   window.addEventListener("focus", () => {
     renderHomeLangPackWidget();
     applyOfflineCardVisibility();
-    applyIcanyRadioAccess();
   });
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
       renderHomeLangPackWidget();
       applyOfflineCardVisibility();
-      applyIcanyRadioAccess();
     }
   });
 
@@ -1409,63 +1398,9 @@ body.home-ready #pageContent{
   let supabaseClientPromise = null;
   let currentUserPromise = null;
   let lastPersistSecond = -1;
-  let currentIcanyAccess = null;
 
   function getDoc(){
     return document;
-  }
-
-  function canUseIcanyRadio(access = currentIcanyAccess || window.__ITALKY_ACCESS__ || {}) {
-    const isAdmin = access?.is_admin === true || access?.is_superadmin === true;
-    if (isAdmin) return true;
-
-    const remaining = getRemainingSeconds(access);
-    return Number.isFinite(remaining) && remaining > 0;
-  }
-
-  function closeIcanyRadioSurfaces(doc = document) {
-    doc.getElementById("icanyRadioModal")?.classList.remove("show");
-    doc.getElementById("icanyKaraokeModal")?.classList.remove("show");
-  }
-
-  function pauseIcanyRadio(doc = document) {
-    const audio = doc.getElementById("icanyRadioAudio");
-    try {
-      if (audio) audio.pause();
-    } catch {}
-
-    const player = doc.getElementById("icanyRadioPlayer");
-    player?.classList.remove("is-playing");
-    player?.classList.remove("show");
-  }
-
-  function applyIcanyRadioAccess(access = currentIcanyAccess || window.__ITALKY_ACCESS__ || {}) {
-    currentIcanyAccess = access || currentIcanyAccess || window.__ITALKY_ACCESS__ || {};
-    const allowed = canUseIcanyRadio(currentIcanyAccess);
-    const doc = document;
-
-    const card = doc.getElementById("icanyRadioSetupCard");
-    if (card) {
-      card.classList.toggle("hidden", !allowed);
-      card.style.display = allowed ? "" : "none";
-      card.setAttribute("aria-hidden", allowed ? "false" : "true");
-      card.setAttribute("aria-disabled", allowed ? "false" : "true");
-    }
-
-    if (!allowed) {
-      pauseIcanyRadio(doc);
-      closeIcanyRadioSurfaces(doc);
-    }
-
-    return allowed;
-  }
-
-  function guardIcanyRadioAccess(doc = document) {
-    if (applyIcanyRadioAccess()) return true;
-    console.warn("iCanyAI Radyo erişimi kapalı: kullanım süresi bitmiş veya aktif erişim yok.");
-    closeIcanyRadioSurfaces(doc);
-    pauseIcanyRadio(doc);
-    return false;
   }
 
   function uniq(list){
@@ -2627,7 +2562,6 @@ body.home-ready #pageContent{
     }
 
     async function playCurrent(){
-      if(!guardIcanyRadioAccess(doc)) return false;
       if(!audio) return false;
 
       const ready = await ensureTrackLoaded();
@@ -2662,7 +2596,6 @@ body.home-ready #pageContent{
     }
 
     async function nextTrack(direction = 1, autoPlay = true){
-      if(!guardIcanyRadioAccess(doc)) return;
       if(!tracks.length){
         await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
       }
@@ -2769,20 +2702,15 @@ body.home-ready #pageContent{
       <div class="arrow-chip"></div>
     `;
 
-    card.addEventListener("click", () => {
-      if (!guardIcanyRadioAccess(doc)) return;
-      openModal(doc);
-    });
+    card.addEventListener("click", () => openModal(doc));
     card.addEventListener("keydown", (event) => {
       if(event.key === "Enter" || event.key === " "){
         event.preventDefault();
-        if (!guardIcanyRadioAccess(doc)) return;
         openModal(doc);
       }
     });
 
     target.insertAdjacentElement("afterend", card);
-    applyIcanyRadioAccess();
     reorderCards(doc);
   }
 
@@ -2858,7 +2786,6 @@ body.home-ready #pageContent{
   }
 
   function openModal(doc){
-    if (!guardIcanyRadioAccess(doc)) return;
     createModal(doc);
     doc.getElementById("icanyRadioModal")?.classList.add("show");
   }
@@ -3014,7 +2941,6 @@ body.home-ready #pageContent{
   }
 
   async function saveRadio(doc){
-    if (!guardIcanyRadioAccess(doc)) return;
     const genres = selectedValues(doc,"genres");
     const languages = selectedValues(doc,"languages");
 
@@ -3056,7 +2982,6 @@ body.home-ready #pageContent{
   }
 
   function showPlayer(doc){
-    if (!guardIcanyRadioAccess(doc)) return;
     createPlayer(doc);
     createKaraokeModal(doc);
 
@@ -3069,7 +2994,6 @@ body.home-ready #pageContent{
 
   async function restorePlayerFromSettings(doc, settings){
     if(!settings || !applySettings(settings)) return;
-    if (!guardIcanyRadioAccess(doc)) return;
 
     showPlayer(doc);
     await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
@@ -3101,14 +3025,14 @@ body.home-ready #pageContent{
     const doc = getDoc();
     if(!doc || !doc.body) return;
 
+    boot?.remove();
+
     injectStyle(doc);
-    applyIcanyRadioAccess();
     await loadChannelIndex();
     createSetupCard(doc);
     createModal(doc);
     createKaraokeModal(doc);
     reorderCards(doc);
-    applyIcanyRadioAccess();
 
     const saved = await loadSavedSettings();
     if(saved){
