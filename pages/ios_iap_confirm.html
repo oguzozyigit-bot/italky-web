@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>italkyAI - iOS Satın Alma Onayı</title>
+  <meta name="theme-color" content="#07111f" />
+  <style>
+    :root{
+      --bg:#07111f;
+      --panel:#101827;
+      --line:rgba(255,255,255,.13);
+      --text:#fff;
+      --muted:rgba(226,232,240,.72);
+      --danger:#fecaca;
+      --ok:#bbf7d0;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",system-ui,sans-serif}
+    body{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:calc(24px + var(--safe-top)) 18px calc(24px + var(--safe-bottom));background:radial-gradient(circle at 12% 8%,rgba(34,211,238,.16),transparent 36%),radial-gradient(circle at 88% 82%,rgba(96,165,250,.18),transparent 38%),#05070f}
+    .card{width:100%;max-width:440px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.035));box-shadow:0 24px 60px rgba(0,0,0,.34);padding:24px 20px;text-align:center}
+    .brand{font-size:13px;font-weight:1000;letter-spacing:.8px;color:rgba(255,255,255,.62);margin-bottom:14px}
+    h1{margin:0;font-size:24px;line-height:1.16;font-weight:1000}
+    .msg{margin:12px auto 0;color:var(--muted);font-size:14px;line-height:1.5;font-weight:750;max-width:340px}
+    .status{margin:18px 0 0;padding:13px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);color:rgba(255,255,255,.82);font-size:13px;line-height:1.5;font-weight:800}
+    .status.ok{border-color:rgba(190,242,100,.24);background:rgba(190,242,100,.08);color:var(--ok)}
+    .status.err{border-color:rgba(248,113,113,.24);background:rgba(248,113,113,.08);color:var(--danger)}
+    .actions{display:grid;gap:10px;margin-top:16px}
+    .btn{width:100%;min-height:48px;border:0;border-radius:999px;font-size:14px;font-weight:950;text-decoration:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .btn.primary{background:#fff;color:#07111f}
+    .btn.secondary{background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.14)}
+    .details{margin-top:14px;text-align:left;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);padding:12px;color:rgba(255,255,255,.66);font-size:11px;line-height:1.45;word-break:break-word}
+    .details strong{color:#fff}
+    .footer{margin-top:18px;color:rgba(255,255,255,.42);font-size:11px;font-weight:900;letter-spacing:1.1px}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">italkyAI</div>
+    <h1 id="title">Satın alma doğrulanıyor</h1>
+    <p class="msg" id="message">Apple Store satın alma bilginiz hesabınıza gün olarak ekleniyor. Lütfen bekleyin.</p>
+    <div class="status" id="status">Oturum kontrol ediliyor...</div>
+    <div class="actions" id="loginActions" hidden>
+      <button class="btn primary" id="appleLoginButton" type="button">Apple ile giriş yap</button>
+      <a class="btn secondary" href="/pages/ios_days.html?ios=1">Gün Yükle'ye dön</a>
+    </div>
+    <div class="actions" id="errorActions" hidden>
+      <a class="btn primary" href="/pages/ios_days.html?ios=1">Tekrar dene</a>
+      <a class="btn secondary" href="/pages/home_ios.html?ios=1">Ana sayfaya dön</a>
+    </div>
+    <div class="details" id="details" hidden></div>
+    <div class="footer">italkyAI By Özyiğit's 2026</div>
+  </main>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js?v=ios-iap-days-confirm-20260604";
+
+    const API_CONFIRM = "https://italky-api.onrender.com/api/ios-iap/confirm";
+    const HOME_URL = "/pages/home_ios.html?ios=1&purchase=success";
+    const PENDING_KEY = "italky_ios_pending_purchase";
+    const IOS_DAY_PRODUCTS = {
+      italky_ios_7gun: 7,
+      italky_ios_30gun: 30,
+      italky_ios_90gun: 90,
+      italky_ios_180gun: 180,
+      italky_ios_365gun: 365
+    };
+
+    const titleEl = document.getElementById("title");
+    const messageEl = document.getElementById("message");
+    const statusEl = document.getElementById("status");
+    const loginActions = document.getElementById("loginActions");
+    const errorActions = document.getElementById("errorActions");
+    const appleLoginButton = document.getElementById("appleLoginButton");
+    const detailsEl = document.getElementById("details");
+
+    function setStatus(text, type = "") {
+      statusEl.textContent = text || "";
+      statusEl.className = type ? `status ${type}` : "status";
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim();
+    }
+
+    function currentReturnPath() {
+      return `${location.pathname}${location.search}${location.hash}`;
+    }
+
+    function readStoredPurchase() {
+      try {
+        const raw = sessionStorage.getItem(PENDING_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function readQueryPurchase() {
+      const qs = new URLSearchParams(location.search || "");
+      return {
+        productId: qs.get("productId") || "",
+        days: qs.get("days") || "",
+        transactionId: qs.get("transactionId") || "",
+        receipt: qs.get("receipt") || "",
+        appAccountToken: qs.get("appAccountToken") || "",
+        platform: qs.get("platform") || "",
+        source: qs.get("source") || ""
+      };
+    }
+
+    function readPurchase() {
+      const stored = readStoredPurchase();
+      const query = readQueryPurchase();
+      const purchase = { ...query, ...stored };
+      const productId = normalizeText(purchase.productId || purchase.product_id || purchase.id);
+      const mappedDays = IOS_DAY_PRODUCTS[productId] || 0;
+      const days = Number(purchase.days || mappedDays || 0);
+      return {
+        productId,
+        days,
+        transactionId: normalizeText(purchase.transactionId || purchase.transaction_id || purchase.originalTransactionId),
+        receipt: normalizeText(purchase.receipt || purchase.signedTransactionInfo || purchase.jwsRepresentation),
+        appAccountToken: normalizeText(purchase.appAccountToken || purchase.app_account_token),
+        platform: "ios",
+        source: "ios_iap_days"
+      };
+    }
+
+    function showDetails(purchase) {
+      detailsEl.hidden = false;
+      detailsEl.innerHTML = [
+        `<strong>productId:</strong> ${purchase.productId || "-"}`,
+        `<strong>days:</strong> ${purchase.days || "-"}`,
+        `<strong>transactionId:</strong> ${purchase.transactionId || "-"}`,
+        `<strong>receipt:</strong> ${purchase.receipt ? "var" : "yok"}`,
+        `<strong>appAccountToken:</strong> ${purchase.appAccountToken ? "var" : "yok"}`
+      ].join("<br>");
+    }
+
+    function clearPendingPurchase() {
+      try { sessionStorage.removeItem(PENDING_KEY); } catch (error) {}
+    }
+
+    async function getSession() {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return data?.session || null;
+    }
+
+    async function confirmPurchase(session, purchase) {
+      const resp = await fetch(API_CONFIRM, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`
+        },
+        cache: "no-store",
+        body: JSON.stringify({
+          productId: purchase.productId,
+          days: purchase.days,
+          transactionId: purchase.transactionId,
+          receipt: purchase.receipt,
+          appAccountToken: purchase.appAccountToken,
+          platform: "ios",
+          source: "ios_iap_days"
+        })
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok || json?.ok !== true) {
+        throw new Error(json?.detail || json?.message || "Satın alma doğrulanamadı.");
+      }
+      return json;
+    }
+
+    function showLoginRequired() {
+      titleEl.textContent = "Giriş gerekiyor";
+      messageEl.textContent = "Satın alınan günleri hesabınıza eklemek için Apple ile giriş yapın.";
+      setStatus("Giriş tamamlanınca satın alma aynı hesaba bağlanacak.");
+      loginActions.hidden = false;
+      errorActions.hidden = true;
+    }
+
+    function showError(message) {
+      titleEl.textContent = "Satın alma doğrulanamadı";
+      messageEl.textContent = "Satın alma doğrulanamadı. Lütfen tekrar deneyin.";
+      setStatus(message || "Backend onayı başarısız.", "err");
+      loginActions.hidden = true;
+      errorActions.hidden = false;
+    }
+
+    async function startAppleLogin() {
+      setStatus("Apple giriş ekranı açılıyor...");
+      const redirectTo = new URL(currentReturnPath(), location.origin).toString();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "apple",
+        options: { redirectTo }
+      });
+      if (error) {
+        setStatus(error.message || "Apple girişi başlatılamadı.", "err");
+      }
+    }
+
+    async function init() {
+      const purchase = readPurchase();
+      showDetails(purchase);
+
+      if (!purchase.productId || !IOS_DAY_PRODUCTS[purchase.productId]) {
+        showError("Ürün bilgisi eksik veya desteklenmiyor.");
+        return;
+      }
+
+      if (!purchase.days) {
+        showError("Gün bilgisi belirlenemedi.");
+        return;
+      }
+
+      if (!purchase.transactionId && !purchase.receipt) {
+        showError("Apple satın alma doğrulama bilgisi eksik.");
+        return;
+      }
+
+      let session = null;
+      try {
+        session = await getSession();
+      } catch (error) {
+        showError(error?.message || "Oturum kontrol edilemedi.");
+        return;
+      }
+
+      if (!session?.access_token) {
+        showLoginRequired();
+        return;
+      }
+
+      try {
+        setStatus("Satın alma backend ile doğrulanıyor...");
+        await confirmPurchase(session, purchase);
+        clearPendingPurchase();
+        setStatus("Günler hesabınıza eklendi. Ana sayfaya yönlendiriliyorsunuz...", "ok");
+        location.replace(HOME_URL);
+      } catch (error) {
+        showError(error?.message || "Satın alma doğrulanamadı. Lütfen tekrar deneyin.");
+      }
+    }
+
+    appleLoginButton.addEventListener("click", startAppleLogin);
+    init();
+  </script>
+</body>
+</html>
