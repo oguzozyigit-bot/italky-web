@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
+  <title>italkyAI • HANGMAN NITRO</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap"
+    rel="stylesheet"
+  />
+
+  <script>
+    (function () {
+      try {
+        var lang = new URLSearchParams(location.search).get("lang");
+        if (/^(en|de|fr|es|it)$/i.test(String(lang || ""))) {
+          document.documentElement.classList.add("hangman-direct-start");
+        }
+      } catch (_) {}
+    })();
+  </script>
+
+  <style>
+    :root{
+      --bg:#030014;
+      --grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --red:#ff0033;
+      --green:#00ff9d;
+      --cyan:#63f3ff;
+      --dockH:220px;
+      --shellLift:0px;
+      --safeB:env(safe-area-inset-bottom, 0px);
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      height:100%;
+      background:var(--bg);
+      color:#fff;
+      font-family:Outfit,sans-serif;
+      overflow:hidden;
+    }
+
+    body{
+      background:
+        radial-gradient(circle at top, rgba(99,102,241,.20), transparent 35%),
+        radial-gradient(circle at bottom, rgba(236,72,153,.14), transparent 30%),
+        var(--bg);
+    }
+
+    html.hangman-direct-start .ready-gate{
+      display:none!important;
+      visibility:hidden!important;
+      pointer-events:none!important;
+    }
+
+    #pageContent{
+      height:100%;
+      padding:14px 14px calc(var(--dockH) + var(--shellLift) + 24px) 14px;
+      position:relative;
+    }
+
+    .top{
+      min-height:0;
+      height:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      position:relative;
+    }
+
+    .title{
+      margin:0;
+      padding-top:4px;
+      text-align:center;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:22px;
+      letter-spacing:10px;
+      opacity:.92;
+      z-index:2;
+    }
+
+    .hud{
+      position:absolute;
+      top:45px;
+      left:0;
+      right:0;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      z-index:10;
+    }
+
+    .leftHud{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .hearts{
+      display:grid;
+      grid-template-columns:repeat(3, max-content);
+      gap:6px;
+    }
+
+    .heart{
+      font-size:22px;
+      filter:drop-shadow(0 0 10px var(--red));
+      transition:.3s;
+    }
+
+    .rightHud{
+      min-width:120px;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:10px;
+    }
+
+    .score .best{
+      font-size:9px;
+      font-weight:900;
+      opacity:.55;
+      letter-spacing:1px;
+      text-align:right;
+    }
+
+    .score .val{
+      font-size:28px;
+      font-weight:900;
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      color:transparent;
+      text-align:right;
+    }
+
+    .jokerCol{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .joker{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:14px;
+      background:rgba(99,102,241,.12);
+      border:1px solid rgba(99,102,241,.55);
+      color:#fff;
+      font-size:22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    .joker:active{ transform:scale(.96); }
+
+    .joker.spent{
+      opacity:.14;
+      filter:grayscale(1);
+      pointer-events:none;
+    }
+
+    .stage{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      z-index:1;
+      padding-top:40px;
+      min-height:460px;
+    }
+
+    .gallows{
+      width:140px;
+      height:160px;
+      position:relative;
+      border-bottom:4px solid #fff;
+    }
+
+    .beam{
+      position:absolute;
+      background:#fff;
+      box-shadow:0 0 10px rgba(255,255,255,.35);
+    }
+
+    .v{
+      left:25px;
+      width:4px;
+      height:100%;
+    }
+
+    .h{
+      left:25px;
+      top:0;
+      width:90px;
+      height:4px;
+    }
+
+    .rope{
+      position:absolute;
+      left:115px;
+      top:0;
+      width:2px;
+      height:35px;
+      background:#aaa;
+    }
+
+    .man{
+      position:absolute;
+      left:115px;
+      top:35px;
+      transform-origin:top center;
+    }
+
+    .man.swing{
+      animation:sway 1.2s infinite ease-in-out;
+    }
+
+    @keyframes sway{
+      0%,100%{ transform:rotate(-8deg); }
+      50%{ transform:rotate(8deg); }
+    }
+
+    .organ{
+      position:absolute;
+      display:none;
+      background:#fff;
+      box-shadow:0 0 10px #fff;
+    }
+
+    .organ.on{ display:block; }
+
+    .head{
+      left:-11px;
+      top:0;
+      width:22px;
+      height:22px;
+      border:3px solid #fff;
+      border-radius:50%;
+      background:transparent;
+    }
+
+    .body{
+      left:-1.5px;
+      top:22px;
+      width:3px;
+      height:45px;
+    }
+
+    .larm{
+      left:-19px;
+      top:32px;
+      width:18px;
+      height:3px;
+      transform:rotate(-30deg);
+    }
+
+    .rarm{
+      left:1px;
+      top:32px;
+      width:18px;
+      height:3px;
+      transform:rotate(30deg);
+    }
+
+    .lleg{
+      left:-19px;
+      top:65px;
+      width:18px;
+      height:3px;
+      transform:rotate(-45deg);
+    }
+
+    .rleg{
+      left:1px;
+      top:65px;
+      width:18px;
+      height:3px;
+      transform:rotate(45deg);
+    }
+
+    .trBox{
+      width:100%;
+      margin-top:18px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      text-align:center;
+      font-size:16px;
+      font-weight:900;
+      color:rgba(255,255,255,.82);
+      letter-spacing:.2px;
+      min-height:48px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .dock{
+      position:fixed;
+      left:14px;
+      right:14px;
+      bottom:calc(var(--safeB) + var(--shellLift) + 10px);
+      height:var(--dockH);
+      padding:12px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(3,0,20,.90);
+      backdrop-filter:blur(10px);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:9000;
+      box-shadow:0 20px 40px rgba(0,0,0,.30);
+    }
+
+    .matrix{
+      min-height:45px;
+      display:flex;
+      justify-content:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .slot{
+      width:26px;
+      height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-bottom:3px solid rgba(255,255,255,.14);
+      font-size:24px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    .slot.found{
+      border-bottom-color:var(--green);
+      text-shadow:0 0 10px var(--green);
+    }
+
+    .kb{
+      flex:1;
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:6px;
+    }
+
+    .key{
+      height:38px;
+      border:none;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    .key:active{ transform:scale(.97); }
+
+    .key.hit{
+      background:var(--green);
+      color:#000;
+      box-shadow:0 0 15px var(--green);
+    }
+
+    .key.miss{
+      background:var(--red);
+      opacity:.28;
+      color:#fff;
+      box-shadow:0 0 14px rgba(255,0,51,.45);
+    }
+
+    .ready-gate{
+      position:fixed;
+      inset:0;
+      z-index:60000;
+      background:rgba(3,0,20,.96);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      text-align:center;
+      backdrop-filter:blur(10px);
+    }
+
+    .gate-logo{
+      font-size:58px;
+      margin-bottom:10px;
+      filter:drop-shadow(0 0 18px rgba(99,102,241,.32));
+    }
+
+    .gate-title{
+      margin:0 0 10px;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:40px;
+      font-weight:900;
+      letter-spacing:8px;
+    }
+
+    .gate-sub{
+      max-width:320px;
+      margin:0 0 26px;
+      line-height:1.45;
+      opacity:.85;
+      font-size:14px;
+      font-weight:800;
+    }
+
+    .start-btn{
+      width:220px;
+      height:60px;
+      border:none;
+      border-radius:20px;
+      background:var(--grad);
+      color:#fff;
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:0 10px 35px rgba(99,102,241,.28);
+    }
+
+    .langChangeBtn{
+      margin-top:12px;
+      width:220px;
+      height:52px;
+      border:none;
+      border-radius:18px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .start-btn:disabled{
+      opacity:.55;
+      pointer-events:none;
+      filter:grayscale(.2);
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:30000;
+      display:none;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:34px;
+      text-align:center;
+      background:rgba(1,0,8,.94);
+      backdrop-filter:blur(8px);
+    }
+
+    .modal.on{ display:flex; }
+
+    .modalCard{
+      width:min(92vw,420px);
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(20,20,34,.96), rgba(5,0,20,.96));
+      padding:24px;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
+    }
+
+    .modal h1{
+      margin:0;
+      font-size:32px;
+      font-weight:900;
+    }
+
+    .m-word{
+      margin:20px 0;
+      font-size:36px;
+      font-weight:900;
+      color:#60a5fa;
+      text-transform:uppercase;
+    }
+
+    .m-tr{
+      margin-bottom:0;
+      opacity:.75;
+      font-style:italic;
+      font-size:14px;
+    }
+
+    .mBtn{
+      margin-top:18px;
+      width:100%;
+      height:52px;
+      border:none;
+      border-radius:18px;
+      background:var(--grad);
+      color:#fff;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .langSheet{
+      position:fixed;
+      inset:0;
+      z-index:70000;
+      display:none;
+      align-items:flex-end;
+      background:rgba(0,0,0,.50);
+      backdrop-filter:blur(6px);
+    }
+
+    .langSheet.show{ display:flex; }
+
+    .langPanel{
+      width:100%;
+      max-height:82vh;
+      overflow:auto;
+      border-radius:26px 26px 0 0;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(14,14,28,.98), rgba(5,0,20,.98));
+      padding:18px 16px calc(16px + var(--safeB));
+      box-shadow:0 -20px 60px rgba(0,0,0,.45);
+    }
+
+    .langPanelTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .langPanelTitle{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:1px;
+    }
+
+    .langPanelSub{
+      font-size:13px;
+      line-height:1.5;
+      color:rgba(255,255,255,.70);
+      font-weight:700;
+      margin-bottom:14px;
+    }
+
+    .langClose{
+      width:40px;
+      height:40px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-size:22px;
+      cursor:pointer;
+    }
+
+    .langGrid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+    }
+
+    .langCard{
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      padding:16px;
+      min-height:104px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .langCard:active{ transform:scale(.98); }
+
+    .langCard.active{
+      border-color:rgba(0,255,157,.45);
+      box-shadow:0 0 0 1px rgba(0,255,157,.30), 0 0 22px rgba(0,255,157,.12);
+      background:linear-gradient(180deg, rgba(0,255,157,.08), rgba(255,255,255,.04));
+    }
+
+    .langFlag{
+      font-size:28px;
+      line-height:1;
+    }
+
+    .langName{
+      font-size:18px;
+      font-weight:900;
+      line-height:1.1;
+    }
+
+    .langHint{
+      font-size:12px;
+      color:rgba(255,255,255,.58);
+      font-weight:700;
+    }
+
+    .sheetBtn{
+      margin-top:14px;
+      width:100%;
+      height:52px;
+      border:none;
+      border-radius:18px;
+      background:var(--grad);
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(var(--safeB) + var(--shellLift) + 16px);
+      transform:translateX(-50%) translateY(120px);
+      z-index:80000;
+      min-width:180px;
+      max-width:min(92vw,420px);
+      padding:14px 18px;
+      border-radius:999px;
+      background:rgba(6,8,22,.96);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 18px 36px rgba(0,0,0,.30);
+      text-align:center;
+      font-size:13px;
+      font-weight:900;
+      transition:.22s ease;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    @media (max-width:420px){
+      .langGrid{
+        grid-template-columns:1fr 1fr;
+      }
+      .gate-title{
+        font-size:34px;
+        letter-spacing:6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="pageContent">
+
+    <div class="ready-gate" id="readyGate">
+      <div class="gate-logo">🎯</div>
+      <div class="gate-title">HANGMAN</div>
+      <div class="gate-sub" id="gateInfo">Hazırlanıyor...</div>
+      <button class="start-btn" id="realStartBtn" type="button">BAŞLA</button>
+      <button class="langChangeBtn" id="langChangeBtn" type="button">Dil Değiştir</button>
+    </div>
+
+    <div class="top">
+      <h1 class="title">HANGMAN</h1>
+
+      <div class="hud">
+        <div class="leftHud">
+          <div class="hearts" id="hearts"></div>
+        </div>
+
+        <div class="rightHud">
+          <div class="score">
+            <div class="best">EN YÜKSEK SKOR: <span id="bestVal">0</span></div>
+            <div class="val" id="scoreVal">0</div>
+          </div>
+
+          <div class="jokerCol">
+            <button class="joker" id="j0" type="button" aria-label="Joker 1">🃏</button>
+            <button class="joker" id="j1" type="button" aria-label="Joker 2">🃏</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="gallows">
+          <div class="beam v"></div>
+          <div class="beam h"></div>
+          <div class="rope"></div>
+
+          <div class="man" id="man">
+            <div class="organ head" id="p_head"></div>
+            <div class="organ body" id="p_body"></div>
+            <div class="organ larm" id="p_larm"></div>
+            <div class="organ rarm" id="p_rarm"></div>
+            <div class="organ lleg" id="p_lleg"></div>
+            <div class="organ rleg" id="p_rleg"></div>
+          </div>
+        </div>
+
+        <div class="trBox" id="trText">—</div>
+      </div>
+    </div>
+
+    <div class="dock">
+      <div class="matrix" id="matrix"></div>
+      <div class="kb" id="kb"></div>
+    </div>
+
+    <div class="modal" id="modal">
+      <div class="modalCard">
+        <h1 id="mTitle">OYUN</h1>
+        <div class="m-word" id="mWord">WORD</div>
+        <div class="m-tr" id="mTr">(—)</div>
+        <button class="mBtn" id="mBtn" type="button">DEVAM ET</button>
+      </div>
+    </div>
+
+    <div class="langSheet" id="langSheet">
+      <div class="langPanel">
+        <div class="langPanelTop">
+          <div class="langPanelTitle">Oyun Dili</div>
+          <button class="langClose" id="langSheetClose" type="button">×</button>
+        </div>
+
+        <div class="langPanelSub">
+          Bayrağa dokun, dili seç. Sonraki girişte oyun bu dille doğrudan açılır.
+        </div>
+
+        <div class="langGrid" id="langGrid"></div>
+
+        <button class="sheetBtn" id="toRulesBtn" type="button">Devam Et</button>
+      </div>
+    </div>
+
+    <div class="langSheet" id="rulesSheet">
+      <div class="langPanel">
+        <div class="langPanelTop">
+          <div class="langPanelTitle">Oyun Kuralları</div>
+          <button class="langClose" id="rulesClose" type="button">×</button>
+        </div>
+
+        <div class="langPanelSub">
+          <b>Hangman Nitro</b> bir eğitim oyunudur. Kelimeyi doğru tahmin et, puan topla, canını koru.
+        </div>
+
+        <ul style="margin:0;padding-left:18px;line-height:1.8;font-size:14px;color:rgba(255,255,255,.84);font-weight:800;">
+          <li>Önce dili seçersin, sonra oyun başlar.</li>
+          <li>Yanlış harfler adamı tamamlar.</li>
+          <li>Doğru tahmin puan kazandırır.</li>
+          <li>Her bölümde <b>2 joker</b> hakkın vardır.</li>
+          <li>Kelimeyi çözemesen bile sonunda doğru cevap gösterilir.</li>
+          <li>Sistem doğru kelimeyi sesli okuyarak öğretir.</li>
+        </ul>
+
+        <button class="sheetBtn" id="finishRulesBtn" type="button">Anladım</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script type="module" src="/js/hangman_page_ios.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (document.getElementById("hangmanMobileScoreBarFix")) return;
+
+      var style = document.createElement("style");
+      style.id = "hangmanMobileScoreBarFix";
+      style.textContent = `
+        @media (max-width: 700px) {
+          body.hangman-game-screen #pageContent {
+            padding-top: 8px !important;
+          }
+
+          body.hangman-game-screen .top {
+            gap: 6px !important;
+          }
+
+          body.hangman-game-screen .hud {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 6px !important;
+            margin: 0 0 6px !important;
+            pointer-events: auto !important;
+            z-index: 12 !important;
+          }
+
+          body.hangman-game-screen .leftHud {
+            width: 100% !important;
+            align-items: center !important;
+          }
+
+          body.hangman-game-screen .hearts {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            justify-content: center !important;
+            gap: 5px !important;
+          }
+
+          body.hangman-game-screen .heart {
+            font-size: 17px !important;
+          }
+
+          body.hangman-game-screen .rightHud {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            display: grid !important;
+            grid-template-columns: auto 1fr !important;
+            align-items: center !important;
+            gap: 7px !important;
+            margin: 0 !important;
+            padding: 7px 8px !important;
+            border-radius: 15px !important;
+            border: 1px solid rgba(255,255,255,.10) !important;
+            background: rgba(255,255,255,.055) !important;
+            box-shadow: 0 10px 24px rgba(0,0,0,.20) !important;
+          }
+
+          body.hangman-game-screen .score {
+            display: flex !important;
+            align-items: baseline !important;
+            justify-content: flex-start !important;
+            gap: 5px !important;
+            min-width: 66px !important;
+          }
+
+          body.hangman-game-screen .score::before {
+            content: "SKOR:";
+            color: rgba(255,255,255,.66);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .4px;
+          }
+
+          body.hangman-game-screen .score .best {
+            display: none !important;
+          }
+
+          body.hangman-game-screen .score .val {
+            font-size: 18px !important;
+            line-height: 1 !important;
+            text-align: left !important;
+          }
+
+          body.hangman-game-screen .jokerCol {
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 7px !important;
+            margin: 0 !important;
+          }
+
+          body.hangman-game-screen .joker {
+            min-width: 66px !important;
+            width: auto !important;
+            height: 30px !important;
+            padding: 0 8px !important;
+            border-radius: 999px !important;
+            font-size: 10px !important;
+            white-space: nowrap !important;
+            flex: 0 0 auto !important;
+          }
+
+          body.hangman-game-screen #j1 {
+            display: none !important;
+          }
+
+          body.hangman-game-screen #hangmanScoreMeta {
+            margin: 0 !important;
+            max-width: none !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-end !important;
+            align-items: center !important;
+            gap: 3px 8px !important;
+            font-size: 8px !important;
+            line-height: 1.12 !important;
+          }
+
+          body.hangman-game-screen #hangmanScoreMeta div {
+            white-space: nowrap !important;
+          }
+
+          body.hangman-game-screen .stage {
+            padding-top: 6px !important;
+            min-height: 305px !important;
+            justify-content: flex-start !important;
+          }
+
+          body.hangman-game-screen .gallows {
+            width: 126px !important;
+            height: 146px !important;
+            margin-top: 4px !important;
+          }
+
+          body.hangman-game-screen .trBox {
+            margin-top: 12px !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    });
+  </script>
+</body>
+</html>
