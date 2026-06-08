@@ -1,4 +1,5 @@
 ﻿<!doctype html>
+<!-- F2F_IOS_FIX_20260608_CLEAR_FOOTER -->
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
@@ -772,6 +773,18 @@
 
     .status-pill{ display:none; }
 
+    body.ios-facetoface-page #italkyFooter,
+    body.ios-facetoface-page .premium-footer,
+    body.ios-facetoface-page [data-italky-footer],
+    body.ios-facetoface-page .italky-global-footer,
+    body.ios-facetoface-page .drawer-footer-seal,
+    body.ios-facetoface-page .footer-seal,
+    body.ios-facetoface-page .seal{
+      display:none !important;
+      visibility:hidden !important;
+      pointer-events:none !important;
+    }
+
     #frameRoot.is-idle .ball-1,
     #frameRoot.is-idle .ball-2,
     #frameRoot.is-error .ball-1,
@@ -931,7 +944,7 @@
     }
   </style>
 </head>
-<body id="frameRoot" class="to-bot">
+<body id="frameRoot" class="to-bot ios-facetoface-page">
   <div class="container">
     <div class="half-screen top" id="topSection">
       <div class="lang-row">
@@ -1065,10 +1078,18 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
-  <script type="module" src="/js/facetoface_page_ios.js?v=F2F_PAGE_IOS_V1"></script>
+  <script type="module" src="/js/facetoface_page_ios.js?v=F2F_IOS_CLEAR_FIX_20260608"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access_ios.js";
     await initGlobalAccess({ allowPublicPageBypass: false });
+    const removeIOSFaceToFaceFooter = () => {
+      document.querySelectorAll("#italkyFooter,.premium-footer,[data-italky-footer],.italky-global-footer,.drawer-footer-seal,.footer-seal,.seal").forEach((node) => {
+        try { node.remove(); } catch {}
+      });
+    };
+    removeIOSFaceToFaceFooter();
+    requestAnimationFrame(removeIOSFaceToFaceFooter);
+    setTimeout(removeIOSFaceToFaceFooter, 300);
   </script>
 </body>
 </html>
