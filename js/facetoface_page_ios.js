@@ -1996,9 +1996,17 @@ function bindUtilityButtons() {
     setSystemReadyUI();
   };
 
+  const captureClearTap = (event) => {
+    const target = event.target?.closest?.("#clearBtn,.btn-clear");
+    if (!target) return;
+    clearConversation(event);
+  };
+
   clearBtn?.addEventListener("pointerdown", clearConversation, { passive: false });
   clearBtn?.addEventListener("touchend", clearConversation, { passive: false });
   clearBtn?.addEventListener("click", clearConversation);
+  document.addEventListener("pointerdown", captureClearTap, { capture: true, passive: false });
+  document.addEventListener("touchend", captureClearTap, { capture: true, passive: false });
 
   homeLink?.addEventListener("click", (e) => {
     e.preventDefault();

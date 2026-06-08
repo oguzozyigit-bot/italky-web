@@ -996,9 +996,17 @@ function bindEvents() {
     pointOrbTo("bot");
   };
 
+  const captureClearTap = (event) => {
+    const target = event.target?.closest?.("#clearBtn,.btn-clear");
+    if (!target) return;
+    clearConversation(event);
+  };
+
   UI.clearBtn?.addEventListener("pointerdown", clearConversation, { passive: false });
   UI.clearBtn?.addEventListener("touchend", clearConversation, { passive: false });
   UI.clearBtn?.addEventListener("click", clearConversation);
+  document.addEventListener("pointerdown", captureClearTap, { capture: true, passive: false });
+  document.addEventListener("touchend", captureClearTap, { capture: true, passive: false });
 
   UI.genericCloseBtn?.addEventListener("click", closeModal);
   UI.genericBackdrop?.addEventListener("click", (e) => {
