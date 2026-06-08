@@ -36,37 +36,37 @@ const PLACEHOLDERS = {
   tr: "Mesaj yaz",
   en: "Write your message here",
   de: "Schreibe hier deine Nachricht",
-  fr: "Ã‰cris ici ton message",
+  fr: "Écris ici ton message",
   it: "Scrivi qui il tuo messaggio",
-  es: "Escribe aquÃ­ tu mensaje",
-  ar: "Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„ØªÙƒ Ù‡Ù†Ø§",
-  ru: "ĞĞ°Ğ¿Ğ¸ÑˆĞ¸Ñ‚Ğµ ÑĞ¾Ğ¾Ğ±Ñ‰ĞµĞ½Ğ¸Ğµ",
-  bg: "ĞĞ°Ğ¿Ğ¸ÑˆĞµÑ‚Ğµ ÑÑŠĞ¾Ğ±Ñ‰ĞµĞ½Ğ¸ĞµÑ‚Ğ¾ ÑĞ¸",
+  es: "Escribe aquí tu mensaje",
+  ar: "اكتب رسالتك هنا",
+  ru: "Напишите сообщение",
+  bg: "Напишете съобщението си",
   pt: "Escreva sua mensagem",
-  zh: "åœ¨è¿™é‡Œè¾“å…¥æ¶ˆæ¯",
-  ja: "ã“ã“ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å…¥åŠ›",
-  ko: "ì—¬ê¸°ì— ë©”ì‹œì§€ë¥¼ ì…ë ¥"
+  zh: "在这里输入消息",
+  ja: "ここにメッセージを入力",
+  ko: "여기에 메시지를 입력"
 };
 
 const ALT_CHARS = {
-  a: ["Ã¢", "Ã¡", "Ã "],
-  A: ["Ã‚", "Ã", "Ã€"],
-  c: ["Ã§"],
-  C: ["Ã‡"],
-  g: ["ÄŸ"],
-  G: ["Ä"],
-  i: ["Ä±", "Ã®"],
-  I: ["Ä°", "Ã"],
-  o: ["Ã¶", "Ã´", "Ã³"],
-  O: ["Ã–", "Ã”", "Ã“"],
-  s: ["ÅŸ"],
-  S: ["Å"],
-  u: ["Ã¼", "Ã»", "Ãº"],
-  U: ["Ãœ", "Ã›", "Ãš"],
-  e: ["Ã©", "Ã¨", "Ãª"],
-  E: ["Ã‰", "Ãˆ", "ÃŠ"],
-  n: ["Ã±"],
-  N: ["Ã‘"]
+  a: ["â", "á", "à"],
+  A: ["Â", "Á", "À"],
+  c: ["ç"],
+  C: ["Ç"],
+  g: ["ğ"],
+  G: ["Ğ"],
+  i: ["ı", "î"],
+  I: ["İ", "Î"],
+  o: ["ö", "ô", "ó"],
+  O: ["Ö", "Ô", "Ó"],
+  s: ["ş"],
+  S: ["Ş"],
+  u: ["ü", "û", "ú"],
+  U: ["Ü", "Û", "Ú"],
+  e: ["é", "è", "ê"],
+  E: ["É", "È", "Ê"],
+  n: ["ñ"],
+  N: ["Ñ"]
 };
 
 const F2F_VOICE_KEY = "italkyai_voice_mode";
@@ -135,7 +135,7 @@ const LANGS = RAW_LANG_POOL
     if (!code) return null;
     return {
       code,
-      flag: l.flag || "ğŸŒ",
+      flag: l.flag || "🌐",
       name: l.name || l.tr_name || code.toUpperCase(),
       bcp: BCP[code] || `${code}-${String(code).toUpperCase()}`
     };
@@ -152,7 +152,7 @@ function langObj(code) {
   return (
     LANGS.find((x) => x.code === c) || {
       code: c || "en",
-      flag: "ğŸŒ",
+      flag: "🌐",
       name: (c || "en").toUpperCase(),
       bcp: BCP[c] || "en-US",
     }
@@ -389,10 +389,10 @@ function detectToneFromText(text) {
   const s = raw.toLowerCase();
   const exclamations = (raw.match(/!/g) || []).length;
 
-  const angryWords = ["saÃ§ma", "yeter", "sinir", "nefret", "rezalet", "berbat"];
-  const sadWords = ["Ã¼zgÃ¼n", "kÃ¶tÃ¼yÃ¼m", "moralim bozuk", "yoruldum"];
-  const happyWords = ["harika", "sÃ¼per", "mÃ¼thiÅŸ", "Ã§ok iyi", "sevindim"];
-  const excitedWords = ["inanamÄ±yorum", "ÅŸahane", "wow", "efsane", "heyecanlÄ±yÄ±m"];
+  const angryWords = ["saçma", "yeter", "sinir", "nefret", "rezalet", "berbat"];
+  const sadWords = ["üzgün", "kötüyüm", "moralim bozuk", "yoruldum"];
+  const happyWords = ["harika", "süper", "müthiş", "çok iyi", "sevindim"];
+  const excitedWords = ["inanamıyorum", "şahane", "wow", "efsane", "heyecanlıyım"];
 
   const hasAny = (arr) => arr.some((w) => s.includes(w));
 
@@ -515,7 +515,7 @@ function closeAllPop() {
   popBot?.classList.remove("show");
 }
 
-function openIosModeMessage(message = "iOS'ta Ã§evrimdÄ±ÅŸÄ± FaceToFace modu ÅŸu anda desteklenmiyor.") {
+function openIosModeMessage(message = "iOS'ta çevrimdışı FaceToFace modu şu anda desteklenmiyor.") {
   if (iosModeTitle) iosModeTitle.textContent = "FaceToFace";
   if (iosModeText) iosModeText.textContent = message;
   iosModeBackdrop?.classList.add("show");
@@ -933,9 +933,9 @@ async function speak(text, langCode, tone = "neutral") {
     const ready = await hasReadyVoiceProfile();
 
     if (!ready) {
-      if (selectedVoice === "mine") showToast("Kendi Sesim hazÄ±r deÄŸil");
-      else if (selectedVoice === "second") showToast("2. Ses hazÄ±r deÄŸil");
-      else if (selectedVoice === "memory") showToast("HatÄ±ra Sesi hazÄ±r deÄŸil");
+      if (selectedVoice === "mine") showToast("Kendi Sesim hazır değil");
+      else if (selectedVoice === "second") showToast("2. Ses hazır değil");
+      else if (selectedVoice === "memory") showToast("Hatıra Sesi hazır değil");
       return;
     }
 
@@ -945,14 +945,14 @@ async function speak(text, langCode, tone = "neutral") {
     } catch (e) {
       console.warn("[facetoface custom voice failed]", e);
 
-      if (selectedVoice === "mine") showToast("Kendi Sesim ÅŸu anda Ã¼retilemedi");
-      else if (selectedVoice === "second") showToast("2. Ses ÅŸu anda Ã¼retilemedi");
-      else if (selectedVoice === "memory") showToast("HatÄ±ra Sesi ÅŸu anda Ã¼retilemedi");
+      if (selectedVoice === "mine") showToast("Kendi Sesim şu anda üretilemedi");
+      else if (selectedVoice === "second") showToast("2. Ses şu anda üretilemedi");
+      else if (selectedVoice === "memory") showToast("Hatıra Sesi şu anda üretilemedi");
     }
   }
 
   const fallbackOk = speakFallback(value, langCode);
-  if (!fallbackOk) showToast("HoparlÃ¶r sesi baÅŸlatÄ±lamadÄ±");
+  if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
 }
 
 async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
@@ -1083,7 +1083,7 @@ function buildRecognizer(langCode, side = "") {
   const rec = new SR();
   rec.lang = langObj(langCode).bcp;
   rec.interimResults = true;
-  rec.continuous = true;
+  rec.continuous = false;
   rec.maxAlternatives = 1;
   return rec;
 }
@@ -1141,7 +1141,7 @@ async function finalizeRecognition(side, text) {
   clearLatest(other);
   setTranslatingUI(side);
 
-  const latestRow = addBubble(other, "me", "Ã‡evriliyor...", {
+  const latestRow = addBubble(other, "me", "Çeviriliyor...", {
     latest: true,
     speakLang: dst,
     speakTone: sourceTone,
@@ -1152,7 +1152,7 @@ async function finalizeRecognition(side, text) {
 
   if (!tr) {
     setErrorUI();
-    if (latestTxt) latestTxt.textContent = "âš ï¸ Ã‡eviri hatasÄ±";
+    if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
     bounceToReady(1200);
     return;
   }
@@ -1161,7 +1161,7 @@ async function finalizeRecognition(side, text) {
     await chargeFaceUsage(cleaned, tr, src, dst);
   } catch (e) {
     if (e?.code === "INSUFFICIENT_TOKENS") {
-      showToast("KullanÄ±m hakkÄ± yetersiz");
+      showToast("Kullanım hakkı yetersiz");
       return;
     }
   }
@@ -1188,7 +1188,7 @@ async function finalizeTypedMessage(side, rawText) {
   clearLatest(other);
   setTranslatingUI(side);
 
-  const latestRow = addBubble(other, "me", "Ã‡evriliyor...", {
+  const latestRow = addBubble(other, "me", "Çeviriliyor...", {
     latest: true,
     speakLang: dst,
     speakTone: tone,
@@ -1199,7 +1199,7 @@ async function finalizeTypedMessage(side, rawText) {
 
   if (!tr) {
     setErrorUI();
-    if (latestTxt) latestTxt.textContent = "âš ï¸ Ã‡eviri hatasÄ±";
+    if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
     bounceToReady(1200);
     return;
   }
@@ -1208,7 +1208,7 @@ async function finalizeTypedMessage(side, rawText) {
     await chargeFaceUsage(text, tr, src, dst);
   } catch (e) {
     if (e?.code === "INSUFFICIENT_TOKENS") {
-      showToast("KullanÄ±m hakkÄ± yetersiz");
+      showToast("Kullanım hakkı yetersiz");
       return;
     }
   }
@@ -1315,7 +1315,7 @@ function startRecording(side) {
 
   if (!rec) {
     setErrorUI();
-    showToast("Bu cihazda sesli giriÅŸ desteklenmiyor.");
+    showToast("Bu cihazda sesli giriş desteklenmiyor.");
     bounceToReady(1800);
     return;
   }
@@ -1354,7 +1354,7 @@ function startRecording(side) {
     if (mySessionId !== recognitionSessionId) return;
 
     if (String(e?.error || "").includes("not-allowed")) showToast("Mikrofon izni gerekli");
-    else showToast("Mikrofon hatasÄ±");
+    else showToast("Mikrofon hatası");
 
     recognizer = null;
     recordingSide = null;
@@ -1364,6 +1364,15 @@ function startRecording(side) {
     setErrorUI();
     bounceToReady(1600);
   };
+
+  const stopAfterSpeechEnds = () => {
+    if (mySessionId !== recognitionSessionId || recordingSide !== side) return;
+    setTranslatingUI(side);
+    try { rec.stop(); } catch {}
+  };
+
+  rec.onspeechend = stopAfterSpeechEnds;
+  rec.onsoundend = stopAfterSpeechEnds;
 
   rec.onend = () => {
     if (mySessionId !== recognitionSessionId) return;
@@ -1449,7 +1458,7 @@ function keyboardRows(lang, shift) {
   if (c === "tr") {
     return {
       nums: numRow,
-      r1: upper ? ["Q","W","E","R","T","Y","U","I","O","P"] : ["q","w","e","r","t","y","u","Ä±","o","p"],
+      r1: upper ? ["Q","W","E","R","T","Y","U","I","O","P"] : ["q","w","e","r","t","y","u","ı","o","p"],
       r2: upper ? ["A","S","D","F","G","H","J","K","L"] : ["a","s","d","f","g","h","j","k","l"],
       r3: upper ? ["Z","X","C","V","B","N","M"] : ["z","x","c","v","b","n","m"],
     };
@@ -1569,7 +1578,7 @@ function renderCharKeys(rowEl, chars, side) {
       onTap: () => {
         hideAltMenu();
         appendInputValue(side, ch);
-        if (shiftState[side] && /[A-ZÃ‡ÄÄ°Ã–ÅÃœ]/.test(ch)) {
+        if (shiftState[side] && /[A-ZÇĞİÖŞÜ]/.test(ch)) {
           shiftState[side] = false;
           renderKeyboard(side);
         }
@@ -2107,7 +2116,7 @@ const requiredDomOk =
   !!iosModeCloseBtn;
 
 if (!requiredDomOk) {
-  console.error("[facetoface] Gerekli DOM elemanlarÄ± eksik.");
+  console.error("[facetoface] Gerekli DOM elemanları eksik.");
 } else {
   try {
     bind();
