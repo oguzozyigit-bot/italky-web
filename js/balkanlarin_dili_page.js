@@ -972,7 +972,9 @@ function bindEvents() {
     location.href = "/pages/home.html";
   });
 
-  UI.clearBtn?.addEventListener("click", () => {
+  const clearConversation = (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
     if (UI.topInput) UI.topInput.value = "";
     if (UI.botInput) UI.botInput.value = "";
 
@@ -992,7 +994,11 @@ function bindEvents() {
     document.body.classList.add("is-ready");
 
     pointOrbTo("bot");
-  });
+  };
+
+  UI.clearBtn?.addEventListener("pointerdown", clearConversation, { passive: false });
+  UI.clearBtn?.addEventListener("touchend", clearConversation, { passive: false });
+  UI.clearBtn?.addEventListener("click", clearConversation);
 
   UI.genericCloseBtn?.addEventListener("click", closeModal);
   UI.genericBackdrop?.addEventListener("click", (e) => {

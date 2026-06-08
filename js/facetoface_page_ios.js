@@ -1966,7 +1966,9 @@ function bindGlobalClicks() {
 }
 
 function bindUtilityButtons() {
-  clearBtn?.addEventListener("click", () => {
+  const clearConversation = (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
     stopAudio();
     stopTypewriter();
     stopRecognizer();
@@ -1992,7 +1994,11 @@ function bindUtilityButtons() {
     hideKeyboards();
     syncAllComposerButtons();
     setSystemReadyUI();
-  });
+  };
+
+  clearBtn?.addEventListener("pointerdown", clearConversation, { passive: false });
+  clearBtn?.addEventListener("touchend", clearConversation, { passive: false });
+  clearBtn?.addEventListener("click", clearConversation);
 
   homeLink?.addEventListener("click", (e) => {
     e.preventDefault();
