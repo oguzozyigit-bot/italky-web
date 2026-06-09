@@ -9,6 +9,28 @@ const SUPPORTED = ["en", "de", "fr", "it", "es"];
 
   const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
 
+  function isIOSNativeAppShell() {
+    const params = new URLSearchParams(window.location.search || "");
+    const ua = navigator.userAgent || "";
+    const platform = navigator.platform || "";
+
+    const queryIOS =
+      params.get("ios") === "1" ||
+      params.get("platform") === "ios" ||
+      params.get("app") === "ios";
+
+    const hasIOSBridge =
+      !!window.webkit?.messageHandlers?.IOSStoreKit ||
+      !!window.webkit?.messageHandlers?.italkyIOS ||
+      !!window.webkit?.messageHandlers?.iosBridge;
+
+    const looksLikeIOS =
+      /iPhone|iPad|iPod/i.test(ua) ||
+      (platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+    return queryIOS || hasIOSBridge || looksLikeIOS;
+  }
+
   function notify(message) {
     const text = String(message || "").trim();
     if (!text) return;
@@ -99,6 +121,11 @@ const SUPPORTED = ["en", "de", "fr", "it", "es"];
 
     const existingRate = nav.querySelector("#memberRateAppBtn");
     const existingWidget = nav.querySelector("#memberPinWidgetBtn");
+    if (isIOSNativeAppShell()) {
+      existingRate?.remove();
+      existingWidget?.remove();
+      return;
+    }
     if (isGuest(nav)) {
       existingRate?.remove();
       existingWidget?.remove();

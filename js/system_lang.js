@@ -245,6 +245,28 @@ function isShellGuestMenu(nav) {
   return loginVisible && !profileVisible;
 }
 
+function isIOSNativeAppShell() {
+  const params = new URLSearchParams(window.location.search || "");
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+
+  const queryIOS =
+    params.get("ios") === "1" ||
+    params.get("platform") === "ios" ||
+    params.get("app") === "ios";
+
+  const hasIOSBridge =
+    !!window.webkit?.messageHandlers?.IOSStoreKit ||
+    !!window.webkit?.messageHandlers?.italkyIOS ||
+    !!window.webkit?.messageHandlers?.iosBridge;
+
+  const looksLikeIOS =
+    /iPhone|iPad|iPod/i.test(ua) ||
+    (platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  return queryIOS || hasIOSBridge || looksLikeIOS;
+}
+
 function openPlayStoreRating() {
   const packageName = "com.ozyigits.italkyai";
   const marketUrl = `market://details?id=${packageName}`;
@@ -309,6 +331,7 @@ function applyMemberGuestMenuPolicy() {
 
   const guest = isShellGuestMenu(nav);
   nav.querySelectorAll("#memberRateAppBtn,#memberPinWidgetBtn").forEach((el) => el.remove());
+  if (isIOSNativeAppShell()) return;
   if (guest) return;
 
   const privacy = nav.querySelector("a[href='/pages/privacy.html']") || nav.querySelector("#privacyLink");

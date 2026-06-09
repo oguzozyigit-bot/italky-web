@@ -4,8 +4,6 @@ import { supabase } from "/js/supabase_client.js";
 
 const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
 const IOS_DAYS_URL = "/pages/ios_days.html?ios=1";
-const IOS_CODE_LOAD_URL = "/pages/code_load_ios.html?ios=1";
-const IOS_CODE_LOAD_ENABLED = true;
 const STANDARD_SIGNATURE = "italkyAI By Özyiğit's 2026";
 
 const PUBLIC_PAGES = new Set([
@@ -34,13 +32,6 @@ const ALWAYS_OPEN_PATHS = new Set([
   "/pages/login_ios.html",
   "/pages/auth_callback.html"
 ]);
-
-const CODE_ACCESS_KEYS = {
-  mode: "italky_access_mode",
-  code: "italky_activation_code",
-  session: "italky_activation_session_key",
-  expires: "italky_activation_expires_at"
-};
 
 let moduleGateInstalled = false;
 let pendingGateContinueUrl = "";
@@ -106,10 +97,6 @@ function isIOSDaysPath(pathname = location.pathname) {
   return normalizePath(pathname) === "/pages/ios_days.html";
 }
 
-function isIOSCodeLoadPath(pathname = location.pathname) {
-  return normalizePath(pathname) === "/pages/code_load_ios.html";
-}
-
 function isOfflineLanguagePath(pathname = "") {
   const p = normalizePath(pathname);
   return p === "/pages/offline_languages.html" || p === "/pages/offline_languages_ios.html";
@@ -169,89 +156,6 @@ function goDays() {
     location.href = `${IOS_DAYS_URL}&next=${here}`;
   } catch {
     location.href = IOS_DAYS_URL;
-  }
-}
-
-function goCodeLoad() {
-  if (!IOS_CODE_LOAD_ENABLED) {
-    showCodeLoadUnavailablePrompt();
-    return;
-  }
-  resetMobileViewportState();
-  try {
-    const here = encodeURIComponent(location.pathname + location.search + location.hash);
-    location.href = `${IOS_CODE_LOAD_URL}&next=${here}`;
-  } catch {
-    location.href = IOS_CODE_LOAD_URL;
-  }
-}
-
-function buildCodeAccess(codeState) {
-  const code = codeState?.code || "";
-  const expiresAt = codeState?.expiresAt || null;
-  const remainingSeconds = secondsUntil(expiresAt);
-  return {
-    ok: true,
-    is_logged_in: true,
-    code_access: true,
-    access_mode: "code",
-    app_access_mode: "code",
-    user_id: `code:${code}`,
-    email: "",
-    display_name: "Kodlu Erisim",
-    full_name: "Kodlu Erisim",
-    access_open: remainingSeconds > 0,
-    active_until: expiresAt,
-    remaining_seconds: remainingSeconds,
-    remaining_label: formatRemaining(remainingSeconds),
-    role: "",
-    is_admin: false,
-    is_superadmin: false,
-    tokens: 0,
-    trial_started_at: null,
-    trial_ends_at: null,
-    trial_used: false,
-    trial_days_left: 0,
-    gift_started_at: null,
-    gift_ends_at: expiresAt,
-    membership_status: remainingSeconds > 0 ? "active" : "expired",
-    membership_source: "activation_code",
-    membership_product_id: code,
-    membership_started_at: null,
-    membership_ends_at: expiresAt,
-    membership_last_checked_at: null,
-    package_active: remainingSeconds > 0,
-    package_code: code,
-    selected_package_code: code,
-    package_started_at: null,
-    package_ends_at: expiresAt,
-    subscription_active: false,
-    subscription_product_id: "",
-    subscription_started_at: null,
-    subscription_ends_at: null,
-    is_member: remainingSeconds > 0,
-    has_active_membership: remainingSeconds > 0,
-    no_ads: remainingSeconds > 0,
-    ads_disabled: remainingSeconds > 0,
-    is_no_ads_member: remainingSeconds > 0,
-    membership_date_valid: remainingSeconds > 0,
-    membership_status_active: remainingSeconds > 0,
-    is_reklamsiz_product: false,
-    server_time: null,
-    raw: { code_access: true, code, expires_at: expiresAt }
-  };
-}
-
-function getCodeAccessState() {
-  try {
-    const mode = localStorage.getItem(CODE_ACCESS_KEYS.mode);
-    const code = localStorage.getItem(CODE_ACCESS_KEYS.code) || "";
-    const sessionKey = localStorage.getItem(CODE_ACCESS_KEYS.session) || "";
-    const expiresAt = localStorage.getItem(CODE_ACCESS_KEYS.expires) || "";
-    if (mode !== "code" || !code || !sessionKey) return null;
-    return { code, sessionKey, expiresAt };
-  } catch {
-    return null;
   }
 }
 
@@ -457,7 +361,6 @@ function showGateModal({ title, text, buttons = [] }) {
     document.querySelectorAll("#italkyAccessGateModal [data-action]").forEach((btn) => btn.addEventListener("click", () => {
       const action = btn.getAttribute("data-action");
       if (action === "days") goDays();
-      else if (action === "code") goCodeLoad();
       else if (action === "continue") {
         const next = pendingGateContinueUrl;
         pendingGateContinueUrl = "";
@@ -491,14 +394,6 @@ function showLowTimeChoicePrompt(continueUrl = "") {
     title: "Kullanim sureniz azaliyor",
     text: "Kullanim surenizin dolmasina 60 dakikadan az kaldi. Kesintisiz devam etmek icin gun yukleyebilirsiniz.",
     buttons: [{ label: "Gun Yukle", action: "days" }, { label: "Devam Et", action: "continue" }]
-  });
-}
-
-function showCodeLoadUnavailablePrompt() {
-  showGateModal({
-    title: "Kod ile Gun Yukle",
-    text: "iOS icin kod ile gun yukleme sayfasi henuz hazir degil.",
-    buttons: [{ label: "Tamam", action: "close" }]
   });
 }
 
@@ -562,7 +457,7 @@ async function guardActiveAccess(session, safe, currentPath, allowPublicPageBypa
   if (safe?.access_open) return false;
   if (!session?.user?.id) return false;
   if (safe?.is_admin || safe?.is_superadmin) return false;
-  if (isIOSHomePath(currentPath) || isIOSDaysPath(currentPath) || isIOSCodeLoadPath(currentPath)) return false;
+  if (isIOSHomePath(currentPath) || isIOSDaysPath(currentPath)) return false;
   if (allowPublicPageBypass && publicPage) return false;
   await showAccessExpiredPrompt();
   return true;
@@ -594,17 +489,6 @@ export async function initGlobalAccess(options = {}) {
   const { allowPublicPageBypass = true } = options;
   const currentPath = normalizePath(location.pathname);
   const publicPage = isPublicPage(currentPath);
-  const codeState = getCodeAccessState();
-  if (codeState) {
-    const codeAccess = buildCodeAccess(codeState);
-    setCachedAccess(codeAccess);
-    dispatchAccessReady(codeAccess);
-    if (!codeAccess.access_open && !isIOSHomePath(currentPath) && !isIOSDaysPath(currentPath) && !isIOSCodeLoadPath(currentPath)) {
-      await showAccessExpiredPrompt();
-    }
-    return { ok: true, code_access: true, session: null, access: codeAccess };
-  }
-
   const session = await getSessionOrNull();
   if (session?.user?.id) {
     const access = await fetchAccessStateSafe(session);
