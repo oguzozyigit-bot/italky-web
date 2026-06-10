@@ -1,8 +1,11 @@
 // /js/ai_data_consent.js
 // italkyAI - Online Translation Data Processing Consent
-// This file intentionally avoids "AI provider" wording.
-// Current disclosure: user text / speech-to-text content may be sent to Google translation services
-// only to provide online translation or speech-assisted translation.
+// Purpose:
+// - Before online translation / speech-assisted translation data is sent,
+//   show a clear consent dialog.
+// - This file intentionally avoids "AI provider" wording.
+// - Current disclosure: user text / speech-to-text content may be sent to
+//   Google translation services only to provide the requested translation.
 
 (() => {
   "use strict";
@@ -12,6 +15,8 @@
   const PRIVACY_URL = "https://italky.ai/pages/privacy.html";
 
   let pendingConsentPromise = null;
+  let networkGuardInstalled = false;
+  let clickGuardInstalled = false;
 
   function getLang() {
     const raw =
@@ -350,13 +355,276 @@
     return true;
   }
 
+  function normalizeUrl(input) {
+    try {
+      if (typeof input === "string") {
+        return new URL(input, location.href).href;
+      }
+
+      if (input instanceof URL) {
+        return input.href;
+      }
+
+      if (input instanceof Request) {
+        return input.url;
+      }
+    } catch (_) {}
+
+    return "";
+  }
+
+  function bodyToText(body) {
+    if (!body) return "";
+
+    try {
+      if (typeof body === "string") return body;
+      if (body instanceof URLSearchParams) return body.toString();
+      if (body instanceof FormData) {
+        const parts = [];
+        body.forEach((value, key) => {
+          if (typeof value === "string") parts.push(`${key}=${value}`);
+        });
+        return parts.join("&");
+      }
+    } catch (_) {}
+
+    return "";
+  }
+
+  function looksLikeOnlineTranslationRequest(input, init = {}) {
+    const url = normalizeUrl(input).toLowerCase();
+    const method =
+      String(init?.method || (input instanceof Request ? input.method : "GET") || "GET")
+        .toUpperCase();
+
+    const bodyText = bodyToText(init?.body).toLowerCase();
+
+    const combined = `${url} ${method} ${bodyText}`;
+
+    const allowListSignals = [
+      "translate",
+      "translation",
+      "ceviri",
+      "çeviri",
+      "speech",
+      "voice",
+      "stt",
+      "tts",
+      "transcribe",
+      "speech-to-text",
+      "language",
+      "detect-language",
+      "googleapis",
+      "google"
+    ];
+
+    const ignoreSignals = [
+      "supabase",
+      "auth",
+      "login",
+      "logout",
+      "session",
+      "profile",
+      "access-state",
+      "membership",
+      "iap",
+      "storekit",
+      "billing",
+      "purchase",
+      "payment",
+      "admob",
+      "privacy.html",
+      "terms",
+      "eula",
+      "analytics",
+      "admin",
+      "promo",
+      "campaign",
+      "code_load",
+      "kampanya"
+    ];
+
+    const hasTranslationSignal = allowListSignals.some((signal) =>
+      combined.includes(signal)
+    );
+
+    const hasIgnoreSignal = ignoreSignals.some((signal) =>
+      combined.includes(signal)
+    );
+
+    if (!hasTranslationSignal) return false;
+    if (hasIgnoreSignal) return false;
+
+    return true;
+  }
+
+  function installFetchGuard() {
+    if (networkGuardInstalled) return;
+    if (typeof window.fetch !== "function") return;
+
+    const originalFetch = window.fetch.bind(window);
+
+    window.fetch = async function guardedFetch(input, init = {}) {
+      if (looksLikeOnlineTranslationRequest(input, init)) {
+        const allowed = await requireConsent();
+
+        if (!allowed) {
+          throw new DOMException(
+            "Online translation request cancelled by the user.",
+            "AbortError"
+          );
+        }
+      }
+
+      return originalFetch(input, init);
+    };
+
+    networkGuardInstalled = true;
+  }
+
+  function installXHRGuard() {
+    if (!window.XMLHttpRequest) return;
+    if (window.XMLHttpRequest.__italkyTranslationConsentGuarded) return;
+
+    const originalOpen = window.XMLHttpRequest.prototype.open;
+    const originalSend = window.XMLHttpRequest.prototype.send;
+
+    window.XMLHttpRequest.prototype.open = function guardedOpen(method, url, ...rest) {
+      this.__italkyConsentMethod = method || "GET";
+      this.__italkyConsentUrl = url || "";
+      return originalOpen.call(this, method, url, ...rest);
+    };
+
+    window.XMLHttpRequest.prototype.send = function guardedSend(body) {
+      const fakeInput = this.__italkyConsentUrl || "";
+      const fakeInit = {
+        method: this.__italkyConsentMethod || "GET",
+        body
+      };
+
+      if (!looksLikeOnlineTranslationRequest(fakeInput, fakeInit)) {
+        return originalSend.call(this, body);
+      }
+
+      requireConsent().then((allowed) => {
+        if (!allowed) {
+          try {
+            this.abort();
+          } catch (_) {}
+          return;
+        }
+
+        originalSend.call(this, body);
+      });
+
+      return undefined;
+    };
+
+    window.XMLHttpRequest.__italkyTranslationConsentGuarded = true;
+  }
+
+  function isClickableTranslationAction(el) {
+    if (!el) return false;
+
+    const text = String(el.textContent || "").trim().toLowerCase();
+    const id = String(el.id || "").toLowerCase();
+    const cls = String(el.className || "").toLowerCase();
+    const href = String(el.getAttribute?.("href") || "").toLowerCase();
+    const action = String(el.getAttribute?.("data-action") || "").toLowerCase();
+    const consentAttr = el.getAttribute?.("data-requires-translation-consent");
+
+    if (consentAttr === "1" || consentAttr === "true") return true;
+
+    const combined = `${text} ${id} ${cls} ${href} ${action}`;
+
+    const signals = [
+      "çevir",
+      "cevir",
+      "translate",
+      "translation",
+      "konuş",
+      "konus",
+      "speech",
+      "voice",
+      "microphone",
+      "mikrofon",
+      "dictation",
+      "transcribe"
+    ];
+
+    const ignore = [
+      "privacy",
+      "gizlilik",
+      "eula",
+      "terms",
+      "payment",
+      "purchase",
+      "billing",
+      "gün yükle",
+      "gun yukle",
+      "promo",
+      "kod",
+      "kupon"
+    ];
+
+    const hasSignal = signals.some((signal) => combined.includes(signal));
+    const hasIgnore = ignore.some((signal) => combined.includes(signal));
+
+    return hasSignal && !hasIgnore;
+  }
+
+  function installClickGuard() {
+    if (clickGuardInstalled) return;
+
+    document.addEventListener(
+      "click",
+      async (event) => {
+        if (hasConsent()) return;
+
+        const target = event.target?.closest?.(
+          "button,a,[role='button'],.btn,.action,.card,[data-action],[data-requires-translation-consent]"
+        );
+
+        if (!target) return;
+        if (!isClickableTranslationAction(target)) return;
+
+        if (target.__italkyConsentReplay === true) {
+          target.__italkyConsentReplay = false;
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        const allowed = await requireConsent();
+        if (!allowed) return;
+
+        try {
+          target.__italkyConsentReplay = true;
+          target.click();
+        } catch (_) {}
+      },
+      true
+    );
+
+    clickGuardInstalled = true;
+  }
+
+  function installGuards() {
+    installFetchGuard();
+    installXHRGuard();
+    installClickGuard();
+  }
+
   const api = {
     STORAGE_KEY,
     hasConsent,
     requestConsent,
     requireConsent,
     resetConsent,
-    guard
+    guard,
+    installGuards
   };
 
   window.italkyTranslationConsent = api;
@@ -364,7 +632,7 @@
 
   // Backward-compatible alias.
   // Existing code may already call window.italkyAIConsent.requireConsent().
-  // The user-facing text still says "online translation", not AI.
+  // User-facing text still says "online translation", not AI.
   window.italkyAIConsent = api;
 
   try {
@@ -373,4 +641,10 @@
       resetConsent();
     }
   } catch (_) {}
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", installGuards, { once: true });
+  } else {
+    installGuards();
+  }
 })();
