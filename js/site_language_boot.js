@@ -133,7 +133,18 @@ function applySiteLang(lang) {
 function patchTwoPhoneHomeCopy() {
   const card = document.getElementById("bluetoothCard");
   if (!card) return;
-  card.setAttribute("href", "/facetoface.html?mode=two-phone");
+  const isIosHome =
+    location.pathname.endsWith("/home_ios.html") ||
+    new URLSearchParams(location.search || "").get("ios") === "1";
+
+  card.setAttribute(
+    "href",
+    isIosHome
+      ? "/facetoface_ios.html?ios=1&mode=two-phone"
+      : "/facetoface.html?mode=two-phone"
+  );
+  card.removeAttribute("data-ios-two-phone-disabled");
+  card.removeAttribute("aria-disabled");
 
   const kicker = card.querySelector(".card-kicker");
   const title = card.querySelector(".card-title");

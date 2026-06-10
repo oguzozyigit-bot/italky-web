@@ -990,7 +990,7 @@ body.home-ready #pageContent{
         <div class="arrow-chip"></div>
       </a>
 
-      <a id="bluetoothCard" class="mod-card primary-card bluetooth-card" href="#" data-ios-two-phone-disabled="1" aria-disabled="true">
+      <a id="bluetoothCard" class="mod-card primary-card bluetooth-card" href="/facetoface_ios.html?ios=1&mode=two-phone">
         <div class="card-kicker">LİSANS</div>
         <h2 class="card-title">İki Telefon</h2>
         <p class="card-desc">Kodu al, diğer telefonda gir. İki cihaz arasında canlı çeviri yap.</p>
@@ -2999,18 +2999,13 @@ body.home-ready #pageContent{
   }
 
   function handleDisabledIOSFeature(event){
-    var target = event.target && event.target.closest ? event.target.closest('[data-ios-offline-disabled="1"],[data-ios-two-phone-disabled="1"]') : null;
+    var target = event.target && event.target.closest ? event.target.closest('[data-ios-offline-disabled="1"]') : null;
     if (!target) return;
     event.preventDefault();
     event.stopPropagation();
     if (target.getAttribute('data-ios-offline-disabled') === '1') {
       emitDisabled('offline_languages_disabled_on_ios');
       try { alert("iOS'ta çevrimdışı dil paketleri şu anda desteklenmiyor."); } catch(e) {}
-      return;
-    }
-    if (target.getAttribute('data-ios-two-phone-disabled') === '1') {
-      emitDisabled('two_phone_disabled_on_ios');
-      try { alert("İki Telefon modu iOS’ta yakında aktif olacak."); } catch(e) {}
       return;
     }
   }
