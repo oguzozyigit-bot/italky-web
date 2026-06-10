@@ -9,6 +9,7 @@ const STANDARD_SIGNATURE = "italkyAI By Özyiğit's 2026";
 const PUBLIC_PAGES = new Set([
   "/",
   "/index.html",
+  "/facetoface_ios.html",
   "/pages/login_ios.html",
   "/pages/auth_callback.html",
   "/pages/ios_days.html",

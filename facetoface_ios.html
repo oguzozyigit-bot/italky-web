@@ -1090,7 +1090,10 @@
   <script type="module" src="/js/facetoface_two_phone_ios.js?v=IOS_TWO_PHONE_20260611"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access_ios.js";
-    await initGlobalAccess({ allowPublicPageBypass: false });
+    const iosFaceParams = new URLSearchParams(location.search || "");
+    const iosFaceMode = iosFaceParams.get("mode");
+    const isTwoPhoneMode = iosFaceMode === "two-phone" || iosFaceMode === "bluetooth";
+    await initGlobalAccess({ allowPublicPageBypass: isTwoPhoneMode });
     const removeIOSFaceToFaceFooter = () => {
       document.querySelectorAll("#italkyFooter,.premium-footer,[data-italky-footer],.italky-global-footer,.drawer-footer-seal,.footer-seal,.seal").forEach((node) => {
         try { node.remove(); } catch {}
