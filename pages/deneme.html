@@ -1,58 +1,1248 @@
-<!doctype html>
+﻿<!doctype html>
+<!-- HOME_IOS_FIX_20260608_MODULES -->
 <html lang="tr">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Deneme Home Radyo</title>
+<title>italkyAI â€¢ Home</title>
 <meta name="theme-color" content="#0b1020"/>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
 <style>
-  html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#020617;
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: #070b16;
   }
 
-  #denemeHomeFrame{
-    width:100%;
-    height:100%;
-    border:0;
-    display:block;
-    background:#020617;
+  body {
+    visibility: hidden;
   }
 
-  #denemeBoot{
-    position:fixed;
-    inset:0;
-    z-index:9999999;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
-    background:
-      radial-gradient(circle at 50% 0%,rgba(56,189,248,.20),transparent 42%),
-      linear-gradient(180deg,#020617,#05070d 58%,#020617);
-    color:#dbeafe;
-    font-family:Arial,sans-serif;
-    font-size:15px;
-    font-weight:900;
-    text-align:center;
+  body.home-ready {
+    visibility: visible;
   }
+</style>
+
+<style>
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.66);
+  --line:rgba(255,255,255,.14);
+  --shadow:0 18px 42px rgba(0,0,0,.34);
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
+
+html,body{
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+  scrollbar-width:none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#pageContent::-webkit-scrollbar{
+  display:none;
+}
+
+body{
+  min-height:100dvh;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(56,189,248,.16), transparent 30%),
+    radial-gradient(circle at 86% 12%, rgba(168,85,247,.16), transparent 32%),
+    radial-gradient(circle at 50% 100%, rgba(20,184,166,.10), transparent 34%),
+    linear-gradient(180deg, #0b1020 0%, #090b16 48%, #05070d 100%);
+}
+
+body.module-leaving{
+  background:#020617;
+}
+
+body.module-leaving::before{
+  content:attr(data-module-loading);
+  position:fixed;
+  inset:0;
+  z-index:2147483600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(56,189,248,.20), transparent 42%),
+    radial-gradient(circle at 82% 100%, rgba(99,102,241,.14), transparent 36%),
+    linear-gradient(180deg,#020617,#05070d 58%,#020617);
+  color:#dbeafe;
+  font-family:'Outfit',sans-serif;
+  font-size:15px;
+  font-weight:1000;
+  letter-spacing:.2px;
+  text-align:center;
+}
+
+body:not(.home-ready) #pageContent{
+  visibility:hidden;
+  opacity:0;
+}
+
+body.home-ready #pageContent{
+  visibility:visible;
+  opacity:1;
+  transition:opacity .18s ease;
+}
+
+#pageContent{
+  width:100%;
+  height:100%;
+  min-height:100%;
+  padding:10px 14px 20px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+
+.page-shell-fit{
+  width:min(100%,760px);
+  min-height:100%;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.hero{
+  flex:0 0 auto;
+  padding:4px 0 2px;
+  perspective:1000px;
+}
+
+.heroTop{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+}
+
+.holo-container{
+  width:154px;
+  height:154px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform-style:preserve-3d;
+  margin:0 auto 2px;
+}
+
+.crystal-cage{
+  position:absolute;
+  width:112px;
+  height:112px;
+  transform-style:preserve-3d;
+  animation:rotateCrystal 18s linear infinite;
+}
+
+.crystal-side{
+  position:absolute;
+  inset:0;
+  border:1.5px solid rgba(103,232,249,.36);
+  background:radial-gradient(circle, rgba(129,140,248,.11), transparent 70%);
+  box-shadow:0 0 15px rgba(103,232,249,.18);
+}
+
+.side1{ transform:rotateY(0deg) translateZ(56px); }
+.side2{ transform:rotateY(90deg) translateZ(56px); }
+.side3{ transform:rotateY(180deg) translateZ(56px); }
+.side4{ transform:rotateY(270deg) translateZ(56px); }
+.side5{ transform:rotateX(90deg) translateZ(56px); }
+.side6{ transform:rotateX(-90deg) translateZ(56px); }
+
+.holo-qr{
+  position:absolute;
+  width:82px;
+  height:82px;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:floatQR 4s ease-in-out infinite;
+}
+
+.planet-glow{
+  position:absolute;
+  inset:-14px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 30%, transparent 63%),
+    radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
+  filter:blur(10px);
+  animation:planetGlow 3.2s ease-in-out infinite;
+  z-index:1;
+}
+
+.planet-rays{
+  position:absolute;
+  inset:-16px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:1;
+}
+
+.planet-rays::before,
+.planet-rays::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0deg 20deg, rgba(255,255,255,.24) 26deg, transparent 38deg 76deg, rgba(255,255,255,.18) 84deg, transparent 96deg 150deg, rgba(255,255,255,.22) 160deg, transparent 174deg 244deg, rgba(255,255,255,.20) 252deg, transparent 266deg 330deg, rgba(255,255,255,.16) 340deg, transparent 350deg 360deg);
+  mask:radial-gradient(circle, transparent 45%, #000 66%, transparent 77%);
+  -webkit-mask:radial-gradient(circle, transparent 45%, #000 66%, transparent 77%);
+  opacity:.48;
+  animation:planetRaySpin 12s linear infinite;
+}
+
+.planet-rays::after{
+  opacity:.28;
+  transform:scale(1.14);
+  animation-duration:18s;
+  animation-direction:reverse;
+}
+
+.planet-core{
+  position:relative;
+  width:82px;
+  height:82px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  z-index:2;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 24%),
+    radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 30%),
+    linear-gradient(145deg, #111827 0%, #070a12 50%, #030406 100%);
+  box-shadow:
+    inset -10px -12px 20px rgba(0,0,0,.72),
+    inset 10px 12px 22px rgba(255,255,255,.04),
+    0 0 18px rgba(255,255,255,.10),
+    0 0 36px rgba(103,232,249,.20),
+    0 0 64px rgba(129,140,248,.16);
+  animation:planetBreath 2.8s ease-in-out infinite;
+}
+
+.planet-core::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.planet-ai-badge{
+  position:relative;
+  z-index:3;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle, rgba(255,255,255,.24), rgba(255,255,255,.08));
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.18);
+  backdrop-filter:blur(10px);
+}
+
+.planet-ai-badge::after{
+  content:"";
+  position:absolute;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.10);
+  animation:aiSpin 8s linear infinite;
+}
+
+.planet-ai-badge span{
+  position:relative;
+  z-index:2;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  font-weight:900;
+  color:#fff;
+}
+
+.heroTitle{
+  margin:0;
+  max-width:340px;
+  text-align:center;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:19px;
+  font-weight:800;
+  line-height:1.08;
+  letter-spacing:-.25px;
+  color:#fff;
+  text-shadow:0 0 14px rgba(255,255,255,.15);
+}
+
+.heroName{
+  margin:0;
+  max-width:320px;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.28;
+  font-weight:800;
+}
+
+.home-lang-pack-widget{
+  display:none!important;
+  text-decoration:none;
+  color:#fff;
+  padding:12px;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(77,232,255,.15), transparent 36%),
+    radial-gradient(circle at 88% 20%, rgba(236,72,153,.10), transparent 36%),
+    rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  cursor:pointer;
+}
+
+.home-lang-pack-widget.hidden{ display:none; }
+
+.home-lang-pack-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.home-lang-pack-kicker{
+  font-size:10px;
+  font-weight:900;
+  color:rgba(255,255,255,.58);
+  letter-spacing:.25px;
+  text-transform:uppercase;
+}
+
+.home-lang-pack-title{
+  margin-top:3px;
+  font-size:15px;
+  font-weight:1000;
+}
+
+.home-lang-pack-status{
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(34,197,94,.14);
+  border:1px solid rgba(34,197,94,.28);
+  color:#bbf7d0;
+  font-size:10px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+
+.home-lang-pack-status.downloading{
+  background:rgba(59,130,246,.14);
+  border-color:rgba(59,130,246,.30);
+  color:#bfdbfe;
+}
+
+.home-lang-pack-route{
+  display:grid;
+  grid-template-columns:1fr 38px 1fr;
+  align-items:center;
+  gap:8px;
+}
+
+.home-lang-chip{
+  min-height:48px;
+  border-radius:16px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:8px;
+  min-width:0;
+}
+
+.home-lang-chip span{
+  font-size:20px;
+  flex:0 0 auto;
+}
+
+.home-lang-chip strong{
+  font-size:12px;
+  font-weight:1000;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.home-lang-arrows{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  background:linear-gradient(135deg,rgba(165,180,252,.22),rgba(236,72,153,.16));
+  border:1px solid rgba(255,255,255,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  font-weight:1000;
+}
+
+.section-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+}
+
+.primary-grid{
+  align-items:stretch;
+}
+
+.mod-card,
+.wide-card{
+  position:relative;
+  overflow:hidden;
+  text-decoration:none;
+  color:#fff;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.05);
+  transition:transform .2s ease, filter .2s ease, box-shadow .2s ease;
+}
+
+.mod-card:active,
+.wide-card:active,
+.home-lang-pack-widget:active{
+  transform:scale(.985);
+  filter:brightness(1.06);
+}
+
+.mod-card{
+  min-height:140px;
+  border-radius:24px;
+  padding:13px 12px 46px;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.primary-card{
+  min-height:285px;
+  padding:18px 15px 110px;
+}
+
+.mod-card::before,
+.wide-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(135deg, rgba(255,255,255,.08), transparent 42%, rgba(255,255,255,.04));
+}
+
+.card-kicker{
+  position:relative;
+  z-index:2;
+  font-size:10px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.45px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.72);
+}
+
+.card-title{
+  position:relative;
+  z-index:2;
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:21px;
+  line-height:.98;
+  letter-spacing:-.6px;
+  word-break:break-word;
+}
+
+.primary-card .card-title{
+  font-size:23px;
+  line-height:1;
+}
+
+.card-desc{
+  position:relative;
+  z-index:2;
+  margin:0;
+  max-width:97%;
+  color:rgba(255,255,255,.86);
+  font-size:12.5px;
+  line-height:1.32;
+  font-weight:800;
+}
+
+.primary-card .card-desc{
+  font-size:13px;
+  line-height:1.35;
+}
+
+.card-icon{
+  position:absolute;
+  left:12px;
+  bottom:12px;
+  width:34px;
+  height:34px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.17);
+  box-shadow:inset 0 0 18px rgba(255,255,255,.05);
+}
+
+.card-icon svg,
+.wide-icon svg{
+  stroke:#fff;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.card-icon svg{
+  width:20px;
+  height:20px;
+  stroke-width:2.2;
+}
+
+.primary-card .card-icon{
+  left:15px;
+  bottom:18px;
+  width:40px;
+  height:40px;
+  border-radius:16px;
+}
+
+.primary-card .card-icon svg{
+  width:23px;
+  height:23px;
+}
+
+.arrow-chip{
+  position:absolute;
+  right:12px;
+  bottom:12px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.primary-card .arrow-chip{
+  right:15px;
+  bottom:18px;
+  width:40px;
+  height:40px;
+}
+
+.arrow-chip::before{
+  content:"";
+  position:absolute;
+  left:11px;
+  top:50%;
+  width:10px;
+  height:10px;
+  border-top:2px solid rgba(255,255,255,.9);
+  border-right:2px solid rgba(255,255,255,.9);
+  transform:translateY(-50%) rotate(45deg);
+}
+
+.primary-card .arrow-chip::before{
+  left:13px;
+  width:12px;
+  height:12px;
+}
+
+.primary-art{
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:76px;
+  height:72px;
+  z-index:2;
+  border-radius:22px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.13);
+  overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.face-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.face-art::before,
+.face-art::after{
+  content:"";
+  position:absolute;
+  width:34px;
+  height:44px;
+  border-radius:18px 18px 14px 14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.25));
+  box-shadow:0 0 18px rgba(255,255,255,.16);
+}
+
+.face-art::before{ left:18px; }
+.face-art::after{ right:18px; }
+
+.face-wave{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:76px;
+  height:34px;
+  transform:translate(-50%,-50%);
+}
+
+.face-wave::before,
+.face-wave::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.05), rgba(103,232,249,.96), rgba(255,255,255,.05));
+  box-shadow:0 0 16px rgba(103,232,249,.52);
+}
+
+.face-wave::before{ top:11px; }
+.face-wave::after{ top:21px; opacity:.68; }
+
+.bt-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bt-node{
+  position:absolute;
+  width:30px;
+  height:30px;
+  border-radius:14px;
+  background:rgba(255,255,255,.86);
+  box-shadow:0 0 20px rgba(255,255,255,.18);
+}
+
+.bt-node.left{ left:18px; }
+.bt-node.right{ right:18px; }
+
+.bt-link{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:74px;
+  height:28px;
+  transform:translate(-50%,-50%);
+}
+
+.bt-link::before,
+.bt-link::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,237,213,.98), rgba(255,255,255,.08));
+  box-shadow:0 0 16px rgba(251,146,60,.55);
+}
+
+.bt-link::before{ top:8px; transform:rotate(8deg); }
+.bt-link::after{ bottom:8px; transform:rotate(-8deg); opacity:.72; }
+
+.face-card{
+  background:
+    radial-gradient(circle at 18% 8%, rgba(103,232,249,.42), transparent 38%),
+    radial-gradient(circle at 90% 85%, rgba(236,72,153,.18), transparent 30%),
+    linear-gradient(145deg, #32146f 0%, #27308a 48%, #0f5fbf 100%);
+}
+
+.bluetooth-card{
+  background:
+    radial-gradient(circle at 18% 8%, rgba(251,146,60,.36), transparent 34%),
+    radial-gradient(circle at 86% 82%, rgba(236,72,153,.20), transparent 32%),
+    linear-gradient(145deg, #7c2d12 0%, #dc2626 45%, #f97316 100%);
+}
+
+.wide-stack{
+  display:flex;
+  flex-direction:column;
+  gap:11px;
+}
+
+.wide-card{
+  min-height:144px;
+  border-radius:24px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px 70px 16px 16px;
+}
+
+.wide-card .arrow-chip{
+  right:16px;
+  top:50%;
+  bottom:auto;
+  transform:translateY(-50%);
+}
+
+.wide-icon{
+  position:relative;
+  z-index:2;
+  width:58px;
+  height:58px;
+  flex:0 0 auto;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:inset 0 0 18px rgba(255,255,255,.05);
+}
+
+.wide-icon svg{
+  width:28px;
+  height:28px;
+  stroke-width:2.15;
+}
+
+.wide-body{
+  position:relative;
+  z-index:2;
+  min-width:0;
+  flex:1;
+}
+
+.wide-kicker{
+  margin-bottom:6px;
+  font-size:10px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.45px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.72);
+}
+
+.wide-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  line-height:1;
+  letter-spacing:-.5px;
+}
+
+.wide-desc{
+  margin:7px 0 0;
+  color:rgba(255,255,255,.82);
+  font-size:13.5px;
+  line-height:1.34;
+  font-weight:800;
+}
+
+.guide-conference-card{
+  background:
+    radial-gradient(circle at 15% 45%, rgba(125,211,252,.28), transparent 30%),
+    radial-gradient(circle at 92% 14%, rgba(56,189,248,.22), transparent 30%),
+    radial-gradient(circle at 68% 105%, rgba(255,255,255,.08), transparent 34%),
+    linear-gradient(90deg, #0b4f6c 0%, #0f6f8f 44%, #1495b6 100%);
+}
+
+.mezo-card{
+  background:
+    radial-gradient(circle at 15% 45%, rgba(245,158,11,.30), transparent 30%),
+    radial-gradient(circle at 92% 14%, rgba(34,197,94,.18), transparent 30%),
+    radial-gradient(circle at 68% 105%, rgba(255,255,255,.08), transparent 34%),
+    linear-gradient(90deg, #78350f 0%, #a16207 46%, #166534 100%);
+}
+
+.turan-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(45,212,191,.42), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(103,232,249,.34), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(20,184,166,.38), transparent 36%),
+    linear-gradient(90deg, #042f2e 0%, #0f766e 42%, #06b6d4 100%);
+}
+
+.kafkas-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(248,113,113,.36), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(244,63,94,.30), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(190,18,60,.34), transparent 36%),
+    linear-gradient(90deg, #7f1d1d 0%, #be123c 46%, #4c0519 100%);
+}
+
+.balkan-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(168,85,247,.38), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(129,140,248,.30), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(30,64,175,.34), transparent 36%),
+    linear-gradient(90deg, #581c87 0%, #4338ca 46%, #0f172a 100%);
+}
+
+.turan-card .wide-desc,
+.kafkas-card .wide-desc,
+.balkan-card .wide-desc{
+  color:rgba(255,255,255,.92);
+}
+
+.turan-card .wide-icon,
+.kafkas-card .wide-icon,
+.balkan-card .wide-icon{
+  background:rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.28);
+  box-shadow:0 16px 34px rgba(0,0,0,.18), inset 0 0 18px rgba(255,255,255,.05);
+}
+
+.turan-card .arrow-chip,
+.kafkas-card .arrow-chip,
+.balkan-card .arrow-chip{
+  background:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.28);
+}
+
+.offline-card{
+  background:
+    radial-gradient(circle at 14% 50%, rgba(45,212,191,.27), transparent 28%),
+    radial-gradient(circle at 88% 15%, rgba(59,130,246,.17), transparent 24%),
+    linear-gradient(90deg, #064e3b 0%, #0f766e 48%, #2563eb 100%);
+}
+
+.text-card{
+  background:
+    radial-gradient(circle at 84% 12%, rgba(255,255,255,.10), transparent 27%),
+    radial-gradient(circle at 20% 70%, rgba(236,72,153,.25), transparent 28%),
+    linear-gradient(90deg, #831843 0%, #be185d 36%, #7c3aed 74%, #3730a3 100%);
+}
+
+.fun-card{
+  background:
+    radial-gradient(circle at 14% 50%, rgba(251,113,133,.24), transparent 28%),
+    radial-gradient(circle at 90% 18%, rgba(168,85,247,.20), transparent 26%),
+    linear-gradient(90deg, #701a75 0%, #9f1239 46%, #4338ca 100%);
+}
+
+.level-card{
+  background:
+    radial-gradient(circle at 12% 48%, rgba(34,197,94,.25), transparent 28%),
+    radial-gradient(circle at 88% 18%, rgba(20,184,166,.18), transparent 26%),
+    linear-gradient(90deg, #14532d 0%, #15803d 46%, #0f766e 100%);
+}
+
+@keyframes rotateCrystal{
+  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+}
+
+@keyframes floatQR{
+  0%,100%{ transform:translateY(0) rotateX(0deg); }
+  50%{ transform:translateY(-7px) rotateX(5deg); }
+}
+
+@keyframes planetBreath{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.04); }
+}
+
+@keyframes planetGlow{
+  0%,100%{ opacity:.56; transform:scale(1); }
+  50%{ opacity:.92; transform:scale(1.14); }
+}
+
+@keyframes planetRaySpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
+@keyframes aiSpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
+@media (max-width:390px){
+  #pageContent{ padding:8px 10px 18px; }
+  .page-shell-fit{ gap:10px; }
+  .holo-container{ width:138px; height:138px; }
+  .crystal-cage{ width:102px; height:102px; }
+  .side1{ transform:rotateY(0deg) translateZ(51px); }
+  .side2{ transform:rotateY(90deg) translateZ(51px); }
+  .side3{ transform:rotateY(180deg) translateZ(51px); }
+  .side4{ transform:rotateY(270deg) translateZ(51px); }
+  .side5{ transform:rotateX(90deg) translateZ(51px); }
+  .side6{ transform:rotateX(-90deg) translateZ(51px); }
+  .holo-qr,.planet-core{ width:76px; height:76px; }
+  .heroTitle{ font-size:17px; }
+  .mod-card{ min-height:136px; padding:12px 11px 46px; }
+  .primary-card{ min-height:260px; padding:15px 12px 102px; }
+  .card-title{ font-size:19px; }
+  .primary-card .card-title{ font-size:20px; }
+  .card-desc{ font-size:12px; }
+  .primary-card .card-desc{ font-size:12.4px; }
+  .primary-art{ left:12px; right:12px; bottom:72px; height:68px; }
+  .wide-card{ min-height:138px; gap:12px; padding:15px 64px 15px 14px; }
+  .wide-card .arrow-chip{ right:14px; }
+  .wide-icon{ width:52px; height:52px; border-radius:18px; }
+  .wide-title{ font-size:20px; }
+  .wide-desc{ font-size:12.7px; }
+}
 </style>
 </head>
 
 <body>
-  <div id="denemeBoot">Deneme Home hazırlanıyor...</div>
-  <iframe id="denemeHomeFrame"></iframe>
+
+<main id="pageContent">
+  <div class="page-shell-fit">
+
+    <section class="hero" id="heroSection">
+      <div class="heroTop">
+        <div class="holo-container">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
+          </div>
+
+          <div class="holo-qr ai-planet" aria-hidden="true">
+            <div class="planet-glow"></div>
+            <div class="planet-rays"></div>
+            <div class="planet-core">
+              <div class="planet-ai-badge"><span>AI</span></div>
+            </div>
+          </div>
+        </div>
+
+        <h1 class="heroTitle">DÃ¼nyaâ€™yÄ± KÃ¼Ã§Ã¼lttÃ¼k, Cebinize SÄ±ÄŸdÄ±rdÄ±k</h1>
+        <p class="heroName" id="heroUserName">HoÅŸ geldin</p>
+      </div>
+    </section>
+
+    <section id="homeLangPackWidget" class="home-lang-pack-widget hidden">
+      <div class="home-lang-pack-head">
+        <div>
+          <div class="home-lang-pack-kicker">Dil paketi</div>
+          <div id="homeLangPackTitle" class="home-lang-pack-title">TÃ¼rkÃ§e â‡„ Almanca</div>
+        </div>
+        <div id="homeLangPackStatus" class="home-lang-pack-status">HazÄ±r</div>
+      </div>
+
+      <div class="home-lang-pack-route">
+        <div class="home-lang-chip">
+          <span id="homeLangPackSourceFlag">ğŸ‡¹ğŸ‡·</span>
+          <strong id="homeLangPackSourceName">TÃ¼rkÃ§e</strong>
+        </div>
+
+        <div class="home-lang-arrows">â‡„</div>
+
+        <div class="home-lang-chip">
+          <span id="homeLangPackTargetFlag">ğŸ‡©ğŸ‡ª</span>
+          <strong id="homeLangPackTargetName">Almanca</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-grid primary-grid" aria-label="Ana Ã§eviri modlarÄ±">
+      <a id="faceCard" class="mod-card primary-card face-card" href="/facetoface_ios.html?ios=1">
+        <div class="card-kicker">Tek Telefon</div>
+        <h2 class="card-title">YÃ¼zYÃ¼ze Ã‡eviri</h2>
+        <p class="card-desc">KonuÅŸmalarÄ± tek ekranda anlÄ±k Ã§evir. GÃ¼nlÃ¼k kullanÄ±m iÃ§in hÄ±zlÄ± ve hazÄ±r.</p>
+        <div class="primary-art face-art" aria-hidden="true">
+          <div class="face-wave"></div>
+        </div>
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="bluetoothCard" class="mod-card primary-card bluetooth-card" href="/facetoface.html?mode=two-phone">
+        <div class="card-kicker">LÄ°SANS</div>
+        <h2 class="card-title">Ä°ki Telefon</h2>
+        <p class="card-desc">Kodu al, diÄŸer telefonda gir. Ä°ki cihaz arasÄ±nda canlÄ± Ã§eviri yap.</p>
+        <div class="primary-art bt-art" aria-hidden="true">
+          <div class="bt-node left"></div>
+          <div class="bt-link"></div>
+          <div class="bt-node right"></div>
+        </div>
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13 19.07"></path></svg>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+    </section>
+
+    <section class="wide-stack" aria-label="DiÄŸer araÃ§lar">
+      <a id="guideConferenceCard" class="wide-card guide-conference-card" href="/pages/conference.html?ios=1">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 0 1 16 0"></path><path d="M7 11v7"></path><path d="M17 11v7"></path><path d="M12 14v7"></path><path d="M6 20h12"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Gezi & Konferans</h2>
+          <p class="wide-desc">Rehber veya konuÅŸmacÄ± anlatÄ±r. KatÄ±lÄ±mcÄ±lar kendi dilinde dinler. Tur, gezi ve toplantÄ±lar iÃ§in hazÄ±r.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="mezoCard" class="wide-card mezo-card" href="/pages/mezopotamyanin_dili.html?ios=1">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M7 9h10"></path><path d="M9 13h6"></path><path d="M12 5v14"></path><path d="M5 19h14"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Mezopotamya Dili</h2>
+          <p class="wide-desc">Kadim coÄŸrafyanÄ±n kÃ¶klÃ¼ dilleri: Kurmanci, Sorani ve Ä°branice</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="turanCard" class="wide-card turan-card" href="/pages/turan_dilleri.html?ios=1">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path><path d="M8 5v14"></path><path d="M16 5v14"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Turan Dilleri</h2>
+          <p class="wide-desc">Azerbaycan, Kazak, KÄ±rgÄ±z, Ã–zbek, TÃ¼rkmen, Uygur, Tatar ve diÄŸer TÃ¼rk dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="kafkasCard" class="wide-card kafkas-card" href="/pages/kafkas_dilleri.html?ios=1">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 5v8l-8 5-8-5V8l8-5z"></path><path d="M12 7v10"></path><path d="M8 9.5l8 5"></path><path d="M16 9.5l-8 5"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Kafkas Dilleri</h2>
+          <p class="wide-desc">GÃ¼rcÃ¼ce, Ermenice, Ã‡eÃ§ence ve Kafkas coÄŸrafyasÄ±nÄ±n dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="balkanCard" class="wide-card balkan-card" href="/pages/balkanlarin_dili.html?ios=1">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 18c2-4 4-6 8-6s6 2 8 6"></path><path d="M6 14c1.6-3 3.4-4.5 6-4.5S16.4 11 18 14"></path><path d="M8 10c1.2-2 2.3-3 4-3s2.8 1 4 3"></path><path d="M12 4v3"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Balkan Dilleri</h2>
+          <p class="wide-desc">ArnavutÃ§a, BoÅŸnakÃ§a, Bulgarca, Yunanca, Romence ve Balkan dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="textCard" class="wide-card text-card" href="/pages/text_translate_ios.html?ios=1">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M4 12h10"></path><path d="M4 19h7"></path><path d="M17 14l3 3-3 3"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">YazÄ±dan Ã‡eviri</h2>
+          <p class="wide-desc">Metni yaz, Ã§evir, dinle ve paylaÅŸ. KÄ±sa notlardan uzun metinlere kadar pratik kullanÄ±m saÄŸlar.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub_ios.html?ios=1">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 19V5"></path><path d="M8 19v-7"></path><path d="M12 19V8"></path><path d="M16 19v-5"></path><path d="M20 19V4"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Seviye Tespit</h2>
+          <p class="wide-desc">Seviyeni Ã¶lÃ§. DoÄŸru yerden baÅŸla. GeliÅŸimini daha net takip et.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="funCard" class="wide-card fun-card" href="/pages/game_menu_ios.html?ios=1">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"></rect><path d="M8 8h.01"></path><path d="M16 8h.01"></path><path d="M8 16h.01"></path><path d="M16 16h.01"></path><path d="M12 12h.01"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">EÄŸlenerek Ã–ÄŸren</h2>
+          <p class="wide-desc">Oyunlarla kelime tekrar et. HafÄ±zanÄ± gÃ¼Ã§lendir. Dili daha kalÄ±cÄ± Ã¶ÄŸren.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="offlineCard" class="wide-card offline-card" href="#" data-ios-offline-disabled="1" aria-disabled="true">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Offline Dil Paketleri</h2>
+          <p class="wide-desc">Dil paketlerini indir. Ä°nternet yokken de Ã§eviri hazÄ±rlÄ±ÄŸÄ±nÄ± yanÄ±nda taÅŸÄ±. Seyahatlerde gÃ¼venle kullan.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+    </section>
+
+  </div>
+</main>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js?v=ios-home-shared-design";
+  import { initGlobalAccess } from "/js/global_access_ios.js";
+  import { supabase } from "/js/supabase_client.js";
+
+  const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
+
+  mountShell({ scroll: "auto" });
+
+  function removePublicEmeShortcuts() {
+    const selectors = [
+      'a[href*="support_eme"]',
+      'button[data-href*="support_eme"]',
+      '[onclick*="support_eme"]',
+      '.eme-top-btn',
+      '.eme-header-avatar',
+      '.eme-mini-btn',
+      '.eme-mini',
+      '.ios-eme-btn'
+    ];
+
+    selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((node) => {
+        if (!node.closest(".eme-support-page")) node.remove();
+      });
+    });
+  }
+
+  removePublicEmeShortcuts();
+  setTimeout(removePublicEmeShortcuts, 0);
+  setTimeout(removePublicEmeShortcuts, 600);
+
+  function renderHomeLangPackWidget() {
+    const widget = document.getElementById("homeLangPackWidget");
+    if (!widget) return;
+    widget.classList.add("hidden");
+    widget.style.display = "none";
+    widget.onclick = null;
+  }
+
+  async function fillUserName() {
+    try {
+      const heroUserName = document.getElementById("heroUserName");
+      if (!heroUserName) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+
+      if (!user) {
+        heroUserName.textContent = "HoÅŸ geldin";
+        return;
+      }
+
+      const meta = user.user_metadata || {};
+      const rawName =
+        meta.hitap ||
+        meta.name ||
+        meta.full_name ||
+        user.email ||
+        "HoÅŸ geldin";
+
+      const firstName = String(rawName).trim().split(" ")[0] || "HoÅŸ geldin";
+      heroUserName.textContent = `${firstName}, DÃ¼nya'yÄ± Anlamaya HazÄ±rmÄ±sÄ±n..?`;
+    } catch (e) {
+      console.error("hero user name error:", e);
+    }
+  }
+
+  async function bootHome() {
+    try {
+      const result = await initGlobalAccess({ allowPublicPageBypass: false });
+      if (!result?.ok) return;
+
+      await fillUserName();
+      renderHomeLangPackWidget();
+
+      const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
+      if (skipWelcome) {
+        sessionStorage.removeItem("italky_skip_welcome_once");
+      }
+    } catch (e) {
+      console.error("home boot error:", e);
+    } finally {
+      document.body.classList.add("home-ready");
+      renderHomeLangPackWidget();
+    }
+  }
+
+  window.addEventListener("storage", () => {
+    renderHomeLangPackWidget();
+  });
+  window.addEventListener("focus", () => {
+    renderHomeLangPackWidget();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      renderHomeLangPackWidget();
+    }
+  });
+
+  const MODULE_LOADING_COPY = {
+    faceCard: "YÃ¼zYÃ¼ze Ã‡eviri hazÄ±rlanÄ±yor...",
+    bluetoothCard: "Ä°ki Telefon hazÄ±rlanÄ±yor...",
+    guideConferenceCard: "Gezi & Konferans hazÄ±rlanÄ±yor...",
+    mezoCard: "Mezopotamyaâ€™nÄ±n Dili hazÄ±rlanÄ±yor...",
+    turanCard: "Turan Dilleri hazÄ±rlanÄ±yor...",
+    kafkasCard: "Kafkas Dilleri hazÄ±rlanÄ±yor...",
+    balkanCard: "Balkan Dilleri hazÄ±rlanÄ±yor...",
+    offlineCard: "ModÃ¼l aÃ§Ä±lÄ±yor...",
+    textCard: "ModÃ¼l aÃ§Ä±lÄ±yor...",
+    funCard: "ModÃ¼l aÃ§Ä±lÄ±yor...",
+    levelCard: "ModÃ¼l aÃ§Ä±lÄ±yor..."
+  };
+
+  function installModuleTransitionOverlay() {
+    document.querySelectorAll("#faceCard,#bluetoothCard,#guideConferenceCard,#mezoCard,#turanCard,#kafkasCard,#balkanCard,#offlineCard,#textCard,#funCard,#levelCard").forEach((card) => {
+      card.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const href = card.getAttribute("href");
+        if (!href || href.startsWith("#")) return;
+        document.body.dataset.moduleLoading = MODULE_LOADING_COPY[card.id] || "ModÃ¼l aÃ§Ä±lÄ±yor...";
+        document.body.classList.add("module-leaving");
+      });
+    });
+  }
+
+  installModuleTransitionOverlay();
+  bootHome();
+</script>
 
 <script>
 (function(){
-  const frame = document.getElementById("denemeHomeFrame");
-  const boot = document.getElementById("denemeBoot");
-
-  frame.src = "/pages/home.html?deneme_radio=1&v=" + Date.now();
+  const boot = null;
 
   const PUBLIC_BASE = "https://media.icany.ai";
   const INDEX_URL = `${PUBLIC_BASE}/icanyai/radio/index.json`;
@@ -60,9 +1250,9 @@
   const SETTINGS_TABLE = "icany_radio_user_settings";
 
   /*
-   * Gerçek uygulamada modül değişince müziğin kesilmemesi için bu player mantığı
-   * ui_shell veya global_audio_manager.js içine taşınmalı. Bu deneme dosyasında
-   * Home iframe içinde test edilecek şekilde modüler fonksiyonlara ayrıldı.
+   * GerÃ§ek uygulamada modÃ¼l deÄŸiÅŸince mÃ¼ziÄŸin kesilmemesi iÃ§in bu player mantÄ±ÄŸÄ±
+   * ui_shell veya global_audio_manager.js iÃ§ine taÅŸÄ±nmalÄ±. Bu deneme dosyasÄ±nda
+   * Home iframe iÃ§inde test edilecek ÅŸekilde modÃ¼ler fonksiyonlara ayrÄ±ldÄ±.
    */
 
   const BANNED_CHANNEL_IDS = new Set([
@@ -96,28 +1286,28 @@
   ]);
 
   const FALLBACK_CHANNELS = [
-    ["01_global_pop_english", "Global Pop English", "İngilizce", "EN", "🇬🇧", ["Pop","Global","Dance"]],
-    ["01_pop_radio", "Pop Radio", "İngilizce", "EN", "🇬🇧", ["Pop"]],
-    ["02_french_lounge_pop", "French Lounge Pop", "Fransızca", "FR", "🇫🇷", ["Pop","Lounge"]],
-    ["02_rock_radio", "Rock Radio", "İngilizce", "EN", "🇬🇧", ["Rock"]],
-    ["03_italian_dolce_pop", "Italian Dolce Pop", "İtalyanca", "IT", "🇮🇹", ["Pop","Lounge"]],
-    ["03_jazz_radio", "Jazz Radio", "İngilizce", "EN", "🇬🇧", ["Jazz"]],
-    ["04_hiphop_radio", "Hip-Hop Radio", "İngilizce", "EN", "🇬🇧", ["Hip-Hop","Rap"]],
-    ["04_spanish_latin_pop", "Spanish Latin Pop", "İspanyolca", "ES", "🇪🇸", ["Pop","Latin","Dance"]],
-    ["05_argentina_tango_pop", "Argentina Tango Pop", "İspanyolca", "AR", "🇦🇷", ["Tango","Latin","Pop"]],
-    ["05_kpop_radio", "K-Pop Radio", "Korece", "KO", "🇰🇷", ["K-Pop","Pop","Dance"]],
-    ["06_kurdish_modern_folk_pop", "Kurdish Modern Folk Pop", "Kürtçe", "KU", "☀️", ["Folk","Pop","World"]],
-    ["06_rnb_radio", "R&B Radio", "İngilizce", "EN", "🇬🇧", ["R&B"]],
-    ["06_russian_modern_pop", "Russian Modern Pop", "Rusça", "RU", "🇷🇺", ["Pop","Rock","Dance"]],
-    ["07_edm_radio", "EDM Radio", "İngilizce", "EN", "🇬🇧", ["EDM","Dance","Electronic"]],
-    ["07_japanese_city_pop", "Japanese City Pop", "Japonca", "JA", "🇯🇵", ["City Pop","Pop","Electronic"]],
-    ["08_brazilian_bossa_pop", "Brazilian Bossa Pop", "Portekizce", "BR", "🇧🇷", ["Bossa Nova","Latin","Lounge"]],
-    ["08_country_radio", "Country Radio", "İngilizce", "EN", "🇺🇸", ["Country"]],
-    ["09_reggae_radio", "Reggae Radio", "İngilizce", "EN", "🇯🇲", ["Reggae"]],
-    ["10_hindi_bollywood_pop", "Hindi Bollywood Pop", "Hintçe", "HI", "🇮🇳", ["Bollywood","Pop","Dance"]],
-    ["10_latin_radio", "Latin Radio", "İspanyolca", "ES", "🇪🇸", ["Latin","Dance"]],
-    ["11_funk_radio", "Funk Radio", "İngilizce", "EN", "🇬🇧", ["Funk"]],
-    ["12_world_radio", "World Radio", "Çok Dilli", "WORLD", "🌍", ["World","Global"]]
+    ["01_global_pop_english", "Global Pop English", "Ä°ngilizce", "EN", "ğŸ‡¬ğŸ‡§", ["Pop","Global","Dance"]],
+    ["01_pop_radio", "Pop Radio", "Ä°ngilizce", "EN", "ğŸ‡¬ğŸ‡§", ["Pop"]],
+    ["02_french_lounge_pop", "French Lounge Pop", "FransÄ±zca", "FR", "ğŸ‡«ğŸ‡·", ["Pop","Lounge"]],
+    ["02_rock_radio", "Rock Radio", "Ä°ngilizce", "EN", "ğŸ‡¬ğŸ‡§", ["Rock"]],
+    ["03_italian_dolce_pop", "Italian Dolce Pop", "Ä°talyanca", "IT", "ğŸ‡®ğŸ‡¹", ["Pop","Lounge"]],
+    ["03_jazz_radio", "Jazz Radio", "Ä°ngilizce", "EN", "ğŸ‡¬ğŸ‡§", ["Jazz"]],
+    ["04_hiphop_radio", "Hip-Hop Radio", "Ä°ngilizce", "EN", "ğŸ‡¬ğŸ‡§", ["Hip-Hop","Rap"]],
+    ["04_spanish_latin_pop", "Spanish Latin Pop", "Ä°spanyolca", "ES", "ğŸ‡ªğŸ‡¸", ["Pop","Latin","Dance"]],
+    ["05_argentina_tango_pop", "Argentina Tango Pop", "Ä°spanyolca", "AR", "ğŸ‡¦ğŸ‡·", ["Tango","Latin","Pop"]],
+    ["05_kpop_radio", "K-Pop Radio", "Korece", "KO", "ğŸ‡°ğŸ‡·", ["K-Pop","Pop","Dance"]],
+    ["06_kurdish_modern_folk_pop", "Kurdish Modern Folk Pop", "KÃ¼rtÃ§e", "KU", "â˜€ï¸", ["Folk","Pop","World"]],
+    ["06_rnb_radio", "R&B Radio", "Ä°ngilizce", "EN", "ğŸ‡¬ğŸ‡§", ["R&B"]],
+    ["06_russian_modern_pop", "Russian Modern Pop", "RusÃ§a", "RU", "ğŸ‡·ğŸ‡º", ["Pop","Rock","Dance"]],
+    ["07_edm_radio", "EDM Radio", "Ä°ngilizce", "EN", "ğŸ‡¬ğŸ‡§", ["EDM","Dance","Electronic"]],
+    ["07_japanese_city_pop", "Japanese City Pop", "Japonca", "JA", "ğŸ‡¯ğŸ‡µ", ["City Pop","Pop","Electronic"]],
+    ["08_brazilian_bossa_pop", "Brazilian Bossa Pop", "Portekizce", "BR", "ğŸ‡§ğŸ‡·", ["Bossa Nova","Latin","Lounge"]],
+    ["08_country_radio", "Country Radio", "Ä°ngilizce", "EN", "ğŸ‡ºğŸ‡¸", ["Country"]],
+    ["09_reggae_radio", "Reggae Radio", "Ä°ngilizce", "EN", "ğŸ‡¯ğŸ‡²", ["Reggae"]],
+    ["10_hindi_bollywood_pop", "Hindi Bollywood Pop", "HintÃ§e", "HI", "ğŸ‡®ğŸ‡³", ["Bollywood","Pop","Dance"]],
+    ["10_latin_radio", "Latin Radio", "Ä°spanyolca", "ES", "ğŸ‡ªğŸ‡¸", ["Latin","Dance"]],
+    ["11_funk_radio", "Funk Radio", "Ä°ngilizce", "EN", "ğŸ‡¬ğŸ‡§", ["Funk"]],
+    ["12_world_radio", "World Radio", "Ã‡ok Dilli", "WORLD", "ğŸŒ", ["World","Global"]]
   ].map(([id,name,language,code,flag,genres]) => ({
     id,
     name,
@@ -145,11 +1335,7 @@
   let lastPersistSecond = -1;
 
   function getDoc(){
-    try{
-      return frame.contentDocument || frame.contentWindow.document;
-    }catch(e){
-      return null;
-    }
+    return document;
   }
 
   function uniq(list){
@@ -181,9 +1367,9 @@
     if(!id || BANNED_CHANNEL_IDS.has(id) || !ALLOWED_CHANNEL_IDS.has(id)) return null;
 
     const name = clean(raw?.name || raw?.title || id.replace(/_/g," "));
-    const language = clean(raw?.language || raw?.lang_name || raw?.lang || raw?.locale || "İngilizce");
+    const language = clean(raw?.language || raw?.lang_name || raw?.lang || raw?.locale || "Ä°ngilizce");
     const code = clean(raw?.code || raw?.lang_code || raw?.language_code || language.slice(0,2).toUpperCase()).toUpperCase();
-    const flag = clean(raw?.flag || "🎧");
+    const flag = clean(raw?.flag || "ğŸ§");
 
     const genresRaw = raw?.genres || raw?.genre || raw?.tags || [];
     const genres = uniq(
@@ -208,7 +1394,7 @@
   async function loadChannelIndex(){
     try{
       const res = await fetch(`${INDEX_URL}?t=${Date.now()}`, { cache:"no-store" });
-      if(!res.ok) throw new Error("index okunamadı");
+      if(!res.ok) throw new Error("index okunamadÄ±");
 
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.channels || data.items || data.radios || []);
@@ -218,7 +1404,7 @@
         ICANY_RADIO_CHANNELS = normalized;
       }
     }catch(error){
-      console.warn("Radyo index okunamadı, fallback kanal listesi kullanılıyor:", error);
+      console.warn("Radyo index okunamadÄ±, fallback kanal listesi kullanÄ±lÄ±yor:", error);
       ICANY_RADIO_CHANNELS = FALLBACK_CHANNELS.slice();
     }
   }
@@ -285,7 +1471,7 @@
       channel.tracks = [];
       channel.loaded = true;
       channel.error = true;
-      console.warn("Playlist okunamadı:", channel.id, error);
+      console.warn("Playlist okunamadÄ±:", channel.id, error);
     }
 
     return channel.tracks;
@@ -304,7 +1490,7 @@
   function getAllLanguages(){
     return uniq(ICANY_RADIO_CHANNELS.map((channel) => channel.language)).filter((language) => {
       const lower = language.toLowerCase();
-      return !lower.includes("türk") && !lower.includes("azer");
+      return !lower.includes("tÃ¼rk") && !lower.includes("azer");
     });
   }
 
@@ -795,12 +1981,7 @@
       }
 
       .icany-karaoke-note{
-        margin:0 0 12px;
-        color:rgba(226,232,240,.62);
-        font-size:12px;
-        font-weight:800;
-        line-height:1.4;
-        min-height:16px;
+        display:none;
       }
 
       .icany-karaoke-close{
@@ -1108,12 +2289,12 @@
 
     if(note){
       note.textContent = hasTimedLyrics
-        ? "Zaman kodlu karaoke akışı hazır."
-        : "Karaoke söz akışı hazırlanıyor.";
+        ? ""
+        : "";
     }
 
     if(!lyricLines.length){
-      wrap.innerHTML = `<div class="icany-karaoke-empty">Bu parça için sözler henüz hazırlanıyor.</div>`;
+      wrap.innerHTML = `<div class="icany-karaoke-empty"></div>`;
       return;
     }
 
@@ -1162,13 +2343,13 @@
 
           ${businessLogo("icany-karaoke-logo")}
 
-          <button class="icany-karaoke-close" id="icanyKaraokeClose" type="button">×</button>
+          <button class="icany-karaoke-close" id="icanyKaraokeClose" type="button">Ã—</button>
         </div>
 
-        <p class="icany-karaoke-note" id="icanyKaraokeNote">Karaoke söz akışı hazırlanıyor.</p>
+        <p class="icany-karaoke-note" id="icanyKaraokeNote"></p>
 
         <div class="icany-karaoke-lines" id="icanyKaraokeLines">
-          <div class="icany-karaoke-empty">Karaoke söz akışı hazırlanıyor.</div>
+          <div class="icany-karaoke-empty"></div>
         </div>
       </div>
     `;
@@ -1188,7 +2369,7 @@
 
   function updatePlayerLanguageBadge(doc, track){
     const flag = doc.getElementById("icanyPlayerFlag");
-    if(flag) flag.textContent = track?.channel_flag || "🎧";
+    if(flag) flag.textContent = track?.channel_flag || "ğŸ§";
   }
 
   function openKaraoke(doc){
@@ -1202,7 +2383,7 @@
       const flag = track?.channel_flag || "";
       const code = track?.channel_code || "";
       const language = track?.language || "";
-      lang.textContent = `${flag} ${code} • ${language}`.trim() || "iCanyAI";
+      lang.textContent = `${flag} ${code} â€¢ ${language}`.trim() || "iCanyAI";
     }
 
     renderKaraoke(doc);
@@ -1223,12 +2404,12 @@
     player.innerHTML = `
       <div class="icany-radio-row">
         <button class="icany-karaoke-mini" id="icanyLyricsBtn" type="button">
-          <span class="icany-karaoke-mini-flag" id="icanyPlayerFlag">🎧</span>
+          <span class="icany-karaoke-mini-flag" id="icanyPlayerFlag">ğŸ§</span>
           <span>Karaoke</span>
         </button>
 
         <div class="icany-radio-controls">
-          <button class="icany-radio-btn" id="icanyShuffleBtn" type="button" aria-label="Karıştır">
+          <button class="icany-radio-btn" id="icanyShuffleBtn" type="button" aria-label="KarÄ±ÅŸtÄ±r">
             <svg viewBox="0 0 24 24">
               <path d="M16 3h5v5h-2V6.4l-4.3 4.3-1.4-1.4L17.6 5H16V3zM4 7h3.6l3 3-1.4 1.4L6.8 9H4V7zm0 8h2.8l10.8-10.8L19 5.6 8.4 16.2H4v-1.2zm15 .6V14h2v5h-5v-2h1.6l-3.3-3.3 1.4-1.4 3.3 3.3z"></path>
             </svg>
@@ -1246,7 +2427,7 @@
             </svg>
           </button>
 
-          <button class="icany-radio-btn" id="icanyNextBtn" type="button" aria-label="İleri">
+          <button class="icany-radio-btn" id="icanyNextBtn" type="button" aria-label="Ä°leri">
             <svg viewBox="0 0 24 24">
               <path d="M16 6h2v12h-2zM6 18V6l9 6z"></path>
             </svg>
@@ -1311,7 +2492,7 @@
         return loadTrack(currentTrackIndex);
       }
 
-      console.warn("Seçili radyo havuzunda çalınacak parça bulunamadı.");
+      console.warn("SeÃ§ili radyo havuzunda Ã§alÄ±nacak parÃ§a bulunamadÄ±.");
       return false;
     }
 
@@ -1327,7 +2508,7 @@
         await persistPlaybackState(doc, tracks[currentTrackIndex], audio);
         return true;
       }catch(error){
-        console.warn("Tarayıcı otomatik çalmayı engelledi, Play ile devam edilebilir:", error);
+        console.warn("TarayÄ±cÄ± otomatik Ã§almayÄ± engelledi, Play ile devam edilebilir:", error);
         setPlaying(false);
         return false;
       }
@@ -1355,7 +2536,7 @@
       }
 
       if(!tracks.length){
-        console.warn("Seçili radyo havuzunda sıradaki parça bulunamadı.");
+        console.warn("SeÃ§ili radyo havuzunda sÄ±radaki parÃ§a bulunamadÄ±.");
         setPlaying(false);
         return;
       }
@@ -1372,7 +2553,7 @@
           await audio.play();
           setPlaying(true);
         }catch(error){
-          console.warn("Sıradaki parça otomatik başlayamadı:", error);
+          console.warn("SÄ±radaki parÃ§a otomatik baÅŸlayamadÄ±:", error);
           setPlaying(false);
         }
       }
@@ -1449,8 +2630,8 @@
       </div>
 
       <div class="wide-body">
-        <h2 class="wide-title">Dinleyerek Öğren</h2>
-        <p class="wide-desc">Seçeceğin müziklerle, hem dinleyerek öğren, sözleri oku birlikte söyle. Binlerce müzik seni bekliyor.</p>
+        <h2 class="wide-title">Dinleyerek Ã–ÄŸren</h2>
+        <p class="wide-desc">SeÃ§eceÄŸin mÃ¼ziklerle, sÃ¶yle,Ã¶ÄŸren. Binlerce mÃ¼zik seni bekliyor.</p>
       </div>
 
       <div class="arrow-chip"></div>
@@ -1492,9 +2673,9 @@
     modal.innerHTML = `
       <div class="icany-radio-modal-card">
         <h2>iCanyAI BUSINESS</h2>
-        <p>Aynı anda birden fazla dil ve tür seçebilirsiniz. Dilediğiniz zaman değiştirebilirsiniz.</p>
+        <p>AynÄ± anda birden fazla dil ve tÃ¼r seÃ§ebilirsiniz. DilediÄŸiniz zaman deÄŸiÅŸtirebilirsiniz.</p>
 
-        <div class="icany-radio-group-title">Müzik Türü</div>
+        <div class="icany-radio-group-title">MÃ¼zik TÃ¼rÃ¼</div>
         <div class="icany-radio-chip-grid" data-group="genres">
           ${genres.map((genre) => `<button class="icany-radio-chip" data-value="${escapeHtml(genre)}" type="button">${escapeHtml(genre)}</button>`).join("")}
         </div>
@@ -1560,7 +2741,7 @@
     supabaseClientPromise = import("/js/supabase_client.js")
       .then((mod) => mod.supabase || null)
       .catch((error) => {
-        console.warn("Supabase yüklenemedi:", error);
+        console.warn("Supabase yÃ¼klenemedi:", error);
         return null;
       });
 
@@ -1578,7 +2759,7 @@
         const { data } = await supabase.auth.getUser();
         return data?.user || null;
       }catch(error){
-        console.warn("Kullanıcı okunamadı:", error);
+        console.warn("KullanÄ±cÄ± okunamadÄ±:", error);
         return null;
       }
     })();
@@ -1594,7 +2775,7 @@
     try{
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     }catch(error){
-      console.warn("Radyo ayarı localStorage kaydedilemedi:", error);
+      console.warn("Radyo ayarÄ± localStorage kaydedilemedi:", error);
     }
   }
 
@@ -1624,7 +2805,7 @@
         return data;
       }
     }catch(error){
-      console.warn("Supabase radyo ayarı okunamadı:", error);
+      console.warn("Supabase radyo ayarÄ± okunamadÄ±:", error);
     }
 
     return local;
@@ -1671,7 +2852,7 @@
       lastSettings = payload;
       writeLocalSettings(payload);
     }catch(error){
-      console.warn("Supabase radyo ayarı kaydedilemedi:", error);
+      console.warn("Supabase radyo ayarÄ± kaydedilemedi:", error);
     }
   }
 
@@ -1699,7 +2880,7 @@
     const languages = selectedValues(doc,"languages");
 
     if(!genres.length || !languages.length){
-      console.warn("Radyo kaydı için en az bir tür ve bir dil seçilmeli.");
+      console.warn("Radyo kaydÄ± iÃ§in en az bir tÃ¼r ve bir dil seÃ§ilmeli.");
       return;
     }
 
@@ -1730,7 +2911,7 @@
         await doc.__icanyPlayCurrent();
       }
     }else{
-      console.warn("Seçili radyo havuzunda çalınacak parça bulunamadı.");
+      console.warn("SeÃ§ili radyo havuzunda Ã§alÄ±nacak parÃ§a bulunamadÄ±.");
       await persistSettings(settingsFromCurrent({}, audio));
     }
   }
@@ -1794,11 +2975,42 @@
     }
   }
 
-  frame.addEventListener("load", () => {
-    setTimeout(patchHome,600);
-    setTimeout(patchHome,1400);
-    setTimeout(patchHome,2600);
-  });
+  function startIcanyHomeRadio(){
+    setTimeout(patchHome, 250);
+    setTimeout(patchHome, 900);
+    setTimeout(patchHome, 1800);
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", startIcanyHomeRadio);
+  }else{
+    startIcanyHomeRadio();
+  }
+})();
+</script>
+
+<script type="module" src="/js/site_language_boot.js"></script>
+<script>
+(function(){
+  function emitDisabled(reason){
+    try {
+      window.dispatchEvent(new CustomEvent('italkyIOSFeatureDisabled', { detail: { ok:false, message:reason } }));
+    } catch(e) {}
+  }
+
+  function handleDisabledIOSFeature(event){
+    var target = event.target && event.target.closest ? event.target.closest('[data-ios-offline-disabled="1"]') : null;
+    if (!target) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (target.getAttribute('data-ios-offline-disabled') === '1') {
+      emitDisabled('offline_languages_disabled_on_ios');
+      try { alert("iOS'ta çevrimdışı dil paketleri şu anda desteklenmiyor."); } catch(e) {}
+      return;
+    }
+  }
+
+  document.addEventListener('click', handleDisabledIOSFeature, true);
 })();
 </script>
 </body>
