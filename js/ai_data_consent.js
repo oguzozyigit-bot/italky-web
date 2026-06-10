@@ -340,8 +340,10 @@
 
       function attachEvents(btn, action) {
         if (!btn) return;
-        btn.addEventListener("click", (e) => handleAction(action, e));
-        btn.addEventListener("touchstart", (e) => handleAction(action, e), { passive: false });
+        const handler = (e) => handleAction(action, e);
+        btn.addEventListener("click", handler);
+        btn.addEventListener("touchstart", handler, { passive: false });
+        btn.addEventListener("mousedown", handler); // Masaüstü Tarayıcı Koruması eklendi
       }
 
       attachEvents(btnAgree, "agree");
