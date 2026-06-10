@@ -99,7 +99,7 @@
       .italky-translation-consent-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 999999;
+        z-index: 9999999; /* Z-index artırıldı, kesin en üstte olacak */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -107,6 +107,7 @@
         background: rgba(2, 8, 23, .74);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
+        pointer-events: auto; /* Tıklamaları yakalaması garanti altına alındı */
       }
 
       .italky-translation-consent-modal {
@@ -122,6 +123,7 @@
         box-shadow: 0 24px 70px rgba(0,0,0,.42);
         color: #f8fbff;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        pointer-events: auto;
       }
 
       .italky-translation-consent-badge {
@@ -189,6 +191,9 @@
         font-size: 14px;
         font-weight: 900;
         font-family: inherit;
+        position: relative; /* Butonların tıklanabilirlik alanını sağlamlaştırır */
+        z-index: 10;
+        pointer-events: auto;
       }
 
       .italky-translation-consent-primary {
@@ -306,11 +311,17 @@
 
       document.addEventListener("keydown", onKeyDown);
 
+      // Event Listener Düzeltmesi: Tıklamaları doğrudan yakalamak için passive: false kullanıyoruz
       backdrop.addEventListener("click", (event) => {
-        const button = event.target?.closest?.("[data-action]");
+        const button = event.target.closest("[data-action]");
+        
         if (!button) return;
 
         const action = button.getAttribute("data-action");
+
+        // Event'in sayfadaki diğer elementlere yayılmasını engelle
+        event.preventDefault();
+        event.stopPropagation();
 
         if (action === "agree") {
           document.removeEventListener("keydown", onKeyDown);
@@ -328,12 +339,14 @@
         if (action === "privacy") {
           window.location.href = PRIVACY_URL;
         }
-      });
+      }, { capture: true }); // capture: true, tıklamaları en dıştan içeriye doğru ilk bu katmanın almasını sağlar.
 
       document.body.appendChild(backdrop);
 
       const firstButton = backdrop.querySelector("[data-action='agree']");
-      firstButton?.focus?.();
+      if(firstButton && typeof firstButton.focus === 'function') {
+         firstButton.focus();
+      }
     });
 
     return pendingConsentPromise;
