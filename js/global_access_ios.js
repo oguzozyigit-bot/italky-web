@@ -487,10 +487,16 @@ function dispatchAccessReady(access) {
 export async function initGlobalAccess(options = {}) {
   standardizeShellSignature();
   disableIOSOfflineLinks();
-  const { allowPublicPageBypass = true } = options;
+  const { allowPublicPageBypass = true, forcePublicBypass = false } = options;
   const currentPath = normalizePath(location.pathname);
   const publicPage = isPublicPage(currentPath);
   const session = await getSessionOrNull();
+  if (forcePublicBypass && !session?.user?.id) {
+    const safe = buildSafeAccess({}, null);
+    setCachedAccess(safe);
+    dispatchAccessReady(safe);
+    return { ok: true, bypass: true, forced_public_bypass: true, session: null, access: safe };
+  }
   if (session?.user?.id) {
     const access = await fetchAccessStateSafe(session);
     const safe = buildSafeAccess(access || {}, session);
