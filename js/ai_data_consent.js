@@ -99,7 +99,7 @@
       .italky-translation-consent-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 9999999; /* Z-index artırıldı, kesin en üstte olacak */
+        z-index: 9999999;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -107,7 +107,7 @@
         background: rgba(2, 8, 23, .74);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
-        pointer-events: auto; /* Tıklamaları yakalaması garanti altına alındı */
+        pointer-events: auto;
       }
 
       .italky-translation-consent-modal {
@@ -191,7 +191,7 @@
         font-size: 14px;
         font-weight: 900;
         font-family: inherit;
-        position: relative; /* Butonların tıklanabilirlik alanını sağlamlaştırır */
+        position: relative;
         z-index: 10;
         pointer-events: auto;
       }
@@ -296,7 +296,10 @@
         </div>
       `;
 
+      let isClosed = false;
       function close(result) {
+        if (isClosed) return;
+        isClosed = true;
         backdrop.remove();
         pendingConsentPromise = null;
         resolve(result);
@@ -310,42 +313,43 @@
       }
 
       document.addEventListener("keydown", onKeyDown);
+      document.body.appendChild(backdrop);
 
-      // Event Listener Düzeltmesi: Tıklamaları doğrudan yakalamak için passive: false kullanıyoruz
-      backdrop.addEventListener("click", (event) => {
-        const button = event.target.closest("[data-action]");
-        
-        if (!button) return;
+      const btnAgree = backdrop.querySelector("[data-action='agree']");
+      const btnCancel = backdrop.querySelector("[data-action='cancel']");
+      const btnPrivacy = backdrop.querySelector("[data-action='privacy']");
 
-        const action = button.getAttribute("data-action");
-
-        // Event'in sayfadaki diğer elementlere yayılmasını engelle
-        event.preventDefault();
-        event.stopPropagation();
+      function handleAction(action, event) {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+        }
 
         if (action === "agree") {
           document.removeEventListener("keydown", onKeyDown);
           saveConsent();
           close(true);
-          return;
-        }
-
-        if (action === "cancel") {
+        } else if (action === "cancel") {
           document.removeEventListener("keydown", onKeyDown);
           close(false);
-          return;
-        }
-
-        if (action === "privacy") {
+        } else if (action === "privacy") {
           window.location.href = PRIVACY_URL;
         }
-      }, { capture: true }); // capture: true, tıklamaları en dıştan içeriye doğru ilk bu katmanın almasını sağlar.
+      }
 
-      document.body.appendChild(backdrop);
+      function attachEvents(btn, action) {
+        if (!btn) return;
+        btn.addEventListener("click", (e) => handleAction(action, e));
+        btn.addEventListener("touchstart", (e) => handleAction(action, e), { passive: false });
+      }
 
-      const firstButton = backdrop.querySelector("[data-action='agree']");
-      if(firstButton && typeof firstButton.focus === 'function') {
-         firstButton.focus();
+      attachEvents(btnAgree, "agree");
+      attachEvents(btnCancel, "cancel");
+      attachEvents(btnPrivacy, "privacy");
+
+      if (btnAgree && typeof btnAgree.focus === 'function') {
+         btnAgree.focus();
       }
     });
 
