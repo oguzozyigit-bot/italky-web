@@ -18,6 +18,7 @@
       --text-muted: #94a3b8;
       --cyan: #67e8f9;
       --magenta: #f472b6;
+      --blue: #3b82f6;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -60,37 +61,14 @@
       -webkit-backdrop-filter: blur(15px);
     }
 
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .brand-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 28px;
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -0.5px;
-    }
-
-    .brand-title span {
-      background: linear-gradient(135deg, var(--cyan), var(--magenta));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .brand-subtitle {
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: 4px;
-      color: var(--cyan);
-      margin-top: 4px;
-    }
+    .brand-text { display: flex; flex-direction: column; align-items: center; }
+    .brand-title { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; }
+    .brand-title span { background: linear-gradient(135deg, var(--cyan), var(--magenta)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .brand-subtitle { font-size: 10px; font-weight: 900; letter-spacing: 4px; color: var(--cyan); margin-top: 4px; }
 
     /* Hero Section */
     .hero {
-      padding: 180px 20px 80px;
+      padding: 160px 20px 40px;
       text-align: center;
       max-width: 1000px;
       margin: 0 auto;
@@ -123,51 +101,68 @@
       color: var(--text-muted);
       font-weight: 400;
       max-width: 620px;
-      margin: 0 auto 50px;
+      margin: 0 auto 30px;
     }
 
-    /* Orijinal Mağaza Butonları (Boyutları Eşitlenmiş Hali) */
-    .store-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    /* ----------------------------------------------------- */
+    /* ÖZEL, EŞİT BOYUTLU VE GENİŞLEYEN MAĞAZA BUTONLARI     */
+    /* ----------------------------------------------------- */
+    .custom-store-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 20px;
-      flex-wrap: wrap;
-      position: relative;
+      width: 100%;
+      max-width: 620px; /* Paragrafın dış hatlarına kadar genişlemesi için eşitlendi */
+      margin: 0 auto 40px;
       z-index: 20;
-      margin-top: 20px;
+      position: relative;
     }
 
-    .store-btn {
-      display: block;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s ease;
-    }
-
-    .store-btn:hover {
-      transform: scale(1.05) translateY(-4px);
-      filter: drop-shadow(0 15px 25px rgba(103, 232, 249, 0.25));
-    }
-
-    .store-btn.apple img { 
-      height: 54px; 
-      width: auto; 
-    }
-    
-    .store-btn.google {
+    .custom-store-btn {
       display: flex;
       align-items: center;
-      height: 54px; /* Apple butonu ile ana iskeleti eşitlemek için */
+      justify-content: center;
+      gap: 16px;
+      background: #000; /* Şık tam siyah arka plan */
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 18px;
+      padding: 18px 24px;
+      text-decoration: none;
+      color: #fff;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    .store-btn.google img { 
-      height: 80px; /* Orijinal görseldeki dev şeffaf boşlukları absorbe etmek için yüksek tutuldu */
-      width: auto; 
+    .custom-store-btn:hover {
+      transform: scale(1.05) translateY(-4px);
+      border-color: var(--cyan);
+      box-shadow: 0 15px 35px rgba(103, 232, 249, 0.25);
+    }
+
+    .custom-store-btn svg {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+
+    .custom-store-btn .apple-logo { fill: #fff; }
+
+    .custom-store-btn .store-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+
+    @media (max-width: 600px) {
+      .custom-store-buttons { grid-template-columns: 1fr; }
     }
 
     /* ----------------------------------------------------- */
     /* 3D KRİSTAL KAFES VE GEZEGEN                           */
     /* ----------------------------------------------------- */
-    .holo-container { width: 154px; height: 154px; position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 20px auto 40px; transform: scale(1.2); pointer-events: none;}
+    .holo-container { width: 154px; height: 154px; position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 0px auto 50px; transform: scale(1.2); pointer-events: none;}
     .crystal-cage { position: absolute; width: 112px; height: 112px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
     .crystal-side { position: absolute; inset: 0; border: 1.5px solid rgba(103,232,249,.36); background: radial-gradient(circle, rgba(129,140,248,.11), transparent 70%); box-shadow: 0 0 15px rgba(103,232,249,.18); }
     .side1 { transform: rotateY(0deg) translateZ(56px); } .side2 { transform: rotateY(90deg) translateZ(56px); } .side3 { transform: rotateY(180deg) translateZ(56px); } .side4 { transform: rotateY(270deg) translateZ(56px); } .side5 { transform: rotateX(90deg) translateZ(56px); } .side6 { transform: rotateX(-90deg) translateZ(56px); }
@@ -189,7 +184,7 @@
     @keyframes planetRaySpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes aiSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* UYGULAMA İÇİ MODÜLLER (Orijinal Home.html Renkleri ve Yapısı) */
+    /* UYGULAMA İÇİ MODÜLLER (Tamamen Orijinal Home.html Renkleri ve Yapısı) */
     .app-preview-section {
       width: min(100%, 760px);
       margin: 0 auto 80px;
@@ -217,7 +212,7 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       margin-bottom: 4px;
-      pointer-events: none;
+      pointer-events: none; /* Tıklamayı kapatır */
     }
 
     .icany-radio-row {
@@ -281,7 +276,7 @@
     .arrow-chip { position: absolute; right: 15px; bottom: 18px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.18); }
     .arrow-chip::before { content: ""; position: absolute; left: 13px; top: 50%; width: 12px; height: 12px; border-top: 2px solid rgba(255,255,255,.9); border-right: 2px solid rgba(255,255,255,.9); transform: translateY(-50%) rotate(45deg); }
 
-    /* Sanat Çizimleri */
+    /* Sanat Çizimleri (Home'dan Esin) */
     .primary-art { position: absolute; left: 14px; right: 14px; bottom: 76px; height: 72px; border-radius: 22px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.13); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); display: flex; align-items: center; justify-content: center; }
     .face-wave { position: relative; width: 76px; height: 34px; }
     .face-wave::before, .face-wave::after { content: ""; position: absolute; left: 0; right: 0; height: 3px; border-radius: 999px; background: linear-gradient(90deg, rgba(255,255,255,.05), rgba(103,232,249,.96), rgba(255,255,255,.05)); box-shadow: 0 0 16px rgba(103,232,249,.52); }
@@ -297,6 +292,7 @@
     .wide-card { position: relative; overflow: hidden; border-radius: 24px; min-height: 144px; display: flex; align-items: center; gap: 14px; padding: 16px 70px 16px 16px; border: 1px solid rgba(255,255,255,.14); color: #fff; box-shadow: 0 18px 42px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05); pointer-events: none; }
     .wide-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 42%, rgba(255,255,255,.04)); }
     
+    /* Renkler (Orijinal Home.html) */
     .guide-conference-card{ background: radial-gradient(circle at 15% 45%, rgba(125,211,252,.28), transparent 30%), radial-gradient(circle at 92% 14%, rgba(56,189,248,.22), transparent 30%), radial-gradient(circle at 68% 105%, rgba(255,255,255,.08), transparent 34%), linear-gradient(90deg, #0b4f6c 0%, #0f6f8f 44%, #1495b6 100%); }
     .mezo-card{ background: radial-gradient(circle at 15% 45%, rgba(245,158,11,.30), transparent 30%), radial-gradient(circle at 92% 14%, rgba(34,197,94,.18), transparent 30%), radial-gradient(circle at 68% 105%, rgba(255,255,255,.08), transparent 34%), linear-gradient(90deg, #78350f 0%, #a16207 46%, #166534 100%); }
     .turan-card{ background: radial-gradient(circle at 14% 42%, rgba(45,212,191,.42), transparent 30%), radial-gradient(circle at 92% 12%, rgba(103,232,249,.34), transparent 28%), radial-gradient(circle at 72% 110%, rgba(20,184,166,.38), transparent 36%), linear-gradient(90deg, #042f2e 0%, #0f766e 42%, #06b6d4 100%); }
@@ -316,9 +312,9 @@
     .wide-card .arrow-chip { right: 16px; top: 50%; bottom: auto; transform: translateY(-50%); }
 
     /* Footer CTA */
-    footer { border-top: 1px solid rgba(255,255,255,0.05); padding: 60px 20px; text-align: center; position: relative; z-index: 10; background: linear-gradient(to top, rgba(3,4,6,1), transparent); margin-top: -30px;}
-    .footer-title { font-family: 'Space Grotesk', sans-serif; font-size: 28px; margin-bottom: 30px; }
-    .footer-copy { margin-top: 50px; font-size: 13px; color: #475569; font-weight: 600; }
+    footer { border-top: 1px solid rgba(255,255,255,0.05); padding: 60px 20px; text-align: center; position: relative; z-index: 10; background: linear-gradient(to top, rgba(3,4,6,1), transparent); }
+    .footer-title { font-family: 'Space Grotesk', sans-serif; font-size: 28px; margin-bottom: 20px; }
+    .footer-copy { margin-top: 40px; font-size: 13px; color: #475569; font-weight: 600; }
 
     /* Animasyon Sınıfları */
     .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -342,6 +338,35 @@
   </nav>
 
   <section class="hero reveal">
+    <h1>
+      Sınırları Kaldır,<br>
+      <span class="text-gradient">Özgürlüğü Keşfet.</span>
+    </h1>
+    <p class="hero-p">
+      Gerçek zamanlı çeviri, icanyAI radyo, çevrimdışı dil paketleri ve dil teknolojileri tek uygulamada cebinizde.
+    </p>
+
+    <div class="custom-store-buttons">
+      
+      <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" class="custom-store-btn">
+        <svg class="apple-logo" viewBox="0 0 384 512">
+          <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+        </svg>
+        <span class="store-text">App Store</span>
+      </a>
+
+      <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" class="custom-store-btn">
+        <svg viewBox="0 0 1024 1024">
+          <path fill="#4CAF50" d="M125.6 46.8v930.4c0 14.4 7.6 27.6 20 34.8 12.4 7.2 27.6 7.2 40 0l467.2-269.6L125.6 46.8z"/>
+          <path fill="#FFC107" d="M652.8 742.4l246.4-142.4c12.4-7.2 20-20.4 20-34.8s-7.6-27.6-20-34.8L652.8 388v354.4z"/>
+          <path fill="#F44336" d="M185.6 46.8c-12.4-7.2-27.6-7.2-40 0-12.4 7.2-20 20.4-20 34.8V46.8l527.2 341.2L185.6 46.8z"/>
+          <path fill="#2196F3" d="M652.8 388L185.6 46.8 125.6 11.6c-12.4-7.2-27.6-7.2-40 0v103.2L652.8 388z"/>
+        </svg>
+        <span class="store-text">Google Play</span>
+      </a>
+
+    </div>
+
     <div class="holo-container">
       <div class="crystal-cage">
         <div class="crystal-side side1"></div>
@@ -358,24 +383,6 @@
           <div class="planet-ai-badge"><span>AI</span></div>
         </div>
       </div>
-    </div>
-
-    <h1>
-      Dünyayı Küçülttük,<br>
-      <span class="text-gradient">Cebinize Sığdırdık.</span>
-    </h1>
-    <p class="hero-p">
-      Gerçek zamanlı çeviri, icanyAI radyo, çevrimdışı dil paketleri ve oyunlarla öğrenme teknolojileri tek uygulamada.
-    </p>
-
-    <div class="store-buttons">
-      <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" class="store-btn apple" aria-label="Download on the App Store">
-        <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=250x83&amp;releaseDate=1483232400" alt="Download on the App Store">
-      </a>
-
-      <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" class="store-btn google" aria-label="Get it on Google Play">
-        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/tr_badge_web_generic.png" alt="Get it on Google Play">
-      </a>
     </div>
   </section>
 
@@ -478,15 +485,20 @@
 
   <footer>
     <div class="reveal">
-      <h2 class="footer-title">Cihazına Uygun Mağazayı Seç, <span class="text-gradient">Başla.</span></h2>
-      <div class="store-buttons" style="margin-top: 15px;">
-        <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" class="store-btn apple" style="transform: scale(0.9);">
-          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=250x83&amp;releaseDate=1483232400" alt="Download on the App Store">
+      <h2 class="footer-title">Telefonuna Uygun Olanı Seç, <span class="text-gradient">Başla.</span></h2>
+      
+      <div class="custom-store-buttons" style="margin-top: 30px;">
+        <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" class="custom-store-btn">
+          <svg class="apple-logo" viewBox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+          <span class="store-text">App Store</span>
         </a>
-        <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" class="store-btn google" style="transform: scale(0.9);">
-          <img src="https://play.google.com/intl/en_us/badges/static/images/badges/tr_badge_web_generic.png" alt="Get it on Google Play">
+
+        <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" class="custom-store-btn">
+          <svg viewBox="0 0 1024 1024"><path fill="#4CAF50" d="M125.6 46.8v930.4c0 14.4 7.6 27.6 20 34.8 12.4 7.2 27.6 7.2 40 0l467.2-269.6L125.6 46.8z"/><path fill="#FFC107" d="M652.8 742.4l246.4-142.4c12.4-7.2 20-20.4 20-34.8s-7.6-27.6-20-34.8L652.8 388v354.4z"/><path fill="#F44336" d="M185.6 46.8c-12.4-7.2-27.6-7.2-40 0-12.4 7.2-20 20.4-20 34.8V46.8l527.2 341.2L185.6 46.8z"/><path fill="#2196F3" d="M652.8 388L185.6 46.8 125.6 11.6c-12.4-7.2-27.6-7.2-40 0v103.2L652.8 388z"/></svg>
+          <span class="store-text">Google Play</span>
         </a>
       </div>
+
     </div>
 
     <div class="footer-copy reveal">
@@ -517,6 +529,8 @@
     }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
 
     reveals.forEach(reveal => revealOnScroll.observe(reveal));
+    
+    // İlk yüklemede Hero kısmını göster
     setTimeout(() => document.querySelector('.hero').classList.add('active'), 100);
   </script>
 </body>
