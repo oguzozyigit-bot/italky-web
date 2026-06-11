@@ -41,7 +41,15 @@ function patchTwoPhoneCopy() {
   try {
     const card = document.getElementById("bluetoothCard");
     if (card) {
-      card.setAttribute("href", "/facetoface.html?mode=two-phone");
+      const isIosHome =
+        location.pathname.endsWith("/home_ios.html") ||
+        new URLSearchParams(location.search || "").get("ios") === "1";
+      card.setAttribute(
+        "href",
+        isIosHome
+          ? "/pages/facetoface_ios.html?ios=1&mode=two-phone&v=IOS_TWO_PHONE_PAGES_ROUTE_20260611"
+          : "/facetoface.html?mode=two-phone"
+      );
       const kicker = card.querySelector(".card-kicker");
       const title = card.querySelector(".card-title");
       const desc = card.querySelector(".card-desc");
