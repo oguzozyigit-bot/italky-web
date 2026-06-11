@@ -11,7 +11,6 @@ const PUBLIC_PAGES = new Set([
   "/index.html",
   "/pages/home_ios.html",
   "/facetoface_ios.html",
-  "/pages/facetoface_ios.html",
   "/pages/login_ios.html",
   "/pages/auth_callback.html",
   "/pages/ios_days.html",
@@ -26,7 +25,6 @@ const PUBLIC_PAGES = new Set([
 const ALWAYS_OPEN_PATHS = new Set([
   "/pages/home_ios.html",
   "/facetoface_ios.html",
-  "/pages/facetoface_ios.html",
   "/pages/ios_days.html",
   "/pages/ios_iap_confirm.html",
   "/pages/about.html",

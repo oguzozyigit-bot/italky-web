@@ -47,7 +47,7 @@ function patchTwoPhoneCopy() {
       card.setAttribute(
         "href",
         isIosHome
-          ? "/pages/facetoface_ios.html?ios=1&mode=two-phone&v=IOS_TWO_PHONE_PAGES_ROUTE_20260611"
+          ? "/facetoface_ios.html?ios=1&mode=two-phone&v=IOS_TWO_PHONE_ROOT_ROUTE_20260611"
           : "/facetoface.html?mode=two-phone"
       );
       const kicker = card.querySelector(".card-kicker");
