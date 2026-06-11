@@ -1,11 +1,468 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" class="dark">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <script>
-    location.replace("/pages/login.html");
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>italkyAI'ı İndir | Dünyayı Kendi Dilinde Konuş</title>
+  <meta name="description" content="italkyAI; yapay zeka destekli canlı çeviri, offline dil paketleri ve gerçek zamanlı iletişim teknolojilerini tek uygulamada birleştirir. App Store veya Google Play'den hemen indirin.">
+  <meta name="theme-color" content="#030712">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #030712;
+      --surface: rgba(15, 23, 42, 0.6);
+      --surface-border: rgba(56, 189, 248, 0.15);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --brand-cyan: #22d3ee;
+      --brand-blue: #3b82f6;
+      --brand-purple: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* Ambient Background Glows */
+    .bg-glows {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background: 
+        radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.15), transparent 40vw),
+        radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.12), transparent 40vw),
+        radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.15), transparent 50vw);
+      filter: blur(40px);
+    }
+
+    .container {
+      width: min(100%, 1100px);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Navbar / Logo Area */
+    header {
+      padding: 30px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span.ai {
+      background: linear-gradient(135deg, var(--brand-cyan), var(--brand-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .be-free {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: var(--brand-cyan);
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 40px 0 60px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: var(--brand-cyan);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(40px, 8vw, 72px);
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+
+    h1 .gradient-text {
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: clamp(16px, 4vw, 20px);
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      font-weight: 400;
+    }
+
+    /* Store Buttons */
+    .store-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .store-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 14px 28px;
+      border-radius: 16px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .store-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .store-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .store-btn:hover::before {
+      opacity: 1;
+    }
+
+    .store-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+      position: relative;
+      z-index: 2;
+    }
+
+    .store-btn span {
+      position: relative;
+      z-index: 2;
+    }
+
+    .store-btn.recommended {
+      background: linear-gradient(135deg, var(--brand-blue), var(--brand-purple));
+      border: none;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
+    }
+    
+    .store-btn.recommended::before {
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    }
+
+    .device-note {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 16px;
+    }
+
+    /* Main Visual / App Mockup Area */
+    .hero-visual {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto 60px;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      border: 1px solid var(--surface-border);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .hero-visual img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Features Bento Grid */
+    .features-section {
+      padding: 60px 0;
+    }
+
+    .section-title {
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 40px;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .bento-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 30px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .bento-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .feature-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .feature-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* Footer / Bottom CTA */
+    footer {
+      border-top: 1px solid var(--surface-border);
+      padding: 60px 0 40px;
+      margin-top: 60px;
+      text-align: center;
+    }
+
+    .footer-cta {
+      margin-bottom: 40px;
+    }
+
+    .footer-cta h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .copyright {
+      font-size: 12px;
+      color: #475569;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 768px) {
+      .hero { padding: 20px 0 40px; }
+      h1 { font-size: 42px; }
+      .bento-card { padding: 24px; }
+      .store-buttons { flex-direction: column; padding: 0 20px; }
+      .store-btn { width: 100%; }
+    }
+  </style>
 </head>
-<body></body>
+<body>
+
+  <div class="bg-glows"></div>
+
+  <div class="container">
+    <header>
+      <div class="logo-container">
+        <div class="logo-text">italky<span class="ai">AI</span></div>
+        <div class="be-free">BE FREE</div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-badge">🌍 Dünyayı kendi dilinde konuş</div>
+      
+      <h1>
+        Sınırları Kaldırın,<br>
+        <span class="gradient-text">Özgürce Anlaşın.</span>
+      </h1>
+      
+      <p class="hero-desc">
+        Gerçek zamanlı çeviri, çevrimdışı dil paketleri ve yapay zeka destekli 
+        iletişim teknolojileri tek bir uygulamada cebinizde.
+      </p>
+
+      <div class="store-buttons">
+        <a href="#" id="btn-ios" class="store-btn">
+          <svg viewBox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+          <span>App Store'dan İndir</span>
+        </a>
+
+        <a href="#" id="btn-android" class="store-btn">
+          <svg viewBox="0 0 512 512"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+          <span>Google Play'den İndir</span>
+        </a>
+      </div>
+      <p class="device-note" id="device-note">Cihazınıza uygun mağazayı seçerek hemen başlayın.</p>
+    </section>
+
+    <div class="hero-visual">
+      <img src="08_translation.png" alt="italkyAI Uygulama Ekranı - Dünyanın Her Yerinde Anlaş">
+    </div>
+
+    <section class="features-section">
+      <h2 class="section-title">Tek Uygulama, Sınırsız İletişim</h2>
+      <div class="bento-grid">
+        
+        <div class="bento-card">
+          <div class="feature-icon">🗣️</div>
+          <h3 class="feature-title">FaceToFace Çeviri</h3>
+          <p class="feature-desc">Telefonu aranıza koyun ve doğal bir şekilde konuşun. Konuşmaları anında ve iki yönlü olarak çevirin.</p>
+        </div>
+
+        <div class="bento-card">
+          <div class="feature-icon">📱</div>
+          <h3 class="feature-title">İki Telefon Modu</h3>
+          <p class="feature-desc">İki cihazı bağlayın. Siz kendi dilinizde konuşun, karşı taraf kendi telefonundan kendi dilinde duysun.</p>
+        </div>
+
+        <div class="bento-card">
+          <div class="feature-icon">📶</div>
+          <h3 class="feature-title">Offline Dil Paketleri</h3>
+          <p class="feature-desc">İnternet bağlantınız koptuğunda bile iletişiminiz kopmasın. Desteklenen 58 dilde çevrimdışı özgürlük.</p>
+        </div>
+
+        <div class="bento-card">
+          <div class="feature-icon">🌐</div>
+          <h3 class="feature-title">Gezi & Konferans</h3>
+          <p class="feature-desc">Rehber veya konuşmacı anlatsın, sınırsız sayıdaki katılımcı kendi seçtiği dilde canlı olarak dinlesin.</p>
+        </div>
+
+        <div class="bento-card">
+          <div class="feature-icon">🎮</div>
+          <h3 class="feature-title">Eğlenerek Öğren</h3>
+          <p class="feature-desc">Kelime oyunları, testler ve yapay zeka analizleriyle dil öğrenmeyi günlük hayatınızın doğal bir parçası yapın.</p>
+        </div>
+
+        <div class="bento-card">
+          <div class="feature-icon">🔒</div>
+          <h3 class="feature-title">Gizlilik ve Güvenlik</h3>
+          <p class="feature-desc">İletişiminiz sadece size aittir. italkyAI, çeviri altyapısında en yüksek güvenlik standartlarını uygular.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-cta">
+        <h2>Dünyayı Anlamaya Hazır Mısın?</h2>
+        <p class="feature-desc" style="margin-bottom: 24px;">Uygulamayı indir ve hemen kullanmaya başla.</p>
+        
+        <div class="store-buttons" style="margin-bottom: 0;">
+          <a href="#" class="store-btn" style="padding: 10px 20px; font-size: 14px;">
+            <svg viewBox="0 0 384 512" style="width: 18px;"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+            App Store
+          </a>
+          <a href="#" class="store-btn" style="padding: 10px 20px; font-size: 14px;">
+            <svg viewBox="0 0 512 512" style="width: 18px;"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+            Google Play
+          </a>
+        </div>
+      </div>
+      
+      <div class="copyright">
+        italkyAI By Ozyigit's &copy; 2026<br>
+        <span style="font-weight: 400; opacity: 0.5; margin-top: 8px; display: inline-block;">Promosyon veya indirim kodları, ilgili uygulama mağazası içinde kullanılır.</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Gerçek mağaza linklerini buraya ekle
+    const APP_STORE_URL = '#'; 
+    const GOOGLE_PLAY_URL = '#';
+
+    // Cihaz Tespiti
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /android/i.test(userAgent);
+
+    const btnIos = document.getElementById('btn-ios');
+    const btnAndroid = document.getElementById('btn-android');
+    const note = document.getElementById('device-note');
+
+    btnIos.href = APP_STORE_URL;
+    btnAndroid.href = GOOGLE_PLAY_URL;
+
+    // İşletim sistemine göre akıllı buton vurgulama
+    if (isIOS) {
+      btnIos.classList.add('recommended');
+      note.innerHTML = '<span style="color:var(--brand-cyan);">iPhone / iPad</span> kullanıyorsunuz. Güvenle indirebilirsiniz.';
+    } else if (isAndroid) {
+      btnAndroid.classList.add('recommended');
+      note.innerHTML = '<span style="color:var(--brand-cyan);">Android</span> cihaz kullanıyorsunuz. Güvenle indirebilirsiniz.';
+    }
+  </script>
+</body>
 </html>
