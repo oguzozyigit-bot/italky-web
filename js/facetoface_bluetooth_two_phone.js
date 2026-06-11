@@ -189,6 +189,8 @@ function injectTwoPhoneCss() {
     body.bt-premium-mode .two-phone-lang-picker-list::-webkit-scrollbar{display:none;}
     body.bt-premium-mode .two-phone-lang-option{width:100%;min-height:46px;border:none;border-radius:14px;background:transparent;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 12px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;}
     body.bt-premium-mode .two-phone-lang-option.active{background:rgba(59,130,246,.18);color:#bfdbfe;}
+    body.bt-premium-mode .half-screen > .lang-row{display:none!important;}
+    body.bt-premium-mode #topSection .composer-stack{display:none!important;}
     body.bt-premium-mode .two-phone-message{transition:font-size .18s ease,opacity .18s ease,transform .18s ease;}
     body.bt-premium-mode .chat-body .two-phone-message{font-size:19px!important;opacity:.54!important;line-height:1.22!important;max-width:86%!important;}
     body.bt-premium-mode .chat-body .two-phone-message.latest,body.bt-premium-mode .chat-body .two-phone-message.is-latest{font-size:31px!important;opacity:1!important;font-weight:1000!important;}

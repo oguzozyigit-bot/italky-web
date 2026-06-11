@@ -1110,7 +1110,6 @@ body.home-ready #pageContent{
   </div>
 </main>
 
-<script src="/js/ios_two_phone_debug.js?v=IOS_TWO_PHONE_DEBUG_TRACE_20260611"></script>
 <script type="module">
   import { mountShell } from "/js/ui_shell.js?v=ios-home-shared-design";
   import { initGlobalAccess } from "/js/global_access_ios.js?v=IOS_HOME_PUBLIC_20260611";
@@ -1181,15 +1180,7 @@ body.home-ready #pageContent{
 
   async function bootHome() {
     try {
-      window.__italkyIosDebug?.("home_boot_start", { href: location.href });
       const result = await initGlobalAccess({ allowPublicPageBypass: true });
-      window.__italkyIosDebug?.("home_access_result", {
-        ok: result?.ok,
-        redirected: result?.redirected,
-        bypass: result?.bypass,
-        public_page: result?.public_page,
-        has_session: !!result?.session?.user?.id
-      });
       if (!result?.ok) return;
 
       await fillUserName();
@@ -1240,7 +1231,6 @@ body.home-ready #pageContent{
     if (!card) return;
     if (card.getAttribute("href") !== IOS_TWO_PHONE_URL) {
       card.setAttribute("href", IOS_TWO_PHONE_URL);
-      window.__italkyIosDebug?.("bluetooth_href_forced", { href: IOS_TWO_PHONE_URL });
     }
     card.removeAttribute("data-ios-two-phone-disabled");
     card.removeAttribute("aria-disabled");
@@ -1264,7 +1254,6 @@ body.home-ready #pageContent{
       event.stopPropagation();
       event.stopImmediatePropagation?.();
       forceIosTwoPhoneRoute();
-      window.__italkyIosDebug?.("bluetooth_click_forced_ios_route", { fromHref: card.getAttribute("href"), to: IOS_TWO_PHONE_URL });
       document.body.dataset.moduleLoading = MODULE_LOADING_COPY.bluetoothCard || "İki Telefon hazırlanıyor...";
       document.body.classList.add("module-leaving");
       location.href = IOS_TWO_PHONE_URL;
@@ -1277,7 +1266,6 @@ body.home-ready #pageContent{
         if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         const href = card.getAttribute("href");
         if (!href || href.startsWith("#")) return;
-        window.__italkyIosDebug?.("home_card_click", { id: card.id, href });
         document.body.dataset.moduleLoading = MODULE_LOADING_COPY[card.id] || "Modül açılıyor...";
         document.body.classList.add("module-leaving");
       });
