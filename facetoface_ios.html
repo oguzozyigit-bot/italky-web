@@ -1084,6 +1084,7 @@
 
   <div class="mini-toast" id="miniToast"></div>
 
+  <script src="/js/ios_two_phone_debug.js?v=IOS_TWO_PHONE_DEBUG_20260611"></script>
   <script src="/js/ai_data_consent.js"></script>
 
   <script type="module" src="/js/facetoface_two_phone_ios.js?v=IOS_TWO_PHONE_NOCACHE_20260611"></script>
@@ -1092,10 +1093,19 @@
     const iosFaceParams = new URLSearchParams(location.search || "");
     const iosFaceMode = iosFaceParams.get("mode");
     const isTwoPhoneMode = iosFaceMode === "two-phone" || iosFaceMode === "bluetooth";
+    window.__italkyIosDebug?.("facetoface_boot_start", { href: location.href, iosFaceMode, isTwoPhoneMode });
     if (!isTwoPhoneMode) {
       await import("/js/facetoface_page_ios.js?v=F2F_IOS_CLEAR_FIX_20260609");
     }
-    await initGlobalAccess({ allowPublicPageBypass: isTwoPhoneMode, forcePublicBypass: isTwoPhoneMode });
+    const accessResult = await initGlobalAccess({ allowPublicPageBypass: isTwoPhoneMode, forcePublicBypass: isTwoPhoneMode });
+    window.__italkyIosDebug?.("facetoface_access_result", {
+      ok: accessResult?.ok,
+      redirected: accessResult?.redirected,
+      bypass: accessResult?.bypass,
+      forced_public_bypass: accessResult?.forced_public_bypass,
+      public_page: accessResult?.public_page,
+      has_session: !!accessResult?.session?.user?.id
+    });
     const removeIOSFaceToFaceFooter = () => {
       document.querySelectorAll("#italkyFooter,.premium-footer,[data-italky-footer],.italky-global-footer,.drawer-footer-seal,.footer-seal,.seal").forEach((node) => {
         try { node.remove(); } catch {}

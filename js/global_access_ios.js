@@ -99,6 +99,36 @@ function isIOSDaysPath(pathname = location.pathname) {
   return normalizePath(pathname) === "/pages/ios_days.html";
 }
 
+function emitIOSDebug(eventName, detail = {}) {
+  try {
+    const payload = {
+      ...detail,
+      href: location.href,
+      pathname: location.pathname,
+      search: location.search
+    };
+    if (typeof window.__italkyIosDebug === "function") {
+      window.__italkyIosDebug(eventName, payload);
+    }
+  } catch {}
+}
+
+function saveIOSLoginRedirectDebug(reason, next) {
+  try {
+    const payload = {
+      reason,
+      next,
+      href: location.href,
+      pathname: location.pathname,
+      search: location.search,
+      userAgent: navigator.userAgent,
+      time: new Date().toISOString()
+    };
+    sessionStorage.setItem("italky_ios_last_login_redirect_debug", JSON.stringify(payload));
+    emitIOSDebug("LOGIN_REDIRECT_REQUESTED", payload);
+  } catch {}
+}
+
 function isOfflineLanguagePath(pathname = "") {
   const p = normalizePath(pathname);
   return p === "/pages/offline_languages.html" || p === "/pages/offline_languages_ios.html";
@@ -141,12 +171,14 @@ function resetMobileViewportState() {
   } catch {}
 }
 
-function goLogin() {
+function goLogin(reason = "unknown") {
   resetMobileViewportState();
   try {
     const here = encodeURIComponent(location.pathname + location.search + location.hash);
+    saveIOSLoginRedirectDebug(reason, here);
     location.replace(`/pages/login_ios.html?next=${here}`);
   } catch {
+    saveIOSLoginRedirectDebug(`${reason}_fallback`, "");
     location.href = "/pages/login_ios.html";
   }
 }
@@ -186,11 +218,13 @@ async function fetchAccessStateSafe(session) {
     const json = await resp.json().catch(() => ({}));
     if (!resp.ok) {
       console.warn("[global_access_ios] access-state not ok:", resp.status, json);
+      emitIOSDebug("access_state_not_ok", { status: resp.status, response: json });
       return null;
     }
     return json || null;
   } catch (err) {
     console.warn("[global_access_ios] access-state fetch failed:", err);
+    emitIOSDebug("access_state_fetch_failed", { message: err?.message || String(err) });
     return null;
   }
 }
@@ -461,6 +495,14 @@ async function guardActiveAccess(session, safe, currentPath, allowPublicPageBypa
   if (safe?.is_admin || safe?.is_superadmin) return false;
   if (isIOSHomePath(currentPath) || isIOSDaysPath(currentPath)) return false;
   if (allowPublicPageBypass && publicPage) return false;
+  emitIOSDebug("ACCESS_BLOCKED_BY_ACTIVE_GUARD", {
+    currentPath,
+    allowPublicPageBypass,
+    publicPage,
+    access_open: safe?.access_open,
+    remaining_seconds: safe?.remaining_seconds,
+    membership_status: safe?.membership_status
+  });
   await showAccessExpiredPrompt();
   return true;
 }
@@ -491,11 +533,14 @@ export async function initGlobalAccess(options = {}) {
   const { allowPublicPageBypass = true, forcePublicBypass = false } = options;
   const currentPath = normalizePath(location.pathname);
   const publicPage = isPublicPage(currentPath);
+  emitIOSDebug("access_start", { allowPublicPageBypass, forcePublicBypass, currentPath, publicPage });
   const session = await getSessionOrNull();
+  emitIOSDebug("access_session_checked", { has_session: !!session?.user?.id });
   if (forcePublicBypass && !session?.user?.id) {
     const safe = buildSafeAccess({}, null);
     setCachedAccess(safe);
     dispatchAccessReady(safe);
+    emitIOSDebug("access_forced_public_bypass", { currentPath });
     return { ok: true, bypass: true, forced_public_bypass: true, session: null, access: safe };
   }
   if (session?.user?.id) {
@@ -505,6 +550,13 @@ export async function initGlobalAccess(options = {}) {
     dispatchAccessReady(safe);
     const blocked = await guardActiveAccess(session, safe, currentPath, allowPublicPageBypass, publicPage);
     if (blocked) return { ok: false, redirected: "access_options", session, access: safe };
+    emitIOSDebug("access_ok_with_session", {
+      currentPath,
+      access_open: safe?.access_open,
+      remaining_seconds: safe?.remaining_seconds,
+      is_admin: safe?.is_admin,
+      is_superadmin: safe?.is_superadmin
+    });
     return { ok: true, session, access: safe };
   }
 
@@ -512,10 +564,11 @@ export async function initGlobalAccess(options = {}) {
     const safe = buildSafeAccess({}, null);
     setCachedAccess(safe);
     dispatchAccessReady(safe);
+    emitIOSDebug("access_public_bypass", { currentPath, publicPage });
     return { ok: true, bypass: true, public_page: true, session: null, access: safe };
   }
 
-  goLogin();
+  goLogin("no_session_and_not_public_or_bypass_disabled");
   return { ok: false, redirected: "login", session: null, access: buildSafeAccess({}, null) };
 }
 
