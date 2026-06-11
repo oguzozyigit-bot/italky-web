@@ -9,6 +9,8 @@ const HOME_HREF = "/pages/home.html";
 const $ = (id) => document.getElementById(id);
 const CONNECT_FAILED_MESSAGE = "Bağlantı kurulamadı. Kodu ve internet bağlantınızı kontrol edip tekrar deneyin.";
 const CONNECT_ERROR_GRACE_MS = 2800;
+const HANDSFREE_ERROR_LIMIT = 5;
+const HANDSFREE_WATCHDOG_MS = 18000;
 
 let installed = false;
 let roomConnected = false;
@@ -19,6 +21,7 @@ let leavingPage = false;
 let lastSentText = "";
 let lastSentAt = 0;
 let restartTimer = null;
+let speechWatchdogTimer = null;
 let webRecognizer = null;
 let allowRemoteTts = false;
 let remoteLangState = null;
@@ -29,6 +32,8 @@ let roomReady = false;
 let waitingForPeer = false;
 let connectAttemptId = 0;
 let pendingConnectErrorTimer = null;
+let handsFreeRetryCount = 0;
+let handsFreeErrorCount = 0;
 let peerId = localStorage.getItem("italky_two_phone_peer_id_v1") || "";
 
 if (!peerId) {
@@ -596,7 +601,20 @@ function updateMicAvailability() {
   mic.setAttribute("aria-disabled", String(!roomConnected));
 }
 
+function clearSpeechWatchdog() {
+  clearTimeout(speechWatchdogTimer);
+  speechWatchdogTimer = null;
+}
+
+function resetHandsFreeHealth() {
+  handsFreeRetryCount = 0;
+  handsFreeErrorCount = 0;
+}
+
 function stopSpeech() {
+  clearTimeout(restartTimer);
+  restartTimer = null;
+  clearSpeechWatchdog();
   recording = false;
   setMicListening(false);
   try {
@@ -606,6 +624,32 @@ function stopSpeech() {
   } catch {}
   webRecognizer = null;
 }
+
+function disableHandsFree(message = "") {
+  handsFree = false;
+  $("handsFreeToggle")?.classList.remove("active");
+  resetHandsFreeHealth();
+  stopSpeech();
+  if (message) toast(message);
+}
+
+function shutdownAudio() {
+  handsFree = false;
+  $("handsFreeToggle")?.classList.remove("active");
+  resetHandsFreeHealth();
+  stopSpeech();
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+}
+
+function armSpeechWatchdog() {
+  clearSpeechWatchdog();
+  speechWatchdogTimer = setTimeout(() => {
+    if (!recording) return;
+    stopSpeech();
+    if (handsFree && roomConnected && !speakingRemote) restartHandsFreeIfNeeded();
+  }, HANDSFREE_WATCHDOG_MS);
+}
+
 
 function installTtsGuard() {
   if (window.__italkyTwoPhoneTtsGuardInstalled) return;
@@ -719,6 +763,8 @@ function parseSpeechResult(arg1, arg2, arg3) {
 function handleSpeechResult(arg1, arg2, arg3) {
   const result = parseSpeechResult(arg1, arg2, arg3);
   if (!roomConnected || !result.isFinal) return;
+  clearSpeechWatchdog();
+  resetHandsFreeHealth();
   recording = false;
   setMicListening(false);
   sendLocalSpeech(result.text);
@@ -726,18 +772,32 @@ function handleSpeechResult(arg1, arg2, arg3) {
 
 function handleSpeechError(errorMsg) {
   const code = String(errorMsg || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  clearSpeechWatchdog();
   recording = false;
   setMicListening(false);
-  if (["manual_stop_empty", "no_speech", "no_match", "speech_timeout", "timeout", "empty", "empty_result", "client_error", "recognizer_busy"].includes(code)) {
+
+  if (code.includes("permission")) {
+    if (handsFree) disableHandsFree("Mikrofon izni gerekli.");
+    else toast("Mikrofon izni gerekli.");
+    return;
+  }
+
+  if (["manual_stop_empty", "no_speech", "no_match", "speech_timeout", "timeout", "empty", "empty_result"].includes(code)) {
     restartHandsFreeIfNeeded();
     return;
   }
-  if (code.includes("permission")) toast("Mikrofon izni gerekli.");
-  else if (handsFree) {
+
+  if (handsFree) {
+    handsFreeErrorCount += 1;
+    if (handsFreeErrorCount >= HANDSFREE_ERROR_LIMIT) {
+      disableHandsFree("Eller serbest durduruldu. Mikrofonu elle tekrar deneyin.");
+      return;
+    }
     restartHandsFreeIfNeeded();
     return;
   }
-  else toast("Mikrofon başlatılamadı.");
+
+  toast("Mikrofon başlatılamadı.");
   restartHandsFreeIfNeeded();
 }
 
@@ -748,12 +808,18 @@ function startSpeech() {
   recording = true;
   setMicListening(true);
   try {
-    if (window.Native?.startSpeechRecognition) { window.Native.startSpeechRecognition(lang, "bot"); return; }
-    if (window.AndroidBridge?.startSpeechRecognition) { window.AndroidBridge.startSpeechRecognition(lang, "bot"); return; }
+    if (window.Native?.startSpeechRecognition) { armSpeechWatchdog(); window.Native.startSpeechRecognition(lang, "bot"); return; }
+    if (window.AndroidBridge?.startSpeechRecognition) { armSpeechWatchdog(); window.AndroidBridge.startSpeechRecognition(lang, "bot"); return; }
   } catch (e) { console.warn("[TWO_PHONE_ROOM] native speech start failed", e); }
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { recording = false; setMicListening(false); toast("Bu cihazda konuşma tanıma hazır değil."); return; }
+  if (!SpeechRecognition) {
+    recording = false;
+    setMicListening(false);
+    if (handsFree) disableHandsFree("Bu cihazda konuşma tanıma hazır değil.");
+    else toast("Bu cihazda konuşma tanıma hazır değil.");
+    return;
+  }
   const rec = new SpeechRecognition();
   webRecognizer = rec;
   rec.lang = lang;
@@ -765,17 +831,22 @@ function startSpeech() {
     if (finalText) handleSpeechResult("bot", finalText, true);
   };
   rec.onerror = (event) => handleSpeechError(event?.error || "speech_error");
-  rec.onend = () => { if (recording) { recording = false; setMicListening(false); restartHandsFreeIfNeeded(); } };
-  try { rec.start(); }
+  rec.onend = () => {
+    clearSpeechWatchdog();
+    if (recording) { recording = false; setMicListening(false); restartHandsFreeIfNeeded(); }
+  };
+  try { armSpeechWatchdog(); rec.start(); }
   catch (e) { console.warn("[TWO_PHONE_ROOM] web speech start failed", e); handleSpeechError("start_error"); }
 }
 
 function restartHandsFreeIfNeeded() {
   clearTimeout(restartTimer);
   if (!handsFree || !roomConnected || recording || speakingRemote) return;
+  handsFreeRetryCount = Math.min(handsFreeRetryCount + 1, 6);
+  const delay = Math.min(1800 + ((handsFreeRetryCount - 1) * 1200), 8500) + Math.floor(Math.random() * 700);
   restartTimer = setTimeout(() => {
     if (handsFree && roomConnected && !recording && !speakingRemote) startSpeech();
-  }, 900 + Math.floor(Math.random() * 500));
+  }, delay);
 }
 
 function setConnected(value, notify = true) {
@@ -794,9 +865,8 @@ function setConnected(value, notify = true) {
     sendLangState();
     setTimeout(sendLangState, 700);
   } else {
-    handsFree = false;
+    shutdownAudio();
     remoteLangState = null;
-    stopSpeech();
     updateLanguageUi();
     if (wasConnected && notify) toast("Görüşme bağlantısı kapandı.");
   }
@@ -814,11 +884,19 @@ function bindControls(options = {}) {
   botMic?.addEventListener("keydown", (event) => { if (event.key !== "Enter" && event.key !== " ") return; event.preventDefault(); event.stopPropagation(); startSpeech(); }, true);
   roomBtn?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); showRoomGate(); }, true);
   hfBtn?.addEventListener("click", (event) => {
-    event.preventDefault(); event.stopPropagation(); handsFree = !handsFree; hfBtn.classList.toggle("active", handsFree);
-    if (handsFree) startSpeech(); else stopSpeech();
+    event.preventDefault();
+    event.stopPropagation();
+    if (handsFree) {
+      disableHandsFree();
+      return;
+    }
+    handsFree = true;
+    resetHandsFreeHealth();
+    hfBtn.classList.add("active");
+    startSpeech();
   }, true);
   clearBtn?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); clearPanel("top"); clearPanel("bot"); }, true);
-  homeLink?.addEventListener("click", (event) => { event.preventDefault(); leavingPage = true; sendLeave(); setTimeout(() => { location.href = homeHref; }, 80); }, true);
+  homeLink?.addEventListener("click", (event) => { event.preventDefault(); shutdownAudio(); leavingPage = true; sendLeave(); setTimeout(() => { location.href = homeHref; }, 80); }, true);
 }
 
 function bindBridge() {
@@ -826,7 +904,8 @@ function bindBridge() {
   window.onNativeSpeechResult = handleSpeechResult;
   window.onNativeSpeechError = handleSpeechError;
   window.__italkyStartHandsFreeListening = () => startSpeech();
-  window.addEventListener("pagehide", () => { if (roomConnected && !leavingPage) sendLeave(); });
+  window.addEventListener("pagehide", () => { shutdownAudio(); if (roomConnected && !leavingPage) sendLeave(); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") shutdownAudio(); });
 }
 
 export function installTwoPhoneBluetoothMode(options = {}) {
