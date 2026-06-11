@@ -6,6 +6,12 @@
 
   const lines = [];
   const MAX_LINES = 18;
+  const TRACE_KEY = "italky_ios_debug_trace";
+
+  try {
+    const previous = JSON.parse(sessionStorage.getItem(TRACE_KEY) || "[]");
+    if (Array.isArray(previous)) lines.push(...previous.slice(-MAX_LINES));
+  } catch {}
 
   function safeJson(value) {
     try {
@@ -66,19 +72,31 @@
     if (log) log.textContent = lines.slice(-MAX_LINES).join("\n\n");
   }
 
+  function persist() {
+    try {
+      sessionStorage.setItem(TRACE_KEY, JSON.stringify(lines.slice(-MAX_LINES)));
+    } catch {}
+  }
+
   window.__italkyIosDebug = function italkyIosDebug(eventName, detail) {
     const stamp = new Date().toLocaleTimeString();
     lines.push("[" + stamp + "] " + eventName + "\n" + safeJson(detail || {}));
+    persist();
     render();
   };
 
   window.addEventListener("error", function (event) {
+    const target = event.target || {};
     window.__italkyIosDebug("window_error", {
       message: event.message,
       filename: event.filename,
       line: event.lineno,
       column: event.colno,
-      target: event.target && (event.target.src || event.target.href || event.target.tagName),
+      target: target.src || target.currentSrc || target.href || target.tagName || "",
+      target_tag: target.tagName || "",
+      target_src: target.src || target.currentSrc || "",
+      target_href: target.href || "",
+      target_html: target.outerHTML ? String(target.outerHTML).slice(0, 300) : "",
       error: event.error
     });
   }, true);
@@ -96,5 +114,21 @@
       search: location.search,
       userAgent: navigator.userAgent
     });
+  });
+
+  document.addEventListener("click", function (event) {
+    const link = event.target?.closest?.("a[href],button");
+    if (!link) return;
+    window.__italkyIosDebug("click", {
+      id: link.id || "",
+      tag: link.tagName || "",
+      text: String(link.textContent || "").trim().slice(0, 80),
+      href: link.href || link.getAttribute?.("href") || "",
+      defaultPrevented: event.defaultPrevented
+    });
+  }, true);
+
+  window.addEventListener("pagehide", function () {
+    window.__italkyIosDebug("pagehide", { href: location.href });
   });
 })();
