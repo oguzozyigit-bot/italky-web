@@ -1233,6 +1233,44 @@ body.home-ready #pageContent{
     levelCard: "Modül açılıyor..."
   };
 
+  const IOS_TWO_PHONE_URL = "/pages/facetoface_ios.html?ios=1&mode=two-phone&v=IOS_TWO_PHONE_PAGES_ROUTE_20260611";
+
+  function forceIosTwoPhoneRoute() {
+    const card = document.getElementById("bluetoothCard");
+    if (!card) return;
+    if (card.getAttribute("href") !== IOS_TWO_PHONE_URL) {
+      card.setAttribute("href", IOS_TWO_PHONE_URL);
+      window.__italkyIosDebug?.("bluetooth_href_forced", { href: IOS_TWO_PHONE_URL });
+    }
+    card.removeAttribute("data-ios-two-phone-disabled");
+    card.removeAttribute("aria-disabled");
+  }
+
+  function installIosTwoPhoneRouteGuard() {
+    forceIosTwoPhoneRoute();
+    setTimeout(forceIosTwoPhoneRoute, 0);
+    setTimeout(forceIosTwoPhoneRoute, 400);
+    setTimeout(forceIosTwoPhoneRoute, 1200);
+
+    try {
+      const observer = new MutationObserver(forceIosTwoPhoneRoute);
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["href", "data-ios-two-phone-disabled", "aria-disabled"] });
+    } catch {}
+
+    document.addEventListener("click", (event) => {
+      const card = event.target?.closest?.("#bluetoothCard");
+      if (!card) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      forceIosTwoPhoneRoute();
+      window.__italkyIosDebug?.("bluetooth_click_forced_ios_route", { fromHref: card.getAttribute("href"), to: IOS_TWO_PHONE_URL });
+      document.body.dataset.moduleLoading = MODULE_LOADING_COPY.bluetoothCard || "İki Telefon hazırlanıyor...";
+      document.body.classList.add("module-leaving");
+      location.href = IOS_TWO_PHONE_URL;
+    }, true);
+  }
+
   function installModuleTransitionOverlay() {
     document.querySelectorAll("#faceCard,#bluetoothCard,#guideConferenceCard,#mezoCard,#turanCard,#kafkasCard,#balkanCard,#offlineCard,#textCard,#funCard,#levelCard").forEach((card) => {
       card.addEventListener("click", (event) => {
@@ -1246,6 +1284,7 @@ body.home-ready #pageContent{
     });
   }
 
+  installIosTwoPhoneRouteGuard();
   installModuleTransitionOverlay();
   bootHome();
 </script>

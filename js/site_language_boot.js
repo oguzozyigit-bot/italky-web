@@ -140,7 +140,7 @@ function patchTwoPhoneHomeCopy() {
   card.setAttribute(
     "href",
     isIosHome
-      ? "/facetoface_ios.html?ios=1&mode=two-phone&v=IOS_TWO_PHONE_NOCACHE_20260611"
+      ? "/pages/facetoface_ios.html?ios=1&mode=two-phone&v=IOS_TWO_PHONE_PAGES_ROUTE_20260611"
       : "/facetoface.html?mode=two-phone"
   );
   card.removeAttribute("data-ios-two-phone-disabled");
