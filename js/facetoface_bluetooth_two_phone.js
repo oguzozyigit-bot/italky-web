@@ -179,7 +179,7 @@ function injectTwoPhoneCss() {
     body.bt-premium-mode .two-phone-lang-value{margin-top:4px;max-width:100%;color:#fff;font-size:14px;font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     body.bt-premium-mode .two-phone-lang-arrow{display:flex;align-items:center;justify-content:center;color:#93c5fd;font-weight:1000;font-size:16px;text-shadow:0 0 16px rgba(59,130,246,.45);}
     body.bt-premium-mode .two-phone-remote-pair,.two-phone-bt-status{display:none!important;}
-    body.bt-premium-mode .two-phone-footer-seal{position:fixed;left:50%;bottom:calc(4px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;pointer-events:none;color:rgba(255,255,255,.78);font-size:10px;line-height:1;font-weight:900;letter-spacing:.25px;text-shadow:none;white-space:nowrap;}
+    body.bt-premium-mode .two-phone-footer-seal{display:none!important;}
     body.bt-premium-mode .two-phone-lang-picker{position:fixed;inset:0;z-index:2147483647;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,23,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
     body.bt-premium-mode .two-phone-lang-picker.show{display:flex;}
     body.bt-premium-mode .two-phone-lang-picker-card{width:min(92vw,390px);max-height:min(72vh,560px);display:flex;flex-direction:column;overflow:hidden;border-radius:22px;border:1px solid rgba(147,197,253,.24);background:linear-gradient(180deg,#0f172a,#020617);box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);}
@@ -191,12 +191,16 @@ function injectTwoPhoneCss() {
     body.bt-premium-mode .two-phone-lang-option.active{background:rgba(59,130,246,.18);color:#bfdbfe;}
     body.bt-premium-mode .half-screen > .lang-row{display:none!important;}
     body.bt-premium-mode #topSection .composer-stack{display:none!important;}
+    body.bt-premium-mode #botSection .composer-stack{position:relative!important;isolation:isolate!important;}
+    body.bt-premium-mode #centerHub #handsFreeToggle,body.bt-premium-mode .center-hub #handsFreeToggle{display:none!important;pointer-events:none!important;}
+    body.bt-premium-mode #botSection .composer-stack > #handsFreeToggle{position:absolute!important;left:calc(50% + 50px)!important;top:50%!important;right:auto!important;bottom:auto!important;transform:translateY(-50%)!important;z-index:70!important;width:auto!important;max-width:116px!important;min-height:40px!important;white-space:nowrap!important;padding:7px 10px!important;font-size:10px!important;line-height:1!important;gap:6px!important;flex-shrink:0!important;}
+    body.bt-premium-mode #botSection .composer-stack > #handsFreeToggle span{display:inline!important;overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;}
     body.bt-premium-mode .two-phone-message{transition:font-size .18s ease,opacity .18s ease,transform .18s ease;}
     body.bt-premium-mode .chat-body .two-phone-message{font-size:19px!important;opacity:.54!important;line-height:1.22!important;max-width:86%!important;}
     body.bt-premium-mode .chat-body .two-phone-message.latest,body.bt-premium-mode .chat-body .two-phone-message.is-latest{font-size:31px!important;opacity:1!important;font-weight:1000!important;}
     body.bt-premium-mode #topBody,body.bt-premium-mode #botBody{justify-content:flex-end!important;gap:12px!important;}
     body.bt-premium-mode #botMic.room-mic-disabled{opacity:.52;filter:saturate(.65);box-shadow:none!important;}
-    @media(max-width:390px){body.bt-premium-mode .two-phone-room-card{padding:17px;}body.bt-premium-mode .two-phone-room-code{font-size:34px;}body.bt-premium-mode .two-phone-lang-bar{width:min(84vw,340px);gap:6px;margin-top:8px;}body.bt-premium-mode .two-phone-lang-card{min-height:50px;padding:8px 9px;}body.bt-premium-mode .two-phone-lang-value{font-size:13px;}body.bt-premium-mode .chat-body .two-phone-message{font-size:17px!important;}body.bt-premium-mode .chat-body .two-phone-message.latest,body.bt-premium-mode .chat-body .two-phone-message.is-latest{font-size:27px!important;}body.bt-premium-mode .two-phone-footer-seal{font-size:9px;bottom:calc(3px + env(safe-area-inset-bottom,0px));}}
+    @media(max-width:390px){body.bt-premium-mode .two-phone-room-card{padding:17px;}body.bt-premium-mode .two-phone-room-code{font-size:34px;}body.bt-premium-mode .two-phone-lang-bar{width:min(84vw,340px);gap:6px;margin-top:8px;}body.bt-premium-mode .two-phone-lang-card{min-height:50px;padding:8px 9px;}body.bt-premium-mode .two-phone-lang-value{font-size:13px;}body.bt-premium-mode .chat-body .two-phone-message{font-size:17px!important;}body.bt-premium-mode .chat-body .two-phone-message.latest,body.bt-premium-mode .chat-body .two-phone-message.is-latest{font-size:27px!important;}body.bt-premium-mode #botSection .composer-stack > #handsFreeToggle{left:calc(50% + 42px)!important;width:auto!important;height:38px!important;min-height:38px!important;max-width:112px!important;padding:6px 8px!important;justify-content:center!important;gap:5px!important;font-size:9px!important;}body.bt-premium-mode #botSection .composer-stack > #handsFreeToggle span{display:inline!important;font-size:9px!important;line-height:1!important;max-width:76px!important;overflow:visible!important;text-overflow:clip!important;}body.bt-premium-mode #botSection .composer-stack > #handsFreeToggle svg{width:15px!important;height:15px!important;flex:0 0 auto!important;}}
   `;
   document.head.appendChild(style);
 }
@@ -503,12 +507,7 @@ function ensureLanguageUi() {
 }
 
 function ensureFooterSeal() {
-  if ($("twoPhoneFooterSeal")) return;
-  const seal = document.createElement("div");
-  seal.id = "twoPhoneFooterSeal";
-  seal.className = "two-phone-footer-seal";
-  seal.textContent = `italkyAI By Ozyigit's 2026 V.${getVersionCode()}`;
-  document.body.appendChild(seal);
+  $("twoPhoneFooterSeal")?.remove();
 }
 
 function updateLanguageUi() {
@@ -734,6 +733,10 @@ function handleSpeechError(errorMsg) {
     return;
   }
   if (code.includes("permission")) toast("Mikrofon izni gerekli.");
+  else if (handsFree) {
+    restartHandsFreeIfNeeded();
+    return;
+  }
   else toast("Mikrofon başlatılamadı.");
   restartHandsFreeIfNeeded();
 }
