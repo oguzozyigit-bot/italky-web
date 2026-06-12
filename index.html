@@ -82,21 +82,21 @@
       height: 100vh;
       height: 100svh;
       height: 100dvh;
-      padding: clamp(86px, 13vh, 132px) clamp(10px, 3vw, 24px) max(12px, env(safe-area-inset-bottom));
+      padding: clamp(58px, 9vh, 88px) clamp(6px, 2vw, 18px) max(8px, env(safe-area-inset-bottom));
       text-align: center;
       max-width: 1000px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: clamp(10px, 2vh, 18px);
+      justify-content: flex-start;
+      gap: clamp(7px, 1.35vh, 14px);
       overflow: hidden;
     }
 
     h1 {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(34px, min(9vw, 7vh), 76px);
+      font-size: clamp(30px, min(8.6vw, 6.4vh), 70px);
       font-weight: 900;
       line-height: .98;
       letter-spacing: -2px;
@@ -114,12 +114,76 @@
     @keyframes shine { to { background-position: 200% center; } }
 
     .hero-p {
-      font-size: clamp(15px, min(4vw, 2.7vh), 21px);
+      font-size: clamp(12px, min(3.6vw, 2.2vh), 19px);
       color: var(--text-muted);
       font-weight: 400;
       max-width: 620px;
       margin: 0 auto;
-      line-height: 1.35;
+      line-height: 1.24;
+    }
+
+    .features-list {
+      width: min(calc(100vw - 18px), 720px);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: clamp(3px, .65vh, 7px);
+      padding: clamp(8px, 1.3vh, 13px) clamp(9px, 2.4vw, 14px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.025);
+      text-align: left;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      color: #e2e8f0;
+      font-size: clamp(10.5px, min(3.2vw, 1.85vh), 14px);
+      font-weight: 650;
+      line-height: 1.18;
+    }
+
+    .feature-icon {
+      flex: 0 0 auto;
+      width: 15px;
+      height: 15px;
+      margin-top: 0;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan);
+      border: 1px solid rgba(103, 232, 249, 0.28);
+      background: rgba(103, 232, 249, 0.13);
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .promo-large-btn {
+      width: min(calc(100vw - 18px), 720px);
+      height: clamp(40px, 6.6vh, 54px);
+      border-radius: 14px;
+      border: 1px solid rgba(103, 232, 249, 0.28);
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(59, 130, 246, 0.07));
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(13px, 3.5vw, 16px);
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+    }
+
+    .promo-large-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: var(--cyan);
+      stroke-width: 2.2;
     }
 
     /* ----------------------------------------------------- */
@@ -128,8 +192,8 @@
     .custom-store-buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: clamp(8px, 2.4vw, 18px);
-      width: min(calc(100vw - 16px), 1000px);
+      gap: clamp(4px, 1.5vw, 14px);
+      width: min(calc(100vw - 8px), 1000px);
       margin: 0 auto;
       z-index: 20;
       position: relative;
@@ -139,45 +203,49 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: clamp(12px, 3vw, 18px);
-      height: clamp(68px, min(12vw, 12vh), 112px);
-      padding: clamp(6px, 2vw, 16px);
+      border: 0;
+      border-radius: 0;
+      height: clamp(72px, min(17vw, 12vh), 116px);
+      padding: 0;
       text-decoration: none;
       color: #fff;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
-      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      box-shadow: none;
+      background: transparent;
+      overflow: visible;
     }
 
     .custom-store-btn:hover {
-      transform: scale(1.05) translateY(-4px);
-      border-color: var(--cyan);
-      box-shadow: 0 15px 35px rgba(103, 232, 249, 0.25), inset 0 1px 0 rgba(255,255,255,0.10);
+      transform: scale(1.03);
+      box-shadow: none;
     }
 
     /* Orijinal Buton Renkleri (Orijinal Kod) */
-    .apple-btn { background: linear-gradient(135deg, #1f1f1f, #000); }
-    .google-btn { background: #000; }
+    .apple-btn,
+    .google-btn {
+      background: transparent;
+    }
 
     .store-badge {
       display: block;
-      width: 100%;
-      height: 100%;
+      width: 112%;
+      height: 112%;
+      max-width: none;
       object-fit: contain;
+      transform: scale(1.08);
     }
 
     @media (max-width: 600px) {
       nav { padding: max(10px, env(safe-area-inset-top)) 12px 8px; }
       .brand-title { font-size: clamp(24px, 8vw, 32px); }
       .brand-subtitle { font-size: 8px; letter-spacing: 3px; }
-      .custom-store-buttons { width: calc(100vw - 12px); }
+      .custom-store-buttons { width: calc(100vw - 4px); }
     }
 
     /* ----------------------------------------------------- */
     /* 3D KRİSTAL KAFES VE GEZEGEN                           */
     /* ----------------------------------------------------- */
-    .holo-container { --holo-size: clamp(92px, min(22vw, 20vh), 154px); width: var(--holo-size); height: var(--holo-size); position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 0 auto; transform: scale(1); pointer-events: none;}
+    .holo-container { --holo-size: clamp(74px, min(22vw, 16vh), 146px); width: var(--holo-size); height: var(--holo-size); position: relative; display: flex; align-items: center; justify-content: center; transform-style: preserve-3d; margin: 0 auto; transform: scale(1); pointer-events: none; order: -1;}
     .crystal-cage { position: absolute; width: calc(var(--holo-size) * .72); height: calc(var(--holo-size) * .72); transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
     .crystal-side { position: absolute; inset: 0; border: 1.5px solid rgba(103,232,249,.36); background: radial-gradient(circle, rgba(129,140,248,.11), transparent 70%); box-shadow: 0 0 15px rgba(103,232,249,.18); }
     .side1 { transform: rotateY(0deg) translateZ(calc(var(--holo-size) * .36)); } .side2 { transform: rotateY(90deg) translateZ(calc(var(--holo-size) * .36)); } .side3 { transform: rotateY(180deg) translateZ(calc(var(--holo-size) * .36)); } .side4 { transform: rotateY(270deg) translateZ(calc(var(--holo-size) * .36)); } .side5 { transform: rotateX(90deg) translateZ(calc(var(--holo-size) * .36)); } .side6 { transform: rotateX(-90deg) translateZ(calc(var(--holo-size) * .36)); }
@@ -347,23 +415,23 @@
 
     @media (max-height: 720px) {
       .hero {
-        padding-top: clamp(70px, 12vh, 94px);
-        gap: 9px;
+        padding-top: clamp(52px, 8vh, 70px);
+        gap: 6px;
       }
 
       .hero-p {
-        font-size: 14px;
+        font-size: 12px;
         line-height: 1.25;
       }
 
       .holo-container {
-        --holo-size: clamp(74px, 18vh, 108px);
+        --holo-size: clamp(66px, 13vh, 96px);
       }
     }
 
     @media (max-height: 610px) {
       .hero {
-        padding-top: 62px;
+        padding-top: 52px;
         gap: 7px;
       }
 
@@ -371,12 +439,14 @@
         font-size: clamp(28px, 8vw, 36px);
       }
 
-      .holo-container {
-        display: none;
-      }
-
       .custom-store-btn {
         height: 62px;
+      }
+
+      .features-list {
+        gap: 3px;
+        padding-top: 7px;
+        padding-bottom: 7px;
       }
     }
 
@@ -398,6 +468,24 @@
   </nav>
 
   <section class="hero reveal">
+    <div class="holo-container">
+      <div class="crystal-cage">
+        <div class="crystal-side side1"></div>
+        <div class="crystal-side side2"></div>
+        <div class="crystal-side side3"></div>
+        <div class="crystal-side side4"></div>
+        <div class="crystal-side side5"></div>
+        <div class="crystal-side side6"></div>
+      </div>
+      <div class="holo-qr ai-planet" aria-hidden="true">
+        <div class="planet-glow"></div>
+        <div class="planet-rays"></div>
+        <div class="planet-core">
+          <div class="planet-ai-badge"><span>AI</span></div>
+        </div>
+      </div>
+    </div>
+
     <h1>
       Sınırları Kaldır,<br>
       <span class="text-gradient">Özgürlüğü Keşfet.</span>
@@ -405,6 +493,20 @@
     <p class="hero-p">
       Gerçek zamanlı çeviri, icanyAI radyo, çevrimdışı dil paketleri ve dil teknolojileri tek uygulamada cebinizde.
     </p>
+
+    <div class="features-list">
+      <div class="feature-item"><div class="feature-icon">✓</div><span>Yapay zeka destekli anlık ve canlı yüz yüze çeviri</span></div>
+      <div class="feature-item"><div class="feature-icon">✓</div><span>İnternet olmadan çalışan çevrimdışı dil paketleri</span></div>
+      <div class="feature-item"><div class="feature-icon">✓</div><span>İki cihaz arasında kesintisiz çift telefon konuşma modu</span></div>
+      <div class="feature-item"><div class="feature-icon">✓</div><span>Gezi, tur ve konferanslar için çoklu katılımcı dinleme sistemi</span></div>
+      <div class="feature-item"><div class="feature-icon">✓</div><span>icanyAI entegrasyonu ile gelişmiş ses ve yapay zeka radyo modülleri</span></div>
+      <div class="feature-item"><div class="feature-icon">✓</div><span>Mezopotamya, Kafkas, Turan ve Balkan dilleri desteği</span></div>
+    </div>
+
+    <button class="promo-large-btn" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a3 3 0 0 1 0 6v1a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1a3 3 0 0 1 0-6z"></path><line x1="12" y1="5" x2="12" y2="19"></line></svg>
+      Kod Girişi
+    </button>
 
     <div class="custom-store-buttons">
       
@@ -424,24 +526,6 @@
         >
       </a>
 
-    </div>
-
-    <div class="holo-container">
-      <div class="crystal-cage">
-        <div class="crystal-side side1"></div>
-        <div class="crystal-side side2"></div>
-        <div class="crystal-side side3"></div>
-        <div class="crystal-side side4"></div>
-        <div class="crystal-side side5"></div>
-        <div class="crystal-side side6"></div>
-      </div>
-      <div class="holo-qr ai-planet" aria-hidden="true">
-        <div class="planet-glow"></div>
-        <div class="planet-rays"></div>
-        <div class="planet-core">
-          <div class="planet-ai-badge"><span>AI</span></div>
-        </div>
-      </div>
     </div>
   </section>
 
