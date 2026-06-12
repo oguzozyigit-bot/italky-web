@@ -23,13 +23,12 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
     
-    /* 1. KESİN VE KATI TAM EKRAN KİLİDİ (SCROLL YOK) */
+    /* UYGULAMA (APP) GİBİ DAVRANMASINI SAĞLAYAN KESİN KİLİT */
     html, body {
       width: 100%;
-      height: 100%;
-      overflow: hidden !important; /* Asla kaydırma yapmaz */
-      touch-action: none; /* Mobilde sayfayı çekip sündürmeyi engeller */
-      overscroll-behavior: none;
+      height: 100%; /* min-height yerine kesin height, tarayıcıda küçülmeyi önler */
+      overflow: hidden; /* Scroll kesinlikle yok */
+      touch-action: none; /* Sayfanın lastik gibi sünmesini engeller */
       background-color: var(--bg);
     }
 
@@ -42,59 +41,55 @@
         linear-gradient(180deg, #0b1020 0%, #030406 100%);
       display: flex;
       flex-direction: column;
-      align-items: center;
     }
 
     .ambient-glow {
-      position: fixed;
+      position: absolute;
       inset: 0; z-index: -1; pointer-events: none;
-      background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(6, 182, 212, 0.12), transparent 40%);
+      background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.12), transparent 40%);
       filter: blur(60px);
     }
 
-    /* ÜST LOGO - EKRANA ORANTILI YAPIŞIR */
+    /* İÇERİĞİ EKRANIN TAM ORTASINA YAYAN ANA TAŞIYICI */
+    .app-container {
+      flex: 1; /* Ekranın geri kalan tüm yüksekliğini kaplar */
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* İçeriği dikeyde tam ortalar */
+      align-items: center;
+      padding: 10px 20px;
+    }
+
+    /* ÜST LOGO */
     nav {
       width: 100%;
-      padding: max(2dvh, 12px) 0 0 0;
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-shrink: 0;
-      z-index: 100;
+      margin-bottom: 20px;
     }
     .brand-text { display: flex; flex-direction: column; align-items: center; }
-    .brand-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(24px, 4dvh, 32px); font-weight: 900; line-height: 1; letter-spacing: -0.5px; color: #fff; }
+    .brand-title { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; color: #fff; }
     .brand-title span { background: linear-gradient(135deg, var(--cyan), var(--magenta)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .brand-subtitle { font-size: 10px; font-weight: 900; letter-spacing: 4px; color: var(--cyan); margin-top: 2px; }
+    .brand-subtitle { font-size: 10px; font-weight: 900; letter-spacing: 4px; color: var(--cyan); margin-top: 4px; }
 
-    /* İÇERİK BLOĞU - EKRANA SIKIŞMADAN TAM DAĞILIR */
-    .container {
-      width: 100%;
-      max-width: 440px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center; /* Dikeyde kusursuz ortalama */
-      align-items: center;
-      padding: 0 16px max(2dvh, 12px) 16px;
-    }
-
-    /* 3D ANİMASYON - EKRAN BOYUNA GÖRE KÜÇÜLÜR VEYA BÜYÜR */
+    /* 3D ANİMASYON (SABİT BOYUT, KÜÇÜLMEZ) */
     .holo-container { 
-      width: clamp(80px, 15dvh, 110px); 
-      height: clamp(80px, 15dvh, 110px); 
-      position: relative; 
+      width: 100px; height: 100px; position: relative; 
       display: flex; align-items: center; justify-content: center; 
-      transform-style: preserve-3d; margin-bottom: 2dvh; pointer-events: none;
+      transform-style: preserve-3d; margin-bottom: 20px; pointer-events: none;
     }
-    .crystal-cage { position: absolute; width: 70%; height: 70%; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
+    .crystal-cage { position: absolute; width: 70px; height: 70px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
     .crystal-side { position: absolute; inset: 0; border: 1.5px solid rgba(103,232,249,.25); background: radial-gradient(circle, rgba(129,140,248,.08), transparent 70%); box-shadow: 0 0 12px rgba(103,232,249,.15); }
-    .side1 { transform: rotateY(0deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side2 { transform: rotateY(90deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side3 { transform: rotateY(180deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side4 { transform: rotateY(270deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side5 { transform: rotateX(90deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side6 { transform: rotateX(-90deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); }
-    .holo-qr { position: absolute; width: 45%; height: 45%; z-index: 2; display: flex; align-items: center; justify-content: center; animation: floatQR 4s ease-in-out infinite; }
-    .planet-glow { position: absolute; inset: -15%; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 65%), radial-gradient(circle, rgba(103,232,249,.20) 0%, transparent 70%); filter: blur(8px); animation: planetGlow 3.2s ease-in-out infinite; z-index: 1; }
+    .side1 { transform: rotateY(0deg) translateZ(35px); } .side2 { transform: rotateY(90deg) translateZ(35px); } .side3 { transform: rotateY(180deg) translateZ(35px); } .side4 { transform: rotateY(270deg) translateZ(35px); } .side5 { transform: rotateX(90deg) translateZ(35px); } .side6 { transform: rotateX(-90deg) translateZ(35px); }
+    .holo-qr { position: absolute; width: 44px; height: 44px; z-index: 2; display: flex; align-items: center; justify-content: center; animation: floatQR 4s ease-in-out infinite; }
+    .planet-glow { position: absolute; inset: -8px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 65%), radial-gradient(circle, rgba(103,232,249,.20) 0%, transparent 70%); filter: blur(8px); animation: planetGlow 3.2s ease-in-out infinite; z-index: 1; }
     .planet-core { position: relative; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 2; background: linear-gradient(145deg, #111827 0%, #030406 100%); box-shadow: inset -6px -6px 12px rgba(0,0,0,.7), inset 6px 6px 12px rgba(255,255,255,.03), 0 0 20px rgba(103,232,249,.2); }
-    .planet-ai-badge { position: relative; z-index: 3; width: 50%; height: 50%; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15); backdrop-filter: blur(5px); }
-    .planet-ai-badge span { font-family: 'Space Grotesk', sans-serif; font-size: clamp(8px, 1.5dvh, 10px); font-weight: 900; color: #fff; letter-spacing: 0.5px; }
+    .planet-ai-badge { position: relative; z-index: 3; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15); backdrop-filter: blur(5px); }
+    .planet-ai-badge span { font-family: 'Space Grotesk', sans-serif; font-size: 8px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
 
     @keyframes rotateCrystal { from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
     @keyframes floatQR { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
@@ -103,28 +98,28 @@
     /* BAŞLIK */
     h1 {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(24px, 4.5dvh, 34px);
+      font-size: 32px;
       font-weight: 900;
       line-height: 1.1;
       letter-spacing: -1px;
-      margin-bottom: 2dvh;
+      margin-bottom: 20px;
       text-align: center;
     }
     .text-gradient { background: linear-gradient(to right, #fff, #94a3b8, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* ÖZELLİKLER LİSTESİ - DİNAMİK DARALMA */
+    /* ÖZELLİKLER LİSTESİ */
     .features-list {
       width: 100%;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 16px;
-      padding: 1.5dvh 16px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: clamp(6px, 1.2dvh, 10px);
-      margin-bottom: 3dvh;
+      gap: 10px;
+      margin-bottom: 24px;
     }
-    .feature-item { display: flex; align-items: flex-start; gap: 8px; font-size: clamp(12px, 1.8dvh, 14px); color: #e2e8f0; font-weight: 500; line-height: 1.35; }
+    .feature-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: #e2e8f0; font-weight: 500; line-height: 1.35; }
     .feature-icon { flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%; background: rgba(103, 232, 249, 0.15); border: 1px solid rgba(103, 232, 249, 0.3); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 9px; font-weight: bold; margin-top: 1px; }
 
     /* -------- EYLEM ALANI -------- */
@@ -132,19 +127,19 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 1.2dvh;
+      gap: 12px;
     }
 
     /* KOD GİRİŞİ BUTONU */
     .promo-large-btn {
       width: 100%;
-      height: clamp(48px, 7dvh, 56px);
+      height: 52px;
       border-radius: 14px;
       border: 1px solid rgba(103, 232, 249, 0.3);
       background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(59, 130, 246, 0.06));
       color: #fff;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(14px, 2.2dvh, 16px);
+      font-size: 16px;
       font-weight: 800;
       display: flex;
       align-items: center;
@@ -152,13 +147,17 @@
       gap: 8px;
       cursor: pointer;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      transition: all 0.2s;
     }
-    .promo-large-btn:hover { border-color: var(--cyan); background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.1)); }
-    .promo-large-btn svg { width: clamp(18px, 2.5dvh, 20px); height: clamp(18px, 2.5dvh, 20px); fill: none; stroke: var(--cyan); stroke-width: 2.2; }
+    .promo-large-btn svg { width: 20px; height: 20px; fill: none; stroke: var(--cyan); stroke-width: 2.2; }
 
-    /* ALT METİN - KOD GİRİŞİ ALTINDA */
-    .promo-bottom-text { font-size: clamp(11px, 1.6dvh, 13px); color: var(--text-muted); font-weight: 500; text-align: center; margin-bottom: 0.5dvh; }
+    /* ALT METİN - KOD GİRİŞİNİN TAM ALTINDA */
+    .promo-bottom-text { 
+      font-size: 12px; 
+      color: var(--text-muted); 
+      font-weight: 500; 
+      text-align: center; 
+      margin-bottom: 4px; 
+    }
 
     /* MAĞAZA BUTONLARI (%50 - %50) */
     .store-row {
@@ -168,7 +167,7 @@
     }
     .custom-store-btn {
       flex: 1; 
-      height: clamp(48px, 7dvh, 56px);
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -176,12 +175,20 @@
       border-radius: 14px;
       background: transparent; 
       text-decoration: none;
-      transition: all 0.2s;
     }
-    .custom-store-btn:hover { border-color: var(--cyan); background: rgba(255,255,255,0.03); }
-    .store-badge { max-height: 70%; max-width: 90%; object-fit: contain; }
 
-    /* -------- MODAL (AÇILIR PENCERE) -------- */
+    /* İŞTE CAN ALICI NOKTA: LOGOLARIN OPTİK OLARAK EŞİTLENMESİ */
+    /* Google Play görselinde devasa şeffaf boşluklar olduğu için boyutu daha büyük tutulup Apple'a eşitlendi */
+    .apple-badge {
+      height: 32px; 
+      width: auto;
+    }
+    .google-badge {
+      height: 48px; /* Optik denge için Apple'dan daha yüksek verildi */
+      width: auto;
+    }
+
+    /* MODAL (AÇILIR PENCERE) */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(3, 4, 6, 0.85);
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -213,23 +220,23 @@
 </head>
 <body>
 
-  <div class="ambient-glow" id="ambientGlow"></div>
+  <div class="ambient-glow"></div>
 
-  <nav>
-    <div class="brand-text">
-      <div class="brand-title">italky<span>AI</span></div>
-      <div class="brand-subtitle">BE FREE</div>
-    </div>
-  </nav>
-
-  <main class="container">
+  <div class="app-container">
     
+    <nav>
+      <div class="brand-text">
+        <div class="brand-title">italky<span>AI</span></div>
+        <div class="brand-subtitle">BE FREE</div>
+      </div>
+    </nav>
+
     <div class="holo-container">
       <div class="crystal-cage">
         <div class="crystal-side side1"></div><div class="crystal-side side2"></div><div class="crystal-side side3"></div>
         <div class="crystal-side side4"></div><div class="crystal-side side5"></div><div class="crystal-side side6"></div>
       </div>
-      <div class="holo-qr ai-planet" aria-hidden="true">
+      <div class="holo-qr ai-planet">
         <div class="planet-glow"></div>
         <div class="planet-core"><div class="planet-ai-badge"><span>AI</span></div></div>
       </div>
@@ -257,15 +264,15 @@
 
       <div class="store-row">
         <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" rel="noopener noreferrer" class="custom-store-btn">
-          <img class="store-badge" src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=320x106" alt="App Store">
+          <img class="apple-badge" src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=320x106" alt="App Store">
         </a>
         <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" rel="noopener noreferrer" class="custom-store-btn">
-          <img class="store-badge" src="https://play.google.com/intl/en_us/badges/static/images/badges/tr_badge_web_generic.png" alt="Google Play">
+          <img class="google-badge" src="https://play.google.com/intl/en_us/badges/static/images/badges/tr_badge_web_generic.png" alt="Google Play">
         </a>
       </div>
 
     </div>
-  </main>
+  </div>
 
   <div class="modal-overlay" id="promoModal">
     <div class="modal-box">
@@ -300,14 +307,6 @@
   </div>
 
   <script>
-    const glow = document.getElementById('ambientGlow');
-    document.addEventListener('mousemove', (e) => {
-      const x = (e.clientX / window.innerWidth) * 100;
-      const y = (e.clientY / window.innerHeight) * 100;
-      glow.style.setProperty('--mouse-x', `${x}%`);
-      glow.style.setProperty('--mouse-y', `${y}%`);
-    });
-
     const modal = document.getElementById('promoModal');
     const openPromoAction = document.getElementById('openPromoAction');
     const closeModalBtn = document.getElementById('closeModalBtn');
