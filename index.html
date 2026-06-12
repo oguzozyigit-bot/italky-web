@@ -222,7 +222,9 @@
       justify-content: center;
       border: 0;
       border-radius: 0;
-      height: 58px;
+      width: 100%;
+      height: 64px;
+      min-height: 64px;
       padding: 0;
       text-decoration: none;
       color: #fff;
@@ -249,7 +251,16 @@
       height: 100%;
       max-width: none;
       object-fit: contain;
+    }
+
+    .apple-store-badge {
       transform: scale(1.12);
+      object-fit: contain;
+    }
+
+    .google-store-badge {
+      transform: scale(1.28);
+      object-fit: contain;
     }
 
     @media (max-width: 600px) {
@@ -289,9 +300,8 @@
     @keyframes planetRaySpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes aiSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    .app-preview-section,
-    footer {
-      display: none;
+    .app-preview-section {
+      display: none !important;
     }
 
     /* UYGULAMA İÇİ MODÜLLER (Orijinal Home.html Renkleri ve Yapısı) */
@@ -422,9 +432,57 @@
     .wide-card .arrow-chip { right: 16px; top: 50%; bottom: auto; transform: translateY(-50%); }
 
     /* Footer CTA */
-    footer { border-top: 1px solid rgba(255,255,255,0.05); padding: 60px 20px; text-align: center; position: relative; z-index: 10; background: linear-gradient(to top, rgba(3,4,6,1), transparent); }
-    .footer-title { font-family: 'Space Grotesk', sans-serif; font-size: 28px; margin-bottom: 20px; }
-    .footer-copy { margin-top: 40px; font-size: 13px; color: #475569; font-weight: 600; }
+    footer {
+      display: block;
+      width: min(100%, 460px);
+      margin: 0 auto;
+      padding: 12px 18px max(24px, env(safe-area-inset-bottom));
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin-bottom: 14px;
+    }
+
+    .footer-links a {
+      color: rgba(226,232,240,.78);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: .2px;
+      transition: color .18s ease, text-shadow .18s ease;
+    }
+
+    .footer-links a:hover {
+      color: #fff;
+      text-shadow: 0 0 16px rgba(103,232,249,.35);
+    }
+
+    .brand-seal {
+      color: rgba(148,163,184,.72);
+      font-size: 12.5px;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+
+    .gokturk-signature {
+      display: block;
+      margin-top: 5px;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #e0faff, var(--cyan), #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(103,232,249,.42));
+    }
 
     /* Animasyon Sınıfları */
     .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -460,7 +518,7 @@
       }
 
       .custom-store-btn {
-        height: 58px;
+        height: 64px;
       }
 
       .holo-container {
@@ -626,6 +684,14 @@
       border-color: rgba(248,113,113,.28);
       background: rgba(248,113,113,.08);
     }
+
+    .app-preview-section {
+      display: none !important;
+    }
+
+    footer {
+      display: block !important;
+    }
   </style>
 </head>
 <body>
@@ -688,7 +754,7 @@
       
       <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" rel="noopener noreferrer" class="custom-store-btn apple-btn">
         <img
-          class="store-badge"
+          class="store-badge apple-store-badge"
           src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=320x106"
           alt="App Store’dan İndir"
         >
@@ -696,7 +762,7 @@
 
       <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" rel="noopener noreferrer" class="custom-store-btn google-btn">
         <img
-          class="store-badge"
+          class="store-badge google-store-badge"
           src="https://play.google.com/intl/en_us/badges/static/images/badges/tr_badge_web_generic.png"
           alt="Google Play’den İndir"
         >
@@ -834,32 +900,15 @@
   </section>
 
   <footer>
-    <div class="reveal">
-      <h2 class="footer-title">Telefonuna Uygun Olanı Seç, <span class="text-gradient">Başla.</span></h2>
-      
-      <div class="custom-store-buttons" style="margin-top: 30px;">
-        <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" rel="noopener noreferrer" class="custom-store-btn apple-btn">
-          <img
-            class="store-badge"
-            src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=320x106"
-            alt="App Store’dan İndir"
-          >
-        </a>
+    <nav class="footer-links" aria-label="Alt bağlantılar">
+      <a href="/about.html">Hakkımızda</a>
+      <a href="/privacy.html">Gizlilik</a>
+      <a href="/contact.html">İletişim</a>
+    </nav>
 
-        <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" rel="noopener noreferrer" class="custom-store-btn google-btn">
-          <img
-            class="store-badge"
-            src="https://play.google.com/intl/en_us/badges/static/images/badges/tr_badge_web_generic.png"
-            alt="Google Play’den İndir"
-          >
-        </a>
-      </div>
-
-    </div>
-
-    <div class="footer-copy reveal">
-      italkyAI By Ozyigit's &copy; 2026<br>
-      <span style="opacity: 0.5; margin-top: 10px; display: inline-block;">Tüm satın alma işlemleri ilgili mağaza üzerinden güvenle gerçekleşir.</span>
+    <div class="brand-seal">
+      italkyAI By Ozyigit's 2026
+      <span class="gokturk-signature" lang="otk">𐰆𐰍𐰔</span>
     </div>
   </footer>
 
