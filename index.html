@@ -23,12 +23,16 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
     
+    /* 1. KESİN VE KATI TAM EKRAN KİLİDİ (SCROLL YOK) */
     html, body {
       width: 100%;
+      height: 100%;
+      overflow: hidden !important; /* Asla kaydırma yapmaz */
+      touch-action: none; /* Mobilde sayfayı çekip sündürmeyi engeller */
+      overscroll-behavior: none;
       background-color: var(--bg);
     }
 
-    /* TAM EKRAN ORTALAMA MİMARİSİ */
     body {
       font-family: 'Outfit', sans-serif;
       color: var(--text-main);
@@ -36,11 +40,9 @@
         radial-gradient(circle at 50% 0%, rgba(56,189,248,.12), transparent 45%),
         radial-gradient(circle at 80% 50%, rgba(168,85,247,.08), transparent 40%),
         linear-gradient(180deg, #0b1020 0%, #030406 100%);
-      min-height: 100dvh; /* Tüm cihazlarda tam ekran yüksekliği */
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 16px;
     }
 
     .ambient-glow {
@@ -50,96 +52,99 @@
       filter: blur(60px);
     }
 
-    /* ÜST LOGO - BOŞLUKLARI MİNİMİZE EDİLDİ */
+    /* ÜST LOGO - EKRANA ORANTILI YAPIŞIR */
     nav {
       width: 100%;
-      padding: 16px 0 0 0;
+      padding: max(2dvh, 12px) 0 0 0;
       display: flex;
       justify-content: center;
       align-items: center;
       flex-shrink: 0;
+      z-index: 100;
     }
     .brand-text { display: flex; flex-direction: column; align-items: center; }
-    .brand-title { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; color: #fff; }
+    .brand-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(24px, 4dvh, 32px); font-weight: 900; line-height: 1; letter-spacing: -0.5px; color: #fff; }
     .brand-title span { background: linear-gradient(135deg, var(--cyan), var(--magenta)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .brand-subtitle { font-size: 10px; font-weight: 900; letter-spacing: 4px; color: var(--cyan); margin-top: 4px; }
+    .brand-subtitle { font-size: 10px; font-weight: 900; letter-spacing: 4px; color: var(--cyan); margin-top: 2px; }
 
-    /* İÇERİK BLOĞU - EKRANIN TAM ORTASINA DÜŞER */
+    /* İÇERİK BLOĞU - EKRANA SIKIŞMADAN TAM DAĞILIR */
     .container {
       width: 100%;
-      max-width: 440px; /* Tablet ve PC'de taşmayı engeller */
-      flex-grow: 1;
+      max-width: 440px;
+      flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: center; /* Dikeyde kusursuz ortalama */
       align-items: center;
-      margin: 0 auto;
-      padding: 20px 0;
+      padding: 0 16px max(2dvh, 12px) 16px;
     }
 
-    /* 3D ANİMASYON */
+    /* 3D ANİMASYON - EKRAN BOYUNA GÖRE KÜÇÜLÜR VEYA BÜYÜR */
     .holo-container { 
-      width: 110px; height: 110px; position: relative; 
+      width: clamp(80px, 15dvh, 110px); 
+      height: clamp(80px, 15dvh, 110px); 
+      position: relative; 
       display: flex; align-items: center; justify-content: center; 
-      transform-style: preserve-3d; margin-bottom: 16px; pointer-events: none;
+      transform-style: preserve-3d; margin-bottom: 2dvh; pointer-events: none;
     }
-    .crystal-cage { position: absolute; width: 74px; height: 74px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
+    .crystal-cage { position: absolute; width: 70%; height: 70%; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
     .crystal-side { position: absolute; inset: 0; border: 1.5px solid rgba(103,232,249,.25); background: radial-gradient(circle, rgba(129,140,248,.08), transparent 70%); box-shadow: 0 0 12px rgba(103,232,249,.15); }
-    .side1 { transform: rotateY(0deg) translateZ(37px); } .side2 { transform: rotateY(90deg) translateZ(37px); } .side3 { transform: rotateY(180deg) translateZ(37px); } .side4 { transform: rotateY(270deg) translateZ(37px); } .side5 { transform: rotateX(90deg) translateZ(37px); } .side6 { transform: rotateX(-90deg) translateZ(37px); }
-    .holo-qr { position: absolute; width: 50px; height: 50px; z-index: 2; display: flex; align-items: center; justify-content: center; animation: floatQR 4s ease-in-out infinite; }
-    .planet-glow { position: absolute; inset: -8px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 65%), radial-gradient(circle, rgba(103,232,249,.20) 0%, transparent 70%); filter: blur(8px); animation: planetGlow 3.2s ease-in-out infinite; z-index: 1; }
+    .side1 { transform: rotateY(0deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side2 { transform: rotateY(90deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side3 { transform: rotateY(180deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side4 { transform: rotateY(270deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side5 { transform: rotateX(90deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); } .side6 { transform: rotateX(-90deg) translateZ(calc(clamp(80px, 15dvh, 110px) * 0.35)); }
+    .holo-qr { position: absolute; width: 45%; height: 45%; z-index: 2; display: flex; align-items: center; justify-content: center; animation: floatQR 4s ease-in-out infinite; }
+    .planet-glow { position: absolute; inset: -15%; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 65%), radial-gradient(circle, rgba(103,232,249,.20) 0%, transparent 70%); filter: blur(8px); animation: planetGlow 3.2s ease-in-out infinite; z-index: 1; }
     .planet-core { position: relative; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 2; background: linear-gradient(145deg, #111827 0%, #030406 100%); box-shadow: inset -6px -6px 12px rgba(0,0,0,.7), inset 6px 6px 12px rgba(255,255,255,.03), 0 0 20px rgba(103,232,249,.2); }
-    .planet-ai-badge { position: relative; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15); backdrop-filter: blur(5px); }
-    .planet-ai-badge span { font-family: 'Space Grotesk', sans-serif; font-size: 10px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
+    .planet-ai-badge { position: relative; z-index: 3; width: 50%; height: 50%; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15); backdrop-filter: blur(5px); }
+    .planet-ai-badge span { font-family: 'Space Grotesk', sans-serif; font-size: clamp(8px, 1.5dvh, 10px); font-weight: 900; color: #fff; letter-spacing: 0.5px; }
 
     @keyframes rotateCrystal { from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
     @keyframes floatQR { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
     @keyframes planetGlow { 0%, 100% { opacity: .5; transform: scale(1); } 50% { opacity: .8; transform: scale(1.1); } }
 
+    /* BAŞLIK */
     h1 {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(28px, 7vw, 36px);
+      font-size: clamp(24px, 4.5dvh, 34px);
       font-weight: 900;
       line-height: 1.1;
       letter-spacing: -1px;
-      margin-bottom: 20px;
+      margin-bottom: 2dvh;
       text-align: center;
     }
     .text-gradient { background: linear-gradient(to right, #fff, #94a3b8, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* ÖZELLİKLER LİSTESİ */
+    /* ÖZELLİKLER LİSTESİ - DİNAMİK DARALMA */
     .features-list {
       width: 100%;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 16px;
-      padding: 16px;
+      padding: 1.5dvh 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 24px;
+      gap: clamp(6px, 1.2dvh, 10px);
+      margin-bottom: 3dvh;
     }
-    .feature-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: #e2e8f0; font-weight: 500; line-height: 1.35; }
+    .feature-item { display: flex; align-items: flex-start; gap: 8px; font-size: clamp(12px, 1.8dvh, 14px); color: #e2e8f0; font-weight: 500; line-height: 1.35; }
     .feature-icon { flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%; background: rgba(103, 232, 249, 0.15); border: 1px solid rgba(103, 232, 249, 0.3); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 9px; font-weight: bold; margin-top: 1px; }
 
-    /* -------- BUTONLARIN OLDUĞU EYLEM ALANI -------- */
+    /* -------- EYLEM ALANI -------- */
     .action-group {
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 1.2dvh;
     }
 
-    /* 1. KOD GİRİŞİ BUTONU (TAM GENİŞLİK VE ÜSTTE) */
+    /* KOD GİRİŞİ BUTONU */
     .promo-large-btn {
       width: 100%;
-      height: 56px;
+      height: clamp(48px, 7dvh, 56px);
       border-radius: 14px;
       border: 1px solid rgba(103, 232, 249, 0.3);
       background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(59, 130, 246, 0.06));
       color: #fff;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 16px;
+      font-size: clamp(14px, 2.2dvh, 16px);
       font-weight: 800;
       display: flex;
       align-items: center;
@@ -150,31 +155,31 @@
       transition: all 0.2s;
     }
     .promo-large-btn:hover { border-color: var(--cyan); background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.1)); }
-    .promo-large-btn svg { width: 20px; height: 20px; fill: none; stroke: var(--cyan); stroke-width: 2.2; }
+    .promo-large-btn svg { width: clamp(18px, 2.5dvh, 20px); height: clamp(18px, 2.5dvh, 20px); fill: none; stroke: var(--cyan); stroke-width: 2.2; }
 
-    /* 2. MAĞAZA BUTONLARI (%50 - %50 BÖLÜNMÜŞ HALDE ALTTA) */
+    /* ALT METİN - KOD GİRİŞİ ALTINDA */
+    .promo-bottom-text { font-size: clamp(11px, 1.6dvh, 13px); color: var(--text-muted); font-weight: 500; text-align: center; margin-bottom: 0.5dvh; }
+
+    /* MAĞAZA BUTONLARI (%50 - %50) */
     .store-row {
       display: flex;
       width: 100%;
       gap: 12px;
     }
     .custom-store-btn {
-      flex: 1; /* Yarı yarıya tam eşit böler */
-      height: 56px; /* Kod girişi butonuyla aynı yükseklik */
+      flex: 1; 
+      height: clamp(48px, 7dvh, 56px);
       display: flex;
       align-items: center;
       justify-content: center;
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 14px;
-      background: transparent; /* Siyah zeminler kaldırıldı */
+      background: transparent; 
       text-decoration: none;
       transition: all 0.2s;
     }
     .custom-store-btn:hover { border-color: var(--cyan); background: rgba(255,255,255,0.03); }
-    .store-badge { max-height: 38px; max-width: 90%; object-fit: contain; }
-
-    /* ALT BİLGİ NOTU */
-    .promo-bottom-text { font-size: 12.5px; color: var(--text-muted); font-weight: 500; text-align: center; margin-top: 4px; }
+    .store-badge { max-height: 70%; max-width: 90%; object-fit: contain; }
 
     /* -------- MODAL (AÇILIR PENCERE) -------- */
     .modal-overlay {
@@ -248,6 +253,8 @@
         Kod Girişi
       </button>
 
+      <div class="promo-bottom-text">Promosyon kodunuz var ise lütfen buradan giriş yapınız.</div>
+
       <div class="store-row">
         <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" rel="noopener noreferrer" class="custom-store-btn">
           <img class="store-badge" src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=320x106" alt="App Store">
@@ -256,8 +263,6 @@
           <img class="store-badge" src="https://play.google.com/intl/en_us/badges/static/images/badges/tr_badge_web_generic.png" alt="Google Play">
         </a>
       </div>
-
-      <div class="promo-bottom-text">Promosyon kodunuz var ise lütfen buradan giriş yapınız.</div>
 
     </div>
   </main>
