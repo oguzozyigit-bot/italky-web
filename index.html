@@ -23,19 +23,28 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
     
+    /* GLOBAL TAM EKRAN KİLİTLEME */
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Cihazlarda gereksiz kaydırmayı engeller */
+    }
+
     body {
       font-family: 'Outfit', sans-serif;
       background-color: var(--bg);
       color: var(--text-main);
-      overflow-x: hidden;
-      line-height: 1.5;
       background: 
         radial-gradient(circle at 50% 0%, rgba(56,189,248,.15), transparent 45%),
         radial-gradient(circle at 80% 50%, rgba(168,85,247,.08), transparent 40%),
         linear-gradient(180deg, #0b1020 0%, #030406 100%);
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .ambient-glow {
@@ -45,12 +54,14 @@
       filter: blur(60px);
     }
 
+    /* ÜST LOGO ALANI */
     nav {
       width: 100%;
-      padding: 24px 24px 10px;
+      padding: 24px 24px 0;
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-shrink: 0;
       z-index: 100;
     }
 
@@ -59,26 +70,26 @@
     .brand-title span { background: linear-gradient(135deg, var(--cyan), var(--magenta)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .brand-subtitle { font-size: 11px; font-weight: 900; letter-spacing: 4px; color: var(--cyan); margin-top: 4px; }
 
-    /* TAM EKRAN VE AKICI MOBİL ALAN */
+    /* CİHAZ BAĞIMSIZ TAM ORTALAMA VE YAYILMA ALANI */
     .hero {
-      padding: 10px 24px 40px;
-      text-align: center;
       width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
+      max-width: 480px; /* PC ve Tablette taşmayı önleyen ideal genişlik */
+      padding: 20px 24px;
+      margin: auto 0; /* Dikeyde kusursuz matematiksel ortalama sağlar */
       display: flex;
       flex-direction: column;
       align-items: center;
-      flex: 1;
       justify-content: center;
+      flex-grow: 1;
+      z-index: 10;
     }
 
     /* 3D ANİMASYON */
     .holo-container { 
       width: 130px; height: 130px; position: relative; 
       display: flex; align-items: center; justify-content: center; 
-      transform-style: preserve-3d; margin: 5px auto 20px; 
-      transform: scale(1.1); pointer-events: none;
+      transform-style: preserve-3d; margin: 0 auto 20px; 
+      transform: scale(1.05); pointer-events: none;
     }
     .crystal-cage { position: absolute; width: 90px; height: 90px; transform-style: preserve-3d; animation: rotateCrystal 18s linear infinite; }
     .crystal-side { position: absolute; inset: 0; border: 1.5px solid rgba(103,232,249,.25); background: radial-gradient(circle, rgba(129,140,248,.08), transparent 70%); box-shadow: 0 0 12px rgba(103,232,249,.15); }
@@ -98,11 +109,11 @@
 
     h1 {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(34px, 8vw, 48px);
+      font-size: clamp(32px, 7.5vw, 44px);
       font-weight: 900;
       line-height: 1.15;
       letter-spacing: -1px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       width: 100%;
     }
 
@@ -112,17 +123,17 @@
       -webkit-text-fill-color: transparent;
     }
 
-    /* KUTU GENİŞLİĞİNDE LİSTE ARÜZÜ */
+    /* KUTU GENİŞLİĞİNDE ÖZELLİKLER LİSTESİ */
     .features-list {
       text-align: left;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      margin-bottom: 24px;
+      gap: 12px;
+      margin-bottom: 20px;
       width: 100%;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 22px;
+      padding: 18px 20px;
       border-radius: 20px;
     }
 
@@ -130,7 +141,7 @@
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      font-size: 15px;
+      font-size: 14px;
       color: #e2e8f0;
       font-weight: 500;
       line-height: 1.4;
@@ -138,8 +149,8 @@
 
     .feature-icon {
       flex-shrink: 0;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: rgba(103, 232, 249, 0.15);
       border: 1px solid rgba(103, 232, 249, 0.3);
@@ -147,12 +158,12 @@
       align-items: center;
       justify-content: center;
       color: var(--cyan);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
-    /* MAĞAZA BUTONLARI - SİYAH ARKA PLANLAR TAMAMEN KALDIRILDI */
+    /* MAĞAZA BUTONLARI - SİYAH KUTULAR YOK */
     .custom-store-buttons {
       display: flex;
       flex-direction: row;
@@ -168,11 +179,12 @@
       justify-content: center;
       border: 1px solid rgba(255,255,255,0.14);
       border-radius: 16px;
-      height: 60px;
+      height: 56px;
       text-decoration: none;
       transition: all 0.2s ease;
       background: transparent;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      padding: 0 4px;
     }
 
     .custom-store-btn:hover {
@@ -181,14 +193,15 @@
     }
 
     .store-badge {
-      height: 42px;
+      height: 38px;
+      width: 100%;
       object-fit: contain;
     }
 
-    /* KOD GİRİŞİ BUTONU - DİĞER BUTONLARLA TAM AYNI BOYUTTA */
+    /* KOD GİRİŞİ BUTONU (MAĞAZA BUTONLARIYLA TAM EŞİT GENİŞLİKTE) */
     .promo-large-btn {
       width: 100%;
-      height: 60px;
+      height: 56px;
       border-radius: 16px;
       border: 1px solid rgba(103, 232, 249, 0.25);
       background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.05));
@@ -203,13 +216,12 @@
       cursor: pointer;
       transition: all 0.2s ease;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .promo-large-btn:hover {
       border-color: var(--cyan);
       background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.1));
-      box-shadow: 0 0 15px rgba(103, 232, 249, 0.2);
     }
 
     .promo-large-btn svg {
@@ -228,7 +240,7 @@
       line-height: 1.4;
     }
 
-    /* MODAL */
+    /* MODAL - TAM EKRAN VE TÜM CİHAZLARLA UYUMLU */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(3, 4, 6, 0.85);
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -241,7 +253,7 @@
       background: linear-gradient(145deg, #0b111e 0%, #05070f 100%);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 24px; width: 100%; max-width: 400px;
-      padding: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+      padding: 28px 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.6);
       text-align: center; transform: scale(0.95); transition: all 0.3s ease;
     }
     .modal-overlay.active .modal-box { transform: scale(1); }
@@ -274,7 +286,14 @@
     .status-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; }
     .status-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 3; }
 
-    footer { padding: 24px 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.03); margin-top: auto; }
+    /* ALT SABİT ALAN */
+    footer { 
+      padding: 20px; 
+      text-align: center; 
+      border-top: 1px solid rgba(255,255,255,0.03); 
+      width: 100%;
+      flex-shrink: 0;
+    }
     .footer-copy { font-size: 12px; color: #475569; font-weight: 600; }
   </style>
 </head>
