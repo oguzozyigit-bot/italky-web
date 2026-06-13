@@ -6,11 +6,15 @@ const ADMIN_EMAILS = [
 
 const TABLE_NAME = "web_promo_codes";
 const QR_BASE_URL = "https://italky.ai/kampanya?kod=";
+const BASE_SELECT_COLUMNS = "code,days,status,max_uses,used_count,expires_at,note";
+const NFC_SELECT_COLUMNS = "nfc_written,nfc_written_at,nfc_written_by,nfc_write_locked,nfc_write_note";
+const PROMO_SELECT_COLUMNS = `${BASE_SELECT_COLUMNS},${NFC_SELECT_COLUMNS}`;
 
 const el = (id) => document.getElementById(id);
 
 let currentSession = null;
 let currentProfile = null;
+let currentRowsByCode = new Map();
 
 function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
@@ -102,6 +106,71 @@ function generatedSeriesCode(prefix, existingCodes) {
 
 function qrLinkForCode(code) {
   return `${QR_BASE_URL}${encodeURIComponent(code)}`;
+}
+
+function currentUserLabel() {
+  return (
+    currentSession?.user?.email ||
+    currentProfile?.email ||
+    currentSession?.user?.id ||
+    "admin"
+  );
+}
+
+function canUnlockNfc() {
+  return isAdminUser(currentSession, currentProfile);
+}
+
+function nfcStateForRow(row) {
+  return {
+    publicNote: String(row.note || "").trim(),
+    locked: row.nfc_written === true || row.nfc_write_locked === true,
+    writtenAt: row.nfc_written_at || "",
+    writeNote: row.nfc_write_note || ""
+  };
+}
+
+function formatNfcDate(value) {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleString("tr-TR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch {
+    return value;
+  }
+}
+
+function ensureNfcWriteSupported() {
+  if (!("NDEFReader" in window)) {
+    throw new Error("NFC yazma sadece Android Chrome üzerinde desteklenir.");
+  }
+
+  if (!window.isSecureContext) {
+    throw new Error("NFC yazma için admin paneli HTTPS üzerinden açılmalı.");
+  }
+}
+
+async function writeNfcLink(url) {
+  ensureNfcWriteSupported();
+  const writer = new window.NDEFReader();
+  try {
+    await writer.write({
+      records: [
+        {
+          recordType: "url",
+          data: url
+        }
+      ]
+    });
+  } catch (error) {
+    console.warn("[admin promo codes] url record write failed, falling back to text/url write", error);
+    await writer.write(url);
+  }
 }
 
 function setStatus(message, type = "") {
@@ -256,7 +325,7 @@ async function insertCodes(rows) {
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .insert(rows)
-    .select("code,days,status,max_uses,used_count,expires_at,note");
+    .select(PROMO_SELECT_COLUMNS);
 
   if (error) {
     if (isDuplicateError(error)) {
@@ -271,7 +340,7 @@ async function insertCodes(rows) {
 async function loadCodes() {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select("code,days,status,max_uses,used_count,expires_at,note")
+    .select(PROMO_SELECT_COLUMNS)
     .order("code", { ascending: true });
 
   if (error) throw error;
@@ -282,6 +351,36 @@ async function updateCodeStatus(code, status) {
   const { error } = await supabase
     .from(TABLE_NAME)
     .update({ status })
+    .eq("code", code);
+
+  if (error) throw error;
+}
+
+async function lockCodeNfcWrite(code) {
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .update({
+      nfc_written: true,
+      nfc_write_locked: true,
+      nfc_written_at: new Date().toISOString(),
+      nfc_written_by: currentUserLabel(),
+      nfc_write_note: "NFC link yazıldı"
+    })
+    .eq("code", code);
+
+  if (error) throw error;
+}
+
+async function unlockCodeNfcWrite(code) {
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .update({
+      nfc_written: false,
+      nfc_write_locked: false,
+      nfc_written_at: null,
+      nfc_written_by: null,
+      nfc_write_note: null
+    })
     .eq("code", code);
 
   if (error) throw error;
@@ -319,8 +418,10 @@ function downloadTextFile(fileName, content) {
 function renderCodes(rows) {
   const body = el("webPromoCodesBody");
   if (!body) return;
+  currentRowsByCode = new Map(rows.map((row) => [normalizeCode(row.code), row]));
 
   if (!rows.length) {
+    currentRowsByCode = new Map();
     body.innerHTML = '<tr><td colspan="8" class="empty">Henüz kampanya kodu yok.</td></tr>';
     return;
   }
@@ -332,6 +433,17 @@ function renderCodes(rows) {
     const maxUses = Number(row.max_uses || 0);
     const usedCount = Number(row.used_count || 0);
     const isActive = status.toLowerCase() === "active";
+    const nfcState = nfcStateForRow(row);
+    const nfcLocked = nfcState.locked;
+    const nfcTitle = nfcLocked
+      ? `NFC yazıldı: ${formatNfcDate(nfcState.writtenAt)}`
+      : "Android Chrome ile NFC karta kampanya linkini yaz";
+    const nfcActions = nfcLocked
+      ? `
+            <button class="btn-ok" type="button" disabled title="${escapeHtml(nfcTitle)}">NFC yazıldı</button>
+            ${canUnlockNfc() ? `<button class="btn-warn" type="button" data-web-promo-action="nfc-unlock" data-code="${escapeHtml(code)}">NFC Kilidini Aç</button>` : ""}
+        `
+      : `<button class="btn-primary" type="button" data-web-promo-action="nfc-write" data-code="${escapeHtml(code)}" title="${escapeHtml(nfcTitle)}">NFC’ye Yaz</button>`;
 
     return `
       <tr>
@@ -340,13 +452,14 @@ function renderCodes(rows) {
         <td>${escapeHtml(status)}</td>
         <td>${escapeHtml(`${usedCount} / ${maxUses}`)}</td>
         <td>${escapeHtml(formatDate(row.expires_at))}</td>
-        <td>${escapeHtml(row.note || "-")}</td>
+        <td>${escapeHtml(nfcState.publicNote || "-")}</td>
         <td><span title="${escapeHtml(url)}">${escapeHtml(url)}</span></td>
         <td>
           <div class="mini-actions">
             <button class="btn-secondary" type="button" data-web-promo-action="copy" data-code="${escapeHtml(code)}">Linki Kopyala</button>
             <button class="btn-secondary" type="button" data-web-promo-action="download" data-code="${escapeHtml(code)}">QR Link İndir</button>
             <button class="${isActive ? "btn-danger" : "btn-ok"}" type="button" data-web-promo-action="toggle" data-code="${escapeHtml(code)}" data-next-status="${isActive ? "inactive" : "active"}">${isActive ? "Pasifleştir" : "Aktif Et"}</button>
+            ${nfcActions}
           </div>
         </td>
       </tr>
@@ -525,8 +638,11 @@ function renderPanel() {
     const code = normalizeCode(button.dataset.code);
     const action = button.dataset.webPromoAction;
     const url = qrLinkForCode(code);
+    const shouldDisableButton = action === "nfc-write" || action === "nfc-unlock";
 
     try {
+      if (shouldDisableButton) button.disabled = true;
+
       if (action === "copy") {
         await copyText(url);
         setStatus(`Link kopyalandı: ${url}`, "ok");
@@ -539,6 +655,47 @@ function renderPanel() {
         return;
       }
 
+      if (action === "nfc-write") {
+        const row = currentRowsByCode.get(code);
+        if (!row) throw new Error("Kod satırı bulunamadı. Listeyi yenileyip tekrar deneyin.");
+
+        if (nfcStateForRow(row).locked) {
+          setStatus(`${code} zaten NFC'ye yazılmış. İkinci karta yazmak için önce kilidi açın.`, "warn");
+          await loadCodes();
+          return;
+        }
+
+        const approved = window.confirm(`Bu link NFC karta yazılacak: ${url}\n\nKartın eski içeriği değiştirilecek. Devam edilsin mi?`);
+        if (!approved) {
+          setStatus("NFC yazma iptal edildi.", "warn");
+          return;
+        }
+
+        setStatus("Android Chrome NFC kartı isteyecek. Kartı telefona yaklaştırın.", "warn");
+        await writeNfcLink(url);
+        await lockCodeNfcWrite(code);
+        await loadCodes();
+        setStatus(`${code} NFC'ye yazıldı ve satır kilitlendi.`, "ok");
+        return;
+      }
+
+      if (action === "nfc-unlock") {
+        const row = currentRowsByCode.get(code);
+        if (!row) throw new Error("Kod satırı bulunamadı. Listeyi yenileyip tekrar deneyin.");
+        if (!canUnlockNfc()) throw new Error("NFC kilidini açma yetkiniz yok.");
+
+        const approved = window.confirm("Bu kodun NFC yazıldı kilidi açılacak. Aynı kod yeniden başka karta yazılabilir. Emin misiniz?");
+        if (!approved) {
+          setStatus("NFC kilidi açma iptal edildi.", "warn");
+          return;
+        }
+
+        await unlockCodeNfcWrite(code);
+        await loadCodes();
+        setStatus(`${code} için NFC kilidi açıldı.`, "ok");
+        return;
+      }
+
       if (action === "toggle") {
         await updateCodeStatus(code, button.dataset.nextStatus);
         await loadCodes();
@@ -547,6 +704,10 @@ function renderPanel() {
     } catch (error) {
       console.error("[admin promo codes] row action failed", error);
       setStatus(error?.message || "İşlem tamamlanamadı.", "err");
+    } finally {
+      if (shouldDisableButton && document.body.contains(button)) {
+        button.disabled = false;
+      }
     }
   });
 
