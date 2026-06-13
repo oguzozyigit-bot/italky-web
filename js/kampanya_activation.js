@@ -16,6 +16,7 @@ const campaignStatus = document.getElementById("campaignStatus");
 const campaignSelectedAccount = document.getElementById("campaignSelectedAccount");
 const campaignOAuthOptions = document.getElementById("campaignOAuthOptions");
 const changeCampaignAccount = document.getElementById("changeCampaignAccount");
+const authOptions = document.querySelector(".auth-options");
 const oauthButtons = document.querySelectorAll("[data-oauth-provider]");
 const successStoreContainer = document.querySelector(".success-store-buttons");
 const successStoreButtons = document.querySelectorAll("[data-success-store]");
@@ -178,9 +179,9 @@ function showConfirmStep({ session = campaignSession } = {}) {
   setHeading(
     "Hesabı",
     "Onaylayın",
-    `Kampanya kodunuz ${account} hesabınıza tanımlanacaktır. Hesabı sonradan değiştiremezsiniz.`
+    "Kampanya kodu aşağıdaki hesaba tanımlanacaktır:"
   );
-  campaignSelectedAccount.textContent = `Kampanya kodunuz ${account} hesabınıza tanımlanacaktır. Hesabı sonradan değiştiremezsiniz.`;
+  campaignSelectedAccount.textContent = account;
   showStep("confirm");
   openCampaignDialog();
 }
@@ -212,6 +213,9 @@ function updateSuccessStoreButtons() {
 
 function updateAuthButtons() {
   const platform = detectDevicePlatform();
+  const singleAuth = platform === "ios" || platform === "android";
+
+  authOptions?.classList.toggle("single-auth", singleAuth);
 
   oauthButtons.forEach(button => {
     const provider = button.dataset.oauthProvider;
