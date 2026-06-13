@@ -4,7 +4,6 @@ const RPC_NAME = "redeem_promo_code_v1";
 const AUTH_PENDING_CODE_KEY = "italkyai_campaign_auth_pending_code";
 
 const campaignModal = document.getElementById("campaignModal");
-const openCampaignModal = document.getElementById("openCampaignModal");
 const closeCampaignModal = document.getElementById("closeCampaignModal");
 const campaignModalTitle = document.getElementById("campaignModalTitle");
 const campaignModalDesc = document.getElementById("campaignModalDesc");
@@ -20,6 +19,8 @@ const changeCampaignAccount = document.getElementById("changeCampaignAccount");
 const oauthButtons = document.querySelectorAll("[data-oauth-provider]");
 const successStoreContainer = document.querySelector(".success-store-buttons");
 const successStoreButtons = document.querySelectorAll("[data-success-store]");
+const pageContainer = document.querySelector(".page");
+const pageFooter = document.querySelector("footer");
 
 let campaignSession = null;
 let campaignCodeValue = "";
@@ -85,7 +86,7 @@ function hasOAuthCallbackSignal() {
 }
 
 function shouldConfirmSession() {
-  return Boolean(campaignSession && (isReturningFromOAuth() || hasOAuthCallbackSignal()));
+  return Boolean(campaignSession);
 }
 
 function userLabel(session = campaignSession) {
@@ -107,6 +108,15 @@ function setHeading(title, accent, description) {
   campaignModalDesc.textContent = description || "";
 }
 
+function mountCampaignCard() {
+  if (pageContainer && campaignModal && pageFooter && campaignModal.parentElement !== pageContainer) {
+    pageContainer.insertBefore(campaignModal, pageFooter);
+  }
+
+  campaignModal.classList.add("active");
+  campaignModal.setAttribute("aria-hidden", "false");
+}
+
 function setCampaignCodeFields() {
   if (campaignCodePreview) {
     campaignCodePreview.value = campaignCodeValue;
@@ -124,13 +134,13 @@ function showStep(stepName) {
 }
 
 function openCampaignDialog() {
+  mountCampaignCard();
   campaignModal.classList.add("active");
   campaignModal.setAttribute("aria-hidden", "false");
 }
 
 function closeCampaignDialog() {
-  campaignModal.classList.remove("active");
-  campaignModal.setAttribute("aria-hidden", "true");
+  window.location.href = "https://italky.ai";
 }
 
 function showCodeMissing() {
@@ -143,6 +153,7 @@ function showCodeMissing() {
 function showAccountStep() {
   resetCampaignStatus();
   setCampaignCodeFields();
+  updateAuthButtons();
   setHeading(
     "Hesabınızı",
     "Seçin",
@@ -195,6 +206,19 @@ function updateSuccessStoreButtons() {
       ? store !== "ios"
       : platform === "android"
         ? store !== "android"
+        : false;
+  });
+}
+
+function updateAuthButtons() {
+  const platform = detectDevicePlatform();
+
+  oauthButtons.forEach(button => {
+    const provider = button.dataset.oauthProvider;
+    button.hidden = platform === "ios"
+      ? provider !== "apple"
+      : platform === "android"
+        ? provider !== "google"
         : false;
   });
 }
@@ -313,7 +337,7 @@ function errorCopyFor(code) {
       };
     case "CODE_EXPIRED":
       return {
-        title: "Kod hatalı",
+        title: "Kodun süresi dolmuş",
         message: "Bu kampanya kodunun kullanım süresi sona ermiş."
       };
     case "AUTH_REQUIRED":
@@ -355,7 +379,8 @@ async function redeemPromoCode(code) {
   return { ok: true, data };
 }
 
-async function bootCampaignFlow({ forceOpen = false } = {}) {
+async function bootCampaignFlow() {
+  mountCampaignCard();
   campaignCodeValue = getCodeFromUrl();
 
   if (!campaignCodeValue) {
@@ -379,10 +404,6 @@ async function bootCampaignFlow({ forceOpen = false } = {}) {
   showAccountStep();
 }
 
-openCampaignModal.addEventListener("click", () => {
-  bootCampaignFlow({ forceOpen: true });
-});
-
 closeCampaignModal.addEventListener("click", closeCampaignDialog);
 
 oauthButtons.forEach(button => {
@@ -392,18 +413,6 @@ oauthButtons.forEach(button => {
 });
 
 changeCampaignAccount.addEventListener("click", signOutForAccountChange);
-
-campaignModal.addEventListener("click", event => {
-  if (event.target === campaignModal) {
-    closeCampaignDialog();
-  }
-});
-
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && campaignModal.classList.contains("active")) {
-    closeCampaignDialog();
-  }
-});
 
 campaignForm.addEventListener("submit", async event => {
   event.preventDefault();
