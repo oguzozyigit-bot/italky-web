@@ -9,12 +9,26 @@ const QR_BASE_URL = "https://italky.ai/kampanya?kod=";
 const BASE_SELECT_COLUMNS = "code,days,status,max_uses,used_count,expires_at,note";
 const NFC_SELECT_COLUMNS = "nfc_written,nfc_written_at,nfc_written_by,nfc_write_locked,nfc_write_note";
 const PROMO_SELECT_COLUMNS = `${BASE_SELECT_COLUMNS},${NFC_SELECT_COLUMNS}`;
+const DEFAULT_FILTER = "available";
+const FILTER_OPTIONS = [
+  ["available", "Kullanılabilir Kodlar"],
+  ["active", "Aktif Tüm Kodlar"],
+  ["nfc_unwritten", "NFC/QR Yazılmamış Kodlar"],
+  ["nfc_written", "NFC’ye Yazılan Kodlar"],
+  ["used", "Kullanılmış Kodlar"],
+  ["inactive", "Pasif / Bloklu Kodlar"],
+  ["all", "Tüm Kodlar"]
+];
+const BLOCKED_STATUSES = new Set(["blocked", "expired", "paused", "inactive"]);
 
 const el = (id) => document.getElementById(id);
 
 let currentSession = null;
 let currentProfile = null;
 let currentRowsByCode = new Map();
+let allPromoRows = [];
+let currentFilter = DEFAULT_FILTER;
+let currentSearch = "";
 
 function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
@@ -66,6 +80,40 @@ function formatDate(value) {
   } catch {
     return "-";
   }
+}
+
+function statusOf(row) {
+  return String(row?.status || "").trim().toLowerCase();
+}
+
+function maxUsesOf(row) {
+  return Number(row?.max_uses || 0);
+}
+
+function usedCountOf(row) {
+  return Number(row?.used_count || 0);
+}
+
+function isExpired(row) {
+  if (!row?.expires_at) return false;
+  const expires = new Date(row.expires_at);
+  return Number.isFinite(expires.getTime()) && expires.getTime() < Date.now();
+}
+
+function hasUsesLeft(row) {
+  const maxUses = maxUsesOf(row);
+  if (maxUses <= 0) return true;
+  return usedCountOf(row) < maxUses;
+}
+
+function isUsed(row) {
+  const status = statusOf(row);
+  const maxUses = maxUsesOf(row);
+  return status === "used" || (maxUses > 0 && usedCountOf(row) >= maxUses);
+}
+
+function isBlockedOrInactive(row) {
+  return BLOCKED_STATUSES.has(statusOf(row)) || isExpired(row);
 }
 
 function randomPart(length = 6) {
@@ -128,6 +176,83 @@ function nfcStateForRow(row) {
     writtenAt: row.nfc_written_at || "",
     writeNote: row.nfc_write_note || ""
   };
+}
+
+function filterLabel(value = currentFilter) {
+  return FILTER_OPTIONS.find(([key]) => key === value)?.[1] || "Kullanılabilir Kodlar";
+}
+
+function rowMatchesFilter(row, filter = currentFilter) {
+  const status = statusOf(row);
+  const nfcLocked = nfcStateForRow(row).locked;
+
+  switch (filter) {
+    case "available":
+      return status === "active" && hasUsesLeft(row) && !nfcLocked && !isExpired(row);
+    case "active":
+      return status === "active";
+    case "nfc_unwritten":
+      return status === "active" && !nfcLocked;
+    case "nfc_written":
+      return nfcLocked;
+    case "used":
+      return isUsed(row);
+    case "inactive":
+      return isBlockedOrInactive(row);
+    case "all":
+      return true;
+    default:
+      return status === "active" && hasUsesLeft(row) && !nfcLocked && !isExpired(row);
+  }
+}
+
+function rowMatchesSearch(row) {
+  const search = currentSearch.trim().toLowerCase();
+  if (!search) return true;
+  return (
+    String(row.code || "").toLowerCase().includes(search) ||
+    String(row.note || "").toLowerCase().includes(search)
+  );
+}
+
+function filteredPromoRows() {
+  return allPromoRows.filter((row) => rowMatchesFilter(row) && rowMatchesSearch(row));
+}
+
+function renderFilterOptions() {
+  return FILTER_OPTIONS.map(([value, label]) => (
+    `<option value="${escapeHtml(value)}"${value === DEFAULT_FILTER ? " selected" : ""}>${escapeHtml(label)}</option>`
+  )).join("");
+}
+
+function renderRowBadges(row) {
+  const status = statusOf(row);
+  const nfcLocked = nfcStateForRow(row).locked;
+  const badges = [];
+
+  if (status === "active") badges.push("Aktif");
+  if (isUsed(row)) badges.push("Kullanıldı");
+  if (nfcLocked) badges.push("NFC yazıldı");
+  if (!nfcLocked) badges.push("NFC yazılmadı");
+  if (isBlockedOrInactive(row)) badges.push(isExpired(row) ? "Süresi doldu" : "Pasif / Bloklu");
+
+  if (!badges.length) badges.push(status || "-");
+
+  return badges.map((label) => `<span class="pill">${escapeHtml(label)}</span>`).join("");
+}
+
+function updateFilterSummary(visibleCount) {
+  const summary = el("webPromoFilterSummary");
+  if (!summary) return;
+  const searchPart = currentSearch.trim() ? `, arama: “${currentSearch.trim()}”` : "";
+  summary.textContent = `${filterLabel()} filtresi: ${visibleCount} / ${allPromoRows.length} kod gösteriliyor${searchPart}. NFC/QR için ayrılmış kodları “NFC’ye Yazılan Kodlar” filtresinde görebilirsiniz.`;
+}
+
+function renderFilteredCodes() {
+  const rows = filteredPromoRows();
+  renderCodes(rows);
+  updateFilterSummary(rows.length);
+  return rows;
 }
 
 function formatNfcDate(value) {
@@ -284,6 +409,11 @@ function isDuplicateError(error) {
   return text.includes("23505") || /duplicate|unique|already exists/i.test(text);
 }
 
+function isMissingColumnError(error, columnName) {
+  const text = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
+  return text.includes(columnName) || /column/i.test(text);
+}
+
 async function createPayloads() {
   const mode = selectedMode();
   const days = selectedDays();
@@ -338,13 +468,32 @@ async function insertCodes(rows) {
 }
 
 async function loadCodes() {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from(TABLE_NAME)
     .select(PROMO_SELECT_COLUMNS)
-    .order("code", { ascending: true });
+    .order("created_at", { ascending: false });
+
+  if (error && isMissingColumnError(error, "created_at")) {
+    const fallback = await supabase
+      .from(TABLE_NAME)
+      .select(PROMO_SELECT_COLUMNS)
+      .order("updated_at", { ascending: false });
+    data = fallback.data;
+    error = fallback.error;
+  }
+
+  if (error && isMissingColumnError(error, "updated_at")) {
+    const fallback = await supabase
+      .from(TABLE_NAME)
+      .select(PROMO_SELECT_COLUMNS)
+      .order("code", { ascending: true });
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) throw error;
-  renderCodes(Array.isArray(data) ? data : []);
+  allPromoRows = Array.isArray(data) ? data : [];
+  renderFilteredCodes();
 }
 
 async function updateCodeStatus(code, status) {
@@ -422,7 +571,10 @@ function renderCodes(rows) {
 
   if (!rows.length) {
     currentRowsByCode = new Map();
-    body.innerHTML = '<tr><td colspan="8" class="empty">Henüz kampanya kodu yok.</td></tr>';
+    const emptyMessage = allPromoRows.length
+      ? "Bu filtrede gösterilecek kampanya kodu yok."
+      : "Henüz kampanya kodu yok.";
+    body.innerHTML = `<tr><td colspan="8" class="empty">${escapeHtml(emptyMessage)}</td></tr>`;
     return;
   }
 
@@ -449,7 +601,7 @@ function renderCodes(rows) {
       <tr>
         <td><b>${escapeHtml(code)}</b></td>
         <td>${escapeHtml(row.days)}</td>
-        <td>${escapeHtml(status)}</td>
+        <td>${renderRowBadges(row)}</td>
         <td>${escapeHtml(`${usedCount} / ${maxUses}`)}</td>
         <td>${escapeHtml(formatDate(row.expires_at))}</td>
         <td>${escapeHtml(nfcState.publicNote || "-")}</td>
@@ -568,6 +720,21 @@ function renderPanel() {
 
         <div id="webPromoStatus" class="status-line"></div>
 
+        <div class="grid grid-2" style="margin-top:14px">
+          <label>
+            Liste Filtresi
+            <select id="webPromoFilter">
+              ${renderFilterOptions()}
+            </select>
+          </label>
+
+          <label>
+            Kod / Not Ara
+            <input id="webPromoSearch" type="search" placeholder="Kod veya not içinde ara" />
+          </label>
+        </div>
+        <div id="webPromoFilterSummary" class="desc" style="margin-top:8px"></div>
+
         <div class="table">
           <table>
             <thead>
@@ -595,6 +762,19 @@ function renderPanel() {
   el("webPromoDays")?.addEventListener("change", syncFormVisibility);
   el("webPromoUseMode")?.addEventListener("change", syncFormVisibility);
   el("webPromoExpires").value = defaultExpiryDate();
+  el("webPromoFilter").value = currentFilter;
+  el("webPromoSearch").value = currentSearch;
+
+  el("webPromoFilter")?.addEventListener("change", (event) => {
+    currentFilter = event.target.value || DEFAULT_FILTER;
+    const visibleRows = renderFilteredCodes();
+    setStatus(`${filterLabel()} filtresi uygulandı. ${visibleRows.length} kod gösteriliyor.`, "ok");
+  });
+
+  el("webPromoSearch")?.addEventListener("input", (event) => {
+    currentSearch = String(event.target.value || "").trim().toLowerCase();
+    renderFilteredCodes();
+  });
 
   el("webPromoForm")?.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -613,9 +793,19 @@ function renderPanel() {
 
       const rows = await createPayloads();
       const created = await insertCodes(rows);
-      renderCodes(created);
-      setStatus(`${created.length} kod oluşturuldu. Kampanya linkleri hazır.`, "ok");
+      const createdRows = created.length ? created : rows;
+      const createdCodes = new Set(createdRows.map((row) => normalizeCode(row.code)));
+      currentFilter = DEFAULT_FILTER;
+      currentSearch = "";
+      if (el("webPromoFilter")) el("webPromoFilter").value = currentFilter;
+      if (el("webPromoSearch")) el("webPromoSearch").value = currentSearch;
       await loadCodes();
+      const visibleCreatedCount = [...createdCodes].filter((code) => currentRowsByCode.has(code)).length;
+      if (visibleCreatedCount > 0) {
+        setStatus(`${createdRows.length} kod oluşturuldu. Yeni kodlar Kullanılabilir Kodlar listesinde görünüyor.`, "ok");
+      } else {
+        setStatus("Kod oluşturuldu ancak mevcut filtreye uymadığı için görünmüyor. Tüm Kodlar filtresinden görebilirsiniz.", "warn");
+      }
     } catch (error) {
       console.error("[admin promo codes] create failed", error);
       setStatus(error?.message || "Kod oluşturulamadı.", "err");
