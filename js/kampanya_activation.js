@@ -1,6 +1,7 @@
 import { supabase } from "/js/supabase_client.js";
 
 const RPC_NAME = "redeem_promo_code_v1";
+const AUTH_PENDING_CODE_KEY = "italkyai_campaign_auth_pending_code";
 
 const campaignModal = document.getElementById("campaignModal");
 const openCampaignModal = document.getElementById("openCampaignModal");
@@ -10,16 +11,15 @@ const campaignModalDesc = document.getElementById("campaignModalDesc");
 const campaignStepAccount = document.getElementById("campaignStepAccount");
 const campaignStepSuccess = document.getElementById("campaignStepSuccess");
 const campaignForm = document.getElementById("campaignForm");
-const campaignCode = document.getElementById("campaignCode");
+const campaignCodePreview = document.getElementById("campaignCodePreview");
 const campaignSubmitBtn = document.getElementById("campaignSubmitBtn");
 const campaignStatus = document.getElementById("campaignStatus");
 const campaignSelectedAccount = document.getElementById("campaignSelectedAccount");
 const campaignOAuthOptions = document.getElementById("campaignOAuthOptions");
-const campaignSessionConfirm = document.getElementById("campaignSessionConfirm");
-const campaignCurrentAccount = document.getElementById("campaignCurrentAccount");
-const continueWithCurrentAccount = document.getElementById("continueWithCurrentAccount");
 const changeCampaignAccount = document.getElementById("changeCampaignAccount");
 const oauthButtons = document.querySelectorAll("[data-oauth-provider]");
+const successStoreContainer = document.querySelector(".success-store-buttons");
+const successStoreButtons = document.querySelectorAll("[data-success-store]");
 
 let campaignSession = null;
 let campaignCodeValue = "";
@@ -42,6 +42,52 @@ function getCodeFromUrl() {
   return normalizeCode(params.get("kod") || params.get("code") || "");
 }
 
+function storageGet(key) {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+}
+
+function storageSet(key, value) {
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch (error) {
+    // Session storage can be unavailable in strict in-app browsers.
+  }
+}
+
+function storageRemove(key) {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch (error) {
+    // Nothing to clean when session storage is unavailable.
+  }
+}
+
+function isReturningFromOAuth() {
+  return Boolean(campaignCodeValue && storageGet(AUTH_PENDING_CODE_KEY) === campaignCodeValue);
+}
+
+function hasOAuthCallbackSignal() {
+  const params = new URLSearchParams(window.location.search);
+  const hash = window.location.hash.startsWith("#")
+    ? window.location.hash.slice(1)
+    : window.location.hash;
+  const hashParams = new URLSearchParams(hash);
+
+  return hashParams.has("access_token")
+    || hashParams.has("refresh_token")
+    || hashParams.has("provider_token")
+    || hashParams.has("error")
+    || (params.has("kod") && params.has("code"));
+}
+
+function shouldConfirmSession() {
+  return Boolean(campaignSession && (isReturningFromOAuth() || hasOAuthCallbackSignal()));
+}
+
 function userLabel(session = campaignSession) {
   return session?.user?.email || session?.user?.user_metadata?.email || session?.user?.id || "-";
 }
@@ -61,12 +107,18 @@ function setHeading(title, accent, description) {
   campaignModalDesc.textContent = description || "";
 }
 
+function setCampaignCodeFields() {
+  if (campaignCodePreview) {
+    campaignCodePreview.value = campaignCodeValue;
+  }
+}
+
 function showStep(stepName) {
   campaignStepAccount.hidden = stepName !== "account";
-  campaignForm.hidden = stepName !== "verify";
+  campaignForm.hidden = stepName !== "confirm";
   campaignStepSuccess.hidden = stepName !== "success";
 
-  if (stepName === "verify") {
+  if (stepName === "confirm") {
     requestAnimationFrame(() => campaignSubmitBtn.focus());
   }
 }
@@ -82,75 +134,89 @@ function closeCampaignDialog() {
 }
 
 function showCodeMissing() {
-  setHeading("Kod", "Bulunamadı.", "Bu bağlantıda kampanya kodu yok. Lütfen QR/NFC bağlantısını kontrol edin.");
+  setHeading("Kod", "hatalı", "Bu kampanya kodu bulunamadı. Lütfen bağlantıyı kontrol edin.");
   showStep("none");
-  setCampaignStatus("error", "Kod bulunamadı. Bu bağlantıda kampanya kodu yok. Lütfen QR/NFC bağlantısını kontrol edin.");
+  setCampaignStatus("error", "Bu kampanya kodu bulunamadı. Lütfen bağlantıyı kontrol edin.");
   openCampaignDialog();
 }
 
-function showAccountStep({ session = campaignSession } = {}) {
+function showAccountStep() {
   resetCampaignStatus();
-  campaignSession = session || null;
-
-  if (campaignSession) {
-    const account = userLabel(campaignSession);
-    setHeading(
-      "Hesabınızı",
-      "Kontrol Edin",
-      `Şu anda açık hesap: ${account}`
-    );
-    campaignCurrentAccount.textContent = `Şu anda açık hesap: ${account}`;
-    campaignOAuthOptions.hidden = true;
-    campaignSessionConfirm.hidden = false;
-  } else {
-    setHeading(
-      "Hesabınızı",
-      "Seçin",
-      "Lütfen italkyAI uygulamasını kullanacağınız veya hâlihazırda kullandığınız Google ya da Apple hesabıyla giriş yapın. Kampanya hakkı seçtiğiniz hesaba tanımlanacaktır."
-    );
-    campaignOAuthOptions.hidden = false;
-    campaignSessionConfirm.hidden = true;
-  }
-
+  setCampaignCodeFields();
+  setHeading(
+    "Hesabınızı",
+    "Seçin",
+    "Kampanya kodu aşağıdaki hesaba tanımlanacaktır. Lütfen uygulamada kullanacağınız Google veya Apple hesabıyla giriş yapın."
+  );
+  campaignOAuthOptions.hidden = false;
   showStep("account");
   openCampaignDialog();
 }
 
-function showVerifyStep() {
+function showConfirmStep({ session = campaignSession } = {}) {
   resetCampaignStatus();
+  campaignSession = session || null;
 
   if (!campaignSession) {
-    showAccountStep({ session: null });
+    showAccountStep();
+    setCampaignStatus("error", "Giriş gerekli. Kampanya hakkının hesabınıza tanımlanması için önce Google veya Apple hesabınızla giriş yapmalısınız.");
     return;
   }
 
+  const account = userLabel(campaignSession);
   setHeading(
-    "Kampanya Kodunu",
-    "Doğrula",
-    "Kampanya kodunuz hazır. Bu kodu seçtiğiniz hesaba tanımlamak için doğrulayın."
+    "Hesabı",
+    "Onaylayın",
+    `Kampanya kodunuz ${account} hesabınıza tanımlanacaktır. Hesabı sonradan değiştiremezsiniz.`
   );
-  campaignCode.value = campaignCodeValue;
-  campaignSelectedAccount.textContent = `Seçilen hesap: ${userLabel()}`;
-  showStep("verify");
+  campaignSelectedAccount.textContent = `Kampanya kodunuz ${account} hesabınıza tanımlanacaktır. Hesabı sonradan değiştiremezsiniz.`;
+  showStep("confirm");
   openCampaignDialog();
+}
+
+function detectDevicePlatform() {
+  const userAgent = navigator.userAgent || navigator.vendor || "";
+
+  if (/android/i.test(userAgent)) return "android";
+  if (/iPad|iPhone|iPod/.test(userAgent)) return "ios";
+  if (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return "ios";
+  return "unknown";
+}
+
+function updateSuccessStoreButtons() {
+  const platform = detectDevicePlatform();
+  const singleStore = platform === "ios" || platform === "android";
+
+  successStoreContainer?.classList.toggle("single-store", singleStore);
+
+  successStoreButtons.forEach(button => {
+    const store = button.dataset.successStore;
+    button.hidden = platform === "ios"
+      ? store !== "ios"
+      : platform === "android"
+        ? store !== "android"
+        : false;
+  });
 }
 
 function showSuccessStep() {
   resetCampaignStatus();
+  storageRemove(AUTH_PENDING_CODE_KEY);
+  updateSuccessStoreButtons();
   setHeading(
     "Kodunuz",
     "Doğrulandı",
-    "Kampanya hakkınız hesabınıza tanımlandı. Günlerin uygulamada görünmesi için lütfen uygulamayı tamamen kapatıp tekrar açın."
+    "Kampanya hakkınız hesabınıza tanımlandı. Günlerin uygulamada görünmesi için lütfen uygulamayı kapatıp tekrar açın."
   );
   showStep("success");
-  setCampaignStatus("success", "Kodunuz işlendi. Günlerin uygulamada görünmesi için uygulamayı kapatıp tekrar açın.");
+  setCampaignStatus("success", "Uygulamayı indirin ve tanımladığınız hesapla giriş yapın.");
   openCampaignDialog();
 }
 
 function showErrorScreen(title, message) {
   setHeading(title, "", message);
-  showStep("verify");
-  setCampaignStatus("error", `${title} ${message}`);
+  showStep("none");
+  setCampaignStatus("error", message);
   openCampaignDialog();
 }
 
@@ -172,12 +238,20 @@ async function signInWithProvider(provider) {
   }
 
   const redirectTo = window.location.href.split("#")[0];
+  const options = { redirectTo };
+
+  if (provider === "google") {
+    options.queryParams = { prompt: "select_account" };
+  }
+
+  storageSet(AUTH_PENDING_CODE_KEY, campaignCodeValue);
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo }
+    options
   });
 
   if (error) {
+    storageRemove(AUTH_PENDING_CODE_KEY);
     setCampaignStatus("error", error.message || "Giriş başlatılamadı. Lütfen tekrar deneyin.");
   }
 }
@@ -195,10 +269,11 @@ async function signOutForAccountChange() {
     }
 
     campaignSession = null;
-    showAccountStep({ session: null });
+    storageRemove(AUTH_PENDING_CODE_KEY);
+    showAccountStep();
   } finally {
     changeCampaignAccount.disabled = false;
-    changeCampaignAccount.textContent = "Hesap Değiştir";
+    changeCampaignAccount.textContent = "Hesabı Değiştir";
   }
 }
 
@@ -227,28 +302,28 @@ function errorCopyFor(code) {
   switch (code) {
     case "CODE_NOT_FOUND":
       return {
-        title: "Kod hatalı.",
-        message: "Bu kampanya kodu bulunamadı. Lütfen kodu kontrol edin."
+        title: "Kod hatalı",
+        message: "Bu kampanya kodu bulunamadı. Lütfen bağlantıyı kontrol edin."
       };
     case "CODE_ALREADY_USED":
     case "USER_ALREADY_REDEEMED":
       return {
-        title: "Bu kod kullanılmış.",
+        title: "Bu kod kullanılmış",
         message: "Bu kampanya kodu daha önce kullanılmış. Bu kod ile tekrar işlem yapılamaz."
       };
     case "CODE_EXPIRED":
       return {
-        title: "Kodun süresi dolmuş.",
+        title: "Kod hatalı",
         message: "Bu kampanya kodunun kullanım süresi sona ermiş."
       };
     case "AUTH_REQUIRED":
       return {
-        title: "Giriş gerekli.",
-        message: "Kodun hesabınıza tanımlanması için önce Google veya Apple hesabınızla giriş yapmalısınız."
+        title: "Giriş gerekli",
+        message: "Kampanya hakkının hesabınıza tanımlanması için önce Google veya Apple hesabınızla giriş yapmalısınız."
       };
     default:
       return {
-        title: "İşlem tamamlanamadı.",
+        title: "İşlem tamamlanamadı",
         message: "Lütfen daha sonra tekrar deneyin."
       };
   }
@@ -288,15 +363,20 @@ async function bootCampaignFlow({ forceOpen = false } = {}) {
     return;
   }
 
-  campaignCode.value = campaignCodeValue;
+  setCampaignCodeFields();
   const { session, error } = await getActiveSession();
   if (error) {
-    showErrorScreen("İşlem tamamlanamadı.", "Lütfen daha sonra tekrar deneyin.");
+    showErrorScreen("İşlem tamamlanamadı", "Lütfen daha sonra tekrar deneyin.");
     return;
   }
 
   campaignSession = session;
-  showAccountStep({ session: campaignSession });
+  if (shouldConfirmSession()) {
+    showConfirmStep({ session: campaignSession });
+    return;
+  }
+
+  showAccountStep();
 }
 
 openCampaignModal.addEventListener("click", () => {
@@ -311,7 +391,6 @@ oauthButtons.forEach(button => {
   });
 });
 
-continueWithCurrentAccount.addEventListener("click", showVerifyStep);
 changeCampaignAccount.addEventListener("click", signOutForAccountChange);
 
 campaignModal.addEventListener("click", event => {
@@ -330,8 +409,9 @@ campaignForm.addEventListener("submit", async event => {
   event.preventDefault();
   resetCampaignStatus();
 
-  const code = normalizeCode(campaignCodeValue || campaignCode.value);
-  campaignCode.value = code;
+  const code = normalizeCode(campaignCodeValue);
+  campaignCodeValue = code;
+  setCampaignCodeFields();
 
   if (!code) {
     showCodeMissing();
@@ -339,14 +419,14 @@ campaignForm.addEventListener("submit", async event => {
   }
 
   campaignSubmitBtn.disabled = true;
-  campaignSubmitBtn.textContent = "Kontrol ediliyor...";
+  campaignSubmitBtn.textContent = "Onaylanıyor...";
 
   try {
     const result = await redeemPromoCode(code);
     if (!result.ok) {
       const copy = errorCopyFor(result.errorCode);
       if (result.errorCode === "AUTH_REQUIRED") {
-        showAccountStep({ session: null });
+        showAccountStep();
         setCampaignStatus("error", `${copy.title} ${copy.message}`);
       } else {
         showErrorScreen(copy.title, copy.message);
@@ -360,14 +440,14 @@ campaignForm.addEventListener("submit", async event => {
     showErrorScreen(copy.title, copy.message);
   } finally {
     campaignSubmitBtn.disabled = false;
-    campaignSubmitBtn.textContent = "Kodu Doğrula";
+    campaignSubmitBtn.textContent = "Onaylıyorum";
   }
 });
 
 supabase.auth.onAuthStateChange((event, session) => {
   campaignSession = session;
-  if (session && campaignCodeValue && event === "SIGNED_IN") {
-    showAccountStep({ session });
+  if (session && campaignCodeValue && event === "SIGNED_IN" && shouldConfirmSession()) {
+    showConfirmStep({ session });
   }
 });
 
