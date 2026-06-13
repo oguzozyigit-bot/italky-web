@@ -4,50 +4,13 @@ const ADMIN_EMAILS = [
   "oguzozyigit@gmail.com"
 ];
 
-const QR_BASE_URL = "https://italky.ai/kampanya?kod=";
 const TABLE_NAME = "web_promo_codes";
+const QR_BASE_URL = "https://italky.ai/kampanya?kod=";
 
 const el = (id) => document.getElementById(id);
 
-const guardMessage = el("guardMessage");
-const adminContent = el("adminContent");
-const promoForm = el("promoForm");
-const refreshBtn = el("refreshBtn");
-const logoutBtn = el("logoutBtn");
-const createBtn = el("createBtn");
-const formStatus = el("formStatus");
-const codesBody = el("codesBody");
-const qrPanel = el("qrPanel");
-const qrUrl = el("qrUrl");
-
-const singleCodeInput = el("singleCodeInput");
-const prefixInput = el("prefixInput");
-const quantityInput = el("quantityInput");
-const daysSelect = el("daysSelect");
-const customDaysField = el("customDaysField");
-const customDaysInput = el("customDaysInput");
-const singleUseInput = el("singleUseInput");
-const maxUsesField = el("maxUsesField");
-const maxUsesInput = el("maxUsesInput");
-const expiresInput = el("expiresInput");
-const noteInput = el("noteInput");
-
-const seriesFields = Array.from(document.querySelectorAll(".series-field"));
-const singleFields = Array.from(document.querySelectorAll(".single-field"));
-const codeModeInputs = Array.from(document.querySelectorAll("input[name='codeMode']"));
-
 let currentSession = null;
 let currentProfile = null;
-
-function setStatus(message, type = "") {
-  formStatus.textContent = message || "";
-  formStatus.className = `status ${type}`.trim();
-}
-
-function setGuard(message) {
-  guardMessage.textContent = message || "";
-  guardMessage.classList.toggle("visible", Boolean(message));
-}
 
 function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
@@ -62,12 +25,6 @@ function normalizeCode(value) {
     .replace(/^-|-$/g, "");
 }
 
-function clampNumber(value, min, max, fallback) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return fallback;
-  return Math.max(min, Math.min(max, Math.floor(parsed)));
-}
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -75,6 +32,12 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function clampNumber(value, min, max, fallback) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(min, Math.min(max, Math.floor(parsed)));
 }
 
 function defaultExpiryDate() {
@@ -85,8 +48,7 @@ function defaultExpiryDate() {
 
 function expiryToDbValue(value) {
   const date = String(value || "").trim();
-  if (!date) return null;
-  return `${date}T23:59:59+03:00`;
+  return date ? `${date}T23:59:59+03:00` : null;
 }
 
 function formatDate(value) {
@@ -102,15 +64,12 @@ function formatDate(value) {
   }
 }
 
-function qrLinkForCode(code) {
-  return `${QR_BASE_URL}${encodeURIComponent(code)}`;
-}
-
 function randomPart(length = 6) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
   const cryptoObj = window.crypto || window.msCrypto;
   const bytes = new Uint32Array(length);
+  let out = "";
+
   if (cryptoObj?.getRandomValues) {
     cryptoObj.getRandomValues(bytes);
     for (let i = 0; i < length; i += 1) {
@@ -141,25 +100,29 @@ function generatedSeriesCode(prefix, existingCodes) {
   throw new Error("Benzersiz seri kod üretilemedi.");
 }
 
-function selectedMode() {
-  return document.querySelector("input[name='codeMode']:checked")?.value || "single";
+function qrLinkForCode(code) {
+  return `${QR_BASE_URL}${encodeURIComponent(code)}`;
 }
 
-function selectedDays() {
-  if (daysSelect.value === "custom") {
-    return clampNumber(customDaysInput.value, 1, 3650, 365);
+function setStatus(message, type = "") {
+  const status = el("webPromoStatus");
+  if (!status) return;
+  status.textContent = message || "";
+  status.className = `status-line ${type ? `status-${type}` : ""}`.trim();
+}
+
+function setGuard(message) {
+  const guard = el("webPromoGuard");
+  const content = el("webPromoContent");
+
+  if (guard) {
+    guard.textContent = message || "";
+    guard.classList.toggle("hidden", !message);
   }
-  return clampNumber(daysSelect.value, 1, 3650, 365);
-}
 
-function selectedMaxUses() {
-  if (singleUseInput.checked) return 1;
-  return clampNumber(maxUsesInput.value, 1, 100000, 1);
-}
-
-function isDuplicateError(error) {
-  const text = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
-  return text.includes("23505") || /duplicate|unique|already exists/i.test(text);
+  if (content) {
+    content.hidden = Boolean(message);
+  }
 }
 
 async function loadProfile(userId) {
@@ -170,7 +133,7 @@ async function loadProfile(userId) {
     .maybeSingle();
 
   if (error) {
-    console.warn("[admin promo] profile lookup failed", error);
+    console.warn("[admin promo codes] profile lookup failed", error);
     return null;
   }
 
@@ -180,6 +143,7 @@ async function loadProfile(userId) {
 function isAdminUser(session, profile) {
   const email = normalizeEmail(session?.user?.email || profile?.email);
   const role = String(profile?.role || "").toLowerCase();
+
   return (
     ADMIN_EMAILS.map(normalizeEmail).includes(email) ||
     profile?.is_admin === true ||
@@ -211,6 +175,99 @@ async function requireAdmin() {
   return { ok: true };
 }
 
+function selectedMode() {
+  return el("webPromoMode")?.value || "single";
+}
+
+function selectedDays() {
+  const select = el("webPromoDays");
+  if (select?.value === "custom") {
+    return clampNumber(el("webPromoCustomDays")?.value, 1, 3650, 365);
+  }
+  return clampNumber(select?.value, 1, 3650, 365);
+}
+
+function selectedMaxUses() {
+  if ((el("webPromoUseMode")?.value || "single") === "single") return 1;
+  return clampNumber(el("webPromoMaxUses")?.value, 1, 100000, 1);
+}
+
+function syncFormVisibility() {
+  const isSeries = selectedMode() === "series";
+  const isCustomDays = el("webPromoDays")?.value === "custom";
+  const isMultiUse = el("webPromoUseMode")?.value === "multi";
+
+  document.querySelectorAll("[data-web-promo-single]").forEach((node) => {
+    node.hidden = isSeries;
+  });
+  document.querySelectorAll("[data-web-promo-series]").forEach((node) => {
+    node.hidden = !isSeries;
+  });
+
+  const customDays = el("webPromoCustomDaysWrap");
+  const maxUses = el("webPromoMaxUsesWrap");
+  if (customDays) customDays.hidden = !isCustomDays;
+  if (maxUses) maxUses.hidden = !isMultiUse;
+}
+
+function isDuplicateError(error) {
+  const text = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
+  return text.includes("23505") || /duplicate|unique|already exists/i.test(text);
+}
+
+async function createPayloads() {
+  const mode = selectedMode();
+  const days = selectedDays();
+  const maxUses = selectedMaxUses();
+  const expiresAt = expiryToDbValue(el("webPromoExpires")?.value || defaultExpiryDate());
+  const note = String(el("webPromoNote")?.value || "").trim();
+  const base = {
+    days,
+    status: "active",
+    max_uses: maxUses,
+    used_count: 0,
+    expires_at: expiresAt,
+    note
+  };
+
+  if (mode === "single") {
+    const manualCode = normalizeCode(el("webPromoSingleCode")?.value);
+    const code = manualCode || generatedSingleCode(days);
+    if (!code) throw new Error("Kod oluşturulamadı.");
+    return [{ ...base, code }];
+  }
+
+  const quantity = clampNumber(el("webPromoQuantity")?.value, 1, 500, 100);
+  const prefix = el("webPromoPrefix")?.value || "ITKY-GIFT";
+  const seen = new Set();
+  const rows = [];
+
+  for (let i = 0; i < quantity; i += 1) {
+    rows.push({
+      ...base,
+      code: generatedSeriesCode(prefix, seen)
+    });
+  }
+
+  return rows;
+}
+
+async function insertCodes(rows) {
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .insert(rows)
+    .select("code,days,status,max_uses,used_count,expires_at,note");
+
+  if (error) {
+    if (isDuplicateError(error)) {
+      throw new Error("Bu kodlardan biri zaten var. Lütfen farklı kod/prefix deneyin.");
+    }
+    throw error;
+  }
+
+  return Array.isArray(data) ? data : [];
+}
+
 async function loadCodes() {
   const { data, error } = await supabase
     .from(TABLE_NAME)
@@ -221,42 +278,13 @@ async function loadCodes() {
   renderCodes(Array.isArray(data) ? data : []);
 }
 
-function renderCodes(rows) {
-  if (!rows.length) {
-    codesBody.innerHTML = '<tr><td colspan="8" class="empty">Henüz kampanya kodu yok.</td></tr>';
-    return;
-  }
+async function updateCodeStatus(code, status) {
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .update({ status })
+    .eq("code", code);
 
-  codesBody.innerHTML = rows.map((row) => {
-    const code = normalizeCode(row.code);
-    const url = qrLinkForCode(code);
-    const status = String(row.status || "-");
-    const maxUses = Number(row.max_uses || 0);
-    const usedCount = Number(row.used_count || 0);
-    const isActive = status.toLowerCase() === "active";
-    const toggleLabel = isActive ? "Pasifleştir" : "Aktif Et";
-    const toggleClass = isActive ? "danger" : "ok";
-
-    return `
-      <tr>
-        <td class="code-cell">${escapeHtml(code)}</td>
-        <td>${escapeHtml(row.days)}</td>
-        <td>${escapeHtml(status)}</td>
-        <td>${escapeHtml(`${usedCount} / ${maxUses}`)}</td>
-        <td>${escapeHtml(formatDate(row.expires_at))}</td>
-        <td>${escapeHtml(row.note || "-")}</td>
-        <td><span class="qr-link" title="${escapeHtml(url)}">${escapeHtml(url)}</span></td>
-        <td>
-          <div class="row-actions">
-            <button class="small-btn" type="button" data-action="copy" data-code="${escapeHtml(code)}">Linki Kopyala</button>
-            <button class="small-btn" type="button" data-action="show" data-code="${escapeHtml(code)}">QR Göster</button>
-            <button class="small-btn" type="button" data-action="download-link" data-code="${escapeHtml(code)}">QR Link İndir</button>
-            <button class="small-btn ${toggleClass}" type="button" data-action="toggle" data-code="${escapeHtml(code)}" data-next-status="${isActive ? "inactive" : "active"}">${toggleLabel}</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join("");
+  if (error) throw error;
 }
 
 async function copyText(text) {
@@ -288,196 +316,257 @@ function downloadTextFile(fileName, content) {
   URL.revokeObjectURL(url);
 }
 
-async function createPayloads() {
-  const mode = selectedMode();
-  const days = selectedDays();
-  const maxUses = selectedMaxUses();
-  const expiresAt = expiryToDbValue(expiresInput.value || defaultExpiryDate());
-  const note = noteInput.value.trim();
-  const usedCount = 0;
-  const status = "active";
+function renderCodes(rows) {
+  const body = el("webPromoCodesBody");
+  if (!body) return;
 
-  if (mode === "single") {
-    const manualCode = normalizeCode(singleCodeInput.value);
-    const code = manualCode || generatedSingleCode(days);
-    if (!code) throw new Error("Kod oluşturulamadı.");
-    return [{
-      code,
-      days,
-      status,
-      max_uses: maxUses,
-      used_count: usedCount,
-      expires_at: expiresAt,
-      note
-    }];
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="8" class="empty">Henüz kampanya kodu yok.</td></tr>';
+    return;
   }
 
-  const quantity = clampNumber(quantityInput.value, 1, 500, 100);
-  const prefix = prefixInput.value || "ITKY-GIFT";
-  const seen = new Set();
-  const rows = [];
+  body.innerHTML = rows.map((row) => {
+    const code = normalizeCode(row.code);
+    const url = qrLinkForCode(code);
+    const status = String(row.status || "-");
+    const maxUses = Number(row.max_uses || 0);
+    const usedCount = Number(row.used_count || 0);
+    const isActive = status.toLowerCase() === "active";
 
-  for (let i = 0; i < quantity; i += 1) {
-    rows.push({
-      code: generatedSeriesCode(prefix, seen),
-      days,
-      status,
-      max_uses: maxUses,
-      used_count: usedCount,
-      expires_at: expiresAt,
-      note
-    });
-  }
-
-  return rows;
+    return `
+      <tr>
+        <td><b>${escapeHtml(code)}</b></td>
+        <td>${escapeHtml(row.days)}</td>
+        <td>${escapeHtml(status)}</td>
+        <td>${escapeHtml(`${usedCount} / ${maxUses}`)}</td>
+        <td>${escapeHtml(formatDate(row.expires_at))}</td>
+        <td>${escapeHtml(row.note || "-")}</td>
+        <td><span title="${escapeHtml(url)}">${escapeHtml(url)}</span></td>
+        <td>
+          <div class="mini-actions">
+            <button class="btn-secondary" type="button" data-web-promo-action="copy" data-code="${escapeHtml(code)}">Linki Kopyala</button>
+            <button class="btn-secondary" type="button" data-web-promo-action="download" data-code="${escapeHtml(code)}">QR Link İndir</button>
+            <button class="${isActive ? "btn-danger" : "btn-ok"}" type="button" data-web-promo-action="toggle" data-code="${escapeHtml(code)}" data-next-status="${isActive ? "inactive" : "active"}">${isActive ? "Pasifleştir" : "Aktif Et"}</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
 }
 
-async function insertCodes(rows) {
-  const created = [];
-
-  for (const row of rows) {
-    const { data, error } = await supabase
-      .from(TABLE_NAME)
-      .insert(row)
-      .select("code,days,status,max_uses,used_count,expires_at,note")
-      .single();
-
-    if (error) {
-      if (isDuplicateError(error)) {
-        throw new Error(`Bu kod zaten var: ${row.code}`);
-      }
-      throw error;
-    }
-
-    created.push(data);
-  }
-
-  return created;
-}
-
-async function updateCodeStatus(code, status) {
-  const { error } = await supabase
-    .from(TABLE_NAME)
-    .update({ status })
-    .eq("code", code);
-
-  if (error) throw error;
-}
-
-function syncFormVisibility() {
-  const mode = selectedMode();
-  const series = mode === "series";
-  seriesFields.forEach((node) => { node.hidden = !series; });
-  singleFields.forEach((node) => { node.hidden = series; });
-  customDaysField.hidden = daysSelect.value !== "custom";
-  maxUsesField.hidden = singleUseInput.checked;
-}
-
-async function refreshPage() {
-  setStatus("Kodlar yükleniyor...");
+async function refreshPromoPanel() {
+  setStatus("Kodlar yükleniyor...", "warn");
   const auth = await requireAdmin();
+
   if (!auth.ok) {
-    adminContent.hidden = true;
     setGuard(auth.message);
     setStatus("");
     return;
   }
 
   setGuard("");
-  adminContent.hidden = false;
   await loadCodes();
-  setStatus("Hazır.");
+  setStatus("Hazır.", "ok");
 }
 
-promoForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
+function renderPanel() {
+  const panel = el("panelPromo");
+  if (!panel || panel.dataset.webPromoReady === "1") return false;
+  panel.dataset.webPromoReady = "1";
 
-  try {
-    createBtn.disabled = true;
-    setStatus("Kodlar oluşturuluyor...");
+  panel.innerHTML = `
+    <section class="card">
+      <h3>Kampanya Kodları</h3>
+      <div class="desc">Ücretsiz gün kodları oluştur, kampanya linklerini hazırla ve kullanım durumlarını takip et.</div>
+      <div id="webPromoGuard" class="status-line status-err hidden"></div>
 
-    const auth = await requireAdmin();
-    if (!auth.ok) {
-      adminContent.hidden = true;
-      setGuard(auth.message);
-      setStatus("", "error");
-      return;
-    }
+      <div id="webPromoContent">
+        <form id="webPromoForm" autocomplete="off">
+          <div class="grid grid-3">
+            <label>
+              Kod Tipi
+              <select id="webPromoMode">
+                <option value="single">Tek Kod</option>
+                <option value="series">Benzersiz Seri Kod</option>
+              </select>
+            </label>
 
-    const rows = await createPayloads();
-    const created = await insertCodes(rows);
-    renderCodes(created);
-    setStatus(`${created.length} kod oluşturuldu. QR/NFC linkleri hazır.`);
-    await loadCodes();
-  } catch (error) {
-    console.error("[admin promo] create failed", error);
-    setStatus(error?.message || "Kod oluşturulamadı.", "error");
-  } finally {
-    createBtn.disabled = false;
-  }
-});
+            <label data-web-promo-single>
+              Kod
+              <input id="webPromoSingleCode" type="text" placeholder="Boş bırakılırsa otomatik üretilir" />
+            </label>
 
-codesBody.addEventListener("click", async (event) => {
-  const button = event.target.closest("button[data-action]");
-  if (!button) return;
+            <label data-web-promo-series hidden>
+              Prefix
+              <input id="webPromoPrefix" type="text" value="ITKY-GIFT" placeholder="ITKY-GIFT" />
+            </label>
 
-  const code = normalizeCode(button.dataset.code);
-  const action = button.dataset.action;
-  const url = qrLinkForCode(code);
+            <label data-web-promo-series hidden>
+              Adet
+              <input id="webPromoQuantity" type="number" min="1" max="500" value="100" />
+            </label>
 
-  try {
-    if (action === "copy") {
-      await copyText(url);
-      setStatus(`Link kopyalandı: ${url}`);
-      return;
-    }
+            <label>
+              Gün Sayısı
+              <select id="webPromoDays">
+                <option value="1">1 gün</option>
+                <option value="7">7 gün</option>
+                <option value="30">30 gün</option>
+                <option value="90">90 gün</option>
+                <option value="180">180 gün</option>
+                <option value="365" selected>365 gün</option>
+                <option value="custom">Özel sayı</option>
+              </select>
+            </label>
 
-    if (action === "show") {
-      qrUrl.textContent = url;
-      qrPanel.classList.add("visible");
-      setStatus("QR link gösterildi. Görsel QR üretimi ikinci mini adımda eklenecek.", "warn");
-      return;
-    }
+            <label id="webPromoCustomDaysWrap" hidden>
+              Özel Gün
+              <input id="webPromoCustomDays" type="number" min="1" max="3650" value="365" />
+            </label>
 
-    if (action === "download-link") {
-      downloadTextFile(`${code}-qr-link.txt`, `${url}\n`);
-      setStatus("QR link dosyası indirildi. Görsel QR çıktısı ikinci mini adımda eklenecek.", "warn");
-      return;
-    }
+            <label>
+              Kullanım Hakkı
+              <select id="webPromoUseMode">
+                <option value="single" selected>Tek kullanımlık</option>
+                <option value="multi">Çok kullanımlı</option>
+              </select>
+            </label>
 
-    if (action === "toggle") {
-      await updateCodeStatus(code, button.dataset.nextStatus);
+            <label id="webPromoMaxUsesWrap" hidden>
+              Maksimum Kullanım
+              <input id="webPromoMaxUses" type="number" min="1" max="100000" value="1" />
+            </label>
+
+            <label>
+              Son Kullanma Tarihi
+              <input id="webPromoExpires" type="date" />
+            </label>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <input id="webPromoNote" type="text" placeholder="Not: Düzce fuar QR kodu" />
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button id="webPromoCreateBtn" class="btn-primary" type="submit">Kod Oluştur</button>
+            <button id="webPromoRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
+          </div>
+        </form>
+
+        <div id="webPromoStatus" class="status-line"></div>
+
+        <div class="table">
+          <table>
+            <thead>
+              <tr>
+                <th>Kod</th>
+                <th>Gün</th>
+                <th>Durum</th>
+                <th>Kullanım</th>
+                <th>Son Kullanma</th>
+                <th>Not</th>
+                <th>Tam Link</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody id="webPromoCodesBody">
+              <tr><td colspan="8" class="empty">Kodlar yükleniyor...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  `;
+
+  el("webPromoMode")?.addEventListener("change", syncFormVisibility);
+  el("webPromoDays")?.addEventListener("change", syncFormVisibility);
+  el("webPromoUseMode")?.addEventListener("change", syncFormVisibility);
+  el("webPromoExpires").value = defaultExpiryDate();
+
+  el("webPromoForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const createBtn = el("webPromoCreateBtn");
+
+    try {
+      if (createBtn) createBtn.disabled = true;
+      setStatus("Kodlar oluşturuluyor...", "warn");
+
+      const auth = await requireAdmin();
+      if (!auth.ok) {
+        setGuard(auth.message);
+        setStatus("");
+        return;
+      }
+
+      const rows = await createPayloads();
+      const created = await insertCodes(rows);
+      renderCodes(created);
+      setStatus(`${created.length} kod oluşturuldu. Kampanya linkleri hazır.`, "ok");
       await loadCodes();
-      setStatus(`${code} durumu güncellendi.`);
+    } catch (error) {
+      console.error("[admin promo codes] create failed", error);
+      setStatus(error?.message || "Kod oluşturulamadı.", "err");
+    } finally {
+      if (createBtn) createBtn.disabled = false;
     }
-  } catch (error) {
-    console.error("[admin promo] row action failed", error);
-    setStatus(error?.message || "İşlem tamamlanamadı.", "error");
-  }
-});
-
-refreshBtn.addEventListener("click", () => {
-  refreshPage().catch((error) => {
-    console.error("[admin promo] refresh failed", error);
-    setStatus(error?.message || "Liste yenilenemedi.", "error");
   });
-});
 
-logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  adminContent.hidden = true;
-  setGuard("Oturum kapatıldı. Bu sayfaya erişmek için admin hesabıyla giriş yapmalısınız.");
-});
+  el("webPromoRefreshBtn")?.addEventListener("click", () => {
+    refreshPromoPanel().catch((error) => {
+      console.error("[admin promo codes] refresh failed", error);
+      setStatus(error?.message || "Liste yenilenemedi.", "err");
+    });
+  });
 
-codeModeInputs.forEach((input) => input.addEventListener("change", syncFormVisibility));
-daysSelect.addEventListener("change", syncFormVisibility);
-singleUseInput.addEventListener("change", syncFormVisibility);
+  el("webPromoCodesBody")?.addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-web-promo-action]");
+    if (!button) return;
 
-expiresInput.value = defaultExpiryDate();
-syncFormVisibility();
+    const code = normalizeCode(button.dataset.code);
+    const action = button.dataset.webPromoAction;
+    const url = qrLinkForCode(code);
 
-refreshPage().catch((error) => {
-  console.error("[admin promo] init failed", error);
-  adminContent.hidden = true;
-  setGuard(error?.message || "Admin sayfası başlatılamadı.");
-});
+    try {
+      if (action === "copy") {
+        await copyText(url);
+        setStatus(`Link kopyalandı: ${url}`, "ok");
+        return;
+      }
+
+      if (action === "download") {
+        downloadTextFile(`${code}-qr-link.txt`, `${url}\n`);
+        setStatus("QR link dosyası indirildi.", "ok");
+        return;
+      }
+
+      if (action === "toggle") {
+        await updateCodeStatus(code, button.dataset.nextStatus);
+        await loadCodes();
+        setStatus(`${code} durumu güncellendi.`, "ok");
+      }
+    } catch (error) {
+      console.error("[admin promo codes] row action failed", error);
+      setStatus(error?.message || "İşlem tamamlanamadı.", "err");
+    }
+  });
+
+  syncFormVisibility();
+  refreshPromoPanel().catch((error) => {
+    console.error("[admin promo codes] init failed", error);
+    setGuard(error?.message || "Kampanya kodları paneli başlatılamadı.");
+  });
+
+  return true;
+}
+
+function boot() {
+  if (renderPanel()) return;
+  setTimeout(renderPanel, 300);
+  setTimeout(renderPanel, 900);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot, { once: true });
+} else {
+  boot();
+}
