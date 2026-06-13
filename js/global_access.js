@@ -5,7 +5,7 @@ import { supabase } from "/js/supabase_client.js";
 const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
 const MEMBERSHIP_URL = "/pages/membership.html";
 const CODE_LOAD_URL = "/pages/code_load.html";
-const STANDARD_SIGNATURE = "italkyAI By Özyiğit's 2026";
+const STANDARD_SIGNATURE_HTML = `<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
 
 const PUBLIC_PAGES = new Set([
   "/", "/index.html", "/pages/login.html", "/pages/auth_callback.html", "/pages/membership.html",
@@ -151,8 +151,9 @@ function goCodeLoad() {
 
 function standardizeShellSignature() {
   try {
+    ensureSealStyle();
     document.querySelectorAll(".signature-main,.menu-sign-main").forEach((el) => {
-      el.textContent = STANDARD_SIGNATURE;
+      el.innerHTML = STANDARD_SIGNATURE_HTML;
     });
     document.querySelectorAll(".signature-dot,.signature-year,.menu-sign-dot,.menu-sign-year").forEach((el) => {
       el.textContent = "";
@@ -160,6 +161,14 @@ function standardizeShellSignature() {
     });
     document.body?.classList?.add("shell-ready");
   } catch {}
+}
+
+function ensureSealStyle() {
+  if (document.getElementById("italkyAccessSealStyle")) return;
+  const style = document.createElement("style");
+  style.id = "italkyAccessSealStyle";
+  style.textContent = `.brand-seal{display:block;text-align:center;line-height:1.2}.gokturk-signature{display:block;margin-top:3px;font-family:"Segoe UI Historic","Noto Sans Old Turkic",serif;font-size:12px;font-weight:900;direction:rtl;unicode-bidi:isolate}`;
+  document.head.appendChild(style);
 }
 
 function injectGoturkConferenceColor() {

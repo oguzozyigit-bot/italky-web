@@ -37,13 +37,13 @@
     import { supabase } from "/js/supabase_client.js";
     mountShell({ scroll:"auto" });
     initGlobalAccess({ allowPublicPageBypass:false }).catch(()=>{});
-    const SHELL_SIGNATURE="italkyAI By Özyiğit's 2026";
+    const SHELL_SIGNATURE_HTML=`<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
     const API_BASE="https://italky-api.onrender.com";
     const ACCESS_API=`${API_BASE}/api/session/access-state`;
     const manualCode=document.getElementById("manualCode"),loadBtn=document.getElementById("loadBtn"),resultBox=document.getElementById("resultBox"),resultTitle=document.getElementById("resultTitle"),resultText=document.getElementById("resultText");
     let viewportResizeHandler=null, viewportScrollHandler=null;
 
-    function standardizeShellSignature(){try{document.querySelectorAll(".signature-main,.menu-sign-main").forEach((el)=>{el.textContent=SHELL_SIGNATURE});document.querySelectorAll(".signature-dot,.signature-year,.menu-sign-dot,.menu-sign-year").forEach((el)=>{el.textContent="";el.style.display="none"})}catch{}}
+    function standardizeShellSignature(){try{document.querySelectorAll(".signature-main,.menu-sign-main").forEach((el)=>{el.innerHTML=SHELL_SIGNATURE_HTML});document.querySelectorAll(".signature-dot,.signature-year,.menu-sign-dot,.menu-sign-year").forEach((el)=>{el.textContent="";el.style.display="none"})}catch{}}
     function markShellReady(){standardizeShellSignature();document.body.classList.add("shell-ready")}
     function waitForShellReady(){const done=()=>setTimeout(markShellReady,80);if(document.getElementById("italkyAppShell")){done();return}try{const observer=new MutationObserver(()=>{if(document.getElementById("italkyAppShell")){observer.disconnect();done()}});observer.observe(document.body,{childList:true,subtree:true})}catch{}setTimeout(markShellReady,1500)}
     waitForShellReady();

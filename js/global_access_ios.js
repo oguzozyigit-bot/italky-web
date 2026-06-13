@@ -4,7 +4,7 @@ import { supabase } from "/js/supabase_client.js";
 
 const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
 const IOS_DAYS_URL = "/pages/ios_days.html?ios=1";
-const STANDARD_SIGNATURE = "italkyAI By Özyiğit's 2026";
+const STANDARD_SIGNATURE_HTML = `<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
 
 const PUBLIC_PAGES = new Set([
   "/",
@@ -305,8 +305,9 @@ function buildSafeAccess(access = {}, session = null) {
 
 function standardizeShellSignature() {
   try {
+    ensureSealStyle();
     document.querySelectorAll(".signature-main,.menu-sign-main,.footer").forEach((el) => {
-      el.textContent = STANDARD_SIGNATURE;
+      el.innerHTML = STANDARD_SIGNATURE_HTML;
     });
     document.querySelectorAll(".signature-dot,.signature-year,.menu-sign-dot,.menu-sign-year").forEach((el) => {
       el.textContent = "";
@@ -505,6 +506,14 @@ async function guardActiveAccess(session, safe, currentPath, allowPublicPageBypa
   });
   await showAccessExpiredPrompt();
   return true;
+}
+
+function ensureSealStyle() {
+  if (document.getElementById("italkyAccessSealStyle")) return;
+  const style = document.createElement("style");
+  style.id = "italkyAccessSealStyle";
+  style.textContent = `.brand-seal{display:block;text-align:center;line-height:1.2}.gokturk-signature{display:block;margin-top:3px;font-family:"Segoe UI Historic","Noto Sans Old Turkic",serif;font-size:12px;font-weight:900;direction:rtl;unicode-bidi:isolate}`;
+  document.head.appendChild(style);
 }
 
 function setCachedAccess(access) {

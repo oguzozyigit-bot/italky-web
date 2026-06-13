@@ -1,9 +1,21 @@
 // FILE: /js/ui_hotfixes.js
 
-const FOOTER_TEXT = "italkyAI By Özyiğit's 2026";
+const FOOTER_HTML = `<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
+
+function ensureSealStyle() {
+  if (document.getElementById("italkySealHotfixStyle")) return;
+  const style = document.createElement("style");
+  style.id = "italkySealHotfixStyle";
+  style.textContent = `
+    .brand-seal{display:block;text-align:center;line-height:1.2}
+    .gokturk-signature{display:block;margin-top:3px;font-family:"Segoe UI Historic","Noto Sans Old Turkic",serif;font-size:12px;font-weight:900;direction:rtl;unicode-bidi:isolate}
+  `;
+  document.head.appendChild(style);
+}
 
 function normalizeFooters() {
   try {
+    ensureSealStyle();
     document.querySelectorAll(".menu-sign").forEach((el) => {
       el.textContent = "";
       el.style.display = "none";
@@ -13,7 +25,7 @@ function normalizeFooters() {
     const globalFooters = Array.from(document.querySelectorAll(".italky-global-footer"));
 
     if (shellFooter) {
-      shellFooter.textContent = FOOTER_TEXT;
+      shellFooter.innerHTML = FOOTER_HTML;
       shellFooter.setAttribute("data-no-translate", "1");
       globalFooters.forEach((el) => el.remove());
       return;
@@ -23,7 +35,7 @@ function normalizeFooters() {
       .filter((el) => el && el.offsetParent !== null && String(el.textContent || "").trim());
 
     stamped.forEach((el, index) => {
-      el.textContent = FOOTER_TEXT;
+      el.innerHTML = FOOTER_HTML;
       if (index > 0 && el.classList.contains("italky-global-footer")) el.remove();
     });
   } catch {}

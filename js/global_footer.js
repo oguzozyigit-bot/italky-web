@@ -1,7 +1,8 @@
 import { STORAGE_KEY } from "/js/config.js";
 
 const FALLBACK_VERSION_CODE = 83;
-const STANDARD_SIGNATURE = "italkyAI By Özyiğit's 2026";
+const STANDARD_SIGNATURE_TEXT = "italkyAI @ icanyAI By Ozyigit's 2026";
+const STANDARD_SIGNATURE_RUNE = "𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅";
 const MEMBERSHIP_SUBSCRIPTION_PRODUCT_ID = "reklamsiz";
 const MEMBERSHIP_BASE_PLAN_IDS = new Set([
   "1-ay-abonelik",
@@ -12,6 +13,7 @@ const MEMBERSHIP_BASE_PLAN_IDS = new Set([
 const FOOTER_SELECTOR = [
   "[data-italky-footer]",
   ".footer",
+  ".brand-seal",
   ".prestige-signature",
   ".drawer-footer-seal",
   ".signature",
@@ -82,7 +84,11 @@ function getVersionCode() {
 }
 
 function footerText() {
-  return STANDARD_SIGNATURE;
+  return STANDARD_SIGNATURE_TEXT;
+}
+
+function footerHtml() {
+  return `${STANDARD_SIGNATURE_TEXT}<span class="gokturk-signature" lang="otk" dir="rtl">${STANDARD_SIGNATURE_RUNE}</span>`;
 }
 
 function ensureGlobalFooterStyle() {
@@ -103,6 +109,27 @@ function ensureGlobalFooterStyle() {
       opacity:1!important;
       -webkit-font-smoothing:antialiased;
       text-rendering:geometricPrecision;
+    }
+    .brand-seal,
+    [data-italky-footer] .brand-seal,
+    .italky-global-footer .brand-seal{
+      display:block!important;
+      color:rgba(255,255,255,.84)!important;
+      font-size:11px!important;
+      font-weight:900!important;
+      letter-spacing:.25px!important;
+      text-align:center!important;
+      line-height:1.2!important;
+    }
+    .gokturk-signature{
+      display:block!important;
+      margin-top:3px!important;
+      font-family:"Segoe UI Historic","Noto Sans Old Turkic",serif!important;
+      font-size:12px!important;
+      font-weight:900!important;
+      line-height:1!important;
+      direction:rtl!important;
+      unicode-bidi:isolate!important;
     }
     body.ui-menu-open [data-italky-footer],
     body.italky-shell-menu-open [data-italky-footer],
@@ -156,13 +183,17 @@ function styleFooter(el) {
 }
 
 function updateKnownFooters() {
-  const text = footerText();
+  const html = footerHtml();
   const nodes = Array.from(document.querySelectorAll(FOOTER_SELECTOR));
 
   nodes.forEach((el) => {
     if (!el) return;
     styleFooter(el);
-    el.textContent = text;
+    if (el.classList.contains("brand-seal")) {
+      el.innerHTML = html;
+    } else {
+      el.innerHTML = `<div class="brand-seal">${html}</div>`;
+    }
   });
 
   return nodes.length;
@@ -173,7 +204,7 @@ function appendFooterIfMissing() {
 
   const el = document.createElement("div");
   el.className = "italky-global-footer";
-  el.textContent = footerText();
+  el.innerHTML = `<div class="brand-seal">${footerHtml()}</div>`;
   styleFooter(el);
   el.style.position = "fixed";
   el.style.left = "0";
