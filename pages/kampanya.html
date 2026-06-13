@@ -511,6 +511,10 @@
       margin-top: 8px;
     }
 
+    .campaign-step[hidden] {
+      display: none !important;
+    }
+
     .auth-options {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -553,6 +557,12 @@
       border: 1px solid rgba(255,255,255,.08);
     }
 
+    .account-warning {
+      color: #fed7aa;
+      border-color: rgba(251, 146, 60, .28);
+      background: rgba(251, 146, 60, .08);
+    }
+
     .modal-form {
       display: grid;
       gap: 13px;
@@ -586,6 +596,12 @@
       box-shadow: 0 0 0 3px rgba(251,146,60,.14);
     }
 
+    .modal-input[readonly] {
+      color: #e5eefc;
+      cursor: default;
+      background: rgba(255,255,255,.04);
+    }
+
     .modal-actions {
       display: grid;
       gap: 10px;
@@ -617,6 +633,10 @@
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.045);
       color: #fff;
+    }
+
+    .success-store-buttons {
+      margin-top: 15px;
     }
 
     .form-status {
@@ -834,11 +854,11 @@
             <path d="M12 5v14"></path>
             <path d="M8 9h8"></path>
           </svg>
-          KOD GİRİŞİ
+          KAMPANYAYI AKTİFLEŞTİR
         </button>
 
         <p class="promo-bottom-text">
-          Kampanya kodunuz varsa hesabınızla giriş yaparak uygulamada özel teklifleri görüntüleyebilirsiniz.
+          QR/NFC bağlantınızdaki kampanya kodunu doğru Google veya Apple hesabınızla doğrulayarak günlerinizi hesabınıza tanımlayın.
         </p>
 
         <div class="custom-store-buttons" aria-label="Uygulama mağazaları">
@@ -882,49 +902,97 @@
 
   <div class="modal-overlay" id="campaignModal" aria-hidden="true">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="campaignModalTitle">
-      <h2 class="modal-title" id="campaignModalTitle">Kampanya Kodunu <span>Doğrula</span></h2>
-      <p class="modal-desc">
-        Google veya Apple hesabınızla giriş yapın, ardından benzersiz kampanya kodunuzu doğrulayın.
+      <h2 class="modal-title" id="campaignModalTitle">Hesabınızı <span>Seçin</span></h2>
+      <p class="modal-desc" id="campaignModalDesc">
+        Lütfen italkyAI uygulamasını kullanacağınız veya hâlihazırda kullandığınız Google ya da Apple hesabıyla giriş yapın. Kampanya hakkı seçtiğiniz hesaba tanımlanacaktır.
       </p>
 
-      <div class="auth-options" aria-label="Hesap ile devam et">
-        <button class="auth-option-btn" type="button" data-oauth-provider="google">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09Z"></path>
-            <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23Z"></path>
-            <path fill="#fbbc05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84Z"></path>
-            <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38Z"></path>
-          </svg>
-          Google
-        </button>
-        <button class="auth-option-btn" type="button" data-oauth-provider="apple">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#fff" d="M16.37 12.2c-.03-3.02 2.46-4.49 2.57-4.56-1.41-2.06-3.6-2.35-4.37-2.38-1.86-.19-3.64 1.1-4.58 1.1-.95 0-2.39-1.08-3.94-1.05-2.02.03-3.9 1.18-4.94 2.98-2.13 3.7-.54 9.14 1.5 12.14 1.02 1.46 2.22 3.09 3.8 3.02 1.54-.06 2.11-.97 3.97-.97 1.84 0 2.38.97 4 .93 1.66-.03 2.7-1.46 3.69-2.94 1.18-1.67 1.65-3.32 1.67-3.4-.04-.02-3.35-1.29-3.37-4.87ZM13.36 3.3c.83-1.03 1.39-2.43 1.24-3.84-1.2.05-2.69.83-3.55 1.84-.77.88-1.46 2.33-1.28 3.7 1.34.1 2.73-.68 3.59-1.7Z"></path>
-          </svg>
-          Apple
-        </button>
+      <div class="campaign-step" id="campaignStepAccount">
+        <div class="auth-options" aria-label="Hesap ile devam et">
+          <button class="auth-option-btn" type="button" data-oauth-provider="google">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09Z"></path>
+              <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23Z"></path>
+              <path fill="#fbbc05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84Z"></path>
+              <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38Z"></path>
+            </svg>
+            Google ile Devam Et
+          </button>
+          <button class="auth-option-btn" type="button" data-oauth-provider="apple">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#fff" d="M16.37 12.2c-.03-3.02 2.46-4.49 2.57-4.56-1.41-2.06-3.6-2.35-4.37-2.38-1.86-.19-3.64 1.1-4.58 1.1-.95 0-2.39-1.08-3.94-1.05-2.02.03-3.9 1.18-4.94 2.98-2.13 3.7-.54 9.14 1.5 12.14 1.02 1.46 2.22 3.09 3.8 3.02 1.54-.06 2.11-.97 3.97-.97 1.84 0 2.38.97 4 .93 1.66-.03 2.7-1.46 3.69-2.94 1.18-1.67 1.65-3.32 1.67-3.4-.04-.02-3.35-1.29-3.37-4.87ZM13.36 3.3c.83-1.03 1.39-2.43 1.24-3.84-1.2.05-2.69.83-3.55 1.84-.77.88-1.46 2.33-1.28 3.7 1.34.1 2.73-.68 3.59-1.7Z"></path>
+            </svg>
+            Apple ile Devam Et
+          </button>
+        </div>
+
+        <p class="modal-note account-warning">
+          Yanlış hesap seçerseniz kampanya hakkı başka hesaba tanımlanır.
+        </p>
       </div>
 
-      <form class="modal-form" id="campaignForm">
+      <form class="modal-form campaign-step" id="campaignForm" hidden>
+        <p class="modal-note" id="campaignSelectedAccount">Seçilen hesap: -</p>
         <div class="input-group">
-          <label for="campaignCode">Benzersiz Kod</label>
-          <input class="modal-input" id="campaignCode" name="code" type="text" autocomplete="one-time-code" placeholder="KAMPANYA2026" required>
+          <label for="campaignCode">Kampanya Kodu</label>
+          <input class="modal-input" id="campaignCode" name="code" type="text" autocomplete="one-time-code" placeholder="KAMPANYA2026" readonly required>
         </div>
 
         <div class="modal-actions">
           <button class="modal-btn" id="campaignSubmitBtn" type="submit">Kodu Doğrula</button>
-          <button class="modal-close-btn" id="closeCampaignModal" type="button">Vazgeç</button>
         </div>
       </form>
+
+      <div class="campaign-step" id="campaignStepSuccess" hidden>
+        <p class="modal-note">
+          Kampanya hakkınız hesabınıza tanımlandı. Kodunuz işlendi. Günlerin uygulamada görünmesi için uygulamayı kapatıp tekrar açın. Gerekirse çıkış yapıp aynı Google/Apple hesabıyla tekrar giriş yapın.
+        </p>
+        <p class="modal-note">
+          Lütfen uygulamayı telefonunuzun işletim sistemine göre indirin veya mevcut uygulamanızı açın.
+        </p>
+
+        <div class="custom-store-buttons success-store-buttons" aria-label="Uygulama mağazaları">
+          <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" rel="noopener noreferrer" class="custom-store-btn apple-store-badge" aria-label="App Store'dan indir">
+            <span class="store-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" role="img">
+                <path fill="#fff" d="M43.88 33.84c-.06-6.28 5.14-9.33 5.38-9.47-2.94-4.3-7.5-4.9-9.1-4.96-3.86-.4-7.58 2.3-9.52 2.3-1.98 0-4.98-2.25-8.2-2.18-4.2.06-8.12 2.45-10.28 6.2-4.44 7.7-1.13 19.02 3.13 25.25 2.13 3.04 4.62 6.43 7.9 6.3 3.2-.13 4.4-2.02 8.27-2.02 3.83 0 4.96 2.02 8.32 1.94 3.45-.05 5.62-3.05 7.67-6.12 2.46-3.48 3.44-6.9 3.48-7.08-.08-.03-6.98-2.68-7.05-10.16Zm-6.25-18.53c1.72-2.15 2.9-5.06 2.57-8.01-2.49.11-5.6 1.72-7.4 3.82-1.6 1.84-3.04 4.86-2.66 7.7 2.8.21 5.69-1.42 7.49-3.51Z"></path>
+              </svg>
+            </span>
+            <span class="store-copy">
+              <span class="store-kicker">İndir</span>
+              <span class="store-name">App Store</span>
+            </span>
+          </a>
+
+          <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" rel="noopener noreferrer" class="custom-store-btn google-store-badge" aria-label="Google Play'den indir">
+            <span class="store-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" role="img">
+                <path fill="#34a853" d="M12.5 7.6c-1.4.78-2.2 2.24-2.2 4.16v40.48c0 1.92.8 3.38 2.2 4.16l.13.07 22.68-24.18v-.58L12.63 7.53l-.13.07Z"></path>
+                <path fill="#4285f4" d="m42.78 40.36-7.47-8.07v-.58l7.48-8.07.17.1 8.84 5.04c2.53 1.45 2.53 3.84 0 5.3l-8.84 5.03-.18.25Z"></path>
+                <path fill="#fbbc04" d="m42.96 40.11-7.65-8.1L12.5 56.4c1.36.75 3.14.63 5.04-.45l25.42-15.84Z"></path>
+                <path fill="#ea4335" d="M42.96 23.89 17.54 8.05c-1.9-1.08-3.68-1.2-5.04-.45l22.81 24.4 7.65-8.11Z"></path>
+              </svg>
+            </span>
+            <span class="store-copy">
+              <span class="store-kicker">İndir</span>
+              <span class="store-name">Google Play</span>
+            </span>
+          </a>
+        </div>
+      </div>
 
       <div class="form-status" id="campaignStatus" aria-live="polite"></div>
 
       <p class="modal-note">
-        iOS uygulamasında dijital kullanım hakkı Apple IAP dışı yöntemle açılmaz. Bu kod yalnızca uygun özel teklifleri göstermek için kullanılır; ödeme iOS'ta Apple, Android'de Google Play üzerinden yapılır.
+        Kampanya hakkı seçtiğiniz hesaba tanımlanır. Uygulamada aynı Google/Apple hesabıyla oturum açtığınızda gün hakkınız görünür; ödeme işlemleri iOS'ta Apple, Android'de Google Play üzerinden gerçekleşir.
       </p>
+
+      <div class="modal-actions">
+        <button class="modal-close-btn" id="closeCampaignModal" type="button">Kapat</button>
+      </div>
     </div>
   </div>
 
-  <script type="module" src="/js/kampanya_activation.js?v=KAMPANYA_AUTH_20260612"></script>
+  <script type="module" src="/js/kampanya_activation.js?v=KAMPANYA_FLOW_20260614"></script>
 </body>
 </html>
