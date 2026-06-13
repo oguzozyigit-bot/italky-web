@@ -226,17 +226,25 @@ function renderFilterOptions() {
 }
 
 function renderRowBadges(row) {
-  const status = statusOf(row);
   const nfcLocked = nfcStateForRow(row).locked;
-  const badges = [];
+  const status = statusOf(row);
+  let codeStatus = status || "-";
 
-  if (status === "active") badges.push("Aktif");
-  if (isUsed(row)) badges.push("Kullanıldı");
-  if (nfcLocked) badges.push("NFC yazıldı");
-  if (!nfcLocked) badges.push("NFC yazılmadı");
-  if (isBlockedOrInactive(row)) badges.push(isExpired(row) ? "Süresi doldu" : "Pasif / Bloklu");
+  if (isUsed(row)) {
+    codeStatus = "Kullanıldı";
+  } else if (isExpired(row)) {
+    codeStatus = "Süresi Doldu";
+  } else if (status === "active") {
+    codeStatus = "Aktif";
+  } else if (BLOCKED_STATUSES.has(status)) {
+    codeStatus = "Bloklu";
+  }
 
-  if (!badges.length) badges.push(status || "-");
+  const badges = [
+    `Kod: ${codeStatus}`,
+    `Kullanım: ${usedCountOf(row)} / ${maxUsesOf(row)}`,
+    `NFC: ${nfcLocked ? "Yazıldı" : "Yazılmadı"}`
+  ];
 
   return badges.map((label) => `<span class="pill">${escapeHtml(label)}</span>`).join("");
 }
@@ -520,6 +528,21 @@ async function lockCodeNfcWrite(code) {
   if (error) throw error;
 }
 
+async function markCodeNfcWrittenManually(code) {
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .update({
+      nfc_written: true,
+      nfc_write_locked: true,
+      nfc_written_at: new Date().toISOString(),
+      nfc_written_by: currentUserLabel(),
+      nfc_write_note: "NFC Tools ile manuel yazıldı"
+    })
+    .eq("code", code);
+
+  if (error) throw error;
+}
+
 async function unlockCodeNfcWrite(code) {
   const { error } = await supabase
     .from(TABLE_NAME)
@@ -584,18 +607,30 @@ function renderCodes(rows) {
     const status = String(row.status || "-");
     const maxUses = Number(row.max_uses || 0);
     const usedCount = Number(row.used_count || 0);
-    const isActive = status.toLowerCase() === "active";
+    const isActive = statusOf(row) === "active";
+    const rowUsed = isUsed(row);
     const nfcState = nfcStateForRow(row);
     const nfcLocked = nfcState.locked;
+    const canWriteNfc = !rowUsed && isActive && hasUsesLeft(row) && !isExpired(row) && !nfcLocked;
     const nfcTitle = nfcLocked
       ? `NFC yazıldı: ${formatNfcDate(nfcState.writtenAt)}`
       : "Android Chrome ile NFC karta kampanya linkini yaz";
-    const nfcActions = nfcLocked
+    const nfcActions = rowUsed
+      ? ""
+      : nfcLocked
       ? `
             <button class="btn-ok" type="button" disabled title="${escapeHtml(nfcTitle)}">NFC yazıldı</button>
             ${canUnlockNfc() ? `<button class="btn-warn" type="button" data-web-promo-action="nfc-unlock" data-code="${escapeHtml(code)}">NFC Kilidini Aç</button>` : ""}
         `
-      : `<button class="btn-primary" type="button" data-web-promo-action="nfc-write" data-code="${escapeHtml(code)}" title="${escapeHtml(nfcTitle)}">NFC’ye Yaz</button>`;
+      : canWriteNfc
+      ? `
+            <button class="btn-primary" type="button" data-web-promo-action="nfc-write" data-code="${escapeHtml(code)}" title="${escapeHtml(nfcTitle)}">NFC’ye Yaz</button>
+            <button class="btn-warn" type="button" data-web-promo-action="nfc-mark-written" data-code="${escapeHtml(code)}">NFC Yazıldı İşaretle</button>
+        `
+      : "";
+    const toggleAction = rowUsed
+      ? ""
+      : `<button class="${isActive ? "btn-danger" : "btn-ok"}" type="button" data-web-promo-action="toggle" data-code="${escapeHtml(code)}" data-next-status="${isActive ? "blocked" : "active"}">${isActive ? "Kodu Pasifleştir" : "Kodu Aktif Et"}</button>`;
 
     return `
       <tr>
@@ -610,7 +645,7 @@ function renderCodes(rows) {
           <div class="mini-actions">
             <button class="btn-secondary" type="button" data-web-promo-action="copy" data-code="${escapeHtml(code)}">Linki Kopyala</button>
             <button class="btn-secondary" type="button" data-web-promo-action="download" data-code="${escapeHtml(code)}">QR Link İndir</button>
-            <button class="${isActive ? "btn-danger" : "btn-ok"}" type="button" data-web-promo-action="toggle" data-code="${escapeHtml(code)}" data-next-status="${isActive ? "inactive" : "active"}">${isActive ? "Pasifleştir" : "Aktif Et"}</button>
+            ${toggleAction}
             ${nfcActions}
           </div>
         </td>
@@ -828,7 +863,7 @@ function renderPanel() {
     const code = normalizeCode(button.dataset.code);
     const action = button.dataset.webPromoAction;
     const url = qrLinkForCode(code);
-    const shouldDisableButton = action === "nfc-write" || action === "nfc-unlock";
+    const shouldDisableButton = action === "nfc-write" || action === "nfc-mark-written" || action === "nfc-unlock";
 
     try {
       if (shouldDisableButton) button.disabled = true;
@@ -848,6 +883,9 @@ function renderPanel() {
       if (action === "nfc-write") {
         const row = currentRowsByCode.get(code);
         if (!row) throw new Error("Kod satırı bulunamadı. Listeyi yenileyip tekrar deneyin.");
+        if (isUsed(row) || statusOf(row) !== "active" || isExpired(row) || !hasUsesLeft(row)) {
+          throw new Error("Bu kod NFC yazma için kullanılabilir durumda değil.");
+        }
 
         if (nfcStateForRow(row).locked) {
           setStatus(`${code} zaten NFC'ye yazılmış. İkinci karta yazmak için önce kilidi açın.`, "warn");
@@ -869,6 +907,31 @@ function renderPanel() {
         return;
       }
 
+      if (action === "nfc-mark-written") {
+        const row = currentRowsByCode.get(code);
+        if (!row) throw new Error("Kod satırı bulunamadı. Listeyi yenileyip tekrar deneyin.");
+        if (isUsed(row) || statusOf(row) !== "active" || isExpired(row) || !hasUsesLeft(row)) {
+          throw new Error("Bu kod NFC yazıldı olarak işaretlenemez.");
+        }
+
+        if (nfcStateForRow(row).locked) {
+          setStatus(`${code} zaten NFC yazıldı olarak kilitli.`, "warn");
+          await loadCodes();
+          return;
+        }
+
+        const approved = window.confirm("Bu kodun linkini NFC karta dışarıdan yazdığınızı onaylıyor musunuz? Bu işlemden sonra kod NFC yazıldı olarak kilitlenecek.");
+        if (!approved) {
+          setStatus("NFC yazıldı işaretleme iptal edildi.", "warn");
+          return;
+        }
+
+        await markCodeNfcWrittenManually(code);
+        await loadCodes();
+        setStatus(`${code} NFC Tools ile yazıldı olarak işaretlendi ve kilitlendi.`, "ok");
+        return;
+      }
+
       if (action === "nfc-unlock") {
         const row = currentRowsByCode.get(code);
         if (!row) throw new Error("Kod satırı bulunamadı. Listeyi yenileyip tekrar deneyin.");
@@ -887,6 +950,13 @@ function renderPanel() {
       }
 
       if (action === "toggle") {
+        const row = currentRowsByCode.get(code);
+        if (row && isUsed(row)) {
+          setStatus("Kullanılmış kodların durumu değiştirilemez.", "warn");
+          await loadCodes();
+          return;
+        }
+
         await updateCodeStatus(code, button.dataset.nextStatus);
         await loadCodes();
         setStatus(`${code} durumu güncellendi.`, "ok");
