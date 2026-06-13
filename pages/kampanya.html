@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>italkyAI İndir | App Store ve Google Play</title>
+  <meta name="description" content="italkyAI uygulamasını App Store veya Google Play üzerinden indirin. Gerçek zamanlı çeviri ve dil teknolojileri cebinizde.">
+  <meta name="theme-color" content="#05070d">
+  <meta property="og:title" content="italkyAI İndir">
+  <meta property="og:description" content="italkyAI uygulamasını telefonunuza indirin.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #05070d;
+      --panel: rgba(10, 16, 28, .72);
+      --panel-strong: rgba(12, 19, 34, .90);
+      --line: rgba(255, 255, 255, .12);
+      --text: #f8fafc;
+      --muted: #a9b4c7;
+      --cyan: #67e8f9;
+      --blue: #38bdf8;
+      --pink: #f472b6;
+      --orange: #fb923c;
+      --orange-strong: #f97316;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    body {
+      width: 100%;
+      min-height: 100svh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      color: var(--text);
+      font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(115deg, rgba(103, 232, 249, .12) 0%, transparent 30%),
+        linear-gradient(245deg, rgba(244, 114, 182, .15) 0%, transparent 36%),
+        linear-gradient(180deg, #111a2e 0%, #090d18 46%, #05070d 100%);
+      line-height: 1.4;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.80), rgba(0,0,0,.20));
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.80), rgba(0,0,0,.20));
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .screen {
+      width: 100%;
+      min-height: 100svh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      width: min(100%, 430px);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 2px 4px;
+    }
+
+    .brand-text {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1;
+    }
+
+    .brand-title {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(30px, 9vw, 40px);
+      font-weight: 900;
+      letter-spacing: 0;
+      color: #fff;
+    }
+
+    .brand-title span {
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .brand-subtitle {
+      margin-top: 2px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0;
+      color: var(--cyan);
+    }
+
+    .page {
+      width: min(100%, 430px);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      padding-top: 0;
+    }
+
+    .holo-container {
+      --holo-size: clamp(96px, 25vw, 122px);
+      width: var(--holo-size);
+      height: var(--holo-size);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      pointer-events: none;
+    }
+
+    .crystal-cage {
+      position: absolute;
+      width: 72%;
+      height: 72%;
+      transform-style: preserve-3d;
+      animation: rotateCrystal 16s linear infinite;
+    }
+
+    .crystal-side {
+      position: absolute;
+      inset: 0;
+      border: 1.5px solid rgba(103, 232, 249, .42);
+      background: linear-gradient(135deg, rgba(103, 232, 249, .13), rgba(244, 114, 182, .07));
+      box-shadow: 0 0 16px rgba(103, 232, 249, .22);
+    }
+
+    .side1 { transform: rotateY(0deg) translateZ(calc(var(--holo-size) * .26)); }
+    .side2 { transform: rotateY(90deg) translateZ(calc(var(--holo-size) * .26)); }
+    .side3 { transform: rotateY(180deg) translateZ(calc(var(--holo-size) * .26)); }
+    .side4 { transform: rotateY(270deg) translateZ(calc(var(--holo-size) * .26)); }
+    .side5 { transform: rotateX(90deg) translateZ(calc(var(--holo-size) * .26)); }
+    .side6 { transform: rotateX(-90deg) translateZ(calc(var(--holo-size) * .26)); }
+
+    .ai-planet {
+      position: relative;
+      z-index: 2;
+      width: 54%;
+      height: 54%;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.20), transparent 36%),
+        linear-gradient(145deg, #1f2937 0%, #090d18 58%, #02040a 100%);
+      box-shadow:
+        inset -9px -10px 20px rgba(0,0,0,.58),
+        inset 7px 8px 18px rgba(255,255,255,.06),
+        0 0 24px rgba(103, 232, 249, .30),
+        0 0 54px rgba(244, 114, 182, .15);
+      animation: floatPlanet 3.6s ease-in-out infinite;
+    }
+
+    .ai-planet::before {
+      content: "";
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      border: 1px solid rgba(103, 232, 249, .18);
+      animation: ringPulse 2.8s ease-in-out infinite;
+    }
+
+    .ai-badge {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(34px, 10.4vw, 48px);
+      line-height: .98;
+      font-weight: 900;
+      letter-spacing: 0;
+      max-width: 390px;
+    }
+
+    .text-gradient {
+      background: linear-gradient(90deg, #fff 0%, var(--cyan) 56%, #bdefff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-p {
+      width: min(100%, 386px);
+      color: var(--muted);
+      font-size: clamp(14.5px, 4.1vw, 17px);
+      font-weight: 600;
+      line-height: 1.42;
+    }
+
+    .features-list {
+      width: 100%;
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: 0 16px 44px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      text-align: left;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: #eef4ff;
+      font-size: clamp(14px, 3.9vw, 16px);
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .feature-icon {
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+      flex: 0 0 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #07101d;
+      background: linear-gradient(135deg, var(--cyan), #b7f6ff);
+      font-size: 12px;
+      font-weight: 900;
+      box-shadow: 0 0 18px rgba(103, 232, 249, .34);
+    }
+
+    .promo-large-btn {
+      width: 100%;
+      min-height: 60px;
+      border: 1px solid rgba(251, 146, 60, .70);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #fff;
+      background:
+        linear-gradient(135deg, rgba(251, 146, 60, .98), rgba(249, 115, 22, .72)),
+        linear-gradient(180deg, rgba(255,255,255,.10), transparent);
+      box-shadow: 0 14px 34px rgba(249, 115, 22, .24), inset 0 1px 0 rgba(255,255,255,.25);
+      cursor: pointer;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(18px, 5.2vw, 23px);
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .promo-large-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,.32));
+    }
+
+    .promo-large-btn:active {
+      transform: translateY(1px) scale(.99);
+    }
+
+    .promo-bottom-text {
+      color: var(--muted);
+      font-size: clamp(12.5px, 3.6vw, 14px);
+      font-weight: 700;
+      line-height: 1.35;
+      text-align: center;
+      padding: 0 4px;
+    }
+
+    .custom-store-buttons {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 1px;
+    }
+
+    .custom-store-btn {
+      width: 100%;
+      min-width: 0;
+      height: clamp(58px, 15vw, 68px);
+      min-height: 58px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.18);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02)),
+        #050505;
+      color: #fff;
+      box-shadow: 0 14px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.10);
+      overflow: hidden;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .custom-store-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(103, 232, 249, .42);
+      box-shadow: 0 18px 42px rgba(0,0,0,.42), 0 0 24px rgba(103,232,249,.16);
+    }
+
+    .store-icon {
+      width: clamp(30px, 8.8vw, 40px);
+      height: clamp(30px, 8.8vw, 40px);
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .store-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .store-copy {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.05;
+    }
+
+    .store-kicker {
+      color: rgba(255,255,255,.78);
+      font-size: clamp(9px, 2.6vw, 10.5px);
+      font-weight: 700;
+    }
+
+    .store-name {
+      color: #fff;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(13px, 3.9vw, 16.5px);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .apple-store-badge .store-icon svg {
+      filter: drop-shadow(0 0 14px rgba(255,255,255,.18));
+    }
+
+    .google-store-badge .store-icon svg {
+      filter: drop-shadow(0 0 14px rgba(64, 220, 140, .26));
+    }
+
+    footer {
+      width: min(100%, 430px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin-top: 0;
+      padding: 0 0 2px;
+      text-align: center;
+    }
+
+    .brand-seal {
+      color: rgba(226, 232, 240, .78);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.18;
+    }
+
+    .gokturk-signature {
+      display: block;
+      margin-top: 2px;
+      font-family: "Segoe UI Historic", "Noto Sans Old Turkic", serif;
+      font-size: clamp(19px, 6vw, 27px);
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, #ffffff 0%, var(--cyan) 42%, var(--orange) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 18px rgba(103, 232, 249, .44), 0 0 28px rgba(249, 115, 22, .24);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(100%, 420px);
+      max-height: min(90svh, 650px);
+      overflow-y: auto;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(15,23,42,.96), rgba(3,7,18,.98));
+      box-shadow: 0 28px 80px rgba(0,0,0,.56);
+      padding: 20px;
+    }
+
+    .modal-title {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 25px;
+      font-weight: 900;
+      line-height: 1.08;
+    }
+
+    .modal-title span {
+      color: var(--orange);
+    }
+
+    .modal-desc,
+    .modal-note,
+    .form-status {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.48;
+      font-weight: 600;
+    }
+
+    .modal-desc {
+      margin-top: 8px;
+    }
+
+    .auth-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .auth-option-btn {
+      min-width: 0;
+      height: 50px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255,255,255,.055);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .auth-option-btn svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .auth-option-btn:hover {
+      border-color: rgba(251,146,60,.45);
+      background: rgba(255,255,255,.085);
+    }
+
+    .modal-note {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .modal-form {
+      display: grid;
+      gap: 13px;
+      margin-top: 17px;
+    }
+
+    .input-group label {
+      display: block;
+      margin: 0 0 7px 2px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .modal-input {
+      width: 100%;
+      height: 52px;
+      border-radius: 15px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.055);
+      color: #fff;
+      padding: 0 15px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-input:focus {
+      outline: none;
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(251,146,60,.14);
+    }
+
+    .modal-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .modal-btn,
+    .modal-close-btn {
+      height: 52px;
+      border-radius: 15px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .modal-btn {
+      border: 0;
+      color: #111827;
+      background: linear-gradient(135deg, #fff7ed, var(--orange));
+    }
+
+    .modal-btn:disabled {
+      opacity: .70;
+      cursor: wait;
+    }
+
+    .modal-close-btn {
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.045);
+      color: #fff;
+    }
+
+    .form-status {
+      display: none;
+      margin-top: 13px;
+      padding: 13px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.045);
+    }
+
+    .form-status.visible {
+      display: block;
+    }
+
+    .form-status.success {
+      color: #dcfce7;
+      border-color: rgba(34,197,94,.34);
+      background: rgba(34,197,94,.10);
+    }
+
+    .form-status.error {
+      color: #fee2e2;
+      border-color: rgba(248,113,113,.34);
+      background: rgba(248,113,113,.10);
+    }
+
+    @keyframes rotateCrystal {
+      from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      to { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+    }
+
+    @keyframes floatPlanet {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-5px) scale(1.04); }
+    }
+
+    @keyframes ringPulse {
+      0%, 100% { opacity: .46; transform: scale(.96); }
+      50% { opacity: .88; transform: scale(1.08); }
+    }
+
+    @media (max-height: 690px) {
+      .screen { padding-top: max(5px, env(safe-area-inset-top)); }
+      .page { gap: 6px; }
+      .hero { gap: 8px; }
+      .holo-container { --holo-size: 86px; }
+      .features-list { padding: 12px; gap: 6px; }
+      .feature-item { font-size: 13.5px; }
+      .promo-large-btn { min-height: 56px; }
+      .gokturk-signature { font-size: 19px; }
+    }
+
+    @media (max-width: 340px) {
+      .custom-store-btn {
+        gap: 5px;
+        padding: 0 6px;
+      }
+
+      .store-name {
+        font-size: 13px;
+      }
+
+      .auth-options {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (min-width: 720px) {
+      .screen {
+        padding-top: 20px;
+      }
+
+      .page,
+      .topbar,
+      footer {
+        width: 430px;
+      }
+
+      .custom-store-btn { border-radius: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="screen">
+    <header class="topbar">
+      <div class="brand-text" aria-label="italkyAI">
+        <div class="brand-title">italky<span>AI</span></div>
+        <div class="brand-subtitle">BE FREE</div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="hero" aria-labelledby="pageTitle">
+        <div class="holo-container" aria-hidden="true">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
+          </div>
+          <div class="ai-planet">
+            <div class="ai-badge">AI</div>
+          </div>
+        </div>
+
+        <h1 id="pageTitle">
+          Sınırları Kaldır,<br>
+          <span class="text-gradient">Özgürlüğü Keşfet.</span>
+        </h1>
+
+        <p class="hero-p">
+          Gerçek zamanlı çeviri, icanyAI radyo, çevrimdışı dil paketleri ve dil teknolojileri tek uygulamada cebinizde.
+        </p>
+
+        <div class="features-list">
+          <div class="feature-item"><span class="feature-icon">✓</span><span>Yapay zeka destekli anlık ve canlı yüz yüze çeviri</span></div>
+          <div class="feature-item"><span class="feature-icon">✓</span><span>İnternet olmadan çalışan çevrimdışı dil paketleri</span></div>
+          <div class="feature-item"><span class="feature-icon">✓</span><span>İki cihaz arasında kesintisiz çift telefon konuşma modu</span></div>
+          <div class="feature-item"><span class="feature-icon">✓</span><span>Gezi, tur ve konferanslar için çoklu katılımcı dinleme sistemi</span></div>
+          <div class="feature-item"><span class="feature-icon">✓</span><span>icanyAI entegrasyonu ile gelişmiş ses ve yapay zeka radyo modülleri</span></div>
+          <div class="feature-item"><span class="feature-icon">✓</span><span>Mezopotamya, Kafkas, Turan ve Balkan dilleri desteği</span></div>
+        </div>
+
+        <button class="promo-large-btn" id="openCampaignModal" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a3 3 0 0 1 0 6v1a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1a3 3 0 0 1 0-6z"></path>
+            <path d="M12 5v14"></path>
+            <path d="M8 9h8"></path>
+          </svg>
+          KOD GİRİŞİ
+        </button>
+
+        <p class="promo-bottom-text">
+          Kampanya kodunuz varsa hesabınızla giriş yaparak uygulamada özel teklifleri görüntüleyebilirsiniz.
+        </p>
+
+        <div class="custom-store-buttons" aria-label="Uygulama mağazaları">
+          <a href="https://apps.apple.com/app/italkyai/id6768123713" target="_blank" rel="noopener noreferrer" class="custom-store-btn apple-store-badge" aria-label="App Store'dan indir">
+            <span class="store-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" role="img">
+                <path fill="#fff" d="M43.88 33.84c-.06-6.28 5.14-9.33 5.38-9.47-2.94-4.3-7.5-4.9-9.1-4.96-3.86-.4-7.58 2.3-9.52 2.3-1.98 0-4.98-2.25-8.2-2.18-4.2.06-8.12 2.45-10.28 6.2-4.44 7.7-1.13 19.02 3.13 25.25 2.13 3.04 4.62 6.43 7.9 6.3 3.2-.13 4.4-2.02 8.27-2.02 3.83 0 4.96 2.02 8.32 1.94 3.45-.05 5.62-3.05 7.67-6.12 2.46-3.48 3.44-6.9 3.48-7.08-.08-.03-6.98-2.68-7.05-10.16Zm-6.25-18.53c1.72-2.15 2.9-5.06 2.57-8.01-2.49.11-5.6 1.72-7.4 3.82-1.6 1.84-3.04 4.86-2.66 7.7 2.8.21 5.69-1.42 7.49-3.51Z"></path>
+              </svg>
+            </span>
+            <span class="store-copy">
+              <span class="store-kicker">İndir</span>
+              <span class="store-name">App Store</span>
+            </span>
+          </a>
+
+          <a href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai" target="_blank" rel="noopener noreferrer" class="custom-store-btn google-store-badge" aria-label="Google Play'den indir">
+            <span class="store-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" role="img">
+                <path fill="#34a853" d="M12.5 7.6c-1.4.78-2.2 2.24-2.2 4.16v40.48c0 1.92.8 3.38 2.2 4.16l.13.07 22.68-24.18v-.58L12.63 7.53l-.13.07Z"></path>
+                <path fill="#4285f4" d="m42.78 40.36-7.47-8.07v-.58l7.48-8.07.17.1 8.84 5.04c2.53 1.45 2.53 3.84 0 5.3l-8.84 5.03-.18.25Z"></path>
+                <path fill="#fbbc04" d="m42.96 40.11-7.65-8.1L12.5 56.4c1.36.75 3.14.63 5.04-.45l25.42-15.84Z"></path>
+                <path fill="#ea4335" d="M42.96 23.89 17.54 8.05c-1.9-1.08-3.68-1.2-5.04-.45l22.81 24.4 7.65-8.11Z"></path>
+              </svg>
+            </span>
+            <span class="store-copy">
+              <span class="store-kicker">İndir</span>
+              <span class="store-name">Google Play</span>
+            </span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        <div class="brand-seal">
+          italkyAI By Ozyigit's 2026
+          <span class="gokturk-signature" lang="otk">𐰆𐰍𐰔</span>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="campaignModal" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="campaignModalTitle">
+      <h2 class="modal-title" id="campaignModalTitle">Kampanya Kodunu <span>Doğrula</span></h2>
+      <p class="modal-desc">
+        Google veya Apple hesabınızla giriş yapın, ardından benzersiz kampanya kodunuzu doğrulayın.
+      </p>
+
+      <div class="auth-options" aria-label="Hesap ile devam et">
+        <button class="auth-option-btn" type="button" data-oauth-provider="google">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09Z"></path>
+            <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23Z"></path>
+            <path fill="#fbbc05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84Z"></path>
+            <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38Z"></path>
+          </svg>
+          Google
+        </button>
+        <button class="auth-option-btn" type="button" data-oauth-provider="apple">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#fff" d="M16.37 12.2c-.03-3.02 2.46-4.49 2.57-4.56-1.41-2.06-3.6-2.35-4.37-2.38-1.86-.19-3.64 1.1-4.58 1.1-.95 0-2.39-1.08-3.94-1.05-2.02.03-3.9 1.18-4.94 2.98-2.13 3.7-.54 9.14 1.5 12.14 1.02 1.46 2.22 3.09 3.8 3.02 1.54-.06 2.11-.97 3.97-.97 1.84 0 2.38.97 4 .93 1.66-.03 2.7-1.46 3.69-2.94 1.18-1.67 1.65-3.32 1.67-3.4-.04-.02-3.35-1.29-3.37-4.87ZM13.36 3.3c.83-1.03 1.39-2.43 1.24-3.84-1.2.05-2.69.83-3.55 1.84-.77.88-1.46 2.33-1.28 3.7 1.34.1 2.73-.68 3.59-1.7Z"></path>
+          </svg>
+          Apple
+        </button>
+      </div>
+
+      <form class="modal-form" id="campaignForm">
+        <div class="input-group">
+          <label for="campaignCode">Benzersiz Kod</label>
+          <input class="modal-input" id="campaignCode" name="code" type="text" autocomplete="one-time-code" placeholder="KAMPANYA2026" required>
+        </div>
+
+        <div class="modal-actions">
+          <button class="modal-btn" id="campaignSubmitBtn" type="submit">Kodu Doğrula</button>
+          <button class="modal-close-btn" id="closeCampaignModal" type="button">Vazgeç</button>
+        </div>
+      </form>
+
+      <div class="form-status" id="campaignStatus" aria-live="polite"></div>
+
+      <p class="modal-note">
+        iOS uygulamasında dijital kullanım hakkı Apple IAP dışı yöntemle açılmaz. Bu kod yalnızca uygun özel teklifleri göstermek için kullanılır; ödeme iOS'ta Apple, Android'de Google Play üzerinden yapılır.
+      </p>
+    </div>
+  </div>
+
+  <script type="module" src="/js/kampanya_activation.js?v=KAMPANYA_AUTH_20260612"></script>
+</body>
+</html>
