@@ -2,307 +2,525 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-  <title>italkyAI • Promosyon Kodları</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>italkyAI • Kampanya Kodları</title>
+  <meta name="theme-color" content="#07111f" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
   <style>
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#07111f,#050914);color:#fff;font-family:Outfit,Arial,sans-serif;padding:22px}
-    .page{max-width:920px;margin:0 auto}
-    .card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);border-radius:24px;padding:18px;box-shadow:0 22px 54px rgba(0,0,0,.26)}
-    h1{margin:0 0 8px;font-size:28px;font-weight:1000;letter-spacing:-.7px}
-    p{margin:0 0 16px;color:rgba(255,255,255,.68);line-height:1.5;font-weight:700}
-    .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    label{display:grid;gap:7px;color:rgba(255,255,255,.78);font-size:12px;font-weight:1000;letter-spacing:.4px;text-transform:uppercase}
-    input,select,textarea,button{width:100%;border:0;border-radius:16px;font-family:Outfit,Arial,sans-serif}
-    input,select,textarea{min-height:50px;background:#111827;color:#fff;border:1px solid rgba(255,255,255,.12);padding:12px 13px;font-size:15px;font-weight:800}
-    textarea{min-height:92px;resize:vertical;text-transform:none}
-    button{min-height:54px;cursor:pointer;font-size:15px;font-weight:1000;color:#06111f;background:linear-gradient(135deg,#67e8f9,#93c5fd,#c4b5fd)}
-    button:disabled{opacity:.55;cursor:not-allowed}
-    .status{margin-top:12px;min-height:22px;color:#bef264;font-size:13px;font-weight:900;line-height:1.5;white-space:pre-wrap}
-    .error{color:#fca5a5}
-    .table{margin-top:16px;overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(0,0,0,.18)}
-    table{width:100%;border-collapse:collapse;min-width:920px}
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;text-align:left}
-    th{color:rgba(255,255,255,.58);font-weight:1000}
-    .top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}
-    .link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;text-decoration:none;font-size:13px;font-weight:1000}
-    @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}
+    :root {
+      --bg: #050914;
+      --panel: rgba(12, 18, 30, .82);
+      --panel-2: rgba(17, 24, 39, .88);
+      --line: rgba(255,255,255,.12);
+      --line-2: rgba(255,255,255,.18);
+      --text: #f8fafc;
+      --muted: #a9b4c7;
+      --cyan: #67e8f9;
+      --orange: #fb923c;
+      --green: #86efac;
+      --red: #fca5a5;
+      --shadow: 0 22px 64px rgba(0,0,0,.32);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      color: var(--text);
+      font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(103,232,249,.14), transparent 30%),
+        radial-gradient(circle at 92% 10%, rgba(251,146,60,.10), transparent 34%),
+        linear-gradient(180deg, #07111f 0%, #050914 100%);
+      padding: 18px;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(100%, 1180px);
+      margin: 0 auto;
+    }
+
+    .topbar,
+    .card,
+    .list-card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      border-radius: 26px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.45;
+      max-width: 680px;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .ghost-link,
+    .ghost-btn {
+      min-height: 42px;
+      border-radius: 14px;
+      border: 1px solid var(--line-2);
+      background: rgba(255,255,255,.055);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
+      gap: 14px;
+    }
+
+    .card,
+    .list-card {
+      border-radius: 24px;
+      padding: 18px;
+    }
+
+    .card h2,
+    .list-card h2 {
+      margin: 0 0 6px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .section-desc {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .wide {
+      grid-column: 1 / -1;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field span,
+    .field legend {
+      color: rgba(255,255,255,.76);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      min-height: 50px;
+      border-radius: 15px;
+      border: 1px solid var(--line);
+      background: rgba(3, 7, 18, .70);
+      color: #fff;
+      padding: 12px 13px;
+      font-size: 15px;
+      font-weight: 800;
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 84px;
+      resize: vertical;
+      text-transform: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: rgba(103,232,249,.58);
+      box-shadow: 0 0 0 3px rgba(103,232,249,.12);
+    }
+
+    .radio-row,
+    .check-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      border: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    .radio-pill,
+    .check-pill {
+      flex: 1 1 150px;
+      min-height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255,255,255,.045);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 12px;
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .radio-pill input,
+    .check-pill input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--cyan);
+    }
+
+    .primary-btn {
+      min-height: 56px;
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--cyan), #93c5fd, #c4b5fd);
+      color: #06111f;
+      font-size: 16px;
+      font-weight: 1000;
+      box-shadow: 0 14px 32px rgba(103,232,249,.18);
+    }
+
+    .status {
+      min-height: 22px;
+      margin-top: 12px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .status.error { color: var(--red); }
+    .status.warn { color: #fde68a; }
+
+    .guard {
+      display: none;
+      border-radius: 18px;
+      border: 1px solid rgba(252,165,165,.28);
+      background: rgba(127,29,29,.18);
+      color: #fee2e2;
+      padding: 14px;
+      margin-bottom: 14px;
+      font-weight: 900;
+      line-height: 1.5;
+    }
+
+    .guard.visible {
+      display: block;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(0,0,0,.20);
+    }
+
+    table {
+      width: 100%;
+      min-width: 1050px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 11px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      color: rgba(255,255,255,.58);
+      font-weight: 1000;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+
+    .code-cell {
+      font-family: "Space Grotesk", monospace;
+      font-size: 14px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .qr-link {
+      display: block;
+      max-width: 240px;
+      color: var(--cyan);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .small-btn {
+      width: auto;
+      min-height: 34px;
+      border-radius: 11px;
+      border: 1px solid var(--line-2);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .small-btn.danger {
+      border-color: rgba(252,165,165,.34);
+      color: #fecaca;
+    }
+
+    .small-btn.ok {
+      border-color: rgba(134,239,172,.34);
+      color: #bbf7d0;
+    }
+
+    .qr-panel {
+      display: none;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(0,0,0,.20);
+      padding: 14px;
+    }
+
+    .qr-panel.visible {
+      display: block;
+    }
+
+    .qr-panel h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .qr-url {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(3,7,18,.70);
+      color: var(--cyan);
+      padding: 11px 12px;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .empty {
+      padding: 20px;
+      color: var(--muted);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    @media (max-width: 920px) {
+      body { padding: 12px; }
+      .topbar,
+      .layout { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; }
+      .top-actions { justify-content: flex-start; }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .card,
+      .list-card,
+      .topbar { border-radius: 20px; padding: 14px; }
+      .brand h1 { font-size: 30px; }
+    }
   </style>
 </head>
 <body>
   <main class="page">
-    <div class="top">
-      <div>
-        <h1>Promosyon Kodları</h1>
-        <p>Yeni promo_codes tablosuna sadece API üzerinden code_value kaydı oluşturur.</p>
+    <header class="topbar">
+      <div class="brand">
+        <h1>Kampanya Kodları</h1>
+        <p>Ücretsiz gün kodları oluştur, QR linklerini hazırla ve kullanım durumlarını takip et.</p>
       </div>
-      <a class="link" href="/pages/admin.html">Ana Admin</a>
-    </div>
+      <div class="top-actions">
+        <a class="ghost-link" href="/pages/admin.html">Ana Admin</a>
+        <button class="ghost-btn" id="refreshBtn" type="button">Yenile</button>
+        <button class="ghost-btn" id="logoutBtn" type="button">Çıkış</button>
+      </div>
+    </header>
 
-    <section class="card">
-      <div class="grid">
-        <label>Kod Sayısı
-          <input id="countInput" type="number" min="1" max="500" value="10" />
-        </label>
-        <label>Süre
-          <select id="durationSelect">
-            <option value="30">30 gün</option>
-            <option value="90">90 gün</option>
-            <option value="180">180 gün</option>
-            <option value="365" selected>365 gün</option>
-          </select>
-        </label>
-        <label class="wide">Not
-          <textarea id="noteInput" placeholder="Kampanya / satış / bayi notu"></textarea>
-        </label>
-        <div class="wide">
-          <button id="generateBtn" type="button">Kodları Oluştur</button>
-          <div id="status" class="status"></div>
+    <div class="guard" id="guardMessage"></div>
+
+    <section class="layout" id="adminContent" hidden>
+      <form class="card" id="promoForm">
+        <h2>Kod Oluştur</h2>
+        <p class="section-desc">Kodlar `web_promo_codes` tablosuna uppercase olarak yazılır. QR/NFC linki `/kampanya?kod=...` formatındadır.</p>
+
+        <div class="form-grid">
+          <fieldset class="field wide">
+            <legend>Kod Tipi</legend>
+            <div class="radio-row">
+              <label class="radio-pill"><input type="radio" name="codeMode" value="single" checked> Tek Kod</label>
+              <label class="radio-pill"><input type="radio" name="codeMode" value="series"> Benzersiz Seri Kod</label>
+            </div>
+          </fieldset>
+
+          <label class="field single-field">Kod
+            <input id="singleCodeInput" type="text" placeholder="ITKY-365-GIFT" autocomplete="off">
+          </label>
+
+          <label class="field series-field" hidden>Prefix
+            <input id="prefixInput" type="text" value="ITKY-GIFT" autocomplete="off">
+          </label>
+
+          <label class="field series-field" hidden>Adet
+            <input id="quantityInput" type="number" min="1" max="500" value="100">
+          </label>
+
+          <label class="field">Gün Sayısı
+            <select id="daysSelect">
+              <option value="1">1 gün</option>
+              <option value="7">7 gün</option>
+              <option value="30">30 gün</option>
+              <option value="90">90 gün</option>
+              <option value="180">180 gün</option>
+              <option value="365" selected>365 gün</option>
+              <option value="custom">Özel sayı</option>
+            </select>
+          </label>
+
+          <label class="field" id="customDaysField" hidden>Özel Gün
+            <input id="customDaysInput" type="number" min="1" max="3650" value="365">
+          </label>
+
+          <fieldset class="field">
+            <legend>Kullanım Hakkı</legend>
+            <div class="check-row">
+              <label class="check-pill"><input id="singleUseInput" type="checkbox" checked> Tek kullanımlık</label>
+            </div>
+          </fieldset>
+
+          <label class="field" id="maxUsesField" hidden>Çoklu Kullanım Sayısı
+            <input id="maxUsesInput" type="number" min="1" max="100000" value="1">
+          </label>
+
+          <label class="field">Son Kullanma Tarihi
+            <input id="expiresInput" type="date">
+          </label>
+
+          <label class="field wide">Not
+            <textarea id="noteInput" placeholder="Düzce fuar QR kodu"></textarea>
+          </label>
+
+          <div class="wide">
+            <button class="primary-btn" id="createBtn" type="submit">Kodları Oluştur</button>
+            <div class="status" id="formStatus"></div>
+          </div>
         </div>
-      </div>
+      </form>
 
-      <div class="table">
-        <table>
-          <thead>
-            <tr><th>Kod</th><th>Kampanya</th><th>Süre</th><th>Teslim</th><th>Durum</th><th>Tarih</th></tr>
-          </thead>
-          <tbody id="resultBody"><tr><td colspan="6">Henüz kod oluşturulmadı.</td></tr></tbody>
-        </table>
-      </div>
+      <section class="list-card">
+        <h2>Mevcut Kodlar</h2>
+        <p class="section-desc">Her satırda QR linki hazırdır. İlk aşamada link kopyalama aktiftir; QR görsel üretimi ikinci mini adım için ayrıldı.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kod</th>
+                <th>Gün</th>
+                <th>Durum</th>
+                <th>Kullanım</th>
+                <th>Son Kullanma</th>
+                <th>Not</th>
+                <th>QR Link</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="codesBody">
+              <tr><td colspan="8" class="empty">Kodlar yükleniyor.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="qr-panel" id="qrPanel">
+          <h3>QR Link</h3>
+          <div class="qr-url" id="qrUrl"></div>
+        </div>
+      </section>
     </section>
   </main>
 
-  <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-
-    const API_BASE = "https://italky-api.onrender.com/api/admin";
-    const countInput = document.getElementById("countInput");
-    const durationSelect = document.getElementById("durationSelect");
-    const generateBtn = document.getElementById("generateBtn");
-    const statusEl = document.getElementById("status");
-    const resultBody = document.getElementById("resultBody");
-
-    const LETTERS = "ABCDEFGHJKLMNPRSTUVYZ";
-    const DIGITS = "0123456789";
-    const BANNED_PAIRS = new Set(["AK", "FG", "FB", "GS"]);
-    const CAMPAIGNS = {
-      30: { code: "TRENDYOL_ANDROID_1AY", months: 1, label: "30 gün" },
-      90: { code: "TRENDYOL_ANDROID_3AY", months: 3, label: "90 gün" },
-      180: { code: "TRENDYOL_ANDROID_6AY", months: 6, label: "180 gün" },
-      365: { code: "TRENDYOL_ANDROID_12AY", months: 12, label: "365 gün" }
-    };
-
-    function setStatus(message, isError = false){
-      statusEl.textContent = message || "";
-      statusEl.classList.toggle("error", !!isError);
-    }
-
-    function pick(source){
-      return source[Math.floor(Math.random() * source.length)];
-    }
-
-    function generatePromoCode(){
-      for(let attempt = 0; attempt < 100; attempt += 1){
-        const letters = `${pick(LETTERS)}${pick(LETTERS)}`;
-        if(BANNED_PAIRS.has(letters)) continue;
-        const digits = Array.from({ length: 6 }, () => pick(DIGITS)).join("");
-        return `${letters}${digits}`;
-      }
-      throw new Error("Kod üretilemedi");
-    }
-
-    function campaignForDuration(durationDays){
-      const cfg = CAMPAIGNS[Number(durationDays)];
-      if(!cfg) throw new Error("Geçersiz süre seçimi");
-      return cfg;
-    }
-
-    async function getToken(){
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token || "";
-      if(!token) throw new Error("Token yok. Lütfen tekrar giriş yapın.");
-      return token;
-    }
-
-    async function apiJson(path, options = {}){
-      const res = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${await getToken()}`,
-          ...(options.headers || {})
-        }
-      });
-
-      const text = await res.text();
-      let json = {};
-      if(text){
-        try{ json = JSON.parse(text); }
-        catch{ json = { detail: text.slice(0, 500) }; }
-      }
-
-      if(!res.ok){
-        const detail = json?.detail || `HTTP ${res.status}`;
-        if(res.status === 401) throw new Error(`Yetki yok: Token geçersiz veya eksik. (${detail})`);
-        if(res.status === 403) throw new Error(`Yetki yok: profiles.role admin/superadmin olmalı. (${detail})`);
-        if(res.status === 404) throw new Error(`API endpoint bulunamadı: ${path}`);
-        throw new Error(String(detail));
-      }
-      return json;
-    }
-
-    async function requireAdmin(){
-      await apiJson("/me", { method: "GET" });
-    }
-
-    async function findCampaign(code){
-      const json = await apiJson("/promo/campaigns", { method: "GET" });
-      const rows = Array.isArray(json?.items) ? json.items : [];
-      return rows.find((row) => String(row?.code || "").toUpperCase() === code) || null;
-    }
-
-    function getCampaignFromResponse(json){
-      const item = Array.isArray(json?.item) ? json.item[0] : json?.item;
-      if(!item?.id) throw new Error("Kampanya id alınamadı");
-      return item;
-    }
-
-    async function ensureCampaign(durationDays){
-      const cfg = campaignForDuration(durationDays);
-      const existing = await findCampaign(cfg.code);
-      if(existing?.id) return existing;
-
-      try{
-        const created = await apiJson("/promo/campaigns", {
-          method: "POST",
-          body: JSON.stringify({
-            code: cfg.code,
-            name: `Trendyol Android ${cfg.months} Ay`,
-            description: `Trendyol Android ${cfg.label} manuel promosyon kodları`,
-            is_active: true,
-            grant_type: "membership",
-            membership_months: cfg.months,
-            token_amount: 0,
-            package_code: "promo_code",
-            stack_mode: "extend",
-            per_user_limit: 1
-          })
-        });
-        return getCampaignFromResponse(created);
-      }catch(e){
-        if(String(e?.message || "").includes("CAMPAIGN_CODE_ALREADY_EXISTS")){
-          const retry = await findCampaign(cfg.code);
-          if(retry?.id) return retry;
-        }
-        throw e;
-      }
-    }
-
-    function extractCreatedCode(json, expectedCode){
-      const item = Array.isArray(json?.item) ? json.item[0] : json?.item;
-      if(!item?.code_value) throw new Error(`Kod oluşturuldu yanıtı eksik: ${expectedCode}`);
-      return item;
-    }
-
-    async function createCodeWithRetry(campaignId){
-      for(let attempt = 0; attempt < 5; attempt += 1){
-        const codeValue = generatePromoCode();
-        try{
-          const json = await apiJson("/promo/codes", {
-            method: "POST",
-            body: JSON.stringify({
-              campaign_id: campaignId,
-              code_value: codeValue,
-              delivery_type: "manual",
-              nfc_uid: null,
-              is_active: true
-            })
-          });
-          return extractCreatedCode(json, codeValue);
-        }catch(e){
-          if(String(e?.message || "").includes("PROMO_CODE_ALREADY_EXISTS")) continue;
-          throw e;
-        }
-      }
-      throw new Error("Benzersiz kod üretilemedi");
-    }
-
-    function normalizeRow(row){
-      const campaign = Array.isArray(row?.promo_campaigns) ? row.promo_campaigns[0] : row?.promo_campaigns;
-      return {
-        code_value: row?.code_value || "",
-        delivery_type: row?.delivery_type || "manual",
-        is_active: !!row?.is_active,
-        is_used: !!row?.is_used,
-        created_at: row?.created_at || "",
-        campaign_code: campaign?.code || row?.campaign_code || "-",
-        membership_months: Number(campaign?.membership_months || row?.membership_months || 0)
-      };
-    }
-
-    function renderRows(rows){
-      if(!rows.length){
-        resultBody.innerHTML = '<tr><td colspan="6">Henüz kod oluşturulmadı.</td></tr>';
-        return;
-      }
-      resultBody.innerHTML = rows.map((raw) => {
-        const row = normalizeRow(raw);
-        const status = row.is_used ? "Kullanıldı" : (row.is_active ? "Aktif" : "Pasif");
-        const createdAt = row.created_at ? new Date(row.created_at).toLocaleString("tr-TR") : "-";
-        return `
-        <tr>
-          <td><b>${row.code_value}</b></td>
-          <td>${row.campaign_code}</td>
-          <td>${row.membership_months} ay</td>
-          <td>${row.delivery_type}</td>
-          <td>${status}</td>
-          <td>${createdAt}</td>
-        </tr>
-      `}).join("");
-    }
-
-    async function loadLatestCodes(){
-      const json = await apiJson("/promo/codes", { method: "GET" });
-      const rows = Array.isArray(json?.items) ? json.items : [];
-      renderRows(rows.slice(0, 25));
-    }
-
-    generateBtn.addEventListener("click", async () => {
-      try{
-        generateBtn.disabled = true;
-        setStatus("Kodlar oluşturuluyor...");
-
-        await requireAdmin();
-        const count = Math.max(1, Math.min(500, Number(countInput.value || 1)));
-        const durationDays = Number(durationSelect.value || 365);
-        const campaign = await ensureCampaign(durationDays);
-        const createdRows = [];
-
-        for(let i = 0; i < count; i += 1){
-          setStatus(`Kodlar oluşturuluyor... (${i + 1}/${count})`);
-          const created = await createCodeWithRetry(campaign.id);
-          createdRows.push({
-            ...created,
-            campaign_code: campaign.code,
-            membership_months: campaign.membership_months
-          });
-        }
-
-        renderRows(createdRows);
-        setStatus(`${createdRows.length} adet promosyon kodu API ile oluşturuldu ve promo_codes tablosuna yazıldı.`);
-        await loadLatestCodes();
-      }catch(e){
-        console.error("promo code generation failed:", e);
-        setStatus(e?.message || "Kod oluşturulamadı", true);
-      }finally{
-        generateBtn.disabled = false;
-      }
-    });
-
-    requireAdmin()
-      .then(loadLatestCodes)
-      .catch((e) => setStatus(e?.message || "Admin doğrulanamadı", true));
-  </script>
+  <script type="module" src="/js/admin_promo_codes.js?v=WEB_PROMO_ADMIN_20260613"></script>
 </body>
 </html>
