@@ -14,6 +14,11 @@ const campaignCode = document.getElementById("campaignCode");
 const campaignSubmitBtn = document.getElementById("campaignSubmitBtn");
 const campaignStatus = document.getElementById("campaignStatus");
 const campaignSelectedAccount = document.getElementById("campaignSelectedAccount");
+const campaignOAuthOptions = document.getElementById("campaignOAuthOptions");
+const campaignSessionConfirm = document.getElementById("campaignSessionConfirm");
+const campaignCurrentAccount = document.getElementById("campaignCurrentAccount");
+const continueWithCurrentAccount = document.getElementById("continueWithCurrentAccount");
+const changeCampaignAccount = document.getElementById("changeCampaignAccount");
 const oauthButtons = document.querySelectorAll("[data-oauth-provider]");
 
 let campaignSession = null;
@@ -83,19 +88,42 @@ function showCodeMissing() {
   openCampaignDialog();
 }
 
-function showAccountStep() {
+function showAccountStep({ session = campaignSession } = {}) {
   resetCampaignStatus();
-  setHeading(
-    "Hesabınızı",
-    "Seçin",
-    "Lütfen italkyAI uygulamasını kullanacağınız veya hâlihazırda kullandığınız Google ya da Apple hesabıyla giriş yapın. Kampanya hakkı seçtiğiniz hesaba tanımlanacaktır."
-  );
+  campaignSession = session || null;
+
+  if (campaignSession) {
+    const account = userLabel(campaignSession);
+    setHeading(
+      "Hesabınızı",
+      "Kontrol Edin",
+      `Şu anda açık hesap: ${account}`
+    );
+    campaignCurrentAccount.textContent = `Şu anda açık hesap: ${account}`;
+    campaignOAuthOptions.hidden = true;
+    campaignSessionConfirm.hidden = false;
+  } else {
+    setHeading(
+      "Hesabınızı",
+      "Seçin",
+      "Lütfen italkyAI uygulamasını kullanacağınız veya hâlihazırda kullandığınız Google ya da Apple hesabıyla giriş yapın. Kampanya hakkı seçtiğiniz hesaba tanımlanacaktır."
+    );
+    campaignOAuthOptions.hidden = false;
+    campaignSessionConfirm.hidden = true;
+  }
+
   showStep("account");
   openCampaignDialog();
 }
 
 function showVerifyStep() {
   resetCampaignStatus();
+
+  if (!campaignSession) {
+    showAccountStep({ session: null });
+    return;
+  }
+
   setHeading(
     "Kampanya Kodunu",
     "Doğrula",
@@ -151,6 +179,26 @@ async function signInWithProvider(provider) {
 
   if (error) {
     setCampaignStatus("error", error.message || "Giriş başlatılamadı. Lütfen tekrar deneyin.");
+  }
+}
+
+async function signOutForAccountChange() {
+  resetCampaignStatus();
+  changeCampaignAccount.disabled = true;
+  changeCampaignAccount.textContent = "Hesap değiştiriliyor...";
+
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setCampaignStatus("error", error.message || "Hesap değiştirilemedi. Lütfen tekrar deneyin.");
+      return;
+    }
+
+    campaignSession = null;
+    showAccountStep({ session: null });
+  } finally {
+    changeCampaignAccount.disabled = false;
+    changeCampaignAccount.textContent = "Hesap Değiştir";
   }
 }
 
@@ -248,12 +296,7 @@ async function bootCampaignFlow({ forceOpen = false } = {}) {
   }
 
   campaignSession = session;
-  if (campaignSession) {
-    showVerifyStep();
-    return;
-  }
-
-  showAccountStep();
+  showAccountStep({ session: campaignSession });
 }
 
 openCampaignModal.addEventListener("click", () => {
@@ -267,6 +310,9 @@ oauthButtons.forEach(button => {
     signInWithProvider(button.dataset.oauthProvider);
   });
 });
+
+continueWithCurrentAccount.addEventListener("click", showVerifyStep);
+changeCampaignAccount.addEventListener("click", signOutForAccountChange);
 
 campaignModal.addEventListener("click", event => {
   if (event.target === campaignModal) {
@@ -300,7 +346,7 @@ campaignForm.addEventListener("submit", async event => {
     if (!result.ok) {
       const copy = errorCopyFor(result.errorCode);
       if (result.errorCode === "AUTH_REQUIRED") {
-        showAccountStep();
+        showAccountStep({ session: null });
         setCampaignStatus("error", `${copy.title} ${copy.message}`);
       } else {
         showErrorScreen(copy.title, copy.message);
@@ -321,7 +367,7 @@ campaignForm.addEventListener("submit", async event => {
 supabase.auth.onAuthStateChange((event, session) => {
   campaignSession = session;
   if (session && campaignCodeValue && event === "SIGNED_IN") {
-    showVerifyStep();
+    showAccountStep({ session });
   }
 });
 
