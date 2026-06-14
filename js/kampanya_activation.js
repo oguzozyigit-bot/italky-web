@@ -19,7 +19,6 @@ const changeCampaignAccount = document.getElementById("changeCampaignAccount");
 const authOptions = document.querySelector(".auth-options");
 const oauthButtons = document.querySelectorAll("[data-oauth-provider]");
 const successStoreContainer = document.querySelector(".success-store-buttons");
-const successStoreButtons = document.querySelectorAll("[data-success-store]");
 const pageContainer = document.querySelector(".page");
 const pageFooter = document.querySelector("footer");
 
@@ -187,28 +186,59 @@ function showConfirmStep({ session = campaignSession } = {}) {
 }
 
 function detectDevicePlatform() {
-  const userAgent = navigator.userAgent || navigator.vendor || "";
+  const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+  const uaDataPlatform = navigator.userAgentData?.platform || "";
 
-  if (/android/i.test(userAgent)) return "android";
-  if (/iphone|ipad|ipod/i.test(userAgent)) return "ios";
-  if (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return "ios";
+  const isAndroid =
+    /android/i.test(ua) ||
+    /android/i.test(uaDataPlatform);
+
+  const isIOS =
+    /iphone|ipad|ipod/i.test(ua) ||
+    /ios/i.test(uaDataPlatform) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  if (isAndroid) return "android";
+  if (isIOS) return "ios";
   return "unknown";
 }
 
 function updateSuccessStoreButtons() {
   const platform = detectDevicePlatform();
-  const singleStore = platform === "ios" || platform === "android";
+  const appleBtn = document.querySelector('[data-success-store="ios"]');
+  const googleBtn = document.querySelector('[data-success-store="android"]');
 
-  successStoreContainer?.classList.toggle("single-store", singleStore);
-
-  successStoreButtons.forEach(button => {
-    const store = button.dataset.successStore;
-    button.hidden = platform === "ios"
-      ? store !== "ios"
-      : platform === "android"
-        ? store !== "android"
-        : false;
-  });
+  if (platform === "android") {
+    if (appleBtn) {
+      appleBtn.hidden = true;
+      appleBtn.style.display = "none";
+    }
+    if (googleBtn) {
+      googleBtn.hidden = false;
+      googleBtn.style.display = "";
+    }
+    successStoreContainer?.classList.add("single-store");
+  } else if (platform === "ios") {
+    if (appleBtn) {
+      appleBtn.hidden = false;
+      appleBtn.style.display = "";
+    }
+    if (googleBtn) {
+      googleBtn.hidden = true;
+      googleBtn.style.display = "none";
+    }
+    successStoreContainer?.classList.add("single-store");
+  } else {
+    if (appleBtn) {
+      appleBtn.hidden = false;
+      appleBtn.style.display = "";
+    }
+    if (googleBtn) {
+      googleBtn.hidden = false;
+      googleBtn.style.display = "";
+    }
+    successStoreContainer?.classList.remove("single-store");
+  }
 }
 
 function updateAuthButtons() {
