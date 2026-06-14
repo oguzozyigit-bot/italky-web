@@ -190,7 +190,7 @@ function detectDevicePlatform() {
   const userAgent = navigator.userAgent || navigator.vendor || "";
 
   if (/android/i.test(userAgent)) return "android";
-  if (/iPad|iPhone|iPod/.test(userAgent)) return "ios";
+  if (/iphone|ipad|ipod/i.test(userAgent)) return "ios";
   if (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return "ios";
   return "unknown";
 }
@@ -234,10 +234,9 @@ function showSuccessStep() {
   setHeading(
     "Kodunuz",
     "Doğrulandı",
-    "Kampanya hakkınız hesabınıza tanımlandı. Günlerin uygulamada görünmesi için lütfen uygulamayı kapatıp tekrar açın."
+    "Kampanya hakkınız hesabınıza tanımlandı."
   );
   showStep("success");
-  setCampaignStatus("success", "Uygulamayı indirin ve tanımladığınız hesapla giriş yapın.");
   openCampaignDialog();
 }
 
