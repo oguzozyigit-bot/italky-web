@@ -16,6 +16,8 @@ const campaignStatus = document.getElementById("campaignStatus");
 const campaignSelectedAccount = document.getElementById("campaignSelectedAccount");
 const campaignOAuthOptions = document.getElementById("campaignOAuthOptions");
 const changeCampaignAccount = document.getElementById("changeCampaignAccount");
+const oauthErrorActions = document.getElementById("oauthErrorActions");
+const retryAppleOAuth = document.getElementById("retryAppleOAuth");
 const authOptions = document.querySelector(".auth-options");
 const oauthButtons = document.querySelectorAll("[data-oauth-provider]");
 const successStoreContainer = document.querySelector(".success-store-buttons");
@@ -40,7 +42,9 @@ function normalizeCode(value) {
 
 function getCodeFromUrl() {
   const params = new URLSearchParams(window.location.search);
-  return normalizeCode(params.get("kod") || params.get("code") || "");
+  const hasOAuthCode = params.has("code") && (params.has("state") || params.has("error") || params.has("error_description"));
+  const code = params.get("kod") || (!hasOAuthCode ? params.get("code") : "") || storageGet(AUTH_PENDING_CODE_KEY) || "";
+  return normalizeCode(code);
 }
 
 function storageGet(key) {
@@ -85,6 +89,34 @@ function hasOAuthCallbackSignal() {
     || (params.has("kod") && params.has("code"));
 }
 
+function getCallbackParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  const hash = window.location.hash.startsWith("#")
+    ? window.location.hash.slice(1)
+    : window.location.hash;
+  const hashParams = new URLSearchParams(hash);
+
+  return params.get(name) || hashParams.get(name) || "";
+}
+
+function getOAuthErrorFromUrl() {
+  const error = getCallbackParam("error");
+  const description = getCallbackParam("error_description");
+  const code = getCallbackParam("error_code");
+
+  if (!error && !description) return null;
+  return { error, description, code };
+}
+
+function shortTechnicalDetail(oauthError) {
+  const detail = oauthError.description || oauthError.code || oauthError.error || "";
+  return detail.trim().slice(0, 180);
+}
+
+function getRedirectUrl() {
+  return `https://italky.ai/kampanya?kod=${encodeURIComponent(campaignCodeValue)}`;
+}
+
 function shouldConfirmSession() {
   return Boolean(campaignSession);
 }
@@ -101,6 +133,9 @@ function setCampaignStatus(type, message) {
 function resetCampaignStatus() {
   campaignStatus.className = "form-status";
   campaignStatus.textContent = "";
+  if (oauthErrorActions) {
+    oauthErrorActions.hidden = true;
+  }
 }
 
 function setHeading(title, accent, description) {
@@ -249,11 +284,14 @@ function updateAuthButtons() {
 
   oauthButtons.forEach(button => {
     const provider = button.dataset.oauthProvider;
-    button.hidden = platform === "ios"
+    const shouldHide = platform === "ios"
       ? provider !== "apple"
       : platform === "android"
         ? provider !== "google"
         : false;
+
+    button.hidden = shouldHide;
+    button.style.display = shouldHide ? "none" : "";
   });
 }
 
@@ -277,6 +315,31 @@ function showErrorScreen(title, message) {
   openCampaignDialog();
 }
 
+function showAppleOAuthError(oauthError) {
+  resetCampaignStatus();
+  setCampaignCodeFields();
+  setHeading(
+    "Apple ile giriş",
+    "tamamlanamadı",
+    "Apple hesabıyla giriş işlemi tamamlanamadı. Lütfen tekrar deneyin. Sorun devam ederse Apple web giriş ayarları kontrol edilmelidir."
+  );
+  showStep("none");
+
+  const detail = shortTechnicalDetail(oauthError);
+  setCampaignStatus(
+    "error",
+    detail
+      ? `Apple hesabıyla giriş işlemi tamamlanamadı. Teknik detay: ${detail}`
+      : "Apple hesabıyla giriş işlemi tamamlanamadı. Lütfen tekrar deneyin."
+  );
+
+  if (oauthErrorActions) {
+    oauthErrorActions.hidden = false;
+  }
+
+  openCampaignDialog();
+}
+
 async function getActiveSession() {
   const { data, error } = await supabase.auth.getSession();
   if (error) {
@@ -294,7 +357,7 @@ async function signInWithProvider(provider) {
     return;
   }
 
-  const redirectTo = window.location.href.split("#")[0];
+  const redirectTo = getRedirectUrl();
   const options = { redirectTo };
 
   if (provider === "google") {
@@ -415,13 +478,19 @@ async function redeemPromoCode(code) {
 async function bootCampaignFlow() {
   mountCampaignCard();
   campaignCodeValue = getCodeFromUrl();
+  setCampaignCodeFields();
+
+  const oauthError = getOAuthErrorFromUrl();
+  if (oauthError) {
+    showAppleOAuthError(oauthError);
+    return;
+  }
 
   if (!campaignCodeValue) {
     showCodeMissing();
     return;
   }
 
-  setCampaignCodeFields();
   const { session, error } = await getActiveSession();
   if (error) {
     showErrorScreen("İşlem tamamlanamadı", "Lütfen daha sonra tekrar deneyin.");
@@ -446,6 +515,7 @@ oauthButtons.forEach(button => {
 });
 
 changeCampaignAccount.addEventListener("click", signOutForAccountChange);
+retryAppleOAuth?.addEventListener("click", () => signInWithProvider("apple"));
 
 campaignForm.addEventListener("submit", async event => {
   event.preventDefault();
