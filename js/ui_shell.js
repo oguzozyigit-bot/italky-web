@@ -91,12 +91,8 @@ function hydrateNativeLangPill() {
 
   const info = getNativeLangInfo();
   const flagEl = document.getElementById("headerNativeLangFlag");
-  const textEl = document.getElementById("siteLangCurrentText");
-  const btnEl = document.getElementById("siteLangBtn");
 
   if (flagEl) flagEl.textContent = info.flag;
-  if (textEl) textEl.textContent = `${info.flag} ${info.name}`;
-  if (btnEl) btnEl.textContent = `Site Dili • ${info.name}`;
 }
 
 export function refreshHeaderNativeLang() {
@@ -167,7 +163,6 @@ const HOME_HEADER_HTML = `
     <nav class="menu-nav">
       <a href="/pages/login.html" id="menuLoginLink" class="hidden">Giriş Yap</a>
 
-      <button class="menu-action" id="siteLangBtn" type="button">Site Dili • Türkçe</button>
       <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
       <a href="/pages/deneme.html" id="italkyAiTestLink" class="hidden">italkyAI</a>
       <a href="/pages/profile.html" id="profileLink" data-i18n="menu_profile">Profil</a>
@@ -191,35 +186,6 @@ const HOME_FOOTER_HTML = `
     
   </div>
 </footer>`;
-
-const SITE_LANG_MODAL_HTML = `
-<div class="shell-modal" id="siteLangModal" aria-hidden="true">
-  <div class="shell-modal-backdrop" id="siteLangBackdrop"></div>
-  <div class="shell-modal-card modern">
-    <div class="shell-modal-head">
-      <h3>Site Dili</h3>
-      <button type="button" class="shell-modal-close" id="siteLangCloseBtn" aria-label="Kapat">✕</button>
-    </div>
-
-    <div class="shell-modal-sub" id="siteLangCurrentText">🇹🇷 Türkçe</div>
-
-    <div class="site-lang-search-wrap">
-      <input type="text" id="siteLangSearch" class="site-lang-search" placeholder="Dil ara..." />
-    </div>
-
-    <div class="site-lang-grid modern" id="siteLangGrid">
-      ${QUICK_SITE_LANGS.map(code => {
-        const meta = NATIVE_LANG_META[code] || { flag: "🌐", name: code.toUpperCase(), dir: "ltr" };
-        return `
-          <button class="site-lang-item modern" type="button" data-lang="${code}" data-name="${meta.name.toLowerCase()}">
-            <span class="site-lang-flag">${meta.flag}</span>
-            <span class="site-lang-name">${meta.name}</span>
-          </button>
-        `;
-      }).join("")}
-    </div>
-  </div>
-</div>`;
 
 const SHELL_CSS = `
 :root{
@@ -661,10 +627,6 @@ export function mountShell(options = {}) {
 
   document.body.prepend(bg, shell);
 
-  if (!document.getElementById("siteLangModal")) {
-    document.body.insertAdjacentHTML("beforeend", SITE_LANG_MODAL_HTML);
-  }
-
   document.getElementById("brandHome")?.addEventListener("click", () => {
     location.href = "/pages/home.html";
   });
@@ -757,14 +719,7 @@ function bindMenu(options = {}) {
   const menuAvatarClick = document.getElementById("menuAvatarClick");
   const adminPanelLink = document.getElementById("adminPanelLink");
   const italkyAiTestLink = document.getElementById("italkyAiTestLink");
-  const siteLangBtn = document.getElementById("siteLangBtn");
   const menuLoginLink = document.getElementById("menuLoginLink");
-
-  const siteLangModal = document.getElementById("siteLangModal");
-  const siteLangBackdrop = document.getElementById("siteLangBackdrop");
-  const siteLangCloseBtn = document.getElementById("siteLangCloseBtn");
-  const siteLangGrid = document.getElementById("siteLangGrid");
-  const siteLangSearch = document.getElementById("siteLangSearch");
 
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
@@ -797,21 +752,6 @@ function bindMenu(options = {}) {
     sideMenu.classList.remove("open");
     sideMenu.setAttribute("aria-hidden", "true");
     document.body.classList.remove("ui-menu-open");
-  };
-
-  const openSiteLangModal = () => {
-    siteLangModal?.classList.add("open");
-    hydrateNativeLangPill();
-    if (siteLangSearch) {
-      siteLangSearch.value = "";
-      siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
-        btn.classList.remove("hidden");
-      });
-    }
-  };
-
-  const closeSiteLangModal = () => {
-    siteLangModal?.classList.remove("open");
   };
 
   const goProfile = () => {
@@ -850,34 +790,6 @@ function bindMenu(options = {}) {
     location.href = "/pages/login.html";
   });
 
-  siteLangBtn?.addEventListener("click", () => {
-    closeMenu();
-    openSiteLangModal();
-  });
-
-  siteLangBackdrop?.addEventListener("click", closeSiteLangModal);
-  siteLangCloseBtn?.addEventListener("click", closeSiteLangModal);
-
-  siteLangSearch?.addEventListener("input", () => {
-    const q = String(siteLangSearch.value || "").trim().toLowerCase();
-
-    siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
-      const name = String(btn.getAttribute("data-name") || "").toLowerCase();
-      const code = String(btn.getAttribute("data-lang") || "").toLowerCase();
-      const visible = !q || name.includes(q) || code.includes(q);
-      btn.classList.toggle("hidden", !visible);
-    });
-  });
-
-  siteLangGrid?.querySelectorAll("[data-lang]")?.forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const lang = String(btn.getAttribute("data-lang") || "tr").trim().toLowerCase();
-      closeSiteLangModal();
-      await applySiteLanguage(lang);
-      hydrateNativeLangPill();
-    });
-  });
-
   adminPanelLink?.addEventListener("click", closeMenu);
   italkyAiTestLink?.addEventListener("click", closeMenu);
 
@@ -903,7 +815,6 @@ function bindMenu(options = {}) {
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         closeMenu();
-        closeSiteLangModal();
       }
     });
     __shellEscapeBound = true;

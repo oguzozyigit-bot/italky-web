@@ -373,10 +373,9 @@ function hydrateMenuAccessBadge(access) {
       card.id = "menuAccessCard";
       card.setAttribute("data-no-translate", "1");
       card.style.cssText = "margin-top:10px;padding:12px;border-radius:18px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);display:grid;gap:9px;";
-      card.innerHTML = `<div style="font-size:10px;font-weight:1000;letter-spacing:.7px;color:rgba(255,255,255,.58);text-transform:uppercase;">Kalan Süre</div><div id="menuAccessTimeValue" style="font-size:16px;font-weight:1000;line-height:1.25;color:#8bd3ff;">-</div><button id="menuBuyDaysBtn" type="button" style="width:100%;min-height:42px;border:0;border-radius:14px;background:linear-gradient(135deg,#ff5a5f,#ff2d55);color:#fff;font-size:13px;font-weight:1000;">Gün Satın Al</button><button id="menuCodeDaysBtn" type="button" style="width:100%;min-height:40px;border:0;border-radius:14px;background:linear-gradient(135deg,#f59e0b,#a855f7);color:#fff;font-size:13px;font-weight:1000;box-shadow:0 10px 22px rgba(168,85,247,.16);">Kod ile Gün Yükle</button>`;
+      card.innerHTML = `<div style="font-size:10px;font-weight:1000;letter-spacing:.7px;color:rgba(255,255,255,.58);text-transform:uppercase;">Kalan Süre</div><div id="menuAccessTimeValue" style="font-size:16px;font-weight:1000;line-height:1.25;color:#8bd3ff;">-</div><button id="menuBuyDaysBtn" type="button" style="width:100%;min-height:42px;border:0;border-radius:14px;background:linear-gradient(135deg,#ff5a5f,#ff2d55);color:#fff;font-size:13px;font-weight:1000;">Gün Satın Al</button>`;
       menuTop.insertAdjacentElement("afterend", card);
       document.getElementById("menuBuyDaysBtn")?.addEventListener("click", goMembership);
-      document.getElementById("menuCodeDaysBtn")?.addEventListener("click", goCodeLoad);
     }
     const value = document.getElementById("menuAccessTimeValue");
     const label = access?.remaining_label || formatRemaining(access?.remaining_seconds || 0);
