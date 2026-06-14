@@ -16,8 +16,6 @@ const campaignStatus = document.getElementById("campaignStatus");
 const campaignSelectedAccount = document.getElementById("campaignSelectedAccount");
 const campaignOAuthOptions = document.getElementById("campaignOAuthOptions");
 const changeCampaignAccount = document.getElementById("changeCampaignAccount");
-const oauthErrorActions = document.getElementById("oauthErrorActions");
-const retryAppleOAuth = document.getElementById("retryAppleOAuth");
 const authOptions = document.querySelector(".auth-options");
 const oauthButtons = document.querySelectorAll("[data-oauth-provider]");
 const successStoreContainer = document.querySelector(".success-store-buttons");
@@ -133,9 +131,6 @@ function setCampaignStatus(type, message) {
 function resetCampaignStatus() {
   campaignStatus.className = "form-status";
   campaignStatus.textContent = "";
-  if (oauthErrorActions) {
-    oauthErrorActions.hidden = true;
-  }
 }
 
 function setHeading(title, accent, description) {
@@ -333,10 +328,6 @@ function showAppleOAuthError(oauthError) {
       : "Apple hesabıyla giriş işlemi tamamlanamadı. Lütfen tekrar deneyin."
   );
 
-  if (oauthErrorActions) {
-    oauthErrorActions.hidden = false;
-  }
-
   openCampaignDialog();
 }
 
@@ -515,7 +506,6 @@ oauthButtons.forEach(button => {
 });
 
 changeCampaignAccount.addEventListener("click", signOutForAccountChange);
-retryAppleOAuth?.addEventListener("click", () => signInWithProvider("apple"));
 
 campaignForm.addEventListener("submit", async event => {
   event.preventDefault();
