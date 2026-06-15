@@ -267,6 +267,19 @@ async function fetchAccessStateSafe(session) {
   }
 }
 
+function getUsableCachedAccessForSession(session) {
+  try {
+    const cached = getCachedAccessState();
+    if (!cached?.access_open) return null;
+    const userId = String(session?.user?.id || "");
+    const cachedUserId = String(cached?.user_id || "");
+    if (userId && cachedUserId && cachedUserId !== userId) return null;
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
 function isReklamsizProduct(productId) {
   const p = cleanLower(productId);
   return p === "reklamsiz" || p.includes("reklamsiz") || p.includes("no_ads") || p.includes("ads_free");
@@ -562,7 +575,7 @@ export async function initGlobalAccess(options = {}) {
 
   if (session?.user?.id) {
     if (allowPublicPageBypass && lockMembershipBack && currentPath === "/pages/membership.html") lockMembershipPageBack();
-    const access = await fetchAccessStateSafe(session);
+    const access = await fetchAccessStateSafe(session) || getUsableCachedAccessForSession(session);
     const safe = buildSafeAccess(access || {}, session);
     setCachedAccess(safe);
     dispatchAccessReady(safe);

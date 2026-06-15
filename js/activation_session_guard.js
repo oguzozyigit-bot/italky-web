@@ -63,33 +63,9 @@
     }
   }
 
-  function removeMatchingStorage(prefixes, containsList){
-    try {
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
-      keys.forEach((key) => {
-        const lower = String(key || "").toLowerCase();
-        if (prefixes.some((prefix) => lower.indexOf(prefix) === 0) || containsList.some((part) => lower.indexOf(part) >= 0)) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch {}
-    try {
-      const keys = [];
-      for (let i = 0; i < sessionStorage.length; i++) keys.push(sessionStorage.key(i));
-      keys.forEach((key) => {
-        const lower = String(key || "").toLowerCase();
-        if (prefixes.some((prefix) => lower.indexOf(prefix) === 0) || containsList.some((part) => lower.indexOf(part) >= 0)) {
-          sessionStorage.removeItem(key);
-        }
-      });
-    } catch {}
-  }
-
   function clearAuthAndUserCaches(){
     try { USER_CACHE_KEYS.forEach((key) => localStorage.removeItem(key)); } catch {}
     try { USER_CACHE_KEYS.forEach((key) => sessionStorage.removeItem(key)); } catch {}
-    removeMatchingStorage(["sb-"], ["supabase", "google", "oauth", "auth-token", "provider-token"]);
   }
 
   function clearActivation(){

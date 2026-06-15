@@ -1,13 +1,11 @@
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
-const ACTIVE_SESSION_LOCAL_KEY = "ITALKY_ACTIVE_SESSION_KEY";
 const NATIVE_GOOGLE_NEXT_KEY = "italky_native_google_login_next";
 const DEFAULT_NATIVE_GOOGLE_NEXT = "/pages/membership.html";
 const HOME_PAGE = "/pages/home.html";
 const MEMBERSHIP_PAGE = "/pages/membership.html";
 const ACCESS_STATE_API = "https://italky-api.onrender.com/api/session/access-state";
-let __singleWatcherStarted = false;
 
 function readNativeIdToken(payload) {
   try {
@@ -85,23 +83,6 @@ function installGoogleAuthDebugHooks() {
 }
 
 installGoogleAuthDebugHooks();
-
-function getOrCreateNacId() {
-  const key = "NAC_ID";
-  try {
-    const existing = localStorage.getItem(key);
-    if (existing && existing.length >= 6) return existing;
-
-    const id =
-      crypto?.randomUUID?.() ||
-      `web-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
-
-    localStorage.setItem(key, id);
-    return id;
-  } catch {
-    return `web-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
-  }
-}
 
 function safeRedirectPath(value) {
   const raw = String(value || "").trim();
@@ -377,13 +358,6 @@ export async function loginWithGoogle(next = "") {
   return data;
 }
 
-async function lockThisDevice() {
-  const nacId = getOrCreateNacId();
-  const { error } = await supabase.rpc("lock_device", { p_nac_id: nacId });
-  if (error) throw error;
-  return nacId;
-}
-
 function buildCache(user, profile) {
   return {
     id: profile?.id || user?.id || null,
@@ -417,71 +391,8 @@ export function clearCachedUser() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
-function nukeSupabaseLocal() {
-  try {
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith("sb-")) keys.push(k);
-    }
-    keys.forEach((k) => localStorage.removeItem(k));
-  } catch {}
-}
-
 function clearLocalAuthArtifacts() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  try { localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY); } catch {}
-  nukeSupabaseLocal();
-}
-
-function newSessionKey() {
-  return crypto?.randomUUID?.() || `sess-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
-}
-
-async function claimActiveSessionIfNeeded(userId) {
-  let myKey = (localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || "").trim();
-
-  if (!myKey) {
-    myKey = newSessionKey();
-    localStorage.setItem(ACTIVE_SESSION_LOCAL_KEY, myKey);
-  }
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      active_session_key: myKey,
-      active_session_updated_at: new Date().toISOString(),
-    })
-    .eq("id", userId);
-
-  if (error) throw error;
-  return myKey;
-}
-
-function startSingleSessionWatcher(userId) {
-  if (__singleWatcherStarted) return;
-  __singleWatcherStarted = true;
-
-  setInterval(async () => {
-    try {
-      const myKey = (localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || "").trim();
-      if (!myKey) return;
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("active_session_key")
-        .eq("id", userId)
-        .single();
-
-      const liveKey = String(data?.active_session_key || "").trim();
-
-      if (liveKey && liveKey !== myKey) {
-        try { await supabase.auth.signOut({ scope: "global" }); } catch {}
-        clearLocalAuthArtifacts();
-        location.replace("/pages/login.html");
-      }
-    } catch {}
-  }, 5000);
 }
 
 async function readProfile(userId) {
@@ -551,19 +462,13 @@ export async function ensureAuthAndCacheUser() {
 
   const user = session.user;
 
-  await lockThisDevice();
-
   const profile = await ensureProfileFallback(user);
   if (!profile?.id) {
     throw new Error("Profil oluşturulamadı");
   }
 
-  await claimActiveSessionIfNeeded(user.id);
-
   const cached = buildCache(user, profile);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
-
-  startSingleSessionWatcher(user.id);
 
   return cached;
 }

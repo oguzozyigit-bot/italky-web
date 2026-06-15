@@ -229,6 +229,19 @@ async function fetchAccessStateSafe(session) {
   }
 }
 
+function getUsableCachedAccessForSession(session) {
+  try {
+    const cached = getCachedAccessState();
+    if (!cached?.access_open) return null;
+    const userId = String(session?.user?.id || "");
+    const cachedUserId = String(cached?.user_id || "");
+    if (userId && cachedUserId && cachedUserId !== userId) return null;
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
 function buildSafeAccess(access = {}, session = null) {
   const userId = session?.user?.id || "";
   const metadata = session?.user?.user_metadata || {};
@@ -553,7 +566,7 @@ export async function initGlobalAccess(options = {}) {
     return { ok: true, bypass: true, forced_public_bypass: true, session: null, access: safe };
   }
   if (session?.user?.id) {
-    const access = await fetchAccessStateSafe(session);
+    const access = await fetchAccessStateSafe(session) || getUsableCachedAccessForSession(session);
     const safe = buildSafeAccess(access || {}, session);
     setCachedAccess(safe);
     dispatchAccessReady(safe);
