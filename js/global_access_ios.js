@@ -1,6 +1,6 @@
 // FILE: /js/global_access_ios.js
 
-import { supabase } from "/js/supabase_client.js";
+import { supabase, waitForSupabaseSession } from "/js/supabase_client.js";
 
 const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
 const IOS_DAYS_URL = "/pages/ios_days.html?ios=1";
@@ -195,12 +195,11 @@ function goDays() {
 
 async function getSessionOrNull() {
   try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) {
-      console.warn("[global_access_ios] getSession error:", error);
-      return null;
-    }
-    return data?.session || null;
+    return await waitForSupabaseSession({
+      timeoutMs: 5000,
+      intervalMs: 250,
+      restoreFromBackup: true
+    });
   } catch (err) {
     console.warn("[global_access_ios] getSession exception:", err);
     return null;

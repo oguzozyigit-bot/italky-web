@@ -1,4 +1,9 @@
-import { supabase } from "/js/supabase_client.js";
+import {
+  supabase,
+  persistSupabaseSessionBackup,
+  removeSupabaseSessionBackup,
+  waitForSupabaseSession
+} from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
 const NATIVE_GOOGLE_NEXT_KEY = "italky_native_google_login_next";
@@ -203,6 +208,7 @@ function installNativeGoogleLoginHandler() {
       });
 
       if (error) throw error;
+      persistSupabaseSessionBackup(data?.session);
 
       try {
         await ensureAuthAndCacheUser();
@@ -246,6 +252,7 @@ function installNativeGoogleLoginCompletionGuard() {
 
         if (error) throw error;
         console.warn("[ITALKY AUTH] signInWithIdToken success", { hasSession: !!data?.session, hasUser: !!data?.user });
+        persistSupabaseSessionBackup(data?.session);
 
         try {
           await ensureAuthAndCacheUser();
@@ -456,11 +463,15 @@ async function ensureProfileFallback(user) {
 }
 
 export async function ensureAuthAndCacheUser() {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error) throw error;
+  const session = await waitForSupabaseSession({
+    timeoutMs: 5000,
+    intervalMs: 250,
+    restoreFromBackup: true
+  });
   if (!session?.user) return null;
 
   const user = session.user;
+  persistSupabaseSessionBackup(session);
 
   const profile = await ensureProfileFallback(user);
   if (!profile?.id) {
@@ -475,6 +486,7 @@ export async function ensureAuthAndCacheUser() {
 
 export async function safeLogout() {
   try { await supabase.auth.signOut({ scope: "global" }); } catch {}
+  removeSupabaseSessionBackup();
   clearLocalAuthArtifacts();
   location.replace("/pages/login.html");
 }

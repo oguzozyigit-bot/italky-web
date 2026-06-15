@@ -67,7 +67,11 @@
   </div>
 
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
+    import {
+      supabase,
+      persistSupabaseSessionBackup,
+      waitForSupabaseSession
+    } from "/js/supabase_client.js";
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
     const LOGIN = "/pages/login.html";
@@ -131,14 +135,13 @@
     }
 
     async function waitForSession(maxMs = 9000){
-      const start = Date.now();
-      while (Date.now() - start < maxMs){
-        const { data:{ session }, error } = await supabase.auth.getSession();
-        authLog("callback getSession", { hasSession: !!session, error: error?.message || "" });
-        if (session) return session;
-        await new Promise(r => setTimeout(r, 250));
-      }
-      return null;
+      const session = await waitForSupabaseSession({
+        timeoutMs: maxMs,
+        intervalMs: 250,
+        restoreFromBackup: true
+      });
+      authLog("callback waitForSession", { hasSession: !!session });
+      return session;
     }
 
     async function fetchAccessStateSafe(session){
@@ -179,13 +182,14 @@
       const next = getNextTarget();
 
       if (code){
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (error){
           console.error("exchangeCodeForSession error:", error);
           showErr("OAuth exchange hatası: " + (error.message || "unknown"));
           setTimeout(() => goLogin(next || MEMBERSHIP), 900);
           throw error;
         }
+        persistSupabaseSessionBackup(data?.session);
       }
 
       const session = await waitForSession();

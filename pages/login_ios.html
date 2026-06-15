@@ -13,6 +13,8 @@
     html,body{height:100%;width:100%}
     body{background:var(--bg-void);color:#fff;font-family:'Outfit',sans-serif;min-height:100dvh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
     [hidden]{display:none!important}
+    body.session-checking .main,
+    body.session-checking footer{visibility:hidden}
     .nebula{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 25% 20%,rgba(0,242,255,.12),transparent 45%),radial-gradient(circle at 80% 80%,rgba(255,0,122,.10),transparent 55%),radial-gradient(circle at 50% 50%,rgba(15,8,22,1) 0%,#060408 100%);z-index:0}
     .main{position:relative;flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;z-index:10;margin-top:-10px}
     .brand-section{text-align:center;margin-bottom:5px;pointer-events:none}
@@ -45,7 +47,7 @@
     @media(max-height:760px){.world-container{width:210px;height:210px}.earth{width:155px;height:155px}.brand-section h1{font-size:54px}.main-btn{min-height:52px}.typewriter-container{margin-bottom:10px}}
   </style>
 </head>
-<body>
+<body class="session-checking">
   <div class="nebula"></div>
   <main class="main">
     <section class="brand-section" aria-label="italkyAI">
@@ -80,5 +82,46 @@
       <span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span>
     </div>
   </footer>
+  <script type="module">
+    import { waitForSupabaseSession } from "/js/supabase_client.js";
+
+    const IOS_HOME = "/pages/home_ios.html?ios=1";
+
+    function safePath(value) {
+      const raw = String(value || "").trim();
+      if (!raw || raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("//")) return "";
+      if (!raw.startsWith("/")) return "";
+      if (raw.startsWith("/pages/login_ios.html")) return "";
+      return raw;
+    }
+
+    function readNextTarget() {
+      try {
+        const params = new URLSearchParams(location.search || "");
+        return safePath(params.get("next") || "") || IOS_HOME;
+      } catch {
+        return IOS_HOME;
+      }
+    }
+
+    async function redirectIfSessionExists() {
+      try {
+        const session = await waitForSupabaseSession({
+          timeoutMs: 4500,
+          intervalMs: 250,
+          restoreFromBackup: true
+        });
+        if (session?.user?.id) {
+          location.replace(readNextTarget());
+          return;
+        }
+      } catch (error) {
+        console.warn("[login_ios] session restore check failed:", error);
+      }
+      document.body.classList.remove("session-checking");
+    }
+
+    redirectIfSessionExists();
+  </script>
 </body>
 </html>

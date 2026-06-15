@@ -18,7 +18,7 @@
   </div>
 
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
+    import { supabase, persistSupabaseSessionBackup } from "/js/supabase_client.js";
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
     const HOME = "/pages/home.html";
@@ -49,6 +49,7 @@
         }
 
         // ✅ profile/cache
+        persistSupabaseSessionBackup(data?.session);
         await ensureAuthAndCacheUser();
 
         location.replace(HOME);
