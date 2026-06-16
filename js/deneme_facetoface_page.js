@@ -379,8 +379,11 @@ function showCulturalInfoModal() {
   if (!uiModal) return;
   uiModalPurpose = "cultural_info";
   uiModalTitle.textContent = "K\u00fclt\u00fcrel \u00c7eviri Modu";
-  uiModalText.textContent = "K\u00fclt\u00fcrel \u00e7eviride kelimeler birebir ve robotik \u015fekilde \u00e7evrilmez. italkyAI, c\u00fcmlenizin anlam\u0131n\u0131 kar\u015f\u0131 dilin do\u011fal olarak anlayaca\u011f\u0131 \u015fekilde aktar\u0131r. B\u00f6ylece birbirinizi daha rahat anlars\u0131n\u0131z.\n\nBu modda \u00e7eviri h\u0131z\u0131 normal \u00e7eviriye g\u00f6re biraz daha yava\u015f olabilir. Eksik, hatal\u0131 veya devrik c\u00fcmle kursan\u0131z bile italkyAI konu\u015fman\u0131z\u0131 daha d\u00fczg\u00fcn ve anla\u015f\u0131l\u0131r \u015fekilde terc\u00fcme etmeye \u00e7al\u0131\u015f\u0131r.\n\nK\u00fclt\u00fcrel \u00e7eviri jeton ile \u00e7al\u0131\u015f\u0131r.";
-  if (uiModalGo) uiModalGo.textContent = "Anlad\u0131m";
+  uiModalText.textContent = "Baz\u0131 c\u00fcmleler, deyimler ve atas\u00f6zleri kelime kelime \u00e7evrildi\u011finde anlam\u0131n\u0131 kaybeder. Mesela \u2018Sakla saman\u0131, gelir zaman\u0131\u2019 gibi bir ifadeyi birebir \u00e7evirmek kar\u015f\u0131 tarafta ayn\u0131 etkiyi olu\u015fturmaz. K\u00fclt\u00fcrel \u00e7eviri modu, c\u00fcmlenin ne demek istedi\u011fini kar\u015f\u0131 dilin do\u011fal olarak anlayaca\u011f\u0131 \u015fekilde aktar\u0131r.\n\nBu modda kelimeler birebir ve robotik bi\u00e7imde \u00e7evrilmez. italkyAI, konu\u015fman\u0131z\u0131n anlam\u0131n\u0131, tonunu ve g\u00fcnl\u00fck kullan\u0131m\u0131n\u0131 dikkate alarak daha anla\u015f\u0131l\u0131r bir terc\u00fcme \u00fcretmeye \u00e7al\u0131\u015f\u0131r.\n\nC\u00fcmle kursan\u0131z bile, k\u00fclt\u00fcrel \u00e7eviri modu a\u00e7\u0131ksa italkyAI eksik, hatal\u0131 veya devrik ifadeleri daha d\u00fczg\u00fcn ve anla\u015f\u0131l\u0131r \u015fekilde terc\u00fcme etmeye \u00e7al\u0131\u015f\u0131r.\n\nK\u00fclt\u00fcrel \u00e7eviri normal \u00e7eviriye g\u00f6re biraz daha yava\u015f olabilir ve jeton ile \u00e7al\u0131\u015f\u0131r.";
+  if (uiModalGo) {
+    uiModalGo.textContent = "Anlad\u0131m";
+    uiModalGo.classList.add("cultural-info-primary");
+  }
   if (uiModalClose) uiModalClose.textContent = "Vazge\u00e7";
   uiModal.classList.add("open");
 }
@@ -409,6 +412,7 @@ function showInsufficientTokens() {
   );
   uiModalPurpose = "tokens";
   if (uiModalGo) uiModalGo.textContent = "Jeton Market";
+  uiModalGo?.classList.remove("cultural-info-primary");
   if (uiModalClose) uiModalClose.textContent = "Atla";
 }
 
@@ -451,6 +455,7 @@ function closeUiModal() {
   uiModal?.classList.remove("open");
   uiModalPurpose = "default";
   if (uiModalGo) uiModalGo.textContent = "\u00dcyelik Paketlerini G\u00f6r";
+  uiModalGo?.classList.remove("cultural-info-primary");
   if (uiModalClose) uiModalClose.textContent = "Atla";
 }
 
