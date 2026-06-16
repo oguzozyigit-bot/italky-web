@@ -2,10 +2,6 @@ import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 import { ensureFaceToFacePremiumAccess } from "/js/facetoface_premium_gate.js";
-import {
-  commitUsage,
-  buildUsageNote
-} from "/js/usage_meter.js";
 
 const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
@@ -71,7 +67,7 @@ const ALT_CHARS = {
 };
 
 const F2F_VOICE_KEY = "italkyai_voice_mode";
-const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
+const DENEME_CULTURAL_MODE_KEY = "deneme_facetoface_cultural_mode";
 const F2F_AUTO_READ_KEY = "italkyai_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
 const SHARED_VOICE_ID_KEY = "italkyai_selected_voice_id";
@@ -298,6 +294,8 @@ const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const miniToast = $("miniToast");
+const cultureToggle = $("cultureToggle");
+const cultureToggleText = $("cultureToggleText");
 
 const uiModal = $("uiModal");
 const uiModalTitle = $("uiModalTitle");
@@ -354,6 +352,30 @@ function showToast(msg = "") {
   }, 1800);
 }
 
+function isCulturalModeEnabled() {
+  return String(localStorage.getItem(DENEME_CULTURAL_MODE_KEY) || "off").trim().toLowerCase() === "on";
+}
+
+function syncCulturalToggleUi() {
+  const enabled = isCulturalModeEnabled();
+  cultureToggle?.classList.toggle("on", enabled);
+  cultureToggle?.setAttribute("aria-pressed", enabled ? "true" : "false");
+  if (cultureToggleText) cultureToggleText.textContent = enabled ? "A\u00e7\u0131k" : "Kapal\u0131";
+}
+
+function setCulturalMode(enabled) {
+  localStorage.setItem(DENEME_CULTURAL_MODE_KEY, enabled ? "on" : "off");
+  syncCulturalToggleUi();
+  showToast(enabled ? "K\u00fclt\u00fcrel mod a\u00e7\u0131k" : "K\u00fclt\u00fcrel mod kapal\u0131");
+}
+
+function bindCulturalToggle() {
+  syncCulturalToggleUi();
+  cultureToggle?.addEventListener("click", () => {
+    setCulturalMode(!isCulturalModeEnabled());
+  });
+}
+
 function showUiModal(message, title = "Jeton Gerekli") {
   if (!uiModal) return;
   uiModalTitle.textContent = title;
@@ -361,8 +383,52 @@ function showUiModal(message, title = "Jeton Gerekli") {
   uiModal.classList.add("open");
 }
 
+function showInsufficientTokens() {
+  showUiModal(
+    "Yetersiz jeton bakiyesi. L\u00fctfen Jeton Market\u2019ten y\u00fckleme yap\u0131n.",
+    "Jeton Gerekli"
+  );
+  if (uiModalGo) uiModalGo.textContent = "Jeton Market";
+}
+
+function updateTokensFromTranslationResponse(json) {
+  const tokensAfter = Number(json?.tokens_after ?? json?.wallet?.tokens_after);
+  if (Number.isFinite(tokensAfter)) {
+    try { setHeaderTokens(tokensAfter); } catch (e) { console.debug("[deneme cultural tokens]", e); }
+  }
+
+  const charged = Number(json?.tokens_charged ?? json?.wallet?.tokens_charged ?? 0);
+  if (Number.isFinite(charged) && charged > 0) {
+    showToast(`${charged} jeton kullanildi`);
+  }
+}
+
+function translationError(code, message, status = 0, detail = null) {
+  const err = new Error(message || code || "translation_failed");
+  err.code = code || "TRANSLATION_FAILED";
+  err.status = status;
+  err.detail = detail;
+  return err;
+}
+
+function handleTranslateError(error, latestRow, latestTxt) {
+  setErrorUI();
+
+  if (error?.code === "INSUFFICIENT_TOKENS") {
+    latestRow?.remove?.();
+    showInsufficientTokens();
+    return true;
+  }
+
+  if (latestTxt) latestTxt.textContent = "Ceviri su anda tamamlanamadi";
+  showToast("Ceviri su anda tamamlanamadi. Lutfen tekrar deneyin.");
+  bounceToReady(1200);
+  return true;
+}
+
 function closeUiModal() {
   uiModal?.classList.remove("open");
+  if (uiModalGo) uiModalGo.textContent = "\u00dcyelik Paketlerini G\u00f6r";
 }
 
 uiModalGo?.addEventListener("click", () => {
@@ -394,12 +460,11 @@ function getFaceVoiceMode() {
 }
 
 function getFaceTranslateMode() {
-  const value = String(localStorage.getItem(F2F_TRANSLATE_KEY) || "normal").trim().toLowerCase();
-  return value === "cultural" ? "cultural" : "normal";
+  return isCulturalModeEnabled() ? "cultural" : "normal";
 }
 
 function isPaidFaceTextMode() {
-  return getFaceTranslateMode() === "cultural";
+  return false;
 }
 
 async function hasReadyVoiceProfile() {
@@ -447,21 +512,9 @@ function isPaidFaceVoiceMode() {
 }
 
 async function ensureCurrentFacePremiumModeAccess() {
-  const needsPremium = isPaidFaceTextMode() || isPaidFaceVoiceMode();
+  const needsPremium = isPaidFaceVoiceMode();
   if (!needsPremium) return true;
   return await ensureFaceToFacePremiumAccess();
-}
-
-function faceTextUsageModule() {
-  return getFaceTranslateMode() === "cultural" ? "facetoface_ai" : "usage_face_to_face";
-}
-
-function faceTextUsageNote() {
-  return buildUsageNote({
-    surface: "facetoface",
-    usageKind: "text",
-    mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
-  });
 }
 
 function canonTone(value) {
@@ -1107,40 +1160,6 @@ async function speak(text, langCode, tone = "neutral") {
   if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
 }
 
-async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
-  const inLen = String(inputText || "").trim().length;
-  const outLen = String(outputText || "").trim().length;
-  const billableChars = Math.max(inLen, outLen);
-  if (billableChars <= 0) return null;
-
-  let latestResult = null;
-
-  if (isPaidFaceTextMode()) {
-    latestResult = await commitUsage({
-      module: faceTextUsageModule(),
-      usageKind: "text",
-      charCount: billableChars,
-      note: faceTextUsageNote(),
-      meta: {
-        surface: "facetoface",
-        from_lang: canonical(srcLang),
-        to_lang: canonical(dstLang),
-        translate_mode: getFaceTranslateMode(),
-        voice_mode: getFaceVoiceMode(),
-        input_chars: inLen,
-        output_chars: outLen,
-        billable_chars: billableChars
-      }
-    });
-  }
-
-  if (typeof latestResult?.tokens_after === "number") {
-    try { setHeaderTokens(latestResult.tokens_after); } catch {}
-  }
-
-  return latestResult;
-}
-
 function addBubble(side, kind, text, opts = {}) {
   const wrap = side === "top" ? topBody : botBody;
   if (!wrap) return null;
@@ -1249,19 +1268,23 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
 
   for (const endpoint of endpoints) {
     try {
+      const culturalMode = isCulturalModeEnabled();
       const payload = {
         text: String(text || "").trim(),
         from_lang: src,
         to_lang: dst,
         source: src,
         target: dst,
-        mode: "cultural",
-        use_ai: true,
-        cultural: true,
         tone: canonTone(tone),
-        style: "cultural",
-        surface: "facetoface_demo"
       };
+
+      if (culturalMode) {
+        payload.surface = "facetoface_demo";
+        payload.mode = "cultural";
+        payload.use_ai = true;
+        payload.cultural = true;
+        payload.style = "cultural";
+      }
 
       const r = await fetch(endpoint, {
         method: "POST",
@@ -1273,11 +1296,26 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
       });
 
       const j = await r.json().catch(() => null);
-      if (!r.ok) continue;
+      if (r.status === 402) {
+        console.warn("[deneme cultural insufficient tokens]", j);
+        throw translationError("INSUFFICIENT_TOKENS", "insufficient_tokens", r.status, j);
+      }
+
+      if (!r.ok) {
+        if (r.status >= 500 || r.status === 503) {
+          throw translationError("TRANSLATION_UNAVAILABLE", "translation_unavailable", r.status, j);
+        }
+        continue;
+      }
 
       const value = String(j?.translated || j?.translation || j?.text || "").trim();
-      if (value) return value;
-    } catch {}
+      if (value) {
+        if (culturalMode) updateTokensFromTranslationResponse(j);
+        return value;
+      }
+    } catch (e) {
+      if (e?.code === "INSUFFICIENT_TOKENS" || e?.code === "TRANSLATION_UNAVAILABLE") throw e;
+    }
   }
 
   return null;
@@ -1489,22 +1527,19 @@ async function finalizeRecognition(side, text) {
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(cleaned, src, dst, sourceTone, { side, targetSide: other });
+  let tr = "";
+  try {
+    tr = await translateText(cleaned, src, dst, sourceTone, { side, targetSide: other });
+  } catch (e) {
+    handleTranslateError(e, latestRow, latestTxt);
+    return;
+  }
 
   if (!tr) {
     setErrorUI();
     if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
     bounceToReady(1200);
     return;
-  }
-
-  try {
-    await chargeFaceUsage(cleaned, tr, src, dst);
-  } catch (e) {
-    if (e?.code === "INSUFFICIENT_TOKENS") {
-      await ensureFaceToFacePremiumAccess();
-      return;
-    }
   }
 
   if (latestTxt) {
@@ -1536,22 +1571,19 @@ async function finalizeTypedMessage(side, rawText) {
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(text, src, dst, tone, { side, targetSide: other });
+  let tr = "";
+  try {
+    tr = await translateText(text, src, dst, tone, { side, targetSide: other });
+  } catch (e) {
+    handleTranslateError(e, latestRow, latestTxt);
+    return;
+  }
 
   if (!tr) {
     setErrorUI();
     if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
     bounceToReady(1200);
     return;
-  }
-
-  try {
-    await chargeFaceUsage(text, tr, src, dst);
-  } catch (e) {
-    if (e?.code === "INSUFFICIENT_TOKENS") {
-      await ensureFaceToFacePremiumAccess();
-      return;
-    }
   }
 
   if (latestTxt) {
@@ -2419,6 +2451,7 @@ function bindSpeechVoices() {
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
+  bindCulturalToggle();
   bindModeControls();
   bindLanguageButtons();
   bindGlobalClicks();
