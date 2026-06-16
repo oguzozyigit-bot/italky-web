@@ -971,6 +971,20 @@ function buildTtsCacheKey(text, langCode, tone = "neutral") {
   });
 }
 
+const TTS_CENSORED_TOKEN_RE = /(^|[^A-Za-zÇĞİÖŞÜçğıöşü0-9_])([A-Za-zÇĞİÖŞÜçğıöşü0-9]?\*{3,}[A-Za-zÇĞİÖŞÜçğıöşü0-9]?)(?=$|[^A-Za-zÇĞİÖŞÜçğıöşü0-9_])/g;
+const TTS_CENSORED_HAS_LETTER_RE = /[A-Za-zÇĞİÖŞÜçğıöşü0-9]/;
+
+function sanitizeCensoredTextForTts(text) {
+  const value = String(text || "");
+
+  return value.replace(TTS_CENSORED_TOKEN_RE, (match, prefix, token) => {
+    const starCount = (token.match(/\*/g) || []).length;
+    if (!TTS_CENSORED_HAS_LETTER_RE.test(token) && starCount < 4) return match;
+    const beepCount = Math.max(1, Math.ceil(starCount / 2));
+    return `${prefix}${Array(beepCount).fill("bip").join(" ")}`;
+  });
+}
+
 function rememberTtsCache(key, audioSrc) {
   if (!key || !audioSrc) return;
 
@@ -1153,12 +1167,13 @@ async function speak(text, langCode, tone = "neutral") {
 
   const value = String(text || "").trim();
   if (!value) return;
+  const spokenValue = sanitizeCensoredTextForTts(value);
 
   stopAudio();
   await warmAudio();
 
   const selectedVoice = getResolvedFaceVoice();
-  const cacheKey = buildTtsCacheKey(value, langCode, tone);
+  const cacheKey = buildTtsCacheKey(spokenValue, langCode, tone);
   const cachedAudio = ttsMemoryCache.get(cacheKey);
 
   if (cachedAudio) {
@@ -1184,7 +1199,7 @@ async function speak(text, langCode, tone = "neutral") {
     }
 
     try {
-      const ok = await speakViaApi(value, langCode, tone);
+      const ok = await speakViaApi(spokenValue, langCode, tone);
       if (ok) return;
     } catch (e) {
       console.warn("[facetoface custom voice failed]", e);
@@ -1195,7 +1210,7 @@ async function speak(text, langCode, tone = "neutral") {
     }
   }
 
-  const fallbackOk = speakFallback(value, langCode);
+  const fallbackOk = speakFallback(spokenValue, langCode);
   if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
 }
 
