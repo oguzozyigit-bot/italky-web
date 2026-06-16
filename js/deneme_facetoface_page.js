@@ -68,6 +68,7 @@ const ALT_CHARS = {
 
 const F2F_VOICE_KEY = "italkyai_voice_mode";
 const DENEME_CULTURAL_MODE_KEY = "deneme_facetoface_cultural_mode";
+const DENEME_CULTURAL_INFO_SEEN_KEY = "deneme_cultural_info_seen";
 const F2F_AUTO_READ_KEY = "italkyai_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
 const SHARED_VOICE_ID_KEY = "italkyai_selected_voice_id";
@@ -341,6 +342,7 @@ let keyboardAudioCtx = null;
 let keyboardMasterGain = null;
 let currentRuntimeMode = "online";
 let offlinePickerPool = [];
+let uiModalPurpose = "default";
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -363,21 +365,38 @@ function syncCulturalToggleUi() {
   if (cultureToggleText) cultureToggleText.textContent = enabled ? "A\u00e7\u0131k" : "Kapal\u0131";
 }
 
-function setCulturalMode(enabled) {
+function setCulturalMode(enabled, opts = {}) {
   localStorage.setItem(DENEME_CULTURAL_MODE_KEY, enabled ? "on" : "off");
   syncCulturalToggleUi();
-  showToast(enabled ? "K\u00fclt\u00fcrel mod a\u00e7\u0131k" : "K\u00fclt\u00fcrel mod kapal\u0131");
+  if (!opts.silent) showToast(enabled ? "K\u00fclt\u00fcrel mod a\u00e7\u0131k" : "K\u00fclt\u00fcrel mod kapal\u0131");
+}
+
+function shouldShowCulturalInfo() {
+  return String(localStorage.getItem(DENEME_CULTURAL_INFO_SEEN_KEY) || "") !== "1";
+}
+
+function showCulturalInfoModal() {
+  if (!uiModal) return;
+  uiModalPurpose = "cultural_info";
+  uiModalTitle.textContent = "K\u00fclt\u00fcrel \u00c7eviri Modu";
+  uiModalText.textContent = "K\u00fclt\u00fcrel \u00e7eviride kelimeler birebir ve robotik \u015fekilde \u00e7evrilmez. italkyAI, c\u00fcmlenizin anlam\u0131n\u0131 kar\u015f\u0131 dilin do\u011fal olarak anlayaca\u011f\u0131 \u015fekilde aktar\u0131r. B\u00f6ylece birbirinizi daha rahat anlars\u0131n\u0131z.\n\nBu modda \u00e7eviri h\u0131z\u0131 normal \u00e7eviriye g\u00f6re biraz daha yava\u015f olabilir. Eksik, hatal\u0131 veya devrik c\u00fcmle kursan\u0131z bile italkyAI konu\u015fman\u0131z\u0131 daha d\u00fczg\u00fcn ve anla\u015f\u0131l\u0131r \u015fekilde terc\u00fcme etmeye \u00e7al\u0131\u015f\u0131r.\n\nK\u00fclt\u00fcrel \u00e7eviri jeton ile \u00e7al\u0131\u015f\u0131r.";
+  if (uiModalGo) uiModalGo.textContent = "Anlad\u0131m";
+  if (uiModalClose) uiModalClose.textContent = "Vazge\u00e7";
+  uiModal.classList.add("open");
 }
 
 function bindCulturalToggle() {
   syncCulturalToggleUi();
   cultureToggle?.addEventListener("click", () => {
-    setCulturalMode(!isCulturalModeEnabled());
+    const next = !isCulturalModeEnabled();
+    setCulturalMode(next);
+    if (next && shouldShowCulturalInfo()) showCulturalInfoModal();
   });
 }
 
 function showUiModal(message, title = "Jeton Gerekli") {
   if (!uiModal) return;
+  uiModalPurpose = "default";
   uiModalTitle.textContent = title;
   uiModalText.textContent = message;
   uiModal.classList.add("open");
@@ -388,7 +407,9 @@ function showInsufficientTokens() {
     "Yetersiz jeton bakiyesi. L\u00fctfen Jeton Market\u2019ten y\u00fckleme yap\u0131n.",
     "Jeton Gerekli"
   );
+  uiModalPurpose = "tokens";
   if (uiModalGo) uiModalGo.textContent = "Jeton Market";
+  if (uiModalClose) uiModalClose.textContent = "Atla";
 }
 
 function updateTokensFromTranslationResponse(json) {
@@ -428,13 +449,26 @@ function handleTranslateError(error, latestRow, latestTxt) {
 
 function closeUiModal() {
   uiModal?.classList.remove("open");
+  uiModalPurpose = "default";
   if (uiModalGo) uiModalGo.textContent = "\u00dcyelik Paketlerini G\u00f6r";
+  if (uiModalClose) uiModalClose.textContent = "Atla";
 }
 
 uiModalGo?.addEventListener("click", () => {
+  if (uiModalPurpose === "cultural_info") {
+    localStorage.setItem(DENEME_CULTURAL_INFO_SEEN_KEY, "1");
+    closeUiModal();
+    return;
+  }
+
   location.href = "/pages/jetonbuy.html";
 });
-uiModalClose?.addEventListener("click", closeUiModal);
+uiModalClose?.addEventListener("click", () => {
+  if (uiModalPurpose === "cultural_info") {
+    setCulturalMode(false);
+  }
+  closeUiModal();
+});
 uiModal?.addEventListener("click", (e) => {
   if (e.target === uiModal) closeUiModal();
 });
