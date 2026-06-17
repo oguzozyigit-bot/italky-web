@@ -1,8 +1,10 @@
-import { supabase } from "/js/supabase_client.js";
+import { supabase, removeSupabaseSessionBackup, clearNativeSupabaseSession } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
+const isIOSApp = () => !!(window.__ITALKY_IOS_APP__ || window.__ITALKY_PLATFORM__ === "ios");
+const loginTarget = () => isIOSApp() ? "/pages/login_ios.html" : "/pages/login.html";
 
 let __voiceProfileReady = false;
 
@@ -72,10 +74,11 @@ function nukeAuthStorage(){
 
 async function safeLogoutHard(){
   try{ await supabase.auth.signOut(); }catch(e){ console.warn("[signOut]", e); }
+  try{ removeSupabaseSessionBackup(); clearNativeSupabaseSession(); }catch{}
   try{ localStorage.removeItem(STORAGE_KEY); }catch{}
   try{ localStorage.removeItem("NAC_ID"); }catch{}
   nukeAuthStorage();
-  location.replace("/pages/login.html");
+  location.replace(loginTarget());
 }
 
 async function copyText(text){
@@ -277,11 +280,12 @@ async function hardDeleteAccount(){
   if(!r.ok) throw new Error(j.detail || j.error || "Hesap silme başarısız.");
 
   try{ await supabase.auth.signOut(); }catch(e){ console.warn("[signOut after delete]", e); }
+  try{ removeSupabaseSessionBackup(); clearNativeSupabaseSession(); }catch{}
   try{ localStorage.removeItem(STORAGE_KEY); }catch{}
   try{ localStorage.removeItem("NAC_ID"); }catch{}
   nukeAuthStorage();
   try{ sessionStorage.clear(); }catch{}
-  location.replace("/pages/login.html");
+  location.replace(loginTarget());
 }
 
 const SETTINGS_META = {

@@ -787,7 +787,8 @@ function bindMenu(options = {}) {
   menuLoginLink?.addEventListener("click", (e) => {
     e.preventDefault();
     closeMenu();
-    location.href = "/pages/login.html";
+    const isIOS = !!(window.__ITALKY_IOS_APP__ || window.__ITALKY_PLATFORM__ === "ios");
+    location.href = isIOS ? "/pages/login_ios.html" : "/pages/login.html";
   });
 
   adminPanelLink?.addEventListener("click", closeMenu);
@@ -798,12 +799,15 @@ function bindMenu(options = {}) {
   });
 
   logoutBtn?.addEventListener("click", async () => {
+    const isIOS = !!(window.__ITALKY_IOS_APP__ || window.__ITALKY_PLATFORM__ === "ios");
     try {
       closeMenu();
-      const { supabase } = await import("/js/supabase_client.js");
+      const { supabase, removeSupabaseSessionBackup, clearNativeSupabaseSession } = await import("/js/supabase_client.js");
       await supabase.auth.signOut();
+      removeSupabaseSessionBackup();
+      if (isIOS) clearNativeSupabaseSession();
     } catch {}
-    location.href = "/pages/login.html";
+    location.href = isIOS ? "/pages/login_ios.html" : "/pages/login.html";
   });
 
   deleteAccountBtn?.addEventListener("click", () => {

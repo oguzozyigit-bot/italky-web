@@ -65,10 +65,10 @@
       <div class="typewriter">Devam etmek için giriş yapın...</div>
     </section>
     <section class="login-box" aria-label="Giriş seçenekleri">
-      <a class="main-btn apple-btn" id="iosLoginButton" href="/pages/home_ios.html?ios=1" aria-label="Apple hesabınla giriş yap">
+      <button class="main-btn apple-btn" id="iosLoginButton" type="button" aria-label="Apple hesabınla giriş yap">
         <span class="apple-mark" aria-hidden="true">&#63743;</span>
         <span>Apple hesabınla giriş yap</span>
-      </a>
+      </button>
     </section>
   </main>
   <footer class="ios-footer">
@@ -120,6 +120,20 @@
       }
       document.body.classList.remove("session-checking");
     }
+
+    function startNativeAppleLogin() {
+      try {
+        const bridge = window.webkit?.messageHandlers?.IOSAuth || window.webkit?.messageHandlers?.appleLogin;
+        if (bridge) {
+          bridge.postMessage({ action: "signInWithApple" });
+          return;
+        }
+      } catch (error) {
+        console.warn("[login_ios] native Apple bridge failed:", error);
+      }
+    }
+
+    document.getElementById("iosLoginButton")?.addEventListener("click", startNativeAppleLogin);
 
     redirectIfSessionExists();
   </script>

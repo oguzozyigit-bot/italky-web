@@ -195,7 +195,7 @@
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
-    import { supabase } from "/js/supabase_client.js";
+    import { supabase, removeSupabaseSessionBackup, clearNativeSupabaseSession } from "/js/supabase_client.js";
 
     try {
       mountShell({ scroll: "none" });
@@ -285,13 +285,19 @@
         } catch {}
 
         try {
+          removeSupabaseSessionBackup();
+          clearNativeSupabaseSession();
+        } catch {}
+
+        try {
           localStorage.clear();
           sessionStorage.clear();
         } catch {}
 
         setStatus("Hesap kalıcı olarak silindi.", "ok");
         setTimeout(() => {
-          location.replace("/pages/login.html");
+          const isIOS = !!(window.__ITALKY_IOS_APP__ || window.__ITALKY_PLATFORM__ === "ios");
+          location.replace(isIOS ? "/pages/login_ios.html" : "/pages/login.html");
         }, 900);
 
       } catch (e) {

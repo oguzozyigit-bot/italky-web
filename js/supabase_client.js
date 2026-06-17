@@ -27,11 +27,66 @@ function normalizeSessionBackup(session) {
   };
 }
 
+function isIOSNativeBridgeAvailable() {
+  try {
+    return !!(
+      window.__ITALKY_IOS_APP__ ||
+      window.__ITALKY_PLATFORM__ === "ios" ||
+      window.webkit?.messageHandlers?.IOSAuth
+    );
+  } catch {
+    return false;
+  }
+}
+
+function postIOSAuthMessage(message) {
+  try {
+    const bridge = window.webkit?.messageHandlers?.IOSAuth;
+    if (!bridge || !message) return false;
+    bridge.postMessage(message);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function nativeSessionPayload(session) {
+  const backup = normalizeSessionBackup(session);
+  if (!backup) return null;
+  return {
+    access_token: backup.access_token,
+    refresh_token: backup.refresh_token,
+    expires_at: backup.expires_at,
+    token_type: backup.token_type,
+    user: backup.user ? {
+      id: backup.user.id || "",
+      email: backup.user.email || ""
+    } : null,
+    saved_at: backup.saved_at
+  };
+}
+
+export function persistSupabaseSessionToNative(session) {
+  try {
+    if (!isIOSNativeBridgeAvailable()) return false;
+    const payload = nativeSessionPayload(session);
+    if (!payload) return false;
+    return postIOSAuthMessage({ action: "storeSession", session: payload });
+  } catch {
+    return false;
+  }
+}
+
+export function clearNativeSupabaseSession() {
+  return postIOSAuthMessage({ action: "clearSession" });
+}
+
 export function persistSupabaseSessionBackup(session) {
   try {
     const backup = normalizeSessionBackup(session);
     if (!backup) return false;
     localStorage.setItem(SUPABASE_SESSION_BACKUP_KEY, JSON.stringify(backup));
+    persistSupabaseSessionToNative(session);
     return true;
   } catch {
     return false;
@@ -42,6 +97,7 @@ export function removeSupabaseSessionBackup() {
   try {
     localStorage.removeItem(SUPABASE_SESSION_BACKUP_KEY);
   } catch {}
+  clearNativeSupabaseSession();
 }
 
 export function readSupabaseSessionBackup() {
@@ -95,6 +151,89 @@ export async function restoreSupabaseSessionFromBackup() {
   return null;
 }
 
+export async function restoreSupabaseSessionFromNative(session) {
+  try {
+    if (!session?.access_token || !session?.refresh_token) return null;
+    const { data, error } = await supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
+    });
+
+    if (error) {
+      console.warn("[supabase_client] native session restore failed:", error);
+      clearNativeSupabaseSession();
+      return null;
+    }
+
+    if (data?.session) {
+      persistSupabaseSessionBackup(data.session);
+      return data.session;
+    }
+  } catch (error) {
+    console.warn("[supabase_client] native session restore exception:", error);
+  }
+
+  return null;
+}
+
+export async function italkyRestoreNativeSupabaseSession(session) {
+  const restored = await restoreSupabaseSessionFromNative(session);
+  if (restored?.user?.id) {
+    try {
+      const path = String(location.pathname || "").toLowerCase();
+      if (path.endsWith("/login_ios.html")) {
+        location.replace("/pages/home_ios.html?ios=1&native_restore=1");
+      }
+    } catch {}
+  } else if (session?.access_token || session?.refresh_token) {
+    try {
+      const path = String(location.pathname || "").toLowerCase();
+      if (path.endsWith("/home_ios.html")) {
+        clearNativeSupabaseSession();
+        location.replace("/pages/login_ios.html?restore=failed");
+      }
+    } catch {}
+  }
+  return restored;
+}
+
+export async function italkySignInWithAppleIdentityToken(identityToken, nonce = "") {
+  const token = String(identityToken || "").trim();
+  if (!token) return null;
+
+  try {
+    const payload = {
+      provider: "apple",
+      token
+    };
+    const cleanNonce = String(nonce || "").trim();
+    if (cleanNonce) payload.nonce = cleanNonce;
+
+    const { data, error } = await supabase.auth.signInWithIdToken(payload);
+    if (error) throw error;
+
+    if (data?.session) {
+      persistSupabaseSessionBackup(data.session);
+      try {
+        window.dispatchEvent(new CustomEvent("italkyIOSAppleSupabaseSignedIn", {
+          detail: { ok: true, user_id: data.session.user?.id || "" }
+        }));
+      } catch {}
+      location.replace("/pages/home_ios.html?ios=1&apple_login=1");
+      return data.session;
+    }
+  } catch (error) {
+    console.warn("[supabase_client] Apple identity token sign-in failed:", error);
+    try {
+      window.dispatchEvent(new CustomEvent("italkyIOSAppleSupabaseSignedIn", {
+        detail: { ok: false, message: error?.message || String(error || "") }
+      }));
+    } catch {}
+  }
+
+  return null;
+}
+
 export async function waitForSupabaseSession({
   timeoutMs = 5000,
   intervalMs = 250,
@@ -114,6 +253,12 @@ export async function waitForSupabaseSession({
 
     if (restoreFromBackup && !restored) {
       restored = true;
+      const nativeSession = window.__ITALKY_IOS_NATIVE_SESSION__;
+      if (nativeSession?.access_token && nativeSession?.refresh_token) {
+        const restoredNativeSession = await restoreSupabaseSessionFromNative(nativeSession);
+        if (restoredNativeSession) return restoredNativeSession;
+      }
+
       const restoredSession = await restoreSupabaseSessionFromBackup();
       if (restoredSession) return restoredSession;
     }
@@ -138,4 +283,17 @@ try {
 
 if (typeof window !== "undefined") {
   window.supabase = supabase;
+  window.italkyRestoreNativeSupabaseSession = italkyRestoreNativeSupabaseSession;
+  window.italkySignInWithAppleIdentityToken = italkySignInWithAppleIdentityToken;
+  window.addEventListener("italkyIOSNativeSessionAvailable", (event) => {
+    italkyRestoreNativeSupabaseSession(event.detail).catch(() => {});
+  });
+  if (window.__ITALKY_IOS_NATIVE_SESSION__?.access_token && window.__ITALKY_IOS_NATIVE_SESSION__?.refresh_token) {
+    italkyRestoreNativeSupabaseSession(window.__ITALKY_IOS_NATIVE_SESSION__).catch(() => {});
+  }
+  if (window.__ITALKY_IOS_PENDING_APPLE_IDENTITY__?.identityToken) {
+    const pending = window.__ITALKY_IOS_PENDING_APPLE_IDENTITY__;
+    window.__ITALKY_IOS_PENDING_APPLE_IDENTITY__ = null;
+    italkySignInWithAppleIdentityToken(pending.identityToken, pending.nonce || "").catch(() => {});
+  }
 }
