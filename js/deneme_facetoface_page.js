@@ -422,10 +422,6 @@ function updateTokensFromTranslationResponse(json) {
     try { setHeaderTokens(tokensAfter); } catch (e) { console.debug("[deneme cultural tokens]", e); }
   }
 
-  const charged = Number(json?.tokens_charged ?? json?.wallet?.tokens_charged ?? 0);
-  if (Number.isFinite(charged) && charged > 0) {
-    showToast(`${charged} jeton kullanildi`);
-  }
 }
 
 function translationError(code, message, status = 0, detail = null) {
