@@ -27,12 +27,11 @@ function normalizeSessionBackup(session) {
   };
 }
 
-function isIOSNativeBridgeAvailable() {
+export function supportsIOSNativeSessionBridge() {
   try {
-    return !!(
-      window.__ITALKY_IOS_APP__ ||
-      window.__ITALKY_PLATFORM__ === "ios" ||
-      window.webkit?.messageHandlers?.IOSAuth
+    return Boolean(
+      window.__ITALKY_IOS_SESSION_BRIDGE_READY === true ||
+      Number(window.__ITALKY_IOS_SESSION_BRIDGE_VERSION || 0) >= 1
     );
   } catch {
     return false;
@@ -41,6 +40,7 @@ function isIOSNativeBridgeAvailable() {
 
 function postIOSAuthMessage(message) {
   try {
+    if (!supportsIOSNativeSessionBridge()) return false;
     const bridge = window.webkit?.messageHandlers?.IOSAuth;
     if (!bridge || !message) return false;
     bridge.postMessage(message);
@@ -68,7 +68,7 @@ function nativeSessionPayload(session) {
 
 export function persistSupabaseSessionToNative(session) {
   try {
-    if (!isIOSNativeBridgeAvailable()) return false;
+    if (!supportsIOSNativeSessionBridge()) return false;
     const payload = nativeSessionPayload(session);
     if (!payload) return false;
     return postIOSAuthMessage({ action: "storeSession", session: payload });
