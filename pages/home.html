@@ -2519,6 +2519,22 @@ body.home-ready #pageContent{
     const shuffleBtn = doc.getElementById("icanyShuffleBtn");
     const lyricsBtn = doc.getElementById("icanyLyricsBtn");
     const player = doc.getElementById("icanyRadioPlayer");
+    let learningAudioStoppedByUser = false;
+
+    function notifyLearningAudioActive(active){
+      const value = !!active;
+      try{ window.__ITALKY_LEARNING_AUDIO_ACTIVE__ = value; }catch{}
+
+      const bridges = [window.Native, window.AndroidBridge];
+      for(const bridge of bridges){
+        try{
+          if(bridge && typeof bridge.setLearningAudioActive === "function"){
+            bridge.setLearningAudioActive(value ? "1" : "0");
+            break;
+          }
+        }catch{}
+      }
+    }
 
     function setPlaying(isPlaying){
       if(playIcon){
@@ -2569,12 +2585,15 @@ body.home-ready #pageContent{
 
       try{
         await audio.play();
+        learningAudioStoppedByUser = false;
+        notifyLearningAudioActive(true);
         setPlaying(true);
         await persistPlaybackState(doc, tracks[currentTrackIndex], audio);
         return true;
       }catch(error){
         console.warn("Tarayıcı otomatik çalmayı engelledi, Play ile devam edilebilir:", error);
         setPlaying(false);
+        notifyLearningAudioActive(false);
         return false;
       }
     }
@@ -2603,6 +2622,7 @@ body.home-ready #pageContent{
       if(!tracks.length){
         console.warn("Seçili radyo havuzunda sıradaki parça bulunamadı.");
         setPlaying(false);
+        notifyLearningAudioActive(false);
         return;
       }
 
@@ -2616,10 +2636,13 @@ body.home-ready #pageContent{
       if(autoPlay){
         try{
           await audio.play();
+          learningAudioStoppedByUser = false;
+          notifyLearningAudioActive(true);
           setPlaying(true);
         }catch(error){
           console.warn("Sıradaki parça otomatik başlayamadı:", error);
           setPlaying(false);
+          notifyLearningAudioActive(false);
         }
       }
     }
@@ -2632,6 +2655,8 @@ body.home-ready #pageContent{
       if(audio.paused){
         await playCurrent();
       }else{
+        learningAudioStoppedByUser = true;
+        notifyLearningAudioActive(false);
         audio.pause();
         setPlaying(false);
         persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
@@ -2667,9 +2692,19 @@ body.home-ready #pageContent{
       persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
     });
 
-    audio?.addEventListener("pause", () => setPlaying(false));
-    audio?.addEventListener("play", () => setPlaying(true));
-    audio?.addEventListener("ended", async () => nextTrack(1, true));
+    audio?.addEventListener("pause", () => {
+      setPlaying(false);
+      if(learningAudioStoppedByUser) notifyLearningAudioActive(false);
+    });
+    audio?.addEventListener("play", () => {
+      learningAudioStoppedByUser = false;
+      notifyLearningAudioActive(true);
+      setPlaying(true);
+    });
+    audio?.addEventListener("ended", async () => {
+      notifyLearningAudioActive(true);
+      await nextTrack(1, true);
+    });
 
     doc.__icanyPlayCurrent = playCurrent;
     doc.__icanyLoadTrack = loadTrack;
