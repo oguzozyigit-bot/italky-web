@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>italkyAI Aktivasyon</title>
+  <meta name="theme-color" content="#05070f">
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:#05070f;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,#05070f,#0b1020)}
+    main{width:min(420px,100%);text-align:center}
+    h1{margin:0 0 10px;font-size:24px;line-height:1.15}
+    p{margin:0;color:rgba(255,255,255,.72);font-size:15px;line-height:1.6}
+    .loader{width:42px;height:42px;margin:0 auto 22px;border-radius:50%;border:4px solid rgba(255,255,255,.16);border-top-color:#8bd3ff;animation:spin .8s linear infinite}
+    .error{display:none;margin-top:18px;padding:14px;border:1px solid rgba(255,178,178,.25);border-radius:14px;background:rgba(255,178,178,.08);color:#ffd9d9}
+    .actions{display:none;margin-top:18px}
+    a{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 18px;border-radius:12px;background:#fff;color:#101421;text-decoration:none;font-weight:800}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="loader" aria-hidden="true"></div>
+    <h1>Aktivasyon hazirlaniyor</h1>
+    <p id="statusText">Link kontrol ediliyor. Birazdan kampanya sayfasina yonlendirileceksiniz.</p>
+    <div id="errorBox" class="error">Bu aktivasyon linki bulunamadi veya artik aktif degil.</div>
+    <div id="actions" class="actions"><a href="/pages/home.html">Anasayfaya don</a></div>
+  </main>
+  <script>
+    const API_BASE = "https://italky-api.onrender.com";
+    const statusText = document.getElementById("statusText");
+    const errorBox = document.getElementById("errorBox");
+    const actions = document.getElementById("actions");
+
+    function tokenFromLocation(){
+      const params = new URLSearchParams(location.search);
+      const queryToken = params.get("token") || params.get("t");
+      if(queryToken) return queryToken;
+      const parts = location.pathname.split("/").filter(Boolean);
+      return parts[0] === "a" ? parts[1] : "";
+    }
+
+    function showError(){
+      document.querySelector(".loader").style.display = "none";
+      statusText.textContent = "Link gecersiz veya suresi dolmus olabilir.";
+      errorBox.style.display = "block";
+      actions.style.display = "block";
+    }
+
+    async function resolveLink(){
+      const token = String(tokenFromLocation() || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if(token.length < 6 || token.length > 8){ showError(); return; }
+      try{
+        const res = await fetch(`${API_BASE}/api/activation-links/${encodeURIComponent(token)}`, { cache:"no-store" });
+        const json = await res.json().catch(() => null);
+        const code = String(json?.code_value || "").trim();
+        if(!res.ok || !json?.ok || !code){ showError(); return; }
+        location.replace(`/kampanya?kod=${encodeURIComponent(code)}`);
+      }catch(e){
+        showError();
+      }
+    }
+
+    resolveLink();
+  </script>
+</body>
+</html>
