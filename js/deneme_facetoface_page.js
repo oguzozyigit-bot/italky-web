@@ -69,6 +69,7 @@ const ALT_CHARS = {
 const F2F_VOICE_KEY = "italkyai_voice_mode";
 const DENEME_CULTURAL_MODE_KEY = "deneme_facetoface_cultural_mode";
 const DENEME_CULTURAL_INFO_SEEN_KEY = "deneme_cultural_info_seen";
+const DENEME_HANDS_FREE_MODE_KEY = "deneme_facetoface_handsfree_mode";
 const F2F_AUTO_READ_KEY = "italkyai_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
 const SHARED_VOICE_ID_KEY = "italkyai_selected_voice_id";
@@ -297,6 +298,7 @@ const homeBtn = $("homeBtn");
 const miniToast = $("miniToast");
 const cultureToggle = $("cultureToggle");
 const cultureToggleText = $("cultureToggleText");
+const handsFreeToggle = $("handsFreeToggle");
 
 const uiModal = $("uiModal");
 const uiModalTitle = $("uiModalTitle");
@@ -396,6 +398,46 @@ function bindCulturalToggle() {
     if (next && shouldShowCulturalInfo()) showCulturalInfoModal();
   });
 }
+
+function isHandsFreeModeEnabled() {
+  return String(localStorage.getItem(DENEME_HANDS_FREE_MODE_KEY) || "off").trim().toLowerCase() === "on";
+}
+
+function syncHandsFreeToggleUi() {
+  const enabled = isHandsFreeModeEnabled();
+  handsFreeToggle?.classList.toggle("active", enabled);
+  handsFreeToggle?.classList.toggle("on", enabled);
+  handsFreeToggle?.setAttribute("aria-pressed", enabled ? "true" : "false");
+  handsFreeToggle?.setAttribute("title", enabled ? "Eller Serbest açık" : "Eller Serbest kapalı");
+  document.body?.classList.toggle("handsfree-mode", enabled);
+}
+
+function setHandsFreeMode(enabled, opts = {}) {
+  localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, enabled ? "on" : "off");
+  syncHandsFreeToggleUi();
+  if (!opts.silent) showToast(enabled ? "Eller Serbest açık" : "Eller Serbest kapalı");
+}
+
+function bindHandsFreeToggle() {
+  syncHandsFreeToggleUi();
+
+  if (!handsFreeToggle || handsFreeToggle.dataset.bound === "1") return;
+  handsFreeToggle.dataset.bound = "1";
+
+  handsFreeToggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const next = !isHandsFreeModeEnabled();
+    setHandsFreeMode(next);
+  });
+}
+
+window.f2fHandsFreeState = {
+  isEnabled: isHandsFreeModeEnabled,
+  setEnabled: (value, opts = {}) => setHandsFreeMode(!!value, opts),
+  sync: syncHandsFreeToggleUi,
+};
 
 function showUiModal(message, title = "Jeton Gerekli") {
   if (!uiModal) return;
@@ -2502,6 +2544,7 @@ function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
   bindCulturalToggle();
+  bindHandsFreeToggle();
   bindModeControls();
   bindLanguageButtons();
   bindGlobalClicks();
