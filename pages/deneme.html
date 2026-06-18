@@ -420,6 +420,10 @@
       position:relative;
     }
 
+    #botComposer{
+      min-width:min(94vw, 330px);
+    }
+
     .composer.listening{
       box-shadow:none;
       animation:none;
@@ -756,32 +760,81 @@
     }
 
     .hf-btn{
-      position:fixed;
-      right:42px;
-      bottom:calc(18px + var(--safe-bottom));
+      position:absolute;
+      left:calc(50% + 62px);
+      top:50%;
+      transform:translateY(-50%);
+      min-width:104px;
       min-height:38px;
       border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.15);
-      color:rgba(255,255,255,.78);
-      padding:8px 12px;
+      border-radius:999px;
+      background:linear-gradient(135deg, rgba(88,28,135,.58), rgba(49,46,129,.50));
+      border:1px solid rgba(216,180,254,.28);
+      color:rgba(245,243,255,.80);
+      padding:6px 12px;
       align-items:center;
+      justify-content:center;
       gap:7px;
-      font-size:11px;
-      font-weight:900;
+      font-size:10px;
+      font-family:'Outfit',sans-serif;
+      font-weight:1000;
       cursor:pointer;
-      z-index:1700;
+      z-index:3;
+      box-shadow:0 10px 24px rgba(2,6,23,.24), inset 0 1px 0 rgba(255,255,255,.08);
+      transition:transform .18s ease, color .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .hf-btn:active{
+      transform:translateY(-50%) scale(.95);
     }
 
     .hf-btn.active{
-      background:rgba(168,85,247,.16);
-      border-color:rgba(168,85,247,.5);
-      color:#d8b4fe;
-      box-shadow:0 0 18px rgba(168,85,247,.22);
+      background:linear-gradient(135deg, #581c87, #4338ca);
+      border-color:rgba(216,180,254,.70);
+      color:#fff;
+      box-shadow:0 0 18px rgba(168,85,247,.25), 0 14px 30px rgba(49,46,129,.24), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+
+    .hf-btn span{
+      white-space:nowrap;
     }
 
     .hf-btn svg{ width:16px; height:16px; stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+
+    @media (max-width:360px){
+      .culture-toggle{
+        right:calc(50% + 54px);
+        min-width:70px;
+        padding:6px 9px;
+        gap:6px;
+        font-size:9px;
+      }
+
+      .culture-toggle .culture-icon{
+        width:20px;
+        height:20px;
+        font-size:12px;
+      }
+
+      .hf-btn{
+        left:calc(50% + 54px);
+        min-width:78px;
+        padding:6px 9px;
+        gap:5px;
+        font-size:9px;
+      }
+
+      .hf-btn span{
+        max-width:42px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+
+      .hf-btn svg{
+        width:14px;
+        height:14px;
+      }
+    }
 
     .orb-container{
       width:82px;
@@ -1139,12 +1192,6 @@
       </div>
 
       <button class="nav-btn btn-clear" id="clearBtn" type="button"><span id="clearText" class="label-rotate">CLEAR</span></button>
-
-      <button id="handsFreeToggle" class="hf-btn premium-bt-only" type="button" aria-label="Eller Serbest" style="display:none;">
-        <svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
-        <span>Eller Serbest</span>
-      </button>
-
       <div id="statusPill" class="status-pill">Hazır</div>
     </div>
 
@@ -1191,6 +1238,12 @@
               <path d="M12 17v4"></path>
               <path d="M8 21h8"></path>
             </svg>
+          </button>
+
+
+          <button id="handsFreeToggle" class="hf-btn premium-bt-only" type="button" aria-pressed="false" aria-label="Eller Serbest">
+            <svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+            <span>Eller Serbest</span>
           </button>
 
           <button id="botSend" class="send-btn hidden" type="button" aria-label="Alt mesaj gönder">
