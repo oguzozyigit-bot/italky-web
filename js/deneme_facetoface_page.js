@@ -70,6 +70,12 @@ const F2F_VOICE_KEY = "italkyai_voice_mode";
 const DENEME_CULTURAL_MODE_KEY = "deneme_facetoface_cultural_mode";
 const DENEME_CULTURAL_INFO_SEEN_KEY = "deneme_cultural_info_seen";
 const DENEME_HANDS_FREE_MODE_KEY = "deneme_facetoface_handsfree_mode";
+const DENEME_HANDS_FREE_SIDE = "bot";
+const DENEME_HANDS_FREE_SILENCE_MS = 1450;
+const DENEME_HANDS_FREE_RESTART_MS = 650;
+const DENEME_HANDS_FREE_BUSY_RETRY_MS = 850;
+const DENEME_HANDS_FREE_AUDIO_GUARD_MS = 1800;
+const DENEME_HANDS_FREE_EMPTY_RESTART_LIMIT = 4;
 const F2F_AUTO_READ_KEY = "italkyai_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
 const SHARED_VOICE_ID_KEY = "italkyai_selected_voice_id";
@@ -346,6 +352,14 @@ let currentRuntimeMode = "online";
 let offlinePickerPool = [];
 let uiModalPurpose = "default";
 
+let handsFreeRunId = 0;
+let handsFreeSilenceTimer = null;
+let handsFreeRestartTimer = null;
+let handsFreeEmptyEndCount = 0;
+let handsFreeStartPending = false;
+let handsFreeLastStartAt = 0;
+let handsFreeAudioGuardUntil = 0;
+
 function showToast(msg = "") {
   if (!miniToast) return;
   miniToast.textContent = String(msg || "");
@@ -403,6 +417,64 @@ function isHandsFreeModeEnabled() {
   return String(localStorage.getItem(DENEME_HANDS_FREE_MODE_KEY) || "off").trim().toLowerCase() === "on";
 }
 
+function getHandsFreeSide() {
+  return DENEME_HANDS_FREE_SIDE;
+}
+
+function clearHandsFreeSilenceTimer() {
+  clearTimeout(handsFreeSilenceTimer);
+  handsFreeSilenceTimer = null;
+}
+
+function clearHandsFreeRestartTimer() {
+  clearTimeout(handsFreeRestartTimer);
+  handsFreeRestartTimer = null;
+}
+
+function clearHandsFreeTimers() {
+  clearHandsFreeSilenceTimer();
+  clearHandsFreeRestartTimer();
+}
+
+function armHandsFreeAudioGuard(ms = DENEME_HANDS_FREE_AUDIO_GUARD_MS) {
+  handsFreeAudioGuardUntil = Math.max(handsFreeAudioGuardUntil, Date.now() + Math.max(0, Number(ms) || 0));
+}
+
+function isHandsFreeAudioOutputBusy() {
+  if (Date.now() < handsFreeAudioGuardUntil) return true;
+
+  try {
+    if (currentAudio && !currentAudio.paused && !currentAudio.ended) return true;
+  } catch {}
+
+  try {
+    if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) return true;
+  } catch {}
+
+  try {
+    if (window.NativeTTS?.isSpeaking?.()) return true;
+  } catch {}
+
+  return false;
+}
+
+function isHandsFreeUiBusy() {
+  if (recordingSide) return true;
+  if (frameRoot?.classList.contains("is-listening")) return true;
+  if (frameRoot?.classList.contains("is-translating")) return true;
+  return false;
+}
+
+function isHandsFreeListening() {
+  return isHandsFreeModeEnabled() && recordingSide === getHandsFreeSide();
+}
+
+function syncHandsFreeRuntimeUi() {
+  const listening = isHandsFreeListening();
+  document.body?.classList.toggle("handsfree-listening", listening);
+  handsFreeToggle?.classList.toggle("listening", listening);
+}
+
 function syncHandsFreeToggleUi() {
   const enabled = isHandsFreeModeEnabled();
   handsFreeToggle?.classList.toggle("active", enabled);
@@ -410,12 +482,144 @@ function syncHandsFreeToggleUi() {
   handsFreeToggle?.setAttribute("aria-pressed", enabled ? "true" : "false");
   handsFreeToggle?.setAttribute("title", enabled ? "Eller Serbest açık" : "Eller Serbest kapalı");
   document.body?.classList.toggle("handsfree-mode", enabled);
+  syncHandsFreeRuntimeUi();
+}
+
+function stopHandsFreeLoop(opts = {}) {
+  handsFreeRunId += 1;
+  handsFreeStartPending = false;
+  handsFreeEmptyEndCount = 0;
+  handsFreeAudioGuardUntil = 0;
+  clearHandsFreeTimers();
+  syncHandsFreeToggleUi();
+
+  if (opts.stopCurrent && recordingSide === getHandsFreeSide()) {
+    try { stopRecognizer(); } catch {}
+  }
+}
+
+function scheduleHandsFreeRestart(reason = "cycle", delay = DENEME_HANDS_FREE_RESTART_MS) {
+  clearHandsFreeRestartTimer();
+  if (!isHandsFreeModeEnabled()) return;
+
+  const runId = handsFreeRunId;
+  handsFreeRestartTimer = setTimeout(() => {
+    handsFreeRestartTimer = null;
+    if (runId !== handsFreeRunId || !isHandsFreeModeEnabled()) return;
+    if (isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) {
+      scheduleHandsFreeRestart(`${reason}:busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
+      return;
+    }
+    void startHandsFreeLoop(reason);
+  }, Math.max(120, Number(delay) || DENEME_HANDS_FREE_RESTART_MS));
+}
+
+function scheduleHandsFreeSilenceStop(side, sessionId, runId) {
+  if (!isHandsFreeModeEnabled() || side !== getHandsFreeSide()) return;
+
+  clearHandsFreeSilenceTimer();
+  handsFreeSilenceTimer = setTimeout(() => {
+    handsFreeSilenceTimer = null;
+
+    if (!isHandsFreeModeEnabled()) return;
+    if (runId !== handsFreeRunId) return;
+    if (recordingSide !== side || sessionId !== recognitionSessionId) return;
+
+    const finalCandidate = cleanupFinalTranscript(
+      getPreviewText(side) || latestPreviewTranscript || liveTranscript || ""
+    );
+    if (!finalCandidate || finalCandidate.length < 2) return;
+
+    setTranslatingUI(side);
+    stopRecognizer();
+  }, DENEME_HANDS_FREE_SILENCE_MS);
+}
+
+function handleHandsFreeCycleEnd(side, hadText, runId) {
+  clearHandsFreeSilenceTimer();
+  syncHandsFreeRuntimeUi();
+
+  if (side !== getHandsFreeSide()) return;
+  if (!isHandsFreeModeEnabled() || runId !== handsFreeRunId) return;
+
+  if (hadText) {
+    handsFreeEmptyEndCount = 0;
+    armHandsFreeAudioGuard();
+    scheduleHandsFreeRestart("after-final", DENEME_HANDS_FREE_RESTART_MS);
+    return;
+  }
+
+  handsFreeEmptyEndCount += 1;
+  if (handsFreeEmptyEndCount <= DENEME_HANDS_FREE_EMPTY_RESTART_LIMIT) {
+    scheduleHandsFreeRestart("empty", 900);
+    return;
+  }
+
+  setHandsFreeMode(false, { silent: true, stopCurrent: false });
+  showToast("Eller Serbest beklemeye alındı");
+}
+
+async function startHandsFreeLoop(reason = "manual") {
+  if (!isHandsFreeModeEnabled()) return false;
+  if (handsFreeStartPending) return false;
+
+  const runId = handsFreeRunId;
+  const side = getHandsFreeSide();
+
+  if (recordingSide) {
+    if (recordingSide !== side) scheduleHandsFreeRestart(`${reason}:busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
+    return false;
+  }
+
+  handsFreeStartPending = true;
+
+  try {
+    await ensureReady();
+    if (runId !== handsFreeRunId || !isHandsFreeModeEnabled()) return false;
+
+    const premiumOk = await ensureCurrentFacePremiumModeAccess();
+    if (!premiumOk) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: false });
+      return false;
+    }
+
+    if (isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) {
+      scheduleHandsFreeRestart(`${reason}:busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
+      return false;
+    }
+
+    const now = Date.now();
+    const waitFor = Math.max(0, 320 - (now - handsFreeLastStartAt));
+    if (waitFor) await wait(waitFor);
+
+    if (runId !== handsFreeRunId || !isHandsFreeModeEnabled() || isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) return false;
+
+    handsFreeLastStartAt = Date.now();
+    startRecording(side, { handsFree: true, runId });
+    return true;
+  } finally {
+    handsFreeStartPending = false;
+  }
 }
 
 function setHandsFreeMode(enabled, opts = {}) {
-  localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, enabled ? "on" : "off");
+  const next = !!enabled;
+  const previous = isHandsFreeModeEnabled();
+
+  localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, next ? "on" : "off");
   syncHandsFreeToggleUi();
-  if (!opts.silent) showToast(enabled ? "Eller Serbest açık" : "Eller Serbest kapalı");
+
+  if (next) {
+    if (!previous) handsFreeRunId += 1;
+    handsFreeEmptyEndCount = 0;
+    clearHandsFreeTimers();
+    if (!opts.silent) showToast("Eller Serbest açık");
+    void startHandsFreeLoop("toggle");
+    return;
+  }
+
+  stopHandsFreeLoop({ stopCurrent: !!opts.stopCurrent });
+  if (!opts.silent) showToast("Eller Serbest kapalı");
 }
 
 function bindHandsFreeToggle() {
@@ -429,13 +633,15 @@ function bindHandsFreeToggle() {
     e.stopPropagation();
 
     const next = !isHandsFreeModeEnabled();
-    setHandsFreeMode(next);
+    setHandsFreeMode(next, { stopCurrent: true });
   });
 }
 
 window.f2fHandsFreeState = {
   isEnabled: isHandsFreeModeEnabled,
   setEnabled: (value, opts = {}) => setHandsFreeMode(!!value, opts),
+  start: () => startHandsFreeLoop("external"),
+  stop: () => setHandsFreeMode(false, { stopCurrent: true }),
   sync: syncHandsFreeToggleUi,
 };
 
@@ -1771,14 +1977,20 @@ async function warmAudio() {
   await unlockKeyboardAudio();
 }
 
-function startRecording(side) {
+function startRecording(side, opts = {}) {
   hideKeyboards();
   setInputPlaceholder(side, "");
 
+  const handsFreeSession = !!opts.handsFree && side === getHandsFreeSide();
+  const handsFreeRun = Number(opts.runId || handsFreeRunId);
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang, side);
 
   if (!rec) {
+    if (handsFreeSession) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: false });
+    }
+
     setErrorUI();
     if (currentRuntimeMode === "offline") {
       showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
@@ -1791,13 +2003,31 @@ function startRecording(side) {
   }
 
   const mySessionId = ++recognitionSessionId;
+  let recognitionFinished = false;
+
+  const markFinished = () => {
+    if (recognitionFinished) return false;
+    recognitionFinished = true;
+    return true;
+  };
 
   recognizer = rec;
   recordingSide = side;
   liveTranscript = "";
   latestPreviewTranscript = "";
 
-  rec.onstart = () => setListeningUI(side);
+  if (handsFreeSession) {
+    clearHandsFreeTimers();
+    syncHandsFreeRuntimeUi();
+  }
+
+  rec.onstart = () => {
+    setListeningUI(side);
+    if (handsFreeSession) {
+      syncHandsFreeRuntimeUi();
+      setInputPlaceholder(side, "Eller Serbest dinliyor…");
+    }
+  };
 
   rec.onresult = (e) => {
     if (mySessionId !== recognitionSessionId) return;
@@ -1818,36 +2048,54 @@ function startRecording(side) {
     const txtEl = previewNode?.querySelector(".txt");
     if (txtEl) txtEl.textContent = builtText;
     keepLatestVisible(side);
+
+    if (handsFreeSession) {
+      scheduleHandsFreeSilenceStop(side, mySessionId, handsFreeRun);
+    }
   };
 
   rec.onerror = (e) => {
     if (mySessionId !== recognitionSessionId) return;
+    if (!markFinished()) return;
 
-    if (currentRuntimeMode === "offline") {
-      showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
-      recognizer = null;
-      recordingSide = null;
-      liveTranscript = "";
-      latestPreviewTranscript = "";
-      setErrorUI();
-      bounceToReady(1600);
-      return;
-    }
+    clearHandsFreeSilenceTimer();
 
-    if (String(e?.error || "").includes("not-allowed")) showToast("Mikrofon izni gerekli");
-    else showToast("Mikrofon hatası");
+    const errorCode = String(e?.error || "").toLowerCase();
+    const body = side === "top" ? topBody : botBody;
+    body?.querySelector(".bubble.preview")?.remove();
 
     recognizer = null;
     recordingSide = null;
     liveTranscript = "";
     latestPreviewTranscript = "";
 
+    if (handsFreeSession && (errorCode === "no-speech" || errorCode === "aborted")) {
+      setSystemReadyUI();
+      handleHandsFreeCycleEnd(side, false, handsFreeRun);
+      return;
+    }
+
+    if (currentRuntimeMode === "offline") {
+      showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
+      setErrorUI();
+      bounceToReady(1600);
+      if (handsFreeSession) setHandsFreeMode(false, { silent: true, stopCurrent: false });
+      return;
+    }
+
+    if (errorCode.includes("not-allowed")) showToast("Mikrofon izni gerekli");
+    else showToast("Mikrofon hatası");
+
     setErrorUI();
     bounceToReady(1600);
+    if (handsFreeSession) setHandsFreeMode(false, { silent: true, stopCurrent: false });
   };
 
   rec.onend = () => {
     if (mySessionId !== recognitionSessionId) return;
+    if (!markFinished()) return;
+
+    clearHandsFreeSilenceTimer();
 
     const sideAtEnd = side;
     const finalText = cleanupFinalTranscript(
@@ -1863,20 +2111,33 @@ function startRecording(side) {
     latestPreviewTranscript = "";
 
     if (finalText) {
-      Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
+      Promise.resolve()
+        .then(() => finalizeRecognition(sideAtEnd, finalText))
+        .finally(() => {
+          if (handsFreeSession) handleHandsFreeCycleEnd(sideAtEnd, true, handsFreeRun);
+        });
       return;
     }
 
     setSystemReadyUI();
+    if (handsFreeSession) handleHandsFreeCycleEnd(sideAtEnd, false, handsFreeRun);
   };
 
   try {
     rec.start();
   } catch {
+    if (!markFinished()) return;
+
+    clearHandsFreeSilenceTimer();
     recognizer = null;
     recordingSide = null;
     liveTranscript = "";
     latestPreviewTranscript = "";
+
+    if (handsFreeSession) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: false });
+    }
+
     setErrorUI();
     bounceToReady(1200);
   }
@@ -1886,6 +2147,11 @@ async function toggleRecording(side) {
   await ensureReady();
   const premiumOk = await ensureCurrentFacePremiumModeAccess();
   if (!premiumOk) return;
+
+  if (isHandsFreeModeEnabled()) {
+    setHandsFreeMode(false, { silent: true, stopCurrent: false });
+    showToast("Eller Serbest kapatıldı");
+  }
 
   if (recordingSide === side) {
     setTranslatingUI(side);
@@ -2382,6 +2648,10 @@ function bindModeControls() {
     e?.preventDefault?.();
     e?.stopPropagation?.();
 
+    if (isHandsFreeModeEnabled()) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: true });
+    }
+
     if (currentRuntimeMode === "online") {
       tryEnableOfflineMode();
     } else {
@@ -2458,6 +2728,7 @@ function bindUtilityButtons() {
     event?.stopPropagation?.();
     stopAudio();
     stopTypewriter();
+    setHandsFreeMode(false, { silent: true, stopCurrent: false });
     stopRecognizer();
     recordingSide = null;
     liveTranscript = "";
