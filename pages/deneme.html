@@ -57,6 +57,7 @@
       --key-text:#f5f7fb;
       --kb-bg:rgba(9,11,17,.97);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
+      --toggle-ai-star:#7dd3fc;
     }
 
     *{
@@ -701,89 +702,32 @@
       box-shadow:0 0 18px rgba(37,99,235,.28);
     }
 
-    .culture-toggle{
-      min-width:84px;
-      min-height:38px;
-      border:none;
-      border-radius:999px;
-      padding:6px 12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      background:linear-gradient(135deg, rgba(11,42,91,.62), rgba(3,22,51,.54));
-      border:1px solid rgba(96,165,250,.28);
-      color:rgba(219,234,254,.78);
-      font-family:'Outfit',sans-serif;
-      font-size:10px;
-      font-weight:1000;
-      cursor:pointer;
-      box-shadow:0 10px 24px rgba(2,6,23,.24), inset 0 1px 0 rgba(255,255,255,.08);
-      transition:transform .18s ease, color .18s ease, border-color .18s ease, background .18s ease;
-      flex:0 0 auto;
-      position:absolute;
-      right:calc(50% + 62px);
-      top:50%;
-      transform:translateY(-50%);
-      z-index:3;
-    }
-
-    .culture-toggle:active{
-      transform:translateY(-50%) scale(.95);
-    }
-
-    .culture-toggle .culture-icon{
-      width:22px;
-      height:22px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.10);
-      font-size:14px;
-      line-height:1;
-      color:#bfdbfe;
-      box-shadow:0 0 12px rgba(14,165,233,.14);
-    }
-
-    .culture-toggle.on{
-      color:#fff;
-      border-color:rgba(125,211,252,.75);
-      background:linear-gradient(135deg, #0B2A5B, #075985);
-      box-shadow:0 0 18px rgba(14,165,233,.28), 0 14px 30px rgba(3,22,51,.28), inset 0 1px 0 rgba(255,255,255,.14);
-    }
-
-    .culture-toggle.on .culture-icon{
-      background:rgba(125,211,252,.18);
-      color:#e0f2fe;
-      box-shadow:0 0 16px rgba(125,211,252,.30);
-    }
-
+    .culture-toggle,
     .hf-btn{
-      display:flex;
-      position:absolute;
-      left:calc(50% + 42px);
-      top:50%;
-      transform:translateY(-50%);
-      width:clamp(106px, 31vw, 112px);
+      width:clamp(96px, 28vw, 104px);
       min-height:38px;
       border:none;
       border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      padding:6px 6px;
       background:
         linear-gradient(135deg, rgba(11,42,91,.62), rgba(3,22,51,.54)),
         radial-gradient(circle at 20% 0%, rgba(125,211,252,.18), transparent 42%);
       border:1px solid rgba(96,165,250,.30);
-      color:rgba(219,234,254,.82);
-      padding:6px 6px;
-      align-items:center;
-      justify-content:center;
-      gap:2.5px;
+      color:rgba(219,234,254,.84);
+      font-family:'Outfit',sans-serif;
       font-size:8.6px;
       line-height:1;
-      font-family:'Outfit',sans-serif;
       font-weight:1000;
-      letter-spacing:-.08px;
+      letter-spacing:-.06px;
       cursor:pointer;
+      flex:0 0 auto;
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
       z-index:3;
       overflow:hidden;
       white-space:nowrap;
@@ -793,6 +737,15 @@
       transition:transform .18s ease, color .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
     }
 
+    .culture-toggle{
+      right:calc(50% + 58px);
+    }
+
+    .hf-btn{
+      left:calc(50% + 58px);
+    }
+
+    .culture-toggle::before,
     .hf-btn::before{
       content:"";
       position:absolute;
@@ -803,10 +756,12 @@
       pointer-events:none;
     }
 
+    .culture-toggle:active,
     .hf-btn:active{
       transform:translateY(-50%) scale(.95);
     }
 
+    .culture-toggle.on,
     .hf-btn.active,
     .hf-btn.on{
       color:#fff;
@@ -825,6 +780,7 @@
       50%{ transform:translateY(-50%) scale(1.045); }
     }
 
+    .culture-toggle .toggle-text,
     .hf-btn span{
       position:relative;
       z-index:1;
@@ -833,19 +789,45 @@
       text-overflow:clip;
     }
 
+    .toggle-star{
+      position:relative;
+      z-index:1;
+      width:15px;
+      height:15px;
+      flex:0 0 15px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--toggle-ai-star);
+      font-size:13px;
+      line-height:1;
+      text-shadow:0 0 8px rgba(125,211,252,.45), 0 0 14px rgba(99,102,241,.20);
+      filter:drop-shadow(0 0 7px rgba(14,165,233,.26));
+    }
+
     .hf-btn .hf-hand{
       position:relative;
       z-index:1;
       width:12px;
       height:12px;
       flex:0 0 12px;
-      stroke:currentColor;
+      stroke:var(--toggle-ai-star);
       stroke-width:2.05;
       fill:none;
       stroke-linecap:round;
       stroke-linejoin:round;
-      opacity:.96;
-      filter:drop-shadow(0 0 7px rgba(14,165,233,.20));
+      opacity:.98;
+      filter:drop-shadow(0 0 7px rgba(125,211,252,.32));
+    }
+
+    .hf-btn.active .hf-hand,
+    .hf-btn.on .hf-hand,
+    .hf-btn.listening .hf-hand,
+    .culture-toggle.on .toggle-star{
+      color:#bae6fd;
+      stroke:#bae6fd;
+      text-shadow:0 0 10px rgba(186,230,253,.55), 0 0 18px rgba(99,102,241,.24);
+      filter:drop-shadow(0 0 8px rgba(125,211,252,.45));
     }
 
     .hf-btn .hf-hand-right{
@@ -853,42 +835,54 @@
     }
 
     @media (max-width:390px){
+      .culture-toggle,
       .hf-btn{
-        left:calc(50% + 40px);
-        width:106px;
-        padding:6px 5px;
-        gap:2px;
-        font-size:8.2px;
+        width:100px;
+        padding:6px 6px;
+        gap:3px;
+        font-size:8.3px;
+      }
+
+      .culture-toggle{ right:calc(50% + 58px); }
+      .hf-btn{ left:calc(50% + 58px); }
+
+      .toggle-star{
+        width:13px;
+        height:13px;
+        flex-basis:13px;
+        font-size:11px;
+      }
+
+      .hf-btn .hf-hand{
+        width:10.5px;
+        height:10.5px;
+        flex-basis:10.5px;
       }
     }
 
     @media (max-width:360px){
-      .culture-toggle{
-        right:calc(50% + 54px);
-        min-width:70px;
-        padding:6px 9px;
-        gap:6px;
-        font-size:9px;
-      }
-
-      .culture-toggle .culture-icon{
-        width:20px;
-        height:20px;
-        font-size:12px;
-      }
-
+      .culture-toggle,
       .hf-btn{
-        left:calc(50% + 39px);
-        width:106px;
+        width:96px;
         padding:6px 5px;
         gap:2px;
-        font-size:8.1px;
+        font-size:8px;
+      }
+
+      .culture-toggle{ right:calc(50% + 56px); }
+      .hf-btn{ left:calc(50% + 56px); }
+
+      .toggle-star{
+        width:13px;
+        height:13px;
+        flex-basis:13px;
+        font-size:11px;
       }
 
       .hf-btn .hf-hand{
-        width:11px;
-        height:11px;
-        flex-basis:11px;
+        width:10px;
+        height:10px;
+        flex-basis:10px;
       }
     }
 
@@ -1152,14 +1146,6 @@
         height:66px;
       }
 
-      .culture-toggle{
-        min-width:76px;
-        min-height:36px;
-        padding:5px 10px;
-        font-size:9px;
-        right:calc(50% + 52px);
-      }
-
       .mic-btn svg{
         width:28px;
         height:28px;
@@ -1283,8 +1269,9 @@
           </div>
 
           <button id="cultureToggle" class="culture-toggle" type="button" aria-pressed="false" aria-label="K&#252;lt&#252;rel modu a&#231; veya kapat">
-            <span class="culture-icon">&#10024;</span>
-            <span id="cultureToggleText">Kapal&#305;</span>
+            <span class="toggle-star" aria-hidden="true">✦</span>
+            <span id="cultureToggleText" class="toggle-text">Kapal&#305;</span>
+            <span class="toggle-star" aria-hidden="true">✦</span>
           </button>
 
           <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
