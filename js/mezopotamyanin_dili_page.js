@@ -167,26 +167,64 @@ function fallbackFaceToFaceHref() {
   return isIosLikeDevice() ? "facetoface_ios.html" : "facetoface.html";
 }
 
+function getSafeReferrerHref() {
+  try {
+    const ref = String(document.referrer || "").trim();
+    if (!ref) return "";
+
+    const refUrl = new URL(ref, location.href);
+    const currentPath = String(location.pathname || "").replace(/\/g, "/");
+    const refPath = String(refUrl.pathname || "").replace(/\/g, "/");
+
+    if (refUrl.origin !== location.origin) return "";
+    if (refPath === currentPath) return "";
+
+    return refUrl.href;
+  } catch {
+    return "";
+  }
+}
+
+function navigateAwayFromMezo(targetHref, replace = false) {
+  const href = String(targetHref || fallbackFaceToFaceHref());
+  try {
+    if (replace) location.replace(href);
+    else location.href = href;
+  } catch {
+    location.href = href;
+  }
+}
+
 function goBackToPreviousPage() {
+  const fallbackHref = fallbackFaceToFaceHref();
+  const refHref = getSafeReferrerHref();
+
+  // iOS/iPadOS WebView bazen history.back() çağrısında aynı ekranda takılı kalıyor.
+  // Bu yüzden iOS'ta doğrudan güvenli referrer/fallback URL'ye gidiyoruz.
+  if (isIosLikeDevice()) {
+    navigateAwayFromMezo(refHref || fallbackHref, true);
+    return;
+  }
+
+  if (refHref) {
+    navigateAwayFromMezo(refHref);
+    return;
+  }
+
   try {
     if (window.history && window.history.length > 1) {
       window.history.back();
+
+      // Bazı WebView'lerde back çağrısı sessizce başarısız olursa yedek çıkış.
+      window.setTimeout(() => {
+        const stillHere = /mezopotamyanin_dili\.html/i.test(String(location.pathname || ""));
+        if (stillHere) navigateAwayFromMezo(fallbackHref, true);
+      }, 650);
       return;
     }
   } catch {}
 
-  try {
-    const ref = String(document.referrer || "");
-    if (ref) {
-      const refUrl = new URL(ref, location.href);
-      if (refUrl.origin === location.origin) {
-        location.href = refUrl.href;
-        return;
-      }
-    }
-  } catch {}
-
-  location.href = fallbackFaceToFaceHref();
+  navigateAwayFromMezo(fallbackHref);
 }
 
 function siteLang() {
@@ -1252,17 +1290,34 @@ function bindEvents() {
     pointOrbTo("bot");
   };
 
-  const captureClearTap = (event) => {
+  window.mezoClearConversation = clearConversation;
+
+  const isClearEventTarget = (event) => {
+    try {
+      const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+      if (path.some((node) => node?.id === "clearBtn" || node?.classList?.contains?.("btn-clear"))) return true;
+    } catch {}
+
     const target = event.target?.closest?.("#clearBtn,.btn-clear");
-    if (!target) return;
+    return !!target;
+  };
+
+  const captureClearTap = (event) => {
+    if (!isClearEventTarget(event)) return;
     clearConversation(event);
   };
 
+  // iPad Safari/WebView tarafında click bazen gelmediği için touchstart/pointerup da dinlenir.
+  UI.clearBtn?.addEventListener("touchstart", clearConversation, { passive: false });
   UI.clearBtn?.addEventListener("pointerdown", clearConversation, { passive: false });
+  UI.clearBtn?.addEventListener("pointerup", clearConversation, { passive: false });
   UI.clearBtn?.addEventListener("touchend", clearConversation, { passive: false });
-  UI.clearBtn?.addEventListener("click", clearConversation);
+  UI.clearBtn?.addEventListener("click", clearConversation, { passive: false });
+  document.addEventListener("touchstart", captureClearTap, { capture: true, passive: false });
   document.addEventListener("pointerdown", captureClearTap, { capture: true, passive: false });
+  document.addEventListener("pointerup", captureClearTap, { capture: true, passive: false });
   document.addEventListener("touchend", captureClearTap, { capture: true, passive: false });
+  document.addEventListener("click", captureClearTap, { capture: true, passive: false });
 
   UI.genericCloseBtn?.addEventListener("click", closeModal);
   UI.genericBackdrop?.addEventListener("click", (e) => {
