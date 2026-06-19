@@ -1521,6 +1521,25 @@
       transform:translateX(-50%) translateY(0);
     }
 
+    .language-family-selector.locked .language-family-trigger{
+      cursor:default;
+      pointer-events:auto;
+    }
+
+    .language-family-selector.locked .language-family-trigger:active{
+      transform:none;
+    }
+
+    .language-family-selector.locked .language-family-caret{
+      display:none;
+    }
+
+    .language-family-selector.locked .language-family-menu{
+      display:none !important;
+      opacity:0 !important;
+      pointer-events:none !important;
+    }
+
     .language-family-option{
       min-height:36px;
       border-radius:999px;
@@ -1844,15 +1863,15 @@
             <span id="botLangTxt">🌐 Dil seçiliyor...</span> ⌵
           </button>
 
-          <div class="language-family-selector" id="languageFamilySelector" data-current-family="geography">
-            <button class="language-family-trigger" id="languageFamilyTrigger" type="button" aria-haspopup="true" aria-expanded="false">
+          <div class="language-family-selector locked" id="languageFamilySelector" data-current-family="geography">
+            <button class="language-family-trigger" id="languageFamilyTrigger" type="button" aria-haspopup="false" aria-expanded="false" aria-disabled="true">
               <span class="language-family-spark" aria-hidden="true">✨</span>
-              <span class="language-family-current" id="languageFamilyCurrent">Genel Diller</span>
+              <span class="language-family-current" id="languageFamilyCurrent">Coğrafyanın Dilleri</span>
               <span class="language-family-caret" aria-hidden="true">⌵</span>
             </button>
             <div class="language-family-menu" id="languageFamilyMenu" role="menu" aria-label="Dil coğrafyası seçimi">
               <a class="language-family-option active" data-family="geography" href="/pages/facetoface.html" role="menuitem">
-                <span>Genel Diller</span><span class="check" aria-hidden="true">✨</span>
+                <span>Coğrafyanın Dilleri</span><span class="check" aria-hidden="true">✨</span>
               </a>
               <a class="language-family-option" data-family="mesopotamia" href="/pages/mezopotamyanin_dili.html" role="menuitem">
                 <span>Mezopotamya Dilleri</span><span class="check" aria-hidden="true">✨</span>
@@ -1999,7 +2018,7 @@
       };
 
       var labels = {
-        geography: "Genel Diller",
+        geography: "Coğrafyanın Dilleri",
         mesopotamia: "Mezopotamya Dilleri",
         turan: "Turan Dilleri",
         caucasus: "Kafkas Dilleri",
@@ -2023,12 +2042,12 @@
         trigger.setAttribute("aria-expanded", "false");
       }
 
+      trigger.setAttribute("aria-disabled", "true");
+      trigger.setAttribute("aria-haspopup", "false");
       trigger.addEventListener("click", function(e){
         e.preventDefault();
         e.stopPropagation();
-        var open = !selector.classList.contains("open");
-        selector.classList.toggle("open", open);
-        trigger.setAttribute("aria-expanded", open ? "true" : "false");
+        closeMenu();
       });
 
       document.addEventListener("click", function(e){
