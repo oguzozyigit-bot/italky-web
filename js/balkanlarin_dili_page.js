@@ -929,6 +929,37 @@ function prepareInputs() {
   UI.botSend?.classList.add("hidden");
 }
 
+
+function isIOSDevice() {
+  const ua = navigator.userAgent || navigator.vendor || "";
+  const platform = navigator.platform || "";
+  const iPadOS = platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  return /iPad|iPhone|iPod/i.test(ua) || iPadOS;
+}
+
+function getDefaultBackTarget() {
+  return isIOSDevice() ? "facetoface_ios.html" : "facetoface.html";
+}
+
+function getSafeBackTarget() {
+  const fallback = getDefaultBackTarget();
+
+  try {
+    const ref = document.referrer ? new URL(document.referrer, location.href) : null;
+    if (ref && ref.origin === location.origin && ref.pathname !== location.pathname) {
+      return `${ref.pathname}${ref.search || ""}${ref.hash || ""}`;
+    }
+  } catch {}
+
+  return fallback;
+}
+
+function goBackToPreviousPage(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  location.href = getSafeBackTarget();
+}
+
 function bindEvents() {
   UI.topLangBtn?.addEventListener("click", () => {
     renderLangLists();
@@ -963,14 +994,8 @@ function bindEvents() {
     e.stopPropagation();
   });
 
-  UI.homeLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    location.href = "/pages/home.html";
-  });
-
-  UI.homeBtn?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
-  });
+  UI.homeLink?.addEventListener("click", goBackToPreviousPage);
+  UI.homeBtn?.addEventListener("click", goBackToPreviousPage);
 
   const clearConversation = (event) => {
     event?.preventDefault?.();
