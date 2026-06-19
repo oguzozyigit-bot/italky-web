@@ -654,7 +654,7 @@
       box-shadow:-10px 0 32px rgba(0,0,0,.30);
     }
 
-    #clearBtn{
+    #textLink{
       left:0;
       right:auto !important;
       border-radius:0 18px 18px 0;
@@ -671,8 +671,8 @@
       transform:none !important;
     }
 
-    .btn-clear{ left:0; }
-    #clearBtn{
+    .text-nav{ left:0; }
+    #textLink{
       pointer-events:auto !important;
       z-index:2147483000 !important;
       isolation:isolate;
@@ -704,7 +704,8 @@
     }
 
     .culture-toggle,
-    .hf-btn{
+    .hf-btn,
+    .clear-toggle{
       width:clamp(96px, 28vw, 104px);
       min-height:38px;
       border:none;
@@ -753,9 +754,40 @@
     .top-hf-btn{
       display:none !important;
     }
+    .top-clear-toggle{
+      right:calc(50% + 58px);
+      transform:translateY(-50%) rotate(180deg);
+      font-family:Outfit,sans-serif;
+      color:rgba(219,234,254,.90);
+    }
+
+    .top-clear-toggle:active{
+      transform:translateY(-50%) rotate(180deg) scale(.95);
+    }
+
+    .clear-toggle .clear-trash{
+      position:relative;
+      z-index:1;
+      width:12px;
+      height:12px;
+      flex:0 0 12px;
+      stroke:#dbeafe;
+      stroke-width:2.05;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      opacity:.98;
+      filter:drop-shadow(0 0 7px rgba(96,165,250,.34));
+    }
+
+    .clear-toggle .clear-trash-right{
+      transform:scaleX(-1);
+    }
+
 
     .culture-toggle::before,
-    .hf-btn::before{
+    .hf-btn::before,
+    .clear-toggle::before{
       content:"";
       position:absolute;
       inset:1px 6px auto 6px;
@@ -767,11 +799,17 @@
     }
 
     .culture-toggle:active,
-    .hf-btn:active{
+    .hf-btn:active,
+    .clear-toggle:active{
       transform:translateY(-50%) scale(.95);
     }
 
+    .top-clear-toggle:active{
+      transform:translateY(-50%) rotate(180deg) scale(.95);
+    }
+
     .culture-toggle.on,
+    .clear-toggle.on,
     .hf-btn.active,
     .hf-btn.on{
       color:#fff;
@@ -816,6 +854,7 @@
     }
 
     .culture-toggle .toggle-text,
+    .clear-toggle span,
     .hf-btn span{
       position:relative;
       z-index:1;
@@ -874,7 +913,8 @@
 
     @media (max-width:390px){
       .culture-toggle,
-      .hf-btn{
+      .hf-btn,
+      .clear-toggle{
         width:100px;
         padding:6px 6px;
         gap:3px;
@@ -883,6 +923,7 @@
 
       .culture-toggle{ right:calc(50% + 58px); }
       .hf-btn{ left:calc(50% + 58px); }
+      .top-clear-toggle{ right:calc(50% + 58px); }
 
       .culture-toggle .culture-icon{
         width:20px;
@@ -891,7 +932,8 @@
         font-size:12px;
       }
 
-      .hf-btn .hf-hand{
+      .hf-btn .hf-hand,
+      .clear-toggle .clear-trash{
         width:11px;
         height:11px;
         flex-basis:11px;
@@ -900,7 +942,8 @@
 
     @media (max-width:360px){
       .culture-toggle,
-      .hf-btn{
+      .hf-btn,
+      .clear-toggle{
         width:96px;
         padding:6px 5px;
         gap:2px;
@@ -909,6 +952,7 @@
 
       .culture-toggle{ right:calc(50% + 56px); }
       .hf-btn{ left:calc(50% + 56px); }
+      .top-clear-toggle{ right:calc(50% + 56px); }
 
       .culture-toggle .culture-icon{
         width:20px;
@@ -917,11 +961,110 @@
         font-size:12px;
       }
 
-      .hf-btn .hf-hand{
+      .hf-btn .hf-hand,
+      .clear-toggle .clear-trash{
         width:10.5px;
         height:10.5px;
         flex-basis:10.5px;
       }
+    }
+
+
+    /* Standalone üst Clear göstergesi: buton zemini yok, çöp kovası konuşma karakteriyle dolar. */
+    .clear-toggle{
+      --clear-fill:0;
+      width:70px;
+      height:70px;
+      min-height:70px;
+      padding:0;
+      border:none !important;
+      border-radius:0;
+      background:transparent !important;
+      box-shadow:none !important;
+      -webkit-backdrop-filter:none !important;
+      backdrop-filter:none !important;
+      color:#dbeafe;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:absolute;
+      top:50%;
+      z-index:4;
+      overflow:visible;
+      cursor:pointer;
+      transform:translateY(-50%);
+      transition:transform .18s ease, filter .18s ease, opacity .18s ease;
+    }
+
+    .top-clear-toggle{
+      right:calc(50% + 75px);
+      transform:translateY(-50%) rotate(180deg);
+    }
+
+    .clear-toggle::before,
+    .clear-toggle span,
+    .clear-toggle .clear-trash{
+      display:none !important;
+    }
+
+    .clear-toggle:active,
+    .top-clear-toggle:active{
+      transform:translateY(-50%) rotate(180deg) scale(.94);
+    }
+
+    .trash-meter-icon{
+      width:68px;
+      height:68px;
+      display:block;
+      overflow:visible;
+      filter:drop-shadow(0 0 10px rgba(96,165,250,.32));
+    }
+
+    .trash-meter-outline,
+    .trash-meter-line{
+      fill:none;
+      stroke:url(#clearTrashStroke);
+      stroke-width:3.2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .trash-meter-line.subtle{
+      stroke-width:2.5;
+      opacity:.78;
+    }
+
+    .trash-meter-fill{
+      fill:url(#clearTrashFill);
+      transform-box:fill-box;
+      transform-origin:center bottom;
+      transform:scaleY(var(--clear-fill,0));
+      opacity:.94;
+      transition:transform .28s ease;
+    }
+
+    .clear-toggle.is-full .trash-meter-icon{
+      filter:drop-shadow(0 0 13px rgba(34,197,94,.55));
+    }
+
+    @media (max-width:390px){
+      .clear-toggle{
+        width:66px;
+        height:66px;
+        min-height:66px;
+      }
+      .top-clear-toggle{ right:calc(50% + 75px); }
+      .trash-meter-icon{ width:64px; height:64px; }
+    }
+
+    @media (max-width:360px){
+      .clear-toggle{
+        width:62px;
+        height:62px;
+        min-height:62px;
+      }
+      .top-clear-toggle{ right:calc(50% + 72px); }
+      .trash-meter-icon{ width:60px; height:60px; }
     }
 
     .orb-container{
@@ -1453,7 +1596,8 @@
       }
 
       .culture-toggle,
-      .hf-btn{
+      .hf-btn,
+      .clear-toggle{
         width:100px;
         min-width:0;
         min-height:36px;
@@ -1463,6 +1607,7 @@
 
       .culture-toggle{ right:calc(50% + 58px); }
       .hf-btn{ left:calc(50% + 58px); }
+      .top-clear-toggle{ right:calc(50% + 58px); }
 
       .mic-btn svg{
         width:28px;
@@ -1476,6 +1621,100 @@
       display:none !important;
       visibility:hidden !important;
       pointer-events:none !important;
+    }
+
+
+    /* Final trash meter polish: zeminsiz, mic boyunda, kül tonu + beyaz çizgi. */
+    #clearBtn.clear-toggle{
+      --clear-fill:0;
+      width:70px !important;
+      height:70px !important;
+      min-height:70px !important;
+      padding:0 !important;
+      border:0 !important;
+      border-radius:0 !important;
+      background:transparent !important;
+      box-shadow:none !important;
+      -webkit-backdrop-filter:none !important;
+      backdrop-filter:none !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      overflow:visible !important;
+      z-index:4 !important;
+      cursor:pointer;
+      opacity:.98;
+    }
+
+    #clearBtn.top-clear-toggle{
+      right:calc(50% + 75px) !important;
+      top:50% !important;
+      transform:translateY(-50%) rotate(180deg) !important;
+    }
+
+    #clearBtn.top-clear-toggle:active{
+      transform:translateY(-50%) rotate(180deg) scale(.94) !important;
+    }
+
+    #clearBtn.clear-toggle::before,
+    #clearBtn.clear-toggle span,
+    #clearBtn.clear-toggle .clear-trash{
+      display:none !important;
+    }
+
+    #clearBtn .trash-meter-icon{
+      width:42px !important;
+      height:42px !important;
+      display:block;
+      overflow:visible;
+      filter:drop-shadow(0 0 8px rgba(226,232,240,.30));
+    }
+
+    #clearBtn .trash-meter-outline,
+    #clearBtn .trash-meter-line{
+      fill:none;
+      stroke:url(#clearTrashStroke);
+      stroke-width:2.85;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    #clearBtn .trash-meter-line.subtle{
+      stroke-width:2.15;
+      opacity:.74;
+    }
+
+    #clearBtn .trash-meter-fill{
+      fill:url(#clearTrashFill);
+      transform-box:fill-box;
+      transform-origin:center bottom;
+      transform:scaleY(var(--clear-fill,0));
+      opacity:.92;
+      transition:transform .28s ease;
+    }
+
+    #clearBtn.clear-toggle.is-full .trash-meter-icon{
+      filter:drop-shadow(0 0 10px rgba(34,197,94,.45));
+    }
+
+    @media (max-width:390px){
+      #clearBtn.clear-toggle{
+        width:66px !important;
+        height:66px !important;
+        min-height:66px !important;
+      }
+      #clearBtn.top-clear-toggle{ right:calc(50% + 75px) !important; }
+      #clearBtn .trash-meter-icon{ width:41px !important; height:41px !important; }
+    }
+
+    @media (max-width:360px){
+      #clearBtn.clear-toggle{
+        width:62px !important;
+        height:62px !important;
+        min-height:62px !important;
+      }
+      #clearBtn.top-clear-toggle{ right:calc(50% + 72px) !important; }
+      #clearBtn .trash-meter-icon{ width:39px !important; height:39px !important; }
     }
 
   </style>
@@ -1522,6 +1761,34 @@
             </svg>
           </button>
 
+          <button id="clearBtn" class="clear-toggle top-clear-toggle" type="button" aria-label="Konuşmayı temizle" style="--clear-fill:0">
+            <svg class="trash-meter-icon" viewBox="0 0 64 64" aria-hidden="true">
+              <defs>
+                <linearGradient id="clearTrashStroke" x1="18" y1="10" x2="46" y2="54" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#ffffff"/>
+                  <stop offset="0.48" stop-color="#e5e7eb"/>
+                  <stop offset="1" stop-color="#94a3b8"/>
+                </linearGradient>
+                <linearGradient id="clearTrashFill" x1="22" y1="50" x2="42" y2="24" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#15803d"/>
+                  <stop offset="0.62" stop-color="#22c55e"/>
+                  <stop offset="1" stop-color="#bbf7d0"/>
+                </linearGradient>
+                <clipPath id="clearTrashBodyClip">
+                  <path d="M22 23h20l-2.2 27H24.2L22 23Z"/>
+                </clipPath>
+              </defs>
+              <g clip-path="url(#clearTrashBodyClip)">
+                <rect class="trash-meter-fill" x="22" y="23" width="20" height="27" rx="4"/>
+              </g>
+              <path class="trash-meter-outline" d="M22 23h20l-2.2 27H24.2L22 23Z"/>
+              <path class="trash-meter-line" d="M18 20h28"/>
+              <path class="trash-meter-line" d="M26 20v-5h12v5"/>
+              <path class="trash-meter-line subtle" d="M29 28v17"/>
+              <path class="trash-meter-line subtle" d="M35 28v17"/>
+            </svg>
+          </button>
+
           <button id="topSend" class="send-btn hidden" type="button" aria-label="Üst mesaj gönder">
             <svg viewBox="0 0 24 24">
               <path d="M5 12h14"></path>
@@ -1560,7 +1827,7 @@
         </div>
       </div>
 
-      <button class="nav-btn btn-clear" id="clearBtn" type="button"><span id="clearText" class="label-rotate">CLEAR</span></button>
+      <a class="nav-btn text-nav" id="textLink" href="/pages/text_translate.html" aria-label="Metin çeviri"><span id="textLinkText" class="label-rotate">TEXT</span></a>
       <div id="statusPill" class="status-pill">Hazır</div>
     </div>
 
