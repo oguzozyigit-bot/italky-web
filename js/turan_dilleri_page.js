@@ -33,6 +33,48 @@ const TURAN_LANG_POOL = [
   { code: "crh", name: "Kırım Tatarcası", flag: "🔹" }
 ];
 
+
+const TOP_LANG_FALLBACK_META = {
+  tr: { name: "Türkçe", flag: "🇹🇷" },
+  en: { name: "İngilizce", flag: "🇬🇧" },
+  de: { name: "Almanca", flag: "🇩🇪" },
+  fr: { name: "Fransızca", flag: "🇫🇷" },
+  it: { name: "İtalyanca", flag: "🇮🇹" },
+  es: { name: "İspanyolca", flag: "🇪🇸" },
+  ru: { name: "Rusça", flag: "🇷🇺" },
+  ar: { name: "Arapça", flag: "🇸🇦" },
+  pt: { name: "Portekizce", flag: "🇵🇹" },
+  nl: { name: "Flemenkçe", flag: "🇳🇱" },
+  pl: { name: "Lehçe", flag: "🇵🇱" },
+  uk: { name: "Ukraynaca", flag: "🇺🇦" },
+  bg: { name: "Bulgarca", flag: "🇧🇬" },
+  ro: { name: "Romence", flag: "🇷🇴" },
+  el: { name: "Yunanca", flag: "🇬🇷" },
+  sq: { name: "Arnavutça", flag: "🇦🇱" },
+  bs: { name: "Boşnakça", flag: "🇧🇦" },
+  sr: { name: "Sırpça", flag: "🇷🇸" },
+  hr: { name: "Hırvatça", flag: "🇭🇷" },
+  mk: { name: "Makedonca", flag: "🇲🇰" },
+  ka: { name: "Gürcüce", flag: "🇬🇪" },
+  ku: { name: "Kürtçe Kurmanci", flag: "☀️" },
+  ckb: { name: "Kürtçe Sorani", flag: "🌙" },
+  he: { name: "İbranice", flag: "✡️" },
+  az: { name: "Azerbaycan Türkçesi", flag: "🇦🇿" },
+  kk: { name: "Kazakça", flag: "🇰🇿" },
+  ky: { name: "Kırgızca", flag: "🇰🇬" },
+  uz: { name: "Özbekçe", flag: "🇺🇿" },
+  tk: { name: "Türkmence", flag: "🇹🇲" },
+  ug: { name: "Uygurca", flag: "🔹" },
+  tt: { name: "Tatarca", flag: "🔷" },
+  ba: { name: "Başkurtça", flag: "🔸" },
+  crh: { name: "Kırım Tatarcası", flag: "🔹" }
+};
+
+function fallbackLangMeta(code) {
+  return TOP_LANG_FALLBACK_META[canon(code)] || null;
+}
+
+
 const REQUIRED_TOP_LANGS = [
   { code: "tr", name: "Türkçe", flag: "🇹🇷" },
   ...TURAN_LANG_POOL
@@ -231,6 +273,7 @@ function extractPoolFromModule(module) {
 
 function itemName(item, code) {
   const lang = siteLang();
+  const fallbackName = fallbackLangMeta(code)?.name || String(code || "").toUpperCase();
 
   const groups = [
     item?.names,
@@ -251,21 +294,30 @@ function itemName(item, code) {
         group.en ||
         group.EN;
 
-      if (found) return String(found);
+      if (found && String(found).trim().toLowerCase() !== canon(code)) return String(found);
     }
   }
 
-  return String(
+  const candidate = String(
     item?.[`name_${lang}`] ||
     item?.[`label_${lang}`] ||
+    item?.[`${lang}_name`] ||
+    item?.[`${lang}_label`] ||
+    item?.tr_name ||
+    item?.tr_label ||
+    item?.en_name ||
+    item?.en_label ||
     item?.name_tr ||
     item?.label_tr ||
     item?.tr ||
     item?.name ||
     item?.label ||
     item?.title ||
-    code.toUpperCase()
-  );
+    ""
+  ).trim();
+
+  if (!candidate || candidate.toLowerCase() === canon(code)) return fallbackName;
+  return candidate;
 }
 
 function normalizeLangItem(item) {
@@ -273,10 +325,12 @@ function normalizeLangItem(item) {
 
   if (!code) return null;
 
+  const fallback = fallbackLangMeta(code);
+
   return {
     code,
     name: itemName(item, code),
-    flag: String(item?.flag || item?.emoji || item?.icon || "🌐")
+    flag: String(item?.flag || item?.emoji || item?.icon || fallback?.flag || "🌐")
   };
 }
 
@@ -1053,6 +1107,40 @@ function prepareInputs() {
   UI.botSend?.classList.add("hidden");
 }
 
+
+function isIOSLike() {
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const iPadOS = platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  return /iPhone|iPad|iPod/i.test(ua) || iPadOS;
+}
+
+function fallbackFaceToFacePath() {
+  return isIOSLike() ? "facetoface_ios.html" : "facetoface.html";
+}
+
+function safeReferrerPath() {
+  try {
+    if (!document.referrer) return "";
+    const ref = new URL(document.referrer, location.href);
+    if (ref.origin !== location.origin) return "";
+    if (/\/pages\/turan_dilleri\.html$/i.test(ref.pathname)) return "";
+    return `${ref.pathname}${ref.search}${ref.hash}`;
+  } catch {
+    return "";
+  }
+}
+
+function goBackToSource() {
+  const ref = safeReferrerPath();
+  if (ref) {
+    location.href = ref;
+    return;
+  }
+
+  location.href = fallbackFaceToFacePath();
+}
+
 function bindEvents() {
   UI.topLangBtn?.addEventListener("click", () => {
     renderLangLists();
@@ -1089,11 +1177,11 @@ function bindEvents() {
 
   UI.homeLink?.addEventListener("click", (e) => {
     e.preventDefault();
-    location.href = "/pages/home.html";
+    goBackToSource();
   });
 
   UI.homeBtn?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
+    goBackToSource();
   });
 
   const clearConversation = (event) => {
