@@ -435,7 +435,10 @@ function getOtherSide(side) {
 }
 
 function getHandsFreeSide() {
-  if (DENEME_HANDS_FREE_SIDE === "auto") return isValidFaceSide(handsFreeNextSide) ? handsFreeNextSide : "bot";
+  // Dual-Ear Pro tek fiziksel mikrofon akışıyla çalışır.
+  // Kullanıcıya sırayla konuşma hissi vermemek için dinleme tarafını sabit tutar,
+  // konuşmanın hangi balona gideceğini ise metin/dil algılama belirler.
+  if (DENEME_HANDS_FREE_SIDE === "auto") return "bot";
   return DENEME_HANDS_FREE_SIDE;
 }
 
@@ -509,7 +512,9 @@ function resolveHandsFreeSpeakerSide(text, listeningSide) {
 function noteHandsFreeRoute(routedSide) {
   if (!isValidFaceSide(routedSide)) return;
   handsFreeLastRoutedSide = routedSide;
-  setHandsFreeNextSide(getOtherSide(routedSide));
+  // Yönlendirme dil algısıyla yapılır; dinleme animasyonu ve mikrofon hissi çift taraflı kalır.
+  // Bu yüzden sonraki dinlemeyi karşı tarafa zıplatmıyoruz.
+  setHandsFreeNextSide("bot");
 }
 
 function clearHandsFreeSilenceTimer() {
@@ -567,13 +572,18 @@ function isHandsFreeListening() {
 }
 
 function getHandsFreeButtons() {
-  return [handsFreeToggle, topHandsFreeToggle].filter(Boolean);
+  // Tek global toggle: alttaki Eller Serbest butonu iki tarafı birden yönetir.
+  return [handsFreeToggle].filter(Boolean);
 }
 
 function syncHandsFreeRuntimeUi() {
   const listening = isHandsFreeListening();
   document.body?.classList.toggle("handsfree-listening", listening);
   getHandsFreeButtons().forEach((btn) => btn.classList.toggle("listening", listening));
+
+  const bothActive = isHandsFreeModeEnabled();
+  [topMic, botMic].forEach((mic) => mic?.classList.toggle("handsfree-dual-active", bothActive));
+  [topComposer, botComposer].forEach((composer) => composer?.classList.toggle("handsfree-dual-active", bothActive));
 }
 
 function syncHandsFreeToggleUi() {
@@ -2280,9 +2290,6 @@ function startRecording(side, opts = {}) {
 
       if (handsFreeSession) {
         noteHandsFreeRoute(routedSide);
-        if (routedSide !== sideAtEnd) {
-          showToast(routedSide === "top" ? "Üst dil algılandı" : "Alt dil algılandı");
-        }
       }
 
       Promise.resolve()
