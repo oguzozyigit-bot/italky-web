@@ -99,7 +99,6 @@ const UI = {
 
   homeBtn: $("homeBtn"),
   homeLink: $("homeLink"),
-  clearBtn: $("clearBtn"),
 
   genericBackdrop: $("genericBackdrop"),
   genericTitle: $("genericTitle"),
@@ -153,78 +152,6 @@ function toast(msg = "") {
 function closeModal() {
   UI.genericBackdrop?.classList.remove("show");
   UI.genericBackdrop?.classList.remove("open");
-}
-
-
-
-function isIosLikeDevice() {
-  const ua = String(navigator.userAgent || "");
-  const platform = String(navigator.platform || "");
-  return /iPad|iPhone|iPod/i.test(ua) || (platform === "MacIntel" && Number(navigator.maxTouchPoints || 0) > 1);
-}
-
-function fallbackFaceToFaceHref() {
-  return isIosLikeDevice() ? "facetoface_ios.html" : "facetoface.html";
-}
-
-function getSafeReferrerHref() {
-  try {
-    const ref = String(document.referrer || "").trim();
-    if (!ref) return "";
-
-    const refUrl = new URL(ref, location.href);
-    const currentPath = String(location.pathname || "").replace(/\/g, "/");
-    const refPath = String(refUrl.pathname || "").replace(/\/g, "/");
-
-    if (refUrl.origin !== location.origin) return "";
-    if (refPath === currentPath) return "";
-
-    return refUrl.href;
-  } catch {
-    return "";
-  }
-}
-
-function navigateAwayFromMezo(targetHref, replace = false) {
-  const href = String(targetHref || fallbackFaceToFaceHref());
-  try {
-    if (replace) location.replace(href);
-    else location.href = href;
-  } catch {
-    location.href = href;
-  }
-}
-
-function goBackToPreviousPage() {
-  const fallbackHref = fallbackFaceToFaceHref();
-  const refHref = getSafeReferrerHref();
-
-  // iOS/iPadOS WebView bazen history.back() çağrısında aynı ekranda takılı kalıyor.
-  // Bu yüzden iOS'ta doğrudan güvenli referrer/fallback URL'ye gidiyoruz.
-  if (isIosLikeDevice()) {
-    navigateAwayFromMezo(refHref || fallbackHref, true);
-    return;
-  }
-
-  if (refHref) {
-    navigateAwayFromMezo(refHref);
-    return;
-  }
-
-  try {
-    if (window.history && window.history.length > 1) {
-      window.history.back();
-
-      // Bazı WebView'lerde back çağrısı sessizce başarısız olursa yedek çıkış.
-      window.setTimeout(() => {
-        const stillHere = /mezopotamyanin_dili\.html/i.test(String(location.pathname || ""));
-        if (stillHere) navigateAwayFromMezo(fallbackHref, true);
-      }, 650);
-      return;
-    }
-  } catch {}
-
-  navigateAwayFromMezo(fallbackHref);
 }
 
 function siteLang() {
@@ -1227,7 +1154,6 @@ function bindEvents() {
     UI.popBot?.classList.add("show");
   });
 
-
   UI.closeTop?.addEventListener("click", () => UI.popTop?.classList.remove("show"));
   UI.popTop?.addEventListener("click", (e) => {
     if (e.target === UI.popTop) UI.popTop.classList.remove("show");
@@ -1259,65 +1185,35 @@ function bindEvents() {
     e.stopPropagation();
   });
 
-  UI.homeLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    goBackToPreviousPage();
-  });
+  const getFaceToFaceFallbackUrl = () => {
+    const ua = String(navigator.userAgent || "");
+    const isiOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    return isiOS ? "facetoface_ios.html" : "facetoface.html";
+  };
 
-  UI.homeBtn?.addEventListener("click", () => {
-    goBackToPreviousPage();
-  });
-
-  const clearConversation = (event) => {
+  const goBackToPreviousPage = (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    if (UI.topInput) UI.topInput.value = "";
-    if (UI.botInput) UI.botInput.value = "";
 
-    stopAudio();
-    stopRecognition("top");
-    stopRecognition("bot");
-    clearBubbles();
+    const currentPath = String(location.pathname || "").replace(/\/+$/, "");
+    const referrer = String(document.referrer || "").trim();
 
-    UI.topKeyboardWrap?.classList.remove("show");
-    UI.botKeyboardWrap?.classList.remove("show");
-
-    syncComposerButtons();
-
-    document.body.classList.remove("is-translating", "is-error", "is-listening");
-    document.body.classList.add("is-ready");
-
-    pointOrbTo("bot");
-  };
-
-  window.mezoClearConversation = clearConversation;
-
-  const isClearEventTarget = (event) => {
     try {
-      const path = typeof event.composedPath === "function" ? event.composedPath() : [];
-      if (path.some((node) => node?.id === "clearBtn" || node?.classList?.contains?.("btn-clear"))) return true;
+      if (referrer) {
+        const refUrl = new URL(referrer, location.href);
+        const refPath = String(refUrl.pathname || "").replace(/\/+$/, "");
+        if (refUrl.origin === location.origin && refPath && refPath !== currentPath) {
+          location.href = refUrl.href;
+          return;
+        }
+      }
     } catch {}
 
-    const target = event.target?.closest?.("#clearBtn,.btn-clear");
-    return !!target;
+    location.href = getFaceToFaceFallbackUrl();
   };
 
-  const captureClearTap = (event) => {
-    if (!isClearEventTarget(event)) return;
-    clearConversation(event);
-  };
-
-  // iPad Safari/WebView tarafında click bazen gelmediği için touchstart/pointerup da dinlenir.
-  UI.clearBtn?.addEventListener("touchstart", clearConversation, { passive: false });
-  UI.clearBtn?.addEventListener("pointerdown", clearConversation, { passive: false });
-  UI.clearBtn?.addEventListener("pointerup", clearConversation, { passive: false });
-  UI.clearBtn?.addEventListener("touchend", clearConversation, { passive: false });
-  UI.clearBtn?.addEventListener("click", clearConversation, { passive: false });
-  document.addEventListener("touchstart", captureClearTap, { capture: true, passive: false });
-  document.addEventListener("pointerdown", captureClearTap, { capture: true, passive: false });
-  document.addEventListener("pointerup", captureClearTap, { capture: true, passive: false });
-  document.addEventListener("touchend", captureClearTap, { capture: true, passive: false });
-  document.addEventListener("click", captureClearTap, { capture: true, passive: false });
+  UI.homeLink?.addEventListener("click", goBackToPreviousPage);
+  UI.homeBtn?.addEventListener("click", goBackToPreviousPage);
 
   UI.genericCloseBtn?.addEventListener("click", closeModal);
   UI.genericBackdrop?.addEventListener("click", (e) => {
@@ -1334,7 +1230,6 @@ function bindEvents() {
     if (!insidePop && !isLangBtn) {
       UI.popTop?.classList.remove("show");
       UI.popBot?.classList.remove("show");
-      toggleFamilyNav(false);
     }
   }, { capture: true });
 }
