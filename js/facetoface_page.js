@@ -85,6 +85,11 @@ const DENEME_HANDS_FREE_AUDIO_GUARD_MS = 1800;
 const DENEME_HANDS_FREE_EMPTY_RESTART_LIMIT = 8;
 const F2F_HANDS_FREE_TIP_LOCAL_KEY = "f2f_handsfree_tip_dismissed_v1";
 const F2F_HANDS_FREE_TIP_PROFILE_FIELD = "handsfree_tip_dismissed";
+const F2F_HANDS_FREE_QUEUE_LIMIT = 5;
+const F2F_HANDS_FREE_DUPLICATE_TTL_MS = 6500;
+const F2F_HANDS_FREE_DUPLICATE_SIMILARITY = 0.92;
+const F2F_HANDS_FREE_ECHO_TTL_MS = 8000;
+const F2F_HANDS_FREE_ECHO_SIMILARITY = 0.84;
 
 
 // Dual-Ear Pro v0.3 — Soft Near Voice Gate
@@ -390,6 +395,11 @@ let handsFreeLastStartAt = 0;
 let handsFreeAudioGuardUntil = 0;
 let handsFreeNextSide = "bot";
 let handsFreeLastRoutedSide = "bot";
+let handsFreeTranslateQueue = [];
+let handsFreeQueueWorkerActive = false;
+let handsFreeQueueSeq = 0;
+let handsFreeLastTts = { text: "", at: 0 };
+let handsFreeLastAccepted = { text: "", side: "", at: 0 };
 
 let handsFreeGateStream = null;
 let handsFreeGateAudioCtx = null;
@@ -606,6 +616,141 @@ function setHandsFreeNextSide(side) {
 
 function getSideLang(side) {
   return side === "top" ? topLang : botLang;
+}
+
+
+function normalizeHandsFreeCompareText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9çğıöşü\u0600-\u06ff\u0400-\u04ff\u3040-\u30ff\u3400-\u9fff\s]+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function levenshteinDistance(a, b) {
+  const x = normalizeHandsFreeCompareText(a);
+  const y = normalizeHandsFreeCompareText(b);
+  if (x === y) return 0;
+  if (!x) return y.length;
+  if (!y) return x.length;
+
+  let prev = Array.from({ length: y.length + 1 }, (_, i) => i);
+  let curr = new Array(y.length + 1);
+
+  for (let i = 1; i <= x.length; i += 1) {
+    curr[0] = i;
+    const cx = x.charAt(i - 1);
+    for (let j = 1; j <= y.length; j += 1) {
+      const cost = cx === y.charAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(
+        curr[j - 1] + 1,
+        prev[j] + 1,
+        prev[j - 1] + cost
+      );
+    }
+    [prev, curr] = [curr, prev];
+  }
+
+  return prev[y.length];
+}
+
+function handsFreeTextSimilarity(a, b) {
+  const x = normalizeHandsFreeCompareText(a);
+  const y = normalizeHandsFreeCompareText(b);
+  if (!x || !y) return 0;
+  if (x === y) return 1;
+  const maxLen = Math.max(x.length, y.length, 1);
+  return 1 - (levenshteinDistance(x, y) / maxLen);
+}
+
+function rememberHandsFreeTts(text) {
+  const value = cleanupFinalTranscript(text);
+  if (!value) return;
+  handsFreeLastTts = { text: value, at: Date.now() };
+}
+
+function isHandsFreeLikelyEcho(text) {
+  const value = cleanupFinalTranscript(text);
+  if (!value || !handsFreeLastTts.text) return false;
+  if (Date.now() - handsFreeLastTts.at > F2F_HANDS_FREE_ECHO_TTL_MS) return false;
+  const sim = handsFreeTextSimilarity(value, handsFreeLastTts.text);
+  return sim >= F2F_HANDS_FREE_ECHO_SIMILARITY;
+}
+
+function isHandsFreeDuplicate(text, side) {
+  const value = cleanupFinalTranscript(text);
+  if (!value || !handsFreeLastAccepted.text) return false;
+  if (side !== handsFreeLastAccepted.side) return false;
+  if (Date.now() - handsFreeLastAccepted.at > F2F_HANDS_FREE_DUPLICATE_TTL_MS) return false;
+  const sim = handsFreeTextSimilarity(value, handsFreeLastAccepted.text);
+  return sim >= F2F_HANDS_FREE_DUPLICATE_SIMILARITY;
+}
+
+function enqueueHandsFreeTranscript(side, text, listeningSide, runId) {
+  const cleaned = cleanupFinalTranscript(text);
+  const routedSide = isValidFaceSide(side) ? side : (isValidFaceSide(listeningSide) ? listeningSide : "bot");
+  if (!cleaned) return false;
+
+  if (isHandsFreeLikelyEcho(cleaned)) {
+    console.warn("[F2F_HANDSFREE_QUEUE] echo discarded", { routedSide, listeningSide, text: cleaned });
+    return false;
+  }
+
+  if (isHandsFreeDuplicate(cleaned, routedSide)) {
+    console.warn("[F2F_HANDSFREE_QUEUE] duplicate discarded", { routedSide, listeningSide, text: cleaned });
+    return false;
+  }
+
+  handsFreeLastAccepted = { text: cleaned, side: routedSide, at: Date.now() };
+  handsFreeTranslateQueue.push({
+    id: ++handsFreeQueueSeq,
+    side: routedSide,
+    listeningSide: isValidFaceSide(listeningSide) ? listeningSide : routedSide,
+    text: cleaned,
+    runId: Number(runId || handsFreeRunId),
+    createdAt: Date.now()
+  });
+
+  while (handsFreeTranslateQueue.length > F2F_HANDS_FREE_QUEUE_LIMIT) {
+    handsFreeTranslateQueue.shift();
+  }
+
+  startHandsFreeQueueWorker();
+  return true;
+}
+
+function startHandsFreeQueueWorker() {
+  if (handsFreeQueueWorkerActive) return;
+  handsFreeQueueWorkerActive = true;
+  void processHandsFreeQueue();
+}
+
+async function processHandsFreeQueue() {
+  try {
+    while (handsFreeTranslateQueue.length) {
+      const item = handsFreeTranslateQueue.shift();
+      if (!item?.text || !isValidFaceSide(item.side)) continue;
+      if (item.runId !== handsFreeRunId) continue;
+
+      console.warn("[F2F_HANDSFREE_QUEUE] translate", {
+        id: item.id,
+        side: item.side,
+        listeningSide: item.listeningSide,
+        length: item.text.length
+      });
+
+      try {
+        await finalizeRecognition(item.side, item.text);
+      } catch (err) {
+        console.warn("[F2F_HANDSFREE_QUEUE] translate failed", err);
+      }
+    }
+  } finally {
+    handsFreeQueueWorkerActive = false;
+    if (handsFreeTranslateQueue.length) startHandsFreeQueueWorker();
+  }
 }
 
 function scoreTextForLanguage(text, lang) {
@@ -893,6 +1038,8 @@ function getHandsFreeVoiceGateStatus() {
 
 function isHandsFreeUiBusy() {
   if (recordingSide) return true;
+  // Pair Queue modunda çeviri/TTS arka planda yürürken mikrofon tekrar başlayabilsin.
+  if (isHandsFreeModeEnabled()) return false;
   if (frameRoot?.classList.contains("is-listening")) return true;
   if (frameRoot?.classList.contains("is-translating")) return true;
   return false;
@@ -935,6 +1082,9 @@ function stopHandsFreeLoop(opts = {}) {
   handsFreeEmptyEndCount = 0;
   handsFreeAudioGuardUntil = 0;
   clearHandsFreeTimers();
+  handsFreeTranslateQueue = [];
+  handsFreeQueueWorkerActive = false;
+  handsFreeLastAccepted = { text: "", side: "", at: 0 };
   syncHandsFreeToggleUi();
 
   if (opts.stopCurrent && isValidFaceSide(recordingSide)) {
@@ -950,8 +1100,8 @@ function scheduleHandsFreeRestart(reason = "cycle", delay = DENEME_HANDS_FREE_RE
   handsFreeRestartTimer = setTimeout(() => {
     handsFreeRestartTimer = null;
     if (runId !== handsFreeRunId || !isHandsFreeModeEnabled()) return;
-    if (isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) {
-      scheduleHandsFreeRestart(`${reason}:busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
+    if (recordingSide) {
+      scheduleHandsFreeRestart(`${reason}:mic-busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
       return;
     }
     void startHandsFreeLoop(reason);
@@ -1012,7 +1162,7 @@ function handleHandsFreeCycleEnd(side, hadText, runId) {
 
   if (hadText) {
     handsFreeEmptyEndCount = 0;
-    armHandsFreeAudioGuard();
+    // Çeviri ve TTS devam etse bile yeni konuşmayı kaçırmamak için yeniden dinlemeyi bekletme.
     scheduleHandsFreeRestart("after-final", DENEME_HANDS_FREE_RESTART_MS);
     return;
   }
@@ -1054,8 +1204,8 @@ async function startHandsFreeLoop(reason = "manual") {
     // Yakın Ses Filtresi best-effort çalışır. Başlatılamazsa Eller Serbest bozulmasın.
     await ensureHandsFreeVoiceGate();
 
-    if (isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) {
-      scheduleHandsFreeRestart(`${reason}:busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
+    if (recordingSide) {
+      scheduleHandsFreeRestart(`${reason}:mic-busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
       return false;
     }
 
@@ -1063,7 +1213,7 @@ async function startHandsFreeLoop(reason = "manual") {
     const waitFor = Math.max(0, 320 - (now - handsFreeLastStartAt));
     if (waitFor) await wait(waitFor);
 
-    if (runId !== handsFreeRunId || !isHandsFreeModeEnabled() || isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) return false;
+    if (runId !== handsFreeRunId || !isHandsFreeModeEnabled() || recordingSide) return false;
 
     handsFreeLastStartAt = Date.now();
     startRecording(side, { handsFree: true, runId });
@@ -1083,6 +1233,9 @@ function setHandsFreeMode(enabled, opts = {}) {
   if (next) {
     if (!previous) handsFreeRunId += 1;
     handsFreeEmptyEndCount = 0;
+    handsFreeTranslateQueue = [];
+    handsFreeQueueWorkerActive = false;
+    handsFreeLastAccepted = { text: "", side: "", at: 0 };
     clearHandsFreeTimers();
     if (!opts.silent) showToast("Çift taraflı Eller Serbest açık");
     void startHandsFreeLoop("toggle");
@@ -1111,6 +1264,9 @@ async function requestEnableHandsFreeMode(opts = {}) {
     return false;
   }
 
+  handsFreeTranslateQueue = [];
+  handsFreeQueueWorkerActive = false;
+  handsFreeLastAccepted = { text: "", side: "", at: 0 };
   setHandsFreeNextSide("bot");
   setHandsFreeMode(true);
   return true;
@@ -1153,6 +1309,8 @@ window.f2fHandsFreeState = {
   sync: syncHandsFreeToggleUi,
   getNextSide: () => handsFreeNextSide,
   routeText: (text, side = handsFreeNextSide) => resolveHandsFreeSpeakerSide(text, side),
+  queue: () => handsFreeTranslateQueue.map((item) => ({ id: item.id, side: item.side, length: item.text.length, ageMs: Date.now() - item.createdAt })),
+  echoSimilarity: (a, b) => handsFreeTextSimilarity(a, b),
   nearVoice: getHandsFreeVoiceGateStatus,
 };
 
@@ -1192,10 +1350,11 @@ function translationError(code, message, status = 0, detail = null) {
 }
 
 function handleTranslateError(error, latestRow, latestTxt) {
-  if (isHandsFreeModeEnabled()) setHandsFreeMode(false, { silent: true, stopCurrent: false });
+  const wasHandsFree = isHandsFreeModeEnabled();
   setErrorUI();
 
   if (error?.code === "INSUFFICIENT_TOKENS") {
+    if (wasHandsFree) setHandsFreeMode(false, { silent: true, stopCurrent: false });
     latestRow?.remove?.();
     showInsufficientTokens();
     return true;
@@ -1203,7 +1362,14 @@ function handleTranslateError(error, latestRow, latestTxt) {
 
   if (latestTxt) latestTxt.textContent = "Ceviri su anda tamamlanamadi";
   showToast("Ceviri su anda tamamlanamadi. Lutfen tekrar deneyin.");
-  bounceToReady(1200);
+
+  if (wasHandsFree) {
+    bounceToReady(500);
+    scheduleHandsFreeRestart("translate-error", 500);
+  } else {
+    bounceToReady(1200);
+  }
+
   return true;
 }
 
@@ -1401,6 +1567,7 @@ function setSystemReadyUI() {
   setFrameVisual("ready");
   restoreInputPlaceholder("top");
   restoreInputPlaceholder("bot");
+  if (isHandsFreeModeEnabled()) syncHandsFreeRuntimeUi();
 }
 
 function setSystemPreparingUI() {
@@ -1923,6 +2090,7 @@ async function speak(text, langCode, tone = "neutral") {
 
   const value = String(text || "").trim();
   if (!value) return;
+  if (isHandsFreeModeEnabled()) rememberHandsFreeTts(value);
   const spokenValue = sanitizeCensoredTextForTts(value);
 
   stopAudio();
@@ -2604,7 +2772,13 @@ function startRecording(side, opts = {}) {
       return;
     }
 
-    if (errorCode.includes("not-allowed")) showToast("Mikrofon izni gerekli");
+    if (handsFreeSession && !errorCode.includes("not-allowed") && !errorCode.includes("permission")) {
+      setSystemReadyUI();
+      handleHandsFreeCycleEnd(side, false, handsFreeRun);
+      return;
+    }
+
+    if (errorCode.includes("not-allowed") || errorCode.includes("permission")) showToast("Mikrofon izni gerekli");
     else showToast("Mikrofon hatası");
 
     setErrorUI();
@@ -2645,13 +2819,14 @@ function startRecording(side, opts = {}) {
 
       if (handsFreeSession) {
         noteHandsFreeRoute(routedSide);
+        enqueueHandsFreeTranscript(routedSide, finalText, sideAtEnd, handsFreeRun);
+        setSystemReadyUI();
+        handleHandsFreeCycleEnd(routedSide, true, handsFreeRun);
+        return;
       }
 
       Promise.resolve()
-        .then(() => finalizeRecognition(routedSide, finalText))
-        .finally(() => {
-          if (handsFreeSession) handleHandsFreeCycleEnd(routedSide, true, handsFreeRun);
-        });
+        .then(() => finalizeRecognition(routedSide, finalText));
       return;
     }
 
