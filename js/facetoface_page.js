@@ -9,6 +9,7 @@ import {
 
 const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
+const CLEAR_TRASH_FULL_CHAR_LIMIT = 1000;
 const API_BASE = "https://italky-api.onrender.com";
 const F2F_LIVE_CULTURAL_MODE_DISABLED = true;
 const $ = (id) => document.getElementById(id);
@@ -505,6 +506,29 @@ function showToast(msg = "") {
   window.__toastTimer = setTimeout(() => {
     miniToast.classList.remove("show");
   }, 1800);
+}
+
+function getConversationCharCount() {
+  const ignored = new Set(["Çeviriliyor...", "Ceviri su anda tamamlanamadi", "⚠️ Çeviri hatası"]);
+  const nodes = [
+    ...(topBody?.querySelectorAll?.(".bubble:not(.preview) .txt") || []),
+    ...(botBody?.querySelectorAll?.(".bubble:not(.preview) .txt") || [])
+  ];
+
+  return nodes.reduce((total, node) => {
+    const value = String(node?.textContent || "").replace(/\s+/g, " ").trim();
+    if (!value || ignored.has(value)) return total;
+    return total + value.length;
+  }, 0);
+}
+
+function syncClearTrashMeter() {
+  if (!clearBtn) return;
+  const count = getConversationCharCount();
+  const ratio = Math.max(0, Math.min(1, count / CLEAR_TRASH_FULL_CHAR_LIMIT));
+  clearBtn.style.setProperty("--clear-fill", ratio.toFixed(3));
+  clearBtn.classList.toggle("is-full", ratio >= 1);
+  clearBtn.setAttribute("title", `${Math.min(count, CLEAR_TRASH_FULL_CHAR_LIMIT)}/${CLEAR_TRASH_FULL_CHAR_LIMIT} karakter`);
 }
 
 function isCulturalModeEnabled() {
@@ -1968,6 +1992,7 @@ function addBubble(side, kind, text, opts = {}) {
   row.appendChild(inner);
   wrap.appendChild(row);
   keepLatestVisible(side);
+  requestAnimationFrame(syncClearTrashMeter);
   return row;
 }
 
@@ -2432,6 +2457,7 @@ async function typewriteText(el, finalText, side) {
 
     const lastChar = full.charAt(i - 1);
     keepLatestVisible(side);
+    syncClearTrashMeter();
 
     await wait(getTypingDelay(lastChar, i, full.length, full));
   }
@@ -3250,6 +3276,7 @@ function bindUtilityButtons() {
 
     if (topBody) topBody.innerHTML = "";
     if (botBody) botBody.innerHTML = "";
+    syncClearTrashMeter();
 
     if (topInput) {
       topInput.value = "";
@@ -3341,6 +3368,7 @@ function bindHandsFreeSafetyEvents() {
 
 function bind() {
   refreshLangLabels();
+  syncClearTrashMeter();
   unlockOnFirstTouch();
   bindCulturalToggle();
   bindHandsFreeTipModal();
