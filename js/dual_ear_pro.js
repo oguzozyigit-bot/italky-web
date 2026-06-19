@@ -183,8 +183,10 @@ export async function getDualEarProStatus(options = {}) {
 
     const bodySignal = getBodyClassSignal();
     const urlSignal = getUrlHelperSignal();
-    if (bodySignal.ok && urlSignal.ok) {
-      return { ok: true, reason: "ready", headsetLikely: true, source: bodySignal.source };
+    // Body class veya URL mode=bluetooth tek başına kulaklık kanıtı sayılmaz.
+    // Bunlar sadece debug/diagnostic sinyaldir; gerçek izin premium modül veya cihaz etiketiyle verilir.
+    if (bodySignal.ok || urlSignal.ok) {
+      console.debug("[DualEarPro] Yardimci sinyal var ama kulaklik kaniti degil", { bodySignal, urlSignal });
     }
 
     const deviceSignal = await hasHeadsetDeviceLabel();
@@ -211,7 +213,7 @@ export function getDualEarProBlockedMessage(reason = "unknown_error") {
     mic_permission_denied: "Mikrofon izni verilmeden Eller Serbest açılamaz.",
     offline_mode: "Eller Serbest şu anda online modda kullanılabilir.",
     busy: "Devam eden dinleme bitince tekrar deneyin.",
-    headset_not_detected: "Eller Serbest için kulaklık bağlantısı önerilir.",
+    headset_not_detected: "Eller Serbest için kulaklık bağlantısı gerekli.",
     unknown_error: "Eller Serbest şu anda başlatılamadı.",
     ready: "Eller Serbest hazır."
   };
