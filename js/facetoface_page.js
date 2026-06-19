@@ -90,6 +90,47 @@ const F2F_HANDS_FREE_DUPLICATE_TTL_MS = 6500;
 const F2F_HANDS_FREE_DUPLICATE_SIMILARITY = 0.92;
 const F2F_HANDS_FREE_ECHO_TTL_MS = 8000;
 const F2F_HANDS_FREE_ECHO_SIMILARITY = 0.84;
+const F2F_HANDS_FREE_COMMAND_ENABLED = true;
+const F2F_HANDS_FREE_COMMAND_DEFAULT_SIDE = "top";
+const F2F_HANDS_FREE_COMMAND_WAKE_ALIASES = [
+  // Ana tetikleme: "Hey Can". SpeechRecognition farklı dillerde Can'ı
+  // cen/ken/kan/chen gibi yazabildiği için fonetik varyantlar da kabul edilir.
+  "hey can",
+  "hey cen",
+  "hey ken",
+  "hey kan",
+  "hey jan",
+  "hey gen",
+  "hey chen",
+  "hey chan",
+  "hey jain",
+  "hey jane",
+  "hay can",
+  "hay cen",
+  "hay ken",
+  "hay kan",
+  "he can",
+  "he cen",
+  "he ken",
+  "he kan",
+  "ey can",
+  "ey cen",
+  "ey ken",
+  "ey kan",
+  "e can",
+  "e ken",
+  "ok can",
+  "okay can",
+  "oke can",
+  "hey italky",
+  "hey italkyai",
+  "hey i talky",
+  "hey talky",
+  "hey talkie",
+  "italky",
+  "italkyai",
+  "i talky"
+];
 
 
 // Dual-Ear Pro v0.3 — Soft Near Voice Gate
@@ -616,6 +657,246 @@ function setHandsFreeNextSide(side) {
 
 function getSideLang(side) {
   return side === "top" ? topLang : botLang;
+}
+
+function normalizeVoiceCommandText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/ı/g, "i")
+    .replace(/İ/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/Ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/Ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/Ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/Ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/Ç/g, "c")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeRegExp(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getVoiceCommandLanguageAliasMap() {
+  return {
+    tr: ["turkce", "turkceye", "turk", "turkish", "turk dili"],
+    en: ["ingilizce", "ingilizceye", "ingiliz", "english", "englis", "inglish", "ingilis", "british", "ingiliz dili", "english language"],
+    de: ["almanca", "almancaya", "almaca", "alamanca", "alman", "almanya", "german", "germany", "deutsch", "deutsche", "alman dili", "german language"],
+    fr: ["fransizca", "fransizcaya", "fransiz", "french", "francais", "français", "fransiz dili", "french language"],
+    it: ["italyanca", "italyancaya", "italyan", "italian", "italiano", "italyan dili"],
+    es: ["ispanyolca", "ispanyolcaya", "ispanyol", "spanish", "espanol", "ispanyol dili"],
+    ar: ["arapca", "arapcaya", "arap", "arabic", "arabi", "arap dili"],
+    ru: ["rusca", "ruscaya", "rus", "russian", "rus dili"],
+    bg: ["bulgarca", "bulgarcaya", "bulgar", "bulgarian", "bulgar dili"],
+    pt: ["portekizce", "portekizceye", "portekiz", "portuguese", "portugues"],
+    zh: ["cince", "cinceye", "cin", "chinese", "mandarin", "cin dili"],
+    ja: ["japonca", "japoncaya", "japon", "japanese", "japon dili"],
+    ko: ["korece", "koreceye", "kore", "korean", "kore dili"],
+    nl: ["hollandaca", "hollandacaya", "hollanda", "dutch", "flemenkce"],
+    pl: ["lehce", "lehceye", "polish", "polonya dili"],
+    uk: ["ukraynaca", "ukraynacaya", "ukrayna", "ukrainian"],
+    fa: ["farsca", "farscaya", "fars", "persian", "farsi"],
+    hi: ["hintce", "hintceye", "hindi", "hint dili"],
+    ur: ["urduca", "urduya", "urdu"],
+    ro: ["romence", "romenceye", "romen", "romanian", "rumence"],
+    el: ["yunanca", "yunancaya", "yunan", "greek", "yunan dili"],
+    he: ["ibranice", "ibraniceye", "ibrani", "hebrew", "ivrit"],
+    id: ["endonezce", "endonezceye", "endonez", "indonesian"],
+    vi: ["vietnamca", "vietnamcaya", "vietnam", "vietnamese"],
+    th: ["tayca", "taycaya", "thai"],
+    sq: ["arnavutca", "arnavutcaya", "arnavut", "albanian"],
+    bs: ["bosnakca", "bosnakcaya", "bosnak", "bosnian"],
+    sr: ["sirpca", "sirpcaya", "sirp", "serbian"],
+    hr: ["hirvatca", "hirvatcaya", "hirvat", "croatian"],
+    mk: ["makedonca", "makedoncaya", "makedon", "macedonian"],
+    sl: ["slovence", "slovenceye", "sloven", "slovenian"],
+    ka: ["gurcuce", "gurcuceye", "gurcu", "georgian"],
+    hy: ["ermenice", "ermeniceye", "ermeni", "armenian"],
+    az: ["azerice", "azericeye", "azerbaycanca", "azerbaycan", "azerbaijani"],
+    kk: ["kazakca", "kazakcaya", "kazak", "kazakh"],
+    ky: ["kirgizca", "kirgizcaya", "kirgiz", "kyrgyz"],
+    uz: ["ozbekce", "ozbekceye", "ozbek", "uzbek"],
+    tk: ["turkmence", "turkmenceye", "turkmen"],
+    ug: ["uygurca", "uygurcaya", "uygur", "uyghur"],
+    tt: ["tatarca", "tatarcaya", "tatar"],
+    ku: ["kurtce", "kurtceye", "kurt", "kurdish"],
+    kmr: ["kurmanci", "kurmancice", "kurmanciceye"],
+    ckb: ["sorani", "soranice", "soraniceye"]
+  };
+}
+
+function buildVoiceCommandLanguageAliases() {
+  const hardcoded = getVoiceCommandLanguageAliasMap();
+  const aliases = [];
+  const seen = new Set();
+
+  LANGS.forEach((item) => {
+    const code = canonical(item?.code);
+    if (!code) return;
+
+    const values = [
+      item?.name,
+      item?.tr_name,
+      item?.nativeName,
+      ...(hardcoded[code] || [])
+    ];
+
+    values.forEach((value) => {
+      const alias = normalizeVoiceCommandText(value);
+      if (!alias || alias.length < 3) return;
+      const key = `${code}:${alias}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      aliases.push({ code, alias, exact: false });
+    });
+
+    // Kısa dil kodlarını sadece tam kelime olarak kabul ediyoruz; böylece "de" gibi kelimeler
+    // yanlışlıkla Almanca komutu sayılmaz.
+    if (code.length >= 3) {
+      const key = `${code}:${code}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        aliases.push({ code, alias: code, exact: true });
+      }
+    }
+  });
+
+  return aliases.sort((a, b) => b.alias.length - a.alias.length);
+}
+
+function stripHandsFreeCommandWake(text) {
+  const norm = normalizeVoiceCommandText(text);
+  if (!norm) return "";
+
+  const wakeAliases = F2F_HANDS_FREE_COMMAND_WAKE_ALIASES
+    .map(normalizeVoiceCommandText)
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+
+  for (const wake of wakeAliases) {
+    if (norm === wake) return "";
+    if (norm.startsWith(`${wake} `)) return norm.slice(wake.length).trim();
+  }
+
+  return "";
+}
+
+function detectHandsFreeCommandSide(body) {
+  const norm = normalizeVoiceCommandText(body);
+
+  if (/\b(alt dil|alt dili|alt tarafi|asagi dil|asagidaki dil|asagi|bottom|lower|lower language|bottom language)\b/.test(norm)) {
+    return "bot";
+  }
+
+  // Kullanıcı sadece "Hey Can Almanca" / "Hey Cen English" derse varsayılan üst dil değişir.
+  if (/\b(ust dil|ust dili|ust tarafi|yukari dil|yukaridaki dil|yukari|top|upper|upper language|top language)\b/.test(norm)) {
+    return "top";
+  }
+
+  return F2F_HANDS_FREE_COMMAND_DEFAULT_SIDE;
+}
+
+function findHandsFreeCommandLanguage(body) {
+  const norm = normalizeVoiceCommandText(body);
+  if (!norm) return "";
+
+  for (const item of buildVoiceCommandLanguageAliases()) {
+    if (!item?.alias || !langExists(item.code)) continue;
+
+    if (item.exact) {
+      const re = new RegExp(`(^|\\s)${escapeRegExp(item.alias)}(\\s|$)`, "i");
+      if (re.test(norm)) return canonical(item.code);
+      continue;
+    }
+
+    if (norm.includes(item.alias)) return canonical(item.code);
+  }
+
+  return "";
+}
+
+function parseHandsFreeVoiceCommand(text) {
+  if (!F2F_HANDS_FREE_COMMAND_ENABLED) return null;
+
+  const body = stripHandsFreeCommandWake(text);
+  if (!body) return null;
+
+  const code = findHandsFreeCommandLanguage(body);
+  if (!code) return null;
+
+  return {
+    type: "set-language",
+    side: detectHandsFreeCommandSide(body),
+    code,
+    body,
+    rawText: String(text || "")
+  };
+}
+
+function getVoiceCommandSideLabel(side) {
+  return side === "top" ? "Üst dil" : "Alt dil";
+}
+
+function applyHandsFreeVoiceCommand(command) {
+  if (!command || command.type !== "set-language") return false;
+
+  const side = isValidFaceSide(command.side) ? command.side : F2F_HANDS_FREE_COMMAND_DEFAULT_SIDE;
+  const code = canonical(command.code);
+  if (!code || !langExists(code)) {
+    showToast("Bu dil bu sayfada desteklenmiyor");
+    return true;
+  }
+
+  const otherLang = side === "top" ? botLang : topLang;
+  if (canonical(otherLang) === code) {
+    showToast(`${getVoiceCommandSideLabel(side)} ${langObj(code).name} olamaz; iki taraf aynı dil seçilemez`);
+    return true;
+  }
+
+  if (side === "top") {
+    topLang = code;
+    window.topLang = topLang;
+  } else {
+    botLang = code;
+    window.botLang = botLang;
+  }
+
+  persistFaceToFaceLangs();
+  refreshLangLabels();
+  renderKeyboard("top");
+  renderKeyboard("bot");
+  closeAllPop();
+  setHandsFreeNextSide(side);
+
+  if (currentRuntimeMode === "offline" && !hasInstalledOfflinePair(topLang, botLang) && canonical(topLang) !== canonical(botLang)) {
+    showToast(`${getVoiceCommandSideLabel(side)} ${langObj(code).name} oldu; bu çift offline hazır değil`);
+  } else {
+    showToast(`${getVoiceCommandSideLabel(side)} ${labelChip(code)} oldu`);
+  }
+
+  return true;
+}
+
+function handleHandsFreeVoiceCommand(text) {
+  const command = parseHandsFreeVoiceCommand(text);
+  if (!command) return false;
+
+  console.warn("[F2F_HANDSFREE_COMMAND] handled", {
+    side: command.side,
+    code: command.code,
+    body: command.body,
+    rawText: command.rawText
+  });
+
+  return applyHandsFreeVoiceCommand(command);
 }
 
 
@@ -2807,6 +3088,14 @@ function startRecording(side, opts = {}) {
     latestPreviewTranscript = "";
 
     if (finalText) {
+      if (handleHandsFreeVoiceCommand(finalText)) {
+        setSystemReadyUI();
+        if (handsFreeSession) {
+          handleHandsFreeCycleEnd(sideAtEnd, true, handsFreeRun);
+        }
+        return;
+      }
+
       if (handsFreeSession && shouldDropHandsFreeTranscriptByVoiceGate(finalText, handsFreeNearVoiceSeenInSession)) {
         setSystemReadyUI();
         handleHandsFreeCycleEnd(sideAtEnd, false, handsFreeRun);
