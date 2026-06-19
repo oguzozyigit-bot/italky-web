@@ -99,6 +99,17 @@ const F2F_HANDS_FREE_COMMAND_WAKE_ALIASES = [
   "hey cen",
   "hey ken",
   "hey kan",
+  "hey kaan",
+  "hey cem",
+  "hey cam",
+  "hey jam",
+  "hey john",
+  "hey jhon",
+  "hey con",
+  "hey sen",
+  "hey san",
+  "hey cin",
+  "hey jin",
   "hey jan",
   "hey gen",
   "hey chen",
@@ -109,16 +120,36 @@ const F2F_HANDS_FREE_COMMAND_WAKE_ALIASES = [
   "hay cen",
   "hay ken",
   "hay kan",
+  "hay kaan",
+  "hay cem",
+  "hay cam",
+  "hay ken",
+  "hay john",
   "he can",
   "he cen",
   "he ken",
   "he kan",
+  "he cem",
+  "he cam",
+  "he john",
+  "hi can",
+  "hi cen",
+  "hi ken",
+  "hi kan",
   "ey can",
   "ey cen",
   "ey ken",
   "ey kan",
   "e can",
   "e ken",
+  "heycan",
+  "heycen",
+  "heyken",
+  "heykan",
+  "heycem",
+  "heycam",
+  "heyjohn",
+  "heyitalky",
   "ok can",
   "okay can",
   "oke can",
@@ -786,7 +817,30 @@ function stripHandsFreeCommandWake(text) {
     if (norm.startsWith(`${wake} `)) return norm.slice(wake.length).trim();
   }
 
+  // SpeechRecognition bazen "Hey Can"ı "heycan", "hey ken", "hey cem",
+  // "hey john" veya "hey sen" gibi yazabiliyor. Bu yüzden tetiklemeyi
+  // başta ve fonetik yakalıyoruz; gövde yine dil alias'ıyla doğrulanacak.
+  const phoneticWake = /^(?:(?:hey|hay|he|hi|ey|e|ok|okay|oke)\s*)?(?:can|cen|ken|kan|kaan|jan|gen|chen|chan|cem|cam|jam|john|jhon|con|sen|san|cin|jin|cane|cani|canim)\b\s*/i;
+  const match = norm.match(phoneticWake);
+  if (match && match[0]) {
+    const body = norm.slice(match[0].length).trim();
+    // "can you" gibi normal İngilizce cümleleri yanlış komut saymayalım:
+    // başında hey/ok/hi yoksa ancak ardından desteklenen dil adı varsa kabul edilir.
+    const hasExplicitWake = /^(hey|hay|he|hi|ey|e|ok|okay|oke)/i.test(match[0]);
+    if (hasExplicitWake || body) return body;
+  }
+
   return "";
+}
+
+function stripLooseHandsFreeCommandWake(text) {
+  const norm = normalizeVoiceCommandText(text);
+  if (!norm) return "";
+
+  // Bazı cihazlar "hey" kısmını düşürüp sadece "ken almanca" bırakabiliyor.
+  // Bunu sadece arkasında gerçek dil adı varsa parseHandsFreeVoiceCommand kabul eder.
+  const loose = norm.match(/^(?:can|cen|ken|kan|kaan|jan|gen|chen|chan|cem|cam|jam|john|jhon|con|sen|san|cin|jin|cane|cani|canim)\s+(.+)$/i);
+  return loose?.[1]?.trim?.() || "";
 }
 
 function detectHandsFreeCommandSide(body) {
@@ -826,11 +880,19 @@ function findHandsFreeCommandLanguage(body) {
 function parseHandsFreeVoiceCommand(text) {
   if (!F2F_HANDS_FREE_COMMAND_ENABLED) return null;
 
-  const body = stripHandsFreeCommandWake(text);
-  if (!body) return null;
+  let body = stripHandsFreeCommandWake(text);
+  let code = body ? findHandsFreeCommandLanguage(body) : "";
 
-  const code = findHandsFreeCommandLanguage(body);
-  if (!code) return null;
+  if (!code) {
+    const looseBody = stripLooseHandsFreeCommandWake(text);
+    const looseCode = looseBody ? findHandsFreeCommandLanguage(looseBody) : "";
+    if (looseCode) {
+      body = looseBody;
+      code = looseCode;
+    }
+  }
+
+  if (!body || !code) return null;
 
   return {
     type: "set-language",
@@ -2968,6 +3030,7 @@ function startRecording(side, opts = {}) {
   const mySessionId = ++recognitionSessionId;
   let recognitionFinished = false;
   let handsFreeNearVoiceSeenInSession = false;
+  let handsFreeCommandCandidateSeen = false;
 
   const markFinished = () => {
     if (recognitionFinished) return false;
@@ -3017,6 +3080,13 @@ function startRecording(side, opts = {}) {
     const txtEl = previewNode?.querySelector(".txt");
     if (txtEl) txtEl.textContent = builtText;
     keepLatestVisible(side);
+
+    if (handsFreeSession && !handsFreeCommandCandidateSeen && parseHandsFreeVoiceCommand(builtText)) {
+      handsFreeCommandCandidateSeen = true;
+      latestPreviewTranscript = builtText;
+      try { stopRecognizer(); } catch {}
+      return;
+    }
 
     if (handsFreeSession) {
       scheduleHandsFreeSilenceStop(side, mySessionId, handsFreeRun);
