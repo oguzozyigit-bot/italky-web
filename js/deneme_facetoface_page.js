@@ -81,6 +81,12 @@ const DENEME_HANDS_FREE_RESTART_MS = 650;
 const DENEME_HANDS_FREE_BUSY_RETRY_MS = 850;
 const DENEME_HANDS_FREE_AUDIO_GUARD_MS = 1800;
 const DENEME_HANDS_FREE_EMPTY_RESTART_LIMIT = 4;
+const NEAR_VOICE_CALIBRATION_MS = 1200;
+const NEAR_VOICE_MIN_ACTIVE_MS = 180;
+const NEAR_VOICE_THRESHOLD_FLOOR = 0.026;
+const NEAR_VOICE_THRESHOLD_MULTIPLIER = 3.1;
+const NEAR_VOICE_THRESHOLD_MARGIN = 0.018;
+const NEAR_VOICE_HINT_INTERVAL_MS = 2200;
 const F2F_AUTO_READ_KEY = "italkyai_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
 const SHARED_VOICE_ID_KEY = "italkyai_selected_voice_id";
@@ -369,6 +375,11 @@ let handsFreeAudioGuardUntil = 0;
 let handsFreeNextSide = "bot";
 let handsFreeLastRoutedSide = "bot";
 
+let nearVoiceFilter = null;
+let nearVoiceStartingPromise = null;
+let nearVoiceAcceptedAt = 0;
+let nearVoiceLastHintAt = 0;
+
 function showToast(msg = "") {
   if (!miniToast) return;
   miniToast.textContent = String(msg || "");
@@ -377,6 +388,235 @@ function showToast(msg = "") {
   window.__toastTimer = setTimeout(() => {
     miniToast.classList.remove("show");
   }, 1800);
+}
+
+function getRmsFromTimeDomain(data) {
+  if (!data?.length) return 0;
+  let sum = 0;
+  for (let i = 0; i < data.length; i += 1) {
+    const centered = (Number(data[i]) - 128) / 128;
+    sum += centered * centered;
+  }
+  return Math.sqrt(sum / data.length);
+}
+
+function createNearVoiceState() {
+  return {
+    active: false,
+    bypass: false,
+    stream: null,
+    audioCtx: null,
+    source: null,
+    analyser: null,
+    data: null,
+    rafId: 0,
+    startedAt: 0,
+    calibrated: false,
+    ambientSamples: [],
+    ambientRms: 0,
+    threshold: NEAR_VOICE_THRESHOLD_FLOOR,
+    currentRms: 0,
+    peakRms: 0,
+    firstAboveAt: 0,
+    lastAboveAt: 0,
+    speechAccepted: false,
+    calibrationPromise: null,
+    resolveCalibration: null,
+  };
+}
+
+function computeNearVoiceThreshold(samples) {
+  const clean = (Array.isArray(samples) ? samples : [])
+    .filter((v) => Number.isFinite(v) && v >= 0)
+    .sort((a, b) => a - b);
+
+  if (!clean.length) {
+    return { ambient: 0, threshold: NEAR_VOICE_THRESHOLD_FLOOR };
+  }
+
+  const trimCount = Math.max(1, Math.floor(clean.length * 0.72));
+  const trimmed = clean.slice(0, trimCount);
+  const ambient = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
+  const threshold = Math.max(
+    NEAR_VOICE_THRESHOLD_FLOOR,
+    ambient * NEAR_VOICE_THRESHOLD_MULTIPLIER,
+    ambient + NEAR_VOICE_THRESHOLD_MARGIN
+  );
+
+  return { ambient, threshold };
+}
+
+function resolveNearVoiceCalibration() {
+  try { nearVoiceFilter?.resolveCalibration?.(true); } catch {}
+  if (nearVoiceFilter) nearVoiceFilter.resolveCalibration = null;
+}
+
+function resetNearVoiceGateSession() {
+  nearVoiceAcceptedAt = 0;
+  nearVoiceLastHintAt = 0;
+
+  if (!nearVoiceFilter) return;
+  nearVoiceFilter.peakRms = 0;
+  nearVoiceFilter.firstAboveAt = 0;
+  nearVoiceFilter.lastAboveAt = 0;
+  nearVoiceFilter.speechAccepted = false;
+}
+
+function nearVoiceSampleLoop() {
+  const state = nearVoiceFilter;
+  if (!state?.active || !state.analyser || !state.data) return;
+
+  try {
+    state.analyser.getByteTimeDomainData(state.data);
+    const rms = getRmsFromTimeDomain(state.data);
+    const now = Date.now();
+
+    state.currentRms = rms;
+    state.peakRms = Math.max(state.peakRms || 0, rms);
+
+    if (!state.calibrated) {
+      state.ambientSamples.push(rms);
+      if (now - state.startedAt >= NEAR_VOICE_CALIBRATION_MS) {
+        const computed = computeNearVoiceThreshold(state.ambientSamples);
+        state.ambientRms = computed.ambient;
+        state.threshold = computed.threshold;
+        state.calibrated = true;
+        document.body?.classList.add("near-voice-ready");
+        resolveNearVoiceCalibration();
+      }
+    } else {
+      const above = rms >= state.threshold;
+      if (above) {
+        state.firstAboveAt = state.firstAboveAt || now;
+        state.lastAboveAt = now;
+        if (!state.speechAccepted && now - state.firstAboveAt >= NEAR_VOICE_MIN_ACTIVE_MS) {
+          state.speechAccepted = true;
+          nearVoiceAcceptedAt = now;
+          document.body?.classList.add("near-voice-detected");
+        }
+      } else if (!state.speechAccepted) {
+        state.firstAboveAt = 0;
+      }
+    }
+  } catch (error) {
+    console.debug("[NearVoice] sample loop", error);
+  }
+
+  state.rafId = requestAnimationFrame(nearVoiceSampleLoop);
+}
+
+function stopNearVoiceFilter() {
+  const state = nearVoiceFilter;
+  nearVoiceFilter = null;
+  nearVoiceStartingPromise = null;
+  nearVoiceAcceptedAt = 0;
+  nearVoiceLastHintAt = 0;
+  document.body?.classList.remove("near-voice-ready", "near-voice-detected");
+
+  if (!state) return;
+
+  try { if (state.rafId) cancelAnimationFrame(state.rafId); } catch {}
+  try { state.stream?.getTracks?.().forEach((track) => track.stop()); } catch {}
+  try { state.source?.disconnect?.(); } catch {}
+  try { state.analyser?.disconnect?.(); } catch {}
+  try { state.audioCtx?.close?.(); } catch {}
+  try { state.resolveCalibration?.(false); } catch {}
+}
+
+async function startNearVoiceFilter() {
+  if (currentRuntimeMode !== "online") return false;
+  if (!navigator.mediaDevices?.getUserMedia) return false;
+
+  if (nearVoiceFilter?.active) return true;
+  if (nearVoiceStartingPromise) return nearVoiceStartingPromise;
+
+  nearVoiceStartingPromise = (async () => {
+    stopNearVoiceFilter();
+
+    const state = createNearVoiceState();
+    nearVoiceFilter = state;
+
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) throw new Error("audio_context_missing");
+
+      state.stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: false
+        }
+      });
+
+      state.audioCtx = new Ctx();
+      if (state.audioCtx.state === "suspended") {
+        try { await state.audioCtx.resume(); } catch {}
+      }
+
+      state.source = state.audioCtx.createMediaStreamSource(state.stream);
+      state.analyser = state.audioCtx.createAnalyser();
+      state.analyser.fftSize = 512;
+      state.analyser.smoothingTimeConstant = 0.18;
+      state.data = new Uint8Array(state.analyser.fftSize);
+      state.source.connect(state.analyser);
+      state.startedAt = Date.now();
+      state.active = true;
+      state.calibrationPromise = new Promise((resolve) => {
+        state.resolveCalibration = resolve;
+      });
+
+      nearVoiceSampleLoop();
+      return true;
+    } catch (error) {
+      console.warn("[NearVoice] Yakın ses filtresi başlatılamadı; mevcut hands-free akışı bypass ediliyor.", error);
+      if (nearVoiceFilter === state) {
+        state.bypass = true;
+        state.active = false;
+        state.calibrated = true;
+        state.speechAccepted = true;
+        resolveNearVoiceCalibration();
+      }
+      return false;
+    } finally {
+      nearVoiceStartingPromise = null;
+    }
+  })();
+
+  return nearVoiceStartingPromise;
+}
+
+async function ensureNearVoiceFilterReady() {
+  const started = await startNearVoiceFilter();
+  const state = nearVoiceFilter;
+  if (!started || !state || state.bypass) return false;
+
+  if (!state.calibrated && state.calibrationPromise) {
+    await Promise.race([
+      state.calibrationPromise,
+      new Promise((resolve) => setTimeout(() => resolve(false), NEAR_VOICE_CALIBRATION_MS + 700))
+    ]);
+  }
+
+  return !!nearVoiceFilter?.calibrated;
+}
+
+function isNearVoiceTranscriptAllowed() {
+  const state = nearVoiceFilter;
+  if (!state || state.bypass || !state.active || !state.calibrated) return true;
+  return !!state.speechAccepted;
+}
+
+function shouldRejectNearVoiceFinal() {
+  const state = nearVoiceFilter;
+  if (!state || state.bypass || !state.active || !state.calibrated) return false;
+  return !state.speechAccepted;
+}
+
+function maybeShowNearVoiceHint(side = "bot") {
+  const now = Date.now();
+  if (now - nearVoiceLastHintAt < NEAR_VOICE_HINT_INTERVAL_MS) return;
+  nearVoiceLastHintAt = now;
+  setInputPlaceholder(side, "Yakın konuşma bekleniyor…");
 }
 
 function isCulturalModeEnabled() {
@@ -604,6 +844,7 @@ function stopHandsFreeLoop(opts = {}) {
   handsFreeEmptyEndCount = 0;
   handsFreeAudioGuardUntil = 0;
   clearHandsFreeTimers();
+  stopNearVoiceFilter();
   syncHandsFreeToggleUi();
 
   if (opts.stopCurrent && isValidFaceSide(recordingSide)) {
@@ -731,6 +972,12 @@ async function startHandsFreeLoop(reason = "manual") {
 
     if (runId !== handsFreeRunId || !isHandsFreeModeEnabled() || isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) return false;
 
+    const nearReady = await ensureNearVoiceFilterReady();
+    if (nearReady && runId === handsFreeRunId && isHandsFreeModeEnabled()) {
+      resetNearVoiceGateSession();
+      setInputPlaceholder(side, "Yakın konuşma bekleniyor…");
+    }
+
     handsFreeLastStartAt = Date.now();
     startRecording(side, { handsFree: true, runId });
     return true;
@@ -750,7 +997,7 @@ function setHandsFreeMode(enabled, opts = {}) {
     if (!previous) handsFreeRunId += 1;
     handsFreeEmptyEndCount = 0;
     clearHandsFreeTimers();
-    if (!opts.silent) showToast("Çift taraflı Eller Serbest açık");
+    if (!opts.silent) showToast("Çift taraflı Eller Serbest açık · Yakın Ses Filtresi hazırlanıyor");
     void startHandsFreeLoop("toggle");
     return;
   }
@@ -812,6 +1059,15 @@ window.f2fHandsFreeState = {
   sync: syncHandsFreeToggleUi,
   getNextSide: () => handsFreeNextSide,
   routeText: (text, side = handsFreeNextSide) => resolveHandsFreeSpeakerSide(text, side),
+  nearVoice: () => ({
+    active: !!nearVoiceFilter?.active,
+    calibrated: !!nearVoiceFilter?.calibrated,
+    accepted: !!nearVoiceFilter?.speechAccepted,
+    currentRms: Number(nearVoiceFilter?.currentRms || 0),
+    peakRms: Number(nearVoiceFilter?.peakRms || 0),
+    ambientRms: Number(nearVoiceFilter?.ambientRms || 0),
+    threshold: Number(nearVoiceFilter?.threshold || 0),
+  }),
 };
 
 function showUiModal(message, title = "Jeton Gerekli") {
@@ -1946,10 +2202,11 @@ function getPreviewText(side) {
   return String(body?.querySelector(".bubble.preview .txt")?.textContent || "").trim();
 }
 
-function buildStableTranscript(results) {
+function buildStableTranscript(results, startIndex = 0) {
   const pieces = [];
+  const start = Math.max(0, Number(startIndex) || 0);
 
-  for (let i = 0; i < results.length; i++) {
+  for (let i = start; i < results.length; i++) {
     const chunk = String(results[i]?.[0]?.transcript || "").replace(/\s+/g, " ").trim();
     if (!chunk) continue;
 
@@ -2174,6 +2431,7 @@ function startRecording(side, opts = {}) {
 
   const mySessionId = ++recognitionSessionId;
   let recognitionFinished = false;
+  let handsFreeAcceptedResultIndex = null;
 
   const markFinished = () => {
     if (recognitionFinished) return false;
@@ -2195,7 +2453,7 @@ function startRecording(side, opts = {}) {
     setListeningUI(side);
     if (handsFreeSession) {
       syncHandsFreeRuntimeUi();
-      setInputPlaceholder(side, "Eller Serbest dinliyor…");
+      setInputPlaceholder(side, nearVoiceFilter?.calibrated ? "Yakın konuşma bekleniyor…" : "Yakın Ses Filtresi hazırlanıyor…");
       scheduleHandsFreeMaxListenStop(side, mySessionId, handsFreeRun);
     }
   };
@@ -2203,7 +2461,17 @@ function startRecording(side, opts = {}) {
   rec.onresult = (e) => {
     if (mySessionId !== recognitionSessionId) return;
 
-    const builtText = buildStableTranscript(e.results);
+    if (handsFreeSession && !isNearVoiceTranscriptAllowed()) {
+      maybeShowNearVoiceHint(side);
+      return;
+    }
+
+    if (handsFreeSession && handsFreeAcceptedResultIndex === null) {
+      handsFreeAcceptedResultIndex = Math.max(0, Number(e.resultIndex) || 0);
+      document.body?.classList.add("near-voice-detected");
+    }
+
+    const builtText = buildStableTranscript(e.results, handsFreeSession ? handsFreeAcceptedResultIndex : 0);
     if (!builtText) return;
 
     liveTranscript = builtText;
@@ -2271,9 +2539,14 @@ function startRecording(side, opts = {}) {
     clearHandsFreeMaxListenTimer();
 
     const sideAtEnd = side;
-    const finalText = cleanupFinalTranscript(
+    let finalText = cleanupFinalTranscript(
       getPreviewText(sideAtEnd) || latestPreviewTranscript || liveTranscript || ""
     );
+
+    if (handsFreeSession && finalText && shouldRejectNearVoiceFinal()) {
+      finalText = "";
+      maybeShowNearVoiceHint(sideAtEnd);
+    }
 
     recognizer = null;
     recordingSide = null;
@@ -2302,7 +2575,7 @@ function startRecording(side, opts = {}) {
 
     setSystemReadyUI();
     if (handsFreeSession) {
-      setHandsFreeNextSide(getOtherSide(sideAtEnd));
+      setHandsFreeNextSide("bot");
       handleHandsFreeCycleEnd(sideAtEnd, false, handsFreeRun);
     }
   };
