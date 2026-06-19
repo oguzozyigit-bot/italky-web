@@ -20,12 +20,6 @@ function apiUrl(path) {
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
-const MEZO_HANDS_FREE_MODE_KEY = "mezopotamya_handsfree_mode";
-const MEZO_HANDS_FREE_SILENCE_MS = 1450;
-const MEZO_HANDS_FREE_MAX_LISTEN_MS = 14000;
-const MEZO_HANDS_FREE_RESTART_MS = 650;
-const MEZO_HANDS_FREE_BUSY_RETRY_MS = 850;
-const MEZO_HANDS_FREE_EMPTY_RESTART_LIMIT = 8;
 
 const BOT_LANG_POOL = [
   { code: "ku", name: "Kürtçe Kurmanci", flag: "☀️" },
@@ -111,12 +105,7 @@ const UI = {
   genericTitle: $("genericTitle"),
   genericText: $("genericText"),
   genericCloseBtn: $("genericCloseBtn"),
-  miniToast: $("miniToast"),
-
-  handsFreeToggle: $("handsFreeToggle"),
-  familyNavBtn: $("familyNavBtn"),
-  familyNavTxt: $("familyNavTxt"),
-  familyNavMenu: $("familyNavMenu")
+  miniToast: $("miniToast")
 };
 
 const state = {
@@ -136,16 +125,7 @@ const state = {
   speakRunId: 0,
 
   loadingTopRow: null,
-  loadingBotRow: null,
-
-  handsFreeRunId: 0,
-  handsFreeRestartTimer: null,
-  handsFreeSilenceTimer: null,
-  handsFreeMaxTimer: null,
-  handsFreeEmptyCount: 0,
-  handsFreeNextSide: "top",
-  handsFreeStartPending: false,
-  handsFreeActiveSide: null
+  loadingBotRow: null
 };
 
 function normalizeText(text) {
@@ -170,195 +150,43 @@ function toast(msg = "") {
   }, 1800);
 }
 
-function isIosLikeDevice() {
-  const ua = String(navigator.userAgent || "").toLowerCase();
-  const platform = String(navigator.platform || "").toLowerCase();
-  const touchMac = platform === "macintel" && Number(navigator.maxTouchPoints || 0) > 1;
-  return /iphone|ipad|ipod/.test(ua) || touchMac;
-}
-
-function generalLanguagesHref() {
-  return isIosLikeDevice() ? "/pages/facetoface_ios.html" : "/pages/facetoface.html";
-}
-
-function syncFamilyNavGeneralLink() {
-  UI.familyNavMenu?.querySelectorAll?.("[data-family-general]")?.forEach((el) => {
-    el.setAttribute("href", generalLanguagesHref());
-  });
-}
-
-function toggleFamilyNav(force) {
-  const next = typeof force === "boolean" ? force : !UI.familyNavMenu?.classList.contains("show");
-  UI.familyNavMenu?.classList.toggle("show", next);
-  UI.familyNavBtn?.setAttribute("aria-expanded", next ? "true" : "false");
-}
-
-function isHandsFreeModeEnabled() {
-  return String(localStorage.getItem(MEZO_HANDS_FREE_MODE_KEY) || "off").trim().toLowerCase() === "on";
-}
-
-function nextHandsFreeSide() {
-  return state.handsFreeNextSide === "bot" ? "bot" : "top";
-}
-
-function setNextHandsFreeSide(side) {
-  state.handsFreeNextSide = side === "top" ? "top" : "bot";
-}
-
-function syncHandsFreeUi() {
-  const enabled = isHandsFreeModeEnabled();
-  UI.handsFreeToggle?.classList.toggle("active", enabled);
-  UI.handsFreeToggle?.classList.toggle("on", enabled);
-  UI.handsFreeToggle?.classList.toggle("listening", enabled && (state.topListening || state.botListening));
-  UI.handsFreeToggle?.setAttribute("aria-pressed", enabled ? "true" : "false");
-  UI.handsFreeToggle?.setAttribute("title", enabled ? "Eller Serbest açık" : "Eller Serbest kapalı");
-  document.body.classList.toggle("handsfree-mode", enabled);
-}
-
-function clearHandsFreeTimers() {
-  clearTimeout(state.handsFreeRestartTimer);
-  clearTimeout(state.handsFreeSilenceTimer);
-  clearTimeout(state.handsFreeMaxTimer);
-  state.handsFreeRestartTimer = null;
-  state.handsFreeSilenceTimer = null;
-  state.handsFreeMaxTimer = null;
-}
-
-function stopHandsFreeMode(opts = {}) {
-  state.handsFreeRunId += 1;
-  state.handsFreeStartPending = false;
-  state.handsFreeEmptyCount = 0;
-  state.handsFreeActiveSide = null;
-  clearHandsFreeTimers();
-  localStorage.setItem(MEZO_HANDS_FREE_MODE_KEY, "off");
-
-  if (opts.stopCurrent) {
-    stopRecognition("top");
-    stopRecognition("bot");
-  }
-
-  syncHandsFreeUi();
-  if (!opts.silent) toast("Eller Serbest kapalı");
-}
-
-function scheduleHandsFreeRestart(reason = "cycle", delay = MEZO_HANDS_FREE_RESTART_MS) {
-  clearTimeout(state.handsFreeRestartTimer);
-  if (!isHandsFreeModeEnabled()) return;
-
-  const runId = state.handsFreeRunId;
-  state.handsFreeRestartTimer = setTimeout(() => {
-    state.handsFreeRestartTimer = null;
-    if (runId !== state.handsFreeRunId || !isHandsFreeModeEnabled()) return;
-    if (state.topListening || state.botListening || document.body.classList.contains("is-translating")) {
-      scheduleHandsFreeRestart(`${reason}:busy`, MEZO_HANDS_FREE_BUSY_RETRY_MS);
-      return;
-    }
-    startHandsFreeLoop(reason);
-  }, Math.max(120, Number(delay) || MEZO_HANDS_FREE_RESTART_MS));
-}
-
-function armHandsFreeTimers(side, runId) {
-  clearTimeout(state.handsFreeSilenceTimer);
-  clearTimeout(state.handsFreeMaxTimer);
-
-  state.handsFreeSilenceTimer = setTimeout(() => {
-    if (!isHandsFreeModeEnabled() || runId !== state.handsFreeRunId) return;
-    if (state.handsFreeActiveSide !== side) return;
-    stopRecognition(side);
-  }, MEZO_HANDS_FREE_SILENCE_MS);
-
-  state.handsFreeMaxTimer = setTimeout(() => {
-    if (!isHandsFreeModeEnabled() || runId !== state.handsFreeRunId) return;
-    if (state.handsFreeActiveSide !== side) return;
-    stopRecognition(side);
-  }, MEZO_HANDS_FREE_MAX_LISTEN_MS);
-}
-
-function handleHandsFreeCycleEnd(side, hadText, runId) {
-  clearTimeout(state.handsFreeSilenceTimer);
-  clearTimeout(state.handsFreeMaxTimer);
-  state.handsFreeSilenceTimer = null;
-  state.handsFreeMaxTimer = null;
-  state.handsFreeActiveSide = null;
-  syncHandsFreeUi();
-
-  if (!isHandsFreeModeEnabled() || runId !== state.handsFreeRunId) return;
-
-  if (hadText) {
-    state.handsFreeEmptyCount = 0;
-    setNextHandsFreeSide(side === "top" ? "bot" : "top");
-    scheduleHandsFreeRestart("after-final", MEZO_HANDS_FREE_RESTART_MS);
-    return;
-  }
-
-  state.handsFreeEmptyCount += 1;
-  setNextHandsFreeSide(side === "top" ? "bot" : "top");
-
-  if (state.handsFreeEmptyCount <= MEZO_HANDS_FREE_EMPTY_RESTART_LIMIT) {
-    scheduleHandsFreeRestart("empty", 900);
-    return;
-  }
-
-  stopHandsFreeMode({ silent: true, stopCurrent: false });
-  toast("Eller Serbest beklemeye alındı");
-}
-
-function startHandsFreeLoop(reason = "manual") {
-  if (!isHandsFreeModeEnabled()) return false;
-  if (state.handsFreeStartPending || state.topListening || state.botListening) return false;
-
-  state.handsFreeStartPending = true;
-  const runId = state.handsFreeRunId;
-  const side = nextHandsFreeSide();
-
-  try {
-    state.handsFreeActiveSide = side;
-    startRecognition(side, { handsFree: true, runId, reason });
-    return true;
-  } finally {
-    setTimeout(() => { state.handsFreeStartPending = false; }, 80);
-  }
-}
-
-function setHandsFreeMode(enabled, opts = {}) {
-  const next = !!enabled;
-  const previous = isHandsFreeModeEnabled();
-  localStorage.setItem(MEZO_HANDS_FREE_MODE_KEY, next ? "on" : "off");
-  syncHandsFreeUi();
-
-  if (next) {
-    if (!previous) state.handsFreeRunId += 1;
-    state.handsFreeEmptyCount = 0;
-    clearHandsFreeTimers();
-    setNextHandsFreeSide("top");
-    if (!opts.silent) toast("Eller Serbest açık");
-    startHandsFreeLoop("toggle");
-    return;
-  }
-
-  stopHandsFreeMode({ stopCurrent: !!opts.stopCurrent, silent: !!opts.silent });
-}
-
-function bindHandsFreeToggle() {
-  syncHandsFreeUi();
-  UI.handsFreeToggle?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const next = !isHandsFreeModeEnabled();
-    setHandsFreeMode(next, { stopCurrent: true });
-  });
-}
-
-window.mezoHandsFreeState = {
-  isEnabled: isHandsFreeModeEnabled,
-  start: () => setHandsFreeMode(true),
-  stop: () => stopHandsFreeMode({ stopCurrent: true }),
-  sync: syncHandsFreeUi
-};
-
 function closeModal() {
   UI.genericBackdrop?.classList.remove("show");
   UI.genericBackdrop?.classList.remove("open");
+}
+
+
+
+function isIosLikeDevice() {
+  const ua = String(navigator.userAgent || "");
+  const platform = String(navigator.platform || "");
+  return /iPad|iPhone|iPod/i.test(ua) || (platform === "MacIntel" && Number(navigator.maxTouchPoints || 0) > 1);
+}
+
+function fallbackFaceToFaceHref() {
+  return isIosLikeDevice() ? "facetoface_ios.html" : "facetoface.html";
+}
+
+function goBackToPreviousPage() {
+  try {
+    if (window.history && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+  } catch {}
+
+  try {
+    const ref = String(document.referrer || "");
+    if (ref) {
+      const refUrl = new URL(ref, location.href);
+      if (refUrl.origin === location.origin) {
+        location.href = refUrl.href;
+        return;
+      }
+    }
+  } catch {}
+
+  location.href = fallbackFaceToFaceHref();
 }
 
 function siteLang() {
@@ -1239,13 +1067,11 @@ function stopRecognition(side) {
     state.topRecognizer = null;
     state.topListening = false;
     setListening("top", false);
-    syncHandsFreeUi();
   } else {
     try { state.botRecognizer?.stop(); } catch {}
     state.botRecognizer = null;
     state.botListening = false;
     setListening("bot", false);
-    syncHandsFreeUi();
   }
 }
 
@@ -1261,28 +1087,19 @@ function setListening(side, on) {
   }
 
   syncComposerButtons();
-  syncHandsFreeUi();
 }
 
-function startRecognition(side, opts = {}) {
+function startRecognition(side) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const handsFree = !!opts.handsFree;
-  const runId = Number(opts.runId || state.handsFreeRunId || 0);
 
   if (!SR) {
     toast("Bu cihazda sesli giriş desteklenmiyor");
-    if (handsFree) stopHandsFreeMode({ silent: true, stopCurrent: false });
     return;
   }
 
   if ((side === "top" && state.topListening) || (side === "bot" && state.botListening)) {
-    if (handsFree) return;
     stopRecognition(side);
     return;
-  }
-
-  if (!handsFree && isHandsFreeModeEnabled()) {
-    stopHandsFreeMode({ silent: true, stopCurrent: true });
   }
 
   const langCode = langForSide(side);
@@ -1291,28 +1108,15 @@ function startRecognition(side, opts = {}) {
   const recog = new SR();
   recog.lang = String(BCP[listenCode] || BCP[langCode] || listenCode || BCP.tr);
   recog.interimResults = true;
-  recog.continuous = handsFree;
+  recog.continuous = false;
   recog.maxAlternatives = 1;
 
-  let handsFreeCycleClosed = false;
-  const finishHandsFreeCycle = (hadText) => {
-    if (!handsFree || handsFreeCycleClosed) return;
-    handsFreeCycleClosed = true;
-    handleHandsFreeCycleEnd(side, !!hadText, runId);
-  };
-
   recog.onstart = () => {
-    if (!handsFree) pointOrbTo(side);
+    pointOrbTo(side);
     setListening(side, true);
 
     if (side === "top") state.topLastSpeech = "";
     else state.botLastSpeech = "";
-
-    if (handsFree) {
-      state.handsFreeActiveSide = side;
-      armHandsFreeTimers(side, runId);
-      syncHandsFreeUi();
-    }
   };
 
   recog.onresult = (e) => {
@@ -1320,23 +1124,10 @@ function startRecognition(side, opts = {}) {
 
     if (side === "top") state.topLastSpeech = stableText;
     else state.botLastSpeech = stableText;
-
-    if (handsFree && stableText) {
-      clearTimeout(state.handsFreeSilenceTimer);
-      state.handsFreeSilenceTimer = setTimeout(() => {
-        if (!isHandsFreeModeEnabled() || runId !== state.handsFreeRunId) return;
-        if (state.handsFreeActiveSide !== side) return;
-        stopRecognition(side);
-      }, MEZO_HANDS_FREE_SILENCE_MS);
-    }
   };
 
   recog.onerror = () => {
     stopRecognition(side);
-    if (handsFree) {
-      finishHandsFreeCycle(false);
-      return;
-    }
     toast("Mikrofon hatası");
   };
 
@@ -1348,10 +1139,6 @@ function startRecognition(side, opts = {}) {
     if (finalText) {
       await runTranslateText(side, finalText);
     }
-
-    if (handsFree) {
-      finishHandsFreeCycle(!!finalText);
-    }
   };
 
   if (side === "top") state.topRecognizer = recog;
@@ -1361,10 +1148,6 @@ function startRecognition(side, opts = {}) {
     recog.start();
   } catch {
     stopRecognition(side);
-    if (handsFree) {
-      finishHandsFreeCycle(false);
-      return;
-    }
     toast("Mikrofon başlatılamadı");
   }
 }
@@ -1406,20 +1189,6 @@ function bindEvents() {
     UI.popBot?.classList.add("show");
   });
 
-  syncFamilyNavGeneralLink();
-  UI.familyNavBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleFamilyNav();
-  });
-  UI.familyNavMenu?.querySelectorAll?.("a")?.forEach((link) => {
-    link.addEventListener("click", (e) => {
-      if (link.hasAttribute("data-family-general")) {
-        e.preventDefault();
-        location.href = generalLanguagesHref();
-      }
-    });
-  });
 
   UI.closeTop?.addEventListener("click", () => UI.popTop?.classList.remove("show"));
   UI.popTop?.addEventListener("click", (e) => {
@@ -1439,16 +1208,8 @@ function bindEvents() {
     location.href = "/pages/premium_voice_settings.html?from=mezopotamyanin_dili";
   });
 
-  UI.topMic?.addEventListener("click", () => {
-    if (isHandsFreeModeEnabled()) stopHandsFreeMode({ silent: true, stopCurrent: true });
-    startRecognition("top");
-  });
-  UI.botMic?.addEventListener("click", () => {
-    if (isHandsFreeModeEnabled()) stopHandsFreeMode({ silent: true, stopCurrent: true });
-    startRecognition("bot");
-  });
-
-  bindHandsFreeToggle();
+  UI.topMic?.addEventListener("click", () => startRecognition("top"));
+  UI.botMic?.addEventListener("click", () => startRecognition("bot"));
 
   UI.topSend?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1462,11 +1223,11 @@ function bindEvents() {
 
   UI.homeLink?.addEventListener("click", (e) => {
     e.preventDefault();
-    location.href = "/pages/home.html";
+    goBackToPreviousPage();
   });
 
   UI.homeBtn?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
+    goBackToPreviousPage();
   });
 
   const clearConversation = (event) => {
@@ -1475,7 +1236,6 @@ function bindEvents() {
     if (UI.topInput) UI.topInput.value = "";
     if (UI.botInput) UI.botInput.value = "";
 
-    stopHandsFreeMode({ silent: true, stopCurrent: false });
     stopAudio();
     stopRecognition("top");
     stopRecognition("bot");
@@ -1512,10 +1272,9 @@ function bindEvents() {
   document.addEventListener("click", (e) => {
     const insidePop =
       (UI.popTop && UI.popTop.contains(e.target)) ||
-      (UI.popBot && UI.popBot.contains(e.target)) ||
-      (UI.familyNavMenu && UI.familyNavMenu.contains(e.target));
+      (UI.popBot && UI.popBot.contains(e.target));
 
-    const isLangBtn = e.target?.closest?.("#topLangBtn,#botLangBtn,#familyNavBtn");
+    const isLangBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
 
     if (!insidePop && !isLangBtn) {
       UI.popTop?.classList.remove("show");
@@ -1536,14 +1295,6 @@ async function requireLogin() {
   return true;
 }
 
-window.addEventListener("beforeunload", () => {
-  if (isHandsFreeModeEnabled()) stopHandsFreeMode({ silent: true, stopCurrent: true });
-});
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden && isHandsFreeModeEnabled()) stopHandsFreeMode({ silent: true, stopCurrent: true });
-});
-
 document.addEventListener("DOMContentLoaded", async () => {
   if (!(await requireLogin())) return;
 
@@ -1556,8 +1307,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   bindEvents();
   syncComposerButtons();
-  syncFamilyNavGeneralLink();
-  syncHandsFreeUi();
 
   document.body.classList.add("is-ready");
 
