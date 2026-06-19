@@ -57,8 +57,6 @@
       --key-text:#f5f7fb;
       --kb-bg:rgba(9,11,17,.97);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
-      --toggle-hand-gold:#facc15;
-      --toggle-hand-gold-glow:rgba(250,204,21,.38);
     }
 
     *{
@@ -703,75 +701,110 @@
       box-shadow:0 0 18px rgba(37,99,235,.28);
     }
 
-    .culture-toggle,
-    .hf-btn{
-      width:clamp(96px, 28vw, 104px);
+    .culture-toggle{
+      min-width:84px;
       min-height:38px;
       border:none;
       border-radius:999px;
+      padding:6px 12px;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:3px;
-      padding:6px 6px;
-      background:
-        linear-gradient(135deg, rgba(11,42,91,.62), rgba(3,22,51,.54)),
-        radial-gradient(circle at 20% 0%, rgba(125,211,252,.18), transparent 42%);
-      border:1px solid rgba(96,165,250,.30);
-      color:rgba(219,234,254,.84);
+      gap:8px;
+      background:linear-gradient(135deg, rgba(11,42,91,.62), rgba(3,22,51,.54));
+      border:1px solid rgba(96,165,250,.28);
+      color:rgba(219,234,254,.78);
       font-family:'Outfit',sans-serif;
-      font-size:8.6px;
-      line-height:1;
+      font-size:10px;
       font-weight:1000;
-      letter-spacing:-.06px;
       cursor:pointer;
+      box-shadow:0 10px 24px rgba(2,6,23,.24), inset 0 1px 0 rgba(255,255,255,.08);
+      transition:transform .18s ease, color .18s ease, border-color .18s ease, background .18s ease;
       flex:0 0 auto;
       position:absolute;
+      right:calc(50% + 62px);
       top:50%;
       transform:translateY(-50%);
+      z-index:3;
+    }
+
+    .culture-toggle:active{
+      transform:translateY(-50%) scale(.95);
+    }
+
+    .culture-toggle .culture-icon{
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,.10);
+      font-size:14px;
+      line-height:1;
+      color:#bfdbfe;
+      box-shadow:0 0 12px rgba(14,165,233,.14);
+    }
+
+    .culture-toggle.on{
+      color:#fff;
+      border-color:rgba(125,211,252,.75);
+      background:linear-gradient(135deg, #0B2A5B, #075985);
+      box-shadow:0 0 18px rgba(14,165,233,.28), 0 14px 30px rgba(3,22,51,.28), inset 0 1px 0 rgba(255,255,255,.14);
+    }
+
+    .culture-toggle.on .culture-icon{
+      background:rgba(125,211,252,.18);
+      color:#e0f2fe;
+      box-shadow:0 0 16px rgba(125,211,252,.30);
+    }
+
+    .hf-btn{
+      display:flex;
+      position:absolute;
+      left:calc(50% + 42px);
+      top:50%;
+      transform:translateY(-50%);
+      width:clamp(108px, 31vw, 116px);
+      min-height:38px;
+      border:none;
+      border-radius:999px;
+      background:linear-gradient(135deg, rgba(11,42,91,.62), rgba(3,22,51,.54));
+      border:1px solid rgba(96,165,250,.28);
+      color:rgba(219,234,254,.78);
+      padding:6px 7px;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      font-size:8.7px;
+      line-height:1;
+      font-family:'Outfit',sans-serif;
+      font-weight:1000;
+      letter-spacing:-.08px;
+      cursor:pointer;
       z-index:3;
       overflow:hidden;
       white-space:nowrap;
       -webkit-backdrop-filter:blur(13px) saturate(1.35);
       backdrop-filter:blur(13px) saturate(1.35);
-      box-shadow:0 10px 24px rgba(2,6,23,.24), 0 0 14px rgba(14,165,233,.12), inset 0 1px 0 rgba(255,255,255,.10);
+      box-shadow:0 10px 24px rgba(2,6,23,.24), inset 0 1px 0 rgba(255,255,255,.08);
       transition:transform .18s ease, color .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
     }
 
-    .culture-toggle{
-      right:calc(50% + 58px);
-    }
-
-    .hf-btn{
-      left:calc(50% + 58px);
-    }
-
-    .bottom-hf-btn{
-      left:calc(50% + 58px);
-    }
-
-    .top-hf-btn{
-      display:none !important;
-    }
-
-    .culture-toggle::before,
     .hf-btn::before{
       content:"";
       position:absolute;
-      inset:1px 6px auto 6px;
+      inset:1px 1px auto 1px;
       height:45%;
-      border-radius:999px;
-      background:linear-gradient(180deg, rgba(255,255,255,.24), transparent);
-      opacity:.78;
+      border-radius:999px 999px 18px 18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0));
       pointer-events:none;
     }
 
-    .culture-toggle:active,
     .hf-btn:active{
       transform:translateY(-50%) scale(.95);
     }
 
-    .culture-toggle.on,
     .hf-btn.active,
     .hf-btn.on{
       color:#fff;
@@ -780,42 +813,6 @@
       box-shadow:0 0 18px rgba(14,165,233,.28), 0 14px 30px rgba(3,22,51,.28), inset 0 1px 0 rgba(255,255,255,.14);
     }
 
-    .hf-btn.listening{
-      animation:hfListenBreath 1.15s ease-in-out infinite;
-      box-shadow:0 0 0 5px rgba(14,165,233,.10), 0 0 22px rgba(14,165,233,.32), 0 14px 30px rgba(3,22,51,.30), inset 0 1px 0 rgba(255,255,255,.16);
-    }
-
-    body.handsfree-mode #topMic,
-    body.handsfree-mode #botMic{
-      background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
-      box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
-      animation:micBreath 1.05s ease-in-out infinite;
-    }
-
-    body.handsfree-mode #topMic::after,
-    body.handsfree-mode #botMic::after{
-      content:"";
-      position:absolute;
-      inset:-13px;
-      border-radius:50%;
-      border:2px solid rgba(165,180,252,.78);
-      box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35);
-      animation:micPulse 1s ease-out infinite;
-      pointer-events:none;
-    }
-
-    body.handsfree-mode #topComposer,
-    body.handsfree-mode #botComposer{
-      box-shadow:none;
-      animation:none;
-    }
-
-    @keyframes hfListenBreath{
-      0%,100%{ transform:translateY(-50%) scale(1); }
-      50%{ transform:translateY(-50%) scale(1.045); }
-    }
-
-    .culture-toggle .toggle-text,
     .hf-btn span{
       position:relative;
       z-index:1;
@@ -824,103 +821,52 @@
       text-overflow:clip;
     }
 
-    .culture-toggle .culture-icon{
-      position:relative;
-      z-index:1;
-      width:22px;
-      height:22px;
-      flex:0 0 22px;
-      border-radius:50%;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.10);
-      font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
-      font-size:14px;
-      line-height:1;
-      box-shadow:0 0 12px rgba(14,165,233,.14);
-    }
-
-    .culture-toggle.on .culture-icon{
-      background:rgba(125,211,252,.18);
-      box-shadow:0 0 16px rgba(125,211,252,.30);
-    }
-
     .hf-btn .hf-hand{
       position:relative;
       z-index:1;
-      width:12px;
-      height:12px;
-      flex:0 0 12px;
-      stroke:var(--toggle-hand-gold);
+      width:12.5px;
+      height:12.5px;
+      flex:0 0 12.5px;
+      stroke:currentColor;
       stroke-width:2.05;
       fill:none;
       stroke-linecap:round;
       stroke-linejoin:round;
-      opacity:.98;
-      filter:drop-shadow(0 0 7px var(--toggle-hand-gold-glow));
-    }
-
-    .hf-btn.active .hf-hand,
-    .hf-btn.on .hf-hand,
-    .hf-btn.listening .hf-hand{
-      stroke:var(--toggle-hand-gold);
-      filter:drop-shadow(0 0 9px rgba(250,204,21,.50));
+      opacity:.96;
+      filter:drop-shadow(0 0 7px rgba(14,165,233,.20));
     }
 
     .hf-btn .hf-hand-right{
       transform:scaleX(-1);
     }
 
-    @media (max-width:390px){
-      .culture-toggle,
-      .hf-btn{
-        width:100px;
-        padding:6px 6px;
-        gap:3px;
-        font-size:8.3px;
-      }
-
-      .culture-toggle{ right:calc(50% + 58px); }
-      .hf-btn{ left:calc(50% + 58px); }
-
-      .culture-toggle .culture-icon{
-        width:20px;
-        height:20px;
-        flex-basis:20px;
-        font-size:12px;
-      }
-
-      .hf-btn .hf-hand{
-        width:11px;
-        height:11px;
-        flex-basis:11px;
-      }
-    }
-
     @media (max-width:360px){
-      .culture-toggle,
-      .hf-btn{
-        width:96px;
-        padding:6px 5px;
-        gap:2px;
-        font-size:8px;
+      .culture-toggle{
+        right:calc(50% + 54px);
+        min-width:70px;
+        padding:6px 9px;
+        gap:6px;
+        font-size:9px;
       }
-
-      .culture-toggle{ right:calc(50% + 56px); }
-      .hf-btn{ left:calc(50% + 56px); }
 
       .culture-toggle .culture-icon{
         width:20px;
         height:20px;
-        flex-basis:20px;
         font-size:12px;
       }
 
+      .hf-btn{
+        left:calc(50% + 40px);
+        width:108px;
+        padding:6px 6px;
+        gap:2.5px;
+        font-size:8.2px;
+      }
+
       .hf-btn .hf-hand{
-        width:10.5px;
-        height:10.5px;
-        flex-basis:10.5px;
+        width:11.5px;
+        height:11.5px;
+        flex-basis:11.5px;
       }
     }
 
@@ -1169,132 +1115,6 @@
       transform:translateX(-50%) translateY(0);
     }
 
-
-
-    .language-family-selector{
-      width:min(76vw, 300px);
-      justify-self:center;
-      position:relative;
-      z-index:3004;
-      margin-top:-2px;
-      pointer-events:auto;
-    }
-
-    .language-family-trigger{
-      width:100%;
-      min-height:32px;
-      border:none;
-      border-radius:999px;
-      padding:4px 10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:7px;
-      cursor:pointer;
-      color:#fff;
-      font-family:inherit;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.2px;
-      background:transparent;
-      box-shadow:none;
-      white-space:nowrap;
-    }
-
-    .language-family-trigger:active{
-      transform:scale(.985);
-    }
-
-    .language-family-spark{
-      font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
-      font-size:13px;
-      line-height:1;
-      filter:drop-shadow(0 0 7px rgba(250,204,21,.34));
-    }
-
-    .language-family-current{
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      text-shadow:none;
-    }
-
-    .language-family-caret{
-      opacity:.82;
-      font-size:11px;
-      transform:translateY(-1px);
-    }
-
-    .language-family-menu{
-      position:absolute;
-      left:50%;
-      top:calc(100% + 4px);
-      width:min(82vw, 320px);
-      transform:translateX(-50%) translateY(-4px);
-      padding:0;
-      border-radius:0;
-      background:transparent;
-      border:none;
-      box-shadow:none;
-      -webkit-backdrop-filter:none;
-      backdrop-filter:none;
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .16s ease, transform .16s ease;
-      z-index:5200;
-    }
-
-    .language-family-selector.open .language-family-menu{
-      opacity:1;
-      pointer-events:auto;
-      transform:translateX(-50%) translateY(0);
-    }
-
-    .language-family-option{
-      min-height:36px;
-      border-radius:999px;
-      padding:8px 12px;
-      margin-top:6px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      color:rgba(219,234,254,.92);
-      text-decoration:none;
-      font-family:inherit;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.2px;
-      background:rgba(5,8,18,.82);
-      border:1px solid rgba(125,211,252,.16);
-      box-shadow:0 12px 26px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.07);
-      -webkit-backdrop-filter:blur(12px) saturate(1.25);
-      backdrop-filter:blur(12px) saturate(1.25);
-    }
-
-    .language-family-option:hover{
-      background:rgba(14,165,233,.14);
-      border-color:rgba(125,211,252,.30);
-    }
-
-    .language-family-option.active{
-      color:#fff;
-      background:linear-gradient(135deg, rgba(14,165,233,.24), rgba(99,102,241,.16));
-      border-color:rgba(125,211,252,.42);
-      box-shadow:0 12px 26px rgba(0,0,0,.30), 0 0 18px rgba(14,165,233,.10), inset 0 1px 0 rgba(255,255,255,.10);
-    }
-
-    .language-family-option .check{
-      opacity:0;
-      color:#facc15;
-      font-size:13px;
-      font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
-    }
-
-    .language-family-option.active .check{
-      opacity:1;
-    }
-
     @media (max-width:390px){
       .lang-row-inner{
         width:min(94vw, 410px);
@@ -1305,36 +1125,18 @@
         width:min(76vw, 280px);
       }
 
-      .language-family-selector{
-        width:min(78vw, 280px);
-      }
-
-      .language-family-trigger{
-        min-height:32px;
-        font-size:12px;
-        padding:6px 10px;
-      }
-
-      .language-family-menu{
-        width:min(88vw, 310px);
-      }
-
       .mic-btn{
         width:66px;
         height:66px;
       }
 
-      .culture-toggle,
-      .hf-btn{
-        width:100px;
-        min-width:0;
+      .culture-toggle{
+        min-width:76px;
         min-height:36px;
-        padding:5px 6px;
-        font-size:8.3px;
+        padding:5px 10px;
+        font-size:9px;
+        right:calc(50% + 52px);
       }
-
-      .culture-toggle{ right:calc(50% + 58px); }
-      .hf-btn{ left:calc(50% + 58px); }
 
       .mic-btn svg{
         width:28px;
@@ -1439,31 +1241,6 @@
           <button class="lang-trigger" id="botLangBtn" type="button">
             <span id="botLangTxt">🌐 Dil seçiliyor...</span> ⌵
           </button>
-
-          <div class="language-family-selector" id="languageFamilySelector" data-current-family="geography">
-            <button class="language-family-trigger" id="languageFamilyTrigger" type="button" aria-haspopup="true" aria-expanded="false">
-              <span class="language-family-spark" aria-hidden="true">✨</span>
-              <span class="language-family-current" id="languageFamilyCurrent">Coğrafyanın Dilleri</span>
-              <span class="language-family-caret" aria-hidden="true">⌵</span>
-            </button>
-            <div class="language-family-menu" id="languageFamilyMenu" role="menu" aria-label="Dil coğrafyası seçimi">
-              <a class="language-family-option active" data-family="geography" href="/pages/deneme.html" role="menuitem">
-                <span>Coğrafyanın Dilleri</span><span class="check" aria-hidden="true">✨</span>
-              </a>
-              <a class="language-family-option" data-family="mesopotamia" href="/pages/mezopotamyanin_dili.html" role="menuitem">
-                <span>Mezopotamya Dilleri</span><span class="check" aria-hidden="true">✨</span>
-              </a>
-              <a class="language-family-option" data-family="turan" href="/pages/turan_dilleri.html" role="menuitem">
-                <span>Turan Dilleri</span><span class="check" aria-hidden="true">✨</span>
-              </a>
-              <a class="language-family-option" data-family="caucasus" href="/pages/kafkas_dilleri.html" role="menuitem">
-                <span>Kafkas Dilleri</span><span class="check" aria-hidden="true">✨</span>
-              </a>
-              <a class="language-family-option" data-family="balkan" href="/pages/balkan_dilleri.html" role="menuitem">
-                <span>Balkan Dilleri</span><span class="check" aria-hidden="true">✨</span>
-              </a>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1484,9 +1261,8 @@
           </div>
 
           <button id="cultureToggle" class="culture-toggle" type="button" aria-pressed="false" aria-label="K&#252;lt&#252;rel modu a&#231; veya kapat">
-            <span class="culture-icon" aria-hidden="true">&#10024;</span>
-            <span id="cultureToggleText" class="toggle-text">Kapal&#305;</span>
-            <span class="culture-icon" aria-hidden="true">&#10024;</span>
+            <span class="culture-icon">&#10024;</span>
+            <span id="cultureToggleText">Kapal&#305;</span>
           </button>
 
           <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
@@ -1499,12 +1275,12 @@
           </button>
 
 
-          <button id="handsFreeToggle" class="hf-btn bottom-hf-btn" type="button" aria-pressed="false" aria-label="Eller Serbest">
+          <button id="handsFreeToggle" class="hf-btn" type="button" aria-pressed="false" aria-label="Eller Serbest">
             <svg class="hf-hand hf-hand-left" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 12V7.5a1.5 1.5 0 0 1 3 0V12"></path>
               <path d="M11 12V5.5a1.5 1.5 0 0 1 3 0V12"></path>
               <path d="M14 12V8a1.5 1.5 0 0 1 3 0v4"></path>
-              <path d="M17 12v-1.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-3.2"></path>
+              <path d="M17 12v-1.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-14 0v-2.2"></path>
               <path d="M6 12a1.6 1.6 0 0 0-3.2.2V14a7 7 0 0 0 7 7h3.2"></path>
             </svg>
             <span>Eller Serbest</span>
@@ -1512,7 +1288,7 @@
               <path d="M8 12V7.5a1.5 1.5 0 0 1 3 0V12"></path>
               <path d="M11 12V5.5a1.5 1.5 0 0 1 3 0V12"></path>
               <path d="M14 12V8a1.5 1.5 0 0 1 3 0v4"></path>
-              <path d="M17 12v-1.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-3.2"></path>
+              <path d="M17 12v-1.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-14 0v-2.2"></path>
               <path d="M6 12a1.6 1.6 0 0 0-3.2.2V14a7 7 0 0 0 7 7h3.2"></path>
             </svg>
           </button>
@@ -1554,65 +1330,6 @@
   </div>
 
   <div class="mini-toast" id="miniToast"></div>
-
-
-  <script>
-    (function(){
-      var selector = document.getElementById("languageFamilySelector");
-      var trigger = document.getElementById("languageFamilyTrigger");
-      var current = document.getElementById("languageFamilyCurrent");
-      if (!selector || !trigger) return;
-
-      var map = {
-        "/pages/deneme.html": "geography",
-        "/pages/mezopotamyanin_dili.html": "mesopotamia",
-        "/pages/turan_dilleri.html": "turan",
-        "/pages/kafkas_dilleri.html": "caucasus",
-        "/pages/balkan_dilleri.html": "balkan"
-      };
-
-      var labels = {
-        geography: "Coğrafyanın Dilleri",
-        mesopotamia: "Mezopotamya Dilleri",
-        turan: "Turan Dilleri",
-        caucasus: "Kafkas Dilleri",
-        balkan: "Balkan Dilleri"
-      };
-
-      var path = location.pathname.replace(/\/+/g, "/");
-      var activeFamily = map[path] || selector.getAttribute("data-current-family") || "geography";
-      selector.setAttribute("data-current-family", activeFamily);
-      if (current) current.textContent = labels[activeFamily] || labels.geography;
-
-      selector.querySelectorAll(".language-family-option").forEach(function(item){
-        var isActive = item.getAttribute("data-family") === activeFamily;
-        item.classList.toggle("active", isActive);
-        if (isActive) item.setAttribute("aria-current", "page");
-        else item.removeAttribute("aria-current");
-      });
-
-      function closeMenu(){
-        selector.classList.remove("open");
-        trigger.setAttribute("aria-expanded", "false");
-      }
-
-      trigger.addEventListener("click", function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        var open = !selector.classList.contains("open");
-        selector.classList.toggle("open", open);
-        trigger.setAttribute("aria-expanded", open ? "true" : "false");
-      });
-
-      document.addEventListener("click", function(e){
-        if (!selector.contains(e.target)) closeMenu();
-      });
-
-      document.addEventListener("keydown", function(e){
-        if (e.key === "Escape") closeMenu();
-      });
-    })();
-  </script>
 
   <script>
     (function(){
