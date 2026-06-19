@@ -513,6 +513,131 @@ function extractStableRecognitionText(results) {
   return cleanText(latestFinal || latestInterim);
 }
 
+
+function getNativeSpeechStarter() {
+  const candidates = [
+    { bridge: window.Native, names: ["startSpeechRecognition", "startNativeSpeechRecognition"], label: "Native" },
+    { bridge: window.AndroidBridge, names: ["startSpeechRecognition", "startNativeSpeechRecognition"], label: "AndroidBridge" }
+  ];
+
+  for (const candidate of candidates) {
+    const bridge = candidate.bridge;
+    if (!bridge) continue;
+
+    for (const name of candidate.names) {
+      const fn = bridge?.[name];
+      if (typeof fn === "function") {
+        return { bridge, fn, name, label: candidate.label };
+      }
+    }
+  }
+
+  return null;
+}
+
+function startNativeRecognition(langCode, reason = "fallback") {
+  const starter = getNativeSpeechStarter();
+  if (!starter) return false;
+
+  try {
+    listening = true;
+    syncInputButtons();
+    console.warn("[TEXT_TRANSLATE_SPEECH] native speech start requested", {
+      bridge: starter.label,
+      method: starter.name,
+      langCode,
+      reason
+    });
+
+    try {
+      starter.fn.call(starter.bridge, langCode, "text");
+    } catch (firstError) {
+      console.warn("[TEXT_TRANSLATE_SPEECH] native text mode failed, retrying text_public", firstError);
+      starter.fn.call(starter.bridge, langCode, "text_public");
+    }
+
+    return true;
+  } catch (e) {
+    console.warn("[TEXT_TRANSLATE_SPEECH] native start failed", e);
+    listening = false;
+    syncInputButtons();
+    return false;
+  }
+}
+
+function startBrowserRecognition(langCode) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return false;
+
+  recognizer = new SpeechRecognition();
+  recognizer.lang = langCode;
+  recognizer.interimResults = true;
+  recognizer.continuous = false;
+  recognizer.maxAlternatives = 1;
+
+  recognizer.onstart = () => {
+    listening = true;
+    syncInputButtons();
+    console.warn("[TEXT_TRANSLATE_SPEECH] browser speech started", { langCode });
+  };
+
+  recognizer.onresult = (event) => {
+    const text = extractStableRecognitionText(event.results);
+    if (text) {
+      lastSpeechResultAt = Date.now();
+      applyTranscriptToInput(text, false);
+    }
+
+    const last = event.results[event.results.length - 1];
+    if (last?.isFinal && text) {
+      lastSpeechResultAt = Date.now();
+      applyTranscriptToInput(text, true);
+    }
+  };
+
+  recognizer.onerror = (event) => {
+    const error = event?.error || "";
+    console.warn("[TEXT_TRANSLATE_SPEECH] browser speech error", error);
+
+    try { recognizer?.stop?.(); } catch {}
+    try { recognizer?.abort?.(); } catch {}
+    recognizer = null;
+    listening = false;
+    syncInputButtons();
+
+    if (shouldIgnoreSpeechError(error)) {
+      console.warn("[TEXT_TRANSLATE_SPEECH] soft browser error ignored", { error });
+      return;
+    }
+
+    const code = String(error || "").toLowerCase();
+    const isPermissionError = code.includes("permission") || code.includes("denied") || code.includes("not-allowed");
+
+    if (!isPermissionError && startNativeRecognition(langCode, `browser-error:${error || "unknown"}`)) {
+      return;
+    }
+
+    toast(friendlySpeechError(error));
+  };
+
+  recognizer.onend = () => {
+    listening = false;
+    syncInputButtons();
+  };
+
+  try {
+    recognizer.start();
+    return true;
+  } catch (e) {
+    console.warn("[TEXT_TRANSLATE_SPEECH] browser start failed", e);
+    try { recognizer?.abort?.(); } catch {}
+    recognizer = null;
+    listening = false;
+    syncInputButtons();
+    return false;
+  }
+}
+
 function stopRecognition() {
   markSpeechStopGrace();
   try { recognizer?.stop?.(); } catch {}
@@ -526,74 +651,23 @@ function stopRecognition() {
 
 function startRecognition() {
   console.warn("[TEXT_TRANSLATE_SPEECH] mic button clicked");
+
   if (listening) {
     stopRecognition();
     return;
   }
+
   stopSpeak();
+
   const langCode = BCP[canonical(fromLang)] || `${canonical(fromLang)}-${canonical(fromLang).toUpperCase()}`;
-  const nativeBridge = [window.Native, window.AndroidBridge, window.OfflineSpeech].find((bridge) => bridge && typeof bridge.startSpeechRecognition === "function");
-  if (nativeBridge) {
-    try {
-      listening = true;
-      syncInputButtons();
-      console.warn("[TEXT_TRANSLATE_SPEECH] speech start requested", { bridge: nativeBridge === window.Native ? "Native" : nativeBridge === window.AndroidBridge ? "AndroidBridge" : "OfflineSpeech", langCode });
-      nativeBridge.startSpeechRecognition(langCode, "text");
-      return;
-    } catch (e) {
-      console.warn("[TEXT_TRANSLATE_SPEECH] native start failed", e);
-      listening = false;
-      syncInputButtons();
-    }
-  }
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    toast("Bu cihazda sesli giriş desteklenmiyor.");
-    return;
-  }
-  recognizer = new SpeechRecognition();
-  recognizer.lang = langCode;
-  recognizer.interimResults = true;
-  recognizer.continuous = false;
-  recognizer.maxAlternatives = 1;
-  recognizer.onstart = () => {
-    listening = true;
-    syncInputButtons();
-    console.warn("[TEXT_TRANSLATE_SPEECH] browser speech started", { langCode });
-  };
-  recognizer.onresult = (event) => {
-    const text = extractStableRecognitionText(event.results);
-    if (text) {
-      lastSpeechResultAt = Date.now();
-      applyTranscriptToInput(text, false);
-    }
-    const last = event.results[event.results.length - 1];
-    if (last?.isFinal && text) {
-      lastSpeechResultAt = Date.now();
-      applyTranscriptToInput(text, true);
-    }
-  };
-  recognizer.onerror = (event) => {
-    console.warn("[TEXT_TRANSLATE_SPEECH] browser speech error", event?.error);
-    const error = event?.error || "";
-    if (shouldIgnoreSpeechError(error)) {
-      stopRecognition();
-      console.warn("[TEXT_TRANSLATE_SPEECH] soft browser error ignored", { error });
-      return;
-    }
-    stopRecognition();
-    toast(friendlySpeechError(error));
-  };
-  recognizer.onend = () => {
-    listening = false;
-    syncInputButtons();
-  };
-  try { recognizer.start(); }
-  catch (e) {
-    console.warn("[TEXT_TRANSLATE_SPEECH] browser start failed", e);
-    stopRecognition();
-    toast("Mikrofon şu anda başlatılamadı. Lütfen tekrar deneyin.");
-  }
+
+  // Önce tarayıcı Web Speech hattını deniyoruz. Android/WebView tarafında native köprü
+  // bazen var görünüp asenkron hata döndürüyor; bu da çalışan mikrofonu "başlatılamadı"
+  // toastına düşürüyordu. Web Speech yoksa veya başlatılamazsa native köprüye düşüyoruz.
+  if (startBrowserRecognition(langCode)) return;
+  if (startNativeRecognition(langCode, "browser-unavailable")) return;
+
+  toast("Bu cihazda sesli giriş desteklenmiyor.");
 }
 
 async function requireLogin() {
