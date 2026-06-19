@@ -1063,6 +1063,134 @@
       50%{ height:25px; opacity:1; }
     }
 
+
+    .handsfree-tip-modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      background:rgba(2,6,23,.62);
+      -webkit-backdrop-filter:blur(14px);
+      backdrop-filter:blur(14px);
+      z-index:2147483200;
+    }
+
+    .handsfree-tip-modal.open{
+      display:flex;
+    }
+
+    .handsfree-tip-card{
+      width:min(92vw, 420px);
+      border-radius:28px;
+      padding:22px;
+      color:#fff;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(125,211,252,.34), transparent 36%),
+        radial-gradient(circle at 92% 100%, rgba(59,130,246,.24), transparent 44%),
+        linear-gradient(145deg, rgba(14,165,233,.96), rgba(29,78,216,.94) 46%, rgba(15,23,42,.98));
+      border:1px solid rgba(191,219,254,.28);
+      box-shadow:0 26px 70px rgba(0,0,0,.54), 0 0 44px rgba(14,165,233,.20), inset 0 1px 0 rgba(255,255,255,.22);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .handsfree-tip-card::before{
+      content:"";
+      position:absolute;
+      inset:1px 8px auto 8px;
+      height:42%;
+      border-radius:26px;
+      background:linear-gradient(180deg, rgba(255,255,255,.22), transparent);
+      pointer-events:none;
+    }
+
+    .handsfree-tip-icon{
+      width:48px;
+      height:48px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:14px;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 12px 26px rgba(15,23,42,.22);
+      position:relative;
+      z-index:1;
+    }
+
+    .handsfree-tip-icon svg{
+      width:26px;
+      height:26px;
+      stroke:#fff;
+      stroke-width:2.1;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .handsfree-tip-title{
+      margin:0 0 10px;
+      font-family:"Space Grotesk", Outfit, sans-serif;
+      font-size:22px;
+      line-height:1.05;
+      font-weight:900;
+      letter-spacing:-.25px;
+      position:relative;
+      z-index:1;
+    }
+
+    .handsfree-tip-text{
+      margin:0;
+      font-size:14px;
+      line-height:1.55;
+      font-weight:800;
+      color:rgba(255,255,255,.88);
+      position:relative;
+      z-index:1;
+    }
+
+    .handsfree-tip-check{
+      margin:18px 0 14px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:12px;
+      font-weight:900;
+      color:rgba(255,255,255,.86);
+      position:relative;
+      z-index:1;
+    }
+
+    .handsfree-tip-check input{
+      width:18px;
+      height:18px;
+      accent-color:#38bdf8;
+      flex:0 0 auto;
+    }
+
+    .handsfree-tip-ok{
+      width:100%;
+      min-height:48px;
+      border:none;
+      border-radius:18px;
+      cursor:pointer;
+      background:linear-gradient(135deg,#ffffff,#dbeafe);
+      color:#082f49;
+      font-family:Outfit,sans-serif;
+      font-size:14px;
+      font-weight:1000;
+      box-shadow:0 14px 28px rgba(15,23,42,.26), inset 0 1px 0 rgba(255,255,255,.75);
+      position:relative;
+      z-index:1;
+    }
+
+    .handsfree-tip-ok:active{
+      transform:scale(.985);
+    }
+
     .modal{
       position:fixed;
       inset:0;
@@ -1452,12 +1580,12 @@
           <div class="language-family-selector" id="languageFamilySelector" data-current-family="geography">
             <button class="language-family-trigger" id="languageFamilyTrigger" type="button" aria-haspopup="true" aria-expanded="false">
               <span class="language-family-spark" aria-hidden="true">✨</span>
-              <span class="language-family-current" id="languageFamilyCurrent">Coğrafyanın Dilleri</span>
+              <span class="language-family-current" id="languageFamilyCurrent">Genel Diller</span>
               <span class="language-family-caret" aria-hidden="true">⌵</span>
             </button>
             <div class="language-family-menu" id="languageFamilyMenu" role="menu" aria-label="Dil coğrafyası seçimi">
               <a class="language-family-option active" data-family="geography" href="/pages/facetoface.html" role="menuitem">
-                <span>Coğrafyanın Dilleri</span><span class="check" aria-hidden="true">✨</span>
+                <span>Genel Diller</span><span class="check" aria-hidden="true">✨</span>
               </a>
               <a class="language-family-option" data-family="mesopotamia" href="/pages/mezopotamyanin_dili.html" role="menuitem">
                 <span>Mezopotamya Dilleri</span><span class="check" aria-hidden="true">✨</span>
@@ -1541,6 +1669,28 @@
     </div>
   </div>
 
+
+  <div class="handsfree-tip-modal" id="handsFreeTipModal" role="dialog" aria-modal="true" aria-labelledby="handsFreeTipTitle">
+    <div class="handsfree-tip-card">
+      <div class="handsfree-tip-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M7 8a5 5 0 0 1 10 0"></path>
+          <path d="M5 10v2a3 3 0 0 0 3 3h1v-8H8a3 3 0 0 0-3 3z"></path>
+          <path d="M19 10v2a3 3 0 0 1-3 3h-1v-8h1a3 3 0 0 1 3 3z"></path>
+          <path d="M12 17v2"></path>
+          <path d="M9 21h6"></path>
+        </svg>
+      </div>
+      <h3 class="handsfree-tip-title" id="handsFreeTipTitle">Eller Serbest Modu</h3>
+      <p class="handsfree-tip-text">En iyi sonucu kulaklık kullanarak alabilirsiniz.<br>Eller Serbest modunda kulaklığın birini alt dil, diğerini üst dil tarafı için kullanabilirsiniz.<br>Böylece görüşmelerde daha akıcı ve daha net bir çeviri deneyimi elde edersiniz.</p>
+      <label class="handsfree-tip-check">
+        <input type="checkbox" id="handsFreeTipDontShow" />
+        <span>Bu uyarıyı bir daha gösterme</span>
+      </label>
+      <button class="handsfree-tip-ok" id="handsFreeTipOk" type="button">Tamam</button>
+    </div>
+  </div>
+
   <div class="modal" id="uiModal">
     <div class="modal-card">
       <h3 class="modal-title" id="uiModalTitle">Üyelik Gerekli</h3>
@@ -1582,7 +1732,7 @@
       };
 
       var labels = {
-        geography: "Coğrafyanın Dilleri",
+        geography: "Genel Diller",
         mesopotamia: "Mezopotamya Dilleri",
         turan: "Turan Dilleri",
         caucasus: "Kafkas Dilleri",
