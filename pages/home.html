@@ -1024,16 +1024,7 @@ body.home-ready #pageContent{
         </div>
         <div class="arrow-chip"></div>
       </a>
-<a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
-        <div class="wide-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M4 19V5"></path><path d="M8 19v-7"></path><path d="M12 19V8"></path><path d="M16 19v-5"></path><path d="M20 19V4"></path></svg>
-        </div>
-        <div class="wide-body">
-          <h2 class="wide-title">Seviye Tespit</h2>
-          <p class="wide-desc">Seviyeni ölç. Doğru yerden başla. Gelişimini daha net takip et.</p>
-        </div>
-        <div class="arrow-chip"></div>
-      </a>
+
 
       <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
         <div class="wide-icon" aria-hidden="true">
@@ -1045,6 +1036,21 @@ body.home-ready #pageContent{
         </div>
         <div class="arrow-chip"></div>
       </a>
+
+
+
+      <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 19V5"></path><path d="M8 19v-7"></path><path d="M12 19V8"></path><path d="M16 19v-5"></path><path d="M20 19V4"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Seviye Tespit</h2>
+          <p class="wide-desc">Seviyeni ölç. Doğru yerden başla. Gelişimini daha net takip et.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+
 
       <a id="offlineCard" class="wide-card offline-card" href="/pages/offline_languages.html">
         <div class="wide-icon" aria-hidden="true">
@@ -2659,8 +2665,7 @@ body.home-ready #pageContent{
 
   function createSetupCard(doc){
     if(!doc || doc.getElementById("icanyRadioSetupCard")) return;
-
-    const target = doc.getElementById("offlineCard");
+    const target = doc.getElementById("guideConferenceCard") || doc.getElementById("offlineCard");
     if(!target) return;
 
     const card = doc.createElement("div");
@@ -2696,11 +2701,21 @@ body.home-ready #pageContent{
   }
 
   function reorderCards(doc){
-    const funCard = doc.getElementById("funCard");
-    const levelCard = doc.getElementById("levelCard");
-    if(funCard && levelCard){
-      funCard.insertAdjacentElement("afterend", levelCard);
-    }
+    const guideCard = doc.getElementById("guideConferenceCard");
+    if(!guideCard) return;
+
+    const order = [
+      doc.getElementById("icanyRadioSetupCard"),
+      doc.getElementById("funCard"),
+      doc.getElementById("levelCard"),
+      doc.getElementById("offlineCard")
+    ].filter(Boolean);
+
+    let anchor = guideCard;
+    order.forEach((card) => {
+      anchor.insertAdjacentElement("afterend", card);
+      anchor = card;
+    });
   }
 
   function createModal(doc){
