@@ -25,7 +25,8 @@ const micBtn = $("micBtn");
 const translateBtn = $("translateBtn");
 const homeBtn = $("homeBtn");
 const homeLink = $("homeLink");
-const clearBtn = $("clearBtn");
+const clearBtn = $("trashClearBtn");
+const backLink = $("backLink");
 const langPopover = $("langPopover");
 const popoverTitle = $("popoverTitle");
 const popoverClose = $("popoverClose");
@@ -565,6 +566,7 @@ function bindEvents() {
     syncInputButtons();
   });
   micBtn?.addEventListener("click", startRecognition);
+  backLink?.addEventListener("click", (event) => { event.preventDefault(); location.href = "/pages/facetoface.html"; });
   homeLink?.addEventListener("click", (event) => { event.preventDefault(); location.href = "/pages/home.html"; });
   homeBtn?.addEventListener("click", () => { location.href = "/pages/home.html"; });
   clearBtn?.addEventListener("click", () => {
