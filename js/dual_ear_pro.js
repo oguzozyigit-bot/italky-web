@@ -194,7 +194,9 @@ export async function getDualEarProStatus(options = {}) {
       return { ok: true, reason: "ready", headsetLikely: true, source: deviceSignal.source };
     }
 
-    return { ok: false, reason: "headset_not_detected", headsetLikely: false, source: "none" };
+    // Deneme Dual-Ear Pro artık kulaklık şartı koymaz.
+    // Kulaklık varsa daha iyi deneyim verir; yoksa yine tek mikrofon + dil algılama ile açılır.
+    return { ok: true, reason: "ready", headsetLikely: false, source: "no-headset-required" };
   } catch (error) {
     console.warn("[DualEarPro] status error", error);
     return { ok: false, reason: "unknown_error", headsetLikely: false, source: "none" };
@@ -213,7 +215,7 @@ export function getDualEarProBlockedMessage(reason = "unknown_error") {
     mic_permission_denied: "Mikrofon izni verilmeden Eller Serbest açılamaz.",
     offline_mode: "Eller Serbest şu anda online modda kullanılabilir.",
     busy: "Devam eden dinleme bitince tekrar deneyin.",
-    headset_not_detected: "Eller Serbest için kulaklık bağlantısı gerekli.",
+    headset_not_detected: "Kulaklık olmadan da Eller Serbest başlatılıyor.",
     unknown_error: "Eller Serbest şu anda başlatılamadı.",
     ready: "Eller Serbest hazır."
   };
