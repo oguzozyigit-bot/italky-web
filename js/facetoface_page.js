@@ -439,9 +439,12 @@ function getOtherSide(side) {
 
 function getHandsFreeSide() {
   // Dual-Ear Pro tek fiziksel mikrofon akışıyla çalışır.
-  // Kullanıcıya sırayla konuşma hissi vermemek için dinleme tarafını sabit tutar,
-  // konuşmanın hangi balona gideceğini ise metin/dil algılama belirler.
-  if (DENEME_HANDS_FREE_SIDE === "auto") return "bot";
+  // Web Speech API aynı anda iki dili dinleyemediği için içeride TR/EN gibi
+  // seçili iki tarafın tanıma dilini dönüşümlü deneriz.
+  // Kullanıcı tarafında iki mic animasyonu aynı anda canlı kalır; sıra hissi vermez.
+  if (DENEME_HANDS_FREE_SIDE === "auto") {
+    return isValidFaceSide(handsFreeNextSide) ? handsFreeNextSide : "bot";
+  }
   return DENEME_HANDS_FREE_SIDE;
 }
 
@@ -468,8 +471,16 @@ function scoreTextForLanguage(text, lang) {
     ["ben", "sen", "biz", "siz", "merhaba", "selam", "nasıl", "değil", "için", "şimdi", "tamam", "evet", "hayır", "var", "yok", "çok", "bir", "bu", "şu", "ile"].forEach((w) => { if (wordSet.has(w)) score += 2; });
     if (/(yorum|yorum|yorum|ıyorum|iyorum|üyor|ıyor|acak|ecek|meli|malı|dir|dır|tır|tur|mış|miş|muş|müş)\b/i.test(value)) score += 3;
   } else if (c === "en") {
-    ["i", "you", "we", "they", "hello", "hi", "how", "what", "where", "when", "why", "yes", "no", "not", "the", "a", "an", "and", "or", "is", "are", "am", "to", "for", "with", "this", "that", "please"].forEach((w) => { if (wordSet.has(w)) score += 2; });
-    if (/\b(the|you|that|with|this|please|hello|what|where|when|because)\b/i.test(value)) score += 3;
+    [
+      "i", "me", "my", "mine", "you", "your", "we", "they", "he", "she", "it",
+      "hello", "hi", "hey", "how", "what", "where", "when", "why", "who",
+      "yes", "no", "not", "the", "a", "an", "and", "or", "is", "are", "am",
+      "was", "were", "do", "does", "did", "can", "could", "would", "should",
+      "to", "for", "with", "this", "that", "there", "here", "please", "thanks",
+      "thank", "good", "morning", "evening", "name", "need", "want", "have", "has"
+    ].forEach((w) => { if (wordSet.has(w)) score += 2; });
+    if (/\b(the|you|your|that|with|this|please|hello|thanks|what|where|when|because|good|morning|name|need|want|have)\b/i.test(value)) score += 4;
+    if (/\b(i am|i'm|my name|how are|thank you|nice to|do you|can you|where is|what is)\b/i.test(value)) score += 6;
   } else if (c === "de") {
     if (/[äöüß]/i.test(value)) score += 7;
     ["ich", "du", "wir", "sie", "hallo", "danke", "bitte", "nicht", "und", "oder", "ist", "bin", "für", "mit", "das", "der", "die"].forEach((w) => { if (wordSet.has(w)) score += 2; });
@@ -515,9 +526,13 @@ function resolveHandsFreeSpeakerSide(text, listeningSide) {
 function noteHandsFreeRoute(routedSide) {
   if (!isValidFaceSide(routedSide)) return;
   handsFreeLastRoutedSide = routedSide;
-  // Yönlendirme dil algısıyla yapılır; dinleme animasyonu ve mikrofon hissi çift taraflı kalır.
-  // Bu yüzden sonraki dinlemeyi karşı tarafa zıplatmıyoruz.
-  setHandsFreeNextSide("bot");
+
+  // Metin geldiğinde sıradaki dinleme dilini iç tarafta değiştiriyoruz.
+  // Görselde iki mic aynı anda aktif kaldığı için kullanıcıya sıra geçişi gibi görünmez.
+  // Bu, özellikle bot=TR / top=EN senaryosunda İngilizceyi yakalamak için gerekli.
+  if (DENEME_HANDS_FREE_SIDE === "auto") {
+    setHandsFreeNextSide(getOtherSide(routedSide));
+  }
 }
 
 function clearHandsFreeSilenceTimer() {
@@ -1598,7 +1613,7 @@ async function speak(text, langCode, tone = "neutral") {
       const ok = await playCachedAudio(cachedAudio, ++speakRunId);
       if (ok) return;
     } catch {
-      showToast("Offline çeviri başarısız");
+      showToast("Offline Ã§eviri baÅŸarÄ±sÄ±z");
       return null;
     }
   }
