@@ -74,8 +74,9 @@ const F2F_VOICE_KEY = "italkyai_voice_mode";
 const DENEME_CULTURAL_MODE_KEY = "deneme_facetoface_cultural_mode";
 const DENEME_CULTURAL_INFO_SEEN_KEY = "deneme_cultural_info_seen";
 const DENEME_HANDS_FREE_MODE_KEY = "deneme_facetoface_handsfree_mode";
-const DENEME_HANDS_FREE_SIDE = "bot";
+const DENEME_HANDS_FREE_SIDE = "auto";
 const DENEME_HANDS_FREE_SILENCE_MS = 1450;
+const DENEME_HANDS_FREE_MAX_LISTEN_MS = 14000;
 const DENEME_HANDS_FREE_RESTART_MS = 650;
 const DENEME_HANDS_FREE_BUSY_RETRY_MS = 850;
 const DENEME_HANDS_FREE_AUDIO_GUARD_MS = 1800;
@@ -309,6 +310,7 @@ const miniToast = $("miniToast");
 const cultureToggle = $("cultureToggle");
 const cultureToggleText = $("cultureToggleText");
 const handsFreeToggle = $("handsFreeToggle");
+const topHandsFreeToggle = $("topHandsFreeToggle");
 
 const uiModal = $("uiModal");
 const uiModalTitle = $("uiModalTitle");
@@ -359,10 +361,13 @@ let uiModalPurpose = "default";
 let handsFreeRunId = 0;
 let handsFreeSilenceTimer = null;
 let handsFreeRestartTimer = null;
+let handsFreeMaxListenTimer = null;
 let handsFreeEmptyEndCount = 0;
 let handsFreeStartPending = false;
 let handsFreeLastStartAt = 0;
 let handsFreeAudioGuardUntil = 0;
+let handsFreeNextSide = "bot";
+let handsFreeLastRoutedSide = "bot";
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -421,8 +426,90 @@ function isHandsFreeModeEnabled() {
   return String(localStorage.getItem(DENEME_HANDS_FREE_MODE_KEY) || "off").trim().toLowerCase() === "on";
 }
 
+function isValidFaceSide(side) {
+  return side === "top" || side === "bot";
+}
+
+function getOtherSide(side) {
+  return side === "top" ? "bot" : "top";
+}
+
 function getHandsFreeSide() {
+  if (DENEME_HANDS_FREE_SIDE === "auto") return isValidFaceSide(handsFreeNextSide) ? handsFreeNextSide : "bot";
   return DENEME_HANDS_FREE_SIDE;
+}
+
+function setHandsFreeNextSide(side) {
+  if (!isValidFaceSide(side)) return;
+  handsFreeNextSide = side;
+}
+
+function getSideLang(side) {
+  return side === "top" ? topLang : botLang;
+}
+
+function scoreTextForLanguage(text, lang) {
+  const value = String(text || "").toLowerCase();
+  const c = canonical(lang);
+  if (!value || !c) return 0;
+
+  let score = 0;
+  const words = value.split(/[^a-zçğıöşüâîûáéíóúàèìòùäëïöüßñ]+/i).filter(Boolean);
+  const wordSet = new Set(words);
+
+  if (c === "tr") {
+    if (/[çğıöşü]/i.test(value)) score += 8;
+    ["ben", "sen", "biz", "siz", "merhaba", "selam", "nasıl", "değil", "için", "şimdi", "tamam", "evet", "hayır", "var", "yok", "çok", "bir", "bu", "şu", "ile"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+    if (/(yorum|yorum|yorum|ıyorum|iyorum|üyor|ıyor|acak|ecek|meli|malı|dir|dır|tır|tur|mış|miş|muş|müş)\b/i.test(value)) score += 3;
+  } else if (c === "en") {
+    ["i", "you", "we", "they", "hello", "hi", "how", "what", "where", "when", "why", "yes", "no", "not", "the", "a", "an", "and", "or", "is", "are", "am", "to", "for", "with", "this", "that", "please"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+    if (/\b(the|you|that|with|this|please|hello|what|where|when|because)\b/i.test(value)) score += 3;
+  } else if (c === "de") {
+    if (/[äöüß]/i.test(value)) score += 7;
+    ["ich", "du", "wir", "sie", "hallo", "danke", "bitte", "nicht", "und", "oder", "ist", "bin", "für", "mit", "das", "der", "die"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+  } else if (c === "fr") {
+    if (/[àâçéèêëîïôùûüÿœ]/i.test(value)) score += 7;
+    ["je", "tu", "nous", "vous", "bonjour", "merci", "pas", "oui", "non", "avec", "pour", "est", "suis", "le", "la", "les"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+  } else if (c === "es") {
+    if (/[áéíóúüñ¿¡]/i.test(value)) score += 7;
+    ["yo", "tu", "usted", "hola", "gracias", "no", "si", "con", "para", "que", "el", "la", "los", "las", "estoy", "es"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+  } else if (c === "it") {
+    ["io", "tu", "noi", "voi", "ciao", "grazie", "non", "si", "con", "per", "che", "il", "la", "sono", "è"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+  } else if (c === "ru") {
+    if (/[а-яё]/i.test(value)) score += 9;
+  } else if (c === "ar") {
+    if (/[\u0600-\u06FF]/.test(value)) score += 9;
+  } else if (c === "zh") {
+    if (/[\u4E00-\u9FFF]/.test(value)) score += 9;
+  } else if (c === "ja") {
+    if (/[\u3040-\u30ff]/.test(value)) score += 9;
+  } else if (c === "ko") {
+    if (/[\uac00-\ud7af]/.test(value)) score += 9;
+  }
+
+  return score;
+}
+
+function resolveHandsFreeSpeakerSide(text, listeningSide) {
+  if (DENEME_HANDS_FREE_SIDE !== "auto") return listeningSide;
+
+  const topScore = scoreTextForLanguage(text, topLang);
+  const botScore = scoreTextForLanguage(text, botLang);
+  const topCode = canonical(topLang);
+  const botCode = canonical(botLang);
+
+  if (topCode && botCode && topCode !== botCode) {
+    if (topScore >= 4 && topScore >= botScore + 2) return "top";
+    if (botScore >= 4 && botScore >= topScore + 2) return "bot";
+  }
+
+  return isValidFaceSide(listeningSide) ? listeningSide : "bot";
+}
+
+function noteHandsFreeRoute(routedSide) {
+  if (!isValidFaceSide(routedSide)) return;
+  handsFreeLastRoutedSide = routedSide;
+  setHandsFreeNextSide(getOtherSide(routedSide));
 }
 
 function clearHandsFreeSilenceTimer() {
@@ -435,9 +522,15 @@ function clearHandsFreeRestartTimer() {
   handsFreeRestartTimer = null;
 }
 
+function clearHandsFreeMaxListenTimer() {
+  clearTimeout(handsFreeMaxListenTimer);
+  handsFreeMaxListenTimer = null;
+}
+
 function clearHandsFreeTimers() {
   clearHandsFreeSilenceTimer();
   clearHandsFreeRestartTimer();
+  clearHandsFreeMaxListenTimer();
 }
 
 function armHandsFreeAudioGuard(ms = DENEME_HANDS_FREE_AUDIO_GUARD_MS) {
@@ -470,21 +563,27 @@ function isHandsFreeUiBusy() {
 }
 
 function isHandsFreeListening() {
-  return isHandsFreeModeEnabled() && recordingSide === getHandsFreeSide();
+  return isHandsFreeModeEnabled() && isValidFaceSide(recordingSide);
+}
+
+function getHandsFreeButtons() {
+  return [handsFreeToggle, topHandsFreeToggle].filter(Boolean);
 }
 
 function syncHandsFreeRuntimeUi() {
   const listening = isHandsFreeListening();
   document.body?.classList.toggle("handsfree-listening", listening);
-  handsFreeToggle?.classList.toggle("listening", listening);
+  getHandsFreeButtons().forEach((btn) => btn.classList.toggle("listening", listening));
 }
 
 function syncHandsFreeToggleUi() {
   const enabled = isHandsFreeModeEnabled();
-  handsFreeToggle?.classList.toggle("active", enabled);
-  handsFreeToggle?.classList.toggle("on", enabled);
-  handsFreeToggle?.setAttribute("aria-pressed", enabled ? "true" : "false");
-  handsFreeToggle?.setAttribute("title", enabled ? "Eller Serbest açık" : "Eller Serbest kapalı");
+  getHandsFreeButtons().forEach((btn) => {
+    btn.classList.toggle("active", enabled);
+    btn.classList.toggle("on", enabled);
+    btn.setAttribute("aria-pressed", enabled ? "true" : "false");
+    btn.setAttribute("title", enabled ? "Eller Serbest açık" : "Eller Serbest kapalı");
+  });
   document.body?.classList.toggle("handsfree-mode", enabled);
   syncHandsFreeRuntimeUi();
 }
@@ -497,7 +596,7 @@ function stopHandsFreeLoop(opts = {}) {
   clearHandsFreeTimers();
   syncHandsFreeToggleUi();
 
-  if (opts.stopCurrent && recordingSide === getHandsFreeSide()) {
+  if (opts.stopCurrent && isValidFaceSide(recordingSide)) {
     try { stopRecognizer(); } catch {}
   }
 }
@@ -518,8 +617,31 @@ function scheduleHandsFreeRestart(reason = "cycle", delay = DENEME_HANDS_FREE_RE
   }, Math.max(120, Number(delay) || DENEME_HANDS_FREE_RESTART_MS));
 }
 
+function scheduleHandsFreeMaxListenStop(side, sessionId, runId) {
+  if (!isHandsFreeModeEnabled() || !isValidFaceSide(side)) return;
+
+  clearHandsFreeMaxListenTimer();
+  handsFreeMaxListenTimer = setTimeout(() => {
+    handsFreeMaxListenTimer = null;
+
+    if (!isHandsFreeModeEnabled()) return;
+    if (runId !== handsFreeRunId) return;
+    if (recordingSide !== side || sessionId !== recognitionSessionId) return;
+
+    const finalCandidate = cleanupFinalTranscript(
+      getPreviewText(side) || latestPreviewTranscript || liveTranscript || ""
+    );
+
+    if (finalCandidate && finalCandidate.length >= 2) {
+      setTranslatingUI(side);
+    }
+
+    stopRecognizer();
+  }, DENEME_HANDS_FREE_MAX_LISTEN_MS);
+}
+
 function scheduleHandsFreeSilenceStop(side, sessionId, runId) {
-  if (!isHandsFreeModeEnabled() || side !== getHandsFreeSide()) return;
+  if (!isHandsFreeModeEnabled() || !isValidFaceSide(side)) return;
 
   clearHandsFreeSilenceTimer();
   handsFreeSilenceTimer = setTimeout(() => {
@@ -541,9 +663,10 @@ function scheduleHandsFreeSilenceStop(side, sessionId, runId) {
 
 function handleHandsFreeCycleEnd(side, hadText, runId) {
   clearHandsFreeSilenceTimer();
+  clearHandsFreeMaxListenTimer();
   syncHandsFreeRuntimeUi();
 
-  if (side !== getHandsFreeSide()) return;
+  if (!isValidFaceSide(side)) return;
   if (!isHandsFreeModeEnabled() || runId !== handsFreeRunId) return;
 
   if (hadText) {
@@ -617,7 +740,7 @@ function setHandsFreeMode(enabled, opts = {}) {
     if (!previous) handsFreeRunId += 1;
     handsFreeEmptyEndCount = 0;
     clearHandsFreeTimers();
-    if (!opts.silent) showToast("Eller Serbest açık");
+    if (!opts.silent) showToast("Çift taraflı Eller Serbest açık");
     void startHandsFreeLoop("toggle");
     return;
   }
@@ -643,6 +766,7 @@ async function requestEnableHandsFreeMode(opts = {}) {
     return false;
   }
 
+  setHandsFreeNextSide("bot");
   setHandsFreeMode(true);
   return true;
 }
@@ -650,17 +774,19 @@ async function requestEnableHandsFreeMode(opts = {}) {
 function bindHandsFreeToggle() {
   syncHandsFreeToggleUi();
 
-  handsFreeToggle?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  getHandsFreeButtons().forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    const next = !isHandsFreeModeEnabled();
-    if (!next) {
-      setHandsFreeMode(false, { stopCurrent: true });
-      return;
-    }
+      const next = !isHandsFreeModeEnabled();
+      if (!next) {
+        setHandsFreeMode(false, { stopCurrent: true });
+        return;
+      }
 
-    await requestEnableHandsFreeMode({ source: "toggle" });
+      await requestEnableHandsFreeMode({ source: btn.id || "toggle" });
+    });
   });
 }
 
@@ -674,6 +800,8 @@ window.f2fHandsFreeState = {
   start: () => startHandsFreeLoop("external"),
   stop: () => setHandsFreeMode(false, { stopCurrent: true }),
   sync: syncHandsFreeToggleUi,
+  getNextSide: () => handsFreeNextSide,
+  routeText: (text, side = handsFreeNextSide) => resolveHandsFreeSpeakerSide(text, side),
 };
 
 function showUiModal(message, title = "Jeton Gerekli") {
@@ -2013,7 +2141,7 @@ function startRecording(side, opts = {}) {
   hideKeyboards();
   setInputPlaceholder(side, "");
 
-  const handsFreeSession = !!opts.handsFree && side === getHandsFreeSide();
+  const handsFreeSession = !!opts.handsFree && isValidFaceSide(side);
   const handsFreeRun = Number(opts.runId || handsFreeRunId);
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang, side);
@@ -2058,6 +2186,7 @@ function startRecording(side, opts = {}) {
     if (handsFreeSession) {
       syncHandsFreeRuntimeUi();
       setInputPlaceholder(side, "Eller Serbest dinliyor…");
+      scheduleHandsFreeMaxListenStop(side, mySessionId, handsFreeRun);
     }
   };
 
@@ -2091,6 +2220,7 @@ function startRecording(side, opts = {}) {
     if (!markFinished()) return;
 
     clearHandsFreeSilenceTimer();
+    clearHandsFreeMaxListenTimer();
 
     const errorCode = String(e?.error || "").toLowerCase();
     const body = side === "top" ? topBody : botBody;
@@ -2128,6 +2258,7 @@ function startRecording(side, opts = {}) {
     if (!markFinished()) return;
 
     clearHandsFreeSilenceTimer();
+    clearHandsFreeMaxListenTimer();
 
     const sideAtEnd = side;
     const finalText = cleanupFinalTranscript(
@@ -2143,16 +2274,30 @@ function startRecording(side, opts = {}) {
     latestPreviewTranscript = "";
 
     if (finalText) {
+      const routedSide = handsFreeSession
+        ? resolveHandsFreeSpeakerSide(finalText, sideAtEnd)
+        : sideAtEnd;
+
+      if (handsFreeSession) {
+        noteHandsFreeRoute(routedSide);
+        if (routedSide !== sideAtEnd) {
+          showToast(routedSide === "top" ? "Üst dil algılandı" : "Alt dil algılandı");
+        }
+      }
+
       Promise.resolve()
-        .then(() => finalizeRecognition(sideAtEnd, finalText))
+        .then(() => finalizeRecognition(routedSide, finalText))
         .finally(() => {
-          if (handsFreeSession) handleHandsFreeCycleEnd(sideAtEnd, true, handsFreeRun);
+          if (handsFreeSession) handleHandsFreeCycleEnd(routedSide, true, handsFreeRun);
         });
       return;
     }
 
     setSystemReadyUI();
-    if (handsFreeSession) handleHandsFreeCycleEnd(sideAtEnd, false, handsFreeRun);
+    if (handsFreeSession) {
+      setHandsFreeNextSide(getOtherSide(sideAtEnd));
+      handleHandsFreeCycleEnd(sideAtEnd, false, handsFreeRun);
+    }
   };
 
   try {
@@ -2161,6 +2306,7 @@ function startRecording(side, opts = {}) {
     if (!markFinished()) return;
 
     clearHandsFreeSilenceTimer();
+    clearHandsFreeMaxListenTimer();
     recognizer = null;
     recordingSide = null;
     liveTranscript = "";
