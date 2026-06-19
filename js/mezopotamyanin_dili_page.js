@@ -60,6 +60,56 @@ const BCP = {
   he: "he-IL"
 };
 
+const COMMON_LANG_NAMES_TR = {
+  tr: "Türkçe",
+  en: "İngilizce",
+  de: "Almanca",
+  fr: "Fransızca",
+  it: "İtalyanca",
+  es: "İspanyolca",
+  ar: "Arapça",
+  ru: "Rusça",
+  bg: "Bulgarca",
+  pt: "Portekizce",
+  zh: "Çince",
+  ja: "Japonca",
+  ko: "Korece",
+  ku: "Kürtçe Kurmanci",
+  ckb: "Kürtçe Sorani",
+  he: "İbranice"
+};
+
+const COMMON_LANG_FLAGS = {
+  tr: "🇹🇷",
+  en: "🇬🇧",
+  de: "🇩🇪",
+  fr: "🇫🇷",
+  it: "🇮🇹",
+  es: "🇪🇸",
+  ar: "🇸🇦",
+  ru: "🇷🇺",
+  bg: "🇧🇬",
+  pt: "🇵🇹",
+  zh: "🇨🇳",
+  ja: "🇯🇵",
+  ko: "🇰🇷",
+  ku: "☀️",
+  ckb: "🌙",
+  he: "✡️"
+};
+
+function prettyLangName(value, code) {
+  const c = canon(code);
+  const raw = String(value || "").trim();
+  if (raw && raw.toLowerCase() !== c) return raw;
+  return COMMON_LANG_NAMES_TR[c] || raw || String(c || "").toUpperCase();
+}
+
+function prettyLangFlag(value, code) {
+  const raw = String(value || "").trim();
+  return raw || COMMON_LANG_FLAGS[canon(code)] || "🌐";
+}
+
 const TTS_FALLBACK_LANG = {
   ku: "tr",
   ckb: "ar",
@@ -99,6 +149,7 @@ const UI = {
 
   homeBtn: $("homeBtn"),
   homeLink: $("homeLink"),
+  clearBtn: $("clearBtn"),
 
   genericBackdrop: $("genericBackdrop"),
   genericTitle: $("genericTitle"),
@@ -226,24 +277,28 @@ function itemName(item, code) {
         group[lang.toUpperCase()] ||
         group.tr ||
         group.TR ||
+        group.tr_name ||
+        group.TR_NAME ||
         group.en ||
         group.EN;
 
-      if (found) return String(found);
+      if (found) return prettyLangName(found, code);
     }
   }
 
-  return String(
+  const direct =
     item?.[`name_${lang}`] ||
     item?.[`label_${lang}`] ||
+    item?.tr_name ||
     item?.name_tr ||
     item?.label_tr ||
     item?.tr ||
     item?.name ||
     item?.label ||
     item?.title ||
-    code.toUpperCase()
-  );
+    "";
+
+  return prettyLangName(direct, code);
 }
 
 function normalizeLangItem(item) {
@@ -253,7 +308,7 @@ function normalizeLangItem(item) {
   return {
     code,
     name: itemName(item, code),
-    flag: String(item?.flag || item?.emoji || item?.icon || "🌐")
+    flag: prettyLangFlag(item?.flag || item?.emoji || item?.icon, code)
   };
 }
 
@@ -1143,6 +1198,47 @@ function prepareInputs() {
   UI.botSend?.classList.add("hidden");
 }
 
+function isIOSLike() {
+  const ua = String(navigator.userAgent || "");
+  return /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function fallbackFaceToFacePage() {
+  return isIOSLike() ? "facetoface_ios.html" : "facetoface.html";
+}
+
+function safeBackTarget() {
+  try {
+    const ref = document.referrer ? new URL(document.referrer) : null;
+    if (!ref) return "";
+    if (ref.origin !== location.origin) return "";
+    if (ref.href === location.href) return "";
+    return `${ref.pathname}${ref.search}${ref.hash}` || "";
+  } catch {
+    return "";
+  }
+}
+
+function goBackToSource(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+
+  const refTarget = safeBackTarget();
+  if (refTarget) {
+    location.href = refTarget;
+    return;
+  }
+
+  if (!isIOSLike() && window.history.length > 1) {
+    try {
+      history.back();
+      return;
+    } catch {}
+  }
+
+  location.href = fallbackFaceToFacePage();
+}
+
 function bindEvents() {
   UI.topLangBtn?.addEventListener("click", () => {
     renderLangLists();
@@ -1185,35 +1281,42 @@ function bindEvents() {
     e.stopPropagation();
   });
 
-  const getFaceToFaceFallbackUrl = () => {
-    const ua = String(navigator.userAgent || "");
-    const isiOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    return isiOS ? "facetoface_ios.html" : "facetoface.html";
-  };
+  UI.homeLink?.addEventListener("click", goBackToSource);
+  UI.homeBtn?.addEventListener("click", goBackToSource);
 
-  const goBackToPreviousPage = (event) => {
+  const clearConversation = (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
+    if (UI.topInput) UI.topInput.value = "";
+    if (UI.botInput) UI.botInput.value = "";
 
-    const currentPath = String(location.pathname || "").replace(/\/+$/, "");
-    const referrer = String(document.referrer || "").trim();
+    stopAudio();
+    stopRecognition("top");
+    stopRecognition("bot");
+    clearBubbles();
 
-    try {
-      if (referrer) {
-        const refUrl = new URL(referrer, location.href);
-        const refPath = String(refUrl.pathname || "").replace(/\/+$/, "");
-        if (refUrl.origin === location.origin && refPath && refPath !== currentPath) {
-          location.href = refUrl.href;
-          return;
-        }
-      }
-    } catch {}
+    UI.topKeyboardWrap?.classList.remove("show");
+    UI.botKeyboardWrap?.classList.remove("show");
 
-    location.href = getFaceToFaceFallbackUrl();
+    syncComposerButtons();
+
+    document.body.classList.remove("is-translating", "is-error", "is-listening");
+    document.body.classList.add("is-ready");
+
+    pointOrbTo("bot");
   };
 
-  UI.homeLink?.addEventListener("click", goBackToPreviousPage);
-  UI.homeBtn?.addEventListener("click", goBackToPreviousPage);
+  const captureClearTap = (event) => {
+    const target = event.target?.closest?.("#clearBtn,.btn-clear");
+    if (!target) return;
+    clearConversation(event);
+  };
+
+  UI.clearBtn?.addEventListener("pointerdown", clearConversation, { passive: false });
+  UI.clearBtn?.addEventListener("touchend", clearConversation, { passive: false });
+  UI.clearBtn?.addEventListener("click", clearConversation);
+  document.addEventListener("pointerdown", captureClearTap, { capture: true, passive: false });
+  document.addEventListener("touchend", captureClearTap, { capture: true, passive: false });
 
   UI.genericCloseBtn?.addEventListener("click", closeModal);
   UI.genericBackdrop?.addEventListener("click", (e) => {
