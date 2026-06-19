@@ -8,34 +8,28 @@ function apiUrl(path) {
 }
 
 /*
-  KAFKAS DİLLERİ
+  MEZOPOTAMYA'NIN DİLİ
   - ÜST / 180 derece: /js/lang_pool_full.js full dil havuzu
-  - ALT: Google tarafında test edilen Kafkas dilleri
-  - Çıkarılanlar:
-    hy  / Ermenice
-    ady / Adıgece
-    az  / Azerbaycan Türkçesi, Turan Dilleri içinde var
-  - Input yok
-  - Klavye yok
-  - Send yok
+  - ALT: sadece ku, ckb, he
+  - Input yok, klavye yok, send yok
   - Sadece mikrofon
-  - AI yok
-  - /api/translate + use_ai:false + google_only:true
+  - AI yok: /api/translate + use_ai:false + google_only:true
+  - TTS: önce orijinal yazı, olmazsa gizli Latin okunuş
 */
 
+const F2F_VOICE_KEY = "facetoface_voice_mode";
+const F2F_PRESET_KEY = "facetoface_voice_preset";
 const F2F_AUTO_READ_KEY = "facetoface_auto_read";
 
-const KAFKAS_LANG_POOL = [
-  { code: "ka", name: "Gürcüce", flag: "🇬🇪" },
-  { code: "ce", name: "Çeçence", flag: "🔹" },
-  { code: "ab", name: "Abhazca", flag: "🔸" },
-  { code: "av", name: "Avarca", flag: "🔹" },
-  { code: "os", name: "Osetçe", flag: "🔹" }
+const BOT_LANG_POOL = [
+  { code: "ku", name: "Kürtçe Kurmanci", flag: "☀️" },
+  { code: "ckb", name: "Kürtçe Sorani", flag: "🌙" },
+  { code: "he", name: "İbranice", flag: "✡️" }
 ];
 
 const REQUIRED_TOP_LANGS = [
   { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-  ...KAFKAS_LANG_POOL
+  ...BOT_LANG_POOL
 ];
 
 const FALLBACK_TOP_LANG_POOL = [
@@ -47,7 +41,7 @@ const FALLBACK_TOP_LANG_POOL = [
   { code: "es", name: "İspanyolca", flag: "🇪🇸" },
   { code: "ru", name: "Rusça", flag: "🇷🇺" },
   { code: "ar", name: "Arapça", flag: "🇸🇦" },
-  ...KAFKAS_LANG_POOL
+  ...BOT_LANG_POOL
 ];
 
 let TOP_LANG_POOL = FALLBACK_TOP_LANG_POOL.slice();
@@ -61,20 +55,65 @@ const BCP = {
   es: "es-ES",
   ru: "ru-RU",
   ar: "ar-SA",
-
-  ka: "ka-GE",
-  ce: "tr-TR",
-  ab: "tr-TR",
-  av: "tr-TR",
-  os: "tr-TR"
+  ku: "tr-TR",
+  ckb: "ar-IQ",
+  he: "he-IL"
 };
 
+const COMMON_LANG_NAMES_TR = {
+  tr: "Türkçe",
+  en: "İngilizce",
+  de: "Almanca",
+  fr: "Fransızca",
+  it: "İtalyanca",
+  es: "İspanyolca",
+  ar: "Arapça",
+  ru: "Rusça",
+  bg: "Bulgarca",
+  pt: "Portekizce",
+  zh: "Çince",
+  ja: "Japonca",
+  ko: "Korece",
+  ku: "Kürtçe Kurmanci",
+  ckb: "Kürtçe Sorani",
+  he: "İbranice"
+};
+
+const COMMON_LANG_FLAGS = {
+  tr: "🇹🇷",
+  en: "🇬🇧",
+  de: "🇩🇪",
+  fr: "🇫🇷",
+  it: "🇮🇹",
+  es: "🇪🇸",
+  ar: "🇸🇦",
+  ru: "🇷🇺",
+  bg: "🇧🇬",
+  pt: "🇵🇹",
+  zh: "🇨🇳",
+  ja: "🇯🇵",
+  ko: "🇰🇷",
+  ku: "☀️",
+  ckb: "🌙",
+  he: "✡️"
+};
+
+function prettyLangName(value, code) {
+  const c = canon(code);
+  const raw = String(value || "").trim();
+  if (raw && raw.toLowerCase() !== c) return raw;
+  return COMMON_LANG_NAMES_TR[c] || raw || String(c || "").toUpperCase();
+}
+
+function prettyLangFlag(value, code) {
+  const raw = String(value || "").trim();
+  return raw || COMMON_LANG_FLAGS[canon(code)] || "🌐";
+}
+
 const TTS_FALLBACK_LANG = {
-  ka: "tr",
-  ce: "tr",
-  ab: "tr",
-  av: "tr",
-  os: "tr"
+  ku: "tr",
+  ckb: "ar",
+  he: "he"
 };
 
 const UI = {
@@ -82,24 +121,28 @@ const UI = {
 
   topLangBtn: $("topLangBtn"),
   topLangTxt: $("topLangTxt"),
+  topSettingsMini: $("topSettingsMini"),
   topInput: $("topInput"),
   topMic: $("topMic"),
   topSend: $("topSend"),
   topComposer: $("topComposer"),
   topBody: $("topBody"),
   topKeyboardWrap: $("topKeyboardWrap"),
+  topKeyboard: $("topKeyboard"),
   popTop: $("pop-top"),
   closeTop: $("close-top"),
   listTop: $("list-top"),
 
   botLangBtn: $("botLangBtn"),
   botLangTxt: $("botLangTxt"),
+  botSettingsMini: $("botSettingsMini"),
   botInput: $("botInput"),
   botMic: $("botMic"),
   botSend: $("botSend"),
   botComposer: $("botComposer"),
   botBody: $("botBody"),
   botKeyboardWrap: $("botKeyboardWrap"),
+  botKeyboard: $("botKeyboard"),
   popBot: $("pop-bot"),
   closeBot: $("close-bot"),
   listBot: $("list-bot"),
@@ -109,13 +152,16 @@ const UI = {
   clearBtn: $("clearBtn"),
 
   genericBackdrop: $("genericBackdrop"),
+  genericTitle: $("genericTitle"),
+  genericText: $("genericText"),
   genericCloseBtn: $("genericCloseBtn"),
   miniToast: $("miniToast")
 };
 
 const state = {
   topLang: "tr",
-  botLang: "ka",
+  botLang: "ku",
+  activeSide: "bot",
 
   topListening: false,
   botListening: false,
@@ -146,12 +192,10 @@ function wait(ms) {
 
 function toast(msg = "") {
   if (!UI.miniToast) return;
-
   UI.miniToast.textContent = String(msg || "");
   UI.miniToast.classList.add("show");
-
-  clearTimeout(window.__kafkasToast);
-  window.__kafkasToast = setTimeout(() => {
+  clearTimeout(window.__mezoToast);
+  window.__mezoToast = setTimeout(() => {
     UI.miniToast.classList.remove("show");
   }, 1800);
 }
@@ -185,7 +229,7 @@ async function loadFullLangPoolModule() {
   try {
     return await import("/js/lang_pool_full.js");
   } catch (e) {
-    console.warn("[KAFKAS] lang_pool_full yüklenemedi, fallback kullanılacak", e);
+    console.warn("[MEZO] /js/lang_pool_full.js yüklenemedi, fallback kullanılacak", e);
     return {};
   }
 }
@@ -207,9 +251,7 @@ function extractPoolFromModule(module) {
 
     if (candidate && typeof candidate === "object") {
       const values = Object.values(candidate);
-      if (values.length && values.every((item) => item && typeof item === "object")) {
-        return values;
-      }
+      if (values.length && values.every((item) => item && typeof item === "object")) return values;
     }
   }
 
@@ -235,24 +277,28 @@ function itemName(item, code) {
         group[lang.toUpperCase()] ||
         group.tr ||
         group.TR ||
+        group.tr_name ||
+        group.TR_NAME ||
         group.en ||
         group.EN;
 
-      if (found) return String(found);
+      if (found) return prettyLangName(found, code);
     }
   }
 
-  return String(
+  const direct =
     item?.[`name_${lang}`] ||
     item?.[`label_${lang}`] ||
+    item?.tr_name ||
     item?.name_tr ||
     item?.label_tr ||
     item?.tr ||
     item?.name ||
     item?.label ||
     item?.title ||
-    code.toUpperCase()
-  );
+    "";
+
+  return prettyLangName(direct, code);
 }
 
 function normalizeLangItem(item) {
@@ -262,7 +308,7 @@ function normalizeLangItem(item) {
   return {
     code,
     name: itemName(item, code),
-    flag: String(item?.flag || item?.emoji || item?.icon || "🌐")
+    flag: prettyLangFlag(item?.flag || item?.emoji || item?.icon, code)
   };
 }
 
@@ -273,14 +319,12 @@ function buildTopPool(poolItems) {
   for (const item of poolItems || []) {
     const normalized = normalizeLangItem(item);
     if (!normalized || seen.has(normalized.code)) continue;
-
     seen.add(normalized.code);
     out.push(normalized);
   }
 
   for (const item of REQUIRED_TOP_LANGS) {
     if (seen.has(item.code)) continue;
-
     seen.add(item.code);
     out.push(item);
   }
@@ -309,7 +353,7 @@ function currentTopLang() {
 }
 
 function currentBotLang() {
-  return langFromPool(KAFKAS_LANG_POOL, state.botLang);
+  return langFromPool(BOT_LANG_POOL, state.botLang);
 }
 
 function langForSide(side) {
@@ -328,6 +372,7 @@ function pointOrbTo(side) {
   document.body.classList.remove("to-top", "to-bot");
   document.body.classList.add(side === "top" ? "to-top" : "to-bot");
   UI.centerHub?.classList.toggle("to-top", side === "top");
+  state.activeSide = side;
 }
 
 function syncComposerButtons() {
@@ -372,7 +417,6 @@ function clearLatest(side) {
 
 function createSpeakerButton(getText, getLang) {
   const btn = document.createElement("button");
-
   btn.type = "button";
   btn.className = "spk-icon";
   btn.setAttribute("aria-label", "Tekrar dinle");
@@ -388,7 +432,6 @@ function createSpeakerButton(getText, getLang) {
   btn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     await speakWithFallback(getText(), getLang());
   });
 
@@ -420,17 +463,22 @@ function addBubble(where, kind, text, opts = {}) {
   }
 
   row.appendChild(inner);
+
+  if (opts.subText) {
+    const sub = document.createElement("div");
+    sub.className = "bubble-sub";
+    sub.textContent = String(opts.subText || "");
+    row.appendChild(sub);
+  }
+
   wrap.appendChild(row);
-
   keepVisible(where);
-
   return row;
 }
 
 function clearBubbles() {
   if (UI.topBody) UI.topBody.innerHTML = "";
   if (UI.botBody) UI.botBody.innerHTML = "";
-
   state.loadingTopRow = null;
   state.loadingBotRow = null;
 }
@@ -481,7 +529,18 @@ function renderLangList(listEl, pool, selectedCode, side) {
 
 function renderLangLists() {
   renderLangList(UI.listTop, TOP_LANG_POOL, state.topLang, "top");
-  renderLangList(UI.listBot, KAFKAS_LANG_POOL, state.botLang, "bot");
+  renderLangList(UI.listBot, BOT_LANG_POOL, state.botLang, "bot");
+}
+
+function getSelectedVoice() {
+  const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
+  const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
+
+  if (mode === "clone") return "mine";
+  if (mode === "preset" && preset === "second") return "second";
+  if (mode === "preset" && preset === "memory") return "memory";
+
+  return "auto";
 }
 
 function isAutoReadEnabled() {
@@ -504,6 +563,15 @@ function stopAudio() {
   try { window.NativeTTS?.stop?.(); } catch {}
 }
 
+async function getCurrentUserId() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || null;
+  } catch {
+    return null;
+  }
+}
+
 function resolveSpeechLang(langCode) {
   const code = canon(langCode);
   return TTS_FALLBACK_LANG[code] || code || "tr";
@@ -511,6 +579,11 @@ function resolveSpeechLang(langCode) {
 
 function bcpForSpeak(langCode) {
   const code = canon(langCode);
+
+  if (code === "he") return "he-IL";
+  if (code === "ckb") return "ar-IQ";
+  if (code === "ku") return "tr-TR";
+
   return BCP[code] || BCP[resolveSpeechLang(code)] || code || BCP.tr;
 }
 
@@ -521,10 +594,72 @@ function chooseWebVoice(langCode) {
   const wantedBcp = String(bcpForSpeak(code)).toLowerCase();
 
   return voices.find(v => String(v.lang || "").toLowerCase() === wantedBcp) ||
+         voices.find(v => code === "ckb" && String(v.lang || "").toLowerCase().startsWith("ar")) ||
+         voices.find(v => code === "he" && String(v.lang || "").toLowerCase().startsWith("he")) ||
          voices.find(v => String(v.lang || "").toLowerCase().startsWith(resolved)) ||
          voices.find(v => String(v.lang || "").toLowerCase().startsWith("tr")) ||
          voices[0] ||
          null;
+}
+
+async function speakViaApi(text, langCode) {
+  const selectedVoice = getSelectedVoice();
+
+  if (!["mine", "second", "memory"].includes(selectedVoice)) return false;
+
+  const userId = await getCurrentUserId();
+  if (!userId) return false;
+
+  const myRunId = ++state.speakRunId;
+
+  let apiVoiceMode = "auto";
+  let apiVoice = "auto";
+  let apiPresetVoice = "";
+
+  if (selectedVoice === "mine") {
+    apiVoiceMode = "clone";
+    apiVoice = "clone";
+  } else if (selectedVoice === "second") {
+    apiVoiceMode = "preset";
+    apiVoice = "second";
+    apiPresetVoice = "second";
+  } else if (selectedVoice === "memory") {
+    apiVoiceMode = "preset";
+    apiVoice = "memory";
+    apiPresetVoice = "memory";
+  }
+
+  const speakCode = resolveSpeechLang(langCode);
+
+  const resp = await fetch(apiUrl("tts"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: speakCode,
+      user_id: userId,
+      module: "mezopotamyanin_dili",
+      voice: apiVoice,
+      voice_mode: apiVoiceMode,
+      preset_voice: apiPresetVoice,
+      selected_voice: selectedVoice,
+      tone: "neutral"
+    })
+  });
+
+  const json = await resp.json().catch(() => null);
+
+  if (!resp.ok || !json?.audio_base64) return false;
+  if (myRunId !== state.speakRunId) return false;
+
+  const audio = new Audio(`data:audio/mp3;base64,${json.audio_base64}`);
+  audio.preload = "auto";
+  audio.playsInline = true;
+
+  state.currentAudio = audio;
+
+  await audio.play();
+  return true;
 }
 
 function speakWebOnce(text, langCode, timeoutMs = 700) {
@@ -536,6 +671,7 @@ function speakWebOnce(text, langCode, timeoutMs = 700) {
       }
 
       const value = normalizeText(text);
+
       if (!value) {
         resolve(false);
         return;
@@ -547,6 +683,7 @@ function speakWebOnce(text, langCode, timeoutMs = 700) {
       utter.lang = String(bcpForSpeak(langCode));
 
       const voice = chooseWebVoice(langCode);
+
       if (voice) utter.voice = voice;
 
       utter.rate = 0.95;
@@ -582,10 +719,16 @@ async function speakText(text, langCode) {
   if (!isAutoReadEnabled()) return false;
 
   const value = normalizeText(text);
+
   if (!value || value === "...") return false;
 
   stopAudio();
+
   await wait(80);
+
+  const apiOk = await speakViaApi(value, langCode).catch(() => false);
+
+  if (apiOk) return true;
 
   try {
     const speakCode = resolveSpeechLang(langCode);
@@ -599,26 +742,67 @@ async function speakText(text, langCode) {
   return await speakWebOnce(value, langCode, 700);
 }
 
-function fallbackSpeakLang() {
-  return "tr";
+function fallbackSpeakLang(langCode) {
+  const code = canon(langCode);
+
+  if (code === "he") return "tr";
+  if (code === "ckb") return "tr";
+  if (code === "ku") return "tr";
+
+  return resolveSpeechLang(code);
 }
 
 function makeTtsReadable(text, langCode) {
   const code = canon(langCode);
   const value = String(text || "");
 
-  if (code === "ka") return latinizeGeorgian(value);
-  if (["ce", "ab", "av", "os"].includes(code)) return latinizeCyrillicKafkas(value);
+  if (code === "he") return latinizeHebrew(value);
+  if (code === "ckb") return latinizeSorani(value);
 
   return value;
 }
 
-function latinizeGeorgian(text) {
+function latinizeHebrew(text) {
   const map = {
-    "ა":"a","ბ":"b","გ":"g","დ":"d","ე":"e","ვ":"v","ზ":"z","თ":"t","ი":"i","კ":"k",
-    "ლ":"l","მ":"m","ნ":"n","ო":"o","პ":"p","ჟ":"zh","რ":"r","ს":"s","ტ":"t","უ":"u",
-    "ფ":"p","ქ":"k","ღ":"gh","ყ":"q","შ":"sh","ჩ":"ch","ც":"ts","ძ":"dz","წ":"ts",
-    "ჭ":"ch","ხ":"kh","ჯ":"j","ჰ":"h"
+    "א": "a",
+    "ב": "b",
+    "ג": "g",
+    "ד": "d",
+    "ה": "h",
+    "ו": "v",
+    "ז": "z",
+    "ח": "h",
+    "ט": "t",
+    "י": "y",
+    "כ": "kh",
+    "ך": "kh",
+    "ל": "l",
+    "מ": "m",
+    "ם": "m",
+    "נ": "n",
+    "ן": "n",
+    "ס": "s",
+    "ע": "a",
+    "פ": "p",
+    "ף": "f",
+    "צ": "ts",
+    "ץ": "ts",
+    "ק": "k",
+    "ר": "r",
+    "ש": "sh",
+    "ת": "t",
+    "ַ": "a",
+    "ָ": "a",
+    "ֶ": "e",
+    "ֵ": "e",
+    "ִ": "i",
+    "ֹ": "o",
+    "ֻ": "u",
+    "ְ": "",
+    "ּ": "",
+    "ֲ": "a",
+    "ֱ": "e",
+    "ֳ": "o"
   };
 
   return String(text || "")
@@ -629,41 +813,138 @@ function latinizeGeorgian(text) {
     .trim();
 }
 
-function latinizeCyrillicKafkas(text) {
+function latinizeSorani(text) {
   const map = {
-    "А":"A","а":"a","Ӏ":"","Б":"B","б":"b","В":"V","в":"v","Г":"G","г":"g",
-    "Д":"D","д":"d","Е":"E","е":"e","Ё":"Yo","ё":"yo","Ж":"Zh","ж":"zh","З":"Z","з":"z",
-    "И":"I","и":"i","Й":"Y","й":"y","К":"K","к":"k","Л":"L","л":"l","М":"M","м":"m",
-    "Н":"N","н":"n","О":"O","о":"o","П":"P","п":"p","Р":"R","р":"r","С":"S","с":"s",
-    "Т":"T","т":"t","У":"U","у":"u","Ф":"F","ф":"f","Х":"Kh","х":"kh","Ц":"Ts","ц":"ts",
-    "Ч":"Ch","ч":"ch","Ш":"Sh","ш":"sh","Щ":"Sh","щ":"sh","Ъ":"","ъ":"","Ы":"I","ы":"i",
-    "Ь":"","ь":"","Э":"E","э":"e","Ю":"Yu","ю":"yu","Я":"Ya","я":"ya"
+    "ا": "a",
+    "أ": "a",
+    "إ": "i",
+    "آ": "a",
+
+    "ب": "b",
+    "پ": "p",
+    "ت": "t",
+    "ث": "s",
+
+    "ج": "j",
+    "چ": "ch",
+    "ح": "h",
+    "خ": "kh",
+
+    "د": "d",
+    "ذ": "z",
+    "ر": "r",
+    "ڕ": "r",
+
+    "ز": "z",
+    "ژ": "zh",
+
+    "س": "s",
+    "ش": "sh",
+    "ص": "s",
+    "ض": "z",
+    "ط": "t",
+    "ظ": "z",
+
+    "ع": "",
+    "غ": "gh",
+
+    "ف": "f",
+    "ڤ": "v",
+
+    "ق": "q",
+    "ک": "k",
+    "ك": "k",
+    "گ": "g",
+
+    "ل": "l",
+    "ڵ": "l",
+
+    "م": "m",
+    "ن": "n",
+
+    "و": "w",
+    "ۆ": "o",
+    "ۇ": "u",
+    "وو": "u",
+
+    "ھ": "h",
+    "ه": "a",
+    "ە": "e",
+
+    "ی": "y",
+    "ي": "y",
+    "ێ": "e",
+    "ى": "a",
+
+    "ء": "",
+    "ئ": "",
+
+    "َ": "a",
+    "ُ": "u",
+    "ِ": "i",
+    "ّ": "",
+    "ْ": "",
+    "ـ": ""
   };
 
-  return String(text || "")
+  const value = String(text || "")
+    .replace(/وو/g, "u")
     .split("")
     .map((ch) => map[ch] ?? ch)
     .join("")
+    .replace(/aa+/g, "a")
+    .replace(/ee+/g, "e")
+    .replace(/ii+/g, "i")
+    .replace(/oo+/g, "o")
+    .replace(/uu+/g, "u")
     .replace(/\s+/g, " ")
     .trim();
+
+  return value;
 }
 
 async function speakWithFallback(visibleText, langCode) {
   if (!isAutoReadEnabled()) return;
 
   const value = normalizeText(visibleText);
+
   if (!value || value === "...") return;
+
+  const code = canon(langCode);
+
+  /*
+    Sorani tarafında Android/NativeTTS bazen "okudum" diye true döndüğü halde
+    hiç ses vermiyor. Bu yüzden ckb için doğrudan gizli Latin okunuş okutuyoruz.
+    Ekrandaki görünen metin yine orijinal Sorani kalır.
+  */
+  if (code === "ckb") {
+    const readable = normalizeText(latinizeSorani(value));
+
+    if (readable) {
+      stopAudio();
+      await wait(120);
+      await speakText(readable, "tr");
+      return;
+    }
+  }
+
+  /*
+    İbranice şu an çalıştığı için önce orijinal he-IL ile deniyoruz.
+    Olmazsa Latin okunuşa düşer.
+  */
+  const originalOk = await speakText(value, langCode);
+
+  if (originalOk) return;
 
   const readable = normalizeText(makeTtsReadable(value, langCode));
 
-  if (readable && readable !== value) {
-    stopAudio();
-    await wait(120);
-    await speakText(readable, fallbackSpeakLang(langCode));
-    return;
-  }
+  if (!readable || readable === value) return;
 
-  await speakText(value, langCode);
+  stopAudio();
+
+  await wait(120);
+
+  await speakText(readable, fallbackSpeakLang(langCode));
 }
 
 async function getAccessToken() {
@@ -750,7 +1031,6 @@ async function runTranslateText(fromSide, text) {
   try {
     const fromLang = langForSide(sourceSide);
     const toLang = langForSide(targetSide);
-
     const translated = await translateGoogle(cleanText, fromLang, toLang);
     const speakLang = toLang;
 
@@ -846,7 +1126,6 @@ function startRecognition(side) {
   const listenCode = resolveSpeechLang(langCode);
 
   const recog = new SR();
-
   recog.lang = String(BCP[listenCode] || BCP[langCode] || listenCode || BCP.tr);
   recog.interimResults = true;
   recog.continuous = false;
@@ -900,7 +1179,6 @@ function prepareInputs() {
     input.value = "";
     input.readOnly = true;
     input.disabled = true;
-
     input.setAttribute("inputmode", "none");
     input.setAttribute("autocomplete", "off");
     input.setAttribute("autocorrect", "off");
@@ -918,6 +1196,47 @@ function prepareInputs() {
 
   UI.topSend?.classList.add("hidden");
   UI.botSend?.classList.add("hidden");
+}
+
+function isIOSLike() {
+  const ua = String(navigator.userAgent || "");
+  return /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function fallbackFaceToFacePage() {
+  return isIOSLike() ? "facetoface_ios.html" : "facetoface.html";
+}
+
+function safeBackTarget() {
+  try {
+    const ref = document.referrer ? new URL(document.referrer) : null;
+    if (!ref) return "";
+    if (ref.origin !== location.origin) return "";
+    if (ref.href === location.href) return "";
+    return `${ref.pathname}${ref.search}${ref.hash}` || "";
+  } catch {
+    return "";
+  }
+}
+
+function goBackToSource(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+
+  const refTarget = safeBackTarget();
+  if (refTarget) {
+    location.href = refTarget;
+    return;
+  }
+
+  if (!isIOSLike() && window.history.length > 1) {
+    try {
+      history.back();
+      return;
+    } catch {}
+  }
+
+  location.href = fallbackFaceToFacePage();
 }
 
 function bindEvents() {
@@ -941,6 +1260,14 @@ function bindEvents() {
     if (e.target === UI.popBot) UI.popBot.classList.remove("show");
   });
 
+  UI.topSettingsMini?.addEventListener("click", () => {
+    location.href = "/pages/premium_voice_settings.html?from=mezopotamyanin_dili";
+  });
+
+  UI.botSettingsMini?.addEventListener("click", () => {
+    location.href = "/pages/premium_voice_settings.html?from=mezopotamyanin_dili";
+  });
+
   UI.topMic?.addEventListener("click", () => startRecognition("top"));
   UI.botMic?.addEventListener("click", () => startRecognition("bot"));
 
@@ -954,14 +1281,8 @@ function bindEvents() {
     e.stopPropagation();
   });
 
-  UI.homeLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    location.href = "/pages/home.html";
-  });
-
-  UI.homeBtn?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
-  });
+  UI.homeLink?.addEventListener("click", goBackToSource);
+  UI.homeBtn?.addEventListener("click", goBackToSource);
 
   const clearConversation = (event) => {
     event?.preventDefault?.();
@@ -970,10 +1291,8 @@ function bindEvents() {
     if (UI.botInput) UI.botInput.value = "";
 
     stopAudio();
-
     stopRecognition("top");
     stopRecognition("bot");
-
     clearBubbles();
 
     UI.topKeyboardWrap?.classList.remove("show");
