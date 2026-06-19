@@ -63,6 +63,8 @@ let audio = null;
 let speakToken = 0;
 let translateToken = 0;
 let speechTranslateTimer = null;
+let suppressSpeechErrorUntil = 0;
+let lastSpeechResultAt = 0;
 let booted = false;
 
 function canonical(code) {
@@ -416,7 +418,10 @@ window.onNativeSpeechResult = function(payload, maybeText, maybeFinal) {
     : parseNativeSpeechPayload(payload);
   const transcript = data?.text || data?.result || data?.transcript || data?.value || "";
   const isFinal = data?.isFinal !== false && data?.final !== false;
-  if (transcript) applyTranscriptToInput(transcript, isFinal);
+  if (transcript) {
+    lastSpeechResultAt = Date.now();
+    applyTranscriptToInput(transcript, isFinal);
+  }
   if (isFinal) {
     listening = false;
     syncInputButtons();
@@ -434,10 +439,65 @@ function friendlySpeechError(error) {
   return "Mikrofon şu anda başlatılamadı. Lütfen tekrar deneyin.";
 }
 
+function isSoftSpeechError(error) {
+  const code = String(error || "").toLowerCase();
+  return code.includes("no_speech") ||
+    code.includes("no speech") ||
+    code.includes("timeout") ||
+    code.includes("empty") ||
+    code.includes("aborted") ||
+    code.includes("abort") ||
+    code.includes("cancelled") ||
+    code.includes("canceled") ||
+    code.includes("stopped");
+}
+
+function markSpeechStopGrace(ms = 1400) {
+  suppressSpeechErrorUntil = Date.now() + Math.max(0, Number(ms) || 0);
+}
+
+function shouldIgnoreSpeechError(error) {
+  if (!isSoftSpeechError(error)) return false;
+  const now = Date.now();
+  if (now < suppressSpeechErrorUntil) return true;
+  if (lastSpeechResultAt && now - lastSpeechResultAt < 1800) return true;
+  return false;
+}
+
+function goBackToFaceToFace(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+
+  const fallback = "/facetoface.html";
+
+  try {
+    const ref = document.referrer || "";
+    if (ref) {
+      const refUrl = new URL(ref, location.origin);
+      const currentUrl = new URL(location.href);
+      const sameOrigin = refUrl.origin === currentUrl.origin;
+      const isFaceToFace = /\/facetoface(?:_ios)?\.html$/i.test(refUrl.pathname);
+
+      if (sameOrigin && isFaceToFace) {
+        location.href = refUrl.href;
+        return;
+      }
+    }
+  } catch {}
+
+  location.href = fallback;
+}
+
 window.onNativeSpeechError = function(error) {
   console.warn("[TEXT_TRANSLATE_SPEECH] speech failure", { error });
   listening = false;
   syncInputButtons();
+
+  if (shouldIgnoreSpeechError(error)) {
+    console.warn("[TEXT_TRANSLATE_SPEECH] soft speech error ignored", { error });
+    return;
+  }
+
   toast(friendlySpeechError(error));
 };
 
@@ -454,6 +514,7 @@ function extractStableRecognitionText(results) {
 }
 
 function stopRecognition() {
+  markSpeechStopGrace();
   try { recognizer?.stop?.(); } catch {}
   try { recognizer?.abort?.(); } catch {}
   try { window.Native?.stopSpeechRecognition?.(); } catch {}
@@ -502,14 +563,26 @@ function startRecognition() {
   };
   recognizer.onresult = (event) => {
     const text = extractStableRecognitionText(event.results);
-    if (text) applyTranscriptToInput(text, false);
+    if (text) {
+      lastSpeechResultAt = Date.now();
+      applyTranscriptToInput(text, false);
+    }
     const last = event.results[event.results.length - 1];
-    if (last?.isFinal && text) applyTranscriptToInput(text, true);
+    if (last?.isFinal && text) {
+      lastSpeechResultAt = Date.now();
+      applyTranscriptToInput(text, true);
+    }
   };
   recognizer.onerror = (event) => {
     console.warn("[TEXT_TRANSLATE_SPEECH] browser speech error", event?.error);
+    const error = event?.error || "";
+    if (shouldIgnoreSpeechError(error)) {
+      stopRecognition();
+      console.warn("[TEXT_TRANSLATE_SPEECH] soft browser error ignored", { error });
+      return;
+    }
     stopRecognition();
-    toast(friendlySpeechError(event?.error));
+    toast(friendlySpeechError(error));
   };
   recognizer.onend = () => {
     listening = false;
@@ -566,10 +639,13 @@ function bindEvents() {
     syncInputButtons();
   });
   micBtn?.addEventListener("click", startRecognition);
-  backLink?.addEventListener("click", (event) => { event.preventDefault(); location.href = "/pages/facetoface.html"; });
+  backLink?.addEventListener("click", goBackToFaceToFace);
   homeLink?.addEventListener("click", (event) => { event.preventDefault(); location.href = "/pages/home.html"; });
   homeBtn?.addEventListener("click", () => { location.href = "/pages/home.html"; });
-  clearBtn?.addEventListener("click", () => {
+  clearBtn?.addEventListener("click", (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    markSpeechStopGrace(1800);
     if (inputBox) {
       inputBox.value = "";
       autoResizeInput();
