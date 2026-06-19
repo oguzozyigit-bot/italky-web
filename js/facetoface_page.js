@@ -89,7 +89,7 @@ const F2F_HANDS_FREE_TIP_PROFILE_FIELD = "handsfree_tip_dismissed";
 // Dual-Ear Pro v0.3 — Soft Near Voice Gate
 // Amaç: Kalabalık ortamda çok kısa/uzak/uğultu benzeri sonuçları azaltmak.
 // Bu filtre "sert kapı" değildir; gate başlatılamazsa mevcut Eller Serbest akışı bozulmadan devam eder.
-const HANDS_FREE_NEAR_VOICE_GATE_ENABLED = true;
+const HANDS_FREE_NEAR_VOICE_GATE_ENABLED = false;
 const HANDS_FREE_NOISE_CALIBRATION_MS = 900;
 const HANDS_FREE_VOICE_SAMPLE_MS = 80;
 const HANDS_FREE_MIN_RMS = 0.022;
