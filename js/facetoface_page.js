@@ -3,13 +3,14 @@ import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 import { ensureFaceToFacePremiumAccess } from "/js/facetoface_premium_gate.js";
 import {
-  commitUsage,
-  buildUsageNote
-} from "/js/usage_meter.js";
+  canEnableDualEarPro,
+  showDualEarProBlockedReason
+} from "/js/dual_ear_pro.js";
 
 const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
 const API_BASE = "https://italky-api.onrender.com";
+const F2F_LIVE_CULTURAL_MODE_DISABLED = true;
 const $ = (id) => document.getElementById(id);
 
 const SITE_LANG_KEY = "site_lang";
@@ -71,7 +72,16 @@ const ALT_CHARS = {
 };
 
 const F2F_VOICE_KEY = "italkyai_voice_mode";
-const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
+const DENEME_CULTURAL_MODE_KEY = "deneme_facetoface_cultural_mode";
+const DENEME_CULTURAL_INFO_SEEN_KEY = "deneme_cultural_info_seen";
+const DENEME_HANDS_FREE_MODE_KEY = "facetoface_handsfree_mode";
+const DENEME_HANDS_FREE_SIDE = "auto";
+const DENEME_HANDS_FREE_SILENCE_MS = 1450;
+const DENEME_HANDS_FREE_MAX_LISTEN_MS = 14000;
+const DENEME_HANDS_FREE_RESTART_MS = 650;
+const DENEME_HANDS_FREE_BUSY_RETRY_MS = 850;
+const DENEME_HANDS_FREE_AUDIO_GUARD_MS = 1800;
+const DENEME_HANDS_FREE_EMPTY_RESTART_LIMIT = 8;
 const F2F_AUTO_READ_KEY = "italkyai_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
 const SHARED_VOICE_ID_KEY = "italkyai_selected_voice_id";
@@ -298,6 +308,10 @@ const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const miniToast = $("miniToast");
+const cultureToggle = $("cultureToggle");
+const cultureToggleText = $("cultureToggleText");
+const handsFreeToggle = $("handsFreeToggle");
+const topHandsFreeToggle = $("topHandsFreeToggle");
 
 const uiModal = $("uiModal");
 const uiModalTitle = $("uiModalTitle");
@@ -343,6 +357,18 @@ let keyboardAudioCtx = null;
 let keyboardMasterGain = null;
 let currentRuntimeMode = "online";
 let offlinePickerPool = [];
+let uiModalPurpose = "default";
+
+let handsFreeRunId = 0;
+let handsFreeSilenceTimer = null;
+let handsFreeRestartTimer = null;
+let handsFreeMaxListenTimer = null;
+let handsFreeEmptyEndCount = 0;
+let handsFreeStartPending = false;
+let handsFreeLastStartAt = 0;
+let handsFreeAudioGuardUntil = 0;
+let handsFreeNextSide = "bot";
+let handsFreeLastRoutedSide = "bot";
 
 function showToast(msg = "") {
   if (!miniToast) return;
@@ -354,21 +380,517 @@ function showToast(msg = "") {
   }, 1800);
 }
 
+function isCulturalModeEnabled() {
+  if (F2F_LIVE_CULTURAL_MODE_DISABLED) return false;
+  return String(localStorage.getItem(DENEME_CULTURAL_MODE_KEY) || "off").trim().toLowerCase() === "on";
+}
+
+function syncCulturalToggleUi() {
+  const enabled = isCulturalModeEnabled();
+  cultureToggle?.classList.toggle("on", enabled);
+  cultureToggle?.setAttribute("aria-pressed", enabled ? "true" : "false");
+  if (cultureToggleText) cultureToggleText.textContent = enabled ? "A\u00e7\u0131k" : "Kapal\u0131";
+}
+
+function setCulturalMode(enabled, opts = {}) {
+  localStorage.setItem(DENEME_CULTURAL_MODE_KEY, enabled ? "on" : "off");
+  syncCulturalToggleUi();
+  if (!opts.silent) showToast(enabled ? "K\u00fclt\u00fcrel mod a\u00e7\u0131k" : "K\u00fclt\u00fcrel mod kapal\u0131");
+}
+
+function shouldShowCulturalInfo() {
+  return String(localStorage.getItem(DENEME_CULTURAL_INFO_SEEN_KEY) || "") !== "1";
+}
+
+function showCulturalInfoModal() {
+  if (!uiModal) return;
+  uiModalPurpose = "cultural_info";
+  uiModalTitle.textContent = "K\u00fclt\u00fcrel \u00c7eviri Modu";
+  uiModalText.textContent = "Baz\u0131 c\u00fcmleler, deyimler ve atas\u00f6zleri kelime kelime \u00e7evrildi\u011finde anlam\u0131n\u0131 kaybeder. Mesela \u2018Sakla saman\u0131, gelir zaman\u0131\u2019 gibi bir ifadeyi birebir \u00e7evirmek kar\u015f\u0131 tarafta ayn\u0131 etkiyi olu\u015fturmaz. K\u00fclt\u00fcrel \u00e7eviri modu, c\u00fcmlenin ne demek istedi\u011fini kar\u015f\u0131 dilin do\u011fal olarak anlayaca\u011f\u0131 \u015fekilde aktar\u0131r.\n\nBu modda kelimeler birebir ve robotik bi\u00e7imde \u00e7evrilmez. italkyAI, konu\u015fman\u0131z\u0131n anlam\u0131n\u0131, tonunu ve g\u00fcnl\u00fck kullan\u0131m\u0131n\u0131 dikkate alarak daha anla\u015f\u0131l\u0131r bir terc\u00fcme \u00fcretmeye \u00e7al\u0131\u015f\u0131r.\n\nC\u00fcmle kursan\u0131z bile, k\u00fclt\u00fcrel \u00e7eviri modu a\u00e7\u0131ksa italkyAI eksik, hatal\u0131 veya devrik ifadeleri daha d\u00fczg\u00fcn ve anla\u015f\u0131l\u0131r \u015fekilde terc\u00fcme etmeye \u00e7al\u0131\u015f\u0131r.\n\nK\u00fclt\u00fcrel \u00e7eviri normal \u00e7eviriye g\u00f6re biraz daha yava\u015f olabilir ve jeton ile \u00e7al\u0131\u015f\u0131r.";
+  if (uiModalGo) {
+    uiModalGo.textContent = "Anlad\u0131m";
+    uiModalGo.classList.add("cultural-info-primary");
+  }
+  if (uiModalClose) uiModalClose.textContent = "Vazge\u00e7";
+  uiModal.classList.add("open");
+}
+
+function bindCulturalToggle() {
+  syncCulturalToggleUi();
+  if (F2F_LIVE_CULTURAL_MODE_DISABLED) return;
+  cultureToggle?.addEventListener("click", () => {
+    const next = !isCulturalModeEnabled();
+    setCulturalMode(next);
+    if (next && shouldShowCulturalInfo()) showCulturalInfoModal();
+  });
+}
+
+function isHandsFreeModeEnabled() {
+  return String(localStorage.getItem(DENEME_HANDS_FREE_MODE_KEY) || "off").trim().toLowerCase() === "on";
+}
+
+function isValidFaceSide(side) {
+  return side === "top" || side === "bot";
+}
+
+function getOtherSide(side) {
+  return side === "top" ? "bot" : "top";
+}
+
+function getHandsFreeSide() {
+  // Dual-Ear Pro tek fiziksel mikrofon akışıyla çalışır.
+  // Kullanıcıya sırayla konuşma hissi vermemek için dinleme tarafını sabit tutar,
+  // konuşmanın hangi balona gideceğini ise metin/dil algılama belirler.
+  if (DENEME_HANDS_FREE_SIDE === "auto") return "bot";
+  return DENEME_HANDS_FREE_SIDE;
+}
+
+function setHandsFreeNextSide(side) {
+  if (!isValidFaceSide(side)) return;
+  handsFreeNextSide = side;
+}
+
+function getSideLang(side) {
+  return side === "top" ? topLang : botLang;
+}
+
+function scoreTextForLanguage(text, lang) {
+  const value = String(text || "").toLowerCase();
+  const c = canonical(lang);
+  if (!value || !c) return 0;
+
+  let score = 0;
+  const words = value.split(/[^a-zçğıöşüâîûáéíóúàèìòùäëïöüßñ]+/i).filter(Boolean);
+  const wordSet = new Set(words);
+
+  if (c === "tr") {
+    if (/[çğıöşü]/i.test(value)) score += 8;
+    ["ben", "sen", "biz", "siz", "merhaba", "selam", "nasıl", "değil", "için", "şimdi", "tamam", "evet", "hayır", "var", "yok", "çok", "bir", "bu", "şu", "ile"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+    if (/(yorum|yorum|yorum|ıyorum|iyorum|üyor|ıyor|acak|ecek|meli|malı|dir|dır|tır|tur|mış|miş|muş|müş)\b/i.test(value)) score += 3;
+  } else if (c === "en") {
+    ["i", "you", "we", "they", "hello", "hi", "how", "what", "where", "when", "why", "yes", "no", "not", "the", "a", "an", "and", "or", "is", "are", "am", "to", "for", "with", "this", "that", "please"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+    if (/\b(the|you|that|with|this|please|hello|what|where|when|because)\b/i.test(value)) score += 3;
+  } else if (c === "de") {
+    if (/[äöüß]/i.test(value)) score += 7;
+    ["ich", "du", "wir", "sie", "hallo", "danke", "bitte", "nicht", "und", "oder", "ist", "bin", "für", "mit", "das", "der", "die"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+  } else if (c === "fr") {
+    if (/[àâçéèêëîïôùûüÿœ]/i.test(value)) score += 7;
+    ["je", "tu", "nous", "vous", "bonjour", "merci", "pas", "oui", "non", "avec", "pour", "est", "suis", "le", "la", "les"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+  } else if (c === "es") {
+    if (/[áéíóúüñ¿¡]/i.test(value)) score += 7;
+    ["yo", "tu", "usted", "hola", "gracias", "no", "si", "con", "para", "que", "el", "la", "los", "las", "estoy", "es"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+  } else if (c === "it") {
+    ["io", "tu", "noi", "voi", "ciao", "grazie", "non", "si", "con", "per", "che", "il", "la", "sono", "è"].forEach((w) => { if (wordSet.has(w)) score += 2; });
+  } else if (c === "ru") {
+    if (/[а-яё]/i.test(value)) score += 9;
+  } else if (c === "ar") {
+    if (/[\u0600-\u06FF]/.test(value)) score += 9;
+  } else if (c === "zh") {
+    if (/[\u4E00-\u9FFF]/.test(value)) score += 9;
+  } else if (c === "ja") {
+    if (/[\u3040-\u30ff]/.test(value)) score += 9;
+  } else if (c === "ko") {
+    if (/[\uac00-\ud7af]/.test(value)) score += 9;
+  }
+
+  return score;
+}
+
+function resolveHandsFreeSpeakerSide(text, listeningSide) {
+  if (DENEME_HANDS_FREE_SIDE !== "auto") return listeningSide;
+
+  const topScore = scoreTextForLanguage(text, topLang);
+  const botScore = scoreTextForLanguage(text, botLang);
+  const topCode = canonical(topLang);
+  const botCode = canonical(botLang);
+
+  if (topCode && botCode && topCode !== botCode) {
+    if (topScore >= 4 && topScore >= botScore + 2) return "top";
+    if (botScore >= 4 && botScore >= topScore + 2) return "bot";
+  }
+
+  return isValidFaceSide(listeningSide) ? listeningSide : "bot";
+}
+
+function noteHandsFreeRoute(routedSide) {
+  if (!isValidFaceSide(routedSide)) return;
+  handsFreeLastRoutedSide = routedSide;
+  // Yönlendirme dil algısıyla yapılır; dinleme animasyonu ve mikrofon hissi çift taraflı kalır.
+  // Bu yüzden sonraki dinlemeyi karşı tarafa zıplatmıyoruz.
+  setHandsFreeNextSide("bot");
+}
+
+function clearHandsFreeSilenceTimer() {
+  clearTimeout(handsFreeSilenceTimer);
+  handsFreeSilenceTimer = null;
+}
+
+function clearHandsFreeRestartTimer() {
+  clearTimeout(handsFreeRestartTimer);
+  handsFreeRestartTimer = null;
+}
+
+function clearHandsFreeMaxListenTimer() {
+  clearTimeout(handsFreeMaxListenTimer);
+  handsFreeMaxListenTimer = null;
+}
+
+function clearHandsFreeTimers() {
+  clearHandsFreeSilenceTimer();
+  clearHandsFreeRestartTimer();
+  clearHandsFreeMaxListenTimer();
+}
+
+function armHandsFreeAudioGuard(ms = DENEME_HANDS_FREE_AUDIO_GUARD_MS) {
+  handsFreeAudioGuardUntil = Math.max(handsFreeAudioGuardUntil, Date.now() + Math.max(0, Number(ms) || 0));
+}
+
+function isHandsFreeAudioOutputBusy() {
+  if (Date.now() < handsFreeAudioGuardUntil) return true;
+
+  try {
+    if (currentAudio && !currentAudio.paused && !currentAudio.ended) return true;
+  } catch {}
+
+  try {
+    if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) return true;
+  } catch {}
+
+  try {
+    if (window.NativeTTS?.isSpeaking?.()) return true;
+  } catch {}
+
+  return false;
+}
+
+function isHandsFreeUiBusy() {
+  if (recordingSide) return true;
+  if (frameRoot?.classList.contains("is-listening")) return true;
+  if (frameRoot?.classList.contains("is-translating")) return true;
+  return false;
+}
+
+function isHandsFreeListening() {
+  return isHandsFreeModeEnabled() && isValidFaceSide(recordingSide);
+}
+
+function getHandsFreeButtons() {
+  // Tek global toggle: alttaki Eller Serbest butonu iki tarafı birden yönetir.
+  return [handsFreeToggle].filter(Boolean);
+}
+
+function syncHandsFreeRuntimeUi() {
+  const listening = isHandsFreeListening();
+  document.body?.classList.toggle("handsfree-listening", listening);
+  getHandsFreeButtons().forEach((btn) => btn.classList.toggle("listening", listening));
+
+  const bothActive = isHandsFreeModeEnabled();
+  [topMic, botMic].forEach((mic) => mic?.classList.toggle("handsfree-dual-active", bothActive));
+  [topComposer, botComposer].forEach((composer) => composer?.classList.toggle("handsfree-dual-active", bothActive));
+}
+
+function syncHandsFreeToggleUi() {
+  const enabled = isHandsFreeModeEnabled();
+  getHandsFreeButtons().forEach((btn) => {
+    btn.classList.toggle("active", enabled);
+    btn.classList.toggle("on", enabled);
+    btn.setAttribute("aria-pressed", enabled ? "true" : "false");
+    btn.setAttribute("title", enabled ? "Eller Serbest açık" : "Eller Serbest kapalı");
+  });
+  document.body?.classList.toggle("handsfree-mode", enabled);
+  syncHandsFreeRuntimeUi();
+}
+
+function stopHandsFreeLoop(opts = {}) {
+  handsFreeRunId += 1;
+  handsFreeStartPending = false;
+  handsFreeEmptyEndCount = 0;
+  handsFreeAudioGuardUntil = 0;
+  clearHandsFreeTimers();
+  syncHandsFreeToggleUi();
+
+  if (opts.stopCurrent && isValidFaceSide(recordingSide)) {
+    try { stopRecognizer(); } catch {}
+  }
+}
+
+function scheduleHandsFreeRestart(reason = "cycle", delay = DENEME_HANDS_FREE_RESTART_MS) {
+  clearHandsFreeRestartTimer();
+  if (!isHandsFreeModeEnabled()) return;
+
+  const runId = handsFreeRunId;
+  handsFreeRestartTimer = setTimeout(() => {
+    handsFreeRestartTimer = null;
+    if (runId !== handsFreeRunId || !isHandsFreeModeEnabled()) return;
+    if (isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) {
+      scheduleHandsFreeRestart(`${reason}:busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
+      return;
+    }
+    void startHandsFreeLoop(reason);
+  }, Math.max(120, Number(delay) || DENEME_HANDS_FREE_RESTART_MS));
+}
+
+function scheduleHandsFreeMaxListenStop(side, sessionId, runId) {
+  if (!isHandsFreeModeEnabled() || !isValidFaceSide(side)) return;
+
+  clearHandsFreeMaxListenTimer();
+  handsFreeMaxListenTimer = setTimeout(() => {
+    handsFreeMaxListenTimer = null;
+
+    if (!isHandsFreeModeEnabled()) return;
+    if (runId !== handsFreeRunId) return;
+    if (recordingSide !== side || sessionId !== recognitionSessionId) return;
+
+    const finalCandidate = cleanupFinalTranscript(
+      getPreviewText(side) || latestPreviewTranscript || liveTranscript || ""
+    );
+
+    if (finalCandidate && finalCandidate.length >= 2) {
+      setTranslatingUI(side);
+    }
+
+    stopRecognizer();
+  }, DENEME_HANDS_FREE_MAX_LISTEN_MS);
+}
+
+function scheduleHandsFreeSilenceStop(side, sessionId, runId) {
+  if (!isHandsFreeModeEnabled() || !isValidFaceSide(side)) return;
+
+  clearHandsFreeSilenceTimer();
+  handsFreeSilenceTimer = setTimeout(() => {
+    handsFreeSilenceTimer = null;
+
+    if (!isHandsFreeModeEnabled()) return;
+    if (runId !== handsFreeRunId) return;
+    if (recordingSide !== side || sessionId !== recognitionSessionId) return;
+
+    const finalCandidate = cleanupFinalTranscript(
+      getPreviewText(side) || latestPreviewTranscript || liveTranscript || ""
+    );
+    if (!finalCandidate || finalCandidate.length < 2) return;
+
+    setTranslatingUI(side);
+    stopRecognizer();
+  }, DENEME_HANDS_FREE_SILENCE_MS);
+}
+
+function handleHandsFreeCycleEnd(side, hadText, runId) {
+  clearHandsFreeSilenceTimer();
+  clearHandsFreeMaxListenTimer();
+  syncHandsFreeRuntimeUi();
+
+  if (!isValidFaceSide(side)) return;
+  if (!isHandsFreeModeEnabled() || runId !== handsFreeRunId) return;
+
+  if (hadText) {
+    handsFreeEmptyEndCount = 0;
+    armHandsFreeAudioGuard();
+    scheduleHandsFreeRestart("after-final", DENEME_HANDS_FREE_RESTART_MS);
+    return;
+  }
+
+  handsFreeEmptyEndCount += 1;
+  if (handsFreeEmptyEndCount <= DENEME_HANDS_FREE_EMPTY_RESTART_LIMIT) {
+    scheduleHandsFreeRestart("empty", 900);
+    return;
+  }
+
+  setHandsFreeMode(false, { silent: true, stopCurrent: false });
+  showToast("Eller Serbest beklemeye alındı");
+}
+
+async function startHandsFreeLoop(reason = "manual") {
+  if (!isHandsFreeModeEnabled()) return false;
+  if (handsFreeStartPending) return false;
+
+  const runId = handsFreeRunId;
+  const side = getHandsFreeSide();
+
+  if (recordingSide) {
+    if (recordingSide !== side) scheduleHandsFreeRestart(`${reason}:busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
+    return false;
+  }
+
+  handsFreeStartPending = true;
+
+  try {
+    await ensureReady();
+    if (runId !== handsFreeRunId || !isHandsFreeModeEnabled()) return false;
+
+    const premiumOk = await ensureCurrentFacePremiumModeAccess();
+    if (!premiumOk) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: false });
+      return false;
+    }
+
+    if (isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) {
+      scheduleHandsFreeRestart(`${reason}:busy`, DENEME_HANDS_FREE_BUSY_RETRY_MS);
+      return false;
+    }
+
+    const now = Date.now();
+    const waitFor = Math.max(0, 320 - (now - handsFreeLastStartAt));
+    if (waitFor) await wait(waitFor);
+
+    if (runId !== handsFreeRunId || !isHandsFreeModeEnabled() || isHandsFreeUiBusy() || isHandsFreeAudioOutputBusy()) return false;
+
+    handsFreeLastStartAt = Date.now();
+    startRecording(side, { handsFree: true, runId });
+    return true;
+  } finally {
+    handsFreeStartPending = false;
+  }
+}
+
+function setHandsFreeMode(enabled, opts = {}) {
+  const next = !!enabled;
+  const previous = isHandsFreeModeEnabled();
+
+  localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, next ? "on" : "off");
+  syncHandsFreeToggleUi();
+
+  if (next) {
+    if (!previous) handsFreeRunId += 1;
+    handsFreeEmptyEndCount = 0;
+    clearHandsFreeTimers();
+    if (!opts.silent) showToast("Çift taraflı Eller Serbest açık");
+    void startHandsFreeLoop("toggle");
+    return;
+  }
+
+  stopHandsFreeLoop({ stopCurrent: !!opts.stopCurrent });
+  if (!opts.silent) showToast("Eller Serbest kapalı");
+}
+
+async function requestEnableHandsFreeMode(opts = {}) {
+  const status = await canEnableDualEarPro({
+    currentRuntimeMode,
+    recordingSide,
+    activeSide,
+    recognizer,
+    frameRoot,
+    bootReady,
+    ...opts
+  });
+
+  if (!status?.ok) {
+    setHandsFreeMode(false, { silent: true, stopCurrent: true });
+    showDualEarProBlockedReason(status?.reason || "unknown_error", showToast);
+    return false;
+  }
+
+  setHandsFreeNextSide("bot");
+  setHandsFreeMode(true);
+  return true;
+}
+
+function bindHandsFreeToggle() {
+  syncHandsFreeToggleUi();
+
+  getHandsFreeButtons().forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const next = !isHandsFreeModeEnabled();
+      if (!next) {
+        setHandsFreeMode(false, { stopCurrent: true });
+        return;
+      }
+
+      await requestEnableHandsFreeMode({ source: btn.id || "toggle" });
+    });
+  });
+}
+
+window.f2fHandsFreeState = {
+  isEnabled: isHandsFreeModeEnabled,
+  setEnabled: (value, opts = {}) => {
+    if (value) return requestEnableHandsFreeMode(opts);
+    setHandsFreeMode(false, { stopCurrent: true, ...opts });
+    return Promise.resolve(true);
+  },
+  start: () => startHandsFreeLoop("external"),
+  stop: () => setHandsFreeMode(false, { stopCurrent: true }),
+  sync: syncHandsFreeToggleUi,
+  getNextSide: () => handsFreeNextSide,
+  routeText: (text, side = handsFreeNextSide) => resolveHandsFreeSpeakerSide(text, side),
+};
+
 function showUiModal(message, title = "Jeton Gerekli") {
   if (!uiModal) return;
+  uiModalPurpose = "default";
   uiModalTitle.textContent = title;
   uiModalText.textContent = message;
   uiModal.classList.add("open");
 }
 
+function showInsufficientTokens() {
+  showUiModal(
+    "Yetersiz jeton bakiyesi. L\u00fctfen Jeton Market\u2019ten y\u00fckleme yap\u0131n.",
+    "Jeton Gerekli"
+  );
+  uiModalPurpose = "tokens";
+  if (uiModalGo) uiModalGo.textContent = "Jeton Market";
+  uiModalGo?.classList.remove("cultural-info-primary");
+  if (uiModalClose) uiModalClose.textContent = "Atla";
+}
+
+function updateTokensFromTranslationResponse(json) {
+  const tokensAfter = Number(json?.tokens_after ?? json?.wallet?.tokens_after);
+  if (Number.isFinite(tokensAfter)) {
+    try { setHeaderTokens(tokensAfter); } catch (e) { console.debug("[deneme cultural tokens]", e); }
+  }
+
+}
+
+function translationError(code, message, status = 0, detail = null) {
+  const err = new Error(message || code || "translation_failed");
+  err.code = code || "TRANSLATION_FAILED";
+  err.status = status;
+  err.detail = detail;
+  return err;
+}
+
+function handleTranslateError(error, latestRow, latestTxt) {
+  if (isHandsFreeModeEnabled()) setHandsFreeMode(false, { silent: true, stopCurrent: false });
+  setErrorUI();
+
+  if (error?.code === "INSUFFICIENT_TOKENS") {
+    latestRow?.remove?.();
+    showInsufficientTokens();
+    return true;
+  }
+
+  if (latestTxt) latestTxt.textContent = "Ceviri su anda tamamlanamadi";
+  showToast("Ceviri su anda tamamlanamadi. Lutfen tekrar deneyin.");
+  bounceToReady(1200);
+  return true;
+}
+
 function closeUiModal() {
   uiModal?.classList.remove("open");
+  uiModalPurpose = "default";
+  if (uiModalGo) uiModalGo.textContent = "\u00dcyelik Paketlerini G\u00f6r";
+  uiModalGo?.classList.remove("cultural-info-primary");
+  if (uiModalClose) uiModalClose.textContent = "Atla";
 }
 
 uiModalGo?.addEventListener("click", () => {
+  if (uiModalPurpose === "cultural_info") {
+    localStorage.setItem(DENEME_CULTURAL_INFO_SEEN_KEY, "1");
+    closeUiModal();
+    return;
+  }
+
   location.href = "/pages/jetonbuy.html";
 });
-uiModalClose?.addEventListener("click", closeUiModal);
+uiModalClose?.addEventListener("click", () => {
+  if (uiModalPurpose === "cultural_info") {
+    setCulturalMode(false);
+  }
+  closeUiModal();
+});
 uiModal?.addEventListener("click", (e) => {
   if (e.target === uiModal) closeUiModal();
 });
@@ -394,12 +916,11 @@ function getFaceVoiceMode() {
 }
 
 function getFaceTranslateMode() {
-  const value = String(localStorage.getItem(F2F_TRANSLATE_KEY) || "normal").trim().toLowerCase();
-  return value === "cultural" ? "cultural" : "normal";
+  return isCulturalModeEnabled() ? "cultural" : "normal";
 }
 
 function isPaidFaceTextMode() {
-  return getFaceTranslateMode() === "cultural";
+  return false;
 }
 
 async function hasReadyVoiceProfile() {
@@ -447,21 +968,9 @@ function isPaidFaceVoiceMode() {
 }
 
 async function ensureCurrentFacePremiumModeAccess() {
-  const needsPremium = isPaidFaceTextMode() || isPaidFaceVoiceMode();
+  const needsPremium = isPaidFaceVoiceMode();
   if (!needsPremium) return true;
   return await ensureFaceToFacePremiumAccess();
-}
-
-function faceTextUsageModule() {
-  return getFaceTranslateMode() === "cultural" ? "facetoface_ai" : "usage_face_to_face";
-}
-
-function faceTextUsageNote() {
-  return buildUsageNote({
-    surface: "facetoface",
-    usageKind: "text",
-    mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
-  });
 }
 
 function canonTone(value) {
@@ -1089,7 +1598,7 @@ async function speak(text, langCode, tone = "neutral") {
       const ok = await playCachedAudio(cachedAudio, ++speakRunId);
       if (ok) return;
     } catch {
-      showToast("Offline Ã§eviri baÅŸarÄ±sÄ±z");
+      showToast("Offline çeviri başarısız");
       return null;
     }
   }
@@ -1120,40 +1629,6 @@ async function speak(text, langCode, tone = "neutral") {
 
   const fallbackOk = speakFallback(spokenValue, langCode);
   if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
-}
-
-async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
-  const inLen = String(inputText || "").trim().length;
-  const outLen = String(outputText || "").trim().length;
-  const billableChars = Math.max(inLen, outLen);
-  if (billableChars <= 0) return null;
-
-  let latestResult = null;
-
-  if (isPaidFaceTextMode()) {
-    latestResult = await commitUsage({
-      module: faceTextUsageModule(),
-      usageKind: "text",
-      charCount: billableChars,
-      note: faceTextUsageNote(),
-      meta: {
-        surface: "facetoface",
-        from_lang: canonical(srcLang),
-        to_lang: canonical(dstLang),
-        translate_mode: getFaceTranslateMode(),
-        voice_mode: getFaceVoiceMode(),
-        input_chars: inLen,
-        output_chars: outLen,
-        billable_chars: billableChars
-      }
-    });
-  }
-
-  if (typeof latestResult?.tokens_after === "number") {
-    try { setHeaderTokens(latestResult.tokens_after); } catch {}
-  }
-
-  return latestResult;
 }
 
 function addBubble(side, kind, text, opts = {}) {
@@ -1221,8 +1696,6 @@ function offlineTranslateRequest(payload) {
 async function translateText(text, from, to, tone = "neutral", context = {}) {
   const src = canonical(from);
   const dst = canonical(to);
-  const mode = getFaceTranslateMode();
-  const style = mode === "normal" ? "warm" : "balanced";
 
   if (currentRuntimeMode === "offline") {
     try {
@@ -1266,18 +1739,23 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
 
   for (const endpoint of endpoints) {
     try {
+      const culturalMode = isCulturalModeEnabled();
       const payload = {
         text: String(text || "").trim(),
         from_lang: src,
         to_lang: dst,
         source: src,
         target: dst,
-        mode: "normal",
-        use_ai: false,
-        cultural: false,
         tone: canonTone(tone),
-        style
       };
+
+      if (culturalMode) {
+        payload.surface = "facetoface_demo";
+        payload.mode = "cultural";
+        payload.use_ai = true;
+        payload.cultural = true;
+        payload.style = "cultural";
+      }
 
       const r = await fetch(endpoint, {
         method: "POST",
@@ -1289,11 +1767,26 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
       });
 
       const j = await r.json().catch(() => null);
-      if (!r.ok) continue;
+      if (r.status === 402) {
+        console.warn("[deneme cultural insufficient tokens]", j);
+        throw translationError("INSUFFICIENT_TOKENS", "insufficient_tokens", r.status, j);
+      }
+
+      if (!r.ok) {
+        if (r.status >= 500 || r.status === 503) {
+          throw translationError("TRANSLATION_UNAVAILABLE", "translation_unavailable", r.status, j);
+        }
+        continue;
+      }
 
       const value = String(j?.translated || j?.translation || j?.text || "").trim();
-      if (value) return value;
-    } catch {}
+      if (value) {
+        if (culturalMode) updateTokensFromTranslationResponse(j);
+        return value;
+      }
+    } catch (e) {
+      if (e?.code === "INSUFFICIENT_TOKENS" || e?.code === "TRANSLATION_UNAVAILABLE") throw e;
+    }
   }
 
   return null;
@@ -1505,22 +1998,19 @@ async function finalizeRecognition(side, text) {
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(cleaned, src, dst, sourceTone, { side, targetSide: other });
+  let tr = "";
+  try {
+    tr = await translateText(cleaned, src, dst, sourceTone, { side, targetSide: other });
+  } catch (e) {
+    handleTranslateError(e, latestRow, latestTxt);
+    return;
+  }
 
   if (!tr) {
     setErrorUI();
     if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
     bounceToReady(1200);
     return;
-  }
-
-  try {
-    await chargeFaceUsage(cleaned, tr, src, dst);
-  } catch (e) {
-    if (e?.code === "INSUFFICIENT_TOKENS") {
-      await ensureFaceToFacePremiumAccess();
-      return;
-    }
   }
 
   if (latestTxt) {
@@ -1552,22 +2042,19 @@ async function finalizeTypedMessage(side, rawText) {
   });
 
   const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(text, src, dst, tone, { side, targetSide: other });
+  let tr = "";
+  try {
+    tr = await translateText(text, src, dst, tone, { side, targetSide: other });
+  } catch (e) {
+    handleTranslateError(e, latestRow, latestTxt);
+    return;
+  }
 
   if (!tr) {
     setErrorUI();
     if (latestTxt) latestTxt.textContent = "⚠️ Çeviri hatası";
     bounceToReady(1200);
     return;
-  }
-
-  try {
-    await chargeFaceUsage(text, tr, src, dst);
-  } catch (e) {
-    if (e?.code === "INSUFFICIENT_TOKENS") {
-      await ensureFaceToFacePremiumAccess();
-      return;
-    }
   }
 
   if (latestTxt) {
@@ -1663,14 +2150,20 @@ async function warmAudio() {
   await unlockKeyboardAudio();
 }
 
-function startRecording(side) {
+function startRecording(side, opts = {}) {
   hideKeyboards();
   setInputPlaceholder(side, "");
 
+  const handsFreeSession = !!opts.handsFree && isValidFaceSide(side);
+  const handsFreeRun = Number(opts.runId || handsFreeRunId);
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang, side);
 
   if (!rec) {
+    if (handsFreeSession) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: false });
+    }
+
     setErrorUI();
     if (currentRuntimeMode === "offline") {
       showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
@@ -1683,13 +2176,32 @@ function startRecording(side) {
   }
 
   const mySessionId = ++recognitionSessionId;
+  let recognitionFinished = false;
+
+  const markFinished = () => {
+    if (recognitionFinished) return false;
+    recognitionFinished = true;
+    return true;
+  };
 
   recognizer = rec;
   recordingSide = side;
   liveTranscript = "";
   latestPreviewTranscript = "";
 
-  rec.onstart = () => setListeningUI(side);
+  if (handsFreeSession) {
+    clearHandsFreeTimers();
+    syncHandsFreeRuntimeUi();
+  }
+
+  rec.onstart = () => {
+    setListeningUI(side);
+    if (handsFreeSession) {
+      syncHandsFreeRuntimeUi();
+      setInputPlaceholder(side, "Eller Serbest dinliyor…");
+      scheduleHandsFreeMaxListenStop(side, mySessionId, handsFreeRun);
+    }
+  };
 
   rec.onresult = (e) => {
     if (mySessionId !== recognitionSessionId) return;
@@ -1710,36 +2222,56 @@ function startRecording(side) {
     const txtEl = previewNode?.querySelector(".txt");
     if (txtEl) txtEl.textContent = builtText;
     keepLatestVisible(side);
+
+    if (handsFreeSession) {
+      scheduleHandsFreeSilenceStop(side, mySessionId, handsFreeRun);
+    }
   };
 
   rec.onerror = (e) => {
     if (mySessionId !== recognitionSessionId) return;
+    if (!markFinished()) return;
 
-    if (currentRuntimeMode === "offline") {
-      showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
-      recognizer = null;
-      recordingSide = null;
-      liveTranscript = "";
-      latestPreviewTranscript = "";
-      setErrorUI();
-      bounceToReady(1600);
-      return;
-    }
+    clearHandsFreeSilenceTimer();
+    clearHandsFreeMaxListenTimer();
 
-    if (String(e?.error || "").includes("not-allowed")) showToast("Mikrofon izni gerekli");
-    else showToast("Mikrofon hatası");
+    const errorCode = String(e?.error || "").toLowerCase();
+    const body = side === "top" ? topBody : botBody;
+    body?.querySelector(".bubble.preview")?.remove();
 
     recognizer = null;
     recordingSide = null;
     liveTranscript = "";
     latestPreviewTranscript = "";
 
+    if (handsFreeSession && (errorCode === "no-speech" || errorCode === "aborted")) {
+      setSystemReadyUI();
+      handleHandsFreeCycleEnd(side, false, handsFreeRun);
+      return;
+    }
+
+    if (currentRuntimeMode === "offline") {
+      showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
+      setErrorUI();
+      bounceToReady(1600);
+      if (handsFreeSession) setHandsFreeMode(false, { silent: true, stopCurrent: false });
+      return;
+    }
+
+    if (errorCode.includes("not-allowed")) showToast("Mikrofon izni gerekli");
+    else showToast("Mikrofon hatası");
+
     setErrorUI();
     bounceToReady(1600);
+    if (handsFreeSession) setHandsFreeMode(false, { silent: true, stopCurrent: false });
   };
 
   rec.onend = () => {
     if (mySessionId !== recognitionSessionId) return;
+    if (!markFinished()) return;
+
+    clearHandsFreeSilenceTimer();
+    clearHandsFreeMaxListenTimer();
 
     const sideAtEnd = side;
     const finalText = cleanupFinalTranscript(
@@ -1755,20 +2287,45 @@ function startRecording(side) {
     latestPreviewTranscript = "";
 
     if (finalText) {
-      Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
+      const routedSide = handsFreeSession
+        ? resolveHandsFreeSpeakerSide(finalText, sideAtEnd)
+        : sideAtEnd;
+
+      if (handsFreeSession) {
+        noteHandsFreeRoute(routedSide);
+      }
+
+      Promise.resolve()
+        .then(() => finalizeRecognition(routedSide, finalText))
+        .finally(() => {
+          if (handsFreeSession) handleHandsFreeCycleEnd(routedSide, true, handsFreeRun);
+        });
       return;
     }
 
     setSystemReadyUI();
+    if (handsFreeSession) {
+      setHandsFreeNextSide(getOtherSide(sideAtEnd));
+      handleHandsFreeCycleEnd(sideAtEnd, false, handsFreeRun);
+    }
   };
 
   try {
     rec.start();
   } catch {
+    if (!markFinished()) return;
+
+    clearHandsFreeSilenceTimer();
+    clearHandsFreeMaxListenTimer();
     recognizer = null;
     recordingSide = null;
     liveTranscript = "";
     latestPreviewTranscript = "";
+
+    if (handsFreeSession) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: false });
+    }
+
     setErrorUI();
     bounceToReady(1200);
   }
@@ -1778,6 +2335,11 @@ async function toggleRecording(side) {
   await ensureReady();
   const premiumOk = await ensureCurrentFacePremiumModeAccess();
   if (!premiumOk) return;
+
+  if (isHandsFreeModeEnabled()) {
+    setHandsFreeMode(false, { silent: true, stopCurrent: false });
+    showToast("Eller Serbest kapatıldı");
+  }
 
   if (recordingSide === side) {
     setTranslatingUI(side);
@@ -2274,6 +2836,10 @@ function bindModeControls() {
     e?.preventDefault?.();
     e?.stopPropagation?.();
 
+    if (isHandsFreeModeEnabled()) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: true });
+    }
+
     if (currentRuntimeMode === "online") {
       tryEnableOfflineMode();
     } else {
@@ -2350,6 +2916,7 @@ function bindUtilityButtons() {
     event?.stopPropagation?.();
     stopAudio();
     stopTypewriter();
+    setHandsFreeMode(false, { silent: true, stopCurrent: false });
     stopRecognizer();
     recordingSide = null;
     liveTranscript = "";
@@ -2432,9 +2999,25 @@ function bindSpeechVoices() {
   } catch {}
 }
 
+function bindHandsFreeSafetyEvents() {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && isHandsFreeModeEnabled()) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: true });
+    }
+  });
+
+  window.addEventListener("beforeunload", () => {
+    if (isHandsFreeModeEnabled()) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: true });
+    }
+  });
+}
+
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
+  bindCulturalToggle();
+  bindHandsFreeToggle();
   bindModeControls();
   bindLanguageButtons();
   bindGlobalClicks();
@@ -2442,6 +3025,7 @@ function bind() {
   bindMicButtons();
   bindInputs();
   bindSpeechVoices();
+  bindHandsFreeSafetyEvents();
 
   try {
     startBoot();
