@@ -153,6 +153,20 @@ const F2F_HANDS_FREE_COMMAND_WAKE_ALIASES = [
   "ok can",
   "okay can",
   "oke can",
+  "hey kem",
+  "hey gem",
+  "hey kim",
+  "hey gan",
+  "hey cenk",
+  "hey kenan",
+  "hay kem",
+  "he kem",
+  "hi kem",
+  "ey kem",
+  "hey canon",
+  "hey canyon",
+  "hey cane",
+  "hey candy",
   "hey italky",
   "hey italkyai",
   "hey i talky",
@@ -719,8 +733,8 @@ function escapeRegExp(value) {
 function getVoiceCommandLanguageAliasMap() {
   return {
     tr: ["turkce", "turkceye", "turk", "turkish", "turk dili"],
-    en: ["ingilizce", "ingilizceye", "ingiliz", "english", "englis", "inglish", "ingilis", "british", "ingiliz dili", "english language"],
-    de: ["almanca", "almancaya", "almaca", "alamanca", "alman", "almanya", "german", "germany", "deutsch", "deutsche", "alman dili", "german language"],
+    en: ["ingilizce", "ingilizceye", "ingiliz", "ingliz", "inglizce", "english", "englis", "inglish", "ingilis", "ingiliş", "british", "ingiliz dili", "english language"],
+    de: ["almanca", "almancaya", "almaca", "alamanca", "alemanca", "alemancaya", "alman", "almanya", "almanyaca", "allmanca", "all mancha", "almancha", "allmancha", "german", "germany", "germen", "deutsch", "deutsche", "doyc", "dojc", "alman dili", "german language"],
     fr: ["fransizca", "fransizcaya", "fransiz", "french", "francais", "français", "fransiz dili", "french language"],
     it: ["italyanca", "italyancaya", "italyan", "italian", "italiano", "italyan dili"],
     es: ["ispanyolca", "ispanyolcaya", "ispanyol", "spanish", "espanol", "ispanyol dili"],
@@ -817,10 +831,19 @@ function stripHandsFreeCommandWake(text) {
     if (norm.startsWith(`${wake} `)) return norm.slice(wake.length).trim();
   }
 
+  // Bazı cihazlar "Hey Can" içindeki Can/Cen/Ken kelimesini düşürüp sadece
+  // "hey almanca" / "hey english" gibi metin döndürebiliyor. Bu durumda
+  // gövdede gerçek bir dil adı varsa bunu komut kabul ediyoruz.
+  const explicitWakeOnly = norm.match(/^(hey|hay|he|hi|ey|e|ok|okay|oke)\s+(.+)$/i);
+  if (explicitWakeOnly?.[2]) {
+    const candidate = explicitWakeOnly[2].trim();
+    if (findHandsFreeCommandLanguage(candidate)) return candidate;
+  }
+
   // SpeechRecognition bazen "Hey Can"ı "heycan", "hey ken", "hey cem",
   // "hey john" veya "hey sen" gibi yazabiliyor. Bu yüzden tetiklemeyi
   // başta ve fonetik yakalıyoruz; gövde yine dil alias'ıyla doğrulanacak.
-  const phoneticWake = /^(?:(?:hey|hay|he|hi|ey|e|ok|okay|oke)\s*)?(?:can|cen|ken|kan|kaan|jan|gen|chen|chan|cem|cam|jam|john|jhon|con|sen|san|cin|jin|cane|cani|canim)\b\s*/i;
+  const phoneticWake = /^(?:(?:hey|hay|he|hi|ey|e|ok|okay|oke)\s*)?(?:can|cen|ken|kan|kaan|kem|gem|kim|gan|cenk|kenan|jan|gen|chen|chan|cem|cam|jam|john|jhon|con|sen|san|cin|jin|cane|cani|canim)\b\s*/i;
   const match = norm.match(phoneticWake);
   if (match && match[0]) {
     const body = norm.slice(match[0].length).trim();
@@ -839,7 +862,7 @@ function stripLooseHandsFreeCommandWake(text) {
 
   // Bazı cihazlar "hey" kısmını düşürüp sadece "ken almanca" bırakabiliyor.
   // Bunu sadece arkasında gerçek dil adı varsa parseHandsFreeVoiceCommand kabul eder.
-  const loose = norm.match(/^(?:can|cen|ken|kan|kaan|jan|gen|chen|chan|cem|cam|jam|john|jhon|con|sen|san|cin|jin|cane|cani|canim)\s+(.+)$/i);
+  const loose = norm.match(/^(?:can|cen|ken|kan|kaan|kem|gem|kim|gan|cenk|kenan|jan|gen|chen|chan|cem|cam|jam|john|jhon|con|sen|san|cin|jin|cane|cani|canim)\s+(.+)$/i);
   return loose?.[1]?.trim?.() || "";
 }
 
