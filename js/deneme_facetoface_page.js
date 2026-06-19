@@ -81,11 +81,11 @@ const DENEME_HANDS_FREE_RESTART_MS = 650;
 const DENEME_HANDS_FREE_BUSY_RETRY_MS = 850;
 const DENEME_HANDS_FREE_AUDIO_GUARD_MS = 1800;
 const DENEME_HANDS_FREE_EMPTY_RESTART_LIMIT = 4;
-const NEAR_VOICE_CALIBRATION_MS = 1200;
-const NEAR_VOICE_MIN_ACTIVE_MS = 180;
-const NEAR_VOICE_THRESHOLD_FLOOR = 0.026;
-const NEAR_VOICE_THRESHOLD_MULTIPLIER = 3.1;
-const NEAR_VOICE_THRESHOLD_MARGIN = 0.018;
+const NEAR_VOICE_CALIBRATION_MS = 800;
+const NEAR_VOICE_MIN_ACTIVE_MS = 90;
+const NEAR_VOICE_THRESHOLD_FLOOR = 0.010;
+const NEAR_VOICE_THRESHOLD_MULTIPLIER = 1.65;
+const NEAR_VOICE_THRESHOLD_MARGIN = 0.006;
 const NEAR_VOICE_HINT_INTERVAL_MS = 2200;
 const F2F_AUTO_READ_KEY = "italkyai_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
@@ -603,20 +603,26 @@ async function ensureNearVoiceFilterReady() {
 function isNearVoiceTranscriptAllowed() {
   const state = nearVoiceFilter;
   if (!state || state.bypass || !state.active || !state.calibrated) return true;
-  return !!state.speechAccepted;
+
+  // v0.2.1: Soft gate. Web Speech zaten metin döndürdüyse akışı kesme.
+  // Yakın Ses Filtresi sadece yönlendirme/uyarı ve çok zayıf sinyalleri ayıklama için çalışır.
+  return true;
 }
 
 function shouldRejectNearVoiceFinal() {
   const state = nearVoiceFilter;
   if (!state || state.bypass || !state.active || !state.calibrated) return false;
-  return !state.speechAccepted;
+
+  // v0.2.1: Sert blok kapatıldı. Önce ses yakalama stabil olsun.
+  // Uzak ses filtresi sonraki adımda transcript geldikten sonra puanlama ile uygulanacak.
+  return false;
 }
 
 function maybeShowNearVoiceHint(side = "bot") {
   const now = Date.now();
   if (now - nearVoiceLastHintAt < NEAR_VOICE_HINT_INTERVAL_MS) return;
   nearVoiceLastHintAt = now;
-  setInputPlaceholder(side, "Yakın konuşma bekleniyor…");
+  setInputPlaceholder(side, "Konuşma bekleniyor…");
 }
 
 function isCulturalModeEnabled() {
@@ -975,7 +981,7 @@ async function startHandsFreeLoop(reason = "manual") {
     const nearReady = await ensureNearVoiceFilterReady();
     if (nearReady && runId === handsFreeRunId && isHandsFreeModeEnabled()) {
       resetNearVoiceGateSession();
-      setInputPlaceholder(side, "Yakın konuşma bekleniyor…");
+      setInputPlaceholder(side, "Konuşma bekleniyor…");
     }
 
     handsFreeLastStartAt = Date.now();
@@ -997,7 +1003,7 @@ function setHandsFreeMode(enabled, opts = {}) {
     if (!previous) handsFreeRunId += 1;
     handsFreeEmptyEndCount = 0;
     clearHandsFreeTimers();
-    if (!opts.silent) showToast("Çift taraflı Eller Serbest açık · Yakın Ses Filtresi hazırlanıyor");
+    if (!opts.silent) showToast("Çift taraflı Eller Serbest açık");
     void startHandsFreeLoop("toggle");
     return;
   }
@@ -2453,7 +2459,7 @@ function startRecording(side, opts = {}) {
     setListeningUI(side);
     if (handsFreeSession) {
       syncHandsFreeRuntimeUi();
-      setInputPlaceholder(side, nearVoiceFilter?.calibrated ? "Yakın konuşma bekleniyor…" : "Yakın Ses Filtresi hazırlanıyor…");
+      setInputPlaceholder(side, nearVoiceFilter?.calibrated ? "Konuşma bekleniyor…" : "Ses filtresi hazırlanıyor…");
       scheduleHandsFreeMaxListenStop(side, mySessionId, handsFreeRun);
     }
   };
