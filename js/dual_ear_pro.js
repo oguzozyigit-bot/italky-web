@@ -1,177 +1,209 @@
-const HEADSET_WORDS = [
-  "bluetooth",
-  "headset",
-  "headphones",
-  "headphone",
-  "airpods",
-  "buds",
-  "earbud",
-  "kulaklık",
-  "hands-free",
-  "handsfree",
-];
-
-function clean(value) {
-  return String(value || "").trim();
-}
+const DEBUG_READY_KEY = "deneme_dual_ear_pro_debug_ready";
+const HEADSET_LABEL_RE = /bluetooth|headset|headphones?|airpods|buds|earbuds?|kulakl[ıi]k|hands[-\s]?free|handsfree/i;
 
 function isLocalhost() {
-  const host = clean(window.location?.hostname).toLowerCase();
-  return host === "localhost" || host === "127.0.0.1" || host === "::1";
-}
-
-function speechSupported() {
-  return typeof window.SpeechRecognition === "function" || typeof window.webkitSpeechRecognition === "function";
-}
-
-function mediaDevicesReady() {
-  return !!(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function");
-}
-
-function readBoolSignal(obj) {
-  if (!obj) return false;
   try {
-    if (typeof obj.isConnected === "function" && obj.isConnected()) return true;
-    if (typeof obj.isReady === "function" && obj.isReady()) return true;
-    if (obj.connected === true || obj.ready === true || obj.active === true) return true;
-    if (obj.mode === "bluetooth" || obj.mode === "two-phone") return true;
-  } catch {}
-  return false;
+    return ["localhost", "127.0.0.1", "::1"].includes(location.hostname);
+  } catch {
+    return false;
+  }
 }
 
-function premiumModuleSignal() {
+function getSpeechRecognitionCtor() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function safeBool(value) {
+  try {
+    if (typeof value === "function") return !!value();
+    return !!value;
+  } catch {
+    return false;
+  }
+}
+
+function inspectPremiumObject(obj) {
+  if (!obj || typeof obj !== "object") return false;
+
+  const checks = [
+    () => obj.isConnected?.(),
+    () => obj.isReady?.(),
+    () => obj.connected,
+    () => obj.ready,
+    () => obj.active,
+    () => obj.mode === "bluetooth",
+    () => obj.mode === "two-phone",
+    () => obj.status === "connected",
+    () => obj.status === "ready"
+  ];
+
+  return checks.some((fn) => safeBool(fn));
+}
+
+function getPremiumModuleSignal() {
   const names = [
     "italkyFaceBluetoothPremium",
     "italkyF2FBluetooth",
     "facetofaceBluetoothPremium",
     "FaceToFaceBluetoothPremium",
     "italkyBt",
-    "btPremium",
+    "btPremium"
   ];
+
   for (const name of names) {
-    if (readBoolSignal(window?.[name])) return true;
-  }
-  return false;
-}
-
-function bodyClassSignal() {
-  try {
-    return (
-      document.body?.classList?.contains("premium-bt-mode") ||
-      document.body?.classList?.contains("bt-active") ||
-      document.documentElement?.classList?.contains("two-phone-ready")
-    );
-  } catch {
-    return false;
-  }
-}
-
-function urlModeSignal() {
-  try {
-    const mode = new URLSearchParams(window.location.search || "").get("mode");
-    return mode === "bluetooth" || mode === "two-phone";
-  } catch {
-    return false;
-  }
-}
-
-function debugOverrideSignal() {
-  try {
-    const storage = window.localStorage || globalThis.localStorage;
-    if (storage?.getItem("deneme_dual_ear_pro_debug_ready") === "1") {
-      console.warn("[DualEarPro] Debug override aktif");
-      return true;
-    }
-  } catch {}
-  return false;
-}
-
-async function deviceLabelSignal() {
-  if (!navigator.mediaDevices || typeof navigator.mediaDevices.enumerateDevices !== "function") return false;
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices.some((device) => {
-      const kind = clean(device.kind).toLowerCase();
-      if (kind !== "audioinput" && kind !== "audiooutput") return false;
-      const label = clean(device.label).toLowerCase();
-      return !!label && HEADSET_WORDS.some((word) => label.includes(word));
-    });
-  } catch {
-    return false;
-  }
-}
-
-async function probeMicrophone(options) {
-  if (options?.probeMic === false || options?.skipMicProbe === true) return true;
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     try {
-      stream.getTracks().forEach((track) => track.stop());
+      const obj = window[name];
+      if (inspectPremiumObject(obj)) {
+        return { ok: true, source: "premium-module", name };
+      }
     } catch {}
-    return true;
-  } catch (error) {
-    const name = clean(error?.name).toLowerCase();
-    if (name.includes("notallowed") || name.includes("permission") || name.includes("denied")) {
-      return "mic_permission_denied";
+  }
+
+  return { ok: false, source: "none" };
+}
+
+function getBodyClassSignal() {
+  try {
+    const body = document.body?.classList;
+    const root = document.documentElement?.classList;
+    const hasStrongBodySignal =
+      body?.contains("premium-bt-mode") ||
+      body?.contains("bt-active") ||
+      root?.contains("two-phone-ready");
+
+    if (hasStrongBodySignal) return { ok: true, source: "body-class" };
+  } catch {}
+
+  return { ok: false, source: "none" };
+}
+
+function getUrlHelperSignal() {
+  try {
+    const mode = String(new URLSearchParams(location.search || "").get("mode") || "").toLowerCase();
+    if (mode === "bluetooth" || mode === "two-phone") return { ok: true, source: "url-mode" };
+  } catch {}
+  return { ok: false, source: "none" };
+}
+
+async function hasHeadsetDeviceLabel() {
+  try {
+    if (!navigator.mediaDevices?.enumerateDevices) {
+      return { ok: false, source: "none" };
     }
-    return "unknown_error";
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const hit = devices.find((d) => {
+      const kind = String(d?.kind || "");
+      const label = String(d?.label || "");
+      return (kind === "audioinput" || kind === "audiooutput") && HEADSET_LABEL_RE.test(label);
+    });
+
+    return hit ? { ok: true, source: "device-label" } : { ok: false, source: "none" };
+  } catch {
+    return { ok: false, source: "none" };
   }
 }
 
-function busyReason(options) {
-  if (options?.handsFreeRunning || options?.handsFreeActive) return "busy";
-  if (options?.recognizer) return "busy";
-  if (clean(options?.recordingSide)) return "busy";
-  const active = clean(options?.activeSide).toLowerCase();
-  if (active === "listening" || active === "translating") return "busy";
-  return "";
+async function probeMicrophonePermission() {
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return { ok: true };
+  } catch (error) {
+    const name = String(error?.name || error?.message || "").toLowerCase();
+    if (name.includes("notallowed") || name.includes("permission") || name.includes("denied")) {
+      return { ok: false, reason: "mic_permission_denied" };
+    }
+    return { ok: false, reason: "media_devices_missing" };
+  } finally {
+    try {
+      stream?.getTracks?.().forEach((track) => track.stop());
+    } catch {}
+  }
 }
 
-function baseBlockedStatus(reason) {
-  return { ok: false, reason, headsetLikely: false, source: "none" };
+function hasDebugOverride() {
+  try {
+    return localStorage.getItem(DEBUG_READY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function isBusy(options = {}) {
+  if (options.recordingSide) return true;
+  if (options.recognizer) return true;
+
+  const active = String(options.activeSide || "").toLowerCase();
+  if (active === "listening" || active === "translating") return true;
+
+  if (options.frameRoot?.classList?.contains?.("is-listening")) return true;
+  if (options.frameRoot?.classList?.contains?.("is-translating")) return true;
+
+  return false;
 }
 
 export async function getDualEarProStatus(options = {}) {
   try {
-    if (!(window.isSecureContext || isLocalhost())) return baseBlockedStatus("not_secure_context");
-    if (!speechSupported()) return baseBlockedStatus("speech_unsupported");
-    if (!mediaDevicesReady()) return baseBlockedStatus("media_devices_missing");
-    if (clean(options.currentRuntimeMode).toLowerCase() === "offline") return baseBlockedStatus("offline_mode");
+    const secureOk = !!window.isSecureContext || isLocalhost();
+    if (!secureOk) {
+      return { ok: false, reason: "not_secure_context", headsetLikely: false, source: "none" };
+    }
 
-    const busy = busyReason(options);
-    if (busy) return baseBlockedStatus(busy);
+    if (!getSpeechRecognitionCtor()) {
+      return { ok: false, reason: "speech_unsupported", headsetLikely: false, source: "none" };
+    }
 
-    const micProbe = await probeMicrophone(options);
-    if (micProbe !== true) return baseBlockedStatus(micProbe || "mic_permission_denied");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      return { ok: false, reason: "media_devices_missing", headsetLikely: false, source: "none" };
+    }
 
-    if (debugOverrideSignal()) {
+    if (String(options.currentRuntimeMode || "online").toLowerCase() === "offline") {
+      return { ok: false, reason: "offline_mode", headsetLikely: false, source: "none" };
+    }
+
+    if (isBusy(options)) {
+      return { ok: false, reason: "busy", headsetLikely: false, source: "none" };
+    }
+
+    const micProbe = await probeMicrophonePermission();
+    if (!micProbe.ok) {
+      return { ok: false, reason: micProbe.reason || "mic_permission_denied", headsetLikely: false, source: "none" };
+    }
+
+    if (hasDebugOverride()) {
+      console.warn("[DualEarPro] Debug override aktif");
       return { ok: true, reason: "ready", headsetLikely: true, source: "debug-override" };
     }
-    if (premiumModuleSignal()) {
-      return { ok: true, reason: "ready", headsetLikely: true, source: "premium-module" };
+
+    const premiumSignal = getPremiumModuleSignal();
+    if (premiumSignal.ok) {
+      return { ok: true, reason: "ready", headsetLikely: true, source: premiumSignal.source };
     }
-    const bodySignal = bodyClassSignal();
-    if (bodySignal && urlModeSignal()) {
-      return { ok: true, reason: "ready", headsetLikely: true, source: "body-class" };
+
+    const bodySignal = getBodyClassSignal();
+    const urlSignal = getUrlHelperSignal();
+    if (bodySignal.ok && urlSignal.ok) {
+      return { ok: true, reason: "ready", headsetLikely: true, source: bodySignal.source };
     }
-    if (bodySignal) {
-      return { ok: true, reason: "ready", headsetLikely: true, source: "body-class" };
+
+    const deviceSignal = await hasHeadsetDeviceLabel();
+    if (deviceSignal.ok) {
+      return { ok: true, reason: "ready", headsetLikely: true, source: deviceSignal.source };
     }
-    if (await deviceLabelSignal()) {
-      return { ok: true, reason: "ready", headsetLikely: true, source: "device-label" };
-    }
-    return baseBlockedStatus("headset_not_detected");
+
+    return { ok: false, reason: "headset_not_detected", headsetLikely: false, source: "none" };
   } catch (error) {
-    console.warn("[DualEarPro] status check failed", error);
-    return baseBlockedStatus("unknown_error");
+    console.warn("[DualEarPro] status error", error);
+    return { ok: false, reason: "unknown_error", headsetLikely: false, source: "none" };
   }
 }
 
 export async function canEnableDualEarPro(options = {}) {
-  return getDualEarProStatus(options);
+  return await getDualEarProStatus(options);
 }
 
-export function getDualEarProBlockedMessage(reason) {
+export function getDualEarProBlockedMessage(reason = "unknown_error") {
   const messages = {
     not_secure_context: "Eller Serbest için güvenli bağlantı gerekli.",
     speech_unsupported: "Bu tarayıcı Eller Serbest konuşma tanımayı desteklemiyor.",
@@ -181,15 +213,19 @@ export function getDualEarProBlockedMessage(reason) {
     busy: "Devam eden dinleme bitince tekrar deneyin.",
     headset_not_detected: "Eller Serbest için kulaklık bağlantısı önerilir.",
     unknown_error: "Eller Serbest şu anda başlatılamadı.",
+    ready: "Eller Serbest hazır."
   };
+
   return messages[reason] || messages.unknown_error;
 }
 
-export function showDualEarProBlockedReason(reason, toastFn) {
+export function showDualEarProBlockedReason(reason = "unknown_error", toastFn = null) {
   const message = getDualEarProBlockedMessage(reason);
   if (typeof toastFn === "function") {
     toastFn(message);
-    return;
+    return message;
   }
-  console.warn(message);
+
+  console.warn("[DualEarPro]", message);
+  return message;
 }
