@@ -2,6 +2,10 @@ import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 import { ensureFaceToFacePremiumAccess } from "/js/facetoface_premium_gate.js";
+import {
+  canEnableDualEarPro,
+  showDualEarProBlockedReason
+} from "/js/dual_ear_pro.js";
 
 const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
@@ -622,24 +626,51 @@ function setHandsFreeMode(enabled, opts = {}) {
   if (!opts.silent) showToast("Eller Serbest kapalı");
 }
 
+async function requestEnableHandsFreeMode(opts = {}) {
+  const status = await canEnableDualEarPro({
+    currentRuntimeMode,
+    recordingSide,
+    activeSide,
+    recognizer,
+    frameRoot,
+    bootReady,
+    ...opts
+  });
+
+  if (!status?.ok) {
+    setHandsFreeMode(false, { silent: true, stopCurrent: true });
+    showDualEarProBlockedReason(status?.reason || "unknown_error", showToast);
+    return false;
+  }
+
+  setHandsFreeMode(true);
+  return true;
+}
+
 function bindHandsFreeToggle() {
   syncHandsFreeToggleUi();
 
-  if (!handsFreeToggle || handsFreeToggle.dataset.bound === "1") return;
-  handsFreeToggle.dataset.bound = "1";
-
-  handsFreeToggle.addEventListener("click", (e) => {
+  handsFreeToggle?.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
     const next = !isHandsFreeModeEnabled();
-    setHandsFreeMode(next, { stopCurrent: true });
+    if (!next) {
+      setHandsFreeMode(false, { stopCurrent: true });
+      return;
+    }
+
+    await requestEnableHandsFreeMode({ source: "toggle" });
   });
 }
 
 window.f2fHandsFreeState = {
   isEnabled: isHandsFreeModeEnabled,
-  setEnabled: (value, opts = {}) => setHandsFreeMode(!!value, opts),
+  setEnabled: (value, opts = {}) => {
+    if (value) return requestEnableHandsFreeMode(opts);
+    setHandsFreeMode(false, { stopCurrent: true, ...opts });
+    return Promise.resolve(true);
+  },
   start: () => startHandsFreeLoop("external"),
   stop: () => setHandsFreeMode(false, { stopCurrent: true }),
   sync: syncHandsFreeToggleUi,
@@ -681,6 +712,7 @@ function translationError(code, message, status = 0, detail = null) {
 }
 
 function handleTranslateError(error, latestRow, latestTxt) {
+  if (isHandsFreeModeEnabled()) setHandsFreeMode(false, { silent: true, stopCurrent: false });
   setErrorUI();
 
   if (error?.code === "INSUFFICIENT_TOKENS") {
@@ -2811,6 +2843,20 @@ function bindSpeechVoices() {
   } catch {}
 }
 
+function bindHandsFreeSafetyEvents() {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && isHandsFreeModeEnabled()) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: true });
+    }
+  });
+
+  window.addEventListener("beforeunload", () => {
+    if (isHandsFreeModeEnabled()) {
+      setHandsFreeMode(false, { silent: true, stopCurrent: true });
+    }
+  });
+}
+
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
@@ -2823,6 +2869,7 @@ function bind() {
   bindMicButtons();
   bindInputs();
   bindSpeechVoices();
+  bindHandsFreeSafetyEvents();
 
   try {
     startBoot();
