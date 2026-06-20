@@ -1,4 +1,5 @@
 import { supabase } from "/js/supabase_client.js";
+import { initGlobalAccess } from "/js/global_access.js";
 
 window.__ITALKY_CALL_JS_LOADED = true;
 window.__ITALKY_CALL_BOOT_STARTED = false;
@@ -71,62 +72,10 @@ function onlyDigits(value) {
   return String(value || "").replace(/\D+/g, "");
 }
 
-function formatNo(value, opts = {}) {
-  const digits = onlyDigits(value).slice(0, 11);
-  const emptyText = opts.emptyText ?? "";
-  if (!digits) return emptyText;
-  if (digits.length <= 4) return digits;
-  if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9, 11)}`;
-}
-
-function isValidItalkyNo(value) {
-  return /^0601[2-9][0-9]{6}$/.test(onlyDigits(value));
-}
-
-function setMyNoUnavailable(message = "Numara alınamadı") {
-  if (els.myNo) {
-    els.myNo.textContent = message;
-    els.myNo.title = message;
-    els.myNo.classList.add("no-error");
-  }
-  if (els.topMyNo) {
-    els.topMyNo.textContent = "No yok";
-    els.topMyNo.title = message;
-  }
-  return "";
-}
-
-function setMyNoText(rawOrFormatted) {
-  const digits = onlyDigits(rawOrFormatted);
-  const formatted = digits ? formatNo(digits) : String(rawOrFormatted || "").trim();
-  if (!formatted || formatted === "0601") return setMyNoUnavailable();
-
-  if (els.myNo) {
-    els.myNo.textContent = formatted;
-    els.myNo.title = formatted;
-    els.myNo.classList.remove("no-error");
-  }
-  if (els.topMyNo) {
-    els.topMyNo.textContent = formatted;
-    els.topMyNo.title = formatted;
-  }
-
-  try {
-    localStorage.setItem("italky_call_my_no_raw", digits || rawOrFormatted);
-    localStorage.setItem("italky_call_my_no_formatted", formatted);
-  } catch {}
-
-  return formatted;
-}
-
-function getCachedMyNo() {
-  try {
-    return localStorage.getItem("italky_call_my_no_formatted") || localStorage.getItem("italky_call_my_no_raw") || "";
-  } catch {
-    return "";
-  }
+function formatNo(value) {
+  const d = onlyDigits(value);
+  if (d.length >= 11) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9, 11)}`;
+  return d || "0601 ___ __ __";
 }
 
 function initials(name = "") {
@@ -149,121 +98,120 @@ function clearCallTimers() {
   timerInterval = null;
 }
 
-function withTimeout(promise, ms = 6500, label = "timeout") {
-  let timer = null;
-  return Promise.race([
-    Promise.resolve(promise),
-    new Promise((_, reject) => {
-      timer = setTimeout(() => reject(new Error(label)), Math.max(800, Number(ms) || 6500));
-    })
-  ]).finally(() => clearTimeout(timer));
-}
-
 async function rpc(name, args = {}) {
-  const { data, error } = await withTimeout(
-    supabase.rpc(name, args),
-    7000,
-    `rpc_${name}_timeout`
-  );
+  const { data, error } = await supabase.rpc(name, args);
   if (error) throw error;
   return data;
 }
 
 async function requireAuth() {
-  // Call ekranında "No okunuyor"da kalmamak için auth kontrolü kısa ve doğrudan yapılır.
-  let session = null;
-  let user = null;
-
   try {
-    const result = await withTimeout(supabase.auth.getSession(), 3500, "session_timeout");
-    session = result?.data?.session || null;
-    user = session?.user || null;
+    await initGlobalAccess({ allowPublicPageBypass: false });
   } catch (e) {
-    console.warn("[italky_call] session read delayed", e);
+    console.warn("[italky_call] global access skipped", e);
   }
 
-  if (!user) {
-    try {
-      const result = await withTimeout(supabase.auth.getUser(), 3500, "user_timeout");
-      user = result?.data?.user || null;
-    } catch (e) {
-      console.warn("[italky_call] user read failed", e);
-    }
-  }
-
-  // Global access kontrolü arka planda çalışır; italkyAI No göstermeyi kilitlemez.
-  void import("/js/global_access.js")
-    .then((mod) => mod?.initGlobalAccess?.({ allowPublicPageBypass: false }))
-    .catch((e) => console.warn("[italky_call] global access skipped", e));
-
-  if (!user) {
+  const { data: { session } = {} } = await supabase.auth.getSession();
+  if (!session?.user) {
     location.replace("/pages/login.html");
     return null;
   }
-
-  currentUser = user;
+  currentUser = session.user;
   return currentUser;
 }
 
+
+function isValidItalkyNoRaw(value) {
+  return /^0601[2-9]\d{6}$/.test(onlyDigits(value));
+}
+
+function cacheMyNo(rawNo) {
+  const raw = onlyDigits(rawNo);
+  if (!isValidItalkyNoRaw(raw)) return "";
+  const formatted = formatNo(raw);
+  try {
+    localStorage.setItem("italky_my_no", raw);
+    localStorage.setItem("italky_my_no_formatted", formatted);
+  } catch {}
+  return formatted;
+}
+
+function setMyNoDisplay(value) {
+  const formatted = String(value || "").trim() || "Numara alınamadı";
+  if (els.myNo) els.myNo.textContent = formatted;
+  if (els.topMyNo) els.topMyNo.textContent = formatted;
+}
+
+function withTimeout(promise, ms = 4500, label = "timeout") {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => setTimeout(() => reject(new Error(label)), ms))
+  ]);
+}
+
+async function readMyNoFromProfileById() {
+  if (!currentUser?.id) return "";
+  const { data, error } = await withTimeout(
+    supabase.from("profiles").select("italky_no").eq("id", String(currentUser.id)).maybeSingle(),
+    4500,
+    "profile_id_timeout"
+  );
+  if (error) throw error;
+  return data?.italky_no || "";
+}
+
+async function readMyNoFromProfileByEmail() {
+  if (!currentUser?.email) return "";
+  const { data, error } = await withTimeout(
+    supabase.from("profiles").select("italky_no").eq("email", String(currentUser.email)).maybeSingle(),
+    4500,
+    "profile_email_timeout"
+  );
+  if (error) throw error;
+  return data?.italky_no || "";
+}
+
 async function ensureMyNo() {
-  const cachedNo = getCachedMyNo();
-  if (cachedNo) setMyNoText(cachedNo);
+  const cached = localStorage.getItem("italky_my_no_formatted") || localStorage.getItem("italky_my_no") || "";
+  if (cached) setMyNoDisplay(formatNo(cached));
+  else setMyNoDisplay("No okunuyor...");
 
-  // 1) Profile sayfasındaki gibi doğrudan profiles.id ile oku. Başarılıysa beklemeden göster.
-  if (currentUser?.id) {
-    try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from("profiles")
-          .select("italky_no")
-          .eq("id", currentUser.id)
-          .maybeSingle(),
-        3500,
-        "profile_id_read_timeout"
-      );
-      if (error) throw error;
-      const digits = onlyDigits(data?.italky_no || "");
-      if (isValidItalkyNo(digits)) return setMyNoText(digits);
-    } catch (e) {
-      console.warn("[italky_call] profile id read failed", e);
-    }
-  }
-
-  // 2) E-posta ile yedek oku.
-  if (currentUser?.email) {
-    try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from("profiles")
-          .select("italky_no")
-          .eq("email", currentUser.email)
-          .maybeSingle(),
-        3500,
-        "profile_email_read_timeout"
-      );
-      if (error) throw error;
-      const digits = onlyDigits(data?.italky_no || "");
-      if (isValidItalkyNo(digits)) return setMyNoText(digits);
-    } catch (e) {
-      console.warn("[italky_call] profile email read failed", e);
-    }
-  }
-
-  // 3) RPC: numara yoksa üretmeyi dener.
-  const rpcNames = ["ensure_my_italky_no", "get_my_italky_call_profile"];
-  for (const name of rpcNames) {
-    try {
-      const rows = await rpc(name);
+  const attempts = [
+    async () => readMyNoFromProfileById(),
+    async () => readMyNoFromProfileByEmail(),
+    async () => {
+      const rows = await withTimeout(rpc("ensure_my_italky_no"), 6000, "ensure_no_timeout");
       const row = Array.isArray(rows) ? rows[0] : rows;
-      const digits = onlyDigits(row?.formatted_italky_no || row?.italky_no || "");
-      if (isValidItalkyNo(digits)) return setMyNoText(digits);
+      return row?.italky_no || row?.formatted_italky_no || "";
+    },
+    async () => {
+      const rows = await withTimeout(rpc("get_my_italky_call_profile"), 6000, "profile_rpc_timeout");
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      return row?.italky_no || row?.formatted_italky_no || "";
+    }
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      const value = await attempt();
+      const raw = onlyDigits(value);
+      if (isValidItalkyNoRaw(raw)) {
+        const formatted = cacheMyNo(raw);
+        setMyNoDisplay(formatted);
+        return formatted;
+      }
+      const formattedDigits = onlyDigits(value);
+      if (formattedDigits && isValidItalkyNoRaw(formattedDigits)) {
+        const formatted = cacheMyNo(formattedDigits);
+        setMyNoDisplay(formatted);
+        return formatted;
+      }
     } catch (e) {
-      console.warn(`[italky_call] ${name} rpc failed`, e);
+      console.warn("[italky_call] no read attempt failed", e);
     }
   }
 
-  setMyNoUnavailable("Numara alınamadı");
-  showToast("italkyAI No okunamadı. Console hatasını kontrol et.");
+  setMyNoDisplay("Numara alınamadı");
   return "";
 }
 
@@ -285,8 +233,8 @@ async function lookupNo(rawNo) {
 
 async function startCall() {
   const no = onlyDigits(els.calleeNoInput?.value || "");
-  if (!isValidItalkyNo(no)) {
-    showToast("Geçerli italkyAI No gir: 0601 XXX XX XX");
+  if (!isValidItalkyNoRaw(no)) {
+    showToast("0601 XXX XX XX formatında italkyAI No gir.");
     return;
   }
 
@@ -503,17 +451,13 @@ function bindEvents() {
   els.addContactBtn?.addEventListener("click", addContact);
   els.blockBtn?.addEventListener("click", blockFromCall);
   els.copyMyNo?.addEventListener("click", async () => {
-    const no = els.myNo?.textContent || els.topMyNo?.textContent || "";
-    if (!onlyDigits(no)) {
-      showToast("Kopyalanacak italkyAI No bulunamadı.");
-      return;
-    }
+    const no = els.myNo?.textContent || "";
     try { await navigator.clipboard?.writeText(no); } catch {}
     showToast("italkyAI No kopyalandı.");
   });
   els.calleeNoInput?.addEventListener("input", (event) => {
     const value = onlyDigits(event.target.value).slice(0, 11);
-    event.target.value = value ? formatNo(value) : "";
+    event.target.value = formatNo(value);
   });
   els.calleeNoInput?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") startCall();
@@ -571,26 +515,15 @@ function setupRealtime() {
 async function boot() {
   window.__ITALKY_CALL_BOOT_STARTED = true;
   try {
-    const cachedNo = getCachedMyNo();
-    if (cachedNo) setMyNoText(cachedNo);
-    else {
-      if (els.myNo) els.myNo.textContent = "No okunuyor...";
-      if (els.topMyNo) els.topMyNo.textContent = "No okunuyor";
-    }
-
     if (!(await requireAuth())) return;
     bindEvents();
-
     await ensureMyNo();
-
-    // Presence ve realtime çağrıları ekranda numara göstermeyi kilitlemesin.
-    void setPresence("online");
+    await setPresence("online");
     setupRealtime();
-    window.__ITALKY_CALL_BOOT_DONE = true;
   } catch (e) {
     console.error("[italky_call] boot failed", e);
-    setMyNoUnavailable("Numara alınamadı");
-    showToast("Call ekranı yüklenemedi. Console hatasını kontrol et.");
+    setMyNoDisplay("Numara alınamadı");
+    showToast("Call ekranı başlatılamadı.");
   } finally {
     window.__ITALKY_CALL_BOOT_DONE = true;
   }
