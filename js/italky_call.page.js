@@ -68,30 +68,62 @@ function onlyDigits(value) {
   return String(value || "").replace(/\D+/g, "");
 }
 
-function formatNo(value) {
-  const d = onlyDigits(value).slice(0, 11);
-  if (!d) return "0601 ...";
-  if (d.length <= 4) return d;
-  if (d.length <= 7) return `${d.slice(0, 4)} ${d.slice(4)}`;
-  if (d.length <= 9) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7)}`;
-  return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9, 11)}`;
+function formatNo(value, opts = {}) {
+  const digits = onlyDigits(value).slice(0, 11);
+  const emptyText = opts.emptyText ?? "";
+  if (!digits) return emptyText;
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9, 11)}`;
 }
 
 function isValidItalkyNo(value) {
   return /^0601[2-9][0-9]{6}$/.test(onlyDigits(value));
 }
 
+function setMyNoUnavailable(message = "Numara alınamadı") {
+  if (els.myNo) {
+    els.myNo.textContent = message;
+    els.myNo.title = message;
+    els.myNo.classList.add("no-error");
+  }
+  if (els.topMyNo) {
+    els.topMyNo.textContent = "No yok";
+    els.topMyNo.title = message;
+  }
+  return "";
+}
+
 function setMyNoText(rawOrFormatted) {
-  const formatted = formatNo(rawOrFormatted);
+  const digits = onlyDigits(rawOrFormatted);
+  const formatted = digits ? formatNo(digits) : String(rawOrFormatted || "").trim();
+  if (!formatted || formatted === "0601") return setMyNoUnavailable();
+
   if (els.myNo) {
     els.myNo.textContent = formatted;
     els.myNo.title = formatted;
+    els.myNo.classList.remove("no-error");
   }
   if (els.topMyNo) {
     els.topMyNo.textContent = formatted;
     els.topMyNo.title = formatted;
   }
+
+  try {
+    localStorage.setItem("italky_call_my_no_raw", digits || rawOrFormatted);
+    localStorage.setItem("italky_call_my_no_formatted", formatted);
+  } catch {}
+
   return formatted;
+}
+
+function getCachedMyNo() {
+  try {
+    return localStorage.getItem("italky_call_my_no_formatted") || localStorage.getItem("italky_call_my_no_raw") || "";
+  } catch {
+    return "";
+  }
 }
 
 function initials(name = "") {
@@ -137,19 +169,31 @@ async function requireAuth() {
 }
 
 async function ensureMyNo() {
-  let raw = "";
-  let formatted = "";
+  const cachedNo = getCachedMyNo();
+  if (cachedNo) setMyNoText(cachedNo);
 
+  const candidates = [];
+
+  // 1) En sağlam yol: security definer profil RPC. SQL patch çalıştıysa RLS/cached session sıkıntılarını azaltır.
+  try {
+    const rows = await rpc("get_my_italky_call_profile");
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    candidates.push(row?.formatted_italky_no || row?.italky_no || "");
+  } catch (e) {
+    console.warn("[italky_call] get_my_italky_call_profile rpc skipped", e);
+  }
+
+  // 2) Eski helper RPC.
   try {
     const rows = await rpc("ensure_my_italky_no");
     const row = Array.isArray(rows) ? rows[0] : rows;
-    raw = row?.italky_no || "";
-    formatted = row?.formatted_italky_no || "";
+    candidates.push(row?.formatted_italky_no || row?.italky_no || "");
   } catch (e) {
-    console.warn("[italky_call] ensure_my_italky_no rpc failed, trying profile fallback", e);
+    console.warn("[italky_call] ensure_my_italky_no rpc failed", e);
   }
 
-  if (!raw && currentUser?.id) {
+  // 3) Direkt profiles okuması: profile.html ile aynı tabloya bakıyoruz.
+  if (currentUser?.id) {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -157,20 +201,35 @@ async function ensureMyNo() {
         .eq("id", currentUser.id)
         .maybeSingle();
       if (error) throw error;
-      raw = data?.italky_no || "";
+      candidates.push(data?.italky_no || "");
     } catch (e) {
-      console.warn("[italky_call] profile italky_no fallback failed", e);
+      console.warn("[italky_call] profile id fallback failed", e);
     }
   }
 
-  if (!raw && formatted) raw = formatted;
-  if (!raw) {
-    setMyNoText("No alınamadı");
-    showToast("italkyAI No okunamadı. Profil kaydını kontrol et.");
-    return "";
+  // 4) Bazı eski profillerde id/email eşleşmesi karıştıysa e-posta ile son deneme.
+  if (currentUser?.email) {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("italky_no")
+        .eq("email", currentUser.email)
+        .maybeSingle();
+      if (error) throw error;
+      candidates.push(data?.italky_no || "");
+    } catch (e) {
+      console.warn("[italky_call] profile email fallback failed", e);
+    }
   }
 
-  return setMyNoText(formatted || raw);
+  for (const value of candidates) {
+    const digits = onlyDigits(value);
+    if (isValidItalkyNo(digits)) return setMyNoText(digits);
+  }
+
+  setMyNoUnavailable("Numara alınamadı");
+  showToast("italkyAI No okunamadı. SQL patch ve profil kaydını kontrol et.");
+  return "";
 }
 
 async function setPresence(value = "online") {
@@ -419,7 +478,7 @@ function bindEvents() {
   });
   els.calleeNoInput?.addEventListener("input", (event) => {
     const value = onlyDigits(event.target.value).slice(0, 11);
-    event.target.value = formatNo(value);
+    event.target.value = value ? formatNo(value) : "";
   });
   els.calleeNoInput?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") startCall();
