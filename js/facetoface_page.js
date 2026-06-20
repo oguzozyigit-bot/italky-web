@@ -1621,6 +1621,12 @@ function setHandsFreeMode(enabled, opts = {}) {
 }
 
 async function requestEnableHandsFreeMode(opts = {}) {
+  showToast("Eller Serbest modu kaldırıldı.");
+  try { localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, "off"); } catch {}
+  return false;
+}
+
+async function requestEnableHandsFreeMode_DISABLED_OLD(opts = {}) {
   if (!F2F_HANDS_FREE_FEATURE_ENABLED) {
     try { localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, "off"); } catch {}
     stopHandsFreeLoop({ stopCurrent: true });
