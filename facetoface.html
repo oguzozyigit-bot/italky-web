@@ -1250,29 +1250,6 @@
       transform:translateX(-50%) translateY(0);
     }
 
-    .language-family-heading{
-      min-height:36px;
-      border-radius:999px;
-      padding:8px 12px;
-      margin-top:6px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      color:#fff;
-      font-family:inherit;
-      font-size:12px;
-      font-weight:1000;
-      letter-spacing:.22px;
-      background:linear-gradient(135deg, rgba(14,165,233,.22), rgba(99,102,241,.16));
-      border:1px solid rgba(125,211,252,.34);
-      box-shadow:0 12px 26px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.10);
-      -webkit-backdrop-filter:blur(12px) saturate(1.25);
-      backdrop-filter:blur(12px) saturate(1.25);
-      cursor:default;
-      pointer-events:none;
-    }
-
     .language-family-option{
       min-height:36px;
       border-radius:999px;
@@ -1375,34 +1352,33 @@
 
   
 
-    /* HTML-only final fix: no handsfree, top 180 mic right-side trash. */
-    #handsFreeToggle,
-    #topHandsFreeToggle,
-    .hf-btn,
-    .handsfree-tip-modal{
-      display:none !important;
-      visibility:hidden !important;
-      pointer-events:none !important;
+    /* Final F2F layout: left TEXT, top-right trash clear, no handsfree toggle. */
+    #textLink{
+      left:0;
+      right:auto !important;
+      border-radius:0 18px 18px 0;
+      border-left:none;
+      box-shadow:10px 0 32px rgba(0,0,0,.30);
+      pointer-events:auto !important;
+      z-index:2147482500 !important;
+      isolation:isolate;
     }
 
     #clearBtn.trash-clear-btn{
       --clear-fill:0;
       position:fixed !important;
-      /* Üst 180° mikrofon hizası: ekranın sağında, köşeden dışarı taşmadan. */
-      top:calc(env(safe-area-inset-top, 0px) + 16px) !important;
-      right:clamp(10px, 3vw, 18px) !important;
+      top:calc(18px + env(safe-area-inset-top, 0px)) !important;
+      right:14px !important;
       left:auto !important;
       width:54px !important;
       height:54px !important;
-      min-width:54px !important;
       min-height:54px !important;
       padding:0 !important;
-      margin:0 !important;
       border:0 !important;
       border-radius:0 !important;
       background:transparent !important;
       box-shadow:none !important;
-      color:#f8fafc !important;
+      color:#f8fafc;
       display:flex !important;
       align-items:center !important;
       justify-content:center !important;
@@ -1415,8 +1391,6 @@
       overflow:visible !important;
       -webkit-backdrop-filter:none !important;
       backdrop-filter:none !important;
-      pointer-events:auto !important;
-      isolation:isolate !important;
     }
 
     #clearBtn.trash-clear-btn:active{
@@ -1474,20 +1448,11 @@
       filter:drop-shadow(0 0 9px rgba(34,197,94,.45));
     }
 
-    @media (max-width:390px){
-      #clearBtn.trash-clear-btn{
-        top:calc(env(safe-area-inset-top, 0px) + 14px) !important;
-        right:10px !important;
-        width:50px !important;
-        height:50px !important;
-        min-width:50px !important;
-        min-height:50px !important;
-      }
-      .trash-can-shell,
-      .trash-can-svg{
-        width:39px;
-        height:39px;
-      }
+    #handsFreeToggle,
+    .hf-btn,
+    .handsfree-tip-modal{
+      display:none !important;
+      pointer-events:none !important;
     }
 
   </style>
@@ -1572,6 +1537,7 @@
         </div>
       </div>
 
+      <a class="nav-btn text-nav" id="textLink" href="/pages/text_translate.html"><span id="textText" class="label-rotate">TEXT</span></a>
       <button class="trash-clear-btn" id="clearBtn" type="button" aria-label="Konuşmayı temizle" title="Konuşmayı temizle">
         <span class="trash-can-shell" aria-hidden="true">
           <span class="trash-can-fill"></span>
@@ -1607,9 +1573,9 @@
               <span class="language-family-caret" aria-hidden="true">⌵</span>
             </button>
             <div class="language-family-menu" id="languageFamilyMenu" role="menu" aria-label="Dil coğrafyası seçimi">
-              <div class="language-family-heading" role="presentation">
-                <span>Coğrafyanın Dilleri</span><span aria-hidden="true">✨</span>
-              </div>
+              <a class="language-family-option active" data-family="geography" href="/pages/deneme.html" role="menuitem">
+                <span>Coğrafyanın Dilleri</span><span class="check" aria-hidden="true">✨</span>
+              </a>
               <a class="language-family-option" data-family="mesopotamia" href="/pages/mezopotamyanin_dili.html" role="menuitem">
                 <span>Mezopotamya Dilleri</span><span class="check" aria-hidden="true">✨</span>
               </a>
@@ -1619,7 +1585,7 @@
               <a class="language-family-option" data-family="caucasus" href="/pages/kafkas_dilleri.html" role="menuitem">
                 <span>Kafkas Dilleri</span><span class="check" aria-hidden="true">✨</span>
               </a>
-              <a class="language-family-option" data-family="balkan" href="/pages/balkanlarin_dili.html" role="menuitem">
+              <a class="language-family-option" data-family="balkan" href="/pages/balkan_dilleri.html" role="menuitem">
                 <span>Balkan Dilleri</span><span class="check" aria-hidden="true">✨</span>
               </a>
             </div>
@@ -1655,25 +1621,6 @@
               <path d="M19 10a7 7 0 0 1-14 0"></path>
               <path d="M12 17v4"></path>
               <path d="M8 21h8"></path>
-            </svg>
-          </button>
-
-
-          <button id="handsFreeToggle" class="hf-btn bottom-hf-btn" type="button" aria-pressed="false" aria-label="Eller Serbest">
-            <svg class="hf-hand hf-hand-left" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 12V7.5a1.5 1.5 0 0 1 3 0V12"></path>
-              <path d="M11 12V5.5a1.5 1.5 0 0 1 3 0V12"></path>
-              <path d="M14 12V8a1.5 1.5 0 0 1 3 0v4"></path>
-              <path d="M17 12v-1.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-3.2"></path>
-              <path d="M6 12a1.6 1.6 0 0 0-3.2.2V14a7 7 0 0 0 7 7h3.2"></path>
-            </svg>
-            <span>Eller Serbest</span>
-            <svg class="hf-hand hf-hand-right" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 12V7.5a1.5 1.5 0 0 1 3 0V12"></path>
-              <path d="M11 12V5.5a1.5 1.5 0 0 1 3 0V12"></path>
-              <path d="M14 12V8a1.5 1.5 0 0 1 3 0v4"></path>
-              <path d="M17 12v-1.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-3.2"></path>
-              <path d="M6 12a1.6 1.6 0 0 0-3.2.2V14a7 7 0 0 0 7 7h3.2"></path>
             </svg>
           </button>
 
@@ -1724,11 +1671,11 @@
       if (!selector || !trigger) return;
 
       var map = {
-        "/pages/facetoface.html": "geography",
+        "/pages/deneme.html": "geography",
         "/pages/mezopotamyanin_dili.html": "mesopotamia",
         "/pages/turan_dilleri.html": "turan",
         "/pages/kafkas_dilleri.html": "caucasus",
-        "/pages/balkanlarin_dili.html": "balkan"
+        "/pages/balkan_dilleri.html": "balkan"
       };
 
       var labels = {
@@ -1783,15 +1730,6 @@
         } else if (mode === "guide" || mode === "conference" || mode === "tour") {
           document.documentElement.classList.add("guide-booting");
         }
-      } catch(e) {}
-    })();
-  </script>
-
-  <script>
-    (function(){
-      try {
-        localStorage.setItem("facetoface_handsfree_mode", "off");
-        document.body && document.body.classList.remove("handsfree-mode", "handsfree-listening");
       } catch(e) {}
     })();
   </script>
