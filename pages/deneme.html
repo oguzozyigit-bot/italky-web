@@ -32,13 +32,13 @@
     }
     button,input{font:inherit;}
     .app{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
-    .topbar{padding:calc(10px + var(--safe-top)) 14px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(2,6,23,.62);backdrop-filter:blur(16px);}
-    .brand{display:flex;align-items:center;gap:10px;min-width:0;}
+    .topbar{padding:calc(10px + var(--safe-top)) 14px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(2,6,23,.62);backdrop-filter:blur(16px);flex-wrap:nowrap;}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;}
     .back{width:42px;height:42px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;font-weight:1000;}
-    .brand-title{min-width:0;}
+    .brand-title{min-width:0;flex:1 1 auto;}
     .brand-title strong{font-family:Space Grotesk,sans-serif;display:block;font-size:18px;line-height:1;letter-spacing:-.3px;}
     .brand-title span{display:block;margin-top:4px;font-size:11px;font-weight:900;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .my-no-chip{border:1px solid rgba(103,232,249,.25);background:rgba(103,232,249,.10);color:#cffafe;border-radius:999px;padding:8px 10px;font-size:11px;font-weight:1000;white-space:nowrap;}
+    .my-no-chip{border:1px solid rgba(103,232,249,.28);background:rgba(103,232,249,.10);color:#cffafe;border-radius:999px;padding:8px 10px;font-size:11px;font-weight:1000;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;min-width:132px;box-shadow:0 10px 24px rgba(8,47,73,.18),inset 0 1px 0 rgba(255,255,255,.06);}
     .main{flex:1;min-height:0;overflow-y:auto;padding:14px 14px calc(16px + var(--safe-bottom));scrollbar-width:none;}
     .main::-webkit-scrollbar{display:none;}
     .screen{display:none;min-height:100%;}
@@ -46,11 +46,12 @@
     .hero-card{border:1px solid var(--line);border-radius:28px;background:linear-gradient(145deg,rgba(15,23,42,.86),rgba(8,13,26,.92));box-shadow:0 20px 52px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);padding:18px;overflow:hidden;position:relative;}
     .hero-card::before{content:"";position:absolute;inset:-80px -60px auto auto;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(103,232,249,.28),transparent 68%);pointer-events:none;}
     .label{font-size:10px;text-transform:uppercase;letter-spacing:.45px;font-weight:1000;color:rgba(255,255,255,.56);}
-    .my-number{margin-top:8px;font-family:Space Grotesk,sans-serif;font-size:30px;line-height:1;font-weight:900;letter-spacing:-.5px;}
+    .my-number{margin-top:8px;font-family:Space Grotesk,sans-serif;font-size:clamp(27px,7.2vw,36px);line-height:1;font-weight:900;letter-spacing:-.5px;white-space:nowrap;overflow:visible;text-overflow:clip;}
     .status-row{margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
     .status-pill{border-radius:999px;padding:8px 10px;border:1px solid rgba(34,197,94,.24);background:rgba(34,197,94,.12);color:#bbf7d0;font-size:11px;font-weight:1000;}
     .status-pill.offline{border-color:rgba(148,163,184,.25);background:rgba(148,163,184,.10);color:#e2e8f0;}
     .status-pill.busy{border-color:rgba(250,204,21,.30);background:rgba(250,204,21,.12);color:#fef08a;}
+    .no-helper{margin-top:10px;color:rgba(248,250,252,.58);font-size:11px;font-weight:900;line-height:1.35;}
     .call-box{margin-top:14px;border:1px solid var(--line);border-radius:26px;background:rgba(255,255,255,.055);padding:14px;}
     .number-input{width:100%;height:58px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(2,6,23,.54);color:#fff;font-size:20px;font-weight:1000;padding:0 16px;text-align:center;letter-spacing:.6px;}
     .number-input::placeholder{color:rgba(255,255,255,.34);}
@@ -100,7 +101,7 @@
     .sheet h3{margin:4px 0 8px;font-family:Space Grotesk,sans-serif;font-size:22px;line-height:1;}
     .sheet p{margin:0;color:var(--muted);font-size:13px;font-weight:850;line-height:1.4;}
     .disabled{opacity:.5;pointer-events:none;}
-    @media(max-width:370px){.my-number{font-size:26px}.control-row{gap:8px}.control{min-height:64px;font-size:10px}.call-orb{width:118px;height:118px}.call-orb .avatar{width:82px;height:82px}}
+    @media(max-width:370px){.topbar{padding-left:10px;padding-right:10px;gap:7px}.brand-title strong{font-size:16px}.brand-title span{font-size:10px}.my-no-chip{min-width:122px;padding:7px 8px;font-size:10.2px}.my-number{font-size:25px}.number-input{font-size:18px}.control-row{gap:8px}.control{min-height:64px;font-size:10px}.call-orb{width:118px;height:118px}.call-orb .avatar{width:82px;height:82px}}
   </style>
 </head>
 <body>
@@ -118,6 +119,7 @@
         <div class="hero-card">
           <div class="label">Benim italkyAI No</div>
           <div class="my-number" id="myNo">0601 ...</div>
+          <div class="no-helper">Bu numara gerçek GSM hattı değil; italkyAI içi çevirili arama numarandır.</div>
           <div class="status-row">
             <span class="status-pill" id="presencePill">Çevrimiçi</span>
             <span class="status-pill offline" id="privacyPill">Herkes arayabilir</span>
@@ -126,7 +128,7 @@
 
         <div class="call-box">
           <div class="label">italkyAI No ile ara</div>
-          <input id="calleeNoInput" class="number-input" inputmode="numeric" autocomplete="off" placeholder="0601 ___ __ ___" />
+          <input id="calleeNoInput" class="number-input" inputmode="numeric" autocomplete="off" placeholder="0601 ___ __ __" />
           <button id="callBtn" class="primary-btn" type="button">Ara</button>
           <button id="recentBtn" class="ghost-btn" type="button">Son Aramalar</button>
         </div>
@@ -204,6 +206,6 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <script type="module" src="/js/italky_call_page.js?v=CALL_V1_STARTER_1"></script>
+  <script type="module" src="/js/italky_call_page.js?v=CALL_V1_NO_DISPLAY_2"></script>
 </body>
 </html>
