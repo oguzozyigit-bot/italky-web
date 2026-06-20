@@ -69,16 +69,30 @@ function onlyDigits(value) {
 }
 
 function formatNo(value) {
-  const d = onlyDigits(value);
-  if (d.length >= 11) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9, 11)}`;
-  if (d.length >= 9) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)}${d.length > 9 ? " " + d.slice(9) : ""}`.trim();
-  if (d.length > 4) return `${d.slice(0, 4)} ${d.slice(4)}`;
-  return d || "0601 ...";
-}
-function normalizeCallNo(value) {
-  return onlyDigits(value).slice(0, 11);
+  const d = onlyDigits(value).slice(0, 11);
+  if (!d) return "0601 ...";
+  if (d.length <= 4) return d;
+  if (d.length <= 7) return `${d.slice(0, 4)} ${d.slice(4)}`;
+  if (d.length <= 9) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7)}`;
+  return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9, 11)}`;
 }
 
+function isValidItalkyNo(value) {
+  return /^0601[2-9][0-9]{6}$/.test(onlyDigits(value));
+}
+
+function setMyNoText(rawOrFormatted) {
+  const formatted = formatNo(rawOrFormatted);
+  if (els.myNo) {
+    els.myNo.textContent = formatted;
+    els.myNo.title = formatted;
+  }
+  if (els.topMyNo) {
+    els.topMyNo.textContent = formatted;
+    els.topMyNo.title = formatted;
+  }
+  return formatted;
+}
 
 function initials(name = "") {
   const parts = String(name || "AI").trim().split(/\s+/).filter(Boolean);
@@ -123,13 +137,40 @@ async function requireAuth() {
 }
 
 async function ensureMyNo() {
-  const rows = await rpc("ensure_my_italky_no");
-  const row = Array.isArray(rows) ? rows[0] : rows;
-  const raw = row?.italky_no || "";
-  const formatted = formatNo(row?.formatted_italky_no || raw);
-  if (els.myNo) els.myNo.textContent = formatted;
-  if (els.topMyNo) els.topMyNo.textContent = formatted;
-  return formatted;
+  let raw = "";
+  let formatted = "";
+
+  try {
+    const rows = await rpc("ensure_my_italky_no");
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    raw = row?.italky_no || "";
+    formatted = row?.formatted_italky_no || "";
+  } catch (e) {
+    console.warn("[italky_call] ensure_my_italky_no rpc failed, trying profile fallback", e);
+  }
+
+  if (!raw && currentUser?.id) {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("italky_no")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+      if (error) throw error;
+      raw = data?.italky_no || "";
+    } catch (e) {
+      console.warn("[italky_call] profile italky_no fallback failed", e);
+    }
+  }
+
+  if (!raw && formatted) raw = formatted;
+  if (!raw) {
+    setMyNoText("No alınamadı");
+    showToast("italkyAI No okunamadı. Profil kaydını kontrol et.");
+    return "";
+  }
+
+  return setMyNoText(formatted || raw);
 }
 
 async function setPresence(value = "online") {
@@ -149,9 +190,9 @@ async function lookupNo(rawNo) {
 }
 
 async function startCall() {
-  const no = normalizeCallNo(els.calleeNoInput?.value || "");
-  if (no.length !== 11 || !no.startsWith("0601")) {
-    showToast("italkyAI No 0601 XXX XX XX formatında olmalı.");
+  const no = onlyDigits(els.calleeNoInput?.value || "");
+  if (!isValidItalkyNo(no)) {
+    showToast("Geçerli italkyAI No gir: 0601 XXX XX XX");
     return;
   }
 
@@ -368,12 +409,16 @@ function bindEvents() {
   els.addContactBtn?.addEventListener("click", addContact);
   els.blockBtn?.addEventListener("click", blockFromCall);
   els.copyMyNo?.addEventListener("click", async () => {
-    const no = els.myNo?.textContent || "";
+    const no = els.myNo?.textContent || els.topMyNo?.textContent || "";
+    if (!onlyDigits(no)) {
+      showToast("Kopyalanacak italkyAI No bulunamadı.");
+      return;
+    }
     try { await navigator.clipboard?.writeText(no); } catch {}
-    showToast(`${no} kopyalandı.`);
+    showToast("italkyAI No kopyalandı.");
   });
   els.calleeNoInput?.addEventListener("input", (event) => {
-    const value = normalizeCallNo(event.target.value);
+    const value = onlyDigits(event.target.value).slice(0, 11);
     event.target.value = formatNo(value);
   });
   els.calleeNoInput?.addEventListener("keydown", (event) => {
