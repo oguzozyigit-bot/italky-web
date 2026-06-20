@@ -1,6 +1,6 @@
 window.__ITALKY_CALL_JS_LOADED = true;
-window.__ITALKY_CALL_JS_VERSION = "FINAL_PROFILE_READ_1";
-console.warn("[italky_call] JS loaded FINAL_PROFILE_READ_1");
+window.__ITALKY_CALL_JS_VERSION = "RLS_RPC_FINAL_1";
+console.warn("[italky_call] JS loaded RLS_RPC_FINAL_1");
 
 let supabase = null;
 let initGlobalAccess = null;
@@ -226,37 +226,30 @@ async function readMyNoFromProfileByEmail() {
   return data?.italky_no || "";
 }
 
+function pickItalkyNoFromRpcResult(result) {
+  const row = Array.isArray(result) ? result[0] : result;
+  if (!row) return "";
+  return onlyDigits(row.italky_no || row.formatted_italky_no || row.italkyNo || row.formattedItalkyNo || "");
+}
+
 async function ensureMyNo() {
   clearBadMyNoCache();
 
   const cachedRaw = onlyDigits(localStorage.getItem("italky_my_no") || "");
-  if (isValidItalkyNoRaw(cachedRaw)) {
-    setMyNoDisplay(formatNo(cachedRaw));
-  } else {
-    setMyNoDisplay("No okunuyor...");
+  if (isValidItalkyNoRaw(cachedRaw)) setMyNoDisplay(formatNo(cachedRaw));
+  else setMyNoDisplay("No okunuyor...");
+
+  if (!supabase) {
+    setMyNoDisplay(isValidItalkyNoRaw(cachedRaw) ? formatNo(cachedRaw) : "Supabase yok");
+    return isValidItalkyNoRaw(cachedRaw) ? formatNo(cachedRaw) : "";
   }
 
-  if (!supabase || !currentUser?.id) {
-    setMyNoDisplay(cachedRaw ? formatNo(cachedRaw) : "Oturum bulunamadı");
-    return cachedRaw ? formatNo(cachedRaw) : "";
-  }
-
-  // Profil sayfasındaki çalışan mantıkla aynı: doğrudan profiles.id üzerinden oku.
+  // 1) En garanti yol: SECURITY DEFINER RPC. RLS select/update takılsa bile burası çalışmalı.
   try {
-    const { data, error } = await withTimeout(
-      supabase
-        .from("profiles")
-        .select("id,email,italky_no")
-        .eq("id", String(currentUser.id))
-        .maybeSingle(),
-      6500,
-      "profile_id_timeout"
-    );
-
-    if (error) throw error;
-
-    const raw = onlyDigits(data?.italky_no || "");
-    console.warn("[italky_call] profile id no", { raw, email: data?.email });
+    console.warn("[italky_call] RPC ensure_my_italky_no deneniyor...");
+    const result = await withTimeout(rpc("ensure_my_italky_no"), 6500, "ensure_my_italky_no_timeout");
+    const raw = pickItalkyNoFromRpcResult(result);
+    console.warn("[italky_call] RPC ensure_my_italky_no sonucu", { raw });
 
     if (isValidItalkyNoRaw(raw)) {
       const formatted = cacheMyNo(raw);
@@ -264,25 +257,15 @@ async function ensureMyNo() {
       return formatted;
     }
   } catch (e) {
-    console.warn("[italky_call] profile id no failed", e);
+    console.warn("[italky_call] RPC ensure_my_italky_no failed", e);
   }
 
-  // E-posta ile yedek oku.
+  // 2) İkinci güvenli RPC: profil + formatlı no döndürür.
   try {
-    const { data, error } = await withTimeout(
-      supabase
-        .from("profiles")
-        .select("id,email,italky_no")
-        .eq("email", String(currentUser.email || ""))
-        .maybeSingle(),
-      6500,
-      "profile_email_timeout"
-    );
-
-    if (error) throw error;
-
-    const raw = onlyDigits(data?.italky_no || "");
-    console.warn("[italky_call] profile email no", { raw, email: data?.email });
+    console.warn("[italky_call] RPC get_my_italky_call_profile deneniyor...");
+    const result = await withTimeout(rpc("get_my_italky_call_profile"), 6500, "get_my_italky_call_profile_timeout");
+    const raw = pickItalkyNoFromRpcResult(result);
+    console.warn("[italky_call] RPC get_my_italky_call_profile sonucu", { raw });
 
     if (isValidItalkyNoRaw(raw)) {
       const formatted = cacheMyNo(raw);
@@ -290,31 +273,55 @@ async function ensureMyNo() {
       return formatted;
     }
   } catch (e) {
-    console.warn("[italky_call] profile email no failed", e);
+    console.warn("[italky_call] RPC get_my_italky_call_profile failed", e);
   }
 
-  // Son çare: RPC ile üret/oku. RPC hatası ekrandaki gösterimi kilitlemesin.
-  const rpcAttempts = ["ensure_my_italky_no", "get_my_italky_call_profile"];
-  for (const fn of rpcAttempts) {
+  // 3) RPC olmazsa doğrudan profil oku. RLS doğruysa burası çalışır.
+  if (currentUser?.id) {
     try {
-      const rows = await withTimeout(rpc(fn), 6500, `${fn}_timeout`);
-      const row = Array.isArray(rows) ? rows[0] : rows;
-      const raw = onlyDigits(row?.italky_no || row?.formatted_italky_no || "");
-      console.warn("[italky_call] rpc no", { fn, raw });
+      const { data, error } = await withTimeout(
+        supabase.from("profiles").select("italky_no").eq("id", String(currentUser.id)).maybeSingle(),
+        4500,
+        "profile_id_timeout"
+      );
+      if (error) throw error;
+      const raw = onlyDigits(data?.italky_no || "");
+      console.warn("[italky_call] profile id sonucu", { raw });
+
       if (isValidItalkyNoRaw(raw)) {
         const formatted = cacheMyNo(raw);
         setMyNoDisplay(formatted);
         return formatted;
       }
     } catch (e) {
-      console.warn(`[italky_call] ${fn} failed`, e);
+      console.warn("[italky_call] profile id fallback failed", e);
+    }
+  }
+
+  if (currentUser?.email) {
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from("profiles").select("italky_no").eq("email", String(currentUser.email)).maybeSingle(),
+        4500,
+        "profile_email_timeout"
+      );
+      if (error) throw error;
+      const raw = onlyDigits(data?.italky_no || "");
+      console.warn("[italky_call] profile email sonucu", { raw });
+
+      if (isValidItalkyNoRaw(raw)) {
+        const formatted = cacheMyNo(raw);
+        setMyNoDisplay(formatted);
+        return formatted;
+      }
+    } catch (e) {
+      console.warn("[italky_call] profile email fallback failed", e);
     }
   }
 
   setMyNoDisplay("Numara alınamadı");
   return "";
 }
-
 
 async function setPresence(value = "online") {
   try {
