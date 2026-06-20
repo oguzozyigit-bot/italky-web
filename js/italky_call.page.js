@@ -146,24 +146,56 @@ function clearCallTimers() {
   timerInterval = null;
 }
 
+function withTimeout(promise, ms = 6500, label = "timeout") {
+  let timer = null;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(label)), Math.max(800, Number(ms) || 6500));
+    })
+  ]).finally(() => clearTimeout(timer));
+}
+
 async function rpc(name, args = {}) {
-  const { data, error } = await supabase.rpc(name, args);
+  const { data, error } = await withTimeout(
+    supabase.rpc(name, args),
+    7000,
+    `rpc_${name}_timeout`
+  );
   if (error) throw error;
   return data;
 }
 
 async function requireAuth() {
+  // Call ekranında "Yükleniyor"da kalmamak için auth kontrolünü Supabase session ile başlatıyoruz.
+  // initGlobalAccess arka planda çalışır; takılırsa numara okuma akışını kilitlemez.
+  let session = null;
+
   try {
-    await initGlobalAccess({ allowPublicPageBypass: false });
+    const result = await withTimeout(supabase.auth.getSession(), 4500, "session_timeout");
+    session = result?.data?.session || null;
   } catch (e) {
-    console.warn("[italky_call] global access skipped", e);
+    console.warn("[italky_call] initial session read delayed", e);
   }
 
-  const { data: { session } = {} } = await supabase.auth.getSession();
+  void initGlobalAccess({ allowPublicPageBypass: false }).catch((e) => {
+    console.warn("[italky_call] global access skipped", e);
+  });
+
+  if (!session?.user) {
+    try {
+      const result = await withTimeout(supabase.auth.getSession(), 4500, "session_retry_timeout");
+      session = result?.data?.session || null;
+    } catch (e) {
+      console.warn("[italky_call] session retry failed", e);
+    }
+  }
+
   if (!session?.user) {
     location.replace("/pages/login.html");
     return null;
   }
+
   currentUser = session.user;
   return currentUser;
 }
@@ -195,11 +227,15 @@ async function ensureMyNo() {
   // 3) Direkt profiles okuması: profile.html ile aynı tabloya bakıyoruz.
   if (currentUser?.id) {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("italky_no")
-        .eq("id", currentUser.id)
-        .maybeSingle();
+      const { data, error } = await withTimeout(
+        supabase
+          .from("profiles")
+          .select("italky_no")
+          .eq("id", currentUser.id)
+          .maybeSingle(),
+        6500,
+        "profile_id_read_timeout"
+      );
       if (error) throw error;
       candidates.push(data?.italky_no || "");
     } catch (e) {
@@ -210,11 +246,15 @@ async function ensureMyNo() {
   // 4) Bazı eski profillerde id/email eşleşmesi karıştıysa e-posta ile son deneme.
   if (currentUser?.email) {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("italky_no")
-        .eq("email", currentUser.email)
-        .maybeSingle();
+      const { data, error } = await withTimeout(
+        supabase
+          .from("profiles")
+          .select("italky_no")
+          .eq("email", currentUser.email)
+          .maybeSingle(),
+        6500,
+        "profile_email_read_timeout"
+      );
       if (error) throw error;
       candidates.push(data?.italky_no || "");
     } catch (e) {
@@ -534,11 +574,27 @@ function setupRealtime() {
 }
 
 async function boot() {
-  if (!(await requireAuth())) return;
-  bindEvents();
-  await ensureMyNo();
-  await setPresence("online");
-  setupRealtime();
+  try {
+    const cachedNo = getCachedMyNo();
+    if (cachedNo) setMyNoText(cachedNo);
+    else {
+      if (els.myNo) els.myNo.textContent = "No okunuyor...";
+      if (els.topMyNo) els.topMyNo.textContent = "No okunuyor";
+    }
+
+    if (!(await requireAuth())) return;
+    bindEvents();
+
+    await ensureMyNo();
+
+    // Presence ve realtime çağrıları ekranda numara göstermeyi kilitlemesin.
+    void setPresence("online");
+    setupRealtime();
+  } catch (e) {
+    console.error("[italky_call] boot failed", e);
+    setMyNoUnavailable("Numara alınamadı");
+    showToast("Call ekranı yüklenemedi. Console hatasını kontrol et.");
+  }
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
