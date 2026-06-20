@@ -70,10 +70,15 @@ function onlyDigits(value) {
 
 function formatNo(value) {
   const d = onlyDigits(value);
-  if (d.length >= 12) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9, 12)}`;
-  if (d.length >= 10) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}`;
+  if (d.length >= 11) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9, 11)}`;
+  if (d.length >= 9) return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)}${d.length > 9 ? " " + d.slice(9) : ""}`.trim();
+  if (d.length > 4) return `${d.slice(0, 4)} ${d.slice(4)}`;
   return d || "0601 ...";
 }
+function normalizeCallNo(value) {
+  return onlyDigits(value).slice(0, 11);
+}
+
 
 function initials(name = "") {
   const parts = String(name || "AI").trim().split(/\s+/).filter(Boolean);
@@ -121,7 +126,7 @@ async function ensureMyNo() {
   const rows = await rpc("ensure_my_italky_no");
   const row = Array.isArray(rows) ? rows[0] : rows;
   const raw = row?.italky_no || "";
-  const formatted = row?.formatted_italky_no || formatNo(raw);
+  const formatted = formatNo(row?.formatted_italky_no || raw);
   if (els.myNo) els.myNo.textContent = formatted;
   if (els.topMyNo) els.topMyNo.textContent = formatted;
   return formatted;
@@ -144,9 +149,9 @@ async function lookupNo(rawNo) {
 }
 
 async function startCall() {
-  const no = onlyDigits(els.calleeNoInput?.value || "");
-  if (no.length < 8) {
-    showToast("Aramak için italkyAI No gir.");
+  const no = normalizeCallNo(els.calleeNoInput?.value || "");
+  if (no.length !== 11 || !no.startsWith("0601")) {
+    showToast("italkyAI No 0601 XXX XX XX formatında olmalı.");
     return;
   }
 
@@ -365,10 +370,10 @@ function bindEvents() {
   els.copyMyNo?.addEventListener("click", async () => {
     const no = els.myNo?.textContent || "";
     try { await navigator.clipboard?.writeText(no); } catch {}
-    showToast("italkyAI No kopyalandı.");
+    showToast(`${no} kopyalandı.`);
   });
   els.calleeNoInput?.addEventListener("input", (event) => {
-    const value = onlyDigits(event.target.value).slice(0, 12);
+    const value = normalizeCallNo(event.target.value);
     event.target.value = formatNo(value);
   });
   els.calleeNoInput?.addEventListener("keydown", (event) => {
