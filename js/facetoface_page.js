@@ -90,7 +90,8 @@ const F2F_HANDS_FREE_DUPLICATE_TTL_MS = 6500;
 const F2F_HANDS_FREE_DUPLICATE_SIMILARITY = 0.92;
 const F2F_HANDS_FREE_ECHO_TTL_MS = 8000;
 const F2F_HANDS_FREE_ECHO_SIMILARITY = 0.84;
-const F2F_HANDS_FREE_COMMAND_ENABLED = true;
+const F2F_HANDS_FREE_COMMAND_ENABLED = false;
+const F2F_HANDS_FREE_FEATURE_ENABLED = false;
 const F2F_HANDS_FREE_COMMAND_DEFAULT_SIDE = "top";
 const F2F_HANDS_FREE_COMMAND_WAKE_ALIASES = [
   // Ana tetikleme: "Hey Can". SpeechRecognition farklı dillerde Can'ı
@@ -501,6 +502,8 @@ let handsFreeGateLastRms = 0;
 let handsFreeTipDismissedCache = null;
 let handsFreeTipPendingEnable = null;
 
+try { localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, "off"); } catch {}
+
 
 
 function isHandsFreeTipDismissedLocal() {
@@ -673,7 +676,7 @@ function bindCulturalToggle() {
 }
 
 function isHandsFreeModeEnabled() {
-  return String(localStorage.getItem(DENEME_HANDS_FREE_MODE_KEY) || "off").trim().toLowerCase() === "on";
+  return false;
 }
 
 function isValidFaceSide(side) {
@@ -1416,8 +1419,7 @@ function isHandsFreeListening() {
 }
 
 function getHandsFreeButtons() {
-  // Tek global toggle: alttaki Eller Serbest butonu iki tarafı birden yönetir.
-  return [handsFreeToggle].filter(Boolean);
+  return [];
 }
 
 function syncHandsFreeRuntimeUi() {
@@ -1590,6 +1592,11 @@ async function startHandsFreeLoop(reason = "manual") {
 }
 
 function setHandsFreeMode(enabled, opts = {}) {
+  if (!F2F_HANDS_FREE_FEATURE_ENABLED) {
+    try { localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, "off"); } catch {}
+    stopHandsFreeLoop({ stopCurrent: true });
+    return;
+  }
   const next = !!enabled;
   const previous = isHandsFreeModeEnabled();
 
@@ -1614,6 +1621,12 @@ function setHandsFreeMode(enabled, opts = {}) {
 }
 
 async function requestEnableHandsFreeMode(opts = {}) {
+  if (!F2F_HANDS_FREE_FEATURE_ENABLED) {
+    try { localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, "off"); } catch {}
+    stopHandsFreeLoop({ stopCurrent: true });
+    showToast("Eller Serbest bu modülde kapalı");
+    return false;
+  }
   const status = await canEnableDualEarPro({
     currentRuntimeMode,
     recordingSide,
@@ -1639,28 +1652,8 @@ async function requestEnableHandsFreeMode(opts = {}) {
 }
 
 function bindHandsFreeToggle() {
+  try { localStorage.setItem(DENEME_HANDS_FREE_MODE_KEY, "off"); } catch {}
   syncHandsFreeToggleUi();
-
-  getHandsFreeButtons().forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const next = !isHandsFreeModeEnabled();
-      if (!next) {
-        setHandsFreeMode(false, { stopCurrent: true });
-        return;
-      }
-
-      const dismissed = await getHandsFreeTipDismissed();
-      if (!dismissed) {
-        showHandsFreeTipModal(() => requestEnableHandsFreeMode({ source: btn.id || "toggle", tipAccepted: true }));
-        return;
-      }
-
-      await requestEnableHandsFreeMode({ source: btn.id || "toggle" });
-    });
-  });
 }
 
 window.f2fHandsFreeState = {
