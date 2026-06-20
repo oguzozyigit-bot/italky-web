@@ -1,5 +1,8 @@
 import { supabase } from "/js/supabase_client.js";
-import { initGlobalAccess } from "/js/global_access.js";
+
+window.__ITALKY_CALL_JS_LOADED = true;
+window.__ITALKY_CALL_BOOT_STARTED = false;
+window.__ITALKY_CALL_BOOT_DONE = false;
 
 const $ = (id) => document.getElementById(id);
 const CALL_DELIVERY_TIMEOUT_MS = 10000;
@@ -167,36 +170,38 @@ async function rpc(name, args = {}) {
 }
 
 async function requireAuth() {
-  // Call ekranında "Yükleniyor"da kalmamak için auth kontrolünü Supabase session ile başlatıyoruz.
-  // initGlobalAccess arka planda çalışır; takılırsa numara okuma akışını kilitlemez.
+  // Call ekranında "No okunuyor"da kalmamak için auth kontrolü kısa ve doğrudan yapılır.
   let session = null;
+  let user = null;
 
   try {
-    const result = await withTimeout(supabase.auth.getSession(), 4500, "session_timeout");
+    const result = await withTimeout(supabase.auth.getSession(), 3500, "session_timeout");
     session = result?.data?.session || null;
+    user = session?.user || null;
   } catch (e) {
-    console.warn("[italky_call] initial session read delayed", e);
+    console.warn("[italky_call] session read delayed", e);
   }
 
-  void initGlobalAccess({ allowPublicPageBypass: false }).catch((e) => {
-    console.warn("[italky_call] global access skipped", e);
-  });
-
-  if (!session?.user) {
+  if (!user) {
     try {
-      const result = await withTimeout(supabase.auth.getSession(), 4500, "session_retry_timeout");
-      session = result?.data?.session || null;
+      const result = await withTimeout(supabase.auth.getUser(), 3500, "user_timeout");
+      user = result?.data?.user || null;
     } catch (e) {
-      console.warn("[italky_call] session retry failed", e);
+      console.warn("[italky_call] user read failed", e);
     }
   }
 
-  if (!session?.user) {
+  // Global access kontrolü arka planda çalışır; italkyAI No göstermeyi kilitlemez.
+  void import("/js/global_access.js")
+    .then((mod) => mod?.initGlobalAccess?.({ allowPublicPageBypass: false }))
+    .catch((e) => console.warn("[italky_call] global access skipped", e));
+
+  if (!user) {
     location.replace("/pages/login.html");
     return null;
   }
 
-  currentUser = session.user;
+  currentUser = user;
   return currentUser;
 }
 
@@ -204,27 +209,7 @@ async function ensureMyNo() {
   const cachedNo = getCachedMyNo();
   if (cachedNo) setMyNoText(cachedNo);
 
-  const candidates = [];
-
-  // 1) En sağlam yol: security definer profil RPC. SQL patch çalıştıysa RLS/cached session sıkıntılarını azaltır.
-  try {
-    const rows = await rpc("get_my_italky_call_profile");
-    const row = Array.isArray(rows) ? rows[0] : rows;
-    candidates.push(row?.formatted_italky_no || row?.italky_no || "");
-  } catch (e) {
-    console.warn("[italky_call] get_my_italky_call_profile rpc skipped", e);
-  }
-
-  // 2) Eski helper RPC.
-  try {
-    const rows = await rpc("ensure_my_italky_no");
-    const row = Array.isArray(rows) ? rows[0] : rows;
-    candidates.push(row?.formatted_italky_no || row?.italky_no || "");
-  } catch (e) {
-    console.warn("[italky_call] ensure_my_italky_no rpc failed", e);
-  }
-
-  // 3) Direkt profiles okuması: profile.html ile aynı tabloya bakıyoruz.
+  // 1) Profile sayfasındaki gibi doğrudan profiles.id ile oku. Başarılıysa beklemeden göster.
   if (currentUser?.id) {
     try {
       const { data, error } = await withTimeout(
@@ -233,17 +218,18 @@ async function ensureMyNo() {
           .select("italky_no")
           .eq("id", currentUser.id)
           .maybeSingle(),
-        6500,
+        3500,
         "profile_id_read_timeout"
       );
       if (error) throw error;
-      candidates.push(data?.italky_no || "");
+      const digits = onlyDigits(data?.italky_no || "");
+      if (isValidItalkyNo(digits)) return setMyNoText(digits);
     } catch (e) {
-      console.warn("[italky_call] profile id fallback failed", e);
+      console.warn("[italky_call] profile id read failed", e);
     }
   }
 
-  // 4) Bazı eski profillerde id/email eşleşmesi karıştıysa e-posta ile son deneme.
+  // 2) E-posta ile yedek oku.
   if (currentUser?.email) {
     try {
       const { data, error } = await withTimeout(
@@ -252,23 +238,32 @@ async function ensureMyNo() {
           .select("italky_no")
           .eq("email", currentUser.email)
           .maybeSingle(),
-        6500,
+        3500,
         "profile_email_read_timeout"
       );
       if (error) throw error;
-      candidates.push(data?.italky_no || "");
+      const digits = onlyDigits(data?.italky_no || "");
+      if (isValidItalkyNo(digits)) return setMyNoText(digits);
     } catch (e) {
-      console.warn("[italky_call] profile email fallback failed", e);
+      console.warn("[italky_call] profile email read failed", e);
     }
   }
 
-  for (const value of candidates) {
-    const digits = onlyDigits(value);
-    if (isValidItalkyNo(digits)) return setMyNoText(digits);
+  // 3) RPC: numara yoksa üretmeyi dener.
+  const rpcNames = ["ensure_my_italky_no", "get_my_italky_call_profile"];
+  for (const name of rpcNames) {
+    try {
+      const rows = await rpc(name);
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      const digits = onlyDigits(row?.formatted_italky_no || row?.italky_no || "");
+      if (isValidItalkyNo(digits)) return setMyNoText(digits);
+    } catch (e) {
+      console.warn(`[italky_call] ${name} rpc failed`, e);
+    }
   }
 
   setMyNoUnavailable("Numara alınamadı");
-  showToast("italkyAI No okunamadı. SQL patch ve profil kaydını kontrol et.");
+  showToast("italkyAI No okunamadı. Console hatasını kontrol et.");
   return "";
 }
 
@@ -574,6 +569,7 @@ function setupRealtime() {
 }
 
 async function boot() {
+  window.__ITALKY_CALL_BOOT_STARTED = true;
   try {
     const cachedNo = getCachedMyNo();
     if (cachedNo) setMyNoText(cachedNo);
@@ -590,10 +586,13 @@ async function boot() {
     // Presence ve realtime çağrıları ekranda numara göstermeyi kilitlemesin.
     void setPresence("online");
     setupRealtime();
+    window.__ITALKY_CALL_BOOT_DONE = true;
   } catch (e) {
     console.error("[italky_call] boot failed", e);
     setMyNoUnavailable("Numara alınamadı");
     showToast("Call ekranı yüklenemedi. Console hatasını kontrol et.");
+  } finally {
+    window.__ITALKY_CALL_BOOT_DONE = true;
   }
 }
 
