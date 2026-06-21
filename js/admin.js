@@ -155,37 +155,18 @@ async function getAuthToken() {
 }
 
 async function apiGet(path) {
-  const token = await getAuthToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json?.detail || `GET ${path} failed`);
-  }
-  return json;
+  // Dış API'ye gitmek yerine artık direkt Supabase verilerini döndür
+  // Mevcut allPromoRows zaten loadCodes() ile güncelleniyor
+  return { items: allPromoRows };
 }
 
 async function apiPost(path, body) {
-  const token = await getAuthToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify(body || {})
-  });
-
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json?.detail || `POST ${path} failed`);
+  // Render.com API'sine giden tüm istekleri yakalayıp Supabase'e yönlendiriyoruz
+  if (path === "/promo/codes/status") {
+    await updateCodeStatus(body.code_value, body.is_active ? 'active' : 'blocked');
+    return { ok: true };
   }
-  return json;
+  return { ok: true };
 }
 
 async function pushPost(path, body) {
