@@ -68,9 +68,6 @@ const homeBtn = $("homeBtn");
 const refreshBtn = $("refreshBtn");
 const logoutBtnTop = $("logoutBtnTop");
 
-const API_BASE = "https://italky-api.onrender.com/api/admin";
-const PUSH_API = "https://italky-api.onrender.com/api/admin/push";
-
 let currentUser = null;
 let currentProfile = null;
 let latestCreatedPromo = null;
@@ -155,13 +152,25 @@ async function getAuthToken() {
 }
 
 async function apiGet(path) {
-  // Dış API'ye gitmek yerine artık direkt Supabase verilerini döndür
-  // Mevcut allPromoRows zaten loadCodes() ile güncelleniyor
-  return { items: allPromoRows };
+  // users veya promo/codes isteklerini artık doğrudan Supabase ile yap
+  if (path === "/users") {
+    const { data } = await supabase.from("profiles").select("*");
+    return { items: data || [] };
+  }
+  if (path === "/promo/codes") {
+    const { data } = await supabase.from("web_promo_codes").select("*");
+    return { items: data || [] };
+  }
+  return { items: [] };
 }
 
 async function apiPost(path, body) {
-  // Render.com API'sine giden tüm istekleri yakalayıp Supabase'e yönlendiriyoruz
+  if (path === "/wallet/manual-load") {
+    // Manuel jeton için RPC fonksiyonunu çağır (daha önce yazdığımız fonksiyonu kullan)
+    const { data, error } = await supabase.rpc("add_tokens", { p_user_id: body.user_id, p_amount: body.amount });
+    if (error) throw error;
+    return data;
+  }
   if (path === "/promo/codes/status") {
     await updateCodeStatus(body.code_value, body.is_active ? 'active' : 'blocked');
     return { ok: true };
