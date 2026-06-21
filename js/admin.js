@@ -146,55 +146,79 @@ function buildQrUrl(code) {
   return `${location.origin}/pages/promo_gate.html?code=${encodeURIComponent(code)}`;
 }
 
-async function getAuthToken() {
-  const { data } = await supabase.auth.getSession();
-  return data?.session?.access_token || "";
-}
-
+// ---------------------------------------------------------
+// RENDER.COM BAĞIMLILIĞI KALDIRILDI - DOĞRUDAN SUPABASE
+// ---------------------------------------------------------
 async function apiGet(path) {
-  // users veya promo/codes isteklerini artık doğrudan Supabase ile yap
-  if (path === "/users") {
-    const { data } = await supabase.from("profiles").select("*");
-    return { items: data || [] };
+  try {
+    if (path === "/users") {
+      const { data, error } = await supabase.from("profiles").select("*");
+      if (error) throw error;
+      return { items: data || [] };
+    }
+    if (path === "/promo/codes") {
+      const { data, error } = await supabase.from("web_promo_codes").select("*, promo_campaigns(*)");
+      if (error) throw error;
+      return { items: data || [] };
+    }
+    if (path === "/promo/redemptions") {
+      const { data, error } = await supabase.from("web_promo_code_redemptions").select("*");
+      if (error) throw error;
+      return { items: data || [] };
+    }
+    return { items: [] };
+  } catch (e) {
+    console.error("GET Hatası:", e);
+    return { items: [] };
   }
-  if (path === "/promo/codes") {
-    const { data } = await supabase.from("web_promo_codes").select("*");
-    return { items: data || [] };
-  }
-  return { items: [] };
 }
 
 async function apiPost(path, body) {
-  if (path === "/wallet/manual-load") {
-    // Manuel jeton için RPC fonksiyonunu çağır (daha önce yazdığımız fonksiyonu kullan)
-    const { data, error } = await supabase.rpc("add_tokens", { p_user_id: body.user_id, p_amount: body.amount });
-    if (error) throw error;
-    return data;
-  }
-  if (path === "/promo/codes/status") {
-    await updateCodeStatus(body.code_value, body.is_active ? 'active' : 'blocked');
+  try {
+    if (path === "/promo/campaigns") {
+      const { data, error } = await supabase.from("promo_campaigns").insert([body]).select();
+      if (error) throw error;
+      return { item: data };
+    }
+    if (path === "/promo/codes") {
+      const { data, error } = await supabase.from("web_promo_codes").insert([body]).select();
+      if (error) throw error;
+      return { item: data };
+    }
+    if (path === "/promo/codes/status") {
+      // is_active sütununu güncelliyoruz
+      const { error } = await supabase.from("web_promo_codes")
+        .update({ is_active: body.is_active })
+        .eq("code_value", body.code_value);
+      if (error) throw error;
+      return { ok: true };
+    }
+    if (path === "/wallet/manual-load") {
+      // Supabase'deki add_tokens veya add_wallet_tx fonksiyonunu çağırıyoruz
+      const { data, error } = await supabase.rpc("add_tokens", { 
+        p_user_id: body.user_id, 
+        p_amount: body.amount 
+      });
+      if (error) throw error;
+      return data || { tokens_after: "Güncellendi" };
+    }
     return { ok: true };
+  } catch (e) {
+    console.error("POST Hatası:", e);
+    throw new Error(e.message || "İşlem başarısız");
   }
-  return { ok: true };
 }
 
 async function pushPost(path, body) {
-  const token = await getAuthToken();
-  const res = await fetch(`${PUSH_API}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify(body || {})
-  });
-
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json?.detail || `POST ${path} failed`);
+  try {
+    const { error } = await supabase.from("push_notifications").insert([body]);
+    if (error) throw error;
+    return { sent: 1, failed: 0 };
+  } catch (e) {
+    throw new Error(e.message || "Push bildirimi kaydedilemedi");
   }
-  return json;
 }
+// ---------------------------------------------------------
 
 async function getCurrentUserAndProfile() {
   const { data } = await supabase.auth.getUser();
