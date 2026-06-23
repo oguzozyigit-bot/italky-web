@@ -250,12 +250,14 @@
       }catch{return ""}
     }
 
-    function bridgeReturnPath(code=""){
+    function bridgeReturnPath(code="", afterLogin=false){
       const c = String(code||codeFromUrl()||"").trim().toUpperCase();
-      return c ? `/pages/code_load.html?kod=${encodeURIComponent(c)}` : "/pages/code_load.html";
+      const base = c ? `/pages/code_load.html?kod=${encodeURIComponent(c)}` : "/pages/code_load.html";
+      return afterLogin ? `${base}&fl=1` : base;
     }
     function loginUrlForCode(code=""){
-      return `/pages/login.html?next=${encodeURIComponent(bridgeReturnPath(code))}&prompt=select_account`;
+      // fl=1 tells code_load that user is returning after login → skip signOut, go straight to redeem
+      return `/pages/login.html?next=${encodeURIComponent(bridgeReturnPath(code, true))}&prompt=select_account`;
     }
 
     const IOS_STORE     = "https://apps.apple.com/app/italkyai/id6768123713";
@@ -355,31 +357,47 @@
     }
 
     // ── Core redeem ──────────────────────────────────────────────────────────
-    async function redeemCode(code){
+    // preVerifiedUser must come from supabase.auth.getUser() (server-side check).
+    // This function will NOT run until boot confirms a verified user exists.
+    async function redeemCode(code, preVerifiedUser){
       if(!code||code.length < 4){
-        showError("Geçerli bir aktivasyon kodu bulunamadı.<br>Lütfen doğru linki kullandığınızdan emin olun.");
+        showError("Geçerli bir aktivasyon kodu bulunamadı.", "Geçersiz Kod");
         return;
       }
 
-      // Re-fetch session as safety net (token may have refreshed after login redirect)
+      // 1. Confirm user identity via getUser() (server-validated JWT)
+      let user = preVerifiedUser || null;
+      if(!user?.id){
+        try{
+          const {data} = await supabase.auth.getUser();
+          user = data?.user || null;
+        }catch{}
+      }
+
+      if(!user?.id){
+        showError("Kullanıcı kimliği doğrulanamadı. Lütfen tekrar giriş yapın.", "Kimlik Hatası");
+        return;
+      }
+
+      // 2. Get session for Bearer token (access_token needed for API call)
       const session = await getSession().catch(()=>null);
-      if(!session?.user?.id){
+      if(!session?.access_token){
         location.href = loginUrlForCode(code);
         return;
       }
 
-
+      // 3. Call API — only now that user.id is verified server-side
       try{
         const res = await fetch(`${API_BASE}/api/promo/redeem`,{
           method:"POST",
           headers: await getAuthHeaders(session),
-          body: JSON.stringify({source:"manual", code, user_id:session.user.id})
+          body: JSON.stringify({source:"manual", code, user_id: user.id})
         });
         const json = await res.json().catch(()=>null);
-        console.log("[code_load] redeem response",{status:res.status, json});
+        console.log("[code_load] redeem response",{status:res.status, json, user_id:user.id});
 
         if(json?.ok){
-          // Wait for server-side state to be confirmed before any redirect
+          // Wait for server-side confirmation before any redirect
           await refreshAccessState(session);
           showSuccess(renderSuccessHtml(json));
           setTimeout(()=>openAppAfterRedeemSuccess(), 2000);
@@ -393,7 +411,7 @@
       }
     }
 
-    // ── Boot: session check → then redeem ───────────────────────────────────
+    // ── Boot: strict 5-step auth → redeem ───────────────────────────────────
     (async()=>{
       const code = codeFromUrl();
 
@@ -402,21 +420,56 @@
         return;
       }
 
-      // Phase 1: show auth-check state
       showAuth();
 
-      let session = null;
-      try{ session = await getSession(); }catch{ session = null; }
+      const params = new URL(location.href).searchParams;
+      const isPostLogin = params.get("fl") === "1";
 
-      if(!session?.user?.id){
-        // Not logged in → go to login, which forces Google account selection
+      if(!isPostLogin){
+        // ── FIRST VISIT: force sign-out, then redirect to login ──────────────
+
+        // Step 1: Sign out — clear any cached/remembered session tokens
+        try{ await supabase.auth.signOut(); }catch{}
+
+        // Step 2: Confirm session is truly gone
+        let lingering = null;
+        try{ lingering = await getSession(); }catch{}
+        if(lingering?.user?.id){
+          // SSO or persistent token survived signOut — hard reload to flush it
+          location.reload();
+          return;
+        }
+
+        // Step 3: Redirect to login with forced account selection
+        // fl=1 in the next URL tells us on return that the user just authenticated
         location.href = loginUrlForCode(code);
         return;
       }
 
-      // Phase 2: session confirmed → switch to activation loading state
+      // ── POST-LOGIN RETURN (fl=1): verify user, then redeem ────────────────
+
+      // Clean fl param from URL so back/refresh doesn't retrigger this path
+      try{
+        const clean = new URL(location.href);
+        clean.searchParams.delete("fl");
+        history.replaceState({}, "", clean.toString());
+      }catch{}
+
+      // Step 4: Server-side user verification via getUser() (validates JWT with Supabase)
+      let verifiedUser = null;
+      try{
+        const {data, error} = await supabase.auth.getUser();
+        if(!error) verifiedUser = data?.user || null;
+      }catch{}
+
+      if(!verifiedUser?.id){
+        showError("Giriş doğrulanamadı. Lütfen tekrar deneyin.", "Kimlik Hatası");
+        return;
+      }
+
+      // Step 5: Session confirmed & user verified — run activation
       showLoading();
-      await redeemCode(code);
+      await redeemCode(code, verifiedUser);
     })();
   </script>
 </body>
