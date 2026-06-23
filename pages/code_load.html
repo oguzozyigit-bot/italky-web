@@ -449,80 +449,103 @@
       return lines.join("<br>");
     }
     function openAppAfterRedeemSuccess(){
-      // Called only after API returns 200 OK — no race condition possible.
-      // visibilitychange trick: if the app opens, the browser tab becomes hidden
-      // and we cancel the store fallback timer so we don't double-redirect.
-      const ua=navigator.userAgent;
-      const isAndroid=/Android/.test(ua);
-      const isIOSDevice=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
-      const storeUrl=isAndroid?ANDROID_STORE:IOS_STORE;
-
-      if(!isAndroid&&!isIOSDevice){
-        // Desktop: go straight to App Store page
-        window.location.href=storeUrl;
-        return;
-      }
-
-      // Set store fallback timer; cancel it if the app actually opens
-      const storeTimer=setTimeout(()=>{window.location.href=storeUrl},2500);
-      document.addEventListener("visibilitychange",()=>{
-        if(document.hidden) clearTimeout(storeTimer);
-      },{once:true});
-
-      if(isAndroid){
-        // intent:// has built-in S.browser_fallback_url for "app not installed" case;
-        // visibilitychange handles "app opened" case — no extra setTimeout needed.
-        const fb=encodeURIComponent(ANDROID_STORE);
-        window.location.href=`intent://open#Intent;scheme=italkyai;package=${ANDROID_PKG};S.browser_fallback_url=${fb};end`;
-      }else{
-        window.location.href="italkyai://";
-      }
+      // ⚠ DEBUG MODE: redirects disabled — remove this block to re-enable
+      console.warn("[DEBUG] openAppAfterRedeemSuccess called — redirect SKIPPED (debug mode)");
+      debugShow("✅ API başarılı döndü. Yönlendirme debug modunda devre dışı.");
     }
 
-    // ── Core redeem (only called after explicit user confirmation) ────────────
+    // ── Debug helper: show raw text on screen without navigating ─────────────
+    function debugShow(msg, isErr=false){
+      let el=document.getElementById("__debugBox");
+      if(!el){
+        el=document.createElement("pre");
+        el.id="__debugBox";
+        Object.assign(el.style,{
+          position:"fixed",bottom:"0",left:"0",right:"0",maxHeight:"55vh",
+          overflowY:"auto",background:isErr?"#3b0000":"#001a00",
+          color:isErr?"#ff6b6b":"#a3e635",fontSize:"11px",padding:"12px 14px",
+          zIndex:"99999",whiteSpace:"pre-wrap",wordBreak:"break-all",
+          borderTop:`2px solid ${isErr?"#ff4444":"#a3e635"}`,margin:"0",
+          fontFamily:"monospace"
+        });
+        document.body.appendChild(el);
+      }
+      el.style.background=isErr?"#3b0000":"#001a00";
+      el.style.borderTopColor=isErr?"#ff4444":"#a3e635";
+      el.textContent+=`\n${new Date().toISOString().slice(11,23)} ${msg}`;
+      el.scrollTop=el.scrollHeight;
+    }
+
+    // ── Core redeem ───────────────────────────────────────────────────────────
     async function redeemCode(code, preVerifiedUser){
+      debugShow(`▶ redeemCode START — code="${code}"`);
+
       if(!code||code.length<4){
+        debugShow(`✗ code too short or empty: "${code}"`, true);
         showError("Geçerli bir aktivasyon kodu bulunamadı.", "Geçersiz Kod");
         return;
       }
 
-      // Re-validate user server-side (safety net)
+      // Re-validate user server-side
       let user = preVerifiedUser||null;
+      debugShow(`  preVerifiedUser.id = ${user?.id||"null"}`);
       if(!user?.id){
-        try{const{data}=await supabase.auth.getUser();user=data?.user||null;}catch{}
+        debugShow("  preVerifiedUser missing → calling getUser()");
+        try{const{data}=await supabase.auth.getUser();user=data?.user||null;}catch(e){
+          debugShow(`  getUser() threw: ${e}`,true);
+        }
       }
+      debugShow(`  resolved user.id = ${user?.id||"null"} | email = ${user?.email||"null"}`);
       if(!user?.id){
+        debugShow("✗ user.id is null after getUser() — aborting",true);
         showError("Kullanıcı kimliği doğrulanamadı. Lütfen tekrar hesap seçin.", "Kimlik Hatası");
-        showGate(code);
         return;
       }
 
-      const session=await getSession().catch(()=>null);
-      if(!session?.access_token){
-        showGate(code);
+      let session=null;
+      try{session=await getSession();}catch(e){debugShow(`  getSession threw: ${e}`,true);}
+      const hasToken=!!(session?.access_token);
+      debugShow(`  session.access_token present: ${hasToken}`);
+      if(!hasToken){
+        debugShow("✗ No access_token — cannot call API",true);
+        showError("Oturum token'ı bulunamadı. Lütfen tekrar giriş yapın.", "Oturum Hatası");
         return;
       }
 
+      const payload={source:"manual",code,user_id:user.id};
+      const url=`${API_BASE}/api/promo/redeem`;
+      debugShow(`  POST ${url}`);
+      debugShow(`  payload: ${JSON.stringify(payload)}`);
+
+      let res, json;
       try{
-        const res=await fetch(`${API_BASE}/api/promo/redeem`,{
+        res=await fetch(url,{
           method:"POST",
           headers:await getAuthHeaders(session),
-          body:JSON.stringify({source:"manual",code,user_id:user.id})
+          body:JSON.stringify(payload)
         });
-        const json=await res.json().catch(()=>null);
-        console.log("[code_load] redeem",{status:res.status,json,user_id:user.id});
+        debugShow(`  HTTP status: ${res.status} ${res.statusText}`);
 
-        if(json?.ok){
-          await refreshAccessState(session);
-          showSuccess(renderSuccessHtml(json));
-          setTimeout(()=>openAppAfterRedeemSuccess(),2000);
-        }else{
-          const raw=json?.reason||json?.detail||"";
-          showError(mapPromoError(raw),mapPromoTitle(raw));
-        }
+        const raw=await res.text();
+        debugShow(`  raw response body: ${raw}`);
+        try{json=JSON.parse(raw);}catch{json=null;}
+        debugShow(`  parsed json: ${JSON.stringify(json)}`);
       }catch(e){
-        console.error("[code_load] redeem error",e);
-        showError("Bağlantı hatası oluştu. Lütfen internet bağlantınızı kontrol edin.","Bağlantı Hatası");
+        debugShow(`✗ fetch threw: ${e}`,true);
+        showError(`Bağlantı hatası: ${e?.message||e}`, "Bağlantı Hatası");
+        return;
+      }
+
+      if(json?.ok){
+        debugShow("✅ json.ok = true — redemption successful!");
+        try{await refreshAccessState(session);}catch(e){debugShow(`  refreshAccessState threw: ${e}`,true);}
+        showSuccess(renderSuccessHtml(json));
+        // ⚠ DEBUG: redirect skipped — call openAppAfterRedeemSuccess() to re-enable
+        openAppAfterRedeemSuccess();
+      }else{
+        const reason=json?.reason||json?.detail||"(no reason field)";
+        debugShow(`✗ json.ok = false | reason: ${reason}`,true);
+        showError(mapPromoError(json?.reason||json?.detail||""),mapPromoTitle(json?.reason||json?.detail||""));
       }
     }
 
