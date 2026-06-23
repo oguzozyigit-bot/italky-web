@@ -1,671 +1,228 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Aktivasyon</title>
-  <meta name="theme-color" content="#060f1e"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;outline:none}
-    html,body{width:100%;height:100%;overflow:hidden;background:#060f1e;color:#fff;font-family:'Inter',sans-serif}
-
-    /* Shell splash */
-    body:not(.shell-ready)::before{content:"italkyAI";position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:#060f1e;color:rgba(255,255,255,.8);font-family:'Inter',sans-serif;font-size:26px;font-weight:700;letter-spacing:.5px}
-    body:not(.shell-ready)::after{content:"";position:fixed;left:50%;top:calc(50% + 44px);z-index:1000000;width:36px;height:36px;margin-left:-18px;border-radius:50%;border:3px solid rgba(59,130,246,.18);border-top-color:#3b82f6;animation:spin .8s linear infinite}
-    body:not(.shell-ready) #pageContent{opacity:0;pointer-events:none}
-    body.shell-ready::before,body.shell-ready::after{opacity:0;pointer-events:none}
-
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-
-    #pageContent{height:100%;display:flex;align-items:center;justify-content:center;padding:20px}
-
-    /* Card */
-    .card{
-      width:100%;max-width:400px;
-      background:#0a1628;
-      border:1px solid rgba(59,130,246,.12);
-      border-radius:20px;
-      padding:36px 28px;
-      text-align:center;
-      animation:fadeIn .3s ease both;
-      box-shadow:0 8px 40px rgba(0,0,0,.45);
-    }
-
-    /* Brand */
-    .brand{
-      font-size:17px;font-weight:800;
-      color:rgba(255,255,255,.42);
-      letter-spacing:.6px;text-transform:uppercase;
-      margin-bottom:28px;
-    }
-    /* y = no special color; AI = electric blue */
-    .brand .ai{color:#3b82f6}
-
-    /* State icons */
-    .state-icon{
-      width:52px;height:52px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      margin:0 auto 20px;font-size:22px;
-    }
-    .state-icon.ok{background:rgba(0,200,120,.10);border:1.5px solid rgba(0,200,120,.28);color:#22c55e}
-    .state-icon.err{background:rgba(255,80,80,.08);border:1.5px solid rgba(255,80,80,.26);color:#f87171}
-    .state-icon.warn{background:rgba(251,146,60,.08);border:1.5px solid rgba(251,146,60,.26);color:#fb923c}
-
-    /* Titles & body */
-    .state-title{font-size:19px;font-weight:700;margin-bottom:8px;color:#fff}
-    .state-body{font-size:13px;font-weight:500;color:rgba(255,255,255,.55);line-height:1.75}
-    .state-body b{color:rgba(255,255,255,.88)}
-
-    /* Spinner */
-    .spinner{width:48px;height:48px;border-radius:50%;border:3px solid rgba(59,130,246,.15);border-top-color:#3b82f6;animation:spin .8s linear infinite;margin:0 auto 20px}
-    .loading-label{font-size:14px;font-weight:600;color:rgba(255,255,255,.75);animation:pulse 1.8s ease infinite;line-height:1.6}
-    .loading-sub{margin-top:6px;font-size:11px;font-weight:500;color:rgba(255,255,255,.3);letter-spacing:.2px}
-
-    /* Gate screen */
-    .gate-eyebrow{
-      font-size:10px;font-weight:700;letter-spacing:1.8px;
-      text-transform:uppercase;color:#3b82f6;
-      margin-bottom:10px;
-    }
-    .gate-notice{
-      margin:14px 0 20px;
-      padding:12px 14px;
-      background:rgba(59,130,246,.06);
-      border:1px solid rgba(59,130,246,.15);
-      border-radius:12px;
-      font-size:13px;font-weight:500;
-      color:rgba(255,255,255,.6);
-      line-height:1.65;
-      text-align:left;
-    }
-    .gate-notice strong{color:rgba(255,255,255,.9)}
-    .gate-code-badge{
-      display:inline-block;margin-bottom:20px;
-      padding:5px 14px;
-      background:rgba(163,230,53,.08);
-      border:1px solid rgba(163,230,53,.2);
-      border-radius:999px;
-      font-size:11px;font-weight:700;
-      color:#a3e635;letter-spacing:1.2px;
-      word-break:break-all;
-    }
-    .google-btn{
-      width:100%;min-height:52px;
-      background:#fff;color:#1f1f1f;
-      border:none;border-radius:12px;
-      font-size:15px;font-weight:700;
-      display:flex;align-items:center;justify-content:center;gap:10px;
-      cursor:pointer;transition:background .15s,transform .1s;
-      font-family:'Inter',sans-serif;
-    }
-    .google-btn:hover{background:#f0f0f0}
-    .google-btn:active{transform:scale(.97)}
-    .google-btn:disabled{opacity:.6;cursor:default}
-    .g-icon{width:20px;height:20px;flex-shrink:0}
-
-    .apple-btn{
-      width:100%;min-height:52px;
-      background:#000;color:#fff;
-      border:1.5px solid rgba(255,255,255,.15);border-radius:12px;
-      font-size:15px;font-weight:700;
-      display:flex;align-items:center;justify-content:center;gap:10px;
-      cursor:pointer;transition:background .15s,transform .1s;
-      font-family:'Inter',sans-serif;
-      margin-top:10px;
-    }
-    .apple-btn:hover{background:#1a1a1a}
-    .apple-btn:active{transform:scale(.97)}
-    .apple-btn:disabled{opacity:.6;cursor:default}
-    .apple-icon{width:18px;height:18px;flex-shrink:0}
-    .divider{margin:14px 0 4px;font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.3px}
-
-    /* Confirm screen */
-    .confirm-account{
-      margin:14px 0 8px;
-      padding:12px 16px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.1);
-      border-radius:12px;
-      font-size:13px;
-      color:rgba(255,255,255,.82);
-      word-break:break-all;
-      line-height:1.5;
-    }
-    .confirm-account .label{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
-    .confirm-code-display{
-      margin-bottom:16px;
-      font-size:11px;font-weight:700;
-      color:rgba(163,230,53,.7);
-      letter-spacing:1px;
-    }
-    .confirm-irrevocable{
-      font-size:12px;font-weight:600;
-      color:#fb923c;
-      margin-bottom:20px;
-      padding:8px 12px;
-      background:rgba(251,146,60,.07);
-      border-radius:8px;
-    }
-    .confirm-btn{
-      width:100%;min-height:56px;
-      background:#a3e635;color:#0d1117;
-      border:none;border-radius:14px;
-      font-size:16px;font-weight:800;
-      cursor:pointer;letter-spacing:.2px;
-      transition:background .15s,transform .1s,box-shadow .2s;
-      font-family:'Inter',sans-serif;
-      position:relative;overflow:hidden;
-      box-shadow:0 0 0 0 rgba(163,230,53,0);
-    }
-    .confirm-btn:hover:not(:disabled){
-      background:#bef264;
-      box-shadow:0 0 22px 4px rgba(163,230,53,.35),0 0 8px 1px rgba(163,230,53,.2);
-      transform:translateY(-1px);
-    }
-    .confirm-btn:active:not(:disabled){transform:scale(.98);box-shadow:none}
-    .confirm-btn:disabled{opacity:.55;cursor:default;box-shadow:none}
-    .confirm-btn-brand{
-      display:block;font-size:10px;font-weight:700;
-      color:rgba(13,17,23,.55);letter-spacing:.8px;
-      text-transform:uppercase;margin-bottom:2px;
-    }
-    .confirm-btn-brand .ai{color:rgba(13,17,23,.75);font-weight:900}
-    .change-account{
-      display:block;margin-top:14px;
-      font-size:12px;font-weight:500;
-      color:rgba(255,255,255,.35);
-      cursor:pointer;background:none;border:none;
-      font-family:'Inter',sans-serif;
-    }
-    .change-account:hover{color:rgba(255,255,255,.6)}
-
-    /* Error/success */
-    .download-btn{
-      display:inline-block;margin-top:22px;padding:13px 28px;
-      background:#a3e635;color:#0d1117;
-      font-size:14px;font-weight:800;
-      border:none;border-radius:12px;cursor:pointer;
-      text-decoration:none;transition:background .15s;
-      font-family:'Inter',sans-serif;
-    }
-    .download-btn:hover{background:#bef264}
-
-    .hidden{display:none!important}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>italkyAI Aktivasyon</title>
+    <meta name="theme-color" content="#05070f">
+    <style>
+        body { margin: 0; padding: 0; background-color: #05070f; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(180deg, #05070f, #0b1020); }
+        .container { text-align: center; padding: 30px; background: #0b1020; border-radius: 16px; border: 1px solid #1a2235; width: 90%; max-width: 400px; }
+        .brand { font-size: 32px; font-weight: 800; margin-bottom: 20px; }
+        .brand .italky { color: #ffffff; }
+        .brand .ai { color: #5e5ce6; }
+        .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-google { background: #ffffff; color: #000000; }
+        .btn-apple { background: #000000; color: #ffffff; border: 1px solid #333; }
+        .btn-confirm { background: #ccff00; color: #000000; font-weight: 800; margin-top: 20px; }
+        .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+        #login-section, #confirm-section, #loading-section, #error-section { display: none; }
+        .active-section { display: block !important; }
+        .user-info { font-size: 14px; color: #a0aabf; margin-bottom: 20px; }
+        .error-box { margin-top: 18px; padding: 14px; border: 1px solid rgba(255, 178, 178, .25); border-radius: 14px; background: rgba(255, 178, 178, .08); color: #ffd9d9; font-size: 14px; line-height: 1.5; }
+        svg { width: 20px; height: 20px; margin-right: 10px; }
+    </style>
 </head>
 <body>
-  <main id="pageContent">
-    <div class="card">
-      <div class="brand">italky<span class="ai">AI</span></div>
-
-      <!-- GATE: account selection prompt (default) -->
-      <div id="stateGate">
-        <div class="gate-eyebrow">Aktivasyon</div>
-        <div class="state-title">Hesabınızı Seçin</div>
-        <div class="gate-notice">
-          Bu aktivasyon seçtiğiniz hesaba <strong>kalıcı olarak tanımlanacak</strong> ve geri alınamaz.<br><br>
-          Lütfen kullanacağınız italkyAI hesabını seçin.
-        </div>
-        <div id="gatePill" class="gate-code-badge"></div>
-        <button id="selectAccountBtn" class="google-btn" type="button">
-          <svg class="g-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Google ile Hesap Seç
-        </button>
-        <!-- Apple Sign-In: shown only on iOS -->
-        <div id="appleDivider" class="divider hidden">veya</div>
-        <button id="appleBtn" class="apple-btn hidden" type="button">
-          <svg class="apple-icon" viewBox="0 0 814 1000" aria-hidden="true" fill="#fff">
-            <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 376.7 0 246.8 0 124.4c0-75.8 26.7-153.5 72.5-213.5 43.9-55.8 116-91.7 188.8-91.7 68.7 0 124.8 41.5 166.8 41.5 40 0 106-43.9 183.3-43.9 30.1 0 108.2 3.2 167.9 77.1zm-78.5-218.4c-26.7 28.8-72.5 52.3-116.9 52.3-5.2 0-10.4-.6-15.6-1.3-3.9-48.5 13.6-100.7 43.2-133.5 26.7-28.8 76.3-53.6 121.7-55.2 4.5 50.5-11 99.4-32.4 137.7z"/>
-          </svg>
-          Apple ile Giriş Yap
-        </button>
-      </div>
-
-      <!-- LOADING: auth check / activation in progress -->
-      <div id="stateLoading" class="hidden">
-        <div class="spinner"></div>
-        <div id="loadingLabel" class="loading-label">Hesabınız doğrulanıyor…</div>
-        <div id="loadingSub" class="loading-sub">Lütfen bekleyiniz</div>
-      </div>
-
-      <!-- CONFIRM: show account + code, await user click -->
-      <div id="stateConfirm" class="hidden">
-        <div class="state-icon ok">✓</div>
-        <div class="state-title">Aktivasyonu Onaylayın</div>
-        <div class="confirm-account">
-          <div class="label">Hesap</div>
-          <div id="confirmEmail"></div>
-        </div>
-        <div id="confirmCodeDisplay" class="confirm-code-display"></div>
-        <div class="confirm-irrevocable">⚠ Bu işlem geri alınamaz.</div>
-        <button id="confirmBtn" class="confirm-btn" type="button">
-          <span class="confirm-btn-brand">italky<span class="ai">AI</span></span>
-          Aktivasyonu Onayla
-        </button>
-        <button id="changeAccountBtn" class="change-account" type="button">Farklı hesap seç</button>
-      </div>
-
-      <!-- SUCCESS -->
-      <div id="stateSuccess" class="hidden">
-        <div class="state-icon ok">✓</div>
-        <div class="state-title">Aktivasyon Tamamlandı</div>
-        <div id="successBody" class="state-body"></div>
-      </div>
-
-      <!-- ERROR -->
-      <div id="stateError" class="hidden">
-        <div class="state-icon err">✕</div>
-        <div id="errorTitle" class="state-title">Aktivasyon Başarısız</div>
-        <div id="errorBody" class="state-body"></div>
-        <a id="errorActionBtn" href="#" class="download-btn" target="_blank" rel="noopener">Uygulamayı İndir</a>
-      </div>
+<div class="container">
+    <div class="brand">
+        <span class="italky">italky</span><span class="ai">AI</span>
     </div>
-  </main>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { initGlobalAccess } from "/js/global_access.js";
+    <div id="login-section">
+        <p style="margin-bottom: 20px; color: #a0aabf; font-size: 14px;">Aktivasyon seçtiğiniz hesaba kalıcı olarak tanımlanacaktır.</p>
+
+        <button class="btn btn-apple" onclick="loginApple()">
+            <svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+            Apple ile Hesap Seç
+        </button>
+
+        <button class="btn btn-google" onclick="loginGoogle()">
+            <svg viewBox="0 0 488 512" fill="currentColor" aria-hidden="true"><path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></svg>
+            Google ile Hesap Seç
+        </button>
+    </div>
+
+    <div id="confirm-section">
+        <p class="user-info">Hesap: <strong id="user-email" style="color: #fff;"></strong></p>
+        <p style="color: #ffb2b2; font-size: 13px; margin-bottom: 20px;">Bu işlem geri alınamaz.</p>
+        <button id="confirm-btn" class="btn btn-confirm" onclick="triggerRedeem()">Aktivasyonu Onayla</button>
+    </div>
+
+    <div id="loading-section">
+        <h3 style="color: #ccff00;">İşlem Başarılı!</h3>
+        <p style="color: #a0aabf; font-size: 14px;">Uygulamaya yönlendiriliyorsunuz...</p>
+    </div>
+
+    <div id="error-section">
+        <div id="error-text" class="error-box"></div>
+    </div>
+</div>
+
+<script type="module">
     import { supabase } from "/js/supabase_client.js";
-    import { loginWithGoogle, loginWithApple } from "/js/auth.js";
 
-    mountShell({ scroll:"auto" });
-    initGlobalAccess({ allowPublicPageBypass:false }).catch(()=>{});
-
-    const API_BASE  = "https://italky-api.onrender.com";
-    const ACCESS_API = `${API_BASE}/api/session/access-state`;
-    const SHELL_SIGNATURE_HTML = `<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
-
-    // ── DOM ──────────────────────────────────────────────────────────────────
-    const stateGate     = document.getElementById("stateGate");
-    const stateLoading  = document.getElementById("stateLoading");
-    const stateConfirm  = document.getElementById("stateConfirm");
-    const stateSuccess  = document.getElementById("stateSuccess");
-    const stateError    = document.getElementById("stateError");
-    const loadingLabel  = document.getElementById("loadingLabel");
-    const loadingSub    = document.getElementById("loadingSub");
-    const successBody   = document.getElementById("successBody");
-    const errorBody     = document.getElementById("errorBody");
-    const errorTitle    = document.getElementById("errorTitle");
-    const errorActionBtn = document.getElementById("errorActionBtn");
-    const gatePill      = document.getElementById("gatePill");
-    const confirmEmail  = document.getElementById("confirmEmail");
-    const confirmCodeDisplay = document.getElementById("confirmCodeDisplay");
-    const confirmBtn    = document.getElementById("confirmBtn");
-    const changeAccountBtn = document.getElementById("changeAccountBtn");
-    const selectAccountBtn = document.getElementById("selectAccountBtn");
-    const appleBtn         = document.getElementById("appleBtn");
-    const appleDivider     = document.getElementById("appleDivider");
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-    // ── Shell ready ──────────────────────────────────────────────────────────
-    function standardizeShellSignature(){
-      try{
-        document.querySelectorAll(".signature-main,.menu-sign-main").forEach(el=>{el.innerHTML=SHELL_SIGNATURE_HTML});
-        document.querySelectorAll(".signature-dot,.signature-year,.menu-sign-dot,.menu-sign-year").forEach(el=>{el.textContent="";el.style.display="none"});
-      }catch{}
-    }
-    function markShellReady(){standardizeShellSignature();document.body.classList.add("shell-ready")}
-    function waitForShellReady(){
-      const done=()=>setTimeout(markShellReady,80);
-      if(document.getElementById("italkyAppShell")){done();return}
-      try{
-        const obs=new MutationObserver(()=>{if(document.getElementById("italkyAppShell")){obs.disconnect();done()}});
-        obs.observe(document.body,{childList:true,subtree:true});
-      }catch{}
-      setTimeout(markShellReady,1500);
-    }
-    waitForShellReady();
-
-    // ── State display helpers ─────────────────────────────────────────────────
-    function hideAll(){
-      [stateGate,stateLoading,stateConfirm,stateSuccess,stateError].forEach(el=>el.classList.add("hidden"));
-    }
-    function showGate(code){
-      hideAll();
-      if(gatePill) gatePill.textContent = code || "";
-      stateGate.classList.remove("hidden");
-    }
-    function showAuth(label="Hesabınız doğrulanıyor…"){
-      hideAll();
-      if(loadingLabel) loadingLabel.textContent = label;
-      if(loadingSub)   loadingSub.textContent   = "Lütfen bekleyiniz";
-      stateLoading.classList.remove("hidden");
-    }
-    function showLoading(){
-      hideAll();
-      if(loadingLabel) loadingLabel.textContent = "Aktivasyonunuz işleniyor…";
-      if(loadingSub)   loadingSub.textContent   = "Bu işlem birkaç saniye sürebilir";
-      stateLoading.classList.remove("hidden");
-    }
-    function showConfirm(code, user){
-      hideAll();
-      if(confirmEmail)       confirmEmail.textContent = user.email || user.id;
-      if(confirmCodeDisplay) confirmCodeDisplay.textContent = `Kod: ${code}`;
-      stateConfirm.classList.remove("hidden");
-    }
-    function showSuccess(html){
-      hideAll();
-      if(successBody) successBody.innerHTML = html;
-      stateSuccess.classList.remove("hidden");
-    }
-    function showError(html, title="Aktivasyon Başarısız"){
-      hideAll();
-      if(errorTitle)     errorTitle.textContent = title;
-      if(errorBody)      errorBody.innerHTML = html;
-      if(errorActionBtn) errorActionBtn.href = storeUrlForDevice();
-      stateError.classList.remove("hidden");
-    }
-
-    // ── Utilities ─────────────────────────────────────────────────────────────
-    function codeFromUrl(){
-      try{
-        const u = new URL(location.href);
-        return String(u.searchParams.get("kod")||u.searchParams.get("code")||"").trim().toUpperCase().replace(/[^A-Z0-9_-]/g,"").slice(0,32);
-      }catch{return ""}
-    }
-    function bridgeReturnPath(code="", afterLogin=false){
-      const c = String(code||codeFromUrl()||"").trim().toUpperCase();
-      const base = c ? `/pages/code_load.html?kod=${encodeURIComponent(c)}` : "/pages/code_load.html";
-      return afterLogin ? `${base}&fl=1` : base;
-    }
-
-    const IOS_STORE     = "https://apps.apple.com/app/italkyai/id6768123713";
+    const API_BASE = "https://italky-api.onrender.com";
+    const IOS_STORE = "https://apps.apple.com/app/italkyai/id6768123713";
     const ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
-    const ANDROID_PKG   = "com.ozyigits.italkyai";
 
-    function storeUrlForDevice(){
-      return /Android/.test(navigator.userAgent) ? ANDROID_STORE : IOS_STORE;
+    const loginSection = document.getElementById("login-section");
+    const confirmSection = document.getElementById("confirm-section");
+    const loadingSection = document.getElementById("loading-section");
+    const errorSection = document.getElementById("error-section");
+    const errorText = document.getElementById("error-text");
+    const userEmail = document.getElementById("user-email");
+    const confirmBtn = document.getElementById("confirm-btn");
+
+    let activeSession = null;
+
+    function show(section) {
+        [loginSection, confirmSection, loadingSection, errorSection].forEach((el) => el.classList.remove("active-section"));
+        section.classList.add("active-section");
     }
 
-    async function getSession(){
-      const {data:{session}} = await supabase.auth.getSession();
-      return session||null;
+    function codeFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return String(params.get("kod") || params.get("code") || "")
+            .trim()
+            .toUpperCase()
+            .replace(/[^A-Z0-9_-]/g, "")
+            .slice(0, 64);
     }
-    async function getAuthHeaders(session){
-      return {"Content-Type":"application/json",...(session?.access_token?{Authorization:`Bearer ${session.access_token}`}:{})};
+
+    function returnUrl() {
+        const code = codeFromUrl();
+        return code ? `/pages/code_load.html?kod=${encodeURIComponent(code)}` : "/pages/code_load.html";
     }
-    async function refreshAccessState(session){
-      try{
-        if(!session?.access_token)return null;
-        const resp = await fetch(ACCESS_API,{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
-        const json = await resp.json().catch(()=>null);
-        if(resp.ok&&json){
-          window.__ITALKY_ACCESS__=json;
-          localStorage.setItem("italky_access_state",JSON.stringify(json));
-          window.dispatchEvent(new CustomEvent("italkyAccessReady",{detail:json}));
+
+    function showError(message) {
+        errorText.textContent = message || "Aktivasyon sırasında bir hata oluştu.";
+        show(errorSection);
+    }
+
+    async function refreshSession() {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        activeSession = data?.session || null;
+        return activeSession;
+    }
+
+    async function boot() {
+        try {
+            const code = codeFromUrl();
+            if (!code || code.length < 4) {
+                showError("Geçerli bir aktivasyon kodu bulunamadı.");
+                return;
+            }
+
+            const session = await refreshSession();
+            if (!session?.user?.id) {
+                show(loginSection);
+                return;
+            }
+
+            userEmail.textContent = session.user.email || session.user.id;
+            show(confirmSection);
+        } catch (error) {
+            showError(error?.message || "Oturum kontrolü yapılamadı.");
         }
-        return json;
-      }catch{return null}
     }
 
-    function mapPromoTitle(r){
-      r = String(r||"").trim().toUpperCase();
-      if(r.includes("ALREADY_USED"))  return "Kod Zaten Kullanılmış";
-      if(r.includes("NOT_FOUND"))     return "Kod Bulunamadı";
-      if(r.includes("EXPIRED"))       return "Kodun Süresi Dolmuş";
-      if(r.includes("INACTIVE")||r.includes("NOT_ACTIVE")) return "Kod Aktif Değil";
-      if(r.includes("LIMIT"))         return "Kullanım Limiti Dolmuş";
-      if(r.includes("MISMATCH"))      return "Hesap Uyuşmazlığı";
-      if(r.includes("ELIGIBLE"))      return "Uygun Değil";
-      return "Aktivasyon Başarısız";
-    }
-    function mapPromoError(r){
-      const reason=String(r||"").trim().toUpperCase();
-      const m={
-        CODE_REQUIRED:"Geçerli bir aktivasyon kodu gereklidir.",
-        PROMO_NOT_FOUND:"Bu kod sistemde kayıtlı değil.",
-        PROMO_ALREADY_USED:"Bu kod daha önce kullanılmıştır.",
-        PROMO_ALREADY_USED_BY_USER:"Bu kod bu hesapta daha önce kullanılmıştır.",
-        PROMO_INACTIVE:"Bu kod kullanıma kapalı.",
-        PROMO_NOT_ACTIVE:"Bu kod kullanıma kapalı.",
-        PROMO_NOT_ELIGIBLE_FOR_PAID_MEMBER:"Bu kod mevcut üyelik tipiniz için uygun değil.",
-        PROMO_NOT_ALLOWED_WHILE_MEMBERSHIP_ACTIVE:"Bu kod aktif üyelik sırasında kullanılamaz.",
-        PROMO_EXPIRED:"Bu kodun süresi dolmuş.",
-        PROMO_NOT_STARTED:"Bu kampanya henüz aktif değil.",
-        PROMO_USER_LIMIT_REACHED:"Bu kampanya için kullanım hakkınız dolmuş.",
-        PROMO_GLOBAL_LIMIT_REACHED:"Bu kampanyanın toplam kullanım limiti dolmuş.",
-        PROMO_ACCOUNT_MISMATCH:"Bu kod başka bir hesapla eşleşmiş.",
-        CAMPAIGN_NOT_FOUND:"Bu kodun kampanyası bulunamadı.",
-        PROFILE_NOT_FOUND:"Kullanıcı profili bulunamadı."
-      };
-      return m[reason]||"Kod uygulanamadı. Lütfen kodu kontrol edip tekrar deneyin.";
-    }
-    function renderSuccessHtml(json){
-      const lines=["Kodunuz başarıyla uygulandı. Kullanım süreniz hesabınıza eklendi."];
-      if(json.membership_ends_at){
-        const d=new Date(json.membership_ends_at);
-        lines.push(`Yeni kullanım bitişi: <b>${d.toLocaleDateString("tr-TR")}</b>`);
-      }
-      return lines.join("<br>");
-    }
-    function openAppAfterRedeemSuccess(){
-      debugShow("▶ openAppAfterRedeemSuccess — deep link başlatılıyor");
-      const ua=navigator.userAgent;
-      const isAndroid=/Android/.test(ua);
-      const isIOSDevice=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
-      const storeUrl=isAndroid?ANDROID_STORE:IOS_STORE;
-
-      if(!isAndroid&&!isIOSDevice){
-        debugShow("  platform: desktop → App Store");
-        window.location.href=storeUrl;
-        return;
-      }
-
-      // Cancel store redirect if app opens (tab becomes hidden)
-      const storeTimer=setTimeout(()=>{
-        debugShow("  app did not open → store redirect");
-        window.location.href=storeUrl;
-      },2500);
-      document.addEventListener("visibilitychange",()=>{
-        if(document.hidden){
-          clearTimeout(storeTimer);
-          debugShow("  visibilitychange: hidden → app opened, store timer cancelled ✓");
+    window.loginGoogle = async function loginGoogle() {
+        try {
+            await supabase.auth.signOut();
+            const callbackUrl = new URL("/pages/auth_callback.html", window.location.origin);
+            callbackUrl.searchParams.set("next", returnUrl());
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                    redirectTo: callbackUrl.toString(),
+                    queryParams: {
+                        access_type: "offline",
+                        prompt: "select_account"
+                    }
+                }
+            });
+            if (error) throw error;
+        } catch (error) {
+            showError(error?.message || "Google girişi başlatılamadı.");
         }
-      },{once:true});
+    };
 
-      if(isAndroid){
-        debugShow("  platform: Android → intent://");
-        const fb=encodeURIComponent(ANDROID_STORE);
-        window.location.href=`intent://open#Intent;scheme=italkyai;package=${ANDROID_PKG};S.browser_fallback_url=${fb};end`;
-      }else{
-        debugShow("  platform: iOS → italkyai://");
-        window.location.href="italkyai://";
-      }
-    }
-
-    // ── Debug helper: show raw text on screen without navigating ─────────────
-    function debugShow(msg, isErr=false){
-      let el=document.getElementById("__debugBox");
-      if(!el){
-        el=document.createElement("pre");
-        el.id="__debugBox";
-        Object.assign(el.style,{
-          position:"fixed",bottom:"0",left:"0",right:"0",maxHeight:"55vh",
-          overflowY:"auto",background:isErr?"#3b0000":"#001a00",
-          color:isErr?"#ff6b6b":"#a3e635",fontSize:"11px",padding:"12px 14px",
-          zIndex:"99999",whiteSpace:"pre-wrap",wordBreak:"break-all",
-          borderTop:`2px solid ${isErr?"#ff4444":"#a3e635"}`,margin:"0",
-          fontFamily:"monospace"
-        });
-        document.body.appendChild(el);
-      }
-      el.style.background=isErr?"#3b0000":"#001a00";
-      el.style.borderTopColor=isErr?"#ff4444":"#a3e635";
-      el.textContent+=`\n${new Date().toISOString().slice(11,23)} ${msg}`;
-      el.scrollTop=el.scrollHeight;
-    }
-
-    // ── Core redeem ───────────────────────────────────────────────────────────
-    async function redeemCode(code, preVerifiedUser){
-      debugShow(`▶ redeemCode START — code="${code}"`);
-
-      if(!code||code.length<4){
-        debugShow(`✗ code too short or empty: "${code}"`, true);
-        showError("Geçerli bir aktivasyon kodu bulunamadı.", "Geçersiz Kod");
-        return;
-      }
-
-      // Re-validate user server-side
-      let user = preVerifiedUser||null;
-      debugShow(`  preVerifiedUser.id = ${user?.id||"null"}`);
-      if(!user?.id){
-        debugShow("  preVerifiedUser missing → calling getUser()");
-        try{const{data}=await supabase.auth.getUser();user=data?.user||null;}catch(e){
-          debugShow(`  getUser() threw: ${e}`,true);
+    window.loginApple = async function loginApple() {
+        try {
+            await supabase.auth.signOut();
+            const callbackUrl = new URL("/pages/auth_callback.html", window.location.origin);
+            callbackUrl.searchParams.set("next", returnUrl());
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: "apple",
+                options: {
+                    redirectTo: callbackUrl.toString()
+                }
+            });
+            if (error) throw error;
+        } catch (error) {
+            showError(error?.message || "Apple girişi başlatılamadı.");
         }
-      }
-      debugShow(`  resolved user.id = ${user?.id||"null"} | email = ${user?.email||"null"}`);
-      if(!user?.id){
-        debugShow("✗ user.id is null after getUser() — aborting",true);
-        showError("Kullanıcı kimliği doğrulanamadı. Lütfen tekrar hesap seçin.", "Kimlik Hatası");
-        return;
-      }
+    };
 
-      let session=null;
-      try{session=await getSession();}catch(e){debugShow(`  getSession threw: ${e}`,true);}
-      const hasToken=!!(session?.access_token);
-      debugShow(`  session.access_token present: ${hasToken}`);
-      if(!hasToken){
-        debugShow("✗ No access_token — cannot call API",true);
-        showError("Oturum token'ı bulunamadı. Lütfen tekrar giriş yapın.", "Oturum Hatası");
-        return;
-      }
+    window.triggerRedeem = async function triggerRedeem() {
+        const code = codeFromUrl();
+        if (!code || code.length < 4) {
+            showError("Geçerli bir aktivasyon kodu bulunamadı.");
+            return;
+        }
 
-      const payload={source:"manual",code,user_id:user.id};
-      const url=`${API_BASE}/api/promo/redeem`;
-      debugShow(`  POST ${url}`);
-      debugShow(`  payload: ${JSON.stringify(payload)}`);
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Onaylanıyor...";
 
-      let res, json;
-      try{
-        res=await fetch(url,{
-          method:"POST",
-          headers:await getAuthHeaders(session),
-          body:JSON.stringify(payload)
-        });
-        debugShow(`  HTTP status: ${res.status} ${res.statusText}`);
+        try {
+            const session = await refreshSession();
+            if (!session?.access_token || !session?.user?.id) {
+                showError("Oturum doğrulanamadı. Lütfen yeniden giriş yapın.");
+                return;
+            }
 
-        const raw=await res.text();
-        debugShow(`  raw response body: ${raw}`);
-        try{json=JSON.parse(raw);}catch{json=null;}
-        debugShow(`  parsed json: ${JSON.stringify(json)}`);
-      }catch(e){
-        debugShow(`✗ fetch threw: ${e}`,true);
-        showError(`Bağlantı hatası: ${e?.message||e}`, "Bağlantı Hatası");
-        return;
-      }
+            const response = await fetch(`${API_BASE}/api/promo/redeem`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    source: "manual",
+                    code,
+                    user_id: session.user.id
+                })
+            });
 
-      if(json?.ok){
-        debugShow("✅ json.ok = true — redemption successful!");
-        try{await refreshAccessState(session);}catch(e){debugShow(`  refreshAccessState threw: ${e}`,true);}
-        showSuccess(renderSuccessHtml(json));
-        // ⚠ DEBUG: redirect skipped — call openAppAfterRedeemSuccess() to re-enable
-        openAppAfterRedeemSuccess();
-      }else{
-        const reason=json?.reason||json?.detail||"(no reason field)";
-        debugShow(`✗ json.ok = false | reason: ${reason}`,true);
-        showError(mapPromoError(json?.reason||json?.detail||""),mapPromoTitle(json?.reason||json?.detail||""));
-      }
-    }
+            const rawBody = await response.text();
+            let json = null;
+            try { json = JSON.parse(rawBody); } catch {}
 
-    // ── Button handlers ───────────────────────────────────────────────────────
+            if (!response.ok || !json?.ok) {
+                throw new Error(json?.reason || json?.detail || rawBody || `API hata kodu: ${response.status}`);
+            }
 
-    // Show Apple button only on iOS
-    if(isIOS){
-      appleBtn?.classList.remove("hidden");
-      appleDivider?.classList.remove("hidden");
-    }
+            show(loadingSection);
+            window.location.href = "italkyai://";
 
-    // Gate: "Google ile Hesap Seç"
-    selectAccountBtn?.addEventListener("click", async()=>{
-      const code=codeFromUrl();
-      if(!code){showError("Aktivasyon kodu bulunamadı.","Kod Eksik");return;}
-      selectAccountBtn.disabled=true;
-      try{await supabase.auth.signOut();}catch{}
-      // prompt:'select_account' is built into loginWithGoogle (auth.js)
-      await loginWithGoogle(bridgeReturnPath(code, true));
-    });
+            setTimeout(() => {
+                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+                    window.location.href = IOS_STORE;
+                } else {
+                    window.location.href = ANDROID_STORE;
+                }
+            }, 2500);
+        } catch (error) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = "Aktivasyonu Onayla";
+            showError(error?.message || "Aktivasyon tamamlanamadı.");
+        }
+    };
 
-    // Gate: "Apple ile Giriş Yap" (iOS only)
-    appleBtn?.addEventListener("click", async()=>{
-      const code=codeFromUrl();
-      if(!code){showError("Aktivasyon kodu bulunamadı.","Kod Eksik");return;}
-      appleBtn.disabled=true;
-      selectAccountBtn.disabled=true;
-      try{await supabase.auth.signOut();}catch{}
-      await loginWithApple(bridgeReturnPath(code, true));
-    });
-
-    // Confirm: "Aktivasyonu Onayla"
-    confirmBtn?.addEventListener("click", async()=>{
-      const code=codeFromUrl();
-      confirmBtn.disabled=true;
-      confirmBtn.innerHTML=`<span class="confirm-btn-brand">italky<span class="ai">AI</span></span>Onaylanıyor…`;
-      showLoading();
-
-      let user=null;
-      try{const{data}=await supabase.auth.getUser();user=data?.user||null;}catch{}
-      if(!user?.id){showGate(code);return;}
-
-      await redeemCode(code, user);
-    });
-
-    // "Farklı hesap seç" — back to gate
-    changeAccountBtn?.addEventListener("click", ()=>{
-      const code=codeFromUrl();
-      showGate(code);
-    });
-
-    // ── Boot ──────────────────────────────────────────────────────────────────
-    (async()=>{
-      const code=codeFromUrl();
-      if(!code){
-        showError("Aktivasyon kodu bulunamadı.<br>Lütfen size gönderilen linki eksiksiz kullanın.","Kod Eksik");
-        return;
-      }
-
-      const isPostLogin = new URL(location.href).searchParams.get("fl")==="1";
-
-      if(!isPostLogin){
-        // First visit: always show gate — no auto-redeem, no auto-login
-        showGate(code);
-        return;
-      }
-
-      // Returned from Google login: clean fl, verify user, show confirm screen
-      try{
-        const clean=new URL(location.href);
-        clean.searchParams.delete("fl");
-        history.replaceState({},""  ,clean.toString());
-      }catch{}
-
-      showAuth();
-
-      let verifiedUser=null;
-      try{
-        const{data,error}=await supabase.auth.getUser();
-        if(!error) verifiedUser=data?.user||null;
-      }catch{}
-
-      if(!verifiedUser?.id){
-        // Verification failed: back to gate
-        showGate(code);
-        return;
-      }
-
-      // Show confirmation screen — user must click to proceed
-      showConfirm(code, verifiedUser);
-    })();
-  </script>
+    boot();
+</script>
 </body>
 </html>
