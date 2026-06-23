@@ -29,6 +29,7 @@
   </main>
   <script>
     const API_BASE = "https://italky-api.onrender.com";
+    const KAMPANYA_BASE = "https://italky.ai/kampanya";
     const statusText = document.getElementById("statusText");
     const errorBox = document.getElementById("errorBox");
     const actions = document.getElementById("actions");
@@ -41,24 +42,48 @@
       return parts[0] === "a" ? parts[1] : "";
     }
 
-    function showError(){
+    function showError(reason){
       document.querySelector(".loader").style.display = "none";
       statusText.textContent = "Link gecersiz veya suresi dolmus olabilir.";
       errorBox.style.display = "block";
+      errorBox.textContent = reason || "Bu aktivasyon linki bulunamadi veya artik aktif degil.";
       actions.style.display = "block";
     }
 
     async function resolveLink(){
       const token = String(tokenFromLocation() || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-      if(token.length < 6 || token.length > 8){ showError(); return; }
-      try{
-        const res = await fetch(`${API_BASE}/api/activation-links/${encodeURIComponent(token)}`, { cache:"no-store" });
-        const json = await res.json().catch(() => null);
-        const code = String(json?.code_value || "").trim();
-        if(!res.ok || !json?.ok || !code){ showError(); return; }
-        location.replace(`/kampanya?kod=${encodeURIComponent(code)}`);
-      }catch(e){
+      if(token.length < 6 || token.length > 8){
+        console.warn("[activation] invalid token length", token);
         showError();
+        return;
+      }
+
+      const requestUrl = `${API_BASE}/api/activation-links/${encodeURIComponent(token)}`;
+      console.log("[activation] fetch", requestUrl);
+
+      try{
+        const res = await fetch(requestUrl, { cache: "no-store", mode: "cors" });
+        const json = await res.json().catch(() => null);
+        console.log("[activation] response", { status: res.status, ok: res.ok, json });
+
+        const code = String(json?.code_value || "").trim();
+        if(!json?.ok || !code){
+          console.warn("[activation] redirect blocked", {
+            status: res.status,
+            jsonOk: json?.ok,
+            code_value: json?.code_value,
+            reason: json?.reason || json?.detail
+          });
+          showError(json?.reason || json?.detail || "Aktivasyon linki cozulemedi.");
+          return;
+        }
+
+        const target = `${KAMPANYA_BASE}?kod=${encodeURIComponent(code)}`;
+        console.log("[activation] redirect", target);
+        location.replace(target);
+      }catch(e){
+        console.error("[activation] fetch failed", e);
+        showError("Baglanti hatasi. Lutfen tekrar deneyin.");
       }
     }
 
