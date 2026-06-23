@@ -23,13 +23,14 @@
   <main>
     <div class="loader" aria-hidden="true"></div>
     <h1>Aktivasyon hazirlaniyor</h1>
-    <p id="statusText">Link kontrol ediliyor. Birazdan kampanya sayfasina yonlendirileceksiniz.</p>
+    <p id="statusText">Link kontrol ediliyor. Aktivasyon sayfasına yönlendiriliyorsunuz…</p>
     <div id="errorBox" class="error">Bu aktivasyon linki bulunamadi veya artik aktif degil.</div>
     <div id="actions" class="actions"><a href="/pages/home.html">Anasayfaya don</a></div>
   </main>
   <script>
     const API_BASE = "https://italky-api.onrender.com";
-    const KAMPANYA_BASE = "https://italky.ai/kampanya";
+    // Redirect to code_load.html (gate → confirm → deep link) instead of /kampanya
+    const CODE_LOAD_BASE = "https://italky.ai/pages/code_load.html";
     const statusText = document.getElementById("statusText");
     const errorBox = document.getElementById("errorBox");
     const actions = document.getElementById("actions");
@@ -78,8 +79,8 @@
           return;
         }
 
-        const target = `${KAMPANYA_BASE}?kod=${encodeURIComponent(code)}`;
-        console.log("[activation] redirect", target);
+        const target = `${CODE_LOAD_BASE}?kod=${encodeURIComponent(code)}`;
+        console.log("[activation] redirect → code_load", target);
         location.replace(target);
       }catch(e){
         console.error("[activation] fetch failed", e);
