@@ -449,9 +449,38 @@
       return lines.join("<br>");
     }
     function openAppAfterRedeemSuccess(){
-      // ⚠ DEBUG MODE: redirects disabled — remove this block to re-enable
-      console.warn("[DEBUG] openAppAfterRedeemSuccess called — redirect SKIPPED (debug mode)");
-      debugShow("✅ API başarılı döndü. Yönlendirme debug modunda devre dışı.");
+      debugShow("▶ openAppAfterRedeemSuccess — deep link başlatılıyor");
+      const ua=navigator.userAgent;
+      const isAndroid=/Android/.test(ua);
+      const isIOSDevice=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
+      const storeUrl=isAndroid?ANDROID_STORE:IOS_STORE;
+
+      if(!isAndroid&&!isIOSDevice){
+        debugShow("  platform: desktop → App Store");
+        window.location.href=storeUrl;
+        return;
+      }
+
+      // Cancel store redirect if app opens (tab becomes hidden)
+      const storeTimer=setTimeout(()=>{
+        debugShow("  app did not open → store redirect");
+        window.location.href=storeUrl;
+      },2500);
+      document.addEventListener("visibilitychange",()=>{
+        if(document.hidden){
+          clearTimeout(storeTimer);
+          debugShow("  visibilitychange: hidden → app opened, store timer cancelled ✓");
+        }
+      },{once:true});
+
+      if(isAndroid){
+        debugShow("  platform: Android → intent://");
+        const fb=encodeURIComponent(ANDROID_STORE);
+        window.location.href=`intent://open#Intent;scheme=italkyai;package=${ANDROID_PKG};S.browser_fallback_url=${fb};end`;
+      }else{
+        debugShow("  platform: iOS → italkyai://");
+        window.location.href="italkyai://";
+      }
     }
 
     // ── Debug helper: show raw text on screen without navigating ─────────────
