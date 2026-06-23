@@ -4,17 +4,17 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Aktivasyon</title>
-  <meta name="theme-color" content="#0d1117"/>
+  <meta name="theme-color" content="#060f1e"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;outline:none}
-    html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;color:#fff;font-family:'Inter',sans-serif}
+    html,body{width:100%;height:100%;overflow:hidden;background:#060f1e;color:#fff;font-family:'Inter',sans-serif}
 
     /* Shell splash */
-    body:not(.shell-ready)::before{content:"italkyAI";position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:#0d1117;color:rgba(255,255,255,.8);font-family:'Inter',sans-serif;font-size:26px;font-weight:700;letter-spacing:.5px}
-    body:not(.shell-ready)::after{content:"";position:fixed;left:50%;top:calc(50% + 44px);z-index:1000000;width:36px;height:36px;margin-left:-18px;border-radius:50%;border:3px solid rgba(163,230,53,.18);border-top-color:#a3e635;animation:spin .8s linear infinite}
+    body:not(.shell-ready)::before{content:"italkyAI";position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:#060f1e;color:rgba(255,255,255,.8);font-family:'Inter',sans-serif;font-size:26px;font-weight:700;letter-spacing:.5px}
+    body:not(.shell-ready)::after{content:"";position:fixed;left:50%;top:calc(50% + 44px);z-index:1000000;width:36px;height:36px;margin-left:-18px;border-radius:50%;border:3px solid rgba(59,130,246,.18);border-top-color:#3b82f6;animation:spin .8s linear infinite}
     body:not(.shell-ready) #pageContent{opacity:0;pointer-events:none}
     body.shell-ready::before,body.shell-ready::after{opacity:0;pointer-events:none}
 
@@ -27,23 +27,24 @@
     /* Card */
     .card{
       width:100%;max-width:400px;
-      background:#161b22;
-      border:1px solid rgba(255,255,255,.08);
+      background:#0a1628;
+      border:1px solid rgba(59,130,246,.12);
       border-radius:20px;
       padding:36px 28px;
       text-align:center;
       animation:fadeIn .3s ease both;
+      box-shadow:0 8px 40px rgba(0,0,0,.45);
     }
 
     /* Brand */
     .brand{
       font-size:17px;font-weight:800;
-      color:rgba(255,255,255,.5);
+      color:rgba(255,255,255,.42);
       letter-spacing:.6px;text-transform:uppercase;
       margin-bottom:28px;
     }
     .brand .y{color:#a3e635}
-    .brand .ai{color:rgba(255,255,255,.75)}
+    .brand .ai{color:#3b82f6}
 
     /* State icons */
     .state-icon{
@@ -61,24 +62,28 @@
     .state-body b{color:rgba(255,255,255,.88)}
 
     /* Spinner */
-    .spinner{width:48px;height:48px;border-radius:50%;border:3px solid rgba(163,230,53,.15);border-top-color:#a3e635;animation:spin .8s linear infinite;margin:0 auto 20px}
+    .spinner{width:48px;height:48px;border-radius:50%;border:3px solid rgba(59,130,246,.15);border-top-color:#3b82f6;animation:spin .8s linear infinite;margin:0 auto 20px}
     .loading-label{font-size:14px;font-weight:600;color:rgba(255,255,255,.75);animation:pulse 1.8s ease infinite;line-height:1.6}
     .loading-sub{margin-top:6px;font-size:11px;font-weight:500;color:rgba(255,255,255,.3);letter-spacing:.2px}
 
     /* Gate screen */
-    .gate-warning-icon{font-size:36px;margin-bottom:16px}
+    .gate-eyebrow{
+      font-size:10px;font-weight:700;letter-spacing:1.8px;
+      text-transform:uppercase;color:#3b82f6;
+      margin-bottom:10px;
+    }
     .gate-notice{
       margin:14px 0 20px;
       padding:12px 14px;
-      background:rgba(251,146,60,.07);
-      border:1px solid rgba(251,146,60,.18);
+      background:rgba(59,130,246,.06);
+      border:1px solid rgba(59,130,246,.15);
       border-radius:12px;
       font-size:13px;font-weight:500;
-      color:rgba(255,255,255,.65);
+      color:rgba(255,255,255,.6);
       line-height:1.65;
       text-align:left;
     }
-    .gate-notice strong{color:#fb923c}
+    .gate-notice strong{color:rgba(255,255,255,.9)}
     .gate-code-badge{
       display:inline-block;margin-bottom:20px;
       padding:5px 14px;
@@ -184,7 +189,7 @@
 
       <!-- GATE: account selection prompt (default) -->
       <div id="stateGate">
-        <div class="gate-warning-icon">🔐</div>
+        <div class="gate-eyebrow">Aktivasyon</div>
         <div class="state-title">Hesabınızı Seçin</div>
         <div class="gate-notice">
           Bu aktivasyon seçtiğiniz hesaba <strong>kalıcı olarak tanımlanacak</strong> ve geri alınamaz.<br><br>
@@ -421,14 +426,16 @@
       const isAndroid=/Android/.test(ua);
       const isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
       if(isAndroid){
+        // intent:// with italkyai scheme; store fallback if app not installed
         const fb=encodeURIComponent(ANDROID_STORE);
-        window.location.href=`intent://open#Intent;scheme=italky;package=${ANDROID_PKG};S.browser_fallback_url=${fb};end`;
+        window.location.href=`intent://open#Intent;scheme=italkyai;package=${ANDROID_PKG};S.browser_fallback_url=${fb};end`;
         setTimeout(()=>{window.location.href=ANDROID_STORE},2500);
       }else if(isIOS){
-        window.location.href="italky://open";
+        // Universal deep link attempt; store fallback after 2 s
+        window.location.href="italkyai://";
         setTimeout(()=>{window.location.href=IOS_STORE},2000);
       }else{
-        window.location.href="https://italky.ai";
+        window.location.href=IOS_STORE; // desktop: point to App Store
       }
     }
 
