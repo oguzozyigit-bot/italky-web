@@ -3,72 +3,355 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Kod ile Gün Yükle</title>
-  <meta name="theme-color" content="#05070f"/>
+  <title>italkyAI • Aktivasyon</title>
+  <meta name="theme-color" content="#0A192F"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--txt:#fff;--muted:rgba(255,255,255,.68);--line:rgba(255,255,255,.10);--ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%)}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070f;color:#fff;font-family:'Outfit',sans-serif}body{background:radial-gradient(circle at 18% 14%,rgba(124,92,255,.16),transparent 28%),radial-gradient(circle at 82% 20%,rgba(139,211,255,.13),transparent 24%),linear-gradient(180deg,#05070f 0%,#090d19 100%)}
-    body:not(.shell-ready)::before{content:"italkyAI";position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 18%,rgba(139,211,255,.14),transparent 32%),linear-gradient(180deg,#05070f,#090d19);color:rgba(255,255,255,.86);font-family:'Space Grotesk','Outfit',sans-serif;font-size:28px;font-weight:900;letter-spacing:.3px;transition:opacity .18s ease}body:not(.shell-ready)::after{content:"";position:fixed;left:50%;top:calc(50% + 42px);z-index:1000000;width:44px;height:44px;margin-left:-22px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:#8bd3ff;animation:shellSpin .8s linear infinite}@keyframes shellSpin{to{transform:rotate(360deg)}}body:not(.shell-ready) #pageContent{opacity:0;pointer-events:none}body.shell-ready::before,body.shell-ready::after{opacity:0;pointer-events:none}
-    html.keyboard-open,body.keyboard-open,html.input-focus,body.input-focus{height:100%;min-height:100%;transform:none!important;position:static!important;overflow:hidden}
-    #pageContent{height:100%;max-width:560px;margin:auto;padding:14px;overflow:auto;display:flex;align-items:center;opacity:1;transition:opacity .18s ease}.hero{width:100%;border-radius:28px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));padding:22px 18px;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.22)}
-    .eyebrow{display:inline-flex;min-height:28px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(139,211,255,.18);background:rgba(139,211,255,.09);color:#c8f2ff;font-size:11px;font-weight:1000;margin-bottom:12px}.title{margin:0 0 12px;font-size:29px;font-weight:1000;line-height:1.12}.desc,.note{margin:0;color:var(--muted);font-size:15px;font-weight:800;line-height:1.65}.note{margin:14px 0 22px;padding:12px 13px;border-radius:18px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);font-size:13px;text-align:left}
-    .code-box{width:100%;min-height:76px;border-radius:24px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:#fff;text-align:center;font-size:24px;font-weight:1000;letter-spacing:2px;margin-bottom:14px;padding:0 12px;font-family:'Outfit',sans-serif;text-transform:uppercase}.submit-btn{width:100%;min-height:58px;border:none;border-radius:18px;cursor:pointer;font-size:17px;font-weight:1000;color:#fff;background:var(--ai-grad);box-shadow:0 14px 28px rgba(124,92,255,.18)}.submit-btn:disabled{opacity:.72;cursor:default}
-    .result{margin-top:18px;border-radius:22px;padding:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);display:none;text-align:left}.result.show{display:block}.result.ok{border-color:rgba(157,240,185,.28);background:linear-gradient(135deg,rgba(157,240,185,.10),rgba(255,255,255,.03))}.result.err{border-color:rgba(255,178,178,.28);background:linear-gradient(135deg,rgba(255,178,178,.10),rgba(255,255,255,.03))}.result-title{font-size:18px;font-weight:1000;margin:0 0 8px}.result-text{font-size:14px;line-height:1.65;font-weight:800;color:rgba(255,255,255,.88)}.result-actions{display:flex;gap:12px;margin-top:14px}.result-btn{flex:1;min-height:52px;border:none;border-radius:16px;cursor:pointer;font-size:15px;font-weight:1000;color:#fff;background:var(--ai-grad)}.result-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;outline:none}
+    html,body{width:100%;height:100%;overflow:hidden;background:#0A192F;color:#fff;font-family:'Inter',sans-serif}
+
+    /* Shell splash */
+    body:not(.shell-ready)::before{content:"italkyAI";position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:#0A192F;color:rgba(255,255,255,.8);font-family:'Inter',sans-serif;font-size:26px;font-weight:700;letter-spacing:.5px;transition:opacity .18s ease}
+    body:not(.shell-ready)::after{content:"";position:fixed;left:50%;top:calc(50% + 44px);z-index:1000000;width:40px;height:40px;margin-left:-20px;border-radius:50%;border:3px solid rgba(0,123,255,.2);border-top-color:#007BFF;animation:spin .8s linear infinite}
+    body:not(.shell-ready) #pageContent{opacity:0;pointer-events:none}
+    body.shell-ready::before,body.shell-ready::after{opacity:0;pointer-events:none}
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+
+    #pageContent{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .card{
+      width:100%;
+      max-width:420px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:20px;
+      padding:40px 32px;
+      text-align:center;
+      animation:fadeIn .35s ease both;
+    }
+
+    /* Logo / wordmark */
+    .brand{
+      font-size:18px;
+      font-weight:700;
+      color:rgba(255,255,255,.45);
+      letter-spacing:.8px;
+      text-transform:uppercase;
+      margin-bottom:32px;
+    }
+    .brand span{color:#007BFF}
+
+    /* Spinner */
+    .spinner{
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      border:3px solid rgba(0,123,255,.18);
+      border-top-color:#007BFF;
+      animation:spin .8s linear infinite;
+      margin:0 auto 24px;
+    }
+
+    .state-icon{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 24px;
+      font-size:24px;
+    }
+    .state-icon.ok{background:rgba(0,200,120,.12);border:2px solid rgba(0,200,120,.3);color:#00C878}
+    .state-icon.err{background:rgba(255,80,80,.10);border:2px solid rgba(255,80,80,.28);color:#FF5050}
+
+    .state-title{
+      font-size:20px;
+      font-weight:700;
+      margin-bottom:10px;
+      color:#fff;
+    }
+
+    .state-body{
+      font-size:14px;
+      font-weight:500;
+      color:rgba(255,255,255,.58);
+      line-height:1.7;
+    }
+    .state-body b{color:rgba(255,255,255,.9)}
+
+    .loading-label{
+      font-size:15px;
+      font-weight:600;
+      color:rgba(255,255,255,.72);
+      animation:pulse 1.8s ease infinite;
+      line-height:1.6;
+    }
+
+    .home-btn{
+      display:inline-block;
+      margin-top:28px;
+      padding:13px 32px;
+      background:#007BFF;
+      color:#fff;
+      font-size:14px;
+      font-weight:700;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      text-decoration:none;
+      transition:background .18s;
+      letter-spacing:.2px;
+    }
+    .home-btn:hover{background:#0068d6}
+
+    .code-pill{
+      display:inline-block;
+      margin-top:16px;
+      padding:5px 14px;
+      background:rgba(0,123,255,.12);
+      border:1px solid rgba(0,123,255,.22);
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      color:#5baeff;
+      letter-spacing:1px;
+      word-break:break-all;
+    }
+
+    .hidden{display:none!important}
   </style>
 </head>
 <body>
   <main id="pageContent">
-    <section class="hero">
-      <div class="eyebrow">Promosyon / Dijital Aktivasyon</div>
-      <h1 class="title">Kod ile Gün Yükle</h1>
-      <p class="desc">Elinizde promosyon kodu veya dijital aktivasyon kodu varsa bu alandan girerek kullanım sürenizi hesabınıza ekleyebilirsiniz.</p>
-      <p class="note">Bu alan yalnızca promosyon kodu veya dijital aktivasyon kodu içindir. Gün satın almak için Gün Yükle sayfasını kullanabilirsiniz. Koddan gelen süre mevcut sürenizin üzerine eklenir; kalan süreniz yanmaz.</p>
-      <input id="manualCode" class="code-box" type="text" maxlength="32" placeholder="KODUNUZU GİRİN"/>
-      <button id="loadBtn" class="submit-btn" type="button">Kodu Uygula</button>
-      <div id="resultBox" class="result"><div id="resultTitle" class="result-title"></div><div id="resultText" class="result-text"></div><div class="result-actions"><button class="result-btn" type="button" id="goHomeBtn">Anasayfaya Dön</button></div></div>
-    </section>
+    <div class="card">
+      <div class="brand">italk<span>y</span>AI</div>
+
+      <!-- Loading state -->
+      <div id="stateLoading">
+        <div class="spinner"></div>
+        <div class="loading-label">Lütfen bekleyiniz,<br>aktivasyon devam ediyor…</div>
+      </div>
+
+      <!-- Success state -->
+      <div id="stateSuccess" class="hidden">
+        <div class="state-icon ok">✓</div>
+        <div class="state-title">Aktivasyon Tamamlandı</div>
+        <div id="successBody" class="state-body"></div>
+      </div>
+
+      <!-- Error state -->
+      <div id="stateError" class="hidden">
+        <div class="state-icon err">✕</div>
+        <div class="state-title">Aktivasyon Başarısız</div>
+        <div id="errorBody" class="state-body"></div>
+        <a href="https://italky.ai" class="home-btn" id="goHomeBtn">Anasayfaya Dön</a>
+      </div>
+    </div>
   </main>
+
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
     import { initGlobalAccess } from "/js/global_access.js";
     import { supabase } from "/js/supabase_client.js";
+
     mountShell({ scroll:"auto" });
     initGlobalAccess({ allowPublicPageBypass:false }).catch(()=>{});
-    const SHELL_SIGNATURE_HTML=`<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
-    const API_BASE="https://italky-api.onrender.com";
-    const ACCESS_API=`${API_BASE}/api/session/access-state`;
-    const manualCode=document.getElementById("manualCode"),loadBtn=document.getElementById("loadBtn"),resultBox=document.getElementById("resultBox"),resultTitle=document.getElementById("resultTitle"),resultText=document.getElementById("resultText");
-    let viewportResizeHandler=null, viewportScrollHandler=null;
 
-    function standardizeShellSignature(){try{document.querySelectorAll(".signature-main,.menu-sign-main").forEach((el)=>{el.innerHTML=SHELL_SIGNATURE_HTML});document.querySelectorAll(".signature-dot,.signature-year,.menu-sign-dot,.menu-sign-year").forEach((el)=>{el.textContent="";el.style.display="none"})}catch{}}
+    const API_BASE = "https://italky-api.onrender.com";
+    const ACCESS_API = `${API_BASE}/api/session/access-state`;
+
+    const SHELL_SIGNATURE_HTML = `<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
+
+    // ── DOM ──────────────────────────────────────────────────────────────────
+    const stateLoading = document.getElementById("stateLoading");
+    const stateSuccess = document.getElementById("stateSuccess");
+    const stateError   = document.getElementById("stateError");
+    const successBody  = document.getElementById("successBody");
+    const errorBody    = document.getElementById("errorBody");
+
+    // ── Shell ready ──────────────────────────────────────────────────────────
+    function standardizeShellSignature(){
+      try{
+        document.querySelectorAll(".signature-main,.menu-sign-main").forEach((el)=>{el.innerHTML=SHELL_SIGNATURE_HTML});
+        document.querySelectorAll(".signature-dot,.signature-year,.menu-sign-dot,.menu-sign-year").forEach((el)=>{el.textContent="";el.style.display="none"});
+      }catch{}
+    }
     function markShellReady(){standardizeShellSignature();document.body.classList.add("shell-ready")}
-    function waitForShellReady(){const done=()=>setTimeout(markShellReady,80);if(document.getElementById("italkyAppShell")){done();return}try{const observer=new MutationObserver(()=>{if(document.getElementById("italkyAppShell")){observer.disconnect();done()}});observer.observe(document.body,{childList:true,subtree:true})}catch{}setTimeout(markShellReady,1500)}
+    function waitForShellReady(){
+      const done=()=>setTimeout(markShellReady,80);
+      if(document.getElementById("italkyAppShell")){done();return}
+      try{
+        const obs=new MutationObserver(()=>{if(document.getElementById("italkyAppShell")){obs.disconnect();done()}});
+        obs.observe(document.body,{childList:true,subtree:true});
+      }catch{}
+      setTimeout(markShellReady,1500);
+    }
     waitForShellReady();
-    function showResult(ok,title,html){resultBox.className="result show "+(ok?"ok":"err");resultTitle.textContent=title;resultText.innerHTML=html}
-    function markKeyboardOpen(open){document.documentElement.classList.toggle("keyboard-open",open);document.body.classList.toggle("keyboard-open",open);document.documentElement.classList.toggle("input-focus",open);document.body.classList.toggle("input-focus",open)}
-    function resetMobileViewportState(){try{document.activeElement?.blur?.()}catch{}try{markKeyboardOpen(false);document.documentElement.classList.remove("keyboard-open","input-focus");document.body.classList.remove("keyboard-open","input-focus","ui-menu-open","menu-open","shell-menu-open","footer-raised","footer-lifted","signature-raised");for(const el of [document.documentElement,document.body]){el.style.transform="";el.style.height="";el.style.minHeight="";el.style.overflow="";el.style.position="";el.style.top="";el.style.bottom="";el.style.inset=""}document.querySelectorAll(".keyboard-open,.input-focus,.footer-raised,.footer-lifted,.signature-raised,.shell-lifted").forEach((el)=>el.classList.remove("keyboard-open","input-focus","footer-raised","footer-lifted","signature-raised","shell-lifted"));document.querySelectorAll("#sideMenu,.side-menu,.menu-panel,.drawer").forEach((el)=>{el.classList.remove("open","show","active","is-open");el.setAttribute("aria-hidden","true")});document.querySelectorAll("#italkyAppShell,#shellMain,#italkyFooter,.premium-footer,.signature,.menu-sign").forEach((el)=>{el.style.transform="";el.style.height="";el.style.minHeight="";el.style.maxHeight="";el.style.position="";el.style.top="";el.style.bottom="";el.style.inset="";el.style.marginTop="";el.style.marginBottom=""});document.getElementById("pageContent")?.scrollTo?.(0,0);window.scrollTo?.(0,0);standardizeShellSignature()}catch{}}
-    async function refreshAccessState(session){try{if(!session?.access_token)return null;const resp=await fetch(ACCESS_API,{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});const json=await resp.json().catch(()=>null);if(resp.ok&&json){window.__ITALKY_ACCESS__=json;localStorage.setItem("italky_access_state",JSON.stringify(json));window.dispatchEvent(new CustomEvent("italkyAccessReady",{detail:json}))}return json}catch{return null}}
-    function goSafe(url){resetMobileViewportState();setTimeout(()=>{location.href=url},80)}
-    function openAppAfterRedeemSuccess(){resetMobileViewportState();window.location.href="italky://open";setTimeout(()=>{const isIOS=/iPad|iPhone|iPod|Mac/.test(navigator.userAgent);window.location.href=isIOS?"https://apps.apple.com/app/italkyai/id6768123713":"https://play.google.com/store/apps/details?id=com.ozyigits.italkyai"},2000)}
-    function mapPromoError(reasonRaw){const reason=String(reasonRaw||"").trim().toUpperCase();const m={CODE_REQUIRED:"Lütfen kodunuzu giriniz.",PROMO_NOT_FOUND:"Bu kod sistemde kayıtlı değil.",PROMO_ALREADY_USED:"Bu kod daha önce kullanılmıştır.",PROMO_ALREADY_USED_BY_USER:"Bu kod bu hesapta daha önce kullanılmıştır.",PROMO_INACTIVE:"Bu kod kullanıma kapalı.",PROMO_NOT_ACTIVE:"Bu kod kullanıma kapalı.",PROMO_NOT_ELIGIBLE_FOR_PAID_MEMBER:"Bu kod mevcut üyelik tipiniz için uygun değil.",PROMO_NOT_ALLOWED_WHILE_MEMBERSHIP_ACTIVE:"Bu kod aktif üyelik sırasında kullanılamaz.",PROMO_EXPIRED:"Bu kodun süresi dolmuş.",PROMO_NOT_STARTED:"Bu kampanya henüz aktif değil.",PROMO_USER_LIMIT_REACHED:"Bu kampanya için kullanım hakkınız dolmuş.",PROMO_GLOBAL_LIMIT_REACHED:"Bu kampanyanın toplam kullanım limiti dolmuş.",PROMO_ACCOUNT_MISMATCH:"Bu kod başka bir hesapla eşleşmiş.",CAMPAIGN_NOT_FOUND:"Bu kodun kampanyası bulunamadı.",PROFILE_NOT_FOUND:"Kullanıcı profili bulunamadı."};return m[reason]||"Kod uygulanamadı. Lütfen kodu kontrol edip tekrar deneyin."}
-    function renderSuccessMessage(json){const parts=["Kod başarıyla uygulandı. Kullanım süreniz uzatıldı."];if(json.membership_ends_at){const d=new Date(json.membership_ends_at);parts.push(`Yeni kullanım bitişi: <b>${d.toLocaleDateString("tr-TR")}</b>`)}return parts.join("<br>")}
-    async function getSession(){const {data:{session}}=await supabase.auth.getSession();return session||null}
-    async function getAuthHeaders(session){return {"Content-Type":"application/json",...(session?.access_token?{Authorization:`Bearer ${session.access_token}`}:{})}}
-    let autoRedeemStarted=false;
-    function codeFromUrl(){try{const u=new URL(location.href);return String(u.searchParams.get("kod")||u.searchParams.get("code")||"").trim().toUpperCase().replace(/[^A-Z0-9_-]/g,"").slice(0,32)}catch{return ""}}
-    function bridgeReturnPath(code=""){const normalized=String(code||codeFromUrl()||"").trim().toUpperCase();return normalized?`/pages/code_load.html?kod=${encodeURIComponent(normalized)}`:"/pages/code_load.html"}
-    function loginUrlForCode(code=""){return `/pages/login.html?next=${encodeURIComponent(bridgeReturnPath(code))}`}
-    function currentReturnPath(){return bridgeReturnPath()}
-    async function redeemCode(codeOverride=""){const code=String(codeOverride||manualCode.value||"").trim().toUpperCase();if(code.length<4){showResult(false,"Islem Basarisiz","Lutfen kodu eksiksiz giriniz.");return}if(manualCode)manualCode.value=code;const session=await getSession();const userId=session?.user?.id||"";if(!userId){goSafe(loginUrlForCode(code));return}resetMobileViewportState();loadBtn.disabled=true;try{const res=await fetch(`${API_BASE}/api/promo/redeem`,{method:"POST",headers:await getAuthHeaders(session),body:JSON.stringify({source:"manual",code,user_id:userId})});const json=await res.json().catch(()=>null);console.log("[code_load] redeem response",{status:res.status,json});if(json?.ok){await refreshAccessState(session);showResult(true,"Kod Basariyla Uygulandi",renderSuccessMessage(json));setTimeout(()=>openAppAfterRedeemSuccess(),1750)}else{showResult(false,"Islem Basarisiz",mapPromoError(json?.reason||json?.detail))}}catch(e){showResult(false,"Islem Basarisiz","Kod uygulanamadi. Lutfen tekrar deneyin.")}finally{loadBtn.disabled=false}}
-    async function autoRedeemFromUrl(){const code=codeFromUrl();if(!code||autoRedeemStarted)return;autoRedeemStarted=true;if(manualCode)manualCode.value=code;await redeemCode(code)}
 
-    manualCode?.addEventListener("focus",()=>markKeyboardOpen(true));manualCode?.addEventListener("blur",()=>{setTimeout(()=>markKeyboardOpen(false),80)});if(window.visualViewport){viewportResizeHandler=()=>{const open=window.visualViewport.height < window.innerHeight-120;markKeyboardOpen(open&&document.activeElement===manualCode)};viewportScrollHandler=()=>{if(document.activeElement!==manualCode)resetMobileViewportState()};window.visualViewport.addEventListener("resize",viewportResizeHandler);window.visualViewport.addEventListener("scroll",viewportScrollHandler)}
-    loadBtn?.addEventListener("click",()=>redeemCode());manualCode?.addEventListener("input",()=>{manualCode.value=manualCode.value.toUpperCase().replace(/[^A-Z0-9_-]/g,"").slice(0,32)});document.getElementById("goHomeBtn")?.addEventListener("click",()=>goSafe("/pages/home.html"));document.addEventListener("click",(e)=>{const brand=e.target?.closest?.("#brandHome");if(brand){e.preventDefault();e.stopPropagation();goSafe("/pages/home.html");return}const link=e.target?.closest?.("a[href]");if(link){const href=String(link.getAttribute("href")||"");if(href&&!href.startsWith("#")&&!href.includes("/pages/code_load.html"))resetMobileViewportState()}},true);
-    window.addEventListener("focus",resetMobileViewportState);window.addEventListener("pagehide",()=>{if(window.visualViewport&&viewportResizeHandler)window.visualViewport.removeEventListener("resize",viewportResizeHandler);if(window.visualViewport&&viewportScrollHandler)window.visualViewport.removeEventListener("scroll",viewportScrollHandler);resetMobileViewportState()});window.addEventListener("beforeunload",resetMobileViewportState);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")resetMobileViewportState()});
-    getSession().then(async (session)=>{const code=codeFromUrl();if(!session?.user?.id){goSafe(loginUrlForCode(code));return}if(code)await autoRedeemFromUrl()}).catch(()=>{});
+    // ── State helpers ────────────────────────────────────────────────────────
+    function showLoading(){
+      stateLoading.classList.remove("hidden");
+      stateSuccess.classList.add("hidden");
+      stateError.classList.add("hidden");
+    }
+    function showSuccess(html){
+      stateLoading.classList.add("hidden");
+      stateError.classList.add("hidden");
+      successBody.innerHTML = html;
+      stateSuccess.classList.remove("hidden");
+    }
+    function showError(html){
+      stateLoading.classList.add("hidden");
+      stateSuccess.classList.add("hidden");
+      errorBody.innerHTML = html;
+      stateError.classList.remove("hidden");
+    }
+
+    // ── Utilities ────────────────────────────────────────────────────────────
+    function codeFromUrl(){
+      try{
+        const u = new URL(location.href);
+        return String(u.searchParams.get("kod")||u.searchParams.get("code")||"").trim().toUpperCase().replace(/[^A-Z0-9_-]/g,"").slice(0,32);
+      }catch{return ""}
+    }
+
+    function bridgeReturnPath(code=""){
+      const c = String(code||codeFromUrl()||"").trim().toUpperCase();
+      return c ? `/pages/code_load.html?kod=${encodeURIComponent(c)}` : "/pages/code_load.html";
+    }
+    function loginUrlForCode(code=""){
+      return `/pages/login.html?next=${encodeURIComponent(bridgeReturnPath(code))}`;
+    }
+
+    async function getSession(){
+      const {data:{session}} = await supabase.auth.getSession();
+      return session||null;
+    }
+    async function getAuthHeaders(session){
+      return {"Content-Type":"application/json",...(session?.access_token?{Authorization:`Bearer ${session.access_token}`}:{})};
+    }
+
+    async function refreshAccessState(session){
+      try{
+        if(!session?.access_token)return null;
+        const resp = await fetch(ACCESS_API,{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
+        const json = await resp.json().catch(()=>null);
+        if(resp.ok&&json){
+          window.__ITALKY_ACCESS__=json;
+          localStorage.setItem("italky_access_state",JSON.stringify(json));
+          window.dispatchEvent(new CustomEvent("italkyAccessReady",{detail:json}));
+        }
+        return json;
+      }catch{return null}
+    }
+
+    function mapPromoError(reasonRaw){
+      const reason=String(reasonRaw||"").trim().toUpperCase();
+      const m={
+        CODE_REQUIRED:"Lütfen geçerli bir aktivasyon kodu ile tekrar deneyin.",
+        PROMO_NOT_FOUND:"Bu kod sistemde kayıtlı değil.",
+        PROMO_ALREADY_USED:"Bu kod daha önce kullanılmıştır.",
+        PROMO_ALREADY_USED_BY_USER:"Bu kod bu hesapta daha önce kullanılmıştır.",
+        PROMO_INACTIVE:"Bu kod kullanıma kapalı.",
+        PROMO_NOT_ACTIVE:"Bu kod kullanıma kapalı.",
+        PROMO_NOT_ELIGIBLE_FOR_PAID_MEMBER:"Bu kod mevcut üyelik tipiniz için uygun değil.",
+        PROMO_NOT_ALLOWED_WHILE_MEMBERSHIP_ACTIVE:"Bu kod aktif üyelik sırasında kullanılamaz.",
+        PROMO_EXPIRED:"Bu kodun süresi dolmuş.",
+        PROMO_NOT_STARTED:"Bu kampanya henüz aktif değil.",
+        PROMO_USER_LIMIT_REACHED:"Bu kampanya için kullanım hakkınız dolmuş.",
+        PROMO_GLOBAL_LIMIT_REACHED:"Bu kampanyanın toplam kullanım limiti dolmuş.",
+        PROMO_ACCOUNT_MISMATCH:"Bu kod başka bir hesapla eşleşmiş.",
+        CAMPAIGN_NOT_FOUND:"Bu kodun kampanyası bulunamadı.",
+        PROFILE_NOT_FOUND:"Kullanıcı profili bulunamadı."
+      };
+      return m[reason]||"Kod uygulanamadı. Lütfen kodu kontrol edip tekrar deneyin.";
+    }
+
+    function renderSuccessHtml(json){
+      const lines = ["Kodunuz başarıyla uygulandı. Kullanım süreniz hesabınıza eklendi."];
+      if(json.membership_ends_at){
+        const d = new Date(json.membership_ends_at);
+        lines.push(`Yeni kullanım bitişi: <b>${d.toLocaleDateString("tr-TR")}</b>`);
+      }
+      return lines.join("<br>");
+    }
+
+    function openAppAfterRedeemSuccess(){
+      window.location.href = "italky://open";
+      setTimeout(()=>{
+        const isIOS = /iPad|iPhone|iPod|Mac/.test(navigator.userAgent);
+        window.location.href = isIOS
+          ? "https://apps.apple.com/app/italkyai/id6768123713"
+          : "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+      },2000);
+    }
+
+    // ── Core redeem ──────────────────────────────────────────────────────────
+    async function redeemCode(code){
+      if(!code||code.length < 4){
+        showError("Geçerli bir aktivasyon kodu bulunamadı.<br>Lütfen doğru linki kullandığınızdan emin olun.");
+        return;
+      }
+
+      const session = await getSession();
+      if(!session?.user?.id){
+        location.href = loginUrlForCode(code);
+        return;
+      }
+
+      showLoading();
+
+      try{
+        const res = await fetch(`${API_BASE}/api/promo/redeem`,{
+          method:"POST",
+          headers: await getAuthHeaders(session),
+          body: JSON.stringify({source:"manual", code, user_id:session.user.id})
+        });
+        const json = await res.json().catch(()=>null);
+        console.log("[code_load] redeem response",{status:res.status, json});
+
+        if(json?.ok){
+          await refreshAccessState(session);
+          showSuccess(renderSuccessHtml(json));
+          setTimeout(()=>openAppAfterRedeemSuccess(), 2000);
+        }else{
+          showError(mapPromoError(json?.reason||json?.detail));
+        }
+      }catch(e){
+        console.error("[code_load] redeem error",e);
+        showError("Bağlantı hatası oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.");
+      }
+    }
+
+    // ── Boot: auto-run on page load ──────────────────────────────────────────
+    (async()=>{
+      const code = codeFromUrl();
+
+      if(!code){
+        showError("Aktivasyon kodu bulunamadı.<br>Lütfen size gönderilen linki tam olarak kullanın.");
+        return;
+      }
+
+      const session = await getSession().catch(()=>null);
+      if(!session?.user?.id){
+        location.href = loginUrlForCode(code);
+        return;
+      }
+
+      await redeemCode(code);
+    })();
   </script>
 </body>
 </html>
