@@ -20,6 +20,9 @@
         .active-section { display: block !important; }
         .user-info { font-size: 14px; color: #a0aabf; margin-bottom: 20px; }
         .error-box { margin-top: 18px; padding: 14px; border: 1px solid rgba(255, 178, 178, .25); border-radius: 14px; background: rgba(255, 178, 178, .08); color: #ffd9d9; font-size: 14px; line-height: 1.5; }
+        .change-account { color: #a0aabf; font-size: 13px; text-decoration: underline; display: block; margin-bottom: 20px; }
+        .error-action { display: none; margin-top: 16px; }
+        .error-action.active-section { display: flex !important; }
         svg { width: 20px; height: 20px; margin-right: 10px; }
     </style>
 </head>
@@ -45,6 +48,7 @@
 
     <div id="confirm-section">
         <p class="user-info">Hesap: <strong id="user-email" style="color: #fff;"></strong></p>
+        <a href="#" onclick="changeAccount()" class="change-account">Farklı bir hesap seç</a>
         <p style="color: #ffb2b2; font-size: 13px; margin-bottom: 20px;">Bu işlem geri alınamaz.</p>
         <button id="confirm-btn" class="btn btn-confirm" onclick="triggerRedeem()">Aktivasyonu Onayla</button>
     </div>
@@ -56,6 +60,7 @@
 
     <div id="error-section">
         <div id="error-text" class="error-box"></div>
+        <button id="open-app-btn" class="btn btn-confirm error-action" onclick="redirectToApp()">Uygulamayı Aç</button>
     </div>
 </div>
 
@@ -71,6 +76,7 @@
     const loadingSection = document.getElementById("loading-section");
     const errorSection = document.getElementById("error-section");
     const errorText = document.getElementById("error-text");
+    const openAppBtn = document.getElementById("open-app-btn");
     const userEmail = document.getElementById("user-email");
     const confirmBtn = document.getElementById("confirm-btn");
 
@@ -95,10 +101,28 @@
         return code ? `/pages/code_load.html?kod=${encodeURIComponent(code)}` : "/pages/code_load.html";
     }
 
-    function showError(message) {
+    function showError(message, { showOpenApp = false } = {}) {
         errorText.textContent = message || "Aktivasyon sırasında bir hata oluştu.";
+        openAppBtn.classList.toggle("active-section", showOpenApp);
         show(errorSection);
     }
+
+    function isAlreadyUsedError(errorValue) {
+        return String(errorValue || "").toUpperCase().includes("ALREADY_USED");
+    }
+
+    window.redirectToApp = function redirectToApp() {
+        window.location.href = "italkyai://";
+
+        setTimeout(() => {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+                window.location.href = IOS_STORE;
+            } else {
+                window.location.href = ANDROID_STORE;
+            }
+        }, 2500);
+    };
 
     async function refreshSession() {
         const { data, error } = await supabase.auth.getSession();
@@ -146,6 +170,14 @@
             if (error) throw error;
         } catch (error) {
             showError(error?.message || "Google girişi başlatılamadı.");
+        }
+    };
+
+    window.changeAccount = async function changeAccount() {
+        try {
+            await supabase.auth.signOut();
+        } finally {
+            window.location.reload();
         }
     };
 
@@ -201,20 +233,16 @@
             try { json = JSON.parse(rawBody); } catch {}
 
             if (!response.ok || !json?.ok) {
-                throw new Error(json?.reason || json?.detail || rawBody || `API hata kodu: ${response.status}`);
+                const reason = json?.reason || json?.detail || rawBody || `API hata kodu: ${response.status}`;
+                if (isAlreadyUsedError(reason)) {
+                    showError("Bu kod daha önce kullanılmıştır.", { showOpenApp: true });
+                    return;
+                }
+                throw new Error(reason);
             }
 
             show(loadingSection);
-            window.location.href = "italkyai://";
-
-            setTimeout(() => {
-                const ua = navigator.userAgent || navigator.vendor || window.opera;
-                if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
-                    window.location.href = IOS_STORE;
-                } else {
-                    window.location.href = ANDROID_STORE;
-                }
-            }, 2500);
+            redirectToApp();
         } catch (error) {
             confirmBtn.disabled = false;
             confirmBtn.textContent = "Aktivasyonu Onayla";
