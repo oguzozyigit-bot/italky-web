@@ -5,7 +5,7 @@ const ADMIN_EMAILS = [
 ];
 
 const TABLE_NAME = "web_promo_codes";
-const QR_BASE_URL = "https://italky.ai/kampanya?kod=";
+const QR_BASE_URL = "https://italky.ai/pages/code_load.html?kod=";
 const BASE_SELECT_COLUMNS = "code,days,status,max_uses,used_count,expires_at,note";
 const NFC_SELECT_COLUMNS = "nfc_written,nfc_written_at,nfc_written_by,nfc_write_locked,nfc_write_note";
 const PROMO_SELECT_COLUMNS = `${BASE_SELECT_COLUMNS},${NFC_SELECT_COLUMNS}`;
