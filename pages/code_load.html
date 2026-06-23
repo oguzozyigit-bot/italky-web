@@ -136,13 +136,18 @@
       border:none;border-radius:14px;
       font-size:16px;font-weight:800;
       cursor:pointer;letter-spacing:.2px;
-      transition:background .15s,transform .1s;
+      transition:background .15s,transform .1s,box-shadow .2s;
       font-family:'Inter',sans-serif;
       position:relative;overflow:hidden;
+      box-shadow:0 0 0 0 rgba(163,230,53,0);
     }
-    .confirm-btn:hover{background:#bef264}
-    .confirm-btn:active{transform:scale(.98)}
-    .confirm-btn:disabled{opacity:.55;cursor:default}
+    .confirm-btn:hover:not(:disabled){
+      background:#bef264;
+      box-shadow:0 0 22px 4px rgba(163,230,53,.35),0 0 8px 1px rgba(163,230,53,.2);
+      transform:translateY(-1px);
+    }
+    .confirm-btn:active:not(:disabled){transform:scale(.98);box-shadow:none}
+    .confirm-btn:disabled{opacity:.55;cursor:default;box-shadow:none}
     .confirm-btn-brand{
       display:block;font-size:10px;font-weight:700;
       color:rgba(13,17,23,.55);letter-spacing:.8px;
@@ -490,6 +495,7 @@
     confirmBtn?.addEventListener("click", async()=>{
       const code=codeFromUrl();
       confirmBtn.disabled=true;
+      confirmBtn.innerHTML=`<span class="confirm-btn-brand">italk<span class="y">Y</span>AI</span>İşleniyor…`;
       showLoading();
 
       let user=null;
