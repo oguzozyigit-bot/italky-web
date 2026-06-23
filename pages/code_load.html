@@ -411,66 +411,32 @@
       }
     }
 
-    // ── Boot: strict 5-step auth → redeem ───────────────────────────────────
-    (async()=>{
+    // ── Entry point ──────────────────────────────────────────────────────────
+    async function checkAuthAndRedeem() {
       const code = codeFromUrl();
 
-      if(!code){
-        showError("Aktivasyon kodu bulunamadı.<br>Lütfen size gönderilen linki tam olarak kullanın.");
+      if (!code) {
+        showError("Aktivasyon kodu bulunamadı.<br>Lütfen size gönderilen linki tam olarak kullanın.", "Kod Eksik");
         return;
       }
 
       showAuth();
 
-      const params = new URL(location.href).searchParams;
-      const isPostLogin = params.get("fl") === "1";
+      // Step 1: Check active session
+      const { data } = await supabase.auth.getSession();
 
-      if(!isPostLogin){
-        // ── FIRST VISIT: force sign-out, then redirect to login ──────────────
-
-        // Step 1: Sign out — clear any cached/remembered session tokens
-        try{ await supabase.auth.signOut(); }catch{}
-
-        // Step 2: Confirm session is truly gone
-        let lingering = null;
-        try{ lingering = await getSession(); }catch{}
-        if(lingering?.user?.id){
-          // SSO or persistent token survived signOut — hard reload to flush it
-          location.reload();
-          return;
-        }
-
-        // Step 3: Redirect to login with forced account selection
-        // fl=1 in the next URL tells us on return that the user just authenticated
-        location.href = loginUrlForCode(code);
+      // Step 2: No session → force login with prompt=select_account
+      if (!data.session) {
+        window.location.href = loginUrlForCode(code);
         return;
       }
 
-      // ── POST-LOGIN RETURN (fl=1): verify user, then redeem ────────────────
-
-      // Clean fl param from URL so back/refresh doesn't retrigger this path
-      try{
-        const clean = new URL(location.href);
-        clean.searchParams.delete("fl");
-        history.replaceState({}, "", clean.toString());
-      }catch{}
-
-      // Step 4: Server-side user verification via getUser() (validates JWT with Supabase)
-      let verifiedUser = null;
-      try{
-        const {data, error} = await supabase.auth.getUser();
-        if(!error) verifiedUser = data?.user || null;
-      }catch{}
-
-      if(!verifiedUser?.id){
-        showError("Giriş doğrulanamadı. Lütfen tekrar deneyin.", "Kimlik Hatası");
-        return;
-      }
-
-      // Step 5: Session confirmed & user verified — run activation
+      // Step 3: Session exists → proceed with activation
       showLoading();
-      await redeemCode(code, verifiedUser);
-    })();
+      await redeemCode(code, data.session.user);
+    }
+
+    checkAuthAndRedeem();
   </script>
 </body>
 </html>
