@@ -190,7 +190,7 @@ function rowMatchesFilter(row, filter = currentFilter) {
     case "available":
       return status === "active" && hasUsesLeft(row) && !nfcLocked && !isExpired(row);
     case "active":
-      return status === "active";
+      return status === "active" && !isUsed(row);
     case "nfc_unwritten":
       return status === "active" && !nfcLocked;
     case "nfc_written":
