@@ -94,9 +94,16 @@
     .loading-label{
       font-size:15px;
       font-weight:600;
-      color:rgba(255,255,255,.72);
+      color:rgba(255,255,255,.80);
       animation:pulse 1.8s ease infinite;
       line-height:1.6;
+    }
+    .loading-sub{
+      margin-top:8px;
+      font-size:12px;
+      font-weight:500;
+      color:rgba(255,255,255,.35);
+      letter-spacing:.3px;
     }
 
     .home-btn{
@@ -138,10 +145,11 @@
     <div class="card">
       <div class="brand">italk<span>y</span>AI</div>
 
-      <!-- Loading state -->
+      <!-- Loading state (auth check + activation) -->
       <div id="stateLoading">
         <div class="spinner"></div>
-        <div class="loading-label">Lütfen bekleyiniz,<br>aktivasyon devam ediyor…</div>
+        <div id="loadingLabel" class="loading-label">Oturumunuz doğrulanıyor…</div>
+        <div id="loadingSub" class="loading-sub">Lütfen bekleyiniz</div>
       </div>
 
       <!-- Success state -->
@@ -175,11 +183,13 @@
     const SHELL_SIGNATURE_HTML = `<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
 
     // ── DOM ──────────────────────────────────────────────────────────────────
-    const stateLoading = document.getElementById("stateLoading");
-    const stateSuccess = document.getElementById("stateSuccess");
-    const stateError   = document.getElementById("stateError");
-    const successBody  = document.getElementById("successBody");
-    const errorBody    = document.getElementById("errorBody");
+    const stateLoading  = document.getElementById("stateLoading");
+    const stateSuccess  = document.getElementById("stateSuccess");
+    const stateError    = document.getElementById("stateError");
+    const successBody   = document.getElementById("successBody");
+    const errorBody     = document.getElementById("errorBody");
+    const loadingLabel  = document.getElementById("loadingLabel");
+    const loadingSub    = document.getElementById("loadingSub");
 
     // ── Shell ready ──────────────────────────────────────────────────────────
     function standardizeShellSignature(){
@@ -201,10 +211,19 @@
     waitForShellReady();
 
     // ── State helpers ────────────────────────────────────────────────────────
+    function showAuth(){
+      stateLoading.classList.remove("hidden");
+      stateSuccess.classList.add("hidden");
+      stateError.classList.add("hidden");
+      if(loadingLabel) loadingLabel.textContent = "Oturumunuz doğrulanıyor…";
+      if(loadingSub)   loadingSub.textContent   = "Lütfen bekleyiniz";
+    }
     function showLoading(){
       stateLoading.classList.remove("hidden");
       stateSuccess.classList.add("hidden");
       stateError.classList.add("hidden");
+      if(loadingLabel) loadingLabel.textContent = "Lütfen bekleyiniz,\naktivasyonunuz devam ediyor…";
+      if(loadingSub)   loadingSub.textContent   = "Bu işlem birkaç saniye sürebilir";
     }
     function showSuccess(html){
       stateLoading.classList.add("hidden");
@@ -305,13 +324,13 @@
         return;
       }
 
-      const session = await getSession();
+      // Re-fetch session as safety net (token may have refreshed after login redirect)
+      const session = await getSession().catch(()=>null);
       if(!session?.user?.id){
         location.href = loginUrlForCode(code);
         return;
       }
 
-      showLoading();
 
       try{
         const res = await fetch(`${API_BASE}/api/promo/redeem`,{
@@ -335,7 +354,7 @@
       }
     }
 
-    // ── Boot: auto-run on page load ──────────────────────────────────────────
+    // ── Boot: session check → then redeem ───────────────────────────────────
     (async()=>{
       const code = codeFromUrl();
 
@@ -344,12 +363,20 @@
         return;
       }
 
-      const session = await getSession().catch(()=>null);
+      // Phase 1: show auth-check state
+      showAuth();
+
+      let session = null;
+      try{ session = await getSession(); }catch{ session = null; }
+
       if(!session?.user?.id){
+        // Not logged in → go to login, which forces Google account selection
         location.href = loginUrlForCode(code);
         return;
       }
 
+      // Phase 2: session confirmed → switch to activation loading state
+      showLoading();
       await redeemCode(code);
     })();
   </script>
