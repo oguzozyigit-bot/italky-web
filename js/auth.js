@@ -365,6 +365,24 @@ export async function loginWithGoogle(next = "") {
   return data;
 }
 
+export async function loginWithApple(next = "") {
+  const safeNext = safeRedirectPath(next);
+  const callbackUrl = new URL("/pages/auth_callback.html", location.origin);
+  if (safeNext) {
+    callbackUrl.searchParams.set("next", safeNext);
+  }
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "apple",
+    options: {
+      redirectTo: callbackUrl.toString(),
+      skipBrowserRedirect: true,
+    }
+  });
+  if (error) throw error;
+  openOAuthUrlOutsideWebView(data?.url || "");
+  return data;
+}
+
 function buildCache(user, profile) {
   return {
     id: profile?.id || user?.id || null,
