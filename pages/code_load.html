@@ -162,9 +162,9 @@
       <!-- Error state -->
       <div id="stateError" class="hidden">
         <div class="state-icon err">✕</div>
-        <div class="state-title">Aktivasyon Başarısız</div>
+        <div id="errorTitle" class="state-title">Aktivasyon Başarısız</div>
         <div id="errorBody" class="state-body"></div>
-        <a href="https://italky.ai" class="home-btn" id="goHomeBtn">Anasayfaya Dön</a>
+        <a id="errorActionBtn" href="#" class="home-btn" target="_blank" rel="noopener">Uygulamayı İndir</a>
       </div>
     </div>
   </main>
@@ -183,13 +183,15 @@
     const SHELL_SIGNATURE_HTML = `<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
 
     // ── DOM ──────────────────────────────────────────────────────────────────
-    const stateLoading  = document.getElementById("stateLoading");
-    const stateSuccess  = document.getElementById("stateSuccess");
-    const stateError    = document.getElementById("stateError");
-    const successBody   = document.getElementById("successBody");
-    const errorBody     = document.getElementById("errorBody");
-    const loadingLabel  = document.getElementById("loadingLabel");
-    const loadingSub    = document.getElementById("loadingSub");
+    const stateLoading   = document.getElementById("stateLoading");
+    const stateSuccess   = document.getElementById("stateSuccess");
+    const stateError     = document.getElementById("stateError");
+    const successBody    = document.getElementById("successBody");
+    const errorBody      = document.getElementById("errorBody");
+    const errorTitle     = document.getElementById("errorTitle");
+    const errorActionBtn = document.getElementById("errorActionBtn");
+    const loadingLabel   = document.getElementById("loadingLabel");
+    const loadingSub     = document.getElementById("loadingSub");
 
     // ── Shell ready ──────────────────────────────────────────────────────────
     function standardizeShellSignature(){
@@ -231,10 +233,12 @@
       successBody.innerHTML = html;
       stateSuccess.classList.remove("hidden");
     }
-    function showError(html){
+    function showError(html, title = "Aktivasyon Başarısız"){
       stateLoading.classList.add("hidden");
       stateSuccess.classList.add("hidden");
+      if(errorTitle)     errorTitle.textContent = title;
       errorBody.innerHTML = html;
+      if(errorActionBtn) errorActionBtn.href = storeUrlForDevice();
       stateError.classList.remove("hidden");
     }
 
@@ -251,7 +255,15 @@
       return c ? `/pages/code_load.html?kod=${encodeURIComponent(c)}` : "/pages/code_load.html";
     }
     function loginUrlForCode(code=""){
-      return `/pages/login.html?next=${encodeURIComponent(bridgeReturnPath(code))}`;
+      return `/pages/login.html?next=${encodeURIComponent(bridgeReturnPath(code))}&prompt=select_account`;
+    }
+
+    const IOS_STORE     = "https://apps.apple.com/app/italkyai/id6768123713";
+    const ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+    const ANDROID_PKG   = "com.ozyigits.italkyai";
+
+    function storeUrlForDevice(){
+      return /Android/.test(navigator.userAgent) ? ANDROID_STORE : IOS_STORE;
     }
 
     async function getSession(){
@@ -274,6 +286,18 @@
         }
         return json;
       }catch{return null}
+    }
+
+    function mapPromoTitle(reasonRaw){
+      const r = String(reasonRaw||"").trim().toUpperCase();
+      if(r.includes("ALREADY_USED"))  return "Kod Zaten Kullanılmış";
+      if(r.includes("NOT_FOUND"))     return "Kod Bulunamadı";
+      if(r.includes("EXPIRED"))       return "Kodun Süresi Dolmuş";
+      if(r.includes("INACTIVE")||r.includes("NOT_ACTIVE")) return "Kod Aktif Değil";
+      if(r.includes("LIMIT"))         return "Kullanım Limiti Dolmuş";
+      if(r.includes("MISMATCH"))      return "Hesap Uyuşmazlığı";
+      if(r.includes("ELIGIBLE"))      return "Uygun Değil";
+      return "Aktivasyon Başarısız";
     }
 
     function mapPromoError(reasonRaw){
@@ -308,13 +332,26 @@
     }
 
     function openAppAfterRedeemSuccess(){
-      window.location.href = "italky://open";
-      setTimeout(()=>{
-        const isIOS = /iPad|iPhone|iPod|Mac/.test(navigator.userAgent);
-        window.location.href = isIOS
-          ? "https://apps.apple.com/app/italkyai/id6768123713"
-          : "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
-      },2000);
+      const ua = navigator.userAgent;
+      const isAndroid = /Android/.test(ua);
+      const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+
+      if(isAndroid){
+        // intent:// tries to open app; S.browser_fallback_url handles "not installed" case
+        const fallback = encodeURIComponent(ANDROID_STORE);
+        window.location.href =
+          `intent://open#Intent;scheme=italky;package=${ANDROID_PKG};S.browser_fallback_url=${fallback};end`;
+        // Safety fallback: if browser doesn't support intent:, go to store
+        setTimeout(()=>{ window.location.href = ANDROID_STORE; }, 2500);
+      } else if(isIOS){
+        // Custom scheme: opens app if installed; browser silently fails if not
+        window.location.href = "italky://open";
+        // After 2s if page is still visible, app wasn't installed → go to App Store
+        setTimeout(()=>{ window.location.href = IOS_STORE; }, 2000);
+      } else {
+        // Desktop / unknown
+        window.location.href = "https://italky.ai";
+      }
     }
 
     // ── Core redeem ──────────────────────────────────────────────────────────
@@ -342,15 +379,17 @@
         console.log("[code_load] redeem response",{status:res.status, json});
 
         if(json?.ok){
+          // Wait for server-side state to be confirmed before any redirect
           await refreshAccessState(session);
           showSuccess(renderSuccessHtml(json));
           setTimeout(()=>openAppAfterRedeemSuccess(), 2000);
         }else{
-          showError(mapPromoError(json?.reason||json?.detail));
+          const rawReason = json?.reason||json?.detail||"";
+          showError(mapPromoError(rawReason), mapPromoTitle(rawReason));
         }
       }catch(e){
         console.error("[code_load] redeem error",e);
-        showError("Bağlantı hatası oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.");
+        showError("Bağlantı hatası oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.", "Bağlantı Hatası");
       }
     }
 
