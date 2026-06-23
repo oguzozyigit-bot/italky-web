@@ -449,24 +449,33 @@
       return lines.join("<br>");
     }
     function openAppAfterRedeemSuccess(){
+      // Called only after API returns 200 OK — no race condition possible.
+      // visibilitychange trick: if the app opens, the browser tab becomes hidden
+      // and we cancel the store fallback timer so we don't double-redirect.
       const ua=navigator.userAgent;
       const isAndroid=/Android/.test(ua);
       const isIOSDevice=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
+      const storeUrl=isAndroid?ANDROID_STORE:IOS_STORE;
+
+      if(!isAndroid&&!isIOSDevice){
+        // Desktop: go straight to App Store page
+        window.location.href=storeUrl;
+        return;
+      }
+
+      // Set store fallback timer; cancel it if the app actually opens
+      const storeTimer=setTimeout(()=>{window.location.href=storeUrl},2500);
+      document.addEventListener("visibilitychange",()=>{
+        if(document.hidden) clearTimeout(storeTimer);
+      },{once:true});
+
       if(isAndroid){
-        // intent:// handles store fallback natively via S.browser_fallback_url
+        // intent:// has built-in S.browser_fallback_url for "app not installed" case;
+        // visibilitychange handles "app opened" case — no extra setTimeout needed.
         const fb=encodeURIComponent(ANDROID_STORE);
         window.location.href=`intent://open#Intent;scheme=italkyai;package=${ANDROID_PKG};S.browser_fallback_url=${fb};end`;
-        // Safety net in case intent:// doesn't fire
-        setTimeout(()=>{window.location.href=ANDROID_STORE},3000);
-      }else if(isIOSDevice){
-        // visibilitychange: if user goes to app, tab becomes hidden → cancel store timer
-        let storeTimer=setTimeout(()=>{window.location.href=IOS_STORE},2500);
-        document.addEventListener("visibilitychange",()=>{
-          if(document.hidden) clearTimeout(storeTimer);
-        },{once:true});
-        window.location.href="italkyai://";
       }else{
-        window.location.href=IOS_STORE;
+        window.location.href="italkyai://";
       }
     }
 
@@ -549,7 +558,7 @@
     confirmBtn?.addEventListener("click", async()=>{
       const code=codeFromUrl();
       confirmBtn.disabled=true;
-      confirmBtn.innerHTML=`<span class="confirm-btn-brand">italky<span class="ai">AI</span></span>İşleniyor…`;
+      confirmBtn.innerHTML=`<span class="confirm-btn-brand">italky<span class="ai">AI</span></span>Onaylanıyor…`;
       showLoading();
 
       let user=null;
