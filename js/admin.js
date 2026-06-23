@@ -142,8 +142,18 @@ function generatePromoCode() {
   throw new Error("Promosyon kodu üretilemedi");
 }
 
+const KAMPANYA_QR_BASE = "https://italky.ai/kampanya?kod=";
+// Backend POST /api/promo/redeem reads web_promo_codes first, then promo_codes (code_value column).
+const PROMO_CODES_TABLE = "promo_codes";
+const PROMO_REDEMPTIONS_TABLE = "promo_redemptions";
+
 function buildQrUrl(code) {
-  return `${location.origin}/pages/promo_gate.html?code=${encodeURIComponent(code)}`;
+  const normalized = String(code || "").trim().toUpperCase();
+  return `${KAMPANYA_QR_BASE}${encodeURIComponent(normalized)}`;
+}
+
+function logPromoTable(action, table, extra = {}) {
+  console.log(`[admin promo] ${action} → table: ${table}`, extra);
 }
 
 // ---------------------------------------------------------
@@ -157,12 +167,14 @@ async function apiGet(path) {
       return { items: data || [] };
     }
     if (path === "/promo/codes") {
-      const { data, error } = await supabase.from("web_promo_codes").select("*, promo_campaigns(*)");
+      logPromoTable("SELECT", PROMO_CODES_TABLE, { path: "/promo/codes" });
+      const { data, error } = await supabase.from(PROMO_CODES_TABLE).select("*, promo_campaigns(*)");
       if (error) throw error;
       return { items: data || [] };
     }
     if (path === "/promo/redemptions") {
-      const { data, error } = await supabase.from("web_promo_code_redemptions").select("*");
+      logPromoTable("SELECT", PROMO_REDEMPTIONS_TABLE, { path: "/promo/redemptions" });
+      const { data, error } = await supabase.from(PROMO_REDEMPTIONS_TABLE).select("*");
       if (error) throw error;
       return { items: data || [] };
     }
@@ -181,13 +193,21 @@ async function apiPost(path, body) {
       return { item: data };
     }
     if (path === "/promo/codes") {
-      const { data, error } = await supabase.from("web_promo_codes").insert([body]).select();
+      logPromoTable("INSERT", PROMO_CODES_TABLE, {
+        path: "/promo/codes",
+        code_value: body?.code_value || body?.code || null
+      });
+      const { data, error } = await supabase.from(PROMO_CODES_TABLE).insert([body]).select();
       if (error) throw error;
       return { item: data };
     }
     if (path === "/promo/codes/status") {
-      // is_active sütununu güncelliyoruz
-      const { error } = await supabase.from("web_promo_codes")
+      logPromoTable("UPDATE", PROMO_CODES_TABLE, {
+        path: "/promo/codes/status",
+        code_value: body?.code_value || null,
+        is_active: body?.is_active
+      });
+      const { error } = await supabase.from(PROMO_CODES_TABLE)
         .update({ is_active: body.is_active })
         .eq("code_value", body.code_value);
       if (error) throw error;
@@ -426,7 +446,7 @@ function mapCreatedCode(codeRow, base) {
     membership_months: base.membership_months,
     token_amount: base.token_amount,
     package_code: base.package_code,
-    qr_url: buildQrUrl(codeRow?.code_value || "")
+    qr_url: buildQrUrl(codeRow?.code_value || codeRow?.code || "")
   };
 }
 
@@ -440,7 +460,8 @@ async function createSinglePromoRecord() {
     campaign_id: campaignId,
     code_value: singleCode,
     delivery_type: base.delivery_type,
-    is_active: true
+    is_active: true,
+    is_used: false
   });
 
   const codeRow = Array.isArray(codeRes?.item) ? codeRes.item[0] : codeRes?.item;
@@ -461,7 +482,8 @@ async function createBulkPromoRecords() {
       campaign_id: campaignId,
       code_value: codeVal,
       delivery_type: base.delivery_type,
-      is_active: true
+      is_active: true,
+      is_used: false
     });
 
     const codeRow = Array.isArray(codeRes?.item) ? codeRes.item[0] : codeRes?.item;
