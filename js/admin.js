@@ -142,14 +142,18 @@ function generatePromoCode() {
   throw new Error("Promosyon kodu üretilemedi");
 }
 
-const KAMPANYA_QR_BASE = "https://italky.ai/kampanya?kod=";
+const CODE_LOAD_QR_BASE = "https://italky.ai/pages/code_load.html?kod=";
 // Backend POST /api/promo/redeem reads web_promo_codes first, then promo_codes (code_value column).
 const PROMO_CODES_TABLE = "promo_codes";
 const PROMO_REDEMPTIONS_TABLE = "promo_redemptions";
 
 function buildQrUrl(code) {
   const normalized = String(code || "").trim().toUpperCase();
-  return `${KAMPANYA_QR_BASE}${encodeURIComponent(normalized)}`;
+  return `${CODE_LOAD_QR_BASE}${encodeURIComponent(normalized)}`;
+}
+
+function qrLinkForCode(code) {
+  return buildQrUrl(code);
 }
 
 function logPromoTable(action, table, extra = {}) {
