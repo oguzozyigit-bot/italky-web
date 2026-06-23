@@ -217,7 +217,7 @@
       stateLoading.classList.remove("hidden");
       stateSuccess.classList.add("hidden");
       stateError.classList.add("hidden");
-      if(loadingLabel) loadingLabel.textContent = "Oturumunuz doğrulanıyor…";
+      if(loadingLabel) loadingLabel.textContent = "Hesabınız doğrulanıyor…";
       if(loadingSub)   loadingSub.textContent   = "Lütfen bekleyiniz";
     }
     function showLoading(){
@@ -420,20 +420,30 @@
         return;
       }
 
+      // Show "Hesabınız doğrulanıyor..." while we verify identity
       showAuth();
 
-      // Step 1: Check active session
-      const { data } = await supabase.auth.getSession();
+      // Step 1: Server-side user verification via getUser().
+      // Unlike getSession() (reads localStorage), getUser() validates the JWT
+      // with Supabase servers — stale/wrong cached sessions cannot pass this check.
+      let verifiedUser = null;
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (!error) verifiedUser = data?.user || null;
+      } catch {}
 
-      // Step 2: No session → force login with prompt=select_account
-      if (!data.session) {
+      // Step 2: No verified user → stop, redirect to login with forced account selection.
+      // loginUrlForCode appends &prompt=select_account so auth.js forces the Google
+      // account picker — automatic/wrong account selection is blocked.
+      if (!verifiedUser?.id) {
         window.location.href = loginUrlForCode(code);
         return;
       }
 
-      // Step 3: Session exists → proceed with activation
+      // Step 3: Identity confirmed → run activation with the verified user_id.
+      // redeemCode will not touch the database until user.id is present.
       showLoading();
-      await redeemCode(code, data.session.user);
+      await redeemCode(code, verifiedUser);
     }
 
     checkAuthAndRedeem();
