@@ -56,10 +56,18 @@
 
     function showToast(text){if(!toastEl||!text)return;toastEl.textContent=text;toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),3600)}
 
+    const REDIRECT_AFTER_LOGIN_KEY = "redirectAfterLogin";
+
     // next param — returns the code_load.html URL or home as fallback
     function nextTarget(){
       try{return new URLSearchParams(location.search||"").get("next")||"/pages/home.html"}
       catch{return "/pages/home.html"}
+    }
+
+    function rememberRedirectAfterLogin(next){
+      try{
+        if(next) sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY,next);
+      }catch{}
     }
 
     // Show Apple button on iOS, place it first
@@ -78,6 +86,7 @@
       if(googleBusy)return;
       googleBusy=true;
       const next=nextTarget();
+      rememberRedirectAfterLogin(next);
       try{
         console.warn("[ITALKY AUTH] google button clicked",{next});
         const {data}=await supabase.auth.getSession();
@@ -98,6 +107,7 @@
       appleBusy=true;
       appleBtn.disabled=true;
       const next=nextTarget();
+      rememberRedirectAfterLogin(next);
       try{
         console.warn("[ITALKY AUTH] apple button clicked",{next});
         await loginWithApple(next);

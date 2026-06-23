@@ -78,6 +78,7 @@
     const HOME = "/pages/home.html";
     const MEMBERSHIP = "/pages/membership.html";
     const ACCESS_API = "https://italky-api.onrender.com/api/session/access-state";
+    const REDIRECT_AFTER_LOGIN_KEY = "redirectAfterLogin";
     const errBox = document.getElementById("errBox");
 
     function authLog(reason, detail = {}){
@@ -109,6 +110,17 @@
       }catch{
         return "";
       }
+    }
+
+    function consumeRedirectAfterLogin(){
+      try{
+        const target = safePath(sessionStorage.getItem(REDIRECT_AFTER_LOGIN_KEY) || "");
+        if (target) {
+          sessionStorage.removeItem(REDIRECT_AFTER_LOGIN_KEY);
+          return target;
+        }
+      }catch{}
+      return "";
     }
 
     function goLogin(next = MEMBERSHIP){
@@ -172,8 +184,12 @@
     }
 
     function resolvePostLoginTarget(access){
+      const storedRedirect = consumeRedirectAfterLogin();
+      if (storedRedirect) return storedRedirect;
+      const next = getNextTarget();
+      if (next) return next;
       if (isActiveAccess(access)) return HOME;
-      return getNextTarget() || MEMBERSHIP;
+      return MEMBERSHIP;
     }
 
     try{
