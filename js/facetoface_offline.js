@@ -826,11 +826,15 @@ async function offlineTranslateText(text, from, to) {
 
     const onResult = (e) => {
       const detail = e?.detail || {};
-      if (!detail.ok) {
-        finish(reject, new Error(detail.error || "offline_translate_failed"));
+      // Native bridge returns {translatedText, status} — never {ok: true}
+      const value = String(
+        detail.translatedText || detail.translation || detail.result || detail.text || ""
+      ).trim();
+      if (!value) {
+        finish(reject, new Error(detail.error || "offline_translate_empty"));
         return;
       }
-      finish(resolve, String(detail.translatedText || "").trim());
+      finish(resolve, value);
     };
 
     const timer = setTimeout(() => {
