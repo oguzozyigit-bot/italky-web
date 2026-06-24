@@ -163,7 +163,7 @@ function hasAnyInstalledOfflinePair() {
 }
 
 function pairKey(a, b) {
-  return `${canonical(a)}__${canonical(b)}`;
+  return `${canonical(a)}_${canonical(b)}`;
 }
 
 function hasInstalledBiDirectional(a, b) {

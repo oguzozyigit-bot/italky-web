@@ -397,7 +397,7 @@ function clearStaleDownloadingState() {
   Object.keys(map).forEach((code) => {
     const item = map[code];
     const updatedAt = Number(item?.updatedAt || 0);
-    if (!updatedAt || now - updatedAt > 8 * 60 * 1000 || isLangInstalledBiDirectional(code)) {
+    if (!updatedAt || now - updatedAt > 30 * 60 * 1000 || isLangInstalledBiDirectional(code)) {
       delete map[code];
       changed = true;
     }

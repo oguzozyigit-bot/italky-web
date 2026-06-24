@@ -33,12 +33,20 @@ const LANGS = [
 ];
 
 const STORAGE = {
-  nativeLang: "italky_native_lang_v1",
+  nativeLang: "italky_native_lang_v7",
   installedV6: "italky_offline_installed_packs_v6",
   installedV5: "italky_offline_installed_packs_v5",
+  installedPairsV7: "italky_offline_installed_pairs_v7",
   installing: "italky_offline_installing_v1",
   installState: "italky_offline_install_state_v1"
 };
+// Migrate v1 → v7 once
+try {
+  const v1 = localStorage.getItem("italky_native_lang_v1");
+  if (v1 && !localStorage.getItem("italky_native_lang_v7")) {
+    localStorage.setItem("italky_native_lang_v7", v1);
+  }
+} catch {}
 
 const listEl = document.getElementById("langList");
 const saveBtn = document.getElementById("saveBtn");
@@ -102,6 +110,26 @@ function saveInstalledPacks(list) {
   const json = JSON.stringify(clean);
   localStorage.setItem(STORAGE.installedV6, json);
   localStorage.setItem(STORAGE.installedV5, json);
+
+  // Mirror to v7 pairs format so offline_languages_page and facetoface_offline can read them
+  try {
+    const existing = JSON.parse(localStorage.getItem(STORAGE.installedPairsV7) || "{}");
+    const nativeLang = localStorage.getItem(STORAGE.nativeLang) || "tr";
+    const nativeLangCode = String(nativeLang).toLowerCase().split("-")[0];
+    const ready = clean.filter(x => x?.status === "ready" && x?.lang);
+    for (const pack of ready) {
+      const lang = String(pack.lang).toLowerCase().split("-")[0];
+      const expiresAt = pack.expires_at || "2099-12-31T23:59:59.000Z";
+      const installedAt = pack.starts_at || new Date().toISOString();
+      if (lang !== nativeLangCode) {
+        const k1 = `${nativeLangCode}_${lang}`;
+        const k2 = `${lang}_${nativeLangCode}`;
+        existing[k1] = { from: nativeLangCode, to: lang, installedAt, expiresAt };
+        existing[k2] = { from: lang, to: nativeLangCode, installedAt, expiresAt };
+      }
+    }
+    localStorage.setItem(STORAGE.installedPairsV7, JSON.stringify(existing));
+  } catch {}
 }
 
 function upsertInstalledPack(entry) {

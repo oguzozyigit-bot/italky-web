@@ -9,8 +9,8 @@ const ACTIVE_KEY = "italky_offline_download_active_v1";
 const GUEST_MODE_KEY = "italky_guest_mode_v1";
 const BT_GUEST_MODAL_ID = "italkyBtGuestRewardModal";
 
-const ACTIVE_STALE_MS = 8 * 60 * 1000;
-const PENDING_START_TIMEOUT_MS = 6 * 60 * 1000;
+const ACTIVE_STALE_MS = 30 * 60 * 1000;
+const PENDING_START_TIMEOUT_MS = 30 * 60 * 1000;
 const BT_GUEST_REWARD_INTERVAL_MS = 3 * 60 * 1000;
 
 let pendingRewardResolve = null;

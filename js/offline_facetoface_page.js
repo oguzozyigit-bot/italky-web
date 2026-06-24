@@ -6,6 +6,7 @@ const OFFLINE_PACK_KEYS = [
   "italky_offline_installed_packs_v6",
   "italky_offline_installed_packs_v5"
 ];
+const OFFLINE_PAIRS_V7_KEY = "italky_offline_installed_pairs_v7";
 
 const frameRoot = $("frameRoot");
 const topLangBtn = $("topLangBtn");
@@ -274,6 +275,29 @@ function getInstalledPacks() {
       if (Array.isArray(parsed)) merged.push(...parsed);
     } catch {}
   }
+
+  // Also read from v7 pairs format used by offline_languages_page
+  try {
+    const pairs = JSON.parse(localStorage.getItem(OFFLINE_PAIRS_V7_KEY) || "{}");
+    const langs = new Set();
+    for (const pair of Object.values(pairs)) {
+      if (pair?.from) langs.add(String(pair.from).toLowerCase().split("-")[0]);
+      if (pair?.to) langs.add(String(pair.to).toLowerCase().split("-")[0]);
+    }
+    for (const lang of langs) {
+      const anyPair = Object.values(pairs).find(
+        (p) => p?.from === lang || p?.to === lang
+      );
+      merged.push({
+        lang_pack: `${lang}-offline`,
+        lang,
+        free_pack: true,
+        token_spent: 0,
+        starts_at: anyPair?.installedAt || new Date().toISOString(),
+        expires_at: anyPair?.expiresAt || "2099-12-31T23:59:59.000Z"
+      });
+    }
+  } catch {}
 
   const map = new Map();
   for (const raw of merged) {

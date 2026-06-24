@@ -2,7 +2,14 @@ import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 import { initSiteLanguageManager } from "/js/site_language_manager.js";
 
-const NATIVE_LANG_STORAGE_KEY = "italky_native_lang_v1";
+const NATIVE_LANG_STORAGE_KEY = "italky_native_lang_v7";
+// Migrate v1 → v7 once on first load
+try {
+  const v1 = localStorage.getItem("italky_native_lang_v1");
+  if (v1 && !localStorage.getItem("italky_native_lang_v7")) {
+    localStorage.setItem("italky_native_lang_v7", v1);
+  }
+} catch {}
 const SITE_LANG_STORAGE_KEY = "site_lang";
 
 const NATIVE_LANG_META = {
