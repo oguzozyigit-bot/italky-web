@@ -920,6 +920,18 @@ function installDownloadEventHandlers(langInfoResolver) {
     const d = e.detail || {};
     const source = canonical(d.source || getActiveDownload()?.source);
     const target = canonical(d.target || getActiveDownload()?.target);
+    const reason = String(d.error || d.reason || "").toLowerCase();
+    const isRetryable = ["timeout_or_pending", "model_download_timeout", "pending"].some((r) => reason.includes(r));
+
+    if (isRetryable && source && target) {
+      // Re-enqueue the same pair after a delay instead of treating as permanent failure
+      setActiveDownload(null);
+      setTimeout(() => {
+        enqueueDownload(source, target, langInfoResolverGlobal);
+        startNextQueuedDownload(langInfoResolverGlobal);
+      }, 10000);
+      return;
+    }
 
     if (source && target) {
       saveHomeWidget(source, target, langInfoResolverGlobal, "failed");

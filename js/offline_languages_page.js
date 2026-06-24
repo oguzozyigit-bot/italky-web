@@ -744,12 +744,37 @@ window.addEventListener("offlinePairDownloadCompleted", (e) => {
   toast(`${getLangInfo(code).name} dil paketiniz indirildi.`);
 });
 
+const _retryCount = {};
+const RETRYABLE_REASONS = ["timeout_or_pending", "model_download_timeout", "pending"];
+
+function isRetryableFailure(errorStr) {
+  const s = String(errorStr || "").toLowerCase();
+  return RETRYABLE_REASONS.some((r) => s.includes(r));
+}
+
 window.addEventListener("offlinePairDownloadFailed", (e) => {
   const d = e.detail || {};
   const code = canonical(d.target || "");
   const source = canonical(d.source || getNativeLang());
   const info = getLangInfo(code);
-  const message = d.error || `${info.name} şu an indirilemedi. Daha sonra tekrar deneyebilirsiniz.`;
+  const errorMsg = d.error || d.reason || "";
+
+  if (code && isRetryableFailure(errorMsg)) {
+    const attempts = (_retryCount[code] || 0) + 1;
+    _retryCount[code] = attempts;
+
+    if (attempts <= 3) {
+      const delaySec = attempts * 15;
+      toast(`${info.name} modeli bekleniyor, ${delaySec}sn sonra yeniden deneniyor... (${attempts}/3)`);
+      setTimeout(() => {
+        _retryCount[code] = attempts;
+        startLanguageInstallFlow(code);
+      }, delaySec * 1000);
+      return;
+    }
+
+    delete _retryCount[code];
+  }
 
   if (code) {
     clearLangProgress(code);
@@ -759,6 +784,9 @@ window.addEventListener("offlinePairDownloadFailed", (e) => {
   globalDownloadLock = false;
   busy = false;
   renderInstalledList();
+  const message = errorMsg && !isRetryableFailure(errorMsg)
+    ? errorMsg
+    : `${info.name} şu an indirilemedi. Daha sonra tekrar deneyebilirsiniz.`;
   toast(message);
 });
 
