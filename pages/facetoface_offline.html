@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+    <title>italkyAI • Offline FaceToFace</title>
+    <style>
+        :root{
+          --ai-gradient:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+          --bg:#050508;
+          --border:rgba(255,255,255,.14);
+          --safe-bottom:env(safe-area-inset-bottom,0px);
+        }
+        *{
+          box-sizing:border-box;
+          -webkit-tap-highlight-color:transparent;
+          outline:none;
+          user-select:none;
+        }
+        html,body{
+          margin:0;
+          width:100%;
+          height:100%;
+          overflow:hidden;
+          background:var(--bg);
+          color:#fff;
+          font-family:Outfit,Arial,sans-serif;
+        }
+        body{
+          background:
+            radial-gradient(circle at top,rgba(236,72,153,.06),transparent 22%),
+            radial-gradient(circle at bottom,rgba(99,102,241,.06),transparent 22%),
+            #050508;
+        }
+        .container{
+          width:100%;
+          height:100dvh;
+          display:flex;
+          flex-direction:column;
+          overflow:hidden;
+        }
+        .half-screen{
+          flex:1;
+          min-height:0;
+          position:relative;
+          display:flex;
+          flex-direction:column;
+          justify-content:space-between;
+          align-items:center;
+          overflow:hidden;
+          padding:10px 8px;
+        }
+        .half-screen.top{
+          transform:rotate(180deg);
+          background:linear-gradient(180deg,rgba(128,19,54,.18),var(--bg));
+        }
+        .half-screen.bottom{
+          background:linear-gradient(180deg,rgba(30,58,138,.18),var(--bg));
+          padding-bottom:calc(4px + var(--safe-bottom));
+        }
+        .lang-row{
+          width:100%;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          z-index:20;
+        }
+        .lang-trigger{
+          min-height:38px;
+          border:none;
+          border-radius:999px;
+          background:transparent;
+          color:#fff;
+          font-size:13px;
+          font-weight:900;
+          cursor:pointer;
+          white-space:nowrap;
+          overflow:hidden;
+          text-overflow:ellipsis;
+          max-width:82vw;
+          padding:8px 14px;
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          gap:8px;
+        }
+        .lang-trigger.static{
+          cursor:default;
+          opacity:.95;
+        }
+        .popover{
+          position:absolute;
+          left:50%;
+          transform:translateX(-50%);
+          width:min(92vw,360px);
+          height:360px;
+          background:#0a0a0f;
+          border:1px solid var(--border);
+          border-radius:24px;
+          display:none;
+          flex-direction:column;
+          z-index:100;
+          overflow:hidden;
+          box-shadow:0 22px 60px rgba(0,0,0,.92);
+        }
+        .popover.show{display:flex}
+        .half-screen.top .popover{top:58px}
+        .pop-head{
+          padding:14px;
+          border-bottom:1px solid rgba(255,255,255,.10);
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          font-weight:900;
+        }
+        .pop-close{
+          cursor:pointer;
+          padding:8px 12px;
+          border-radius:12px;
+          background:rgba(255,255,255,.06);
+          border:1px solid rgba(255,255,255,.12);
+        }
+        .pop-list{
+          flex:1;
+          overflow-y:auto;
+          padding:10px;
+          scrollbar-width:none;
+        }
+        .pop-list::-webkit-scrollbar{
+          display:none;
+        }
+        .pop-item{
+          padding:12px;
+          border-radius:16px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:12px;
+          cursor:pointer;
+          border:1px solid transparent;
+        }
+        .pop-item.active{
+          background:rgba(99,102,241,.14);
+          border-color:rgba(99,102,241,.25);
+        }
+        .pop-left{
+          display:flex;
+          align-items:center;
+          gap:10px;
+          min-width:0;
+          flex:1;
+        }
+        .pop-flag{font-size:18px}
+        .pop-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .pop-code{font-size:12px;font-weight:900;opacity:.7}
+        .pop-empty{
+          padding:20px 14px;
+          text-align:center;
+          color:rgba(255,255,255,.68);
+          font-size:13px;
+          line-height:1.5;
+          font-weight:800;
+        }
+        .chat-body{
+          flex:1;
+          width:100%;
+          min-height:0;
+          overflow-y:auto;
+          overflow-x:hidden;
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          justify-content:flex-start;
+          gap:14px;
+          padding:18px 0 18px;
+          text-align:center;
+          scrollbar-width:none;
+          -ms-overflow-style:none;
+          -webkit-overflow-scrolling:touch;
+          overscroll-behavior:contain;
+          touch-action:pan-y;
+          mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);
+        }
+        .chat-body::before{
+          content:"";
+          flex:1 0 auto;
+          min-height:12px;
+        }
+        .chat-body::-webkit-scrollbar{
+          display:none;
+          width:0;
+          height:0;
+        }
+        .bubble{
+          max-width:86%;
+          line-height:1.18;
+          word-break:break-word;
+          font-size:24px;
+          font-weight:900;
+          opacity:.9;
+          text-align:center;
+        }
+        .bubble.latest{
+          font-size:32px;
+          font-weight:1000;
+          opacity:1;
+        }
+        .bubble.subtle{
+          font-size:18px;
+          opacity:.62;
+          font-weight:800;
+        }
+        .mic-line{
+          width:100%;
+          display:grid;
+          grid-template-columns:1fr 70px 1fr;
+          align-items:center;
+          gap:12px;
+          padding:0 8px;
+          flex:0 0 auto;
+          transform:translateY(-8px);
+        }
+        .mic-side{
+          min-height:60px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        }
+        .mic-btn{
+          width:70px;
+          height:70px;
+          border:none;
+          border-radius:999px;
+          background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));
+          border:1px solid rgba(255,255,255,.18);
+          color:#fff;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          cursor:pointer;
+          box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
+          position:relative;
+        }
+        .mic-btn svg{
+          width:30px;
+          height:30px;
+          stroke:currentColor;
+          stroke-width:2.2;
+          fill:none;
+          stroke-linecap:round;
+          stroke-linejoin:round;
+        }
+        .mic-btn.listening{
+          background:radial-gradient(circle at 50% 35%,rgba(216,180,254,.34),rgba(99,102,241,.22) 44%,rgba(236,72,153,.12));
+          box-shadow:0 0 0 10px rgba(99,102,241,.12),0 0 34px rgba(99,102,241,.45),0 0 70px rgba(236,72,153,.25),inset 0 1px 0 rgba(255,255,255,.10);
+          animation:micBreath 1.05s ease-in-out infinite;
+        }
+        .mic-btn.listening::after{
+          content:"";
+          position:absolute;
+          inset:-13px;
+          border-radius:50%;
+          border:2px solid rgba(165,180,252,.78);
+          box-shadow:0 0 0 12px rgba(99,102,241,.10),0 0 38px rgba(236,72,153,.35);
+          animation:micPulse 1s ease-out infinite;
+        }
+        @keyframes micBreath{
+          0%,100%{transform:scale(1)}
+          50%{transform:scale(1.045)}
+        }
+        @keyframes micPulse{
+          0%{transform:scale(.92);opacity:.95}
+          70%{transform:scale(1.18);opacity:.16}
+          100%{transform:scale(1.24);opacity:0}
+        }
+        .center-hub{
+          height:82px;
+          flex:0 0 auto;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          position:relative;
+          background:rgba(0,0,0,.58);
+          backdrop-filter:blur(16px);
+          z-index:50;
+          border-top:1px solid rgba(255,255,255,.05);
+          border-bottom:1px solid rgba(255,255,255,.05);
+        }
+        .center-action{
+          position:absolute;
+          border:none;
+          background:transparent;
+          color:#fff;
+          font-family:inherit;
+          font-size:15px;
+          font-weight:1000;
+          cursor:pointer;
+          padding:10px 12px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          text-decoration:none;
+          text-shadow:0 0 16px rgba(255,255,255,.18);
+        }
+        .center-clear{right:34px}
+        .orb{
+          width:66px;
+          height:66px;
+          border-radius:50%;
+          background:#000;
+          border:1px solid var(--border);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-family:"Space Grotesk",Arial,sans-serif;
+          font-size:13px;
+          font-weight:900;
+          position:relative;
+          overflow:visible;
+        }
+        .orb-main{position:relative;z-index:3}
+        .orb .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .sat{
+          position:absolute;
+          left:50%;
+          top:50%;
+          width:10px;
+          height:10px;
+          margin-left:-5px;
+          margin-top:-5px;
+          border-radius:50%;
+          z-index:1;
+          filter:blur(1.5px);
+        }
+        .sat1{
+          background:#6366f1;
+          box-shadow:0 0 15px #6366f1;
+          animation:orbit1 4.8s linear infinite;
+        }
+        .sat2{
+          background:#ec4899;
+          box-shadow:0 0 15px #ec4899;
+          animation:orbit2 6.2s linear infinite;
+        }
+        @keyframes orbit1{
+          from{transform:rotate(0deg) translateX(48px) rotate(0deg)}
+          to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}
+        }
+        @keyframes orbit2{
+          from{transform:rotate(180deg) translateX(48px) rotate(-180deg)}
+          to{transform:rotate(540deg) translateX(48px) rotate(-540deg)}
+        }
+        .modal{
+          position:fixed;
+          inset:0;
+          background:rgba(0,0,0,.55);
+          backdrop-filter:blur(6px);
+          display:none;
+          align-items:center;
+          justify-content:center;
+          z-index:9998;
+          padding:20px;
+        }
+        .modal.show{display:flex}
+        .modal-card{
+          width:min(100%,420px);
+          border-radius:24px;
+          padding:18px;
+          background:linear-gradient(145deg,rgba(16,16,24,.97),rgba(10,10,18,.97));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow:0 24px 50px rgba(0,0,0,.30);
+        }
+        .modal-title{
+          margin:0 0 8px;
+          font-family:"Space Grotesk",Arial,sans-serif;
+          font-size:20px;
+          font-weight:900;
+        }
+        .modal-text{
+          margin:0;
+          font-size:13px;
+          line-height:1.6;
+          color:rgba(255,255,255,.76);
+          white-space:pre-line;
+        }
+        .modal-actions{
+          display:grid;
+          grid-template-columns:1fr;
+          gap:10px;
+          margin-top:16px;
+        }
+        .modal-btn{
+          min-height:46px;
+          border:none;
+          border-radius:16px;
+          cursor:pointer;
+          font-family:inherit;
+          font-size:13px;
+          font-weight:900;
+          background:rgba(255,255,255,.06);
+          border:1px solid rgba(255,255,255,.10);
+          color:#fff;
+        }
+        .toast{
+          position:fixed;
+          left:50%;
+          bottom:24px;
+          transform:translateX(-50%) translateY(120px);
+          max-width:min(92vw,430px);
+          min-height:44px;
+          padding:11px 16px;
+          border-radius:16px;
+          background:rgba(12,16,28,.96);
+          border:1px solid rgba(255,255,255,.10);
+          color:#fff;
+          font-size:12px;
+          font-weight:1000;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          text-align:center;
+          z-index:9999;
+          box-shadow:0 18px 36px rgba(0,0,0,.35);
+          transition:.22s ease;
+          pointer-events:none;
+        }
+        .toast.show{
+          transform:translateX(-50%) translateY(0);
+        }
+        @media(max-width:390px){
+          .mic-line{grid-template-columns:1fr 66px 1fr;gap:8px;transform:translateY(-7px)}
+          .mic-btn{width:66px;height:66px}
+          .mic-btn svg{width:28px;height:28px}
+          .bubble{font-size:22px}
+          .bubble.latest{font-size:30px}
+          .center-action{font-size:13px;padding:10px 7px}
+          .center-clear{right:28px}
+        }
+    </style>
+</head>
+<body>
+<main class="container">
+    <section class="half-screen top" id="topSection">
+        <div class="lang-row">
+            <button id="topLangBtn" class="lang-trigger" type="button">🌐 Dil seçiliyor...</button>
+        </div>
+        <div class="popover" id="pop-top">
+            <div class="pop-head">
+                <div>ÜST DİL</div>
+                <div class="pop-close" id="close-top">✕</div>
+            </div>
+            <div class="pop-list" id="list-top"></div>
+        </div>
+        <div class="chat-body" id="topBody"></div>
+        <div class="mic-line">
+            <div class="mic-side"></div>
+            <button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+                    <path d="M19 10a7 7 0 0 1-14 0"></path>
+                    <path d="M12 17v4"></path>
+                    <path d="M8 21h8"></path>
+                </svg>
+            </button>
+            <div class="mic-side"></div>
+        </div>
+    </section>
+    <section class="center-hub">
+        <div class="orb">
+            <span class="sat sat1"></span>
+            <span class="sat sat2"></span>
+            <span class="orb-main">italky<span class="ai">AI</span></span>
+        </div>
+        <button id="clearBtn" class="center-action center-clear" type="button">Temizle</button>
+    </section>
+    <section class="half-screen bottom" id="botSection">
+        <div class="lang-row">
+            <button id="botLangBtn" class="lang-trigger static" type="button">🌐 Dil seçiliyor...</button>
+        </div>
+        <div class="chat-body" id="botBody"></div>
+        <div class="mic-line">
+            <div class="mic-side"></div>
+            <button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
+                    <path d="M19 10a7 7 0 0 1-14 0"></path>
+                    <path d="M12 17v4"></path>
+                    <path d="M8 21h8"></path>
+                </svg>
+            </button>
+            <div class="mic-side"></div>
+        </div>
+    </section>
+</main>
+<div id="offlineRequiredBackdrop" class="modal">
+    <div class="modal-card">
+        <h3 class="modal-title">Kurulu dil gerekli</h3>
+        <p class="modal-text" id="offlineRequiredText">Kurulu karşı dil paketi bulunamadı.</p>
+        <div class="modal-actions">
+            <button class="modal-btn" id="offlineRequiredCloseBtn" type="button">Kapat</button>
+        </div>
+    </div>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+    const $ = (id) => document.getElementById(id);
+    const offlineLanguagePackNotReadyMessage = "Bu dil paketi henüz cihazınızda hazır değil. Lütfen internet bağlantısıyla önce dil paketini kurun. Kurulumdan sonra internet olmadan kullanabilirsiniz.";
+    const offlineSpeechNotReadyMessage = "Bu cihazda offline konuşma tanıma hazır değil. Lütfen internet bağlantısıyla tekrar deneyin veya cihaz dil paketlerini kontrol edin.";
+    const BCP = {
+      tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
+      ar:"ar-SA", ru:"ru-RU", pt:"pt-PT", nl:"nl-NL", zh:"zh-CN", ja:"ja-JP",
+      ko:"ko-KR", hi:"hi-IN", az:"az-AZ", kk:"kk-KZ", uz:"uz-UZ", uk:"uk-UA",
+      pl:"pl-PL", cs:"cs-CZ", ro:"ro-RO", bg:"bg-BG", el:"el-GR", fa:"fa-IR",
+      he:"he-IL", ur:"ur-PK", bn:"bn-BD", id:"id-ID", ms:"ms-MY", vi:"vi-VN",
+      th:"th-TH", sv:"sv-SE", no:"no-NO", da:"da-DK", fi:"fi-FI"
+    };
+    const LANG_META = {
+      tr: { name: "Türkçe", flag: "🇹🇷" },
+      en: { name: "İngilizce", flag: "🇬🇧" },
+      de: { name: "Almanca", flag: "🇩🇪" },
+      fr: { name: "Fransızca", flag: "🇫🇷" },
+      it: { name: "İtalyanca", flag: "🇮🇹" },
+      es: { name: "İspanyolca", flag: "🇪🇸" },
+      pt: { name: "Portekizce", flag: "🇵🇹" },
+      nl: { name: "Hollandaca", flag: "🇳🇱" },
+      sv: { name: "İsveççe", flag: "🇸🇪" },
+      no: { name: "Norveççe", flag: "🇳🇴" },
+      da: { name: "Danca", flag: "🇩🇰" },
+      fi: { name: "Fince", flag: "🇫🇮" },
+      pl: { name: "Lehçe", flag: "🇵🇱" },
+      cs: { name: "Çekçe", flag: "🇨🇿" },
+      sk: { name: "Slovakça", flag: "🇸🇰" },
+      hu: { name: "Macarca", flag: "🇭🇺" },
+      ro: { name: "Rumence", flag: "🇷🇴" },
+      bg: { name: "Bulgarca", flag: "🇧🇬" },
+      el: { name: "Yunanca", flag: "🇬🇷" },
+      uk: { name: "Ukraynaca", flag: "🇺🇦" },
+      ru: { name: "Rusça", flag: "🇷🇺" },
+      ar: { name: "Arapça", flag: "🇸🇦" },
+      he: { name: "İbranice", flag: "🇮🇱" },
+      fa: { name: "Farsça", flag: "🇮🇷" },
+      ur: { name: "Urduca", flag: "🇵🇰" },
+      hi: { name: "Hintçe", flag: "🇮🇳" },
+      bn: { name: "Bengalce", flag: "🇧🇩" },
+      id: { name: "Endonezce", flag: "🇮🇩" },
+      ms: { name: "Malayca", flag: "🇲🇾" },
+      vi: { name: "Vietnamca", flag: "🇻🇳" },
+      th: { name: "Tayca", flag: "🇹🇭" },
+      zh: { name: "Çince", flag: "🇨🇳" },
+      ja: { name: "Japonca", flag: "🇯🇵" },
+      ko: { name: "Korece", flag: "🇰🇷" },
+      az: { name: "Azerbaycanca", flag: "🇦🇿" },
+      kk: { name: "Kazakça", flag: "🇰🇿" },
+      ky: { name: "Kırgızca", flag: "🇰🇬" },
+      uz: { name: "Özbekçe", flag: "🇺🇿" },
+      tk: { name: "Türkmence", flag: "🇹🇲" },
+      ka: { name: "Gürcüce", flag: "🇬🇪" },
+      hy: { name: "Ermenice", flag: "🇦🇲" },
+      sr: { name: "Sırpça", flag: "🇷🇸" },
+      hr: { name: "Hırvatça", flag: "🇭🇷" },
+      bs: { name: "Boşnakça", flag: "🇧🇦" },
+      sq: { name: "Arnavutça", flag: "🇦🇱" },
+      et: { name: "Estonca", flag: "🇪🇪" },
+      lv: { name: "Letonca", flag: "🇱🇻" },
+      lt: { name: "Litvanca", flag: "🇱🇹" },
+      af: { name: "Afrikanca", flag: "🇿🇦" },
+      sw: { name: "Svahili", flag: "🇰🇪" }
+    };
+    const topBody = $("topBody");
+    const botBody = $("botBody");
+    const topMic = $("topMic");
+    const botMic = $("botMic");
+    const topLangBtn = $("topLangBtn");
+    const botLangBtn = $("botLangBtn");
+    const popTop = $("pop-top");
+    const listTop = $("list-top");
+    const closeTop = $("close-top");
+    const clearBtn = $("clearBtn");
+    const toast = $("toast");
+    const offlineRequiredBackdrop = $("offlineRequiredBackdrop");
+    const offlineRequiredText = $("offlineRequiredText");
+    const offlineRequiredCloseBtn = $("offlineRequiredCloseBtn");
+    let topLang = "en";
+    let botLang = "tr";
+    let nativeLang = "tr";
+    let allowedTargets = [];
+    let recordingSide = null;
+    let liveText = "";
+    let lastMicStartAt = 0;
+    let micLocked = false;
+    let manualStopPending = false;
+    let activeSpeechEngine = "";
+    let nativeFallbackLang = "";
+    let nativeFallbackSide = "";
+    let nativeErrorGraceTimer = null;
+    function canonical(code){
+      return String(code || "").toLowerCase().replace("_","-").split("-")[0].trim();
+    }
+    function langObj(code){
+      const c = canonical(code);
+      return LANG_META[c] || {name:(c || "en").toUpperCase(),flag:"🌐"};
+    }
+    function labelChip(code){
+      const o = langObj(code);
+      return `${o.flag} ${o.name}`;
+    }
+    function showToast(msg){
+      if(!toast) return;
+      const text = String(msg || "").trim();
+      if(!text) return;
+      function hideToast(){
+        try{
+          toast.classList.remove("show");
+          toast.textContent = "";
+          clearTimeout(window.__toastTimer);
+        }catch(e){}
+      }
+      const silentMessages = [
+        "Offline FaceToFace hazır",
+        "Offline ses motoru hazırlanıyor...",
+        "Offline ses motoru bu sürümde hazır değil.",
+        "Dinliyorum...",
+        "Cihazın ses algılaması dinliyor...",
+        "Cihaz STT hazır değil, Vosk deneniyor...",
+        "Cihaz STT sonuç vermedi, Vosk deneniyor...",
+        "Cihaz STT sonucu alınamadı. Offline ses modeli de kurulu değil.",
+        "Konuşma net alınamadı. Tekrar deneyin.",
+        "Konuşma alınamadı",
+        "Mikrofon hatası",
+        "Offline ses algılama başlatılamadı.",
+        "Cihaz STT ve offline ses modeli başlatılamadı.",
+        "Mikrofon sonucu alınamadı",
+        "Dinleme tamamlanıyor..."
+      ];
+      if(silentMessages.includes(text)){
+        hideToast();
+        return;
+      }
+      const silentStarts = [
+        "Türkçe için offline ses modeli",
+        "İngilizce için offline ses modeli",
+        "Almanca için offline ses modeli",
+        "Fransızca için offline ses modeli",
+        "İtalyanca için offline ses modeli",
+        "İspanyolca için offline ses modeli",
+        "Arapça için offline ses modeli",
+        "Rusça için offline ses modeli"
+      ];
+      if(silentStarts.some((prefix) => text.startsWith(prefix))){
+        hideToast();
+        return;
+      }
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      },1800);
+    }
+    function sleep(ms){
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+    function getNativeLang(){
+      try{
+        if(window.OfflineTranslate && typeof window.OfflineTranslate.getNativeOfflineLang === "function"){
+          return canonical(window.OfflineTranslate.getNativeOfflineLang() || "tr") || "tr";
+        }
+      }catch(e){
+        console.warn("getNativeLang error", e);
+      }
+      try{
+        const stored = localStorage.getItem("italky_native_lang_v7") || localStorage.getItem("italky_native_lang");
+        if(stored) return canonical(stored) || "tr";
+      }catch(e){
+        console.warn("native lang localStorage error", e);
+      }
+      return "tr";
+    }
+    function pushPair(out, from, to, suffix){
+      const f = canonical(from);
+      const t = canonical(to);
+      if(!f || !t || f === t) return;
+      const key = suffix !== undefined ? `${f}-${t}-${suffix}` : `${f}-${t}`;
+      out[key] = {from:f,to:t};
+    }
+    function getInstalledPairs(){
+      try{
+        if(window.OfflineTranslate && typeof window.OfflineTranslate.getInstalledOfflinePairs === "function"){
+          const raw = window.OfflineTranslate.getInstalledOfflinePairs() || "{}";
+          const parsed = JSON.parse(raw);
+          if(parsed && typeof parsed === "object" && Object.keys(parsed).length > 0){
+            return parsed;
+          }
+        }
+      }catch(e){
+        console.warn("getInstalledPairs native error", e);
+      }
+      const keys = [
+        "italky_offline_installed_pairs_v7",
+        "italky_offline_installed_pairs_v6",
+        "italky_offline_installed_pairs",
+        "offline_installed_pairs"
+      ];
+      const out = {};
+      for(const key of keys){
+        try{
+          const raw = localStorage.getItem(key);
+          if(!raw) continue;
+          const parsed = JSON.parse(raw);
+          if(Array.isArray(parsed)){
+            parsed.forEach((item,index) => {
+              if(typeof item === "string"){
+                const clean = item.toLowerCase().replace(/_/g,"-");
+                const parts = clean.split("-");
+                pushPair(out, parts[0], parts[1], index);
+                return;
+              }
+              if(item && typeof item === "object"){
+                pushPair(
+                  out,
+                  item.from || item.source || item.sourceLang || item.src,
+                  item.to || item.target || item.targetLang || item.dst,
+                  index
+                );
+              }
+            });
+          } else if(parsed && typeof parsed === "object"){
+            Object.keys(parsed).forEach((pairKey,index) => {
+              const item = parsed[pairKey];
+              if(item === false || item === null || item === undefined) return;
+              if(item && typeof item === "object"){
+                pushPair(
+                  out,
+                  item.from || item.source || item.sourceLang || item.src,
+                  item.to || item.target || item.targetLang || item.dst,
+                  index
+                );
+                return;
+              }
+              const clean = String(pairKey || "").toLowerCase().replace(/_/g,"-");
+              const parts = clean.split("-");
+              pushPair(out, parts[0], parts[1], index);
+            });
+          }
+        }catch(e){
+          console.warn("getInstalledPairs localStorage error", key, e);
+        }
+      }
+      return out;
+    }
+    function getInstalledTargetLangsForNative(native){
+      const n = canonical(native || "tr");
+      const installed = getInstalledPairs();
+      const result = [];
+      Object.values(installed).forEach((item) => {
+        const from = canonical(item && item.from);
+        const to = canonical(item && item.to);
+        if(from === n && to && to !== n && !result.includes(to)){
+          result.push(to);
+        }
+        if(to === n && from && from !== n && !result.includes(from)){
+          result.push(from);
+        }
+      });
+      return result;
+    }
+    function hasInstalledPair(from,to){
+      const f = canonical(from);
+      const t = canonical(to);
+      const installed = getInstalledPairs();
+      return Object.values(installed).some((item) => {
+        const a = canonical(item && item.from);
+        const b = canonical(item && item.to);
+        return (
+          (a === f && b === t) ||
+          (a === t && b === f)
+        );
+      });
+    }
+    function refreshLangLabels(){
+      if(topLangBtn) topLangBtn.textContent = `${labelChip(topLang)} ⌵`;
+      if(botLangBtn) botLangBtn.textContent = labelChip(botLang);
+    }
+    function getTargets(){
+      nativeLang = getNativeLang();
+      botLang = nativeLang;
+      allowedTargets = getInstalledTargetLangsForNative(nativeLang);
+      if(allowedTargets.length){
+        if(!allowedTargets.includes(canonical(topLang))){
+          topLang = allowedTargets[0];
+        }
+      }else{
+        topLang = nativeLang === "tr" ? "en" : "tr";
+      }
+      refreshLangLabels();
+    }
+    function openOfflineRequiredPopup(message){
+      if(offlineRequiredText){
+        offlineRequiredText.textContent = message || "Kurulu karşı dil paketi bulunamadı.";
+      }
+      if(offlineRequiredBackdrop) offlineRequiredBackdrop.classList.add("show");
+    }
+    function closeOfflineRequiredPopup(){
+      if(offlineRequiredBackdrop) offlineRequiredBackdrop.classList.remove("show");
+    }
+    function closeAllPop(){
+      if(popTop) popTop.classList.remove("show");
+    }
+    function renderTopLanguagePicker(){
+      if(!listTop) return;
+      if(!allowedTargets.length){
+        listTop.innerHTML = `<div class="pop-empty">${offlineLanguagePackNotReadyMessage}</div>`;
+        return;
+      }
+      listTop.innerHTML = allowedTargets.map((code) => {
+        const lang = langObj(code);
+        const active = canonical(code) === canonical(topLang) ? "active" : "";
+        return `
+          <div class="pop-item ${active}" data-code="${code}">
+            <div class="pop-left">
+              <div class="pop-flag">${lang.flag}</div>
+              <div class="pop-name">${lang.name}</div>
+            </div>
+            <div class="pop-code">${String(code).toUpperCase()}</div>
+          </div>
+        `;
+      }).join("");
+      listTop.querySelectorAll(".pop-item[data-code]").forEach((el) => {
+        el.addEventListener("click",() => {
+          topLang = canonical(el.dataset.code || topLang);
+          refreshLangLabels();
+          closeAllPop();
+          showToast(`${langObj(topLang).name} seçildi`);
+        });
+      });
+    }
+    function clearBody(body){
+      if(body) body.innerHTML = "";
+    }
+    function addBubble(side,text,latest=false){
+      const body = side === "top" ? topBody : botBody;
+      if(!body) return null;
+      if(latest){
+        body.querySelectorAll(".bubble.latest").forEach((x) => x.classList.remove("latest"));
+      }
+      const div = document.createElement("div");
+      div.className = `bubble${latest ? " latest" : ""}${!latest ? " subtle" : ""}`;
+      div.textContent = String(text || "").trim();
+      body.appendChild(div);
+      const scroll = () => {
+        try{ body.scrollTop = body.scrollHeight; }catch(e){}
+      };
+      scroll();
+      requestAnimationFrame(scroll);
+      setTimeout(scroll,60);
+      return div;
+    }
+    function setMicState(side,listening){
+      const mic = side === "top" ? topMic : botMic;
+      if(mic) mic.classList.toggle("listening",!!listening);
+    }
+    function cleanupTranscript(text){
+      return String(text || "")
+        .replace(/\s+/g," ")
+        .replace(/\b(\S+)( \1\b)+/gi,"$1")
+        .trim();
+    }
+    function resetRecognizerUi(){
+      recordingSide = null;
+      liveText = "";
+      micLocked = false;
+      manualStopPending = false;
+      activeSpeechEngine = "";
+      nativeFallbackLang = "";
+      nativeFallbackSide = "";
+      if(nativeErrorGraceTimer){
+        clearTimeout(nativeErrorGraceTimer);
+        nativeErrorGraceTimer = null;
+      }
+      if(topMic) topMic.classList.remove("listening");
+      if(botMic) botMic.classList.remove("listening");
+    }
+    function hasOfflineSpeechBridge(){
+      try{
+        return !!(
+          window.OfflineSpeech &&
+          typeof window.OfflineSpeech.isReady === "function" &&
+          typeof window.OfflineSpeech.start === "function"
+        );
+      }catch{
+        return false;
+      }
+    }
+    async function waitForOfflineSpeechBridge(timeoutMs = 3500){
+      const started = Date.now();
+      while(Date.now() - started < timeoutMs){
+        if(hasOfflineSpeechBridge()){
+          return true;
+        }
+        await sleep(150);
+      }
+      return false;
+    }
+    function isOfflineSpeechReady(langCode){
+      try{
+        if(!hasOfflineSpeechBridge()) return false;
+        return !!window.OfflineSpeech.isReady(canonical(langCode));
+      }catch{
+        return false;
+      }
+    }
+    async function waitForOfflineSpeechReady(langCode, timeoutMs = 4500){
+      const lang = canonical(langCode);
+      const started = Date.now();
+      while(Date.now() - started < timeoutMs){
+        if(hasOfflineSpeechBridge()){
+          try{
+            if(window.OfflineSpeech.isReady(lang)){
+              return true;
+            }
+          }catch(e){
+            console.warn("OfflineSpeech.isReady retry error", e);
+          }
+        }
+        await sleep(180);
+      }
+      return false;
+    }
+    function getOfflineSpeechInfo(langCode){
+      try{
+        if(!window.OfflineSpeech || typeof window.OfflineSpeech.getModelInfo !== "function"){
+          return null;
+        }
+        const raw = window.OfflineSpeech.getModelInfo(canonical(langCode));
+        const parsed = JSON.parse(raw || "{}");
+        return parsed && typeof parsed === "object" ? parsed : null;
+      }catch{
+        return null;
+      }
+    }
+    function isDeviceOffline(){
+      return navigator.onLine === false;
+    }
+    function showOfflineSpeechNotReady(langCode){
+      openOfflineRequiredPopup(offlineLanguagePackNotReadyMessage);
+      showToast(offlineLanguagePackNotReadyMessage);
+    }
+    function showOfflineSpeechUnavailable(){
+      resetRecognizerUi();
+      openOfflineRequiredPopup(offlineSpeechNotReadyMessage);
+      showToast(offlineSpeechNotReadyMessage);
+    }
+    async function startVoskSpeech(side, forcedLang){
+      const lang = canonical(forcedLang || (side === "top" ? topLang : botLang));
+      const info = getOfflineSpeechInfo(lang);
+      if(info && info.installed === false){
+        showOfflineSpeechNotReady(lang);
+        resetRecognizerUi();
+        return false;
+      }
+      showToast("Offline ses motoru hazırlanıyor...");
+      const bridgeReady = await waitForOfflineSpeechBridge(3500);
+      if(!bridgeReady){
+        showToast(offlineSpeechNotReadyMessage);
+        resetRecognizerUi();
+        return false;
+      }
+      const modelReady = await waitForOfflineSpeechReady(lang, 4500);
+      if(!modelReady){
+        showOfflineSpeechNotReady(lang);
+        resetRecognizerUi();
+        return false;
+      }
+      recordingSide = side;
+      liveText = "";
+      activeSpeechEngine = "vosk";
+      setMicState(side,true);
+      try{
+        window.OfflineSpeech.start(lang, side);
+        showToast("Dinliyorum...");
+        return true;
+      }catch(e){
+        console.warn("OfflineSpeech.start error", e);
+        showToast(offlineSpeechNotReadyMessage);
+        resetRecognizerUi();
+        return false;
+      }
+    }
+    function hasNativeSpeechBridge(){
+      try{
+        return !!(
+          window.Native &&
+          typeof window.Native.startSpeechRecognition === "function"
+        );
+      }catch{
+        return false;
+      }
+    }
+    function startNativeSpeechFirst(side){
+      const lang = canonical(side === "top" ? topLang : botLang);
+      const bcp = BCP[lang] || lang || "tr-TR";
+      if(!hasNativeSpeechBridge()){
+        return false;
+      }
+      if(isDeviceOffline() && !isOfflineSpeechReady(lang)){
+        showOfflineSpeechUnavailable();
+        return false;
+      }
+      try{
+        recordingSide = side;
+        liveText = "";
+        activeSpeechEngine = "native";
+        nativeFallbackLang = lang;
+        nativeFallbackSide = side;
+        setMicState(side,true);
+        window.Native.startSpeechRecognition(bcp, side);
+        showToast("Cihazın ses algılaması dinliyor...");
+        return true;
+      }catch(e){
+        console.warn("Native.startSpeechRecognition error", e);
+        activeSpeechEngine = "";
+        resetRecognizerUi();
+        return false;
+      }
+    }
+    async function startOfflineSpeech(side){
+      const lang = canonical(side === "top" ? topLang : botLang);
+      if(isDeviceOffline()){
+        const bridgeReady = await waitForOfflineSpeechBridge(1500);
+        const speechReady = bridgeReady && isOfflineSpeechReady(lang);
+        if(!speechReady){
+          showOfflineSpeechUnavailable();
+          return false;
+        }
+        return await startVoskSpeech(side, lang);
+      }
+      const nativeStarted = startNativeSpeechFirst(side);
+      if(nativeStarted){
+        return true;
+      }
+      return await startVoskSpeech(side, lang);
+    }
+    function stopRecognizerByUser(){
+      manualStopPending = true;
+      activeSpeechEngine = "";
+      nativeFallbackLang = "";
+      nativeFallbackSide = "";
+      if(nativeErrorGraceTimer){
+        clearTimeout(nativeErrorGraceTimer);
+        nativeErrorGraceTimer = null;
+      }
+      if(topMic) topMic.classList.remove("listening");
+      if(botMic) botMic.classList.remove("listening");
+      try{
+        if(window.OfflineSpeech && typeof window.OfflineSpeech.stop === "function"){
+          window.OfflineSpeech.stop();
+        }
+      }catch(e){
+        console.warn("OfflineSpeech.stop error", e);
+      }
+      try{
+        if(window.Native && typeof window.Native.stopSpeechRecognition === "function"){
+          window.Native.stopSpeechRecognition();
+        }else{
+          resetRecognizerUi();
+        }
+      }catch(e){
+        console.warn("stopSpeechRecognition error", e);
+        resetRecognizerUi();
+        return;
+      }
+      setTimeout(() => {
+        if(manualStopPending){
+          resetRecognizerUi();
+        }
+      }, 2500);
+    }
+    function requestOfflineTranslate(payload){
+      return new Promise((resolve) => {
+        if(!window.OfflineTranslate || typeof window.OfflineTranslate.translate !== "function"){
+          resolve(null);
+          return;
+        }
+        let done = false;
+        const timer = setTimeout(() => {
+          if(done) return;
+          done = true;
+          window.removeEventListener("offlineTranslateResult", handler);
+          console.warn("[offline_f2f] translate timeout for payload:", payload);
+          resolve(null);
+        }, 30000);
+        const handler = (e) => {
+          if(done) return;
+          done = true;
+          clearTimeout(timer);
+          window.removeEventListener("offlineTranslateResult", handler);
+          resolve(e.detail || null);
+        };
+        window.addEventListener("offlineTranslateResult", handler);
+        try{
+          window.OfflineTranslate.translate(JSON.stringify(payload));
+        }catch(e){
+          console.warn("OfflineTranslate.translate error", e);
+          if(!done){
+            done = true;
+            clearTimeout(timer);
+            window.removeEventListener("offlineTranslateResult", handler);
+            resolve(null);
+          }
+        }
+      });
+    }
+    async function translateText(text,from,to){
+      if(!hasInstalledPair(from,to)){
+        console.warn("[offline_f2f] pair not installed:", from, "->", to, "installed:", getInstalledPairs());
+        showToast(offlineLanguagePackNotReadyMessage);
+        return null;
+      }
+      const res = await requestOfflineTranslate({
+        from:canonical(from),
+        to:canonical(to),
+        text:String(text || "").trim()
+      });
+      console.log("[offline_f2f] translate result:", res);
+      // BUG FIX: native bridge does NOT return res.ok — only check for the translated string
+      const value = String(
+        (res && (res.translatedText || res.translation || res.result || res.text)) || ""
+      ).trim();
+      if(value) return value;
+      console.warn("[offline_f2f] empty translation, raw response:", res);
+      return null;
+    }
+    function speak(text,langCode){
+      const value = String(text || "").trim();
+      if(!value) return;
+      try{
+        if(window.OfflineSpeech && typeof window.OfflineSpeech.stop === "function"){
+          window.OfflineSpeech.stop();
+        }
+      }catch(e){}
+      try{
+        if(window.Native && typeof window.Native.stopSpeechRecognition === "function"){
+          window.Native.stopSpeechRecognition();
+        }
+      }catch(e){}
+      try{
+        if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
+          window.NativeTTS.speak(value,canonical(langCode));
+          return;
+        }
+      }catch(e){
+        console.warn("NativeTTS error", e);
+      }
+      try{
+        if(window.speechSynthesis){
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(value);
+          u.lang = BCP[canonical(langCode)] || "en-US";
+          window.speechSynthesis.speak(u);
+        }
+      }catch(e){
+        console.warn("speechSynthesis error", e);
+      }
+    }
+    async function finalizeSpeech(side,text){
+      manualStopPending = false;
+      if(nativeErrorGraceTimer){
+        clearTimeout(nativeErrorGraceTimer);
+        nativeErrorGraceTimer = null;
+      }
+      const clean = cleanupTranscript(text);
+      if(!clean){
+        showToast("Konuşma alınamadı");
+        resetRecognizerUi();
+        return;
+      }
+      const src = side === "top" ? topLang : botLang;
+      const dst = side === "top" ? botLang : topLang;
+      const other = side === "top" ? "bot" : "top";
+      addBubble(side,clean,false);
+      const targetRow = addBubble(other,"Çevriliyor...",true);
+      const translated = await translateText(clean,src,dst);
+      if(!translated){
+        if(targetRow) targetRow.textContent = "⚠️ Çeviri hatası";
+        showToast("Çeviri yapılamadı");
+        resetRecognizerUi();
+        return;
+      }
+      if(targetRow) targetRow.textContent = translated;
+      speak(translated,dst);
+      resetRecognizerUi();
+    }
+    async function startRecording(side){
+      const now = Date.now();
+      if(micLocked || now - lastMicStartAt < 800){
+        return;
+      }
+      if(recordingSide){
+        stopRecognizerByUser();
+        showToast("Dinleme tamamlanıyor...");
+        return;
+      }
+      if(!allowedTargets.length){
+        getTargets();
+      }
+      if(!allowedTargets.length){
+        openOfflineRequiredPopup(offlineLanguagePackNotReadyMessage);
+        return;
+      }
+      const src = side === "top" ? topLang : botLang;
+      const dst = side === "top" ? botLang : topLang;
+      if(!hasInstalledPair(src,dst)){
+        openOfflineRequiredPopup(offlineLanguagePackNotReadyMessage);
+        return;
+      }
+      lastMicStartAt = now;
+      micLocked = true;
+      setTimeout(() => {
+        micLocked = false;
+      }, 900);
+      await startOfflineSpeech(side);
+    }
+    window.addEventListener("offlineSpeechResult", async function(e){
+      try{
+        const d = e.detail || {};
+        const side = d.side === "top" ? "top" : "bot";
+        const text = cleanupTranscript(d.text || "");
+        activeSpeechEngine = "";
+        nativeFallbackLang = "";
+        nativeFallbackSide = "";
+        if(nativeErrorGraceTimer){
+          clearTimeout(nativeErrorGraceTimer);
+          nativeErrorGraceTimer = null;
+        }
+        await finalizeSpeech(side,text);
+      }catch{
+        showToast("Offline ses sonucu alınamadı.");
+        resetRecognizerUi();
+      }
+    });
+    window.addEventListener("offlineSpeechError", function(e){
+      const d = e.detail || {};
+      const error = String(d.error || "").trim();
+      const message = String(d.message || "").trim();
+      resetRecognizerUi();
+      if(error === "offline_speech_model_not_ready"){
+        showToast(message || offlineLanguagePackNotReadyMessage);
+        return;
+      }
+      if(error === "engine_not_connected_yet"){
+        showToast("Offline ses motoru bağlandı, model motoru bir sonraki adımda aktif edilecek.");
+        return;
+      }
+      showToast(message || offlineSpeechNotReadyMessage);
+    });
+    window.addEventListener("offlineSpeechStopped", function(){
+      resetRecognizerUi();
+    });
+    function normalizeNativeSpeechResult(args){
+      const payload = args && args.length ? args[0] : null;
+      if(payload && typeof payload === "object"){
+        return payload;
+      }
+      if(typeof payload === "string"){
+        try{
+          const parsed = JSON.parse(payload);
+          if(parsed && typeof parsed === "object"){
+            return parsed;
+          }
+        }catch{}
+        return {
+          side: payload,
+          text: args && args.length > 1 ? args[1] : "",
+          final: args && args.length > 2 ? args[2] !== false : true
+        };
+      }
+      return { side:"bot", text:"", final:true };
+    }
+    function normalizeNativeSpeechError(args){
+      const payload = args && args.length ? args[0] : null;
+      if(payload && typeof payload === "object"){
+        return {
+          side: payload.side,
+          code: payload.errorCode,
+          message: payload.message || payload.error || payload.status || "speech_error"
+        };
+      }
+      return {
+        side: nativeFallbackSide || recordingSide || "bot",
+        code: null,
+        message: String(payload || "").trim()
+      };
+    }
+    window.onNativeSpeechResult = async function(payload){
+      try{
+        manualStopPending = false;
+        if(nativeErrorGraceTimer){
+          clearTimeout(nativeErrorGraceTimer);
+          nativeErrorGraceTimer = null;
+        }
+        const data = normalizeNativeSpeechResult(arguments);
+        const side = data && data.side === "top" ? "top" : "bot";
+        const text = cleanupTranscript(data && data.text || "");
+        const isFinal = data && data.final !== false;
+        if(!text){
+          return;
+        }
+        if(!isFinal){
+          liveText = text;
+          return;
+        }
+        activeSpeechEngine = "";
+        nativeFallbackLang = "";
+        nativeFallbackSide = "";
+        await finalizeSpeech(side,text);
+      }catch(e){
+        console.warn("onNativeSpeechResult error", e);
+        showToast("Mikrofon sonucu alınamadı");
+        resetRecognizerUi();
+      }
+    };
+    window.onNativeSpeechError = async function(err){
+      const normalizedError = normalizeNativeSpeechError(arguments);
+      const errorText = String(normalizedError.message || "").trim();
+      console.warn("onNativeSpeechError", normalizedError);
+      if(manualStopPending){
+        resetRecognizerUi();
+        return;
+      }
+      const side = normalizedError.side === "top" ? "top" : (nativeFallbackSide || recordingSide || "bot");
+      const lang = nativeFallbackLang || (side === "top" ? topLang : botLang);
+      if(activeSpeechEngine === "native"){
+        if(nativeErrorGraceTimer){
+          clearTimeout(nativeErrorGraceTimer);
+          nativeErrorGraceTimer = null;
+        }
+        if(errorText === "manual_stop_empty"){
+          resetRecognizerUi();
+          return;
+        }
+        nativeErrorGraceTimer = setTimeout(async () => {
+          nativeErrorGraceTimer = null;
+          if(activeSpeechEngine !== "native"){
+            return;
+          }
+          activeSpeechEngine = "";
+          const voskReady = isOfflineSpeechReady(lang);
+          if(voskReady){
+            showToast("Cihaz STT sonuç vermedi, Vosk deneniyor...");
+            await startVoskSpeech(side, lang);
+            return;
+          }
+          if(errorText === "no_match" || errorText === "speech_timeout"){
+            showToast("Konuşma net alınamadı. Tekrar deneyin.");
+          }else{
+            showToast(offlineSpeechNotReadyMessage);
+          }
+          resetRecognizerUi();
+        }, 2500);
+        return;
+      }
+      showToast(errorText || offlineSpeechNotReadyMessage);
+      resetRecognizerUi();
+    };
+    if(topMic) topMic.addEventListener("click",() => startRecording("top"));
+    if(botMic) botMic.addEventListener("click",() => startRecording("bot"));
+    if(topLangBtn){
+      topLangBtn.addEventListener("click",(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        getTargets();
+        if(!allowedTargets.length){
+          openOfflineRequiredPopup(offlineLanguagePackNotReadyMessage);
+          return;
+        }
+        closeAllPop();
+        renderTopLanguagePicker();
+        if(popTop) popTop.classList.add("show");
+      });
+    }
+    if(closeTop) closeTop.addEventListener("click",closeAllPop);
+    document.addEventListener("click",(e) => {
+      const inside = (popTop && popTop.contains(e.target)) || (e.target.closest && e.target.closest("#topLangBtn"));
+      if(!inside) closeAllPop();
+    },{capture:true});
+    if(clearBtn){
+      clearBtn.addEventListener("click",() => {
+        clearBody(topBody);
+        clearBody(botBody);
+        if(recordingSide){
+          stopRecognizerByUser();
+        }else{
+          resetRecognizerUi();
+        }
+        getTargets();
+        if(!allowedTargets.length){
+          addBubble("top",offlineLanguagePackNotReadyMessage,false);
+        }
+      });
+    }
+    if(offlineRequiredCloseBtn){
+      offlineRequiredCloseBtn.addEventListener("click",closeOfflineRequiredPopup);
+    }
+    if(offlineRequiredBackdrop){
+      offlineRequiredBackdrop.addEventListener("click",(e) => {
+        if(e.target === offlineRequiredBackdrop) closeOfflineRequiredPopup();
+      });
+    }
+    function init(){
+      getTargets();
+      if(!allowedTargets.length){
+        openOfflineRequiredPopup(offlineLanguagePackNotReadyMessage);
+        addBubble("top",offlineLanguagePackNotReadyMessage,false);
+      }
+      try{
+        if(window.Native && typeof window.Native.requestF2FPermissions === "function"){
+          window.Native.requestF2FPermissions();
+        }
+      }catch(e){
+        console.warn("requestF2FPermissions error", e);
+      }
+      setTimeout(() => {
+        getTargets();
+        refreshLangLabels();
+      }, 700);
+      setTimeout(() => {
+        getTargets();
+        refreshLangLabels();
+      }, 1800);
+      showToast("Offline FaceToFace hazır");
+    }
+    init();
+</script>
+</body>
+</html>
