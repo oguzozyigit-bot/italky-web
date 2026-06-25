@@ -111,7 +111,10 @@ export function showNativeLangModal({ supabase, userId, onComplete } = {}) {
     btn.innerHTML = "Kaydediliyor…";
 
     // 1. localStorage
-    try { localStorage.setItem("italky_native_lang_v7", selected); } catch {}
+    try {
+      localStorage.setItem("italky_native_lang_v7", selected);
+      localStorage.setItem("italky_native_lang_confirmed", "1");
+    } catch {}
 
     // 2. Supabase profiles
     try {

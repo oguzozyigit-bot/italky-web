@@ -374,6 +374,10 @@ saveBtn.addEventListener("click", async () => {
     console.warn("native_lang Supabase kayıt hatası:", e);
   }
 
+  try {
+    localStorage.setItem("italky_native_lang_confirmed", "1");
+  } catch {}
+
   await notifyAppToPrepare(selected);
 
   setTimeout(() => {

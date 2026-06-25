@@ -907,9 +907,12 @@ async function hydrateShellMeta() {
 
     // native_lang kontrolü: Supabase query'den bağımsız çalışır
     // Böylece native_lang kolonu henüz eklenmemişse bile modal gösterilebilir
+    // "italky_native_lang_confirmed" yalnızca kullanıcı modal/setup sayfasından onayladığında set edilir.
+    // syncSiteLangKeys() site_lang'ı v7'ye kopyalar ama bu "confirmed" sayılmaz.
     const localNativeLang = String(localStorage.getItem("italky_native_lang_v7") || "").trim().toLowerCase();
+    const nativeLangConfirmed = !!localStorage.getItem("italky_native_lang_confirmed");
     const skipPages = ["/pages/native_lang_setup.html", "/pages/login.html", "/pages/auth_callback.html", "/pages/code_load.html"];
-    const canShowModal = !localNativeLang && !skipPages.some(p => window.location.pathname.includes(p));
+    const canShowModal = !nativeLangConfirmed && !skipPages.some(p => window.location.pathname.includes(p));
 
     const { data, error } = await supabase
       .from("profiles")
@@ -921,6 +924,7 @@ async function hydrateShellMeta() {
     const dbNativeLang = String(data?.native_lang || "").trim().toLowerCase();
     if (dbNativeLang) {
       localStorage.setItem("italky_native_lang_v7", dbNativeLang);
+      localStorage.setItem("italky_native_lang_confirmed", "1");
       try { window.OfflineTranslate?.setNativeOfflineLang?.(dbNativeLang); } catch {}
     } else if (canShowModal) {
       // Supabase'de de localStorage'da da yok → modal göster
