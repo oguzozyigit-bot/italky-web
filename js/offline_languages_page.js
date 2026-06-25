@@ -178,6 +178,23 @@ function canUseNativeMirror() {
   );
 }
 
+function canUseNativeWarmupState() {
+  return !!(
+    window.OfflineTranslate &&
+    typeof window.OfflineTranslate.isNativeWarmupInProgress === "function"
+  );
+}
+
+function isNativeWarmupInProgress() {
+  try {
+    if (!canUseNativeWarmupState()) return false;
+    return !!window.OfflineTranslate.isNativeWarmupInProgress();
+  } catch (e) {
+    console.warn("Native warmup durumu okunamadı:", e);
+    return false;
+  }
+}
+
 function getNativeInstalledPairs() {
   try {
     if (!window.OfflineTranslate?.getInstalledOfflinePairs) return {};
@@ -420,6 +437,30 @@ function normalizeInstalledVsProgress() {
   if (changed) saveDownloadingMap(downloading);
 }
 
+function syncWarmupProgressState() {
+  const targetCode = "en";
+  const installed = isLangInstalledBiDirectional(targetCode);
+  const inProgress = isNativeWarmupInProgress();
+  const current = getLangProgress(targetCode);
+
+  if (inProgress && !installed) {
+    setLangProgress(targetCode, {
+      autoWarmup: true,
+      percent: Math.max(6, Number(current?.percent || 0)),
+      label: "Kuruluyor...",
+      message: "Arka planda otomatik kurulum devam ediyor. Lütfen bekleyiniz."
+    });
+    globalDownloadLock = true;
+    return true;
+  }
+
+  if (current?.autoWarmup) {
+    clearLangProgress(targetCode);
+    return true;
+  }
+  return false;
+}
+
 function showConfirm(title, text, okText = "İndir") {
   return new Promise((resolve) => {
     confirmResolver = resolve;
@@ -611,6 +652,19 @@ function renderInstalledList() {
 async function startLanguageInstallFlow(langCode) {
   const code = canonical(langCode);
   if (!code || busy || globalDownloadLock) return;
+
+  if (code === "en" && isNativeWarmupInProgress()) {
+    setLangProgress(code, {
+      autoWarmup: true,
+      percent: Math.max(8, Number(getLangProgress(code)?.percent || 0)),
+      label: "Kuruluyor...",
+      message: "Bu dil arka planda otomatik kuruluyor."
+    });
+    globalDownloadLock = true;
+    renderInstalledList();
+    toast("İngilizce arka planda kuruluyor. Lütfen bekleyiniz.");
+    return;
+  }
 
   const info = getLangInfo(code);
   const nativeInfo = getLangInfo(getNativeLang());
@@ -824,11 +878,18 @@ async function init() {
   clearStaleDownloadingState();
   mergeInstalledPairsWithNative();
   normalizeInstalledVsProgress();
+  syncWarmupProgressState();
   refreshHomeWidgetFromInstalled("ready");
 
   renderMyLanguageButton();
   renderLicenseInfo();
   renderInstalledList();
+
+  // Sayfa açıldığında event kaçtıysa warmup durumunu periyodik eşitle
+  setInterval(() => {
+    const changed = syncWarmupProgressState();
+    if (changed) renderInstalledList();
+  }, 3000);
 
   searchInput?.addEventListener("input", renderInstalledList);
 
