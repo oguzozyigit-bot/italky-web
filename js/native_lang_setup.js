@@ -359,6 +359,21 @@ window.addEventListener("italky-offline-failed", (e) => {
 
 saveBtn.addEventListener("click", async () => {
   saveBtn.disabled = true;
+
+  // Supabase'e yaz (kullanıcı giriş yaptıysa)
+  try {
+    const { supabase } = await import("/js/supabase_client.js");
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      await supabase
+        .from("profiles")
+        .update({ native_lang: selected })
+        .eq("id", session.user.id);
+    }
+  } catch (e) {
+    console.warn("native_lang Supabase kayıt hatası:", e);
+  }
+
   await notifyAppToPrepare(selected);
 
   setTimeout(() => {

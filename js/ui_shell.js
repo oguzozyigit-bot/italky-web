@@ -907,11 +907,28 @@ async function hydrateShellMeta() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("last_login_at, role, is_admin, full_name, avatar_url, email")
+      .select("last_login_at, role, is_admin, full_name, avatar_url, email, native_lang")
       .eq("id", userId)
       .maybeSingle();
 
     if (error || !data) return;
+
+    // native_lang: Supabase → localStorage senkronizasyonu
+    const dbNativeLang = String(data.native_lang || "").trim().toLowerCase();
+    const localNativeLang = String(localStorage.getItem("italky_native_lang_v7") || "").trim().toLowerCase();
+    if (dbNativeLang) {
+      localStorage.setItem("italky_native_lang_v7", dbNativeLang);
+      // Android bridge'e de bildir
+      try { window.OfflineTranslate?.setNativeOfflineLang?.(dbNativeLang); } catch {}
+    } else if (!localNativeLang) {
+      // Supabase'de de yoksa ve bu sayfa setup değilse → setup'a yönlendir
+      const currentPath = window.location.pathname;
+      const skipPages = ["/pages/native_lang_setup.html", "/pages/login.html", "/pages/auth_callback.html"];
+      if (!skipPages.some(p => currentPath.includes(p))) {
+        window.location.replace("/pages/native_lang_setup.html");
+        return;
+      }
+    }
 
     const nameEl = document.getElementById("menuUserName");
     if (nameEl && data.full_name) {
