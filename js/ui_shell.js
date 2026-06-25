@@ -905,39 +905,32 @@ async function hydrateShellMeta() {
     const userId = user?.id || "";
     if (!userId) return;
 
+    // native_lang kontrolü: Supabase query'den bağımsız çalışır
+    // Böylece native_lang kolonu henüz eklenmemişse bile modal gösterilebilir
+    const localNativeLang = String(localStorage.getItem("italky_native_lang_v7") || "").trim().toLowerCase();
+    const skipPages = ["/pages/native_lang_setup.html", "/pages/login.html", "/pages/auth_callback.html", "/pages/code_load.html"];
+    const canShowModal = !localNativeLang && !skipPages.some(p => window.location.pathname.includes(p));
+
     const { data, error } = await supabase
       .from("profiles")
       .select("last_login_at, role, is_admin, full_name, avatar_url, email, native_lang")
       .eq("id", userId)
       .maybeSingle();
 
-    if (error || !data) return;
-
     // native_lang: Supabase → localStorage senkronizasyonu
-    const dbNativeLang = String(data.native_lang || "").trim().toLowerCase();
-    const localNativeLang = String(localStorage.getItem("italky_native_lang_v7") || "").trim().toLowerCase();
+    const dbNativeLang = String(data?.native_lang || "").trim().toLowerCase();
     if (dbNativeLang) {
       localStorage.setItem("italky_native_lang_v7", dbNativeLang);
-      // Android bridge'e de bildir
       try { window.OfflineTranslate?.setNativeOfflineLang?.(dbNativeLang); } catch {}
-    } else if (!localNativeLang) {
-      // Supabase'de de localStorage'da da yok → modal popup göster
-      const currentPath = window.location.pathname;
-      const skipPages = ["/pages/native_lang_setup.html", "/pages/login.html", "/pages/auth_callback.html", "/pages/code_load.html"];
-      if (!skipPages.some(p => currentPath.includes(p))) {
-        try {
-          const { showNativeLangModal } = await import("/js/native_lang_modal.js");
-          showNativeLangModal({
-            supabase,
-            userId,
-            onComplete: (lang) => {
-              // Offline languages sayfasındaki ilk tercih için de güncelle
-              try { window.OfflineTranslate?.setNativeOfflineLang?.(lang); } catch {}
-            }
-          });
-        } catch (e) { console.warn("native lang modal:", e); }
-      }
+    } else if (canShowModal) {
+      // Supabase'de de localStorage'da da yok → modal göster
+      try {
+        const { showNativeLangModal } = await import("/js/native_lang_modal.js");
+        showNativeLangModal({ supabase, userId });
+      } catch (e) { console.warn("native lang modal:", e); }
     }
+
+    if (error || !data) return;
 
     const nameEl = document.getElementById("menuUserName");
     if (nameEl && data.full_name) {
