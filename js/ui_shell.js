@@ -1168,3 +1168,129 @@ window.addEventListener("focus", () => {
   syncSiteLangKeys();
   hydrateNativeLangPill();
 });
+
+// ─── Offline dil indirme bildirimleri ────────────────────────────────────────
+(function () {
+  const OFFLINE_LANG_PAGE = "/pages/offline_languages.html";
+
+  const LANG_NAMES = {
+    tr:"Türkçe",en:"İngilizce",de:"Almanca",fr:"Fransızca",es:"İspanyolca",
+    it:"İtalyanca",ar:"Arapça",ru:"Rusça",pt:"Portekizce",zh:"Çince",
+    ja:"Japonca",ko:"Korece",nl:"Hollandaca",pl:"Lehçe",uk:"Ukraynaca",
+    az:"Azerbaycanca",hi:"Hintçe",sv:"İsveççe",no:"Norveççe",da:"Danca",
+    fi:"Fince",el:"Yunanca",cs:"Çekçe",ro:"Rumence",hu:"Macarca",
+    bg:"Bulgarca",sk:"Slovakça",id:"Endonezce",ms:"Malayca",vi:"Vietnamca",
+    th:"Tay dili",fa:"Farsça",ur:"Urduca",bn:"Bengalce",
+  };
+
+  function langName(code) {
+    return LANG_NAMES[String(code || "").toLowerCase()] || String(code || "").toUpperCase();
+  }
+
+  function isOnOfflinePage() {
+    return window.location.pathname.includes(OFFLINE_LANG_PAGE.replace(".html","")) ||
+           window.location.pathname.includes("offline_languages");
+  }
+
+  function injectStyles() {
+    if (document.getElementById("_dlNotifStyle")) return;
+    const s = document.createElement("style");
+    s.id = "_dlNotifStyle";
+    s.textContent = `
+      #_dlNotifOverlay {
+        position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;
+        display:flex;align-items:center;justify-content:center;padding:20px;
+      }
+      #_dlNotifCard {
+        background:#fff;border-radius:18px;padding:28px 24px 22px;max-width:360px;
+        width:100%;box-shadow:0 8px 40px rgba(0,0,0,.22);text-align:center;
+        animation:_dlFadeIn .22s ease;
+      }
+      @keyframes _dlFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+      #_dlNotifCard .dl-icon{font-size:2.4rem;margin-bottom:10px}
+      #_dlNotifCard h3{margin:0 0 10px;font-size:1.1rem;color:#1a2240;font-weight:700}
+      #_dlNotifCard p{margin:0 0 20px;font-size:.92rem;color:#444;line-height:1.55}
+      #_dlNotifCard .dl-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+      #_dlNotifCard .dl-btn-primary{
+        background:linear-gradient(135deg,#1a3a6b,#2563eb);color:#fff;border:none;
+        border-radius:10px;padding:11px 22px;font-size:.95rem;font-weight:600;
+        cursor:pointer;flex:1;min-width:110px;
+      }
+      #_dlNotifCard .dl-btn-secondary{
+        background:#f0f4ff;color:#1a3a6b;border:none;border-radius:10px;
+        padding:11px 22px;font-size:.95rem;font-weight:600;cursor:pointer;
+        flex:1;min-width:110px;
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  function removeNotif() {
+    document.getElementById("_dlNotifOverlay")?.remove();
+  }
+
+  function showDownloadingNotif(targetLang) {
+    if (isOnOfflinePage()) return;
+    injectStyles();
+    removeNotif();
+    const name = langName(targetLang);
+    const el = document.createElement("div");
+    el.id = "_dlNotifOverlay";
+    el.innerHTML = `
+      <div id="_dlNotifCard">
+        <div class="dl-icon">⏳</div>
+        <h3>Dil İndirimi Devam Ediyor</h3>
+        <p>${name} dil paketi arka planda kuruluyor.<br><br>
+        Bu işlem sunucu yoğunluğuna ve internet hızınıza göre değişkenlik gösterecektir.<br>
+        <b>Bu sayfada beklemenize gerek yok.</b></p>
+        <div class="dl-btns">
+          <button class="dl-btn-primary" id="_dlNotifOk">Tamam</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    document.getElementById("_dlNotifOk").addEventListener("click", () => {
+      removeNotif();
+      if (!window.location.pathname.includes("/pages/home")) {
+        window.location.href = "/pages/home.html";
+      }
+    });
+  }
+
+  function showDownloadCompleteNotif(targetLang) {
+    if (isOnOfflinePage()) return;
+    injectStyles();
+    removeNotif();
+    const name = langName(targetLang);
+    const el = document.createElement("div");
+    el.id = "_dlNotifOverlay";
+    el.innerHTML = `
+      <div id="_dlNotifCard">
+        <div class="dl-icon">🎉</div>
+        <h3>Dil Kurulumu Tamamlandı!</h3>
+        <p><b>${name}</b> artık internet bağlantısı olmadan da kullanılabilir.<br><br>
+        Yeni bir dil indirmek ister misiniz?</p>
+        <div class="dl-btns">
+          <button class="dl-btn-primary" id="_dlNotifYes">Evet</button>
+          <button class="dl-btn-secondary" id="_dlNotifNo">Hayır</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    document.getElementById("_dlNotifYes").addEventListener("click", () => {
+      removeNotif();
+      window.location.href = "/pages/offline_languages.html";
+    });
+    document.getElementById("_dlNotifNo").addEventListener("click", () => {
+      removeNotif();
+    });
+  }
+
+  window.addEventListener("offlinePairDownloadStarted", (e) => {
+    const target = e.detail?.target || e.detail?.source || "";
+    if (target) showDownloadingNotif(target);
+  });
+
+  window.addEventListener("offlinePairDownloadCompleted", (e) => {
+    const target = e.detail?.target || e.detail?.source || "";
+    if (target) showDownloadCompleteNotif(target);
+  });
+})();
