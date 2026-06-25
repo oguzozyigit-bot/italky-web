@@ -921,12 +921,21 @@ async function hydrateShellMeta() {
       // Android bridge'e de bildir
       try { window.OfflineTranslate?.setNativeOfflineLang?.(dbNativeLang); } catch {}
     } else if (!localNativeLang) {
-      // Supabase'de de yoksa ve bu sayfa setup değilse → setup'a yönlendir
+      // Supabase'de de localStorage'da da yok → modal popup göster
       const currentPath = window.location.pathname;
-      const skipPages = ["/pages/native_lang_setup.html", "/pages/login.html", "/pages/auth_callback.html"];
+      const skipPages = ["/pages/native_lang_setup.html", "/pages/login.html", "/pages/auth_callback.html", "/pages/code_load.html"];
       if (!skipPages.some(p => currentPath.includes(p))) {
-        window.location.replace("/pages/native_lang_setup.html");
-        return;
+        try {
+          const { showNativeLangModal } = await import("/js/native_lang_modal.js");
+          showNativeLangModal({
+            supabase,
+            userId,
+            onComplete: (lang) => {
+              // Offline languages sayfasındaki ilk tercih için de güncelle
+              try { window.OfflineTranslate?.setNativeOfflineLang?.(lang); } catch {}
+            }
+          });
+        } catch (e) { console.warn("native lang modal:", e); }
       }
     }
 
