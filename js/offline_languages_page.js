@@ -456,9 +456,35 @@ function syncWarmupProgressState() {
 
   if (current?.autoWarmup) {
     clearLangProgress(targetCode);
+    // Warmup just finished — pull fresh installed pairs from native in case
+    // they were saved after the page's initial load.
+    syncStorageFromNative();
+    mergeInstalledPairsWithNative();
     return true;
   }
   return false;
+}
+
+/**
+ * Defensive re-sync: if the local installed-pairs map looks empty but native
+ * reports real pairs, pull them in.  Handles the race where warmup completes
+ * (or was already done) before the page had a chance to read the pairs, and
+ * no offlinePairDownloadCompleted event was fired.
+ */
+function maybeResyncPairsFromNative() {
+  if (!canUseNativeMirror()) return false;
+  if (Object.keys(getDownloadingMap()).length > 0) return false;
+
+  const localPairs = getInstalledPairs();
+  const hasRealLocal = Object.keys(localPairs).some((k) => !k.startsWith("__"));
+  if (hasRealLocal) return false;
+
+  const nativePairs = getNativeInstalledPairs();
+  const hasRealNative = Object.keys(nativePairs).some((k) => !k.startsWith("__"));
+  if (!hasRealNative) return false;
+
+  mergeInstalledPairsWithNative();
+  return true;
 }
 
 function showConfirm(title, text, okText = "İndir") {
@@ -885,10 +911,14 @@ async function init() {
   renderLicenseInfo();
   renderInstalledList();
 
-  // Sayfa açıldığında event kaçtıysa warmup durumunu periyodik eşitle
+  // Sayfa açıldığında event kaçtıysa warmup durumunu ve kurulu çiftleri periyodik eşitle
   setInterval(() => {
-    const changed = syncWarmupProgressState();
-    if (changed) renderInstalledList();
+    const warmupChanged = syncWarmupProgressState();
+    const pairsChanged = maybeResyncPairsFromNative();
+    if (warmupChanged || pairsChanged) {
+      renderLicenseInfo();
+      renderInstalledList();
+    }
   }, 3000);
 
   searchInput?.addEventListener("input", renderInstalledList);
