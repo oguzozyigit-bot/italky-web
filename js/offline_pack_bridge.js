@@ -61,6 +61,12 @@ function installLoginEntryGuestAdGate() {
   } catch {}
 }
 
+function resolveModelParent(code = "") {
+  const reg = window.ItalkyLanguageRegistry;
+  if (reg?.modelParent) return reg.modelParent(code);
+  return canonical(code);
+}
+
 function canonical(code = "") {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
@@ -121,7 +127,7 @@ function isPendingStartExpired(item) {
   const percent = Number(item.percent || 0);
 
   // Native started/progress event geldiyse artik web tarafi erken temizlemesin.
-  // ML Kit ilk model indirmesi birkac dakika surebilir.
+  // Supabase ONNX ilk model indirmesi birkac dakika surebilir.
   if (percent >= 10) return false;
 
   const t = getItemTime(item);
@@ -821,8 +827,10 @@ function startNativeDownload(source, target, langInfoResolver, options = {}) {
   try {
     window.OfflineTranslate.downloadBiDirectionalPair(
       JSON.stringify({
-        source: s,
-        target: t
+        source: resolveModelParent(s),
+        target: resolveModelParent(t),
+        displaySource: s,
+        displayTarget: t
       })
     );
 

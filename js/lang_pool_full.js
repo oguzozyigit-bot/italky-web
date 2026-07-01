@@ -1,15 +1,11 @@
 /* FILE: /js/lang_pool_full.js */
 
-/**
- * ML Kit On-Device (İnternetsiz) Çeviri Desteklenen Diller Listesi
- * Bu listede olmayan diller sadece Cloud (Online) üzerinden çevrilebilir.
- */
-const ML_KIT_SUPPORTED = [
-  "af", "ar", "be", "bg", "bn", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", 
-  "fa", "fi", "fr", "ga", "gl", "gu", "he", "hi", "hr", "ht", "hu", "id", "is", "it", "ja", 
-  "ka", "kn", "ko", "lt", "lv", "mk", "mr", "ms", "mt", "nl", "no", "pl", "pt", "ro", "ru", 
-  "sk", "sl", "sq", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh"
-];
+import { LANGUAGE_REGISTRY_129 } from "/js/language_registry_129.js";
+
+/** Supabase ONNX offline — 129 display langs (dialect clone). */
+const OFFLINE_CODE_SET = new Set(
+  LANGUAGE_REGISTRY_129.flatMap((e) => [e.code, e.code.split("-")[0], e.parent])
+);
 
 export const LANG_POOL = [
   // Avrupa Dilleri
@@ -87,8 +83,8 @@ export const LANG_POOL = [
   { code: "sw", flag: "🇰🇪", region: "africa", featured: true }
 ].map(lang => ({
   ...lang,
-  // Otomatik mühür: ML Kit listesinde varsa true döner
-  canOffline: ML_KIT_SUPPORTED.includes(lang.code)
+  // Registry 129: Supabase ONNX offline destekli dil
+  canOffline: OFFLINE_CODE_SET.has(lang.code)
 }));
 
 const REGION_NAMES = {

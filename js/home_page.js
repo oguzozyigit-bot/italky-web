@@ -14,7 +14,7 @@ const isPremium = accessMode === "premium" || accessMode === "nfc";
 const LOCK_MESSAGE = `
   <div class="premium-lock-pop">
     <div class="premium-lock-title">Premium Üye Ol</div>
-    <div class="premium-lock-text">67 offline dili ücretsiz indir.</div>
+    <div class="premium-lock-text">129 offline dili ücretsiz indir.</div>
     <div class="premium-lock-text">Tüm modüllere eriş.</div>
     <button class="premium-lock-btn" type="button">Premium Üyelik Satın Al</button>
   </div>

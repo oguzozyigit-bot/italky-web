@@ -1,6 +1,13 @@
 // /js/offline_languages_page.js
 
 import { mountShell } from "/js/ui_shell.js";
+import {
+  listOfflineLanguages,
+  getLangEntry,
+  normalizeLangCode,
+  modelParent,
+  OFFLINE_ONLINE_LANG_TARGET
+} from "/js/language_registry_129.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -32,67 +39,12 @@ const STORAGE = {
 
 const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
 
-const ALL_OFFLINE_LANGS = [
-  { code: "af", name: "Afrikanca", flag: "🇿🇦" },
-  { code: "ar", name: "Arapça", flag: "🇸🇦" },
-  { code: "be", name: "Belarusça", flag: "🇧🇾" },
-  { code: "bg", name: "Bulgarca", flag: "🇧🇬" },
-  { code: "bn", name: "Bengalce", flag: "🇧🇩" },
-  { code: "ca", name: "Katalanca", flag: "🇪🇸" },
-  { code: "cs", name: "Çekçe", flag: "🇨🇿" },
-  { code: "cy", name: "Galce", flag: "🏴" },
-  { code: "da", name: "Danca", flag: "🇩🇰" },
-  { code: "de", name: "Almanca", flag: "🇩🇪" },
-  { code: "el", name: "Yunanca", flag: "🇬🇷" },
-  { code: "en", name: "İngilizce", flag: "🇬🇧" },
-  { code: "eo", name: "Esperanto", flag: "🌍" },
-  { code: "es", name: "İspanyolca", flag: "🇪🇸" },
-  { code: "et", name: "Estonca", flag: "🇪🇪" },
-  { code: "fa", name: "Farsça", flag: "🇮🇷" },
-  { code: "fi", name: "Fince", flag: "🇫🇮" },
-  { code: "fr", name: "Fransızca", flag: "🇫🇷" },
-  { code: "ga", name: "İrlandaca", flag: "🇮🇪" },
-  { code: "gl", name: "Galiçyaca", flag: "🇪🇸" },
-  { code: "gu", name: "Guceratça", flag: "🇮🇳" },
-  { code: "he", name: "İbranice", flag: "🇮🇱" },
-  { code: "hi", name: "Hintçe", flag: "🇮🇳" },
-  { code: "hr", name: "Hırvatça", flag: "🇭🇷" },
-  { code: "ht", name: "Haiti Kreyolu", flag: "🇭🇹" },
-  { code: "hu", name: "Macarca", flag: "🇭🇺" },
-  { code: "id", name: "Endonezce", flag: "🇮🇩" },
-  { code: "is", name: "İzlandaca", flag: "🇮🇸" },
-  { code: "it", name: "İtalyanca", flag: "🇮🇹" },
-  { code: "ja", name: "Japonca", flag: "🇯🇵" },
-  { code: "ka", name: "Gürcüce", flag: "🇬🇪" },
-  { code: "kn", name: "Kannada", flag: "🇮🇳" },
-  { code: "ko", name: "Korece", flag: "🇰🇷" },
-  { code: "lt", name: "Litvanca", flag: "🇱🇹" },
-  { code: "lv", name: "Letonca", flag: "🇱🇻" },
-  { code: "mk", name: "Makedonca", flag: "🇲🇰" },
-  { code: "mr", name: "Marathi", flag: "🇮🇳" },
-  { code: "ms", name: "Malayca", flag: "🇲🇾" },
-  { code: "mt", name: "Maltaca", flag: "🇲🇹" },
-  { code: "nl", name: "Hollandaca", flag: "🇳🇱" },
-  { code: "no", name: "Norveççe", flag: "🇳🇴" },
-  { code: "pl", name: "Lehçe", flag: "🇵🇱" },
-  { code: "pt", name: "Portekizce", flag: "🇵🇹" },
-  { code: "ro", name: "Romence", flag: "🇷🇴" },
-  { code: "ru", name: "Rusça", flag: "🇷🇺" },
-  { code: "sk", name: "Slovakça", flag: "🇸🇰" },
-  { code: "sl", name: "Slovence", flag: "🇸🇮" },
-  { code: "sq", name: "Arnavutça", flag: "🇦🇱" },
-  { code: "sv", name: "İsveççe", flag: "🇸🇪" },
-  { code: "sw", name: "Svahili", flag: "🇹🇿" },
-  { code: "ta", name: "Tamilce", flag: "🇮🇳" },
-  { code: "te", name: "Telugu", flag: "🇮🇳" },
-  { code: "th", name: "Tayca", flag: "🇹🇭" },
-  { code: "tl", name: "Tagalog", flag: "🇵🇭" },
-  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-  { code: "uk", name: "Ukraynaca", flag: "🇺🇦" },
-  { code: "ur", name: "Urduca", flag: "🇵🇰" },
-  { code: "vi", name: "Vietnamca", flag: "🇻🇳" },
-  { code: "zh", name: "Çince", flag: "🇨🇳" }
-];
+const ALL_OFFLINE_LANGS = listOfflineLanguages().map((e) => ({
+  code: e.code,
+  name: e.name,
+  flag: e.flag,
+  parent: e.parent
+}));
 
 const PRIORITY_ORDER = ["tr", "en", "de", "fr", "ru", "ar", "es", "it"];
 
@@ -119,15 +71,22 @@ function safeJsonParse(raw, fallback) {
 }
 
 function canonical(code) {
-  return String(code || "").trim().toLowerCase().replace("_", "-").split("-")[0];
+  return normalizeLangCode(code).split("-")[0];
+}
+
+function displayCode(code) {
+  const entry = getLangEntry(code);
+  return entry ? entry.code : normalizeLangCode(code);
 }
 
 function pairKey(from, to) {
-  return `${canonical(from)}_${canonical(to)}`;
+  return `${displayCode(from)}_${displayCode(to)}`;
 }
 
 function getLangInfo(code) {
-  const normalized = canonical(code);
+  const entry = getLangEntry(code);
+  if (entry) return { code: entry.code, name: entry.name, flag: entry.flag };
+  const normalized = displayCode(code);
   return LANGS.find((l) => l.code === normalized) || {
     code: normalized,
     name: String(code || "").toUpperCase(),
@@ -599,7 +558,7 @@ function renderLicenseInfo() {
   if (!licenseInfo) return;
   const nativeInfo = getLangInfo(getNativeLang());
   const installedCount = getInstalledLangCodes().length;
-  licenseInfo.textContent = `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Kurulu dil: ${installedCount} • Offline izin: ${getOfflineLicenseDays()} gün`;
+  licenseInfo.textContent = `Benim dilim: ${nativeInfo.name} ${nativeInfo.flag} • Kurulu dil: ${installedCount} / ${OFFLINE_ONLINE_LANG_TARGET} • Offline izin: ${getOfflineLicenseDays()} gün`;
 }
 
 function renderInstalledList() {
@@ -756,7 +715,14 @@ async function installBiDirectionalPair(langCode) {
       return;
     }
 
-    window.OfflineTranslate.downloadBiDirectionalPair(JSON.stringify({ source: nativeLang, target: code }));
+    window.OfflineTranslate.downloadBiDirectionalPair(
+      JSON.stringify({
+        source: modelParent(nativeLang),
+        target: modelParent(code),
+        displaySource: displayCode(nativeLang),
+        displayTarget: displayCode(code)
+      })
+    );
     toast(`${info.name} dil paketiniz indiriliyor.`);
   } catch (e) {
     console.error("[offline_languages_page] installBiDirectionalPair:", e);

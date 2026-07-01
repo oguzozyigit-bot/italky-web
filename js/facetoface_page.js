@@ -2,6 +2,7 @@ import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 import { ensureFaceToFacePremiumAccess } from "/js/facetoface_premium_gate.js";
+import { modelParent } from "/js/language_registry_129.js";
 
 const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
@@ -1282,14 +1283,16 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
 
   if (currentRuntimeMode === "offline") {
     try {
+      const modelFrom = modelParent(from);
+      const modelTo = modelParent(to);
       const offlineRaw = await offlineTranslateRequest({
-        from: src,
-        to: dst,
+        from: modelFrom,
+        to: modelTo,
         text: String(text || "").trim(),
-        sourceLang: src,
-        targetLang: dst,
-        source: src,
-        target: dst,
+        sourceLang: modelFrom,
+        targetLang: modelTo,
+        source: modelFrom,
+        target: modelTo,
         tone: canonTone(tone),
         side: context.side || "",
         targetSide: context.targetSide || "",
@@ -2222,6 +2225,31 @@ function resolveStartupLang() {
   return canonical(base);
 }
 
+function bindConnectivityOfflineFallback() {
+  const goOfflineIfNeeded = () => {
+    if (navigator.onLine !== false) return;
+    if (!window.OfflineTranslate) return;
+    if (currentRuntimeMode === "offline") return;
+    applyOfflineStartLayout();
+    currentRuntimeMode = "offline";
+    syncModeUi();
+    showToast("İnternet yok — offline mod");
+  };
+
+  window.addEventListener("offline", goOfflineIfNeeded);
+  if (navigator.onLine === false) goOfflineIfNeeded();
+}
+
+function resolveStartupRuntimeMode() {
+  const saved = String(localStorage.getItem(F2F_MODE_KEY) || "").trim().toLowerCase();
+  const hasBridge = !!(window.OfflineTranslate && typeof window.OfflineTranslate.translate === "function");
+
+  if (!navigator.onLine && hasBridge) return "offline";
+  if (saved === "offline" && hasBridge) return "offline";
+  return "online";
+}
+}
+
 function startBoot() {
   if (bootStarted) return bootPromise;
   bootStarted = true;
@@ -2248,7 +2276,10 @@ function startBoot() {
       ]);
     } catch {}
 
-    currentRuntimeMode = "online";
+    currentRuntimeMode = resolveStartupRuntimeMode();
+    if (currentRuntimeMode === "offline") {
+      applyOfflineStartLayout();
+    }
     syncModeUi();
 
     bootReady = true;
@@ -2513,6 +2544,7 @@ function bind() {
   bindMicButtons();
   bindInputs();
   bindSpeechVoices();
+  bindConnectivityOfflineFallback();
 
   try {
     startBoot();
