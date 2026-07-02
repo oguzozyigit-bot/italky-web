@@ -414,9 +414,25 @@ function hasAnyInstalledPair() {
 function hasInstalledPair(source, target) {
   const s = canonical(source);
   const t = canonical(target);
-  const installed = getInstalledPairs();
+  if (!s || !t || s === t) return false;
 
-  return !!installed[pairKey(s, t)] && !!installed[pairKey(t, s)];
+  try {
+    if (window.OfflineTranslate?.hasInstalledOfflinePair) {
+      return !!window.OfflineTranslate.hasInstalledOfflinePair(s, t);
+    }
+    if (window.OfflineTranslate?.isModelReady) {
+      const raw = window.OfflineTranslate.isModelReady(
+        JSON.stringify({ from: s, to: t, source: s, target: t })
+      );
+      const parsed = JSON.parse(raw || "{}");
+      if (parsed.modelReady || parsed.ready) return true;
+    }
+  } catch (e) {
+    console.warn("[offline_pack_bridge] native pair check failed:", e);
+  }
+
+  const installed = getInstalledPairs();
+  return !!installed[pairKey(s, t)];
 }
 
 function markInstalledPair(source, target) {

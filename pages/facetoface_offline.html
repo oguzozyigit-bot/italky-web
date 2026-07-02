@@ -767,14 +767,19 @@
     function hasInstalledPair(from,to){
       const f = canonical(from);
       const t = canonical(to);
+      if(!f || !t || f === t) return false;
+      try{
+        if(window.OfflineTranslate && typeof window.OfflineTranslate.hasInstalledOfflinePair === "function"){
+          return !!window.OfflineTranslate.hasInstalledOfflinePair(f, t);
+        }
+      }catch(e){
+        console.warn("hasInstalledPair native error", e);
+      }
       const installed = getInstalledPairs();
       return Object.values(installed).some((item) => {
         const a = canonical(item && item.from);
         const b = canonical(item && item.to);
-        return (
-          (a === f && b === t) ||
-          (a === t && b === f)
-        );
+        return a === f && b === t;
       });
     }
     function refreshLangLabels(){
