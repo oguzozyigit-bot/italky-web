@@ -71,6 +71,55 @@ function canonical(code = "") {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
+const RESERVED_PAIR_KEY = /^__|native_checked|source_system|android_onnx/i;
+const RESERVED_LANG_CODES = new Set(["native", "checked", "android", "onnx", "supabase", "source", "system"]);
+
+function isValidInstalledLang(code = "") {
+  const c = canonical(code);
+  return !!c && !RESERVED_LANG_CODES.has(c);
+}
+
+function sanitizeInstalledPairs(map) {
+  const out = {};
+  if (!map || typeof map !== "object") return out;
+
+  Object.entries(map).forEach(([key, value]) => {
+    if (RESERVED_PAIR_KEY.test(String(key || ""))) return;
+    if (!value || typeof value !== "object") return;
+
+    const from = canonical(value.from || value.source || value.sourceLang || value.src || "");
+    const to = canonical(value.to || value.target || value.targetLang || value.dst || "");
+    if (!isValidInstalledLang(from) || !isValidInstalledLang(to) || from === to) return;
+
+    const pk = `${from}_${to}`;
+    out[pk] = { ...value, from, to, source: from, target: to };
+  });
+
+  return out;
+}
+
+function isNativeWarmupInProgress() {
+  try {
+    return !!window.OfflineTranslate?.isNativeWarmupInProgress?.();
+  } catch {
+    return false;
+  }
+}
+
+function eventUiTarget(d = {}) {
+  const reg = window.ItalkyLanguageRegistry;
+  const raw = d.displayTarget || d.target || "";
+  if (reg?.normalizeLangCode) return reg.normalizeLangCode(raw);
+  return String(raw || "").toLowerCase().trim();
+}
+
+function eventUiSource(d = {}) {
+  const reg = window.ItalkyLanguageRegistry;
+  const raw = d.displaySource || d.source || getNativeLang();
+  if (reg?.normalizeLangCode) return reg.normalizeLangCode(raw);
+  return String(raw || "").toLowerCase().trim();
+}
+
 function readJson(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -313,15 +362,16 @@ function startNextQueuedDownload(langInfoResolver) {
 
 function getInstalledPairs() {
   syncInstalledPairsFromNative();
-  return readJson(OFFLINE_INSTALLED_KEY, {});
+  return sanitizeInstalledPairs(readJson(OFFLINE_INSTALLED_KEY, {}));
 }
 
 function saveInstalledPairs(map) {
-  writeJson(OFFLINE_INSTALLED_KEY, map || {});
+  const clean = sanitizeInstalledPairs(map || {});
+  writeJson(OFFLINE_INSTALLED_KEY, clean);
 
   try {
-    if (window.OfflineTranslate?.setInstalledOfflinePairs) {
-      window.OfflineTranslate.setInstalledOfflinePairs(JSON.stringify(map || {}));
+    if (!isNativeWarmupInProgress() && window.OfflineTranslate?.setInstalledOfflinePairs) {
+      window.OfflineTranslate.setInstalledOfflinePairs(JSON.stringify(clean));
     }
   } catch (e) {
     console.warn("[offline_pack_bridge] native installed write failed:", e);
@@ -334,11 +384,9 @@ function syncInstalledPairsFromNative() {
   try {
     if (!window.OfflineTranslate?.getInstalledOfflinePairs) return;
 
-    const raw = window.OfflineTranslate.getInstalledOfflinePairs() || "{}";
-    const parsed = JSON.parse(raw);
-
+    const parsed = JSON.parse(window.OfflineTranslate.getInstalledOfflinePairs() || "{}");
     if (parsed && typeof parsed === "object") {
-      localStorage.setItem(OFFLINE_INSTALLED_KEY, JSON.stringify(parsed));
+      localStorage.setItem(OFFLINE_INSTALLED_KEY, JSON.stringify(sanitizeInstalledPairs(parsed)));
     }
   } catch (e) {
     console.warn("[offline_pack_bridge] native installed read failed:", e);
@@ -870,8 +918,8 @@ function installDownloadEventHandlers(langInfoResolver) {
 
   window.addEventListener("offlinePairDownloadStarted", (e) => {
     const d = e.detail || {};
-    const source = canonical(d.source || getActiveDownload()?.source);
-    const target = canonical(d.target || getActiveDownload()?.target);
+    const source = canonical(eventUiSource(d) || getActiveDownload()?.source);
+    const target = canonical(eventUiTarget(d) || getActiveDownload()?.target);
 
     if (!source || !target) return;
 
@@ -879,8 +927,8 @@ function installDownloadEventHandlers(langInfoResolver) {
       source,
       target,
       percent: 10,
-      label: "Başlatılıyor...",
-      message: d.message || "",
+      label: d.phase === "speech" ? "Konuşma modeli" : "Başlatılıyor...",
+      message: d.message || "Supabase dil paketi indiriliyor.",
       startedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
@@ -890,8 +938,32 @@ function installDownloadEventHandlers(langInfoResolver) {
 
   window.addEventListener("offlinePairDownloadProgress", (e) => {
     const d = e.detail || {};
-    const source = canonical(d.source || getActiveDownload()?.source);
-    const target = canonical(d.target || getActiveDownload()?.target);
+    const source = canonical(eventUiSource(d) || getActiveDownload()?.source);
+    const target = canonical(eventUiTarget(d) || getActiveDownload()?.target);
+
+    if (!source || !target) return;
+
+    const phaseLabel = d.phase === "speech"
+      ? "Konuşma modeli"
+      : (d.phase === "translate" ? "Çeviri modeli (ONNX)" : (d.label || "İndiriliyor..."));
+
+    setActiveDownload({
+      source,
+      target,
+      percent: Number(d.percent || 0),
+      label: d.label || phaseLabel,
+      message: d.message || "",
+      startedAt: getActiveDownload()?.startedAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+
+    saveHomeWidget(source, target, langInfoResolverGlobal, "downloading");
+  });
+
+  window.addEventListener("offlineSpeechDownloadProgress", (e) => {
+    const d = e.detail || {};
+    const source = canonical(eventUiSource(d) || getActiveDownload()?.source);
+    const target = canonical(eventUiTarget(d) || getActiveDownload()?.target);
 
     if (!source || !target) return;
 
@@ -899,7 +971,7 @@ function installDownloadEventHandlers(langInfoResolver) {
       source,
       target,
       percent: Number(d.percent || 0),
-      label: d.label || "İndiriliyor...",
+      label: "Konuşma modeli",
       message: d.message || "",
       startedAt: getActiveDownload()?.startedAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -910,8 +982,8 @@ function installDownloadEventHandlers(langInfoResolver) {
 
   window.addEventListener("offlinePairDownloadCompleted", (e) => {
     const d = e.detail || {};
-    const source = canonical(d.source || getActiveDownload()?.source);
-    const target = canonical(d.target || getActiveDownload()?.target);
+    const source = canonical(eventUiSource(d) || getActiveDownload()?.source);
+    const target = canonical(eventUiTarget(d) || getActiveDownload()?.target);
 
     if (!source || !target) return;
 
@@ -926,8 +998,8 @@ function installDownloadEventHandlers(langInfoResolver) {
 
   window.addEventListener("offlinePairDownloadFailed", (e) => {
     const d = e.detail || {};
-    const source = canonical(d.source || getActiveDownload()?.source);
-    const target = canonical(d.target || getActiveDownload()?.target);
+    const source = canonical(eventUiSource(d) || getActiveDownload()?.source);
+    const target = canonical(eventUiTarget(d) || getActiveDownload()?.target);
     const reason = String(d.error || d.reason || "").toLowerCase();
     const isRetryable = ["timeout_or_pending", "model_download_timeout", "pending"].some((r) => reason.includes(r));
 

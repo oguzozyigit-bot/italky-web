@@ -1025,20 +1025,23 @@
     }
     async function startOfflineSpeech(side){
       const lang = canonical(side === "top" ? topLang : botLang);
-      if(isDeviceOffline()){
-        const bridgeReady = await waitForOfflineSpeechBridge(1500);
-        const speechReady = bridgeReady && isOfflineSpeechReady(lang);
-        if(!speechReady){
-          showOfflineSpeechUnavailable();
-          return false;
-        }
+      const bridgeReady = await waitForOfflineSpeechBridge(1500);
+      if(bridgeReady && isOfflineSpeechReady(lang)){
         return await startVoskSpeech(side, lang);
+      }
+      if(isDeviceOffline()){
+        showOfflineSpeechUnavailable();
+        return false;
       }
       const nativeStarted = startNativeSpeechFirst(side);
       if(nativeStarted){
         return true;
       }
-      return await startVoskSpeech(side, lang);
+      if(bridgeReady){
+        return await startVoskSpeech(side, lang);
+      }
+      showOfflineSpeechUnavailable();
+      return false;
     }
     function stopRecognizerByUser(){
       manualStopPending = true;

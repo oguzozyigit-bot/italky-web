@@ -126,7 +126,12 @@ export function showNativeLangModal({ supabase, userId, onComplete } = {}) {
     // 3. Android bridge — dil tercihi + offline indirme tetikle
     try { window.OfflineTranslate?.setNativeOfflineLang?.(selected); } catch {}
     try {
-      const pair = JSON.stringify({ source: selected, target: "en" });
+      const pair = JSON.stringify({
+        source: selected,
+        target: "en",
+        displaySource: selected,
+        displayTarget: "en"
+      });
       window.OfflineTranslate?.downloadBiDirectionalPair?.(pair);
     } catch {}
 

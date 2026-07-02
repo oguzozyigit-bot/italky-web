@@ -306,6 +306,72 @@ async function writeNfcLink(url) {
   }
 }
 
+function decodeNfcRecord(record) {
+  try {
+    if (!record) return "";
+    if (record.recordType === "absolute-url") return String(record.data || "");
+    if (!record.data) return "";
+
+    const encoding = record.encoding || "utf-8";
+    const decoder = new TextDecoder(encoding);
+    const text = decoder.decode(record.data);
+    if (record.recordType === "url" || record.recordType === "text") return text;
+    return `${record.recordType}: ${text}`;
+  } catch {
+    return record?.recordType ? `[${record.recordType}]` : "";
+  }
+}
+
+async function readNfcTagContent(timeoutMs = 9000) {
+  ensureNfcWriteSupported();
+
+  const reader = new window.NDEFReader();
+  const abortController = new AbortController();
+
+  return new Promise(async (resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      abortController.abort();
+      resolve("");
+    }, timeoutMs);
+
+    reader.onreading = (event) => {
+      window.clearTimeout(timeout);
+      abortController.abort();
+
+      const records = Array.from(event?.message?.records || []);
+      const content = records
+        .map(decodeNfcRecord)
+        .filter(Boolean)
+        .join("\n")
+        .trim();
+
+      resolve(content);
+    };
+
+    reader.onreadingerror = () => {
+      window.clearTimeout(timeout);
+      abortController.abort();
+      reject(new Error("NFC etiketi okunamadı."));
+    };
+
+    try {
+      await reader.scan({ signal: abortController.signal });
+    } catch (error) {
+      window.clearTimeout(timeout);
+      if (error?.name === "AbortError") {
+        resolve("");
+        return;
+      }
+      reject(error);
+    }
+  });
+}
+
+function isNfcWritableError(error) {
+  const text = `${error?.name || ""} ${error?.message || ""}`.toLowerCase();
+  return /notallowed|not supported|not writable|read-only|readonly|locked|networkerror|abort|invalid/i.test(text);
+}
+
 function setStatus(message, type = "") {
   const status = el("webPromoStatus");
   if (!status) return;
@@ -624,7 +690,7 @@ function renderCodes(rows) {
         `
       : canWriteNfc
       ? `
-            <button class="btn-primary" type="button" data-web-promo-action="nfc-write" data-code="${escapeHtml(code)}" title="${escapeHtml(nfcTitle)}">NFC’ye Yaz</button>
+            <button class="btn-primary" type="button" data-web-promo-action="nfc-write" data-code="${escapeHtml(code)}" title="${escapeHtml(nfcTitle)}">NFC Yazdır</button>
             <button class="btn-warn" type="button" data-web-promo-action="nfc-mark-written" data-code="${escapeHtml(code)}">NFC Yazıldı İşaretle</button>
         `
       : "";
@@ -634,13 +700,6 @@ function renderCodes(rows) {
 
     return `
       <tr>
-        <td><b>${escapeHtml(code)}</b></td>
-        <td>${escapeHtml(row.days)}</td>
-        <td>${renderRowBadges(row)}</td>
-        <td>${escapeHtml(`${usedCount} / ${maxUses}`)}</td>
-        <td>${escapeHtml(formatDate(row.expires_at))}</td>
-        <td>${escapeHtml(nfcState.publicNote || "-")}</td>
-        <td><span title="${escapeHtml(url)}">${escapeHtml(url)}</span></td>
         <td>
           <div class="mini-actions">
             <button class="btn-secondary" type="button" data-web-promo-action="copy" data-code="${escapeHtml(code)}">Linki Kopyala</button>
@@ -649,6 +708,13 @@ function renderCodes(rows) {
             ${nfcActions}
           </div>
         </td>
+        <td>${renderRowBadges(row)}</td>
+        <td><b>${escapeHtml(code)}</b></td>
+        <td>${escapeHtml(row.days)}</td>
+        <td>${escapeHtml(`${usedCount} / ${maxUses}`)}</td>
+        <td>${escapeHtml(formatDate(row.expires_at))}</td>
+        <td>${escapeHtml(nfcState.publicNote || "-")}</td>
+        <td><span title="${escapeHtml(url)}">${escapeHtml(url)}</span></td>
       </tr>
     `;
   }).join("");
@@ -774,14 +840,14 @@ function renderPanel() {
           <table>
             <thead>
               <tr>
+                <th>İşlemler</th>
+                <th>Durum</th>
                 <th>Kod</th>
                 <th>Gün</th>
-                <th>Durum</th>
                 <th>Kullanım</th>
                 <th>Son Kullanma</th>
                 <th>Not</th>
                 <th>Tam Link</th>
-                <th>İşlemler</th>
               </tr>
             </thead>
             <tbody id="webPromoCodesBody">
@@ -893,14 +959,25 @@ function renderPanel() {
           return;
         }
 
-        const approved = window.confirm(`Bu link NFC karta yazılacak: ${url}\n\nKartın eski içeriği değiştirilecek. Devam edilsin mi?`);
-        if (!approved) {
-          setStatus("NFC yazma iptal edildi.", "warn");
-          return;
+        setStatus("NFC etiketi okunuyor. İçeriği kontrol etmek için etiketi cihaza yaklaştırın.", "warn");
+        const existingContent = await readNfcTagContent();
+        if (existingContent) {
+          const shouldOverwrite = window.confirm(`Etiket içerisinde şu bilgi var:\n\n${existingContent}\n\nÜstüne yazılsın mı?`);
+          if (!shouldOverwrite) {
+            setStatus("NFC yazma iptal edildi. Etiket içeriği değiştirilmedi.", "warn");
+            return;
+          }
         }
 
-        setStatus("Android Chrome NFC kartı isteyecek. Kartı telefona yaklaştırın.", "warn");
-        await writeNfcLink(url);
+        setStatus("NFC etiketi yazılıyor. Aynı etiketi cihaza tekrar yaklaştırın.", "warn");
+        try {
+          await writeNfcLink(url);
+        } catch (error) {
+          if (isNfcWritableError(error)) {
+            throw new Error("NFC etiketi yazılabilir değil.");
+          }
+          throw error;
+        }
         await lockCodeNfcWrite(code);
         await loadCodes();
         setStatus(`${code} NFC'ye yazıldı ve satır kilitlendi.`, "ok");

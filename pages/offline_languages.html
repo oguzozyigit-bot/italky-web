@@ -293,32 +293,39 @@
       cursor:default;
     }
 
-    .progress-wrap{
+    .download-status{
       margin-top:14px;
-    }
-
-    .progress-bar{
-      height:12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      overflow:hidden;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
       border:1px solid rgba(255,255,255,.08);
     }
 
-    .progress-fill{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,#4de8ff,#7b7dff,#ff54c9);
-      transition:width .35s ease;
+    .download-status-line{
+      font-size:15px;
+      font-weight:1000;
+      color:#fff;
+      line-height:1.4;
     }
 
-    .progress-text{
+    .loading-dots::after{
+      content:"";
+      animation:loadingDots 1.35s steps(4, end) infinite;
+    }
+
+    @keyframes loadingDots{
+      0%, 20%{ content:""; }
+      40%{ content:"."; }
+      60%{ content:".."; }
+      80%, 100%{ content:"..."; }
+    }
+
+    .download-status-hint{
       margin-top:10px;
       font-size:13px;
-      color:rgba(255,255,255,.78);
-      font-weight:900;
-      line-height:1.5;
-      white-space:pre-line;
+      color:rgba(255,255,255,.72);
+      font-weight:800;
+      line-height:1.55;
     }
 
     .toast{
@@ -657,7 +664,7 @@
           </div>
         </div>
 
-        <div class="section-title">Diller</div>
+        <div class="section-title" id="sectionLangTitle">Diller</div>
         <div id="installedList"></div>
       </section>
     </div>
@@ -696,7 +703,7 @@
       const text = document.getElementById("confirmText");
       const ok = document.getElementById("confirmOk");
 
-      const setupText = "Bu dil ilk kez hazırlanıyor. Dil paketi ve gerekli çeviri bileşenleri cihazınıza indiriliyor.\n\nKurulum süresi telefon modelinize, internet hızınıza ve sistem yoğunluğuna göre değişebilir. İlk kurulum bazı cihazlarda daha uzun sürebilir.\n\nKurulum arka planda devam ederken uygulamayı kullanmaya devam edebilirsiniz.";
+      const setupText = "Bu dil ilk kez hazırlanıyor. Dil paketi ve gerekli çeviri bileşenleri cihazınıza indiriliyor.\n\nİndirme devam edecektir. Bu sayfada beklemenize gerek yoktur. Uygulama içinde diğer sayfalara geçebilirsiniz.";
 
       function hasInstalledPairs() {
         try {
@@ -746,7 +753,7 @@
     await initGlobalAccess({ allowPublicPageBypass: false });
   </script>
 
-  <script type="module" src="/js/language_registry_129.js?v=1"></script>
-  <script type="module" src="/js/offline_languages_page.js?v=10"></script>
+  <script type="module" src="/js/language_registry_129.js?v=2"></script>
+  <script type="module" src="/js/offline_languages_page.js?v=11"></script>
 </body>
 </html>

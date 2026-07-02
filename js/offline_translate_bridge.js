@@ -1,5 +1,7 @@
 // /js/offline_translate_bridge.js
 
+import { modelParent, normalizeLangCode } from "/js/language_registry_129.js";
+
 export function getOfflineStatus() {
   if (!window.OfflineTranslate) {
     return { ok: false, error: "OfflineTranslate bridge not available" };
@@ -41,10 +43,12 @@ export function downloadOfflineModel(from, to, wifiOnly = false) {
   }
 
   const payload = {
-    source: from,
-    target: to,
-    from,
-    to,
+    source: modelParent(from),
+    target: modelParent(to),
+    displaySource: normalizeLangCode(from),
+    displayTarget: normalizeLangCode(to),
+    from: modelParent(from),
+    to: modelParent(to),
     wifiOnly: !!wifiOnly,
 
     // Yeni public kullanım işaretleri
@@ -52,7 +56,8 @@ export function downloadOfflineModel(from, to, wifiOnly = false) {
     loginRequired: false,
     requireLicense: false,
     skipLicenseCheck: true,
-    sourceModule: "offline_languages_public"
+    sourceModule: "offline_languages_public",
+    source_system: "android_onnx_supabase"
   };
 
   if (typeof window.OfflineTranslate.downloadBiDirectionalPair === "function") {
