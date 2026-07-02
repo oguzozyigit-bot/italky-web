@@ -790,6 +790,15 @@ function renderPop(side) {
     pool = LANGS.filter((l) => allowed.has(canonical(l.code)));
   }
 
+  if (!pool.length) {
+    list.innerHTML = `<div class="pop-empty">${
+      currentRuntimeMode === "offline"
+        ? "Kurulu offline dil bulunamadı."
+        : "Dil listesi yüklenemedi."
+    }</div>`;
+    return;
+  }
+
   const sel = side === "top" ? topLang : botLang;
 
   list.innerHTML = pool.map((l) => {
@@ -2247,7 +2256,6 @@ function resolveStartupRuntimeMode() {
   if (!navigator.onLine && hasBridge) return "offline";
   if (saved === "offline" && hasBridge) return "offline";
   return "online";
-}
 }
 
 function startBoot() {
