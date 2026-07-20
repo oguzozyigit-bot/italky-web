@@ -160,18 +160,47 @@ function setTranslateEngineLabel(label) {
   updateSpeedMetrics();
 }
 
+function recordTranslateTiming(trT0, label) {
+  speedMetrics.translateMs = Math.max(1, Math.round(performance.now() - trT0));
+  if (label) setTranslateEngineLabel(label);
+  else updateSpeedMetrics();
+}
+
 function updateSpeedMetrics() {
   const el = speedLabPill();
   if (!el) return;
   const fmt = (v) => (v == null ? "—" : `${v}`);
   const engine = translateEngineLabel === "gtx"
-    ? "gtx"
-    : translateEngineLabel === "offline-native"
-      ? "offline (app)"
-      : translateEngineLabel === "offline-browser"
-        ? "offline EN↔TR"
-        : translateEngineLabel;
+    ? (navigator.onLine ? "gtx" : "offline")
+    : translateEngineLabel === "cache"
+      ? "cache"
+      : translateEngineLabel === "offline-native"
+        ? "offline (app)"
+        : translateEngineLabel === "offline-browser"
+          ? "offline EN↔TR"
+          : translateEngineLabel === "offline-fail"
+            ? "çeviri yok"
+            : translateEngineLabel;
   el.textContent = `${engine} · STT ${fmt(speedMetrics.sttMs)} · TR ${fmt(speedMetrics.translateMs)} · TTS ${fmt(speedMetrics.ttsMs)}ms`;
+}
+
+function shouldUseOfflineTypingInsteadOfMic() {
+  return SPEED_LAB_FREE_ONLY && !navigator.onLine;
+}
+
+function focusOfflineTyping(side) {
+  if (!isValidFaceSide(side)) return false;
+  hideKeyboards();
+  const input = side === "top" ? topInput : botInput;
+  const lang = getSideLang(side);
+  if (input) {
+    input.focus();
+    try { input.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch {}
+  }
+  showKeyboard(side);
+  setSystemReadyUI();
+  showToast(`${labelChip(lang)}: offline — yaz, gönder ↵`);
+  return true;
 }
 
 function maybePrefetchOfflineEnTr() {
@@ -202,6 +231,7 @@ function bindNetworkFallback() {
       return;
     }
     showToast("İnternet gitti — EN↔TR offline devrede");
+    setTranslateEngineLabel("offline-browser");
     maybePrefetchOfflineEnTr();
   });
 
@@ -1943,6 +1973,14 @@ async function translateEnTrRescue(text, from, to) {
 async function translateText(text, from, to, tone = "neutral", context = {}) {
   const src = canonical(from);
   const dst = canonical(to);
+  const trT0 = performance.now();
+
+  const cacheKey = translateCacheKey(text, src, dst);
+  const cached = translateCache.get(cacheKey);
+  if (cached) {
+    recordTranslateTiming(trT0, "cache");
+    return cached;
+  }
 
   if (currentRuntimeMode === "offline") {
     if (SPEED_LAB_FREE_ONLY && !isEnTrPair(src, dst)) {
@@ -1967,13 +2005,18 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
 
       const offlineValue = String(offlineRaw?.translatedText || "").trim();
       if (offlineRaw?.ok && offlineValue) {
-        setTranslateEngineLabel("offline-native");
+        rememberTranslateCache(cacheKey, offlineValue);
+        recordTranslateTiming(trT0, "offline-native");
         return offlineValue;
       }
 
       if (SPEED_LAB_FREE_ONLY && isEnTrPair(src, dst)) {
         const browser = await translateEnTrRescue(text, src, dst);
-        if (browser) return browser;
+        if (browser) {
+          rememberTranslateCache(cacheKey, browser);
+          recordTranslateTiming(trT0, "offline-browser");
+          return browser;
+        }
       }
 
       const offlineError = String(offlineRaw?.error || "");
@@ -1981,29 +2024,20 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
       else if (offlineError === "offline_translate_timeout") showToast("Offline ceviri yanit vermedi");
       else if (offlineError === "offline_license_required") showToast("Offline ceviri icin lisans dogrulanamadi");
       else showToast("Offline ceviri basarisiz");
+      recordTranslateTiming(trT0, "offline-fail");
       return null;
     } catch {
       showToast("Offline ceviri basarisiz");
+      recordTranslateTiming(trT0, "offline-fail");
       return null;
     }
-  }
-
-  const trT0 = performance.now();
-  const cacheKey = translateCacheKey(text, src, dst);
-  const cached = translateCache.get(cacheKey);
-  if (cached) {
-    speedMetrics.translateMs = Math.round(performance.now() - trT0);
-    updateSpeedMetrics();
-    return cached;
   }
 
   try {
     const useGtx = !navigator.onLine ? "" : await translateFastGtx(text, src, dst);
     if (useGtx) {
       rememberTranslateCache(cacheKey, useGtx);
-      speedMetrics.translateMs = Math.round(performance.now() - trT0);
-      setTranslateEngineLabel("gtx");
-      updateSpeedMetrics();
+      recordTranslateTiming(trT0, "gtx");
       return useGtx;
     }
   } catch {}
@@ -2012,19 +2046,19 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
     const rescue = await translateEnTrRescue(text, src, dst);
     if (rescue) {
       rememberTranslateCache(cacheKey, rescue);
-      speedMetrics.translateMs = Math.round(performance.now() - trT0);
-      updateSpeedMetrics();
+      recordTranslateTiming(trT0, getLastOfflineEngine() === "native" ? "offline-native" : "offline-browser");
       if (!navigator.onLine) showToast("Offline EN↔TR çeviri kullanıldı");
       return rescue;
     }
     if (!navigator.onLine && canonical(src) === "en") {
-      showToast("EN→TR tarayıcıda zor — italky uygulaması veya önce online çevir");
+      showToast("EN→TR offline yok — önce online çevir veya italky uygulaması");
     }
+    recordTranslateTiming(trT0, "offline-fail");
+    return null;
   }
 
   if (SPEED_LAB_FREE_ONLY) {
-    speedMetrics.translateMs = Math.round(performance.now() - trT0);
-    updateSpeedMetrics();
+    recordTranslateTiming(trT0, "offline-fail");
     return null;
   }
 
@@ -2572,10 +2606,7 @@ function startRecording(side, opts = {}) {
     }
 
     if (SPEED_LAB_FREE_ONLY && (errorCode === "network" || errorCode === "service-not-allowed")) {
-      showToast("İnternet yok: mic çalışmayabilir — yazı kutusuna yaz");
-      setErrorUI();
-      bounceToReady(1600);
-      if (handsFreeSession) setHandsFreeMode(false, { silent: true, stopCurrent: false });
+      focusOfflineTyping(side);
       return;
     }
 
@@ -2656,6 +2687,11 @@ async function toggleRecording(side) {
   await ensureReady();
   const premiumOk = await ensureCurrentFacePremiumModeAccess();
   if (!premiumOk) return;
+
+  if (shouldUseOfflineTypingInsteadOfMic()) {
+    focusOfflineTyping(side);
+    return;
+  }
 
   if (isHandsFreeModeEnabled()) {
     setHandsFreeMode(false, { silent: true, stopCurrent: false });
@@ -3066,8 +3102,20 @@ function startBoot() {
       try {
         const warmFrom = canonical(topLang);
         const warmTo = canonical(botLang);
-        if (warmFrom !== warmTo) {
-          await translateFastGtx("merhaba", warmFrom, warmTo);
+        const warmPairs = [
+          ["merhaba", "tr", "en"],
+          ["hello", "en", "tr"],
+          ["how are you", "en", "tr"],
+          ["nasılsın", "tr", "en"],
+        ];
+        if (isEnTrPair(topLang, botLang)) {
+          for (const [phrase, from, to] of warmPairs) {
+            const out = await translateFastGtx(phrase, from, to);
+            if (out) rememberTranslateCache(translateCacheKey(phrase, from, to), out);
+          }
+        } else if (warmFrom !== warmTo) {
+          const out = await translateFastGtx("merhaba", warmFrom, warmTo);
+          if (out) rememberTranslateCache(translateCacheKey("merhaba", warmFrom, warmTo), out);
         }
         if (window.speechSynthesis) {
           const u = new SpeechSynthesisUtterance(" ");
