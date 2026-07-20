@@ -5,14 +5,16 @@
 
 const EN_TR_MODEL_CANDIDATES = {
   en_tr: [
+    "Xenova/opus-mt-en-tr",
     "Helsinki-NLP/opus-mt-en-tr",
-    "Helsinki-NLP/opus-mt-tc-big-en-tr",
   ],
   tr_en: [
     "Xenova/opus-mt-tr-en",
     "Helsinki-NLP/opus-mt-tr-en",
   ],
 };
+
+const TRANSLATE_CACHE_STORAGE_KEY = "speed_lab_entr_cache_v1";
 
 const pipeCache = new Map();
 let transformersModule = null;
@@ -79,7 +81,7 @@ function nativeTranslateRequest(payload, timeoutMs = 10000) {
 
 async function loadTransformers() {
   if (transformersModule) return transformersModule;
-  transformersModule = await import("https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2");
+  transformersModule = await import("https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js");
   transformersModule.env.allowLocalModels = false;
   transformersModule.env.useBrowserCache = true;
   return transformersModule;
@@ -118,18 +120,48 @@ export function prefetchBrowserEnTrModels(onProgress) {
   if (prefetchPromise) return prefetchPromise;
 
   prefetchPromise = (async () => {
+    let ok = false;
+    try {
+      await getBrowserPipeline("tr", "en", onProgress);
+      ok = true;
+    } catch (e) {
+      console.warn("[speed_lab_entr_offline] tr→en prefetch failed", e);
+    }
     try {
       await getBrowserPipeline("en", "tr", onProgress);
-      await getBrowserPipeline("tr", "en", onProgress);
-      return true;
+      ok = true;
     } catch (e) {
-      console.warn("[speed_lab_entr_offline] prefetch failed", e);
-      prefetchPromise = null;
-      return false;
+      console.warn("[speed_lab_entr_offline] en→tr prefetch failed", e);
     }
+    if (!ok) prefetchPromise = null;
+    return ok;
   })();
 
   return prefetchPromise;
+}
+
+export function loadPersistedEnTrCache(intoMap) {
+  if (!intoMap || typeof intoMap.set !== "function") return;
+  try {
+    const raw = JSON.parse(localStorage.getItem(TRANSLATE_CACHE_STORAGE_KEY) || "{}");
+    Object.entries(raw).forEach(([key, value]) => {
+      if (key && value) intoMap.set(key, String(value));
+    });
+  } catch {}
+}
+
+export function persistEnTrCacheEntry(key, value) {
+  if (!key || !value) return;
+  if (!/^(en\|tr|tr\|en)\|/i.test(String(key))) return;
+  try {
+    const raw = JSON.parse(localStorage.getItem(TRANSLATE_CACHE_STORAGE_KEY) || "{}");
+    raw[key] = String(value);
+    const keys = Object.keys(raw);
+    while (keys.length > 180) {
+      delete raw[keys.shift()];
+    }
+    localStorage.setItem(TRANSLATE_CACHE_STORAGE_KEY, JSON.stringify(raw));
+  } catch {}
 }
 
 export async function tryNativeEnTrTranslate(text, from, to) {

@@ -15,6 +15,8 @@ import {
   prefetchBrowserEnTrModels,
   getLastOfflineEngine,
   canUseBrowserOfflineEnTr,
+  loadPersistedEnTrCache,
+  persistEnTrCacheEntry,
 } from "/js/speed_lab_entr_offline.js";
 import { downloadOfflineModel } from "/js/offline_translate_bridge.js";
 
@@ -116,6 +118,7 @@ function rememberTranslateCache(key, value) {
   while (translateCache.size > TRANSLATE_CACHE_MAX) {
     translateCache.delete(translateCache.keys().next().value);
   }
+  if (SPEED_LAB_FREE_ONLY) persistEnTrCacheEntry(key, value);
 }
 
 function ttsRateFor(langCode) {
@@ -1328,7 +1331,7 @@ function tryEnableOfflineMode() {
     applyOfflineStartLayout();
     setModeOffline();
     maybePrefetchOfflineEnTr();
-    showToast("Offline EN↔TR — internetsiz kurtarıcı");
+    showToast("Offline çeviri modu — mic yine ONLINE kalır (speed lab)");
     return true;
   }
 
@@ -2014,6 +2017,9 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
       if (!navigator.onLine) showToast("Offline EN↔TR çeviri kullanıldı");
       return rescue;
     }
+    if (!navigator.onLine && canonical(src) === "en") {
+      showToast("EN→TR tarayıcıda zor — italky uygulaması veya önce online çevir");
+    }
   }
 
   if (SPEED_LAB_FREE_ONLY) {
@@ -2220,9 +2226,7 @@ function buildOfflineRecognizer(langCode, side) {
   };
 }
 
-function buildRecognizer(langCode, side = "") {
-  if (currentRuntimeMode === "offline") return buildOfflineRecognizer(langCode, side);
-
+function buildWebSpeechRecognizer(langCode) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
 
@@ -2232,6 +2236,16 @@ function buildRecognizer(langCode, side = "") {
   rec.continuous = true;
   rec.maxAlternatives = 1;
   return rec;
+}
+
+function buildRecognizer(langCode, side = "") {
+  // Speed lab: mic her zaman tarayıcı STT — OFFLINE toggle sadece çeviriyi etkiler.
+  if (SPEED_LAB_FREE_ONLY) {
+    return buildWebSpeechRecognizer(langCode);
+  }
+
+  if (currentRuntimeMode === "offline") return buildOfflineRecognizer(langCode, side);
+  return buildWebSpeechRecognizer(langCode);
 }
 
 function stopRecognizer() {
@@ -2550,7 +2564,15 @@ function startRecording(side, opts = {}) {
     }
 
     if (currentRuntimeMode === "offline") {
-      showToast(OFFLINE_SPEECH_NOT_READY_MESSAGE);
+      showToast("Offline STT uygulamada — yazı kutusunu da kullanabilirsin");
+      setErrorUI();
+      bounceToReady(1600);
+      if (handsFreeSession) setHandsFreeMode(false, { silent: true, stopCurrent: false });
+      return;
+    }
+
+    if (SPEED_LAB_FREE_ONLY && (errorCode === "network" || errorCode === "service-not-allowed")) {
+      showToast("İnternet yok: mic çalışmayabilir — yazı kutusuna yaz");
       setErrorUI();
       bounceToReady(1600);
       if (handsFreeSession) setHandsFreeMode(false, { silent: true, stopCurrent: false });
@@ -2558,7 +2580,7 @@ function startRecording(side, opts = {}) {
     }
 
     if (errorCode.includes("not-allowed")) showToast("Mikrofon izni gerekli");
-    else showToast("Mikrofon hatası");
+    else showToast("Mikrofon hatası — yazı kutusunu dene");
 
     setErrorUI();
     bounceToReady(1600);
@@ -3040,6 +3062,7 @@ function startBoot() {
     } catch {}
 
     if (SPEED_LAB_FREE_ONLY) {
+      loadPersistedEnTrCache(translateCache);
       try {
         const warmFrom = canonical(topLang);
         const warmTo = canonical(botLang);
