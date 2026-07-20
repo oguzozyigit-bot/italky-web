@@ -171,6 +171,7 @@ const HOME_HEADER_HTML = `
       <a href="/pages/login.html" id="menuLoginLink" class="hidden">Giriş Yap</a>
 
       <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
+      <a href="/yeni_yuzyuze.html" id="stagingTestLink" class="hidden">🧪 Test Staging Ortamı</a>
       <a href="/pages/deneme.html" id="italkyAiTestLink" class="hidden">italkyAI</a>
       <a href="/pages/profile.html" id="profileLink" data-i18n="menu_profile">Profil</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
@@ -725,6 +726,7 @@ function bindMenu(options = {}) {
   const menuProfileTop = document.getElementById("menuProfileTop");
   const menuAvatarClick = document.getElementById("menuAvatarClick");
   const adminPanelLink = document.getElementById("adminPanelLink");
+  const stagingTestLink = document.getElementById("stagingTestLink");
   const italkyAiTestLink = document.getElementById("italkyAiTestLink");
   const menuLoginLink = document.getElementById("menuLoginLink");
 
@@ -799,6 +801,7 @@ function bindMenu(options = {}) {
   });
 
   adminPanelLink?.addEventListener("click", closeMenu);
+  stagingTestLink?.addEventListener("click", closeMenu);
   italkyAiTestLink?.addEventListener("click", closeMenu);
 
   sideMenu.querySelectorAll(".menu-nav a").forEach((link) => {
@@ -896,6 +899,7 @@ async function hydratePlanUi() {}
 
 async function hydrateShellMeta() {
   const adminLink = document.getElementById("adminPanelLink");
+  const stagingLink = document.getElementById("stagingTestLink");
   const aiTestLink = document.getElementById("italkyAiTestLink");
 
   try {
@@ -976,6 +980,16 @@ async function hydrateShellMeta() {
       }
     }
 
+    if (stagingLink) {
+      if (isAdminAllowed) {
+        stagingLink.classList.remove("hidden");
+        stagingLink.style.display = "";
+      } else {
+        stagingLink.classList.add("hidden");
+        stagingLink.style.display = "none";
+      }
+    }
+
     if (aiTestLink) {
       if (isSuperAdminAllowed) {
         aiTestLink.classList.remove("hidden");
@@ -1004,9 +1018,10 @@ async function hydrateShellMeta() {
 
 async function hydrateAdminButton() {
   const adminLink = document.getElementById("adminPanelLink");
+  const stagingLink = document.getElementById("stagingTestLink");
   const aiTestLink = document.getElementById("italkyAiTestLink");
 
-  if (!adminLink && !aiTestLink) return;
+  if (!adminLink && !stagingLink && !aiTestLink) return;
 
   const show = (el) => {
     if (!el) return;
@@ -1021,6 +1036,7 @@ async function hydrateAdminButton() {
   };
 
   hide(adminLink);
+  hide(stagingLink);
   hide(aiTestLink);
 
   try {
@@ -1054,7 +1070,10 @@ async function hydrateAdminButton() {
           cachedRole === "superadmin" ||
           cachedEmail === "oguzozyigit@gmail.com";
 
-        if (cachedAdmin) show(adminLink);
+        if (cachedAdmin) {
+          show(adminLink);
+          show(stagingLink);
+        }
         if (cachedSuperAdmin) show(aiTestLink);
       }
     } catch {}
@@ -1064,6 +1083,7 @@ async function hydrateAdminButton() {
     const userId = user?.id || "";
     if (!userId) {
       hide(adminLink);
+      hide(stagingLink);
       hide(aiTestLink);
       return;
     }
@@ -1086,7 +1106,10 @@ async function hydrateAdminButton() {
       sessionRole === "superadmin" ||
       sessionEmail === "oguzozyigit@gmail.com";
 
-    if (sessionAdmin) show(adminLink);
+    if (sessionAdmin) {
+      show(adminLink);
+      show(stagingLink);
+    }
     if (sessionSuperAdmin) show(aiTestLink);
 
     const { data, error } = await supabase
@@ -1110,14 +1133,20 @@ async function hydrateAdminButton() {
       role === "superadmin" ||
       email === "oguzozyigit@gmail.com";
 
-    if (allowedAdmin) show(adminLink);
-    else hide(adminLink);
+    if (allowedAdmin) {
+      show(adminLink);
+      show(stagingLink);
+    } else {
+      hide(adminLink);
+      hide(stagingLink);
+    }
 
     if (allowedSuperAdmin) show(aiTestLink);
     else hide(aiTestLink);
   } catch (e) {
     console.warn("[ui_shell admin btn]", e);
     hide(adminLink);
+    hide(stagingLink);
     hide(aiTestLink);
   }
 }

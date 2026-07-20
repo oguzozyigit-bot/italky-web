@@ -266,6 +266,17 @@ async function getCurrentUserAndProfile() {
     : `${currentUser.email || "-"} • Profil bulunamadı`;
 
   const role = String(currentProfile?.role || "").toLowerCase();
+  const isAdmin =
+    currentProfile?.is_admin === true ||
+    role === "admin" ||
+    role === "superadmin" ||
+    String(currentProfile?.email || currentUser?.email || "").toLowerCase() === "oguzozyigit@gmail.com";
+
+  const stagingBtn = document.getElementById("stagingEnvBtn");
+  if (stagingBtn) {
+    stagingBtn.classList.toggle("hidden", !isAdmin);
+  }
+
   if (role !== "superadmin") {
     if (manualLoadBtn) manualLoadBtn.disabled = true;
     setStatus(manualStatus, "Manuel jeton yükleme sadece superadmin içindir.", "status-warn");
