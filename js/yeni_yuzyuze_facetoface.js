@@ -78,15 +78,69 @@ const DENEME_CULTURAL_MODE_KEY = "deneme_facetoface_cultural_mode";
 const DENEME_CULTURAL_INFO_SEEN_KEY = "deneme_cultural_info_seen";
 const DENEME_HANDS_FREE_MODE_KEY = "speed_lab_f2f_handsfree_mode";
 const DENEME_HANDS_FREE_SIDE = "auto";
-const DENEME_HANDS_FREE_SILENCE_MS = 850;
-const DENEME_HANDS_FREE_MAX_LISTEN_MS = 12000;
-const DENEME_HANDS_FREE_RESTART_MS = 320;
-const DENEME_HANDS_FREE_BUSY_RETRY_MS = 520;
-const DENEME_HANDS_FREE_AUDIO_GUARD_MS = 950;
+const DENEME_HANDS_FREE_SILENCE_MS = 720;
+const DENEME_HANDS_FREE_MAX_LISTEN_MS = 11000;
+const DENEME_HANDS_FREE_RESTART_MS = 280;
+const DENEME_HANDS_FREE_BUSY_RETRY_MS = 420;
+const DENEME_HANDS_FREE_AUDIO_GUARD_MS = 850;
 const DENEME_HANDS_FREE_EMPTY_RESTART_LIMIT = 10;
 
 const speedMetrics = { sttMs: null, translateMs: null, ttsMs: null };
 const speedLabPill = () => document.getElementById("speedLabPill");
+
+/** Speed lab: no Cartesia / Render translate API — gtx + browser TTS only */
+const SPEED_LAB_FREE_ONLY = true;
+const translateCache = new Map();
+const TRANSLATE_CACHE_MAX = 96;
+let handsFreeListenSide = "bot";
+let partialTranslateTimer = null;
+
+function translateCacheKey(text, from, to) {
+  return `${canonical(from)}|${canonical(to)}|${String(text || "").trim().toLowerCase()}`;
+}
+
+function rememberTranslateCache(key, value) {
+  if (!key || !value) return;
+  if (translateCache.has(key)) translateCache.delete(key);
+  translateCache.set(key, value);
+  while (translateCache.size > TRANSLATE_CACHE_MAX) {
+    translateCache.delete(translateCache.keys().next().value);
+  }
+}
+
+function ttsRateFor(langCode) {
+  const c = canonical(langCode);
+  if (c === "tr") return 1.22;
+  if (c === "en") return 1.12;
+  return 1.14;
+}
+
+function pauseListeningForTts(text) {
+  if (recordingSide) {
+    try { stopRecognizer(); } catch {}
+  }
+  const ms = Math.min(9000, Math.max(700, String(text || "").trim().length * 38));
+  armHandsFreeAudioGuard(ms);
+}
+
+function flipHandsFreeListenSideAfterTurn(listeningSide) {
+  if (!isValidFaceSide(listeningSide)) return;
+  handsFreeListenSide = getOtherSide(listeningSide);
+  setHandsFreeNextSide(handsFreeListenSide);
+}
+
+function schedulePartialTranslate(text, from, to) {
+  const value = String(text || "").trim();
+  if (value.length < 3) return;
+  clearTimeout(partialTranslateTimer);
+  partialTranslateTimer = setTimeout(() => {
+    const key = translateCacheKey(value, from, to);
+    if (translateCache.has(key)) return;
+    translateFastGtx(value, from, to)
+      .then((out) => { if (out) rememberTranslateCache(key, out); })
+      .catch(() => {});
+  }, 200);
+}
 
 function updateSpeedMetrics() {
   const el = speedLabPill();
@@ -394,6 +448,7 @@ function showToast(msg = "") {
 }
 
 function isCulturalModeEnabled() {
+  if (SPEED_LAB_FREE_ONLY) return false;
   return String(localStorage.getItem(DENEME_CULTURAL_MODE_KEY) || "off").trim().toLowerCase() === "on";
 }
 
@@ -449,10 +504,8 @@ function getOtherSide(side) {
 }
 
 function getHandsFreeSide() {
-  // Dual-Ear Pro tek fiziksel mikrofon akışıyla çalışır.
-  // Kullanıcıya sırayla konuşma hissi vermemek için dinleme tarafını sabit tutar,
-  // konuşmanın hangi balona gideceğini ise metin/dil algılama belirler.
-  if (DENEME_HANDS_FREE_SIDE === "auto") return "bot";
+  // Tek mikrofon: dinleme dilini sırayla üst/alt tarafa göre değiştir (STT doğruluğu).
+  if (DENEME_HANDS_FREE_SIDE === "auto") return handsFreeListenSide;
   return DENEME_HANDS_FREE_SIDE;
 }
 
@@ -526,8 +579,10 @@ function resolveHandsFreeSpeakerSide(text, listeningSide) {
 function noteHandsFreeRoute(routedSide) {
   if (!isValidFaceSide(routedSide)) return;
   handsFreeLastRoutedSide = routedSide;
-  // Yönlendirme dil algısıyla yapılır; dinleme animasyonu ve mikrofon hissi çift taraflı kalır.
-  // Bu yüzden sonraki dinlemeyi karşı tarafa zıplatmıyoruz.
+  if (SPEED_LAB_FREE_ONLY) {
+    setHandsFreeNextSide(handsFreeListenSide);
+    return;
+  }
   setHandsFreeNextSide("bot");
 }
 
@@ -695,7 +750,6 @@ function handleHandsFreeCycleEnd(side, hadText, runId) {
 
   if (hadText) {
     handsFreeEmptyEndCount = 0;
-    armHandsFreeAudioGuard();
     scheduleHandsFreeRestart("after-final", DENEME_HANDS_FREE_RESTART_MS);
     return;
   }
@@ -764,7 +818,11 @@ function setHandsFreeMode(enabled, opts = {}) {
     if (!previous) handsFreeRunId += 1;
     handsFreeEmptyEndCount = 0;
     clearHandsFreeTimers();
-    if (!opts.silent) showToast("Çift taraflı Eller Serbest açık");
+    if (!opts.silent) {
+      showToast(SPEED_LAB_FREE_ONLY
+        ? "Eller Serbest: tek mic sırayla üst/alt dinler · ses okurken mic kapalı"
+        : "Çift taraflı Eller Serbest açık");
+    }
     void startHandsFreeLoop("toggle");
     return;
   }
@@ -790,7 +848,8 @@ async function requestEnableHandsFreeMode(opts = {}) {
     return false;
   }
 
-  setHandsFreeNextSide("bot");
+  handsFreeListenSide = "top";
+  setHandsFreeNextSide("top");
   setHandsFreeMode(true);
   return true;
 }
@@ -907,6 +966,7 @@ uiModal?.addEventListener("click", (e) => {
 });
 
 function getResolvedFaceVoice() {
+  if (SPEED_LAB_FREE_ONLY) return "free";
   const mode = String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
   const preset = String(localStorage.getItem(F2F_PRESET_KEY) || "").trim().toLowerCase();
 
@@ -1487,6 +1547,14 @@ function chooseWebVoice(langCode) {
 
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
+  if (!pool.length) pool = voices;
+
+  if (langBase === "tr") {
+    const trPreferred = pool.find((v) => /google|microsoft|turk/i.test(String(v.name || "")))
+      || pool.find((v) => String(v.lang || "").toLowerCase().startsWith("tr"));
+    if (trPreferred) return trPreferred;
+  }
+
   return pool[0] || voices[0] || null;
 }
 
@@ -1577,10 +1645,19 @@ function speakFallback(text, langCode) {
   try {
     const u = new SpeechSynthesisUtterance(value);
     u.lang = langObj(langCode).bcp;
-    u.rate = 1.08;
+    u.rate = ttsRateFor(langCode);
     u.pitch = 1;
     const voice = chooseWebVoice(langCode);
     if (voice) u.voice = voice;
+    u.onend = () => {
+      if (isHandsFreeModeEnabled()) {
+        armHandsFreeAudioGuard(350);
+        scheduleHandsFreeRestart("tts-done", 240);
+      }
+    };
+    u.onerror = () => {
+      if (isHandsFreeModeEnabled()) scheduleHandsFreeRestart("tts-error", 400);
+    };
     window.speechSynthesis.speak(u);
     return true;
   } catch {
@@ -1596,6 +1673,7 @@ async function speak(text, langCode, tone = "neutral") {
   const spokenValue = sanitizeCensoredTextForTts(value);
 
   stopAudio();
+  pauseListeningForTts(spokenValue);
   await warmAudio();
 
   const ttsT0 = performance.now();
@@ -1603,7 +1681,11 @@ async function speak(text, langCode, tone = "neutral") {
   if (fastOk) {
     speedMetrics.ttsMs = Math.round(performance.now() - ttsT0);
     updateSpeedMetrics();
-    armHandsFreeAudioGuard(DENEME_HANDS_FREE_AUDIO_GUARD_MS);
+    return;
+  }
+
+  if (SPEED_LAB_FREE_ONLY) {
+    showToast("Hoparlör sesi başlatılamadı");
     return;
   }
 
@@ -1770,14 +1852,29 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
   }
 
   const trT0 = performance.now();
+  const cacheKey = translateCacheKey(text, src, dst);
+  const cached = translateCache.get(cacheKey);
+  if (cached) {
+    speedMetrics.translateMs = Math.round(performance.now() - trT0);
+    updateSpeedMetrics();
+    return cached;
+  }
+
   try {
     const fast = await translateFastGtx(text, src, dst);
     if (fast) {
+      rememberTranslateCache(cacheKey, fast);
       speedMetrics.translateMs = Math.round(performance.now() - trT0);
       updateSpeedMetrics();
       return fast;
     }
   } catch {}
+
+  if (SPEED_LAB_FREE_ONLY) {
+    speedMetrics.translateMs = Math.round(performance.now() - trT0);
+    updateSpeedMetrics();
+    return null;
+  }
 
   const { data: { session } = {} } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
   const accessToken = session?.access_token || "";
@@ -2027,7 +2124,8 @@ function cleanupFinalTranscript(text) {
   return String(text || "").replace(/\s+/g, " ").replace(/\b(\S+)( \1\b)+/gi, "$1").trim();
 }
 
-async function finalizeRecognition(side, text) {
+async function finalizeRecognition(side, text, opts = {}) {
+  const listeningSide = isValidFaceSide(opts.listeningSide) ? opts.listeningSide : side;
   const src = side === "top" ? topLang : botLang;
   const dst = side === "top" ? botLang : topLang;
   const sourceTone = detectToneFromText(text);
@@ -2075,6 +2173,10 @@ async function finalizeRecognition(side, text) {
     latestTxt.textContent = tr;
     keepLatestVisible(other);
     speak(tr, dst, sourceTone).catch(() => {});
+  }
+
+  if (isHandsFreeModeEnabled()) {
+    flipHandsFreeListenSideAfterTurn(listeningSide);
   }
 
   updateSpeedMetrics();
@@ -2265,6 +2367,15 @@ function startRecording(side, opts = {}) {
     if (txtEl) txtEl.textContent = builtText;
     keepLatestVisible(side);
 
+    if (SPEED_LAB_FREE_ONLY && builtText.length >= 3) {
+      const listenLang = getSideLang(side);
+      const targetLang = getSideLang(getOtherSide(side));
+      const isFinalChunk = e.results?.[e.results.length - 1]?.isFinal;
+      if (!isFinalChunk) {
+        schedulePartialTranslate(builtText, listenLang, targetLang);
+      }
+    }
+
     if (handsFreeSession) {
       scheduleHandsFreeSilenceStop(side, mySessionId, handsFreeRun);
     }
@@ -2338,7 +2449,7 @@ function startRecording(side, opts = {}) {
       }
 
       Promise.resolve()
-        .then(() => finalizeRecognition(routedSide, finalText))
+        .then(() => finalizeRecognition(routedSide, finalText, { listeningSide: sideAtEnd }))
         .finally(() => {
           if (handsFreeSession) handleHandsFreeCycleEnd(routedSide, true, handsFreeRun);
         });
@@ -2347,7 +2458,7 @@ function startRecording(side, opts = {}) {
 
     setSystemReadyUI();
     if (handsFreeSession) {
-      setHandsFreeNextSide(getOtherSide(sideAtEnd));
+      flipHandsFreeListenSideAfterTurn(sideAtEnd);
       handleHandsFreeCycleEnd(sideAtEnd, false, handsFreeRun);
     }
   };
@@ -2778,9 +2889,28 @@ function startBoot() {
     try {
       await Promise.race([
         Promise.allSettled([warmApis(), warmAudio()]),
-        new Promise((resolve) => setTimeout(resolve, 1800))
+        new Promise((resolve) => setTimeout(resolve, 1200))
       ]);
     } catch {}
+
+    if (SPEED_LAB_FREE_ONLY) {
+      try {
+        const warmFrom = canonical(topLang);
+        const warmTo = canonical(botLang);
+        if (warmFrom !== warmTo) {
+          await translateFastGtx("merhaba", warmFrom, warmTo);
+        }
+        if (window.speechSynthesis) {
+          const u = new SpeechSynthesisUtterance(" ");
+          u.volume = 0.01;
+          u.rate = ttsRateFor(warmTo);
+          window.speechSynthesis.speak(u);
+        }
+      } catch {}
+      updateSpeedMetrics();
+      const pill = speedLabPill();
+      if (pill) pill.textContent = "Hız Lab · gtx + tarayıcı ses (Cartesia kapalı)";
+    }
 
     currentRuntimeMode = "online";
     syncModeUi();
