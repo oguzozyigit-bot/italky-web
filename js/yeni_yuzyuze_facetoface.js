@@ -106,6 +106,43 @@ let handsFreeListenSide = "bot";
 let partialTranslateTimer = null;
 let translateEngineLabel = "gtx";
 let offlinePackPrefetchStarted = false;
+let webVoicesCache = [];
+let lastTtsVoiceLabel = "";
+const SPEED_LAB_TTS_SPEED_KEY = "speed_lab_tts_speed_v1";
+
+function getSpeedLabTtsMode() {
+  const mode = String(localStorage.getItem(SPEED_LAB_TTS_SPEED_KEY) || "turbo").trim().toLowerCase();
+  return ["turbo", "fast", "normal"].includes(mode) ? mode : "turbo";
+}
+
+function cycleSpeedLabTtsMode() {
+  const order = ["turbo", "fast", "normal"];
+  const next = order[(order.indexOf(getSpeedLabTtsMode()) + 1) % order.length];
+  localStorage.setItem(SPEED_LAB_TTS_SPEED_KEY, next);
+  syncSpeedLabTtsBtn();
+  showToast(`Ses hızı: ${speedLabTtsModeLabel(next)}`);
+}
+
+function speedLabTtsModeLabel(mode) {
+  if (mode === "turbo") return "Turbo (1.45x TR)";
+  if (mode === "fast") return "Hızlı (1.32x TR)";
+  return "Normal";
+}
+
+function syncSpeedLabTtsBtn() {
+  const btn = document.getElementById("speedLabTtsBtn");
+  if (!btn) return;
+  btn.textContent = `🔊 ${speedLabTtsModeLabel(getSpeedLabTtsMode())}`;
+}
+
+function refreshWebVoices() {
+  try {
+    webVoicesCache = window.speechSynthesis?.getVoices?.() || [];
+  } catch {
+    webVoicesCache = [];
+  }
+  return webVoicesCache;
+}
 
 function translateCacheKey(text, from, to) {
   return `${canonical(from)}|${canonical(to)}|${String(text || "").trim().toLowerCase()}`;
@@ -122,10 +159,48 @@ function rememberTranslateCache(key, value) {
 }
 
 function ttsRateFor(langCode) {
+  const mode = SPEED_LAB_FREE_ONLY ? getSpeedLabTtsMode() : "fast";
   const c = canonical(langCode);
-  if (c === "tr") return 1.22;
-  if (c === "en") return 1.12;
-  return 1.14;
+  const table = {
+    turbo: { tr: 1.45, en: 1.28, default: 1.32 },
+    fast: { tr: 1.32, en: 1.15, default: 1.18 },
+    normal: { tr: 1.05, en: 1.0, default: 1.02 },
+  };
+  const row = table[mode] || table.fast;
+  return row[c] || row.default;
+}
+
+function ttsPitchFor(langCode, targetSide = "") {
+  const c = canonical(langCode);
+  if (c === "tr") return targetSide === "top" ? 1.06 : 0.96;
+  if (c === "en") return targetSide === "top" ? 1.08 : 0.92;
+  return 1;
+}
+
+function scoreWebVoice(voice, langCode, targetSide = "") {
+  const name = String(voice?.name || "").toLowerCase();
+  const lang = String(voice?.lang || "").toLowerCase();
+  const base = canonical(langCode);
+  let score = 0;
+
+  if (!lang.startsWith(base)) score -= 120;
+  else score += 30;
+
+  if (voice?.localService) score += 18;
+  if (/google/i.test(name)) score += 28;
+  if (/microsoft/i.test(name)) score += 16;
+  if (/natural|neural|premium|online/i.test(name)) score += 12;
+
+  if (base === "tr") {
+    if (/emel|filiz|yelda|female|kadın|turk/i.test(name)) score += targetSide === "top" ? 14 : 4;
+    if (/tolga|ahmet|male|erkek/i.test(name)) score += targetSide === "bot" ? 14 : 4;
+  }
+  if (base === "en") {
+    if (/zira|samantha|jenny|female|aria/i.test(name)) score += targetSide === "top" ? 14 : 4;
+    if (/david|mark|guy|male|andrew/i.test(name)) score += targetSide === "bot" ? 14 : 4;
+  }
+
+  return score;
 }
 
 function pauseListeningForTts(text) {
@@ -181,7 +256,7 @@ function updateSpeedMetrics() {
           : translateEngineLabel === "offline-fail"
             ? "çeviri yok"
             : translateEngineLabel;
-  el.textContent = `${engine} · STT ${fmt(speedMetrics.sttMs)} · TR ${fmt(speedMetrics.translateMs)} · TTS ${fmt(speedMetrics.ttsMs)}ms`;
+  el.textContent = `${engine} · STT ${fmt(speedMetrics.sttMs)} · TR ${fmt(speedMetrics.translateMs)} · TTS ${fmt(speedMetrics.ttsMs)}ms${lastTtsVoiceLabel ? ` · ${lastTtsVoiceLabel}` : ""}`;
 }
 
 function shouldUseOfflineTypingInsteadOfMic() {
@@ -1662,22 +1737,25 @@ function createSpeakerButton(getText, langCode, tone = "neutral") {
   return btn;
 }
 
-function chooseWebVoice(langCode) {
-  const voices = window.speechSynthesis?.getVoices?.() || [];
+function chooseWebVoice(langCode, targetSide = "") {
+  const voices = refreshWebVoices();
   const bcp = langObj(langCode).bcp.toLowerCase();
   const langBase = canonical(langCode);
 
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
-  if (!pool.length) pool = voices;
+  if (!pool.length) pool = voices.slice();
 
-  if (langBase === "tr") {
-    const trPreferred = pool.find((v) => /google|microsoft|turk/i.test(String(v.name || "")))
-      || pool.find((v) => String(v.lang || "").toLowerCase().startsWith("tr"));
-    if (trPreferred) return trPreferred;
-  }
-
+  pool.sort((a, b) => scoreWebVoice(b, langCode, targetSide) - scoreWebVoice(a, langCode, targetSide));
   return pool[0] || voices[0] || null;
+}
+
+function shortVoiceLabel(voice) {
+  if (!voice) return "sistem";
+  const name = String(voice.name || "").trim();
+  if (!name) return "sistem";
+  const parts = name.split(/[\s-]+/).filter(Boolean);
+  return parts.slice(0, 2).join(" ") || name.slice(0, 14);
 }
 
 async function speakViaApi(text, langCode, tone = "neutral") {
@@ -1747,13 +1825,18 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   return await playCachedAudio(audioSrc, myRunId);
 }
 
-function speakFallback(text, langCode) {
+function speakFallback(text, langCode, opts = {}) {
   const value = String(text || "").trim();
   if (!value) return false;
+  const targetSide = opts.targetSide || "";
+  const ttsT0 = performance.now();
 
   try {
     if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
       window.NativeTTS.speak(value, canonical(langCode));
+      speedMetrics.ttsMs = Math.max(1, Math.round(performance.now() - ttsT0));
+      lastTtsVoiceLabel = "native";
+      updateSpeedMetrics();
       return true;
     }
   } catch {}
@@ -1765,12 +1848,20 @@ function speakFallback(text, langCode) {
   } catch {}
 
   try {
+    if (!webVoicesCache.length) refreshWebVoices();
+
     const u = new SpeechSynthesisUtterance(value);
     u.lang = langObj(langCode).bcp;
     u.rate = ttsRateFor(langCode);
-    u.pitch = 1;
-    const voice = chooseWebVoice(langCode);
+    u.pitch = ttsPitchFor(langCode, targetSide);
+    const voice = chooseWebVoice(langCode, targetSide);
     if (voice) u.voice = voice;
+    lastTtsVoiceLabel = shortVoiceLabel(voice);
+
+    u.onstart = () => {
+      speedMetrics.ttsMs = Math.max(1, Math.round(performance.now() - ttsT0));
+      updateSpeedMetrics();
+    };
     u.onend = () => {
       if (isHandsFreeModeEnabled()) {
         armHandsFreeAudioGuard(350);
@@ -1787,7 +1878,7 @@ function speakFallback(text, langCode) {
   }
 }
 
-async function speak(text, langCode, tone = "neutral") {
+async function speak(text, langCode, tone = "neutral", opts = {}) {
   if (!isFaceAutoReadEnabled()) return;
 
   const value = String(text || "").trim();
@@ -1798,13 +1889,21 @@ async function speak(text, langCode, tone = "neutral") {
   pauseListeningForTts(spokenValue);
   await warmAudio();
 
-  const ttsT0 = performance.now();
-  const fastOk = speakFallback(spokenValue, langCode);
-  if (fastOk) {
-    speedMetrics.ttsMs = Math.round(performance.now() - ttsT0);
-    updateSpeedMetrics();
-    return;
+  if (!webVoicesCache.length) {
+    refreshWebVoices();
+    await new Promise((resolve) => {
+      if (webVoicesCache.length) { resolve(); return; }
+      const done = () => {
+        refreshWebVoices();
+        resolve();
+      };
+      window.speechSynthesis.onvoiceschanged = done;
+      setTimeout(done, 500);
+    });
   }
+
+  const fastOk = speakFallback(spokenValue, langCode, opts);
+  if (fastOk) return;
 
   if (SPEED_LAB_FREE_ONLY) {
     showToast("Hoparlör sesi başlatılamadı");
@@ -2366,7 +2465,7 @@ async function finalizeRecognition(side, text, opts = {}) {
   if (latestTxt) {
     latestTxt.textContent = tr;
     keepLatestVisible(other);
-    speak(tr, dst, sourceTone).catch(() => {});
+    speak(tr, dst, sourceTone, { targetSide: other }).catch(() => {});
   }
 
   if (isHandsFreeModeEnabled()) {
@@ -2415,7 +2514,7 @@ async function finalizeTypedMessage(side, rawText) {
   if (latestTxt) {
     latestTxt.textContent = tr;
     keepLatestVisible(other);
-    speak(tr, dst, tone).catch(() => {});
+    speak(tr, dst, tone, { targetSide: other }).catch(() => {});
   }
 
   updateSpeedMetrics();
@@ -3383,8 +3482,10 @@ function bindSpeechVoices() {
   try {
     if (window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = () => {
+        refreshWebVoices();
         voicesReady = true;
       };
+      refreshWebVoices();
       window.speechSynthesis.getVoices();
     }
   } catch {}
@@ -3406,6 +3507,13 @@ function bindHandsFreeSafetyEvents() {
 
 function bindSpeedLabControls() {
   if (!SPEED_LAB_FREE_ONLY) return;
+
+  syncSpeedLabTtsBtn();
+  document.getElementById("speedLabTtsBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    cycleSpeedLabTtsMode();
+  });
 
   const offlineBtn = document.getElementById("speedLabOfflineBtn");
   offlineBtn?.addEventListener("click", async (e) => {
