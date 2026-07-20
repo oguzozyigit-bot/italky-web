@@ -3364,7 +3364,7 @@ function bindSpeedLabControls() {
   const hintBtn = document.getElementById("speedLabHintBtn");
   hintBtn?.addEventListener("click", (e) => {
     e.preventDefault();
-    showToast("Mic'e bas → konuş → çeviri + ses. Kulaklıkta karşı taraf duyar; sıra ona geçer.");
+    showToast("1) TR↔EN seç 2) Mic→konuş 3) Offline indir 4) WiFi kapat→tekrar dene");
   });
 }
 
