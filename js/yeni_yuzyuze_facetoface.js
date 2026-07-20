@@ -1524,7 +1524,7 @@ function renderPop(side) {
   });
 }
 
-function stopAudio() {
+function stopMediaPlayers() {
   speakRunId += 1;
 
   try {
@@ -1535,9 +1535,21 @@ function stopAudio() {
   } catch {}
 
   currentAudio = null;
-
-  try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
+}
+
+function stopAudio() {
+  stopMediaPlayers();
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+}
+
+function primeSpeechOutput() {
+  if (!window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.resume();
+    refreshWebVoices();
+    window.speechSynthesis.getVoices();
+  } catch {}
 }
 
 function stopTypewriter() {
@@ -1828,42 +1840,44 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   return await playCachedAudio(audioSrc, myRunId);
 }
 
-function speakFallback(text, langCode, opts = {}) {
-  const value = String(text || "").trim();
-  if (!value) return false;
-  const targetSide = opts.targetSide || "";
-  const ttsT0 = performance.now();
-
-  try {
-    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.speak(value, canonical(langCode));
-      speedMetrics.ttsMs = Math.max(1, Math.round(performance.now() - ttsT0));
-      lastTtsVoiceLabel = "native";
-      updateSpeedMetrics();
-      return true;
+function speakOnceWeb(value, langCode, opts = {}, profile = {}) {
+  return new Promise((resolve) => {
+    if (!window.speechSynthesis) {
+      resolve(false);
+      return;
     }
-  } catch {}
 
-  if (!window.speechSynthesis) return false;
+    let settled = false;
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      resolve(!!ok);
+    };
 
-  try {
-    window.speechSynthesis.cancel();
-  } catch {}
-
-  try {
-    if (!webVoicesCache.length) refreshWebVoices();
-
+    const targetSide = opts.targetSide || "";
     const u = new SpeechSynthesisUtterance(value);
     u.lang = langObj(langCode).bcp;
-    u.rate = ttsRateFor(langCode);
+    u.volume = 1;
+    const baseRate = profile.rateOverride ?? ttsRateFor(langCode);
+    u.rate = Math.min(2, Math.max(0.85, baseRate));
     u.pitch = ttsPitchFor(langCode, targetSide);
-    const voice = chooseWebVoice(langCode, targetSide);
-    if (voice) u.voice = voice;
-    lastTtsVoiceLabel = shortVoiceLabel(voice);
+
+    if (!profile.skipVoice) {
+      const voice = chooseWebVoice(langCode, targetSide);
+      if (voice) u.voice = voice;
+      lastTtsVoiceLabel = shortVoiceLabel(voice);
+    } else {
+      lastTtsVoiceLabel = "sistem";
+    }
+
+    const ttsT0 = performance.now();
+    const watchdog = setTimeout(() => finish(false), 1500);
 
     u.onstart = () => {
+      clearTimeout(watchdog);
       speedMetrics.ttsMs = Math.max(1, Math.round(performance.now() - ttsT0));
       updateSpeedMetrics();
+      finish(true);
     };
     u.onend = () => {
       if (isHandsFreeModeEnabled()) {
@@ -1872,13 +1886,53 @@ function speakFallback(text, langCode, opts = {}) {
       }
     };
     u.onerror = () => {
-      if (isHandsFreeModeEnabled()) scheduleHandsFreeRestart("tts-error", 400);
+      clearTimeout(watchdog);
+      finish(false);
     };
-    window.speechSynthesis.speak(u);
-    return true;
-  } catch {
-    return false;
+
+    try {
+      window.speechSynthesis.resume();
+      window.speechSynthesis.speak(u);
+    } catch {
+      clearTimeout(watchdog);
+      finish(false);
+    }
+  });
+}
+
+async function speakFallbackAsync(text, langCode, opts = {}) {
+  const value = String(text || "").trim();
+  if (!value) return false;
+
+  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+    try {
+      window.NativeTTS.speak(value, canonical(langCode));
+      lastTtsVoiceLabel = "native";
+      speedMetrics.ttsMs = 1;
+      updateSpeedMetrics();
+      return true;
+    } catch {}
   }
+
+  if (!window.speechSynthesis) return false;
+
+  primeSpeechOutput();
+  try { window.speechSynthesis.cancel(); } catch {}
+  await wait(64);
+  primeSpeechOutput();
+
+  const profiles = [
+    { skipVoice: false },
+    { skipVoice: true, rateOverride: Math.min(1.45, ttsRateFor(langCode)) },
+  ];
+
+  for (const profile of profiles) {
+    const ok = await speakOnceWeb(value, langCode, opts, profile);
+    if (ok) return true;
+    await wait(40);
+  }
+
+  return false;
 }
 
 async function speak(text, langCode, tone = "neutral", opts = {}) {
@@ -1887,13 +1941,14 @@ async function speak(text, langCode, tone = "neutral", opts = {}) {
   const value = String(text || "").trim();
   if (!value) return;
   const spokenValue = sanitizeCensoredTextForTts(value);
+  if (!spokenValue.trim()) return;
 
-  stopAudio();
+  stopMediaPlayers();
   pauseListeningForTts(spokenValue);
   await warmAudio();
+  primeSpeechOutput();
 
   if (!webVoicesCache.length) {
-    refreshWebVoices();
     await new Promise((resolve) => {
       if (webVoicesCache.length) { resolve(); return; }
       const done = () => {
@@ -1905,11 +1960,11 @@ async function speak(text, langCode, tone = "neutral", opts = {}) {
     });
   }
 
-  const fastOk = speakFallback(spokenValue, langCode, opts);
+  const fastOk = await speakFallbackAsync(spokenValue, langCode, opts);
   if (fastOk) return;
 
   if (SPEED_LAB_FREE_ONLY) {
-    showToast("Hoparlör sesi başlatılamadı");
+    showToast("Ses yok — sayfaya dokun, 🔊 Turbo dene");
     return;
   }
 
@@ -1951,7 +2006,7 @@ async function speak(text, langCode, tone = "neutral", opts = {}) {
     }
   }
 
-  const fallbackOk = speakFallback(spokenValue, langCode);
+  const fallbackOk = await speakFallbackAsync(spokenValue, langCode, opts);
   if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
 }
 
@@ -2787,6 +2842,9 @@ function startRecording(side, opts = {}) {
 
 async function toggleRecording(side) {
   await ensureReady();
+  await warmAudio();
+  primeSpeechOutput();
+
   const premiumOk = await ensureCurrentFacePremiumModeAccess();
   if (!premiumOk) return;
 
@@ -3148,7 +3206,10 @@ async function warmApis() {
 
 function unlockOnFirstTouch() {
   const once = async () => {
-    try { await warmAudio(); } catch {}
+    try {
+      await warmAudio();
+      primeSpeechOutput();
+    } catch {}
     window.removeEventListener("touchstart", once);
     window.removeEventListener("pointerdown", once);
     window.removeEventListener("click", once);
@@ -3220,10 +3281,7 @@ function startBoot() {
           if (out) rememberTranslateCache(translateCacheKey("merhaba", warmFrom, warmTo), out);
         }
         if (window.speechSynthesis) {
-          const u = new SpeechSynthesisUtterance(" ");
-          u.volume = 0.01;
-          u.rate = ttsRateFor(warmTo);
-          window.speechSynthesis.speak(u);
+          primeSpeechOutput();
         }
       } catch {}
       updateSpeedMetrics();
