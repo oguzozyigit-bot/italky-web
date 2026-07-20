@@ -1,34 +1,32 @@
 /**
  * Staging-only fast face-to-face lane.
- * Isolated from games, ads, global_access, and legacy facetoface modules.
+ * Transport: Supabase Realtime Broadcast (serverless).
+ * Isolated from games, ads, global_access, Render WS, and legacy facetoface modules.
  */
-import { BASE_DOMAIN } from "/js/config.js";
 import { supabase } from "/js/supabase_client.js";
 
-const WS_BASE = String(BASE_DOMAIN || "").replace(/^http/i, "ws").replace(/\/+$/, "");
-const STAGING_WS = `${WS_BASE}/api/f2f/staging/ws`;
-const API_BASE = String(BASE_DOMAIN || "").replace(/\/+$/, "");
+const ROOM_PREFIX = "f2f_staging_";
 const PEER_KEY = "italky_staging_peer_id_v1";
-const TTS_PREF_KEY = "italky_staging_tts_pref_v1";
+const MAX_BROADCAST_B64 = 28000;
 
 const $ = (id) => document.getElementById(id);
 
 const state = {
-  ws: null,
-  wsReady: false,
+  channel: null,
+  channelReady: false,
   room: "",
   role: "",
   peerId: "",
+  displayName: "",
   listening: false,
   recognizer: null,
   partialThrottle: 0,
   audioRecorder: null,
   audioSeq: 0,
   ttsEnabled: true,
-  ttsPreferApi: localStorage.getItem(TTS_PREF_KEY) === "api",
   audioUnlocked: false,
   metrics: {
-    wsRtt: null,
+    realtimeRtt: null,
     sttMs: null,
     translateMs: null,
     totalMs: null,
@@ -38,11 +36,9 @@ const state = {
 
 const playback = {
   speakToken: 0,
-  currentAudio: null,
   chunkQueue: [],
   chunkPlaying: false,
   chunkAudio: null,
-  chunkDropped: 0,
 };
 
 function nowMs() {
@@ -67,8 +63,13 @@ function ensurePeerId() {
   return id;
 }
 
+function roomChannelName(roomCode) {
+  const room = String(roomCode || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+  return `${ROOM_PREFIX}${room}`;
+}
+
 function isRemotePeer(msg) {
-  const from = String(msg?.from || "").trim();
+  const from = String(msg?.from || msg?.peer_id || "").trim();
   return !!from && from !== state.peerId;
 }
 
@@ -103,62 +104,161 @@ function setTtsStatus(text, active = true) {
   el.style.color = active ? "var(--lime)" : "var(--muted)";
 }
 
-function wsSend(payload) {
-  if (!state.ws || state.ws.readyState !== WebSocket.OPEN) return false;
+async function disconnectRoom() {
+  clearInterval(pingTimer);
+  pingTimer = null;
+
+  if (state.channel) {
+    try {
+      await state.channel.untrack();
+    } catch {}
+    try {
+      await supabase.removeChannel(state.channel);
+    } catch {}
+  }
+
+  state.channel = null;
+  state.channelReady = false;
+  setConn("Kapalı", false);
+}
+
+async function broadcastEvent(event, payload) {
+  if (!state.channel || !state.channelReady) return false;
+  const body = {
+    ...payload,
+    from: state.peerId,
+    peer_id: state.peerId,
+    name: state.displayName,
+    sent_at: wallMs(),
+  };
   try {
-    state.ws.send(JSON.stringify(payload));
-    return true;
+    const status = await state.channel.send({
+      type: "broadcast",
+      event,
+      payload: body,
+    });
+    return status === "ok";
   } catch {
     return false;
   }
 }
 
-function disconnectWs() {
-  try { state.ws?.close(); } catch {}
-  state.ws = null;
-  state.wsReady = false;
-  setConn("Kapalı", false);
+function attachChannelHandlers() {
+  const ch = state.channel;
+  if (!ch) return;
+
+  ch.on("broadcast", { event: "utterance" }, ({ payload }) => handleRoomMessage(payload));
+  ch.on("broadcast", { event: "translation" }, ({ payload }) => handleRoomMessage(payload));
+  ch.on("broadcast", { event: "audio_chunk" }, ({ payload }) => handleRoomMessage(payload));
+  ch.on("broadcast", { event: "peer_joined" }, ({ payload }) => handleRoomMessage(payload));
+  ch.on("broadcast", { event: "peer_left" }, ({ payload }) => handleRoomMessage(payload));
+  ch.on("broadcast", { event: "pong" }, ({ payload }) => {
+    const clientTs = Number(payload?.client_ts || 0);
+    if (clientTs && isRemotePeer(payload)) {
+      setMetric("realtimeRtt", Math.max(0, wallMs() - clientTs));
+    }
+  });
+  ch.on("broadcast", { event: "ping" }, ({ payload }) => {
+    if (!isRemotePeer(payload)) return;
+    broadcastEvent("pong", {
+      type: "pong",
+      client_ts: Number(payload.client_ts || 0),
+    }).catch(() => {});
+  });
+
+  ch.on("presence", { event: "sync" }, () => {
+    const count = Object.keys(ch.presenceState?.() || {}).length;
+    $("peerCount").textContent = String(count);
+  });
+
+  ch.on("presence", { event: "join" }, ({ key, newPresences }) => {
+    const peer = newPresences?.[0] || {};
+    if (key && key !== state.peerId) {
+      logLine(`Peer katıldı: ${peer.name || key}`, "ok");
+    }
+  });
+
+  ch.on("presence", { event: "leave" }, ({ key }) => {
+    if (key && key !== state.peerId) {
+      logLine("Peer ayrıldı", "warn");
+      stopRemoteChunkPlayback();
+    }
+  });
 }
 
-function connectWs(roomCode, afterOpen) {
-  disconnectWs();
+async function connectRoom(roomCode, asHost) {
+  await disconnectRoom();
+
   const room = String(roomCode || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
   if (!room) throw new Error("Oda kodu gerekli");
 
   state.room = room;
-  const url = `${STAGING_WS}/${encodeURIComponent(room)}`;
+  state.role = asHost ? "host" : "guest";
+  state.displayName = String($("displayName")?.value || (asHost ? "Host" : "Guest")).trim() || "Guest";
+  ensurePeerId();
+
+  const channelName = roomChannelName(room);
   setConn("Bağlanıyor…", false);
-  logLine(`WS bağlanıyor: ${url}`);
+  logLine(`Supabase Realtime: ${channelName}`);
 
-  const ws = new WebSocket(url);
-  state.ws = ws;
+  state.channel = supabase.channel(channelName, {
+    config: {
+      broadcast: { self: false },
+      presence: { key: state.peerId },
+    },
+  });
 
-  ws.onopen = () => {
-    state.wsReady = true;
-    setConn("Bağlı", true);
-    logLine("WebSocket açık", "ok");
-    afterOpen?.();
-    startWsPingLoop();
-  };
+  attachChannelHandlers();
 
-  ws.onmessage = (ev) => {
-    try {
-      handleWsMessage(JSON.parse(ev.data || "{}"));
-    } catch (e) {
-      logLine(`WS parse hatası: ${e?.message || e}`, "err");
-    }
-  };
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("Realtime subscribe timeout")), 12000);
 
-  ws.onerror = () => {
-    setConn("Hata", false);
-    logLine("WebSocket hata", "err");
-  };
+    state.channel.subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        clearTimeout(timeout);
+        try {
+          await state.channel.track({
+            peer_id: state.peerId,
+            name: state.displayName,
+            role: state.role,
+            me_lang: canonLang($("myLang")?.value, "tr"),
+            target_lang: canonLang($("targetLang")?.value, "en"),
+            joined_at: wallMs(),
+          });
+        } catch (e) {
+          logLine(`Presence track hatası: ${e?.message || e}`, "warn");
+        }
 
-  ws.onclose = () => {
-    state.wsReady = false;
-    setConn("Kapalı", false);
-    logLine("WebSocket kapandı", "warn");
-  };
+        state.channelReady = true;
+        setConn("Realtime bağlı", true);
+        logLine("Supabase Realtime kanalı hazır", "ok");
+
+        await broadcastEvent("peer_joined", {
+          type: "peer_joined",
+          peer: {
+            peer_id: state.peerId,
+            name: state.displayName,
+            role: state.role,
+          },
+        });
+
+        startRealtimePingLoop();
+        resolve(true);
+        return;
+      }
+
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        clearTimeout(timeout);
+        setConn("Hata", false);
+        logLine(`Realtime durumu: ${status}`, "err");
+        reject(new Error(status));
+      }
+    });
+  });
+
+  $("laneStatus").textContent = asHost
+    ? "Oda oluşturuldu — Supabase Realtime aktif"
+    : "Odaya katıldınız — Supabase Realtime aktif";
 }
 
 function bcpLang(code) {
@@ -196,13 +296,6 @@ async function unlockAudio() {
 
 function stopTtsPlayback() {
   playback.speakToken += 1;
-  try {
-    if (playback.currentAudio) {
-      playback.currentAudio.pause();
-      playback.currentAudio.currentTime = 0;
-    }
-  } catch {}
-  playback.currentAudio = null;
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
@@ -255,7 +348,6 @@ function enqueueRemoteAudioChunk(msg) {
   if (playback.chunkQueue.length > 24) {
     const dropped = playback.chunkQueue.shift();
     try { URL.revokeObjectURL(dropped?.url); } catch {}
-    playback.chunkDropped += 1;
   }
 
   try {
@@ -302,57 +394,6 @@ async function speakViaBrowser(text, langCode) {
   });
 }
 
-async function speakViaApi(text, langCode, token) {
-  const value = String(text || "").trim();
-  if (!value || !token?.userId) return false;
-
-  const headers = { "Content-Type": "application/json" };
-  if (token.accessToken) headers.Authorization = `Bearer ${token.accessToken}`;
-
-  const res = await fetch(`${API_BASE}/api/tts`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      text: value,
-      lang: canonLang(langCode, "en"),
-      user_id: token.userId,
-      voice: "mine",
-      module: "facetoface",
-    }),
-  });
-
-  const data = await res.json().catch(() => null);
-  const audioBase64 = String(data?.audio_base64 || "").trim();
-  if (!res.ok || !data?.ok || !audioBase64) return false;
-
-  const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
-  audio.playsInline = true;
-  audio.preload = "auto";
-  playback.currentAudio = audio;
-
-  await audio.play();
-  await new Promise((resolve) => {
-    audio.onended = resolve;
-    audio.onerror = resolve;
-  });
-  if (playback.currentAudio === audio) playback.currentAudio = null;
-  return true;
-}
-
-async function getAuthToken() {
-  try {
-    const { data } = await supabase.auth.getSession();
-    const session = data?.session;
-    if (!session?.user?.id) return null;
-    return {
-      userId: session.user.id,
-      accessToken: session.access_token || "",
-    };
-  } catch {
-    return null;
-  }
-}
-
 async function speakTranslatedText(text, langCode) {
   if (!state.ttsEnabled) return;
 
@@ -364,45 +405,41 @@ async function speakTranslatedText(text, langCode) {
   const tokenId = ++playback.speakToken;
   const t0 = nowMs();
 
-  let mode = "tarayıcı";
-  let ok = false;
-
-  if (state.ttsPreferApi) {
-    const auth = await getAuthToken();
-    if (auth && tokenId === playback.speakToken) {
-      try {
-        ok = await speakViaApi(value, langCode, auth);
-        if (ok) mode = "Cartesia";
-      } catch {}
-    }
-  }
-
-  if (!ok && tokenId === playback.speakToken) {
-    ok = await speakViaBrowser(value, langCode);
-    mode = ok ? "tarayıcı" : "kapalı";
-  }
-
+  const ok = await speakViaBrowser(value, langCode);
   if (tokenId !== playback.speakToken) return;
 
   const ttsMs = Math.round(nowMs() - t0);
   setMetric("ttsMs", ttsMs);
-  setTtsStatus(`TTS açık · ${mode}`, state.ttsEnabled);
-  logLine(`TTS (${mode}, ${ttsMs}ms): ${value.slice(0, 80)}`, ok ? "ok" : "warn");
+  setTtsStatus(ok ? "TTS açık · tarayıcı" : "TTS kapalı", state.ttsEnabled);
+  logLine(`TTS (tarayıcı, ${ttsMs}ms): ${value.slice(0, 80)}`, ok ? "ok" : "warn");
 }
 
-function handleWsMessage(msg) {
+async function translateStaging(text, sourceLang, targetLang) {
+  const value = String(text || "").trim();
+  if (!value) return "";
+  const src = canonLang(sourceLang, "auto");
+  const tgt = canonLang(targetLang, "en");
+  if (src === tgt) return value;
+
+  const params = new URLSearchParams({
+    client: "gtx",
+    sl: src,
+    tl: tgt,
+    dt: "t",
+    q: value,
+  });
+
+  const res = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
+  if (!res.ok) throw new Error(`translate_${res.status}`);
+  const data = await res.json();
+  const parts = Array.isArray(data?.[0])
+    ? data[0].map((chunk) => String(chunk?.[0] || "")).join("")
+    : "";
+  return String(parts || value).trim() || value;
+}
+
+function handleRoomMessage(msg) {
   const type = String(msg?.type || "");
-
-  if (type === "pong") {
-    const clientTs = Number(msg.client_ts || 0);
-    if (clientTs) setMetric("wsRtt", Math.max(0, wallMs() - clientTs));
-    return;
-  }
-
-  if (type === "presence") {
-    $("peerCount").textContent = String(msg.count ?? "0");
-    return;
-  }
 
   if (type === "utterance" && msg.partial && isRemotePeer(msg)) {
     $("remotePartial").textContent = String(msg.text || "");
@@ -432,47 +469,74 @@ function handleWsMessage(msg) {
     return;
   }
 
-  if (type === "peer_joined") {
-    logLine(`Peer katıldı: ${msg.peer?.name || "?"}`, "ok");
+  if (type === "peer_joined" && isRemotePeer(msg)) {
+    logLine(`Peer katıldı: ${msg.peer?.name || msg.name || "?"}`, "ok");
     return;
   }
 
-  if (type === "peer_left") {
+  if (type === "peer_left" && isRemotePeer(msg)) {
     logLine("Peer ayrıldı", "warn");
     stopRemoteChunkPlayback();
-    return;
-  }
-
-  if (type === "error") {
-    logLine(`Sunucu: ${msg.message || "error"}`, "err");
   }
 }
 
 let pingTimer = null;
-function startWsPingLoop() {
+function startRealtimePingLoop() {
   clearInterval(pingTimer);
   pingTimer = setInterval(() => {
-    wsSend({ type: "ping", client_ts: wallMs() });
+    broadcastEvent("ping", { type: "ping", client_ts: wallMs() }).catch(() => {});
   }, 4000);
 }
 
-function joinStaging(asHost) {
-  const room = $("roomCode")?.value || "";
-  const meLang = canonLang($("myLang")?.value, "tr");
+async function publishUtterance(text, partial, clientTs) {
+  const sourceLang = canonLang($("myLang")?.value, "tr");
   const targetLang = canonLang($("targetLang")?.value, "en");
-  ensurePeerId();
-  unlockAudio().catch(() => {});
+  const payload = {
+    type: "utterance",
+    text,
+    partial,
+    source_lang: sourceLang,
+    target_lang: targetLang,
+    client_ts: clientTs,
+  };
 
-  connectWs(room, () => {
-    wsSend({
-      type: asHost ? "create" : "join",
-      peer_id: state.peerId,
-      name: String($("displayName")?.value || (asHost ? "Host" : "Guest")).trim(),
-      me_lang: meLang,
+  await broadcastEvent("utterance", payload);
+
+  if (partial) return;
+
+  const t0 = nowMs();
+  try {
+    const translated = await translateStaging(text, sourceLang, targetLang);
+    const translateMs = Math.round(nowMs() - t0);
+    const totalMs = Math.max(translateMs, wallMs() - clientTs);
+
+    setMetric("translateMs", translateMs);
+    setMetric("totalMs", totalMs);
+
+    await broadcastEvent("translation", {
+      type: "translation",
+      source_text: text,
+      translated_text: translated,
+      source_lang: sourceLang,
       target_lang: targetLang,
+      client_ts: clientTs,
+      translate_ms: translateMs,
+      total_ms: totalMs,
+      staging: true,
     });
-    state.role = asHost ? "host" : "guest";
-    $("laneStatus").textContent = asHost ? "Oda oluşturuldu — staging aktif" : "Odaya katıldınız";
+
+    $("localFinal").textContent = text;
+    logLine(`Çeviri yayınlandı (${translateMs}ms)`, "ok");
+  } catch (e) {
+    logLine(`Çeviri hatası: ${e?.message || e}`, "err");
+  }
+}
+
+function joinStaging(asHost) {
+  unlockAudio().catch(() => {});
+  connectRoom($("roomCode")?.value || "", asHost).catch((e) => {
+    setConn("Hata", false);
+    logLine(`Bağlantı hatası: ${e?.message || e}`, "err");
   });
 }
 
@@ -485,7 +549,7 @@ function stopListening() {
 }
 
 function startListening() {
-  if (!state.wsReady) {
+  if (!state.channelReady) {
     logLine("Önce odaya bağlanın", "warn");
     return;
   }
@@ -528,14 +592,7 @@ function startListening() {
       const t = nowMs();
       if (t - state.partialThrottle > 180) {
         state.partialThrottle = t;
-        wsSend({
-          type: "utterance",
-          text: interim.trim(),
-          partial: true,
-          source_lang: canonLang($("myLang")?.value, "tr"),
-          target_lang: canonLang($("targetLang")?.value, "en"),
-          client_ts: wallMs(),
-        });
+        publishUtterance(interim.trim(), true, wallMs()).catch(() => {});
       }
     }
 
@@ -548,15 +605,7 @@ function startListening() {
       const text = finalText.trim();
       $("localFinal").textContent = text;
       $("localPartial").textContent = "";
-
-      wsSend({
-        type: "utterance",
-        text,
-        partial: false,
-        source_lang: canonLang($("myLang")?.value, "tr"),
-        target_lang: canonLang($("targetLang")?.value, "en"),
-        client_ts: wallMs(),
-      });
+      publishUtterance(text, false, wallMs()).catch(() => {});
       logLine(`STT final (${sttMs}ms): ${text}`);
     }
   };
@@ -587,7 +636,7 @@ async function toggleAudioStream() {
     return;
   }
 
-  if (!state.wsReady) {
+  if (!state.channelReady) {
     logLine("Önce odaya bağlanın", "warn");
     return;
   }
@@ -607,8 +656,12 @@ async function toggleAudioStream() {
       if (!ev.data?.size) return;
       const buf = await ev.data.arrayBuffer();
       const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+      if (b64.length > MAX_BROADCAST_B64) {
+        logLine(`Ses chunk atlandı (>${MAX_BROADCAST_B64} b64)`, "warn");
+        return;
+      }
       state.audioSeq += 1;
-      wsSend({
+      await broadcastEvent("audio_chunk", {
         type: "audio_chunk",
         seq: state.audioSeq,
         mime,
@@ -620,34 +673,17 @@ async function toggleAudioStream() {
     recorder.start(250);
     $("audioStreamBtn")?.classList.add("active");
     $("audioStreamStatus").textContent = "Ses akışı açık (250ms chunk)";
-    logLine("Audio chunk stream başladı", "ok");
+    logLine("Audio chunk Realtime stream başladı", "ok");
   } catch (e) {
     logLine(`Mikrofon izni/akış hatası: ${e?.message || e}`, "err");
   }
-}
-
-function toggleTtsMode() {
-  state.ttsPreferApi = !state.ttsPreferApi;
-  localStorage.setItem(TTS_PREF_KEY, state.ttsPreferApi ? "api" : "browser");
-  setTtsStatus(
-    state.ttsEnabled
-      ? `TTS açık · ${state.ttsPreferApi ? "Cartesia öncelik" : "tarayıcı"}`
-      : "TTS kapalı",
-    state.ttsEnabled,
-  );
-  logLine(`TTS modu: ${state.ttsPreferApi ? "Cartesia öncelik" : "tarayıcı öncelik"}`, "ok");
 }
 
 function toggleTtsEnabled() {
   state.ttsEnabled = !state.ttsEnabled;
   $("ttsBtn")?.classList.toggle("active", state.ttsEnabled);
   if (!state.ttsEnabled) stopTtsPlayback();
-  setTtsStatus(
-    state.ttsEnabled
-      ? `TTS açık · ${state.ttsPreferApi ? "Cartesia öncelik" : "tarayıcı"}`
-      : "TTS kapalı",
-    state.ttsEnabled,
-  );
+  setTtsStatus(state.ttsEnabled ? "TTS açık · tarayıcı" : "TTS kapalı", state.ttsEnabled);
 }
 
 function randomRoomCode() {
@@ -655,15 +691,6 @@ function randomRoomCode() {
   let out = "";
   for (let i = 0; i < 6; i += 1) out += chars[Math.floor(Math.random() * chars.length)];
   return out;
-}
-
-async function hydrateTtsPreference() {
-  const auth = await getAuthToken();
-  if (auth?.userId && state.ttsPreferApi) {
-    setTtsStatus("TTS açık · Cartesia öncelik", true);
-  } else {
-    setTtsStatus("TTS açık · tarayıcı", true);
-  }
 }
 
 function bindUi() {
@@ -677,7 +704,7 @@ function bindUi() {
     stopListening();
     stopTtsPlayback();
     stopRemoteChunkPlayback();
-    disconnectWs();
+    disconnectRoom().catch(() => {});
     $("laneStatus").textContent = "Bağlantı kesildi";
   });
 
@@ -690,10 +717,7 @@ function bindUi() {
     toggleAudioStream().catch(() => {});
   });
 
-  $("ttsBtn")?.addEventListener("click", (ev) => {
-    if (ev.shiftKey) toggleTtsMode();
-    else toggleTtsEnabled();
-  });
+  $("ttsBtn")?.addEventListener("click", () => toggleTtsEnabled());
 
   $("clearLogBtn")?.addEventListener("click", () => {
     $("eventLog").innerHTML = "";
@@ -715,10 +739,9 @@ function bindUi() {
   }
 
   ensurePeerId();
-  hydrateTtsPreference().catch(() => {});
+  setTtsStatus("TTS açık · tarayıcı", true);
   logLine(`Staging peer: ${state.peerId}`);
-  logLine("Modül izole — oyun/şov/ad gate yok", "ok");
-  logLine("Shift+TTS: Cartesia/tarayıcı modu değiştir", "info");
+  logLine("Supabase Realtime · Render WS yok", "ok");
 }
 
 bindUi();
