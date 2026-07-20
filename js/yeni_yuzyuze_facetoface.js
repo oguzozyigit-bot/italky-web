@@ -107,60 +107,6 @@ let partialTranslateTimer = null;
 let translateEngineLabel = "gtx";
 let offlinePackPrefetchStarted = false;
 let webVoicesCache = [];
-let lastTtsVoiceLabel = "";
-let audioUnlockedForSpeech = false;
-const SPEED_LAB_TTS_SPEED_KEY = "speed_lab_tts_speed_v1";
-
-function getSpeedLabTtsMode() {
-  const mode = String(localStorage.getItem(SPEED_LAB_TTS_SPEED_KEY) || "turbo").trim().toLowerCase();
-  return ["turbo", "fast", "normal"].includes(mode) ? mode : "turbo";
-}
-
-function cycleSpeedLabTtsMode() {
-  const order = ["turbo", "fast", "normal"];
-  const next = order[(order.indexOf(getSpeedLabTtsMode()) + 1) % order.length];
-  localStorage.setItem(SPEED_LAB_TTS_SPEED_KEY, next);
-  syncSpeedLabTtsBtn();
-  showToast(`Ses hızı: ${speedLabTtsModeLabel(next)}`);
-  unlockAudioForSpeechSync();
-  void runSpeedLabSoundTest();
-}
-
-async function runSpeedLabSoundTest() {
-  const text = "Merhaba, ses testi";
-  const lang = "tr";
-  unlockAudioForSpeechSync();
-  stopMediaPlayers();
-  const runId = speakRunId;
-
-  if (navigator.onLine) {
-    const googleOk = await speakViaGoogleTtsAudio(text, lang, runId);
-    if (googleOk) {
-      showToast("Ses testi: Google TTS");
-      return;
-    }
-  }
-
-  const webOk = await speakFallbackAsync(text, lang, { targetSide: "top" });
-  if (webOk) {
-    showToast("Ses testi: sistem sesi");
-    return;
-  }
-
-  showToast("Ses gelmedi — telefon sesini ve sessiz modu kontrol et");
-}
-
-function speedLabTtsModeLabel(mode) {
-  if (mode === "turbo") return "Turbo (TR 1.85x)";
-  if (mode === "fast") return "Hızlı (TR 1.65x)";
-  return "Normal (TR 1.35x)";
-}
-
-function syncSpeedLabTtsBtn() {
-  const btn = document.getElementById("speedLabTtsBtn");
-  if (!btn) return;
-  btn.textContent = `🔊 ${speedLabTtsModeLabel(getSpeedLabTtsMode())}`;
-}
 
 function refreshWebVoices() {
   try {
@@ -186,51 +132,10 @@ function rememberTranslateCache(key, value) {
 }
 
 function ttsRateFor(langCode) {
-  const mode = SPEED_LAB_FREE_ONLY ? getSpeedLabTtsMode() : "fast";
   const c = canonical(langCode);
-  const table = {
-    turbo: { tr: 1.85, en: 1.22, default: 1.4 },
-    fast: { tr: 1.65, en: 1.12, default: 1.25 },
-    normal: { tr: 1.35, en: 1.0, default: 1.08 },
-  };
-  const row = table[mode] || table.turbo;
-  const rate = row[c] || row.default;
-  return Math.min(2, Math.max(0.5, rate));
-}
-
-function ttsPitchFor(langCode, targetSide = "") {
-  const c = canonical(langCode);
-  if (c === "tr") return 1.12;
-  if (c === "en") return targetSide === "top" ? 1.06 : 0.94;
-  return 1;
-}
-
-function scoreWebVoice(voice, langCode, targetSide = "") {
-  const name = String(voice?.name || "").toLowerCase();
-  const lang = String(voice?.lang || "").toLowerCase();
-  const base = canonical(langCode);
-  let score = 0;
-
-  if (!lang.startsWith(base)) score -= 120;
-  else score += 30;
-
-  if (voice?.localService) score += 12;
-  if (/google/i.test(name)) score += 34;
-  if (/microsoft/i.test(name)) score += 8;
-  if (/natural|neural|premium|online/i.test(name)) score += 10;
-
-  if (base === "tr") {
-    if (/google.*(turk|türk|tr)/i.test(name)) score += 40;
-    if (/microsoft.*(tolga|emel)/i.test(name)) score -= 8;
-    if (/emel|filiz|yelda|female|kadın|turk/i.test(name)) score += targetSide === "top" ? 10 : 2;
-    if (/tolga|ahmet|male|erkek/i.test(name)) score += targetSide === "bot" ? 10 : 2;
-  }
-  if (base === "en") {
-    if (/zira|samantha|jenny|female|aria/i.test(name)) score += targetSide === "top" ? 14 : 4;
-    if (/david|mark|guy|male|andrew/i.test(name)) score += targetSide === "bot" ? 14 : 4;
-  }
-
-  return score;
+  if (c === "tr") return 1.22;
+  if (c === "en") return 1.12;
+  return 1.14;
 }
 
 function pauseListeningForTts(text) {
@@ -283,12 +188,10 @@ function updateSpeedMetrics() {
         ? "offline (app)"
         : translateEngineLabel === "offline-browser"
           ? "offline EN↔TR"
-          : translateEngineLabel === "google-tts"
-            ? "google ses"
-            : translateEngineLabel === "offline-fail"
+          : translateEngineLabel === "offline-fail"
             ? "çeviri yok"
             : translateEngineLabel;
-  el.textContent = `${engine} · STT ${fmt(speedMetrics.sttMs)} · TR ${fmt(speedMetrics.translateMs)} · TTS ${fmt(speedMetrics.ttsMs)}ms${lastTtsVoiceLabel ? ` · ${lastTtsVoiceLabel}` : ""}`;
+  el.textContent = `${engine} · STT ${fmt(speedMetrics.sttMs)} · TR ${fmt(speedMetrics.translateMs)} · TTS ${fmt(speedMetrics.ttsMs)}ms`;
 }
 
 function shouldUseOfflineTypingInsteadOfMic() {
@@ -602,7 +505,6 @@ let shiftState = { top: false, bot: false };
 let recognizer = null;
 let recordingSide = null;
 let currentAudio = null;
-let blessedSpeechAudio = null;
 let audioCtx = null;
 let bootReady = false;
 let bootStarted = false;
@@ -1573,268 +1475,6 @@ function stopAudio() {
   try { window.speechSynthesis?.cancel?.(); } catch {}
 }
 
-function primeSpeechOutput() {
-  if (!window.speechSynthesis) return;
-  try {
-    window.speechSynthesis.resume();
-    refreshWebVoices();
-    window.speechSynthesis.getVoices();
-  } catch {}
-}
-
-function ensureBlessedSpeechAudio() {
-  if (!blessedSpeechAudio) {
-    blessedSpeechAudio = new Audio();
-    blessedSpeechAudio.preload = "auto";
-    blessedSpeechAudio.playsInline = true;
-    blessedSpeechAudio.setAttribute("playsinline", "");
-    blessedSpeechAudio.setAttribute("webkit-playsinline", "");
-  }
-  return blessedSpeechAudio;
-}
-
-function unlockAudioForSpeechSync() {
-  audioUnlockedForSpeech = true;
-  primeSpeechOutput();
-
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (Ctx) {
-      if (!audioCtx) audioCtx = new Ctx();
-      if (audioCtx.state === "suspended") void audioCtx.resume();
-      const buffer = audioCtx.createBuffer(1, 1, 22050);
-      const source = audioCtx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioCtx.destination);
-      source.start(0);
-    }
-  } catch {}
-
-  try {
-    const audio = ensureBlessedSpeechAudio();
-    audio.volume = 0.02;
-    audio.muted = false;
-    audio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-    void audio.play().catch(() => {});
-  } catch {}
-
-  try {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.resume();
-      const prime = new SpeechSynthesisUtterance(" ");
-      prime.volume = 0.01;
-      prime.rate = 10;
-      window.speechSynthesis.speak(prime);
-    }
-  } catch {}
-}
-
-function chunkTextForTts(text, maxLen = 180) {
-  const value = String(text || "").trim();
-  if (!value) return [];
-  if (value.length <= maxLen) return [value];
-
-  const parts = [];
-  let rest = value;
-  while (rest.length > maxLen) {
-    let cut = rest.lastIndexOf(" ", maxLen);
-    if (cut < 40) cut = maxLen;
-    parts.push(rest.slice(0, cut).trim());
-    rest = rest.slice(cut).trim();
-  }
-  if (rest) parts.push(rest);
-  return parts.filter(Boolean);
-}
-
-function buildGoogleTtsUrl(text, langCode) {
-  const tl = canonical(langCode) || "en";
-  const q = encodeURIComponent(String(text || "").trim().slice(0, 200));
-  return `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${q}`;
-}
-
-async function fetchGoogleTtsBlob(text, langCode) {
-  const url = buildGoogleTtsUrl(text, langCode);
-  const attempts = [
-    () => fetch(url, { mode: "cors", referrerPolicy: "no-referrer", credentials: "omit" }),
-    () => fetch(url, { mode: "no-cors", referrerPolicy: "no-referrer", credentials: "omit" }),
-  ];
-
-  for (const attempt of attempts) {
-    try {
-      const resp = await attempt();
-      if (!resp || (!resp.ok && resp.type !== "opaque")) continue;
-      const blob = await resp.blob();
-      if (!blob || blob.size < 256) continue;
-      return URL.createObjectURL(blob);
-    } catch {}
-  }
-
-  return url;
-}
-
-function playAudioElementSrc(audio, src, langCode, runId, revokeUrl = "") {
-  return new Promise((resolve) => {
-    if (!audio || runId !== speakRunId) {
-      if (revokeUrl && revokeUrl.startsWith("blob:")) URL.revokeObjectURL(revokeUrl);
-      resolve(false);
-      return;
-    }
-
-    const ttsT0 = performance.now();
-    let settled = false;
-    let heardAudio = false;
-
-    const finish = (ok) => {
-      if (settled) return;
-      settled = true;
-      if (currentAudio === audio) currentAudio = null;
-      if (revokeUrl && revokeUrl.startsWith("blob:")) URL.revokeObjectURL(revokeUrl);
-      resolve(!!ok);
-    };
-
-    audio.onplaying = () => {
-      heardAudio = true;
-      speedMetrics.ttsMs = Math.max(1, Math.round(performance.now() - ttsT0));
-      lastTtsVoiceLabel = "google-tts";
-      setTranslateEngineLabel("google-tts");
-      updateSpeedMetrics();
-    };
-    audio.onended = () => finish(heardAudio);
-    audio.onerror = () => finish(false);
-
-    try {
-      audio.pause();
-      audio.currentTime = 0;
-      audio.src = src;
-      audio.playbackRate = Math.min(2, Math.max(0.85, ttsRateFor(langCode)));
-      audio.volume = 1;
-      audio.muted = false;
-      currentAudio = audio;
-      void audio.play().catch(() => finish(false));
-      setTimeout(() => {
-        if (!settled && !heardAudio) finish(false);
-      }, 2200);
-    } catch {
-      finish(false);
-    }
-  });
-}
-
-async function playGoogleTtsViaWebAudio(blobUrl, langCode, runId) {
-  if (!audioCtx || runId !== speakRunId) return false;
-
-  try {
-    if (audioCtx.state === "suspended") await audioCtx.resume();
-    const resp = await fetch(blobUrl);
-    const buf = await resp.arrayBuffer();
-    const audioBuffer = await audioCtx.decodeAudioData(buf.slice(0));
-    if (runId !== speakRunId) return false;
-
-    const source = audioCtx.createBufferSource();
-    const gain = audioCtx.createGain();
-    source.buffer = audioBuffer;
-    source.playbackRate.value = Math.min(2, Math.max(0.85, ttsRateFor(langCode)));
-    gain.gain.value = 1;
-    source.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    return await new Promise((resolve) => {
-      const ttsT0 = performance.now();
-      let settled = false;
-      const finish = (ok) => {
-        if (settled) return;
-        settled = true;
-        resolve(!!ok);
-      };
-      source.onended = () => finish(true);
-      try {
-        source.start(0);
-        speedMetrics.ttsMs = Math.max(1, Math.round(performance.now() - ttsT0));
-        lastTtsVoiceLabel = "google-webaudio";
-        setTranslateEngineLabel("google-tts");
-        updateSpeedMetrics();
-      } catch {
-        finish(false);
-        return;
-      }
-      setTimeout(() => finish(true), Math.min(12000, Math.ceil(audioBuffer.duration * 1000) + 400));
-    });
-  } catch {
-    return false;
-  }
-}
-
-function playGoogleTtsViaIframe(text, langCode, runId) {
-  return new Promise((resolve) => {
-    if (!text || runId !== speakRunId) {
-      resolve(false);
-      return;
-    }
-
-    let frame = document.getElementById("speedLabGttsFrame");
-    if (!frame) {
-      frame = document.createElement("iframe");
-      frame.id = "speedLabGttsFrame";
-      frame.title = "TTS";
-      frame.setAttribute("aria-hidden", "true");
-      frame.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none";
-      frame.allow = "autoplay";
-      document.body.appendChild(frame);
-    }
-
-    frame.src = buildGoogleTtsUrl(text, langCode);
-    lastTtsVoiceLabel = "google-iframe";
-    setTranslateEngineLabel("google-tts");
-    speedMetrics.ttsMs = 1;
-    updateSpeedMetrics();
-    setTimeout(() => resolve(runId === speakRunId), Math.min(9000, text.length * 70 + 1400));
-  });
-}
-
-async function playGoogleTtsChunk(text, langCode, runId) {
-  if (!text || runId !== speakRunId) return false;
-
-  const src = await fetchGoogleTtsBlob(text, langCode);
-  if (!src || runId !== speakRunId) return false;
-
-  const audio = audioUnlockedForSpeech ? ensureBlessedSpeechAudio() : new Audio();
-  audio.preload = "auto";
-  audio.playsInline = true;
-
-  const blobUrl = src.startsWith("blob:") ? src : "";
-  const ok = await playAudioElementSrc(audio, src, langCode, runId, blobUrl);
-  if (ok) return true;
-
-  if (blobUrl && audioCtx) {
-    return playGoogleTtsViaWebAudio(blobUrl, langCode, runId);
-  }
-
-  if (!src.startsWith("blob:")) {
-    const retryAudio = ensureBlessedSpeechAudio();
-    const retryOk = await playAudioElementSrc(retryAudio, src, langCode, runId, "");
-    if (retryOk) return true;
-  }
-
-  return playGoogleTtsViaIframe(text, langCode, runId);
-}
-
-async function speakViaGoogleTtsAudio(text, langCode, runId) {
-  if (!navigator.onLine) return false;
-
-  const chunks = chunkTextForTts(text);
-  if (!chunks.length) return false;
-
-  await warmAudio();
-  if (runId !== speakRunId) return false;
-
-  for (const chunk of chunks) {
-    if (runId !== speakRunId) return false;
-    const ok = await playGoogleTtsChunk(chunk, langCode, runId);
-    if (!ok) return false;
-  }
-  return true;
-}
-
 function stopTypewriter() {
   typewriterRunId += 1;
 }
@@ -2035,25 +1675,22 @@ function createSpeakerButton(getText, langCode, tone = "neutral") {
   return btn;
 }
 
-function chooseWebVoice(langCode, targetSide = "") {
-  const voices = refreshWebVoices();
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
   const bcp = langObj(langCode).bcp.toLowerCase();
   const langBase = canonical(langCode);
 
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
-  if (!pool.length) pool = voices.slice();
+  if (!pool.length) pool = voices;
 
-  pool.sort((a, b) => scoreWebVoice(b, langCode, targetSide) - scoreWebVoice(a, langCode, targetSide));
+  if (langBase === "tr") {
+    const trPreferred = pool.find((v) => /google|microsoft|turk/i.test(String(v.name || "")))
+      || pool.find((v) => String(v.lang || "").toLowerCase().startsWith("tr"));
+    if (trPreferred) return trPreferred;
+  }
+
   return pool[0] || voices[0] || null;
-}
-
-function shortVoiceLabel(voice) {
-  if (!voice) return "sistem";
-  const name = String(voice.name || "").trim();
-  if (!name) return "sistem";
-  const parts = name.split(/[\s-]+/).filter(Boolean);
-  return parts.slice(0, 2).join(" ") || name.slice(0, 14);
 }
 
 async function speakViaApi(text, langCode, tone = "neutral") {
@@ -2123,142 +1760,67 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   return await playCachedAudio(audioSrc, myRunId);
 }
 
-function speakOnceWeb(value, langCode, opts = {}, profile = {}) {
-  return new Promise((resolve) => {
-    if (!window.speechSynthesis) {
-      resolve(false);
-      return;
+function speakFallback(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return false;
+
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(value, canonical(langCode));
+      return true;
     }
+  } catch {}
 
-    let settled = false;
-    const finish = (ok) => {
-      if (settled) return;
-      settled = true;
-      resolve(!!ok);
-    };
+  if (!window.speechSynthesis) return false;
 
-    const targetSide = opts.targetSide || "";
+  try {
+    window.speechSynthesis.cancel();
+  } catch {}
+
+  try {
     const u = new SpeechSynthesisUtterance(value);
     u.lang = langObj(langCode).bcp;
-    u.volume = 1;
-    const baseRate = profile.rateOverride ?? ttsRateFor(langCode);
-    u.rate = Math.min(2, Math.max(0.85, baseRate));
-    u.pitch = ttsPitchFor(langCode, targetSide);
-
-    if (!profile.skipVoice) {
-      const voice = chooseWebVoice(langCode, targetSide);
-      if (voice) u.voice = voice;
-      lastTtsVoiceLabel = shortVoiceLabel(voice);
-    } else {
-      lastTtsVoiceLabel = "sistem";
-    }
-
-    const ttsT0 = performance.now();
-    const watchdog = setTimeout(() => finish(false), 8000);
-    let started = false;
-
-    u.onstart = () => {
-      started = true;
-      speedMetrics.ttsMs = Math.max(1, Math.round(performance.now() - ttsT0));
-      updateSpeedMetrics();
-    };
+    u.rate = ttsRateFor(langCode);
+    u.pitch = 1;
+    const voice = chooseWebVoice(langCode);
+    if (voice) u.voice = voice;
     u.onend = () => {
-      clearTimeout(watchdog);
       if (isHandsFreeModeEnabled()) {
         armHandsFreeAudioGuard(350);
         scheduleHandsFreeRestart("tts-done", 240);
       }
-      finish(started);
     };
     u.onerror = () => {
-      clearTimeout(watchdog);
-      finish(false);
+      if (isHandsFreeModeEnabled()) scheduleHandsFreeRestart("tts-error", 400);
     };
-
-    try {
-      window.speechSynthesis.resume();
-      window.speechSynthesis.speak(u);
-    } catch {
-      clearTimeout(watchdog);
-      finish(false);
-    }
-  });
-}
-
-async function speakFallbackAsync(text, langCode, opts = {}) {
-  const value = String(text || "").trim();
-  if (!value) return false;
-
-  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-    try {
-      window.NativeTTS.speak(value, canonical(langCode));
-      lastTtsVoiceLabel = "native";
-      speedMetrics.ttsMs = 1;
-      updateSpeedMetrics();
-      return true;
-    } catch {}
+    window.speechSynthesis.speak(u);
+    return true;
+  } catch {
+    return false;
   }
-
-  if (!window.speechSynthesis) return false;
-
-  primeSpeechOutput();
-  try { window.speechSynthesis.cancel(); } catch {}
-  await wait(64);
-  primeSpeechOutput();
-
-  const profiles = [
-    { skipVoice: false },
-    { skipVoice: true, rateOverride: Math.min(1.45, ttsRateFor(langCode)) },
-  ];
-
-  for (const profile of profiles) {
-    const ok = await speakOnceWeb(value, langCode, opts, profile);
-    if (ok) return true;
-    await wait(40);
-  }
-
-  return false;
 }
 
 async function speak(text, langCode, tone = "neutral", opts = {}) {
-  if (!SPEED_LAB_FREE_ONLY && !isFaceAutoReadEnabled()) {
-    showToast("Otomatik okuma kapalı — ayarlardan aç");
-    return;
-  }
+  if (!isFaceAutoReadEnabled()) return;
 
   const value = String(text || "").trim();
   if (!value) return;
   const spokenValue = sanitizeCensoredTextForTts(value);
-  if (!spokenValue.trim()) return;
 
-  stopMediaPlayers();
-  const myRunId = speakRunId;
+  stopAudio();
   pauseListeningForTts(spokenValue);
   await warmAudio();
-  primeSpeechOutput();
 
-  if (SPEED_LAB_FREE_ONLY && navigator.onLine) {
-    const googleOk = await speakViaGoogleTtsAudio(spokenValue, langCode, myRunId);
-    if (googleOk) return;
+  const ttsT0 = performance.now();
+  const fastOk = speakFallback(spokenValue, langCode);
+  if (fastOk) {
+    speedMetrics.ttsMs = Math.round(performance.now() - ttsT0);
+    updateSpeedMetrics();
+    return;
   }
-
-  if (!webVoicesCache.length) {
-    await new Promise((resolve) => {
-      if (webVoicesCache.length) { resolve(); return; }
-      const done = () => {
-        refreshWebVoices();
-        resolve();
-      };
-      if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = done;
-      setTimeout(done, 500);
-    });
-  }
-
-  const fastOk = await speakFallbackAsync(spokenValue, langCode, opts);
-  if (fastOk) return;
 
   if (SPEED_LAB_FREE_ONLY) {
-    showToast("Ses gelmedi — 🔊 butonuna bas (ses testi)");
+    showToast("Hoparlör sesi başlatılamadı");
     return;
   }
 
@@ -2271,7 +1833,7 @@ async function speak(text, langCode, tone = "neutral", opts = {}) {
       const ok = await playCachedAudio(cachedAudio, ++speakRunId);
       if (ok) return;
     } catch {
-      showToast("Offline Ã§eviri baÅŸarÄ±sÄ±z");
+      showToast("Offline çeviri başarısız");
       return null;
     }
   }
@@ -2300,7 +1862,7 @@ async function speak(text, langCode, tone = "neutral", opts = {}) {
     }
   }
 
-  const fallbackOk = await speakFallbackAsync(spokenValue, langCode, opts);
+  const fallbackOk = speakFallback(spokenValue, langCode);
   if (!fallbackOk) showToast("Hoparlör sesi başlatılamadı");
 }
 
@@ -3135,10 +2697,8 @@ function startRecording(side, opts = {}) {
 }
 
 async function toggleRecording(side) {
-  unlockAudioForSpeechSync();
   await ensureReady();
   await warmAudio();
-  primeSpeechOutput();
 
   const premiumOk = await ensureCurrentFacePremiumModeAccess();
   if (!premiumOk) return;
@@ -3502,7 +3062,6 @@ async function warmApis() {
 function unlockOnFirstTouch() {
   const once = () => {
     try {
-      unlockAudioForSpeechSync();
       void warmAudio();
     } catch {}
     window.removeEventListener("touchstart", once);
@@ -3576,7 +3135,10 @@ function startBoot() {
           if (out) rememberTranslateCache(translateCacheKey("merhaba", warmFrom, warmTo), out);
         }
         if (window.speechSynthesis) {
-          primeSpeechOutput();
+          const u = new SpeechSynthesisUtterance(" ");
+          u.volume = 0.01;
+          u.rate = ttsRateFor(warmTo);
+          window.speechSynthesis.speak(u);
         }
       } catch {}
       updateSpeedMetrics();
@@ -3625,18 +3187,9 @@ function bindMicTap(el, side) {
 
   let lastTouchTs = 0;
 
-  el.addEventListener("pointerdown", () => {
-    unlockAudioForSpeechSync();
-  }, { passive: true });
-
-  el.addEventListener("touchstart", () => {
-    unlockAudioForSpeechSync();
-  }, { passive: true });
-
   const run = async (e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
-    unlockAudioForSpeechSync();
     await toggleRecording(side);
   };
 
@@ -3872,13 +3425,6 @@ function bindHandsFreeSafetyEvents() {
 
 function bindSpeedLabControls() {
   if (!SPEED_LAB_FREE_ONLY) return;
-
-  syncSpeedLabTtsBtn();
-  document.getElementById("speedLabTtsBtn")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    cycleSpeedLabTtsMode();
-  });
 
   const offlineBtn = document.getElementById("speedLabOfflineBtn");
   offlineBtn?.addEventListener("click", async (e) => {
