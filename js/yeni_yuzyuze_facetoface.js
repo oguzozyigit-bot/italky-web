@@ -9,6 +9,14 @@ import {
   canEnableDualEarPro,
   showDualEarProBlockedReason
 } from "/js/dual_ear_pro.js";
+import {
+  isEnTrPair,
+  translateEnTrOfflineFallback,
+  prefetchBrowserEnTrModels,
+  getLastOfflineEngine,
+  canUseBrowserOfflineEnTr,
+} from "/js/speed_lab_entr_offline.js";
+import { downloadOfflineModel } from "/js/offline_translate_bridge.js";
 
 const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
@@ -91,9 +99,11 @@ const speedLabPill = () => document.getElementById("speedLabPill");
 /** Speed lab: no Cartesia / Render translate API — gtx + browser TTS only */
 const SPEED_LAB_FREE_ONLY = true;
 const translateCache = new Map();
-const TRANSLATE_CACHE_MAX = 96;
+const TRANSLATE_CACHE_MAX = 220;
 let handsFreeListenSide = "bot";
 let partialTranslateTimer = null;
+let translateEngineLabel = "gtx";
+let offlinePackPrefetchStarted = false;
 
 function translateCacheKey(text, from, to) {
   return `${canonical(from)}|${canonical(to)}|${String(text || "").trim().toLowerCase()}`;
@@ -139,14 +149,64 @@ function schedulePartialTranslate(text, from, to) {
     translateFastGtx(value, from, to)
       .then((out) => { if (out) rememberTranslateCache(key, out); })
       .catch(() => {});
-  }, 200);
+  }, 120);
+}
+
+function setTranslateEngineLabel(label) {
+  translateEngineLabel = String(label || "gtx");
+  updateSpeedMetrics();
 }
 
 function updateSpeedMetrics() {
   const el = speedLabPill();
   if (!el) return;
   const fmt = (v) => (v == null ? "—" : `${v}`);
-  el.textContent = `STT ${fmt(speedMetrics.sttMs)}ms · TR ${fmt(speedMetrics.translateMs)}ms · TTS ${fmt(speedMetrics.ttsMs)}ms`;
+  const engine = translateEngineLabel === "gtx"
+    ? "gtx"
+    : translateEngineLabel === "offline-native"
+      ? "offline (app)"
+      : translateEngineLabel === "offline-browser"
+        ? "offline EN↔TR"
+        : translateEngineLabel;
+  el.textContent = `${engine} · STT ${fmt(speedMetrics.sttMs)} · TR ${fmt(speedMetrics.translateMs)} · TTS ${fmt(speedMetrics.ttsMs)}ms`;
+}
+
+function maybePrefetchOfflineEnTr() {
+  if (!SPEED_LAB_FREE_ONLY || offlinePackPrefetchStarted) return;
+  if (!isEnTrPair(topLang, botLang) && !isEnTrPair(botLang, topLang)) return;
+
+  offlinePackPrefetchStarted = true;
+
+  if (canUseBrowserOfflineEnTr()) {
+    prefetchBrowserEnTrModels((data) => {
+      if (data?.status === "progress" && data?.progress != null) {
+        const pct = Math.round(Number(data.progress) || 0);
+        const el = speedLabPill();
+        if (el) el.textContent = `EN↔TR offline indiriliyor %${pct}…`;
+      }
+    }).then((ok) => {
+      if (ok) showToast("EN↔TR offline hazır (internetsiz kurtarıcı)");
+      setTranslateEngineLabel("gtx");
+    }).catch(() => {});
+  }
+}
+
+function bindNetworkFallback() {
+  window.addEventListener("offline", () => {
+    if (!SPEED_LAB_FREE_ONLY) return;
+    if (!isEnTrPair(topLang, botLang)) {
+      showToast("İnternet gitti — offline yalnızca EN↔TR");
+      return;
+    }
+    showToast("İnternet gitti — EN↔TR offline devrede");
+    maybePrefetchOfflineEnTr();
+  });
+
+  window.addEventListener("online", () => {
+    if (!SPEED_LAB_FREE_ONLY) return;
+    setTranslateEngineLabel("gtx");
+    showToast("İnternet geldi — gtx çeviri");
+  });
 }
 const F2F_AUTO_READ_KEY = "italkyai_auto_read";
 const SHARED_VOICE_NAME_KEY = "italkyai_selected_voice_name";
@@ -820,7 +880,7 @@ function setHandsFreeMode(enabled, opts = {}) {
     clearHandsFreeTimers();
     if (!opts.silent) {
       showToast(SPEED_LAB_FREE_ONLY
-        ? "Eller Serbest: tek mic sırayla üst/alt dinler · ses okurken mic kapalı"
+        ? "Eller Serbest: sırayla konuşun (kulaklık önerilir)"
         : "Çift taraflı Eller Serbest açık");
     }
     void startHandsFreeLoop("toggle");
@@ -1206,6 +1266,14 @@ function syncModeUi() {
 }
 
 function getOfflinePickerPool() {
+  if (SPEED_LAB_FREE_ONLY) {
+    const installed = getAllInstalledOfflineLangs().filter((c) => c === "en" || c === "tr");
+    const set = new Set(installed);
+    set.add("en");
+    set.add("tr");
+    return Array.from(set).filter((c) => langExists(c));
+  }
+
   const native = canonical(botLang || getPreferredBaseLang());
   const all = getAllInstalledOfflineLangs();
   const set = new Set(all);
@@ -1243,6 +1311,27 @@ function setModeOffline() {
 }
 
 function tryEnableOfflineMode() {
+  if (SPEED_LAB_FREE_ONLY) {
+    const src = canonical(topLang);
+    const dst = canonical(botLang);
+    if (src === dst) {
+      showToast("İki farklı dil seçin (EN ↔ TR)");
+      setModeOnline();
+      return false;
+    }
+    if (!isEnTrPair(src, dst)) {
+      openOfflineRequiredPopup("Test lab offline kurtarıcı yalnızca İngilizce ↔ Türkçe çiftinde çalışır.");
+      setModeOnline();
+      return false;
+    }
+
+    applyOfflineStartLayout();
+    setModeOffline();
+    maybePrefetchOfflineEnTr();
+    showToast("Offline EN↔TR — internetsiz kurtarıcı");
+    return true;
+  }
+
   const pool = getOfflinePickerPool();
 
   if (!pool.length || pool.length < 1) {
@@ -1793,7 +1882,7 @@ function offlineTranslateRequest(payload) {
   });
 }
 
-async function translateFastGtx(text, from, to) {
+async function translateFastGtx(text, from, to, timeoutMs = 2800) {
   const value = String(text || "").trim();
   if (!value) return "";
   const src = canonical(from);
@@ -1807,13 +1896,45 @@ async function translateFastGtx(text, from, to) {
     dt: "t",
     q: value,
   });
-  const res = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
-  if (!res.ok) return "";
-  const data = await res.json();
-  const parts = Array.isArray(data?.[0])
-    ? data[0].map((chunk) => String(chunk?.[0] || "")).join("")
-    : "";
-  return String(parts || "").trim();
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.max(800, Number(timeoutMs) || 2800));
+
+  try {
+    const res = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`, {
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    const parts = Array.isArray(data?.[0])
+      ? data[0].map((chunk) => String(chunk?.[0] || "")).join("")
+      : "";
+    return String(parts || "").trim();
+  } catch {
+    return "";
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function translateEnTrRescue(text, from, to) {
+  if (!isEnTrPair(from, to)) return null;
+
+  const offline = await translateEnTrOfflineFallback(text, from, to, {
+    onProgress: (data) => {
+      if (data?.status === "progress" && data?.progress != null) {
+        const el = speedLabPill();
+        if (el) el.textContent = `Offline model %${Math.round(Number(data.progress) || 0)}…`;
+      }
+    },
+  });
+
+  if (!offline) return null;
+
+  const engine = getLastOfflineEngine();
+  setTranslateEngineLabel(engine === "native" ? "offline-native" : "offline-browser");
+  return offline;
 }
 
 async function translateText(text, from, to, tone = "neutral", context = {}) {
@@ -1821,6 +1942,11 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
   const dst = canonical(to);
 
   if (currentRuntimeMode === "offline") {
+    if (SPEED_LAB_FREE_ONLY && !isEnTrPair(src, dst)) {
+      showToast("Test lab offline: yalnızca EN ↔ TR");
+      return null;
+    }
+
     try {
       const offlineRaw = await offlineTranslateRequest({
         from: src,
@@ -1837,7 +1963,15 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
       });
 
       const offlineValue = String(offlineRaw?.translatedText || "").trim();
-      if (offlineRaw?.ok && offlineValue) return offlineValue;
+      if (offlineRaw?.ok && offlineValue) {
+        setTranslateEngineLabel("offline-native");
+        return offlineValue;
+      }
+
+      if (SPEED_LAB_FREE_ONLY && isEnTrPair(src, dst)) {
+        const browser = await translateEnTrRescue(text, src, dst);
+        if (browser) return browser;
+      }
 
       const offlineError = String(offlineRaw?.error || "");
       if (offlineError === "offline_engine_missing") showToast("Offline ceviri motoru bulunamadi");
@@ -1861,14 +1995,26 @@ async function translateText(text, from, to, tone = "neutral", context = {}) {
   }
 
   try {
-    const fast = await translateFastGtx(text, src, dst);
-    if (fast) {
-      rememberTranslateCache(cacheKey, fast);
+    const useGtx = !navigator.onLine ? "" : await translateFastGtx(text, src, dst);
+    if (useGtx) {
+      rememberTranslateCache(cacheKey, useGtx);
       speedMetrics.translateMs = Math.round(performance.now() - trT0);
+      setTranslateEngineLabel("gtx");
       updateSpeedMetrics();
-      return fast;
+      return useGtx;
     }
   } catch {}
+
+  if (SPEED_LAB_FREE_ONLY && isEnTrPair(src, dst)) {
+    const rescue = await translateEnTrRescue(text, src, dst);
+    if (rescue) {
+      rememberTranslateCache(cacheKey, rescue);
+      speedMetrics.translateMs = Math.round(performance.now() - trT0);
+      updateSpeedMetrics();
+      if (!navigator.onLine) showToast("Offline EN↔TR çeviri kullanıldı");
+      return rescue;
+    }
+  }
 
   if (SPEED_LAB_FREE_ONLY) {
     speedMetrics.translateMs = Math.round(performance.now() - trT0);
@@ -2908,9 +3054,11 @@ function startBoot() {
         }
       } catch {}
       updateSpeedMetrics();
-      const pill = speedLabPill();
-      if (pill) pill.textContent = "Hız Lab · gtx + tarayıcı ses (Cartesia kapalı)";
+      setTranslateEngineLabel("gtx");
+      maybePrefetchOfflineEnTr();
     }
+
+    bindNetworkFallback();
 
     currentRuntimeMode = "online";
     syncModeUi();
@@ -3185,6 +3333,41 @@ function bindHandsFreeSafetyEvents() {
   });
 }
 
+function bindSpeedLabControls() {
+  if (!SPEED_LAB_FREE_ONLY) return;
+
+  const offlineBtn = document.getElementById("speedLabOfflineBtn");
+  offlineBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      if (window.OfflineTranslate) {
+        downloadOfflineModel("en", "tr");
+        showToast("Uygulama: EN↔TR paketi indiriliyor…");
+        return;
+      }
+      showToast("Tarayıcı: EN↔TR offline modeli indiriliyor…");
+      const ok = await prefetchBrowserEnTrModels((data) => {
+        if (data?.status === "progress" && data?.progress != null) {
+          const el = speedLabPill();
+          if (el) el.textContent = `EN↔TR offline %${Math.round(Number(data.progress) || 0)}…`;
+        }
+      });
+      if (ok) showToast("EN↔TR offline hazır");
+      setTranslateEngineLabel("gtx");
+    } catch {
+      showToast("Offline indirme başlatılamadı");
+    }
+  });
+
+  const hintBtn = document.getElementById("speedLabHintBtn");
+  hintBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    showToast("Mic'e bas → konuş → çeviri + ses. Kulaklıkta karşı taraf duyar; sıra ona geçer.");
+  });
+}
+
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
@@ -3194,6 +3377,7 @@ function bind() {
   bindLanguageButtons();
   bindGlobalClicks();
   bindUtilityButtons();
+  bindSpeedLabControls();
   bindMicButtons();
   bindInputs();
   bindSpeechVoices();
