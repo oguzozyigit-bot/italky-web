@@ -124,9 +124,9 @@ function cycleSpeedLabTtsMode() {
 }
 
 function speedLabTtsModeLabel(mode) {
-  if (mode === "turbo") return "Turbo (1.45x TR)";
-  if (mode === "fast") return "Hızlı (1.32x TR)";
-  return "Normal";
+  if (mode === "turbo") return "Turbo (TR 1.85x)";
+  if (mode === "fast") return "Hızlı (TR 1.65x)";
+  return "Normal (TR 1.35x)";
 }
 
 function syncSpeedLabTtsBtn() {
@@ -162,18 +162,19 @@ function ttsRateFor(langCode) {
   const mode = SPEED_LAB_FREE_ONLY ? getSpeedLabTtsMode() : "fast";
   const c = canonical(langCode);
   const table = {
-    turbo: { tr: 1.45, en: 1.28, default: 1.32 },
-    fast: { tr: 1.32, en: 1.15, default: 1.18 },
-    normal: { tr: 1.05, en: 1.0, default: 1.02 },
+    turbo: { tr: 1.85, en: 1.22, default: 1.4 },
+    fast: { tr: 1.65, en: 1.12, default: 1.25 },
+    normal: { tr: 1.35, en: 1.0, default: 1.08 },
   };
-  const row = table[mode] || table.fast;
-  return row[c] || row.default;
+  const row = table[mode] || table.turbo;
+  const rate = row[c] || row.default;
+  return Math.min(2, Math.max(0.5, rate));
 }
 
 function ttsPitchFor(langCode, targetSide = "") {
   const c = canonical(langCode);
-  if (c === "tr") return targetSide === "top" ? 1.06 : 0.96;
-  if (c === "en") return targetSide === "top" ? 1.08 : 0.92;
+  if (c === "tr") return 1.12;
+  if (c === "en") return targetSide === "top" ? 1.06 : 0.94;
   return 1;
 }
 
@@ -186,14 +187,16 @@ function scoreWebVoice(voice, langCode, targetSide = "") {
   if (!lang.startsWith(base)) score -= 120;
   else score += 30;
 
-  if (voice?.localService) score += 18;
-  if (/google/i.test(name)) score += 28;
-  if (/microsoft/i.test(name)) score += 16;
-  if (/natural|neural|premium|online/i.test(name)) score += 12;
+  if (voice?.localService) score += 12;
+  if (/google/i.test(name)) score += 34;
+  if (/microsoft/i.test(name)) score += 8;
+  if (/natural|neural|premium|online/i.test(name)) score += 10;
 
   if (base === "tr") {
-    if (/emel|filiz|yelda|female|kadın|turk/i.test(name)) score += targetSide === "top" ? 14 : 4;
-    if (/tolga|ahmet|male|erkek/i.test(name)) score += targetSide === "bot" ? 14 : 4;
+    if (/google.*(turk|türk|tr)/i.test(name)) score += 40;
+    if (/microsoft.*(tolga|emel)/i.test(name)) score -= 8;
+    if (/emel|filiz|yelda|female|kadın|turk/i.test(name)) score += targetSide === "top" ? 10 : 2;
+    if (/tolga|ahmet|male|erkek/i.test(name)) score += targetSide === "bot" ? 10 : 2;
   }
   if (base === "en") {
     if (/zira|samantha|jenny|female|aria/i.test(name)) score += targetSide === "top" ? 14 : 4;
