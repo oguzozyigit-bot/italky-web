@@ -4,6 +4,7 @@
 const ICANY_ORIGIN = "https://www.icany.ai";
 const STORAGE_KEY = "icany_shared_pool_v1";
 const CONSUME_PATH = "/api/bridge/consume-handoff";
+const IAP_CREDIT_PATH = "/api/bridge/iap-credit";
 
 function safeParse(raw) {
   try {
@@ -42,6 +43,9 @@ function persistPool(row) {
     email: String(row.email || "").trim().toLowerCase(),
     name: String(row.name || "").trim(),
     tokenBalance: Math.max(0, Number(row.tokenBalance || 0)),
+    enterToken: String(row.enterToken || "").trim(),
+    enterHosgeldinizUrl: String(row.enterHosgeldinizUrl || "").trim(),
+    enterMusicUrl: String(row.enterMusicUrl || "").trim(),
     pool: "shared",
     master: "icany",
     linkedAt: new Date().toISOString(),
@@ -113,15 +117,73 @@ export async function consumeIcanyBridgeFromUrl(options = {}) {
 }
 
 export function icanyHosgeldinizUrl() {
+  const pool = readIcanySharedPool();
+  if (pool?.enterHosgeldinizUrl) return pool.enterHosgeldinizUrl;
   return `${ICANY_ORIGIN}/hosgeldiniz`;
 }
 
 export function icanyPersonalMusicUrl() {
+  const pool = readIcanySharedPool();
+  if (pool?.enterMusicUrl) return pool.enterMusicUrl;
   return `${ICANY_ORIGIN}/personal/music`;
 }
 
 export function icanyDenemeHubUrl() {
   return `${ICANY_ORIGIN}/deneme`;
+}
+
+/** Play IAP sonrası ortak havuza yaz (bridge bağlıysa). */
+export async function creditIcanyIap(input = {}) {
+  const pool = readIcanySharedPool();
+  const productId = String(input.productId || input.product_id || "").trim();
+  const purchaseToken = String(input.purchaseToken || input.purchase_token || "").trim();
+  if (!productId || !purchaseToken) return null;
+
+  const payload = {
+    productId,
+    purchaseToken,
+    source: String(input.source || "italky_web_iap"),
+  };
+  if (pool?.enterToken) payload.token = pool.enterToken;
+  else if (input.token) payload.token = String(input.token);
+
+  if (!payload.token) {
+    console.warn("[icany_bridge] iap credit skipped — no enterToken");
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${ICANY_ORIGIN}${IAP_CREDIT_PATH}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-store",
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json?.ok) {
+      console.warn("[icany_bridge] iap credit failed", json?.error || res.status);
+      return null;
+    }
+    if (pool) {
+      persistPool({
+        ...pool,
+        tokenBalance: Number(json.tokenBalance ?? pool.tokenBalance),
+      });
+    }
+    return json;
+  } catch (error) {
+    console.warn("[icany_bridge] iap credit error", error);
+    return null;
+  }
+}
+
+export function wireHubPanelLinks() {
+  const dinle = document.getElementById("hubDinle");
+  const uret = document.getElementById("hubUret");
+  if (dinle) dinle.setAttribute("href", icanyHosgeldinizUrl());
+  if (uret) uret.setAttribute("href", icanyPersonalMusicUrl());
 }
 
 if (typeof window !== "undefined") {
@@ -132,5 +194,7 @@ if (typeof window !== "undefined") {
     hosgeldinizUrl: icanyHosgeldinizUrl,
     personalMusicUrl: icanyPersonalMusicUrl,
     denemeHubUrl: icanyDenemeHubUrl,
+    creditIap: creditIcanyIap,
+    wireHubPanelLinks,
   };
 }
