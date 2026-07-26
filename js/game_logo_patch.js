@@ -206,12 +206,13 @@ function standardFooterHtml() {
 
 function killBeFreeText() {
   document.querySelectorAll(".menu-brand-sub,.brand-sub,.logo-subtitle").forEach((el) => {
+    if (el.dataset.italkyBeFree === "1") return;
     el.textContent = "";
     el.setAttribute("data-italky-be-free", "1");
   });
 
   document.querySelectorAll("body *").forEach((el) => {
-    if (!el || el.children?.length) return;
+    if (!el || el.children?.length || el.dataset.italkyBeFree === "1") return;
     const txt = String(el.textContent || "").trim().toUpperCase();
     if (txt === "BE FREE" || txt === "SPEAK · LISTEN · CREATE") {
       el.textContent = "";
@@ -225,14 +226,17 @@ function patchLogos() {
   document.body?.classList?.add("italky-game-brand-patched");
 
   document.querySelectorAll("#brandHome.brand-group").forEach((brand) => {
-    brand.innerHTML = logoImg();
+    if (!brand.querySelector(".italky-game-logo-img")) brand.innerHTML = logoImg();
     brand.setAttribute("aria-label", "italkyAI Ana Sayfa");
     brand.setAttribute("role", "link");
-    brand.onclick = () => { location.href = HOME_HREF; };
+    if (brand.dataset.italkyLogoClickPatched !== "1") {
+      brand.dataset.italkyLogoClickPatched = "1";
+      brand.addEventListener("click", () => { location.href = HOME_HREF; });
+    }
   });
 
   document.querySelectorAll(".menu-brandblock").forEach((block) => {
-    block.innerHTML = logoImg("menu-logo");
+    if (!block.querySelector(".italky-game-logo-img")) block.innerHTML = logoImg("menu-logo");
   });
 
   document.querySelectorAll(".brand-link img.logo,.brand-link img.brand-logo,header .logo,header .brand-logo").forEach((img) => {
@@ -274,7 +278,11 @@ function patchFooter() {
 
   footer.classList.add("italky-game-standard-footer");
   footer.setAttribute("data-no-translate", "1");
-  footer.innerHTML = standardFooterHtml();
+
+  if (footer.dataset.italkyStandardFooter !== "1") {
+    footer.innerHTML = standardFooterHtml();
+    footer.dataset.italkyStandardFooter = "1";
+  }
 
   try {
     document.documentElement.style.setProperty("--footerH", `${footer.offsetHeight || 66}px`);
