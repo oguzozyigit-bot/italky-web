@@ -98,10 +98,7 @@ function patchJeton(){
   const hp=document.querySelector(".head p"); if(hp)hp.textContent="Jeton satın alma işlemini Google Play hesabınızla tamamlayabilirsiniz."; if(!document.getElementById("italkyTokenDayNote")){const d=document.createElement("div");d.id="italkyTokenDayNote";d.className="italky-token-note";d.textContent="Günü olmayan kullanıcıda ilk girişte 6 jeton düşer ve 24 saat kullanım açılır. Sonraki 24 saatlik kullanımlar 5 jetondur.";document.querySelector(".balanceCard")?.insertAdjacentElement("afterend",d);}
 }
 
-function patchGate(){
-  document.querySelectorAll('[data-action="membership"],#menuBuyDaysBtn').forEach(b=>{b.textContent="Jeton Yükle";});
-  document.querySelectorAll("#italkyAccessGateModal,#italkyAccessExpiredModal").forEach(m=>{m.innerHTML=m.innerHTML.replaceAll("Gün Satın Al","Jeton Yükle").replaceAll("gün satın","jeton yükle").replaceAll("gün satın alınız","jeton yükleyiniz");});
-}
+function patchGate(){ document.querySelectorAll('[data-action="membership"],#menuBuyDaysBtn').forEach(b=>{b.textContent="Jeton Yükle";}); }
 function bindGateRedirect(){if(window.__italkyGateRedirectBound)return;window.__italkyGateRedirectBound=true;document.addEventListener("click",e=>{const b=e.target?.closest?.('[data-action="membership"],#menuBuyDaysBtn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();location.href="/pages/jetonbuy.html";},true);}
 
 function patchAll(){patchBrand();patchMenu();patchJeton();patchGate();}
