@@ -33,7 +33,7 @@
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
   <aside class="drawer" id="drawer" aria-hidden="true">
     <div class="drawer-head"><div class="brand"><span class="brand-mark">italky</span><span class="ai">AI</span></div><button class="drawer-close" id="drawerClose" aria-label="Menüyü kapat">×</button></div>
-    <nav><a href="/pages/home_modern.html">Ana Sayfa</a><a href="/facetoface.html">Konuşmak</a><a href="https://www.icany.ai/hosgeldiniz?source=italkyai">Dinlemek</a><a href="https://www.icany.ai/personal/music?source=italkyai">Üretmek</a><a href="/pages/jetonbuy.html">Jeton Market</a></nav>
+    <nav><a href="/pages/home_modern.html">Ana Sayfa</a><a href="/facetoface.html">Konuşmak</a><a href="#" data-sso-next="/hosgeldiniz">Dinlemek</a><a href="#" data-sso-next="/personal/music">Üretmek</a><a href="/pages/jetonbuy.html">Jeton Market</a></nav>
     <p class="drawer-note">Tek girişle konuşma, dinleme ve üretme deneyimlerine ulaşın.</p>
   </aside>
   <main class="page"><div class="shell">
@@ -42,21 +42,67 @@
     <section id="secenekler" class="section-title"><h2>Ne yapmak istersiniz?</h2><p>İhtiyacınızı seçin, italkyAI sizi doğru deneyime götürsün.</p></section>
     <section class="banners" aria-label="Ana deneyimler">
       <a class="banner talk" href="/facetoface.html" data-module="Konuşmak"><div class="media" aria-hidden="true"><span class="play">▶</span></div><div class="banner-copy"><small>KONUŞMAK</small><h3>Konuşmak</h3><p>Dünyayı anlamak ve her dilde insanla anlaşmak için gelişmiş AI destekli çeviri platformu.</p><span class="cta">Hemen Başla ›</span></div></a>
-      <a class="banner listen" href="https://www.icany.ai/hosgeldiniz?source=italkyai" data-module="Dinlemek"><div class="media" aria-hidden="true"><span class="play">▶</span></div><div class="banner-copy"><small>DİNLEMEK</small><h3>Dinlemek</h3><p>Milyonlarca üreticinin ürettiği şarkıları ve kendi şarkılarınızı dinletebilir, yeni sesleri keşfedebilirsiniz.</p><span class="cta">Hemen Keşfet ›</span></div></a>
-      <a class="banner create" href="https://www.icany.ai/personal/music?source=italkyai" data-module="Üretmek"><div class="media" aria-hidden="true"><span class="play">▶</span></div><div class="banner-copy"><small>ÜRETMEK</small><h3>Üretmek</h3><p>Dünyanın en gelişmiş müzik üretme platformunda müziklerinizi üretin. Benzersiz müzik deneyiminizi dünyaya tanıtın.</p><span class="cta">Hemen Üret ›</span></div></a>
+      <a class="banner listen" href="#" data-module="Dinlemek" data-sso-next="/hosgeldiniz"><div class="media" aria-hidden="true"><span class="play">▶</span></div><div class="banner-copy"><small>DİNLEMEK</small><h3>Dinlemek</h3><p>Milyonlarca üreticinin ürettiği şarkıları ve kendi şarkılarınızı dinletebilir, yeni sesleri keşfedebilirsiniz.</p><span class="cta">Hemen Keşfet ›</span></div></a>
+      <a class="banner create" href="#" data-module="Üretmek" data-sso-next="/personal/music"><div class="media" aria-hidden="true"><span class="play">▶</span></div><div class="banner-copy"><small>ÜRETMEK</small><h3>Üretmek</h3><p>Dünyanın en gelişmiş müzik üretme platformunda müziklerinizi üretin. Benzersiz müzik deneyiminizi dünyaya tanıtın.</p><span class="cta">Hemen Üret ›</span></div></a>
     </section>
     <section class="quick" aria-label="Hızlı araçlar"><a href="/facetoface.html"><b>YÜZ YÜZE</b><span>Anında çeviri</span></a><a href="/pages/bluetooth.html"><b>İKİ TELEFON</b><span>Karşılıklı çeviri</span></a><a href="/pages/text_translate.html"><b>METİN ÇEVİRİ</b><span>Hızlı çeviri</span></a><a href="/pages/jetonbuy.html"><b>JETON MARKET</b><span>Jeton yükle</span></a></section>
-    <footer class="sealbar"><div class="seal">𐰆</div><div class="sealtext"><strong>Türk mühendisliği ile geliştirildi.</strong><br>Güvenli, hızlı ve ücretsiz deneyin. Premium özellikler gerektiğinde jeton ile açılır.</div><a class="login" href="/pages/login.html?next=/pages/home_modern.html">♙ <span>Bireysel Giriş</span></a></footer>
+    <footer class="sealbar"><div class="seal">𐰆</div><div class="sealtext"><strong>Türk mühendisliği ile geliştirildi.</strong><br>Güvenli, hızlı ve ücretsiz deneyin. Premium özellikler gerektiğinde jeton ile açılır.</div><a class="login" id="footerLoginButton" href="/pages/login.html?next=/pages/home_modern.html">♙ <span>Bireysel Giriş</span></a></footer>
   </div></main>
   <div id="toast" class="toast"></div>
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
-    const body=document.body,drawer=document.getElementById("drawer"),backdrop=document.getElementById("drawerBackdrop"),loginButton=document.getElementById("loginButton"),toastEl=document.getElementById("toast");
+    const API_BASE="https://italky-api.onrender.com";
+    const body=document.body,drawer=document.getElementById("drawer"),backdrop=document.getElementById("drawerBackdrop"),loginButton=document.getElementById("loginButton"),footerLoginButton=document.getElementById("footerLoginButton"),toastEl=document.getElementById("toast");
     const toggleMenu=(open)=>{body.classList.toggle("menu-open",open);drawer.setAttribute("aria-hidden",String(!open));};
     document.getElementById("menuButton").addEventListener("click",()=>toggleMenu(true));document.getElementById("drawerClose").addEventListener("click",()=>toggleMenu(false));backdrop.addEventListener("click",()=>toggleMenu(false));document.addEventListener("keydown",e=>{if(e.key==="Escape")toggleMenu(false)});
-    function toast(text){toastEl.textContent=text;toastEl.classList.add("show");clearTimeout(window.__homeToast);window.__homeToast=setTimeout(()=>toastEl.classList.remove("show"),1500)}
-    document.querySelectorAll("[data-module]").forEach(link=>link.addEventListener("click",()=>toast(`${link.dataset.module} açılıyor...`)));
-    try{const{data:{session}}=await supabase.auth.getSession();if(session?.user){const name=String(session.user.user_metadata?.full_name||session.user.user_metadata?.name||session.user.email||"").trim().split(/\s+/)[0];loginButton.href="/pages/profile.html";loginButton.querySelector("span").textContent=name||"Profilim";}}catch(error){console.warn("home session check failed",error)}
+    function toast(text){toastEl.textContent=text;toastEl.classList.add("show");clearTimeout(window.__homeToast);window.__homeToast=setTimeout(()=>toastEl.classList.remove("show"),1800)}
+
+    let activeSession=null;
+    try{
+      const{data:{session}}=await supabase.auth.getSession();
+      activeSession=session||null;
+      if(session?.user){
+        const name=String(session.user.user_metadata?.full_name||session.user.user_metadata?.name||session.user.email||"").trim().split(/\s+/)[0];
+        for(const button of [loginButton,footerLoginButton]){
+          button.href="/pages/profile.html";
+          button.querySelector("span").textContent=name||"Profilim";
+        }
+      }
+    }catch(error){console.warn("home session check failed",error)}
+
+    async function openIcanyModule(nextPath,label){
+      if(!activeSession?.access_token){
+        const next=`/pages/home_modern.html?open=${encodeURIComponent(nextPath)}`;
+        location.href=`/pages/login.html?next=${encodeURIComponent(next)}`;
+        return;
+      }
+      toast(`${label} hazırlanıyor...`);
+      try{
+        const response=await fetch(`${API_BASE}/api/sso/icany-handoff?next=${encodeURIComponent(nextPath)}`,{
+          headers:{Authorization:`Bearer ${activeSession.access_token}`},
+          cache:"no-store"
+        });
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok||!data?.url)throw new Error(data?.detail||data?.error||"Tek giriş bağlantısı oluşturulamadı");
+        location.href=data.url;
+      }catch(error){
+        console.error("icany sso handoff failed",error);
+        toast("Tek giriş hazırlanamadı. Lütfen tekrar deneyin.");
+      }
+    }
+
+    document.querySelectorAll("[data-sso-next]").forEach(link=>link.addEventListener("click",event=>{
+      event.preventDefault();
+      toggleMenu(false);
+      openIcanyModule(link.dataset.ssoNext,link.dataset.module||link.textContent.trim());
+    }));
+    document.querySelectorAll("[data-module]:not([data-sso-next])").forEach(link=>link.addEventListener("click",()=>toast(`${link.dataset.module} açılıyor...`)));
+
+    const requested=new URLSearchParams(location.search).get("open");
+    if(requested&&activeSession?.access_token&&["/hosgeldiniz","/personal/music"].includes(requested)){
+      history.replaceState({},"",location.pathname);
+      openIcanyModule(requested,requested.includes("music")?"Üretmek":"Dinlemek");
+    }
   </script>
 </body>
 </html>
