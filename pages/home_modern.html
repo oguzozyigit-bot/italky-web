@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <title>italkyAI • Konuş, Dinle, Üret</title>
+  <meta name="theme-color" content="#050816" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#050816;
+      --panel:rgba(255,255,255,.065);
+      --line:rgba(255,255,255,.12);
+      --text:#f8fafc;
+      --muted:rgba(226,232,240,.68);
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font-family:Outfit,Arial,sans-serif}
+    body{overflow:hidden;background:radial-gradient(circle at 15% 0%,rgba(56,189,248,.17),transparent 30%),radial-gradient(circle at 90% 12%,rgba(168,85,247,.18),transparent 32%),radial-gradient(circle at 50% 100%,rgba(20,184,166,.11),transparent 35%),linear-gradient(180deg,#091126,#070a16 48%,#04060d)}
+    a{text-decoration:none;color:inherit}
+    button{font:inherit}
+    .page{height:100%;overflow:auto;padding:calc(14px + var(--safe-top)) 14px calc(92px + var(--safe-bottom));scrollbar-width:none}
+    .page::-webkit-scrollbar{display:none}
+    .shell{width:min(100%,760px);margin:0 auto}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .brand{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:800;letter-spacing:-1px}
+    .brand span{background:linear-gradient(135deg,#67e8f9,#818cf8,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .wallet{display:flex;align-items:center;gap:8px;min-height:38px;padding:0 12px;border-radius:999px;border:1px solid rgba(129,140,248,.3);background:rgba(99,102,241,.12);font-size:12px;font-weight:900}
+    .hero{padding:22px;border-radius:28px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.095),rgba(255,255,255,.035));box-shadow:0 24px 60px rgba(0,0,0,.3);position:relative;overflow:hidden}
+    .hero:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-75px;top:-80px;background:radial-gradient(circle,rgba(103,232,249,.23),transparent 68%)}
+    .eyebrow{position:relative;z-index:1;font-size:11px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:#93c5fd}
+    .hero h1{position:relative;z-index:1;margin:9px 0 8px;font-family:'Space Grotesk',sans-serif;font-size:clamp(31px,8vw,52px);line-height:.98;letter-spacing:-2px;max-width:600px}
+    .hero p{position:relative;z-index:1;margin:0;color:var(--muted);font-size:14px;line-height:1.55;max-width:560px;font-weight:600}
+    .start-note{position:relative;z-index:1;margin-top:16px;display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:999px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);color:#bbf7d0;font-size:11px;font-weight:900}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:22px 3px 10px}
+    .section-title h2{margin:0;font-size:17px;font-weight:900}
+    .section-title span{font-size:11px;color:var(--muted);font-weight:700}
+    .modules{display:grid;grid-template-columns:1fr;gap:12px}
+    .module{min-height:148px;padding:18px;border-radius:26px;border:1px solid var(--line);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 18px 42px rgba(0,0,0,.24);transition:transform .18s ease,border-color .18s ease}
+    .module:active{transform:scale(.985)}
+    .module:before{content:"";position:absolute;inset:0;pointer-events:none}
+    .module-talk{background:linear-gradient(135deg,#082f49,#0f172a 58%,#172554)}
+    .module-talk:before{background:radial-gradient(circle at 85% 15%,rgba(56,189,248,.45),transparent 34%)}
+    .module-listen{background:linear-gradient(135deg,#052e2b,#0f172a 60%,#164e63)}
+    .module-listen:before{background:radial-gradient(circle at 85% 15%,rgba(45,212,191,.42),transparent 34%)}
+    .module-create{background:linear-gradient(135deg,#3b1d08,#181226 60%,#4c1d4f)}
+    .module-create:before{background:radial-gradient(circle at 85% 15%,rgba(251,191,36,.42),transparent 34%)}
+    .module-badge{position:absolute;top:14px;right:14px;z-index:2;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13);font-size:10px;font-weight:900}
+    .module-icon{position:relative;z-index:1;width:44px;height:44px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);font-size:22px;margin-bottom:13px}
+    .module h3{position:relative;z-index:1;margin:0;font-family:'Space Grotesk',sans-serif;font-size:30px;letter-spacing:-1px}
+    .module p{position:relative;z-index:1;margin:5px 0 0;color:rgba(255,255,255,.72);font-size:13px;font-weight:600;line-height:1.4;max-width:44ch}
+    .tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .tool{min-height:94px;padding:14px;border-radius:22px;border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+    .tool strong{font-size:14px}.tool span{font-size:11px;color:var(--muted);line-height:1.35}
+    .dock{position:fixed;left:50%;bottom:calc(10px + var(--safe-bottom));transform:translateX(-50%);width:min(calc(100% - 24px),520px);height:66px;padding:7px;border-radius:24px;border:1px solid rgba(255,255,255,.13);background:rgba(5,8,22,.86);backdrop-filter:blur(20px);display:grid;grid-template-columns:repeat(4,1fr);gap:4px;box-shadow:0 18px 44px rgba(0,0,0,.42);z-index:30}
+    .dock a{border-radius:17px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:800;color:rgba(255,255,255,.62)}
+    .dock a.active{background:rgba(99,102,241,.17);color:#fff}
+    .dock b{font-size:18px;line-height:1}
+    .toast{position:fixed;left:50%;top:calc(14px + var(--safe-top));transform:translate(-50%,-120px);padding:11px 15px;border-radius:15px;background:rgba(7,10,20,.96);border:1px solid var(--line);font-size:12px;font-weight:800;transition:.2s;z-index:80;text-align:center;max-width:90vw}
+    .toast.show{transform:translate(-50%,0)}
+    @media(min-width:680px){.modules{grid-template-columns:repeat(3,1fr)}.module{min-height:240px}.tools{grid-template-columns:repeat(4,1fr)}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">italky<span>AI</span></div>
+        <a class="wallet" href="/pages/jetonbuy.html" aria-label="Jeton Market"><span>◆</span><span id="tokenValue">0 Jeton</span></a>
+      </header>
+
+      <section class="hero">
+        <div class="eyebrow">Tek giriş · Tek uygulama</div>
+        <h1 id="welcomeTitle">Konuş. Dinle. Üret.</h1>
+        <p>İhtiyacın olan yapay zekâ araçlarına tek yerden ulaş. Önce keşfet, ücretsiz bölümlerle başla; jeton yalnızca gerektiği yerde kullanılır.</p>
+        <div class="start-note">Ödeme yapmadan başlayabilirsin</div>
+      </section>
+
+      <div class="section-title"><h2>Ne yapmak istersin?</h2><span>Bir modül seç</span></div>
+      <section class="modules" aria-label="Ana modüller">
+        <a class="module module-talk" href="/facetoface.html" data-module="Konuş">
+          <div class="module-badge">Çeviri</div><div class="module-icon">◉</div><h3>Konuş</h3><p>Yüz yüze çeviri, iki telefon, gezi ve konferans araçları.</p>
+        </a>
+        <a class="module module-listen" href="https://www.icany.ai/hosgeldiniz?source=italkyai" data-module="Dinle">
+          <div class="module-badge">Müzik</div><div class="module-icon">♫</div><h3>Dinle</h3><p>Radyo, müzik keşfi ve kişisel dinleme alanı.</p>
+        </a>
+        <a class="module module-create" href="https://www.icany.ai/personal/music?source=italkyai" data-module="Üret">
+          <div class="module-badge">Stüdyo</div><div class="module-icon">✦</div><h3>Üret</h3><p>Kendi şarkını ve yapay zekâ destekli içeriklerini oluştur.</p>
+        </a>
+      </section>
+
+      <div class="section-title"><h2>Hızlı araçlar</h2><span>Doğrudan aç</span></div>
+      <section class="tools">
+        <a class="tool" href="/facetoface.html"><strong>Yüz Yüze</strong><span>Tek telefonda anlık konuşma çevirisi</span></a>
+        <a class="tool" href="/pages/bluetooth.html"><strong>İki Telefon</strong><span>Uzak cihazla karşılıklı konuşma</span></a>
+        <a class="tool" href="/pages/text_translate.html"><strong>Metin Çeviri</strong><span>Yaz, çevir ve sesli dinle</span></a>
+        <a class="tool" href="/pages/jetonbuy.html"><strong>Jeton Market</strong><span>Ortak cüzdanına jeton yükle</span></a>
+      </section>
+    </div>
+  </main>
+
+  <nav class="dock" aria-label="Modül geçişi">
+    <a class="active" href="/pages/home_modern.html"><b>⌂</b><span>Ana Sayfa</span></a>
+    <a href="/facetoface.html"><b>◉</b><span>Konuş</span></a>
+    <a href="https://www.icany.ai/hosgeldiniz?source=italkyai"><b>♫</b><span>Dinle</span></a>
+    <a href="https://www.icany.ai/personal/music?source=italkyai"><b>✦</b><span>Üret</span></a>
+  </nav>
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+
+    const API_BASE = "https://italky-api.onrender.com";
+    const tokenValue = document.getElementById("tokenValue");
+    const welcomeTitle = document.getElementById("welcomeTitle");
+    const toastEl = document.getElementById("toast");
+
+    function toast(text){
+      toastEl.textContent = text;
+      toastEl.classList.add("show");
+      clearTimeout(window.__modernHomeToast);
+      window.__modernHomeToast = setTimeout(() => toastEl.classList.remove("show"), 1600);
+    }
+
+    async function loadAccount(){
+      try{
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        if (!user){
+          location.replace("/pages/login.html?next=/pages/home_modern.html");
+          return;
+        }
+
+        const displayName = String(user.user_metadata?.full_name || user.user_metadata?.name || user.email || "").trim();
+        const firstName = displayName.split(/\s+/)[0];
+        if (firstName) welcomeTitle.textContent = `${firstName}, konuş. dinle. üret.`;
+
+        const response = await fetch(`${API_BASE}/api/wallet/summary`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store"
+        });
+        const data = await response.json().catch(() => ({}));
+        const balance = Number(data?.tokens ?? data?.balance ?? data?.current_tokens ?? data?.summary?.tokens ?? 0);
+        tokenValue.textContent = `${Math.max(0, balance).toLocaleString("tr-TR")} Jeton`;
+      }catch(error){
+        console.warn("modern home account load failed", error);
+        tokenValue.textContent = "Jeton";
+      }
+    }
+
+    document.querySelectorAll("[data-module]").forEach((link) => {
+      link.addEventListener("click", () => toast(`${link.dataset.module} açılıyor...`));
+    });
+
+    loadAccount();
+  </script>
+</body>
+</html>
