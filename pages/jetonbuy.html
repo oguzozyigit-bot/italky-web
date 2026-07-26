@@ -1,259 +1,220 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>italkyAI • Jeton Yükle</title>
-<meta name="theme-color" content="#06111d">
+<meta name="theme-color" content="#06111d" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#06111d;
-  --surface:#0b1a2a;
-  --surface2:#102538;
+  --head:72px;
+  --foot:76px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
   --line:rgba(53,213,208,.24);
-  --line2:rgba(255,255,255,.075);
   --cyan:#35d5d0;
   --cyan2:#72fff7;
   --text:#f6fbff;
   --muted:#9eb2c8;
   --gold:#f4bd50;
-  --safe-bottom:env(safe-area-inset-bottom,0px);
-  --shellLift:0px;
+  --danger:#ef8b8b;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)!important;color:var(--text);font-family:Manrope,Arial,sans-serif}
-body{background:linear-gradient(180deg,#07131f 0%,#06111d 52%,#040b13 100%)!important}
-#pageContent{position:relative;z-index:2;width:100%;height:100%;overflow:auto;scrollbar-width:none;padding:92px clamp(18px,3.2vw,38px) calc(104px + var(--safe-bottom) + var(--shellLift));color:var(--text)}
-#pageContent::-webkit-scrollbar{display:none}
-.tokens-page{width:100%;max-width:1920px;margin:0 auto;min-height:100%;position:relative}
-.tokens-hero{position:relative;min-height:168px;padding:22px 0 18px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;overflow:hidden}
-.tokens-hero:before{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,rgba(6,17,29,.98) 0%,rgba(6,17,29,.78) 38%,rgba(6,17,29,.34) 72%,rgba(6,17,29,.96) 100%),url('https://www.icany.ai/brand/hero/crowd-lights.mp4');opacity:.35}
-.tokens-hero:after{content:"";position:absolute;right:17%;top:-96px;width:430px;height:260px;border-radius:54px;background:linear-gradient(135deg,rgba(53,213,208,.12),rgba(255,42,142,.12));filter:blur(18px);transform:rotate(-10deg);z-index:-1}
-.market-kicker{display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:6px 13px;border-radius:999px;border:1px solid rgba(53,213,208,.42);background:rgba(53,213,208,.14);color:#66fff6;font-size:12px;font-weight:1000;letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px}
-.tokens-hero h1{margin:0;font-size:clamp(38px,4vw,56px);line-height:.94;font-weight:1000;letter-spacing:-.06em;color:#fff}
-.market-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.market-pill{display:inline-flex;align-items:center;min-height:32px;padding:7px 13px;border-radius:999px;border:1px solid rgba(53,213,208,.22);background:rgba(8,24,38,.72);color:#b8c9db;font-size:12px;font-weight:900;white-space:nowrap}.market-pill strong{color:#fff}.market-pill.play{color:#fff}.market-pill.rate{color:#aafffa}
-.products-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:16px}
-.token-card{position:relative;min-height:342px;border:1px solid rgba(53,213,208,.22);border-radius:22px;background:linear-gradient(180deg,rgba(15,34,53,.92),rgba(8,20,34,.96));box-shadow:inset 0 1px 0 rgba(255,255,255,.04);padding:20px 18px;display:flex;flex-direction:column;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;overflow:hidden}.token-card:hover{transform:translateY(-2px);border-color:rgba(53,213,208,.50);box-shadow:0 18px 50px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.04)}.token-card.recommended{border-color:rgba(53,213,208,.55);background:radial-gradient(circle at 80% 0%,rgba(53,213,208,.16),transparent 34%),linear-gradient(180deg,rgba(13,49,68,.96),rgba(8,20,34,.98))}.token-card.best{background:radial-gradient(circle at 82% 0%,rgba(244,189,80,.13),transparent 33%),linear-gradient(180deg,rgba(15,35,55,.95),rgba(8,20,34,.98))}
-.card-no{color:#3bfff5;font-size:13px;font-weight:1000;letter-spacing:.12em;margin-bottom:24px}.card-badge{position:absolute;right:18px;top:18px;min-height:28px;padding:7px 12px;border:1px solid rgba(53,213,208,.32);border-radius:999px;background:rgba(53,213,208,.12);color:#c7fffb;font-size:11px;font-weight:1000;letter-spacing:.04em;text-transform:uppercase}.best .card-badge{border-color:rgba(244,189,80,.30);background:rgba(244,189,80,.13);color:#ffe3a5}
-.card-title{font-size:22px;line-height:1.1;font-weight:1000;color:#fff;margin-bottom:10px}.card-amount{display:flex;align-items:flex-end;gap:7px;margin-bottom:22px}.card-amount strong{font-size:46px;line-height:.9;font-weight:1000;letter-spacing:-.06em;color:#fff}.card-amount span{font-size:13px;font-weight:900;color:#a9c1d9;margin-bottom:4px}
-.price-box{border:1px solid rgba(53,213,208,.18);background:rgba(5,16,28,.74);border-radius:16px;padding:17px 14px;margin-bottom:18px;min-height:106px}.price-main{display:flex;align-items:baseline;gap:5px;font-size:27px;line-height:1;font-weight:1000;color:#fff;letter-spacing:-.04em}.price-main small{font-size:11px;color:#66fff6;font-weight:1000;letter-spacing:0}.unit-price{margin-top:10px;font-size:12px;font-weight:900;color:#99aec4}.advantage{margin-top:7px;font-size:12px;font-weight:1000;color:#6ffff7}.card-spacer{flex:1 1 auto}.buy-btn{width:100%;min-height:54px;border:0;border-radius:15px;background:#fff;color:#06111d;font-size:14px;font-weight:1000;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.20);transition:transform .14s ease,opacity .14s ease}.buy-btn:active{transform:scale(.985)}.play-triangle{width:0;height:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:15px solid #22c55e;filter:drop-shadow(4px 0 0 #facc15) drop-shadow(8px 0 0 #38bdf8)}
-.product-id{margin-top:10px;text-align:center;color:#6d839b;font-size:10px;font-weight:900;letter-spacing:.04em}.history-link{display:flex;justify-content:center;margin:28px 0 4px}.history-link a{color:#3ffff6;font-size:14px;font-weight:1000;text-decoration:none}.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));z-index:9999;transform:translateX(-50%) translateY(20px);max-width:min(92vw,520px);padding:12px 16px;border:1px solid var(--line);border-radius:16px;background:rgba(6,17,29,.96);box-shadow:0 20px 50px rgba(0,0,0,.34);color:#fff;text-align:center;font-size:13px;font-weight:900;opacity:0;pointer-events:none;transition:.22s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:1180px){.products-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.token-card{min-height:310px}}
-@media(max-width:720px){#pageContent{padding:86px 14px calc(104px + var(--safe-bottom) + var(--shellLift))}.tokens-hero{min-height:148px}.products-grid{grid-template-columns:1fr;gap:12px}.token-card{min-height:278px;padding:17px}.card-no{margin-bottom:16px}.card-amount strong{font-size:40px}.market-kicker{font-size:10px}.tokens-hero h1{font-size:38px}.price-box{min-height:96px}}
+body{background:linear-gradient(180deg,#07131f 0%,#06111d 55%,#040b13 100%)!important}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit}
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--head);z-index:40;display:flex;align-items:center;gap:16px;padding:10px clamp(16px,2.4vw,34px);border-bottom:1px solid var(--line);background:rgba(6,17,29,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.brand{display:inline-flex;align-items:center;min-width:0}.brand img{display:block;width:132px;height:50px;object-fit:contain;object-position:left center}.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.top-token{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:7px 13px;border-radius:999px;border:1px solid rgba(244,189,80,.28);background:rgba(244,189,80,.12);color:#ffe2a4;font-size:12px;font-weight:1000}.avatar-btn{display:none;width:40px;height:40px;border-radius:999px;overflow:hidden;border:2px solid var(--cyan);background:#10202d}.avatar-btn img{width:100%;height:100%;object-fit:cover}.menu-btn{width:42px;height:42px;border:1px solid rgba(53,213,208,.42);border-radius:13px;background:rgba(6,20,32,.88);display:grid;place-items:center;cursor:pointer;box-shadow:0 0 0 1px rgba(53,213,208,.12),0 10px 28px rgba(0,0,0,.22)}.menu-lines{width:18px;height:14px;display:grid;gap:4px}.menu-lines span{height:2px;border-radius:999px;background:#38e4df;box-shadow:0 0 12px rgba(56,228,223,.45)}
+.page{position:fixed;top:var(--head);bottom:calc(var(--foot) + var(--safe-bottom));left:0;right:0;overflow:auto;scrollbar-width:none;padding:0 clamp(18px,3.2vw,38px) 26px}.page::-webkit-scrollbar{display:none}
+.tokens-page{width:100%;max-width:none;margin:0 auto;min-height:100%;position:relative}.tokens-hero{position:relative;min-height:230px;padding:36px 0 24px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;overflow:hidden}.tokens-hero:before{content:"";position:absolute;inset:0 calc(-1 * clamp(18px,3.2vw,38px));z-index:-2;background:linear-gradient(90deg,rgba(6,17,29,.98) 0%,rgba(6,17,29,.76) 42%,rgba(6,17,29,.42) 72%,rgba(6,17,29,.95) 100%)}.tokens-hero:after{content:"";position:absolute;right:16%;top:28px;width:390px;height:180px;border-radius:54px;background:linear-gradient(135deg,rgba(53,213,208,.13),rgba(255,42,142,.17));filter:blur(20px);transform:rotate(-10deg);z-index:-1}.market-kicker{display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:6px 13px;border-radius:999px;border:1px solid rgba(53,213,208,.42);background:rgba(53,213,208,.14);color:#66fff6;font-size:12px;font-weight:1000;letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px}.tokens-hero h1{margin:0;font-size:clamp(42px,4.4vw,64px);line-height:.94;font-weight:1000;letter-spacing:-.06em;color:#fff}.market-pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}.market-pill{display:inline-flex;align-items:center;min-height:34px;padding:7px 14px;border-radius:999px;border:1px solid rgba(53,213,208,.22);background:rgba(8,24,38,.72);color:#b8c9db;font-size:12px;font-weight:900;white-space:nowrap}.market-pill strong{color:#fff}.market-pill.rate{color:#aafffa}.market-pill.gold{border-color:rgba(244,189,80,.28);background:rgba(244,189,80,.10);color:#ffe2a4}
+.products-grid{display:grid;grid-template-columns:repeat(4,minmax(230px,1fr));gap:16px;margin-top:14px}.token-card{position:relative;min-height:310px;border:1px solid rgba(53,213,208,.22);border-radius:22px;background:linear-gradient(180deg,rgba(15,34,53,.92),rgba(8,20,34,.96));box-shadow:inset 0 1px 0 rgba(255,255,255,.04);padding:20px 18px;display:flex;flex-direction:column;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;overflow:hidden}.token-card:hover{transform:translateY(-2px);border-color:rgba(53,213,208,.50);box-shadow:0 18px 50px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.04)}.token-card.recommended{border-color:rgba(53,213,208,.55);background:radial-gradient(circle at 80% 0%,rgba(53,213,208,.16),transparent 34%),linear-gradient(180deg,rgba(13,49,68,.96),rgba(8,20,34,.98))}.token-card.best{background:radial-gradient(circle at 82% 0%,rgba(244,189,80,.13),transparent 33%),linear-gradient(180deg,rgba(15,35,55,.95),rgba(8,20,34,.98))}.card-no{color:#3bfff5;font-size:13px;font-weight:1000;letter-spacing:.12em;margin-bottom:22px}.card-badge{position:absolute;right:18px;top:18px;min-height:28px;max-width:150px;padding:7px 12px;border:1px solid rgba(53,213,208,.32);border-radius:999px;background:rgba(53,213,208,.12);color:#c7fffb;font-size:11px;font-weight:1000;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.best .card-badge{border-color:rgba(244,189,80,.30);background:rgba(244,189,80,.13);color:#ffe3a5}.card-title{font-size:22px;line-height:1.1;font-weight:1000;color:#fff;margin-bottom:10px}.card-amount{display:flex;align-items:flex-end;gap:7px;margin-bottom:20px}.card-amount strong{font-size:46px;line-height:.9;font-weight:1000;letter-spacing:-.06em;color:#fff}.card-amount span{font-size:13px;font-weight:900;color:#a9c1d9;margin-bottom:4px}.price-box{border:1px solid rgba(53,213,208,.18);background:rgba(5,16,28,.74);border-radius:16px;padding:17px 14px;margin-bottom:16px;min-height:102px}.price-main{display:flex;align-items:baseline;gap:5px;font-size:27px;line-height:1;font-weight:1000;color:#fff;letter-spacing:-.04em}.price-main small{font-size:11px;color:#66fff6;font-weight:1000;letter-spacing:0}.unit-price{margin-top:10px;font-size:12px;font-weight:900;color:#99aec4}.advantage{margin-top:7px;font-size:12px;font-weight:1000;color:#6ffff7}.card-spacer{flex:1 1 auto}.buy-btn{width:100%;min-height:54px;border:0;border-radius:15px;background:#fff;color:#06111d;font-size:14px;font-weight:1000;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.20);transition:transform .14s ease,opacity .14s ease}.buy-btn:active{transform:scale(.985)}.play-triangle{width:0;height:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:15px solid #22c55e;filter:drop-shadow(4px 0 0 #facc15) drop-shadow(8px 0 0 #38bdf8)}.product-id{margin-top:10px;text-align:center;color:#6d839b;font-size:10px;font-weight:900;letter-spacing:.04em}.history-link{display:flex;justify-content:center;margin:28px 0 4px}.history-link a{color:#3ffff6;font-size:14px;font-weight:1000;text-decoration:none}
+.footer{position:fixed;left:0;right:0;bottom:0;height:calc(var(--foot) + var(--safe-bottom));z-index:40;border-top:1px solid var(--line);background:#06111d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 12px calc(8px + var(--safe-bottom));overflow:hidden}.footer-links{display:flex;align-items:center;justify-content:center;gap:16px;white-space:nowrap}.footer-links a{font-size:11px;color:#aebdcc;font-weight:800}.footer-sign{font-size:10px;line-height:1.2;color:#91a4b8;font-weight:800;white-space:nowrap;text-align:center}.footer-sign b{color:#36d4ce;margin-left:5px}
+.drawer-bg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.56);opacity:0;pointer-events:none;transition:.2s}.drawer{position:fixed;right:0;top:0;bottom:0;z-index:61;width:min(92vw,370px);padding:calc(16px + env(safe-area-inset-top,0px)) 14px calc(18px + env(safe-area-inset-bottom,0px));background:radial-gradient(circle at 14% 0%,rgba(53,213,208,.18),transparent 34%),linear-gradient(180deg,rgba(7,19,31,.99),rgba(4,12,22,.99));border-left:1px solid rgba(53,213,208,.20);box-shadow:-24px 0 70px rgba(0,0,0,.48);transform:translateX(105%);transition:.22s;overflow-y:auto}.open .drawer{transform:none}.open .drawer-bg{opacity:1;pointer-events:auto}.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.drawer-logo{display:block;width:126px;max-height:54px;object-fit:contain}.close{width:42px;height:42px;border:1px solid var(--line);border-radius:13px;background:#10202d;color:#fff;font-size:24px;cursor:pointer}.drawer-user{min-height:118px;padding:14px;border-radius:24px;display:grid;grid-template-columns:64px 1fr;align-items:center;gap:14px;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.032));border:1px solid rgba(53,213,208,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 18px 44px rgba(0,0,0,.22);margin-bottom:12px;cursor:pointer}.drawer-avatar{width:64px;height:64px;border-radius:22px;overflow:hidden;border:1px solid rgba(53,213,208,.28);background:linear-gradient(135deg,rgba(53,213,208,.22),rgba(15,23,42,.92));display:grid;place-items:center}.drawer-avatar img{width:100%;height:100%;object-fit:cover}.drawer-name{font-size:15px;font-weight:1000;color:#fff;line-height:1.1;margin-bottom:4px}.drawer-mail{font-size:12px;font-weight:900;color:#f6fbff;line-height:1.25;word-break:break-all}.drawer-token{margin-top:8px;display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:6px 11px;border-radius:999px;background:rgba(53,213,208,.12);border:1px solid rgba(53,213,208,.28);color:#bafffb;font-size:12px;font-weight:1000;white-space:nowrap}.drawer nav{display:grid;gap:8px}.drawer nav a,.drawer nav button{width:100%;min-height:45px;border-radius:16px;display:flex;align-items:center;gap:11px;padding:0 13px;background:linear-gradient(180deg,rgba(255,255,255,.058),rgba(255,255,255,.026));border:1px solid rgba(255,255,255,.075);color:#f6fbff!important;text-align:left;text-decoration:none;font-size:13px;font-weight:900;line-height:1;font-family:Manrope,Arial,sans-serif;cursor:pointer}.drawer nav a.danger,.drawer nav button.danger{color:#fecaca!important;border-color:rgba(248,113,113,.18)}.drawer-icon{width:26px;height:26px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;background:rgba(53,213,208,.11);border:1px solid rgba(53,213,208,.18);color:#84fff7;font-size:13px;font-weight:1000}.danger .drawer-icon{background:rgba(248,113,113,.10);border-color:rgba(248,113,113,.16);color:#fecaca}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));z-index:9999;transform:translateX(-50%) translateY(20px);max-width:min(92vw,520px);padding:12px 16px;border:1px solid var(--line);border-radius:16px;background:rgba(6,17,29,.96);box-shadow:0 20px 50px rgba(0,0,0,.34);color:#fff;text-align:center;font-size:13px;font-weight:900;opacity:0;pointer-events:none;transition:.22s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:1180px){.products-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.token-card{min-height:300px}.top-token{display:none}}
+@media(max-width:720px){:root{--head:68px;--foot:74px}.topbar{padding:8px 13px}.brand img{width:104px;height:44px}.avatar-btn{display:inline-flex}.products-grid{grid-template-columns:1fr;gap:12px}.page{padding-left:14px;padding-right:14px}.tokens-hero{min-height:170px;padding-top:24px}.tokens-hero h1{font-size:38px}.card-amount strong{font-size:40px}.footer-links{gap:10px}.footer-links a{font-size:9px}.footer-sign{font-size:8px}.drawer{width:min(94vw,360px)}}
 </style>
 </head>
 <body>
-<div id="pageContent">
-  <main class="tokens-page">
-    <section class="tokens-hero">
+<div class="drawer-bg" id="drawerBg"></div>
+<aside class="drawer" aria-label="Hesap menüsü">
+  <div class="drawer-head">
+    <a href="https://italky.ai/hosgeldiniz" aria-label="Ana sayfa"><img class="drawer-logo" src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
+    <button class="close" id="close" type="button">×</button>
+  </div>
+  <div class="drawer-user" id="drawerProfile">
+    <div class="drawer-avatar"><img src="" id="drawerPic" alt="Profil"></div>
+    <div>
+      <div class="drawer-name" id="drawerName">Kullanıcı</div>
+      <div class="drawer-mail" id="drawerMail">-</div>
+      <div class="drawer-token"><span>Jeton</span><strong id="drawerTokens">0</strong></div>
+    </div>
+  </div>
+  <nav>
+    <a href="https://italky.ai/hosgeldiniz"><span class="drawer-icon">⌂</span><span>Anasayfa</span></a>
+    <a href="/pages/jetonbuy.html"><span class="drawer-icon">+</span><span>Jeton Yükle</span></a>
+    <a href="/pages/wallet_history.html"><span class="drawer-icon">↕</span><span>Jeton Hareketleri</span></a>
+    <a href="/pages/plan_select.html"><span class="drawer-icon">$</span><span>Fiyatlandırma</span></a>
+    <a href="/pages/about.html"><span class="drawer-icon">i</span><span>Hakkımızda</span></a>
+    <a href="/pages/features.html"><span class="drawer-icon">◆</span><span>Özellikler</span></a>
+    <a href="/pages/privacy.html"><span class="drawer-icon">◌</span><span>Gizlilik</span></a>
+    <a href="/pages/contact.html"><span class="drawer-icon">@</span><span>İletişim</span></a>
+    <a href="/music-showcase/"><span class="drawer-icon">♫</span><span>Müzik Hakları</span></a>
+    <button class="danger" id="logout" type="button"><span class="drawer-icon">⇥</span><span>Güvenli Çıkış</span></button>
+    <a class="danger" href="/pages/delete-account.html"><span class="drawer-icon">×</span><span>Hesabımı Sil</span></a>
+  </nav>
+</aside>
+<header class="topbar">
+  <a class="brand" href="https://italky.ai/hosgeldiniz" aria-label="Ana sayfa"><img src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
+  <div class="top-actions">
+    <div class="top-token">Jeton <strong id="headerTokens">0</strong></div>
+    <a class="avatar-btn" href="/pages/profile.html" aria-label="Profil"><img id="avatar" alt="Profil"></a>
+    <button class="menu-btn" id="menu" type="button" aria-label="Menü"><span class="menu-lines"><span></span><span></span><span></span></span></button>
+  </div>
+</header>
+<main class="page" id="pageContent">
+  <section class="tokens-page">
+    <div class="tokens-hero">
       <div class="market-kicker">ITALKYAI · JETON MARKET</div>
       <h1>Jeton yükle</h1>
       <div class="market-pills">
-        <span class="market-pill play">Google Play</span>
+        <span class="market-pill">Google Play</span>
         <span class="market-pill">USD + KDV</span>
-        <span class="market-pill rate" id="priceState">Google Play fiyatları yükleniyor</span>
-        <span class="market-pill">Mevcut bakiye: <strong id="currentTokens">0</strong></span>
+        <span class="market-pill rate" id="priceState">Google Play fiyatı ödeme ekranında doğrulanır</span>
+        <span class="market-pill gold">Mevcut bakiye: <strong id="currentTokens">0</strong></span>
       </div>
-    </section>
-
-    <section class="products-grid" id="products" aria-label="Jeton paketleri"></section>
-
-    <div class="history-link">
-      <a href="/pages/wallet_history.html">Jeton hareketlerini görüntüle</a>
     </div>
-  </main>
-</div>
+    <section class="products-grid" id="products" aria-label="Jeton paketleri"></section>
+    <div class="history-link"><a href="/pages/wallet_history.html">Jeton hareketlerini görüntüle</a></div>
+  </section>
+</main>
+<footer class="footer">
+  <nav class="footer-links"><a href="/pages/about.html">Hakkımızda</a><a href="/pages/features.html">Özellikler</a><a href="/pages/privacy.html">Gizlilik</a><a href="/pages/contact.html">İletişim</a></nav>
+  <div class="footer-sign">by Ozyigit's 2026 <b>𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</b></div>
+</footer>
 <div id="toast" class="toast"></div>
-
 <script type="module">
-import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
-import { supabase } from "/js/supabase_client.js";
-import { STORAGE_KEY } from "/js/config.js";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+const SUPABASE_URL = "https://rkbwcmeqdwuewqeokfas.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Xh1B9xUhmHCV6A3ffgeIrg_yO6uTX0t";
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }});
 const PRODUCTS = [
-  { no:"01", id:"jeton_20", tokens:25, badge:"PAKET", fallbackPrice:"0,99", note:"Başlangıç paketi", unit:"≈ 0,0396 USD / jeton", advantage:"Play fiyatı ödeme ekranında doğrulanır" },
-  { no:"02", id:"jeton_50", tokens:50, badge:"", fallbackPrice:"1,49", note:"Günlük kullanım", unit:"≈ 0,0298 USD / jeton", advantage:"Daha avantajlı" },
-  { no:"03", id:"jeton_100", tokens:100, badge:"ÖNERİLEN", fallbackPrice:"2,29", note:"Popüler paket", unit:"≈ 0,0229 USD / jeton", advantage:"En çok tercih edilen", recommended:true },
-  { no:"04", id:"jeton_500", tokens:500, badge:"%60 BİRİM FİYAT AVANTAJI", fallbackPrice:"9,99", note:"Büyük paket", unit:"≈ 0,0200 USD / jeton", advantage:"En avantajlı paket", best:true }
+  { no:"01", id:"jeton_20", tokens:25, badge:"PAKET", fallbackPrice:"0,99", unit:"≈ 0,0396 USD / jeton", advantage:"Referans birim fiyatı" },
+  { no:"02", id:"jeton_50", tokens:50, badge:"", fallbackPrice:"1,49", unit:"≈ 0,0298 USD / jeton", advantage:"Daha avantajlı" },
+  { no:"03", id:"jeton_100", tokens:100, badge:"ÖNERİLEN", fallbackPrice:"2,29", unit:"≈ 0,0229 USD / jeton", advantage:"En çok tercih edilen", recommended:true },
+  { no:"04", id:"jeton_500", tokens:500, badge:"EN AVANTAJLI", fallbackPrice:"9,99", unit:"≈ 0,0200 USD / jeton", advantage:"En avantajlı paket", best:true }
 ];
-
-try{ mountShell({ scroll:"none" }); }catch(e){ console.warn("[jetonbuy shell]", e); }
-try{
-  const root = getComputedStyle(document.documentElement);
-  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-  document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
-}catch(e){ console.warn("[jetonbuy shellLift]", e); }
-
 let __billingUserId = "";
 let lastPriceMap = {};
+const body = document.body;
 const currentTokensEl = document.getElementById("currentTokens");
-const toastEl = document.getElementById("toast");
+const headerTokensEl = document.getElementById("headerTokens");
+const drawerTokensEl = document.getElementById("drawerTokens");
+const drawerPic = document.getElementById("drawerPic");
+const avatar = document.getElementById("avatar");
+const drawerName = document.getElementById("drawerName");
+const drawerMail = document.getElementById("drawerMail");
 const productsEl = document.getElementById("products");
 const priceStateEl = document.getElementById("priceState");
+const toastEl = document.getElementById("toast");
+const fallbackAvatar = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="24" fill="#0f766e"/><text x="40" y="50" text-anchor="middle" font-family="Arial" font-size="30" font-weight="800" fill="white">i</text></svg>');
 
-function toast(msg){
-  if(!toastEl) return;
-  toastEl.textContent = String(msg || "");
-  toastEl.classList.add("show");
-  clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2300);
-}
+function toast(msg){ if(!toastEl) return; toastEl.textContent = String(msg || ""); toastEl.classList.add("show"); clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(()=>toastEl.classList.remove("show"),2300); }
+function openMenu(v){ body.classList.toggle("open", !!v); }
+document.getElementById("menu")?.addEventListener("click",()=>openMenu(true));
+document.getElementById("close")?.addEventListener("click",()=>openMenu(false));
+document.getElementById("drawerBg")?.addEventListener("click",()=>openMenu(false));
+document.getElementById("drawerProfile")?.addEventListener("click",()=>{ location.href="/pages/profile.html"; });
+document.querySelectorAll(".drawer nav a").forEach(a=>a.addEventListener("click",()=>openMenu(false)));
+document.getElementById("logout")?.addEventListener("click", async()=>{ try{ await supabase.auth.signOut(); }catch{} location.replace("https://italky.ai/hosgeldiniz"); });
 
-function formatTokens(value){
-  try{return Number(value||0).toLocaleString("tr-TR");}catch{return String(value||0);}
-}
-
-function readPrice(product){
-  const info = lastPriceMap[product.id] || {};
-  const raw = info.price || info.formattedPrice || info.localizedPrice || info.priceText || product.fallbackPrice;
-  return String(raw).replace(/\s*USD\s*$/i, "").trim();
-}
-
+function formatTokens(value){ try{return Number(value||0).toLocaleString("tr-TR");}catch{return String(value||0);} }
+function setTokenViews(value){ const txt = formatTokens(value); if(currentTokensEl) currentTokensEl.textContent = txt; if(headerTokensEl) headerTokensEl.textContent = txt; if(drawerTokensEl) drawerTokensEl.textContent = txt; }
+function readPrice(product){ const info = lastPriceMap[product.id] || {}; const raw = info.price || info.formattedPrice || info.localizedPrice || info.priceText || product.fallbackPrice; return String(raw).replace(/\s*USD\s*$/i, "").trim(); }
 function renderProducts(){
-  if(!productsEl) return;
-  productsEl.innerHTML = PRODUCTS.map((p) => {
+  productsEl.innerHTML = PRODUCTS.map(p=>{
     const price = readPrice(p);
-    return `
-      <article class="token-card${p.recommended ? " recommended" : ""}${p.best ? " best" : ""}" data-product-id="${p.id}">
-        <div class="card-no">${p.no}</div>
-        ${p.badge ? `<div class="card-badge">${p.badge}</div>` : ""}
-        <div class="card-title">${formatTokens(p.tokens)} Jeton</div>
-        <div class="card-amount"><strong>${formatTokens(p.tokens)}</strong><span>jeton</span></div>
-        <div class="price-box">
-          <div class="price-main"><span>${price}</span><small>USD + KDV</small></div>
-          <div class="unit-price">${p.unit}</div>
-          <div class="advantage">${p.advantage}</div>
-        </div>
-        <div class="card-spacer"></div>
-        <button class="buy-btn" type="button" data-buy="${p.id}"><span class="play-triangle"></span><span>Google Play ile satın al</span></button>
-        <div class="product-id">${p.id}</div>
-      </article>`;
+    return `<article class="token-card${p.recommended?" recommended":""}${p.best?" best":""}" data-product-id="${p.id}">
+      <div class="card-no">${p.no}</div>${p.badge?`<div class="card-badge">${p.badge}</div>`:""}
+      <div class="card-title">${formatTokens(p.tokens)} Jeton</div>
+      <div class="card-amount"><strong>${formatTokens(p.tokens)}</strong><span>jeton</span></div>
+      <div class="price-box"><div class="price-main"><span>${price}</span><small>USD + KDV</small></div><div class="unit-price">${p.unit}</div><div class="advantage">${p.advantage}</div></div>
+      <div class="card-spacer"></div>
+      <button class="buy-btn" type="button" data-buy="${p.id}"><span class="play-triangle"></span><span>Google Play ile satın al</span></button>
+      <div class="product-id">${p.id}</div>
+    </article>`;
   }).join("");
 }
-
 function normalizePricePayload(payload){
   if(!payload) return {};
   let data = payload;
-  if(typeof data === "string"){
-    try{ data = JSON.parse(data); }catch{ return {}; }
-  }
-  const rows = Array.isArray(data) ? data : (Array.isArray(data.products) ? data.products : Array.isArray(data.productDetails) ? data.productDetails : []);
+  if(typeof data === "string"){ try{ data = JSON.parse(data); }catch{return{};} }
+  const rows = Array.isArray(data) ? data : (Array.isArray(data.products) ? data.products : (Array.isArray(data.productDetails) ? data.productDetails : []));
   const map = {};
-  rows.forEach((item) => {
-    const id = item?.productId || item?.product_id || item?.id || item?.sku;
-    if(!id) return;
-    map[id] = {
-      price: item.price || item.formattedPrice || item.localizedPrice || item.priceText || item.oneTimePurchaseOfferDetails?.formattedPrice,
-      source:"google"
-    };
-  });
+  rows.forEach(row=>{ const id = row.productId || row.product_id || row.id || row.sku; if(id) map[id] = row; });
   return map;
 }
-
-function applyPlayPrices(payload){
+window.italkySetGooglePlayPrices = function(payload){
   const map = normalizePricePayload(payload);
-  if(Object.keys(map).length){
-    lastPriceMap = { ...lastPriceMap, ...map };
-    if(priceStateEl) priceStateEl.textContent = "Google Play fiyatları alındı";
-    renderProducts();
-  }
-}
-
-window.onGooglePlayProducts = applyPlayPrices;
-window.onProductDetailsResult = applyPlayPrices;
-window.updateProductPrices = applyPlayPrices;
-
-function requestPlayPrices(){
-  const ids = PRODUCTS.map(p => p.id);
-  const bridge = window.AndroidBilling;
+  if(Object.keys(map).length){ lastPriceMap = map; if(priceStateEl) priceStateEl.textContent = "Google Play fiyatları yüklendi"; renderProducts(); }
+};
+async function requestNativePrices(){
+  const ids = PRODUCTS.map(p=>p.id);
   try{
-    if(bridge?.getProductPrices){ bridge.getProductPrices(JSON.stringify(ids)); return; }
-    if(bridge?.requestProductDetails){ bridge.requestProductDetails(JSON.stringify(ids)); return; }
-    if(bridge?.queryProducts){ bridge.queryProducts(JSON.stringify(ids)); return; }
-    if(bridge?.getProducts){ bridge.getProducts(JSON.stringify(ids)); return; }
-    if(priceStateEl) priceStateEl.textContent = "Google Play fiyatı ödeme ekranında doğrulanır";
-  }catch(e){
-    console.warn("[jetonbuy] Play fiyat isteği hata:", e);
-    if(priceStateEl) priceStateEl.textContent = "Google Play fiyatı ödeme ekranında doğrulanır";
-  }
-}
-
-function getCachedUser(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("italky_user") || localStorage.getItem("user") || localStorage.getItem("auth_user") || localStorage.getItem("italky_auth_user");
-    return raw ? JSON.parse(raw) : {};
-  }catch{return {};}
-}
-
-function resolveTokenValue(user, cached, profileRow){
-  return Number(profileRow?.tokens ?? user?.user_metadata?.tokens ?? user?.user_metadata?.jetons ?? cached?.tokens ?? cached?.jetons ?? cached?.user_metadata?.tokens ?? cached?.user_metadata?.jetons ?? 0);
-}
-
-async function fetchProfile(userId){
-  try{
-    const { data, error } = await supabase.from("profiles").select("tokens").eq("id", userId).single();
-    if(error){ console.warn("[jetonbuy] profiles okunamadı:", error.message || error); return null; }
-    return data || null;
-  }catch(e){ console.warn("[jetonbuy] profiles sorgu hata:", e); return null; }
-}
-
-async function syncBillingUserId(){
-  try{
-    const cached = getCachedUser();
-    const { data, error } = await supabase.auth.getUser();
-    if(error) throw error;
-    const user = data?.user || null;
-    const userId = user?.id || "";
-    __billingUserId = userId;
-    const profileRow = userId ? await fetchProfile(userId) : null;
-    const tokenVal = resolveTokenValue(user, cached, profileRow);
-    if(currentTokensEl) currentTokensEl.textContent = formatTokens(tokenVal);
-    try{ setHeaderTokens(tokenVal); }catch{}
-    if(userId && window.AndroidBilling?.setUserId){
-      window.AndroidBilling.setUserId(userId);
+    const bridge = window.AndroidBilling;
+    if(!bridge){ renderProducts(); return; }
+    if(typeof bridge.getProductPrices === "function"){
+      const res = bridge.getProductPrices(JSON.stringify(ids));
+      if(res) window.italkySetGooglePlayPrices(res);
+      return;
     }
-  }catch(e){
-    console.warn("[jetonbuy] syncBillingUserId hata:", e);
-    if(currentTokensEl) currentTokensEl.textContent = "0";
-  }
+    if(typeof bridge.requestProductDetails === "function"){ bridge.requestProductDetails(JSON.stringify(ids)); return; }
+    if(typeof bridge.queryProducts === "function"){ bridge.queryProducts(JSON.stringify(ids)); return; }
+    if(typeof bridge.getProducts === "function"){ bridge.getProducts(JSON.stringify(ids)); return; }
+  }catch(e){ console.warn("[jetonbuy prices]", e); }
+  renderProducts();
 }
-
+async function hydrateUser(){
+  try{
+    const { data:{ session } } = await supabase.auth.getSession();
+    const user = session?.user || null;
+    const meta = user?.user_metadata || {};
+    let name = meta.full_name || meta.name || user?.email || "Kullanıcı";
+    let email = user?.email || "-";
+    let pic = meta.avatar_url || meta.picture || fallbackAvatar;
+    let tokens = 0;
+    __billingUserId = user?.id || "";
+    if(user?.id){
+      const { data } = await supabase.from("profiles").select("email,full_name,display_name,avatar_url,tokens").eq("id", user.id).maybeSingle();
+      if(data){ name = data.full_name || data.display_name || name; email = data.email || email; pic = data.avatar_url || pic; tokens = Number(data.tokens || 0) || 0; }
+    }
+    setTokenViews(tokens);
+    if(drawerName) drawerName.textContent = name;
+    if(drawerMail) drawerMail.textContent = email || "-";
+    if(drawerPic) drawerPic.src = pic || fallbackAvatar;
+    if(avatar) avatar.src = pic || fallbackAvatar;
+    try{ if(__billingUserId && window.AndroidBilling?.setUserId) window.AndroidBilling.setUserId(__billingUserId); }catch{}
+  }catch(e){ console.warn("[jetonbuy user]", e); setTokenViews(0); if(drawerPic) drawerPic.src=fallbackAvatar; if(avatar) avatar.src=fallbackAvatar; }
+}
 window.buy = async function(productId){
   try{
-    if(!__billingUserId){ await syncBillingUserId(); }
-    if(!__billingUserId){
-      toast("Önce giriş yapmanız gerekiyor.");
-      setTimeout(() => { location.href = "/pages/login.html"; }, 700);
-      return;
-    }
-    if(window.AndroidBilling?.buy){
-      window.AndroidBilling.buy(productId);
-      return;
-    }
-    toast("Google Play satın alma sistemi uygulama içinde açılır.");
-  }catch(e){
-    console.warn("[jetonbuy] buy hata:", e);
-    toast("Satın alma başlatılamadı.");
-  }
+    if(!__billingUserId){ await hydrateUser(); }
+    if(!__billingUserId){ toast("Önce giriş yapmanız gerekiyor."); setTimeout(()=>location.href="https://italky.ai/hosgeldiniz",700); return; }
+    if(window.AndroidBilling?.setUserId) window.AndroidBilling.setUserId(__billingUserId);
+    if(window.AndroidBilling?.buy){ window.AndroidBilling.buy(productId); return; }
+    toast("Google Play satın alma sistemi sadece Android uygulamasında açılır.");
+  }catch(e){ console.warn("[jetonbuy buy]", e); toast("Satın alma başlatılamadı."); }
 };
-
-document.addEventListener("click", (event) => {
-  const btn = event.target.closest("[data-buy]");
-  if(!btn) return;
-  event.preventDefault();
-  window.buy(btn.getAttribute("data-buy"));
-});
-
+productsEl?.addEventListener("click", e=>{ const btn = e.target.closest("[data-buy]"); if(btn) window.buy(btn.dataset.buy); });
 renderProducts();
-requestPlayPrices();
-syncBillingUserId();
-setTimeout(syncBillingUserId, 600);
-setTimeout(syncBillingUserId, 1400);
-setTimeout(requestPlayPrices, 900);
+requestNativePrices();
+hydrateUser();
+setTimeout(hydrateUser, 700);
+setTimeout(hydrateUser, 1600);
 </script>
 </body>
 </html>
