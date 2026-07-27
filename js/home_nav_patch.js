@@ -134,7 +134,7 @@ function replaceHeaderAvatarWithHome(root = document) {
 
     // keep similar footprint
     wrap.style.cssText =
-      "display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;border:1.7px solid rgba(53,213,208,.62);background:rgba(15,72,76,.35);color:#bafffb;text-decoration:none;flex:0 0 auto;";
+      "display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:0;background:transparent;color:#fff;text-decoration:none;flex:0 0 auto;";
 
     const target = host.id === "avatar" ? host.parentElement || host : host;
     target.replaceWith(wrap);
@@ -146,9 +146,10 @@ function injectStyle() {
   const style = document.createElement("style");
   style.id = "homeNavPatchStyle";
   style.textContent = `
-    .italky-home-icon-btn{display:inline-flex!important;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;border:1.7px solid rgba(53,213,208,.62);background:rgba(15,72,76,.35);color:#bafffb;text-decoration:none;flex:0 0 auto}
-    .italky-home-icon-btn svg{display:block}
-    @media(max-width:700px){.italky-home-icon-btn{width:40px;height:40px}}
+    .italky-home-icon-btn{display:inline-flex!important;align-items:center;justify-content:center;width:28px;height:28px;border:0!important;border-radius:0!important;background:transparent!important;color:#fff!important;text-decoration:none;flex:0 0 auto;box-shadow:none!important;padding:0!important}
+    .italky-home-icon-btn svg{display:block;width:24px;height:24px;fill:#fff;color:#fff}
+    .italky-home-icon-btn path{fill:#fff!important}
+    @media(max-width:700px){.italky-home-icon-btn{width:26px;height:26px}.italky-home-icon-btn svg{width:22px;height:22px}}
     header .profile, header .profile-btn, header .avatar-btn{pointer-events:none!important;cursor:default!important}
     .drawer-user, .menu-user-card, .italky-official-user, #drawerProfile, #menuProfileCard, #menuProfileTop, #menuAvatarClick{cursor:default!important}
   `;
