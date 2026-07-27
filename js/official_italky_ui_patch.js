@@ -57,10 +57,14 @@ function injectStyle() {
 function fixLogos(root = document) {
   const imgs = root.querySelectorAll?.('img[src*="italkyai-logo"],img[src*="icanyai-logo"],img[src*="italky-logo-official"],img.logo,img.brand-logo,img.drawer-logo,.menu-brand img') || [];
   imgs.forEach((img) => {
-    if (img.dataset.officialItalkyLogo === "1") return;
-    img.src = OFFICIAL_LOGO;
-    img.alt = "italkyAI";
+    if (img.dataset.officialItalkyLogo === "1" || img.dataset.italkyLogoFixed === "1") return;
+    const current = String(img.getAttribute("src") || img.src || "");
     img.dataset.officialItalkyLogo = "1";
+    img.dataset.italkyLogoFixed = "1";
+    if (!current.includes("italkyai-logo-clear.png?v=20260727-vector")) {
+      img.setAttribute("src", OFFICIAL_LOGO);
+    }
+    if (img.getAttribute("alt") !== "italkyAI") img.alt = "italkyAI";
   });
 }
 
