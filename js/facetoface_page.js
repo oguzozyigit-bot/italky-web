@@ -2308,7 +2308,7 @@ async function ensureReady() {
 }
 
 function safeHomeHref() {
-  return "/pages/home.html";
+  return "/pages/home.html?hub=1";
 }
 
 function bindKeyboardButton(el, handler) {
