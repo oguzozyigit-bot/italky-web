@@ -4,7 +4,7 @@
 const OFFICIAL_LOGO = "/assets/italky-logo-official.svg?v=20260727";
 
 const MENU_ITEMS = [
-  { href: "https://italky.ai/hosgeldiniz", icon: "⌂", label: "Anasayfa" },
+  { href: "https://italky.ai", icon: "⌂", label: "Anasayfa" },
   { href: "/pages/jetonbuy.html", icon: "+", label: "Jeton Yükle" },
   { href: "/pages/wallet_history.html", icon: "↕", label: "Jeton Hareketleri" },
   { href: "/pages/plan_select.html", icon: "$", label: "Fiyatlandırma" },
@@ -83,7 +83,7 @@ function normalizeDrawer(drawer) {
   const head = drawer.querySelector(".drawer-head,.menu-top,.menu-user-card") || drawer.firstElementChild;
   if (!drawer.querySelector(".menu-official-logo")) {
     const logoWrap = document.createElement("div");
-    logoWrap.innerHTML = `<a href="https://italky.ai/hosgeldiniz"><img class="menu-official-logo" src="${OFFICIAL_LOGO}" alt="italkyAI"></a>`;
+    logoWrap.innerHTML = `<a href="https://italky.ai"><img class="menu-official-logo" src="${OFFICIAL_LOGO}" alt="italkyAI"></a>`;
     drawer.insertBefore(logoWrap.firstElementChild, drawer.firstChild);
   }
 
@@ -143,7 +143,7 @@ async function logout() {
     localStorage.removeItem("italky_protected_after_login");
     localStorage.removeItem("italky_icany_pending_target");
   } catch {}
-  location.replace("https://italky.ai/hosgeldiniz");
+  location.replace("https://italky.ai");
 }
 
 function boot() {

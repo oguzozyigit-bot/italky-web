@@ -5,6 +5,7 @@ import "/js/game_logo_patch.js";
 import "/js/official_italky_ui_patch.js";
 import "/js/logo_hotfix.js";
 import "/js/profile_avatar_patch.js";
+import "/js/home_nav_patch.js";
 import "/js/auth_session_unifier.js";
 
 export const GOOGLE_CLIENT_ID =

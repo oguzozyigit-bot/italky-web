@@ -28,7 +28,7 @@ body{background:linear-gradient(180deg,#07131f 0%,#06111d 55%,#040b13 100%)!impo
 <div class="drawer-bg" id="drawerBg"></div>
 <aside class="drawer" aria-label="Hesap menüsü">
   <div class="drawer-head">
-    <a href="https://italky.ai/hosgeldiniz" aria-label="Ana sayfa"><img class="drawer-logo" src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
+    <a href="https://italky.ai" aria-label="Ana sayfa"><img class="drawer-logo" src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
     <button class="close" id="close" type="button">×</button>
   </div>
   <div class="drawer-user" id="drawerProfile">
@@ -40,7 +40,7 @@ body{background:linear-gradient(180deg,#07131f 0%,#06111d 55%,#040b13 100%)!impo
     </div>
   </div>
   <nav>
-    <a href="https://italky.ai/hosgeldiniz"><span class="drawer-icon">⌂</span><span>Anasayfa</span></a>
+    <a href="https://italky.ai"><span class="drawer-icon">⌂</span><span>Anasayfa</span></a>
     <a href="/pages/jetonbuy.html"><span class="drawer-icon">+</span><span>Jeton Yükle</span></a>
     <a href="/pages/wallet_history.html"><span class="drawer-icon">↕</span><span>Jeton Hareketleri</span></a>
     <a href="/pages/plan_select.html"><span class="drawer-icon">$</span><span>Fiyatlandırma</span></a>
@@ -54,10 +54,10 @@ body{background:linear-gradient(180deg,#07131f 0%,#06111d 55%,#040b13 100%)!impo
   </nav>
 </aside>
 <header class="topbar">
-  <a class="brand" href="https://italky.ai/hosgeldiniz" aria-label="Ana sayfa"><img src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
+  <a class="brand" href="https://italky.ai" aria-label="Ana sayfa"><img src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
   <div class="top-actions">
     <div class="top-token">Jeton <strong id="headerTokens">0</strong></div>
-    <a class="avatar-btn" href="/pages/profile.html" aria-label="Profil"><img id="avatar" alt="Profil"></a>
+    <a class="italky-home-icon-btn" href="https://italky.ai" aria-label="Ana sayfa"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 3.2 3.8 10.2c-.3.3-.2.8.2.8H7v8.2c0 .4.3.8.8.8h3.2v-5.2h2v5.2h3.2c.4 0 .8-.4.8-.8V11h3c.4 0 .5-.5.2-.8L12 3.2z"/></svg></a>
     <button class="menu-btn" id="menu" type="button" aria-label="Menü"><span class="menu-lines"><span></span><span></span><span></span></span></button>
   </div>
 </header>
@@ -81,7 +81,7 @@ body{background:linear-gradient(180deg,#07131f 0%,#06111d 55%,#040b13 100%)!impo
     <section class="panel">
       <div class="panel-head">
         <div class="panel-title"><h2>Filtreler</h2><p>Hareketleri türüne göre daraltabilir veya arayabilirsin.</p></div>
-        <div class="actions"><a class="primary-link" href="/pages/jetonbuy.html">Jeton yükle</a><a class="ghost-link" href="https://italky.ai/hosgeldiniz">Anasayfa</a></div>
+        <div class="actions"><a class="primary-link" href="/pages/jetonbuy.html">Jeton yükle</a><a class="ghost-link" href="https://italky.ai">Anasayfa</a></div>
       </div>
       <div class="filters" id="filterBar">
         <button class="chip active" data-filter="all" type="button">Tümü</button>
@@ -131,9 +131,9 @@ function openMenu(v){body.classList.toggle("open",!!v);document.documentElement.
 document.getElementById("menu")?.addEventListener("click",()=>openMenu(true));
 document.getElementById("close")?.addEventListener("click",()=>openMenu(false));
 document.getElementById("drawerBg")?.addEventListener("click",()=>openMenu(false));
-document.getElementById("drawerProfile")?.addEventListener("click",()=>{location.href="/pages/profile.html"});
+document.getElementById("drawerProfile")?.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation()});
 document.querySelectorAll(".drawer nav a").forEach(a=>a.addEventListener("click",()=>openMenu(false)));
-document.getElementById("logout")?.addEventListener("click",async()=>{try{await supabase.auth.signOut()}catch{}location.replace("https://italky.ai/hosgeldiniz")});
+document.getElementById("logout")?.addEventListener("click",async()=>{try{await supabase.auth.signOut()}catch{}location.replace("https://italky.ai")});
 const LOADED_TYPES=new Set(["purchase","package_bonus","upgrade_credit","gift","manual_add","nfc_token_load","manual_code_token_load","google_play_token_load","billing_google_confirm","billing_google","subscription_bonus","welcome_bonus"]);
 const SPENT_TYPES=new Set(["usage_text","usage_face_to_face","usage_side_to_side","usage_meeting","usage_clone_voice","usage_teacher","usage_voice","manual_deduct","text_ai","voice_ai","voice_clone","voice_clone_preview","voice_preset_use","voice_preset_preview","practic_ai","level_test_exam","game_pass_use","translate_ai_gemini","translate_ai_openai","chat_text_gemini","chat_text_openai","chat_voice_gemini","chat_voice_openai","tts_mine","tts_second","tts_memory","usage"]);
 function formatInt(val){try{return Number(val||0).toLocaleString("tr-TR")}catch{return String(val||0)}}
@@ -153,7 +153,7 @@ function filterRows(rows){const q=String(searchInput.value||"").trim().toLowerCa
 function setTokenViews(value){const txt=formatInt(value);if(currentBalanceEl)currentBalanceEl.textContent=txt;if(summaryBalanceEl)summaryBalanceEl.textContent=txt;if(headerTokensEl)headerTokensEl.textContent=txt;if(drawerTokensEl)drawerTokensEl.textContent=txt;try{const raw=localStorage.getItem(STORAGE_KEY);const cached=raw?JSON.parse(raw):{};cached.tokens=Number(value||0);localStorage.setItem(STORAGE_KEY,JSON.stringify(cached))}catch{}}
 function paintSummary(rows,currentBalance){let loaded=0;let spent=0;rows.forEach(r=>{const amt=getSignedAmount(r);if(amt>0)loaded+=amt;if(amt<0)spent+=Math.abs(amt)});setTokenViews(currentBalance);totalLoadedEl.textContent=formatInt(loaded);totalSpentEl.textContent=formatInt(spent)}
 function renderRows(rows){const filtered=filterRows(rows);resultInfo.textContent=`${filtered.length} hareket gösteriliyor`;if(!filtered.length){listWrap.innerHTML='<div class="empty">Bu filtre için kayıt bulunamadı.<br>Filtreyi değiştirerek diğer hareketleri görebilirsin.</div>';return}listWrap.innerHTML=filtered.map(row=>{const amt=getSignedAmount(row);const group=typeGroup(row);const icon=typeIcon(row);const meta=parseMeta(row?.meta);const balanceAfterRaw=row?.balance_after??meta?.balance_after??null;const balanceAfter=Number.isFinite(Number(balanceAfterRaw))?Number(balanceAfterRaw):null;const deltaText=`${amt>0?"+":""}${formatInt(amt)}`;return `<div class="row"><div class="icon ${group}">${icon}</div><div class="mid"><div class="mid-top"><div class="type-pill">${escapeHtml(typeLabel(row))}</div></div><div class="title">${escapeHtml(shortDescription(row))}</div><div class="date">${escapeHtml(formatDate(row.created_at))}</div></div><div class="right"><div class="delta ${group}">${escapeHtml(deltaText)}</div><div class="after">Bakiye: ${escapeHtml(balanceAfter===null?"-":formatInt(balanceAfter))}</div></div></div>`}).join("")}
-async function hydrateUserAndLoad(){try{listWrap.innerHTML='<div class="loading">Jeton hareketleri yükleniyor...</div>';resultInfo.textContent="Yükleniyor...";const {data:{session}}=await supabase.auth.getSession();const user=session?.user||null;body.classList.toggle("signed",!!user);if(!user?.id){listWrap.innerHTML='<div class="error">Önce giriş yapmalısın.</div>';resultInfo.textContent="Oturum bulunamadı";return}const meta=user.user_metadata||{};let name=meta.full_name||meta.name||user.email||"Kullanıcı";let email=user.email||"-";let pic=meta.avatar_url||meta.picture||fallbackAvatar;const [profileRes,txRes]=await Promise.all([supabase.from("profiles").select("email,full_name,display_name,avatar_url,tokens").eq("id",user.id).maybeSingle(),supabase.from("wallet_tx").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(300)]);if(profileRes.error)throw profileRes.error;if(txRes.error)throw txRes.error;const profile=profileRes.data||{};name=profile.full_name||profile.display_name||name;email=profile.email||email;pic=profile.avatar_url||pic;const currentBalance=Number(profile.tokens||0);if(drawerName)drawerName.textContent=name;if(drawerMail)drawerMail.textContent=email||"-";if(drawerPic)drawerPic.src=pic||fallbackAvatar;if(avatar)avatar.src=pic||fallbackAvatar;allRows=Array.isArray(txRes.data)?txRes.data:[];paintSummary(allRows,currentBalance);renderRows(allRows)}catch(e){console.error("[wallet_history]",e);listWrap.innerHTML=`<div class="error">Jeton hareketleri alınamadı.<br>${escapeHtml(e?.message||"Bilinmeyen hata")}</div>`;resultInfo.textContent="Hata oluştu"}}
+async function hydrateUserAndLoad(){try{listWrap.innerHTML='<div class="loading">Jeton hareketleri yükleniyor...</div>';resultInfo.textContent="Yükleniyor...";const {data:{session}}=await supabase.auth.getSession();const user=session?.user||null;body.classList.toggle("signed",!!user);if(!user?.id){listWrap.innerHTML='<div class="error">Önce giriş yapmalısın.</div>';resultInfo.textContent="Oturum bulunamadı";return}const meta=user.user_metadata||{};let name=meta.full_name||meta.name||user.email||"Kullanıcı";let email=user.email||"-";let pic=meta.avatar_url||meta.picture||fallbackAvatar;const [profileRes,txRes]=await Promise.all([supabase.from("profiles").select("email,full_name,display_name,avatar_url,tokens").eq("id",user.id).maybeSingle(),supabase.from("wallet_tx").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(300)]);if(profileRes.error)throw profileRes.error;if(txRes.error)throw txRes.error;const profile=profileRes.data||{};name=profile.full_name||profile.display_name||name;email=profile.email||email;pic=profile.avatar_url||pic;const currentBalance=Number(profile.tokens||0);if(drawerName)drawerName.textContent=name;if(drawerMail)drawerMail.textContent=email||"-";if(drawerPic)drawerPic.src=pic||fallbackAvatar;if(avatar)if(avatar)avatar.src=pic||fallbackAvatar;allRows=Array.isArray(txRes.data)?txRes.data:[];paintSummary(allRows,currentBalance);renderRows(allRows)}catch(e){console.error("[wallet_history]",e);listWrap.innerHTML=`<div class="error">Jeton hareketleri alınamadı.<br>${escapeHtml(e?.message||"Bilinmeyen hata")}</div>`;resultInfo.textContent="Hata oluştu"}}
 filterBar?.querySelectorAll(".chip").forEach(btn=>btn.addEventListener("click",()=>{filterBar.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));btn.classList.add("active");activeFilter=btn.dataset.filter||"all";renderRows(allRows)}));
 searchInput?.addEventListener("input",()=>renderRows(allRows));
 clearFilterBtn?.addEventListener("click",()=>{searchInput.value="";activeFilter="all";filterBar.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));filterBar.querySelector('[data-filter="all"]')?.classList.add("active");renderRows(allRows)});

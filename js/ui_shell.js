@@ -636,7 +636,7 @@ export function mountShell(options = {}) {
   document.body.prepend(bg, shell);
 
   document.getElementById("brandHome")?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
+    location.href = "https://italky.ai";
   });
 
   bindMenu(options);
@@ -786,7 +786,10 @@ function bindMenu(options = {}) {
   headerSettingsBtn?.addEventListener("click", goSettings);
   headerPlusBtn?.addEventListener("click", goPlus);
 
-  menuProfileTop?.addEventListener("click", goProfile);
+  menuProfileTop?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
   menuAvatarClick?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
