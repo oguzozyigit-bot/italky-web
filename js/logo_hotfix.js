@@ -4,6 +4,14 @@
 
 const SAFE_ITALKY_LOGO = "/assets/italkyai-logo-clear.png?v=20260727-vector";
 
+function absoluteLogoUrl() {
+  try {
+    return new URL(SAFE_ITALKY_LOGO, location.origin).href;
+  } catch {
+    return SAFE_ITALKY_LOGO;
+  }
+}
+
 function isAvatarImage(img) {
   if (!img || img.tagName !== "IMG") return false;
   const id = String(img.id || "");
@@ -25,11 +33,24 @@ function looksLikeItalkyLogo(img) {
   return logoClass || logoAlt || logoSrc;
 }
 
+function alreadySafe(img) {
+  if (!img) return false;
+  if (img.dataset.italkyLogoFixed === "1") return true;
+  const current = String(img.getAttribute("src") || img.src || "");
+  const safeAbs = absoluteLogoUrl();
+  return current === SAFE_ITALKY_LOGO || current === safeAbs || current.endsWith("/assets/italkyai-logo-clear.png?v=20260727-vector");
+}
+
 function fixOne(img) {
   if (!looksLikeItalkyLogo(img)) return;
-  if (img.src === SAFE_ITALKY_LOGO) return;
-  img.src = SAFE_ITALKY_LOGO;
-  img.alt = "italkyAI";
+  if (alreadySafe(img)) {
+    img.dataset.italkyLogoFixed = "1";
+    return;
+  }
+
+  img.dataset.italkyLogoFixed = "1";
+  img.setAttribute("src", SAFE_ITALKY_LOGO);
+  if (img.getAttribute("alt") !== "italkyAI") img.alt = "italkyAI";
   img.style.objectFit = "contain";
   img.style.objectPosition = "left center";
   img.style.background = "transparent";
@@ -42,20 +63,23 @@ function fixAll(root = document) {
 }
 
 function bootLogoHotfix() {
+  if (window.__italkyLogoHotfixBooted) return;
+  window.__italkyLogoHotfixBooted = true;
+
   fixAll();
   setTimeout(fixAll, 80);
   setTimeout(fixAll, 300);
-  setTimeout(fixAll, 1000);
 
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === "attributes" && mutation.target?.tagName === "IMG") {
+        if (mutation.target.dataset.italkyLogoFixed === "1" && alreadySafe(mutation.target)) continue;
         fixOne(mutation.target);
       }
       mutation.addedNodes?.forEach((node) => {
         if (node.nodeType !== 1) return;
         if (node.tagName === "IMG") fixOne(node);
-        fixAll(node);
+        else fixAll(node);
       });
     }
   });
@@ -63,7 +87,7 @@ function bootLogoHotfix() {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ["src", "class", "alt"],
+    attributeFilter: ["src"],
   });
 }
 
