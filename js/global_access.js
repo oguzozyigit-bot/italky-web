@@ -592,6 +592,30 @@ export async function initGlobalAccess(options = {}) {
     return { ok: true, bypass: true, public_page: true, session: null, access: safe };
   }
 
+  // Ortak icany bridge — tek Google (icany) ile home / konuş (italky oturumu yoksa)
+  try {
+    const pool = JSON.parse(localStorage.getItem("icany_shared_pool_v1") || "null");
+    if (pool?.memberId && pool?.email) {
+      const bridgeAccess = buildSafeAccess(
+        {
+          access_open: true,
+          has_active_membership: true,
+          is_member: true,
+          package_active: true,
+          subscription_active: true,
+          membership_status: "active",
+          membership_source: "icany_bridge",
+          tokens: Number(pool.tokenBalance || 0),
+          remaining_seconds: 86400 * 30
+        },
+        null
+      );
+      setCachedAccess(bridgeAccess);
+      dispatchAccessReady(bridgeAccess);
+      return { ok: true, icany_bridge: true, session: null, access: bridgeAccess };
+    }
+  } catch {}
+
   goLogin();
   return { ok: false, redirected: "login", session: null, access: buildSafeAccess({}, null) };
 }
