@@ -11,6 +11,17 @@ const DEFAULT_NATIVE_GOOGLE_NEXT = "/pages/membership.html";
 const HOME_PAGE = "/pages/home.html";
 const MEMBERSHIP_PAGE = "/pages/membership.html";
 const ACCESS_STATE_API = "https://italky-api.onrender.com/api/session/access-state";
+let oauthRedirectStarted = false;
+
+function safeRedirectPath(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("http://")) return "";
+  if (raw.startsWith("https://")) return "";
+  if (raw.startsWith("//")) return "";
+  if (!raw.startsWith("/")) return "";
+  return raw;
+}
 
 function readNativeIdToken(payload) {
   try {
@@ -24,7 +35,6 @@ function readNativeIdToken(payload) {
         return raw;
       }
     }
-
     return String(
       payload?.id_token ||
       payload?.idToken ||
@@ -35,68 +45,6 @@ function readNativeIdToken(payload) {
   } catch {
     return "";
   }
-}
-
-function isDatabaseSaveError(error) {
-  const message = String(error?.message || error || "").toLowerCase();
-  return message.includes("database error saving new user");
-}
-
-function installGoogleAuthDebugHooks() {
-  try {
-    if (window.__italkyGoogleAuthDebugInstalled) return;
-    window.__italkyGoogleAuthDebugInstalled = true;
-
-    let nativeLoginSuccessHandler = window.onNativeLoginSuccess;
-    Object.defineProperty(window, "onNativeLoginSuccess", {
-      configurable: true,
-      get() {
-        return nativeLoginSuccessHandler;
-      },
-      set(handler) {
-        if (typeof handler !== "function") {
-          nativeLoginSuccessHandler = handler;
-          return;
-        }
-
-        nativeLoginSuccessHandler = function(payload) {
-          const idToken = readNativeIdToken(payload);
-          console.warn("[ITALKY AUTH] payload", payload);
-          console.warn("[ITALKY AUTH] idToken exists", !!idToken);
-          return handler.apply(this, arguments);
-        };
-      }
-    });
-
-    const originalSignInWithIdToken = supabase.auth.signInWithIdToken?.bind(supabase.auth);
-    if (originalSignInWithIdToken) {
-      supabase.auth.signInWithIdToken = async function() {
-        const result = await originalSignInWithIdToken(...arguments);
-        if (result?.error) {
-          if (isDatabaseSaveError(result.error)) {
-            window.__italkyNativeLoginDatabaseSaveError = true;
-            console.error("[SUPABASE_AUTH] database_save_error", result.error);
-          }
-          console.error("[ITALKY AUTH] signInWithIdToken error", result.error);
-        }
-        return result;
-      };
-    }
-  } catch (e) {
-    console.warn("[ITALKY AUTH] debug hook failed", e);
-  }
-}
-
-installGoogleAuthDebugHooks();
-
-function safeRedirectPath(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  if (raw.startsWith("http://")) return "";
-  if (raw.startsWith("https://")) return "";
-  if (raw.startsWith("//")) return "";
-  if (!raw.startsWith("/")) return "";
-  return raw;
 }
 
 function rememberNativeGoogleNext(next = "") {
@@ -110,18 +58,37 @@ function readNativeGoogleNext() {
     const stored = safeRedirectPath(localStorage.getItem(NATIVE_GOOGLE_NEXT_KEY) || "");
     if (stored) return stored;
   } catch {}
-
   try {
     const params = new URLSearchParams(location.search || "");
     const next = safeRedirectPath(params.get("next") || "");
     if (next) return next;
   } catch {}
-
   return DEFAULT_NATIVE_GOOGLE_NEXT;
 }
 
 function clearNativeGoogleNext() {
   try { localStorage.removeItem(NATIVE_GOOGLE_NEXT_KEY); } catch {}
+}
+
+function hasNativeGoogleLogin() {
+  try {
+    return typeof window.Native?.startGoogleLogin === "function";
+  } catch {
+    return false;
+  }
+}
+
+function isAndroidWebView() {
+  try {
+    return !!(
+      hasNativeGoogleLogin() ||
+      window.AndroidBridge ||
+      window.AndroidBilling ||
+      /; wv\)/i.test(navigator.userAgent || "")
+    );
+  } catch {
+    return false;
+  }
 }
 
 function isActiveAccess(access) {
@@ -150,155 +117,20 @@ async function fetchAccessStateSafe(session) {
       cache: "no-store"
     });
     const json = await response.json().catch(() => ({}));
-    console.warn("[ITALKY AUTH] native access-state", {
-      ok: response.ok,
-      status: response.status,
-      active: isActiveAccess(json)
-    });
     return response.ok ? json : null;
   } catch (e) {
-    console.warn("[ITALKY AUTH] native access-state failed", e);
+    console.warn("[ITALKY AUTH] access-state failed", e);
     return null;
   }
 }
 
 async function resolveNativeRedirectTarget(session, requestedTarget) {
   const access = await fetchAccessStateSafe(session);
-  if (isActiveAccess(access)) return HOME_PAGE;
-
+  if (isActiveAccess(access)) return safeRedirectPath(requestedTarget) || HOME_PAGE;
   const safeRequested = safeRedirectPath(requestedTarget);
   if (safeRequested && safeRequested !== HOME_PAGE) return safeRequested;
   return MEMBERSHIP_PAGE;
 }
-
-function hasNativeGoogleLogin() {
-  try {
-    return typeof window.Native?.startGoogleLogin === "function";
-  } catch {
-    return false;
-  }
-}
-
-function isAndroidWebView() {
-  try {
-    return !!(
-      hasNativeGoogleLogin() ||
-      window.AndroidBridge ||
-      window.AndroidBilling ||
-      /; wv\)/i.test(navigator.userAgent || "")
-    );
-  } catch {
-    return false;
-  }
-}
-
-function installNativeGoogleLoginHandler() {
-  try {
-    window.onNativeLoginSuccess = async function(payload) {
-      const idToken = readNativeIdToken(payload);
-      console.warn("[ITALKY AUTH] native Google callback", { hasToken: !!idToken });
-
-      if (!idToken) {
-        throw new Error("Google giriş token boş geldi.");
-      }
-
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: "google",
-        token: idToken
-      });
-
-      if (error) throw error;
-      persistSupabaseSessionBackup(data?.session);
-
-      try {
-        await ensureAuthAndCacheUser();
-      } catch (e) {
-        console.warn("[ITALKY AUTH] ensureAuthAndCacheUser after native login failed", e);
-      }
-
-      try {
-        const userId = data?.user?.id || data?.session?.user?.id || "";
-        if (userId && typeof window.Native?.setUserId === "function") {
-          window.Native.setUserId(userId);
-        }
-      } catch {}
-
-      const target = readNativeGoogleNext();
-      clearNativeGoogleNext();
-      location.replace(target);
-    };
-  } catch (e) {
-    console.warn("[ITALKY AUTH] native Google handler install failed", e);
-  }
-}
-
-// The guarded handler below owns the Android native Google completion flow.
-
-function installNativeGoogleLoginCompletionGuard() {
-  try {
-    window.onNativeLoginSuccess = async function(payload) {
-      try {
-        const idToken = readNativeIdToken(payload);
-        console.warn("[ITALKY AUTH] onNativeLoginSuccess called", { hasToken: !!idToken });
-
-        if (!idToken) {
-          throw new Error("Google giriş token boş geldi.");
-        }
-
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: "google",
-          token: idToken
-        });
-
-        if (error) throw error;
-        console.warn("[ITALKY AUTH] signInWithIdToken success", { hasSession: !!data?.session, hasUser: !!data?.user });
-        persistSupabaseSessionBackup(data?.session);
-
-        try {
-          await ensureAuthAndCacheUser();
-          console.warn("[ITALKY AUTH] ensureAuthAndCacheUser success");
-        } catch (e) {
-          console.warn("[ITALKY AUTH] ensureAuthAndCacheUser after native login failed", e);
-        }
-
-        try {
-          const userId = data?.user?.id || data?.session?.user?.id || "";
-          if (userId && typeof window.Native?.setUserId === "function") {
-            window.Native.setUserId(userId);
-          }
-        } catch {}
-
-        const requestedTarget = readNativeGoogleNext();
-        const target = await resolveNativeRedirectTarget(data?.session, requestedTarget);
-        clearNativeGoogleNext();
-        console.warn("[ITALKY AUTH] redirect target", { target, requestedTarget });
-        window.dispatchEvent(new CustomEvent("italky-native-login-success"));
-        location.replace(target);
-      } catch (e) {
-        console.error("[ITALKY AUTH] native login completion failed", e);
-        window.dispatchEvent(new CustomEvent("italky-native-login-error", {
-          detail: { message: e?.message || String(e || "") }
-        }));
-        throw e;
-      }
-    };
-
-    window.onNativeLoginError = function(payload) {
-      try {
-        console.error("[ITALKY AUTH] native Google error", payload);
-        window.dispatchEvent(new CustomEvent("italky-native-login-error", {
-          detail: { message: typeof payload === "string" ? payload : payload?.message || "native_google_error" }
-        }));
-      } catch {
-        console.error("[ITALKY AUTH] native Google error");
-      }
-    };
-  } catch (e) {
-    console.warn("[ITALKY AUTH] native Google completion guard failed", e);
-  }
-}
-
-installNativeGoogleLoginCompletionGuard();
 
 function toAndroidBrowserIntent(url) {
   const parsed = new URL(url);
@@ -306,11 +138,12 @@ function toAndroidBrowserIntent(url) {
   return `intent://${path}#Intent;scheme=${parsed.protocol.replace(":", "")};package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end`;
 }
 
-function openOAuthUrlOutsideWebView(url) {
+function redirectToOAuthUrl(url) {
   if (!url) throw new Error("Google OAuth adresi alınamadı.");
+  if (oauthRedirectStarted) return;
+  oauthRedirectStarted = true;
 
   if (hasNativeGoogleLogin()) {
-    console.warn("[ITALKY AUTH] Browser OAuth blocked because native Google login is available");
     throw new Error("Uygulama içinde Google girişi native akışla tamamlanmalı.");
   }
 
@@ -323,30 +156,66 @@ function openOAuthUrlOutsideWebView(url) {
     }
   }
 
-  try {
-    const popup = window.open(url, "_blank", "noopener,noreferrer");
-    if (popup) return;
-  } catch {}
-
   location.assign(url);
 }
+
+function installNativeGoogleLoginCompletionGuard() {
+  try {
+    window.onNativeLoginSuccess = async function(payload) {
+      try {
+        const idToken = readNativeIdToken(payload);
+        if (!idToken) throw new Error("Google giriş token boş geldi.");
+
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: idToken
+        });
+        if (error) throw error;
+
+        persistSupabaseSessionBackup(data?.session);
+        try { await ensureAuthAndCacheUser(); } catch (e) { console.warn("[ITALKY AUTH] cache after native login failed", e); }
+        try {
+          const userId = data?.user?.id || data?.session?.user?.id || "";
+          if (userId && typeof window.Native?.setUserId === "function") window.Native.setUserId(userId);
+        } catch {}
+
+        const requestedTarget = readNativeGoogleNext();
+        const target = await resolveNativeRedirectTarget(data?.session, requestedTarget);
+        clearNativeGoogleNext();
+        window.dispatchEvent(new CustomEvent("italky-native-login-success"));
+        location.replace(target);
+      } catch (e) {
+        console.error("[ITALKY AUTH] native login completion failed", e);
+        window.dispatchEvent(new CustomEvent("italky-native-login-error", {
+          detail: { message: e?.message || String(e || "") }
+        }));
+        throw e;
+      }
+    };
+
+    window.onNativeLoginError = function(payload) {
+      window.dispatchEvent(new CustomEvent("italky-native-login-error", {
+        detail: { message: typeof payload === "string" ? payload : payload?.message || "native_google_error" }
+      }));
+    };
+  } catch (e) {
+    console.warn("[ITALKY AUTH] native completion guard failed", e);
+  }
+}
+
+installNativeGoogleLoginCompletionGuard();
 
 export async function loginWithGoogle(next = "") {
   const safeNext = safeRedirectPath(next);
 
   if (hasNativeGoogleLogin()) {
     const target = rememberNativeGoogleNext(safeNext || DEFAULT_NATIVE_GOOGLE_NEXT);
-    console.warn("[ITALKY AUTH] starting native Google login", { next: target });
-    console.warn("[ANDROID NATIVE] startGoogleLogin called");
     window.Native.startGoogleLogin();
     return { native: true, next: target };
   }
 
   const callbackUrl = new URL("/pages/auth_callback.html", location.origin);
-
-  if (safeNext) {
-    callbackUrl.searchParams.set("next", safeNext);
-  }
+  if (safeNext) callbackUrl.searchParams.set("next", safeNext);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -361,25 +230,25 @@ export async function loginWithGoogle(next = "") {
   });
 
   if (error) throw error;
-  openOAuthUrlOutsideWebView(data?.url || "");
+  redirectToOAuthUrl(data?.url || "");
   return data;
 }
 
 export async function loginWithApple(next = "") {
   const safeNext = safeRedirectPath(next);
   const callbackUrl = new URL("/pages/auth_callback.html", location.origin);
-  if (safeNext) {
-    callbackUrl.searchParams.set("next", safeNext);
-  }
+  if (safeNext) callbackUrl.searchParams.set("next", safeNext);
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "apple",
     options: {
       redirectTo: callbackUrl.toString(),
-      skipBrowserRedirect: true,
+      skipBrowserRedirect: true
     }
   });
+
   if (error) throw error;
-  openOAuthUrlOutsideWebView(data?.url || "");
+  redirectToOAuthUrl(data?.url || "");
   return data;
 }
 
@@ -426,7 +295,6 @@ async function readProfile(userId) {
     .select("*")
     .eq("id", userId)
     .maybeSingle();
-
   if (error) throw error;
   return data || null;
 }
@@ -438,14 +306,12 @@ async function ensureProfileFallback(user) {
     const { data, error } = await supabase.rpc("ensure_profile_and_welcome");
     if (!error && data) profile = data;
   } catch {}
-
   if (profile) return profile;
 
   try {
     const { data, error } = await supabase.rpc("ensure_profile");
     if (!error && data) profile = data;
   } catch {}
-
   if (profile) return profile;
 
   profile = await readProfile(user.id);
@@ -454,14 +320,8 @@ async function ensureProfileFallback(user) {
   const fallbackProfile = {
     id: user.id,
     email: user.email || "",
-    full_name:
-      user?.user_metadata?.full_name ||
-      user?.user_metadata?.name ||
-      "",
-    avatar_url:
-      user?.user_metadata?.avatar_url ||
-      user?.user_metadata?.picture ||
-      "",
+    full_name: user?.user_metadata?.full_name || user?.user_metadata?.name || "",
+    avatar_url: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "",
     tokens: 0,
     package_active: false,
     selected_package_code: null,
@@ -474,9 +334,7 @@ async function ensureProfileFallback(user) {
   const { error } = await supabase
     .from("profiles")
     .upsert(fallbackProfile, { onConflict: "id" });
-
   if (error) throw error;
-
   return await readProfile(user.id);
 }
 
@@ -492,13 +350,10 @@ export async function ensureAuthAndCacheUser() {
   persistSupabaseSessionBackup(session);
 
   const profile = await ensureProfileFallback(user);
-  if (!profile?.id) {
-    throw new Error("Profil oluşturulamadı");
-  }
+  if (!profile?.id) throw new Error("Profil oluşturulamadı");
 
   const cached = buildCache(user, profile);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
-
   return cached;
 }
 

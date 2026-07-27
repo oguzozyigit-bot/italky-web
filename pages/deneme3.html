@@ -1,209 +1,3096 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI Call</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
-  <style>
-    :root{
-      --bg:#05070d;
-      --panel:rgba(12,18,32,.88);
-      --panel2:rgba(15,23,42,.78);
-      --line:rgba(255,255,255,.12);
-      --text:#f8fafc;
-      --muted:rgba(248,250,252,.66);
-      --cyan:#67e8f9;
-      --blue:#3b82f6;
-      --green:#22c55e;
-      --red:#ef4444;
-      --amber:#facc15;
-      --safe-top:env(safe-area-inset-top,0px);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
-    html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font-family:Outfit,sans-serif;overflow:hidden;}
-    body{min-height:100dvh;background:
-      radial-gradient(circle at 18% 0%,rgba(103,232,249,.16),transparent 30%),
-      radial-gradient(circle at 88% 10%,rgba(99,102,241,.18),transparent 34%),
-      radial-gradient(circle at 50% 100%,rgba(34,197,94,.10),transparent 34%),
-      linear-gradient(180deg,#08111f,#05070d 58%,#02040a);
-    }
-    button,input{font:inherit;}
-    .app{width:100%;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
-    .topbar{padding:calc(10px + var(--safe-top)) 14px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(2,6,23,.62);backdrop-filter:blur(16px);}
-    .brand{display:flex;align-items:center;gap:10px;min-width:0;}
-    .back{width:42px;height:42px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;font-weight:1000;}
-    .brand-title{min-width:0;}
-    .brand-title strong{font-family:Space Grotesk,sans-serif;display:block;font-size:18px;line-height:1;letter-spacing:-.3px;}
-    .brand-title span{display:block;margin-top:4px;font-size:11px;font-weight:900;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .my-no-chip{border:1px solid rgba(103,232,249,.25);background:rgba(103,232,249,.10);color:#cffafe;border-radius:999px;padding:8px 10px;font-size:11px;font-weight:1000;white-space:nowrap;}
-    .main{flex:1;min-height:0;overflow-y:auto;padding:14px 14px calc(16px + var(--safe-bottom));scrollbar-width:none;}
-    .main::-webkit-scrollbar{display:none;}
-    .screen{display:none;min-height:100%;}
-    .screen.show{display:block;}
-    .hero-card{border:1px solid var(--line);border-radius:28px;background:linear-gradient(145deg,rgba(15,23,42,.86),rgba(8,13,26,.92));box-shadow:0 20px 52px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);padding:18px;overflow:hidden;position:relative;}
-    .hero-card::before{content:"";position:absolute;inset:-80px -60px auto auto;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(103,232,249,.28),transparent 68%);pointer-events:none;}
-    .label{font-size:10px;text-transform:uppercase;letter-spacing:.45px;font-weight:1000;color:rgba(255,255,255,.56);}
-    .my-number{margin-top:8px;font-family:Space Grotesk,sans-serif;font-size:30px;line-height:1;font-weight:900;letter-spacing:-.5px;}
-    .status-row{margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-    .status-pill{border-radius:999px;padding:8px 10px;border:1px solid rgba(34,197,94,.24);background:rgba(34,197,94,.12);color:#bbf7d0;font-size:11px;font-weight:1000;}
-    .status-pill.offline{border-color:rgba(148,163,184,.25);background:rgba(148,163,184,.10);color:#e2e8f0;}
-    .status-pill.busy{border-color:rgba(250,204,21,.30);background:rgba(250,204,21,.12);color:#fef08a;}
-    .call-box{margin-top:14px;border:1px solid var(--line);border-radius:26px;background:rgba(255,255,255,.055);padding:14px;}
-    .number-input{width:100%;height:58px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(2,6,23,.54);color:#fff;font-size:20px;font-weight:1000;padding:0 16px;text-align:center;letter-spacing:.6px;}
-    .number-input::placeholder{color:rgba(255,255,255,.34);}
-    .primary-btn,.ghost-btn,.danger-btn,.accept-btn{width:100%;height:54px;border:none;border-radius:20px;font-weight:1000;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:10px;}
-    .primary-btn{background:linear-gradient(135deg,#67e8f9,#3b82f6,#6366f1);color:#fff;box-shadow:0 14px 32px rgba(59,130,246,.24);}
-    .ghost-btn{background:rgba(255,255,255,.07);border:1px solid var(--line);color:#fff;}
-    .danger-btn{background:rgba(239,68,68,.16);border:1px solid rgba(239,68,68,.36);color:#fecaca;}
-    .accept-btn{background:rgba(34,197,94,.17);border:1px solid rgba(34,197,94,.38);color:#bbf7d0;}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-    .section-title{margin:18px 2px 10px;font-size:13px;font-weight:1000;color:rgba(255,255,255,.74);}
-    .list{display:grid;gap:10px;}
-    .person-card{border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.055);padding:13px;display:flex;align-items:center;gap:12px;}
-    .avatar{width:48px;height:48px;border-radius:18px;background:linear-gradient(135deg,rgba(103,232,249,.22),rgba(99,102,241,.22));display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:18px;flex:0 0 auto;}
-    .person-main{min-width:0;flex:1;}
-    .person-main strong{display:block;font-size:14px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .person-main span{display:block;margin-top:4px;font-size:11px;color:var(--muted);font-weight:800;}
-    .mini-call{width:42px;height:42px;border-radius:16px;border:1px solid rgba(103,232,249,.25);background:rgba(103,232,249,.10);color:#cffafe;font-weight:1000;}
-    .call-center{min-height:calc(100dvh - 110px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;}
-    .call-orb{width:132px;height:132px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:22px;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.15),rgba(59,130,246,.18),rgba(2,6,23,.70));border:1px solid rgba(255,255,255,.12);box-shadow:0 0 60px rgba(59,130,246,.20),inset 0 1px 0 rgba(255,255,255,.08);}
-    .call-orb::before,.call-orb::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(103,232,249,.18);animation:pulse 1.7s ease-out infinite;}
-    .call-orb::after{inset:-26px;animation-delay:.35s;opacity:.72;}
-    .call-orb .avatar{width:92px;height:92px;border-radius:34px;font-size:34px;}
-    @keyframes pulse{0%{transform:scale(.92);opacity:1;}100%{transform:scale(1.18);opacity:0;}}
-    .call-title{font-family:Space Grotesk,sans-serif;font-size:27px;font-weight:900;letter-spacing:-.5px;margin:0;}
-    .call-sub{margin:8px 0 0;font-size:13px;font-weight:900;color:var(--muted);}
-    .call-status{margin-top:18px;min-height:24px;font-size:13px;font-weight:1000;color:#bfdbfe;}
-    .actions{width:100%;max-width:360px;margin-top:22px;}
-    .incoming-card{width:100%;max-width:380px;border:1px solid var(--line);border-radius:32px;background:linear-gradient(145deg,rgba(15,23,42,.88),rgba(7,11,22,.96));padding:24px 18px;box-shadow:0 24px 60px rgba(0,0,0,.30);}
-    .active-shell{min-height:calc(100dvh - 110px);display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;padding:14px 0 0;}
-    .timer{font-size:14px;font-weight:1000;color:#bbf7d0;margin-top:8px;}
-    .wave{margin:22px auto;width:210px;height:82px;border-radius:26px;border:1px solid var(--line);background:rgba(255,255,255,.045);display:flex;align-items:center;justify-content:center;gap:7px;}
-    .bar{width:7px;border-radius:999px;background:linear-gradient(180deg,#67e8f9,#3b82f6);animation:eq 1s ease-in-out infinite;height:22px;}
-    .bar:nth-child(2){animation-delay:.1s;height:42px}.bar:nth-child(3){animation-delay:.2s;height:60px}.bar:nth-child(4){animation-delay:.3s;height:34px}.bar:nth-child(5){animation-delay:.4s;height:52px}.bar:nth-child(6){animation-delay:.5s;height:28px}
-    @keyframes eq{0%,100%{transform:scaleY(.55);opacity:.62}50%{transform:scaleY(1.05);opacity:1}}
-    .caption-card{width:100%;border:1px solid var(--line);border-radius:24px;background:rgba(255,255,255,.055);padding:14px;text-align:left;margin-top:8px;}
-    .caption-card.hidden-caption{display:none;}
-    .caption-line{font-size:13px;font-weight:850;color:rgba(255,255,255,.78);margin:6px 0;line-height:1.35;}
-    .caption-line strong{color:#fff;}
-    .control-row{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px;}
-    .control{min-height:70px;border-radius:22px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font-size:11px;font-weight:1000;display:flex;flex-direction:column;gap:7px;align-items:center;justify-content:center;}
-    .control .ico{font-size:22px;line-height:1;}
-    .control.end{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.36);color:#fecaca;}
-    .toast{position:fixed;left:50%;top:calc(14px + var(--safe-top));transform:translateX(-50%) translateY(-80px);max-width:min(92vw,460px);z-index:9999;background:rgba(15,23,42,.96);border:1px solid rgba(103,232,249,.22);color:#fff;border-radius:999px;padding:11px 14px;font-size:12px;font-weight:1000;text-align:center;transition:.25s ease;box-shadow:0 14px 32px rgba(0,0,0,.22);}
-    .toast.show{transform:translateX(-50%) translateY(0);}
-    .sheet{position:fixed;left:0;right:0;bottom:0;z-index:9000;padding:16px 14px calc(16px + var(--safe-bottom));background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(2,6,23,.98));border-top:1px solid var(--line);border-radius:28px 28px 0 0;box-shadow:0 -20px 60px rgba(0,0,0,.32);display:none;}
-    .sheet.show{display:block;}
-    .sheet h3{margin:4px 0 8px;font-family:Space Grotesk,sans-serif;font-size:22px;line-height:1;}
-    .sheet p{margin:0;color:var(--muted);font-size:13px;font-weight:850;line-height:1.4;}
-    .disabled{opacity:.5;pointer-events:none;}
-    @media(max-width:370px){.my-number{font-size:26px}.control-row{gap:8px}.control{min-height:64px;font-size:10px}.call-orb{width:118px;height:118px}.call-orb .avatar{width:82px;height:82px}}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Home</title>
+<meta name="theme-color" content="#0b1020"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+<style>
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: #070b16;
+  }
+
+  body {
+    visibility: hidden;
+  }
+
+  body.home-ready {
+    visibility: visible;
+  }
+</style>
+
+<style>
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.66);
+  --line:rgba(255,255,255,.14);
+  --shadow:0 18px 42px rgba(0,0,0,.34);
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
+
+html,body{
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+  scrollbar-width:none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#pageContent::-webkit-scrollbar{
+  display:none;
+}
+
+body{
+  min-height:100dvh;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(56,189,248,.16), transparent 30%),
+    radial-gradient(circle at 86% 12%, rgba(168,85,247,.16), transparent 32%),
+    radial-gradient(circle at 50% 100%, rgba(20,184,166,.10), transparent 34%),
+    linear-gradient(180deg, #0b1020 0%, #090b16 48%, #05070d 100%);
+}
+
+body.module-leaving{
+  background:#020617;
+}
+
+body.module-leaving::before{
+  content:attr(data-module-loading);
+  position:fixed;
+  inset:0;
+  z-index:2147483600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(56,189,248,.20), transparent 42%),
+    radial-gradient(circle at 82% 100%, rgba(99,102,241,.14), transparent 36%),
+    linear-gradient(180deg,#020617,#05070d 58%,#020617);
+  color:#dbeafe;
+  font-family:'Outfit',sans-serif;
+  font-size:15px;
+  font-weight:1000;
+  letter-spacing:.2px;
+  text-align:center;
+}
+
+body:not(.home-ready) #pageContent{
+  visibility:hidden;
+  opacity:0;
+}
+
+body.home-ready #pageContent{
+  visibility:visible;
+  opacity:1;
+  transition:opacity .18s ease;
+}
+
+#pageContent{
+  width:100%;
+  height:100%;
+  min-height:100%;
+  padding:10px 14px 20px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+
+.page-shell-fit{
+  width:min(100%,760px);
+  min-height:100%;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.hero{
+  flex:0 0 auto;
+  padding:4px 0 2px;
+  perspective:1000px;
+}
+
+.heroTop{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+}
+
+.holo-container{
+  width:154px;
+  height:154px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform-style:preserve-3d;
+  margin:0 auto 2px;
+}
+
+.crystal-cage{
+  position:absolute;
+  width:112px;
+  height:112px;
+  transform-style:preserve-3d;
+  animation:rotateCrystal 18s linear infinite;
+}
+
+.crystal-side{
+  position:absolute;
+  inset:0;
+  border:1.5px solid rgba(103,232,249,.36);
+  background:radial-gradient(circle, rgba(129,140,248,.11), transparent 70%);
+  box-shadow:0 0 15px rgba(103,232,249,.18);
+}
+
+.side1{ transform:rotateY(0deg) translateZ(56px); }
+.side2{ transform:rotateY(90deg) translateZ(56px); }
+.side3{ transform:rotateY(180deg) translateZ(56px); }
+.side4{ transform:rotateY(270deg) translateZ(56px); }
+.side5{ transform:rotateX(90deg) translateZ(56px); }
+.side6{ transform:rotateX(-90deg) translateZ(56px); }
+
+.holo-qr{
+  position:absolute;
+  width:82px;
+  height:82px;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:floatQR 4s ease-in-out infinite;
+}
+
+.planet-glow{
+  position:absolute;
+  inset:-14px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 30%, transparent 63%),
+    radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
+  filter:blur(10px);
+  animation:planetGlow 3.2s ease-in-out infinite;
+  z-index:1;
+}
+
+.planet-rays{
+  position:absolute;
+  inset:-16px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:1;
+}
+
+.planet-rays::before,
+.planet-rays::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0deg 20deg, rgba(255,255,255,.24) 26deg, transparent 38deg 76deg, rgba(255,255,255,.18) 84deg, transparent 96deg 150deg, rgba(255,255,255,.22) 160deg, transparent 174deg 244deg, rgba(255,255,255,.20) 252deg, transparent 266deg 330deg, rgba(255,255,255,.16) 340deg, transparent 350deg 360deg);
+  mask:radial-gradient(circle, transparent 45%, #000 66%, transparent 77%);
+  -webkit-mask:radial-gradient(circle, transparent 45%, #000 66%, transparent 77%);
+  opacity:.48;
+  animation:planetRaySpin 12s linear infinite;
+}
+
+.planet-rays::after{
+  opacity:.28;
+  transform:scale(1.14);
+  animation-duration:18s;
+  animation-direction:reverse;
+}
+
+.planet-core{
+  position:relative;
+  width:82px;
+  height:82px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  z-index:2;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 24%),
+    radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 30%),
+    linear-gradient(145deg, #111827 0%, #070a12 50%, #030406 100%);
+  box-shadow:
+    inset -10px -12px 20px rgba(0,0,0,.72),
+    inset 10px 12px 22px rgba(255,255,255,.04),
+    0 0 18px rgba(255,255,255,.10),
+    0 0 36px rgba(103,232,249,.20),
+    0 0 64px rgba(129,140,248,.16);
+  animation:planetBreath 2.8s ease-in-out infinite;
+}
+
+.planet-core::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.planet-ai-badge{
+  position:relative;
+  z-index:3;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle, rgba(255,255,255,.24), rgba(255,255,255,.08));
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 0 16px rgba(255,255,255,.10), 0 0 28px rgba(129,140,248,.18);
+  backdrop-filter:blur(10px);
+}
+
+.planet-ai-badge::after{
+  content:"";
+  position:absolute;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.10);
+  animation:aiSpin 8s linear infinite;
+}
+
+.planet-ai-badge span{
+  position:relative;
+  z-index:2;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  font-weight:900;
+  color:#fff;
+}
+
+.heroTitle{
+  margin:0;
+  max-width:340px;
+  text-align:center;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:19px;
+  font-weight:800;
+  line-height:1.08;
+  letter-spacing:-.25px;
+  color:#fff;
+  text-shadow:0 0 14px rgba(255,255,255,.15);
+}
+
+.heroName{
+  margin:0;
+  max-width:320px;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.28;
+  font-weight:800;
+}
+
+.home-lang-pack-widget{
+  display:none!important;
+  text-decoration:none;
+  color:#fff;
+  padding:12px;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(77,232,255,.15), transparent 36%),
+    radial-gradient(circle at 88% 20%, rgba(236,72,153,.10), transparent 36%),
+    rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  cursor:pointer;
+}
+
+.home-lang-pack-widget.hidden{ display:none; }
+
+.home-lang-pack-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.home-lang-pack-kicker{
+  font-size:10px;
+  font-weight:900;
+  color:rgba(255,255,255,.58);
+  letter-spacing:.25px;
+  text-transform:uppercase;
+}
+
+.home-lang-pack-title{
+  margin-top:3px;
+  font-size:15px;
+  font-weight:1000;
+}
+
+.home-lang-pack-status{
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(34,197,94,.14);
+  border:1px solid rgba(34,197,94,.28);
+  color:#bbf7d0;
+  font-size:10px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+
+.home-lang-pack-status.downloading{
+  background:rgba(59,130,246,.14);
+  border-color:rgba(59,130,246,.30);
+  color:#bfdbfe;
+}
+
+.home-lang-pack-route{
+  display:grid;
+  grid-template-columns:1fr 38px 1fr;
+  align-items:center;
+  gap:8px;
+}
+
+.home-lang-chip{
+  min-height:48px;
+  border-radius:16px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:8px;
+  min-width:0;
+}
+
+.home-lang-chip span{
+  font-size:20px;
+  flex:0 0 auto;
+}
+
+.home-lang-chip strong{
+  font-size:12px;
+  font-weight:1000;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.home-lang-arrows{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  background:linear-gradient(135deg,rgba(165,180,252,.22),rgba(236,72,153,.16));
+  border:1px solid rgba(255,255,255,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  font-weight:1000;
+}
+
+.section-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+}
+
+.primary-grid{
+  align-items:stretch;
+}
+
+.mod-card,
+.wide-card{
+  position:relative;
+  overflow:hidden;
+  text-decoration:none;
+  color:#fff;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.05);
+  transition:transform .2s ease, filter .2s ease, box-shadow .2s ease;
+}
+
+.mod-card:active,
+.wide-card:active,
+.home-lang-pack-widget:active{
+  transform:scale(.985);
+  filter:brightness(1.06);
+}
+
+.mod-card{
+  min-height:140px;
+  border-radius:24px;
+  padding:13px 12px 46px;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.primary-card{
+  min-height:285px;
+  padding:18px 15px 110px;
+}
+
+.mod-card::before,
+.wide-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(135deg, rgba(255,255,255,.08), transparent 42%, rgba(255,255,255,.04));
+}
+
+.card-kicker{
+  position:relative;
+  z-index:2;
+  font-size:10px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.45px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.72);
+}
+
+.card-title{
+  position:relative;
+  z-index:2;
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:21px;
+  line-height:.98;
+  letter-spacing:-.6px;
+  word-break:break-word;
+}
+
+.primary-card .card-title{
+  font-size:23px;
+  line-height:1;
+}
+
+.card-desc{
+  position:relative;
+  z-index:2;
+  margin:0;
+  max-width:97%;
+  color:rgba(255,255,255,.86);
+  font-size:12.5px;
+  line-height:1.32;
+  font-weight:800;
+}
+
+.primary-card .card-desc{
+  font-size:13px;
+  line-height:1.35;
+}
+
+.card-icon{
+  position:absolute;
+  left:12px;
+  bottom:12px;
+  width:34px;
+  height:34px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.17);
+  box-shadow:inset 0 0 18px rgba(255,255,255,.05);
+}
+
+.card-icon svg,
+.wide-icon svg{
+  stroke:#fff;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.card-icon svg{
+  width:20px;
+  height:20px;
+  stroke-width:2.2;
+}
+
+.primary-card .card-icon{
+  left:15px;
+  bottom:18px;
+  width:40px;
+  height:40px;
+  border-radius:16px;
+}
+
+.primary-card .card-icon svg{
+  width:23px;
+  height:23px;
+}
+
+.arrow-chip{
+  position:absolute;
+  right:12px;
+  bottom:12px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.primary-card .arrow-chip{
+  right:15px;
+  bottom:18px;
+  width:40px;
+  height:40px;
+}
+
+.arrow-chip::before{
+  content:"";
+  position:absolute;
+  left:11px;
+  top:50%;
+  width:10px;
+  height:10px;
+  border-top:2px solid rgba(255,255,255,.9);
+  border-right:2px solid rgba(255,255,255,.9);
+  transform:translateY(-50%) rotate(45deg);
+}
+
+.primary-card .arrow-chip::before{
+  left:13px;
+  width:12px;
+  height:12px;
+}
+
+.primary-art{
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:76px;
+  height:72px;
+  z-index:2;
+  border-radius:22px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.13);
+  overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.face-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.face-art::before,
+.face-art::after{
+  content:"";
+  position:absolute;
+  width:34px;
+  height:44px;
+  border-radius:18px 18px 14px 14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.25));
+  box-shadow:0 0 18px rgba(255,255,255,.16);
+}
+
+.face-art::before{ left:18px; }
+.face-art::after{ right:18px; }
+
+.face-wave{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:76px;
+  height:34px;
+  transform:translate(-50%,-50%);
+}
+
+.face-wave::before,
+.face-wave::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.05), rgba(103,232,249,.96), rgba(255,255,255,.05));
+  box-shadow:0 0 16px rgba(103,232,249,.52);
+}
+
+.face-wave::before{ top:11px; }
+.face-wave::after{ top:21px; opacity:.68; }
+
+.bt-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bt-node{
+  position:absolute;
+  width:30px;
+  height:30px;
+  border-radius:14px;
+  background:rgba(255,255,255,.86);
+  box-shadow:0 0 20px rgba(255,255,255,.18);
+}
+
+.bt-node.left{ left:18px; }
+.bt-node.right{ right:18px; }
+
+.bt-link{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:74px;
+  height:28px;
+  transform:translate(-50%,-50%);
+}
+
+.bt-link::before,
+.bt-link::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,237,213,.98), rgba(255,255,255,.08));
+  box-shadow:0 0 16px rgba(251,146,60,.55);
+}
+
+.bt-link::before{ top:8px; transform:rotate(8deg); }
+.bt-link::after{ bottom:8px; transform:rotate(-8deg); opacity:.72; }
+
+.face-card{
+  background:
+    radial-gradient(circle at 18% 8%, rgba(103,232,249,.42), transparent 38%),
+    radial-gradient(circle at 90% 85%, rgba(236,72,153,.18), transparent 30%),
+    linear-gradient(145deg, #32146f 0%, #27308a 48%, #0f5fbf 100%);
+}
+
+.bluetooth-card{
+  background:
+    radial-gradient(circle at 18% 8%, rgba(251,146,60,.36), transparent 34%),
+    radial-gradient(circle at 86% 82%, rgba(236,72,153,.20), transparent 32%),
+    linear-gradient(145deg, #7c2d12 0%, #dc2626 45%, #f97316 100%);
+}
+
+.wide-stack{
+  display:flex;
+  flex-direction:column;
+  gap:11px;
+}
+
+.wide-card{
+  min-height:144px;
+  border-radius:24px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px 70px 16px 16px;
+}
+
+.wide-card .arrow-chip{
+  right:16px;
+  top:50%;
+  bottom:auto;
+  transform:translateY(-50%);
+}
+
+.wide-icon{
+  position:relative;
+  z-index:2;
+  width:58px;
+  height:58px;
+  flex:0 0 auto;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:inset 0 0 18px rgba(255,255,255,.05);
+}
+
+.wide-icon svg{
+  width:28px;
+  height:28px;
+  stroke-width:2.15;
+}
+
+.wide-body{
+  position:relative;
+  z-index:2;
+  min-width:0;
+  flex:1;
+}
+
+.wide-kicker{
+  margin-bottom:6px;
+  font-size:10px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.45px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.72);
+}
+
+.wide-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  line-height:1;
+  letter-spacing:-.5px;
+}
+
+.wide-desc{
+  margin:7px 0 0;
+  color:rgba(255,255,255,.82);
+  font-size:13.5px;
+  line-height:1.34;
+  font-weight:800;
+}
+
+.guide-conference-card{
+  background:
+    radial-gradient(circle at 15% 45%, rgba(125,211,252,.28), transparent 30%),
+    radial-gradient(circle at 92% 14%, rgba(56,189,248,.22), transparent 30%),
+    radial-gradient(circle at 68% 105%, rgba(255,255,255,.08), transparent 34%),
+    linear-gradient(90deg, #0b4f6c 0%, #0f6f8f 44%, #1495b6 100%);
+}
+
+.mezo-card{
+  background:
+    radial-gradient(circle at 15% 45%, rgba(245,158,11,.30), transparent 30%),
+    radial-gradient(circle at 92% 14%, rgba(34,197,94,.18), transparent 30%),
+    radial-gradient(circle at 68% 105%, rgba(255,255,255,.08), transparent 34%),
+    linear-gradient(90deg, #78350f 0%, #a16207 46%, #166534 100%);
+}
+
+.turan-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(45,212,191,.42), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(103,232,249,.34), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(20,184,166,.38), transparent 36%),
+    linear-gradient(90deg, #042f2e 0%, #0f766e 42%, #06b6d4 100%);
+}
+
+.kafkas-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(248,113,113,.36), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(244,63,94,.30), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(190,18,60,.34), transparent 36%),
+    linear-gradient(90deg, #7f1d1d 0%, #be123c 46%, #4c0519 100%);
+}
+
+.balkan-card{
+  background:
+    radial-gradient(circle at 14% 42%, rgba(168,85,247,.38), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(129,140,248,.30), transparent 28%),
+    radial-gradient(circle at 72% 110%, rgba(30,64,175,.34), transparent 36%),
+    linear-gradient(90deg, #581c87 0%, #4338ca 46%, #0f172a 100%);
+}
+
+.turan-card .wide-desc,
+.kafkas-card .wide-desc,
+.balkan-card .wide-desc{
+  color:rgba(255,255,255,.92);
+}
+
+.turan-card .wide-icon,
+.kafkas-card .wide-icon,
+.balkan-card .wide-icon{
+  background:rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.28);
+  box-shadow:0 16px 34px rgba(0,0,0,.18), inset 0 0 18px rgba(255,255,255,.05);
+}
+
+.turan-card .arrow-chip,
+.kafkas-card .arrow-chip,
+.balkan-card .arrow-chip{
+  background:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.28);
+}
+
+.offline-card{
+  background:
+    radial-gradient(circle at 14% 50%, rgba(45,212,191,.27), transparent 28%),
+    radial-gradient(circle at 88% 15%, rgba(59,130,246,.17), transparent 24%),
+    linear-gradient(90deg, #064e3b 0%, #0f766e 48%, #2563eb 100%);
+}
+
+.text-card{
+  background:
+    radial-gradient(circle at 84% 12%, rgba(255,255,255,.10), transparent 27%),
+    radial-gradient(circle at 20% 70%, rgba(236,72,153,.25), transparent 28%),
+    linear-gradient(90deg, #831843 0%, #be185d 36%, #7c3aed 74%, #3730a3 100%);
+}
+
+.fun-card{
+  background:
+    radial-gradient(circle at 14% 50%, rgba(251,113,133,.24), transparent 28%),
+    radial-gradient(circle at 90% 18%, rgba(168,85,247,.20), transparent 26%),
+    linear-gradient(90deg, #701a75 0%, #9f1239 46%, #4338ca 100%);
+}
+
+.level-card{
+  background:
+    radial-gradient(circle at 12% 48%, rgba(34,197,94,.25), transparent 28%),
+    radial-gradient(circle at 88% 18%, rgba(20,184,166,.18), transparent 26%),
+    linear-gradient(90deg, #14532d 0%, #15803d 46%, #0f766e 100%);
+}
+
+@keyframes rotateCrystal{
+  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+}
+
+@keyframes floatQR{
+  0%,100%{ transform:translateY(0) rotateX(0deg); }
+  50%{ transform:translateY(-7px) rotateX(5deg); }
+}
+
+@keyframes planetBreath{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.04); }
+}
+
+@keyframes planetGlow{
+  0%,100%{ opacity:.56; transform:scale(1); }
+  50%{ opacity:.92; transform:scale(1.14); }
+}
+
+@keyframes planetRaySpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
+@keyframes aiSpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
+@media (max-width:390px){
+  #pageContent{ padding:8px 10px 18px; }
+  .page-shell-fit{ gap:10px; }
+  .holo-container{ width:138px; height:138px; }
+  .crystal-cage{ width:102px; height:102px; }
+  .side1{ transform:rotateY(0deg) translateZ(51px); }
+  .side2{ transform:rotateY(90deg) translateZ(51px); }
+  .side3{ transform:rotateY(180deg) translateZ(51px); }
+  .side4{ transform:rotateY(270deg) translateZ(51px); }
+  .side5{ transform:rotateX(90deg) translateZ(51px); }
+  .side6{ transform:rotateX(-90deg) translateZ(51px); }
+  .holo-qr,.planet-core{ width:76px; height:76px; }
+  .heroTitle{ font-size:17px; }
+  .mod-card{ min-height:136px; padding:12px 11px 46px; }
+  .primary-card{ min-height:260px; padding:15px 12px 102px; }
+  .card-title{ font-size:19px; }
+  .primary-card .card-title{ font-size:20px; }
+  .card-desc{ font-size:12px; }
+  .primary-card .card-desc{ font-size:12.4px; }
+  .primary-art{ left:12px; right:12px; bottom:72px; height:68px; }
+  .wide-card{ min-height:138px; gap:12px; padding:15px 64px 15px 14px; }
+  .wide-card .arrow-chip{ right:14px; }
+  .wide-icon{ width:52px; height:52px; border-radius:18px; }
+  .wide-title{ font-size:20px; }
+  .wide-desc{ font-size:12.7px; }
+}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <a class="back" href="/pages/home.html" aria-label="Geri">‹</a>
-        <div class="brand-title"><strong>italkyAI Call</strong><span id="subtitle">Çevirili görüşme</span></div>
+
+<main id="pageContent">
+  <div class="page-shell-fit">
+
+    <section class="hero" id="heroSection">
+      <div class="heroTop">
+        <div class="holo-container">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
+          </div>
+
+          <div class="holo-qr ai-planet" aria-hidden="true">
+            <div class="planet-glow"></div>
+            <div class="planet-rays"></div>
+            <div class="planet-core">
+              <div class="planet-ai-badge"><span>AI</span></div>
+            </div>
+          </div>
+        </div>
+
+        <h1 class="heroTitle">Dünya’yı Küçülttük, Cebinize Sığdırdık</h1>
+        <p class="heroName" id="heroUserName">Hoş geldin</p>
       </div>
-      <button class="my-no-chip" id="copyMyNo" type="button">📞 <span id="topMyNo">No okunuyor</span></button>
-    </header>
+    </section>
 
-    <main class="main">
-      <section class="screen show" id="homeScreen">
-        <div class="hero-card">
-          <div class="label">Benim italkyAI No</div>
-          <div class="my-number" id="myNo">No okunuyor...</div>
-          <div class="status-row">
-            <span class="status-pill" id="presencePill">Çevrimiçi</span>
-            <span class="status-pill offline" id="privacyPill">Herkes arayabilir</span>
-          </div>
+    <section id="homeLangPackWidget" class="home-lang-pack-widget hidden">
+      <div class="home-lang-pack-head">
+        <div>
+          <div class="home-lang-pack-kicker">Dil paketi</div>
+          <div id="homeLangPackTitle" class="home-lang-pack-title">Türkçe ⇄ Almanca</div>
+        </div>
+        <div id="homeLangPackStatus" class="home-lang-pack-status">Hazır</div>
+      </div>
+
+      <div class="home-lang-pack-route">
+        <div class="home-lang-chip">
+          <span id="homeLangPackSourceFlag">🇹🇷</span>
+          <strong id="homeLangPackSourceName">Türkçe</strong>
         </div>
 
-        <div class="call-box">
-          <div class="label">italkyAI No ile ara</div>
-          <input id="calleeNoInput" class="number-input" inputmode="numeric" autocomplete="off" placeholder="0601 ___ __ __" />
-          <button id="callBtn" class="primary-btn" type="button">Ara</button>
-          <button id="recentBtn" class="ghost-btn" type="button">Son Aramalar</button>
-        </div>
+        <div class="home-lang-arrows">⇄</div>
 
-        <div class="section-title">Rehber</div>
-        <div class="list" id="contactsList">
-          <div class="person-card"><div class="avatar">AI</div><div class="person-main"><strong>Rehber görüşme sonrası oluşur</strong><span>Görüşme bitince veya Son Aramalar’dan ekleyebilirsin.</span></div></div>
+        <div class="home-lang-chip">
+          <span id="homeLangPackTargetFlag">🇩🇪</span>
+          <strong id="homeLangPackTargetName">Almanca</strong>
         </div>
+      </div>
+    </section>
 
-        <div class="section-title">Son Aramalar</div>
-        <div class="list" id="recentList">
-          <div class="person-card"><div class="avatar">↻</div><div class="person-main"><strong>Henüz arama yok</strong><span>İlk italkyAI görüşmen burada görünecek.</span></div></div>
+    <section class="section-grid primary-grid" aria-label="Ana çeviri modları">
+      <a id="faceCard" class="mod-card primary-card face-card" href="/facetoface.html">
+        <div class="card-kicker">Tek Telefon</div>
+        <h2 class="card-title">YüzYüze Çeviri</h2>
+        <p class="card-desc">Konuşmaları tek ekranda anlık çevir. Günlük kullanım için hızlı ve hazır.</p>
+        <div class="primary-art face-art" aria-hidden="true">
+          <div class="face-wave"></div>
         </div>
-      </section>
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
 
-      <section class="screen" id="ringingScreen">
-        <div class="call-center">
-          <div>
-            <div class="call-orb"><div class="avatar" id="ringAvatar">?</div></div>
-            <h1 class="call-title" id="ringName">Aranıyor...</h1>
-            <p class="call-sub" id="ringSub">italkyAI çevirili görüşme isteği</p>
-            <div class="call-status" id="ringStatus">Arama gönderiliyor...</div>
-          </div>
-          <div class="actions">
-            <button id="cancelCallBtn" class="danger-btn" type="button">Aramayı İptal Et</button>
-          </div>
+      <a id="bluetoothCard" class="mod-card primary-card bluetooth-card" href="/facetoface.html?mode=two-phone">
+        <div class="card-kicker">LİSANS</div>
+        <h2 class="card-title">İki Telefon</h2>
+        <p class="card-desc">Kodu al, diğer telefonda gir. İki cihaz arasında canlı çeviri yap.</p>
+        <div class="primary-art bt-art" aria-hidden="true">
+          <div class="bt-node left"></div>
+          <div class="bt-link"></div>
+          <div class="bt-node right"></div>
         </div>
-      </section>
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13 19.07"></path></svg>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+    </section>
 
-      <section class="screen" id="incomingScreen">
-        <div class="call-center">
-          <div class="incoming-card">
-            <div class="call-orb"><div class="avatar" id="incomingAvatar">?</div></div>
-            <div class="label">italkyAI Araması</div>
-            <h1 class="call-title" id="incomingName">Biri</h1>
-            <p class="call-sub" id="incomingText">seninle görüşmek istiyor.</p>
-            <div class="grid2 actions">
-              <button id="rejectBtn" class="danger-btn" type="button">Reddet</button>
-              <button id="acceptBtn" class="accept-btn" type="button">Kabul Et</button>
-            </div>
-          </div>
+    <section class="wide-stack" aria-label="Diğer araçlar">
+      <a id="guideConferenceCard" class="wide-card guide-conference-card" href="/pages/conference.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 0 1 16 0"></path><path d="M7 11v7"></path><path d="M17 11v7"></path><path d="M12 14v7"></path><path d="M6 20h12"></path></svg>
         </div>
-      </section>
+        <div class="wide-body">
+          <h2 class="wide-title">Gezi & Konferans</h2>
+          <p class="wide-desc">Rehber veya konuşmacı anlatır. Katılımcılar kendi dilinde dinler. Tur, gezi ve toplantılar için hazır.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
 
-      <section class="screen" id="activeScreen">
-        <div class="active-shell">
-          <div>
-            <div class="call-orb"><div class="avatar" id="activeAvatar">?</div></div>
-            <h1 class="call-title" id="activeName">Bağlandı</h1>
-            <div class="timer" id="callTimer">00:00</div>
-            <p class="call-sub" id="langLine">Türkçe ⇄ İngilizce</p>
-            <div class="wave" aria-hidden="true"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
-            <div class="caption-card" id="captionCard">
-              <div class="caption-line"><strong>Sen:</strong> Konuşmalar burada görünecek.</div>
-              <div class="caption-line"><strong>Çeviri:</strong> Çeviri yazısı açık.</div>
-            </div>
-          </div>
-          <div class="control-row">
-            <button class="control" id="muteBtn" type="button"><span class="ico">🎙</span><span>Sessiz</span></button>
-            <button class="control" id="speakerBtn" type="button"><span class="ico">🔊</span><span>Hoparlör</span></button>
-            <button class="control" id="captionToggle" type="button"><span class="ico">💬</span><span>Yazı</span></button>
-            <button class="control end" id="endCallBtn" type="button"><span class="ico">☎</span><span>Kapat</span></button>
-          </div>
+      <a id="mezoCard" class="wide-card mezo-card" href="/pages/mezopotamyanin_dili.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M7 9h10"></path><path d="M9 13h6"></path><path d="M12 5v14"></path><path d="M5 19h14"></path></svg>
         </div>
-      </section>
-    </main>
+        <div class="wide-body">
+          <h2 class="wide-title">Mezopotamya Dili</h2>
+          <p class="wide-desc">Kadim coğrafyanın köklü dilleri: Kurmanci, Sorani ve İbranice</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="turanCard" class="wide-card turan-card" href="/pages/turan_dilleri.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path><path d="M8 5v14"></path><path d="M16 5v14"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Turan Dilleri</h2>
+          <p class="wide-desc">Azerbaycan, Kazak, Kırgız, Özbek, Türkmen, Uygur, Tatar ve diğer Türk dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="kafkasCard" class="wide-card kafkas-card" href="/pages/kafkas_dilleri.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 5v8l-8 5-8-5V8l8-5z"></path><path d="M12 7v10"></path><path d="M8 9.5l8 5"></path><path d="M16 9.5l-8 5"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Kafkas Dilleri</h2>
+          <p class="wide-desc">Gürcüce, Ermenice, Çeçence ve Kafkas coğrafyasının dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="balkanCard" class="wide-card balkan-card" href="/pages/balkanlarin_dili.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 18c2-4 4-6 8-6s6 2 8 6"></path><path d="M6 14c1.6-3 3.4-4.5 6-4.5S16.4 11 18 14"></path><path d="M8 10c1.2-2 2.3-3 4-3s2.8 1 4 3"></path><path d="M12 4v3"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Balkan Dilleri</h2>
+          <p class="wide-desc">Arnavutça, Boşnakça, Bulgarca, Yunanca, Romence ve Balkan dilleri.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="textCard" class="wide-card text-card" href="/pages/text_translate.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M4 12h10"></path><path d="M4 19h7"></path><path d="M17 14l3 3-3 3"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Yazıdan Çeviri</h2>
+          <p class="wide-desc">Metni yaz, çevir, dinle ve paylaş. Kısa notlardan uzun metinlere kadar pratik kullanım sağlar.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 19V5"></path><path d="M8 19v-7"></path><path d="M12 19V8"></path><path d="M16 19v-5"></path><path d="M20 19V4"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Seviye Tespit</h2>
+          <p class="wide-desc">Seviyeni ölç. Doğru yerden başla. Gelişimini daha net takip et.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"></rect><path d="M8 8h.01"></path><path d="M16 8h.01"></path><path d="M8 16h.01"></path><path d="M16 16h.01"></path><path d="M12 12h.01"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Eğlenerek Öğren</h2>
+          <p class="wide-desc">Oyunlarla kelime tekrar et. Hafızanı güçlendir. Dili daha kalıcı öğren.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="offlineCard" class="wide-card offline-card" href="/pages/offline_languages.html">
+        <div class="wide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg>
+        </div>
+        <div class="wide-body">
+          <h2 class="wide-title">Offline Dil Paketleri</h2>
+          <p class="wide-desc">Dil paketlerini indir. İnternet yokken de çeviri hazırlığını yanında taşı. Seyahatlerde güvenle kullan.</p>
+        </div>
+        <div class="arrow-chip"></div>
+      </a>
+    </section>
+
   </div>
+</main>
 
-  <div class="sheet" id="endedSheet">
-    <h3>Görüşme sona erdi</h3>
-    <p id="endedText">Bu kişiyi italkyAI Rehberine eklemek ister misin?</p>
-    <button id="addContactBtn" class="primary-btn" type="button">Rehbere Ekle</button>
-    <button id="laterBtn" class="ghost-btn" type="button">Şimdi Değil</button>
-    <button id="blockBtn" class="danger-btn" type="button">Engelle</button>
-  </div>
+<script>
+(function(){
+  try {
+    var qs = new URLSearchParams(location.search || "");
+    var isIOSIAP = qs.get("ios_iap") === "1" || qs.get("purchase") === "success";
+    if (!isIOSIAP) return;
 
-  <div class="toast" id="toast"></div>
-  <script type="module" src="/js/italky_call_page.js?v=CALL_RLS_RPC_FINAL_1"></script>
+    localStorage.setItem("italky_membership_active", "1");
+    localStorage.setItem("italky_membership_status", "active");
+    localStorage.setItem("italky_premium_active", "1");
+    localStorage.setItem("italky_ios_premium_active", "1");
+    localStorage.setItem("italky_premium_source", "ios_iap");
+    sessionStorage.setItem("italky_membership_active", "1");
+    sessionStorage.setItem("italky_premium_active", "1");
+    window.__ITALKY_IOS_IAP_PREMIUM__ = true;
+  } catch(e) {}
+})();
+</script>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js?v=no-public-eme-shortcut-20260605";
+  import { initGlobalAccess } from "/js/global_access.js?v=ios-iap-20260524-2";
+  import { supabase } from "/js/supabase_client.js";
+
+  const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
+
+  mountShell({ scroll: "auto" });
+
+  function removePublicEmeShortcuts() {
+    const selectors = [
+      'a[href*="support_eme"]',
+      'button[data-href*="support_eme"]',
+      '[onclick*="support_eme"]',
+      '.eme-top-btn',
+      '.eme-header-avatar',
+      '.eme-mini-btn',
+      '.eme-mini',
+      '.ios-eme-btn'
+    ];
+
+    selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((node) => {
+        if (!node.closest(".eme-support-page")) node.remove();
+      });
+    });
+  }
+
+  removePublicEmeShortcuts();
+  setTimeout(removePublicEmeShortcuts, 0);
+  setTimeout(removePublicEmeShortcuts, 600);
+
+  function getActiveUntil(access = {}) {
+    const dates = [
+      access?.active_until,
+      access?.membership_ends_at,
+      access?.package_ends_at,
+      access?.trial_ends_at,
+      access?.subscription_ends_at,
+      access?.gift_ends_at
+    ]
+      .map((value) => {
+        const ms = Date.parse(value || "");
+        return Number.isFinite(ms) ? ms : 0;
+      })
+      .filter(Boolean);
+
+    return dates.length ? Math.max(...dates) : 0;
+  }
+
+  function getRemainingSeconds(access = window.__ITALKY_ACCESS__ || {}) {
+    const direct = Number(access?.remaining_seconds);
+    if (Number.isFinite(direct) && direct >= 0) return direct;
+
+    const activeUntil = getActiveUntil(access);
+    if (!activeUntil) return 0;
+
+    return Math.max(0, Math.floor((activeUntil - Date.now()) / 1000));
+  }
+
+  function applyOfflineCardVisibility(access = window.__ITALKY_ACCESS__ || {}) {
+    const card = document.getElementById("offlineCard");
+    if (!card) return;
+
+    const isAdmin = access?.is_admin === true || access?.is_superadmin === true;
+    const remaining = getRemainingSeconds(access);
+    const showOffline = isAdmin || remaining >= 86460;
+
+    card.classList.toggle("hidden", !showOffline);
+    card.style.display = showOffline ? "" : "none";
+    card.setAttribute("aria-hidden", showOffline ? "false" : "true");
+  }
+
+  function renderHomeLangPackWidget() {
+    const widget = document.getElementById("homeLangPackWidget");
+    if (!widget) return;
+    widget.classList.add("hidden");
+    widget.style.display = "none";
+    widget.onclick = null;
+  }
+
+  async function fillUserName() {
+    try {
+      const heroUserName = document.getElementById("heroUserName");
+      if (!heroUserName) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+
+      if (!user) {
+        heroUserName.textContent = "Hoş geldin";
+        return;
+      }
+
+      const meta = user.user_metadata || {};
+      const rawName =
+        meta.hitap ||
+        meta.name ||
+        meta.full_name ||
+        user.email ||
+        "Hoş geldin";
+
+      const firstName = String(rawName).trim().split(" ")[0] || "Hoş geldin";
+      heroUserName.textContent = `${firstName}, Dünya'yı Anlamaya Hazırmısın..?`;
+    } catch (e) {
+      console.error("hero user name error:", e);
+    }
+  }
+
+  async function bootHome() {
+    try {
+      const result = await initGlobalAccess({ allowPublicPageBypass: false });
+      if (!result?.ok) return;
+
+      await fillUserName();
+      renderHomeLangPackWidget();
+      applyOfflineCardVisibility(result.access);
+
+      const skipWelcome = sessionStorage.getItem("italky_skip_welcome_once") === "1";
+      if (skipWelcome) {
+        sessionStorage.removeItem("italky_skip_welcome_once");
+      }
+    } catch (e) {
+      console.error("home boot error:", e);
+    } finally {
+      document.body.classList.add("home-ready");
+      renderHomeLangPackWidget();
+      applyOfflineCardVisibility();
+    }
+  }
+
+  window.addEventListener("italkyAccessReady", (event) => applyOfflineCardVisibility(event.detail));
+  window.addEventListener("storage", () => {
+    renderHomeLangPackWidget();
+    applyOfflineCardVisibility();
+  });
+  window.addEventListener("focus", () => {
+    renderHomeLangPackWidget();
+    applyOfflineCardVisibility();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      renderHomeLangPackWidget();
+      applyOfflineCardVisibility();
+    }
+  });
+
+  const MODULE_LOADING_COPY = {
+    faceCard: "YüzYüze Çeviri hazırlanıyor...",
+    bluetoothCard: "İki Telefon hazırlanıyor...",
+    guideConferenceCard: "Gezi & Konferans hazırlanıyor...",
+    mezoCard: "Mezopotamya’nın Dili hazırlanıyor...",
+    turanCard: "Turan Dilleri hazırlanıyor...",
+    kafkasCard: "Kafkas Dilleri hazırlanıyor...",
+    balkanCard: "Balkan Dilleri hazırlanıyor...",
+    offlineCard: "Modül açılıyor...",
+    textCard: "Modül açılıyor...",
+    funCard: "Modül açılıyor...",
+    levelCard: "Modül açılıyor..."
+  };
+
+  function installModuleTransitionOverlay() {
+    document.querySelectorAll("#faceCard,#bluetoothCard,#guideConferenceCard,#mezoCard,#turanCard,#kafkasCard,#balkanCard,#offlineCard,#textCard,#funCard,#levelCard").forEach((card) => {
+      card.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const href = card.getAttribute("href");
+        if (!href || href.startsWith("#")) return;
+        document.body.dataset.moduleLoading = MODULE_LOADING_COPY[card.id] || "Modül açılıyor...";
+        document.body.classList.add("module-leaving");
+      });
+    });
+  }
+
+  installModuleTransitionOverlay();
+  bootHome();
+</script>
+
+<script>
+(function(){
+  const boot = null;
+
+  const PUBLIC_BASE = "https://media.icany.ai";
+  const INDEX_URL = `${PUBLIC_BASE}/icanyai/radio/index.json`;
+  const SETTINGS_KEY = "icany_radio_user_settings_v3";
+  const SETTINGS_TABLE = "icany_radio_user_settings";
+
+  /*
+   * Gerçek uygulamada modül değişince müziğin kesilmemesi için bu player mantığı
+   * ui_shell veya global_audio_manager.js içine taşınmalı. Bu deneme dosyasında
+   * Home iframe içinde test edilecek şekilde modüler fonksiyonlara ayrıldı.
+   */
+
+  const BANNED_CHANNEL_IDS = new Set([
+    "09_turkish_pop_radio",
+    "11_azerbaijani_modern_pop"
+  ]);
+
+  const ALLOWED_CHANNEL_IDS = new Set([
+    "01_global_pop_english",
+    "01_pop_radio",
+    "02_french_lounge_pop",
+    "02_rock_radio",
+    "03_italian_dolce_pop",
+    "03_jazz_radio",
+    "04_hiphop_radio",
+    "04_spanish_latin_pop",
+    "05_argentina_tango_pop",
+    "05_kpop_radio",
+    "06_kurdish_modern_folk_pop",
+    "06_rnb_radio",
+    "06_russian_modern_pop",
+    "07_edm_radio",
+    "07_japanese_city_pop",
+    "08_brazilian_bossa_pop",
+    "08_country_radio",
+    "09_reggae_radio",
+    "10_hindi_bollywood_pop",
+    "10_latin_radio",
+    "11_funk_radio",
+    "12_world_radio"
+  ]);
+
+  const FALLBACK_CHANNELS = [
+    ["01_global_pop_english", "Global Pop English", "İngilizce", "EN", "🇬🇧", ["Pop","Global","Dance"]],
+    ["01_pop_radio", "Pop Radio", "İngilizce", "EN", "🇬🇧", ["Pop"]],
+    ["02_french_lounge_pop", "French Lounge Pop", "Fransızca", "FR", "🇫🇷", ["Pop","Lounge"]],
+    ["02_rock_radio", "Rock Radio", "İngilizce", "EN", "🇬🇧", ["Rock"]],
+    ["03_italian_dolce_pop", "Italian Dolce Pop", "İtalyanca", "IT", "🇮🇹", ["Pop","Lounge"]],
+    ["03_jazz_radio", "Jazz Radio", "İngilizce", "EN", "🇬🇧", ["Jazz"]],
+    ["04_hiphop_radio", "Hip-Hop Radio", "İngilizce", "EN", "🇬🇧", ["Hip-Hop","Rap"]],
+    ["04_spanish_latin_pop", "Spanish Latin Pop", "İspanyolca", "ES", "🇪🇸", ["Pop","Latin","Dance"]],
+    ["05_argentina_tango_pop", "Argentina Tango Pop", "İspanyolca", "AR", "🇦🇷", ["Tango","Latin","Pop"]],
+    ["05_kpop_radio", "K-Pop Radio", "Korece", "KO", "🇰🇷", ["K-Pop","Pop","Dance"]],
+    ["06_kurdish_modern_folk_pop", "Kurdish Modern Folk Pop", "Kürtçe", "KU", "☀️", ["Folk","Pop","World"]],
+    ["06_rnb_radio", "R&B Radio", "İngilizce", "EN", "🇬🇧", ["R&B"]],
+    ["06_russian_modern_pop", "Russian Modern Pop", "Rusça", "RU", "🇷🇺", ["Pop","Rock","Dance"]],
+    ["07_edm_radio", "EDM Radio", "İngilizce", "EN", "🇬🇧", ["EDM","Dance","Electronic"]],
+    ["07_japanese_city_pop", "Japanese City Pop", "Japonca", "JA", "🇯🇵", ["City Pop","Pop","Electronic"]],
+    ["08_brazilian_bossa_pop", "Brazilian Bossa Pop", "Portekizce", "BR", "🇧🇷", ["Bossa Nova","Latin","Lounge"]],
+    ["08_country_radio", "Country Radio", "İngilizce", "EN", "🇺🇸", ["Country"]],
+    ["09_reggae_radio", "Reggae Radio", "İngilizce", "EN", "🇯🇲", ["Reggae"]],
+    ["10_hindi_bollywood_pop", "Hindi Bollywood Pop", "Hintçe", "HI", "🇮🇳", ["Bollywood","Pop","Dance"]],
+    ["10_latin_radio", "Latin Radio", "İspanyolca", "ES", "🇪🇸", ["Latin","Dance"]],
+    ["11_funk_radio", "Funk Radio", "İngilizce", "EN", "🇬🇧", ["Funk"]],
+    ["12_world_radio", "World Radio", "Çok Dilli", "WORLD", "🌍", ["World","Global"]]
+  ].map(([id,name,language,code,flag,genres]) => ({
+    id,
+    name,
+    language,
+    code,
+    flag,
+    genres,
+    tracks:[],
+    loaded:false,
+    error:false
+  }));
+
+  let ICANY_RADIO_CHANNELS = FALLBACK_CHANNELS.slice();
+  let tracks = [];
+  let currentTrackIndex = 0;
+  let shuffleEnabled = false;
+  let activeChannel = null;
+  let lyricLines = [];
+  let timedLyricLines = [];
+  let hasTimedLyrics = false;
+  let lastSelection = { genres:[], languages:[] };
+  let lastSettings = null;
+  let supabaseClientPromise = null;
+  let currentUserPromise = null;
+  let lastPersistSecond = -1;
+
+  function getDoc(){
+    return document;
+  }
+
+  function uniq(list){
+    return Array.from(new Set((Array.isArray(list) ? list : []).filter(Boolean)));
+  }
+
+  function clean(value){
+    return String(value || "").trim();
+  }
+
+  function safeJsonParse(value, fallback = null){
+    try{
+      return JSON.parse(value);
+    }catch{
+      return fallback;
+    }
+  }
+
+  function escapeHtml(value){
+    return String(value || "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
+  }
+
+  function normalizeChannel(raw){
+    const id = clean(raw?.id || raw?.channel_id || raw?.slug || raw?.folder || raw?.key);
+    if(!id || BANNED_CHANNEL_IDS.has(id) || !ALLOWED_CHANNEL_IDS.has(id)) return null;
+
+    const name = clean(raw?.name || raw?.title || id.replace(/_/g," "));
+    const language = clean(raw?.language || raw?.lang_name || raw?.lang || raw?.locale || "İngilizce");
+    const code = clean(raw?.code || raw?.lang_code || raw?.language_code || language.slice(0,2).toUpperCase()).toUpperCase();
+    const flag = clean(raw?.flag || "🎧");
+
+    const genresRaw = raw?.genres || raw?.genre || raw?.tags || [];
+    const genres = uniq(
+      Array.isArray(genresRaw)
+        ? genresRaw.map((item) => clean(item))
+        : String(genresRaw).split(",").map((item) => item.trim())
+    );
+
+    return {
+      id,
+      name,
+      language,
+      code,
+      flag,
+      genres: genres.length ? genres : ["Pop"],
+      tracks:[],
+      loaded:false,
+      error:false
+    };
+  }
+
+  async function loadChannelIndex(){
+    try{
+      const res = await fetch(`${INDEX_URL}?t=${Date.now()}`, { cache:"no-store" });
+      if(!res.ok) throw new Error("index okunamadı");
+
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.channels || data.items || data.radios || []);
+      const normalized = list.map(normalizeChannel).filter(Boolean);
+
+      if(normalized.length){
+        ICANY_RADIO_CHANNELS = normalized;
+      }
+    }catch(error){
+      console.warn("Radyo index okunamadı, fallback kanal listesi kullanılıyor:", error);
+      ICANY_RADIO_CHANNELS = FALLBACK_CHANNELS.slice();
+    }
+  }
+
+  function manifestUrl(channel){
+    return `${PUBLIC_BASE}/icanyai/radio/${channel.id}/playlist.json`;
+  }
+
+  function safeTitle(track){
+    return String(
+      track?.title ||
+      track?.name ||
+      track?.track_title ||
+      (track?.url || track?.audio_url || "").split("/").pop() ||
+      "iCanyAI Track"
+    ).replace(/\.mp3$/i,"");
+  }
+
+  function resolveUrl(url, channel){
+    const value = String(url || "").trim();
+    if(!value) return "";
+    if(/^https?:\/\//i.test(value)) return value;
+    if(value.startsWith("/")) return `${PUBLIC_BASE}${value}`;
+    if(value.startsWith("icanyai/")) return `${PUBLIC_BASE}/${value}`;
+    return `${PUBLIC_BASE}/icanyai/radio/${channel.id}/${value}`;
+  }
+
+  function normalizeShowcaseTrack(track, channel){
+    const rawUrl = track?.url || track?.audio_url || track?.mp3_url || track?.file || track?.src || "";
+    const url = resolveUrl(rawUrl, channel);
+    if(!url) return null;
+
+    return {
+      ...track,
+      url,
+      audio_url:url,
+      channel_id:channel.id,
+      channel_name:channel.name,
+      channel_code:channel.code,
+      channel_flag:channel.flag,
+      language:channel.language,
+      genres:channel.genres,
+      title:safeTitle({...track,url})
+    };
+  }
+
+  async function loadChannel(channel){
+    if(channel.loaded && Array.isArray(channel.tracks)) return channel.tracks;
+
+    try{
+      const res = await fetch(`${manifestUrl(channel)}?t=${Date.now()}`, { cache:"no-store" });
+      if(!res.ok) throw new Error("manifest yok");
+
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.tracks || data.items || data.songs || []);
+
+      channel.tracks = list
+        .map((track) => normalizeShowcaseTrack(track, channel))
+        .filter(Boolean);
+
+      channel.loaded = true;
+      channel.error = false;
+    }catch(error){
+      channel.tracks = [];
+      channel.loaded = true;
+      channel.error = true;
+      console.warn("Playlist okunamadı:", channel.id, error);
+    }
+
+    return channel.tracks;
+  }
+
+  function getAllGenres(){
+    const fallback = [
+      "Pop","Rock","Rap","Hip-Hop","Lounge","Latin","Dance","Electronic","EDM",
+      "Tango","City Pop","Bossa Nova","Bollywood","K-Pop","Jazz","R&B",
+      "Country","Reggae","Funk","World","Global","Folk"
+    ];
+
+    return uniq(ICANY_RADIO_CHANNELS.flatMap((channel) => channel.genres || []).concat(fallback)).sort();
+  }
+
+  function getAllLanguages(){
+    return uniq(ICANY_RADIO_CHANNELS.map((channel) => channel.language)).filter((language) => {
+      const lower = language.toLowerCase();
+      return !lower.includes("türk") && !lower.includes("azer");
+    });
+  }
+
+  function uniqueChannels(list){
+    const seen = new Set();
+
+    return list.filter((channel) => {
+      if(!channel || BANNED_CHANNEL_IDS.has(channel.id) || !ALLOWED_CHANNEL_IDS.has(channel.id) || seen.has(channel.id)) return false;
+      seen.add(channel.id);
+      return true;
+    });
+  }
+
+  function findRadioChannels(genres, languages, options = {}){
+    const wantedGenres = uniq(genres);
+    const wantedLanguages = uniq(languages);
+    const allowed = ICANY_RADIO_CHANNELS.filter((channel) => !BANNED_CHANNEL_IDS.has(channel.id) && ALLOWED_CHANNEL_IDS.has(channel.id));
+
+    const languageScoped = wantedLanguages.length
+      ? allowed.filter((channel) => wantedLanguages.includes(channel.language))
+      : allowed;
+
+    const exact = languageScoped.filter((channel) => {
+      return !wantedGenres.length || wantedGenres.some((genre) => (channel.genres || []).includes(genre));
+    });
+
+    if(exact.length) return uniqueChannels(exact);
+
+    if(wantedLanguages.length) return uniqueChannels(languageScoped);
+
+    if(options.genreFallback !== false && wantedGenres.length){
+      const byGenre = allowed.filter((channel) => wantedGenres.some((genre) => (channel.genres || []).includes(genre)));
+      if(byGenre.length) return uniqueChannels(byGenre);
+    }
+
+    return uniqueChannels(allowed);
+  }
+
+  function filterTracksBySelection(list, genres, languages, strictGenre = true){
+    const wantedGenres = uniq(genres);
+    const wantedLanguages = uniq(languages);
+
+    return list.filter((track) => {
+      if(wantedLanguages.length && !wantedLanguages.includes(track.language)) return false;
+      if(strictGenre && wantedGenres.length && !wantedGenres.some((genre) => (track.genres || []).includes(genre))) return false;
+      return true;
+    });
+  }
+
+  async function loadTracksFromChannels(channels){
+    let allTracks = [];
+    for(const channel of channels){
+      const channelTracks = await loadChannel(channel);
+      if(channelTracks.length) allTracks = allTracks.concat(channelTracks);
+    }
+    return allTracks;
+  }
+
+  async function loadRadioTracksBySelection(genres, languages){
+    const exactChannels = findRadioChannels(genres, languages);
+    const exactTracks = await loadTracksFromChannels(exactChannels);
+    let scopedTracks = filterTracksBySelection(exactTracks, genres, languages, true);
+
+    if(!scopedTracks.length && languages?.length){
+      const languageChannels = findRadioChannels([], languages, { genreFallback:false });
+      const languageTracks = await loadTracksFromChannels(languageChannels);
+      scopedTracks = filterTracksBySelection(languageTracks, [], languages, false);
+    }
+
+    if(!scopedTracks.length && !languages?.length){
+      scopedTracks = exactTracks;
+    }
+
+    tracks = scopedTracks;
+    currentTrackIndex = 0;
+    activeChannel = tracks[0]
+      ? ICANY_RADIO_CHANNELS.find((channel) => channel.id === tracks[0].channel_id)
+      : null;
+
+    return tracks;
+  }
+
+  function radioIcon(){
+    return `
+      <svg viewBox="0 0 24 24">
+        <path d="M9 18V5l11-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="17" cy="16" r="3"></circle>
+      </svg>
+    `;
+  }
+
+  function businessLogo(className = ""){
+    return `
+      <div class="icany-business-logo ${className}" aria-label="icanyAI Business">
+        <span class="icany-business-main"><span class="icany-white">icany</span><span class="icany-ai">AI</span></span>
+        <span class="icany-business-sub">BUSINESS</span>
+      </div>
+    `;
+  }
+
+  function injectStyle(doc){
+    if(!doc) return;
+
+    const old = doc.getElementById("icanyRadioDenemeStyle");
+    if(old) old.remove();
+
+    const style = doc.createElement("style");
+    style.id = "icanyRadioDenemeStyle";
+
+    style.textContent = `
+      .icany-radio-player{
+        display:none;
+        position:relative;
+        overflow:hidden;
+        border-radius:18px;
+        padding:7px 9px 10px;
+        color:#fff;
+        border:1px solid rgba(255,255,255,.13);
+        background:
+          radial-gradient(circle at 12% 18%,rgba(56,189,248,.16),transparent 34%),
+          radial-gradient(circle at 88% 20%,rgba(14,165,233,.12),transparent 30%),
+          linear-gradient(135deg,rgba(2,6,23,.90),rgba(15,23,42,.96) 52%,rgba(3,105,161,.72));
+        box-shadow:0 12px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);
+        backdrop-filter:blur(16px);
+        -webkit-backdrop-filter:blur(16px);
+      }
+
+      .icany-radio-player.show{ display:block; }
+
+      .icany-radio-row{
+        position:relative;
+        z-index:2;
+        display:grid;
+        grid-template-columns:minmax(74px,.7fr) minmax(146px,1.4fr) minmax(86px,.8fr);
+        align-items:center;
+        gap:8px;
+      }
+
+      .icany-karaoke-mini{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:5px;
+        width:100%;
+        max-width:92px;
+        height:31px;
+        padding:0 8px;
+        border-radius:999px;
+        border:1px solid rgba(255,255,255,.16);
+        background:rgba(255,255,255,.09);
+        color:#fff;
+        font-family:Outfit,sans-serif;
+        font-size:10px;
+        line-height:1;
+        font-weight:1000;
+        cursor:pointer;
+        box-shadow:0 8px 18px rgba(0,0,0,.16);
+        white-space:nowrap;
+      }
+
+      .icany-karaoke-mini-flag{ font-size:13px; line-height:1; }
+
+      .icany-radio-controls{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:6px;
+        min-width:0;
+      }
+
+      .icany-business-logo{
+        text-align:center;
+        line-height:1;
+        user-select:none;
+        overflow:hidden;
+      }
+
+      .icany-business-main{
+        display:block;
+        font-family:'Space Grotesk',Outfit,sans-serif;
+        font-size:15px;
+        font-weight:900;
+        letter-spacing:0;
+        white-space:nowrap;
+      }
+
+      .icany-business-main .icany-white{ color:#fff; -webkit-text-fill-color:#fff; }
+
+      .icany-business-main .icany-ai{
+        color:#67e8f9;
+        background:linear-gradient(135deg,#a5f3fc,#67e8f9,#38bdf8);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+      }
+
+      .icany-business-sub{
+        display:block;
+        margin-top:3px;
+        font-size:6.2px;
+        font-weight:1000;
+        letter-spacing:.9px;
+        color:rgba(226,232,240,.78);
+        white-space:nowrap;
+        transform:translateX(.4px);
+      }
+
+      .icany-radio-brand{
+        justify-self:end;
+        width:86px;
+        max-width:86px;
+        min-height:38px;
+        padding:7px 9px 6px;
+        border-radius:12px;
+        background:
+          radial-gradient(circle at 80% 0%,rgba(56,189,248,.18),transparent 48%),
+          linear-gradient(145deg,#020617,#071426 62%,#082f49);
+        border:1px solid rgba(148,163,184,.20);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.16);
+      }
+
+      .icany-card-logo{
+        position:absolute;
+        right:14px;
+        top:12px;
+        width:72px;
+        opacity:.94;
+        z-index:3;
+        pointer-events:none;
+      }
+
+      .icany-card-logo .icany-business-main{ font-size:13px; }
+      .icany-card-logo .icany-business-sub{ font-size:5.2px; letter-spacing:.7px; }
+
+      .icany-karaoke-logo{
+        width:82px;
+        flex:0 0 auto;
+        margin-top:3px;
+      }
+
+      .icany-karaoke-logo .icany-business-main{ font-size:14px; }
+      .icany-karaoke-logo .icany-business-sub{ font-size:5.8px; }
+
+      .icany-eq-line{
+        position:relative;
+        z-index:2;
+        height:8px;
+        margin-top:7px;
+        overflow:hidden;
+        border-radius:999px;
+        background:
+          repeating-linear-gradient(90deg,
+            rgba(103,232,249,.20) 0 2px,
+            transparent 2px 7px);
+        opacity:.86;
+      }
+
+      .icany-eq-line::before,
+      .icany-eq-line::after{
+        content:"";
+        position:absolute;
+        inset:0;
+        border-radius:999px;
+        background:
+          repeating-linear-gradient(90deg,
+            transparent 0 3px,
+            rgba(103,232,249,.88) 3px 5px,
+            transparent 5px 11px),
+          linear-gradient(90deg,transparent,rgba(255,255,255,.30),transparent);
+        transform:translateX(-42%);
+        animation:icanyEqMove 4.2s linear infinite;
+      }
+
+      .icany-eq-line::after{
+        opacity:.52;
+        filter:blur(2px);
+        animation-duration:6.4s;
+        animation-direction:reverse;
+      }
+
+      .icany-radio-player.is-playing .icany-eq-line::before{ animation-duration:1.35s; }
+      .icany-radio-player.is-playing .icany-eq-line::after{ animation-duration:2.2s; }
+
+      @keyframes icanyEqMove{
+        from{ transform:translateX(-45%); }
+        to{ transform:translateX(45%); }
+      }
+
+      .icany-radio-btn{
+        width:32px;
+        height:32px;
+        border-radius:50%;
+        border:1px solid rgba(255,255,255,.16);
+        background:rgba(255,255,255,.09);
+        color:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:0;
+        cursor:pointer;
+        box-shadow:0 8px 18px rgba(0,0,0,.16);
+        flex:0 0 auto;
+      }
+
+      .icany-radio-btn.main{
+        width:43px;
+        height:43px;
+        background:#fff;
+        color:#0f172a;
+        box-shadow:0 12px 28px rgba(0,0,0,.22);
+      }
+
+      .icany-radio-btn.active{
+        border-color:rgba(103,232,249,.72);
+        box-shadow:0 0 18px rgba(103,232,249,.22);
+      }
+
+      .icany-radio-btn svg{ width:18px; height:18px; fill:currentColor; stroke:none; }
+      .icany-radio-btn.main svg{ width:21px; height:21px; }
+
+      .icany-radio-card{
+        cursor:pointer;
+        background:
+          radial-gradient(circle at 14% 42%,rgba(59,130,246,.30),transparent 30%),
+          radial-gradient(circle at 92% 12%,rgba(14,165,233,.22),transparent 28%),
+          radial-gradient(circle at 72% 110%,rgba(255,255,255,.09),transparent 36%),
+          linear-gradient(90deg,#020617 0%,#0f172a 48%,#0369a1 100%);
+      }
+
+      .icany-radio-card .wide-icon{
+        background:linear-gradient(135deg,#f8fafc,#38bdf8,#0f172a);
+        border-color:rgba(255,255,255,.28);
+      }
+
+      .icany-radio-card .wide-icon svg{ stroke:#fff; }
+      .icany-radio-card .wide-desc{ color:rgba(255,255,255,.90); }
+
+      .icany-radio-modal,
+      .icany-karaoke-modal{
+        position:fixed;
+        inset:0;
+        z-index:999999;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:12px;
+        background:rgba(0,0,0,.62);
+        backdrop-filter:blur(10px);
+        -webkit-backdrop-filter:blur(10px);
+      }
+
+      .icany-radio-modal.show,
+      .icany-karaoke-modal.show{ display:flex; }
+
+      .icany-radio-modal-card{
+        width:min(100%,430px);
+        max-height:min(86vh,720px);
+        overflow:auto;
+        border-radius:26px;
+        padding:18px;
+        background:linear-gradient(145deg,rgba(16,23,42,.98),rgba(10,10,18,.98));
+        border:1px solid rgba(255,255,255,.12);
+        color:#fff;
+        box-shadow:0 24px 70px rgba(0,0,0,.42);
+      }
+
+      .icany-karaoke-card{
+        width:min(96vw,760px);
+        height:min(90vh,860px);
+        overflow:hidden;
+        border-radius:30px;
+        padding:22px;
+        background:
+          radial-gradient(circle at 12% 0%,rgba(56,189,248,.14),transparent 34%),
+          radial-gradient(circle at 92% 100%,rgba(14,165,233,.10),transparent 34%),
+          linear-gradient(145deg,rgba(16,23,42,.985),rgba(5,7,18,.985));
+        border:1px solid rgba(255,255,255,.14);
+        color:#fff;
+        box-shadow:0 30px 90px rgba(0,0,0,.52);
+        display:flex;
+        flex-direction:column;
+      }
+
+      .icany-radio-modal-card h2,
+      .icany-karaoke-card h2{
+        margin:0 0 6px;
+        font-family:'Space Grotesk',Outfit,sans-serif;
+        font-size:26px;
+        font-weight:900;
+      }
+
+      .icany-radio-modal-card p{
+        margin:0 0 14px;
+        color:rgba(255,255,255,.72);
+        font-size:13px;
+        font-weight:800;
+        line-height:1.45;
+      }
+
+      .icany-radio-group-title{
+        margin:14px 0 8px;
+        font-size:12px;
+        font-weight:1000;
+        color:rgba(255,255,255,.86);
+        text-transform:uppercase;
+        letter-spacing:.35px;
+      }
+
+      .icany-radio-chip-grid{
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:8px;
+      }
+
+      .icany-radio-chip{
+        width:100%;
+        min-height:40px;
+        border:none;
+        border-radius:999px;
+        padding:9px 6px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.12);
+        color:#fff;
+        font-family:inherit;
+        font-size:11.5px;
+        line-height:1.12;
+        font-weight:900;
+        cursor:pointer;
+        text-align:center;
+        white-space:normal;
+      }
+
+      .icany-radio-chip.active{
+        background:linear-gradient(135deg,#06b6d4,#2563eb,#0f172a);
+        border-color:rgba(255,255,255,.24);
+      }
+
+      .icany-radio-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:16px;
+      }
+
+      .icany-radio-action{
+        min-height:46px;
+        border-radius:16px;
+        border:none;
+        font-family:inherit;
+        font-size:13px;
+        font-weight:1000;
+        cursor:pointer;
+      }
+
+      .icany-radio-action.primary{
+        background:linear-gradient(135deg,#67e8f9,#38bdf8,#0ea5e9);
+        color:#06111f;
+      }
+
+      .icany-radio-action.secondary{
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.12);
+        color:#fff;
+      }
+
+      .icany-karaoke-head{
+        display:grid;
+        grid-template-columns:1fr auto auto;
+        align-items:start;
+        gap:12px;
+        margin-bottom:14px;
+        flex:0 0 auto;
+      }
+
+      .icany-karaoke-title{ min-width:0; }
+
+      .icany-karaoke-lang{
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        padding:7px 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.12);
+        font-size:13px;
+        font-weight:1000;
+        margin-top:8px;
+      }
+
+      .icany-karaoke-note{
+        display:none;
+      }
+
+      .icany-karaoke-close{
+        width:42px;
+        height:42px;
+        border-radius:50%;
+        border:1px solid rgba(255,255,255,.14);
+        background:rgba(255,255,255,.08);
+        color:#fff;
+        font-size:22px;
+        font-weight:900;
+        cursor:pointer;
+        flex:0 0 auto;
+      }
+
+      .icany-karaoke-lines{
+        flex:1 1 auto;
+        min-height:0;
+        overflow:auto;
+        padding:8px 2px 28px;
+        scroll-behavior:smooth;
+      }
+
+      .icany-karaoke-line{
+        padding:13px 16px;
+        margin:6px 0;
+        border-radius:18px;
+        font-size:22px;
+        line-height:1.35;
+        font-weight:900;
+        color:rgba(255,255,255,.70);
+        transition:.18s ease;
+      }
+
+      .icany-karaoke-line.done{ color:rgba(255,255,255,.50); }
+
+      .icany-karaoke-line.active{
+        color:#06111f;
+        background:linear-gradient(135deg,#67e8f9,#f8fafc);
+        box-shadow:0 0 30px rgba(103,232,249,.20);
+        transform:scale(1.012);
+      }
+
+      .icany-karaoke-lines:not(.has-timing) .icany-karaoke-line{
+        color:rgba(255,255,255,.82);
+        background:rgba(255,255,255,.045);
+        border:1px solid rgba(255,255,255,.06);
+      }
+
+      .icany-karaoke-empty{
+        padding:32px 12px;
+        text-align:center;
+        color:rgba(255,255,255,.66);
+        font-size:16px;
+        line-height:1.55;
+        font-weight:800;
+      }
+
+      @media(max-width:390px){
+        .icany-radio-player{ padding:6px 8px 9px; border-radius:16px; }
+
+        .icany-radio-row{
+          grid-template-columns:minmax(66px,.66fr) minmax(138px,1.42fr) minmax(78px,.82fr);
+          gap:5px;
+        }
+
+        .icany-radio-controls{ gap:4px; }
+
+        .icany-karaoke-mini{
+          max-width:76px;
+          height:30px;
+          padding:0 6px;
+          font-size:9px;
+        }
+
+        .icany-karaoke-mini-flag{ font-size:12px; }
+
+        .icany-radio-btn{ width:30px; height:30px; }
+        .icany-radio-btn.main{ width:40px; height:40px; }
+        .icany-radio-btn svg{ width:17px; height:17px; }
+        .icany-radio-btn.main svg{ width:20px; height:20px; }
+
+        .icany-radio-brand{
+          width:78px;
+          max-width:78px;
+          padding:7px 7px 6px;
+        }
+
+        .icany-radio-brand .icany-business-main{ font-size:13.5px; }
+        .icany-radio-brand .icany-business-sub{ font-size:5.7px; letter-spacing:.74px; }
+
+        .icany-card-logo{
+          width:66px;
+          right:12px;
+          top:11px;
+        }
+
+        .icany-card-logo .icany-business-main{ font-size:11.5px; }
+        .icany-card-logo .icany-business-sub{ font-size:4.8px; letter-spacing:.62px; }
+
+        .icany-karaoke-modal{ padding:9px; }
+
+        .icany-karaoke-card{
+          width:94vw;
+          height:84vh;
+          border-radius:26px;
+          padding:18px;
+        }
+
+        .icany-karaoke-card h2{ font-size:28px; }
+
+        .icany-karaoke-head{
+          grid-template-columns:1fr auto;
+        }
+
+        .icany-karaoke-logo{
+          display:none;
+        }
+
+        .icany-karaoke-line{
+          font-size:21px;
+          padding:13px 14px;
+          margin:7px 0;
+        }
+
+        .icany-karaoke-close{ width:38px; height:38px; }
+      }
+
+      @media(max-width:360px){
+        .icany-radio-chip-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .icany-radio-controls{ gap:3px; }
+        .icany-radio-btn{ width:29px; height:29px; }
+        .icany-radio-btn.main{ width:39px; height:39px; }
+        .icany-radio-brand{ width:74px; max-width:74px; }
+        .icany-radio-brand .icany-business-main{ font-size:12.5px; }
+        .icany-radio-brand .icany-business-sub{ font-size:5.3px; letter-spacing:.62px; }
+        .icany-karaoke-mini{ max-width:68px; font-size:8.5px; }
+        .icany-karaoke-line{ font-size:19px; }
+      }
+    `;
+
+    doc.head.appendChild(style);
+  }
+
+  function firstTextField(track, keys){
+    for(const key of keys){
+      const value = track?.[key];
+      if(typeof value === "string" && value.trim()) return value;
+    }
+    return "";
+  }
+
+  function parsePlainLyrics(text){
+    return String(text || "")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !/^\[.*\]$/.test(line));
+  }
+
+  function parseLRC(text){
+    const out = [];
+
+    String(text || "").split(/\r?\n/).forEach((line) => {
+      const matches = Array.from(line.matchAll(/\[(\d+):(\d+(?:\.\d+)?)\]/g));
+      if(!matches.length) return;
+
+      const text = line.replace(/\[(\d+):(\d+(?:\.\d+)?)\]/g,"").trim();
+      if(!text) return;
+
+      matches.forEach((match) => {
+        out.push({
+          time: Number(match[1]) * 60 + Number(match[2]),
+          text
+        });
+      });
+    });
+
+    return out.sort((a,b) => a.time - b.time);
+  }
+
+  function parseTimedArray(value){
+    let arr = value;
+
+    if(typeof value === "string"){
+      try {
+        arr = JSON.parse(value);
+      } catch {
+        return [];
+      }
+    }
+
+    if(!Array.isArray(arr)) return [];
+
+    return arr.map((item) => {
+      if(typeof item === "string"){
+        return { text:item.trim(), time:null };
+      }
+
+      const text = String(
+        item.latin ||
+        item.romanized ||
+        item.transliteration ||
+        item.text ||
+        item.line ||
+        item.lyric ||
+        item.words ||
+        ""
+      ).trim();
+
+      const time = Number(
+        item.time ??
+        item.start ??
+        item.start_time ??
+        item.startTime ??
+        item.t ??
+        NaN
+      );
+
+      if(!text) return null;
+
+      return {
+        text,
+        time:Number.isFinite(time) ? time : null
+      };
+    }).filter(Boolean);
+  }
+
+  function buildLyricsForTrack(track){
+    const lrcText = firstTextField(track, [
+      "lrc_latin",
+      "lrc_romanized",
+      "lyrics_lrc_latin",
+      "lyrics_lrc_romanized",
+      "lrc",
+      "lrc_text",
+      "lyrics_lrc"
+    ]);
+
+    const lrc = parseLRC(lrcText);
+    if(lrc.length){
+      timedLyricLines = lrc;
+      lyricLines = lrc.map((item) => item.text);
+      hasTimedLyrics = true;
+      return;
+    }
+
+    const timedArray =
+      parseTimedArray(track?.lyrics_latin) ||
+      parseTimedArray(track?.lyrics_romanized) ||
+      parseTimedArray(track?.transliteration) ||
+      parseTimedArray(track?.romanized) ||
+      parseTimedArray(track?.lyrics_json) ||
+      parseTimedArray(track?.lyrics_lines) ||
+      [];
+
+    const exactTimed = timedArray.filter((item) => Number.isFinite(item.time));
+
+    if(exactTimed.length){
+      timedLyricLines = exactTimed.sort((a,b) => a.time - b.time);
+      lyricLines = timedLyricLines.map((item) => item.text);
+      hasTimedLyrics = true;
+      return;
+    }
+
+    const plainText = firstTextField(track, [
+      "lyrics_latin",
+      "lyrics_romanized",
+      "transliteration",
+      "romanized",
+      "lyrics",
+      "lyrics_text",
+      "lyric"
+    ]);
+
+    const plainTimedTexts = timedArray.map((item) => item.text).filter(Boolean);
+
+    lyricLines = plainTimedTexts.length
+      ? plainTimedTexts
+      : parsePlainLyrics(plainText);
+
+    timedLyricLines = [];
+    hasTimedLyrics = false;
+  }
+
+  function activeLyricIndex(audio){
+    if(!hasTimedLyrics || !timedLyricLines.length) return -1;
+
+    const currentTime = audio?.currentTime || 0;
+    let index = 0;
+
+    for(let i = 0; i < timedLyricLines.length; i++){
+      if(currentTime >= Number(timedLyricLines[i].time || 0)) index = i;
+      else break;
+    }
+
+    return index;
+  }
+
+  function renderKaraoke(doc){
+    const wrap = doc.getElementById("icanyKaraokeLines");
+    const note = doc.getElementById("icanyKaraokeNote");
+    if(!wrap) return;
+
+    wrap.classList.toggle("has-timing", hasTimedLyrics);
+
+    if(note){
+      note.textContent = hasTimedLyrics
+        ? ""
+        : "";
+    }
+
+    if(!lyricLines.length){
+      wrap.innerHTML = `<div class="icany-karaoke-empty"></div>`;
+      return;
+    }
+
+    wrap.innerHTML = lyricLines.map((line, index) => {
+      return `<div class="icany-karaoke-line" data-i="${index}">${escapeHtml(line)}</div>`;
+    }).join("");
+  }
+
+  function updateKaraoke(doc){
+    if(!hasTimedLyrics) return;
+
+    const audio = doc.getElementById("icanyRadioAudio");
+    const wrap = doc.getElementById("icanyKaraokeLines");
+    if(!audio || !wrap || !lyricLines.length) return;
+
+    const activeIndex = activeLyricIndex(audio);
+
+    Array.from(wrap.querySelectorAll(".icany-karaoke-line")).forEach((line, index) => {
+      line.classList.toggle("active", index === activeIndex);
+      line.classList.toggle("done", index < activeIndex);
+    });
+
+    const active = wrap.querySelector(".icany-karaoke-line.active");
+    if(active){
+      const wrapRect = wrap.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      const target = wrap.scrollTop + (activeRect.top - wrapRect.top) - (wrap.clientHeight / 2) + (active.clientHeight / 2);
+      wrap.scrollTo({ top:Math.max(0, target), behavior:"smooth" });
+    }
+  }
+
+  function createKaraokeModal(doc){
+    if(!doc || doc.getElementById("icanyKaraokeModal")) return;
+
+    const modal = doc.createElement("div");
+    modal.id = "icanyKaraokeModal";
+    modal.className = "icany-karaoke-modal";
+
+    modal.innerHTML = `
+      <div class="icany-karaoke-card">
+        <div class="icany-karaoke-head">
+          <div class="icany-karaoke-title">
+            <h2>Karaoke</h2>
+            <div class="icany-karaoke-lang" id="icanyKaraokeLang">iCanyAI</div>
+          </div>
+
+          ${businessLogo("icany-karaoke-logo")}
+
+          <button class="icany-karaoke-close" id="icanyKaraokeClose" type="button">×</button>
+        </div>
+
+        <p class="icany-karaoke-note" id="icanyKaraokeNote"></p>
+
+        <div class="icany-karaoke-lines" id="icanyKaraokeLines">
+          <div class="icany-karaoke-empty"></div>
+        </div>
+      </div>
+    `;
+
+    doc.body.appendChild(modal);
+
+    modal.querySelector("#icanyKaraokeClose")?.addEventListener("click", () => {
+      modal.classList.remove("show");
+    });
+
+    modal.addEventListener("click", (event) => {
+      if(event.target === modal){
+        modal.classList.remove("show");
+      }
+    });
+  }
+
+  function updatePlayerLanguageBadge(doc, track){
+    const flag = doc.getElementById("icanyPlayerFlag");
+    if(flag) flag.textContent = track?.channel_flag || "🎧";
+  }
+
+  function openKaraoke(doc){
+    createKaraokeModal(doc);
+
+    const modal = doc.getElementById("icanyKaraokeModal");
+    const lang = doc.getElementById("icanyKaraokeLang");
+
+    if(lang){
+      const track = tracks[currentTrackIndex] || null;
+      const flag = track?.channel_flag || "";
+      const code = track?.channel_code || "";
+      const language = track?.language || "";
+      lang.textContent = `${flag} ${code} • ${language}`.trim() || "iCanyAI";
+    }
+
+    renderKaraoke(doc);
+    updateKaraoke(doc);
+    modal?.classList.add("show");
+  }
+
+  function createPlayer(doc){
+    if(!doc || doc.getElementById("icanyRadioPlayer")) return;
+
+    const hero = doc.getElementById("heroSection");
+    if(!hero) return;
+
+    const player = doc.createElement("section");
+    player.id = "icanyRadioPlayer";
+    player.className = "icany-radio-player";
+
+    player.innerHTML = `
+      <div class="icany-radio-row">
+        <button class="icany-karaoke-mini" id="icanyLyricsBtn" type="button">
+          <span class="icany-karaoke-mini-flag" id="icanyPlayerFlag">🎧</span>
+          <span>Karaoke</span>
+        </button>
+
+        <div class="icany-radio-controls">
+          <button class="icany-radio-btn" id="icanyShuffleBtn" type="button" aria-label="Karıştır">
+            <svg viewBox="0 0 24 24">
+              <path d="M16 3h5v5h-2V6.4l-4.3 4.3-1.4-1.4L17.6 5H16V3zM4 7h3.6l3 3-1.4 1.4L6.8 9H4V7zm0 8h2.8l10.8-10.8L19 5.6 8.4 16.2H4v-1.2zm15 .6V14h2v5h-5v-2h1.6l-3.3-3.3 1.4-1.4 3.3 3.3z"></path>
+            </svg>
+          </button>
+
+          <button class="icany-radio-btn" id="icanyPrevBtn" type="button" aria-label="Geri">
+            <svg viewBox="0 0 24 24">
+              <path d="M6 6h2v12H6zM9 12l9-6v12z"></path>
+            </svg>
+          </button>
+
+          <button class="icany-radio-btn main" id="icanyPlayBtn" type="button" aria-label="Oynat">
+            <svg id="icanyPlayIcon" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"></path>
+            </svg>
+          </button>
+
+          <button class="icany-radio-btn" id="icanyNextBtn" type="button" aria-label="İleri">
+            <svg viewBox="0 0 24 24">
+              <path d="M16 6h2v12h-2zM6 18V6l9 6z"></path>
+            </svg>
+          </button>
+        </div>
+
+        ${businessLogo("icany-radio-brand")}
+      </div>
+
+      <div class="icany-eq-line" id="icanyEqLine"></div>
+      <audio id="icanyRadioAudio" preload="none"></audio>
+    `;
+
+    hero.insertAdjacentElement("afterend", player);
+    bindPlayer(doc);
+  }
+
+  function bindPlayer(doc){
+    const audio = doc.getElementById("icanyRadioAudio");
+    const playIcon = doc.getElementById("icanyPlayIcon");
+    const playBtn = doc.getElementById("icanyPlayBtn");
+    const nextBtn = doc.getElementById("icanyNextBtn");
+    const prevBtn = doc.getElementById("icanyPrevBtn");
+    const shuffleBtn = doc.getElementById("icanyShuffleBtn");
+    const lyricsBtn = doc.getElementById("icanyLyricsBtn");
+    const player = doc.getElementById("icanyRadioPlayer");
+    let learningAudioStoppedByUser = false;
+
+    function notifyLearningAudioActive(active){
+      const value = !!active;
+      try{ window.__ITALKY_LEARNING_AUDIO_ACTIVE__ = value; }catch{}
+
+      const bridges = [window.Native, window.AndroidBridge];
+      for(const bridge of bridges){
+        try{
+          if(bridge && typeof bridge.setLearningAudioActive === "function"){
+            bridge.setLearningAudioActive(value ? "1" : "0");
+            break;
+          }
+        }catch{}
+      }
+    }
+
+    function setPlaying(isPlaying){
+      if(playIcon){
+        playIcon.innerHTML = isPlaying
+          ? `<path d="M7 5h4v14H7zM13 5h4v14h-4z"></path>`
+          : `<path d="M8 5v14l11-7z"></path>`;
+      }
+      player?.classList.toggle("is-playing", !!isPlaying);
+    }
+
+    function loadTrack(index){
+      if(!audio || !tracks.length) return false;
+
+      const track = tracks[index];
+      if(!track || !track.audio_url) return false;
+
+      audio.src = track.audio_url;
+      audio.load();
+
+      buildLyricsForTrack(track);
+      renderKaraoke(doc);
+      updateKaraoke(doc);
+      updatePlayerLanguageBadge(doc, track);
+      persistPlaybackState(doc, track, audio).catch(() => {});
+      return true;
+    }
+
+    async function ensureTrackLoaded(){
+      if(audio?.src) return true;
+
+      if(!tracks.length){
+        await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
+      }
+
+      if(tracks.length){
+        return loadTrack(currentTrackIndex);
+      }
+
+      console.warn("Seçili radyo havuzunda çalınacak parça bulunamadı.");
+      return false;
+    }
+
+    async function playCurrent(){
+      if(!audio) return false;
+
+      const ready = await ensureTrackLoaded();
+      if(!ready || !audio.src) return false;
+
+      try{
+        await audio.play();
+        learningAudioStoppedByUser = false;
+        notifyLearningAudioActive(true);
+        setPlaying(true);
+        await persistPlaybackState(doc, tracks[currentTrackIndex], audio);
+        return true;
+      }catch(error){
+        console.warn("Tarayıcı otomatik çalmayı engelledi, Play ile devam edilebilir:", error);
+        setPlaying(false);
+        notifyLearningAudioActive(false);
+        return false;
+      }
+    }
+
+    function chooseNextIndex(direction = 1){
+      if(!tracks.length) return 0;
+
+      if(shuffleEnabled && tracks.length > 1){
+        let next = currentTrackIndex;
+        let guard = 0;
+        while(next === currentTrackIndex && guard < 12){
+          next = Math.floor(Math.random() * tracks.length);
+          guard++;
+        }
+        return next;
+      }
+
+      return (currentTrackIndex + direction + tracks.length) % tracks.length;
+    }
+
+    async function nextTrack(direction = 1, autoPlay = true){
+      if(!tracks.length){
+        await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
+      }
+
+      if(!tracks.length){
+        console.warn("Seçili radyo havuzunda sıradaki parça bulunamadı.");
+        setPlaying(false);
+        notifyLearningAudioActive(false);
+        return;
+      }
+
+      let attempts = 0;
+      while(attempts < tracks.length){
+        currentTrackIndex = chooseNextIndex(direction);
+        if(loadTrack(currentTrackIndex)) break;
+        attempts++;
+      }
+
+      if(autoPlay){
+        try{
+          await audio.play();
+          learningAudioStoppedByUser = false;
+          notifyLearningAudioActive(true);
+          setPlaying(true);
+        }catch(error){
+          console.warn("Sıradaki parça otomatik başlayamadı:", error);
+          setPlaying(false);
+          notifyLearningAudioActive(false);
+        }
+      }
+    }
+
+    lyricsBtn?.addEventListener("click", () => openKaraoke(doc));
+
+    playBtn?.addEventListener("click", async () => {
+      if(!audio) return;
+
+      if(audio.paused){
+        await playCurrent();
+      }else{
+        learningAudioStoppedByUser = true;
+        notifyLearningAudioActive(false);
+        audio.pause();
+        setPlaying(false);
+        persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
+      }
+    });
+
+    nextBtn?.addEventListener("click", () => nextTrack(1, true));
+    prevBtn?.addEventListener("click", () => nextTrack(-1, true));
+
+    shuffleBtn?.addEventListener("click", () => {
+      shuffleEnabled = !shuffleEnabled;
+      shuffleBtn.classList.toggle("active", shuffleEnabled);
+      persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
+    });
+
+    audio?.addEventListener("loadedmetadata", () => {
+      renderKaraoke(doc);
+      updateKaraoke(doc);
+    });
+
+    audio?.addEventListener("timeupdate", () => {
+      updateKaraoke(doc);
+
+      const second = Math.floor(audio.currentTime || 0);
+      if(second > 0 && second % 5 === 0 && second !== lastPersistSecond){
+        lastPersistSecond = second;
+        persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
+      }
+    });
+
+    audio?.addEventListener("seeked", () => {
+      updateKaraoke(doc);
+      persistPlaybackState(doc, tracks[currentTrackIndex], audio).catch(() => {});
+    });
+
+    audio?.addEventListener("pause", () => {
+      setPlaying(false);
+      if(learningAudioStoppedByUser) notifyLearningAudioActive(false);
+    });
+    audio?.addEventListener("play", () => {
+      learningAudioStoppedByUser = false;
+      notifyLearningAudioActive(true);
+      setPlaying(true);
+    });
+    audio?.addEventListener("ended", async () => {
+      notifyLearningAudioActive(true);
+      await nextTrack(1, true);
+    });
+
+    doc.__icanyPlayCurrent = playCurrent;
+    doc.__icanyLoadTrack = loadTrack;
+  }
+
+  function createSetupCard(doc){
+    if(!doc || doc.getElementById("icanyRadioSetupCard")) return;
+
+    const textCard = doc.getElementById("textCard");
+    const target = textCard || doc.getElementById("offlineCard");
+    if(!target) return;
+
+    const card = doc.createElement("div");
+    card.id = "icanyRadioSetupCard";
+    card.className = "wide-card icany-radio-card";
+    card.setAttribute("role","button");
+    card.setAttribute("tabindex","0");
+
+    card.innerHTML = `
+      ${businessLogo("icany-card-logo")}
+      <div class="wide-icon" aria-hidden="true">
+        ${radioIcon()}
+      </div>
+
+      <div class="wide-body">
+        <h2 class="wide-title">Dinleyerek Öğren</h2>
+        <p class="wide-desc">Seçeceğin müziklerle, söyle,öğren. Binlerce müzik seni bekliyor.</p>
+      </div>
+
+      <div class="arrow-chip"></div>
+    `;
+
+    card.addEventListener("click", () => openModal(doc));
+    card.addEventListener("keydown", (event) => {
+      if(event.key === "Enter" || event.key === " "){
+        event.preventDefault();
+        openModal(doc);
+      }
+    });
+
+    target.insertAdjacentElement("afterend", card);
+    reorderCards(doc);
+  }
+
+  function reorderCards(doc){
+    const funCard = doc.getElementById("funCard");
+    const levelCard = doc.getElementById("levelCard");
+    if(funCard && levelCard){
+      funCard.insertAdjacentElement("afterend", levelCard);
+    }
+  }
+
+  function createModal(doc){
+    if(!doc) return;
+
+    const old = doc.getElementById("icanyRadioModal");
+    if(old) old.remove();
+
+    const modal = doc.createElement("div");
+    modal.id = "icanyRadioModal";
+    modal.className = "icany-radio-modal";
+
+    const genres = getAllGenres();
+    const languages = getAllLanguages();
+
+    modal.innerHTML = `
+      <div class="icany-radio-modal-card">
+        <h2>iCanyAI BUSINESS</h2>
+        <p>Aynı anda birden fazla dil ve tür seçebilirsiniz. Dilediğiniz zaman değiştirebilirsiniz.</p>
+
+        <div class="icany-radio-group-title">Müzik Türü</div>
+        <div class="icany-radio-chip-grid" data-group="genres">
+          ${genres.map((genre) => `<button class="icany-radio-chip" data-value="${escapeHtml(genre)}" type="button">${escapeHtml(genre)}</button>`).join("")}
+        </div>
+
+        <div class="icany-radio-group-title">Dil</div>
+        <div class="icany-radio-chip-grid" data-group="languages">
+          ${languages.map((language) => `<button class="icany-radio-chip" data-value="${escapeHtml(language)}" type="button">${escapeHtml(language)}</button>`).join("")}
+        </div>
+
+        <div class="icany-radio-actions">
+          <button class="icany-radio-action secondary" id="icanyRadioClose" type="button">Kapat</button>
+          <button class="icany-radio-action primary" id="icanyRadioSave" type="button">KAYDET</button>
+        </div>
+      </div>
+    `;
+
+    doc.body.appendChild(modal);
+
+    modal.querySelectorAll(".icany-radio-chip").forEach((button) => {
+      button.addEventListener("click", () => button.classList.toggle("active"));
+    });
+
+    modal.querySelector("#icanyRadioClose")?.addEventListener("click", () => closeModal(doc));
+    modal.querySelector("#icanyRadioSave")?.addEventListener("click", () => saveRadio(doc));
+
+    modal.addEventListener("click", (event) => {
+      if(event.target === modal) closeModal(doc);
+    });
+
+    applySelectionToModal(doc, lastSelection);
+  }
+
+  function applySelectionToModal(doc, selection){
+    if(!selection) return;
+
+    doc.querySelectorAll('[data-group="genres"] .icany-radio-chip').forEach((button) => {
+      button.classList.toggle("active", (selection.genres || []).includes(button.dataset.value));
+    });
+
+    doc.querySelectorAll('[data-group="languages"] .icany-radio-chip').forEach((button) => {
+      button.classList.toggle("active", (selection.languages || []).includes(button.dataset.value));
+    });
+  }
+
+  function openModal(doc){
+    createModal(doc);
+    doc.getElementById("icanyRadioModal")?.classList.add("show");
+  }
+
+  function closeModal(doc){
+    doc.getElementById("icanyRadioModal")?.classList.remove("show");
+  }
+
+  function selectedValues(doc, groupName){
+    return Array.from(doc.querySelectorAll(`[data-group="${groupName}"] .icany-radio-chip.active`))
+      .map((item) => item.dataset.value)
+      .filter(Boolean);
+  }
+
+  async function getSupabase(){
+    if(supabaseClientPromise) return supabaseClientPromise;
+
+    supabaseClientPromise = import("/js/supabase_client.js")
+      .then((mod) => mod.supabase || null)
+      .catch((error) => {
+        console.warn("Supabase yüklenemedi:", error);
+        return null;
+      });
+
+    return supabaseClientPromise;
+  }
+
+  async function getCurrentUser(){
+    if(currentUserPromise) return currentUserPromise;
+
+    currentUserPromise = (async () => {
+      const supabase = await getSupabase();
+      if(!supabase) return null;
+
+      try{
+        const { data } = await supabase.auth.getUser();
+        return data?.user || null;
+      }catch(error){
+        console.warn("Kullanıcı okunamadı:", error);
+        return null;
+      }
+    })();
+
+    return currentUserPromise;
+  }
+
+  function readLocalSettings(){
+    return safeJsonParse(localStorage.getItem(SETTINGS_KEY), null);
+  }
+
+  function writeLocalSettings(settings){
+    try{
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }catch(error){
+      console.warn("Radyo ayarı localStorage kaydedilemedi:", error);
+    }
+  }
+
+  async function loadSavedSettings(){
+    const local = readLocalSettings();
+    if(local) lastSettings = local;
+
+    const user = await getCurrentUser();
+    if(!user) return local;
+
+    const supabase = await getSupabase();
+    if(!supabase) return local;
+
+    try{
+      const { data, error } = await supabase
+        .from(SETTINGS_TABLE)
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if(error) throw error;
+
+      if(data){
+        lastSettings = data;
+        writeLocalSettings(data);
+        return data;
+      }
+    }catch(error){
+      console.warn("Supabase radyo ayarı okunamadı:", error);
+    }
+
+    return local;
+  }
+
+  function settingsFromCurrent(track, audio){
+    const selectedChannels = findRadioChannels(lastSelection.genres, lastSelection.languages).map((channel) => channel.id);
+
+    return {
+      genres:uniq(lastSelection.genres),
+      languages:uniq(lastSelection.languages),
+      selected_channel_ids:selectedChannels,
+      shuffle_enabled:!!shuffleEnabled,
+      last_track_url:track?.audio_url || audio?.src || "",
+      last_track_title:track?.title || "",
+      last_channel_id:track?.channel_id || activeChannel?.id || "",
+      last_position_seconds:Math.floor(Number(audio?.currentTime || 0)),
+      is_active:true
+    };
+  }
+
+  async function persistSettings(settings){
+    lastSettings = { ...(lastSettings || {}), ...settings };
+    writeLocalSettings(lastSettings);
+
+    const user = await getCurrentUser();
+    if(!user) return;
+
+    const supabase = await getSupabase();
+    if(!supabase) return;
+
+    const payload = {
+      ...lastSettings,
+      user_id:user.id,
+      is_active:true
+    };
+
+    try{
+      const { error } = await supabase
+        .from(SETTINGS_TABLE)
+        .upsert(payload, { onConflict:"user_id" });
+
+      if(error) throw error;
+      lastSettings = payload;
+      writeLocalSettings(payload);
+    }catch(error){
+      console.warn("Supabase radyo ayarı kaydedilemedi:", error);
+    }
+  }
+
+  async function persistPlaybackState(doc, track, audio){
+    if(!lastSelection.languages.length && !lastSelection.genres.length) return;
+    await persistSettings(settingsFromCurrent(track || {}, audio || null));
+  }
+
+  function applySettings(settings){
+    if(!settings) return false;
+
+    lastSelection = {
+      genres:uniq(settings.genres || []),
+      languages:uniq(settings.languages || [])
+    };
+
+    shuffleEnabled = !!settings.shuffle_enabled;
+    lastSettings = settings;
+
+    return !!(lastSelection.genres.length || lastSelection.languages.length);
+  }
+
+  async function saveRadio(doc){
+    const genres = selectedValues(doc,"genres");
+    const languages = selectedValues(doc,"languages");
+
+    if(!genres.length || !languages.length){
+      console.warn("Radyo kaydı için en az bir tür ve bir dil seçilmeli.");
+      return;
+    }
+
+    lastSelection = { genres, languages };
+    closeModal(doc);
+    showPlayer(doc);
+
+    doc.getElementById("icanyRadioPlayer")?.scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+
+    await loadRadioTracksBySelection(genres,languages);
+
+    const audio = doc.getElementById("icanyRadioAudio");
+
+    if(audio && tracks.length){
+      currentTrackIndex = 0;
+      const track = tracks[0];
+      audio.src = track.audio_url;
+      audio.load();
+      buildLyricsForTrack(track);
+      renderKaraoke(doc);
+      updatePlayerLanguageBadge(doc, track);
+      await persistSettings(settingsFromCurrent(track, audio));
+
+      if(typeof doc.__icanyPlayCurrent === "function"){
+        await doc.__icanyPlayCurrent();
+      }
+    }else{
+      console.warn("Seçili radyo havuzunda çalınacak parça bulunamadı.");
+      await persistSettings(settingsFromCurrent({}, audio));
+    }
+  }
+
+  function showPlayer(doc){
+    createPlayer(doc);
+    createKaraokeModal(doc);
+
+    const player = doc.getElementById("icanyRadioPlayer");
+    player?.classList.add("show");
+
+    const shuffleBtn = doc.getElementById("icanyShuffleBtn");
+    shuffleBtn?.classList.toggle("active", !!shuffleEnabled);
+  }
+
+  async function restorePlayerFromSettings(doc, settings){
+    if(!settings || !applySettings(settings)) return;
+
+    showPlayer(doc);
+    await loadRadioTracksBySelection(lastSelection.genres, lastSelection.languages);
+
+    const audio = doc.getElementById("icanyRadioAudio");
+    if(!audio || !tracks.length) return;
+
+    let index = tracks.findIndex((track) => track.audio_url === settings.last_track_url);
+    if(index < 0) index = tracks.findIndex((track) => track.channel_id === settings.last_channel_id);
+    currentTrackIndex = index >= 0 ? index : 0;
+
+    const track = tracks[currentTrackIndex];
+    audio.src = track.audio_url;
+    audio.load();
+
+    const pos = Number(settings.last_position_seconds || 0);
+    if(Number.isFinite(pos) && pos > 0){
+      audio.addEventListener("loadedmetadata", () => {
+        try { audio.currentTime = Math.min(pos, audio.duration || pos); } catch {}
+      }, { once:true });
+    }
+
+    buildLyricsForTrack(track);
+    renderKaraoke(doc);
+    updatePlayerLanguageBadge(doc, track);
+  }
+
+  async function patchHome(){
+    const doc = getDoc();
+    if(!doc || !doc.body) return;
+
+    boot?.remove();
+
+    injectStyle(doc);
+    await loadChannelIndex();
+    createSetupCard(doc);
+    createModal(doc);
+    createKaraokeModal(doc);
+    reorderCards(doc);
+
+    const saved = await loadSavedSettings();
+    if(saved){
+      await restorePlayerFromSettings(doc, saved);
+    }
+  }
+
+  function startIcanyHomeRadio(){
+    setTimeout(patchHome, 250);
+    setTimeout(patchHome, 900);
+    setTimeout(patchHome, 1800);
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", startIcanyHomeRadio);
+  }else{
+    startIcanyHomeRadio();
+  }
+})();
+</script>
+
+<script src="/js/ai_data_consent.js"></script>
+
+<script type="module" src="/js/site_language_boot.js"></script>
 </body>
 </html>

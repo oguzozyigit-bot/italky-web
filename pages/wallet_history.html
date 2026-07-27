@@ -1,440 +1,88 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-  <title>italkyAI • Jeton Ekstresi</title>
-  <meta name="theme-color" content="#060912"/>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      --bg:#060912;
-      --bg2:#0b1120;
-      --txt:#fff;
-      --muted:rgba(255,255,255,.64);
-      --line:rgba(255,255,255,.09);
-      --grad:linear-gradient(135deg,#8bd3ff 0%, #7c5cff 45%, #ff66c4 100%);
-      --shadow:0 20px 55px rgba(0,0,0,.28);
-    }
-
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-    }
-
-    html,body{
-      margin:0;
-      padding:0;
-      width:100%;
-      min-height:100%;
-      background:
-        radial-gradient(circle at top, rgba(124,92,255,.12), transparent 26%),
-        radial-gradient(circle at 80% 18%, rgba(103,232,249,.08), transparent 18%),
-        linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
-    }
-
-    #pageContent{
-      min-height:100%;
-      padding:16px 14px 28px;
-    }
-
-    .hero{
-      position:relative;
-      overflow:hidden;
-      border-radius:28px;
-      padding:18px 16px;
-      background:
-        radial-gradient(circle at top left, rgba(103,232,249,.10), transparent 28%),
-        radial-gradient(circle at top right, rgba(255,102,196,.10), transparent 22%),
-        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-      border:1px solid var(--line);
-      box-shadow:var(--shadow);
-      margin-bottom:16px;
-    }
-
-    .hero h1{
-      margin:0;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:28px;
-      line-height:1.05;
-      letter-spacing:-.7px;
-      position:relative;
-      z-index:1;
-    }
-
-    .hero p{
-      margin:8px 0 0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-      font-weight:700;
-      position:relative;
-      z-index:1;
-    }
-
-    .summary{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:10px;
-      margin-top:14px;
-      position:relative;
-      z-index:1;
-    }
-
-    .sum-card{
-      border-radius:18px;
-      padding:12px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      min-height:88px;
-    }
-
-    .sum-label{
-      font-size:11px;
-      font-weight:900;
-      color:rgba(255,255,255,.62);
-      text-transform:uppercase;
-      letter-spacing:.45px;
-      margin-bottom:6px;
-    }
-
-    .sum-value{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:28px;
-      line-height:1;
-      font-weight:700;
-    }
-
-    .sum-sub{
-      margin-top:7px;
-      font-size:11px;
-      color:var(--muted);
-      line-height:1.45;
-      font-weight:700;
-    }
-
-    .content-card{
-      border-radius:24px;
-      padding:14px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--line);
-      box-shadow:var(--shadow);
-      margin-bottom:14px;
-    }
-
-    .section-title{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:12px;
-    }
-
-    .section-title h2{
-      margin:0;
-      font-size:18px;
-      font-weight:900;
-      letter-spacing:-.3px;
-    }
-
-    .section-title p{
-      margin:0;
-      font-size:12px;
-      color:var(--muted);
-      font-weight:700;
-    }
-
-    .filters{
-      display:flex;
-      gap:8px;
-      overflow:auto;
-      padding-bottom:2px;
-      scrollbar-width:none;
-      -ms-overflow-style:none;
-    }
-
-    .filters::-webkit-scrollbar{
-      display:none;
-      width:0;
-      height:0;
-    }
-
-    .chip{
-      border:none;
-      min-height:38px;
-      padding:0 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      font-size:12px;
-      font-weight:900;
-      white-space:nowrap;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .chip.active{
-      background:var(--grad);
-      border-color:transparent;
-      box-shadow:0 12px 28px rgba(124,92,255,.18);
-    }
-
-    .search-row{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:10px;
-      margin-top:12px;
-    }
-
-    .search-row input{
-      width:100%;
-      min-height:46px;
-      border:none;
-      outline:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      padding:12px 14px;
-      font-family:'Outfit',sans-serif;
-      font-size:14px;
-    }
-
-    .search-row input::placeholder{
-      color:rgba(255,255,255,.36);
-    }
-
-    .search-row button{
-      min-width:110px;
-      min-height:46px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      font-size:13px;
-      font-weight:900;
-      cursor:pointer;
-      font-family:'Outfit',sans-serif;
-    }
-
-    .list{
-      display:grid;
-      gap:10px;
-    }
-
-    .row{
-      display:grid;
-      grid-template-columns:auto 1fr auto;
-      gap:12px;
-      align-items:center;
-      border-radius:20px;
-      padding:14px 12px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.07);
-    }
-
-    .icon{
-      width:48px;
-      height:48px;
-      border-radius:16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:20px;
-      font-weight:900;
-      flex:0 0 auto;
-    }
-
-    .icon.plus{
-      background:rgba(34,197,94,.12);
-      border:1px solid rgba(34,197,94,.18);
-      color:#b5f3c8;
-    }
-
-    .icon.minus{
-      background:rgba(239,68,68,.10);
-      border:1px solid rgba(239,68,68,.18);
-      color:#ffd1d1;
-    }
-
-    .icon.neutral{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-    }
-
-    .mid{
-      min-width:0;
-    }
-
-    .mid-top{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:5px;
-    }
-
-    .type-pill{
-      display:inline-flex;
-      align-items:center;
-      min-height:24px;
-      padding:4px 8px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      font-size:10px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.35px;
-    }
-
-    .title{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      line-height:1.35;
-      word-break:break-word;
-    }
-
-    .sub{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.55;
-      font-weight:700;
-      word-break:break-word;
-    }
-
-    .right{
-      text-align:right;
-      min-width:88px;
-    }
-
-    .delta{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:22px;
-      line-height:1;
-      font-weight:700;
-    }
-
-    .delta.plus{ color:#86efac; }
-    .delta.minus{ color:#fca5a5; }
-    .delta.neutral{ color:#fff; }
-
-    .after{
-      margin-top:6px;
-      font-size:11px;
-      color:var(--muted);
-      font-weight:800;
-      line-height:1.4;
-    }
-
-    .date{
-      margin-top:4px;
-      font-size:11px;
-      color:rgba(255,255,255,.46);
-      font-weight:700;
-    }
-
-    .empty{
-      border-radius:20px;
-      padding:18px 14px;
-      background:rgba(255,255,255,.04);
-      border:1px dashed rgba(255,255,255,.10);
-      text-align:center;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.65;
-      font-weight:700;
-    }
-
-    .loading{
-      padding:18px 14px;
-      text-align:center;
-      color:var(--muted);
-      font-size:13px;
-      font-weight:800;
-    }
-
-    .error{
-      border-radius:16px;
-      padding:14px;
-      background:rgba(239,68,68,.08);
-      border:1px solid rgba(239,68,68,.14);
-      color:#ffd7d7;
-      font-size:13px;
-      line-height:1.55;
-      font-weight:800;
-    }
-
-    @media (max-width:680px){
-      .summary{
-        grid-template-columns:1fr;
-      }
-
-      .row{
-        grid-template-columns:auto 1fr;
-      }
-
-      .right{
-        grid-column:2;
-        min-width:0;
-        text-align:left;
-      }
-
-      .search-row{
-        grid-template-columns:1fr;
-      }
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>italkyAI • Jeton Hareketleri</title>
+<meta name="theme-color" content="#06111d" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06111d;--head:72px;--foot:76px;--safe-bottom:env(safe-area-inset-bottom,0px);--line:rgba(53,213,208,.24);--cyan:#35d5d0;--cyan2:#72fff7;--text:#f6fbff;--muted:#9eb2c8;--gold:#f4bd50;--danger:#ef8b8b;--green:#7af0a0;--red:#ff9d9d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)!important;color:var(--text);font-family:Manrope,Arial,sans-serif}
+body{background:linear-gradient(180deg,#07131f 0%,#06111d 55%,#040b13 100%)!important}a{color:inherit;text-decoration:none}button,input{font:inherit;color:inherit}
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--head);z-index:40;display:flex;align-items:center;gap:16px;padding:10px clamp(16px,2.4vw,34px);border-bottom:1px solid var(--line);background:rgba(6,17,29,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.brand{display:inline-flex;align-items:center;min-width:0}.brand img{display:block;width:132px;height:50px;object-fit:contain;object-position:left center}.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.top-token{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:7px 13px;border-radius:999px;border:1px solid rgba(244,189,80,.28);background:rgba(244,189,80,.12);color:#ffe2a4;font-size:12px;font-weight:1000}.avatar-btn{display:none;width:40px;height:40px;border-radius:999px;overflow:hidden;border:2px solid var(--cyan);background:#10202d}.avatar-btn img{width:100%;height:100%;object-fit:cover}.signed .avatar-btn{display:block}.menu-btn{width:42px;height:42px;border:1px solid rgba(53,213,208,.42);border-radius:13px;background:rgba(6,20,32,.88);display:grid;place-items:center;cursor:pointer;box-shadow:0 0 0 1px rgba(53,213,208,.12),0 10px 28px rgba(0,0,0,.22)}.menu-lines{width:18px;height:14px;display:grid;gap:4px}.menu-lines span{height:2px;border-radius:999px;background:#38e4df;box-shadow:0 0 12px rgba(56,228,223,.45)}
+.page{position:fixed;top:var(--head);bottom:calc(var(--foot) + var(--safe-bottom));left:0;right:0;overflow:auto;scrollbar-width:none;padding:0 clamp(18px,3.2vw,38px) 28px}.page::-webkit-scrollbar{display:none}.history-page{width:100%;max-width:none;margin:0 auto;min-height:100%;position:relative}.hero{position:relative;min-height:230px;padding:36px 0 24px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;overflow:hidden}.hero:before{content:"";position:absolute;inset:0 calc(-1 * clamp(18px,3.2vw,38px));z-index:-2;background:linear-gradient(90deg,rgba(6,17,29,.98) 0%,rgba(6,17,29,.76) 42%,rgba(6,17,29,.42) 72%,rgba(6,17,29,.95) 100%)}.hero:after{content:"";position:absolute;right:14%;top:18px;width:430px;height:210px;border-radius:54px;background:linear-gradient(135deg,rgba(53,213,208,.14),rgba(244,189,80,.14));filter:blur(20px);transform:rotate(-10deg);z-index:-1}.kicker{display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:6px 13px;border-radius:999px;border:1px solid rgba(53,213,208,.42);background:rgba(53,213,208,.14);color:#66fff6;font-size:12px;font-weight:1000;letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px}.hero h1{margin:0;font-size:clamp(42px,4.4vw,64px);line-height:.94;font-weight:1000;letter-spacing:-.06em;color:#fff}.hero p{margin:14px 0 0;max-width:780px;color:#c5d5e7;font-size:15px;line-height:1.55;font-weight:800}.hero-pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}.pill{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:7px 14px;border-radius:999px;border:1px solid rgba(53,213,208,.22);background:rgba(8,24,38,.72);color:#b8c9db;font-size:12px;font-weight:900;white-space:nowrap}.pill strong{color:#fff}.pill.gold{border-color:rgba(244,189,80,.28);background:rgba(244,189,80,.10);color:#ffe2a4}.pill.cyan{color:#aafffa}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}.sum-card{position:relative;min-height:138px;border:1px solid rgba(53,213,208,.20);border-radius:22px;background:linear-gradient(180deg,rgba(15,34,53,.92),rgba(8,20,34,.96));box-shadow:inset 0 1px 0 rgba(255,255,255,.04);padding:18px;overflow:hidden}.sum-card:after{content:"";position:absolute;right:-28px;top:-36px;width:120px;height:120px;border-radius:999px;background:rgba(53,213,208,.08);filter:blur(2px)}.sum-label{font-size:12px;font-weight:1000;color:#9eb2c8;text-transform:uppercase;letter-spacing:.06em}.sum-value{margin-top:10px;font-size:clamp(34px,3.2vw,48px);line-height:.9;font-weight:1000;letter-spacing:-.06em;color:#fff}.sum-sub{margin-top:12px;color:#95abc2;font-size:12px;font-weight:850;line-height:1.45}.sum-card.loaded .sum-value{color:#9dffb5}.sum-card.spent .sum-value{color:#ffb3b3}
+.panel{margin-top:16px;border:1px solid rgba(53,213,208,.20);border-radius:24px;background:linear-gradient(180deg,rgba(15,34,53,.78),rgba(8,20,34,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.04);padding:18px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}.panel-title h2{margin:0;font-size:22px;line-height:1.05;font-weight:1000;letter-spacing:-.04em}.panel-title p{margin:7px 0 0;color:#9eb2c8;font-size:13px;font-weight:850}.filters{display:flex;gap:8px;overflow:auto;scrollbar-width:none;padding-bottom:2px}.filters::-webkit-scrollbar{display:none}.chip{min-height:38px;padding:0 14px;border-radius:999px;border:1px solid rgba(53,213,208,.16);background:rgba(255,255,255,.045);color:#dce9f6;font-size:12px;font-weight:1000;white-space:nowrap;cursor:pointer}.chip.active{background:rgba(53,213,208,.16);border-color:rgba(53,213,208,.50);color:#aafffa;box-shadow:0 10px 28px rgba(53,213,208,.08)}.search-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:12px}.search-row input{width:100%;min-height:48px;border-radius:15px;background:rgba(5,16,28,.74);border:1px solid rgba(53,213,208,.18);color:#fff;padding:12px 14px;font-size:14px;font-weight:800}.search-row input::placeholder{color:#6f849a}.search-row button{min-width:118px;min-height:48px;border-radius:15px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:1000;cursor:pointer}.list{display:grid;gap:10px}.row{display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:14px;min-height:86px;border-radius:20px;padding:14px;background:rgba(5,16,28,.64);border:1px solid rgba(255,255,255,.065);transition:.14s}.row:hover{border-color:rgba(53,213,208,.24);background:rgba(8,24,38,.76)}.icon{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:20px;font-weight:1000}.icon.plus{background:rgba(34,197,94,.11);border:1px solid rgba(34,197,94,.20);color:#bbf7d0}.icon.minus{background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.20);color:#fecaca}.icon.neutral{background:rgba(53,213,208,.10);border:1px solid rgba(53,213,208,.16);color:#aafffa}.mid{min-width:0}.mid-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}.type-pill{display:inline-flex;align-items:center;min-height:25px;padding:4px 9px;border-radius:999px;background:rgba(53,213,208,.10);border:1px solid rgba(53,213,208,.15);color:#bafffb;font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em}.title{font-size:14px;font-weight:1000;color:#fff;line-height:1.35;word-break:break-word}.date{margin-top:5px;font-size:11px;color:#7f95ad;font-weight:850}.right{text-align:right;min-width:96px}.delta{font-size:25px;line-height:.95;font-weight:1000;letter-spacing:-.045em}.delta.plus{color:#9dffb5}.delta.minus{color:#ffb3b3}.delta.neutral{color:#fff}.after{margin-top:7px;color:#8fa4ba;font-size:11px;font-weight:900;line-height:1.35}.empty,.loading,.error{border-radius:20px;padding:22px 16px;background:rgba(5,16,28,.64);border:1px dashed rgba(53,213,208,.18);text-align:center;color:#9eb2c8;font-size:13px;line-height:1.65;font-weight:850}.error{border-color:rgba(248,113,113,.25);background:rgba(127,29,29,.10);color:#fecaca}.actions{display:flex;gap:10px;flex-wrap:wrap}.primary-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border-radius:14px;background:#fff;color:#06111d!important;font-size:13px;font-weight:1000}.ghost-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border-radius:14px;border:1px solid rgba(53,213,208,.28);background:rgba(53,213,208,.08);color:#bafffb!important;font-size:13px;font-weight:1000}
+.footer{position:fixed;left:0;right:0;bottom:0;height:calc(var(--foot) + var(--safe-bottom));z-index:40;border-top:1px solid var(--line);background:#06111d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 12px calc(8px + var(--safe-bottom));overflow:hidden}.footer-links{display:flex;align-items:center;justify-content:center;gap:16px;white-space:nowrap}.footer-links a{font-size:11px;color:#aebdcc;font-weight:800}.footer-sign{font-size:10px;line-height:1.2;color:#91a4b8;font-weight:800;white-space:nowrap;text-align:center}.footer-sign b{color:#36d4ce;margin-left:5px}
+.drawer-bg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.56);opacity:0;pointer-events:none;transition:.2s}.drawer{position:fixed;right:0;top:0;bottom:0;z-index:61;width:min(92vw,370px);padding:calc(16px + env(safe-area-inset-top,0px)) 14px calc(18px + env(safe-area-inset-bottom,0px));background:radial-gradient(circle at 14% 0%,rgba(53,213,208,.18),transparent 34%),linear-gradient(180deg,rgba(7,19,31,.99),rgba(4,12,22,.99));border-left:1px solid rgba(53,213,208,.20);box-shadow:-24px 0 70px rgba(0,0,0,.48);transform:translateX(105%);transition:.22s;overflow-y:auto}.open .drawer{transform:none}.open .drawer-bg{opacity:1;pointer-events:auto}.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.drawer-logo{display:block;width:126px;max-height:54px;object-fit:contain}.close{width:42px;height:42px;border:1px solid var(--line);border-radius:13px;background:#10202d;color:#fff;font-size:24px;cursor:pointer}.drawer-user{min-height:118px;padding:14px;border-radius:24px;display:grid;grid-template-columns:64px 1fr;align-items:center;gap:14px;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.032));border:1px solid rgba(53,213,208,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 18px 44px rgba(0,0,0,.22);margin-bottom:12px;cursor:pointer}.drawer-avatar{width:64px;height:64px;border-radius:22px;overflow:hidden;border:1px solid rgba(53,213,208,.28);background:linear-gradient(135deg,rgba(53,213,208,.22),rgba(15,23,42,.92));display:grid;place-items:center}.drawer-avatar img{width:100%;height:100%;object-fit:cover}.drawer-name{font-size:15px;font-weight:1000;color:#fff;line-height:1.1;margin-bottom:4px}.drawer-mail{font-size:12px;font-weight:900;color:#f6fbff;line-height:1.25;word-break:break-all}.drawer-token{margin-top:8px;display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:6px 11px;border-radius:999px;background:rgba(53,213,208,.12);border:1px solid rgba(53,213,208,.28);color:#bafffb;font-size:12px;font-weight:1000;white-space:nowrap}.drawer nav{display:grid;gap:8px}.drawer nav a,.drawer nav button{width:100%;min-height:45px;border-radius:16px;display:flex;align-items:center;gap:11px;padding:0 13px;background:linear-gradient(180deg,rgba(255,255,255,.058),rgba(255,255,255,.026));border:1px solid rgba(255,255,255,.075);color:#f6fbff!important;text-align:left;text-decoration:none;font-size:13px;font-weight:900;line-height:1;font-family:Manrope,Arial,sans-serif;cursor:pointer}.drawer nav a.danger,.drawer nav button.danger{color:#fecaca!important;border-color:rgba(248,113,113,.18)}.drawer-icon{width:26px;height:26px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;background:rgba(53,213,208,.11);border:1px solid rgba(53,213,208,.18);color:#84fff7;font-size:13px;font-weight:1000}.danger .drawer-icon{background:rgba(248,113,113,.10);border-color:rgba(248,113,113,.16);color:#fecaca}.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));z-index:9999;transform:translateX(-50%) translateY(20px);max-width:min(92vw,520px);padding:12px 16px;border:1px solid var(--line);border-radius:16px;background:rgba(6,17,29,.96);box-shadow:0 20px 50px rgba(0,0,0,.34);color:#fff;text-align:center;font-size:13px;font-weight:900;opacity:0;pointer-events:none;transition:.22s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:1180px){.summary{grid-template-columns:1fr 1fr}.products-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top-token{display:none}}
+@media(max-width:720px){:root{--head:68px;--foot:74px}.topbar{padding:8px 13px}.brand img{width:104px;height:44px}.page{padding-left:14px;padding-right:14px}.hero{min-height:196px;padding:26px 0 22px}.hero h1{font-size:39px}.hero p{font-size:13px}.summary{grid-template-columns:1fr;gap:10px}.sum-card{min-height:112px;padding:16px}.panel{padding:14px;border-radius:20px}.panel-head{gap:10px}.panel-title h2{font-size:20px}.search-row{grid-template-columns:1fr}.row{grid-template-columns:48px 1fr;gap:12px}.right{grid-column:2;text-align:left;min-width:0}.icon{width:48px;height:48px;border-radius:16px}.drawer{width:min(94vw,370px)}.footer-links{gap:12px}.footer-links a{font-size:10px}}
+</style>
 </head>
 <body>
-  <div id="pageContent">
-    <section class="hero">
-      <h1>Jeton Ekstresi</h1>
-      <p>
-        Yüklenen ve kullanılan jetonlarını sade şekilde buradan takip edebilirsin.
-      </p>
-
-      <div class="summary">
-        <div class="sum-card">
-          <div class="sum-label">Mevcut Bakiye</div>
-          <div class="sum-value" id="currentBalance">0</div>
-          <div class="sum-sub">Kullanılabilir jetonların</div>
-        </div>
-
-        <div class="sum-card">
-          <div class="sum-label">Toplam Yüklenen</div>
-          <div class="sum-value" id="totalLoaded">0</div>
-          <div class="sum-sub">Hesabına eklenen toplam jeton</div>
-        </div>
-
-        <div class="sum-card">
-          <div class="sum-label">Toplam Harcanan</div>
-          <div class="sum-value" id="totalSpent">0</div>
-          <div class="sum-sub">Kullanımda düşen toplam jeton</div>
-        </div>
+<div class="drawer-bg" id="drawerBg"></div>
+<aside class="drawer" aria-label="Hesap menüsü">
+  <div class="drawer-head">
+    <a href="https://italky.ai/hosgeldiniz" aria-label="Ana sayfa"><img class="drawer-logo" src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
+    <button class="close" id="close" type="button">×</button>
+  </div>
+  <div class="drawer-user" id="drawerProfile">
+    <div class="drawer-avatar"><img src="" id="drawerPic" alt="Profil"></div>
+    <div>
+      <div class="drawer-name" id="drawerName">Kullanıcı</div>
+      <div class="drawer-mail" id="drawerMail">-</div>
+      <div class="drawer-token"><span>Jeton</span><strong id="drawerTokens">0</strong></div>
+    </div>
+  </div>
+  <nav>
+    <a href="https://italky.ai/hosgeldiniz"><span class="drawer-icon">⌂</span><span>Anasayfa</span></a>
+    <a href="/pages/jetonbuy.html"><span class="drawer-icon">+</span><span>Jeton Yükle</span></a>
+    <a href="/pages/wallet_history.html"><span class="drawer-icon">↕</span><span>Jeton Hareketleri</span></a>
+    <a href="/pages/plan_select.html"><span class="drawer-icon">$</span><span>Fiyatlandırma</span></a>
+    <a href="/pages/about.html"><span class="drawer-icon">i</span><span>Hakkımızda</span></a>
+    <a href="/pages/features.html"><span class="drawer-icon">◆</span><span>Özellikler</span></a>
+    <a href="/pages/privacy.html"><span class="drawer-icon">◌</span><span>Gizlilik</span></a>
+    <a href="/pages/contact.html"><span class="drawer-icon">@</span><span>İletişim</span></a>
+    <a href="/music-showcase/"><span class="drawer-icon">♫</span><span>Müzik Hakları</span></a>
+    <button class="danger" id="logout" type="button"><span class="drawer-icon">⇥</span><span>Güvenli Çıkış</span></button>
+    <a class="danger" href="/pages/delete-account.html"><span class="drawer-icon">×</span><span>Hesabımı Sil</span></a>
+  </nav>
+</aside>
+<header class="topbar">
+  <a class="brand" href="https://italky.ai/hosgeldiniz" aria-label="Ana sayfa"><img src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
+  <div class="top-actions">
+    <div class="top-token">Jeton <strong id="headerTokens">0</strong></div>
+    <a class="avatar-btn" href="/pages/profile.html" aria-label="Profil"><img id="avatar" alt="Profil"></a>
+    <button class="menu-btn" id="menu" type="button" aria-label="Menü"><span class="menu-lines"><span></span><span></span><span></span></span></button>
+  </div>
+</header>
+<main class="page" id="pageContent">
+  <section class="history-page">
+    <div class="hero">
+      <div class="kicker">ITALKYAI · JETON HAREKETLERİ</div>
+      <h1>Jeton hareketleri</h1>
+      <p>Yüklenen, harcanan ve hediye gelen tüm jeton işlemlerini buradan takip edebilirsin.</p>
+      <div class="hero-pills">
+        <span class="pill gold">Mevcut bakiye: <strong id="currentBalance">0</strong></span>
+        <span class="pill cyan"><span id="resultInfo">Yükleniyor...</span></span>
+        <span class="pill">Son 300 hareket</span>
       </div>
+    </div>
+    <section class="summary">
+      <article class="sum-card"><div class="sum-label">Mevcut Bakiye</div><div class="sum-value" id="summaryBalance">0</div><div class="sum-sub">Kullanılabilir jetonların</div></article>
+      <article class="sum-card loaded"><div class="sum-label">Toplam Yüklenen</div><div class="sum-value" id="totalLoaded">0</div><div class="sum-sub">Hesabına eklenen toplam jeton</div></article>
+      <article class="sum-card spent"><div class="sum-label">Toplam Harcanan</div><div class="sum-value" id="totalSpent">0</div><div class="sum-sub">Kullanımda düşen toplam jeton</div></article>
     </section>
-
-    <section class="content-card">
-      <div class="section-title">
-        <div>
-          <h2>Filtreler</h2>
-          <p>İşlemleri türüne göre daraltabilirsin</p>
-        </div>
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><h2>Filtreler</h2><p>Hareketleri türüne göre daraltabilir veya arayabilirsin.</p></div>
+        <div class="actions"><a class="primary-link" href="/pages/jetonbuy.html">Jeton yükle</a><a class="ghost-link" href="https://italky.ai/hosgeldiniz">Anasayfa</a></div>
       </div>
-
       <div class="filters" id="filterBar">
         <button class="chip active" data-filter="all" type="button">Tümü</button>
         <button class="chip" data-filter="loaded" type="button">Yüklenen</button>
@@ -443,452 +91,73 @@
         <button class="chip" data-filter="package_bonus" type="button">Paket Bonusu</button>
         <button class="chip" data-filter="upgrade_credit" type="button">Yükseltme</button>
       </div>
-
-      <div class="search-row">
-        <input id="searchInput" type="text" placeholder="İşlem ara"/>
-        <button id="clearFilterBtn" type="button">Temizle</button>
-      </div>
+      <div class="search-row"><input id="searchInput" type="text" placeholder="İşlem ara"/><button id="clearFilterBtn" type="button">Temizle</button></div>
     </section>
-
-    <section class="content-card">
-      <div class="section-title">
-        <div>
-          <h2>Hareketler</h2>
-          <p id="resultInfo">Yükleniyor...</p>
-        </div>
-      </div>
-
-      <div id="listWrap" class="list">
-        <div class="loading">Jeton hareketleri yükleniyor...</div>
-      </div>
+    <section class="panel">
+      <div class="panel-head"><div class="panel-title"><h2>Hareketler</h2><p>En yeni işlem en üstte görünür.</p></div></div>
+      <div id="listWrap" class="list"><div class="loading">Jeton hareketleri yükleniyor...</div></div>
     </section>
-  </div>
-
-  <script type="module">
-    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
-    import { supabase } from "/js/supabase_client.js";
-    import { STORAGE_KEY } from "/js/config.js";
-
-    try{
-      mountShell({ scroll:"auto" });
-    }catch(e){
-      console.warn("[wallet_history shell]", e);
-    }
-
-    const currentBalanceEl = document.getElementById("currentBalance");
-    const totalLoadedEl = document.getElementById("totalLoaded");
-    const totalSpentEl = document.getElementById("totalSpent");
-    const listWrap = document.getElementById("listWrap");
-    const resultInfo = document.getElementById("resultInfo");
-    const filterBar = document.getElementById("filterBar");
-    const searchInput = document.getElementById("searchInput");
-    const clearFilterBtn = document.getElementById("clearFilterBtn");
-
-    let allRows = [];
-    let activeFilter = "all";
-
-    const LOADED_TYPES = new Set([
-      "purchase",
-      "package_bonus",
-      "upgrade_credit",
-      "gift",
-      "manual_add",
-      "nfc_token_load",
-      "manual_code_token_load",
-      "google_play_token_load",
-      "billing_google_confirm",
-      "billing_google",
-      "subscription_bonus",
-      "welcome_bonus"
-    ]);
-
-    const SPENT_TYPES = new Set([
-      "usage_text",
-      "usage_face_to_face",
-      "usage_side_to_side",
-      "usage_meeting",
-      "usage_clone_voice",
-      "usage_teacher",
-      "usage_voice",
-      "manual_deduct",
-      "text_ai",
-      "voice_ai",
-      "voice_clone",
-      "voice_clone_preview",
-      "voice_preset_use",
-      "voice_preset_preview",
-      "practic_ai",
-      "level_test_exam",
-      "game_pass_use",
-      "translate_ai_gemini",
-      "translate_ai_openai",
-      "chat_text_gemini",
-      "chat_text_openai",
-      "chat_voice_gemini",
-      "chat_voice_openai",
-      "tts_mine",
-      "tts_second",
-      "tts_memory",
-      "usage"
-    ]);
-
-    function formatInt(val){
-      return Number(val || 0).toLocaleString("tr-TR");
-    }
-
-    function escapeHtml(str){
-      return String(str ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#39;");
-    }
-
-    function formatDate(v){
-      if(!v) return "-";
-      try{
-        return new Date(v).toLocaleString("tr-TR", {
-          timeZone: "Europe/Istanbul",
-          year:"numeric",
-          month:"2-digit",
-          day:"2-digit",
-          hour:"2-digit",
-          minute:"2-digit"
-        });
-      }catch{
-        return String(v);
-      }
-    }
-
-    function parseMeta(meta){
-      if (!meta) return {};
-      if (typeof meta === "object") return meta;
-      try{ return JSON.parse(meta); } catch { return {}; }
-    }
-
-    function getRowTxType(row){
-      return String(row?.tx_type || row?.type || "").trim().toLowerCase();
-    }
-
-    function getRowSource(row){
-      const meta = parseMeta(row?.meta);
-      return String(row?.source || meta?.source || row?.reason || "").trim().toLowerCase();
-    }
-
-    function getSignedAmount(row){
-      const txType = getRowTxType(row);
-
-      if (row?.jetons !== undefined && row?.jetons !== null) {
-        const jetons = Number(row.jetons || 0);
-        if (txType === "debit") return -Math.abs(jetons);
-        if (txType === "credit") return Math.abs(jetons);
-      }
-
-      const delta = Number(row?.delta);
-      if (Number.isFinite(delta) && delta !== 0) return delta;
-
-      const amount = Number(row?.amount || 0);
-      if (Number.isFinite(amount) && amount !== 0) {
-        if (txType === "debit") return -Math.abs(amount);
-        if (txType === "credit") return Math.abs(amount);
-        return amount;
-      }
-
-      return 0;
-    }
-
-    function isLoadedRow(row){
-      const txType = getRowTxType(row);
-      const source = getRowSource(row);
-      const amt = getSignedAmount(row);
-      return amt > 0 || txType === "credit" || txType === "gift" || LOADED_TYPES.has(source);
-    }
-
-    function isSpentRow(row){
-      const txType = getRowTxType(row);
-      const source = getRowSource(row);
-      const amt = getSignedAmount(row);
-      return amt < 0 || txType === "debit" || SPENT_TYPES.has(source);
-    }
-
-    function typeLabel(row){
-      const txType = getRowTxType(row);
-      const source = getRowSource(row);
-
-      const map = {
-        purchase: "Satın Alma",
-        package_bonus: "Paket Bonusu",
-        upgrade_credit: "Yükseltme Kredisi",
-        gift: "Hediye",
-        welcome_bonus: "Hoş Geldin Bonusu",
-        manual_add: "Manuel Ekleme",
-        manual_deduct: "Manuel Düşüm",
-        nfc_token_load: "NFC Yükleme",
-        manual_code_token_load: "Kod ile Yükleme",
-        google_play_token_load: "Google Play Yükleme",
-        billing_google_confirm: "Play Satın Alma",
-        billing_google: "Play Satın Alma",
-        subscription_bonus: "Üyelik Bonusu",
-        translate_ai_gemini: "Çeviri",
-        translate_ai_openai: "Çeviri",
-        chat_text_gemini: "Yazılı Sohbet",
-        chat_text_openai: "Yazılı Sohbet",
-        chat_voice_gemini: "Sesli Sohbet",
-        chat_voice_openai: "Sesli Sohbet",
-        tts_mine: "Kendi Sesim",
-        tts_second: "2. Ses",
-        tts_memory: "Hatıra Sesi",
-        usage_text: "Metin Kullanımı",
-        usage_voice: "Ses Kullanımı",
-        usage: "Kullanım"
-      };
-
-      if (map[source]) return map[source];
-      if (txType === "credit") return "Yüklenen";
-      if (txType === "debit") return "Harcanan";
-      if (txType === "gift") return "Hediye";
-      return "İşlem";
-    }
-
-    function typeIcon(row){
-      const source = getRowSource(row);
-
-      if (isLoadedRow(row)) {
-        if (source.includes("welcome_bonus")) return "🎊";
-        if (source.includes("gift")) return "🎁";
-        if (source.includes("google_play") || source.includes("billing_google") || source.includes("purchase")) return "🛒";
-        if (source.includes("manual_code")) return "🔢";
-        if (source.includes("nfc")) return "📶";
-        if (source.includes("package_bonus")) return "🎉";
-        if (source.includes("upgrade_credit")) return "🔄";
-        return "➕";
-      }
-
-      if (isSpentRow(row)) {
-        if (source.includes("translate")) return "🌍";
-        if (source.includes("chat_voice")) return "🎙️";
-        if (source.includes("chat_text")) return "💬";
-        if (source.includes("tts_")) return "🗣️";
-        if (source.includes("voice")) return "🔊";
-        return "➖";
-      }
-
-      return "•";
-    }
-
-    function typeGroup(row){
-      if (isLoadedRow(row)) return "plus";
-      if (isSpentRow(row)) return "minus";
-      return "neutral";
-    }
-
-    function shortDescription(row){
-      const source = getRowSource(row);
-      const label = typeLabel(row);
-
-      if (source === "welcome_bonus") return "İlk üyelik bonusu";
-      if (source === "gift") return "Hediye jeton";
-      if (source === "package_bonus") return "Paketle gelen bonus";
-      if (source === "upgrade_credit") return "Yükseltmeden gelen kredi";
-      if (source === "nfc_token_load") return "NFC kart ile yüklendi";
-      if (source === "manual_code_token_load") return "Kod ile yüklendi";
-      if (source === "google_play_token_load" || source === "billing_google_confirm" || source === "billing_google" || source === "purchase") {
-        return "Google Play üzerinden işlendi";
-      }
-      if (source === "tts_mine") return "Kendi sesin kullanıldı";
-      if (source === "tts_second") return "2. ses kullanıldı";
-      if (source === "tts_memory") return "Hatıra sesi kullanıldı";
-      if (source === "translate_ai_gemini" || source === "translate_ai_openai") return "Çeviri sırasında kullanıldı";
-      if (source === "chat_text_gemini" || source === "chat_text_openai") return "Yazılı sohbette kullanıldı";
-      if (source === "chat_voice_gemini" || source === "chat_voice_openai") return "Sesli sohbette kullanıldı";
-
-      return row?.description || row?.reason || label;
-    }
-
-    function filterRows(rows){
-      const q = String(searchInput.value || "").trim().toLowerCase();
-
-      return rows.filter((row) => {
-        const source = getRowSource(row);
-        const txType = getRowTxType(row);
-        const searchBlob = [
-          source,
-          txType,
-          typeLabel(row),
-          shortDescription(row)
-        ].join(" ").toLowerCase();
-
-        const matchesSearch = !q || searchBlob.includes(q);
-
-        let matchesFilter = true;
-
-        if (activeFilter === "loaded") {
-          matchesFilter = isLoadedRow(row);
-        } else if (activeFilter === "spent") {
-          matchesFilter = isSpentRow(row);
-        } else if (activeFilter === "gift") {
-          matchesFilter = source === "gift" || source === "welcome_bonus" || txType === "gift";
-        } else if (activeFilter === "package_bonus") {
-          matchesFilter = source === "package_bonus";
-        } else if (activeFilter === "upgrade_credit") {
-          matchesFilter = source === "upgrade_credit";
-        }
-
-        return matchesSearch && matchesFilter;
-      });
-    }
-
-    function paintSummary(rows, currentBalance){
-      let loaded = 0;
-      let spent = 0;
-
-      rows.forEach((r) => {
-        const amt = getSignedAmount(r);
-        if (amt > 0) loaded += amt;
-        if (amt < 0) spent += Math.abs(amt);
-      });
-
-      currentBalanceEl.textContent = formatInt(currentBalance);
-      totalLoadedEl.textContent = formatInt(loaded);
-      totalSpentEl.textContent = formatInt(spent);
-
-      try{ setHeaderTokens(currentBalance); }catch{}
-      patchCacheTokens(currentBalance);
-    }
-
-    function patchCacheTokens(tokens){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const cached = raw ? JSON.parse(raw) : {};
-        cached.tokens = Number(tokens || 0);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
-      }catch{}
-    }
-
-    function renderRows(rows){
-      const filtered = filterRows(rows);
-
-      resultInfo.textContent = `${filtered.length} hareket gösteriliyor`;
-
-      if (!filtered.length) {
-        listWrap.innerHTML = `
-          <div class="empty">
-            Bu filtre için kayıt bulunamadı.<br>
-            Filtreyi değiştirerek diğer hareketleri görebilirsin.
-          </div>
-        `;
-        return;
-      }
-
-      listWrap.innerHTML = filtered.map((row) => {
-        const amt = getSignedAmount(row);
-        const group = typeGroup(row);
-        const icon = typeIcon(row);
-
-        const balanceAfterRaw =
-          row?.balance_after ??
-          parseMeta(row?.meta)?.balance_after ??
-          null;
-
-        const balanceAfter = Number.isFinite(Number(balanceAfterRaw))
-          ? Number(balanceAfterRaw)
-          : null;
-
-        const deltaText = `${amt > 0 ? "+" : ""}${formatInt(amt)}`;
-
-        return `
-          <div class="row">
-            <div class="icon ${group}">${icon}</div>
-
-            <div class="mid">
-              <div class="mid-top">
-                <div class="type-pill">${escapeHtml(typeLabel(row))}</div>
-              </div>
-
-              <div class="title">${escapeHtml(shortDescription(row))}</div>
-              <div class="date">${escapeHtml(formatDate(row.created_at))}</div>
-            </div>
-
-            <div class="right">
-              <div class="delta ${group}">${escapeHtml(deltaText)}</div>
-              <div class="after">Bakiye: ${escapeHtml(balanceAfter === null ? "-" : formatInt(balanceAfter))}</div>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    async function loadPage(){
-      try{
-        listWrap.innerHTML = `<div class="loading">Jeton hareketleri yükleniyor...</div>`;
-        resultInfo.textContent = "Yükleniyor...";
-
-        const { data: authData, error: authErr } = await supabase.auth.getUser();
-        if (authErr) throw authErr;
-
-        const user = authData?.user;
-        if (!user?.id) {
-          listWrap.innerHTML = `<div class="error">Önce giriş yapmalısın.</div>`;
-          resultInfo.textContent = "Oturum bulunamadı";
-          return;
-        }
-
-        const [profileRes, txRes] = await Promise.all([
-          supabase
-            .from("profiles")
-            .select("tokens")
-            .eq("id", user.id)
-            .single(),
-
-          supabase
-            .from("wallet_tx")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending:false })
-            .limit(300)
-        ]);
-
-        if (profileRes.error) throw profileRes.error;
-        if (txRes.error) throw txRes.error;
-
-        const currentBalance = Number(profileRes.data?.tokens || 0);
-        allRows = Array.isArray(txRes.data) ? txRes.data : [];
-
-        paintSummary(allRows, currentBalance);
-        renderRows(allRows);
-      }catch(e){
-        console.error("[wallet_history]", e);
-        listWrap.innerHTML = `
-          <div class="error">
-            Jeton hareketleri alınamadı.<br>
-            ${escapeHtml(e?.message || "Bilinmeyen hata")}
-          </div>
-        `;
-        resultInfo.textContent = "Hata oluştu";
-      }
-    }
-
-    filterBar?.querySelectorAll(".chip").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        filterBar.querySelectorAll(".chip").forEach((x) => x.classList.remove("active"));
-        btn.classList.add("active");
-        activeFilter = btn.dataset.filter || "all";
-        renderRows(allRows);
-      });
-    });
-
-    searchInput?.addEventListener("input", () => renderRows(allRows));
-
-    clearFilterBtn?.addEventListener("click", () => {
-      searchInput.value = "";
-      activeFilter = "all";
-      filterBar.querySelectorAll(".chip").forEach((x) => x.classList.remove("active"));
-      filterBar.querySelector('[data-filter="all"]')?.classList.add("active");
-      renderRows(allRows);
-    });
-
-    loadPage();
-  </script>
+  </section>
+</main>
+<footer class="footer">
+  <nav class="footer-links"><a href="/pages/about.html">Hakkımızda</a><a href="/pages/features.html">Özellikler</a><a href="/pages/privacy.html">Gizlilik</a><a href="/pages/contact.html">İletişim</a></nav>
+  <div class="footer-sign">by Ozyigit's 2026 <b>𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</b></div>
+</footer>
+<div id="toast" class="toast"></div>
+<script type="module">
+import { supabase } from "/js/supabase_client.js";
+import { STORAGE_KEY } from "/js/config.js";
+const body=document.body;
+const currentBalanceEl=document.getElementById("currentBalance");
+const summaryBalanceEl=document.getElementById("summaryBalance");
+const totalLoadedEl=document.getElementById("totalLoaded");
+const totalSpentEl=document.getElementById("totalSpent");
+const headerTokensEl=document.getElementById("headerTokens");
+const drawerTokensEl=document.getElementById("drawerTokens");
+const drawerPic=document.getElementById("drawerPic");
+const avatar=document.getElementById("avatar");
+const drawerName=document.getElementById("drawerName");
+const drawerMail=document.getElementById("drawerMail");
+const listWrap=document.getElementById("listWrap");
+const resultInfo=document.getElementById("resultInfo");
+const filterBar=document.getElementById("filterBar");
+const searchInput=document.getElementById("searchInput");
+const clearFilterBtn=document.getElementById("clearFilterBtn");
+const toastEl=document.getElementById("toast");
+const fallbackAvatar="data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="24" fill="#0f766e"/><text x="40" y="51" text-anchor="middle" font-family="Arial" font-size="30" font-weight="800" fill="white">i</text></svg>');
+let allRows=[];let activeFilter="all";
+function toast(msg){if(!toastEl)return;toastEl.textContent=String(msg||"");toastEl.classList.add("show");clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>toastEl.classList.remove("show"),2300)}
+function openMenu(v){body.classList.toggle("open",!!v);document.documentElement.style.overflow=v?"hidden":"hidden";body.style.overflow=v?"hidden":"hidden"}
+document.getElementById("menu")?.addEventListener("click",()=>openMenu(true));
+document.getElementById("close")?.addEventListener("click",()=>openMenu(false));
+document.getElementById("drawerBg")?.addEventListener("click",()=>openMenu(false));
+document.getElementById("drawerProfile")?.addEventListener("click",()=>{location.href="/pages/profile.html"});
+document.querySelectorAll(".drawer nav a").forEach(a=>a.addEventListener("click",()=>openMenu(false)));
+document.getElementById("logout")?.addEventListener("click",async()=>{try{await supabase.auth.signOut()}catch{}location.replace("https://italky.ai/hosgeldiniz")});
+const LOADED_TYPES=new Set(["purchase","package_bonus","upgrade_credit","gift","manual_add","nfc_token_load","manual_code_token_load","google_play_token_load","billing_google_confirm","billing_google","subscription_bonus","welcome_bonus"]);
+const SPENT_TYPES=new Set(["usage_text","usage_face_to_face","usage_side_to_side","usage_meeting","usage_clone_voice","usage_teacher","usage_voice","manual_deduct","text_ai","voice_ai","voice_clone","voice_clone_preview","voice_preset_use","voice_preset_preview","practic_ai","level_test_exam","game_pass_use","translate_ai_gemini","translate_ai_openai","chat_text_gemini","chat_text_openai","chat_voice_gemini","chat_voice_openai","tts_mine","tts_second","tts_memory","usage"]);
+function formatInt(val){try{return Number(val||0).toLocaleString("tr-TR")}catch{return String(val||0)}}
+function escapeHtml(str){return String(str??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;")}
+function formatDate(v){if(!v)return "-";try{return new Date(v).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})}catch{return String(v)}}
+function parseMeta(meta){if(!meta)return{};if(typeof meta==="object")return meta;try{return JSON.parse(meta)}catch{return{}}}
+function getRowTxType(row){return String(row?.tx_type||row?.type||"").trim().toLowerCase()}
+function getRowSource(row){const meta=parseMeta(row?.meta);return String(row?.source||meta?.source||row?.reason||"").trim().toLowerCase()}
+function getSignedAmount(row){const txType=getRowTxType(row);if(row?.jetons!==undefined&&row?.jetons!==null){const jetons=Number(row.jetons||0);if(txType==="debit")return-Math.abs(jetons);if(txType==="credit")return Math.abs(jetons)}const delta=Number(row?.delta);if(Number.isFinite(delta)&&delta!==0)return delta;const amount=Number(row?.amount||0);if(Number.isFinite(amount)&&amount!==0){if(txType==="debit")return-Math.abs(amount);if(txType==="credit")return Math.abs(amount);return amount}return 0}
+function isLoadedRow(row){const txType=getRowTxType(row);const source=getRowSource(row);const amt=getSignedAmount(row);return amt>0||txType==="credit"||txType==="gift"||LOADED_TYPES.has(source)}
+function isSpentRow(row){const txType=getRowTxType(row);const source=getRowSource(row);const amt=getSignedAmount(row);return amt<0||txType==="debit"||SPENT_TYPES.has(source)}
+function typeLabel(row){const txType=getRowTxType(row);const source=getRowSource(row);const map={purchase:"Satın Alma",package_bonus:"Paket Bonusu",upgrade_credit:"Yükseltme Kredisi",gift:"Hediye",welcome_bonus:"Hoş Geldin Bonusu",manual_add:"Manuel Ekleme",manual_deduct:"Manuel Düşüm",nfc_token_load:"NFC Yükleme",manual_code_token_load:"Kod ile Yükleme",google_play_token_load:"Google Play Yükleme",billing_google_confirm:"Play Satın Alma",billing_google:"Play Satın Alma",subscription_bonus:"Üyelik Bonusu",translate_ai_gemini:"Çeviri",translate_ai_openai:"Çeviri",chat_text_gemini:"Yazılı Sohbet",chat_text_openai:"Yazılı Sohbet",chat_voice_gemini:"Sesli Sohbet",chat_voice_openai:"Sesli Sohbet",tts_mine:"Kendi Sesim",tts_second:"2. Ses",tts_memory:"Hatıra Sesi",usage_text:"Metin Kullanımı",usage_voice:"Ses Kullanımı",usage:"Kullanım",level_test_exam:"Seviye Tespiti",game_pass_use:"Oyun Kullanımı"};if(map[source])return map[source];if(txType==="credit")return"Yüklenen";if(txType==="debit")return"Harcanan";if(txType==="gift")return"Hediye";return"İşlem"}
+function typeIcon(row){const source=getRowSource(row);if(isLoadedRow(row)){if(source.includes("welcome_bonus"))return"🎊";if(source.includes("gift"))return"🎁";if(source.includes("google_play")||source.includes("billing_google")||source.includes("purchase"))return"🛒";if(source.includes("manual_code"))return"🔢";if(source.includes("nfc"))return"📶";if(source.includes("package_bonus"))return"🎉";if(source.includes("upgrade_credit"))return"↻";return"+"}if(isSpentRow(row)){if(source.includes("translate"))return"🌍";if(source.includes("chat_voice"))return"🎙";if(source.includes("chat_text"))return"💬";if(source.includes("tts_"))return"🗣";if(source.includes("voice"))return"🔊";if(source.includes("level_test"))return"✓";if(source.includes("game"))return"★";return"−"}return"•"}
+function typeGroup(row){if(isLoadedRow(row))return"plus";if(isSpentRow(row))return"minus";return"neutral"}
+function shortDescription(row){const source=getRowSource(row);const label=typeLabel(row);if(source==="welcome_bonus")return"İlk üyelik bonusu";if(source==="gift")return"Hediye jeton";if(source==="package_bonus")return"Paketle gelen bonus";if(source==="upgrade_credit")return"Yükseltmeden gelen kredi";if(source==="nfc_token_load")return"NFC kart ile yüklendi";if(source==="manual_code_token_load")return"Kod ile yüklendi";if(source==="google_play_token_load"||source==="billing_google_confirm"||source==="billing_google"||source==="purchase")return"Google Play üzerinden işlendi";if(source==="tts_mine")return"Kendi sesin kullanıldı";if(source==="tts_second")return"2. ses kullanıldı";if(source==="tts_memory")return"Hatıra sesi kullanıldı";if(source==="translate_ai_gemini"||source==="translate_ai_openai")return"Çeviri sırasında kullanıldı";if(source==="chat_text_gemini"||source==="chat_text_openai")return"Yazılı sohbette kullanıldı";if(source==="chat_voice_gemini"||source==="chat_voice_openai")return"Sesli sohbette kullanıldı";if(source==="level_test_exam")return"Seviye tespit sınavında kullanıldı";if(source==="game_pass_use")return"Oyun modülünde kullanıldı";return row?.description||row?.reason||label}
+function filterRows(rows){const q=String(searchInput.value||"").trim().toLowerCase();return rows.filter(row=>{const source=getRowSource(row);const txType=getRowTxType(row);const searchBlob=[source,txType,typeLabel(row),shortDescription(row)].join(" ").toLowerCase();const matchesSearch=!q||searchBlob.includes(q);let matchesFilter=true;if(activeFilter==="loaded")matchesFilter=isLoadedRow(row);else if(activeFilter==="spent")matchesFilter=isSpentRow(row);else if(activeFilter==="gift")matchesFilter=source==="gift"||source==="welcome_bonus"||txType==="gift";else if(activeFilter==="package_bonus")matchesFilter=source==="package_bonus";else if(activeFilter==="upgrade_credit")matchesFilter=source==="upgrade_credit";return matchesSearch&&matchesFilter})}
+function setTokenViews(value){const txt=formatInt(value);if(currentBalanceEl)currentBalanceEl.textContent=txt;if(summaryBalanceEl)summaryBalanceEl.textContent=txt;if(headerTokensEl)headerTokensEl.textContent=txt;if(drawerTokensEl)drawerTokensEl.textContent=txt;try{const raw=localStorage.getItem(STORAGE_KEY);const cached=raw?JSON.parse(raw):{};cached.tokens=Number(value||0);localStorage.setItem(STORAGE_KEY,JSON.stringify(cached))}catch{}}
+function paintSummary(rows,currentBalance){let loaded=0;let spent=0;rows.forEach(r=>{const amt=getSignedAmount(r);if(amt>0)loaded+=amt;if(amt<0)spent+=Math.abs(amt)});setTokenViews(currentBalance);totalLoadedEl.textContent=formatInt(loaded);totalSpentEl.textContent=formatInt(spent)}
+function renderRows(rows){const filtered=filterRows(rows);resultInfo.textContent=`${filtered.length} hareket gösteriliyor`;if(!filtered.length){listWrap.innerHTML='<div class="empty">Bu filtre için kayıt bulunamadı.<br>Filtreyi değiştirerek diğer hareketleri görebilirsin.</div>';return}listWrap.innerHTML=filtered.map(row=>{const amt=getSignedAmount(row);const group=typeGroup(row);const icon=typeIcon(row);const meta=parseMeta(row?.meta);const balanceAfterRaw=row?.balance_after??meta?.balance_after??null;const balanceAfter=Number.isFinite(Number(balanceAfterRaw))?Number(balanceAfterRaw):null;const deltaText=`${amt>0?"+":""}${formatInt(amt)}`;return `<div class="row"><div class="icon ${group}">${icon}</div><div class="mid"><div class="mid-top"><div class="type-pill">${escapeHtml(typeLabel(row))}</div></div><div class="title">${escapeHtml(shortDescription(row))}</div><div class="date">${escapeHtml(formatDate(row.created_at))}</div></div><div class="right"><div class="delta ${group}">${escapeHtml(deltaText)}</div><div class="after">Bakiye: ${escapeHtml(balanceAfter===null?"-":formatInt(balanceAfter))}</div></div></div>`}).join("")}
+async function hydrateUserAndLoad(){try{listWrap.innerHTML='<div class="loading">Jeton hareketleri yükleniyor...</div>';resultInfo.textContent="Yükleniyor...";const {data:{session}}=await supabase.auth.getSession();const user=session?.user||null;body.classList.toggle("signed",!!user);if(!user?.id){listWrap.innerHTML='<div class="error">Önce giriş yapmalısın.</div>';resultInfo.textContent="Oturum bulunamadı";return}const meta=user.user_metadata||{};let name=meta.full_name||meta.name||user.email||"Kullanıcı";let email=user.email||"-";let pic=meta.avatar_url||meta.picture||fallbackAvatar;const [profileRes,txRes]=await Promise.all([supabase.from("profiles").select("email,full_name,display_name,avatar_url,tokens").eq("id",user.id).maybeSingle(),supabase.from("wallet_tx").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(300)]);if(profileRes.error)throw profileRes.error;if(txRes.error)throw txRes.error;const profile=profileRes.data||{};name=profile.full_name||profile.display_name||name;email=profile.email||email;pic=profile.avatar_url||pic;const currentBalance=Number(profile.tokens||0);if(drawerName)drawerName.textContent=name;if(drawerMail)drawerMail.textContent=email||"-";if(drawerPic)drawerPic.src=pic||fallbackAvatar;if(avatar)avatar.src=pic||fallbackAvatar;allRows=Array.isArray(txRes.data)?txRes.data:[];paintSummary(allRows,currentBalance);renderRows(allRows)}catch(e){console.error("[wallet_history]",e);listWrap.innerHTML=`<div class="error">Jeton hareketleri alınamadı.<br>${escapeHtml(e?.message||"Bilinmeyen hata")}</div>`;resultInfo.textContent="Hata oluştu"}}
+filterBar?.querySelectorAll(".chip").forEach(btn=>btn.addEventListener("click",()=>{filterBar.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));btn.classList.add("active");activeFilter=btn.dataset.filter||"all";renderRows(allRows)}));
+searchInput?.addEventListener("input",()=>renderRows(allRows));
+clearFilterBtn?.addEventListener("click",()=>{searchInput.value="";activeFilter="all";filterBar.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));filterBar.querySelector('[data-filter="all"]')?.classList.add("active");renderRows(allRows)});
+hydrateUserAndLoad();setTimeout(hydrateUserAndLoad,900);
+</script>
 </body>
 </html>

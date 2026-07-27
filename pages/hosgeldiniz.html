@@ -41,18 +41,19 @@
   <div class="toast" id="toast"></div>
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
-    const ICANY_BRIDGE="https://www.icany.ai/api/bridge/from-italky";
+    import { navigateToIcany } from "/js/icany_bridge.js?v=3";
     const body=document.body,drawer=document.getElementById("drawer"),backdrop=document.getElementById("drawerBackdrop"),menuButton=document.getElementById("menuButton"),loginButton=document.getElementById("loginButton"),profileLink=document.getElementById("profileLink"),profileAvatar=document.getElementById("profileAvatar"),logoutButton=document.getElementById("logoutButton"),toastEl=document.getElementById("toast");
     const toggleMenu=open=>{body.classList.toggle("menu-open",open);drawer.setAttribute("aria-hidden",String(!open))};
     menuButton.addEventListener("click",()=>toggleMenu(true));document.getElementById("drawerClose").addEventListener("click",()=>toggleMenu(false));backdrop.addEventListener("click",()=>toggleMenu(false));
     function toast(text){toastEl.textContent=text;toastEl.classList.add("show");clearTimeout(window.__toast);window.__toast=setTimeout(()=>toastEl.classList.remove("show"),2200)}
     let activeSession=null;
-    try{const{data:{session}}=await supabase.auth.getSession();activeSession=session||null;if(session?.user){const meta=session.user.user_metadata||{};const avatar=meta.avatar_url||meta.picture||"";loginButton.classList.add("hidden");profileLink.classList.add("visible");menuButton.classList.add("visible");logoutButton.classList.add("visible");profileAvatar.src=avatar||"/assets/avatar-default.svg"}}catch(error){console.warn("session check failed",error)}
-    logoutButton.addEventListener("click",async()=>{toggleMenu(false);toast("Çıkış yapılıyor...");try{await supabase.auth.signOut({scope:"local"})}catch(error){console.warn("sign out failed",error)}try{localStorage.removeItem("italkySupabaseSessionBackup");sessionStorage.clear()}catch{}location.replace("/hosgeldiniz?logged_out=1")});
+    try{const{data:{session}}=await supabase.auth.getSession();activeSession=session||null;if(session?.user){const meta=session.user.user_metadata||{};const avatar=meta.avatar_url||meta.picture||"";loginButton.classList.add("hidden");profileLink.classList.add("visible");menuButton.classList.add("visible");logoutButton.classList.add("visible");profileAvatar.src=avatar||"/assets/avatar-default.svg";try{window.__ITALKY_ACCESS_TOKEN__=session.access_token||""}catch{}}}catch(error){console.warn("session check failed",error)}
+    logoutButton.addEventListener("click",async()=>{toggleMenu(false);toast("Çıkış yapılıyor...");try{await supabase.auth.signOut({scope:"local"})}catch(error){console.warn("sign out failed",error)}try{localStorage.removeItem("italkySupabaseSessionBackup");sessionStorage.clear();delete window.__ITALKY_ACCESS_TOKEN__}catch{}location.replace("/hosgeldiniz?logged_out=1")});
     async function openIcanyModule(nextPath,label){
       if(!activeSession?.access_token){location.href=`/pages/login.html?next=${encodeURIComponent(`/hosgeldiniz?open=${nextPath}`)}`;return}
+      try{window.__ITALKY_ACCESS_TOKEN__=activeSession.access_token}catch{}
       toast(`${label} hazırlanıyor...`);
-      try{const response=await fetch(ICANY_BRIDGE,{method:"POST",headers:{Authorization:`Bearer ${activeSession.access_token}`,"Content-Type":"application/json"},body:JSON.stringify({next:nextPath}),cache:"no-store"});const data=await response.json().catch(()=>({}));if(!response.ok||!data?.enterUrl)throw new Error(data?.error||"Tek giriş bağlantısı oluşturulamadı");location.href=data.enterUrl}catch(error){console.error("icany sso failed",error);toast(error?.message||"Tek giriş hazırlanamadı.")}
+      try{await navigateToIcany(nextPath)}catch(error){console.error("icany sso failed",error);toast(error?.message||"Tek giriş hazırlanamadı.")}
     }
     document.querySelectorAll("[data-sso-next]").forEach(link=>link.addEventListener("click",event=>{event.preventDefault();toggleMenu(false);openIcanyModule(link.dataset.ssoNext,link.dataset.module||link.textContent.trim())}));
     const videos=[...document.querySelectorAll(".service video")];videos.forEach(video=>{video.addEventListener("error",()=>video.closest(".service")?.classList.add("video-error"));video.play().catch(()=>{})});if("IntersectionObserver" in window){const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{const video=entry.target;if(entry.isIntersecting&&entry.intersectionRatio>.25&&!document.hidden)video.play().catch(()=>{});else video.pause()}),{threshold:[0,.25,.7]});videos.forEach(video=>observer.observe(video))}document.addEventListener("visibilitychange",()=>{if(document.hidden)videos.forEach(video=>video.pause())});
