@@ -1,5 +1,6 @@
 // FILE: /js/translate_day_pass.js
 // Çeviri erişimi: ilk 7 gün ücretsiz (trial), sonrası giriş günü = 5 jeton / 24 saat.
+// Mevcut paket / üyelik / hediye günleri bitene kadar aynen devam eder; yeni kural süre dolunca devreye girer.
 
 import { supabase } from "/js/supabase_client.js";
 
@@ -10,10 +11,6 @@ export const TRANSLATE_DAY_PASS_SOURCE = "translate_day_pass";
 
 const API_BASE = "https://italky-api.onrender.com";
 
-function clean(v) {
-  return String(v || "").trim();
-}
-
 function dayLabel(d = new Date()) {
   try {
     return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -22,9 +19,48 @@ function dayLabel(d = new Date()) {
   }
 }
 
+function parseEndMs(...values) {
+  let max = 0;
+  for (const value of values) {
+    if (!value) continue;
+    const ms = Date.parse(value);
+    if (Number.isFinite(ms) && ms > max) max = ms;
+  }
+  return max;
+}
+
 async function getSession() {
   const { data } = await supabase.auth.getSession();
   return data?.session || null;
+}
+
+/**
+ * Aktif paket / trial / üyelik günü varsa yeni 5 jeton kuralı uygulanmaz.
+ * Mevcut haklar bitiş tarihine kadar devam eder.
+ */
+export async function getActiveTranslateAccessUntil(userId) {
+  const id = String(userId || "").trim();
+  if (!id) return null;
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select(
+      "package_ends_at,trial_ends_at,membership_ends_at,subscription_ends_at,gift_ends_at,nfc_expires_at"
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+
+  const endMs = parseEndMs(
+    profile?.package_ends_at,
+    profile?.trial_ends_at,
+    profile?.membership_ends_at,
+    profile?.subscription_ends_at,
+    profile?.gift_ends_at,
+    profile?.nfc_expires_at
+  );
+  if (!endMs || endMs <= Date.now()) return null;
+  return new Date(endMs).toISOString();
 }
 
 /**
@@ -60,7 +96,7 @@ async function tryApiDayPass(accessToken) {
       } catch {
         json = { raw: txt };
       }
-      if (r.ok && (json?.ok !== false)) {
+      if (r.ok && json?.ok !== false) {
         return { ok: true, via: "api", path, json };
       }
     } catch {
@@ -72,14 +108,35 @@ async function tryApiDayPass(accessToken) {
 
 /**
  * Yerel fallback: profiles.tokens düş + wallet_tx + package_ends_at +24s.
+ * Aktif bitiş tarihi varsa kısaltılmaz; üzerine eklenir.
  */
 async function localDayPass(userId) {
   const { data: profile, error: readErr } = await supabase
     .from("profiles")
-    .select("tokens,package_ends_at,trial_ends_at,created_at")
+    .select(
+      "tokens,package_ends_at,trial_ends_at,membership_ends_at,subscription_ends_at,gift_ends_at,nfc_expires_at,created_at"
+    )
     .eq("id", userId)
     .maybeSingle();
   if (readErr) throw readErr;
+
+  const activeUntil = parseEndMs(
+    profile?.package_ends_at,
+    profile?.trial_ends_at,
+    profile?.membership_ends_at,
+    profile?.subscription_ends_at,
+    profile?.gift_ends_at,
+    profile?.nfc_expires_at
+  );
+  if (activeUntil > Date.now()) {
+    return {
+      ok: true,
+      via: "existing",
+      alreadyActive: true,
+      package_ends_at: new Date(activeUntil).toISOString(),
+      tokens: Math.floor(Number(profile?.tokens || 0)),
+    };
+  }
 
   const tokens = Math.floor(Number(profile?.tokens || 0));
   if (tokens < TRANSLATE_DAY_PASS_COST) {
@@ -90,10 +147,7 @@ async function localDayPass(userId) {
   }
 
   const now = Date.now();
-  const currentEnd = profile?.package_ends_at
-    ? new Date(profile.package_ends_at).getTime()
-    : 0;
-  const base = Math.max(now, currentEnd || 0);
+  const base = Math.max(now, activeUntil || 0);
   const newEndsAt = new Date(base + TRANSLATE_DAY_PASS_MS).toISOString();
   const newTokens = tokens - TRANSLATE_DAY_PASS_COST;
 
@@ -138,11 +192,28 @@ export function isTranslateTrialActive(profileOrAccess) {
 
 /**
  * 5 jeton karşılığı 24 saat çeviri erişimi açar.
+ * Hâlâ geçerli gün hakkı varsa jeton düşülmez; mevcut süre korunur.
  */
 export async function purchaseTranslateDayPass() {
   const session = await getSession();
   if (!session?.user?.id || !session.access_token) {
     return { ok: false, error: "Önce giriş yapmalısınız.", code: "SESSION_REQUIRED" };
+  }
+
+  try {
+    const activeUntil = await getActiveTranslateAccessUntil(session.user.id);
+    if (activeUntil) {
+      return {
+        ok: true,
+        via: "existing",
+        alreadyActive: true,
+        package_ends_at: activeUntil,
+        message:
+          "Mevcut gün hakkınız bitene kadar devam ediyor. Yeni 5 jeton kuralı süre dolunca geçerli olur.",
+      };
+    }
+  } catch (e) {
+    console.warn("[translate_day_pass] active-until check failed", e);
   }
 
   const api = await tryApiDayPass(session.access_token);
@@ -157,6 +228,16 @@ export async function purchaseTranslateDayPass() {
 
   try {
     const local = await localDayPass(session.user.id);
+    if (local.alreadyActive) {
+      return {
+        ok: true,
+        via: "existing",
+        alreadyActive: true,
+        package_ends_at: local.package_ends_at,
+        message:
+          "Mevcut gün hakkınız bitene kadar devam ediyor. Yeni 5 jeton kuralı süre dolunca geçerli olur.",
+      };
+    }
     return {
       ok: true,
       via: "local",

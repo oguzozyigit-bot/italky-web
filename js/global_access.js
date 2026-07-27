@@ -162,7 +162,11 @@ async function buyTranslateDayPassFromGate() {
       return;
     }
     closeGateModal();
-    alert(result.message || "24 saatlik çeviri erişimi açıldı.");
+    if (result.alreadyActive) {
+      alert(result.message || "Mevcut gün hakkınız bitene kadar devam ediyor.");
+    } else {
+      alert(result.message || "24 saatlik çeviri erişimi açıldı.");
+    }
     try {
       location.reload();
     } catch {
@@ -483,7 +487,7 @@ function showGateModal({ title, text, buttons = [] }) {
 async function showAccessExpiredPrompt() {
   showGateModal({
     title: "Kullanım süreniz bitti",
-    text: "İlk 7 gün ücretsizdir. Süre bitince her giriş günü 5 jeton ile 24 saat çeviri açılır. İsterseniz paket gün de alabilirsiniz.",
+    text: "Mevcut gün hakkınız varsa bitiş tarihine kadar aynen devam eder. Yeni kullanıcılar: ilk 7 gün ücretsiz; süre bitince her giriş günü 5 jeton ile 24 saat açılır.",
     buttons: [
       { label: `${TRANSLATE_DAY_PASS_COST} Jeton · 24 Saat Aç`, action: "daypass" },
       { label: "Gün Paketi Al", action: "membership" },
@@ -497,7 +501,7 @@ function showLowTimeChoicePrompt(continueUrl = "") {
   pendingGateContinueUrl = continueUrl || "";
   showGateModal({
     title: "Kullanım süreniz azalıyor",
-    text: "Kullanım sürenizin dolmasına 60 dakikadan az kaldı. 5 jeton ile 24 saat daha açabilir veya paket alabilirsiniz.",
+    text: "Mevcut gün hakkınız bitişine kadar geçerlidir. Süre dolmadan 5 jeton ile 24 saat daha ekleyebilir veya paket alabilirsiniz.",
     buttons: [
       { label: `${TRANSLATE_DAY_PASS_COST} Jeton · 24 Saat Aç`, action: "daypass" },
       { label: "Gün Paketi Al", action: "membership" },
