@@ -19,7 +19,7 @@
 <div class="drawer-bg" id="drawerBg"></div>
 <aside class="drawer" aria-label="Hesap menüsü">
   <div class="drawer-head">
-    <a href="https://italky.ai" aria-label="Ana sayfa"><img class="drawer-logo" src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
+    <a href="https://italky.ai/hosgeldiniz" aria-label="Ana sayfa"><img class="drawer-logo" src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a>
     <button class="close" id="close" type="button">×</button>
   </div>
   <div class="drawer-user" id="drawerProfile">
@@ -31,7 +31,7 @@
     </div>
   </div>
   <nav>
-    <a href="https://italky.ai"><span class="drawer-icon">⌂</span><span>Anasayfa</span></a>
+    <a href="https://italky.ai/hosgeldiniz"><span class="drawer-icon">⌂</span><span>Anasayfa</span></a>
     <a href="/pages/jetonbuy.html"><span class="drawer-icon">+</span><span>Jeton Yükle</span></a>
     <a href="/pages/wallet_history.html"><span class="drawer-icon">↕</span><span>Jeton Hareketleri</span></a>
     <a href="/pages/plan_select.html"><span class="drawer-icon">$</span><span>Fiyatlandırma</span></a>
@@ -44,9 +44,9 @@
     <a class="danger" href="/pages/delete-account.html"><span class="drawer-icon">×</span><span>Hesabımı Sil</span></a>
   </nav>
 </aside>
-<header class="top"><a class="brand-link" href="https://italky.ai" aria-label="Ana sayfa"><img class="logo" src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a><div class="top-actions"><button class="login" id="googleLogin" type="button">Giriş yap</button><span class="profile" aria-label="Profil"><img id="avatar" alt="Profil"></span><button class="menu" id="menu" type="button" aria-label="Menü">☰</button></div></header>
+<header class="top"><a class="brand-link" href="https://italky.ai/hosgeldiniz" aria-label="Ana sayfa"><img class="logo" src="https://www.icany.ai/brand/italkyai-logo-clear.png" alt="italkyAI"></a><div class="top-actions"><button class="login" id="googleLogin" type="button">Giriş yap</button><span class="profile" aria-label="Profil"><img id="avatar" alt="Profil"></span><button class="menu" id="menu" type="button" aria-label="Menü">☰</button></div></header>
 <main class="panels">
-  <a class="panel konus" href="/pages/home.html" data-auth-target="/pages/home.html"><video muted loop autoplay playsinline preload="metadata"><source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4"></video><div class="copy"><h2>Konuş</h2><p>Gerçek zamanlı çeviriyle yüz yüze konuşun, toplantıda, yolculukta ve günlük yaşamda dil engelini azaltın.</p></div></a>
+  <a class="panel konus" href="/facetoface.html" data-auth-target="/facetoface.html"><video muted loop autoplay playsinline preload="metadata"><source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4"></video><div class="copy"><h2>Konuş</h2><p>Gerçek zamanlı çeviriyle yüz yüze konuşun, toplantıda, yolculukta ve günlük yaşamda dil engelini azaltın.</p></div></a>
   <a class="panel dinle" href="#" data-sso="/hosgeldiniz"><video muted loop autoplay playsinline preload="metadata"><source src="https://www.icany.ai/brand/hero/concert.mp4" type="video/mp4"></video><div class="copy"><h2>Dinle</h2><p>Yapay zekâ ile üretilen müzikleri keşfedin, kendi radyo kanallarınızı oluşturun ve eserlerinizi paylaşın.</p></div></a>
   <a class="panel uret" href="#" data-sso="/personal/music"><video muted loop autoplay playsinline preload="metadata"><source src="https://www.icany.ai/brand/hero/crowd-lights.mp4" type="video/mp4"></video><div class="copy"><h2>Üret</h2><p>Şarkı sözlerinizi yazın, müziğinizi ve kapak görselinizi oluşturup eserinizi yayınlayın.</p></div></a>
 </main>
@@ -86,7 +86,7 @@ async function refreshSession(){const{data:{session:s}}=await supabase.auth.getS
 async function requireAuth(next){const s=await refreshSession();if(s?.access_token){location.href=next;return}await loginWithGoogle(next)}
 async function enter(next,label){const s=await refreshSession();if(!s?.access_token){localStorage.setItem(PENDING,next);await loginWithGoogle('/hosgeldiniz');return}note(label+' açılıyor…');localStorage.removeItem(PENDING);location.replace(buildFromItalkyUrl(next,s.access_token))}
 login.onclick=async()=>{login.disabled=true;try{await loginWithGoogle('/hosgeldiniz')}catch(e){note(e?.message||'Google girişi başlatılamadı');login.disabled=false}};
-document.querySelectorAll('[data-auth-target]').forEach(a=>a.onclick=e=>{e.preventDefault();openMenu(false);requireAuth(a.dataset.authTarget||a.getAttribute('href')||'/pages/home.html')});
+document.querySelectorAll('[data-auth-target]').forEach(a=>a.onclick=e=>{e.preventDefault();openMenu(false);requireAuth(a.dataset.authTarget||a.getAttribute('href')||'/facetoface.html')});
 document.querySelectorAll('[data-sso]').forEach(a=>a.onclick=e=>{e.preventDefault();openMenu(false);enter(a.dataset.sso,a.textContent.trim())});
 document.querySelectorAll('.drawer nav a').forEach(a=>a.addEventListener('click',()=>openMenu(false)));
 document.getElementById('logout').onclick=async()=>{await supabase.auth.signOut();localStorage.removeItem(PENDING);location.replace('https://italky.ai')};
