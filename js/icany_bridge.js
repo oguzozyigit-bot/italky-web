@@ -1,5 +1,5 @@
 // italky → icany SSO + IAP credit helpers (DOM'a dokunmaz).
-const ICANY_ORIGIN = "https://icany.ai";
+const ICANY_ORIGIN = "https://www.icany.ai";
 const FROM_ITALKY_PATH = "/api/bridge/from-italky";
 const IAP_CREDIT_PATH = "/api/bridge/iap-credit";
 const STORAGE_KEY = "icany_shared_pool_v1";
