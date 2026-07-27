@@ -1,10 +1,12 @@
 // FILE: /js/icany_bridge.js
-// Ortak jeton havuzu (icany master) — `?icany_bridge=` handoff tüketimi.
+// Ortak jeton havuzu (icany master) — italky → icany SSO + handoff.
 
-const ICANY_ORIGIN = "https://www.icany.ai";
+/** Canonical apex — www kullanılmaz (cookie Domain=.icany.ai). */
+const ICANY_ORIGIN = "https://icany.ai";
 const STORAGE_KEY = "icany_shared_pool_v1";
 const CONSUME_PATH = "/api/bridge/consume-handoff";
 const IAP_CREDIT_PATH = "/api/bridge/iap-credit";
+const FROM_ITALKY_PATH = "/api/bridge/from-italky";
 
 function safeParse(raw) {
   try {
@@ -116,16 +118,36 @@ export async function consumeIcanyBridgeFromUrl(options = {}) {
   }
 }
 
+/** italky Supabase access_token ile icany Dinle/Üret SSO URL. */
+export function buildFromItalkyUrl(nextPath, accessToken) {
+  const next = String(nextPath || "/hosgeldiniz").startsWith("/")
+    ? String(nextPath || "/hosgeldiniz")
+    : `/${nextPath}`;
+  const url = new URL(`${ICANY_ORIGIN}${FROM_ITALKY_PATH}`);
+  url.searchParams.set("next", next);
+  const token = String(accessToken || "").trim();
+  if (token) url.searchParams.set("access_token", token);
+  return url.toString();
+}
+
 export function icanyHosgeldinizUrl() {
   const pool = readIcanySharedPool();
-  if (pool?.enterHosgeldinizUrl) return pool.enterHosgeldinizUrl;
-  return `${ICANY_ORIGIN}/hosgeldiniz`;
+  if (pool?.enterHosgeldinizUrl) {
+    // Eski www URL'lerini apex'e çevir
+    return String(pool.enterHosgeldinizUrl).replace(
+      /^https:\/\/www\.icany\.ai/i,
+      ICANY_ORIGIN
+    );
+  }
+  return buildFromItalkyUrl("/hosgeldiniz");
 }
 
 export function icanyPersonalMusicUrl() {
   const pool = readIcanySharedPool();
-  if (pool?.enterMusicUrl) return pool.enterMusicUrl;
-  return `${ICANY_ORIGIN}/personal/music`;
+  if (pool?.enterMusicUrl) {
+    return String(pool.enterMusicUrl).replace(/^https:\/\/www\.icany\.ai/i, ICANY_ORIGIN);
+  }
+  return buildFromItalkyUrl("/personal/music");
 }
 
 export function icanyDenemeHubUrl() {
@@ -179,11 +201,68 @@ export async function creditIcanyIap(input = {}) {
   }
 }
 
+async function resolveItalkyAccessToken() {
+  try {
+    if (typeof window !== "undefined" && window.__ITALKY_ACCESS_TOKEN__) {
+      return String(window.__ITALKY_ACCESS_TOKEN__ || "").trim();
+    }
+  } catch {
+    /* ignore */
+  }
+  try {
+    const mod = await import("/js/supabase_client.js");
+    const client = mod.supabase || mod.default;
+    if (!client?.auth?.getSession) return "";
+    const { data } = await client.auth.getSession();
+    return String(data?.session?.access_token || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Dinle / Üret: italky oturumu ile https://icany.ai/api/bridge/from-italky
+ * UI'ye /hosgeldiniz DOM müdahalesi yok — sadece link hedefi.
+ */
+export async function navigateToIcany(nextPath) {
+  const token = await resolveItalkyAccessToken();
+  const pool = readIcanySharedPool();
+  const next = String(nextPath || "/hosgeldiniz");
+
+  // Eldeki enter URL (handoff) varsa ve token yoksa onu kullan
+  if (!token && next.startsWith("/hosgeldiniz") && pool?.enterHosgeldinizUrl) {
+    location.href = String(pool.enterHosgeldinizUrl).replace(
+      /^https:\/\/www\.icany\.ai/i,
+      ICANY_ORIGIN
+    );
+    return;
+  }
+  if (!token && next.startsWith("/personal") && pool?.enterMusicUrl) {
+    location.href = String(pool.enterMusicUrl).replace(/^https:\/\/www\.icany\.ai/i, ICANY_ORIGIN);
+    return;
+  }
+
+  location.href = buildFromItalkyUrl(next, token);
+}
+
 export function wireHubPanelLinks() {
   const dinle = document.getElementById("hubDinle");
   const uret = document.getElementById("hubUret");
-  if (dinle) dinle.setAttribute("href", icanyHosgeldinizUrl());
-  if (uret) uret.setAttribute("href", icanyPersonalMusicUrl());
+
+  if (dinle) {
+    dinle.setAttribute("href", buildFromItalkyUrl("/hosgeldiniz"));
+    dinle.onclick = (event) => {
+      event.preventDefault();
+      void navigateToIcany("/hosgeldiniz");
+    };
+  }
+  if (uret) {
+    uret.setAttribute("href", buildFromItalkyUrl("/personal/music"));
+    uret.onclick = (event) => {
+      event.preventDefault();
+      void navigateToIcany("/personal/music");
+    };
+  }
 }
 
 if (typeof window !== "undefined") {
@@ -196,5 +275,8 @@ if (typeof window !== "undefined") {
     denemeHubUrl: icanyDenemeHubUrl,
     creditIap: creditIcanyIap,
     wireHubPanelLinks,
+    navigateToIcany,
+    buildFromItalkyUrl,
+    origin: ICANY_ORIGIN,
   };
 }
