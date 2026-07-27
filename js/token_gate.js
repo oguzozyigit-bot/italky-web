@@ -3,7 +3,7 @@
 import { supabase } from "/js/supabase_client.js";
 
 const JETON_PAGE_URL = "/pages/jetonbuy.html";
-const HOME_PAGE_URL = "/pages/home.html";
+const HOME_PAGE_URL = "/hosgeldiniz";
 
 function $(id) {
   return document.getElementById(id);

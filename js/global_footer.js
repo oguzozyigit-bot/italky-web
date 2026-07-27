@@ -443,7 +443,7 @@ function installMembershipHelpers() {
   const redirectIfActive = () => {
     if (redirected || !document.body.classList.contains("access-open")) return;
     redirected = true;
-    setTimeout(() => location.replace("/pages/home.html"), 700);
+    setTimeout(() => location.replace("/hosgeldiniz"), 700);
   };
   const observer = new MutationObserver(redirectIfActive);
   observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
