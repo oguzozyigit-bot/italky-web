@@ -1,10 +1,10 @@
 // FILE: js/official_italky_ui_patch.js
 // Central italkyAI UI patch: official logo + unified hamburger menu.
 
-const OFFICIAL_LOGO = "/assets/italky-logo-official.svg?v=20260727";
+const OFFICIAL_LOGO = "/assets/italkyai-logo-clear.png?v=20260727-vector";
 
 const MENU_ITEMS = [
-  { href: "https://italky.ai", icon: "⌂", label: "Anasayfa" },
+  { href: "https://italky.ai/hosgeldiniz", icon: "⌂", label: "Anasayfa" },
   { href: "/pages/jetonbuy.html", icon: "+", label: "Jeton Yükle" },
   { href: "/pages/wallet_history.html", icon: "↕", label: "Jeton Hareketleri" },
   { href: "/pages/plan_select.html", icon: "$", label: "Fiyatlandırma" },
@@ -77,17 +77,24 @@ function normalizeDrawer(drawer) {
   if (!nav) return;
 
   const oldText = nav.textContent || "";
+  const hasModernMenu = /Jeton Yükle/.test(oldText) && /Güvenli Çıkış|Hesabımı Sil/.test(oldText);
+  const hasExistingChrome =
+    !!drawer.querySelector(".drawer-head,.drawer-logo,.menu-user-card,.drawer-user,.menu-official-logo,.italky-official-user");
+  if (hasModernMenu || hasExistingChrome) {
+    drawer.dataset.officialItalkyDrawer = "1";
+    return;
+  }
+
   const looksOld = /Konuş|Dinle|Üret|Profilim|Çıkış Yap|Giriş Yap/.test(oldText) || !/Jeton Yükle/.test(oldText);
   if (!looksOld) return;
 
-  const head = drawer.querySelector(".drawer-head,.menu-top,.menu-user-card") || drawer.firstElementChild;
-  if (!drawer.querySelector(".menu-official-logo")) {
+  if (!drawer.querySelector(".menu-official-logo,.drawer-logo,.drawer-head img")) {
     const logoWrap = document.createElement("div");
-    logoWrap.innerHTML = `<a href="https://italky.ai"><img class="menu-official-logo" src="${OFFICIAL_LOGO}" alt="italkyAI"></a>`;
+    logoWrap.innerHTML = `<a href="https://italky.ai/hosgeldiniz"><img class="menu-official-logo" src="${OFFICIAL_LOGO}" alt="italkyAI"></a>`;
     drawer.insertBefore(logoWrap.firstElementChild, drawer.firstChild);
   }
 
-  if (!drawer.querySelector(".italky-official-user")) {
+  if (!drawer.querySelector(".italky-official-user,.menu-user-card,.drawer-user")) {
     const existingAvatar = document.getElementById("avatar")?.src || document.getElementById("menuUserPic")?.src || FALLBACK_AVATAR;
     const userBox = document.createElement("div");
     userBox.className = "italky-official-user";
@@ -143,7 +150,7 @@ async function logout() {
     localStorage.removeItem("italky_protected_after_login");
     localStorage.removeItem("italky_icany_pending_target");
   } catch {}
-  location.replace("https://italky.ai");
+  location.replace("https://italky.ai/hosgeldiniz");
 }
 
 function boot() {

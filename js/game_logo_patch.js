@@ -1,8 +1,8 @@
 // FILE: /js/game_logo_patch.js
 // Ortak görünüm düzeltmeleri: logo, alt bar, hamburger menü ve jeton market.
 
-const LOGO = "https://www.icany.ai/brand/italkyai-logo-clear.png";
-const HOME = "https://italky.ai";
+const LOGO = "/assets/italkyai-logo-clear.png?v=20260727-vector";
+const HOME = "https://italky.ai/hosgeldiniz";
 const SIGN = "by Ozyigit's 2026";
 const RUNE = "𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅";
 
