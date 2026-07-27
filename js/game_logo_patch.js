@@ -95,7 +95,7 @@ async function hydrateMenu(){
 function patchJeton(){
   if(path()!=="/pages/jetonbuy.html")return; style(); document.querySelectorAll('.pkg[onclick*="jeton_10"],.pkg[onclick*="jeton_250"]').forEach(x=>x.remove());
   Object.entries(TOKEN_PRODUCTS).forEach(([id,[am,pr,bo]])=>{const card=document.querySelector(`.pkg[onclick*="${id}"]`);if(!card)return;card.querySelector(".amt")&&(card.querySelector(".amt").textContent=am);card.querySelector(".price")&&(card.querySelector(".price").textContent=pr);card.querySelector(".bonus")&&(card.querySelector(".bonus").textContent=bo);card.dataset.googleProduct=id;});
-  const hp=document.querySelector(".head p"); if(hp)hp.textContent="Jeton satın alma işlemini Google Play hesabınızla tamamlayabilirsiniz."; if(!document.getElementById("italkyTokenDayNote")){const d=document.createElement("div");d.id="italkyTokenDayNote";d.className="italky-token-note";d.textContent="Günü olmayan kullanıcıda ilk girişte 6 jeton düşer ve 24 saat kullanım açılır. Sonraki 24 saatlik kullanımlar 5 jetondur.";document.querySelector(".balanceCard")?.insertAdjacentElement("afterend",d);}
+  const hp=document.querySelector(".head p"); if(hp)hp.textContent="Jeton satın alma işlemini Google Play hesabınızla tamamlayabilirsiniz."; if(!document.getElementById("italkyTokenDayNote")){const d=document.createElement("div");d.id="italkyTokenDayNote";d.className="italky-token-note";d.textContent="İlk 7 gün ücretsiz. Sonra her giriş günü 5 jeton ile 24 saat çeviri açılır.";document.querySelector(".balanceCard")?.insertAdjacentElement("afterend",d);}
 }
 
 function patchGate(){ document.querySelectorAll('[data-action="membership"],#menuBuyDaysBtn').forEach(b=>{b.textContent="Jeton Yükle";}); }

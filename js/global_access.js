@@ -1,10 +1,12 @@
 // FILE: /js/global_access.js
 
 import { supabase } from "/js/supabase_client.js";
+import { purchaseTranslateDayPass, TRANSLATE_DAY_PASS_COST } from "/js/translate_day_pass.js";
 
 const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
 const MEMBERSHIP_URL = "/pages/membership.html";
 const CODE_LOAD_URL = "/pages/code_load.html";
+const JETONBUY_URL = "/pages/jetonbuy.html";
 const STANDARD_SIGNATURE_HTML = `<div class="brand-seal">italkyAI @ icanyAI By Ozyigit's 2026<span class="gokturk-signature" lang="otk" dir="rtl">𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</span></div>`;
 
 const PUBLIC_PAGES = new Set([
@@ -126,6 +128,48 @@ function goLogin() {
     location.replace(`/pages/login.html?next=${here}`);
   } catch {
     location.href = "/pages/login.html";
+  }
+}
+
+function goJetonBuy() {
+  resetMobileViewportState();
+  try {
+    location.href = JETONBUY_URL;
+  } catch {
+    location.assign(JETONBUY_URL);
+  }
+}
+
+async function buyTranslateDayPassFromGate() {
+  try {
+    const btn = document.querySelector('#italkyAccessGateModal [data-action="daypass"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Açılıyor…";
+    }
+    const result = await purchaseTranslateDayPass();
+    if (!result.ok) {
+      if (result.code === "INSUFFICIENT_TOKENS") {
+        alert(result.error || "Yetersiz jeton. 5 jeton yükleyin.");
+        goJetonBuy();
+        return;
+      }
+      alert(result.error || "Gün açılamadı.");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = `${TRANSLATE_DAY_PASS_COST} Jeton · 24 Saat Aç`;
+      }
+      return;
+    }
+    closeGateModal();
+    alert(result.message || "24 saatlik çeviri erişimi açıldı.");
+    try {
+      location.reload();
+    } catch {
+      location.href = location.href;
+    }
+  } catch (e) {
+    alert(e?.message || "Gün açılamadı.");
   }
 }
 
@@ -418,6 +462,8 @@ function showGateModal({ title, text, buttons = [] }) {
       const action = btn.getAttribute("data-action");
       if (action === "membership") goMembership();
       else if (action === "code") goCodeLoad();
+      else if (action === "daypass") void buyTranslateDayPassFromGate();
+      else if (action === "jeton") goJetonBuy();
       else if (action === "continue") {
         const next = pendingGateContinueUrl;
         pendingGateContinueUrl = "";
@@ -437,9 +483,10 @@ function showGateModal({ title, text, buttons = [] }) {
 async function showAccessExpiredPrompt() {
   showGateModal({
     title: "Kullanım süreniz bitti",
-    text: "Kullanım süreniz bitmiştir. Devam etmek için lütfen gün satın alınız. Elinizde kod varsa Kod ile Gün Yükle sayfasından kodunuzu da girebilirsiniz.",
+    text: "İlk 7 gün ücretsizdir. Süre bitince her giriş günü 5 jeton ile 24 saat çeviri açılır. İsterseniz paket gün de alabilirsiniz.",
     buttons: [
-      { label: "Gün Satın Al", action: "membership" },
+      { label: `${TRANSLATE_DAY_PASS_COST} Jeton · 24 Saat Aç`, action: "daypass" },
+      { label: "Gün Paketi Al", action: "membership" },
       { label: "Kod ile Gün Yükle", action: "code" }
     ]
   });
@@ -450,9 +497,10 @@ function showLowTimeChoicePrompt(continueUrl = "") {
   pendingGateContinueUrl = continueUrl || "";
   showGateModal({
     title: "Kullanım süreniz azalıyor",
-    text: "Kullanım sürenizin dolmasına 60 dakikadan az kaldı. Kesintisiz devam etmek için gün satın alabilirsiniz.",
+    text: "Kullanım sürenizin dolmasına 60 dakikadan az kaldı. 5 jeton ile 24 saat daha açabilir veya paket alabilirsiniz.",
     buttons: [
-      { label: "Gün Satın Al", action: "membership" },
+      { label: `${TRANSLATE_DAY_PASS_COST} Jeton · 24 Saat Aç`, action: "daypass" },
+      { label: "Gün Paketi Al", action: "membership" },
       { label: "Devam Et", action: "continue" }
     ]
   });
