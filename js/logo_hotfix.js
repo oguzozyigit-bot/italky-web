@@ -2,7 +2,7 @@
 // Emergency logo stabilizer: never leave broken local logo assets on screen.
 // Important: this must NOT touch profile/avatar images.
 
-const SAFE_ITALKY_LOGO = "https://www.icany.ai/brand/italkyai-logo-clear.png?v=stable-italky-logo";
+const SAFE_ITALKY_LOGO = "/assets/italkyai-logo-clear.png?v=20260727-vector";
 
 function isAvatarImage(img) {
   if (!img || img.tagName !== "IMG") return false;
