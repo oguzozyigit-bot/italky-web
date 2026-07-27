@@ -8,7 +8,7 @@ import { STORAGE_KEY } from "/js/config.js";
 
 const NATIVE_GOOGLE_NEXT_KEY = "italky_native_google_login_next";
 const DEFAULT_NATIVE_GOOGLE_NEXT = "/pages/membership.html";
-const HOME_PAGE = "/pages/home.html";
+const HOME_PAGE = "/hosgeldiniz";
 const MEMBERSHIP_PAGE = "/pages/membership.html";
 const ACCESS_STATE_API = "https://italky-api.onrender.com/api/session/access-state";
 let oauthRedirectStarted = false;
