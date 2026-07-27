@@ -915,117 +915,8 @@ body.home-ready #pageContent{
   .wide-card{ min-height:138px; gap:12px; padding:15px 64px 15px 14px; }
   .wide-card .arrow-chip{ right:14px; }
   .wide-icon{ width:52px; height:52px; border-radius:18px; }
-.wide-title{ font-size:20px; }
-.wide-desc{ font-size:12.7px; }
-}
-
-/* —— Tek app hub: Konuş / Dinle / Üret —— */
-.unified-hub{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin:2px 0 4px;
-}
-
-.unified-hub-status{
-  margin:0;
-  padding:0 2px;
-  color:var(--muted);
-  font-size:12.5px;
-  font-weight:600;
-  letter-spacing:.01em;
-  line-height:1.35;
-}
-
-.unified-hub-jeton{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  margin-left:8px;
-  padding:3px 9px;
-  border-radius:999px;
-  border:1px solid rgba(45,212,191,.35);
-  background:rgba(45,212,191,.12);
-  color:#99f6e4;
-  font-size:12px;
-  font-weight:800;
-}
-
-.unified-hub-panel{
-  position:relative;
-  display:block;
-  min-height:112px;
-  border-radius:22px;
-  overflow:hidden;
-  text-decoration:none;
-  color:inherit;
-  border:1px solid var(--line);
-  box-shadow:var(--shadow);
-  transform:translateZ(0);
-}
-
-.unified-hub-panel:focus-visible{
-  outline:2px solid rgba(56,189,248,.7);
-  outline-offset:2px;
-}
-
-.unified-hub-scrim{
-  position:absolute;
-  inset:0;
-  z-index:1;
-  pointer-events:none;
-}
-
-.unified-hub-panel--sky .unified-hub-scrim{
-  background:linear-gradient(115deg, rgba(7,18,36,.92) 8%, rgba(14,70,120,.55) 55%, rgba(56,189,248,.28));
-}
-.unified-hub-panel--teal .unified-hub-scrim{
-  background:linear-gradient(115deg, rgba(4,24,28,.92) 8%, rgba(13,90,84,.55) 55%, rgba(45,212,191,.28));
-}
-.unified-hub-panel--amber .unified-hub-scrim{
-  background:linear-gradient(115deg, rgba(28,18,4,.92) 8%, rgba(120,70,14,.55) 55%, rgba(245,185,66,.28));
-}
-
-.unified-hub-copy{
-  position:relative;
-  z-index:2;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
-  gap:4px;
-  min-height:112px;
-  padding:16px 16px 15px;
-}
-
-.unified-hub-copy h2{
-  margin:0;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:28px;
-  font-weight:800;
-  letter-spacing:-.03em;
-  line-height:1;
-}
-
-.unified-hub-copy p{
-  margin:0;
-  max-width:34ch;
-  color:rgba(255,255,255,.78);
-  font-size:13px;
-  font-weight:500;
-  line-height:1.35;
-}
-
-.unified-hub-panel--sky .unified-hub-copy h2{ color:#7dd3fc; }
-.unified-hub-panel--teal .unified-hub-copy h2{ color:#5eead4; }
-.unified-hub-panel--amber .unified-hub-copy h2{ color:#fcd34d; }
-
-.tools-kicker{
-  margin:10px 2px 0;
-  color:rgba(255,255,255,.45);
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.14em;
-  text-transform:uppercase;
+  .wide-title{ font-size:20px; }
+  .wide-desc{ font-size:12.7px; }
 }
 </style>
 </head>
@@ -1084,38 +975,6 @@ body.home-ready #pageContent{
         </div>
       </div>
     </section>
-
-    <section class="unified-hub" aria-label="Konuş · Dinle · Üret">
-      <p class="unified-hub-status" id="unifiedHubStatus" role="status">
-        Tek uygulama · Konuş (italky) + Dinle / Üret (icany)
-      </p>
-
-      <a id="hubKonus" class="unified-hub-panel unified-hub-panel--sky" href="/facetoface_ios.html?ios=1">
-        <div class="unified-hub-scrim" aria-hidden="true"></div>
-        <div class="unified-hub-copy">
-          <h2>Konuş</h2>
-          <p>Tüm dillerde yüz yüze sohbet · italkyAI</p>
-        </div>
-      </a>
-
-      <a id="hubDinle" class="unified-hub-panel unified-hub-panel--teal" href="https://icany.ai/api/bridge/from-italky?next=%2Fhosgeldiniz">
-        <div class="unified-hub-scrim" aria-hidden="true"></div>
-        <div class="unified-hub-copy">
-          <h2>Dinle</h2>
-          <p>Radyo, vitrin ve keşif · icany.ai</p>
-        </div>
-      </a>
-
-      <a id="hubUret" class="unified-hub-panel unified-hub-panel--amber" href="https://icany.ai/api/bridge/from-italky?next=%2Fpersonal%2Fmusic">
-        <div class="unified-hub-scrim" aria-hidden="true"></div>
-        <div class="unified-hub-copy">
-          <h2>Üret</h2>
-          <p>Kendi şarkını yaz · bireysel stüdyo</p>
-        </div>
-      </a>
-    </section>
-
-    <p class="tools-kicker">Çeviri araçları</p>
 
     <section class="section-grid primary-grid" aria-label="Ana çeviri modları">
       <a id="faceCard" class="mod-card primary-card face-card" href="/facetoface_ios.html?ios=1">
@@ -1255,11 +1114,6 @@ body.home-ready #pageContent{
   import { mountShell } from "/js/ui_shell.js?v=ios-home-shared-design";
   import { initGlobalAccess } from "/js/global_access_ios.js?v=IOS_HOME_PUBLIC_20260611";
   import { supabase } from "/js/supabase_client.js";
-  import {
-    consumeIcanyBridgeFromUrl,
-    readIcanySharedPool,
-    wireHubPanelLinks,
-  } from "/js/icany_bridge.js?v=3";
 
   const HOME_LANG_WIDGET_KEY = "italky_home_lang_pack_widget_v1";
 
@@ -1288,18 +1142,6 @@ body.home-ready #pageContent{
   setTimeout(removePublicEmeShortcuts, 0);
   setTimeout(removePublicEmeShortcuts, 600);
 
-  function renderUnifiedHubStatus(pool) {
-    const el = document.getElementById("unifiedHubStatus");
-    if (!el) return;
-    if (!pool?.memberId) {
-      el.innerHTML = "Tek uygulama · Konuş (italky) + Dinle / Üret (icany)";
-      return;
-    }
-    const bal = Number(pool.tokenBalance || 0).toLocaleString("tr-TR");
-    const mail = pool.email ? ` · ${pool.email}` : "";
-    el.innerHTML = `Ortak jeton havuzu${mail} <span class="unified-hub-jeton" title="icany master"><span aria-hidden="true">◆</span>${bal}</span>`;
-  }
-
   function renderHomeLangPackWidget() {
     const widget = document.getElementById("homeLangPackWidget");
     if (!widget) return;
@@ -1313,17 +1155,11 @@ body.home-ready #pageContent{
       const heroUserName = document.getElementById("heroUserName");
       if (!heroUserName) return;
 
-      const pool = readIcanySharedPool();
-      if (pool?.name || pool?.email) {
-        const firstName = String(pool.name || pool.email).trim().split(" ")[0] || "Hoş geldin";
-        heroUserName.textContent = `${firstName}, Dünya'yı Anlamaya Hazırmısın..?`;
-      }
-
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
 
       if (!user) {
-        if (!pool) heroUserName.textContent = "Hoş geldin";
+        heroUserName.textContent = "Hoş geldin";
         return;
       }
 
@@ -1344,10 +1180,6 @@ body.home-ready #pageContent{
 
   async function bootHome() {
     try {
-      const pool = await consumeIcanyBridgeFromUrl();
-      renderUnifiedHubStatus(pool);
-      wireHubPanelLinks();
-
       const result = await initGlobalAccess({ allowPublicPageBypass: true });
       if (!result?.ok) return;
 
@@ -1363,17 +1195,11 @@ body.home-ready #pageContent{
     } finally {
       document.body.classList.add("home-ready");
       renderHomeLangPackWidget();
-      renderUnifiedHubStatus(readIcanySharedPool());
     }
   }
 
-  window.addEventListener("icanySharedPoolReady", (event) => {
-    renderUnifiedHubStatus(event.detail);
-    wireHubPanelLinks();
-  });
   window.addEventListener("storage", () => {
     renderHomeLangPackWidget();
-    renderUnifiedHubStatus(readIcanySharedPool());
   });
   window.addEventListener("focus", () => {
     renderHomeLangPackWidget();
@@ -1385,7 +1211,6 @@ body.home-ready #pageContent{
   });
 
   const MODULE_LOADING_COPY = {
-    hubKonus: "Konuş hazırlanıyor...",
     faceCard: "YüzYüze Çeviri hazırlanıyor...",
     bluetoothCard: "İki Telefon hazırlanıyor...",
     guideConferenceCard: "Gezi & Konferans hazırlanıyor...",
@@ -1436,11 +1261,11 @@ body.home-ready #pageContent{
   }
 
   function installModuleTransitionOverlay() {
-    document.querySelectorAll("#hubKonus,#faceCard,#bluetoothCard,#guideConferenceCard,#mezoCard,#turanCard,#kafkasCard,#balkanCard,#offlineCard,#textCard,#funCard,#levelCard").forEach((card) => {
+    document.querySelectorAll("#faceCard,#bluetoothCard,#guideConferenceCard,#mezoCard,#turanCard,#kafkasCard,#balkanCard,#offlineCard,#textCard,#funCard,#levelCard").forEach((card) => {
       card.addEventListener("click", (event) => {
         if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         const href = card.getAttribute("href");
-        if (!href || href.startsWith("#") || /^https?:\/\//i.test(href)) return;
+        if (!href || href.startsWith("#")) return;
         document.body.dataset.moduleLoading = MODULE_LOADING_COPY[card.id] || "Modül açılıyor...";
         document.body.classList.add("module-leaving");
       });

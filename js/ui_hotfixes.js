@@ -106,106 +106,11 @@ function injectConferenceEntryStyle() {
   } catch {}
 }
 
-function installHubVideoBanners() {
-  try {
-    const path = String(location.pathname || "").replace(/\/+$/, "");
-    if (!["/hosgeldiniz", "/pages/home_modern.html"].includes(path)) return;
-    if (document.documentElement.dataset.hubVideosInstalled === "1") return;
-
-    const configs = [
-      {
-        selector: ".banner.talk .media",
-        src: "https://assets.mixkit.co/videos/preview/mixkit-people-walking-around-an-airport-27461-large.mp4",
-        label: "Seyahat ve farklı dillerde iletişim"
-      },
-      {
-        selector: ".banner.listen .media",
-        src: "https://assets.mixkit.co/videos/preview/mixkit-dj-wearing-headphones-12051-large.mp4",
-        label: "DJ ve müzik dinleme deneyimi"
-      },
-      {
-        selector: ".banner.create .media",
-        src: "https://assets.mixkit.co/videos/preview/mixkit-man-setting-up-his-microphone-42819-large.mp4",
-        label: "Müzik stüdyosunda üretim"
-      }
-    ];
-
-    const style = document.createElement("style");
-    style.id = "italkyHubVideoBannerStyle";
-    style.textContent = `
-      .banner .media{background:#050b17;}
-      .banner .media::before,.banner .media::after{display:none!important;}
-      .hub-banner-video{position:absolute;inset:-3%;width:106%;height:106%;object-fit:cover;object-position:center;opacity:.76;filter:saturate(1.12) contrast(1.06);transform:scale(1.01);transition:opacity .35s ease;}
-      .banner:hover .hub-banner-video{transform:scale(1.055);transition:transform 7s ease,opacity .35s ease;}
-      .banner .media::after{display:block!important;content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,10,23,.86) 0%,rgba(2,10,23,.28) 38%,rgba(2,10,23,.08) 70%,rgba(2,10,23,.24) 100%);pointer-events:none;}
-      .hub-video-state{position:absolute;right:14px;bottom:12px;z-index:4;padding:6px 9px;border-radius:999px;background:rgba(2,10,23,.58);border:1px solid rgba(255,255,255,.22);font-size:10px;font-weight:900;letter-spacing:.08em;color:#fff;backdrop-filter:blur(8px);}
-      @media(max-width:720px){.hub-banner-video{inset:0;width:100%;height:100%;opacity:.66}.banner .media::after{background:linear-gradient(180deg,rgba(2,10,23,.18),rgba(2,10,23,.22) 60%,rgba(2,10,23,.62));}}
-      @media(prefers-reduced-motion:reduce){.hub-banner-video{display:none}.hub-video-state{display:none}}
-    `;
-    document.head.appendChild(style);
-
-    const videos = [];
-    configs.forEach((config) => {
-      const media = document.querySelector(config.selector);
-      if (!media) return;
-      media.querySelector(".play")?.remove();
-      const video = document.createElement("video");
-      video.className = "hub-banner-video";
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = false;
-      video.playsInline = true;
-      video.preload = "metadata";
-      video.setAttribute("aria-label", config.label);
-      video.setAttribute("disablepictureinpicture", "");
-      video.src = config.src;
-      media.prepend(video);
-      const badge = document.createElement("span");
-      badge.className = "hub-video-state";
-      badge.textContent = "CANLI GÖRSEL";
-      media.appendChild(badge);
-      video.addEventListener("error", () => {
-        video.style.display = "none";
-        badge.textContent = "GÖRSEL MOD";
-      });
-      videos.push(video);
-    });
-
-    if (!videos.length) return;
-    document.documentElement.dataset.hubVideosInstalled = "1";
-
-    if (!("IntersectionObserver" in window)) {
-      videos[0]?.play().catch(() => {});
-      return;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const video = entry.target;
-        if (!(video instanceof HTMLVideoElement)) return;
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.38 && !document.hidden) {
-          video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
-      });
-    }, { threshold: [0, 0.38, 0.7] });
-
-    videos.forEach((video) => observer.observe(video));
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) videos.forEach((video) => video.pause());
-    });
-  } catch (error) {
-    console.warn("hub video banners could not be installed", error);
-  }
-}
-
 function bootHotfixes() {
   normalizeFooters();
   patchHomeConferenceLink();
   patchTwoPhoneCopy();
   injectConferenceEntryStyle();
-  installHubVideoBanners();
 }
 
 if (document.readyState === "loading") {
