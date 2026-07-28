@@ -2,9 +2,10 @@
 // Central italkyAI UI patch: official logo + unified hamburger menu.
 
 const OFFICIAL_LOGO = "/assets/italkyai-logo-clear.png?v=20260727-vector";
+const PERSONAL_HOME = "https://www.icany.ai/hosgeldiniz";
 
 const MENU_ITEMS = [
-  { href: "https://italky.ai/hosgeldiniz", icon: "⌂", label: "Anasayfa" },
+  { href: PERSONAL_HOME, icon: "⌂", label: "Anasayfa" },
   { href: "/pages/jetonbuy.html", icon: "+", label: "Jeton Yükle" },
   { href: "/pages/wallet_history.html", icon: "↕", label: "Jeton Hareketleri" },
   { href: "/pages/pricing.html", icon: "$", label: "Fiyatlandırma" },
@@ -73,8 +74,16 @@ function fixMenuRoutes(root = document) {
   links.forEach((link) => {
     const href = String(link.getAttribute("href") || "").trim();
     if (!href) return;
+    if (
+      href === "https://italky.ai/hosgeldiniz" ||
+      href === "https://www.italky.ai/hosgeldiniz"
+    ) {
+      link.setAttribute("href", PERSONAL_HOME);
+      return;
+    }
     if (href === "/pages/plan_select.html" || href.endsWith("/pages/plan_select.html")) {
       link.setAttribute("href", "/pages/pricing.html");
+      return;
     }
     if (href === "/music-showcase/" || href.includes("/music-showcase")) {
       link.setAttribute("href", "https://www.icany.ai/music-rights");
@@ -109,7 +118,7 @@ function normalizeDrawer(drawer) {
 
   if (!drawer.querySelector(".menu-official-logo,.drawer-logo,.drawer-head img")) {
     const logoWrap = document.createElement("div");
-    logoWrap.innerHTML = `<a href="https://italky.ai/hosgeldiniz"><img class="menu-official-logo" src="${OFFICIAL_LOGO}" alt="italkyAI"></a>`;
+    logoWrap.innerHTML = `<a href="${PERSONAL_HOME}"><img class="menu-official-logo" src="${OFFICIAL_LOGO}" alt="italkyAI"></a>`;
     drawer.insertBefore(logoWrap.firstElementChild, drawer.firstChild);
   }
 
@@ -169,7 +178,7 @@ async function logout() {
     localStorage.removeItem("italky_protected_after_login");
     localStorage.removeItem("italky_icany_pending_target");
   } catch {}
-  location.replace("https://italky.ai/hosgeldiniz");
+  location.replace(PERSONAL_HOME);
 }
 
 function boot() {
@@ -178,9 +187,10 @@ function boot() {
   fixMenuRoutes();
   normalizeDrawers();
   document.addEventListener("click", (event) => {
-    const btn = event.target.closest?.('[data-official-action="logout"]');
+    const btn = event.target.closest?.('[data-official-action="logout"],#logout');
     if (!btn) return;
     event.preventDefault();
+    event.stopImmediatePropagation();
     logout();
   }, true);
   const obs = new MutationObserver((mutations) => {
