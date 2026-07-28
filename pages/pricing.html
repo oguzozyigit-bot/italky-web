@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Fiyatlandırma</title>
+  <meta name="theme-color" content="#06111d" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#06111d;
+      --panel:#0b1c2d;
+      --panel2:#0f263b;
+      --line:rgba(73,221,214,.22);
+      --cyan:#49ddd6;
+      --gold:#f3bd55;
+      --text:#f7fbff;
+      --muted:#a9b9ca;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Manrope,Arial,sans-serif}
+    body{background:radial-gradient(circle at 15% 0%,rgba(73,221,214,.13),transparent 30%),radial-gradient(circle at 88% 8%,rgba(255,74,155,.12),transparent 32%),linear-gradient(180deg,#071522 0%,#06111d 52%,#030911 100%)}
+    a{color:inherit;text-decoration:none}
+    button{font:inherit;color:inherit}
+    .topbar{position:sticky;top:0;z-index:40;height:calc(70px + var(--safe-top));padding:var(--safe-top) clamp(16px,3vw,40px) 0;display:flex;align-items:center;border-bottom:1px solid var(--line);background:rgba(6,17,29,.95);backdrop-filter:blur(18px)}
+    .brand img{display:block;width:138px;height:52px;object-fit:contain;object-position:left center}
+    .menu-btn{margin-left:auto;width:44px;height:44px;border:1px solid rgba(73,221,214,.42);border-radius:14px;background:rgba(9,31,47,.92);display:grid;place-items:center;cursor:pointer}
+    .menu-lines{display:grid;gap:4px;width:19px}.menu-lines span{height:2px;border-radius:999px;background:#65fff6}
+    .hero{width:100%;min-height:390px;padding:clamp(34px,6vw,82px) clamp(20px,6vw,88px);display:flex;align-items:flex-end;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+    .hero:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 78% 24%,rgba(244,189,80,.22),transparent 30%),radial-gradient(circle at 20% 30%,rgba(73,221,214,.25),transparent 34%),linear-gradient(110deg,rgba(4,13,23,.98) 0%,rgba(8,30,46,.92) 50%,rgba(16,33,58,.86) 100%)}
+    .hero:after{content:"";position:absolute;right:-6%;top:-34%;width:48vw;height:48vw;min-width:360px;min-height:360px;border-radius:50%;border:1px solid rgba(255,255,255,.08);box-shadow:0 0 0 45px rgba(73,221,214,.035),0 0 0 90px rgba(244,189,80,.025)}
+    .hero-inner{position:relative;z-index:2;max-width:1080px}
+    .kicker{display:inline-flex;align-items:center;gap:9px;padding:8px 13px;border-radius:999px;border:1px solid rgba(73,221,214,.4);background:rgba(73,221,214,.12);color:#9efff8;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    h1{font-family:Space Grotesk,Manrope,sans-serif;font-size:clamp(44px,7vw,92px);line-height:.92;letter-spacing:-.055em;margin:22px 0 16px;max-width:980px}
+    .hero p{margin:0;max-width:850px;color:#d7e5f2;font-size:clamp(16px,2vw,23px);line-height:1.55;font-weight:700}
+    .hero strong{color:#fff}
+    .main{width:100%;padding:clamp(30px,5vw,68px) clamp(16px,4vw,64px) calc(52px + var(--safe-bottom))}
+    .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:0 0 26px}
+    .summary-card{min-height:170px;border:1px solid var(--line);border-radius:24px;padding:22px;background:linear-gradient(180deg,rgba(15,38,59,.92),rgba(7,22,36,.96));box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+    .summary-card.gold{border-color:rgba(244,189,80,.28);background:radial-gradient(circle at 100% 0%,rgba(244,189,80,.12),transparent 38%),linear-gradient(180deg,rgba(15,38,59,.92),rgba(7,22,36,.96))}
+    .summary-card .eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:800;color:#7ff8f0}
+    .summary-card.gold .eyebrow{color:#ffe1a0}
+    .summary-card h2{margin:12px 0 8px;font-size:23px;line-height:1.12}
+    .summary-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.55;font-weight:700}
+    .section{margin-top:26px;border:1px solid var(--line);border-radius:28px;overflow:hidden;background:rgba(7,23,37,.84)}
+    .section-head{padding:22px 24px;border-bottom:1px solid var(--line);display:flex;align-items:flex-end;justify-content:space-between;gap:18px}
+    .section-head h2{margin:0;font-size:28px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px;font-weight:700}
+    .rate-badge{white-space:nowrap;padding:9px 13px;border-radius:999px;background:rgba(73,221,214,.12);border:1px solid rgba(73,221,214,.32);color:#bafffa;font-size:12px;font-weight:800}
+    .pricing-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,.75fr);gap:24px;align-items:center;padding:22px 24px;border-top:1px solid rgba(255,255,255,.07)}
+    .pricing-row:first-of-type{border-top:0}.pricing-row h3{margin:0 0 6px;font-size:18px}.pricing-row p{margin:0;color:var(--muted);font-size:13px;line-height:1.55;font-weight:700}.price{text-align:right;font-size:17px;line-height:1.35;font-weight:800;color:#fff}.price span{display:block;margin-top:4px;color:#7ff8f0;font-size:12px}
+    .rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:24px}.rule{padding:19px;border-radius:20px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035)}.rule b{display:block;margin-bottom:7px;font-size:14px}.rule p{margin:0;color:var(--muted);font-size:12px;line-height:1.55;font-weight:700}
+    .notice{margin-top:24px;padding:18px 20px;border:1px solid rgba(244,189,80,.28);border-radius:22px;background:rgba(244,189,80,.09);color:#ffe9bd;font-size:13px;line-height:1.65;font-weight:700}
+    .drawer-bg{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:.2s}.drawer{position:fixed;right:0;top:0;bottom:0;z-index:71;width:min(92vw,380px);padding:calc(18px + var(--safe-top)) 14px calc(18px + var(--safe-bottom));background:linear-gradient(180deg,#07131f,#040c16);border-left:1px solid var(--line);transform:translateX(105%);transition:.22s;overflow-y:auto}.open .drawer{transform:none}.open .drawer-bg{opacity:1;pointer-events:auto}.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.drawer-logo{width:132px;height:52px;object-fit:contain;object-position:left}.close{width:42px;height:42px;border:1px solid var(--line);border-radius:13px;background:#10202d;font-size:24px}.drawer nav{display:grid;gap:8px}.drawer nav a{min-height:46px;display:flex;align-items:center;gap:11px;padding:0 13px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);font-size:13px;font-weight:800}.drawer-icon{width:27px;height:27px;border-radius:10px;display:grid;place-items:center;background:rgba(73,221,214,.11);border:1px solid rgba(73,221,214,.18);color:#85fff7}
+    @media(max-width:920px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.rules{grid-template-columns:1fr}}
+    @media(max-width:620px){.hero{min-height:350px;padding:40px 17px}.hero:after{right:-48%;top:-6%}.main{padding-left:13px;padding-right:13px}.summary{grid-template-columns:1fr}.section-head{align-items:flex-start;flex-direction:column}.pricing-row{grid-template-columns:1fr;gap:12px}.price{text-align:left}.topbar{padding-left:13px;padding-right:13px}.brand img{width:116px}}
+  </style>
+</head>
+<body>
+  <div class="drawer-bg" id="drawerBg"></div>
+  <aside class="drawer" aria-label="Hesap menüsü">
+    <div class="drawer-head"><a href="https://italky.ai/hosgeldiniz"><img class="drawer-logo" src="/assets/italkyai-logo-clear.png?v=20260727-vector" alt="italkyAI"></a><button class="close" id="close" type="button">×</button></div>
+    <nav>
+      <a href="https://italky.ai/hosgeldiniz"><span class="drawer-icon">⌂</span><span>Anasayfa</span></a>
+      <a href="/pages/jetonbuy.html"><span class="drawer-icon">+</span><span>Jeton Yükle</span></a>
+      <a href="/pages/wallet_history.html"><span class="drawer-icon">↕</span><span>Jeton Hareketleri</span></a>
+      <a href="/pages/pricing.html"><span class="drawer-icon">₺</span><span>Fiyatlandırma</span></a>
+      <a href="/pages/about.html"><span class="drawer-icon">i</span><span>Hakkımızda</span></a>
+      <a href="/pages/privacy.html"><span class="drawer-icon">◌</span><span>Gizlilik</span></a>
+      <a href="/pages/contact.html"><span class="drawer-icon">@</span><span>İletişim</span></a>
+      <a href="https://www.icany.ai/music-rights"><span class="drawer-icon">♫</span><span>Müzik Hakları</span></a>
+    </nav>
+  </aside>
+
+  <header class="topbar"><a class="brand" href="https://italky.ai/hosgeldiniz"><img src="/assets/italkyai-logo-clear.png?v=20260727-vector" alt="italkyAI"></a><button class="menu-btn" id="menu" type="button" aria-label="Menü"><span class="menu-lines"><span></span><span></span><span></span></span></button></header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="kicker">Basit • Şeffaf • Kullandığın Kadar</div>
+      <h1>Kullanmadığın gün ödeme yok.</h1>
+      <p>Tüm çeviri modülleri ilk <strong>7 gün ücretsiz.</strong> Sonrasında yalnız çeviri kullandığın 24 saat için <strong>5 jeton.</strong> İlk müzik üretimin bizden; sonraki üretimler müzik başına <strong>18 jeton.</strong></p>
+    </div>
+  </section>
+
+  <main class="main">
+    <section class="summary" aria-label="Fiyatlandırma özeti">
+      <article class="summary-card"><div class="eyebrow">Çeviri</div><h2>İlk 7 gün ücretsiz</h2><p>Yüz Yüze, Metin, Belge, Fotoğraf, italkyAI Call ve diğer tüm çeviri modülleri birlikte.</p></article>
+      <article class="summary-card"><div class="eyebrow">Günlük kullanım</div><h2>5 jeton / 24 saat</h2><p>İlk gerçek çeviri kullanımında açılır. Aynı 24 saatte ikinci kez jeton düşmez.</p></article>
+      <article class="summary-card gold"><div class="eyebrow">İlk müzik</div><h2>Üretim ücretsiz</h2><p>Hediye müziği sahiplenmek, indirmek ve paylaşmak için yalnız bir kez 5 jeton.</p></article>
+      <article class="summary-card gold"><div class="eyebrow">Sonraki müzikler</div><h2>18 jeton</h2><p>Üretim, sahiplenme, sınırsız indirme ve sınırsız paylaşım tek ücretin içinde.</p></article>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Çeviri kullanımı</h2><p>Tüm çeviri özellikleri tek günlük erişim altında çalışır.</p></div><div class="rate-badge">5 jeton • 24 saat</div></div>
+      <div class="pricing-row"><div><h3>Ücretsiz deneme</h3><p>İlk çeviri kullanımında başlayan 7 günlük dönem boyunca tüm çeviri modülleri ücretsizdir.</p></div><div class="price">7 gün ücretsiz<span>Kredi kartı gerektirmez</span></div></div>
+      <div class="pricing-row"><div><h3>Deneme sonrası kullanım</h3><p>Kullanıcı çeviri yapmadığı gün hiçbir ücret oluşmaz. İlk başarılı kullanım 24 saatlik erişimi açar.</p></div><div class="price">5 jeton<span>Tüm çeviri modülleri</span></div></div>
+      <div class="pricing-row"><div><h3>Aynı gün sınırsız geçiş</h3><p>Metin, belge, fotoğraf, yüz yüze veya italkyAI Call arasında geçiş yapıldığında yeniden jeton düşmez.</p></div><div class="price">Ek ücret yok<span>24 saat boyunca</span></div></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Müzik üretimi</h2><p>İlk deneyim ücretsiz; sonraki üretimlerde sahiplik baştan dahildir.</p></div><div class="rate-badge">İlk müzik hediye</div></div>
+      <div class="pricing-row"><div><h3>İlk müzik üretimi</h3><p>Her hesap için ilk başarılı müzik üretimi ücretsizdir ve uygulama içinde dinlenebilir.</p></div><div class="price">Ücretsiz<span>Hesap başına bir kez</span></div></div>
+      <div class="pricing-row"><div><h3>Hediye müziği sahiplenme</h3><p>İndirme ve dışarıda paylaşma hakkı açılır. Ödeme sonrasında aynı müzik için yeniden ücret alınmaz.</p></div><div class="price">5 jeton<span>Sınırsız indirme ve paylaşım</span></div></div>
+      <div class="pricing-row"><div><h3>Sonraki müzik üretimleri</h3><p>Üretim, sahiplenme, indirme ve paylaşım hakları tek işlemde birlikte verilir.</p></div><div class="price">18 jeton<span>Müzik başına</span></div></div>
+    </section>
+
+    <div class="rules">
+      <article class="rule"><b>Başarısız işlemde ücret yok</b><p>Çeviri veya müzik üretimi tamamlanmazsa jeton tahsilatı kesinleşmez.</p></article>
+      <article class="rule"><b>Çift tahsilat yok</b><p>Aynı işlem kimliği tekrar gelirse sistem ikinci kez jeton düşmez.</p></article>
+      <article class="rule"><b>Bakiye önceden görünür</b><p>Yetersiz bakiye varsa işlem başlamadan önce Jeton Market’e yönlendirilirsin.</p></article>
+    </div>
+
+    <div class="notice"><strong>Not:</strong> Jeton paketlerinin yerel fiyatlarını Google Play veya App Store belirler. Bu sayfadaki kurallar, hangi kullanımda kaç jeton harcandığını açıklar.</div>
+  </main>
+
+  <script>
+    const body=document.body;
+    const setMenu=(open)=>body.classList.toggle('open',!!open);
+    document.getElementById('menu')?.addEventListener('click',()=>setMenu(true));
+    document.getElementById('close')?.addEventListener('click',()=>setMenu(false));
+    document.getElementById('drawerBg')?.addEventListener('click',()=>setMenu(false));
+  </script>
+  <script type="module" src="/js/official_italky_ui_patch.js?v=20260728-pricing"></script>
+</body>
+</html>
