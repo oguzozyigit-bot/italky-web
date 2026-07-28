@@ -1,8 +1,9 @@
 // FILE: /js/usage_meter.js
 
 import { supabase } from "/js/supabase_client.js";
+import { BASE_DOMAIN } from "/js/config.js";
 
-const API_BASE = "https://italky-api.onrender.com";
+const API_BASE = BASE_DOMAIN;
 
 function cleanString(v, fallback = "") {
   const s = String(v ?? fallback).trim();
