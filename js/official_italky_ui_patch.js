@@ -7,12 +7,12 @@ const MENU_ITEMS = [
   { href: "https://italky.ai/hosgeldiniz", icon: "⌂", label: "Anasayfa" },
   { href: "/pages/jetonbuy.html", icon: "+", label: "Jeton Yükle" },
   { href: "/pages/wallet_history.html", icon: "↕", label: "Jeton Hareketleri" },
-  { href: "/pages/plan_select.html", icon: "$", label: "Fiyatlandırma" },
+  { href: "/pages/pricing.html", icon: "$", label: "Fiyatlandırma" },
   { href: "/pages/about.html", icon: "i", label: "Hakkımızda" },
   { href: "/pages/features.html", icon: "◆", label: "Özellikler" },
   { href: "/pages/privacy.html", icon: "◌", label: "Gizlilik" },
   { href: "/pages/contact.html", icon: "@", label: "İletişim" },
-  { href: "/music-showcase/", icon: "♫", label: "Müzik Hakları" },
+  { href: "https://www.icany.ai/music-rights", icon: "♫", label: "Müzik Hakları" },
   { button: true, danger: true, icon: "⇥", label: "Güvenli Çıkış", action: "logout" },
   { href: "/pages/delete-account.html", danger: true, icon: "×", label: "Hesabımı Sil" },
 ];
@@ -68,6 +68,20 @@ function fixLogos(root = document) {
   });
 }
 
+function fixMenuRoutes(root = document) {
+  const links = root.querySelectorAll?.("a[href]") || [];
+  links.forEach((link) => {
+    const href = String(link.getAttribute("href") || "").trim();
+    if (!href) return;
+    if (href === "/pages/plan_select.html" || href.endsWith("/pages/plan_select.html")) {
+      link.setAttribute("href", "/pages/pricing.html");
+    }
+    if (href === "/music-showcase/" || href.includes("/music-showcase")) {
+      link.setAttribute("href", "https://www.icany.ai/music-rights");
+    }
+  });
+}
+
 function itemHtml(item) {
   const cls = item.danger ? "danger" : "";
   const inner = `<span class="italky-official-icon">${item.icon}</span><span>${item.label}</span>`;
@@ -86,6 +100,7 @@ function normalizeDrawer(drawer) {
     !!drawer.querySelector(".drawer-head,.drawer-logo,.menu-user-card,.drawer-user,.menu-official-logo,.italky-official-user");
   if (hasModernMenu || hasExistingChrome) {
     drawer.dataset.officialItalkyDrawer = "1";
+    fixMenuRoutes(drawer);
     return;
   }
 
@@ -160,6 +175,7 @@ async function logout() {
 function boot() {
   injectStyle();
   fixLogos();
+  fixMenuRoutes();
   normalizeDrawers();
   document.addEventListener("click", (event) => {
     const btn = event.target.closest?.('[data-official-action="logout"]');
@@ -172,6 +188,7 @@ function boot() {
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType !== 1) return;
         fixLogos(node);
+        fixMenuRoutes(node);
         normalizeDrawers(node);
       });
     }
