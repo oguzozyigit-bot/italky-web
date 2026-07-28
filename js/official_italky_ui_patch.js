@@ -2,7 +2,7 @@
 // Central italkyAI UI patch: official logo + unified hamburger menu.
 
 const OFFICIAL_LOGO = "/assets/italkyai-logo-clear.png?v=20260727-vector";
-const PERSONAL_HOME = "https://www.icany.ai/hosgeldiniz";
+const PERSONAL_HOME = "https://www.italky.ai/hosgeldiniz";
 
 const MENU_ITEMS = [
   { href: PERSONAL_HOME, icon: "⌂", label: "Anasayfa" },
@@ -75,8 +75,8 @@ function fixMenuRoutes(root = document) {
     const href = String(link.getAttribute("href") || "").trim();
     if (!href) return;
     if (
-      href === "https://italky.ai/hosgeldiniz" ||
-      href === "https://www.italky.ai/hosgeldiniz"
+      href === "https://icany.ai/hosgeldiniz" ||
+      href === "https://www.icany.ai/hosgeldiniz"
     ) {
       link.setAttribute("href", PERSONAL_HOME);
       return;
