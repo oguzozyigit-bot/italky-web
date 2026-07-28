@@ -8,6 +8,7 @@ import "/js/logo_hotfix.js";
 import "/js/profile_avatar_patch.js";
 import "/js/home_nav_patch.js";
 import "/js/auth_session_unifier.js";
+import "/js/center_swipe_return.js";
 
 export const GOOGLE_CLIENT_ID =
   "300866462204-c76rl1eia9a4cuogehsuf2cm1uc08iov.apps.googleusercontent.com";
