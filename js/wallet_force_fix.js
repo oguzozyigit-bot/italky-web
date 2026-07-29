@@ -28,12 +28,42 @@ function setBalance(value){
   });
 }
 
+function normalizeStoredSession(value){
+  try{
+    const parsed=typeof value==="string"?JSON.parse(value):value;
+    const session=parsed?.currentSession||parsed?.session||parsed;
+    const accessToken=String(session?.access_token||"").trim();
+    const user=session?.user||null;
+    if(accessToken&&user?.id&&user?.email)return{...session,access_token:accessToken,user};
+  }catch{}
+  return null;
+}
+
+function readStoredSupabaseSession(){
+  try{
+    const preferred=["italky_supabase_session_backup"];
+    for(const key of preferred){
+      const session=normalizeStoredSession(localStorage.getItem(key));
+      if(session)return session;
+    }
+    for(let i=0;i<localStorage.length;i++){
+      const key=String(localStorage.key(i)||"");
+      if(!/^sb-.*-auth-token$/i.test(key))continue;
+      const session=normalizeStoredSession(localStorage.getItem(key));
+      if(session)return session;
+    }
+  }catch{}
+  return null;
+}
+
 async function getSession(){
   for(let i=0;i<100;i++){
     const sb=window.supabase;
     if(sb?.auth?.getSession){
       try{const {data}=await sb.auth.getSession();if(data?.session)return data.session;}catch{}
     }
+    const stored=readStoredSupabaseSession();
+    if(stored)return stored;
     await new Promise(r=>setTimeout(r,100));
   }
   return null;
