@@ -4,6 +4,7 @@ import "/js/global_footer.js";
 import "/js/ui_hotfixes.js";
 import "/js/game_logo_patch.js";
 import "/js/account_wallet_context.js";
+import "/js/center_swipe_return.js";
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL = "https://rkbwcmeqdwuewqeokfas.supabase.co";
