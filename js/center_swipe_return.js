@@ -10,6 +10,11 @@ function installTranslatorSwipeReturn() {
   const path = String(location.pathname || "").toLowerCase();
   if (path !== "/pages/home.html" && path !== "/home.html") return;
 
+  const appScroll = document.querySelector(".app-scroll");
+  document.documentElement.style.touchAction = "pan-y";
+  document.body.style.touchAction = "pan-y";
+  if (appScroll) appScroll.style.touchAction = "pan-y";
+
   let startX = 0;
   let startY = 0;
   let lastX = 0;
@@ -50,13 +55,13 @@ function installTranslatorSwipeReturn() {
     const dx = lastX - startX;
     const dy = lastY - startY;
 
-    if (!dragging && dx < -10 && Math.abs(dx) > Math.abs(dy) * 1.12) {
+    if (!dragging && dx < -8 && Math.abs(dx) > Math.abs(dy) * 1.04) {
       dragging = true;
     }
     if (!dragging) return;
 
     event?.preventDefault?.();
-    const pageMove = Math.max(-innerWidth * .48, Math.min(0, dx));
+    const pageMove = Math.max(-innerWidth * .52, Math.min(0, dx));
     setPosition(pageMove);
   };
 
@@ -66,12 +71,12 @@ function installTranslatorSwipeReturn() {
 
     const dx = x - startX;
     const dy = y - startY;
-    const threshold = Math.max(72, innerWidth * .12);
-    const completed = dragging && dx <= -threshold && Math.abs(dx) > Math.abs(dy) * 1.12;
+    const threshold = Math.max(58, innerWidth * .10);
+    const completed = dragging && dx <= -threshold && Math.abs(dx) > Math.abs(dy) * 1.04;
 
     if (dragging) {
       suppressNextClick = true;
-      setTimeout(() => { suppressNextClick = false; }, 450);
+      setTimeout(() => { suppressNextClick = false; }, 500);
     }
 
     dragging = false;
@@ -92,26 +97,9 @@ function installTranslatorSwipeReturn() {
     suppressNextClick = false;
   }, true);
 
-  if ("PointerEvent" in window) {
-    window.addEventListener("pointerdown", (event) => {
-      if (event.pointerType === "mouse") return;
-      begin(event.clientX, event.clientY, event.target);
-    }, { passive: true, capture: true });
+  const hasTouch = "ontouchstart" in window || Number(navigator.maxTouchPoints || 0) > 0;
 
-    window.addEventListener("pointermove", (event) => {
-      move(event.clientX, event.clientY, event);
-    }, { passive: false, capture: true });
-
-    window.addEventListener("pointerup", (event) => {
-      finish(event.clientX, event.clientY);
-    }, { passive: true, capture: true });
-
-    window.addEventListener("pointercancel", () => {
-      tracking = false;
-      dragging = false;
-      reset();
-    }, { passive: true, capture: true });
-  } else {
+  if (hasTouch) {
     window.addEventListener("touchstart", (event) => {
       const touch = event.touches?.[0];
       if (!touch) return;
@@ -130,6 +118,25 @@ function installTranslatorSwipeReturn() {
     }, { passive: true, capture: true });
 
     window.addEventListener("touchcancel", () => {
+      tracking = false;
+      dragging = false;
+      reset();
+    }, { passive: true, capture: true });
+  } else {
+    window.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse") return;
+      begin(event.clientX, event.clientY, event.target);
+    }, { passive: true, capture: true });
+
+    window.addEventListener("pointermove", (event) => {
+      move(event.clientX, event.clientY, event);
+    }, { passive: false, capture: true });
+
+    window.addEventListener("pointerup", (event) => {
+      finish(event.clientX, event.clientY);
+    }, { passive: true, capture: true });
+
+    window.addEventListener("pointercancel", () => {
       tracking = false;
       dragging = false;
       reset();
