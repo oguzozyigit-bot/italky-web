@@ -1,7 +1,7 @@
 // italkyAI bireysel jeton hareketleri görünümü.
 // Ana kaynak: iCany business_members.personal_token_balance + personal_* hareketleri.
 
-const PERSONAL_WALLET_ENDPOINT = "https://www.icany.ai/api/bridge/personal-wallet";
+const PERSONAL_WALLET_ENDPOINT = "https://icany.ai/api/bridge/personal-wallet";
 
 function isWalletHistoryPage() {
   const path = String(location.pathname || "").toLowerCase();
@@ -99,8 +99,6 @@ function buildRows(items, currentBalance) {
     cursor -= row.amount;
   }
 
-  // Eski manuel yükleme, hareket defteri devreye girmeden önce yapılmış olabilir.
-  // Kaydı uydurmak yerine tarihsiz bir devir satırıyla mevcut gerçek bakiyeyi açıklarız.
   const carriedBalance = Math.max(0, Math.floor(cursor));
   if (carriedBalance > 0) {
     rows.push({
@@ -192,7 +190,7 @@ async function loadAndRender() {
 
 function boot() {
   if (!isWalletHistoryPage()) return;
-  [50, 500, 1400, 3000].forEach((delay) => window.setTimeout(loadAndRender, delay));
+  [50, 500, 1400, 3000, 5000].forEach((delay) => window.setTimeout(loadAndRender, delay));
   window.addEventListener("focus", loadAndRender);
   window.addEventListener("pageshow", loadAndRender);
 }
