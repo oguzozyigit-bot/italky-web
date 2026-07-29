@@ -4,6 +4,7 @@ import "/js/activation_session_guard.js";
 import "/js/game_logo_patch.js";
 import "/js/official_italky_ui_patch.js";
 import "/js/account_wallet_context.js";
+import "/js/personal_wallet_history_context.js";
 import "/js/logo_hotfix.js";
 import "/js/profile_avatar_patch.js";
 import "/js/home_nav_patch.js";
