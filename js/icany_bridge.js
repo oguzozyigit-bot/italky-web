@@ -10,6 +10,9 @@ const TOKEN_VIEW_IDS = [
   "drawerTokens",
   "menuTokens",
   "officialMenuTokens",
+  "tokenVal",
+  "currentBalance",
+  "summaryBalance",
 ];
 
 let walletClientPromise = null;
@@ -67,6 +70,43 @@ async function getWalletClient() {
   return walletClientPromise;
 }
 
+export async function fetchIcanyPersonalWallet(options = {}) {
+  const client = await getWalletClient();
+  if (!client?.auth?.getSession) return null;
+
+  const { data } = await client.auth.getSession();
+  const session = data?.session;
+  const userId = String(session?.user?.id || "").trim();
+  const email = String(session?.user?.email || "").trim().toLowerCase();
+  const accessToken = String(session?.access_token || "").trim();
+  if (!userId || !email || !accessToken) return null;
+
+  const historyLimit = Math.max(0, Math.min(300, Math.floor(Number(options.historyLimit) || 0)));
+  const includeHistory = Boolean(options.includeHistory) || historyLimit > 0;
+
+  const response = await fetch(`${ICANY_ORIGIN}${PERSONAL_WALLET_PATH}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    mode: "cors",
+    credentials: "omit",
+    cache: "no-store",
+    body: JSON.stringify({
+      userId,
+      email,
+      includeHistory,
+      historyLimit: historyLimit || (includeHistory ? 200 : 0),
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload?.ok || payload?.wallet !== "personal") {
+    throw new Error(payload?.error || `personal_wallet_${response.status}`);
+  }
+  return payload;
+}
+
 /**
  * iCany ana bireysel cüzdanını okur ve italky ekranlarındaki eski
  * profiles.tokens görünümünün üzerine doğru bakiyeyi yazar.
@@ -76,32 +116,8 @@ export async function refreshIcanyPersonalWallet() {
 
   walletRefreshPromise = (async () => {
     try {
-      const client = await getWalletClient();
-      if (!client?.auth?.getSession) return null;
-
-      const { data } = await client.auth.getSession();
-      const session = data?.session;
-      const userId = String(session?.user?.id || "").trim();
-      const email = String(session?.user?.email || "").trim().toLowerCase();
-      const accessToken = String(session?.access_token || "").trim();
-      if (!userId || !email || !accessToken) return null;
-
-      const response = await fetch(`${ICANY_ORIGIN}${PERSONAL_WALLET_PATH}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        mode: "cors",
-        credentials: "omit",
-        cache: "no-store",
-        body: JSON.stringify({ userId, email }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload?.ok || payload?.wallet !== "personal") {
-        throw new Error(payload?.error || `personal_wallet_${response.status}`);
-      }
-
+      const payload = await fetchIcanyPersonalWallet();
+      if (!payload) return null;
       const balance = Math.max(
         0,
         Number(payload.personalTokenBalance ?? payload.tokenBalance ?? 0)
@@ -109,7 +125,7 @@ export async function refreshIcanyPersonalWallet() {
       setPersonalWalletViews(balance);
       window.dispatchEvent(
         new CustomEvent("italkyPersonalWalletLoaded", {
-          detail: { ok: true, balance, wallet: "personal" },
+          detail: { ok: true, balance, wallet: "personal", payload },
         })
       );
       return balance;
@@ -151,6 +167,7 @@ try {
   window.IcanyBridge = {
     ...(window.IcanyBridge || {}),
     buildFromItalkyUrl,
+    fetchPersonalWallet: fetchIcanyPersonalWallet,
     refreshPersonalWallet: refreshIcanyPersonalWallet,
     creditIap: (detail) => {
       void creditIcanyIap(detail || {});
@@ -158,7 +175,15 @@ try {
   };
 
   const path = String(location.pathname || "").toLowerCase();
-  if (path === "/pages/jetonbuy.html" || path === "/jetonbuy.html") {
+  const personalWalletPages = new Set([
+    "/pages/jetonbuy.html",
+    "/jetonbuy.html",
+    "/pages/wallet_history.html",
+    "/wallet_history.html",
+    "/pages/profile.html",
+    "/profile.html",
+  ]);
+  if (personalWalletPages.has(path)) {
     [0, 350, 1000, 2500].forEach((delay) => {
       window.setTimeout(() => void refreshIcanyPersonalWallet(), delay);
     });
