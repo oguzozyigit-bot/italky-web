@@ -1,9 +1,9 @@
 // italky.ai hesap bağlamı
-// Bireysel sayfalarda yalnız iCany business_members.personal_token_balance gösterilir.
-// Eski profiles.tokens ve kurumsal token_balance bu görünümü değiştiremez.
+// Bireysel sayfalarda yalnız personal_token_balance gösterilir.
+// Kurumsal giriş icany.ai/dashboard üzerinden başlar.
 
-const CORPORATE_DASHBOARD = "https://www.icany.ai/dashboard";
-const PERSONAL_WALLET_ENDPOINT = "https://www.icany.ai/api/bridge/personal-wallet";
+const CORPORATE_DASHBOARD = "https://icany.ai/dashboard";
+const PERSONAL_WALLET_ENDPOINT = "https://icany.ai/api/bridge/personal-wallet";
 const TOKEN_IDS = [
   "drawerTokens",
   "officialMenuTokens",
@@ -18,35 +18,18 @@ const TOKEN_IDS = [
 let lastPersonalBalance = null;
 let refreshInFlight = null;
 
-function formatBalance(value) {
-  const amount = Math.max(0, Math.floor(Number(value) || 0));
-  try {
-    return amount.toLocaleString("tr-TR");
-  } catch {
-    return String(amount);
-  }
-}
-
-function isTokenElement(el) {
-  return Boolean(
-    el &&
-      el.nodeType === 1 &&
-      (TOKEN_IDS.includes(el.id) || el.matches?.("[data-personal-token-balance]"))
-  );
-}
-
 function setPersonalBalance(value) {
   const amount = Math.max(0, Math.floor(Number(value) || 0));
-  const text = formatBalance(amount);
   lastPersonalBalance = amount;
+  const text = amount.toLocaleString("tr-TR");
   TOKEN_IDS.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.dataset.walletSource = "icany-personal";
+    el.dataset.walletSource = "personal";
     if (el.textContent !== text) el.textContent = text;
   });
   document.querySelectorAll?.("[data-personal-token-balance]").forEach((el) => {
-    el.dataset.walletSource = "icany-personal";
+    el.dataset.walletSource = "personal";
     if (el.textContent !== text) el.textContent = text;
   });
 }
@@ -102,13 +85,13 @@ async function loadPersonalWallet(session) {
     body: JSON.stringify({ userId, email }),
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok || !payload?.ok || payload?.wallet !== "personal") {
+  if (!response.ok || !payload?.ok || (payload.wallet && payload.wallet !== "personal")) {
     const error = new Error(payload?.error || `personal_wallet_${response.status}`);
     error.status = response.status;
     error.payload = payload;
     throw error;
   }
-  return Math.max(0, Number(payload.personalTokenBalance ?? 0));
+  return Math.max(0, Number(payload.personalTokenBalance ?? payload.tokenBalance ?? 0));
 }
 
 async function refreshPersonalBalance() {
@@ -116,25 +99,25 @@ async function refreshPersonalBalance() {
   refreshInFlight = (async () => {
     try {
       const supabase = await waitForSupabase();
-      if (!supabase) return null;
+      if (!supabase) return;
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user || !session?.access_token) return null;
+      if (!session?.user || !session?.access_token) {
+        lastPersonalBalance = null;
+        setPersonalBalance(0);
+        return;
+      }
 
       const balance = await loadPersonalWallet(session);
-      if (balance == null) return null;
-      setPersonalBalance(balance);
+      setPersonalBalance(balance ?? 0);
       window.dispatchEvent(new CustomEvent("italkyPersonalWalletLoaded", {
-        detail: { ok: true, balance, wallet: "personal" },
+        detail: { ok: true, balance: balance ?? 0, wallet: "personal" },
       }));
-      return balance;
     } catch (error) {
       console.warn("[account_wallet_context] personal wallet could not be loaded", error);
-      // Hata halinde profiles.tokens veya kurumsal bakiyeye dönme; son doğru değeri koru.
-      restoreLastPersonalBalance();
+      if (lastPersonalBalance == null) setPersonalBalance(0);
       window.dispatchEvent(new CustomEvent("italkyPersonalWalletLoaded", {
-        detail: { ok: false, balance: lastPersonalBalance },
+        detail: { ok: false, balance: lastPersonalBalance ?? 0 },
       }));
-      return null;
     } finally {
       refreshInFlight = null;
     }
@@ -146,53 +129,37 @@ function bootAccountWalletContext() {
   fixCorporateEntry();
   void refreshPersonalBalance();
 
-  [150, 500, 1000, 1800, 3000, 5000].forEach((delay) =>
-    window.setTimeout(refreshPersonalBalance, delay)
-  );
+  [300, 1000, 2500, 5000].forEach((delay) => window.setTimeout(refreshPersonalBalance, delay));
   window.addEventListener("focus", refreshPersonalBalance);
   window.addEventListener("pageshow", refreshPersonalBalance);
-  window.addEventListener("italkyPersonalWalletLoaded", () =>
-    window.setTimeout(restoreLastPersonalBalance, 0)
-  );
 
   const observer = new MutationObserver((mutations) => {
     let shouldRefresh = false;
     let shouldRestore = false;
-
     for (const mutation of mutations) {
       if (mutation.type === "characterData") {
-        if (isTokenElement(mutation.target?.parentElement)) shouldRestore = true;
+        const parent = mutation.target?.parentElement;
+        if (parent && (TOKEN_IDS.includes(parent.id) || parent.matches?.("[data-personal-token-balance]"))) {
+          shouldRestore = true;
+        }
         continue;
       }
-
-      // textContent ataması çoğu tarayıcıda childList olarak gelir.
-      if (isTokenElement(mutation.target)) shouldRestore = true;
-
       mutation.addedNodes.forEach((node) => {
-        if (node.nodeType === 3 && isTokenElement(mutation.target)) {
-          shouldRestore = true;
-          return;
-        }
         if (node.nodeType !== 1) return;
         fixCorporateEntry(node);
         if (
-          isTokenElement(node) ||
+          TOKEN_IDS.includes(node.id) ||
+          node.matches?.("[data-personal-token-balance]") ||
           node.querySelector?.(`#${TOKEN_IDS.join(",#")},[data-personal-token-balance]`)
         ) {
           shouldRefresh = true;
         }
       });
     }
-
     if (shouldRestore) window.setTimeout(restoreLastPersonalBalance, 0);
     if (shouldRefresh) window.setTimeout(refreshPersonalBalance, 0);
   });
-
-  observer.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-  });
+  observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 }
 
 if (document.readyState === "loading") {
