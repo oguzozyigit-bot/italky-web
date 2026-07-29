@@ -3,7 +3,9 @@ import "/js/site_language_boot.js";
 import "/js/global_footer.js";
 import "/js/ui_hotfixes.js";
 import "/js/game_logo_patch.js";
+import "/js/icany_bridge.js";
 import "/js/account_wallet_context.js";
+import "/js/personal_wallet_history_context.js";
 import "/js/center_swipe_return.js";
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
@@ -127,7 +129,6 @@ export const supabase = createClient(
   }
 );
 
-// Session restore helpers for iOS WebView reloads.
 export async function restoreSupabaseSessionFromBackup() {
   const backup = readSupabaseSessionBackup();
   if (!backup) return null;
