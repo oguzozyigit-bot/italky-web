@@ -4,15 +4,19 @@
 
 const CORPORATE_DASHBOARD = "https://www.icany.ai/dashboard";
 const PERSONAL_WALLET_ENDPOINT = "https://www.icany.ai/api/bridge/personal-wallet";
-const TOKEN_IDS = ["drawerTokens", "officialMenuTokens", "menuTokens"];
+const TOKEN_IDS = [
+  "drawerTokens",
+  "officialMenuTokens",
+  "menuTokens",
+  "currentTokens",
+  "headerTokens",
+  "tokenVal",
+  "currentBalance",
+  "summaryBalance",
+];
 
 let lastPersonalBalance = null;
 let refreshInFlight = null;
-
-function setText(id, value) {
-  const el = document.getElementById(id);
-  if (el && el.textContent !== String(value)) el.textContent = String(value);
-}
 
 function setPersonalBalance(value) {
   const amount = Math.max(0, Math.floor(Number(value) || 0));
@@ -51,8 +55,13 @@ function fixCorporateEntry(root = document) {
 async function waitForSupabase(timeoutMs = 6000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
-    const client = window.supabase;
-    if (client?.auth?.getSession) return client;
+    if (window.supabase?.auth?.getSession) return window.supabase;
+    try {
+      const module = await import("/js/supabase_client.js");
+      if (module?.supabase?.auth?.getSession) return module.supabase;
+    } catch {
+      /* module is still booting; retry */
+    }
     await new Promise((resolve) => window.setTimeout(resolve, 100));
   }
   return null;
@@ -141,7 +150,7 @@ function bootAccountWalletContext() {
         if (
           TOKEN_IDS.includes(node.id) ||
           node.matches?.("[data-personal-token-balance]") ||
-          node.querySelector?.("#drawerTokens,#officialMenuTokens,#menuTokens,[data-personal-token-balance]")
+          node.querySelector?.(`#${TOKEN_IDS.join(",#")},[data-personal-token-balance]`)
         ) {
           shouldRefresh = true;
         }
