@@ -1,7 +1,7 @@
 // italkyAI bireysel jeton hareketleri görünümü.
 // Ana kaynak: iCany business_members.personal_token_balance + personal_* hareketleri.
 
-const PERSONAL_WALLET_ENDPOINT = "https://icany.ai/api/bridge/personal-wallet";
+const PERSONAL_WALLET_ENDPOINT = "https://www.icany.ai/api/bridge/personal-wallet";
 
 function isWalletHistoryPage() {
   const path = String(location.pathname || "").toLowerCase();
@@ -58,11 +58,13 @@ async function fetchPersonalHistory(session) {
   const accessToken = String(session?.access_token || "").trim();
   if (!userId || !email || !accessToken) return null;
 
-  const response = await fetch(PERSONAL_WALLET_ENDPOINT, {
+  const response = await fetch(`${PERSONAL_WALLET_ENDPOINT}?t=${Date.now()}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
     },
     mode: "cors",
     credentials: "omit",
@@ -72,6 +74,7 @@ async function fetchPersonalHistory(session) {
       email,
       includeHistory: true,
       historyLimit: 300,
+      cacheBust: Date.now(),
     }),
   });
   const payload = await response.json().catch(() => ({}));
@@ -115,10 +118,7 @@ function buildRows(items, currentBalance) {
 }
 
 function render(payload) {
-  const balance = Math.max(
-    0,
-    Number(payload?.personalTokenBalance ?? payload?.tokenBalance ?? 0)
-  );
+  const balance = Math.max(0, Number(payload?.personalTokenBalance ?? payload?.tokenBalance ?? 0));
   const rows = buildRows(payload?.items, balance);
   const loaded = rows.reduce((sum, row) => sum + (row.amount > 0 ? row.amount : 0), 0);
   const spent = rows.reduce((sum, row) => sum + (row.amount < 0 ? Math.abs(row.amount) : 0), 0);
@@ -146,27 +146,14 @@ function render(payload) {
   }
 
   listWrap.dataset.walletSource = "icany-personal";
-  listWrap.innerHTML = rows
-    .map((row) => {
-      const positive = row.amount > 0;
-      const group = positive ? "plus" : "minus";
-      const icon = positive ? (row.synthetic ? "↻" : "+") : "−";
-      const type = positive ? (row.synthetic ? "DEVİR" : "YÜKLENEN") : "KULLANILAN";
-      const delta = `${positive ? "+" : ""}${formatInt(row.amount)}`;
-      return `<div class="row" data-personal-history-row="1">
-        <div class="icon ${group}">${icon}</div>
-        <div class="mid">
-          <div class="mid-top"><div class="type-pill">${type}</div></div>
-          <div class="title">${escapeHtml(row.title)}</div>
-          <div class="date">${escapeHtml(formatDate(row.createdAt))}</div>
-        </div>
-        <div class="right">
-          <div class="delta ${group}">${escapeHtml(delta)}</div>
-          <div class="after">Bakiye: ${escapeHtml(formatInt(row.balanceAfter))}</div>
-        </div>
-      </div>`;
-    })
-    .join("");
+  listWrap.innerHTML = rows.map((row) => {
+    const positive = row.amount > 0;
+    const group = positive ? "plus" : "minus";
+    const icon = positive ? (row.synthetic ? "↻" : "+") : "−";
+    const type = positive ? (row.synthetic ? "DEVİR" : "YÜKLENEN") : "KULLANILAN";
+    const delta = `${positive ? "+" : ""}${formatInt(row.amount)}`;
+    return `<div class="row" data-personal-history-row="1"><div class="icon ${group}">${icon}</div><div class="mid"><div class="mid-top"><div class="type-pill">${type}</div></div><div class="title">${escapeHtml(row.title)}</div><div class="date">${escapeHtml(formatDate(row.createdAt))}</div></div><div class="right"><div class="delta ${group}">${escapeHtml(delta)}</div><div class="after">Bakiye: ${escapeHtml(formatInt(row.balanceAfter))}</div></div></div>`;
+  }).join("");
 }
 
 let loading = null;
