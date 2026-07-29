@@ -7,7 +7,8 @@ function isInteractive(target) {
 }
 
 function installTranslatorSwipeReturn() {
-  if (location.pathname !== "/facetoface.html") return;
+  const path = String(location.pathname || "").toLowerCase();
+  if (path !== "/pages/home.html" && path !== "/home.html") return;
 
   let startX = 0;
   let startY = 0;
@@ -39,10 +40,10 @@ function installTranslatorSwipeReturn() {
     lastX = event.clientX;
     const dx = lastX - startX;
     const dy = event.clientY - startY;
-    if (!dragging && dx > 12 && Math.abs(dx) > Math.abs(dy) * 1.25) dragging = true;
+    if (!dragging && dx < -12 && Math.abs(dx) > Math.abs(dy) * 1.25) dragging = true;
     if (!dragging) return;
     event.preventDefault();
-    const move = Math.min(innerWidth * .44, Math.max(0, dx));
+    const move = Math.max(-innerWidth * .44, Math.min(0, dx));
     document.body.style.transition = "none";
     document.body.style.transform = `translate3d(${move}px,0,0)`;
     document.body.style.opacity = String(1 - Math.min(.34, Math.abs(move) / innerWidth * .5));
@@ -54,9 +55,9 @@ function installTranslatorSwipeReturn() {
     const dx = event.clientX - startX;
     const dy = event.clientY - startY;
     const threshold = Math.max(92, innerWidth * .15);
-    if (dragging && dx >= threshold && Math.abs(dx) > Math.abs(dy) * 1.25) {
+    if (dragging && dx <= -threshold && Math.abs(dx) > Math.abs(dy) * 1.25) {
       document.body.style.transition = "transform .25s cubic-bezier(.22,.8,.22,1), opacity .25s ease";
-      document.body.style.transform = "translate3d(105vw,0,0)";
+      document.body.style.transform = "translate3d(-105vw,0,0)";
       document.body.style.opacity = ".48";
       setTimeout(() => location.assign(HOME_URL), 215);
     } else {
