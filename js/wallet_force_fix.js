@@ -1,5 +1,5 @@
 // Tek gerçek cüzdan: icany business_members.personal_token_balance
-const ENDPOINT = "https://icany.ai/api/bridge/personal-wallet";
+const ENDPOINT = "https://www.icany.ai/api/bridge/personal-wallet";
 const TOKEN_IDS = [
   "drawerTokens","officialMenuTokens","menuTokens","currentTokens","headerTokens",
   "tokenVal","currentBalance","summaryBalance","italkyMenuTokenCount","topTokens",
