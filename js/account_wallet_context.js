@@ -1,7 +1,7 @@
 // italky.ai ortak kişisel cüzdan ve kurumsal giriş önyükleyicisi.
-// Tek gerçek cüzdan kaynağı: icany business_members.personal_token_balance.
+// Tek gerçek bireysel cüzdan kaynağı: icany business_members.personal_token_balance.
 
-const CORPORATE_LOGIN = "https://italky.ai/hosgeldiniz?open=corporate";
+const CORPORATE_LOGIN = "https://www.icany.ai/login?audience=corporate";
 const FALLBACK_ID = "italkyCorporateEntryFixed";
 const STYLE_ID = "italkyCorporateEntryStyle";
 
@@ -84,7 +84,7 @@ function ensureCorporateEntry() {
     link.id = FALLBACK_ID;
     link.href = CORPORATE_LOGIN;
     link.textContent = "Kurumsal Giriş";
-    link.setAttribute("aria-label", "italkyAI kurumsal giriş seçimini aç");
+    link.setAttribute("aria-label", "Kurumsal giriş sayfasını aç");
     showCorporateLink(link);
     document.body.appendChild(link);
   } catch {}
