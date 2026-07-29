@@ -39,7 +39,7 @@ body{position:fixed;inset:0;overscroll-behavior:none}a{color:inherit;text-decora
   </section>
 </div>
 <main class="gateway" id="gateway">
-  <a class="world translator" href="/pages/home.html" data-kind="translator" aria-label="Translatör merkezini aç">
+  <a class="world translator" href="/home.html" data-kind="translator" aria-label="Translatör merkezini aç">
     <video muted loop autoplay playsinline preload="metadata"><source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4"></video><span class="world-shade" aria-hidden="true"></span>
     <div class="copy translator-copy"><span class="kicker">DÜNYAYLA KONUŞ</span><h1>TRANSLATÖR</h1><p>Canlı sesli çeviri, yüz yüze konuşma ve anlık iletişim tek merkezde. Seyahatte, işte ve günlük yaşamda diller arasındaki mesafeyi kaldır; konuştuğun anda anlaşıl.</p><div class="tags"><span>Canlı sesli çeviri</span><span>Yüz yüze konuşma</span><span>Anlık iletişim</span></div></div>
   </a>
@@ -68,7 +68,7 @@ function showChoice(open){choice.classList.toggle('open',!!open);login.setAttrib
 async function refreshSession(){const{data:{session:s}}=await supabase.auth.getSession();session=s;body.classList.toggle('signed',!!s?.user);if(s?.user)showChoice(false);return s}
 function resetGateway(){gateway.classList.remove('dragging','leaving');gateway.style.transform='translate3d(0,0,0)';gateway.style.opacity='1'}
 function animateExit(direction,done){gateway.classList.remove('dragging');gateway.classList.add('leaving');gateway.style.transform=`translate3d(${direction*110}vw,0,0)`;gateway.style.opacity='.42';setTimeout(done,225)}
-async function goTranslator(){const s=await refreshSession();if(!s?.access_token){resetGateway();await loginWithGoogle('/pages/home.html');return}animateExit(1,()=>location.assign('/pages/home.html'))}
+async function goTranslator(){const s=await refreshSession();if(!s?.access_token){resetGateway();await loginWithGoogle('/home.html');return}animateExit(1,()=>location.assign('/home.html'))}
 async function goMusic(){const s=await refreshSession();if(!s?.access_token){resetGateway();localStorage.setItem(PENDING,'/hosgeldiniz');await loginWithGoogle('/hosgeldiniz');return}note('Müzik Merkezi açılıyor…');localStorage.removeItem(PENDING);animateExit(-1,()=>location.replace(buildFromItalkyUrl('/hosgeldiniz',s.access_token)))}
 async function beginChoice(kind){showChoice(false);login.disabled=true;chooseTranslator.disabled=true;chooseMusic.disabled=true;try{if(kind==='translator')await goTranslator();else await goMusic()}catch(e){resetGateway();note(e?.message||'Google girişi başlatılamadı');login.disabled=false;chooseTranslator.disabled=false;chooseMusic.disabled=false}}
 login.onclick=()=>showChoice(true);choiceClose.onclick=()=>showChoice(false);choice.onclick=e=>{if(e.target===choice)showChoice(false)};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&choice.classList.contains('open'))showChoice(false)});chooseTranslator.onclick=()=>beginChoice('translator');chooseMusic.onclick=()=>beginChoice('music');
