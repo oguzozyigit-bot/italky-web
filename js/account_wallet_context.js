@@ -2,6 +2,8 @@
 // Tek gerçek cüzdan kaynağı: icany business_members.personal_token_balance.
 
 const CORPORATE_LOGIN = "https://www.icany.ai/login?audience=corporate";
+const CORPORATE_BRIDGE = "https://www.icany.ai/api/bridge/from-italky";
+const CORPORATE_TARGET = "/dashboard";
 const FALLBACK_ID = "italkyCorporateEntryFixed";
 const STYLE_ID = "italkyCorporateEntryStyle";
 
@@ -44,8 +46,53 @@ function ensureCorporateStyle() {
   document.head.appendChild(style);
 }
 
+async function openCorporateFromItalky(event) {
+  event.preventDefault();
+  const link = event.currentTarget;
+  if (!(link instanceof HTMLAnchorElement) || link.dataset.italkyCorporateBusy === "1") return;
+
+  link.dataset.italkyCorporateBusy = "1";
+  link.setAttribute("aria-busy", "true");
+
+  try {
+    const client = window.supabase;
+    const sessionResult = client?.auth?.getSession
+      ? await client.auth.getSession()
+      : { data: { session: null } };
+    const accessToken = String(sessionResult?.data?.session?.access_token || "").trim();
+
+    if (!accessToken) {
+      window.location.assign(CORPORATE_LOGIN);
+      return;
+    }
+
+    const response = await fetch(CORPORATE_BRIDGE, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ next: CORPORATE_TARGET }),
+      cache: "no-store",
+    });
+    const json = await response.json().catch(() => ({}));
+    const enterUrl = String(json?.enterUrl || "").trim();
+    if (!response.ok || !enterUrl) {
+      throw new Error(json?.error || "Kurumsal tek giriş hazırlanamadı.");
+    }
+
+    window.location.assign(enterUrl);
+  } catch (error) {
+    console.warn("[account_wallet_context] corporate SSO failed", error);
+    window.location.assign(CORPORATE_LOGIN);
+  } finally {
+    delete link.dataset.italkyCorporateBusy;
+    link.removeAttribute("aria-busy");
+  }
+}
+
 function showCorporateLink(link) {
-  if (!link) return;
+  if (!(link instanceof HTMLAnchorElement)) return;
   link.setAttribute("href", CORPORATE_LOGIN);
   link.removeAttribute("hidden");
   link.setAttribute("aria-hidden", "false");
@@ -53,6 +100,11 @@ function showCorporateLink(link) {
   link.style.setProperty("visibility", "visible", "important");
   link.style.setProperty("opacity", "1", "important");
   link.style.setProperty("pointer-events", "auto", "important");
+
+  if (link.dataset.italkyCorporateBound !== "1") {
+    link.dataset.italkyCorporateBound = "1";
+    link.addEventListener("click", openCorporateFromItalky);
+  }
 }
 
 function findPageCorporateLink() {
@@ -75,7 +127,7 @@ function ensureCorporateEntry() {
       return;
     }
 
-    if (fallback) {
+    if (fallback instanceof HTMLAnchorElement) {
       showCorporateLink(fallback);
       return;
     }
@@ -85,6 +137,7 @@ function ensureCorporateEntry() {
     link.href = CORPORATE_LOGIN;
     link.textContent = "Kurumsal Giriş";
     link.setAttribute("aria-label", "Kurumsal giriş sayfasını aç");
+    showCorporateLink(link);
     document.body.appendChild(link);
   } catch {}
 }
