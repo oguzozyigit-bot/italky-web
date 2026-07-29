@@ -1,5 +1,5 @@
 // italky → iCany SSO helper. Jeton yazımı yalnız doğrulanmış backend tarafından yapılır.
-const ICANY_ORIGIN = "https://www.icany.ai";
+const ICANY_ORIGIN = "https://icany.ai";
 const FROM_ITALKY_PATH = "/api/bridge/from-italky";
 const PERSONAL_WALLET_PATH = "/api/bridge/personal-wallet";
 const ITALKY_SUPABASE_URL = "https://rkbwcmeqdwuewqeokfas.supabase.co";
@@ -17,6 +17,7 @@ const TOKEN_VIEW_IDS = [
 
 let walletClientPromise = null;
 let walletRefreshPromise = null;
+let lastPersonalWalletBalance = null;
 
 /** Build GET URL: https://icany.ai/api/bridge/from-italky?next=...&access_token=... */
 export function buildFromItalkyUrl(nextPath, accessToken) {
@@ -40,7 +41,9 @@ function formatTokens(value) {
 }
 
 function setPersonalWalletViews(value) {
-  const text = formatTokens(value);
+  const amount = Math.max(0, Math.floor(Number(value) || 0));
+  lastPersonalWalletBalance = amount;
+  const text = formatTokens(amount);
   for (const id of TOKEN_VIEW_IDS) {
     const element = document.getElementById(id);
     if (!element) continue;
@@ -51,6 +54,11 @@ function setPersonalWalletViews(value) {
     element.dataset.walletSource = "icany-personal";
     element.textContent = text;
   });
+}
+
+function restorePersonalWalletViews() {
+  if (lastPersonalWalletBalance == null) return;
+  setPersonalWalletViews(lastPersonalWalletBalance);
 }
 
 async function getWalletClient() {
@@ -107,10 +115,7 @@ export async function fetchIcanyPersonalWallet(options = {}) {
   return payload;
 }
 
-/**
- * iCany ana bireysel cüzdanını okur ve italky ekranlarındaki eski
- * profiles.tokens görünümünün üzerine doğru bakiyeyi yazar.
- */
+/** iCany ana bireysel cüzdanını okur ve eski profiles.tokens görünümünü ezer. */
 export async function refreshIcanyPersonalWallet() {
   if (walletRefreshPromise) return walletRefreshPromise;
 
@@ -131,6 +136,7 @@ export async function refreshIcanyPersonalWallet() {
       return balance;
     } catch (error) {
       console.warn("[icany_bridge] personal wallet refresh failed", error);
+      restorePersonalWalletViews();
       return null;
     } finally {
       walletRefreshPromise = null;
@@ -140,12 +146,6 @@ export async function refreshIcanyPersonalWallet() {
   return walletRefreshPromise;
 }
 
-/**
- * Eski Android/web sürümleri bu yardımcıyı satın alma sonrasında çağırabilir.
- * Bakiye, Google Play doğrulaması tamamlanırken italky API tarafından zaten
- * iCany ana cüzdana yazılır. Buradan ikinci bir kredi isteği gönderilmez;
- * yalnız ekrandaki ana bakiye yeniden okunur.
- */
 export async function creditIcanyIap(input = {}) {
   const productId = String(input.productId || input.product_id || "").trim();
   const purchaseToken = String(input.purchaseToken || input.purchase_token || "").trim();
@@ -184,11 +184,23 @@ try {
     "/profile.html",
   ]);
   if (personalWalletPages.has(path)) {
-    [0, 350, 1000, 2500].forEach((delay) => {
+    [0, 350, 1000, 2500, 5000].forEach((delay) => {
       window.setTimeout(() => void refreshIcanyPersonalWallet(), delay);
     });
     window.addEventListener("focus", () => void refreshIcanyPersonalWallet());
     window.addEventListener("pageshow", () => void refreshIcanyPersonalWallet());
+
+    const observer = new MutationObserver((mutations) => {
+      if (lastPersonalWalletBalance == null) return;
+      for (const mutation of mutations) {
+        const parent = mutation.type === "characterData" ? mutation.target?.parentElement : mutation.target;
+        if (parent?.id && TOKEN_VIEW_IDS.includes(parent.id)) {
+          window.setTimeout(restorePersonalWalletViews, 0);
+          break;
+        }
+      }
+    });
+    observer.observe(document.documentElement, { subtree: true, characterData: true, childList: true });
   }
 } catch {
   /* ignore */
