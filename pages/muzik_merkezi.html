@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Müzik Merkezi açılıyor | italkyAI</title>
+<meta name="theme-color" content="#06111d">
+<style>
+html,body{margin:0;width:100%;height:100%;display:grid;place-items:center;background:#06111d;color:#fff;font-family:Arial,sans-serif}.box{text-align:center;padding:24px}.box strong{display:block;font-size:18px;margin-bottom:8px}.box span{font-size:13px;color:#aebdcc}
+</style>
+</head>
+<body>
+<div class="box"><strong>Müzik Merkezi açılıyor…</strong><span>Eski bireysel müzik akışına yönlendiriliyorsunuz.</span></div>
+<script type="module">
+import{supabase}from'/js/supabase_client.js';
+import{loginWithGoogle}from'/js/auth.js';
+import{buildFromItalkyUrl}from'/js/icany_bridge.js';
+try{
+  const{data:{session}}=await supabase.auth.getSession();
+  if(session?.access_token){
+    location.replace(buildFromItalkyUrl('/hosgeldiniz',session.access_token));
+  }else{
+    await loginWithGoogle('/pages/muzik_merkezi.html?rollback=1');
+  }
+}catch(e){
+  location.replace('/hosgeldiniz?rollback=1');
+}
+</script>
+</body>
+</html>
