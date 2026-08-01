@@ -125,10 +125,21 @@ async function fetchAccessStateSafe(session) {
 }
 
 async function resolveNativeRedirectTarget(session, requestedTarget) {
-  const access = await fetchAccessStateSafe(session);
-  if (isActiveAccess(access)) return safeRedirectPath(requestedTarget) || HOME_PAGE;
   const safeRequested = safeRedirectPath(requestedTarget);
-  if (safeRequested && safeRequested !== HOME_PAGE) return safeRequested;
+
+  // Kişisel merkez ve Müzik Merkezi girişleri üyelik sayfasına çevrilmez.
+  // Çeviri tarafındaki üyelik kontrolü ilgili sayfada ayrıca uygulanır.
+  if (
+    safeRequested === HOME_PAGE ||
+    safeRequested.startsWith(`${HOME_PAGE}?`) ||
+    safeRequested.startsWith(`${HOME_PAGE}#`)
+  ) {
+    return safeRequested;
+  }
+
+  const access = await fetchAccessStateSafe(session);
+  if (isActiveAccess(access)) return safeRequested || HOME_PAGE;
+  if (safeRequested) return safeRequested;
   return MEMBERSHIP_PAGE;
 }
 
