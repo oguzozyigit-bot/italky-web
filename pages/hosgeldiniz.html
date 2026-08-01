@@ -49,22 +49,35 @@ import{buildFromItalkyUrl}from'/js/icany_bridge.js';
 const body=document.body,toast=document.getElementById('toast'),login=document.getElementById('googleLogin');
 const gateway=document.getElementById('gateway'),swipeTranslator=document.getElementById('swipeTranslator'),swipeMusic=document.getElementById('swipeMusic');
 const note=t=>{toast.textContent=t;toast.classList.add('show');clearTimeout(window.__t);window.__t=setTimeout(()=>toast.classList.remove('show'),2600)};
-let startX=0,startY=0,lastX=0,tracking=false,dragging=false,suppressClick=false;
+let startX=0,startY=0,lastX=0,tracking=false,dragging=false,suppressClick=false,loginResetTimer=0;
 async function refreshSession(){const{data:{session}}=await supabase.auth.getSession();body.classList.toggle('signed',!!session?.user);return session}
 function resetGateway(){gateway.classList.remove('dragging','leaving');gateway.style.transform='translate3d(0,0,0)';gateway.style.opacity='1'}
 function animateExit(direction,done){gateway.classList.remove('dragging');gateway.classList.add('leaving');gateway.style.transform=`translate3d(${direction*110}vw,0,0)`;gateway.style.opacity='.42';setTimeout(done,225)}
-async function startPersonalLogin(){login.disabled=true;try{await loginWithGoogle('/hosgeldiniz')}catch(e){note(e?.message||'Google girişi başlatılamadı');login.disabled=false}}
-async function requirePersonalSession(){const session=await refreshSession();if(session?.access_token)return session;resetGateway();await startPersonalLogin();return null}
-async function goTranslator(){const session=await requirePersonalSession();if(!session)return;animateExit(1,()=>location.assign('/home.html'))}
-async function goMusic(){const session=await requirePersonalSession();if(!session)return;note('Müzik Merkezi açılıyor…');animateExit(-1,()=>location.replace(buildFromItalkyUrl('/hosgeldiniz',session.access_token)))}
-login.onclick=()=>startPersonalLogin();
+async function startPersonalLogin(next='/hosgeldiniz'){
+  login.disabled=true;
+  clearTimeout(loginResetTimer);
+  try{
+    const result=await loginWithGoogle(next);
+    if(result?.native){loginResetTimer=setTimeout(()=>{login.disabled=false;resetGateway()},30000)}
+  }catch(e){note(e?.message||'Google girişi başlatılamadı');login.disabled=false;resetGateway()}
+}
+async function requirePersonalSession(next='/hosgeldiniz'){const session=await refreshSession();if(session?.access_token)return session;resetGateway();await startPersonalLogin(next);return null}
+async function goTranslator(){const session=await requirePersonalSession('/hosgeldiniz');if(!session)return;animateExit(1,()=>location.assign('/home.html'))}
+async function goMusic(){const session=await requirePersonalSession('/hosgeldiniz?open=music');if(!session)return;note('Müzik Merkezi açılıyor…');animateExit(-1,()=>location.replace(buildFromItalkyUrl('/hosgeldiniz',session.access_token)))}
+login.onclick=()=>startPersonalLogin('/hosgeldiniz');
 swipeTranslator.onclick=()=>goTranslator();swipeMusic.onclick=()=>goMusic();
 document.querySelectorAll('[data-kind]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();if(suppressClick){suppressClick=false;return}a.dataset.kind==='translator'?goTranslator():goMusic()}));
+window.addEventListener('italky-native-login-error',e=>{clearTimeout(loginResetTimer);login.disabled=false;resetGateway();note(e?.detail?.message||'Google girişi tamamlanamadı')});
 gateway.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'||e.target.closest('button,input,textarea,select'))return;startX=lastX=e.clientX;startY=e.clientY;tracking=true;dragging=false;gateway.setPointerCapture?.(e.pointerId)});
 gateway.addEventListener('pointermove',e=>{if(!tracking)return;lastX=e.clientX;const dx=lastX-startX,dy=e.clientY-startY;if(!dragging&&Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.15){dragging=true;gateway.classList.add('dragging')}if(!dragging)return;e.preventDefault();const limit=innerWidth*.42;const move=Math.max(-limit,Math.min(limit,dx));gateway.style.transform=`translate3d(${move}px,0,0)`;gateway.style.opacity=String(1-Math.min(.35,Math.abs(move)/innerWidth*.45))},{passive:false});
 function finishSwipe(e){if(!tracking)return;tracking=false;const dx=(e?.clientX??lastX)-startX,dy=(e?.clientY??startY)-startY;const threshold=Math.max(88,innerWidth*.14);gateway.classList.remove('dragging');if(dragging){suppressClick=true;setTimeout(()=>suppressClick=false,380)}dragging=false;if(Math.abs(dx)>=threshold&&Math.abs(dx)>Math.abs(dy)*1.2){dx<0?goMusic():goTranslator()}else resetGateway()}
 gateway.addEventListener('pointerup',finishSwipe);gateway.addEventListener('pointercancel',finishSwipe);
-await refreshSession();
+const initialSession=await refreshSession();
+const initialParams=new URLSearchParams(location.search||'');
+if(initialSession?.access_token&&initialParams.get('open')==='music'){
+  history.replaceState(null,'','/hosgeldiniz');
+  setTimeout(()=>void goMusic(),80);
+}
 </script>
 </body>
 </html>
