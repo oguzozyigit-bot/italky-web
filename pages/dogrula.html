@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Doğrula | Ürün ve Haber Analizi</title>
+  <meta name="description" content="Haber, ürün ve sosyal medya bağlantılarını analiz edin." />
+  <style>
+    :root{--bg:#f6f8fb;--card:#fff;--text:#101828;--muted:#667085;--line:#e4e7ec;--blue:#175cd3;--green:#15803d;--orange:#d97706;--red:#dc2626;--shadow:0 18px 55px rgba(16,24,40,.08)}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#fff 0,#f6f8fb 45%,#eef2f7 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}button,input{font:inherit}.wrap{width:min(1180px,calc(100% - 28px));margin:auto}
+    header{height:72px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);display:flex;align-items:center;position:sticky;top:0;z-index:10}.nav{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%}.brand{font-weight:950;font-size:25px;letter-spacing:-.04em}.brand b{color:var(--blue)}.mini{color:var(--muted);font-size:13px}
+    main{padding:54px 0 70px}.hero{text-align:center;max-width:900px;margin:auto}.hero h1{font-size:clamp(38px,6vw,68px);line-height:1.02;letter-spacing:-.055em;margin:0 0 16px}.hero p{color:var(--muted);font-size:18px;line-height:1.65;margin:0 auto 26px;max-width:720px}
+    .search{display:flex;gap:10px;background:#fff;border:1px solid var(--line);padding:10px;border-radius:22px;box-shadow:var(--shadow)}.search input{flex:1;border:0;outline:0;padding:0 14px;font-size:16px;min-height:54px}.search button{border:0;border-radius:15px;background:#101828;color:#fff;font-weight:850;padding:0 24px;cursor:pointer}.search button:disabled{opacity:.6;cursor:wait}
+    .hint{margin-top:12px;color:#98a2b3;font-size:13px}.status{display:none;margin:24px auto 0;padding:16px 18px;border-radius:16px;background:#eff6ff;color:#1d4ed8;text-align:left}.status.show{display:block}.error{background:#fef2f2;color:#b42318}
+    .result{display:none;margin-top:42px}.result.show{display:block}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:20px}.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 10px 35px rgba(16,24,40,.05)}
+    .product{display:grid;grid-template-columns:230px 1fr;gap:22px}.imagebox{background:#f8fafc;border:1px solid var(--line);border-radius:18px;min-height:290px;display:flex;align-items:center;justify-content:center;overflow:hidden}.imagebox img{width:100%;height:100%;object-fit:contain}.kicker{font-size:12px;font-weight:850;color:var(--blue);text-transform:uppercase;letter-spacing:.08em}.product h2{font-size:29px;line-height:1.2;letter-spacing:-.035em;margin:8px 0 12px}.source{color:var(--muted);font-size:14px}.price{font-size:30px;font-weight:950;margin:20px 0 5px}.old{color:#98a2b3;text-decoration:line-through;font-size:14px}.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:22px}.fact{padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #eef2f6}.fact span{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}.fact b{font-size:14px}
+    .verdict{padding:22px;border-radius:18px;background:#ecfdf3;border:1px solid #abefc6;margin-bottom:16px}.verdict small{font-weight:800;color:#067647}.verdict h3{font-size:28px;color:#067647;margin:8px 0}.verdict p{margin:0;color:#475467;line-height:1.55}.chips{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.chip{padding:15px;border:1px solid var(--line);border-radius:16px}.chip span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.chip b{font-size:15px}.ok{color:var(--green)}.warn{color:var(--orange)}.bad{color:var(--red)}
+    .wide{grid-column:1/-1}.section-title{font-size:20px;margin:0 0 16px}.list{margin:0;padding-left:19px;color:#475467;line-height:1.75}.description{color:#475467;line-height:1.7;white-space:pre-line}.footnote{margin-top:18px;color:#98a2b3;font-size:12px;text-align:center}
+    @media(max-width:850px){.grid{grid-template-columns:1fr}.product{grid-template-columns:1fr}.imagebox{min-height:260px}.search{flex-direction:column}.search button{height:52px}.facts,.chips{grid-template-columns:1fr}.hero h1{font-size:44px}}
+  </style>
+</head>
+<body>
+<header><div class="wrap nav"><div><div class="brand">doğru<b>la</b></div><div class="mini">Geçici test sayfası</div></div><div class="mini">italky.ai/dogrula</div></div></header>
+<main class="wrap">
+  <section class="hero">
+    <h1>Gördüğünü doğrula.</h1>
+    <p>Ürün, haber veya herkese açık bir paylaşım bağlantısı yapıştır. Bu ilk sürüm ürün sayfalarındaki gerçek bilgileri okuyup analiz eder.</p>
+    <div class="search"><input id="urlInput" type="url" placeholder="Ürün veya haber bağlantısını yapıştır…" autocomplete="off" /><button id="analyzeBtn">Doğrula</button></div>
+    <div class="hint">Örnek: Trendyol, Hepsiburada, haber sitesi veya sosyal medya bağlantısı</div>
+    <div id="status" class="status"></div>
+  </section>
+
+  <section id="result" class="result">
+    <div class="grid">
+      <article class="card product">
+        <div class="imagebox"><img id="productImage" alt="Ürün görseli" /></div>
+        <div>
+          <div id="contentType" class="kicker">İçerik Analizi</div>
+          <h2 id="title">—</h2>
+          <div id="source" class="source">—</div>
+          <div id="price" class="price"></div>
+          <div id="oldPrice" class="old"></div>
+          <div id="facts" class="facts"></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div id="verdict" class="verdict"><small>SONUÇ</small><h3 id="verdictTitle">Analiz tamamlandı</h3><p id="verdictText"></p></div>
+        <div id="chips" class="chips"></div>
+      </article>
+
+      <article class="card">
+        <h3 class="section-title">Olumlu noktalar</h3>
+        <ul id="pros" class="list"></ul>
+      </article>
+
+      <article class="card">
+        <h3 class="section-title">Dikkat edilmesi gerekenler</h3>
+        <ul id="cons" class="list"></ul>
+      </article>
+
+      <article class="card wide">
+        <h3 class="section-title">Sayfadan çıkarılan açıklama</h3>
+        <div id="description" class="description"></div>
+      </article>
+    </div>
+    <div class="footnote">Bu analiz yalnızca erişilebilen sayfa verilerine dayanır. Satın almadan önce güncel fiyatı, satıcıyı, garanti ve iade koşullarını ayrıca kontrol edin.</div>
+  </section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const input=$('urlInput'),btn=$('analyzeBtn'),status=$('status'),result=$('result');
+function showStatus(text,isError=false){status.textContent=text;status.className='status show'+(isError?' error':'')}
+function addFacts(data){const items=[['Marka',data.brand],['Model',data.model],['Satıcı',data.seller],['Puan',data.rating],['Yorum sayısı',data.reviewCount],['Stok',data.availability]]; $('facts').innerHTML=items.filter(x=>x[1]).map(x=>`<div class="fact"><span>${x[0]}</span><b>${escapeHtml(String(x[1]))}</b></div>`).join('')||'<div class="fact"><span>Bilgi</span><b>Ek özellik bulunamadı</b></div>'}
+function addChips(data){const chips=[['Fiyat bilgisi',data.price?'Bulundu':'Bulunamadı',data.price?'ok':'warn'],['Satıcı bilgisi',data.seller?'Bulundu':'Eksik',data.seller?'ok':'warn'],['Yorum verisi',data.rating||data.reviewCount?'Bulundu':'Eksik',data.rating||data.reviewCount?'ok':'warn'],['Ürün açıklaması',data.description?'Bulundu':'Eksik',data.description?'ok':'warn']];$('chips').innerHTML=chips.map(x=>`<div class="chip"><span>${x[0]}</span><b class="${x[2]}">${x[1]}</b></div>`).join('')}
+function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function render(d){$('contentType').textContent=d.type==='product'?'Ürün Analizi':'Bağlantı Analizi';$('title').textContent=d.title||'Başlık bulunamadı';$('source').textContent=(d.siteName||d.hostname||'Kaynak')+(d.url?' • '+d.hostname:'');$('productImage').src=d.image||'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="500"><rect width="100%" height="100%" fill="#f2f4f7"/><text x="50%" y="50%" text-anchor="middle" fill="#98a2b3" font-family="Arial" font-size="28">Görsel bulunamadı</text></svg>');$('price').textContent=d.price?`${d.price} ${d.currency||''}`:'';$('oldPrice').textContent=d.oldPrice?`Önceki fiyat: ${d.oldPrice} ${d.currency||''}`:'';addFacts(d);addChips(d);
+const enough=[d.title,d.description,d.price,d.seller].filter(Boolean).length;$('verdictTitle').textContent=d.type==='product'?(enough>=3?'Ürün bilgileri okunabildi':'Ürün bilgileri kısmen okunabildi'):'Bağlantı okunabildi';$('verdictText').textContent=d.analysisSummary||'Sayfadaki erişilebilir bilgiler çıkarıldı. Bu prototip bağımsız fiyat karşılaştırması yapmaz.';
+const pros=[];if(d.price)pros.push('Sayfada güncel fiyat bilgisi bulunuyor.');if(d.seller)pros.push('Satıcı bilgisi görülebiliyor.');if(d.rating)pros.push('Kullanıcı puanı sayfadan okunabildi.');if(d.brand)pros.push('Marka bilgisi açıkça belirtilmiş.');if(!pros.length)pros.push('Bağlantı ve temel sayfa bilgileri okunabildi.');$('pros').innerHTML=pros.map(x=>`<li>${escapeHtml(x)}</li>`).join('');
+const cons=[];if(!d.seller)cons.push('Satıcı bilgisi sayfadan çıkarılamadı.');if(!d.rating&&!d.reviewCount)cons.push('Yorum ve puan verisi bulunamadı.');cons.push('Bu ilk sürüm başka mağazalardaki fiyatları henüz karşılaştırmıyor.');cons.push('Garanti ve iade şartları satın alma öncesinde ayrıca kontrol edilmeli.');$('cons').innerHTML=cons.map(x=>`<li>${escapeHtml(x)}</li>`).join('');$('description').textContent=d.description||'Sayfada açıklama bulunamadı veya site erişimi sınırladı.';result.classList.add('show');result.scrollIntoView({behavior:'smooth',block:'start'})}
+async function analyze(){const url=input.value.trim();if(!url){showStatus('Önce bir bağlantı yapıştırın.',true);input.focus();return}try{new URL(url)}catch{showStatus('Geçerli bir http veya https bağlantısı girin.',true);return}btn.disabled=true;btn.textContent='Analiz ediliyor…';showStatus('Sayfa açılıyor ve erişilebilir ürün bilgileri okunuyor…');result.classList.remove('show');try{const r=await fetch('/api/dogrula',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});const data=await r.json();if(!r.ok)throw new Error(data.error||'Analiz yapılamadı');render(data);showStatus('Analiz tamamlandı.')}catch(e){showStatus(e.message||'Bağlantı analiz edilemedi.',true)}finally{btn.disabled=false;btn.textContent='Doğrula'}}
+btn.addEventListener('click',analyze);input.addEventListener('keydown',e=>{if(e.key==='Enter')analyze()});
+const sample='https://www.trendyol.com/kumtel/ktf-355-siyah-16-inc-ayakli-vantilator-50-w-5-pervaneli-3-kademeli-121-cm-yukseklik-p-1146148704?boutiqueId=689770&merchantId=968';input.value=sample;
+</script>
+</body>
+</html>
