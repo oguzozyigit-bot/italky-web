@@ -20,7 +20,13 @@ function decodeHtml(value = '') {
 }
 
 function stripTags(value = '') {
-  return decodeHtml(value.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' '));
+  return decodeHtml(
+    value
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+  );
 }
 
 function meta(html, key, attr = 'property') {
@@ -36,7 +42,7 @@ function meta(html, key, attr = 'property') {
   return '';
 }
 
-function firstJsonLd(html) {
+function jsonLdNodes(html) {
   const blocks = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   const values = [];
   for (const block of blocks) {
@@ -57,21 +63,67 @@ function findProduct(nodes) {
   }) || null;
 }
 
-function cleanPrice(value) {
-  if (value === undefined || value === null || value === '') return '';
-  return String(value).replace(/\s+/g, ' ').trim();
+function titleFromSlug(inputUrl) {
+  try {
+    const url = new URL(inputUrl);
+    const parts = url.pathname.split('/').filter(Boolean);
+    const productSlug = parts.find((part) => /-p-\d+/i.test(part)) || parts[parts.length - 1] || '';
+    const raw = productSlug.replace(/-p-\d+.*$/i, '');
+    return decodeURIComponent(raw)
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (m) => m.toLocaleUpperCase('tr-TR'));
+  } catch (_) {
+    return '';
+  }
 }
 
-function titleFromSlug(url) {
-  try {
-    const parts = new URL(url).pathname.split('/').filter(Boolean);
-    const slug = parts.find((p) => p.includes('-p-')) || parts[parts.length - 1] || '';
-    return decodeURIComponent(slug.split('-p-')[0]).replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
-  } catch (_) { return ''; }
+function inferFromUrl(inputUrl) {
+  const url = new URL(inputUrl);
+  const parts = url.pathname.split('/').filter(Boolean);
+  const brand = parts[0] ? decodeURIComponent(parts[0]).replace(/-/g, ' ') : '';
+  const title = titleFromSlug(inputUrl);
+  const modelMatch = title.match(/\b[A-ZÇĞİÖŞÜ]{2,}\s*-?\s*\d{2,}[A-Z0-9-]*\b/i);
+  const productIdMatch = url.pathname.match(/-p-(\d+)/i);
+  return {
+    title,
+    brand: brand ? brand.replace(/\b\w/g, (m) => m.toLocaleUpperCase('tr-TR')) : '',
+    model: modelMatch ? modelMatch[0].replace(/\s+/g, '').toUpperCase() : '',
+    productId: productIdMatch ? productIdMatch[1] : '',
+    merchantId: url.searchParams.get('merchantId') || ''
+  };
+}
+
+function partialResult(url, sourceStatus, reason) {
+  const inferred = inferFromUrl(url.toString());
+  return {
+    type: 'product',
+    url: url.toString(),
+    hostname: url.hostname.replace(/^www\./, ''),
+    siteName: url.hostname.includes('trendyol') ? 'Trendyol' : url.hostname,
+    title: inferred.title || 'Ürün bağlantısı',
+    description: '',
+    image: '',
+    brand: inferred.brand,
+    model: inferred.model,
+    seller: inferred.merchantId ? `Satıcı No: ${inferred.merchantId}` : '',
+    price: '',
+    currency: 'TL',
+    availability: '',
+    rating: '',
+    reviewCount: '',
+    productId: inferred.productId,
+    accessLimited: true,
+    sourceStatus,
+    analysisSummary: `Kaynak site otomatik erişimi kısıtladı${sourceStatus ? ` (${sourceStatus})` : ''}. Ürün adı, marka, model ve bağlantı kimlikleri URL üzerinden çıkarıldı; fiyat, puan ve yorumlar doğrulanamadı.`,
+    warning: reason || 'Kaynak site otomatik erişimi engelliyor. Eksik alanlar tahmin edilmedi.',
+    analyzedAt: new Date().toISOString()
+  };
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') return send(res, 405, { error: 'Yalnızca POST isteği destekleniyor.' });
+  if (req.method !== 'POST') {
+    return send(res, 405, { error: 'Yalnızca POST isteği destekleniyor.' });
+  }
 
   let url;
   try {
@@ -84,19 +136,31 @@ module.exports = async function handler(req, res) {
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 18_000);
+
   try {
     const response = await fetch(url.toString(), {
       redirect: 'follow',
       signal: controller.signal,
       headers: {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'accept-language': 'tr-TR,tr;q=0.9,en;q=0.7',
-        'accept': 'text/html,application/xhtml+xml'
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'cache-control': 'no-cache',
+        pragma: 'no-cache'
       }
     });
-    if (!response.ok) return send(res, 502, { error: `Kaynak site ${response.status} yanıtı verdi.` });
+
+    if (!response.ok) {
+      if ([401, 403, 429].includes(response.status)) {
+        return send(res, 200, partialResult(url, response.status));
+      }
+      return send(res, 502, { error: `Kaynak site ${response.status} yanıtı verdi.` });
+    }
+
     const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('text/html')) return send(res, 415, { error: 'Bu ilk sürüm yalnızca web sayfası bağlantılarını analiz ediyor.' });
+    if (!contentType.includes('text/html')) {
+      return send(res, 415, { error: 'Bu ilk sürüm yalnızca web sayfası bağlantılarını analiz ediyor.' });
+    }
 
     const reader = response.body.getReader();
     let received = 0;
@@ -108,39 +172,31 @@ module.exports = async function handler(req, res) {
       if (received > MAX_BYTES) break;
       chunks.push(value);
     }
-    const html = new TextDecoder('utf-8').decode(Buffer.concat(chunks.map((v) => Buffer.from(v))));
-    const nodes = firstJsonLd(html);
-    const product = findProduct(nodes);
+
+    const html = new TextDecoder('utf-8').decode(Buffer.concat(chunks.map((value) => Buffer.from(value))));
+    const product = findProduct(jsonLdNodes(html));
     const offers = product && (Array.isArray(product.offers) ? product.offers[0] : product.offers);
     const aggregate = product && product.aggregateRating;
     const brandObj = product && product.brand;
+    const inferred = inferFromUrl(response.url || url.toString());
 
-    const titleTag = decodeHtml((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [,''])[1].replace(/\s+/g, ' '));
-    const title = (product && product.name) || meta(html, 'og:title') || titleTag || titleFromSlug(response.url || url.toString());
+    const titleTag = decodeHtml((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [, ''])[1].replace(/\s+/g, ' '));
+    const title = (product && product.name) || meta(html, 'og:title') || titleTag || inferred.title;
     const description = stripTags((product && product.description) || meta(html, 'og:description') || meta(html, 'description', 'name'));
     const imageRaw = (product && product.image) || meta(html, 'og:image');
     const image = Array.isArray(imageRaw) ? imageRaw[0] : (typeof imageRaw === 'object' && imageRaw ? imageRaw.url : imageRaw);
-    const brand = typeof brandObj === 'string' ? brandObj : (brandObj && brandObj.name) || '';
+    const brand = typeof brandObj === 'string' ? brandObj : (brandObj && brandObj.name) || inferred.brand;
     const sellerObj = offers && offers.seller;
-    const seller = typeof sellerObj === 'string' ? sellerObj : (sellerObj && sellerObj.name) || '';
-    const price = cleanPrice((offers && (offers.price || offers.lowPrice)) || meta(html, 'product:price:amount'));
+    const seller = typeof sellerObj === 'string' ? sellerObj : (sellerObj && sellerObj.name) || (inferred.merchantId ? `Satıcı No: ${inferred.merchantId}` : '');
+    const price = String((offers && (offers.price || offers.lowPrice)) || meta(html, 'product:price:amount') || '').trim();
     const currency = (offers && offers.priceCurrency) || meta(html, 'product:price:currency') || 'TL';
     const availabilityRaw = offers && offers.availability;
     const availability = availabilityRaw ? String(availabilityRaw).split('/').pop().replace(/([a-z])([A-Z])/g, '$1 $2') : '';
     const rating = aggregate && aggregate.ratingValue ? String(aggregate.ratingValue) : '';
     const reviewCount = aggregate && (aggregate.reviewCount || aggregate.ratingCount) ? String(aggregate.reviewCount || aggregate.ratingCount) : '';
-
-    let model = (product && (product.model || product.sku || product.mpn)) || '';
-    if (!model) {
-      const modelMatch = title.match(/\bKTF[-\s]?\d+[A-Z-]*\b/i);
-      if (modelMatch) model = modelMatch[0].toUpperCase();
-    }
-
+    const model = (product && (product.model || product.sku || product.mpn)) || inferred.model;
     const type = product || price || /trendyol|hepsiburada|n11|amazon|pazarama|pttavm/i.test(url.hostname) ? 'product' : 'page';
     const found = [title, description, image, price, seller, brand, rating].filter(Boolean).length;
-    const analysisSummary = type === 'product'
-      ? `${found} temel veri alanı sayfadan çıkarıldı. ${price ? 'Fiyat bilgisi mevcut.' : 'Fiyat bilgisi çıkarılamadı.'} ${seller ? 'Satıcı bilgisi mevcut.' : 'Satıcı bilgisi sayfada görünmüyor veya erişim kısıtlı.'}`
-      : 'Bağlantının başlık, açıklama ve görsel gibi erişilebilir temel bilgileri çıkarıldı.';
 
     return send(res, 200, {
       type,
@@ -158,14 +214,18 @@ module.exports = async function handler(req, res) {
       availability,
       rating,
       reviewCount,
-      analysisSummary,
+      productId: inferred.productId,
+      accessLimited: false,
+      analysisSummary: type === 'product'
+        ? `${found} temel veri alanı sayfadan çıkarıldı. ${price ? 'Fiyat bilgisi mevcut.' : 'Fiyat bilgisi çıkarılamadı.'}`
+        : 'Bağlantının erişilebilir temel bilgileri çıkarıldı.',
       analyzedAt: new Date().toISOString()
     });
   } catch (error) {
-    const message = error && error.name === 'AbortError'
-      ? 'Kaynak site zamanında yanıt vermedi.'
-      : 'Bağlantı okunamadı. Site otomatik erişimi engelliyor olabilir.';
-    return send(res, 502, { error: message });
+    if (error && error.name === 'AbortError') {
+      return send(res, 200, partialResult(url, 408, 'Kaynak site zamanında yanıt vermedi.'));
+    }
+    return send(res, 200, partialResult(url, 0, 'Bağlantı tam olarak okunamadı; güvenli kısmi analiz gösteriliyor.'));
   } finally {
     clearTimeout(timeout);
   }
