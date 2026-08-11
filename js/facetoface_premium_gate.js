@@ -29,6 +29,22 @@ function $(id) {
   return document.getElementById(id);
 }
 
+function applyFaceToFaceChromeOnly() {
+  const menuButton = $("f2fMenuBtn");
+  if (menuButton) menuButton.style.setProperty("display", "none", "important");
+
+  const homeLink = $("homeLink");
+  const homeText = $("homeText");
+  if (homeLink) {
+    homeLink.href = "https://italky.ai/hosgeldiniz";
+    homeLink.setAttribute("aria-label", "Short");
+    homeLink.setAttribute("title", "Short");
+  }
+  if (homeText) homeText.textContent = "SHORT";
+}
+
+applyFaceToFaceChromeOnly();
+
 function ensureStyles() {
   if ($("f2fPremiumGateStyles")) return;
 
