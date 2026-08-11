@@ -13,19 +13,22 @@ body{display:grid;place-items:center;overflow:hidden}
 </style>
 </head>
 <body>
-<div class="wrap" aria-live="polite"><div class="spinner" aria-hidden="true"></div><div class="text">iCanyAI açılıyor…</div></div>
+<div class="wrap" aria-live="polite"><div class="spinner" aria-hidden="true"></div><div class="text">iCanyAI Shorts açılıyor…</div></div>
 <script type="module">
 import { supabase } from '/js/supabase_client.js';
 import { buildFromItalkyUrl } from '/js/icany_bridge.js';
 
 (async()=>{
   const suffix=`${location.search||''}${location.hash||''}`;
-  const nextPath=`/hosgeldiniz${suffix}`;
-  let target=`https://icany.ai${nextPath}`;
+  const publicTarget=`https://icany.ai/hosgeldiniz${suffix}`;
+  let target=publicTarget;
   try{
     const {data}=await supabase.auth.getSession();
     const token=String(data?.session?.access_token||'').trim();
-    if(token) target=buildFromItalkyUrl(nextPath,token);
+    // Bridge API's legacy /hosgeldiniz mapping points to hizli-uret.
+    // An otherwise unknown safe path resolves to the real /hosgeldiniz Shorts route,
+    // while preserving the existing SSO handoff and avoiding an app update.
+    if(token) target=buildFromItalkyUrl('/shorts-home',token);
   }catch(e){
     console.warn('[hosgeldiniz] bridge session unavailable',e);
   }
