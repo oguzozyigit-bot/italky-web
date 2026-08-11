@@ -3,17 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>italkyAI</title>
+<title>italkyAI Shorts</title>
 <meta name="theme-color" content="#06111d">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;background:#06111d;color:#fff;font-family:Arial,sans-serif}
-body{display:grid;place-items:center;overflow:hidden}
-.wrap{display:grid;place-items:center;gap:14px;text-align:center;padding:24px}.spinner{width:42px;height:42px;border:3px solid rgba(255,255,255,.18);border-top-color:#42d7d0;border-radius:999px;animation:spin .8s linear infinite}.text{font-size:14px;font-weight:700;color:rgba(255,255,255,.72)}@keyframes spin{to{transform:rotate(360deg)}}
+body{overflow:hidden;background:radial-gradient(circle at 50% 43%,#0b2633 0,#071724 31%,#06111d 68%)}
+.splash{position:fixed;inset:0;display:grid;place-items:center;padding:24px;isolation:isolate}
+.glow{position:absolute;left:50%;top:46%;width:240px;height:240px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(49,220,214,.18),rgba(49,220,214,.05) 42%,transparent 72%);filter:blur(7px);animation:breathe 1.7s ease-in-out infinite}
+.center{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:19px;text-align:center;transform:translateY(-3vh)}
+.mark{position:relative;width:96px;height:68px;border-radius:23px;background:linear-gradient(135deg,#34e1dc,#15a9be);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 0 38px rgba(46,219,215,.26);animation:pop 1.55s cubic-bezier(.2,.8,.2,1) infinite}
+.mark:before{content:"";position:absolute;left:39px;top:21px;border-left:25px solid #fff;border-top:14px solid transparent;border-bottom:14px solid transparent;filter:drop-shadow(0 2px 6px rgba(0,0,0,.22))}
+.wave{display:flex;align-items:center;justify-content:center;gap:4px;height:24px;margin-top:-6px}
+.wave i{display:block;width:4px;border-radius:99px;background:#53e7e1;box-shadow:0 0 10px rgba(83,231,225,.55);animation:wave 1s ease-in-out infinite}
+.wave i:nth-child(1){height:8px;animation-delay:-.36s}.wave i:nth-child(2){height:16px;animation-delay:-.24s}.wave i:nth-child(3){height:24px;animation-delay:-.12s}.wave i:nth-child(4){height:14px}.wave i:nth-child(5){height:7px;animation-delay:.12s}
+.brand{font-size:23px;font-weight:800;letter-spacing:-.02em}.brand b{color:#50e1dc}.text{font-size:13px;font-weight:700;color:rgba(255,255,255,.62);letter-spacing:.01em}
+.footer{position:absolute;left:16px;right:16px;bottom:max(22px,env(safe-area-inset-bottom));text-align:center;color:rgba(255,255,255,.58);font-size:11px;font-weight:700;line-height:1.45}
+.footer small{display:block;margin-top:4px;color:rgba(255,255,255,.34);font-size:10px}
+@keyframes pop{0%,100%{transform:scale(.94);filter:saturate(.94)}50%{transform:scale(1.04);filter:saturate(1.18)}}
+@keyframes breathe{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.92)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
+@keyframes wave{0%,100%{transform:scaleY(.55);opacity:.55}50%{transform:scaleY(1.2);opacity:1}}
+@media(prefers-reduced-motion:reduce){.mark,.glow,.wave i{animation:none}}
 </style>
 </head>
 <body>
-<div class="wrap" aria-live="polite"><div class="spinner" aria-hidden="true"></div><div class="text">iCanyAI Shorts açılıyor…</div></div>
+<div class="splash" aria-live="polite">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="center">
+    <div class="mark" aria-hidden="true"></div>
+    <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="brand">italky<b>AI</b> Shorts</div>
+    <div class="text" id="statusText">Shorts hazırlanıyor…</div>
+  </div>
+  <div class="footer">italkyAI @ iCanyAI By Ozyigit’s 2026<small>𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</small></div>
+</div>
 <script type="module">
 import { supabase } from '/js/supabase_client.js';
 import { buildFromItalkyUrl } from '/js/icany_bridge.js';
@@ -29,18 +52,30 @@ const observer=new MutationObserver(removeCorporateEntry);
 observer.observe(document.documentElement,{subtree:true,childList:true});
 
 (async()=>{
-  const publicTarget='https://icany.ai/hosgeldiniz';
+  const publicTarget=`https://icany.ai/hosgeldiniz?from=italky&t=${Date.now()}`;
+  const status=document.getElementById('statusText');
+  let finished=false;
+  const watchdog=window.setTimeout(()=>{
+    if(finished) return;
+    if(status) status.textContent='Shorts açılıyor…';
+    window.location.replace(publicTarget);
+  },4200);
+
   try{
-    const {data}=await supabase.auth.getSession();
-    const token=String(data?.session?.access_token||'').trim();
-    if(!token){
-      location.replace(publicTarget);
-      return;
-    }
-    location.replace(buildFromItalkyUrl('/shorts-home',token));
+    const sessionPromise=supabase.auth.getSession();
+    const timeoutPromise=new Promise((resolve)=>window.setTimeout(()=>resolve({data:{session:null},timeout:true}),1800));
+    const result=await Promise.race([sessionPromise,timeoutPromise]);
+    const token=String(result?.data?.session?.access_token||'').trim();
+    const target=token ? buildFromItalkyUrl('/shorts-home',token) : publicTarget;
+    if(status) status.textContent=token ? 'Oturum bağlanıyor…' : 'Shorts açılıyor…';
+    finished=true;
+    window.clearTimeout(watchdog);
+    window.location.replace(target);
   }catch(e){
     console.warn('[hosgeldiniz] bridge session unavailable',e);
-    location.replace(publicTarget);
+    finished=true;
+    window.clearTimeout(watchdog);
+    window.location.replace(publicTarget);
   }
 })();
 </script>
