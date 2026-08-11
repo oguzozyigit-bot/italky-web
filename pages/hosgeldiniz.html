@@ -18,64 +18,42 @@ body{overflow:hidden;background:radial-gradient(circle at 50% 43%,#0b2633 0,#071
 .wave i{display:block;width:4px;border-radius:99px;background:#53e7e1;box-shadow:0 0 10px rgba(83,231,225,.55);animation:wave 1s ease-in-out infinite}
 .wave i:nth-child(1){height:8px;animation-delay:-.36s}.wave i:nth-child(2){height:16px;animation-delay:-.24s}.wave i:nth-child(3){height:24px;animation-delay:-.12s}.wave i:nth-child(4){height:14px}.wave i:nth-child(5){height:7px;animation-delay:.12s}
 .brand{font-size:23px;font-weight:800;letter-spacing:-.02em}.brand b{color:#50e1dc}.text{font-size:13px;font-weight:700;color:rgba(255,255,255,.62);letter-spacing:.01em}
-.footer{position:absolute;left:16px;right:16px;bottom:max(22px,env(safe-area-inset-bottom));text-align:center;color:rgba(255,255,255,.58);font-size:11px;font-weight:700;line-height:1.45}
-.footer small{display:block;margin-top:4px;color:rgba(255,255,255,.34);font-size:10px}
-@keyframes pop{0%,100%{transform:scale(.94);filter:saturate(.94)}50%{transform:scale(1.04);filter:saturate(1.18)}}
-@keyframes breathe{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.92)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
-@keyframes wave{0%,100%{transform:scaleY(.55);opacity:.55}50%{transform:scaleY(1.2);opacity:1}}
-@media(prefers-reduced-motion:reduce){.mark,.glow,.wave i{animation:none}}
+.footer{position:absolute;left:16px;right:16px;bottom:max(22px,env(safe-area-inset-bottom));text-align:center;color:rgba(255,255,255,.58);font-size:11px;font-weight:700;line-height:1.45}.footer small{display:block;margin-top:4px;color:rgba(255,255,255,.34);font-size:10px}
+@keyframes pop{0%,100%{transform:scale(.94);filter:saturate(.94)}50%{transform:scale(1.04);filter:saturate(1.18)}}@keyframes breathe{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.92)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}@keyframes wave{0%,100%{transform:scaleY(.55);opacity:.55}50%{transform:scaleY(1.2);opacity:1}}@media(prefers-reduced-motion:reduce){.mark,.glow,.wave i{animation:none}}
 </style>
 </head>
 <body>
-<div class="splash" aria-live="polite">
-  <div class="glow" aria-hidden="true"></div>
-  <div class="center">
-    <div class="mark" aria-hidden="true"></div>
-    <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="brand">italky<b>AI</b> Shorts</div>
-    <div class="text" id="statusText">Shorts hazırlanıyor…</div>
-  </div>
-  <div class="footer">italkyAI @ iCanyAI By Ozyigit’s 2026<small>𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</small></div>
-</div>
+<div class="splash" aria-live="polite"><div class="glow" aria-hidden="true"></div><div class="center"><div class="mark" aria-hidden="true"></div><div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div class="brand">italky<b>AI</b> Shorts</div><div class="text" id="statusText">Shorts hazırlanıyor…</div></div><div class="footer">italkyAI @ iCanyAI By Ozyigit’s 2026<small>𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</small></div></div>
+<script>
+(function(){
+  var target='https://icany.ai/hosgeldiniz?from=italky&fallback=1&t='+Date.now();
+  window.__shortsFallbackTarget=target;
+  window.__shortsFallbackTimer=setTimeout(function(){
+    var s=document.getElementById('statusText'); if(s) s.textContent='Shorts açılıyor…';
+    location.replace(target);
+  },2800);
+})();
+</script>
 <script type="module">
 import { supabase } from '/js/supabase_client.js';
 import { buildFromItalkyUrl } from '/js/icany_bridge.js';
-
-function removeCorporateEntry(){
-  document.querySelectorAll('a,button,[role="button"]').forEach((el)=>{
-    const text=String(el.textContent||'').replace(/\s+/g,' ').trim().toLocaleLowerCase('tr-TR');
-    if(text==='kurumsal giriş'||text==='kurumsal giris') el.remove();
-  });
-}
-removeCorporateEntry();
-const observer=new MutationObserver(removeCorporateEntry);
-observer.observe(document.documentElement,{subtree:true,childList:true});
-
 (async()=>{
-  const publicTarget=`https://icany.ai/hosgeldiniz?from=italky&t=${Date.now()}`;
+  const publicTarget=window.__shortsFallbackTarget||`https://icany.ai/hosgeldiniz?from=italky&t=${Date.now()}`;
   const status=document.getElementById('statusText');
-  let finished=false;
-  const watchdog=window.setTimeout(()=>{
-    if(finished) return;
-    if(status) status.textContent='Shorts açılıyor…';
-    window.location.replace(publicTarget);
-  },4200);
-
   try{
-    const sessionPromise=supabase.auth.getSession();
-    const timeoutPromise=new Promise((resolve)=>window.setTimeout(()=>resolve({data:{session:null},timeout:true}),1800));
-    const result=await Promise.race([sessionPromise,timeoutPromise]);
+    const result=await Promise.race([
+      supabase.auth.getSession(),
+      new Promise((resolve)=>setTimeout(()=>resolve({data:{session:null},timeout:true}),1200))
+    ]);
     const token=String(result?.data?.session?.access_token||'').trim();
-    const target=token ? buildFromItalkyUrl('/shorts-home',token) : publicTarget;
-    if(status) status.textContent=token ? 'Oturum bağlanıyor…' : 'Shorts açılıyor…';
-    finished=true;
-    window.clearTimeout(watchdog);
-    window.location.replace(target);
+    const target=token ? buildFromItalkyUrl('/hosgeldiniz',token) : publicTarget;
+    if(status) status.textContent=token?'Oturum bağlanıyor…':'Shorts açılıyor…';
+    clearTimeout(window.__shortsFallbackTimer);
+    location.replace(target);
   }catch(e){
     console.warn('[hosgeldiniz] bridge session unavailable',e);
-    finished=true;
-    window.clearTimeout(watchdog);
-    window.location.replace(publicTarget);
+    clearTimeout(window.__shortsFallbackTimer);
+    location.replace(publicTarget);
   }
 })();
 </script>
