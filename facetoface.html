@@ -2,21 +2,86 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <meta name="theme-color" content="#06111d" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Face to Face</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
+
   <style>
-    *{box-sizing:border-box}
-    html,body{margin:0;width:100%;height:100%;background:#06111d;overflow:hidden}
-    iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#06111d;display:block}
+    html.two-phone-booting body,
+    html.guide-booting body{background:#06111d}
+    html.two-phone-booting body::before,
+    html.guide-booting body::before{position:fixed;inset:0;z-index:2147483599;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 0%,rgba(53,213,208,.22),transparent 42%),linear-gradient(180deg,#06111d,#040c16);color:#d8e7f2;font-family:Outfit,sans-serif;font-size:15px;font-weight:1000;letter-spacing:.2px;text-align:center}
+    html.two-phone-booting body::before{content:"İki Telefon hazırlanıyor..."}
+    html.guide-booting body::before{content:"Gezi & Konferans hazırlanıyor..."}
+    html.two-phone-booting .container,html.guide-booting .container{visibility:hidden;opacity:0}
+    html.two-phone-ready body::before{display:none}
+    :root{--ai-gradient:linear-gradient(135deg,#84fff7,#35d5d0,#0ea5a4);--bg:#06111d;--cyan:#35d5d0;--border:rgba(78,210,217,.22);--composer-bg:rgba(7,19,31,.94);--composer-line:rgba(78,210,217,.12);--key-bg:#0b1a28;--key-line:rgba(78,210,217,.14);--key-active:rgba(53,213,208,.22);--key-text:#f5f7fb;--kb-bg:rgba(4,12,22,.97);--safe-bottom:env(safe-area-inset-bottom,0px)}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;-webkit-user-select:none;user-select:none}
+    html,body{margin:0;width:100%;height:100%;background:var(--bg);color:#fff;font-family:Outfit,sans-serif;overflow:hidden}
+    body{min-height:100dvh;background:radial-gradient(circle at top,rgba(53,213,208,.08),transparent 22%),radial-gradient(circle at bottom,rgba(14,165,164,.07),transparent 22%),#06111d}
+    body.bt-active{background:#040c16}body.bt-active .half-screen.top{transform:none;border-bottom:1px solid rgba(78,210,217,.12)}
+    .container{display:flex;flex-direction:column;width:100%;height:100dvh;position:relative;overflow:hidden}
+    .half-screen{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;overflow:hidden;min-height:0}
+    .half-screen.top{transform:rotate(180deg);background:linear-gradient(180deg,rgba(53,213,208,.14),var(--bg));padding:10px 8px 8px}
+    .half-screen.bottom{background:linear-gradient(180deg,rgba(14,165,164,.12),var(--bg));padding:6px 8px calc(6px + var(--safe-bottom))}
+    .lang-row{width:100%;display:flex;justify-content:center;padding:0 6px;flex:0 0 auto;position:relative;z-index:3000;pointer-events:none}
+    .lang-row-inner{width:min(92vw,420px);display:grid;grid-template-columns:1fr;align-items:center;gap:8px;margin:0 auto;position:relative;z-index:3001;pointer-events:auto}
+    .mode-toggle-inline{display:none!important}
+    .lang-trigger{background:transparent;border:none;padding:8px 14px;border-radius:999px;color:#fff;font-size:12px;font-weight:900;letter-spacing:.2px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:38px;width:min(70vw,300px);text-decoration:none;flex:0 1 auto;white-space:nowrap;justify-self:center;pointer-events:auto;z-index:3002}
+    .popover{position:absolute;left:50%;transform:translateX(-50%);width:min(92vw,360px);height:360px;background:#0a0a0f;border:1px solid var(--border);border-radius:24px;display:none;flex-direction:column;z-index:5000;overflow:hidden;box-shadow:0 22px 60px rgba(0,0,0,.92)}
+    .popover.show{display:flex}.half-screen.top .popover{top:56px}.half-screen.bottom .popover{bottom:56px}
+    .pop-head{padding:14px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center;font-weight:900;letter-spacing:.3px}
+    .pop-close{cursor:pointer;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06)}
+    .pop-list{flex:1;overflow-y:auto;padding:10px;scrollbar-width:none}.pop-list::-webkit-scrollbar{display:none}
+    .pop-item{padding:12px;border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;border:1px solid transparent}.pop-item:hover{background:rgba(255,255,255,.06)}.pop-item.active{background:rgba(53,213,208,.14);border-color:rgba(53,213,208,.28)}
+    .pop-left{display:flex;align-items:center;gap:10px;min-width:0}.pop-flag{font-size:18px}.pop-name{font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}.pop-code{font-weight:900;font-size:12px;opacity:.7}.pop-empty{padding:16px 12px;text-align:center;font-size:13px;font-weight:700;opacity:.75}
+    .chat-body{flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding:12px 0 20px;mask-image:linear-gradient(to bottom,transparent,black 10%,black 90%,transparent);scrollbar-width:none}.chat-body::-webkit-scrollbar{display:none}
+    .bubble{text-align:center;max-width:84%;line-height:1.25;word-break:break-word}.bubble.them{opacity:.55;font-size:18px;font-weight:500}.bubble.me{font-size:18px;font-weight:650;opacity:.82}.bubble.me.is-latest{font-size:30px;font-weight:900;opacity:1;line-height:1.08}
+    .composer-stack{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:30;padding-bottom:0;flex:0 0 auto}.composer{width:auto;min-width:86px;display:flex;align-items:center;justify-content:center;gap:0;min-height:86px;padding:8px;border-radius:999px;background:transparent;border:none;box-shadow:none;position:relative}.composer-center,.send-btn,.kb-wrap{display:none!important}
+    .send-btn,.mic-btn{width:70px;height:70px;border:none;border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.18);color:#fff;position:relative;z-index:2;box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08)}
+    .send-btn svg,.mic-btn svg{width:30px;height:30px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}.hidden{display:none!important}
+    .center-hub{height:82px;display:flex;align-items:center;justify-content:center;gap:18px;position:relative;background:rgba(0,0,0,.58);backdrop-filter:blur(16px);z-index:600;flex:0 0 auto;border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05)}
+    .nav-btn{position:fixed!important;top:50%;width:30px;height:118px;padding:0;background:linear-gradient(180deg,rgba(53,213,208,.24),rgba(14,165,164,.18),rgba(6,17,29,.18));border:1px solid rgba(255,255,255,.14);color:#fff;font-size:11px;font-weight:1000;cursor:pointer;z-index:1800;text-decoration:none;display:flex;align-items:center;justify-content:center;transition:transform .2s ease;transform:translateY(-50%);writing-mode:vertical-rl;text-orientation:upright;letter-spacing:1px;line-height:1.15}
+    #homeLink{right:0;left:auto!important;border-radius:18px 0 0 18px;border-right:none;box-shadow:-10px 0 32px rgba(0,0,0,.3)}#clearBtn{left:0;right:auto!important;border-radius:0 18px 18px 0;border-left:none;box-shadow:10px 0 32px rgba(0,0,0,.3);pointer-events:auto!important;z-index:2147483000!important;isolation:isolate}.nav-btn:active{transform:translateY(-50%) scale(.96)}.nav-btn .label-rotate{display:inline-block;transform:none!important}
+    .premium-bt-only{display:none}.hub-btn{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:#fff;align-items:center;justify-content:center;cursor:pointer;transition:all .2s ease;box-shadow:0 14px 30px rgba(0,0,0,.24)}
+    .orb-container{width:82px;height:82px;display:flex;align-items:center;justify-content:center;transition:transform .8s cubic-bezier(.34,1.56,.64,1);position:relative}.energy-orbit{position:absolute;width:82px;height:82px;border-radius:50%;animation:rotateOrbit 5s linear infinite}.ball-1,.ball-2{position:absolute;width:10px;height:10px;border-radius:50%;filter:blur(1.5px)}.ball-1{top:-5px;left:50%;transform:translateX(-50%);background:#35d5d0;box-shadow:0 0 15px #35d5d0}.ball-2{bottom:-5px;left:50%;transform:translateX(-50%);background:#84fff7;box-shadow:0 0 15px #84fff7}.ai-core{width:66px;height:66px;border-radius:50%;background:#000;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk",sans-serif;font-weight:700;position:relative;overflow:hidden}.logo-text{color:#fff;letter-spacing:.4px;font-size:13px}.logo-ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}@keyframes rotateOrbit{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    .status-pill{display:none}.modal{position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:999999;padding:20px}.modal.open,.modal.show{display:flex}.modal-card{width:min(100%,420px);border-radius:24px;padding:18px;background:linear-gradient(145deg,rgba(16,16,24,.96),rgba(10,10,18,.96));border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 50px rgba(0,0,0,.3)}.modal-title{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:900;color:#fff}.modal-text{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.76)}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.modal-btn{min-height:46px;border:none;border-radius:16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:900}.modal-btn.primary{background:var(--ai-gradient);color:#05060d}.modal-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff}
+    .mini-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);min-height:44px;padding:10px 16px;border-radius:16px;background:rgba(12,16,28,.96);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:1000;display:flex;align-items:center;justify-content:center;text-align:center;max-width:min(92vw,420px);z-index:99999;box-shadow:0 18px 36px rgba(0,0,0,.35);transition:.22s ease;backdrop-filter:blur(14px);pointer-events:none}.mini-toast.show{transform:translateX(-50%) translateY(0)}
+    #f2fMenuBtn,#f2fDrawer,#drawerBg{display:none!important}
   </style>
 </head>
-<body>
-  <iframe
-    src="/pages/deneme.html?v=20260811-root-live-1"
-    title="italkyAI FaceToFace"
-    allow="microphone; autoplay; clipboard-read; clipboard-write"
-    referrerpolicy="same-origin"
-  ></iframe>
+<body id="frameRoot" class="to-bot">
+  <div class="drawer-bg" id="drawerBg"></div>
+  <aside class="drawer" id="f2fDrawer" aria-label="Menü"></aside>
+  <div class="container">
+    <div class="half-screen top" id="topSection">
+      <button class="f2f-menu-btn" id="f2fMenuBtn" type="button" aria-label="Menü"></button>
+      <div class="lang-row"><div class="lang-row-inner"><button id="topModeToggle" class="mode-toggle-inline online" type="button"></button><button class="lang-trigger" id="topLangBtn" type="button"><span id="topLangTxt">🌐 Dil seçiliyor...</span> ⌵</button></div></div>
+      <div class="popover" id="pop-top" role="dialog" aria-label="Üst dil seçimi"><div class="pop-head"><div>ÜST DİL</div><div class="pop-close" id="close-top">✕</div></div><div class="pop-list" id="list-top"></div></div>
+      <div class="chat-body" id="topBody"></div>
+      <div class="composer-stack"><div class="composer" id="topComposer"><div class="composer-center"><textarea id="topInput" class="composer-input" rows="1" placeholder="Mesaj yaz"></textarea></div><button id="topMic" class="mic-btn" type="button" aria-label="Üst mikrofon"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg></button><button id="topSend" class="send-btn hidden" type="button"></button></div><div class="kb-wrap" id="topKeyboardWrap"><div class="kb" id="topKeyboard"></div></div></div>
+    </div>
+    <div class="center-hub" id="centerHub">
+      <a class="nav-btn" id="homeLink" href="https://italky.ai/hosgeldiniz"><span id="homeText" class="label-rotate">SHORT</span></a>
+      <button id="btToggleBtn" class="hub-btn premium-bt-only" type="button"></button>
+      <div class="orb-container" id="homeBtn" title="Ana sayfa"><div class="energy-orbit"><div class="ball-1"></div><div class="ball-2"></div></div><div class="ai-core"><span class="logo-text">italky<span class="logo-ai">AI</span></span></div></div>
+      <button class="nav-btn btn-clear" id="clearBtn" type="button"><span id="clearText" class="label-rotate">CLEAR</span></button>
+      <button id="handsFreeToggle" class="hf-btn premium-bt-only" type="button" style="display:none"></button><div id="statusPill" class="status-pill">Hazır</div>
+    </div>
+    <div class="half-screen bottom" id="botSection">
+      <div class="lang-row"><div class="lang-row-inner"><button id="botModeToggle" class="mode-toggle-inline online" type="button"></button><button class="lang-trigger" id="botLangBtn" type="button"><span id="botLangTxt">🌐 Dil seçiliyor...</span> ⌵</button></div></div>
+      <div class="popover" id="pop-bot" role="dialog" aria-label="Alt dil seçimi"><div class="pop-head"><div>ALT DİL</div><div class="pop-close" id="close-bot">✕</div></div><div class="pop-list" id="list-bot"></div></div>
+      <div class="chat-body" id="botBody"></div>
+      <div class="composer-stack"><div class="composer" id="botComposer"><div class="composer-center"><textarea id="botInput" class="composer-input" rows="1" placeholder="Mesaj yaz"></textarea></div><button id="botMic" class="mic-btn" type="button" aria-label="Alt mikrofon"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path><path d="M19 10a7 7 0 0 1-14 0"></path><path d="M12 17v4"></path><path d="M8 21h8"></path></svg></button><button id="botSend" class="send-btn hidden" type="button"></button></div><div class="kb-wrap" id="botKeyboardWrap"><div class="kb" id="botKeyboard"></div></div></div>
+    </div>
+  </div>
+  <div class="modal" id="uiModal"><div class="modal-card"><h3 class="modal-title" id="uiModalTitle">Üyelik Gerekli</h3><p class="modal-text" id="uiModalText">Bu özelliği kullanabilmek için üyelik gereklidir.</p><div class="modal-actions"><button class="modal-btn primary" id="uiModalGo">Üyelik Paketlerini Gör</button><button class="modal-btn secondary" id="uiModalClose">Atla</button></div></div></div>
+  <div id="offlineRequiredBackdrop" class="modal"><div class="modal-card"><h3 class="modal-title" id="offlineRequiredTitle">Dil yüklemeniz gerekli</h3><p class="modal-text" id="offlineRequiredText">Önce dil yüklemeniz gereklidir.</p><div class="modal-actions"><button class="modal-btn secondary" id="offlineRequiredCloseBtn">Kapat</button></div></div></div>
+  <div class="mini-toast" id="miniToast"></div>
+  <script>(function(){try{var mode=new URLSearchParams(location.search||"").get("mode");if(mode==="two-phone"||mode==="bluetooth")document.documentElement.classList.add("two-phone-booting");else if(mode==="guide"||mode==="conference"||mode==="tour")document.documentElement.classList.add("guide-booting")}catch(e){}})();</script>
+  <script type="module" src="/js/facetoface_page.js?v=F2F_ONLINE_LANG_FIX_20260702"></script>
+  <script type="module" src="/js/facetoface_bluetooth_premium.js?v=F2F_BT_PREMIUM_V1"></script>
 </body>
 </html>
