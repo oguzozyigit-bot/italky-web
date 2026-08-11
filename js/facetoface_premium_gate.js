@@ -9,6 +9,13 @@ function $(id) {
   return document.getElementById(id);
 }
 
+const FALLBACK_LANGS = [
+  ["tr","🇹🇷","Türkçe"],["en","🇬🇧","İngilizce"],["de","🇩🇪","Almanca"],["fr","🇫🇷","Fransızca"],
+  ["it","🇮🇹","İtalyanca"],["es","🇪🇸","İspanyolca"],["pt","🇵🇹","Portekizce"],["ru","🇷🇺","Rusça"],
+  ["ar","🇸🇦","Arapça"],["zh","🇨🇳","Çince"],["ja","🇯🇵","Japonca"],["ko","🇰🇷","Korece"],
+  ["mk","🇲🇰","Makedonca"],["sq","🇦🇱","Arnavutça"],["bs","🇧🇦","Boşnakça"],["sr","🇷🇸","Sırpça"]
+];
+
 function installFaceToFaceUiPatch() {
   const apply = () => {
     try {
@@ -47,11 +54,52 @@ function installFaceToFaceUiPatch() {
   try {
     const observer = new MutationObserver(() => apply());
     observer.observe(document.documentElement, { childList: true, subtree: true });
-    window.setTimeout(() => observer.disconnect(), 12000);
+    window.setTimeout(() => observer.disconnect(), 30000);
   } catch {}
+
+  [150, 500, 1200, 2500, 5000, 9000].forEach((ms) => window.setTimeout(apply, ms));
+}
+
+function installLanguageRecovery() {
+  const setLabel = (id, code, flag, name) => {
+    const el = $(id);
+    if (!el) return;
+    const current = String(el.textContent || "");
+    if (/Dil seçiliyor|Dil seciliyor/i.test(current)) el.textContent = `${flag} ${name}`;
+    try { localStorage.setItem(id === "topLangTxt" ? "f2f_top_lang" : "f2f_bot_lang", code); } catch {}
+  };
+
+  const hydrateList = (listId, side) => {
+    const list = $(listId);
+    if (!list || list.children.length) return;
+    for (const [code, flag, name] of FALLBACK_LANGS) {
+      const row = document.createElement("div");
+      row.className = "pop-item";
+      row.dataset.code = code;
+      row.innerHTML = `<div class="pop-left"><span class="pop-flag">${flag}</span><span class="pop-name">${name}</span></div><span class="pop-code">${String(code).toUpperCase()}</span>`;
+      row.addEventListener("click", () => {
+        const txt = side === "top" ? $("topLangTxt") : $("botLangTxt");
+        if (txt) txt.textContent = `${flag} ${name}`;
+        try { localStorage.setItem(side === "top" ? "f2f_top_lang" : "f2f_bot_lang", code); } catch {}
+        $(side === "top" ? "pop-top" : "pop-bot")?.classList.remove("show");
+        window.location.reload();
+      });
+      list.appendChild(row);
+    }
+  };
+
+  const recover = () => {
+    setLabel("topLangTxt", "en", "🇬🇧", "İngilizce");
+    setLabel("botLangTxt", "tr", "🇹🇷", "Türkçe");
+    hydrateList("list-top", "top");
+    hydrateList("list-bot", "bot");
+  };
+
+  [700, 1600, 3000].forEach((ms) => window.setTimeout(recover, ms));
 }
 
 installFaceToFaceUiPatch();
+installLanguageRecovery();
 
 function ensureStyles() {
   if ($("f2fPremiumGateStyles")) return;
@@ -127,7 +175,6 @@ export async function ensureFaceToFacePremiumAccess() {
     location.replace("/pages/login.html");
     return false;
   }
-  // italkyAI bireysel kullanım politikası: giriş yapan kullanıcı için FaceToFace ücretsiz.
   return true;
 }
 
