@@ -18,6 +18,16 @@ body{display:grid;place-items:center;overflow:hidden}
 import { supabase } from '/js/supabase_client.js';
 import { buildFromItalkyUrl } from '/js/icany_bridge.js';
 
+function removeCorporateEntry(){
+  document.querySelectorAll('a,button,[role="button"]').forEach((el)=>{
+    const text=String(el.textContent||'').replace(/\s+/g,' ').trim().toLocaleLowerCase('tr-TR');
+    if(text==='kurumsal giriş'||text==='kurumsal giris') el.remove();
+  });
+}
+removeCorporateEntry();
+const observer=new MutationObserver(removeCorporateEntry);
+observer.observe(document.documentElement,{subtree:true,childList:true});
+
 (async()=>{
   const publicTarget='https://icany.ai/hosgeldiniz';
   try{
