@@ -55,12 +55,17 @@
   </div>
 
   <script type="module">
-    import { waitForSupabaseSession } from '/js/supabase_client.js';
+    import {
+      supabase,
+      waitForSupabaseSession,
+      removeSupabaseSessionBackup
+    } from '/js/supabase_client.js';
     import { buildFromItalkyUrl } from '/js/icany_bridge.js';
 
     const frame=document.getElementById('shortsFrame');
     const splash=document.getElementById('splash');
     const splashText=document.getElementById('splashText');
+    let logoutRunning=false;
 
     function playStartupTone(stage='start'){
       try{
@@ -92,6 +97,44 @@
           });
       }catch{}
     }
+
+    async function secureParentLogout(){
+      if(logoutRunning)return;
+      logoutRunning=true;
+      try{ splash?.classList.remove('hide'); }catch{}
+      if(splashText)splashText.textContent='Güvenli çıkış yapılıyor…';
+
+      try{ removeSupabaseSessionBackup(); }catch{}
+      try{ await supabase.auth.signOut({scope:'local'}); }catch{}
+      try{ await supabase.auth.signOut(); }catch{}
+      try{ localStorage.removeItem('italky_supabase_session_backup'); }catch{}
+      try{ sessionStorage.clear(); }catch{}
+
+      try{
+        if(window.Native&&typeof window.Native.logoutNativeGoogle==='function'){
+          window.Native.logoutNativeGoogle();
+          return;
+        }
+      }catch{}
+      try{
+        if(window.AndroidBridge&&typeof window.AndroidBridge.logoutNativeGoogle==='function'){
+          window.AndroidBridge.logoutNativeGoogle();
+          return;
+        }
+      }catch{}
+
+      location.replace('/pages/login.html?logout=1&next='+encodeURIComponent('/hosgeldiniz'));
+    }
+
+    window.addEventListener('message',(event)=>{
+      try{
+        if(event.origin!=='https://icany.ai'&&event.origin!=='https://www.icany.ai')return;
+        const data=event.data||{};
+        if(data.type==='italky:secure-logout'||data.action==='italky:secure-logout'){
+          void secureParentLogout();
+        }
+      }catch{}
+    });
 
     removeInjectedFooter();
     const footerObserver=new MutationObserver(removeInjectedFooter);
