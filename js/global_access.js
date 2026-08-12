@@ -1,6 +1,6 @@
 // FILE: /js/global_access.js
 
-import { supabase } from "/js/supabase_client.js";
+import { supabase, waitForSupabaseSession } from "/js/supabase_client.js";
 
 const API_ACCESS = "https://italky-api.onrender.com/api/session/access-state";
 const MEMBERSHIP_URL = "/pages/membership.html";
@@ -243,9 +243,11 @@ function getIOSIAPPremiumState() {
 
 async function getSessionOrNull() {
   try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) return null;
-    return data?.session || null;
+    return await waitForSupabaseSession({
+      timeoutMs: 4500,
+      intervalMs: 180,
+      restoreFromBackup: true
+    });
   } catch {
     return null;
   }
