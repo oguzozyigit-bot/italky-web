@@ -12,6 +12,15 @@
       }
     }catch{}
   </script>
+  <script>
+    try{
+      if('serviceWorker' in navigator){
+        window.addEventListener('load',()=>{
+          navigator.serviceWorker.register('/shorts-shell-sw.js',{scope:'/'}).catch(()=>{});
+        },{once:true});
+      }
+    }catch{}
+  </script>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06111d;color:#fff;font-family:Arial,sans-serif}
@@ -55,12 +64,21 @@
   </div>
 
   <script type="module">
-    import {
-      supabase,
-      waitForSupabaseSession,
-      removeSupabaseSessionBackup
-    } from '/js/supabase_client.js';
-    import { buildFromItalkyUrl } from '/js/icany_bridge.js';
+    let authModulesPromise=null;
+    async function loadAuthModules(){
+      if(!authModulesPromise){
+        authModulesPromise=Promise.all([
+          import('/js/supabase_client.js'),
+          import('/js/icany_bridge.js')
+        ]).then(([auth,bridge])=>({
+          supabase:auth.supabase,
+          waitForSupabaseSession:auth.waitForSupabaseSession,
+          removeSupabaseSessionBackup:auth.removeSupabaseSessionBackup,
+          buildFromItalkyUrl:bridge.buildFromItalkyUrl
+        }));
+      }
+      return authModulesPromise;
+    }
 
     const frame=document.getElementById('shortsFrame');
     const splash=document.getElementById('splash');
@@ -104,9 +122,11 @@
       try{ splash?.classList.remove('hide'); }catch{}
       if(splashText)splashText.textContent='Güvenli çıkış yapılıyor…';
 
-      try{ removeSupabaseSessionBackup(); }catch{}
-      try{ await supabase.auth.signOut({scope:'local'}); }catch{}
-      try{ await supabase.auth.signOut(); }catch{}
+      let auth=null;
+      try{ auth=await loadAuthModules(); }catch{}
+      try{ auth?.removeSupabaseSessionBackup?.(); }catch{}
+      try{ await auth?.supabase?.auth?.signOut?.({scope:'local'}); }catch{}
+      try{ await auth?.supabase?.auth?.signOut?.(); }catch{}
       try{ localStorage.removeItem('italky_supabase_session_backup'); }catch{}
       try{ sessionStorage.clear(); }catch{}
 
@@ -151,13 +171,22 @@
 
     async function loadShorts(){
       playStartupTone('start');
+
+      if(typeof navigator!=='undefined' && navigator.onLine===false){
+        if(splashText)splashText.textContent='Kaydedilmiş Shorts açılıyor…';
+        frame.src=publicShortsUrl();
+        return;
+      }
+
       try{
+        const {waitForSupabaseSession,buildFromItalkyUrl}=await loadAuthModules();
         const session=await waitForSupabaseSession({timeoutMs:4500,intervalMs:180,restoreFromBackup:true});
         const token=String(session?.access_token||'').trim();
         if(splashText)splashText.textContent=token?'Oturum bağlanıyor…':'Shorts açılıyor…';
         frame.src=token?buildFromItalkyUrl('/hosgeldiniz',token):publicShortsUrl();
       }catch(error){
         console.warn('[hosgeldiniz_shell] session read failed',error);
+        if(splashText)splashText.textContent='Kaydedilmiş Shorts açılıyor…';
         frame.src=publicShortsUrl();
       }
     }
