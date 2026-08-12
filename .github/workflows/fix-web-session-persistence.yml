@@ -1,0 +1,36 @@
+name: Fix web session persistence
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-web-session-persistence.yml'
+      - 'tools/patch_web_session_persistence.py'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply patch
+        run: python tools/patch_web_session_persistence.py
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.name "oguzozyigit-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add js/global_access.js
+          git commit -m "Wait for persisted Supabase session before access guard"
+          git push origin main
