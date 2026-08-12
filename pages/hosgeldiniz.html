@@ -1,61 +1,104 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>italkyAI Shorts</title>
-<meta name="theme-color" content="#06111d">
-<style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;background:#06111d;color:#fff;font-family:Arial,sans-serif}
-body{overflow:hidden;background:radial-gradient(circle at 50% 43%,#0b2633 0,#071724 31%,#06111d 68%)}
-.splash{position:fixed;inset:0;display:grid;place-items:center;padding:24px;isolation:isolate}
-.glow{position:absolute;left:50%;top:46%;width:240px;height:240px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(49,220,214,.18),rgba(49,220,214,.05) 42%,transparent 72%);filter:blur(7px);animation:breathe 1.7s ease-in-out infinite}
-.center{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:19px;text-align:center;transform:translateY(-3vh)}
-.mark{position:relative;width:96px;height:68px;border-radius:23px;background:linear-gradient(135deg,#34e1dc,#15a9be);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 0 38px rgba(46,219,215,.26);animation:pop 1.55s cubic-bezier(.2,.8,.2,1) infinite}
-.mark:before{content:"";position:absolute;left:39px;top:21px;border-left:25px solid #fff;border-top:14px solid transparent;border-bottom:14px solid transparent;filter:drop-shadow(0 2px 6px rgba(0,0,0,.22))}
-.wave{display:flex;align-items:center;justify-content:center;gap:4px;height:24px;margin-top:-6px}
-.wave i{display:block;width:4px;border-radius:99px;background:#53e7e1;box-shadow:0 0 10px rgba(83,231,225,.55);animation:wave 1s ease-in-out infinite}
-.wave i:nth-child(1){height:8px;animation-delay:-.36s}.wave i:nth-child(2){height:16px;animation-delay:-.24s}.wave i:nth-child(3){height:24px;animation-delay:-.12s}.wave i:nth-child(4){height:14px}.wave i:nth-child(5){height:7px;animation-delay:.12s}
-.brand{font-size:23px;font-weight:800;letter-spacing:-.02em}.brand b{color:#50e1dc}.text{font-size:13px;font-weight:700;color:rgba(255,255,255,.62);letter-spacing:.01em}
-.footer{position:absolute;left:16px;right:16px;bottom:max(22px,env(safe-area-inset-bottom));text-align:center;color:rgba(255,255,255,.58);font-size:11px;font-weight:700;line-height:1.45}.footer small{display:block;margin-top:4px;color:rgba(255,255,255,.34);font-size:10px}
-@keyframes pop{0%,100%{transform:scale(.94);filter:saturate(.94)}50%{transform:scale(1.04);filter:saturate(1.18)}}@keyframes breathe{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.92)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}@keyframes wave{0%,100%{transform:scaleY(.55);opacity:.55}50%{transform:scaleY(1.2);opacity:1}}@media(prefers-reduced-motion:reduce){.mark,.glow,.wave i{animation:none}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>italkyAI Shorts</title>
+  <meta name="theme-color" content="#06111d">
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06111d;color:#fff;font-family:Arial,sans-serif}
+    #shortsFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#06111d;z-index:1}
+    #splash{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#0b2633 0,#071724 33%,#06111d 70%);transition:opacity .25s ease,visibility .25s ease}
+    #splash.hide{opacity:0;visibility:hidden;pointer-events:none}
+    .splash-card{text-align:center;padding:24px}.brand{font-size:25px;font-weight:900;letter-spacing:-.03em}.brand b{color:#53e7e1}.spin{width:38px;height:38px;margin:20px auto;border-radius:50%;border:3px solid rgba(83,231,225,.18);border-top-color:#53e7e1;animation:r .9s linear infinite}@keyframes r{to{transform:rotate(360deg)}}.splash-text{font-size:13px;font-weight:700;color:rgba(255,255,255,.66)}
+    #authCover{position:fixed;top:max(8px,env(safe-area-inset-top));right:8px;z-index:2147483600;width:72px;height:72px;border-radius:28px;background:radial-gradient(circle,rgba(7,17,28,.98) 0,rgba(7,17,28,.92) 58%,rgba(7,17,28,0) 78%);display:grid;place-items:center;pointer-events:none}
+    #authButton{pointer-events:auto;width:52px;height:52px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(8,16,23,.86);color:#fff;display:grid;place-items:center;box-shadow:0 8px 28px rgba(0,0,0,.28);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer}
+    #authButton:active{transform:scale(.96)}#authButton[disabled]{opacity:.55;cursor:default}
+    #authButton svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    #toast{position:fixed;left:50%;top:calc(max(16px,env(safe-area-inset-top)) + 66px);z-index:2147483601;transform:translate(-50%,-10px);opacity:0;pointer-events:none;max-width:min(88vw,420px);padding:10px 15px;border-radius:999px;background:rgba(4,10,18,.92);border:1px solid rgba(83,231,225,.25);font-size:12px;font-weight:800;transition:.2s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#toast.show{opacity:1;transform:translate(-50%,0)}
+  </style>
 </head>
 <body>
-<div class="splash" aria-live="polite"><div class="glow" aria-hidden="true"></div><div class="center"><div class="mark" aria-hidden="true"></div><div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div class="brand">italky<b>AI</b> Shorts</div><div class="text" id="statusText">Shorts hazırlanıyor…</div></div><div class="footer">italkyAI @ iCanyAI By Ozyigit’s 2026<small>𐰆𐰍𐰔 𐰇𐰔𐰘𐰃𐰏𐱅</small></div></div>
-<script>
-(function(){
-  var target='https://icany.ai/hosgeldiniz?from=italky&fallback=1&t='+Date.now();
-  window.__shortsFallbackTarget=target;
-  window.__shortsFallbackTimer=setTimeout(function(){
-    var s=document.getElementById('statusText'); if(s) s.textContent='Shorts açılıyor…';
-    location.replace(target);
-  },2800);
-})();
-</script>
-<script type="module">
-import { supabase } from '/js/supabase_client.js';
-import { buildFromItalkyUrl } from '/js/icany_bridge.js';
-(async()=>{
-  const publicTarget=window.__shortsFallbackTarget||`https://icany.ai/hosgeldiniz?from=italky&t=${Date.now()}`;
-  const status=document.getElementById('statusText');
-  try{
-    const result=await Promise.race([
-      supabase.auth.getSession(),
-      new Promise((resolve)=>setTimeout(()=>resolve({data:{session:null},timeout:true}),1200))
-    ]);
-    const token=String(result?.data?.session?.access_token||'').trim();
-    const target=token ? buildFromItalkyUrl('/hosgeldiniz',token) : publicTarget;
-    if(status) status.textContent=token?'Oturum bağlanıyor…':'Shorts açılıyor…';
-    clearTimeout(window.__shortsFallbackTimer);
-    location.replace(target);
-  }catch(e){
-    console.warn('[hosgeldiniz] bridge session unavailable',e);
-    clearTimeout(window.__shortsFallbackTimer);
-    location.replace(publicTarget);
-  }
-})();
-</script>
+  <iframe id="shortsFrame" title="iCanyAI Shorts" allow="autoplay; microphone; camera; clipboard-read; clipboard-write; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+
+  <div id="splash" aria-live="polite"><div class="splash-card"><div class="brand">italky<b>AI</b> Shorts</div><div class="spin"></div><div class="splash-text" id="splashText">Shorts hazırlanıyor…</div></div></div>
+
+  <div id="authCover">
+    <button id="authButton" type="button" disabled aria-label="Giriş durumu hazırlanıyor" title="Giriş durumu hazırlanıyor"></button>
+  </div>
+  <div id="toast"></div>
+
+  <script type="module">
+    import { supabase } from '/js/supabase_client.js';
+    import { buildFromItalkyUrl } from '/js/icany_bridge.js';
+
+    const frame=document.getElementById('shortsFrame');
+    const splash=document.getElementById('splash');
+    const splashText=document.getElementById('splashText');
+    const authButton=document.getElementById('authButton');
+    const toast=document.getElementById('toast');
+
+    const loginSvg='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>';
+    const logoutSvg='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/></svg>';
+    let signedIn=false;
+    let toastTimer=0;
+
+    function showToast(text){
+      if(!toast)return;
+      toast.textContent=String(text||'');
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer=setTimeout(()=>toast.classList.remove('show'),1800);
+    }
+
+    function publicShortsUrl(){
+      return `https://icany.ai/hosgeldiniz?from=italky&embedded=1&t=${Date.now()}`;
+    }
+
+    function setAuthState(hasSession){
+      signedIn=Boolean(hasSession);
+      authButton.disabled=false;
+      authButton.innerHTML=signedIn?logoutSvg:loginSvg;
+      authButton.setAttribute('aria-label',signedIn?'Güvenli Çıkış':'Google ile giriş yap');
+      authButton.title=signedIn?'Güvenli Çıkış':'Google ile giriş yap';
+    }
+
+    async function loadShorts(){
+      try{
+        const result=await Promise.race([
+          supabase.auth.getSession(),
+          new Promise(resolve=>setTimeout(()=>resolve({data:{session:null},timeout:true}),1600))
+        ]);
+        const session=result?.data?.session||null;
+        const token=String(session?.access_token||'').trim();
+        setAuthState(Boolean(token));
+        if(splashText)splashText.textContent=token?'Oturum bağlanıyor…':'Shorts açılıyor…';
+        frame.src=token?buildFromItalkyUrl('/hosgeldiniz',token):publicShortsUrl();
+      }catch(error){
+        console.warn('[hosgeldiniz_shell] session read failed',error);
+        setAuthState(false);
+        frame.src=publicShortsUrl();
+      }
+    }
+
+    frame.addEventListener('load',()=>{
+      window.setTimeout(()=>splash?.classList.add('hide'),180);
+    });
+
+    authButton.addEventListener('click',()=>{
+      if(authButton.disabled)return;
+      authButton.disabled=true;
+      if(signedIn){
+        showToast('Güvenli çıkış yapılıyor…');
+        location.assign('/pages/native_logout.html');
+      }else{
+        showToast('Google hesapları açılıyor…');
+        location.assign('/pages/native_login.html?next=%2Fhosgeldiniz');
+      }
+    });
+
+    void loadShorts();
+  </script>
 </body>
 </html>
