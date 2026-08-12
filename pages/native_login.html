@@ -14,7 +14,7 @@
     .spin{width:38px;height:38px;margin:22px auto;border-radius:50%;border:3px solid rgba(83,231,225,.18);border-top-color:#53e7e1;animation:spin .9s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     #status{margin:0;color:rgba(255,255,255,.76);font-size:14px;line-height:1.5;font-weight:700}
-    #retry{display:none;margin:22px auto 0;min-height:52px;padding:0 24px;border:0;border-radius:26px;background:#fff;color:#111827;font-size:15px;font-weight:900;cursor:pointer}
+    #retry{display:none;margin:22px auto 0;min-height:52px;padding:0 24px;border:0;border-radius:26px;background:#fff;color:#111827;font-size:15px;font-weight:900;cursor:pointer;align-items:center;justify-content:center}
     #retry:active{transform:scale(.98)}
     .small{margin-top:16px;color:rgba(255,255,255,.42);font-size:11px;line-height:1.45}
   </style>
@@ -25,23 +25,17 @@
     <div class="spin" id="spin" aria-hidden="true"></div>
     <p id="status">Google hesaplarınız açılıyor…</p>
     <button id="retry" type="button">Google ile giriş yap</button>
-    <div class="small">Giriş italkyAI hesabınızda tamamlanır ve ardından Shorts ekranına dönersiniz.</div>
+    <div class="small">Tek hesabınız italkyAI içinde açılır. Müzik, çeviri ve jeton bakiyeniz aynı hesapta kalır.</div>
   </main>
 
-  <script type="module">
-    import {
-      supabase,
-      persistSupabaseSessionBackup
-    } from '/js/supabase_client.js';
-    import {
-      ensureAuthAndCacheUser,
-      loginWithGoogle
-    } from '/js/auth.js';
-
+  <script>
+    const MASTER_LOGIN_ENDPOINT='https://www.icany.ai/api/auth/native-personal';
+    const SHARED_POOL_KEY='icany_shared_pool_v1';
     const statusEl=document.getElementById('status');
     const retryBtn=document.getElementById('retry');
     const spinEl=document.getElementById('spin');
     let busy=false;
+    let chooserOpen=false;
 
     function setStatus(text,error=false){
       if(statusEl) statusEl.textContent=text;
@@ -86,30 +80,60 @@
       }catch{}
     }
 
+    function saveSharedPool(data){
+      const memberId=String(data?.memberId||'').trim();
+      const email=String(data?.email||'').trim().toLowerCase();
+      if(!memberId||!email) throw new Error('Ortak hesap bilgisi alınamadı.');
+      const row={
+        memberId,
+        email,
+        name:String(data?.name||'').trim(),
+        avatarUrl:String(data?.avatarUrl||'').trim(),
+        tokenBalance:Math.max(0,Number(data?.tokenBalance||0)),
+        pool:'shared',
+        master:'icany',
+        linkedAt:new Date().toISOString()
+      };
+      localStorage.setItem(SHARED_POOL_KEY,JSON.stringify(row));
+      window.__ICANY_SHARED_POOL__=row;
+      try{window.dispatchEvent(new CustomEvent('icanySharedPoolReady',{detail:row}));}catch{}
+      return row;
+    }
+
     async function completeNativeLogin(payload){
-      if(busy) return;
+      if(busy)return;
       busy=true;
+      chooserOpen=false;
       try{
-        setStatus('italkyAI oturumunuz hazırlanıyor…');
+        setStatus('Tek hesabınız bağlanıyor…');
         const idToken=readIdToken(payload);
         if(!idToken) throw new Error('Google giriş bilgisi alınamadı.');
 
-        const {data,error}=await supabase.auth.signInWithIdToken({
-          provider:'google',
-          token:idToken
+        const response=await fetch(MASTER_LOGIN_ENDPOINT,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          mode:'cors',
+          credentials:'omit',
+          cache:'no-store',
+          body:JSON.stringify({idToken})
         });
-        if(error) throw error;
-        if(!data?.session?.access_token) throw new Error('italkyAI oturumu oluşturulamadı.');
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok||!data?.ok){
+          throw new Error(String(data?.error||'Tek hesap girişi tamamlanamadı.'));
+        }
 
-        persistSupabaseSessionBackup(data.session);
-        try{await ensureAuthAndCacheUser();}catch(e){console.warn('[native_login] user cache',e);}
-        bindNativeUser(data?.user?.id||data?.session?.user?.id||'');
+        const pool=saveSharedPool(data);
+        bindNativeUser(pool.memberId);
+
+        const enterUrl=String(data?.enterUrl||'').trim();
+        if(!enterUrl) throw new Error('Shorts oturum bağlantısı alınamadı.');
 
         setStatus('Shorts açılıyor…');
-        location.replace('/hosgeldiniz');
+        location.replace(enterUrl);
       }catch(error){
-        console.error('[native_login] completion failed',error);
+        console.error('[native_login] shared login failed',error);
         busy=false;
+        chooserOpen=false;
         setStatus(error?.message||'Giriş tamamlanamadı. Tekrar deneyin.',true);
       }
     }
@@ -118,37 +142,32 @@
     window.onNativeLoginError=(payload)=>{
       console.error('[native_login] native error',payload);
       busy=false;
+      chooserOpen=false;
       const message=typeof payload==='string'?payload:String(payload?.message||'Google hesap seçimi tamamlanamadı.');
       setStatus(message,true);
     };
 
-    async function startLogin(){
-      if(busy) return;
+    function startLogin(){
+      if(busy||chooserOpen)return;
       const bridge=nativeGoogleBridge();
-      if(bridge){
-        busy=true;
-        setStatus('Google hesaplarınız açılıyor…');
-        try{
-          bridge.startGoogleLogin();
-          busy=false;
-          return;
-        }catch(error){
-          console.warn('[native_login] native chooser failed',error);
-          busy=false;
-        }
+      if(!bridge){
+        setStatus('Google hesap seçimi italkyAI uygulaması içinde yapılmalıdır.',true);
+        return;
       }
 
+      chooserOpen=true;
+      setStatus('Google hesaplarınız açılıyor…');
       try{
-        setStatus('Google giriş sayfası açılıyor…');
-        await loginWithGoogle('/hosgeldiniz');
+        bridge.startGoogleLogin();
       }catch(error){
-        busy=false;
-        setStatus(error?.message||'Google girişi başlatılamadı.',true);
+        console.error('[native_login] chooser failed',error);
+        chooserOpen=false;
+        setStatus('Google hesapları açılamadı. Tekrar deneyin.',true);
       }
     }
 
-    retryBtn?.addEventListener('click',()=>void startLogin());
-    window.setTimeout(()=>void startLogin(),180);
+    retryBtn?.addEventListener('click',startLogin);
+    window.setTimeout(startLogin,180);
   </script>
 </body>
 </html>
