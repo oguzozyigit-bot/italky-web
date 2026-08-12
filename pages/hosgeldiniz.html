@@ -16,9 +16,20 @@
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06111d;color:#fff;font-family:Arial,sans-serif}
     #shortsFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#06111d;z-index:1}
-    #splash{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#0b2633 0,#071724 33%,#06111d 70%);transition:opacity .25s ease,visibility .25s ease}
+    #splash{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:linear-gradient(180deg,#06111d 0%,#071724 52%,#06111d 100%);transition:opacity .28s ease,visibility .28s ease}
     #splash.hide{opacity:0;visibility:hidden;pointer-events:none}
-    .splash-card{text-align:center;padding:24px}.brand{font-size:25px;font-weight:900;letter-spacing:-.03em}.brand b{color:#53e7e1}.spin{width:38px;height:38px;margin:20px auto;border-radius:50%;border:3px solid rgba(83,231,225,.18);border-top-color:#53e7e1;animation:r .9s linear infinite}@keyframes r{to{transform:rotate(360deg)}}.splash-text{font-size:13px;font-weight:700;color:rgba(255,255,255,.66)}
+    .splash-card{width:min(82vw,360px);text-align:center;padding:24px 18px;display:flex;flex-direction:column;align-items:center}
+    .play-loader{position:relative;width:92px;height:66px;border-radius:20px;background:linear-gradient(145deg,#20b8ff,#087eff);display:grid;place-items:center;box-shadow:0 18px 46px rgba(8,126,255,.34),0 0 0 1px rgba(255,255,255,.08) inset;animation:playPulse 1.25s ease-in-out infinite}
+    .play-loader::before{content:"";position:absolute;inset:-10px;border-radius:28px;border:2px solid rgba(32,184,255,.18);animation:ring 1.25s ease-out infinite}
+    .play-triangle{width:0;height:0;border-top:14px solid transparent;border-bottom:14px solid transparent;border-left:23px solid #fff;margin-left:5px;filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))}
+    .brand{margin-top:24px;font-size:27px;font-weight:900;letter-spacing:-.035em}.brand b{color:#36c8ff}.brand small{display:block;margin-top:5px;font-size:11px;font-weight:800;letter-spacing:.16em;color:rgba(255,255,255,.48);text-transform:uppercase}
+    .progress{width:min(220px,64vw);height:3px;margin-top:24px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.1)}
+    .progress>span{display:block;width:38%;height:100%;border-radius:99px;background:linear-gradient(90deg,transparent,#36c8ff,#fff,#36c8ff,transparent);animation:progressMove 1.15s ease-in-out infinite}
+    .splash-text{margin-top:14px;font-size:13px;font-weight:700;color:rgba(255,255,255,.62)}
+    @keyframes playPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+    @keyframes ring{0%{opacity:.8;transform:scale(.9)}100%{opacity:0;transform:scale(1.25)}}
+    @keyframes progressMove{0%{transform:translateX(-120%)}100%{transform:translateX(290%)}}
+    @media (prefers-reduced-motion:reduce){.play-loader,.play-loader::before,.progress>span{animation:none}.progress>span{width:100%;background:#36c8ff}}
 
     /* Shorts iframe'inin üstüne italky global footer / mühür basılmasın. */
     body>.italky-global-footer,
@@ -34,7 +45,14 @@
 <body>
   <iframe id="shortsFrame" title="iCanyAI Shorts" allow="autoplay; microphone; camera; clipboard-read; clipboard-write; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 
-  <div id="splash" aria-live="polite"><div class="splash-card"><div class="brand">italky<b>AI</b> Shorts</div><div class="spin"></div><div class="splash-text" id="splashText">Shorts hazırlanıyor…</div></div></div>
+  <div id="splash" aria-live="polite">
+    <div class="splash-card">
+      <div class="play-loader" aria-hidden="true"><span class="play-triangle"></span></div>
+      <div class="brand">italky<b>AI</b> Shorts<small>Watch · Listen · Translate</small></div>
+      <div class="progress" aria-hidden="true"><span></span></div>
+      <div class="splash-text" id="splashText">Shorts hazırlanıyor…</div>
+    </div>
+  </div>
 
   <script type="module">
     import { waitForSupabaseSession } from '/js/supabase_client.js';
@@ -43,6 +61,27 @@
     const frame=document.getElementById('shortsFrame');
     const splash=document.getElementById('splash');
     const splashText=document.getElementById('splashText');
+
+    function playStartupTone(stage='start'){
+      try{
+        const AudioCtx=window.AudioContext||window.webkitAudioContext;
+        if(!AudioCtx)return;
+        const ctx=new AudioCtx();
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.type='sine';
+        osc.frequency.value=stage==='ready'?620:420;
+        const now=ctx.currentTime;
+        gain.gain.setValueAtTime(0.0001,now);
+        gain.gain.exponentialRampToValueAtTime(stage==='ready'?0.035:0.025,now+0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001,now+0.13);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now+0.14);
+        window.setTimeout(()=>{try{ctx.close();}catch{}},220);
+      }catch{}
+    }
 
     function removeInjectedFooter(){
       try{
@@ -68,6 +107,7 @@
     }
 
     async function loadShorts(){
+      playStartupTone('start');
       try{
         const session=await waitForSupabaseSession({timeoutMs:4500,intervalMs:180,restoreFromBackup:true});
         const token=String(session?.access_token||'').trim();
@@ -80,6 +120,7 @@
     }
 
     frame.addEventListener('load',()=>{
+      playStartupTone('ready');
       window.setTimeout(()=>splash?.classList.add('hide'),180);
     });
 
