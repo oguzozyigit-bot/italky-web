@@ -1400,10 +1400,23 @@ function bindOfflineSpeechEvents() {
   offlineSpeechEventsBound = true;
 
   const prevNativeResult = window.onNativeSpeechResult;
-  window.onNativeSpeechResult = (side, text, isFinal = true) => {
-    try { prevNativeResult?.(side, text, isFinal); } catch {}
+  window.onNativeSpeechResult = (arg1, arg2, arg3 = true) => {
+    let side = arg1;
+    let text = arg2;
+    let isFinal = arg3;
+
+    if (arg1 && typeof arg1 === "object") {
+      side = arg1.side;
+      text = arg1.text;
+      isFinal = arg1.final !== false;
+    }
+
+    side = side === "top" ? "top" : "bot";
+    text = String(text || "");
+
+    try { prevNativeResult?.(arg1, arg2, arg3); } catch {}
     const rec = activeOfflineSpeechRecognizer;
-    if (rec && rec.side === side) rec.emitResult(text, isFinal !== false);
+    if (rec && rec.side === side && text) rec.emitResult(text, isFinal !== false);
   };
 
   const prevNativeError = window.onNativeSpeechError;
@@ -1442,8 +1455,14 @@ function bindOfflineSpeechEvents() {
 function buildOfflineRecognizer(langCode, side) {
   const lang = canonical(langCode);
   const bcp = langObj(lang).bcp;
-  const nativeStart = window.Native?.startSpeechRecognition || window.Native?.startNativeSpeechRecognition;
-  const nativeStop = window.Native?.stopSpeechRecognition || window.Native?.stopNativeSpeechRecognition;
+  const nativeBridge =
+    (window.Native?.startSpeechRecognition || window.Native?.startNativeSpeechRecognition)
+      ? window.Native
+      : ((window.AndroidBridge?.startSpeechRecognition || window.AndroidBridge?.startNativeSpeechRecognition)
+          ? window.AndroidBridge
+          : null);
+  const nativeStart = nativeBridge?.startSpeechRecognition || nativeBridge?.startNativeSpeechRecognition;
+  const nativeStop = nativeBridge?.stopSpeechRecognition || nativeBridge?.stopNativeSpeechRecognition;
   const offline = window.OfflineSpeech;
 
   if (!nativeStart && !offline?.start) return null;
@@ -1466,7 +1485,7 @@ function buildOfflineRecognizer(langCode, side) {
       if (nativeStart) {
         this.mode = "native";
         try {
-          nativeStart.call(window.Native, bcp, side);
+          nativeStart.call(nativeBridge, bcp, side);
           return;
         } catch {}
       }
@@ -1477,7 +1496,7 @@ function buildOfflineRecognizer(langCode, side) {
     },
     stop() {
       try {
-        if (this.mode === "native") nativeStop?.call(window.Native);
+        if (this.mode === "native") nativeStop?.call(nativeBridge);
         else if (this.mode === "offline") offline?.stop?.();
       } catch {}
       setTimeout(() => this.finish(), 700);
@@ -1520,7 +1539,18 @@ function buildOfflineRecognizer(langCode, side) {
 }
 
 function buildRecognizer(langCode, side = "") {
-  if (currentRuntimeMode === "offline") return buildOfflineRecognizer(langCode, side);
+  const hasNativeSpeech = !!(
+    window.Native?.startSpeechRecognition ||
+    window.Native?.startNativeSpeechRecognition ||
+    window.AndroidBridge?.startSpeechRecognition ||
+    window.AndroidBridge?.startNativeSpeechRecognition
+  );
+
+  // Android uygulamada native SpeechRecognizer kullan. Böylece FaceToFace ses rotası
+  // gerçekten seçilen tarafa göre kulaklık/telefon arasında değiştirilebilir.
+  if (hasNativeSpeech || currentRuntimeMode === "offline") {
+    return buildOfflineRecognizer(langCode, side);
+  }
 
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
