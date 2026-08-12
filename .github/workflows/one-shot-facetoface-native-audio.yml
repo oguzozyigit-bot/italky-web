@@ -1,0 +1,36 @@
+name: One-shot FaceToFace native audio fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/one-shot-facetoface-native-audio.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Apply FaceToFace native audio patch
+        run: python tools/patch_facetoface_native_audio.py
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet -- js/facetoface_page.js; then
+            echo "No source change needed"
+            exit 0
+          fi
+          git config user.name "oguzozyigit-bot"
+          git config user.email "oguzozyigit@gmail.com"
+          git add js/facetoface_page.js
+          git commit -m "Fix FaceToFace native speech bridge and audio routing"
+          git pull --rebase origin main
+          git push origin HEAD:main
