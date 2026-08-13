@@ -9,24 +9,26 @@
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;width:100%;min-height:100%;background:#06111d;color:#fff;font-family:Arial,sans-serif}
     body{min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 32%,#0b2633 0,#071724 36%,#06111d 72%)}
-    .card{width:min(92vw,390px);padding:32px 24px 26px;border:1px solid rgba(83,231,225,.22);border-radius:28px;background:rgba(6,17,29,.88);box-shadow:0 24px 70px rgba(0,0,0,.38);text-align:center}
-    .brand{font-size:31px;font-weight:900;letter-spacing:-.04em}.brand b{color:#53e7e1}
-    .sub{margin:10px 0 24px;color:rgba(255,255,255,.62);font-size:13px;line-height:1.55;font-weight:700}
-    .login-btn{width:100%;min-height:54px;border:0;border-radius:28px;background:#fff;color:#111827;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 20px}
+    .login{width:min(92vw,430px);display:flex;flex-direction:column;align-items:center;gap:34px;text-align:center}
+    .logo{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .wave{height:70px;display:flex;align-items:center;gap:7px}
+    .wave i{display:block;width:7px;border-radius:999px;background:#53e7e1;box-shadow:0 0 18px rgba(83,231,225,.28)}
+    .wave i:nth-child(1),.wave i:nth-child(7){height:14px}.wave i:nth-child(2),.wave i:nth-child(6){height:34px}.wave i:nth-child(3),.wave i:nth-child(5){height:52px}.wave i:nth-child(4){height:70px}
+    .brand{font-size:43px;font-weight:900;letter-spacing:-.055em;line-height:1}.brand b{color:#53e7e1}
+    .login-btn{width:100%;min-height:64px;border:0;border-radius:34px;background:#fff;color:#111827;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 22px;box-shadow:0 12px 34px rgba(0,0,0,.22)}
     .login-btn:active{transform:scale(.985)}.login-btn[disabled]{opacity:.65;cursor:default}
-    .g{width:21px;height:21px;border-radius:50%;display:grid;place-items:center;font-size:16px;font-weight:900;color:#4285f4;background:#fff}
-    .status{min-height:22px;margin:18px 0 0;color:rgba(255,255,255,.68);font-size:12px;line-height:1.5;font-weight:700}
-    .status.error{color:#ffb6b6}
-    .note{margin-top:18px;color:rgba(255,255,255,.38);font-size:11px;line-height:1.5}
+    .g{font-size:21px;font-weight:900;color:#4285f4;line-height:1}
+    #status{display:none}
   </style>
 </head>
 <body>
-  <main class="card">
-    <div class="brand">italky<b>AI</b></div>
-    <p class="sub">Tek hesabınızla Shorts, müzik, çeviri, profil ve jetonlarınız aynı oturumda açılır.</p>
-    <button id="googleBtn" class="login-btn" type="button"><span class="g">G</span><span>Google ile giriş yap</span></button>
-    <p id="status" class="status">Oturum kontrol ediliyor…</p>
-    <div class="note">italkyAI ücretsizdir. Giriş yalnızca hesabınızı, üretimlerinizi ve bakiyenizi aynı kullanıcıya bağlamak için kullanılır.</div>
+  <main class="login">
+    <div class="logo" aria-label="italkyAI">
+      <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="brand">italky<b>AI</b></div>
+    </div>
+    <button id="googleBtn" class="login-btn" type="button"><span class="g">G</span><span>Google Hesabınızla Ücretsiz Giriş Yapın</span></button>
+    <p id="status" aria-live="polite"></p>
   </main>
 
   <script type="module">
@@ -45,17 +47,12 @@
       }catch{return HOME;}
     }
 
-    function setStatus(text,error=false){
-      statusEl.textContent=text||'';
-      statusEl.classList.toggle('error',!!error);
-    }
+    function setStatus(text){ statusEl.textContent=text||''; }
 
     function nativeBridge(){
       try{
         const candidates=[window.Native,window.AndroidBridge,window.CorporateNative];
-        for(const bridge of candidates){
-          if(bridge&&typeof bridge.startGoogleLogin==='function')return bridge;
-        }
+        for(const bridge of candidates){ if(bridge&&typeof bridge.startGoogleLogin==='function')return bridge; }
       }catch{}
       return null;
     }
@@ -65,10 +62,7 @@
         if(typeof payload==='string'){
           const raw=payload.trim();
           if(!raw)return '';
-          try{
-            const obj=JSON.parse(raw);
-            return String(obj?.id_token||obj?.idToken||obj?.token||obj?.credential||'').trim();
-          }catch{return raw;}
+          try{const obj=JSON.parse(raw);return String(obj?.id_token||obj?.idToken||obj?.token||obj?.credential||'').trim();}catch{return raw;}
         }
         return String(payload?.id_token||payload?.idToken||payload?.token||payload?.credential||'').trim();
       }catch{return '';}
@@ -78,21 +72,14 @@
       if(!userId)return;
       try{
         const candidates=[window.Native,window.AndroidBridge,window.CorporateNative];
-        for(const bridge of candidates){
-          if(bridge&&typeof bridge.setUserId==='function'){
-            bridge.setUserId(userId);
-            break;
-          }
-        }
+        for(const bridge of candidates){if(bridge&&typeof bridge.setUserId==='function'){bridge.setUserId(userId);break;}}
       }catch{}
     }
 
     async function finishNativeLogin(payload){
       if(busy)return;
-      busy=true;
-      btn.disabled=true;
+      busy=true;btn.disabled=true;
       try{
-        setStatus('italkyAI hesabınız açılıyor…');
         const idToken=readIdToken(payload);
         if(!idToken)throw new Error('Google giriş bilgisi alınamadı.');
         const {data,error}=await supabase.auth.signInWithIdToken({provider:'google',token:idToken});
@@ -103,52 +90,29 @@
         persistSupabaseSessionBackup(session);
         try{await ensureAuthAndCacheUser();}catch(error){console.warn('[login] profile cache',error);}
         bindNativeUser(userId);
-        setStatus('Giriş tamamlandı…');
         location.replace(safeNext());
       }catch(error){
         console.error('[login] native sign-in failed',error);
-        busy=false;
-        btn.disabled=false;
-        setStatus(error?.message||'Giriş tamamlanamadı. Tekrar deneyin.',true);
+        busy=false;btn.disabled=false;setStatus(error?.message||'Giriş tamamlanamadı.');
       }
     }
 
     window.onNativeLoginSuccess=(payload)=>{void finishNativeLogin(payload);};
-    window.onNativeLoginError=(payload)=>{
-      busy=false;
-      btn.disabled=false;
-      const message=typeof payload==='string'?payload:String(payload?.message||'Google hesap seçimi tamamlanamadı.');
-      setStatus(message,true);
-    };
+    window.onNativeLoginError=(payload)=>{busy=false;btn.disabled=false;setStatus(typeof payload==='string'?payload:String(payload?.message||''));};
 
     async function startLogin(){
       if(busy)return;
-      busy=true;
-      btn.disabled=true;
-      setStatus('Google hesabınız açılıyor…');
+      busy=true;btn.disabled=true;
       try{
         const bridge=nativeBridge();
-        if(bridge){
-          busy=false;
-          btn.disabled=false;
-          bridge.startGoogleLogin();
-          return;
-        }
+        if(bridge){busy=false;btn.disabled=false;bridge.startGoogleLogin();return;}
         const callback=new URL('/pages/auth_callback.html',location.origin);
         callback.searchParams.set('next',safeNext());
-        const {data,error}=await supabase.auth.signInWithOAuth({
-          provider:'google',
-          options:{redirectTo:callback.toString(),skipBrowserRedirect:true,queryParams:{access_type:'offline',prompt:'select_account'}}
-        });
+        const {data,error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:callback.toString(),skipBrowserRedirect:true,queryParams:{access_type:'offline',prompt:'select_account'}}});
         if(error)throw error;
         if(!data?.url)throw new Error('Google giriş adresi alınamadı.');
         location.assign(data.url);
-      }catch(error){
-        console.error('[login] sign-in start failed',error);
-        busy=false;
-        btn.disabled=false;
-        setStatus(error?.message||'Google girişi başlatılamadı.',true);
-      }
+      }catch(error){console.error('[login] sign-in start failed',error);busy=false;btn.disabled=false;setStatus(error?.message||'');}
     }
 
     btn.addEventListener('click',()=>void startLogin());
@@ -156,17 +120,9 @@
     (async()=>{
       const params=new URLSearchParams(location.search||'');
       const forcedLogout=params.get('logout')==='1'||params.get('force_logout')==='1'||params.get('logged_out')==='1';
-      if(forcedLogout){
-        setStatus('Giriş yapabilirsiniz.');
-        return;
-      }
+      if(forcedLogout)return;
       const session=await waitForSupabaseSession({timeoutMs:2200,intervalMs:180,restoreFromBackup:true});
-      if(session?.user?.id){
-        persistSupabaseSessionBackup(session);
-        location.replace(safeNext());
-        return;
-      }
-      setStatus('Giriş yapabilirsiniz.');
+      if(session?.user?.id){persistSupabaseSessionBackup(session);location.replace(safeNext());}
     })();
   </script>
 </body>
