@@ -1,3 +1,5 @@
+import "/js/hosgeldiniz_footer_guard.js";
+
 // italky → iCany SSO helper. Jeton yazımı yalnız doğrulanmış backend tarafından yapılır.
 const ICANY_ORIGIN = "https://icany.ai";
 const FROM_ITALKY_PATH = "/api/bridge/from-italky";
