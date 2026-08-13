@@ -1,36 +1,173 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>italkyAI • Yönlendiriliyor</title>
-<meta name="theme-color" content="#06111d">
-<style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#06111d;color:#fff;font-family:Arial,sans-serif}body{display:grid;place-items:center;text-align:center;padding:24px}.card{max-width:420px;padding:28px;border:1px solid rgba(53,213,208,.28);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));box-shadow:0 22px 70px rgba(0,0,0,.32)}.logo{width:150px;height:auto;margin-bottom:18px}.spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(53,213,208,.20);border-top-color:#35d5d0;margin:18px auto;animation:r 1s linear infinite}@keyframes r{to{transform:rotate(360deg)}}a{color:#72fff7;font-weight:800;text-decoration:none}
-</style>
-<script>
-(function(){
-  var target = "https://italky.ai/hosgeldiniz";
-  try{
-    var url = new URL(location.href);
-    var next = url.searchParams.get("next") || "";
-    if(next && next.indexOf("/pages/code_load.html") === 0){
-      target = next;
-    }
-  }catch(e){}
-  window.__target = target;
-  setTimeout(function(){ location.replace(target); }, 120);
-})();
-</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>italkyAI • Giriş</title>
+  <meta name="theme-color" content="#06111d">
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;min-height:100%;background:#06111d;color:#fff;font-family:Arial,sans-serif}
+    body{min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 32%,#0b2633 0,#071724 36%,#06111d 72%)}
+    .card{width:min(92vw,390px);padding:32px 24px 26px;border:1px solid rgba(83,231,225,.22);border-radius:28px;background:rgba(6,17,29,.88);box-shadow:0 24px 70px rgba(0,0,0,.38);text-align:center}
+    .brand{font-size:31px;font-weight:900;letter-spacing:-.04em}.brand b{color:#53e7e1}
+    .sub{margin:10px 0 24px;color:rgba(255,255,255,.62);font-size:13px;line-height:1.55;font-weight:700}
+    .login-btn{width:100%;min-height:54px;border:0;border-radius:28px;background:#fff;color:#111827;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 20px}
+    .login-btn:active{transform:scale(.985)}.login-btn[disabled]{opacity:.65;cursor:default}
+    .g{width:21px;height:21px;border-radius:50%;display:grid;place-items:center;font-size:16px;font-weight:900;color:#4285f4;background:#fff}
+    .status{min-height:22px;margin:18px 0 0;color:rgba(255,255,255,.68);font-size:12px;line-height:1.5;font-weight:700}
+    .status.error{color:#ffb6b6}
+    .note{margin-top:18px;color:rgba(255,255,255,.38);font-size:11px;line-height:1.5}
+  </style>
 </head>
 <body>
-<div class="card">
-  <img class="logo" src="/assets/italkyai-logo-clear.png?v=20260727-vector" alt="italkyAI">
-  <h1>Yönlendiriliyor</h1>
-  <p>italkyAI ana giriş sayfası açılıyor.</p>
-  <div class="spin" aria-hidden="true"></div>
-  <p><a id="manual" href="https://italky.ai/hosgeldiniz">Devam et</a></p>
-</div>
-<script>try{document.getElementById('manual').href=window.__target||'https://italky.ai/hosgeldiniz'}catch(e){}</script>
+  <main class="card">
+    <div class="brand">italky<b>AI</b></div>
+    <p class="sub">Tek hesabınızla Shorts, müzik, çeviri, profil ve jetonlarınız aynı oturumda açılır.</p>
+    <button id="googleBtn" class="login-btn" type="button"><span class="g">G</span><span>Google ile giriş yap</span></button>
+    <p id="status" class="status">Oturum kontrol ediliyor…</p>
+    <div class="note">italkyAI ücretsizdir. Giriş yalnızca hesabınızı, üretimlerinizi ve bakiyenizi aynı kullanıcıya bağlamak için kullanılır.</div>
+  </main>
+
+  <script type="module">
+    import { supabase, persistSupabaseSessionBackup, waitForSupabaseSession } from '/js/supabase_client.js';
+    import { ensureAuthAndCacheUser } from '/js/auth.js';
+
+    const HOME='/hosgeldiniz';
+    const btn=document.getElementById('googleBtn');
+    const statusEl=document.getElementById('status');
+    let busy=false;
+
+    function safeNext(){
+      try{
+        const raw=String(new URLSearchParams(location.search||'').get('next')||HOME).trim();
+        return raw.startsWith('/')&&!raw.startsWith('//')?raw:HOME;
+      }catch{return HOME;}
+    }
+
+    function setStatus(text,error=false){
+      statusEl.textContent=text||'';
+      statusEl.classList.toggle('error',!!error);
+    }
+
+    function nativeBridge(){
+      try{
+        const candidates=[window.Native,window.AndroidBridge,window.CorporateNative];
+        for(const bridge of candidates){
+          if(bridge&&typeof bridge.startGoogleLogin==='function')return bridge;
+        }
+      }catch{}
+      return null;
+    }
+
+    function readIdToken(payload){
+      try{
+        if(typeof payload==='string'){
+          const raw=payload.trim();
+          if(!raw)return '';
+          try{
+            const obj=JSON.parse(raw);
+            return String(obj?.id_token||obj?.idToken||obj?.token||obj?.credential||'').trim();
+          }catch{return raw;}
+        }
+        return String(payload?.id_token||payload?.idToken||payload?.token||payload?.credential||'').trim();
+      }catch{return '';}
+    }
+
+    function bindNativeUser(userId){
+      if(!userId)return;
+      try{
+        const candidates=[window.Native,window.AndroidBridge,window.CorporateNative];
+        for(const bridge of candidates){
+          if(bridge&&typeof bridge.setUserId==='function'){
+            bridge.setUserId(userId);
+            break;
+          }
+        }
+      }catch{}
+    }
+
+    async function finishNativeLogin(payload){
+      if(busy)return;
+      busy=true;
+      btn.disabled=true;
+      try{
+        setStatus('italkyAI hesabınız açılıyor…');
+        const idToken=readIdToken(payload);
+        if(!idToken)throw new Error('Google giriş bilgisi alınamadı.');
+        const {data,error}=await supabase.auth.signInWithIdToken({provider:'google',token:idToken});
+        if(error)throw error;
+        const session=data?.session||null;
+        const userId=String(data?.user?.id||session?.user?.id||'').trim();
+        if(!session?.access_token||!session?.refresh_token||!userId)throw new Error('Oturum oluşturulamadı.');
+        persistSupabaseSessionBackup(session);
+        try{await ensureAuthAndCacheUser();}catch(error){console.warn('[login] profile cache',error);}
+        bindNativeUser(userId);
+        setStatus('Giriş tamamlandı…');
+        location.replace(safeNext());
+      }catch(error){
+        console.error('[login] native sign-in failed',error);
+        busy=false;
+        btn.disabled=false;
+        setStatus(error?.message||'Giriş tamamlanamadı. Tekrar deneyin.',true);
+      }
+    }
+
+    window.onNativeLoginSuccess=(payload)=>{void finishNativeLogin(payload);};
+    window.onNativeLoginError=(payload)=>{
+      busy=false;
+      btn.disabled=false;
+      const message=typeof payload==='string'?payload:String(payload?.message||'Google hesap seçimi tamamlanamadı.');
+      setStatus(message,true);
+    };
+
+    async function startLogin(){
+      if(busy)return;
+      busy=true;
+      btn.disabled=true;
+      setStatus('Google hesabınız açılıyor…');
+      try{
+        const bridge=nativeBridge();
+        if(bridge){
+          busy=false;
+          btn.disabled=false;
+          bridge.startGoogleLogin();
+          return;
+        }
+        const callback=new URL('/pages/auth_callback.html',location.origin);
+        callback.searchParams.set('next',safeNext());
+        const {data,error}=await supabase.auth.signInWithOAuth({
+          provider:'google',
+          options:{redirectTo:callback.toString(),skipBrowserRedirect:true,queryParams:{access_type:'offline',prompt:'select_account'}}
+        });
+        if(error)throw error;
+        if(!data?.url)throw new Error('Google giriş adresi alınamadı.');
+        location.assign(data.url);
+      }catch(error){
+        console.error('[login] sign-in start failed',error);
+        busy=false;
+        btn.disabled=false;
+        setStatus(error?.message||'Google girişi başlatılamadı.',true);
+      }
+    }
+
+    btn.addEventListener('click',()=>void startLogin());
+
+    (async()=>{
+      const params=new URLSearchParams(location.search||'');
+      const forcedLogout=params.get('logout')==='1'||params.get('force_logout')==='1'||params.get('logged_out')==='1';
+      if(forcedLogout){
+        setStatus('Giriş yapabilirsiniz.');
+        return;
+      }
+      const session=await waitForSupabaseSession({timeoutMs:2200,intervalMs:180,restoreFromBackup:true});
+      if(session?.user?.id){
+        persistSupabaseSessionBackup(session);
+        location.replace(safeNext());
+        return;
+      }
+      setStatus('Giriş yapabilirsiniz.');
+    })();
+  </script>
 </body>
 </html>
