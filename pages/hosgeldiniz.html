@@ -18,11 +18,27 @@
   <script type="module">
     import {waitForSupabaseSession} from '/js/supabase_client.js';
     import {buildFromItalkyUrl} from '/js/icany_bridge.js';
+    import {safeLogout} from '/js/auth.js';
+
     const HOME='/hosgeldiniz';
     const LOGIN='/pages/login.html';
     const frame=document.getElementById('app');
     const gate=document.getElementById('gate');
     const status=document.getElementById('status');
+    let logoutRunning=false;
+
+    window.addEventListener('message',(event)=>{
+      if(event.origin!=='https://icany.ai'&&event.origin!=='https://www.icany.ai')return;
+      const data=event.data||{};
+      if(data.type==='italky:secure-logout'||data.action==='italky:secure-logout'){
+        if(logoutRunning)return;
+        logoutRunning=true;
+        gate.classList.remove('hide');
+        status.textContent='Güvenli çıkış yapılıyor…';
+        void safeLogout();
+      }
+    });
+
     try{
       const session=await waitForSupabaseSession({timeoutMs:4500,intervalMs:180,restoreFromBackup:true});
       const token=String(session?.access_token||'').trim();
