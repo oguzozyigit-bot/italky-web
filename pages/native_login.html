@@ -5,153 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>italkyAI • Giriş</title>
   <meta name="theme-color" content="#06111d">
-  <style>
-    *{box-sizing:border-box}
-    html,body{margin:0;width:100%;height:100%;background:#06111d;color:#fff;font-family:Arial,sans-serif}
-    body{display:grid;place-items:center;padding:24px;text-align:center;background:radial-gradient(circle at 50% 36%,#0b2633 0,#071724 34%,#06111d 72%)}
-    .card{width:min(92vw,380px);padding:30px 24px;border:1px solid rgba(83,231,225,.22);border-radius:26px;background:rgba(6,17,29,.82);box-shadow:0 24px 70px rgba(0,0,0,.35)}
-    .brand{font-size:28px;font-weight:900;letter-spacing:-.03em}.brand b{color:#53e7e1}
-    .spin{width:38px;height:38px;margin:22px auto;border-radius:50%;border:3px solid rgba(83,231,225,.18);border-top-color:#53e7e1;animation:spin .9s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    #status{margin:0;color:rgba(255,255,255,.76);font-size:14px;line-height:1.5;font-weight:700}
-    #retry{display:none;margin:22px auto 0;min-height:52px;padding:0 24px;border:0;border-radius:26px;background:#fff;color:#111827;font-size:15px;font-weight:900;cursor:pointer;align-items:center;justify-content:center}
-    #retry:active{transform:scale(.98)}
-    .small{margin-top:16px;color:rgba(255,255,255,.42);font-size:11px;line-height:1.45}
-  </style>
-</head>
-<body>
-  <main class="card">
-    <div class="brand">italky<b>AI</b></div>
-    <div class="spin" id="spin" aria-hidden="true"></div>
-    <p id="status">Google hesaplarınız açılıyor…</p>
-    <button id="retry" type="button">Google ile giriş yap</button>
-    <div class="small">Tek hesabınız italkyAI içinde açılır. Müzik, çeviri ve jeton bakiyeniz aynı hesapta kalır.</div>
-  </main>
-
-  <script type="module">
-    import { supabase, persistSupabaseSessionBackup } from '/js/supabase_client.js';
-    import { ensureAuthAndCacheUser } from '/js/auth.js';
-
-    const statusEl=document.getElementById('status');
-    const retryBtn=document.getElementById('retry');
-    const spinEl=document.getElementById('spin');
-    let busy=false;
-    let chooserOpen=false;
-
-    function setStatus(text,error=false){
-      if(statusEl) statusEl.textContent=text;
-      if(retryBtn) retryBtn.style.display=error?'inline-flex':'none';
-      if(spinEl) spinEl.style.display=error?'none':'block';
+  <script>
+    try{
+      const params=new URLSearchParams(location.search||'');
+      const next=params.get('next')||'/hosgeldiniz';
+      location.replace('/pages/login.html?next='+encodeURIComponent(next));
+    }catch{
+      location.replace('/pages/login.html?next=%2Fhosgeldiniz');
     }
-
-    function safeNext(){
-      try{
-        const raw=String(new URLSearchParams(location.search||'').get('next')||'/hosgeldiniz').trim();
-        if(raw.startsWith('/')&&!raw.startsWith('//')) return raw;
-      }catch{}
-      return '/hosgeldiniz';
-    }
-
-    function readIdToken(payload){
-      try{
-        if(typeof payload==='string'){
-          const raw=payload.trim();
-          if(!raw) return '';
-          try{
-            const obj=JSON.parse(raw);
-            return String(obj?.id_token||obj?.idToken||obj?.token||obj?.credential||'').trim();
-          }catch{return raw;}
-        }
-        return String(payload?.id_token||payload?.idToken||payload?.token||payload?.credential||'').trim();
-      }catch{return '';}
-    }
-
-    function nativeGoogleBridge(){
-      try{
-        const candidates=[window.Native,window.AndroidBridge,window.CorporateNative];
-        for(const bridge of candidates){
-          if(bridge&&typeof bridge.startGoogleLogin==='function') return bridge;
-        }
-      }catch{}
-      return null;
-    }
-
-    function bindNativeUser(userId){
-      if(!userId) return;
-      try{
-        const candidates=[window.Native,window.AndroidBridge,window.CorporateNative];
-        for(const bridge of candidates){
-          if(bridge&&typeof bridge.setUserId==='function'){
-            bridge.setUserId(userId);
-            break;
-          }
-        }
-      }catch{}
-    }
-
-    async function completeNativeLogin(payload){
-      if(busy)return;
-      busy=true;
-      chooserOpen=false;
-      try{
-        setStatus('italkyAI hesabınız açılıyor…');
-        const idToken=readIdToken(payload);
-        if(!idToken) throw new Error('Google giriş bilgisi alınamadı.');
-
-        const {data,error}=await supabase.auth.signInWithIdToken({
-          provider:'google',
-          token:idToken
-        });
-        if(error) throw error;
-        const session=data?.session||null;
-        const userId=String(data?.user?.id||session?.user?.id||'').trim();
-        if(!session?.access_token||!session?.refresh_token||!userId){
-          throw new Error('italkyAI oturumu oluşturulamadı.');
-        }
-
-        persistSupabaseSessionBackup(session);
-        try{await ensureAuthAndCacheUser();}catch(error){console.warn('[native_login] profile cache',error);}
-        bindNativeUser(userId);
-
-        setStatus('Giriş tamamlandı…');
-        location.replace(safeNext());
-      }catch(error){
-        console.error('[native_login] italky login failed',error);
-        busy=false;
-        chooserOpen=false;
-        setStatus(error?.message||'Giriş tamamlanamadı. Tekrar deneyin.',true);
-      }
-    }
-
-    window.onNativeLoginSuccess=(payload)=>{void completeNativeLogin(payload);};
-    window.onNativeLoginError=(payload)=>{
-      console.error('[native_login] native error',payload);
-      busy=false;
-      chooserOpen=false;
-      const message=typeof payload==='string'?payload:String(payload?.message||'Google hesap seçimi tamamlanamadı.');
-      setStatus(message,true);
-    };
-
-    function startLogin(){
-      if(busy||chooserOpen)return;
-      const bridge=nativeGoogleBridge();
-      if(!bridge){
-        setStatus('Google hesap seçimi italkyAI uygulaması içinde yapılmalıdır.',true);
-        return;
-      }
-      chooserOpen=true;
-      setStatus('Google hesaplarınız açılıyor…');
-      try{
-        bridge.startGoogleLogin();
-      }catch(error){
-        console.error('[native_login] chooser failed',error);
-        chooserOpen=false;
-        setStatus('Google hesapları açılamadı. Tekrar deneyin.',true);
-      }
-    }
-
-    retryBtn?.addEventListener('click',startLogin);
-    window.setTimeout(startLogin,180);
   </script>
+</head>
+<body style="margin:0;background:#06111d;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;min-height:100vh">
+  <div>Giriş ekranı açılıyor…</div>
 </body>
 </html>
