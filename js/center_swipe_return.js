@@ -1,9 +1,35 @@
 const HOME_URL = "https://www.italky.ai/hosgeldiniz";
+const F2F_SHORTS_URL = "https://icany.ai/hosgeldiniz";
 
 function blocksPageSwipe(target) {
   return target instanceof Element && Boolean(
     target.closest("button,input,textarea,select,[contenteditable='true'],[role='slider'],[data-no-page-swipe],audio,.popover,.drawer,.modal")
   );
+}
+
+function installFaceToFaceShortsReturn() {
+  const path = String(location.pathname || "").toLowerCase();
+  if (path !== "/facetoface.html") return;
+
+  let navigating = false;
+  const goShorts = (event) => {
+    const target = event?.target;
+    if (!(target instanceof Element)) return;
+    const trigger = target.closest("#homeBtn,#homeLink");
+    if (!trigger) return;
+
+    event.preventDefault?.();
+    event.stopPropagation?.();
+    event.stopImmediatePropagation?.();
+    if (navigating) return;
+    navigating = true;
+    location.assign(F2F_SHORTS_URL);
+  };
+
+  // Capture before facetoface_page.js handlers so the old /pages/home.html?hub=1
+  // route cannot win on Android touch/click events.
+  document.addEventListener("touchend", goShorts, { capture: true, passive: false });
+  document.addEventListener("click", goShorts, true);
 }
 
 function installTranslatorSwipeReturn() {
@@ -144,4 +170,5 @@ function installTranslatorSwipeReturn() {
   }
 }
 
+installFaceToFaceShortsReturn();
 installTranslatorSwipeReturn();
