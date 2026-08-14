@@ -24,11 +24,14 @@
     const HOME='/hosgeldiniz';
     const LOGIN='/pages/login.html';
     const TRANSLATE_URL='https://italky.ai/facetoface.html';
+    const SKIP_RETRY_MS=5*60*1000;
     const frame=document.getElementById('app');
     const gate=document.getElementById('gate');
     const status=document.getElementById('status');
     let logoutRunning=false;
     let pendingTargetOpen=false;
+    let activePageKey='';
+    let skipRetryTimer=null;
 
     const PAGE_LABELS={
       music:'Müzik',
@@ -38,23 +41,53 @@
       translate:'Çeviri',
     };
 
-    async function runPageReward(pageKey,label){
+    function clearSkipRetry(){
+      if(skipRetryTimer){
+        clearTimeout(skipRetryTimer);
+        skipRetryTimer=null;
+      }
+    }
+
+    function scheduleSkipRetry(pageKey,label){
       const key=String(pageKey||'').trim().toLowerCase();
-      if(!PAGE_LABELS[key])return;
+      clearSkipRetry();
+      skipRetryTimer=setTimeout(()=>{
+        skipRetryTimer=null;
+        if(activePageKey!==key)return;
+        void runPageReward(key,label,{fromRetry:true});
+      },SKIP_RETRY_MS);
+    }
+
+    async function runPageReward(pageKey,label,options={}){
+      const key=String(pageKey||'').trim().toLowerCase();
+      if(!PAGE_LABELS[key])return null;
+      if(!options.fromRetry){
+        activePageKey=key;
+        clearSkipRetry();
+      }
       try{
-        await ensurePageRewardAd({
+        const result=await ensurePageRewardAd({
           pageKey:key,
           placement:`page_${key}`,
           label:String(label||PAGE_LABELS[key]),
         });
+        if(result?.status==='skipped'&&activePageKey===key){
+          scheduleSkipRetry(key,label||PAGE_LABELS[key]);
+        }else if(result?.earned||result?.status==='cooldown'){
+          clearSkipRetry();
+        }
+        return result;
       }catch(error){
         console.warn('[page reward] flow failed',key,error);
+        return null;
       }
     }
 
     async function openTranslateWithReward(){
       if(pendingTargetOpen)return;
       pendingTargetOpen=true;
+      activePageKey='translate';
+      clearSkipRetry();
       try{
         await runPageReward('translate','Çeviri');
       }finally{
@@ -69,6 +102,7 @@
       if(data.type==='italky:secure-logout'||data.action==='italky:secure-logout'){
         if(logoutRunning)return;
         logoutRunning=true;
+        clearSkipRetry();
         gate.classList.remove('hide');
         status.textContent='Güvenli çıkış yapılıyor…';
         void safeLogout();
