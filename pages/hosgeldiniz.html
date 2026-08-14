@@ -44,6 +44,28 @@
       translate:'Çeviri',
     };
 
+    function syncVerifiedItalkySessionToNative(session){
+      const userId=String(session?.user?.id||'').trim();
+      const token=String(session?.access_token||'').trim();
+      if(!userId||!token)return false;
+      try{
+        window.__ITALKY_ACCESS_TOKEN__=token;
+        window.__ITALKY_USER_ID__=userId;
+        const billing=window.AndroidBilling;
+        if(typeof billing?.setAuthContext==='function'){
+          billing.setAuthContext(userId,token);
+          return true;
+        }
+        if(typeof billing?.setUserId==='function'){
+          billing.setUserId(userId);
+          return true;
+        }
+      }catch(error){
+        console.warn('[hosgeldiniz] Android billing auth sync failed',error);
+      }
+      return false;
+    }
+
     function clearSkipRetry(){
       if(skipRetryTimer){
         clearTimeout(skipRetryTimer);
@@ -131,6 +153,10 @@
         location.replace(`${LOGIN}?next=${encodeURIComponent(HOME)}`);
       }else{
         status.textContent='Oturum bağlanıyor…';
+        // This is the only place where we still have the real italky Supabase
+        // session before handing the user to the iCany bridge. Persist it into
+        // AndroidBilling so Jeton Market can keep using the same account later.
+        syncVerifiedItalkySessionToNative(session);
         frame.src=buildFromItalkyUrl('/hosgeldiniz',token);
         frame.addEventListener('load',()=>gate.classList.add('hide'),{once:true});
       }
