@@ -57,12 +57,14 @@ function markRewardCompleted(pageKey = "") {
 }
 
 function getRewardedBridge() {
+  // The current Android app always exposes AndroidBridge and its rewarded
+  // method takes (langCode, placement), so prefer it over older one-arg bridges.
   const candidates = [
+    window.AndroidBridge,
+    window.Native,
     window.AndroidAdBridge,
     window.NativeAds,
     window.AdMobBridge,
-    window.Native,
-    window.AndroidBridge,
   ];
   return (
     candidates.find(
@@ -75,6 +77,13 @@ function getRewardedBridge() {
 }
 
 function callRewardedBridge(placement) {
+  if (window.AndroidBridge && typeof window.AndroidBridge.showRewardedAd === "function") {
+    try {
+      window.AndroidBridge.showRewardedAd("", placement);
+      return true;
+    } catch {}
+  }
+
   const bridge = getRewardedBridge();
   if (!bridge) return false;
 
@@ -87,15 +96,6 @@ function callRewardedBridge(placement) {
 
   try {
     if (typeof bridge.showRewardedAd === "function") {
-      // AndroidBridge / NativeBridge use (langCode, placement).
-      bridge.showRewardedAd("", placement);
-      return true;
-    }
-  } catch {}
-
-  try {
-    if (typeof bridge.showRewardedAd === "function") {
-      // Some older ad bridges use only (placement).
       bridge.showRewardedAd(placement);
       return true;
     }
