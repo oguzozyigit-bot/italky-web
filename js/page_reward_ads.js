@@ -57,14 +57,12 @@ function markRewardCompleted(pageKey = "") {
 }
 
 function getRewardedBridge() {
-  // The current Android app always exposes AndroidBridge and its rewarded
-  // method takes (langCode, placement), so prefer it over older one-arg bridges.
   const candidates = [
-    window.AndroidBridge,
-    window.Native,
     window.AndroidAdBridge,
     window.NativeAds,
     window.AdMobBridge,
+    window.Native,
+    window.AndroidBridge,
   ];
   return (
     candidates.find(
@@ -77,26 +75,36 @@ function getRewardedBridge() {
 }
 
 function callRewardedBridge(placement) {
-  if (window.AndroidBridge && typeof window.AndroidBridge.showRewardedAd === "function") {
+  // Current Android app exposes AndroidAdBridge/NativeAds/AdMobBridge with
+  // showRewardedAd(placement). Prefer these exact one-argument bridges first.
+  const oneArgBridges = [
+    window.AndroidAdBridge,
+    window.NativeAds,
+    window.AdMobBridge,
+  ];
+  for (const bridge of oneArgBridges) {
     try {
-      window.AndroidBridge.showRewardedAd("", placement);
-      return true;
+      if (bridge && typeof bridge.showRewardedAd === "function") {
+        bridge.showRewardedAd(placement);
+        return true;
+      }
     } catch {}
   }
 
-  const bridge = getRewardedBridge();
-  if (!bridge) return false;
-
+  // NativeBridge uses showRewardedAd(langCode, placement).
   try {
-    if (typeof bridge.showRewardedAdForLang === "function") {
-      bridge.showRewardedAdForLang("", placement);
+    if (window.Native && typeof window.Native.showRewardedAd === "function") {
+      window.Native.showRewardedAd("", placement);
       return true;
     }
   } catch {}
 
+  // Compatibility fallback for bridges exposing showRewardedAdForLang.
+  const bridge = getRewardedBridge();
+  if (!bridge) return false;
   try {
-    if (typeof bridge.showRewardedAd === "function") {
-      bridge.showRewardedAd(placement);
+    if (typeof bridge.showRewardedAdForLang === "function") {
+      bridge.showRewardedAdForLang("", placement);
       return true;
     }
   } catch {}
