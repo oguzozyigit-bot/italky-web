@@ -19,13 +19,49 @@
     import {waitForSupabaseSession} from '/js/supabase_client.js';
     import {buildFromItalkyUrl} from '/js/icany_bridge.js';
     import {safeLogout} from '/js/auth.js';
+    import {ensurePageRewardAd} from '/js/page_reward_ads.js';
 
     const HOME='/hosgeldiniz';
     const LOGIN='/pages/login.html';
+    const TRANSLATE_URL='https://italky.ai/facetoface.html';
     const frame=document.getElementById('app');
     const gate=document.getElementById('gate');
     const status=document.getElementById('status');
     let logoutRunning=false;
+    let pendingTargetOpen=false;
+
+    const PAGE_LABELS={
+      music:'Müzik',
+      shorts:'Shorts',
+      news:'Haber',
+      test:'Test',
+      translate:'Çeviri',
+    };
+
+    async function runPageReward(pageKey,label){
+      const key=String(pageKey||'').trim().toLowerCase();
+      if(!PAGE_LABELS[key])return;
+      try{
+        await ensurePageRewardAd({
+          pageKey:key,
+          placement:`page_${key}`,
+          label:String(label||PAGE_LABELS[key]),
+        });
+      }catch(error){
+        console.warn('[page reward] flow failed',key,error);
+      }
+    }
+
+    async function openTranslateWithReward(){
+      if(pendingTargetOpen)return;
+      pendingTargetOpen=true;
+      try{
+        await runPageReward('translate','Çeviri');
+      }finally{
+        pendingTargetOpen=false;
+        frame.src=TRANSLATE_URL;
+      }
+    }
 
     window.addEventListener('message',(event)=>{
       if(event.origin!=='https://icany.ai'&&event.origin!=='https://www.icany.ai')return;
@@ -36,6 +72,14 @@
         gate.classList.remove('hide');
         status.textContent='Güvenli çıkış yapılıyor…';
         void safeLogout();
+        return;
+      }
+      if(data.type==='italky:reward-section-enter'){
+        void runPageReward(data.pageKey,data.label);
+        return;
+      }
+      if(data.type==='italky:reward-open-translate'){
+        void openTranslateWithReward();
       }
     });
 
