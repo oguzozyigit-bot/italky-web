@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>italkyAI Telefon</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f7f7f8;color:#111;min-height:100vh;display:flex;justify-content:center}.phone{width:min(100%,430px);min-height:100vh;background:#fff;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 18px env(safe-area-inset-bottom)}.top{padding:18px 4px 10px;display:flex;align-items:center;justify-content:space-between}.brand{font-size:22px;font-weight:700}.mode{font-size:13px;color:#666}.number{margin:20px 0 8px;text-align:center;font-size:29px;min-height:42px;letter-spacing:.4px}.sub{text-align:center;color:#777;font-size:13px;min-height:22px}.langs{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 18px}.lang{border:1px solid #ddd;border-radius:18px;padding:8px 12px;font-size:13px;background:#fafafa}.swap{font-size:18px}.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 26px;max-width:310px;width:100%;margin:0 auto}.key{aspect-ratio:1;border:0;border-radius:50%;background:#f1f2f4;font-size:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}.letters{font-size:9px;letter-spacing:1.3px;margin-top:2px;color:#666}.actions{display:flex;justify-content:center;align-items:center;gap:28px;margin:24px 0 12px}.call{width:72px;height:72px;border-radius:50%;border:0;background:#22c55e;color:white;font-size:30px;cursor:pointer}.backspace{width:54px;height:54px;border-radius:50%;border:0;background:#eceef1;font-size:22px;cursor:pointer}.tabs{margin-top:auto;border-top:1px solid #eee;display:grid;grid-template-columns:repeat(3,1fr);padding:12px 0 8px}.tab{text-align:center;font-size:12px;color:#777}.tab.active{color:#111;font-weight:600}.note{font-size:11px;color:#999;text-align:center;padding:4px 0 10px}
+  </style>
+</head>
+<body>
+  <main class="phone" aria-label="italkyAI telefon prototipi">
+    <header class="top"><div class="brand">Telefon</div><div class="mode">Prototip</div></header>
+    <div id="number" class="number">Numara girin</div>
+    <div class="sub">Normal telefon görünümü · çağrı motoru bağlı değil</div>
+    <div class="langs"><button class="lang" type="button">Ben: Türkçe</button><span class="swap">⇄</span><button class="lang" type="button">Karşı taraf: English</button></div>
+    <section class="keypad" id="keypad">
+      <button class="key" data-k="1">1</button><button class="key" data-k="2">2<span class="letters">ABC</span></button><button class="key" data-k="3">3<span class="letters">DEF</span></button>
+      <button class="key" data-k="4">4<span class="letters">GHI</span></button><button class="key" data-k="5">5<span class="letters">JKL</span></button><button class="key" data-k="6">6<span class="letters">MNO</span></button>
+      <button class="key" data-k="7">7<span class="letters">PQRS</span></button><button class="key" data-k="8">8<span class="letters">TUV</span></button><button class="key" data-k="9">9<span class="letters">WXYZ</span></button>
+      <button class="key" data-k="*">*</button><button class="key" data-k="0">0<span class="letters">+</span></button><button class="key" data-k="#">#</button>
+    </section>
+    <div class="actions"><button id="backspace" class="backspace" aria-label="Sil">⌫</button><button id="call" class="call" aria-label="Ara">☎</button></div>
+    <div class="note" id="status">Bu ekran yalnızca arayüz denemesidir.</div>
+    <nav class="tabs"><div class="tab">Son Aramalar</div><div class="tab">Kişiler</div><div class="tab active">Tuş Takımı</div></nav>
+  </main>
+<script>
+  let value=''; const number=document.getElementById('number'); const status=document.getElementById('status');
+  function paint(){ number.textContent=value||'Numara girin'; }
+  document.getElementById('keypad').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;value+=b.dataset.k;paint();});
+  document.getElementById('backspace').addEventListener('click',()=>{value=value.slice(0,-1);paint();});
+  document.getElementById('call').addEventListener('click',()=>{status.textContent=value?`${value} için çağrı prototipi hazır; gerçek arama henüz kapalı.`:'Önce bir numara girin.';});
+</script>
+</body>
+</html>
