@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>italkyAI Telefon Test</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0e1014;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}.phone{max-width:440px;min-height:100vh;margin:auto;background:linear-gradient(180deg,#151922,#0d0f13);position:relative;overflow:hidden}.status{height:34px;padding:8px 14px;font-size:12px;display:flex;justify-content:space-between}.screen{padding:8px 16px 90px}.hero{padding:18px 4px 22px}.hero h1{margin:0;font-size:28px}.hero p{margin:6px 0 0;color:#aab0bb;font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 14px}.appbtn{background:none;border:0;color:#fff;text-align:center}.icon{width:58px;height:58px;margin:auto;border-radius:18px;background:#262b34;display:grid;place-items:center;font-size:28px;box-shadow:0 6px 18px #0005}.label{font-size:11px;margin-top:6px}.dock{position:absolute;left:14px;right:14px;bottom:16px;background:#ffffff12;border:1px solid #ffffff12;backdrop-filter:blur(12px);border-radius:24px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr)}.dock .icon{width:54px;height:54px}.app{position:absolute;inset:0;background:#101318;display:none;flex-direction:column}.app.open{display:flex}.apphead{height:58px;padding:10px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #ffffff12}.back{border:0;background:#232832;color:#fff;border-radius:14px;padding:8px 12px}.apptitle{font-weight:700}.appbody{padding:16px;overflow:auto;flex:1}.field,textarea,select{width:100%;background:#191d24;border:1px solid #333a46;color:#fff;border-radius:12px;padding:12px;margin:7px 0}.primary{border:0;border-radius:12px;padding:12px 14px;background:#2f7cf6;color:#fff;font-weight:700}.row{display:flex;gap:8px}.card{background:#181c22;border:1px solid #2b313b;border-radius:14px;padding:12px;margin:10px 0}.browserFrame{width:100%;height:65vh;border:0;border-radius:14px;background:#fff}.calc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.calc button{padding:16px;border:0;border-radius:12px;background:#262b34;color:#fff;font-size:18px}.preview{width:100%;aspect-ratio:3/4;background:#222;border-radius:18px;display:grid;place-items:center;overflow:hidden}.preview video{width:100%;height:100%;object-fit:cover}.clock{font-size:52px;font-weight:800;text-align:center;margin:30px 0}.toggle{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #262b34}.noteItem,.msgItem,.contactItem{padding:12px;border-bottom:1px solid #252b33}.tiny{font-size:12px;color:#9aa1ad}.gallery img{width:100%;border-radius:14px;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+<div class="status"><span id="clockMini">20:14</span><span>5G ▮▮▮ 87%</span></div>
+<div class="screen">
+<div class="hero"><h1>italkyAI Phone</h1><p>Test telefonu · tüm ikonlar işlevli</p></div>
+<div class="grid" id="grid"></div>
+</div>
+<div class="dock" id="dock"></div>
+<div id="apps"></div>
+</div>
+<script>
+const appDefs=[
+['phone','Telefon','📞'],['meet','Görüşme','🎥'],['browser','Tarayıcı','🌐'],['messages','Mesajlar','💬'],['contacts','Kişiler','👥'],['camera','Kamera','📷'],['gallery','Galeri','🖼️'],['notes','Notlar','📝'],['calc','Hesap','🧮'],['clock','Saat','🕒'],['settings','Ayarlar','⚙️']];
+const grid=document.getElementById('grid'),dock=document.getElementById('dock'),apps=document.getElementById('apps');
+function btn([id,name,ico]){return `<button class="appbtn" onclick="openApp('${id}')"><div class="icon">${ico}</div><div class="label">${name}</div></button>`}
+grid.innerHTML=appDefs.map(btn).join('');dock.innerHTML=[appDefs[0],appDefs[1],appDefs[2],appDefs[3]].map(btn).join('');
+function shell(id,title,body){const el=document.createElement('section');el.className='app';el.id='app-'+id;el.innerHTML=`<div class="apphead"><button class="back" onclick="closeApp('${id}')">‹ Geri</button><div class="apptitle">${title}</div></div><div class="appbody">${body}</div>`;apps.appendChild(el)}
+function openApp(id){document.getElementById('app-'+id).classList.add('open');if(id==='clock')tick();if(id==='camera')startCamera()}
+function closeApp(id){document.getElementById('app-'+id).classList.remove('open');if(id==='camera'&&window.camStream){camStream.getTracks().forEach(t=>t.stop());window.camStream=null}}
+shell('phone','Telefon',`<input class="field" id="dial" placeholder="Numara gir"><div class="row"><button class="primary" onclick="dialCall()">Ara</button><button class="primary" onclick="document.getElementById('dial').value=''">Sil</button></div><div id="callState" class="card">Hazır</div>`);
+function dialCall(){const n=document.getElementById('dial').value.trim();document.getElementById('callState').textContent=n?`${n} aranıyor… (test modu)`:'Numara girin';}
+shell('meet','Görüşme',`<div class="card">Canlı altyazılı sesli/görüntülü görüşme modülü</div><button class="primary" onclick="location.href='video_live_subtitles.html'">Görüşmeyi Aç</button>`);
+shell('browser','Tarayıcı',`<div class="row"><input class="field" id="url" value="https://example.com"><button class="primary" onclick="goWeb()">Git</button></div><div class="tiny">Bazı siteler iframe içinde açılmayı engelleyebilir; bu durumda yeni sekmede açılır.</div><iframe id="webframe" class="browserFrame" src="https://example.com"></iframe>`);
+function goWeb(){let u=document.getElementById('url').value.trim();if(!/^https?:\/\//i.test(u))u='https://'+u;const f=document.getElementById('webframe');f.src=u;setTimeout(()=>{},0)}
+shell('messages','Mesajlar',`<input class="field" id="msgTo" placeholder="Kime"><textarea id="msgText" placeholder="Mesaj"></textarea><button class="primary" onclick="sendMsg()">Gönder</button><div id="msgList"></div>`);
+function sendMsg(){const to=msgTo.value.trim(),t=msgText.value.trim();if(!t)return;const arr=JSON.parse(localStorage.getItem('demoMsgs')||'[]');arr.unshift({to,t,at:new Date().toLocaleTimeString()});localStorage.setItem('demoMsgs',JSON.stringify(arr));msgText.value='';renderMsgs()}
+function renderMsgs(){const arr=JSON.parse(localStorage.getItem('demoMsgs')||'[]');msgList.innerHTML=arr.map(x=>`<div class="msgItem"><b>${x.to||'Taslak'}</b><div>${x.t}</div><div class="tiny">${x.at}</div></div>`).join('')}
+shell('contacts','Kişiler',`<input class="field" id="cName" placeholder="Ad"><input class="field" id="cPhone" placeholder="Telefon"><button class="primary" onclick="addContact()">Kaydet</button><div id="contactList"></div>`);
+function addContact(){const a=JSON.parse(localStorage.getItem('demoContacts')||'[]');if(!cName.value.trim())return;a.push({n:cName.value.trim(),p:cPhone.value.trim()});localStorage.setItem('demoContacts',JSON.stringify(a));cName.value='';cPhone.value='';renderContacts()}
+function renderContacts(){const a=JSON.parse(localStorage.getItem('demoContacts')||'[]');contactList.innerHTML=a.map(x=>`<div class="contactItem"><b>${x.n}</b><div class="tiny">${x.p||''}</div></div>`).join('')}
+shell('camera','Kamera',`<div class="preview"><video id="camVideo" autoplay playsinline muted></video></div><button class="primary" style="margin-top:12px" onclick="snap()">Fotoğraf Çek</button><canvas id="camCanvas" class="hidden"></canvas>`);
+async function startCamera(){try{window.camStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});camVideo.srcObject=camStream}catch(e){camVideo.outerHTML='<div class="card">Kamera izni verilmedi veya cihaz desteklemiyor.</div>'}}
+function snap(){if(!camVideo.videoWidth)return;camCanvas.width=camVideo.videoWidth;camCanvas.height=camVideo.videoHeight;camCanvas.getContext('2d').drawImage(camVideo,0,0);const d=camCanvas.toDataURL('image/jpeg',.85);const g=JSON.parse(localStorage.getItem('demoGallery')||'[]');g.unshift(d);localStorage.setItem('demoGallery',JSON.stringify(g));alert('Fotoğraf Galeriye kaydedildi')}
+shell('gallery','Galeri',`<div id="galleryList" class="gallery"></div>`);
+function renderGallery(){const g=JSON.parse(localStorage.getItem('demoGallery')||'[]');galleryList.innerHTML=g.length?g.map(x=>`<img src="${x}">`).join(''):'<div class="card">Henüz fotoğraf yok.</div>'}
+shell('notes','Notlar',`<textarea id="noteText" placeholder="Not yaz"></textarea><button class="primary" onclick="saveNote()">Kaydet</button><div id="noteList"></div>`);
+function saveNote(){const t=noteText.value.trim();if(!t)return;const a=JSON.parse(localStorage.getItem('demoNotes')||'[]');a.unshift(t);localStorage.setItem('demoNotes',JSON.stringify(a));noteText.value='';renderNotes()}
+function renderNotes(){const a=JSON.parse(localStorage.getItem('demoNotes')||'[]');noteList.innerHTML=a.map(x=>`<div class="noteItem">${x}</div>`).join('')}
+shell('calc','Hesap Makinesi',`<input class="field" id="calcDisplay" readonly><div class="calc">${['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+','C'].map(x=>`<button onclick="calcKey('${x}')">${x}</button>`).join('')}</div>`);
+function calcKey(k){if(k==='C')return calcDisplay.value='';if(k==='='){try{calcDisplay.value=Function('return '+calcDisplay.value)()}catch(e){calcDisplay.value='Hata'};return}calcDisplay.value+=k}
+shell('clock','Saat',`<div class="clock" id="bigClock"></div><div class="card" id="bigDate"></div>`);
+function tick(){const d=new Date();bigClock.textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});bigDate.textContent=d.toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});clockMini.textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});setTimeout(()=>document.getElementById('app-clock').classList.contains('open')&&tick(),1000)}
+shell('settings','Ayarlar',`<div class="toggle"><span>Koyu mod</span><input type="checkbox" checked onchange="document.body.style.filter=this.checked?'none':'invert(.95)'"/></div><div class="toggle"><span>Titreşim</span><button class="primary" onclick="navigator.vibrate&&navigator.vibrate(80)">Test</button></div><div class="toggle"><span>Verileri temizle</span><button class="primary" onclick="localStorage.clear();location.reload()">Temizle</button></div>`);
+const origOpen=openApp;openApp=function(id){origOpen(id);if(id==='messages')renderMsgs();if(id==='contacts')renderContacts();if(id==='gallery')renderGallery();if(id==='notes')renderNotes()};
+tick();
+</script>
+</body>
+</html>
