@@ -23,10 +23,7 @@
 
     const HOME='/hosgeldiniz';
     const LOGIN='/pages/login.html';
-    // Keep Translate on the exact same italky origin (www/non-www) as the shell.
-    // Face to Face must be the top-level WebView page because Android native
-    // speech callbacks are dispatched to window.onNativeSpeechResult on that window.
-    const TRANSLATE_URL='/facetoface.html';
+    const TRANSLATE_URL='/pages/translate_hub.html';
     const SKIP_RETRY_MS=5*60*1000;
     const frame=document.getElementById('app');
     const gate=document.getElementById('gate');
@@ -117,9 +114,6 @@
         await runPageReward('translate','Çeviri');
       }finally{
         pendingTargetOpen=false;
-        // Do not put Face to Face inside the icany shell iframe. Android's native
-        // SpeechRecognizer callbacks are evaluated on the top-level WebView window.
-        // Same-origin top-level navigation also preserves the Supabase session.
         location.assign(TRANSLATE_URL);
       }
     }
@@ -153,9 +147,6 @@
         location.replace(`${LOGIN}?next=${encodeURIComponent(HOME)}`);
       }else{
         status.textContent='Oturum bağlanıyor…';
-        // This is the only place where we still have the real italky Supabase
-        // session before handing the user to the iCany bridge. Persist it into
-        // AndroidBilling so Jeton Market can keep using the same account later.
         syncVerifiedItalkySessionToNative(session);
         frame.src=buildFromItalkyUrl('/hosgeldiniz',token);
         frame.addEventListener('load',()=>gate.classList.add('hide'),{once:true});
