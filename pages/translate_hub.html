@@ -6,30 +6,81 @@
 <title>Translate | italkyAI</title>
 <meta name="theme-color" content="#05070f">
 <style>
-:root{--bg:#05070f;--ink:#f7f9ff;--muted:#b8c2d8;--cyan:#79e9ff;--violet:#8068ff;--pink:#ff66c4;--line:rgba(255,255,255,.12)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{position:fixed;inset:0}.shell{height:100dvh;display:grid;grid-template-rows:auto 1fr;background:radial-gradient(circle at 20% 10%,rgba(128,104,255,.20),transparent 30%),radial-gradient(circle at 80% 90%,rgba(255,102,196,.14),transparent 28%),#05070f}.topbar{height:66px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(5,7,15,.78);backdrop-filter:blur(18px);z-index:20}.back{width:40px;height:40px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.04);color:white;font-size:24px;display:grid;place-items:center;cursor:pointer}.brand{font-size:22px;font-weight:900;letter-spacing:-.7px}.brand .ai,.title-grad{background:linear-gradient(135deg,var(--cyan),var(--violet) 50%,var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}.tag{margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.12em;color:#a9b4ca}.choices{min-height:0;display:grid;grid-template-rows:1fr 1fr;gap:1px;background:rgba(255,255,255,.08)}.choice{position:relative;overflow:hidden;border:0;color:white;text-align:left;padding:0;cursor:pointer;background:#090d18;isolation:isolate}.choice:before{content:"";position:absolute;inset:-20%;z-index:-3;transition:transform .7s cubic-bezier(.2,.8,.2,1)}.choice.face:before{background:radial-gradient(circle at 22% 30%,rgba(121,233,255,.33),transparent 28%),radial-gradient(circle at 76% 68%,rgba(128,104,255,.35),transparent 32%),linear-gradient(135deg,#071623,#101127 55%,#17102a)}.choice.call:before{background:radial-gradient(circle at 80% 26%,rgba(255,102,196,.30),transparent 29%),radial-gradient(circle at 22% 72%,rgba(128,104,255,.38),transparent 34%),linear-gradient(135deg,#100b22,#11152b 55%,#071b22)}.choice:hover:before,.choice:active:before{transform:scale(1.06) rotate(.5deg)}.grid{position:absolute;inset:0;z-index:-2;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to right,#000,transparent 85%)}.orb{position:absolute;border-radius:50%;filter:blur(1px);opacity:.75;animation:float 6s ease-in-out infinite}.orb.a{width:140px;height:140px;right:-30px;top:-28px;border:1px solid rgba(121,233,255,.28);box-shadow:inset 0 0 50px rgba(121,233,255,.10),0 0 60px rgba(121,233,255,.12)}.orb.b{width:74px;height:74px;right:82px;bottom:18px;border:1px solid rgba(255,102,196,.30);animation-delay:-2.2s}.pulse{position:absolute;right:28px;top:50%;width:112px;height:112px;transform:translateY(-50%);border-radius:50%;border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;background:rgba(255,255,255,.045);box-shadow:0 18px 60px rgba(0,0,0,.28)}.pulse:before,.pulse:after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(121,233,255,.24);animation:ripple 2.5s ease-out infinite}.pulse:before{inset:-12px}.pulse:after{inset:-30px;animation-delay:.8s}.call .pulse:before,.call .pulse:after{border-color:rgba(255,102,196,.25)}.icon{width:52px;height:52px}.copy{position:absolute;left:clamp(20px,6vw,70px);right:160px;top:50%;transform:translateY(-50%);z-index:2}.eyebrow{font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#8ff2ff;margin-bottom:10px}.call .eyebrow{color:#ff9ed8}.choice h1{margin:0;font-size:clamp(32px,7vw,64px);line-height:.92;letter-spacing:-.055em;font-weight:950}.choice p{margin:12px 0 0;max-width:520px;font-size:clamp(13px,2vw,17px);line-height:1.45;color:#c5cede;font-weight:650}.go{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;font-weight:900;color:white}.go span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);transition:transform .2s}.choice:hover .go span{transform:translateX(4px)}
-@keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(13px) rotate(8deg)}}@keyframes ripple{0%{transform:scale(.78);opacity:.7}100%{transform:scale(1.35);opacity:0}}
-@media(max-width:600px){.topbar{height:62px}.copy{left:20px;right:112px}.choice h1{font-size:36px}.choice p{font-size:13px;max-width:250px}.pulse{right:12px;width:86px;height:86px}.pulse:after{inset:-18px}.orb.a{width:100px;height:100px}.tag{display:none}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070f;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{position:fixed;inset:0;color:#fff}
+.stage{position:fixed;inset:0;overflow:hidden;background:#05070f}
+.panel{position:absolute;inset:0;border:0;padding:0;margin:0;overflow:hidden;cursor:pointer;color:white;text-align:left;background:#05070f}
+.panel video{position:absolute;inset:-3%;width:106%;height:106%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.8,.2,1),filter .45s ease;will-change:transform}
+.panel:active video,.panel:hover video{transform:scale(1.035)}
+.face{clip-path:polygon(0 0,100% 0,100% 43%,0 61%);z-index:2}
+.call{clip-path:polygon(0 61%,100% 43%,100% 100%,0 100%);z-index:1}
+.face video{object-position:center 42%;filter:saturate(1.12) contrast(1.05) brightness(.72) hue-rotate(-5deg)}
+.call video{object-position:center 58%;filter:saturate(1.05) contrast(1.08) brightness(.54) hue-rotate(18deg)}
+.tint{position:absolute;inset:0;pointer-events:none}
+.face .tint{background:linear-gradient(90deg,rgba(3,12,20,.82) 0%,rgba(3,12,20,.34) 52%,rgba(5,8,16,.16) 100%),radial-gradient(circle at 82% 20%,rgba(58,218,255,.26),transparent 32%)}
+.call .tint{background:linear-gradient(90deg,rgba(7,6,20,.88) 0%,rgba(10,7,24,.48) 58%,rgba(4,8,14,.18) 100%),radial-gradient(circle at 76% 78%,rgba(145,94,255,.30),transparent 34%)}
+.copy{position:absolute;z-index:5;left:clamp(22px,6vw,76px);max-width:min(70vw,700px);text-shadow:0 3px 20px rgba(0,0,0,.65)}
+.face .copy{top:12vh}
+.call .copy{bottom:10vh}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#b9f6ff;margin-bottom:10px}
+.call .kicker{color:#e0c7ff}
+.dot{width:7px;height:7px;border-radius:50%;background:#6cecff;box-shadow:0 0 18px #6cecff}
+.call .dot{background:#b491ff;box-shadow:0 0 18px #b491ff}
+h1{margin:0;font-size:clamp(38px,8.5vw,88px);line-height:.88;letter-spacing:-.065em;font-weight:950}
+p{margin:10px 0 0;font-size:clamp(14px,2.2vw,20px);font-weight:750;color:rgba(255,255,255,.88)}
+.action{display:inline-flex;align-items:center;gap:10px;margin-top:15px;font-size:12px;font-weight:900;color:#fff}
+.arrow{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.11);backdrop-filter:blur(10px);transition:transform .2s ease,background .2s ease}
+.panel:hover .arrow{transform:translateX(5px);background:rgba(255,255,255,.18)}
+.divider{position:absolute;left:-8%;top:50%;width:116%;height:2px;z-index:10;background:linear-gradient(90deg,transparent,rgba(255,255,255,.78) 18%,rgba(255,255,255,.34) 70%,transparent);transform:rotate(-10.2deg);transform-origin:center;box-shadow:0 0 20px rgba(120,220,255,.28);pointer-events:none}
+.brand{position:absolute;z-index:12;right:18px;top:calc(16px + env(safe-area-inset-top));font-size:15px;font-weight:900;letter-spacing:-.4px;color:rgba(255,255,255,.88);text-shadow:0 2px 12px rgba(0,0,0,.6);pointer-events:none}
+.brand b{background:linear-gradient(135deg,#8bd3ff,#7c5cff 48%,#ff66c4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+@media(max-width:600px){
+  .face{clip-path:polygon(0 0,100% 0,100% 45%,0 59%)}
+  .call{clip-path:polygon(0 59%,100% 45%,100% 100%,0 100%)}
+  .divider{transform:rotate(-8deg)}
+  .copy{left:20px;max-width:78vw}
+  .face .copy{top:13vh}
+  .call .copy{bottom:11vh}
+  h1{font-size:43px}
+  p{font-size:14px}
+}
 </style>
 </head>
 <body>
-<div class="shell">
-  <header class="topbar"><button class="back" type="button" aria-label="Geri" onclick="history.length>1?history.back():location.href='/pages/home.html?keep=1'">‹</button><div class="brand">italky<span class="ai">AI</span> <span class="title-grad">Translate</span></div><div class="tag">TRANSLATE</div></header>
-  <main class="choices">
-    <button class="choice face" id="faceToFace" type="button">
-      <span class="grid"></span><span class="orb a"></span><span class="orb b"></span>
-      <div class="copy"><div class="eyebrow">TEK TELEFON • YAN YANA</div><h1>FaceToFace</h1><p>Yüzyüze Çeviri · Tek Telefon</p><div class="go">Başla <span>→</span></div></div>
-      <div class="pulse" aria-hidden="true"><svg class="icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 35c6 0 11-5 11-11S24 13 18 13 7 18 7 24s5 11 11 11Z"/><path d="M46 35c6 0 11-5 11-11S52 13 46 13 35 18 35 24s5 11 11 11Z"/><path d="M4 54c2-9 8-14 14-14s12 5 14 14M32 54c2-9 8-14 14-14s12 5 14 14"/></svg></div>
-    </button>
-    <button class="choice call" id="callTranslate" type="button">
-      <span class="grid"></span><span class="orb a"></span><span class="orb b"></span>
-      <div class="copy"><div class="eyebrow">İKİ TELEFON • UZAKTAN</div><h1>Call Translate</h1><p>Uzak Çeviri · 2 Telefon</p><div class="go">Bağlan <span>→</span></div></div>
-      <div class="pulse" aria-hidden="true"><svg class="icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 9h-6a5 5 0 0 0-5 5v36a5 5 0 0 0 5 5h15a5 5 0 0 0 5-5v-7"/><path d="M43 9h6a5 5 0 0 1 5 5v36a5 5 0 0 1-5 5H38a5 5 0 0 1-5-5v-7"/><path d="M24 27c5-5 11-5 16 0M27 32c3-3 7-3 10 0"/><circle cx="32" cy="37" r="1.5" fill="currentColor"/></svg></div>
-    </button>
-  </main>
+<div class="stage">
+  <button class="panel face" id="faceToFace" type="button" aria-label="FaceToFace Yüzyüze Çeviri Tek Telefon">
+    <video muted autoplay loop playsinline preload="metadata" poster="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1800&q=80">
+      <source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4">
+    </video>
+    <span class="tint"></span>
+    <div class="copy">
+      <div class="kicker"><span class="dot"></span>TEK TELEFON · YAN YANA</div>
+      <h1>FaceToFace</h1>
+      <p>Yüzyüze Çeviri · Tek Telefon</p>
+      <div class="action">Başla <span class="arrow">→</span></div>
+    </div>
+  </button>
+
+  <button class="panel call" id="callTranslate" type="button" aria-label="Call Translate Uzak Çeviri İki Telefon">
+    <video muted autoplay loop playsinline preload="metadata" poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1800&q=80">
+      <source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4">
+    </video>
+    <span class="tint"></span>
+    <div class="copy">
+      <div class="kicker"><span class="dot"></span>İKİ TELEFON · UZAKTAN</div>
+      <h1>Call Translate</h1>
+      <p>Uzak Çeviri · 2 Telefon</p>
+      <div class="action">Bağlan <span class="arrow">→</span></div>
+    </div>
+  </button>
+
+  <div class="divider"></div>
+  <div class="brand">italky<b>AI</b></div>
 </div>
 <script>
 document.getElementById('faceToFace').addEventListener('click',()=>location.href='/yeni_yuzyuze.html');
 document.getElementById('callTranslate').addEventListener('click',()=>location.href='/pages/italky_messenger.html');
 </script>
-</body></html>
+</body>
+</html>
