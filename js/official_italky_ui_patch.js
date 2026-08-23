@@ -3,9 +3,11 @@
 
 const OFFICIAL_LOGO = "/assets/italkyai-logo-clear.png?v=20260727-vector";
 const PERSONAL_HOME = "https://www.italky.ai/hosgeldiniz";
+const ITALKY_MESSENGER = "/pages/italky_messenger.html";
 
 const MENU_ITEMS = [
   { href: PERSONAL_HOME, icon: "⌂", label: "Anasayfa" },
+  { href: ITALKY_MESSENGER, icon: "iT", label: "iTalky" },
   { href: "/pages/jetonbuy.html", icon: "+", label: "Jeton Yükle" },
   { href: "/pages/wallet_history.html", icon: "↕", label: "Jeton Hareketleri" },
   { href: "/pages/pricing.html", icon: "$", label: "Fiyatlandırma" },
@@ -98,8 +100,19 @@ function itemHtml(item) {
   return `<a class="${cls}" href="${item.href}">${inner}</a>`;
 }
 
+function ensureItalkyMenuItem(nav) {
+  if (!nav || nav.querySelector('a[href="/pages/italky_messenger.html"]')) return;
+  const a = document.createElement('a');
+  a.href = ITALKY_MESSENGER;
+  a.className = 'italky-menu-entry';
+  a.innerHTML = '<span class="italky-official-icon">iT</span><span>iTalky</span>';
+  const first = nav.querySelector('a,button');
+  if (first?.nextSibling) nav.insertBefore(a, first.nextSibling);
+  else nav.appendChild(a);
+}
+
 function normalizeDrawer(drawer) {
-  if (!drawer || drawer.dataset.officialItalkyDrawer === "1") return;
+  if (!drawer) return;
   const nav = drawer.querySelector("nav,.menu-nav");
   if (!nav) return;
 
@@ -110,6 +123,7 @@ function normalizeDrawer(drawer) {
   if (hasModernMenu || hasExistingChrome) {
     drawer.dataset.officialItalkyDrawer = "1";
     fixMenuRoutes(drawer);
+    ensureItalkyMenuItem(nav);
     return;
   }
 
