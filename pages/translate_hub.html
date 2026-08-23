@@ -6,36 +6,34 @@
 <title>italkyAI Translate</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070f;color:#fff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06111d;color:#fff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 body{position:fixed;inset:0}
-.stage{position:fixed;inset:0;overflow:hidden;background:#05070f}
-.panel{position:absolute;inset:0;overflow:hidden;user-select:none;cursor:pointer;outline:none;touch-action:manipulation}
-.panel video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transform:scale(1.02)}
+.stage{position:fixed;inset:0;overflow:hidden;background:#06111d;isolation:isolate}
+.panel{position:absolute;inset:0;overflow:hidden;user-select:none;cursor:pointer;outline:none;touch-action:manipulation;background:#07131f}
+.panel video{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;pointer-events:none}
 .face{z-index:2;clip-path:polygon(0 0,100% 0,0 100%)}
 .talk{z-index:1;clip-path:polygon(100% 0,100% 100%,0 100%)}
-.face video{filter:brightness(.58) saturate(1.14);object-position:center}
-.talk video{filter:brightness(.48) saturate(1.2) contrast(1.05);object-position:center}
+.face video{filter:brightness(.66) saturate(1.14) contrast(1.05);object-position:42% center}
+.talk video{filter:brightness(.64) saturate(1.12) contrast(1.06);object-position:58% center}
 .shade{position:absolute;inset:0;pointer-events:none}
-.face .shade{background:linear-gradient(135deg,rgba(0,20,28,.20),rgba(3,10,19,.78) 74%)}
-.talk .shade{background:linear-gradient(315deg,rgba(18,5,32,.18),rgba(4,8,18,.82) 74%)}
-.copy{position:absolute;z-index:4;text-shadow:0 3px 22px rgba(0,0,0,.78);pointer-events:none}
-.face .copy{left:clamp(20px,7vw,72px);top:12%;max-width:70vw}
-.talk .copy{right:clamp(20px,7vw,72px);bottom:11%;max-width:70vw;text-align:right}
-.kicker{font-size:10px;font-weight:900;letter-spacing:.18em;opacity:.86;margin-bottom:9px}
+.face .shade{background:linear-gradient(135deg,rgba(3,18,28,.22) 0%,rgba(3,12,20,.34) 52%,rgba(3,9,16,.58) 100%)}
+.talk .shade{background:linear-gradient(315deg,rgba(17,9,31,.18) 0%,rgba(7,12,24,.30) 52%,rgba(3,9,16,.56) 100%)}
+.copy{position:absolute;z-index:4;text-shadow:0 3px 22px rgba(0,0,0,.84);pointer-events:none}
+.face .copy{left:clamp(22px,7vw,76px);top:11%;max-width:72vw;text-align:left}
+.talk .copy{right:clamp(22px,7vw,76px);bottom:10%;max-width:72vw;text-align:right}
+.kicker{font-size:10px;font-weight:900;letter-spacing:.20em;opacity:.88;margin-bottom:10px}
 h1{margin:0;font-size:clamp(42px,9vw,88px);line-height:.9;letter-spacing:-.06em;font-weight:950}
-p{margin:10px 0 0;font-size:clamp(14px,2.4vw,20px);font-weight:780;color:rgba(255,255,255,.9)}
-.hint{display:inline-flex;margin-top:15px;padding:7px 11px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(0,0,0,.22);backdrop-filter:blur(8px);font-size:11px;font-weight:900;letter-spacing:.04em}
-.divider{position:absolute;inset:0;z-index:8;width:100%;height:100%;pointer-events:none;filter:drop-shadow(0 0 8px rgba(125,220,255,.32))}
-.divider line{stroke:rgba(255,255,255,.78);stroke-width:.22}
+p{margin:10px 0 0;font-size:clamp(14px,2.4vw,20px);font-weight:800;color:rgba(255,255,255,.94)}
+.hint{margin-top:14px;font-size:11px;font-weight:850;letter-spacing:.02em;color:rgba(255,255,255,.72)}
 .panel.tap-one .copy{animation:tapPulse .28s ease}
 @keyframes tapPulse{50%{transform:scale(1.025);opacity:.82}}
-@media(max-width:600px){.face .copy{left:20px;top:11%}.talk .copy{right:20px;bottom:10%}h1{font-size:46px}p{font-size:14px}}
+@media(max-width:600px){.face .copy{left:22px;top:10.5%;max-width:78vw}.talk .copy{right:22px;bottom:9.5%;max-width:78vw}h1{font-size:46px}p{font-size:14px}.hint{font-size:10px}}
 </style>
 </head>
 <body>
 <main class="stage">
   <section class="panel face" id="face" role="button" tabindex="0" aria-label="FaceToFace, açmak için iki kez dokun">
-    <video muted autoplay loop playsinline preload="metadata">
+    <video muted autoplay loop playsinline preload="auto">
       <source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4">
     </video>
     <span class="shade"></span>
@@ -43,38 +41,31 @@ p{margin:10px 0 0;font-size:clamp(14px,2.4vw,20px);font-weight:780;color:rgba(25
       <div class="kicker">YÜZ YÜZE · TEK TELEFON</div>
       <h1>FaceToFace</h1>
       <p>Yüz Yüze Çeviri</p>
-      <div class="hint">İki kez dokun</div>
+      <div class="hint">Açmak için çift dokun</div>
     </div>
   </section>
 
   <section class="panel talk" id="talk" role="button" tabindex="0" aria-label="iTalky, açmak için iki kez dokun">
-    <video muted autoplay loop playsinline preload="metadata">
-      <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4">
+    <video muted autoplay loop playsinline preload="auto">
+      <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
     </video>
     <span class="shade"></span>
     <div class="copy">
       <div class="kicker">UZAKTAN · İKİ TELEFON</div>
       <h1>iTalky</h1>
       <p>Kendi dilinde konuş</p>
-      <div class="hint">İki kez dokun</div>
+      <div class="hint">Açmak için çift dokun</div>
     </div>
   </section>
-
-  <svg class="divider" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-    <line x1="0" y1="0" x2="100" y2="100"></line>
-  </svg>
 </main>
 <script>
 (()=>{
   const face=document.getElementById('face');
   const talk=document.getElementById('talk');
-
   function open(url){ location.href=url; }
-
   function bind(panel,url){
     let lastTap=0;
     let flashTimer=null;
-
     panel.addEventListener('pointerup',(event)=>{
       if(event.pointerType==='mouse') return;
       const now=Date.now();
@@ -91,20 +82,14 @@ p{margin:10px 0 0;font-size:clamp(14px,2.4vw,20px);font-weight:780;color:rgba(25
       clearTimeout(flashTimer);
       flashTimer=setTimeout(()=>panel.classList.remove('tap-one'),380);
     });
-
     panel.addEventListener('dblclick',(event)=>{
       event.preventDefault();
       open(url);
     });
-
     panel.addEventListener('keydown',(event)=>{
-      if(event.key==='Enter'||event.key===' '){
-        event.preventDefault();
-        open(url);
-      }
+      if(event.key==='Enter'||event.key===' '){event.preventDefault();open(url);}
     });
   }
-
   bind(face,'/yeni_yuzyuze.html');
   bind(talk,'/pages/italky_messenger.html');
 })();
