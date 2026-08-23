@@ -11,12 +11,18 @@ html,body{margin:0;width:100%;height:100%;background:#f7fbff;overflow:hidden}
 #verify{display:none!important;pointer-events:none!important}
 #home{display:block!important}
 .modernSearch,.filterRow{display:none!important}
+.homeQuickComposer{display:none!important}
 vercel-live-feedback,#vercel-toolbar,[data-vercel-toolbar],[data-testid="vercel-toolbar"]{display:none!important}
 [data-italky-footer],.italky-global-footer,.brand-seal,.prestige-signature,.signature,.drawer-footer-seal,.menu-sign,.it-mode-dock{display:none!important}
-.chat:not(.hidden){display:flex!important;flex-direction:column!important}
-.chat:not(.hidden) .messages{padding-bottom:86px!important}
-.chat:not(.hidden) .composer{display:flex!important;position:absolute!important;left:0!important;right:0!important;bottom:0!important;z-index:80!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
-.chat:not(.hidden) .composer input,.chat:not(.hidden) .composer button{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+
+/* Mesaj alanı yalnızca açılan sohbet ekranında görünür. */
+.chat.hidden{display:none!important}
+.chat:not(.hidden){display:flex!important;flex-direction:column!important;position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;z-index:200!important;background:#eaf1f8!important}
+.chat:not(.hidden) .messages{flex:1!important;min-height:0!important;overflow:auto!important;padding-bottom:82px!important}
+.chat:not(.hidden) .composer{display:flex!important;position:fixed!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;min-height:64px!important;z-index:260!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;background:#dfe8f1!important;padding:7px 8px calc(7px + env(safe-area-inset-bottom))!important;align-items:center!important;gap:7px!important}
+.chat:not(.hidden) .waInputShell{display:flex!important;flex:1!important;min-width:0!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+.chat:not(.hidden) #msg{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;min-width:0!important;flex:1!important}
+.chat:not(.hidden) #send,.chat:not(.hidden) #voice{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
 </style>
 <script>
 (()=>{const q=new URLSearchParams(location.search);if(q.get('skipLanguageGate')==='1'||q.get('languageChosen')==='1')return;const verified=localStorage.getItem('italky_phone_verified')==='1',phone=String(localStorage.getItem('italky_phone_number')||'').trim();if(verified&&phone)location.replace('/pages/language_gate.html')})();
@@ -30,13 +36,10 @@ vercel-live-feedback,#vercel-toolbar,[data-vercel-toolbar],[data-testid="vercel-
   const reveal=()=>mount.classList.add('ui-ready');
   const fallback=setTimeout(reveal,2200);
   try{
-    const html=await fetch('/pages/italky_messenger_v4.html?v=23',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Ana ekran yüklenemedi');return r.text()});
+    const html=await fetch('/pages/italky_messenger_v4.html?v=24',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Ana ekran yüklenemedi');return r.text()});
     const parsed=new DOMParser().parseFromString(html,'text/html');
     parsed.head.querySelectorAll('style').forEach(src=>{const s=document.createElement('style');s.textContent=src.textContent;document.head.appendChild(s)});
-    const skin=document.createElement('link');
-    skin.rel='stylesheet';
-    skin.href='/css/italky_whatsapp_skin.css?v=19';
-    document.head.appendChild(skin);
+    const skin=document.createElement('link');skin.rel='stylesheet';skin.href='/css/italky_whatsapp_skin.css?v=19';document.head.appendChild(skin);
     mount.innerHTML=parsed.body.innerHTML;
     document.querySelector('#verify')?.classList.add('hidden');
     document.querySelector('#home')?.classList.remove('hidden');
@@ -45,7 +48,7 @@ vercel-live-feedback,#vercel-toolbar,[data-vercel-toolbar],[data-testid="vercel-
     const loadModule=src=>new Promise((resolve,reject)=>{const s=document.createElement('script');s.type='module';s.src=src;s.onload=resolve;s.onerror=reject;document.body.appendChild(s)});
 
     await loadClassic('https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.6/build/js/intlTelInput.min.js').catch(()=>{});
-    await loadModule('/js/italky_messenger_v4.js?v=23');
+    await loadModule('/js/italky_messenger_v4.js?v=24');
     for(const src of[
       '/js/language_priority.js?v=3',
       '/js/italky_whatsapp_skin.js?v=14',
@@ -54,30 +57,37 @@ vercel-live-feedback,#vercel-toolbar,[data-vercel-toolbar],[data-testid="vercel-
       '/js/italky_guest_qr.js?v=3',
       '/js/italky_main_menu.js?v=3',
       '/js/italky_optimistic_message.js?v=3',
-      '/js/italky_home_polish_v1.js?v=9',
-      '/js/italky_home_quick_composer.js?v=1'
+      '/js/italky_home_polish_v1.js?v=9'
     ]){await loadClassic(src).catch(err=>console.warn('script',src,err))}
+
+    document.querySelectorAll('.homeQuickComposer').forEach(x=>x.remove());
 
     const lockLogo=()=>{
       document.title='italkyAI';
       const title=document.querySelector('.waTitle');
       if(title && !title.querySelector('img')) title.innerHTML='<img class="waBrandLogo" src="/assets/italkyai-logo-clear.png?v=20260727-vector" alt="italkyAI">';
     };
-    const ensureComposer=()=>{
-      const chat=document.querySelector('#chat');
+    const ensureChatComposer=()=>{
+      const chat=document.getElementById('chat');
       const composer=chat?.querySelector('.composer');
-      if(chat && !chat.classList.contains('hidden') && composer){
-        composer.style.display='flex';
-        composer.style.visibility='visible';
-        composer.style.opacity='1';
-        composer.style.pointerEvents='auto';
-      }
+      if(!chat||!composer||chat.classList.contains('hidden'))return;
+      chat.appendChild(composer);
+      composer.style.display='flex';
+      composer.style.position='fixed';
+      composer.style.left='0';
+      composer.style.right='0';
+      composer.style.bottom='0';
+      composer.style.visibility='visible';
+      composer.style.opacity='1';
+      composer.style.pointerEvents='auto';
+      document.getElementById('msg')?.setAttribute('placeholder','Mesaj');
     };
     lockLogo();
-    ensureComposer();
+    ensureChatComposer();
+    const chat=document.getElementById('chat');
+    if(chat)new MutationObserver(ensureChatComposer).observe(chat,{attributes:true,attributeFilter:['class']});
     setTimeout(lockLogo,600);
-    setTimeout(ensureComposer,600);
-    setTimeout(ensureComposer,1400);
+    setTimeout(ensureChatComposer,700);
     document.querySelector('#verify')?.classList.add('hidden');
     document.querySelector('#home')?.classList.remove('hidden');
     clearTimeout(fallback);
