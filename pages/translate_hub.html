@@ -1,1 +1,113 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>italkyAI Translate</title><style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070f;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#fff;touch-action:none}.stage{position:fixed;inset:0;overflow:hidden;background:#05070f}.panel{position:absolute;inset:0;border:0;padding:0;color:#fff;text-align:left;overflow:hidden;background:#05070f;transition:clip-path .62s cubic-bezier(.2,.85,.2,1),transform .62s cubic-bezier(.2,.85,.2,1),opacity .42s ease}.panel video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.55) saturate(1.08);pointer-events:none}.face{z-index:2;clip-path:polygon(0 0,100% 0,0 100%)}.talk{z-index:1;clip-path:polygon(100% 0,100% 100%,0 100%)}.shade{position:absolute;inset:0}.face .shade{background:linear-gradient(135deg,rgba(2,13,20,.35),rgba(6,12,22,.62) 52%,rgba(6,9,18,.86))}.talk .shade{background:linear-gradient(315deg,rgba(20,6,28,.35),rgba(10,8,24,.62) 52%,rgba(4,8,17,.86))}.copy{position:absolute;z-index:4;text-shadow:0 3px 20px #000}.face .copy{left:7vw;top:13%;max-width:68vw}.talk .copy{right:7vw;bottom:12%;max-width:68vw;text-align:right}.kicker{font-size:10px;font-weight:900;letter-spacing:.18em;opacity:.82;margin-bottom:9px}h1{margin:0;font-size:clamp(42px,9vw,88px);line-height:.88;letter-spacing:-.06em;font-weight:950}p{margin:10px 0 0;font-size:clamp(14px,2.4vw,20px);font-weight:750;color:rgba(255,255,255,.88)}.hint{margin-top:15px;font-size:12px;font-weight:850;opacity:.8}.divider{position:absolute;z-index:9;left:0;top:0;width:141.5%;height:1.5px;transform:rotate(45deg);transform-origin:0 0;background:linear-gradient(90deg,rgba(255,255,255,.85),rgba(130,220,255,.5),rgba(255,255,255,.15));box-shadow:0 0 18px rgba(130,220,255,.35);pointer-events:none;transition:opacity .25s}.stage.select-face .face,.stage.select-talk .talk{clip-path:polygon(0 0,100% 0,100% 100%,0 100%);z-index:5}.stage.select-face .talk{transform:translate(30%,30%);opacity:0}.stage.select-talk .face{transform:translate(-30%,-30%);opacity:0}.stage.select-face .divider,.stage.select-talk .divider{opacity:0}.stage.selected .copy{transition:transform .45s ease,opacity .45s ease}.stage.selected .copy{transform:scale(1.03)}.stage.removed .panel:not(.winner),.stage.removed .divider{display:none}.winner{clip-path:none!important;transform:none!important;opacity:1!important;z-index:6!important}.winner video{filter:brightness(.62) saturate(1.1)}@media(max-width:600px){.face .copy{left:20px;top:12%;max-width:76vw}.talk .copy{right:20px;bottom:11%;max-width:76vw}h1{font-size:46px}p{font-size:14px}}</style></head><body><main class="stage" id="stage"><section class="panel face" id="face"><video muted autoplay playsinline preload="metadata"><source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4"></video><span class="shade"></span><div class="copy"><div class="kicker">YÜZ YÜZE · TEK TELEFON</div><h1>FaceToFace</h1><p>Yüz Yüze Çeviri</p><div class="hint">Kaydırarak aç</div></div></section><section class="panel talk" id="talk"><video muted autoplay playsinline preload="metadata"><source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4"></video><span class="shade"></span><div class="copy"><div class="kicker">UZAKTAN · İKİ TELEFON</div><h1>iTalky</h1><p>Kendi dilinde konuş</p><div class="hint">Kaydırarak aç</div></div></section><div class="divider"></div></main><script>(()=>{const stage=document.getElementById('stage'),face=document.getElementById('face'),talk=document.getElementById('talk');let sx=0,sy=0,active=null,done=false;function side(x,y){return y>=x?'talk':'face'}function select(which){if(done)return;done=true;const winner=which==='face'?face:talk,loser=which==='face'?talk:face;stage.classList.add('selected','select-'+which);winner.classList.add('winner');setTimeout(()=>{loser.remove();stage.classList.add('removed');const v=winner.querySelector('video');v.loop=true;v.currentTime=0;v.play().catch(()=>{});},650)}stage.addEventListener('pointerdown',e=>{if(done)return;sx=e.clientX;sy=e.clientY;active=side(sx,sy);stage.setPointerCapture?.(e.pointerId)});stage.addEventListener('pointerup',e=>{if(done||!active)return;const dx=e.clientX-sx,dy=e.clientY-sy,dist=Math.hypot(dx,dy);if(dist>=45)select(active);active=null});stage.addEventListener('pointercancel',()=>active=null);face.addEventListener('dblclick',()=>select('face'));talk.addEventListener('dblclick',()=>select('talk'));})();</script></body></html>
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>italkyAI Translate</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070f;color:#fff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{position:fixed;inset:0}
+.stage{position:fixed;inset:0;overflow:hidden;background:#05070f}
+.panel{position:absolute;inset:0;overflow:hidden;user-select:none;cursor:pointer;outline:none;touch-action:manipulation}
+.panel video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transform:scale(1.02)}
+.face{z-index:2;clip-path:polygon(0 0,100% 0,0 100%)}
+.talk{z-index:1;clip-path:polygon(100% 0,100% 100%,0 100%)}
+.face video{filter:brightness(.58) saturate(1.14);object-position:center}
+.talk video{filter:brightness(.48) saturate(1.2) contrast(1.05);object-position:center}
+.shade{position:absolute;inset:0;pointer-events:none}
+.face .shade{background:linear-gradient(135deg,rgba(0,20,28,.20),rgba(3,10,19,.78) 74%)}
+.talk .shade{background:linear-gradient(315deg,rgba(18,5,32,.18),rgba(4,8,18,.82) 74%)}
+.copy{position:absolute;z-index:4;text-shadow:0 3px 22px rgba(0,0,0,.78);pointer-events:none}
+.face .copy{left:clamp(20px,7vw,72px);top:12%;max-width:70vw}
+.talk .copy{right:clamp(20px,7vw,72px);bottom:11%;max-width:70vw;text-align:right}
+.kicker{font-size:10px;font-weight:900;letter-spacing:.18em;opacity:.86;margin-bottom:9px}
+h1{margin:0;font-size:clamp(42px,9vw,88px);line-height:.9;letter-spacing:-.06em;font-weight:950}
+p{margin:10px 0 0;font-size:clamp(14px,2.4vw,20px);font-weight:780;color:rgba(255,255,255,.9)}
+.hint{display:inline-flex;margin-top:15px;padding:7px 11px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(0,0,0,.22);backdrop-filter:blur(8px);font-size:11px;font-weight:900;letter-spacing:.04em}
+.divider{position:absolute;inset:0;z-index:8;width:100%;height:100%;pointer-events:none;filter:drop-shadow(0 0 8px rgba(125,220,255,.32))}
+.divider line{stroke:rgba(255,255,255,.78);stroke-width:.22}
+.panel.tap-one .copy{animation:tapPulse .28s ease}
+@keyframes tapPulse{50%{transform:scale(1.025);opacity:.82}}
+@media(max-width:600px){.face .copy{left:20px;top:11%}.talk .copy{right:20px;bottom:10%}h1{font-size:46px}p{font-size:14px}}
+</style>
+</head>
+<body>
+<main class="stage">
+  <section class="panel face" id="face" role="button" tabindex="0" aria-label="FaceToFace, açmak için iki kez dokun">
+    <video muted autoplay loop playsinline preload="metadata">
+      <source src="https://www.icany.ai/brand/strips/night-move.mp4" type="video/mp4">
+    </video>
+    <span class="shade"></span>
+    <div class="copy">
+      <div class="kicker">YÜZ YÜZE · TEK TELEFON</div>
+      <h1>FaceToFace</h1>
+      <p>Yüz Yüze Çeviri</p>
+      <div class="hint">İki kez dokun</div>
+    </div>
+  </section>
+
+  <section class="panel talk" id="talk" role="button" tabindex="0" aria-label="iTalky, açmak için iki kez dokun">
+    <video muted autoplay loop playsinline preload="metadata">
+      <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4">
+    </video>
+    <span class="shade"></span>
+    <div class="copy">
+      <div class="kicker">UZAKTAN · İKİ TELEFON</div>
+      <h1>iTalky</h1>
+      <p>Kendi dilinde konuş</p>
+      <div class="hint">İki kez dokun</div>
+    </div>
+  </section>
+
+  <svg class="divider" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <line x1="0" y1="0" x2="100" y2="100"></line>
+  </svg>
+</main>
+<script>
+(()=>{
+  const face=document.getElementById('face');
+  const talk=document.getElementById('talk');
+
+  function open(url){ location.href=url; }
+
+  function bind(panel,url){
+    let lastTap=0;
+    let flashTimer=null;
+
+    panel.addEventListener('pointerup',(event)=>{
+      if(event.pointerType==='mouse') return;
+      const now=Date.now();
+      if(now-lastTap<=360){
+        lastTap=0;
+        clearTimeout(flashTimer);
+        open(url);
+        return;
+      }
+      lastTap=now;
+      panel.classList.remove('tap-one');
+      void panel.offsetWidth;
+      panel.classList.add('tap-one');
+      clearTimeout(flashTimer);
+      flashTimer=setTimeout(()=>panel.classList.remove('tap-one'),380);
+    });
+
+    panel.addEventListener('dblclick',(event)=>{
+      event.preventDefault();
+      open(url);
+    });
+
+    panel.addEventListener('keydown',(event)=>{
+      if(event.key==='Enter'||event.key===' '){
+        event.preventDefault();
+        open(url);
+      }
+    });
+  }
+
+  bind(face,'/yeni_yuzyuze.html');
+  bind(talk,'/pages/italky_messenger.html');
+})();
+</script>
+</body>
+</html>
