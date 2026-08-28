@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <title>italky Learn — Soruyu çözme, öğren</title>
+  <style>
+    :root{
+      --bg:#07111f;--panel:#0c1829;--panel2:#101f34;--line:#20344f;--text:#f7fbff;
+      --muted:#93a9c1;--cyan:#5ee7f2;--blue:#4f8cff;--good:#4ade80;--warn:#fbbf24;
+      --danger:#fb7185;--shadow:0 22px 70px rgba(0,0,0,.34)
+    }
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{background:radial-gradient(circle at 15% -10%,rgba(94,231,242,.18),transparent 35%),radial-gradient(circle at 100% 10%,rgba(79,140,255,.18),transparent 32%),linear-gradient(180deg,#0b1728 0%,#07111f 55%,#050b14 100%)}
+    button,input,select{font:inherit}.app{width:min(100%,520px);min-height:100dvh;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{font-weight:900;font-size:24px;letter-spacing:-.6px}.brand span{color:var(--cyan)}
+    .badge{font-size:12px;font-weight:800;color:#b7f6ff;border:1px solid rgba(94,231,242,.28);background:rgba(94,231,242,.08);padding:7px 10px;border-radius:999px}
+    .hero{margin:12px 0 18px}.hero h1{font-size:clamp(30px,8.4vw,44px);line-height:1.02;letter-spacing:-1.7px;margin:0 0 10px}.hero p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
+    .card{background:linear-gradient(180deg,rgba(16,31,52,.95),rgba(9,20,35,.95));border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+    .section-title{font-size:13px;color:#bcd0e6;font-weight:800;text-transform:uppercase;letter-spacing:.75px;margin:0 0 12px}
+    .uploader{position:relative;display:grid;place-items:center;min-height:220px;border:1.5px dashed #315276;border-radius:18px;background:rgba(4,12,22,.44);overflow:hidden;text-align:center;padding:16px}
+    .uploader.has-image{padding:0;border-style:solid}.uploader img{display:none;width:100%;max-height:330px;object-fit:contain;background:#030812}.uploader.has-image img{display:block}.upload-copy{display:grid;gap:8px;place-items:center}.uploader.has-image .upload-copy{display:none}.camera{font-size:42px}.upload-copy strong{font-size:18px}.upload-copy small{color:var(--muted);line-height:1.4}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.btn{border:0;border-radius:15px;min-height:50px;padding:12px 14px;font-weight:900;cursor:pointer}.btn:disabled{opacity:.45;cursor:not-allowed}.btn-primary{color:#051017;background:linear-gradient(135deg,var(--cyan),#8ff3fb)}.btn-secondary{color:var(--text);background:#14263d;border:1px solid #29435f}.btn-full{width:100%;margin-top:12px}
+    input[type=file]{display:none}.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.field{display:grid;gap:6px}.field label{font-size:12px;color:var(--muted);font-weight:700}.field select,.answer{width:100%;border:1px solid #2b4461;background:#091523;color:var(--text);border-radius:14px;padding:13px 14px;outline:none}.answer:focus,.field select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(94,231,242,.10)}
+    .hidden{display:none!important}.status{display:flex;align-items:center;gap:10px;color:#d4e3f3}.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    .topic-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.chip{border-radius:999px;padding:6px 9px;background:#122740;border:1px solid #254765;color:#c8dbef;font-size:12px;font-weight:800}
+    .teacher{display:flex;gap:11px;align-items:flex-start;margin-bottom:14px}.avatar{width:42px;height:42px;flex:0 0 42px;border-radius:14px;background:linear-gradient(135deg,#59dce9,#527dff);display:grid;place-items:center;color:#06111d;font-weight:1000}.bubble{background:#0b1726;border:1px solid #223a55;border-radius:8px 17px 17px 17px;padding:12px 13px;line-height:1.48;font-size:15px;flex:1}
+    .question{font-size:22px;line-height:1.32;font-weight:900;letter-spacing:-.3px;padding:18px;border-radius:17px;background:linear-gradient(135deg,rgba(79,140,255,.14),rgba(94,231,242,.07));border:1px solid #2a4868;margin:10px 0 14px}
+    .feedback{padding:12px 13px;border-radius:14px;margin:12px 0;font-size:14px;line-height:1.45;border:1px solid #2b4461;background:#0a1727}.feedback.good{border-color:rgba(74,222,128,.42);background:rgba(74,222,128,.08)}.feedback.bad{border-color:rgba(251,191,36,.42);background:rgba(251,191,36,.08)}
+    .mastery-head{display:flex;align-items:end;justify-content:space-between;gap:12px}.score{font-size:31px;font-weight:1000;letter-spacing:-1px}.score small{font-size:14px;color:var(--muted);letter-spacing:0}.track{height:12px;border-radius:99px;background:#07101d;border:1px solid #213750;overflow:hidden;margin:10px 0 7px}.fill{height:100%;width:20%;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .5s ease}.mastery-note{font-size:12px;color:var(--muted)}
+    .mastered{padding:18px;border-radius:18px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.38);text-align:center}.mastered .big{font-size:38px;margin-bottom:5px}.mastered strong{display:block;font-size:20px}.mastered p{margin:6px 0 0;color:#b9d8c6;font-size:14px}
+    .error{color:#ffd3da;background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.35);border-radius:14px;padding:12px;font-size:14px;margin-top:12px}
+    footer{text-align:center;color:#617992;font-size:11px;padding:8px 0}.original{margin-top:12px;padding-top:12px;border-top:1px solid #1c334b;color:#7892ad;font-size:12px;line-height:1.4}.original b{color:#9bb3ca}
+  </style>
+</head>
+<body>
+<main class="app">
+  <header><div class="brand">italky<span>.ai</span></div><div class="badge">LEARN • MVP</div></header>
+  <section class="hero"><h1>Soruyu çözme.<br>Çözmeyi öğren.</h1><p>Sorunun fotoğrafını çek. italky Learn cevabı vermek yerine konuyu sana adım adım öğretsin.</p></section>
+
+  <section id="uploadCard" class="card">
+    <h2 class="section-title">1 • Sorunu göster</h2>
+    <label id="dropZone" class="uploader" for="photoInput">
+      <img id="preview" alt="Soru fotoğrafı önizleme">
+      <span class="upload-copy"><span class="camera">📷</span><strong>Soru fotoğrafını çek</strong><small>Matematikle başlıyoruz. Net ve tek bir soru görünecek şekilde çek.</small></span>
+    </label>
+    <input id="photoInput" type="file" accept="image/*" capture="environment">
+    <div class="meta">
+      <div class="field"><label>Sınıf</label><select id="grade"><option>5</option><option>6</option><option selected>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div>
+      <div class="field"><label>Anlatım dili</label><select id="language"><option value="tr" selected>Türkçe</option><option value="en">English</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="ar">العربية</option></select></div>
+    </div>
+    <div class="controls"><button id="changeBtn" class="btn btn-secondary" type="button">Fotoğrafı değiştir</button><button id="analyzeBtn" class="btn btn-primary" type="button" disabled>Öğrenmeye başla</button></div>
+    <div id="uploadError" class="error hidden"></div>
+  </section>
+
+  <section id="loadingCard" class="card hidden"><div class="status"><span class="spinner"></span><strong>italky Learn soruyu inceliyor…</strong></div></section>
+
+  <section id="lessonCard" class="card hidden">
+    <h2 class="section-title">2 • Birlikte öğrenelim</h2>
+    <div class="topic-row"><span id="subjectChip" class="chip"></span><span id="topicChip" class="chip"></span><span id="gradeChip" class="chip"></span></div>
+    <div class="teacher"><div class="avatar">AI</div><div id="teacherMessage" class="bubble"></div></div>
+    <div id="currentQuestion" class="question"></div>
+    <input id="studentAnswer" class="answer" autocomplete="off" placeholder="Cevabını buraya yaz…">
+    <button id="answerBtn" class="btn btn-primary btn-full" type="button">Cevabımı kontrol et</button>
+    <div id="feedback" class="feedback hidden"></div>
+    <div id="lessonError" class="error hidden"></div>
+    <div class="original"><b>Gönderdiğin soru:</b> <span id="originalProblem"></span></div>
+  </section>
+
+  <section id="masteryCard" class="card hidden">
+    <h2 class="section-title">Öğrenme durumu</h2>
+    <div class="mastery-head"><div><strong id="masteryTopic">Konu</strong><div class="mastery-note">Ezber değil, gerçek öğrenme puanı</div></div><div class="score"><span id="scoreText">20</span><small>/100</small></div></div>
+    <div class="track"><div id="scoreFill" class="fill"></div></div>
+    <div id="scoreNote" class="mastery-note">Bu konuyu birlikte güçlendiriyoruz.</div>
+  </section>
+
+  <section id="masteredCard" class="card hidden"><div class="mastered"><div class="big">🎯</div><strong>Bu kazanımı öğrendin.</strong><p>Bir sonraki tekrarında da doğrularsan kalıcı öğrenme puanın güçlenecek.</p></div><button id="newProblemBtn" class="btn btn-secondary btn-full" type="button">Yeni soru çek</button></section>
+  <footer>italky Learn • Cevabı teslim etmez, düşünmeyi öğretir.</footer>
+</main>
+<script>
+(() => {
+  const API = 'https://italky-api.onrender.com/api/learn';
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    photo:$('photoInput'), preview:$('preview'), drop:$('dropZone'), analyze:$('analyzeBtn'), change:$('changeBtn'), grade:$('grade'), lang:$('language'),
+    uploadCard:$('uploadCard'), loading:$('loadingCard'), lesson:$('lessonCard'), mastery:$('masteryCard'), mastered:$('masteredCard'), uploadError:$('uploadError'), lessonError:$('lessonError'),
+    subject:$('subjectChip'), topic:$('topicChip'), gradeChip:$('gradeChip'), teacher:$('teacherMessage'), question:$('currentQuestion'), answer:$('studentAnswer'), answerBtn:$('answerBtn'), feedback:$('feedback'), original:$('originalProblem'),
+    masteryTopic:$('masteryTopic'), score:$('scoreText'), fill:$('scoreFill'), scoreNote:$('scoreNote'), newProblem:$('newProblemBtn')
+  };
+  let imageData = '';
+  let lessonState = null;
+  let history = [];
+  let busy = false;
+
+  function setBusy(value){busy=value;els.analyze.disabled=value||!imageData;els.answerBtn.disabled=value;els.change.disabled=value}
+  function show(el,yes=true){el.classList.toggle('hidden',!yes)}
+  function err(el,msg=''){el.textContent=msg;show(el,Boolean(msg))}
+  function masteryMap(){try{return JSON.parse(localStorage.getItem('italky_learn_mastery')||'{}')}catch{return {}}}
+  function saveMastery(skill,score){const map=masteryMap();map[skill]=score;localStorage.setItem('italky_learn_mastery',JSON.stringify(map))}
+  function resizeImage(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{const max=1600;let w=img.width,h=img.height;const scale=Math.min(1,max/Math.max(w,h));w=Math.round(w*scale);h=Math.round(h*scale);const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(img,0,0,w,h);resolve(c.toDataURL('image/jpeg',.84))};img.src=reader.result};reader.readAsDataURL(file)})}
+  async function post(path,data){const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});let payload={};try{payload=await r.json()}catch{}if(!r.ok)throw new Error(payload.detail||'İşlem tamamlanamadı.');return payload}
+  function renderMastery(score){score=Math.max(0,Math.min(100,Number(score)||0));els.score.textContent=score;els.fill.style.width=score+'%';els.masteryTopic.textContent=lessonState?.topic||'Konu';els.scoreNote.textContent=score>=90?'Kazanım doğrulandı.':score>=80?'Çok yaklaştın; bir doğrulama daha.':score>=55?'Temel oluşuyor, biraz daha pekiştirelim.':'Önce temeli sağlamlaştırıyoruz.';show(els.mastery,true)}
+  function reset(){imageData='';lessonState=null;history=[];els.photo.value='';els.preview.removeAttribute('src');els.drop.classList.remove('has-image');els.answer.value='';show(els.lesson,false);show(els.mastery,false);show(els.mastered,false);show(els.loading,false);show(els.uploadCard,true);err(els.uploadError);err(els.lessonError);els.analyze.disabled=true;window.scrollTo({top:0,behavior:'smooth'})}
+
+  els.photo.addEventListener('change',async()=>{const file=els.photo.files?.[0];if(!file)return;err(els.uploadError);try{imageData=await resizeImage(file);els.preview.src=imageData;els.drop.classList.add('has-image');els.analyze.disabled=false}catch{err(els.uploadError,'Fotoğraf okunamadı. Başka bir fotoğraf deneyin.')}});
+  els.change.addEventListener('click',()=>els.photo.click());
+  els.newProblem.addEventListener('click',reset);
+
+  els.analyze.addEventListener('click',async()=>{
+    if(!imageData||busy)return;setBusy(true);err(els.uploadError);show(els.loading,true);
+    try{
+      const data=await post('/analyze',{image_data:imageData,grade:Number(els.grade.value),language:els.lang.value,mastery:masteryMap()});
+      const l=data.lesson;lessonState={subject:l.subject,grade:l.grade,topic:l.topic,skill_id:l.skill_id,original_problem:l.original_problem,current_question:l.current_question,mastery_score:Number(l.mastery_score)||20,attempt_count:0};
+      history=[];els.subject.textContent=l.subject;els.topic.textContent=l.topic;els.gradeChip.textContent=l.grade+'. sınıf';els.teacher.textContent=l.teacher_message;els.question.textContent=l.current_question;els.original.textContent=l.original_problem;els.answer.value='';els.feedback.className='feedback hidden';
+      saveMastery(l.skill_id,lessonState.mastery_score);renderMastery(lessonState.mastery_score);show(els.uploadCard,false);show(els.lesson,true);setTimeout(()=>els.answer.focus(),100);window.scrollTo({top:0,behavior:'smooth'});
+    }catch(e){err(els.uploadError,e.message||'Soru analiz edilemedi.')}finally{show(els.loading,false);setBusy(false)}
+  });
+
+  async function submitAnswer(){
+    const value=els.answer.value.trim();if(!lessonState||!value||busy)return;setBusy(true);err(els.lessonError);els.feedback.className='feedback hidden';
+    try{
+      const data=await post('/respond',{lesson:lessonState,student_answer:value,language:els.lang.value,history});
+      history.push({question:lessonState.current_question,answer:value,correct:String(Boolean(data.correct))});history=history.slice(-8);
+      lessonState.attempt_count+=1;lessonState.mastery_score=Number(data.mastery_score)||lessonState.mastery_score;saveMastery(lessonState.skill_id,lessonState.mastery_score);renderMastery(lessonState.mastery_score);
+      els.feedback.textContent=[data.feedback,data.hint].filter(Boolean).join(' ');els.feedback.className='feedback '+(data.correct?'good':'bad');
+      if(data.status==='mastered'){
+        show(els.mastered,true);els.answerBtn.disabled=true;els.answer.disabled=true;setTimeout(()=>els.mastered.scrollIntoView({behavior:'smooth',block:'center'}),150);
+      }else{
+        lessonState.current_question=data.next_question;els.question.textContent=data.next_question;els.answer.value='';setTimeout(()=>els.answer.focus(),100);
+      }
+    }catch(e){err(els.lessonError,e.message||'Cevap değerlendirilemedi.')}finally{setBusy(false)}
+  }
+  els.answerBtn.addEventListener('click',submitAnswer);
+  els.answer.addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();submitAnswer()}});
+})();
+</script>
+</body>
+</html>
